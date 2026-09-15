@@ -70,6 +70,7 @@ final class JobsTest extends TestCase
         $this->assertReplacement($replacement);
         $this->assertSame('building', $this->database->getDocument('deployments', $deployment->getId())->getAttribute('status'));
         $this->assertSame([], $this->realtime->payloads);
+        $this->assertNoEvents();
     }
 
     public function testCompleteRecreatedSite(): void
@@ -91,6 +92,7 @@ final class JobsTest extends TestCase
         $this->assertEmpty($site->getAttribute('adapter'));
         $this->assertEmpty($site->getAttribute('fallbackFile'));
         $this->assertSame([], $this->realtime->payloads);
+        $this->assertNoEvents();
     }
 
     public function testCompleteDeletedResource(): void
@@ -109,6 +111,7 @@ final class JobsTest extends TestCase
         $this->assertTrue($this->database->getDocument('functions', $resource->getId())->isEmpty());
         $this->assertSame('building', $this->database->getDocument('deployments', $deployment->getId())->getAttribute('status'));
         $this->assertSame([], $this->realtime->payloads);
+        $this->assertNoEvents();
     }
 
     public function testCompleteWithoutOwnerSequence(): void
@@ -126,6 +129,7 @@ final class JobsTest extends TestCase
         $this->assertEmpty($this->database->getDocument('functions', $resource->getId())->getAttribute('deploymentId'));
         $this->assertSame('building', $this->database->getDocument('deployments', $deployment->getId())->getAttribute('status'));
         $this->assertSame([], $this->realtime->payloads);
+        $this->assertNoEvents();
     }
 
     #[\PHPUnit\Framework\Attributes\DataProvider('resources')]
@@ -183,6 +187,54 @@ final class JobsTest extends TestCase
         $this->assertReplacement($replacement);
         $this->assertSame('building', $this->database->getDocument('deployments', $deployment->getId())->getAttribute('status'));
         $this->assertSame([], $this->realtime->payloads);
+        $this->assertNoEvents();
+    }
+
+    #[\PHPUnit\Framework\Attributes\DataProvider('callbacks')]
+    public function testCallbackForRecreatedOwner(string $collection, string $event, array $data): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $resource = $this->resource($collection);
+        $deployment = $this->deployment($resource, ['status' => 'waiting', 'buildLogs' => 'original']);
+        $replacement = $this->replace($resource);
+
+        $this->enqueue($deployment, $event, $data);
+        $this->runWorker();
+
+        $this->assertReplacement($replacement);
+        $current = $this->database->getDocument('deployments', $deployment->getId());
+        $this->assertSame('waiting', $current->getAttribute('status'));
+        $this->assertSame('original', $current->getAttribute('buildLogs'));
+        $this->assertSame(1, $current->getAttribute('sourceSize'));
+        $this->assertSame([], $this->realtime->payloads);
+        $this->assertNoEvents();
+    }
+
+    public static function callbacks(): \Iterator
+    {
+        foreach (['functions', 'sites'] as $collection) {
+            yield "$collection log" => [$collection, 'log', ['lines' => ['old output']]];
+            yield "$collection source size" => [$collection, 'artifact', ['artifactId' => 'sourceSize', 'status' => 'success', 'content' => 900]];
+            yield "$collection output failure" => [$collection, 'artifact', ['artifactId' => 'output', 'status' => 'failed', 'error' => 'old failure']];
+            yield "$collection failed exit" => [$collection, 'exit', ['exitCode' => 1]];
+            yield "$collection successful exit" => [$collection, 'exit', ['exitCode' => 0]];
+            yield "$collection manifest" => [$collection, 'artifact', ['artifactId' => 'manifest', 'status' => 'success', 'content' => ['files' => ['index.html']]]];
+        }
+    }
+
+    private function assertNoEvents(): void
+    {
+        foreach ([
+            '_APP_FUNCTIONS_QUEUE_NAME' => \Appwrite\Event\Event::FUNCTIONS_QUEUE_NAME,
+            '_APP_WEBHOOK_QUEUE_NAME' => \Appwrite\Event\Event::WEBHOOK_QUEUE_NAME,
+            '_APP_SCREENSHOTS_QUEUE_NAME' => \Appwrite\Event\Event::SCREENSHOTS_QUEUE_NAME,
+            '_APP_STATS_USAGE_QUEUE_NAME' => \Appwrite\Event\Event::STATS_USAGE_QUEUE_NAME,
+        ] as $variable => $default) {
+            $queue = new Queue(\Utopia\System\System::getEnv($variable, $default));
+            $this->assertSame(0, $this->broker->getQueueSize($queue), $queue->name);
+        }
     }
 
     private function project(): Document
