@@ -2,7 +2,7 @@
 layout: post
 title: "Dedicated Postgres vs. serverless databases: Which one should developers choose?"
 description: Compare dedicated Postgres and serverless databases across scaling, pricing, performance, and when to choose each for your app.
-date: 2026-07-20
+date: 2026-09-13
 cover: /images/blog/managed-postgres-vs-serverless-databases-which-one-should-developers-choose/cover.avif
 timeToRead: 5
 author: atharva
