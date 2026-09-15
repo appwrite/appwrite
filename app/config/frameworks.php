@@ -323,6 +323,22 @@ return [
             ],
         ],
     ],
+    'jaspr' => [
+        'key' => 'jaspr',
+        'name' => 'Jaspr',
+        'screenshotSleep' => 3000,
+        'buildRuntime' => 'flutter-3.44',
+        'runtimes' => $templateRuntimes['FLUTTER'],
+        'adapters' => [
+            'ssr' => [
+                'key' => 'ssr',
+                'buildCommand' => 'dart run jaspr_cli:jaspr build',
+                'installCommand' => 'dart pub get',
+                'outputDirectory' => './build/jaspr',
+                'startCommand' => 'bash helpers/jaspr/server.sh',
+            ],
+        ],
+    ],
     'react-native' => [
         'key' => 'react-native',
         'name' => 'React Native',
