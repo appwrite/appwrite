@@ -264,6 +264,42 @@ trait ProxyBase
         yield 'site' => ['site'];
     }
 
+    #[DataProvider('resources')]
+    public function testDeleteDeploymentAndBranchRules(string $type): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $resourceId = $type === 'function'
+            ? $this->setupFunction()['functionId']
+            : $this->setupSite()['siteId'];
+        $domain = \uniqid() . '-deleted-branch.custom.localhost';
+        $ruleId = $type === 'function'
+            ? $this->setupFunctionRule($domain, $resourceId, 'dev')
+            : $this->setupSiteRule($domain, $resourceId, 'dev');
+        $rule = $this->getRule($ruleId);
+        $this->assertEquals(200, $rule['headers']['status-code']);
+        $this->assertSame('dev', $rule['body']['deploymentVcsProviderBranch']);
+        $queries = [
+            Query::equal('deploymentResourceType', [$type])->toString(),
+            Query::equal('deploymentResourceId', [$resourceId])->toString(),
+        ];
+        $rules = $this->listRules(['queries' => $queries]);
+        $this->assertEquals(200, $rules['headers']['status-code']);
+        $this->assertGreaterThan(1, $rules['body']['total']);
+
+        if ($type === 'function') {
+            $this->cleanupFunction($resourceId);
+        } else {
+            $this->cleanupSite($resourceId);
+        }
+
+        $rules = $this->listRules(['queries' => $queries]);
+        $this->assertEquals(200, $rules['headers']['status-code']);
+        $this->assertSame(0, $rules['body']['total']);
+        $this->assertEquals(404, $this->getRule($ruleId)['headers']['status-code']);
+    }
+
     public function testCreateRule(): void
     {
         $domain = \uniqid() . '-api.myapp.com';
