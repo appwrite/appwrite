@@ -68,7 +68,7 @@ You can now provision and manage PostgreSQL directly inside an Appwrite project 
 
 That also means developers can use familiar PostgreSQL capabilities and extensions, including tools such as pgvector and PostGIS, while Appwrite takes care of the surrounding infrastructure.
 
-The goal is simple: give developers the convenience of managing their backend through Appwrite without asking them to give up the database tools and workflows they already rely on. PostgreSQL is also now the default for new self-hosted installations, which we explained in [PostgreSQL by default in Appwrite 2.0](/blog/post/appwrite-2-0-postgres-by-default).
+The goal is simple: give developers the convenience of managing their backend through Appwrite without asking them to give up the database tools and workflows they already rely on. For new self-hosted Appwrite installations, PostgreSQL is also now the default underlying database that Appwrite itself runs on, which we explained in [PostgreSQL by default in Appwrite 2.0](/blog/post/appwrite-2-0-postgres-by-default).
 
 If you work with an ORM, we published walkthroughs for both [Drizzle](/blog/post/drizzle-orm-appwrite-postgres) and [Prisma](/blog/post/prisma-orm-appwrite-postgres) against an Appwrite PostgreSQL database.
 
