@@ -2,7 +2,7 @@
 layout: post
 title: "File vs. object vs. block storage: What's the difference?"
 description: Compare file, object, and block storage, including how each works, key differences, costs, performance, scalability, and the best use cases in cloud.
-date: 2026-07-17
+date: 2026-09-12
 cover: /images/blog/file-vs-object-vs-block-storage-whats-the-difference/cover.avif
 timeToRead: 5
 author: aditya-oberai
