@@ -30,9 +30,10 @@ export function InsertSampleMessageMenu({
           variant="outline"
           size="sm"
           className="h-7 text-[12px]"
+          aria-label={t('Sample')}
         >
-          <Plus className="me-1.5 h-3.5 w-3.5" />
-          {t('Sample')}
+          <Plus className="h-3.5 w-3.5 sm:me-1.5" />
+          <span className="hidden sm:inline">{t('Sample')}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-72">
