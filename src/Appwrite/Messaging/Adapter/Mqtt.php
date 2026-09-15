@@ -3,11 +3,11 @@
 namespace Appwrite\Messaging\Adapter;
 
 use Appwrite\Messaging\Adapter as MessagingAdapter;
-use Appwrite\Mqtt\Connection;
-use Appwrite\Mqtt\KeepAlive;
-use Appwrite\Mqtt\SubscriptionStore;
 use Appwrite\PubSub\Adapter as PubSub;
+use Utopia\Mqtt\Connection;
+use Utopia\Mqtt\Keepalive;
 use Utopia\Mqtt\Packet;
+use Utopia\Mqtt\Subscription\Store;
 use Utopia\Telemetry\Adapter as Telemetry;
 use Utopia\Telemetry\Counter;
 use Utopia\Telemetry\Histogram;
@@ -20,7 +20,7 @@ class Mqtt extends MessagingAdapter
     /**
      * Connection registry.
      *
-     * [FD] -> Connection { protocol, projectId, identity, packetId, active }
+     * [FD] -> Connection { protocol, prefix, identity, packetId, active }
      *
      * @var array<int, Connection>
      */
@@ -45,9 +45,9 @@ class Mqtt extends MessagingAdapter
     public readonly Histogram $messageSize;
 
     /** Keep-alive reaper wheel: connections register their deadline here, the tick drains it. */
-    public readonly KeepAlive $keepAlive;
+    public readonly Keepalive $keepAlive;
 
-    private ?SubscriptionStore $subscriptionStore = null;
+    private ?Store $subscriptionStore = null;
 
     public function __construct(Telemetry $telemetry, private readonly PubSub $pubsub)
     {
@@ -65,16 +65,16 @@ class Mqtt extends MessagingAdapter
         $this->authDuration = $telemetry->createHistogram('mqtt.auth.duration', 's');
         $this->connectionDuration = $telemetry->createHistogram('mqtt.connection.duration', 's');
         $this->messageSize = $telemetry->createHistogram('mqtt.message.size', 'By');
-        $this->keepAlive = new KeepAlive();
+        $this->keepAlive = new Keepalive();
     }
 
     /**
      * The subscription index, created lazily so the adapter owns it rather than
      * receiving it — the in-memory tree has no external dependency to wire in.
      */
-    private function subscriptionStore(): SubscriptionStore
+    private function subscriptionStore(): Store
     {
-        return $this->subscriptionStore ??= new SubscriptionStore();
+        return $this->subscriptionStore ??= new Store();
     }
 
     /** Get or create the connection state for a file descriptor. */
@@ -95,9 +95,7 @@ class Mqtt extends MessagingAdapter
                 $this->connectionsActive->add(-1);
                 $this->connectionDuration->record(microtime(true) - $connection->openedAt);
             }
-            if ($connection->wheelSlot > 0) {
-                $this->keepAlive->remove($fd, $connection->wheelSlot);
-            }
+            $this->keepAlive->remove($fd);
         }
         $this->unsubscribe($fd);
         unset($this->connections[$fd]);
@@ -196,10 +194,10 @@ class Mqtt extends MessagingAdapter
 
     /**
      * The subscription-store record for an fd: its project, user, and subscriptions,
-     * or null when the fd holds none. This is the store's copy (the projectId/userId
+     * or null when the fd holds none. This is the store's copy (the prefix/userId
      * captured at subscribe time), not the live Connection object from open().
      *
-     * @return array{projectId: string, userId: string, subs: array<string, int>}|null
+     * @return array{prefix: string, userId: string, subs: array<string, int>}|null
      */
     public function getConnection(int $fd): ?array
     {

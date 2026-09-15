@@ -3,9 +3,9 @@
 namespace Appwrite\Mqtt\Handlers;
 
 use Appwrite\Messaging\Adapter\Mqtt;
-use Appwrite\Mqtt\Connection;
 use Appwrite\Mqtt\Dispatcher;
 use Appwrite\Mqtt\Response;
+use Utopia\Mqtt\Connection;
 use Utopia\Mqtt\Packet;
 use Utopia\Mqtt\Packet\V5;
 use Utopia\Mqtt\Properties;
@@ -52,7 +52,7 @@ class Auth extends Action
             $projectId = $userProperties['projectId'] ?? '';
 
             $identity = [];
-            if ($projectId !== '' && $projectId === $connection->projectId) {
+            if ($projectId !== '' && $projectId === $connection->prefix) {
                 $start = microtime(true);
                 $identity = $authenticator($projectId, $method, $data);
                 $mqtt->authDuration->record(microtime(true) - $start);

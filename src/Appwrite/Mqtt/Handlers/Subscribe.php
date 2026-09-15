@@ -3,12 +3,12 @@
 namespace Appwrite\Mqtt\Handlers;
 
 use Appwrite\Messaging\Adapter\Mqtt;
-use Appwrite\Mqtt\Connection;
 use Appwrite\Mqtt\Dispatcher;
 use Appwrite\Mqtt\Response;
 use Appwrite\Utopia\Database\Documents\User;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
+use Utopia\Mqtt\Connection;
 use Utopia\Mqtt\Packet;
 use Utopia\Mqtt\Packet\V3;
 use Utopia\Mqtt\Packet\V5;
@@ -51,7 +51,7 @@ class Subscribe extends Action
         $denied = $connection->protocol >= 5 ? V5::REASON_NOT_AUTHORIZED : V3::SUBSCRIBE_FAILURE;
 
         $consoleDatabase = getConsoleDB();
-        $project = $consoleDatabase->getAuthorization()->skip(fn () => $consoleDatabase->getDocument('projects', $connection->projectId));
+        $project = $consoleDatabase->getAuthorization()->skip(fn () => $consoleDatabase->getDocument('projects', $connection->prefix));
         $projectDB = getProjectDB($project);
 
         // The subscriber's roles, resolved once, to enforce each topic's subscribe ACL below.
@@ -118,7 +118,7 @@ class Subscribe extends Action
             $topicQos = $topicDocument->getAttribute('qos');
             $grantedQos = min($requestedQos, $topicQos === null ? Packet::QOS_1 : (int) $topicQos);
 
-            $mqtt->subscribe($connection->projectId, $connection->fd, '', [], [$filter], [], $grantedQos);
+            $mqtt->subscribe($connection->prefix, $connection->fd, '', [], [$filter], [], $grantedQos);
             $granted .= chr($grantedQos);
             $mqtt->subscriptions->add(1, ['result' => 'granted']);
 
@@ -151,7 +151,7 @@ class Subscribe extends Action
 
         $cache = getCache();
 
-        $cursorKey = 'appwrite:push:cursor:' . $connection->projectId . ':' . $connection->identity['userId'] . ':' . $connection->getClientId();
+        $cursorKey = 'appwrite:push:cursor:' . $connection->prefix . ':' . $connection->identity['userId'] . ':' . $connection->getClientId();
 
         // A clean-start session discards any persisted cursor before resuming.
         if ($connection->cleanStart) {

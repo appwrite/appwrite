@@ -3,9 +3,9 @@
 namespace Appwrite\Mqtt\Handlers;
 
 use Appwrite\Messaging\Adapter\Mqtt;
-use Appwrite\Mqtt\Connection;
 use Appwrite\Mqtt\Dispatcher;
 use Appwrite\Mqtt\Response;
+use Utopia\Mqtt\Connection;
 use Utopia\Mqtt\Packet;
 use Utopia\Mqtt\Packet\V3;
 use Utopia\Mqtt\Packet\V5;

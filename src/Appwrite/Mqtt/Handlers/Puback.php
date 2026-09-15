@@ -3,9 +3,9 @@
 namespace Appwrite\Mqtt\Handlers;
 
 use Appwrite\Messaging\Adapter\Mqtt;
-use Appwrite\Mqtt\Connection;
 use Appwrite\Mqtt\Dispatcher;
 use Appwrite\Mqtt\Response;
+use Utopia\Mqtt\Connection;
 use Utopia\Mqtt\Packet;
 use Utopia\Mqtt\Packet\V5;
 use Utopia\Platform\Action;
@@ -40,7 +40,7 @@ class Puback extends Action
         }
 
         $connectionMetdata = $mqtt->getConnection($connection->fd);
-        if ($connectionMetdata['userId'] !== $connection->identity['userId'] || $connectionMetdata['projectId'] !== $connection->projectId) {
+        if ($connectionMetdata['userId'] !== $connection->identity['userId'] || $connectionMetdata['prefix'] !== $connection->prefix) {
             $response->send(V5::disconnect(V5::REASON_NOT_AUTHORIZED));
             $response->close();
             return;
@@ -63,7 +63,7 @@ class Puback extends Action
         // sequence it just acked — so an out-of-order ack can't skip a still-unacked
         // message. Only ever move the cursor forward, so two acks at once can't rewind it.
         $cache = getCache();
-        $cursorKey = 'appwrite:push:cursor:' . $connection->projectId . ':' . $connection->identity['userId'] . ':' . $connection->getClientId();
+        $cursorKey = 'appwrite:push:cursor:' . $connection->prefix . ':' . $connection->identity['userId'] . ':' . $connection->getClientId();
         $topic = $delivery['topic'];
         $cursor = (int) $delivery['cursor'];
 

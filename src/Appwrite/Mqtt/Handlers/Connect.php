@@ -3,11 +3,11 @@
 namespace Appwrite\Mqtt\Handlers;
 
 use Appwrite\Messaging\Adapter\Mqtt;
-use Appwrite\Mqtt\Connection;
 use Appwrite\Mqtt\Dispatcher;
 use Appwrite\Mqtt\Response;
 use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
+use Utopia\Mqtt\Connection;
 use Utopia\Mqtt\Packet;
 use Utopia\Mqtt\Packet\V3;
 use Utopia\Mqtt\Packet\V5;
@@ -63,7 +63,7 @@ class Connect extends Action
         }
 
         $projectId = $user['projectId'] ?? '';
-        $connection->projectId = $projectId;
+        $connection->prefix = $projectId;
         Span::add('project.id', $projectId);
         Span::add('mqtt.auth_method', $authMethod);
 
@@ -102,8 +102,14 @@ class Connect extends Action
             }
         }
 
-        // The client id can only be resolved once the identity is known.
-        $connection->setClientId(Packet::getClientId($body));
+        // The per-device session anchor: the client-supplied id, or an account-level fallback so
+        // reconnects resume the same session (the offline-replay cursor is keyed on it). Resolved
+        // here rather than in the library, which only server-assigns a generic id for an empty one.
+        $clientId = Packet::getClientId($body);
+        if ($clientId === '') {
+            $clientId = 'custom_' . $connection->prefix . '_' . ($connection->identity['userId'] ?? '');
+        }
+        $connection->setClientId($clientId);
         Span::add('mqtt.client_id', $connection->getClientId());
 
         $mqtt->connectionsOpened->add(1, ['auth_method' => $authMethod, 'result' => 'accepted']);
