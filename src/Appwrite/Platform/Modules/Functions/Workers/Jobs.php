@@ -787,11 +787,6 @@ class Jobs extends Action
      */
     protected function schedule(Database $dbForProject, Database $dbForPlatform, Document $resource, Document $project): void
     {
-        $scheduleId = $resource->getAttribute('scheduleId', '');
-        if ($scheduleId === '') {
-            return;
-        }
-
         $resource = $dbForProject->findOne($resource->getCollection(), [
             Query::equal('$id', [$resource->getId()]),
             Query::equal('$sequence', [$resource->getSequence()]),
@@ -799,6 +794,11 @@ class Jobs extends Action
         if ($resource->isEmpty()) {
             return;
         }
+        $scheduleId = $resource->getAttribute('scheduleId', '');
+        if ($scheduleId === '') {
+            return;
+        }
+
         $queries = [
             Query::equal('$id', [$scheduleId]),
             Query::equal('projectInternalId', [$project->getSequence()]),
@@ -806,6 +806,12 @@ class Jobs extends Action
             Query::equal('resourceId', [$resource->getId()]),
             Query::equal('resourceInternalId', [$resource->getSequence()]),
         ];
+        // Legacy resources may predate scheduleInternalId. Their full owner
+        // identity still scopes the lookup; newer resources also bind the row.
+        $scheduleInternalId = $resource->getAttribute('scheduleInternalId');
+        if ($scheduleInternalId !== null && $scheduleInternalId !== '') {
+            $queries[] = Query::equal('$sequence', [$scheduleInternalId]);
+        }
         $schedule = $dbForPlatform->findOne('schedules', $queries);
         if ($schedule->isEmpty()) {
             return;

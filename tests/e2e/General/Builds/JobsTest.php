@@ -362,6 +362,7 @@ final class JobsTest extends TestCase
             '$id' => 'schedule', 'region' => 'default', 'projectId' => 'console', 'projectInternalId' => '0', 'resourceId' => $resource->getId(), 'resourceInternalId' => $resource->getSequence(),
             'resourceType' => 'function', 'active' => false, 'schedule' => '* * * * *',
         ]));
+        $this->database->updateDocument('functions', $resource->getId(), new Document(['scheduleInternalId' => $schedule->getSequence()]));
         $this->cache->save('jobs-exit-' . $deployment->getId(), true);
         if ($replaceSchedule) {
             $this->database->before(Database::EVENT_DOCUMENTS_UPDATE, 'replace-schedule', function (string $sql): string {
@@ -519,6 +520,42 @@ final class JobsTest extends TestCase
     {
         yield 'log' => ['log', ['lines' => ['current output']], 'building'];
         yield 'failed exit' => ['exit', ['exitCode' => 1], 'failed'];
+    }
+
+    #[\PHPUnit\Framework\Attributes\DataProvider('scheduleIdentities')]
+    public function testCompleteScheduleIdentity(bool $legacy, bool $recreated): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $resource = $this->resource('functions', ['scheduleId' => 'schedule', 'schedule' => '* * * * *']);
+        $deployment = $this->deployment($resource);
+        $attributes = [
+            '$id' => 'schedule', 'region' => 'default', 'projectId' => 'console', 'projectInternalId' => '0',
+            'resourceId' => $resource->getId(), 'resourceInternalId' => $resource->getSequence(),
+            'resourceType' => SCHEDULE_RESOURCE_TYPE_FUNCTION, 'active' => false, 'schedule' => '0 * * * *',
+        ];
+        $schedule = $this->database->createDocument('schedules', new Document($attributes));
+        if (! $legacy) {
+            $this->database->updateDocument('functions', $resource->getId(), new Document(['scheduleInternalId' => $schedule->getSequence()]));
+        }
+        if ($recreated) {
+            $this->database->deleteDocument('schedules', 'schedule');
+            $this->database->createDocument('schedules', new Document($attributes));
+        }
+        $this->cache->save('jobs-exit-' . $deployment->getId(), true);
+
+        $this->enqueue($deployment, 'complete');
+        $this->runWorker();
+
+        $this->assertSame(! $recreated, $this->database->getDocument('schedules', 'schedule')->getAttribute('active'));
+    }
+
+    public static function scheduleIdentities(): \Iterator
+    {
+        yield 'legacy current owner' => [true, false];
+        yield 'persisted schedule identity' => [false, false];
+        yield 'reused schedule ID with same owner' => [false, true];
     }
 
     private function project(): Document
