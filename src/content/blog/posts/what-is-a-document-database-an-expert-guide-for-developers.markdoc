@@ -8,7 +8,7 @@ timeToRead: 5
 author: aishwari
 category: architecture
 featured: false
-unlisted: true
+unlisted: false
 faqs:
   - question: How is a document database different from a relational database?
     answer: A relational database stores data in structured tables with a fixed schema and uses joins to connect records. A document database stores related data together in flexible documents that can have different structures.
