@@ -39,6 +39,8 @@ use Utopia\Messaging\Adapter\SMS\Telesign;
 use Utopia\Messaging\Adapter\SMS\TextMagic;
 use Utopia\Messaging\Adapter\SMS\Twilio;
 use Utopia\Messaging\Adapter\SMS\Vonage;
+use Utopia\Messaging\Adapter\SMS\WhatsApp;
+use Utopia\Messaging\Adapter\SMS\WhatsApp\MetadataParameter as WhatsAppMetadataParameter;
 use Utopia\Messaging\Messages\Email;
 use Utopia\Messaging\Messages\Email\Attachment;
 use Utopia\Messaging\Messages\Push;
@@ -59,6 +61,8 @@ use function Swoole\Coroutine\batch;
 class Messaging extends Action
 {
     private ?SMSAdapter $adapter = null;
+
+    private ?SMSAdapter $whatsappAdapter = null;
 
     private Telemetry $telemetry;
 
@@ -117,7 +121,14 @@ class Messaging extends Action
                 $message = new Document($payload['message'] ?? []);
                 $recipients = $payload['recipients'] ?? [];
 
-                $this->sendInternalSMSMessage($message, $project, $recipients);
+                $this->sendInternalMessage(
+                    $message,
+                    $project,
+                    $recipients,
+                    $publisherForUsage,
+                    $payload['channel'] ?? null,
+                    (bool)($payload['fallback'] ?? false)
+                );
                 break;
             case MESSAGE_SEND_TYPE_EXTERNAL:
                 $messageId = $payload['messageId'];
@@ -812,14 +823,36 @@ class Messaging extends Action
         return $data;
     }
 
-    private function sendInternalSMSMessage(Document $message, Document $project, array $recipients): void
-    {
+    /**
+     * Deliver an internally generated message — a one-time passcode or an invite — over the channel the
+     * caller asked for. An unknown or absent channel is the SMS channel, so payloads enqueued before
+     * channels existed keep their behaviour.
+     *
+     * @param array<string> $recipients
+     * @throws \Exception
+     */
+    private function sendInternalMessage(
+        Document $message,
+        Document $project,
+        array $recipients,
+        UsagePublisher $publisherForUsage,
+        ?string $channel = null,
+        bool $fallback = false
+    ): void {
+        $whatsapp = \in_array($channel, [PHONE_OTP_CHANNEL_WHATSAPP, PHONE_OTP_CHANNEL_WHATSAPP_SMS], true);
+
         if ($this->adapter === null) {
             $this->adapter = $this->createInternalSMSAdapter();
         }
 
-        if ($this->adapter === null) {
-            throw new \Exception('SMS adapter is not set.');
+        if ($whatsapp && $this->whatsappAdapter === null) {
+            $this->whatsappAdapter = $this->createInternalWhatsAppAdapter();
+        }
+
+        $adapter = $whatsapp ? $this->whatsappAdapter : $this->adapter;
+
+        if ($adapter === null) {
+            throw new \Exception($whatsapp ? 'WhatsApp adapter is not set.' : 'SMS adapter is not set.');
         }
 
         if ($project->isEmpty()) {
@@ -838,18 +871,86 @@ class Messaging extends Action
 
         Span::add('message.country_code', CallingCode::fromPhoneNumber($recipients[0] ?? '') ?? 'unknown');
 
+        $data = $message->getAttribute('data');
+
+        // WhatsApp authentication templates carry the bare code, never rendered copy. The coalesce keeps
+        // a payload enqueued in the older shape, and already in flight, deliverable.
+        $code = $data['code'] ?? $data['content'];
+
         $sms = new SMS(
             $recipients,
-            $message->getAttribute('data')['content'],
+            $whatsapp ? $code : $data['content'],
             $from
         );
         $sms->setOrigin(MESSAGE_SEND_TYPE_INTERNAL);
 
-        // Attach the project ID so the SMS provider's delivery logs and
-        // webhooks can be attributed back to the originating project.
+        // Attach the project ID so the provider's delivery logs and webhooks can be
+        // attributed back to the originating project. Meta drops every metadata key it
+        // does not know, so callback data is the only attribution it echoes back.
+        $sms->setMetadata($whatsapp
+            ? [WhatsAppMetadataParameter::CALLBACK_DATA->value => $project->getId() . ':' . $message->getId()]
+            : [MetadataParameter::UUID->value => $project->getId()]);
+
+        $response = $adapter->send($sms);
+
+        if (!$whatsapp) {
+            return;
+        }
+
+        $errors = $this->getSendErrors($response);
+
+        if ($errors === []) {
+            return;
+        }
+
+        Span::add('message.error', \implode(', ', $errors));
+
+        if (!$fallback || $this->adapter === null) {
+            return;
+        }
+
+        $sms = new SMS($recipients, $data['content'], $from);
+        $sms->setOrigin(MESSAGE_SEND_TYPE_INTERNAL);
         $sms->setMetadata([MetadataParameter::UUID->value => $project->getId()]);
 
         $this->adapter->send($sms);
+
+        // Pairs with the controller's METRIC_AUTH_METHOD_WHATSAPP: one records the channel
+        // attempted, this one the channel that carried the code, so neither double counts.
+        $usage = new UsageContext();
+        $usage->addMetric(METRIC_AUTH_METHOD_PHONE, 1);
+
+        $publisherForUsage->enqueue(new Usage(
+            project: $project,
+            metrics: $usage->getMetrics(),
+        ));
+    }
+
+    /**
+     * Collect the error of every recipient the provider failed to deliver to.
+     *
+     * @param array<mixed> $response
+     * @return array<string>
+     */
+    private function getSendErrors(array $response): array
+    {
+        $errors = [];
+        $results = $response['results'] ?? [];
+
+        if (!\is_array($results)) {
+            return $errors;
+        }
+
+        foreach ($results as $result) {
+            if (!\is_array($result) || ($result['status'] ?? '') !== 'failure') {
+                continue;
+            }
+
+            $error = $result['error'] ?? '';
+            $errors[] = \is_string($error) && $error !== '' ? $error : 'Unknown error';
+        }
+
+        return $errors;
     }
 
 
@@ -891,6 +992,12 @@ class Messaging extends Action
             'inforu' => new Inforu(
                 $credentials['senderId'] ?? '',
                 $credentials['apiKey'] ?? '',
+            ),
+            'whatsapp' => new WhatsApp(
+                $credentials['accessToken'] ?? '',
+                $credentials['phoneNumberId'] ?? '',
+                $credentials['template'] ?? '',
+                $credentials['language'] ?? WhatsApp::DEFAULT_LANGUAGE,
             ),
             default => null
         };
@@ -1261,12 +1368,41 @@ class Messaging extends Action
         return $geosms;
     }
 
+    /**
+     * Build the adapter that carries internal one-time passcodes over WhatsApp.
+     *
+     * Unlike the SMS provider this takes a single DSN: there is no per-country routing to do, because
+     * WhatsApp reaches every country from the one business phone number.
+     */
+    private function createInternalWhatsAppAdapter(): ?SMSAdapter
+    {
+        $provider = System::getEnv('_APP_WHATSAPP_PROVIDER', '');
+
+        if (empty($provider)) {
+            return null;
+        }
+
+        $dsn = new DSN($provider);
+
+        // The username differs from the SMS mock's so end-to-end tests can tell the two
+        // channels apart at the request catcher.
+        $adapter = $dsn->getHost() === 'mock'
+            ? (new Mock('whatsapp', 'password'))->setEndpoint('http://request-catcher-sms:5000/')
+            : $this->getSmsAdapter($this->createProviderFromDSN($dsn));
+
+        $adapter?->setTelemetry($this->telemetry);
+
+        return $adapter;
+    }
+
     private function createProviderFromDSN(DSN $dsn): Document
     {
         $host = $dsn->getHost();
         $password = $dsn->getPassword();
         $user = $dsn->getUser();
-        $from = System::getEnv('_APP_SMS_FROM');
+        // WhatsApp sends from the phone number behind the DSN's phone number ID, so a
+        // deployment that only configures WhatsApp never sets a sender.
+        $from = System::getEnv('_APP_SMS_FROM', '');
 
         $provider = new Document([
             '$id' => ID::unique(),
@@ -1308,6 +1444,12 @@ class Messaging extends Action
                 'inforu' => [
                     'senderId' => $user,
                     'apiKey' => $password,
+                ],
+                'whatsapp' => [
+                    'phoneNumberId' => $user,
+                    'accessToken' => $password,
+                    'template' => $dsn->getParam('template'),
+                    'language' => $dsn->getParam('language', WhatsApp::DEFAULT_LANGUAGE),
                 ],
                 default => null
             },
