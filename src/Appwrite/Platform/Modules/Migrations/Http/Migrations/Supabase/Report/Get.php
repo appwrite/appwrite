@@ -74,9 +74,14 @@ class Get extends Action
             $supabase = new Supabase($endpoint, $apiKey, $databaseHost, 'postgres', $username, $password, $port);
             $report = $supabase->report($resources);
         } catch (\Throwable $e) {
+            $message = !empty($e->getMessage())
+                ? 'Failed to generate migration report: ' . $e->getMessage()
+                : 'Unable to connect to the migration source. Please verify your credentials and ensure the source is reachable from this server. Check for network restrictions such as firewalls, IP allowlists, or outbound connectivity limits.';
+
             throw new Exception(
-                Exception::MIGRATION_PROVIDER_ERROR,
-                'Unable to connect to the migration source. Please verify your credentials and ensure the source is reachable from this server. Check for network restrictions such as firewalls, IP allowlists, or outbound connectivity limits.'
+                type: Exception::MIGRATION_PROVIDER_ERROR,
+                message: $message,
+                previous: $e
             );
         }
 
