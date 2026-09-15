@@ -251,6 +251,12 @@ return function (Container $context): void {
     $context->set('allowedHostnames', function (array $platform, Document $project, Document $rule, Document $devKey, Request $request) {
         $allowed = [...($platform['hostnames'] ?? [])];
 
+        /* Add the console host, the default OAuth2 redirects land on it even when _APP_CONSOLE_URL points elsewhere */
+        $consoleHostname = \parse_url($platform['consoleUrl'] ?? '', PHP_URL_HOST);
+        if (! empty($consoleHostname)) {
+            $allowed[] = $consoleHostname;
+        }
+
         /* Add platform configured hostnames */
         if (! $project->isEmpty() && $project->getId() !== 'console') {
             $platforms = $project->getAttribute('platforms', []);
