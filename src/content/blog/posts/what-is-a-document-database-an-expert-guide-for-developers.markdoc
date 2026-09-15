@@ -77,7 +77,7 @@ Relational databases follow **ACID** guarantees (Atomicity, Consistency, Isolati
 
 Neither model is strictly better. For a deeper side-by-side, read [Document vs relational databases: finding the right fit for your project](/blog/post/document-vs-relational-databases-vibecoding).
 
-## Do document databases support relationships?
+# Do document databases support relationships?
 
 Yes, but they handle them differently than SQL. A document database gives you two options: **embedding** and **referencing**.
 
