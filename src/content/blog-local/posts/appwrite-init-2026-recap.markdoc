@@ -62,7 +62,7 @@ During our first livestream of the week, the team walked through the new experie
 
 # Day 2: Native PostgreSQL comes to Appwrite
 
-Day 2 was all about something developers have been asking us for: **native PostgreSQL databases on Appwrite**.
+Day 2 was all about something developers have been asking us for: [native PostgreSQL databases on Appwrite](/blog/post/appwrite-now-speaks-postgresql).
 
 You can now provision and manage PostgreSQL directly inside an Appwrite project while continuing to use the PostgreSQL ecosystem you already know. Existing drivers, ORMs, extensions, and development workflows can continue working with your database without requiring a proprietary abstraction in between.
 
