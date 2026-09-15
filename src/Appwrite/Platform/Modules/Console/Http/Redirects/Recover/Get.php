@@ -15,4 +15,9 @@ class Get extends Base
     {
         return '/recover';
     }
+
+    protected function getTarget(string $path): string
+    {
+        return '/reset';
+    }
 }

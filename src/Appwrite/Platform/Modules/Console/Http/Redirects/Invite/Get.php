@@ -15,4 +15,9 @@ class Get extends Base
     {
         return '/invite';
     }
+
+    protected function getTarget(string $path): string
+    {
+        return '/join';
+    }
 }

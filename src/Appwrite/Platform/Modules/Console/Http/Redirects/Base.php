@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Console\Http\Redirects;
 
+use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Platform\Action;
@@ -21,6 +22,14 @@ abstract class Base extends Action
      */
     abstract protected function getPath(): string;
 
+    /**
+     * Console route to land on, the request path unless the console names it differently.
+     */
+    protected function getTarget(string $path): string
+    {
+        return $path;
+    }
+
     public function __construct()
     {
         $this
@@ -31,13 +40,21 @@ abstract class Base extends Action
             ->label('scope', 'home')
             ->inject('request')
             ->inject('response')
+            ->inject('platform')
             ->callback($this->action(...));
     }
 
-    public function action(Request $request, Response $response): void
+    public function action(Request $request, Response $response, array $platform): void
     {
+        $consoleUrl = $platform['consoleUrl'] ?? '';
+
+        // On the console's own host the proxy serves these paths, so redirecting would loop
+        if ($request->getHostname() === \parse_url($consoleUrl, PHP_URL_HOST)) {
+            throw new Exception(Exception::GENERAL_ROUTE_NOT_FOUND);
+        }
+
         $url = parse_url($request->getURI());
-        $target = "/console" . ($url['path'] ?? '');
+        $target = $consoleUrl . $this->getTarget($url['path'] ?? '');
         $params = $request->getParams();
         if (!empty($params)) {
             $target .= "?" . \http_build_query($params);

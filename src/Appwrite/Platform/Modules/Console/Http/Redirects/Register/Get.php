@@ -15,4 +15,9 @@ class Get extends Base
     {
         return '/register/*';
     }
+
+    protected function getTarget(string $path): string
+    {
+        return '/sign-up';
+    }
 }

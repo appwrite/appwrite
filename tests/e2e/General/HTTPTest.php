@@ -9,7 +9,6 @@ use Tests\E2E\Scopes\ProjectNone;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideNone;
 use Utopia\Config\Config;
-use Utopia\System\System;
 
 final class HTTPTest extends Scope
 {
@@ -121,11 +120,11 @@ final class HTTPTest extends Scope
 
     public function testDefaultOAuth2()
     {
-        $response = $this->client->call(Client::METHOD_GET, '/console/auth/oauth2/success', $this->getHeaders());
+        $response = $this->client->call(Client::METHOD_GET, '/auth/oauth2/success', $this->getHeaders());
 
         $this->assertEquals(200, $response['headers']['status-code']);
 
-        $response = $this->client->call(Client::METHOD_GET, '/console/auth/oauth2/failure', $this->getHeaders());
+        $response = $this->client->call(Client::METHOD_GET, '/auth/oauth2/failure', $this->getHeaders());
 
         $this->assertEquals(200, $response['headers']['status-code']);
     }
@@ -240,10 +239,10 @@ final class HTTPTest extends Scope
 
         $endpoint = '/invite?membershipId=123&userId=asdf';
 
-        $response = $this->client->call(Client::METHOD_GET, $endpoint, [], [], true, false);
+        // Requests on the console's own host are left to the proxy, so arrive on the API host
+        $response = $this->client->call(Client::METHOD_GET, $endpoint, ['host' => 'appwrite.test'], [], true, false);
 
-        $location = System::getEnv('_APP_CONSOLE_URL_SCHEME', 'legacy') !== 'root' ? '/console' . $endpoint : null;
-        $this->assertEquals($location, $response['headers']['location'] ?? null);
+        $this->assertEquals('http://localhost/join?membershipId=123&userId=asdf', $response['headers']['location']);
     }
 
     public function testConsoleServed()
