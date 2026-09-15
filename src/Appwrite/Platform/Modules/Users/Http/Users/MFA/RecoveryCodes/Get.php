@@ -31,6 +31,7 @@ class Get extends Action
             ->desc('Get MFA recovery codes')
             ->groups(['api', 'users'])
             ->label('scope', 'users.read')
+            ->label('impersonation', 'deny')
             ->label('usage.metric', 'users.{scope}.requests.read')
             ->label('sdk', [
                 new Method(

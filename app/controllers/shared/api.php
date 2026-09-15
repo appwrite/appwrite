@@ -342,13 +342,16 @@ Http::init()
         $scopes = \array_unique($scopes);
 
         // Intentional: impersonators get users.read so they can discover a target user
-        // before impersonation starts, and keep that access while impersonating.
+        // before impersonation starts, and keep that access while impersonating. The grant
+        // skips routes labelled `impersonation: deny`, which return other users' credentials
+        // (MFA recovery codes, challenge secrets).
         if (
             !$user->isEmpty()
             && (
                 $user->getAttribute('impersonator', false)
                 || !$impersonatorUser->isEmpty()
             )
+            && $route->getLabel('impersonation', null) !== 'deny'
         ) {
             $scopes[] = 'users.read';
             $scopes = \array_unique($scopes);
@@ -461,6 +464,21 @@ Http::init()
 
         if (! empty($method)) {
             $namespace = \strtolower($method->getNamespace());
+
+            // Impersonation shows an operator the target's account without letting them change it,
+            // so account writes are refused; MFA-group routes act on the operator's own session and
+            // stay open. The `impersonation` route label overrides this: 'deny' refuses a route on
+            // any method (credentials), 'allow' keeps an account write open (JWTs for the operator).
+            if (! $impersonatorUser->isEmpty()) {
+                $impersonation = $route->getLabel('impersonation', null);
+                $isAccountWrite = $namespace === 'account'
+                    && $request->getMethod() !== Request::METHOD_GET
+                    && ! \in_array('mfa', $route->getGroups());
+
+                if ($impersonation === 'deny' || ($isAccountWrite && $impersonation !== 'allow')) {
+                    throw new Exception(Exception::USER_IMPERSONATION_READ_ONLY);
+                }
+            }
 
             // DocumentsDB runs only on MongoDB and VectorsDB only on PostgreSQL, while an
             // installation deploys just the engine backing the platform, so neither is on
