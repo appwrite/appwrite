@@ -1866,7 +1866,7 @@ return [
             ],
             [
                 'name' => '_APP_STATS_RESOURCES_INTERVAL',
-                'description' => 'Interval in seconds between full resource-count snapshots.',
+                'description' => 'Interval in seconds between resource-count snapshots. Each active project is counted once per interval, at a slot spread across it.',
                 'introduction' => '',
                 'default' => '3600',
                 'required' => false,
