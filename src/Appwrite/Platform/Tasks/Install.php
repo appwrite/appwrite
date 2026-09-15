@@ -576,7 +576,7 @@ class Install extends Action
         // there is no X.Y to re-derive a nightly tag from, and writing it back would keep
         // an install asking for the stable channel on nightly. The release the image was
         // built from is compiled in, and both channels take their tag from it.
-        if (\str_contains($version, 'nightly')) {
+        if ($this->isNightlyTag($version)) {
             $version = $stableVersion;
         }
 
@@ -846,6 +846,18 @@ class Install extends Action
             }
             throw $e;
         }
+    }
+
+    /**
+     * The tags nightly.yml publishes: `nightly`, `X.Y-nightly` and
+     * `X.Y-nightly.<date>`. A self-hoster's own tag that happens to mention the
+     * word is theirs, not this channel's, and is carried forward untouched.
+     */
+    private function isNightlyTag(string $version): bool
+    {
+        return $version === 'nightly'
+            || \str_ends_with($version, '-nightly')
+            || \str_contains($version, '-nightly.');
     }
 
     /**
