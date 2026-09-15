@@ -50,7 +50,7 @@ We opened Init with one of our biggest releases yet: **Appwrite 2.0**.
 
 The release marks a new chapter for the platform, with changes to both the infrastructure underneath Appwrite and the experience developers use every day.
 
-One of the biggest changes is our completely redesigned **Appwrite Console**, bringing the website and Console into a more connected experience. We also introduced **Appwrite Explorer**, giving developers a built-in workspace for interacting with Appwrite APIs directly from the Console.
+One of the biggest changes is our completely redesigned [**Appwrite Console**](/blog/post/announcing-console-iv), bringing the website and Console into a more connected experience. We also introduced [**Appwrite Explorer**](/blog/post/announcing-appwrite-explorer), giving developers a built-in workspace for interacting with Appwrite APIs directly from the Console, alongside [**Appwrite Terminal**](/blog/post/announcing-console-terminal), which brings the Appwrite CLI directly into the Console.
 
 Behind the scenes, Appwrite 2.0 is powered by **Hyperloop B**, our rebuilt engine designed to handle significantly more concurrent traffic. The new architecture allows Appwrite to handle up to **7x more requests**, giving the platform a stronger foundation for increasingly demanding workloads.
 
