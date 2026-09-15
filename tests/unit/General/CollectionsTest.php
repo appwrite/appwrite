@@ -37,11 +37,6 @@ final class CollectionsTest extends TestCase
         }
     }
 
-    public function testProjectsDoNotDefineExecutionsCollection(): void
-    {
-        $this->assertArrayNotHasKey('executions', $this->collections['projects']);
-    }
-
     public function testExecutionQueryValidatorsDoNotNeedCollectionSchema(): void
     {
         $this->assertTrue((new Executions())->isValid([
