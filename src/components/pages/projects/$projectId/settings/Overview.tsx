@@ -80,7 +80,7 @@ import { PremiumGeoDBCard } from './_components/PremiumGeoDBCard'
 import { buildVcsAuthUrl, type VcsProviderId } from '@/lib/vcs/providers'
 import { getApiEndpoint } from '@/lib/appwrite/sdk'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
-import { getActiveProfileFeatures } from '@/lib/console-profiles'
+import { canSwitchOrganizations } from '@/lib/console-access-checks'
 import { useScrollToCard } from '@/hooks/use-scroll-to-card'
 import { useT } from '@/lib/i18n/translate'
 
@@ -203,7 +203,6 @@ export function ProjectSettingsOverview({
   const t = useT()
   const { features } = useConsoleProfile()
   const supportsMultiRegion = features.multiRegion
-  const supportsMultiTenancy = features.multiTenancy
   const navigate = useNavigate()
   useScrollToCard()
   const queryClient = useQueryClient()
@@ -566,7 +565,7 @@ export function ProjectSettingsOverview({
   // Mutation to transfer project
   const transferProjectMutation = useMutation({
     mutationFn: async (teamId: string) => {
-      if (!getActiveProfileFeatures().multiTenancy) {
+      if (!supportsMultiTenancy) {
         throw new Error(
           'This console profile does not support transferring between organizations',
         )
@@ -741,6 +740,10 @@ export function ProjectSettingsOverview({
         label: org.name,
       }))
   }, [allOrganizations, project])
+  const supportsMultiTenancy = canSwitchOrganizations(
+    features,
+    allOrganizations.length,
+  )
 
   // Build a VCS provider authorization URL (github, gitlab, ...)
   const getVcsAuthUrl = (
@@ -1217,54 +1220,60 @@ function ChangeOrganizationSection({
           </h3>
         </div>
         <div className="border-t border-border" />
-        <div className="px-6 py-4">
-          <p className="text-[13px] text-muted-foreground mb-4">
-            {t('To transfer this project, you must be a member of both the current and target organization. Select a destination below.')}
-          </p>
-          {hasNoTargetOrgs && (
-            <Alert className="mb-4">
-              <AlertTriangle className="h-4 w-4" />
-              <AlertDescription className="text-[13px]">
-                {t('You do not have any organizations you can transfer this project to. Create or join another organization to transfer.')}
-              </AlertDescription>
-            </Alert>
-          )}
-          <Label
-            htmlFor="organization"
-            className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground mb-1.5 block"
-          >
-            {t('Move to')}
-          </Label>
-          <Select
-            value={selectedOrgId}
-            onValueChange={onOrgChange}
-            disabled={organizationsLoading}
-          >
-            <SelectTrigger id="organization" className="mt-2 h-9 max-w-sm">
-              <SelectValue
-                placeholder={
-                  organizationsLoading
-                    ? t('Loading organizations...')
-                    : t('Select destination')
-                }
-              />
-            </SelectTrigger>
-            <SelectContent>
-              {organizations.length === 0 ? (
-                <div className="px-2 py-1.5 text-[13px] text-muted-foreground">
-                  {organizationsLoading
-                    ? t('Loading...')
-                    : t('No other organizations available')}
-                </div>
-              ) : (
-                organizations.map((org) => (
-                  <SelectItem key={org.value} value={org.value}>
-                    {org.label}
-                  </SelectItem>
-                ))
+        <div className="px-6 py-4 @container">
+          <div className="flex gap-6 @[600px]:flex-row flex-col">
+            <div className="@[600px]:w-64 shrink-0">
+              <p className="text-[13px] text-muted-foreground">
+                {t('To transfer this project, you must be a member of both the current and target organization. Select a destination below.')}
+              </p>
+            </div>
+            <div className="flex-1 min-w-0">
+              {hasNoTargetOrgs && (
+                <Alert className="mb-4">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertDescription className="text-[13px]">
+                    {t('You do not have any organizations you can transfer this project to. Create or join another organization to transfer.')}
+                  </AlertDescription>
+                </Alert>
               )}
-            </SelectContent>
-          </Select>
+              <Label
+                htmlFor="organization"
+                className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground mb-1.5 block"
+              >
+                {t('Move to')}
+              </Label>
+              <Select
+                value={selectedOrgId}
+                onValueChange={onOrgChange}
+                disabled={organizationsLoading}
+              >
+                <SelectTrigger id="organization" className="mt-2 h-9 max-w-sm">
+                  <SelectValue
+                    placeholder={
+                      organizationsLoading
+                        ? t('Loading organizations...')
+                        : t('Select destination')
+                    }
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  {organizations.length === 0 ? (
+                    <div className="px-2 py-1.5 text-[13px] text-muted-foreground">
+                      {organizationsLoading
+                        ? t('Loading...')
+                        : t('No other organizations available')}
+                    </div>
+                  ) : (
+                    organizations.map((org) => (
+                      <SelectItem key={org.value} value={org.value}>
+                        {org.label}
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
         </div>
         <div className="px-6 py-4 border-t border-border bg-muted/30">
           {isMoveDisabled ? (

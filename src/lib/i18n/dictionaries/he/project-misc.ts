@@ -277,6 +277,27 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Search rules...': 'חיפוש כללים...',
   'Search logs...': 'חיפוש בלוגים...',
   'Create rule': 'יצירת כלל',
+  'Attack mode': 'מצב התקפה',
+  'Turn on attack mode': 'הפעלת מצב התקפה',
+  'Turn off attack mode': 'השבתת מצב התקפה',
+  'Turn on': 'הפעלה',
+  'Turn off': 'השבתה',
+  'Attack mode is on': 'מצב התקפה פעיל',
+  'Attack mode is off': 'מצב התקפה כבוי',
+  'Failed to turn on attack mode': 'הפעלת מצב התקפה נכשלה',
+  'Failed to turn off attack mode': 'השבתת מצב התקפה נכשלה',
+  'Challenge every visitor until you turn it off.':
+    'אתגרו כל מבקר עד שתשבתו את המצב.',
+  'Visitors must pass a challenge before they can continue.':
+    'מבקרים חייבים לעבור אתגר לפני שיוכלו להמשיך.',
+  'Bypass rules with a lower priority number still apply.':
+    'כללי עקיפה עם מספר עדיפות נמוך יותר עדיין חלים.',
+  'New requests will no longer be challenged by attack mode.':
+    'בקשות חדשות לא יאותגרו יותר על ידי מצב התקפה.',
+  'Your other firewall rules stay in place.':
+    'שאר כללי חומת האש נשארים במקומם.',
+  'Attack mode is on. Every visitor is challenged.':
+    'מצב התקפה פעיל. כל מבקר מאותגר.',
   'Apply as firewall rule': 'החלה ככלל חומת אש',
   "You don't have permission to create firewall rules.":
     'אין לכם הרשאה ליצור כללי חומת אש.',
@@ -369,6 +390,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Challenge matching requests before allowing them through.':
     'אתגרו בקשות תואמות לפני שתאפשרו להן לעבור.',
   'Lower numbers are evaluated first.': 'מספרים נמוכים יותר מוערכים קודם.',
+  'A rule with priority 10 is stronger than one with priority 100.':
+    'כלל עם עדיפות 10 חזק יותר מכלל עם עדיפות 100.',
   'Resource ID': 'מזהה משאב',
   'Function ID': 'מזהה פונקציה',
   'Site ID': 'מזהה אתר',
@@ -628,7 +651,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
   System: 'מערכת',
   'Project API key': 'מפתח API של פרויקט',
   'Account API key': 'מפתח API של חשבון',
-  'Organization API key': 'מפתח API של ארגון',
+  'Partners API key': 'מפתח API של שותפים',
   document: 'מסמך',
   collection: 'אוסף',
   database: 'מסד נתונים',
@@ -651,6 +674,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Could not copy link': 'לא ניתן היה להעתיק את הקישור',
   Email: 'אימייל',
   'Actor ID': 'מזהה מבצע',
+  'Actor email': 'אימייל מבצע',
   'Actor type': 'סוג מבצע',
   'Via MCP': 'דרך MCP',
   'Resource type (API)': 'סוג משאב (API)',
@@ -1276,7 +1300,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Create manual deployment': 'יצירת פריסה ידנית',
   'Upload a .tar.gz archive of your code. Maximum file size is':
     'העלו ארכיון ‎.tar.gz של הקוד שלכם. גודל הקובץ המקסימלי הוא',
-  'Click to select a .tar.gz file': 'לחצו לבחירת קובץ ‎.tar.gz',
+  'Drop a .tar.gz file here or click to browse':
+    'גררו קובץ ‎.tar.gz לכאן או לחצו לעיון',
   'Uploading…': 'מעלה…',
   Redeploy: 'פריסה מחדש',
   Timeout: 'Timeout',
@@ -1462,15 +1487,14 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'פרסו את הפונקציה שלכם באמצעות ה-CLI של Appwrite על ידי הרצת הפקודה הבאה בתוך תיקיית הפונקציה.', // pragma: allowlist secret
   "Deploy your site using the Appwrite CLI by running the following command inside your site's folder.":
     'פרסו את האתר שלכם באמצעות ה-CLI של Appwrite על ידי הרצת הפקודה הבאה בתוך תיקיית האתר.', // pragma: allowlist secret
-  'Historic data is not available through the new usage API.':
-    'נתונים היסטוריים אינם זמינים דרך ה-API החדש של נתוני שימוש.',
-  'Common filename for provider {} blocks. Example: custom endpoint and self_signed when Appwrite is not at cloud.appwrite.io. Secrets stay in tfvars, env, or CI - not in .tf files. One required_providers block per root module (see main.tf).':
+ 'Common filename for provider {} blocks. Example: custom endpoint and self_signed when Appwrite is not at cloud.appwrite.io. Secrets stay in tfvars, env, or CI - not in .tf files. One required_providers block per root module (see main.tf).':
     'שם קובץ נפוץ לבלוקים של provider {}. דוגמה: נקודת קצה מותאמת ו-self_signed כאשר Appwrite אינו ב-cloud.appwrite.io. סודות נשארים ב-tfvars, במשתני סביבה או ב-CI, לא בקובצי ‎.tf. בלוק required_providers אחד לכל מודול שורש (ראו main.tf).', // pragma: allowlist secret
   'About GBH': 'אודות GBH',
   Bandwidth: 'רוחב פס',
   'Bandwidth over time': 'רוחב פס לאורך זמן',
   Buckets: 'באקטים',
   'Chart interval': 'מרווח תרשים',
+  '1m': '1 דק׳',
   '15m': '15 דק׳',
   '1h': '1 שע׳',
   '1d': '1 יום',
@@ -1719,6 +1743,18 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'נפח בקשות מקובץ לפי מדינת המקור.',
   'Request volume grouped by caller city.':
     'נפח בקשות מקובץ לפי עיר המקור.',
+  'Request volume grouped by caller internet service provider.':
+    'נפח בקשות מקובץ לפי ספק האינטרנט של המקור.',
+  'Request volume grouped by caller autonomous system number.':
+    'נפח בקשות מקובץ לפי מספר מערכת אוטונומית של המקור.',
+  'Request volume grouped by caller autonomous system organization.':
+    'נפח בקשות מקובץ לפי ארגון המערכת האוטונומית של המקור.',
+  'Request volume grouped by caller connection type.':
+    'נפח בקשות מקובץ לפי סוג החיבור של המקור.',
+  'Request volume grouped by caller connection usage type.':
+    'נפח בקשות מקובץ לפי סוג השימוש בחיבור של המקור.',
+  'Request volume grouped by caller connection organization.':
+    'נפח בקשות מקובץ לפי ארגון החיבור של המקור.',
   'Request volume grouped by caller hostname.':
     'נפח בקשות מקובץ לפי שם המארח של המקור.',
   'Request volume grouped by caller IP address.':
@@ -1742,6 +1778,18 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'רוחב פס מקובץ לפי מקטע שירות של Appwrite.', // pragma: allowlist secret
   'Bandwidth grouped by caller country.': 'רוחב פס מקובץ לפי מדינת המקור.',
   'Bandwidth grouped by caller city.': 'רוחב פס מקובץ לפי עיר המקור.',
+  'Bandwidth grouped by caller internet service provider.':
+    'רוחב פס מקובץ לפי ספק האינטרנט של המקור.',
+  'Bandwidth grouped by caller autonomous system number.':
+    'רוחב פס מקובץ לפי מספר מערכת אוטונומית של המקור.',
+  'Bandwidth grouped by caller autonomous system organization.':
+    'רוחב פס מקובץ לפי ארגון המערכת האוטונומית של המקור.',
+  'Bandwidth grouped by caller connection type.':
+    'רוחב פס מקובץ לפי סוג החיבור של המקור.',
+  'Bandwidth grouped by caller connection usage type.':
+    'רוחב פס מקובץ לפי סוג השימוש בחיבור של המקור.',
+  'Bandwidth grouped by caller connection organization.':
+    'רוחב פס מקובץ לפי ארגון החיבור של המקור.',
   'Bandwidth grouped by caller hostname.':
     'רוחב פס מקובץ לפי שם המארח של המקור.',
   'Bandwidth grouped by caller IP address.':
@@ -1758,6 +1806,16 @@ export const heProjectMiscDictionary: Record<string, string> = {
   SDK: 'SDK',
   'SDK version': 'גרסת SDK',
   'Caller city': 'עיר מקור',
+  'AS number': 'מספר AS',
+  'AS organization': 'ארגון AS',
+  'Connection usage type': 'סוג שימוש בחיבור',
+  'Connection organization': 'ארגון חיבור',
+  ISPs: 'ספקי ISP',
+  'AS numbers': 'מספרי AS',
+  'AS organizations': 'ארגוני AS',
+  'Connection types': 'סוגי חיבור',
+  'Connection usage types': 'סוגי שימוש בחיבור',
+  'Connection organizations': 'ארגוני חיבור',
   'API paths': 'נתיבי API',
   'Operations grouped by database.': 'פעולות מקובצות לפי מסד נתונים.',
   'Operations grouped by resource.': 'פעולות מקובצות לפי משאב.',
@@ -2191,6 +2249,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
   Summary: 'סיכום',
   'Supabase endpoint': 'נקודת קצה של Supabase',
   TablesDB: 'TablesDB',
+  Embeddings: 'Embeddings',
   Teams: 'צוותים',
   'Test email sent to': 'אימייל בדיקה נשלח אל',
   'The target organization’s pricing plan may limit features or usage (e.g. executions, storage, or team size) for this project.':
@@ -2362,6 +2421,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Draft updated': 'הטיוטה עודכנה',
   'EU region': 'אזור האיחוד האירופי',
   'Email content': 'תוכן האימייל',
+  'Email preview': 'תצוגה מקדימה של האימייל',
   'Email subject': 'נושא האימייל',
   'Enable for development builds, disable for production.':
     'הפעילו עבור גרסאות פיתוח, השביתו עבור סביבת ייצור.',
@@ -2371,6 +2431,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'הפעילו את מצב HTML אם ההודעה שלכם מכילה תגיות HTML.',
   'Enable when your Mailgun account is hosted in the EU.':
     'הפעילו כאשר חשבון ה-Mailgun שלכם מאוחסן באיחוד האירופי.',
+  'Select the AWS region of your verified SES identity.':
+    'בחרו את אזור ה-AWS שבו זהות ה-SES המאומתת שלכם נמצאת.',
   'Enter the SMS body for this message. Delivery uses topics, users, and targets you add on this page.':
     'הזינו את גוף ה-SMS עבור ההודעה הזו. השליחה משתמשת בנושאים, במשתמשים וביעדים שתוסיפו בעמוד זה.',
   'Failed to add subscribers': 'הוספת המנויים נכשלה',
@@ -2446,6 +2508,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'מחיקה לצמיתות של ההודעה הזו. פעולה זו אינה ניתנת לביטול.',
   'Permanently delete this topic and all its subscribers. This action cannot be undone.':
     'מחיקה לצמיתות של הנושא הזה וכל המנויים שלו. פעולה זו אינה ניתנת לביטול.',
+  'Phone number with the leading + and country code, or an alphanumeric sender ID.':
+    'מספר טלפון עם סימן ה-+ וקידומת המדינה, או מזהה שולח אלפאנומרי.',
   'Pick a bucket and file from Storage. It will be referenced as bucketId:fileId on the message.':
     'בחרו באקט וקובץ מאחסון. הקובץ יצוין בהודעה בתור bucketId:fileId.',
   'Pick specific channel targets for this message. Targets must match the message provider (email, SMS, or push).':
@@ -2506,12 +2570,15 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'שליחת התראות Push דרך APNS (iOS).',
   'Send push notifications via FCM (Android, iOS, web).':
     'שליחת התראות Push דרך FCM (Android, iOS, ווב).',
+  'Send transactional email through Amazon SES.':
+    'שליחת אימייל טרנזקציוני דרך Amazon SES.',
   'Send transactional email through Mailgun.':
     'שליחת אימייל טרנזקציוני דרך Mailgun.',
   'Send transactional email through Resend.':
     'שליחת אימייל טרנזקציוני דרך Resend.',
   'Send transactional email through SendGrid.':
     'שליחת אימייל טרנזקציוני דרך SendGrid.',
+  Sender: 'שולח',
   'Sender ID': 'מזהה שולח',
   'Sender Name': 'שם שולח',
   'Sender phone': 'טלפון שולח',
@@ -2609,6 +2676,89 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'אין לכם הרשאה ליצור מיגרציות.',
   "You don't have permission to create webhooks.":
     'אין לכם הרשאה ליצור webhooks.',
+  // SMTP quick setup (universal card: Resend today, Mailgun and SendGrid next)
+  'Connect an email provider and Appwrite fills in your SMTP settings automatically.':
+    'חברו ספק אימייל ו-Appwrite תמלא עבורכם את הגדרות ה-SMTP באופן אוטומטי.',
+  'Set up': 'הגדרה',
+  'Creates a sending-only API key for a verified domain.':
+    'יוצר מפתח API לשליחה בלבד עבור דומיין מאומת.',
+  'Creates a domain sending key for a verified domain.':
+    'יוצר מפתח שליחה לדומיין עבור דומיין מאומת.',
+  'Creates a restricted API key with mail send access.':
+    'יוצר מפתח API מוגבל עם הרשאת שליחת אימייל.',
+  'Failed to connect the email provider': 'החיבור לספק האימייל נכשל',
+  'The provider was authorized for a different Appwrite account. Try again while signed in to this account.':
+    'ההרשאה לספק ניתנה לחשבון Appwrite אחר. נסו שוב כשאתם מחוברים לחשבון הזה.',
+  'Loading domains…': 'טוען דומיינים…',
+  'Failed to load domains from the email provider':
+    'טעינת הדומיינים מספק האימייל נכשלה',
+  'No verified domains': 'אין דומיינים מאומתים',
+  'Add and verify a sending domain, then check again.':
+    'הוסיפו ואמתו דומיין שליחה, ואז בדקו שוב.',
+  'Manage domains': 'ניהול דומיינים',
+  'Check again': 'בדיקה חוזרת',
+  'The credential is restricted to this domain and can only send email.':
+    'פרטי הגישה מוגבלים לדומיין הזה ומאפשרים שליחת אימייל בלבד.',
+  'Must use the selected domain.': 'חייב להשתמש בדומיין שנבחר.',
+  'Enter a sender name.': 'הזינו שם שולח.',
+  'Enter a sender email on the selected domain.':
+    'הזינו אימייל שולח בדומיין שנבחר.',
+  'Authorization expired': 'ההרשאה פגה',
+  'Reconnect your provider account to continue.':
+    'חברו מחדש את חשבון הספק שלכם כדי להמשיך.',
+  'Failed to set up SMTP with the email provider':
+    'הגדרת ה-SMTP מול ספק האימייל נכשלה',
+  'Let Appwrite create the API key for a verified domain and fill these fields.':
+    'תנו ל-Appwrite ליצור את מפתח ה-API עבור דומיין מאומת ולמלא את השדות האלה.',
+  'Generate API key': 'יצירת מפתח API',
+  'One-click Resend sender': 'שולח Resend בקליק אחד',
+  'Creating the sending credential…': 'יוצר את פרטי הגישה לשליחה…',
+  'Failed to create the API key with the email provider':
+    'יצירת מפתח ה-API מול ספק האימייל נכשלה',
+  'API key created and filled in below. Review and create the provider.':
+    'מפתח ה-API נוצר ומולא למטה. בדקו ויצרו את הספק.',
+  'One-click setup': 'הגדרה בקליק אחד',
+  'Notify me': 'עדכנו אותי',
+  'You will be notified': 'נודיע לכם',
+  "You'll no longer be notified about this provider.":
+    'לא נודיע לכם יותר על הספק הזה.',
+  'Failed to update notification preferences': 'עדכון העדפות ההתראות נכשל',
+  "You'll be notified when this provider is available.":
+    'נודיע לכם כשהספק הזה יהיה זמין.',
+  'Sending domain': 'דומיין שליחה',
+  Sender: 'שולח',
+  'Disconnect Resend': 'ניתוק Resend',
+  'Disconnect Mailgun': 'ניתוק Mailgun',
+  'Disconnect SendGrid': 'ניתוק SendGrid',
+  'Provider actions': 'פעולות ספק',
+  'Set up SMTP with Resend': 'הגדרת SMTP עם Resend',
+  'Set up SMTP with Mailgun': 'הגדרת SMTP עם Mailgun',
+  'Set up SMTP with SendGrid': 'הגדרת SMTP עם SendGrid',
+  'Creating credential and saving SMTP settings…':
+    'יוצר פרטי גישה ושומר את הגדרות ה-SMTP…',
+  'Custom SMTP is enabled and your project now sends emails through this provider.':
+    'SMTP מותאם אישית הופעל והפרויקט שלכם שולח כעת אימיילים דרך הספק הזה.',
+  'Connect with Resend': 'התחברות עם Resend',
+  'Connect with Mailgun': 'התחברות עם Mailgun',
+  'Connect with SendGrid': 'התחברות עם SendGrid',
+  'Appwrite will no longer be able to create sending credentials for this provider. Credentials already saved in your SMTP settings keep working.':
+    'Appwrite לא תוכל עוד ליצור פרטי גישה לשליחה עבור הספק הזה. פרטי גישה ששמורים כבר בהגדרות ה-SMTP שלכם ימשיכו לפעול.',
+  'Provider disconnected': 'הספק נותק',
+  'Failed to disconnect the provider': 'ניתוק הספק נכשל',
+  'Confirm setup': 'אישור ההגדרה',
+  'This browser has no record of starting this authorization, so we will not sign you in automatically.':
+    'לדפדפן הזה אין תיעוד של תחילת ההרשאה הזו, ולכן לא נחבר אתכם באופן אוטומטי.',
+  'Continuing signs you in to the Appwrite account that authorized this provider.':
+    'המשך יחבר אתכם לחשבון Appwrite שאישר את הספק הזה.',
+  'This authorization link was already used or has expired. Start the setup again from the console.':
+    'קישור ההרשאה הזה כבר נוצל או שפג תוקפו. התחילו את ההגדרה מחדש מהקונסולה.',
+  'Back to setup': 'חזרה להגדרה',
+  'Unable to finish setup': 'לא ניתן להשלים את ההגדרה',
+  'Finishing setup': 'משלים את ההגדרה',
+  'Restoring your session and returning to the setup.':
+    'משחזר את ההתחברות שלכם ומחזיר אתכם להגדרה.',
+  'This link is missing required parameters.':
+    'בקישור הזה חסרים פרמטרים נדרשים.',
   // Project selector
   Organizations: 'ארגונים',
   'Organization:': 'ארגון:',
@@ -2642,6 +2792,23 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Enable Premium Geo DB': 'הפעלת Premium Geo DB',
   'Upgrade plan': 'שדרוג תוכנית',
   'Premium Geo DB': 'Premium Geo DB',
+  'Strengthen security with precise Firewall rules and improve observability across sessions, activity, and usage analytics.':
+    'חזקו אבטחה עם כללי Firewall מדויקים ושפרו Observability בסשנים, פעילות וניתוח שימוש.',
+  'How this affects your app': 'איך זה משפיע על האפליקציה',
+  'Stronger firewall rules': 'כללי Firewall חזקים יותר',
+  'Block or allow traffic by city, state, ISP, ASN, and connection type for precise access control.':
+    'חסמו או אפשרו תעבורה לפי עיר, מדינה/אזור, ISP, ASN וסוג חיבור לבקרת גישה מדויקת.',
+  'Richer session and request context': 'הקשר עשיר יותר לסשן ולבקשות',
+  'Attach detailed geolocation to Auth sessions, activity logs, and audit trails on every request.':
+    'צרפו נתוני מיקום מפורטים לסשני Auth, לוגי פעילות ומסלולי ביקורת בכל בקשה.',
+  'Deeper usage insights': 'תובנות שימוש מעמיקות יותר',
+  'Break down API traffic by city, ISP, and network attributes to spot abuse and regional patterns.':
+    'פרקו תעבורת API לפי עיר, ISP ומאפייני רשת כדי לזהות ניצול לרעה ודפוסים אזוריים.',
+  'Geolocation attributes': 'מאפייני מיקום',
+  'Included on every plan': 'כלול בכל תוכנית',
+  'Added with Premium Geo DB': 'נוסף עם Premium Geo DB',
+  'Location details': 'פרטי מיקום',
+  'Network details': 'פרטי רשת',
   'Enrich sessions, activity, and usage with detailed geolocation from every request.':
     'העשירו סשנים, פעילות ושימוש עם נתוני מיקום מפורטים מכל בקשה.',
   'Not enabled': 'לא מופעל',
@@ -2701,4 +2868,22 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Upgrade required': 'נדרש שדרוג',
   'This feature requires an upgrade to access.':
     'נדרש שדרוג כדי לגשת לתכונה זו.',
+
+  // Git contributor authorization (GitHub PR check)
+  'Approve deployment': 'אישור פריסה',
+  'Authorize Git deployment': 'אישור פריסת Git',
+  'Git deployment authorized': 'פריסת Git אושרה',
+  'A contributor opened this pull request. Approve it to start the Git deployment.':
+    'משתתף פתח pull request זה. אשרו אותו כדי להתחיל את פריסת ה-Git.',
+  'The build will start shortly.': 'הבנייה תתחיל בקרוב.',
+  'Approved': 'אושר',
+  'Merge request': 'Merge request',
+  'Pull request': 'Pull request',
+  'Failed to approve deployment': 'אישור הפריסה נכשל',
+  'Pause live updates': 'השהיית עדכונים חיים',
+  'Pause live updates to refresh manually':
+    'השהו עדכונים חיים כדי לרענן ידנית',
+  'Resume live updates': 'חידוש עדכונים חיים',
+  'Updating…': 'מתעדכן…',
+  Paused: 'מושהה',
 }

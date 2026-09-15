@@ -130,6 +130,27 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Search rules...': 'ルールを検索...',
   'Search logs...': 'ログを検索...',
   'Create rule': 'ルールの作成',
+  'Attack mode': '攻撃モード',
+  'Turn on attack mode': '攻撃モードをオンにする',
+  'Turn off attack mode': '攻撃モードをオフにする',
+  'Turn on': 'オンにする',
+  'Turn off': 'オフにする',
+  'Attack mode is on': '攻撃モードがオンです',
+  'Attack mode is off': '攻撃モードがオフです',
+  'Failed to turn on attack mode': '攻撃モードをオンにできませんでした',
+  'Failed to turn off attack mode': '攻撃モードをオフにできませんでした',
+  'Challenge every visitor until you turn it off.':
+    'オフにするまで、すべての訪問者をチャレンジします。',
+  'Visitors must pass a challenge before they can continue.':
+    '訪問者は続行する前にチャレンジを通過する必要があります。',
+  'Bypass rules with a lower priority number still apply.':
+    '優先度の数値がより小さいバイパスルールは引き続き適用されます。',
+  'New requests will no longer be challenged by attack mode.':
+    '新しいリクエストは攻撃モードではチャレンジされなくなります。',
+  'Your other firewall rules stay in place.':
+    '他のファイアウォールルールはそのまま残ります。',
+  'Attack mode is on. Every visitor is challenged.':
+    '攻撃モードがオンです。すべての訪問者がチャレンジされます。',
   'Apply as firewall rule': 'ファイアウォールルールとして適用',
   'No firewall rules': 'ファイアウォールルールがありません',
   'No API firewall rules': 'API のファイアウォールルールがありません',
@@ -184,6 +205,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Challenge matching requests before allowing them through.':
     '一致するリクエストを通過させる前にチャレンジします。',
   'Lower numbers are evaluated first.': '数値が小さいほど先に評価されます。',
+  'A rule with priority 10 is stronger than one with priority 100.':
+    '優先度 10 のルールは、優先度 100 のルールより先に適用されます。',
   'Resource ID': 'リソース ID',
   'Function ID': 'Function ID',
   'Site ID': 'サイト ID',
@@ -374,7 +397,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Org key': '組織キー',
   'Project API key': 'プロジェクト API キー',
   'Account API key': 'アカウント API キー',
-  'Organization API key': '組織 API キー',
+  'Partners API key': 'パートナー API キー',
   'No activities yet': 'アクティビティがまだありません',
   'Activity log': 'アクティビティログ',
   'Details for activity': 'アクティビティの詳細',
@@ -383,6 +406,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'このアクティビティへのリンクをコピーしました',
   'Could not copy link': 'リンクをコピーできませんでした',
   'Actor ID': 'アクター ID',
+  'Actor email': 'アクターのメール',
   'Actor type': 'アクタータイプ',
   'Via MCP': 'MCP 経由',
   'Resource type (API)': 'リソースタイプ (API)',
@@ -789,7 +813,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Create manual deployment': '手動デプロイの作成',
   'Upload a .tar.gz archive of your code. Maximum file size is':
     'コードの .tar.gz アーカイブをアップロードしてください。最大ファイルサイズ:',
-  'Click to select a .tar.gz file': '.tar.gz ファイルを選択するにはクリック',
+  'Drop a .tar.gz file here or click to browse':
+    '.tar.gz ファイルをここにドロップするか、クリックして参照',
   'Uploading…': 'アップロード中…',
   'Control how long inactive deployments are kept before they are automatically deleted. Active deployments are always retained.':
     '非アクティブなデプロイが自動削除されるまでの保持期間を制御します。アクティブなデプロイは常に保持されます。',
@@ -955,15 +980,14 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     '関数フォルダー内で次のコマンドを実行し、Appwrite CLI を使用して関数をデプロイしてください。',
   "Deploy your site using the Appwrite CLI by running the following command inside your site's folder.":
     'サイトフォルダー内で次のコマンドを実行し、Appwrite CLI を使用してサイトをデプロイしてください。',
-  'Historic data is not available through the new usage API.':
-    '新しい使用量 API では履歴データは利用できません。',
-  'Common filename for provider {} blocks. Example: custom endpoint and self_signed when Appwrite is not at cloud.appwrite.io. Secrets stay in tfvars, env, or CI - not in .tf files. One required_providers block per root module (see main.tf).':
+ 'Common filename for provider {} blocks. Example: custom endpoint and self_signed when Appwrite is not at cloud.appwrite.io. Secrets stay in tfvars, env, or CI - not in .tf files. One required_providers block per root module (see main.tf).':
     'provider {} ブロックの一般的なファイル名。例: Appwrite が cloud.appwrite.io にない場合のカスタムエンドポイントと self_signed。シークレットは .tf ファイルではなく、tfvars、env、または CI に保持します。ルートモジュールごとに 1 つの required_providers ブロック (main.tf を参照)。',
   'About GBH': 'GBH について',
   Bandwidth: '帯域幅',
   'Bandwidth over time': '経時的な帯域幅',
   Buckets: 'バケット',
   'Chart interval': 'チャート間隔',
+  '1m': '1 分',
   '15m': '15 分',
   '1h': '1 時間',
   '1d': '1 日',
@@ -1212,6 +1236,18 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     '呼び出し元の国別にグループ化されたリクエスト量。',
   'Request volume grouped by caller city.':
     '呼び出し元の都市別にグループ化されたリクエスト量。',
+  'Request volume grouped by caller internet service provider.':
+    '呼び出し元の ISP 別にグループ化されたリクエスト量。',
+  'Request volume grouped by caller autonomous system number.':
+    '呼び出し元の AS 番号別にグループ化されたリクエスト量。',
+  'Request volume grouped by caller autonomous system organization.':
+    '呼び出し元の AS 組織別にグループ化されたリクエスト量。',
+  'Request volume grouped by caller connection type.':
+    '呼び出し元の接続タイプ別にグループ化されたリクエスト量。',
+  'Request volume grouped by caller connection usage type.':
+    '呼び出し元の接続用途タイプ別にグループ化されたリクエスト量。',
+  'Request volume grouped by caller connection organization.':
+    '呼び出し元の接続組織別にグループ化されたリクエスト量。',
   'Request volume grouped by caller hostname.':
     '呼び出し元のホスト名別にグループ化されたリクエスト量。',
   'Request volume grouped by caller IP address.':
@@ -1242,6 +1278,18 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     '呼び出し元の国別にグループ化された帯域幅。',
   'Bandwidth grouped by caller city.':
     '呼び出し元の都市別にグループ化された帯域幅。',
+  'Bandwidth grouped by caller internet service provider.':
+    '呼び出し元の ISP 別にグループ化された帯域幅。',
+  'Bandwidth grouped by caller autonomous system number.':
+    '呼び出し元の AS 番号別にグループ化された帯域幅。',
+  'Bandwidth grouped by caller autonomous system organization.':
+    '呼び出し元の AS 組織別にグループ化された帯域幅。',
+  'Bandwidth grouped by caller connection type.':
+    '呼び出し元の接続タイプ別にグループ化された帯域幅。',
+  'Bandwidth grouped by caller connection usage type.':
+    '呼び出し元の接続用途タイプ別にグループ化された帯域幅。',
+  'Bandwidth grouped by caller connection organization.':
+    '呼び出し元の接続組織別にグループ化された帯域幅。',
   'Bandwidth grouped by caller hostname.':
     '呼び出し元のホスト名別にグループ化された帯域幅。',
   'Bandwidth grouped by caller IP address.':
@@ -1263,6 +1311,16 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   SDK: 'SDK',
   'SDK version': 'SDK バージョン',
   'Caller city': '呼び出し元の都市',
+  'AS number': 'AS 番号',
+  'AS organization': 'AS 組織',
+  'Connection usage type': '接続用途タイプ',
+  'Connection organization': '接続組織',
+  ISPs: 'ISP',
+  'AS numbers': 'AS 番号',
+  'AS organizations': 'AS 組織',
+  'Connection types': '接続タイプ',
+  'Connection usage types': '接続用途タイプ',
+  'Connection organizations': '接続組織',
   'API paths': 'API パス',
   'Operations grouped by database.': 'データベース別にグループ化された操作。',
   'Operations grouped by resource.': 'リソース別にグループ化された操作。',
@@ -1708,6 +1766,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   Summary: '概要',
   'Supabase endpoint': 'Supabase エンドポイント',
   TablesDB: 'TablesDB',
+  Embeddings: 'Embeddings',
   Teams: 'チーム',
   'Test email sent to': 'テストメールの送信先',
   'The target organization’s pricing plan may limit features or usage (e.g. executions, storage, or team size) for this project.':
@@ -1883,6 +1942,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Draft updated': '下書きを更新しました',
   'EU region': 'EU リージョン',
   'Email content': 'メールコンテンツ',
+  'Email preview': 'メールプレビュー',
   'Email subject': 'メール件名',
   'Enable for development builds, disable for production.':
     '開発ビルドでは有効、本番では無効にしてください。',
@@ -1892,6 +1952,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'メッセージに HTML タグが含まれる場合は HTML モードを有効にしてください。',
   'Enable when your Mailgun account is hosted in the EU.':
     'Mailgun アカウントが EU でホストされている場合に有効にしてください。',
+  'Select the AWS region of your verified SES identity.':
+    '検証済み SES ID がある AWS リージョンを選択してください。',
   'Enter the SMS body for this message. Delivery uses topics, users, and targets you add on this page.':
     'このメッセージの SMS 本文を入力してください。配信には、このページで追加したトピック、ユーザー、ターゲットを使用します。',
   'Failed to add subscribers': 'サブスクライバーの追加に失敗しました',
@@ -1970,6 +2032,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'このメッセージを完全に削除します。この操作は元に戻せません。',
   'Permanently delete this topic and all its subscribers. This action cannot be undone.':
     'このトピックとすべてのサブスクライバーを完全に削除します。この操作は元に戻せません。',
+  'Phone number with the leading + and country code, or an alphanumeric sender ID.':
+    '先頭の + と国コードを含む電話番号、または英数字の Sender ID。',
   'Pick a bucket and file from Storage. It will be referenced as bucketId:fileId on the message.':
     'ストレージからバケットとファイルを選択してください。メッセージでは bucketId:fileId として参照されます。',
   'Pick specific channel targets for this message. Targets must match the message provider (email, SMS, or push).':
@@ -2030,12 +2094,15 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'APNS (iOS) 経由でプッシュ通知を送信します。',
   'Send push notifications via FCM (Android, iOS, web).':
     'FCM (Android、iOS、Web) 経由でプッシュ通知を送信します。',
+  'Send transactional email through Amazon SES.':
+    'Amazon SES 経由でトランザクションメールを送信します。',
   'Send transactional email through Mailgun.':
     'Mailgun 経由でトランザクションメールを送信します。',
   'Send transactional email through Resend.':
     'Resend 経由でトランザクションメールを送信します。',
   'Send transactional email through SendGrid.':
     'SendGrid 経由でトランザクションメールを送信します。',
+  Sender: '送信元',
   'Sender ID': 'Sender ID',
   'Sender Name': '送信者名',
   'Sender phone': '送信元電話番号',
@@ -2604,6 +2671,90 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   avatars: 'アバター',
   Organizations: '組織',
   Install: 'インストール',
+  // SMTP quick setup (universal card: Resend today, Mailgun and SendGrid next)
+  'Connect an email provider and Appwrite fills in your SMTP settings automatically.':
+    'メールプロバイダーを接続すると、Appwrite が SMTP 設定を自動で入力します。',
+  'Set up': 'セットアップ',
+  'Creates a sending-only API key for a verified domain.':
+    '検証済みドメイン用の送信専用 API キーを作成します。',
+  'Creates a domain sending key for a verified domain.':
+    '検証済みドメイン用のドメイン送信キーを作成します。',
+  'Creates a restricted API key with mail send access.':
+    'メール送信権限を持つ制限付き API キーを作成します。',
+  'Failed to connect the email provider':
+    'メールプロバイダーへの接続に失敗しました',
+  'The provider was authorized for a different Appwrite account. Try again while signed in to this account.':
+    'プロバイダーは別の Appwrite アカウントに対して認可されました。このアカウントにサインインした状態でもう一度お試しください。',
+  'Loading domains…': 'ドメインを読み込み中…',
+  'Failed to load domains from the email provider':
+    'メールプロバイダーからドメインを読み込めませんでした',
+  'No verified domains': '検証済みのドメインがありません',
+  'Add and verify a sending domain, then check again.':
+    '送信ドメインを追加して検証し、もう一度確認してください。',
+  'Manage domains': 'ドメインを管理',
+  'Check again': '再確認',
+  'The credential is restricted to this domain and can only send email.':
+    'この認証情報はこのドメインに制限され、メール送信のみ行えます。',
+  'Must use the selected domain.': '選択したドメインを使用する必要があります。',
+  'Enter a sender name.': '送信者名を入力してください。',
+  'Enter a sender email on the selected domain.':
+    '選択したドメインの送信者メールアドレスを入力してください。',
+  'Authorization expired': '認可の有効期限が切れました',
+  'Reconnect your provider account to continue.':
+    '続行するにはプロバイダーアカウントを再接続してください。',
+  'Failed to set up SMTP with the email provider':
+    'メールプロバイダーでの SMTP セットアップに失敗しました',
+  'Let Appwrite create the API key for a verified domain and fill these fields.':
+    'Appwrite が検証済みドメイン用の API キーを作成し、これらの項目を入力します。',
+  'Generate API key': 'API キーを生成',
+  'One-click Resend sender': 'ワンクリック Resend 送信者',
+  'Creating the sending credential…': '送信用の認証情報を作成中…',
+  'Failed to create the API key with the email provider':
+    'メールプロバイダーでの API キーの作成に失敗しました',
+  'API key created and filled in below. Review and create the provider.':
+    'API キーを作成し、以下に入力しました。内容を確認してプロバイダーを作成してください。',
+  'One-click setup': 'ワンクリックセットアップ',
+  'Notify me': '通知を受け取る',
+  'You will be notified': '通知されます',
+  "You'll no longer be notified about this provider.":
+    'このプロバイダーについては今後通知しません。',
+  'Failed to update notification preferences': '通知設定を更新できませんでした',
+  "You'll be notified when this provider is available.":
+    'このプロバイダーが利用可能になったらお知らせします。',
+  'Sending domain': '送信ドメイン',
+  Sender: '送信者',
+  'Disconnect Resend': 'Resend を切断',
+  'Disconnect Mailgun': 'Mailgun を切断',
+  'Disconnect SendGrid': 'SendGrid を切断',
+  'Provider actions': 'プロバイダーの操作',
+  'Set up SMTP with Resend': 'Resend で SMTP をセットアップ',
+  'Set up SMTP with Mailgun': 'Mailgun で SMTP をセットアップ',
+  'Set up SMTP with SendGrid': 'SendGrid で SMTP をセットアップ',
+  'Creating credential and saving SMTP settings…':
+    '認証情報を作成して SMTP 設定を保存中…',
+  'Custom SMTP is enabled and your project now sends emails through this provider.':
+    'カスタム SMTP が有効になり、プロジェクトはこのプロバイダー経由でメールを送信するようになりました。',
+  'Connect with Resend': 'Resend に接続',
+  'Connect with Mailgun': 'Mailgun に接続',
+  'Connect with SendGrid': 'SendGrid に接続',
+  'Appwrite will no longer be able to create sending credentials for this provider. Credentials already saved in your SMTP settings keep working.':
+    'Appwrite はこのプロバイダーの送信用認証情報を作成できなくなります。SMTP 設定に保存済みの認証情報は引き続き動作します。',
+  'Provider disconnected': 'プロバイダーを切断しました',
+  'Failed to disconnect the provider': 'プロバイダーの切断に失敗しました',
+  'Confirm setup': 'セットアップの確認',
+  'This browser has no record of starting this authorization, so we will not sign you in automatically.':
+    'このブラウザーにはこの認可を開始した記録がないため、自動的にはサインインしません。',
+  'Continuing signs you in to the Appwrite account that authorized this provider.':
+    '続行すると、このプロバイダーを認可した Appwrite アカウントにサインインします。',
+  'This authorization link was already used or has expired. Start the setup again from the console.':
+    'この認可リンクは既に使用されたか、有効期限が切れています。コンソールからもう一度セットアップを開始してください。',
+  'Back to setup': 'セットアップに戻る',
+  'Unable to finish setup': 'セットアップを完了できません',
+  'Finishing setup': 'セットアップを完了しています',
+  'Restoring your session and returning to the setup.':
+    'セッションを復元してセットアップに戻ります。',
+  'This link is missing required parameters.':
+    'このリンクには必要なパラメーターがありません。',
   // Usage log retention
   'Usage history limit reached': '利用履歴の上限に達しました',
   'Your plan includes': 'ご利用中のプランには',
@@ -2619,6 +2770,23 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Enable Premium Geo DB': 'Premium Geo DB を有効にする',
   'Upgrade plan': 'プランのアップグレード',
   'Premium Geo DB': 'Premium Geo DB',
+  'Strengthen security with precise Firewall rules and improve observability across sessions, activity, and usage analytics.':
+    'Firewall ルールを精密化してセキュリティを強化し、セッション、アクティビティ、使用状況分析のオブザーバビリティを向上させます。',
+  'How this affects your app': 'アプリへの影響',
+  'Stronger firewall rules': 'より強力な Firewall ルール',
+  'Block or allow traffic by city, state, ISP, ASN, and connection type for precise access control.':
+    '都市、州、ISP、ASN、接続タイプでトラフィックをブロックまたは許可し、きめ細かなアクセス制御を実現します。',
+  'Richer session and request context': 'より詳細なセッションとリクエストのコンテキスト',
+  'Attach detailed geolocation to Auth sessions, activity logs, and audit trails on every request.':
+    'すべてのリクエストで Auth セッション、アクティビティログ、監査証跡に詳細な位置情報を付与します。',
+  'Deeper usage insights': 'より深い使用状況の分析',
+  'Break down API traffic by city, ISP, and network attributes to spot abuse and regional patterns.':
+    '都市、ISP、ネットワーク属性別に API トラフィックを分析し、不正利用や地域パターンを把握します。',
+  'Geolocation attributes': '位置情報の属性',
+  'Included on every plan': 'すべてのプランに含まれる',
+  'Added with Premium Geo DB': 'Premium Geo DB で追加',
+  'Location details': '位置情報の詳細',
+  'Network details': 'ネットワークの詳細',
   'Enrich sessions, activity, and usage with detailed geolocation from every request.':
     'セッション、アクティビティ、使用状況を、リクエストごとの詳細な位置情報で補強します。',
   'Not enabled': '未有効',
@@ -2680,4 +2848,22 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Upgrade required': 'アップグレードが必要です',
   'This feature requires an upgrade to access.':
     'この機能を利用するにはアップグレードが必要です。',
+
+  // Git contributor authorization (GitHub PR check)
+  'Approve deployment': 'デプロイを承認',
+  'Authorize Git deployment': 'Git デプロイを承認',
+  'Git deployment authorized': 'Git デプロイを承認しました',
+  'A contributor opened this pull request. Approve it to start the Git deployment.':
+    'コントリビューターがこのプルリクエストを開きました。承認すると Git デプロイが開始されます。',
+  'The build will start shortly.': 'まもなくビルドが開始されます。',
+  'Approved': '承認済み',
+  'Merge request': 'マージリクエスト',
+  'Pull request': 'プルリクエスト',
+  'Failed to approve deployment': 'デプロイの承認に失敗しました',
+  'Pause live updates': 'ライブ更新を一時停止',
+  'Pause live updates to refresh manually':
+    '手動で更新するにはライブ更新を一時停止してください',
+  'Resume live updates': 'ライブ更新を再開',
+  'Updating…': '更新中…',
+  Paused: '一時停止',
 }

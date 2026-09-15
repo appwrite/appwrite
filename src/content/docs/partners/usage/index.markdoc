@@ -1,0 +1,98 @@
+---
+layout: article
+title: Usage
+description: Read organization usage, plan limits, and billing aggregation with the Partners Usage API for metering and reselling Appwrite.
+---
+
+{% info title="Unlinked draft" %}
+This page is not in the Partners navigation. Organization usage and billing sit behind `billing.read` and `billing.write`, which a Partners key cannot hold, so no operation below is reachable from a backend today. Relink this page once a key-authenticated usage surface exists.
+{% /info %}
+
+The Usage API lets partner platforms read **organization-level consumption** and plan context. Use it to show usage dashboards, enforce limits, or align your billing with Appwrite Cloud usage.
+
+Access usage through `sdk.forConsole.organizations` with an organization API key or OAuth-delegated access that includes billing scopes.
+
+# Console SDK access {% #console-sdk-access %}
+
+{% multicode %}
+```server-nodejs
+import { Client, Organization } from 'node-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://cloud.appwrite.io/v1')
+    .setOrganization('<ORGANIZATION_ID>')
+    .setKey(process.env.APPWRITE_PARTNERS_KEY);
+
+const organization = new Organization(client);
+```
+{% /multicode %}
+
+# Common operations {% #common-operations %}
+
+| Operation | Use case |
+| --------- | -------- |
+| `getPlan` | Read plan limits, features, and billing cycle for an organization |
+| `listUsage` | Fetch current usage metrics for the organization |
+| `getAggregation` | Paginate usage breakdown by project or resource |
+| `listInvoices` | Surface billing history in your platform UI |
+| `updateSelectedProjects` | Control which projects count toward plan limits |
+
+# Read organization usage {% #read-organization-usage %}
+
+{% multicode %}
+```server-nodejs
+const plan = await organizations.getPlan({ organizationId: '<ORGANIZATION_ID>' });
+
+const usage = await organizations.listUsage('<ORGANIZATION_ID>');
+```
+{% /multicode %}
+
+Use `getPlan` to understand limits before provisioning projects for a customer. Use `listUsage` to display consumption in your control plane or trigger alerts when thresholds are reached.
+
+# Usage aggregation {% #usage-aggregation %}
+
+For per-project breakdowns, call `getAggregation` with the aggregation ID from your organization billing context:
+
+{% multicode %}
+```server-nodejs
+const aggregation = await organizations.getAggregation({
+    organizationId: '<ORGANIZATION_ID>',
+    aggregationId: '<AGGREGATION_ID>',
+    limit: 25,
+    offset: 0,
+});
+```
+{% /multicode %}
+
+Paginate with `limit` and `offset` when an organization has many projects. Map each project row to a customer in your platform database.
+
+# Plan limits and project selection {% #plan-limits-and-project-selection %}
+
+When your platform creates multiple projects per organization, use `updateSelectedProjects` to control which projects are active on the current plan:
+
+{% multicode %}
+```server-nodejs
+await organizations.updateSelectedProjects(
+    '<ORGANIZATION_ID>',
+    ['projectId1', 'projectId2'],
+);
+```
+{% /multicode %}
+
+Check plan limits from `getPlan` before creating new customer workspaces. See [Provisioning](/docs/partners/guides/provisioning).
+
+# Partner patterns {% #partner-patterns %}
+
+- **Reselling**: combine `listUsage` with your billing system to invoice customers based on Appwrite consumption
+- **Multi-tenant dashboards**: show each customer their project usage from aggregation breakdowns
+- **Quota enforcement**: block provisioning when usage approaches plan limits from `getPlan`
+
+{% info title="Appwrite Cloud" %}
+Usage and billing APIs are available on Appwrite Cloud. Self-hosted deployments do not expose organization billing or usage endpoints.
+{% /info %}
+
+# Related {% #related %}
+
+{% arrow_link href="/docs/partners/organizations" %}
+Organization API
+{% /arrow_link %}

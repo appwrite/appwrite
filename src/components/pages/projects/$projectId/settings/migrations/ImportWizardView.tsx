@@ -2,7 +2,7 @@
  * Fullscreen import data wizard: provider → credentials → get report → resource selection → create migration.
  */
 
-import { useState, useMemo, useEffect, useCallback } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useParams, useNavigate } from '@tanstack/react-router'
 import { ArrowRightLeft, Database, Info, Zap } from 'lucide-react'
 import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
@@ -30,12 +30,18 @@ import {
   type Models,
 } from '@appwrite.io/console'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { canSwitchOrganizations } from '@/lib/console-access-checks'
+import { useOrganizations } from '@/lib/react-query/hooks/organizations'
+import {
+  INITIAL_RESOURCE_FORM,
+  NHOST_RESOURCES,
+  resourceFormToResources,
+  type MigrationProviderKind,
+  type ResourceFormState,
+  type ResourceGroupKey,
+} from '@/lib/migrations/resource-selection'
 import {
   useProject,
-  APPWRITE_RESOURCES,
-  SUPABASE_NHOST_RESOURCES,
-  NHOST_RESOURCES,
-  FIREBASE_RESOURCES,
   fetchAppwriteReport,
   fetchSupabaseReport,
   fetchFirebaseReport,
@@ -96,22 +102,7 @@ const REPORT_KEYS: Record<ResourceGroupKey, keyof Models.MigrationReport> = {
   databases: 'database',
   storage: 'bucket',
   functions: 'function',
-}
-
-type ResourceGroupKey = 'users' | 'databases' | 'storage' | 'functions'
-
-interface ResourceFormState {
-  users: { root: boolean; teams: boolean }
-  databases: { root: boolean; rows: boolean }
-  storage: { root: boolean }
-  functions: { root: boolean; env: boolean; inactive: boolean }
-}
-
-const INITIAL_RESOURCE_FORM: ResourceFormState = {
-  users: { root: false, teams: false },
-  databases: { root: false, rows: false },
-  storage: { root: false },
-  functions: { root: false, env: false, inactive: false },
+  messaging: 'provider',
 }
 
 const PROVIDER_DISPLAY_LABELS: Record<ImportProvider, string> = {
@@ -130,7 +121,11 @@ export function ImportWizardView() {
   const { project } = useProject(pid)
   const region = project?.region
   const { isCloud, features } = useConsoleProfile()
-  const supportsMultiTenancy = features.multiTenancy
+  const { organizations } = useOrganizations()
+  const supportsMultiTenancy = canSwitchOrganizations(
+    features,
+    organizations.length,
+  )
 
   const [step, setStep] = useState(1)
   const [provider, setProvider] = useState<ImportProvider | null>(null)
@@ -186,7 +181,7 @@ export function ImportWizardView() {
 
   const visibleGroups = useMemo((): ResourceGroupKey[] => {
     const base: ResourceGroupKey[] = ['users', 'databases', 'storage']
-    if (supportsFunctions) base.push('functions')
+    if (supportsFunctions) base.push('functions', 'messaging')
     return base
   }, [supportsFunctions])
 
@@ -197,68 +192,15 @@ export function ImportWizardView() {
     return typeof value === 'number' ? value : null
   }
 
-  const resourceFormToResources = useCallback((): (
-    | AppwriteMigrationResource
-    | SupabaseMigrationResource
-    | FirebaseMigrationResource
-  )[] => {
-    const allowed = supportsFunctions
-      ? APPWRITE_RESOURCES
-      : provider === 'Firebase'
-        ? FIREBASE_RESOURCES
-        : SUPABASE_NHOST_RESOURCES
-    const out: (
-      | AppwriteMigrationResource
-      | SupabaseMigrationResource
-      | FirebaseMigrationResource
-    )[] = []
-    if (resourceForm.users.root) {
-      out.push(
-        supportsFunctions
-          ? AppwriteMigrationResource.User
-          : provider === 'Firebase'
-            ? FirebaseMigrationResource.User
-            : SupabaseMigrationResource.User,
-      )
-    }
-    if (resourceForm.databases.root) {
-      if (supportsFunctions) {
-        out.push(
-          AppwriteMigrationResource.Database,
-          AppwriteMigrationResource.Table,
-          AppwriteMigrationResource.Column,
-          AppwriteMigrationResource.Index,
-        )
-        if (resourceForm.databases.rows) out.push(AppwriteMigrationResource.Row)
-      } else {
-        const dbEnum =
-          provider === 'Firebase'
-            ? FirebaseMigrationResource
-            : SupabaseMigrationResource
-        out.push(
-          dbEnum.Database,
-          dbEnum.Collection,
-          dbEnum.Attribute,
-          ...(provider === 'Firebase' ? [] : [SupabaseMigrationResource.Index]),
-          dbEnum.Document,
-        )
-      }
-    }
-    if (resourceForm.storage.root) {
-      const storageEnum = supportsFunctions
-        ? AppwriteMigrationResource
-        : provider === 'Firebase'
-          ? FirebaseMigrationResource
-          : SupabaseMigrationResource
-      out.push(storageEnum.Bucket, storageEnum.File)
-    }
-    const allowedSet = new Set<string>(allowed as readonly string[])
-    return out.filter((r) => allowedSet.has(r))
-  }, [resourceForm, provider, supportsFunctions])
+  const providerKind: MigrationProviderKind = supportsFunctions
+    ? 'appwrite'
+    : provider === 'Firebase'
+      ? 'firebase'
+      : 'supabase'
 
   const selectedResourcesList = useMemo(
-    () => resourceFormToResources(),
-    [resourceFormToResources],
+    () => resourceFormToResources(resourceForm, providerKind),
+    [resourceForm, providerKind],
   )
   const hasSelection = selectedResourcesList.length > 0
 
@@ -268,6 +210,7 @@ export function ImportWizardView() {
       databases: { root: true, rows: true },
       storage: { root: true },
       functions: { root: true, env: true, inactive: true },
+      messaging: { root: true, messages: true },
     })
   }
 
@@ -290,29 +233,40 @@ export function ImportWizardView() {
           env: value,
           inactive: value,
         }
+      else if (group === 'messaging')
+        next.messaging = { ...prev.messaging, root: value, messages: value }
       return next
     })
   }
 
   const setGroupChild = (
-    group: 'users' | 'databases' | 'functions',
+    group: 'users' | 'databases' | 'functions' | 'messaging',
     child:
       | keyof ResourceFormState['users']
       | keyof ResourceFormState['databases']
-      | keyof ResourceFormState['functions'],
+      | keyof ResourceFormState['functions']
+      | keyof ResourceFormState['messaging'],
     value: boolean,
   ) => {
     setResourceForm((prev) => {
       const next = { ...prev }
+      // Ticking a sub-resource implies its group; without this the group stays
+      // off and the sub-resource is silently dropped from the request.
+      const root = value || prev[group].root
       if (group === 'users' && (child === 'root' || child === 'teams'))
-        next.users = { ...prev.users, [child]: value }
+        next.users = { ...prev.users, root, [child]: value }
       else if (group === 'databases' && (child === 'root' || child === 'rows'))
-        next.databases = { ...prev.databases, [child]: value }
+        next.databases = { ...prev.databases, root, [child]: value }
       else if (
         group === 'functions' &&
         (child === 'root' || child === 'env' || child === 'inactive')
       )
-        next.functions = { ...prev.functions, [child]: value }
+        next.functions = { ...prev.functions, root, [child]: value }
+      else if (
+        group === 'messaging' &&
+        (child === 'root' || child === 'messages')
+      )
+        next.messaging = { ...prev.messaging, root, [child]: value }
       return next
     })
   }
@@ -1158,6 +1112,68 @@ export function ImportWizardView() {
                               {t(
                                 'Import all deployments that are not currently active.',
                               )}
+                            </p>
+                          </AccordionContent>
+                        </AccordionItem>
+                      </Accordion>
+                    )
+                  }
+                  if (group === 'messaging') {
+                    return (
+                      <Accordion
+                        key={group}
+                        type="single"
+                        collapsible
+                        className="rounded-lg border border-border bg-card/50"
+                      >
+                        <AccordionItem
+                          value="messaging"
+                          className="border-none"
+                        >
+                          <AccordionTrigger className="px-4 py-3 hover:no-underline [&[data-state=open]]:rounded-b-none">
+                            <div className="flex items-center gap-3 text-start">
+                              <Checkbox
+                                checked={resourceForm.messaging.root}
+                                onCheckedChange={(v) =>
+                                  setGroupRoot('messaging', v === true)
+                                }
+                                onClick={(e) => e.stopPropagation()}
+                              />
+                              <span className="text-[13px] font-medium">
+                                {t('Messaging')}
+                              </span>
+                              <span className="text-[12px] text-muted-foreground tabular-nums">
+                                {countLabel}
+                              </span>
+                            </div>
+                          </AccordionTrigger>
+                          <AccordionContent className="px-4 pb-3 pt-0 space-y-2">
+                            <p className="ps-6 text-[11px] text-muted-foreground">
+                              {t(
+                                'Import all messaging providers and topics. Subscribers are included when Users is selected, since each subscriber belongs to a user.',
+                              )}
+                            </p>
+                            <div className="flex items-center gap-2 ps-6">
+                              <Checkbox
+                                id="messaging-messages"
+                                checked={resourceForm.messaging.messages}
+                                onCheckedChange={(v) =>
+                                  setGroupChild(
+                                    'messaging',
+                                    'messages',
+                                    v === true,
+                                  )
+                                }
+                              />
+                              <Label
+                                htmlFor="messaging-messages"
+                                className="cursor-pointer text-[13px] font-normal"
+                              >
+                                {t('Include messages')}
+                              </Label>
+                            </div>
+                            <p className="ps-6 text-[11px] text-muted-foreground">
+                              {t('Import all messages.')}
                             </p>
                           </AccordionContent>
                         </AccordionItem>

@@ -19,6 +19,13 @@ If a user has read, create, update, or delete permissions at the collection leve
 
 Configure collection level permissions by navigating to **Your collection** > **Security** > **Permissions**, or pass a `permissions` array when you create or update the collection.
 
+{% only_dark %}
+![Collection permissions in the Security tab](/images/docs/products/databases/vectorsdb/dark/security-permissions.avif)
+{% /only_dark %}
+{% only_light %}
+![Collection permissions in the Security tab](/images/docs/products/databases/vectorsdb/security-permissions.avif)
+{% /only_light %}
+
 {% multicode %}
 ```server-nodejs
 const sdk = require('node-appwrite');
@@ -299,7 +306,7 @@ let collection = try await vectorsDB.createCollection(
 ```
 ```server-rust
 use appwrite::Client;
-use appwrite::services::vectors_db::VectorsDB;
+use appwrite::services::VectorsDB;
 use appwrite::id::ID;
 use appwrite::permission::Permission;
 use appwrite::role::Role;
@@ -333,13 +340,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 ```bash
-appwrite vectors-db create-collection \
+appwrite vectorsdb create-collection \
     --database-id "<DATABASE_ID>" \
     --collection-id "<COLLECTION_ID>" \
     --name "documents" \
     --dimension 4 \
-    --permissions 'read("any")' 'create("users")' 'update("users")' 'delete("users")' \
-    --document-security true
+    --permissions 'read("any")' \
+    --permissions 'create("users")' \
+    --permissions 'update("users")' \
+    --permissions 'delete("users")' \
+    --document-security=true
 ```
 {% /multicode %}
 
@@ -585,7 +595,7 @@ let collection = try await vectorsDB.updateCollection(
 ```
 ```server-rust
 use appwrite::Client;
-use appwrite::services::vectors_db::VectorsDB;
+use appwrite::services::VectorsDB;
 use appwrite::permission::Permission;
 use appwrite::role::Role;
 
@@ -616,12 +626,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 ```bash
-appwrite vectors-db update-collection \
+appwrite vectorsdb update-collection \
     --database-id "<DATABASE_ID>" \
     --collection-id "<COLLECTION_ID>" \
     --name "documents" \
-    --permissions 'read("any")' 'create("users")' \
-    --document-security false
+    --permissions 'read("any")' \
+    --permissions 'create("users")' \
+    --document-security=false
 ```
 {% /multicode %}
 
@@ -632,6 +643,13 @@ Document level permissions grant access to individual documents.
 If a user has read, update, or delete permissions at the document level, the user can access the **individual document**.
 
 Document level permissions are only applied if `documentSecurity` is enabled on the collection. Enable it in the Console by navigating to **Your collection** > **Security** > **Document security**, or by setting `documentSecurity` to `true` when you create or update the collection, as shown above.
+
+{% only_dark %}
+![Row level security toggle in the Security tab](/images/docs/products/databases/vectorsdb/dark/security-rls.avif)
+{% /only_dark %}
+{% only_light %}
+![Row level security toggle in the Security tab](/images/docs/products/databases/vectorsdb/security-rls.avif)
+{% /only_light %}
 
 Set permissions on an individual document by passing a `permissions` array to `createDocument`. Use `Role.user('<USER_ID>')` to scope access to a specific user.
 
@@ -925,7 +943,7 @@ let document = try await vectorsDB.createDocument(
 ```
 ```server-rust
 use appwrite::Client;
-use appwrite::services::vectors_db::VectorsDB;
+use appwrite::services::VectorsDB;
 use appwrite::id::ID;
 use appwrite::permission::Permission;
 use appwrite::role::Role;
@@ -960,12 +978,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 ```bash
-appwrite vectors-db create-document \
+appwrite vectorsdb create-document \
     --database-id "<DATABASE_ID>" \
     --collection-id "<COLLECTION_ID>" \
     --document-id 'unique()' \
     --data '{ "embeddings": [0.12, 0.84, 0.33, 0.57], "metadata": { "title": "Hamlet" } }' \
-    --permissions 'read("any")' 'update("user:<USER_ID>")' 'delete("user:<USER_ID>")'
+    --permissions 'read("any")' \
+    --permissions 'update("user:<USER_ID>")' \
+    --permissions 'delete("user:<USER_ID>")'
 ```
 {% /multicode %}
 
@@ -1197,7 +1217,7 @@ let document = try await vectorsDB.updateDocument(
 ```
 ```server-rust
 use appwrite::Client;
-use appwrite::services::vectors_db::VectorsDB;
+use appwrite::services::VectorsDB;
 use appwrite::permission::Permission;
 use appwrite::role::Role;
 
@@ -1226,7 +1246,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 ```bash
-appwrite vectors-db update-document \
+appwrite vectorsdb update-document \
     --database-id "<DATABASE_ID>" \
     --collection-id "<COLLECTION_ID>" \
     --document-id "<DOCUMENT_ID>" \

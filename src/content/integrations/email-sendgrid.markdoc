@@ -51,7 +51,7 @@ Fill in the following fields:
 | Field name |  |
 | --- | --- |
 | API key | The full access API key you saved from the SendGrid dashboard. |
-| Sender email | The provider sends emails from this sender email. The sender email must either be an email under an authenticated domain or a verified sender identity. |
+| Sender email | The provider sends emails from this sender email. The sender email must either be an email under an authenticated domain or a verified sender identity. |
 | Sender name | The sender name that appears in the emails sent from this provider. |
 | Reply-to email | The reply-to email that appears in the emails sent from this provider. The reply-to email must either be an email under an authenticated domain or a verified sender identity. |
 | Reply-to name | The reply-to name that appears in the emails sent from this provider. |

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute, redirect, useNavigate, useSearch } from '@tanstack/react-router'
 import { z } from 'zod'
@@ -14,7 +14,9 @@ import {
   ensureConsoleAccountQueryData,
   refreshConsoleAccountAfterAuth,
 } from '@/lib/react-query/hooks/auth'
+import { CONSOLE_ENTRY_PATH } from '@/lib/root-guest-redirect'
 import {
+  isValidRelativeRedirect,
   prefetchPostAuthDestination,
   requiresConsoleEmailVerification,
   resolvePostAuthRedirect,
@@ -22,14 +24,6 @@ import {
 } from '@/lib/post-auth-navigation'
 import { useRouter } from '@tanstack/react-router'
 import { MarketingSiteLink } from '@/components/global/shared/MarketingSiteLink'
-
-function isValidRelativeRedirect(url: string): boolean {
-  try {
-    return url.startsWith('/') && !url.includes('://')
-  } catch {
-    return false
-  }
-}
 
 const searchSchema = z.object({
   redirect: z
@@ -42,6 +36,20 @@ const searchSchema = z.object({
   secret: z.string().optional(),
   expire: z.string().optional(),
 })
+
+function isInvalidTokenError(error: unknown): boolean {
+  return (
+    error instanceof AppwriteException && error.type === 'user_invalid_token'
+  )
+}
+
+/**
+ * Secrets already submitted in this page session. A per-component ref does not
+ * survive the remount that follows `router.invalidate()`, so the spent secret
+ * was submitted a second time and the server answered `user_invalid_token` -
+ * reporting failure for a verification that had in fact just succeeded.
+ */
+const attemptedSecrets = new Set<string>()
 
 /** Parse userId and secret from the current URL (used when following email link) so long tokens are not altered by router. */
 function getVerificationParamsFromUrl(): {
@@ -79,9 +87,18 @@ export const Route = createFileRoute('/_auth/verify-email')({
       })
     }
 
-    // Already verified: leave this page for the console.
+    // Already verified, including in another tab: resume the pending flow.
     if (!requiresConsoleEmailVerification(account)) {
-      throw redirect({ to: '/', replace: true })
+      const targetRedirect = resolvePostAuthRedirect(
+        (location.search as { redirect?: string }).redirect,
+      )
+      if (targetRedirect) {
+        throw redirect({
+          ...toRedirectNavigateOptions(targetRedirect),
+          replace: true,
+        })
+      }
+      throw redirect({ to: CONSOLE_ENTRY_PATH, replace: true })
     }
   },
   head: () => ({ meta: [{ title: pageTitle('Verify your email') }] }),
@@ -125,10 +142,36 @@ function VerifyEmailPage() {
           replace: true,
         })
       } catch {
-        navigate({ to: '/' })
+        navigate({ to: CONSOLE_ENTRY_PATH })
       }
     },
-    onError: (error: unknown) => {
+    onError: async (error: unknown) => {
+      // A rejected token does not prove the address is unverified: whatever
+      // consumes the secret first (a duplicate submit, a link scanner, an
+      // earlier click) leaves the account verified and the token spent. Trust
+      // the account over the token before reporting a failure.
+      if (isInvalidTokenError(error)) {
+        try {
+          const account = await refreshConsoleAccountAfterAuth(queryClient)
+          if (account?.emailVerification) {
+            toast.success(t('Email verified successfully'))
+            await router.invalidate()
+            const targetRedirect = resolvePostAuthRedirect(search.redirect)
+            if (targetRedirect) {
+              navigate({
+                ...toRedirectNavigateOptions(targetRedirect),
+                replace: true,
+              })
+              return
+            }
+            navigate({ to: CONSOLE_ENTRY_PATH })
+            return
+          }
+        } catch {
+          // Fall through and report the original failure.
+        }
+      }
+
       const message =
         error instanceof AppwriteException
           ? error.message
@@ -160,14 +203,12 @@ function VerifyEmailPage() {
     },
   })
 
-  const hasTriggeredConfirm = useRef(false)
-
   // When landing with userId + secret (from email link), confirm and redirect.
   // Read from URL directly so the long secret is not altered by router/search parsing.
   useEffect(() => {
     const params = getVerificationParamsFromUrl()
-    if (params && !hasTriggeredConfirm.current) {
-      hasTriggeredConfirm.current = true
+    if (params && !attemptedSecrets.has(params.secret)) {
+      attemptedSecrets.add(params.secret)
       confirmMutation.mutate(params)
     }
   }, [])
@@ -178,9 +219,39 @@ function VerifyEmailPage() {
 
   if (isConfirming) {
     return (
-      <div className="bg-background relative flex min-h-svh flex-col items-center justify-center p-6 md:p-10">
-        <div className="w-full max-w-sm md:max-w-4xl">
-          <VerifyEmail status="confirming" />
+      <div className="bg-background relative h-full overflow-y-auto">
+        <div className="flex min-h-full flex-col items-center p-6 md:p-10">
+          <div className="my-auto w-full max-w-sm md:max-w-4xl">
+            <VerifyEmail status="confirming" />
+            <p className="mt-6 text-center text-xs text-muted-foreground">
+              {t('By continuing, you agree to our')}{' '}
+              <MarketingSiteLink className="link-neutral" href="/terms">
+                {t('Terms of Service')}
+              </MarketingSiteLink>{' '}
+              {t('and')}{' '}
+              <MarketingSiteLink className="link-neutral" href="/privacy">
+                {t('Privacy Policy')}
+              </MarketingSiteLink>
+              .
+            </p>
+            <div className="mt-10 md:mt-16 flex justify-center">
+              <AppwriteLogo className="h-6 w-auto" />
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="bg-background relative h-full overflow-y-auto">
+      <div className="flex min-h-full flex-col items-center p-6 md:p-10">
+        <div className="my-auto w-full max-w-sm md:max-w-4xl">
+          <VerifyEmail
+            onResend={() => resendMutation.mutate()}
+            isResendLoading={resendMutation.isPending}
+            redirect={search.redirect}
+          />
           <p className="mt-6 text-center text-xs text-muted-foreground">
             {t('By continuing, you agree to our')}{' '}
             <MarketingSiteLink className="link-neutral" href="/terms">
@@ -195,32 +266,6 @@ function VerifyEmailPage() {
           <div className="mt-10 md:mt-16 flex justify-center">
             <AppwriteLogo className="h-6 w-auto" />
           </div>
-        </div>
-      </div>
-    )
-  }
-
-  return (
-    <div className="bg-background relative flex min-h-svh flex-col items-center justify-center p-6 md:p-10">
-      <div className="w-full max-w-sm md:max-w-4xl">
-        <VerifyEmail
-          onResend={() => resendMutation.mutate()}
-          isResendLoading={resendMutation.isPending}
-          redirect={search.redirect}
-        />
-        <p className="mt-6 text-center text-xs text-muted-foreground">
-          {t('By continuing, you agree to our')}{' '}
-          <MarketingSiteLink className="link-neutral" href="/terms">
-            {t('Terms of Service')}
-          </MarketingSiteLink>{' '}
-          {t('and')}{' '}
-          <MarketingSiteLink className="link-neutral" href="/privacy">
-            {t('Privacy Policy')}
-          </MarketingSiteLink>
-          .
-        </p>
-        <div className="mt-10 md:mt-16 flex justify-center">
-          <AppwriteLogo className="h-6 w-auto" />
         </div>
       </div>
     </div>

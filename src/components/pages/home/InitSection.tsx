@@ -84,7 +84,7 @@ function HomeInitDayCard({
         ) : null}
       </div>
 
-      <h3 className="mt-3 text-[15px] font-semibold leading-none text-foreground">
+      <h3 className="mt-3 text-[15px] font-semibold leading-snug text-foreground">
         {t(day.title)}
       </h3>
       <p className="mt-3 min-h-[2lh] flex-1 line-clamp-2 text-[12px] leading-normal text-muted-foreground">
@@ -103,7 +103,7 @@ export function InitSection() {
   const { mockInitCurrentDay } = useDebugOverrides()
 
   const visible = useMemo(
-    () => isInitEventDuring({ mockCurrentDay: mockInitCurrentDay }),
+    () => isInitEventDuring({ currentDay: mockInitCurrentDay }),
     [mockInitCurrentDay],
   )
 
@@ -113,7 +113,7 @@ export function InitSection() {
     const active = getActiveLaunchEvent()
     if (!active) return null
 
-    return applyInitEventVisibility(active, { mockCurrentDay: mockInitCurrentDay })
+    return applyInitEventVisibility(active, { currentDay: mockInitCurrentDay })
   }, [visible, mockInitCurrentDay])
 
   if (!visible || !event) return null

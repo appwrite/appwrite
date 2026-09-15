@@ -81,7 +81,7 @@ To export rows using the Appwrite Console:
 
 1. Go to your project and navigate to **Databases**
 2. Select your target database and navigate to your target table
-3. Click on the **Export CSV** button in the action area
+3. Click the download icon in the table action area
 4. Configure your export options:
    - Choose which columns to include (optional)
    - Set your preferred delimiter

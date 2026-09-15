@@ -14,17 +14,12 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { Copy, Check, Maximize2 } from 'lucide-react'
 import { Highlight, Prism } from 'prism-react-renderer'
-import { useTheme } from 'next-themes'
 import {
   buildCodeBlockPrismTheme,
   CODE_BLOCK_PRISM_SURFACE_CLASS,
   resolvePrismPreSurfaceStyle,
   stripPrismTokenBackground,
 } from '@/lib/code-block-prism-theme'
-import {
-  isHtmlDarkChrome,
-  isResolvedThemeDarkChrome,
-} from '@/lib/html-theme'
 import { cn } from '@/lib/utils'
 import { FORCE_LTR_CLASS } from '@/lib/layout/force-ltr'
 import { Button } from '@/components/ui/button'
@@ -75,6 +70,7 @@ export type CodeBlockLanguage =
   | 'hcl'
   | 'rust'
   | 'graphql'
+  | 'sql'
   | 'http'
   | 'groovy'
   | 'docker'
@@ -129,6 +125,7 @@ export function getCodeLanguageLabel(lang: CodeBlockLanguage): string {
     hcl: 'Terraform',
     rust: 'Rust',
     graphql: 'GraphQL',
+    sql: 'SQL',
     http: 'HTTP',
     groovy: 'Groovy',
     docker: 'Dockerfile',
@@ -164,6 +161,7 @@ const EXTRA_LANGUAGES: string[] = [
   'hcl',
   'rust',
   'graphql',
+  'sql',
   'http',
   'groovy',
   'docker',
@@ -199,6 +197,7 @@ const PRISM_LOADERS: Record<string, () => Promise<unknown>> = {
   hcl: () => import('prismjs/components/prism-hcl'),
   rust: () => import('prismjs/components/prism-rust'),
   graphql: () => import('prismjs/components/prism-graphql'),
+  sql: () => import('prismjs/components/prism-sql'),
   http: () => import('prismjs/components/prism-http'),
   groovy: () => import('prismjs/components/prism-groovy'),
   docker: () => import('prismjs/components/prism-docker'),
@@ -304,7 +303,10 @@ export function CodeBlock({
   wrapLines = false,
 }: CodeBlockProps) {
   const t = useT()
-  const resolvedSurface = resolveCodeBlockSurface(surface, transparentBackground)
+  const resolvedSurface = resolveCodeBlockSurface(
+    surface,
+    transparentBackground,
+  )
   const [copied, setCopied] = useState(false)
   const [isFullscreenOpen, setIsFullscreenOpen] = useState(false)
   const preRef = useRef<HTMLPreElement>(null)
@@ -318,11 +320,6 @@ export function CodeBlock({
     Boolean(Prism.languages[prismLanguage])
   // Bump when async Prism grammars finish loading so Highlight re-tokenizes.
   const [, setLoadGeneration] = useState(0)
-  const { resolvedTheme } = useTheme()
-  const isDarkChrome =
-    resolvedTheme !== undefined
-      ? isResolvedThemeDarkChrome(resolvedTheme)
-      : isHtmlDarkChrome()
 
   const handleWheel = (e: React.WheelEvent<HTMLPreElement>) => {
     const pre = preRef.current
@@ -363,7 +360,8 @@ export function CodeBlock({
   }, [prismLanguage, languageIsRegistered])
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(displayCode)
+    // Render trims a fence's trailing newline; the clipboard gets the input as given.
+    navigator.clipboard.writeText(code)
     setCopied(true)
     toast.success(t('Copied to clipboard'))
     setTimeout(() => setCopied(false), 2000)
@@ -371,10 +369,7 @@ export function CodeBlock({
 
   const effectiveLanguage = languageIsRegistered ? prismLanguage : 'plaintext'
   const displayCode = useMemo(() => normalizeCodeBlockContent(code), [code])
-  const prismTheme = useMemo(
-    () => buildCodeBlockPrismTheme(resolvedTheme),
-    [isDarkChrome],
-  )
+  const prismTheme = useMemo(() => buildCodeBlockPrismTheme(), [])
 
   const isHeadless = variant === 'headless'
   const isNestedSurface = resolvedSurface === 'muted'
@@ -383,7 +378,13 @@ export function CodeBlock({
     ? 'overflow-x-hidden whitespace-pre-wrap break-words [overflow-wrap:anywhere]'
     : 'overflow-x-auto'
 
-  const lineWrapClasses = wrapLines ? 'min-w-0 w-full break-all' : undefined
+  // `break-all` breaks at any character even when a space was available, so
+  // prose in a wrapped block splits mid-word ("Bonjou|r"). `anywhere` only
+  // breaks a run that has no other break opportunity, which is what minified
+  // markup needs.
+  const lineWrapClasses = wrapLines
+    ? 'min-w-0 w-full [overflow-wrap:anywhere]'
+    : undefined
 
   const renderCopyButton = () => {
     if (!showCopy) return null
@@ -465,9 +466,7 @@ export function CodeBlock({
           <div
             className={cn(
               'flex h-10 shrink-0 items-center justify-between px-3',
-              isHeadless
-                ? 'border-0 bg-muted/20'
-                : 'border-b border-border',
+              isHeadless ? 'border-0 bg-muted/20' : 'border-b border-border',
             )}
           >
             <span className="text-[11px] font-medium text-muted-foreground">

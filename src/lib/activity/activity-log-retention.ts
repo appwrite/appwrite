@@ -1,6 +1,10 @@
 import type { Models } from '@appwrite.io/console'
 import type { DateRange } from 'react-day-picker'
 import { endOfDay, startOfDay, subDays, subHours } from 'date-fns'
+import {
+  getLogRetentionFloor,
+  UNLIMITED_LOG_RETENTION_HOURS,
+} from '@/lib/date-range-retention'
 
 /** Fallback when plan retention is unknown (Pro default). */
 export const DEFAULT_ACTIVITY_LOG_RETENTION_DAYS = 30
@@ -8,7 +12,8 @@ export const DEFAULT_ACTIVITY_LOG_RETENTION_DAYS = 30
 export const DEFAULT_ACTIVITY_LOG_RETENTION_HOURS =
   DEFAULT_ACTIVITY_LOG_RETENTION_DAYS * 24
 
-const UNLIMITED_ACTIVITY_LOG_RETENTION_THRESHOLD = 36500
+const UNLIMITED_ACTIVITY_LOG_RETENTION_THRESHOLD =
+  UNLIMITED_LOG_RETENTION_HOURS / 24
 
 export function hasFiniteActivityLogRetention(
   plan: Models.BillingPlan | null | undefined,
@@ -42,7 +47,7 @@ export function getActivityLogRetentionHoursFromPlan(
 export function getActivityLogRetentionFloor(
   retentionHours: number = DEFAULT_ACTIVITY_LOG_RETENTION_HOURS,
 ): Date {
-  return new Date(Date.now() - retentionHours * 60 * 60 * 1000)
+  return getLogRetentionFloor(retentionHours)
 }
 
 /**

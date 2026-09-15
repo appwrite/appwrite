@@ -29,7 +29,7 @@ One such integration you can implement using Appwrite Functions is **WhatsApp me
 
 ## Setting up Vonage
 
-The first step is to create a Vonage account. Head over to Vonage’s [website](https://www.vonage.com/) and [sign up](https://dashboard.nexmo.com/sign-up?icid=tryitfree_homepage_nexmodashbdfreetrialsignup_tile&utm_campaign=bizdirect&attribution_campaign=bizdirect&cjregion=429207&adobe_mc=MCMID%3D34270386780739068404296704713035591008%7CMCORGID%3DA8833BC75245AF9E0A490D4D%2540AdobeOrg%7CTS%3D1663266957) to use Vonage Communication APIs. On the Vonage API Dashboard, visit the **[API Settings](https://dashboard.nexmo.com/settings)** tab and copy the **API Key**, **API Secret**, and **Signature Secret** from there.
+The first step is to create a Vonage account. Head over to Vonage’s [website](https://www.vonage.com/) and [sign up](https://dashboard.nexmo.com/sign-up?icid=tryitfree_homepage_nexmodashbdfreetrialsignup_tile&utm_campaign=bizdirect&attribution_campaign=bizdirect&cjregion=429207&adobe_mc=MCMID%3D34270386780739068404296704713035591008%7CMCORGID%3DA8833BC75245AF9E0A490D4D%2540AdobeOrg%7CTS%3D1663266957) to use Vonage Communication APIs. On the Vonage API Dashboard, visit the **[API Settings](https://dashboard.nexmo.com/settings)** tab and copy the **API Key**, **API Secret**, and **Signature Secret** from there.
 
 ![Vonage API Dashboard](/images/blog/function-template-whatsapp-vonage/api-settings.avif)
 

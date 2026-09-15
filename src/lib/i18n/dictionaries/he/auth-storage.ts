@@ -35,6 +35,8 @@ export const heAuthStorageDictionary: Record<string, string> = {
   'App enabled': 'האפליקציה הופעלה',
   'App updated': 'האפליקציה עודכנה',
   'Activity': 'פעילות',
+  'Auto crops around the main subject when both width and height are set.':
+    'חיתוך Auto ממקד את הפריים בנושא הראשי כשמוגדרים גם רוחב וגם גובה.',
   'Back to apps': 'חזרה לאפליקציות',
   'Disabled apps cannot start new authorization flows. Existing tokens remain until revoked.':
     'אפליקציות מושבתות לא יכולות להתחיל תהליכי הרשאה חדשים. טוקנים קיימים נשארים בתוקף עד לשלילתם.',
@@ -615,6 +617,7 @@ export const heAuthStorageDictionary: Record<string, string> = {
   'No OAuth2 apps': 'אין אפליקציות OAuth2',
   'Connect with': 'התחברות עם',
   'Connect with Appwrite': 'התחברות עם Appwrite',
+  'Connect with S3': 'התחברות עם S3',
   'Connect with this project': 'התחברות לפרויקט זה',
   'Register OAuth2 clients here when you want other products to let users connect with this project. Organization apps serve a different purpose. Create those under your organization when you want your users to connect their Appwrite account with your application.':
     'רשמו כאן לקוחות OAuth2 כאשר אתם רוצים שמוצרים אחרים יאפשרו למשתמשים להתחבר לפרויקט זה. לאפליקציות ארגון יש מטרה אחרת. צרו אותן תחת הארגון כאשר אתם רוצים שהמשתמשים שלכם יחברו את חשבון Appwrite שלהם ליישום שלכם.',
@@ -900,6 +903,7 @@ export const heAuthStorageDictionary: Record<string, string> = {
   'Sessions': 'סשנים',
   'Sessions limit': 'מגבלת סשנים',
   'Sessions limit has been updated': 'מגבלת הסשנים עודכנה',
+  'Set an authorization URL below, then click Update.': 'הזינו כתובת URL להרשאה למטה, ואז לחצו על עדכון.',
   'Set authorization, token, and user info URLs manually only when your provider does not expose a well-known metadata URL.': 'הגדירו ידנית כתובות הרשאה, טוקנים ופרטי משתמש רק כאשר הספק שלכם אינו חושף כתובת מטא-נתונים well-known.',
   'Set minimum length and character requirements for user passwords. Rules apply when users sign up, reset their password, or change their password through your app. Existing passwords stay valid until the user sets a new one. Password updates from the Appwrite console also validate against this policy.': 'הגדירו אורך מינימלי ודרישות תווים לסיסמאות משתמשים. הכללים חלים כשמשתמשים נרשמים, מאפסים את סיסמתם או משנים אותה דרך האפליקציה שלכם. סיסמאות קיימות נשארות בתוקף עד שהמשתמש מגדיר חדשה. עדכוני סיסמה מקונסולת Appwrite נבדקים גם הם מול מדיניות זו.', // pragma: allowlist secret
   'Set the locale using': 'הגדירו את השפה באמצעות',
@@ -1107,6 +1111,7 @@ export const heAuthStorageDictionary: Record<string, string> = {
   'You don\'t have permission to perform this action.': 'אין לכם הרשאה לבצע פעולה זו.',
   'You don\'t have permission to remove team presets.': 'אין לכם הרשאה להסיר ערכות צוות.',
   'You don\'t have permission to save team presets.': 'אין לכם הרשאה לשמור ערכות צוות.',
+  'You don\'t have permission to update OAuth2 server settings.': 'אין לכם הרשאה לעדכן את הגדרות שרת OAuth2.',
   'You have not saved any presets yet. Use': 'עדיין לא שמרתם ערכות. השתמשו ב',
   'Your API is the OAuth client; mobile or SPA apps get a session without holding secrets.': 'ה-API שלכם הוא לקוח ה-OAuth; אפליקציות מובייל או SPA מקבלות סשן מבלי להחזיק סודות.',
   'Your consent screen URL. Users are redirected here during authorization.': 'כתובת מסך ההסכמה שלכם. משתמשים מופנים לכאן במהלך ההרשאה.',

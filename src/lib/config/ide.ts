@@ -8,6 +8,11 @@
  * - IDE selection dropdowns
  */
 
+import {
+  DOCS_HOME_IDE_AI_TOOLS,
+  DOCS_HOME_VIBE_AI_TOOLS,
+} from '@/lib/docs/home-content'
+
 export interface IDEConfig {
   /** Unique identifier for the IDE */
   id: string
@@ -93,6 +98,13 @@ export const IDE_CONFIGS: IDEConfig[] = [
     mcpDocsUrl: '/docs/tooling/mcp/antigravity',
   },
   {
+    id: 'grok-build',
+    name: 'Grok Build',
+    iconPath: '/icons/grok-build.svg',
+    supportsAIChat: false,
+    mcpDocsUrl: '/docs/tooling/ai/agents/grok-build',
+  },
+  {
     id: 'opencode',
     name: 'OpenCode',
     iconPath: '/icons/opencode.svg',
@@ -142,6 +154,97 @@ export function getOfficialPlugins(): HomePluginConfig[] {
       docsUrl: ide.pluginDocsUrl,
     }
   })
+}
+
+const DOCS_HOME_AI_TOOLS = [...DOCS_HOME_IDE_AI_TOOLS, ...DOCS_HOME_VIBE_AI_TOOLS]
+
+const OFFICIAL_PLUGIN_TITLES = new Set(
+  OFFICIAL_PLUGIN_IDS.map((id) => getIDEById(id)?.name).filter(
+    (name): name is string => Boolean(name),
+  ),
+)
+
+function getDocsHomeAiToolHref(ide: IDEConfig): string | undefined {
+  const byTitle = DOCS_HOME_AI_TOOLS.find((tool) => tool.title === ide.name)?.href
+  if (byTitle) return byTitle
+
+  if (ide.id === 'google-antigravity') {
+    return DOCS_HOME_AI_TOOLS.find((tool) => tool.title === 'Google Antigravity')
+      ?.href
+  }
+
+  return DOCS_HOME_AI_TOOLS.find((tool) => tool.iconSrc === ide.iconPath)?.href
+}
+
+function getDocsHomeAiToolTitle(ide: IDEConfig): string {
+  if (ide.id === 'google-antigravity') {
+    return 'Google Antigravity'
+  }
+
+  return (
+    DOCS_HOME_AI_TOOLS.find(
+      (tool) => tool.title === ide.name || tool.iconSrc === ide.iconPath,
+    )?.title ?? ide.name
+  )
+}
+
+/**
+ * MCP integrations shown in the home page avatar stack (explicit order).
+ */
+export const HOME_MCP_STACK_VISIBLE_IDS = [
+  'grok-build',
+  'vscode',
+  'opencode',
+  'google-antigravity',
+] as const
+
+export function getHomeMcpStackVisibleIntegrations(): IDEConfig[] {
+  return HOME_MCP_STACK_VISIBLE_IDS.map((id) => {
+    const ide = getIDEById(id)
+    if (!ide) {
+      throw new Error(`Missing IDE: ${id}`)
+    }
+    return ide
+  })
+}
+
+export function getHomeMcpStackOverflowCount(): number {
+  const visibleHrefs = new Set(
+    getHomeMcpStackVisibleIntegrations()
+      .map((ide) => getDocsHomeAiToolHref(ide))
+      .filter((href): href is string => Boolean(href)),
+  )
+
+  return DOCS_HOME_AI_TOOLS.filter(
+    (tool) =>
+      !OFFICIAL_PLUGIN_TITLES.has(tool.title) && !visibleHrefs.has(tool.href),
+  ).length
+}
+
+export type HomeMcpStackAvatarItem = {
+  name: string
+  imageSrc?: string
+  label?: string
+  href: string
+}
+
+export function getHomeMcpStackAvatarItems(): HomeMcpStackAvatarItem[] {
+  const items = getHomeMcpStackVisibleIntegrations().map((integration) => ({
+    name: getDocsHomeAiToolTitle(integration),
+    imageSrc: integration.iconPath,
+    href: getDocsHomeAiToolHref(integration) ?? '/docs/tooling',
+  }))
+
+  const overflowCount = getHomeMcpStackOverflowCount()
+  if (overflowCount > 0) {
+    items.push({
+      name: 'And more',
+      label: `+${overflowCount}`,
+      href: '/docs/tooling',
+    })
+  }
+
+  return items
 }
 
 /**

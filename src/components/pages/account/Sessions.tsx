@@ -249,6 +249,7 @@ export function AccountSessions({
       phone: t('Phone'),
       github: 'GitHub',
       google: 'Google',
+      cursor: 'Cursor',
       apple: 'Apple',
       facebook: 'Facebook',
       twitter: 'Twitter',
@@ -268,6 +269,7 @@ export function AccountSessions({
       phone: 'phone.svg',
       github: 'github.svg',
       google: 'google.svg',
+      cursor: 'cursor-ai.svg',
       apple: 'apple.svg',
       facebook: 'facebook.svg',
     }

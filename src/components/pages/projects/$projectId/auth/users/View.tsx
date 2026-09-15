@@ -8,6 +8,7 @@ import {
 import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import { cn } from '@/lib/utils'
 import { formatIpForDisplay } from '@/lib/format-ip'
+import { formatPrefValue, formatPrefsForEditor } from '@/lib/prefs-value'
 import { getBaseEndpoint } from '@/lib/appwrite/sdk'
 import {
   ArrowLeft,
@@ -1456,7 +1457,7 @@ function UpdatePreferencesSection({
     setPreferences(
       Object.entries(prefs).map(([key, value]) => ({
         key,
-        value: String(value),
+        value: formatPrefValue(value),
       })),
     )
     if (Object.keys(prefs).length === 0) {
@@ -1489,7 +1490,7 @@ function UpdatePreferencesSection({
     setPreferences(updated)
   }
 
-  const originalPrefs = user.prefs || {}
+  const originalPrefs = formatPrefsForEditor(user.prefs || {})
   const currentPrefs: Record<string, string> = {}
   preferences.forEach((pref) => {
     if (pref.key && pref.value) {
@@ -2269,7 +2270,7 @@ function CreateUserMembershipDialog({
   }
 
   const handleSubmit = () => {
-    if (!teamId || roles.length === 0) {
+    if (!teamId) {
       return
     }
     onSubmit({ teamId, roles })
@@ -2303,7 +2304,12 @@ function CreateUserMembershipDialog({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="membership-roles">{t('Roles')}</Label>
+              <Label htmlFor="membership-roles">
+                {t('Roles')}{' '}
+                <span className="font-normal text-muted-foreground">
+                  {t('(optional)')}
+                </span>
+              </Label>
               <div className="space-y-2">
                 <div className="flex gap-2">
                   <Input
@@ -2372,7 +2378,7 @@ function CreateUserMembershipDialog({
           </Button>
           <Button
             onClick={handleSubmit}
-            disabled={!teamId || roles.length === 0 || isLoading}
+            disabled={!teamId || isLoading}
           >
             {t('Create')}
           </Button>
@@ -2428,6 +2434,7 @@ function IdentitiesTab({
       auth0: 'auth0.svg',
       authentik: 'authentik.svg',
       oidc: 'oidc.svg',
+      cursor: 'cursor-ai.svg',
     }
     return providerMap[provider.toLowerCase()] || 'empty.svg'
   }

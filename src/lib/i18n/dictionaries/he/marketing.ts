@@ -54,6 +54,8 @@ export const heMarketingDictionary: Record<string, string> = {
   'Additional connections': 'חיבורים נוספים',
   'Additional executions': 'הרצות נוספות',
   'Additional GB-hours': 'שעות GB נוספות',
+  'Additional MiniLM embeddings': 'MiniLM embeddings נוספים',
+  'Additional Nomic embeddings': 'Nomic embeddings נוספים',
   'Additional projects': 'פרויקטים נוספים',
   'Additional reads': 'קריאות נוספות',
   'Additional screenshots': 'צילומי מסך נוספים',
@@ -81,6 +83,7 @@ export const heMarketingDictionary: Record<string, string> = {
   'Allowed': 'מאושר',
   'Analytics': 'אנליטיקה',
   'and': 'וכן',
+  'and more below': 'ועוד למטה',
   'And more': 'ועוד',
   'Angel Investor': "משקיע אנג'ל",
   'Angel Investors': "משקיעי אנג'ל",
@@ -98,6 +101,7 @@ export const heMarketingDictionary: Record<string, string> = {
   'apply.': 'של Google.',
   'Appwrite 2.0 introduced a refreshed platform experience and stronger foundations, powered by Hyperloop B, a new engine for the platform, and Console IV, a next-generation console rebuilt with TanStack.': // pragma: allowlist secret
     'Appwrite 2.0 הביאה חוויית פלטפורמה מרעננת ויסודות חזקים יותר, מונעת על ידי Hyperloop B, מנוע חדש לפלטפורמה, ו-Console IV, קונסולה מהדור הבא שנבנתה מחדש עם TanStack.', // pragma: allowlist secret
+  'Appwrite 2.0 launch': 'Appwrite 2.0 launch',
   'Appwrite Arena launched as an open benchmark for evaluating how effectively AI models understand and work with Appwrite APIs and workflows.': // pragma: allowlist secret
     'Appwrite Arena הושקה כמדד פתוח להערכת מידת ההבנה והעבודה של מודלי AI עם ממשקי ה-API ותהליכי העבודה של Appwrite.', // pragma: allowlist secret
   'Appwrite Cloud entered public beta, making the platform available without self-hosting and opening the door to managed infrastructure for teams of every size.': // pragma: allowlist secret
@@ -448,6 +452,9 @@ export const heMarketingDictionary: Record<string, string> = {
   'Errors': 'שגיאות',
   'EU data processing': 'עיבוד נתונים באיחוד האירופי',
   'Evaluating vendors': 'בוחנים ספקים',
+  'Just researching': 'בשלב מחקר ראשוני',
+  'Comparing options': 'משווים אפשרויות',
+  'Ready to get started': 'מוכנים להתחיל',
   'Event triggers': 'טריגרים מאירועים',
   'Event-driven': 'מונע אירועים',
   'Every day at midnight': 'כל יום בחצות',
@@ -634,7 +641,9 @@ export const heMarketingDictionary: Record<string, string> = {
   'Join a lean, AI-native team': 'הצטרפו לצוות רזה ו-AI-native',
   'Join a vibrant community': 'הצטרפו לקהילה תוססת',
   'Join Discord': 'הצטרפו ל-Discord',
+  'Join on Discord': 'הצטרפו ל-Discord',
   'Join Init': 'הצטרפו ל-Init',
+  'Join event': 'הצטרפות לאירוע',
   'Join our Discord': 'הצטרפו ל-Discord שלנו',
   'Join the Appwrite Education program in collaboration with the GitHub Student Developer Pack. Students access Appwrite Cloud for free throughout their studies.': // pragma: allowlist secret
     'הצטרפו לתוכנית ה-Education של Appwrite בשיתוף GitHub Student Developer Pack. סטודנטים מקבלים גישה חינמית ל-Appwrite Cloud לאורך כל הלימודים.', // pragma: allowlist secret
@@ -664,6 +673,8 @@ export const heMarketingDictionary: Record<string, string> = {
   'Learn more about': 'למדו עוד על',
   'Light Grey': 'אפור בהיר',
   'Live': 'Live',
+  'Live now': 'בשידור חי',
+  'Loading online participants…': 'טוען משתתפים אונליין…',
   'Log drains': 'ייצוא לוגים',
   'Logging': 'רישום לוגים',
   'Logomark': 'סמל הלוגו',
@@ -730,10 +741,11 @@ export const heMarketingDictionary: Record<string, string> = {
   'Number of projects': 'מספר פרויקטים',
   'of original': 'מהמקור',
   'Official': 'רשמי',
-  'Official plugins': 'תוספים רשמיים',
+  'Works great with your favorite agents': 'עובד מצוין עם הסוכנים האהובים עליכם',
   'on GitHub': 'ב-GitHub',
   'On this page': 'בעמוד זה',
   'Online now': 'אונליין עכשיו',
+  invisible: 'מוסתרים',
   'on X': 'ב-X',
   'On-set monitor during the first Init filming in Prague': 'מוניטור בסט במהלך צילומי ה-Init הראשונים בפראג',
   'Once your Appwrite account is created, go to our Docs and get started with Appwrite Cloud.': 'לאחר יצירת חשבון ה-Appwrite, עברו לדוקומנטציה שלנו והתחילו לעבוד עם Appwrite Cloud.', // pragma: allowlist secret
@@ -754,6 +766,7 @@ export const heMarketingDictionary: Record<string, string> = {
   'Open-source alternative to Hacker News.': 'אלטרנטיבה בקוד פתוח ל-Hacker News.',
   'Open-source launch': 'השקת קוד פתוח',
   'or': 'או',
+  'or Appwrite DBs': 'או Appwrite DBs',
   'Organization members': 'חברי ארגון',
   'Organization roles': 'תפקידי ארגון',
   'Original': 'מקור',
@@ -781,6 +794,8 @@ export const heMarketingDictionary: Record<string, string> = {
   'Partner Tiers': 'דרגות שותפים',
   'Partner with one of the fastest growing dev tool companies': 'שתפו פעולה עם אחת מחברות כלי הפיתוח הצומחות במהירות',
   'Partners Program': 'תוכנית השותפים',
+  'participant online': 'משתתף אונליין',
+  'participants online': 'משתתפים אונליין',
   'Pass a user JWT so Server SDKs inside the function respect Auth permissions.': 'העבירו JWT של משתמש כדי ש-SDKs של השרת בתוך הפונקציה יכבדו הרשאות אימות.',
   'Password policies': 'מדיניות סיסמאות',
   'Password protected': 'מוגן בסיסמה',
@@ -871,6 +886,7 @@ export const heMarketingDictionary: Record<string, string> = {
   'Recovery codes': 'קודי שחזור',
   'Redirect': 'הפניה',
   'Redo': 'ביצוע מחדש',
+  'Reload list': 'טעינת הרשימה מחדש',
   'Reduce vendor sprawl and integration overhead. Appwrite unifies the backend services enterprise teams need to build, deploy, and protect modern applications without juggling multiple contracts or stitching vendors together.': // pragma: allowlist secret
     'צמצמו ריבוי ספקים ותקורת אינטגרציות. Appwrite מאחדת את שירותי ה-backend שצוותי ארגון צריכים כדי לבנות, לפרוס ולהגן על אפליקציות מודרניות בלי ללהטט בין חוזים או לתפור ספקים יחד.', // pragma: allowlist secret
   'Region': 'אזור',
@@ -949,8 +965,8 @@ export const heMarketingDictionary: Record<string, string> = {
     'שלחו קודי OTP, עדכוני משלוח והתראות מחוץ לאפליקציה דרך Twilio, Vonage, MSG91, Telesign, Textmagic וספקי SMS נוספים.',
   'Send realtime alerts to signed-in users without leaving your application experience.': 'שלחו התראות בזמן אמת למשתמשים מחוברים בלי לצאת מחוויית האפליקציה.',
   'Send receipt, update inventory, and notify fulfillment': 'שלחו קבלה, עדכנו מלאי והודיעו למערך האספקה',
-  'Send receipts, digests, and transactional mail through SendGrid, Mailgun, SMTP, and other email providers.':
-    'שלחו קבלות, סיכומים ודואר טרנזקציוני דרך SendGrid, Mailgun, SMTP וספקי אימייל נוספים.',
+  'Send receipts, digests, and transactional mail through SendGrid, Mailgun, Amazon SES, SMTP, and other email providers.':
+    'שלחו קבלות, סיכומים ודואר טרנזקציוני דרך SendGrid, Mailgun, Amazon SES, SMTP וספקי אימייל נוספים.',
   'Series A': 'סבב Series A',
   'Series A coverage': 'סיקור ה-Series A',
   'Serve WebP or AVIF without storing duplicate files.': 'הגישו WebP או AVIF בלי לאחסן קבצים כפולים.',
@@ -1056,6 +1072,7 @@ export const heMarketingDictionary: Record<string, string> = {
   'Start small, build consistently, and give things enough time to become real.': 'התחילו בקטן, בנו בעקביות ותנו לדברים מספיק זמן להפוך לאמיתיים.',
   'Startups program': 'תוכנית הסטארטאפים',
   'Startups Program': 'תוכנית הסטארטאפים',
+  'Starting soon': 'מתחיל בקרוב',
   'Static assets': 'נכסים סטטיים',
   'Static, SPA, and PWA': 'סטטי, SPA ו-PWA',
   'Status': 'סטטוס',
@@ -1109,6 +1126,8 @@ export const heMarketingDictionary: Record<string, string> = {
   'Terms of Service': 'תנאי שירות',
   Terms: 'תנאים',
   Cookies: 'עוגיות',
+  'Text embeddings (MiniLM)': 'Text embeddings (MiniLM)',
+  'Text embeddings (Nomic)': 'Text embeddings (Nomic)',
   'Text verification': 'אימות ב-SMS',
   'Thank you for applying': 'תודה על הגשת המועמדות',
   "Thanks for signing up. Here's how to get started with your new account.": 'תודה שנרשמתם. כך מתחילים עם החשבון החדש שלכם.',
@@ -1212,7 +1231,9 @@ export const heMarketingDictionary: Record<string, string> = {
     'בקרו באתר התצוגה שלנו שנבנה עם Appwrite כדי למצוא השראה לפרויקטים שלכם או להציג את מה שבניתם.', // pragma: allowlist secret
   'Visit the community': 'בקרו בקהילה',
   'Volume discounts': 'הנחות כמות',
-  'Volume discounts are available in case you handle the bill for your clients.': 'הנחות כמות זמינות אם אתם מנהלים את החיוב עבור הלקוחות שלכם.',
+  'Volume discounts and rev-share models are available if you handle the bill for your clients.':
+    'הנחות כמות ומודלי rev-share זמינים אם אתם מנהלים את החיוב עבור הלקוחות שלכם.',
+  'Watch': 'צפייה',
   'Ways to partner': 'דרכים לשותפות',
   'We adhere to all needed compliance: GDPR, HIPAA, CCPA, SOC-2.': 'אנחנו עומדים בכל דרישות התאימות הנדרשות: GDPR, HIPAA, CCPA, SOC-2.',
   'We are a remote-first, AI-native team built to stay lean. We recruit exceptional talent worldwide, communicate with clarity, and combine human judgment with AI to ship ambitious work at speed.':
@@ -1480,4 +1501,137 @@ export const heMarketingDictionary: Record<string, string> = {
   'Create and share your first link': 'צרו ושתפו את הקישור הראשון',
   'Generate an invite link for each campaign or channel. Signups stay attributed for 180 days, and you earn $15 when a referral upgrades to Pro.':
     'צרו קישור הזמנה לכל קמפיין או ערוץ. הרשמות מיוחסות למשך 180 ימים, ואתם מרוויחים 15$ כשמופנה משדרג ל-Pro.',
+  'A skill loads first, then MCP tools fetch live Auth and Functions data.':
+    'Skill נטען קודם, ואז כלי MCP שולפים נתוני Auth ו-Functions חיים.',
+  'Agents call Appwrite MCP and Skills from the same composer you already use.': // pragma: allowlist secret
+    'הסוכנים קוראים ל-MCP ול-Skills של Appwrite מאותו Composer שאתם כבר עובדים בו.',
+  'Ask to chart usage, scaffold auth, or query tables...':
+    'בקשו לשרטט שימוש, להקים auth או לשלוף טבלאות...',
+  'Artifact': 'Artifact',
+  'Auth is up 18% week over week. Functions executions followed the same curve after the Friday deploy.':
+    'Auth עלה ב-18% משבוע לשבוע. הרצות Functions עקבו אחרי אותה עקומה אחרי הפריסה ביום שישי.',
+  'Auth signups vs function executions': 'הרשמות Auth מול הרצות Functions',
+  "Chart this week's Auth signups against Functions executions":
+    'שרטטו את הרשמות ה-Auth השבוע מול הרצות Functions',
+  'Compare layouts': 'השוואת פריסות',
+  'Composer': 'Composer',
+  'Install Appwrite in Cursor, Claude Code, Codex, and other agents.': // pragma: allowlist secret
+    'התקינו את Appwrite ב-Cursor, Claude Code, Codex ובסוכנים אחרים.',
+  'MCP and Skills show up in the chat, complete with live Appwrite data and a usage chart.': // pragma: allowlist secret
+    'MCP ו-Skills מופיעים בצ׳אט, כולל נתוני Appwrite חיים ותרשים שימוש.',
+  'Query Postgres, chart traffic, and ship a campaign. Your agent does it on a live Appwrite project.': // pragma: allowlist secret
+    'שלפו מ-Postgres, שרטטו תעבורה ושלחו קמפיין. הסוכן מריץ את זה על פרויקט Appwrite אמיתי.',
+  'MCP docs': 'מסמכי MCP',
+  'Official plugin with MCP and Skills.': 'תוסף רשמי עם MCP ו-Skills.',
+  'Plugins and integrations': 'תוספים ואינטגרציות',
+  'Ran MCP': 'הרצת MCP',
+  'Rendered chart': 'תרשים הוצג',
+  'Skills docs': 'מסמכי Skills',
+  'Skills ready': 'Skills מוכנים',
+  'Spotlight': 'Spotlight',
+  'Steps': 'שלבים',
+  'Using skill': 'שימוש ב-Skill',
+  'Usage chart from Appwrite MCP': 'תרשים שימוש מ-Appwrite MCP',
+  'Weekly activity': 'פעילות שבועית',
+  'Workbench': 'Workbench',
+  'Agent chat with Appwrite MCP': 'צ׳אט סוכן עם Appwrite MCP',
+  "Query Postgres for Friday's new users. Did the launch convert?":
+    'שלפו מ-Postgres את המשתמשים החדשים מיום שישי. ההשקה המירה?',
+  '2,184 new accounts since Friday. Email verification is at 91%, so they are staying.':
+    '2,184 חשבונות חדשים מאז יום שישי. אימות האימייל עומד על 91%, כך שהם נשארים.',
+  'Show requests since Friday. Did the launch spike traffic?':
+    'הציגו את הבקשות מאז יום שישי. ההשקה הקפיצה את התעבורה?',
+  '184K requests since Friday, 3.2x Thursday. Traffic is holding through the weekend.':
+    '184K בקשות מאז יום שישי, פי 3.2 מיום חמישי. התעבורה מחזיקה לאורך סוף השבוע.',
+  'Queue a Messaging campaign for the 9% who have not verified yet.':
+    'תזמנו קמפיין Messaging ל-9% שעדיין לא אומתו.',
+  'Draft is ready for 187 unverified accounts, scheduled tomorrow at 9am.':
+    'הטיוטה מוכנה ל-187 חשבונות לא מאומתים, מתוזמנת למחר ב-9:00.',
+  'Ask to inspect logs, ship a campaign, or query tables...':
+    'בקשו לבדוק לוגים, לשלוח קמפיין או לשלוף טבלאות...',
+  '2,184 new rows in users since Friday. Email verification is at 91%. Opening the latest signups.':
+    '2,184 שורות חדשות ב-users מאז יום שישי. אימות האימייל עומד על 91%. פותחים את ההרשמות האחרונות.',
+  '2,184 rows since Friday': '2,184 שורות מאז יום שישי',
+  'Postgres': 'Postgres',
+  'Any failed executions from Friday?': 'יש הרצות שנכשלו ביום שישי?',
+  '12 executions timed out on cold start. The rest completed.':
+    '12 הרצות חרגו מזמן ב-cold start. השאר הושלמו.',
+  'Latest signups': 'ההרשמות האחרונות',
+  '2,184 accounts since Friday': '2,184 חשבונות מאז יום שישי',
+  'Friday executions': 'הרצות מיום שישי',
+  '12 timed out on cold start': '12 חרגו מזמן ב-cold start',
+  'Verify your account': 'אמתו את החשבון שלכם',
+  '187 unverified accounts': '187 חשבונות לא מאומתים',
+  'Audience': 'קהל',
+  'Unverified users': 'משתמשים לא מאומתים',
+  'Schedule': 'תזמון',
+  'Tomorrow, 9:00 AM': 'מחר, 9:00',
+  'Finish creating your account to keep your data and start building.':
+    'סיימו ליצור את החשבון כדי לשמור על הנתונים ולהתחיל לבנות.',
+  'Campaign': 'קמפיין',
+  'Upload this photo to a new Storage bucket.':
+    'העלו את התמונה הזו לבאקט Storage חדש.',
+  'Created the campaign-assets bucket and uploaded kittens.jpg.':
+    'יצרנו את הבאקט campaign-assets והעלינו את kittens.jpg.',
+  '1 file': 'קובץ אחד',
+  'Remote MCP': 'MCP מרוחק',
+  'Authorize Appwrite MCP': 'אישור Appwrite MCP',
+  'No API key needed. Sign in with OAuth.':
+    'אין צורך ב-API key. התחברו עם OAuth.',
+  'Allow access': 'אישור גישה',
+  'Authenticated with OAuth': 'מאומת עם OAuth',
+  // Init day 5 grand prize CSV draw
+  'Live winner draw': 'הגרלת הזוכה בשידור חי',
+  'Drawn only from the verified social entries in the uploaded CSV. Online users are not part of this draw.': 'ההגרלה נערכת רק מבין ההשתתפויות המאומתות מהרשתות החברתיות שבקובץ ה-CSV שהועלה. משתמשים אונליין אינם חלק מהגרלה זו.',
+  'Upload the verified entries CSV to build the wheel.': 'העלו את קובץ ה-CSV של ההשתתפויות המאומתות כדי לבנות את הגלגל.',
+  'Upload the CSV first. Drop it anywhere on this card or use Upload CSV.': 'העלו קודם את קובץ ה-CSV. גררו אותו לכל מקום בכרטיס הזה או השתמשו ב"העלאת CSV".',
+  'Upload CSV': 'העלאת CSV',
+  'Replace CSV': 'החלפת CSV',
+  'Only CSV files are accepted.': 'ניתן להעלות רק קובצי CSV.',
+  'The CSV has no eligible entries.': 'בקובץ ה-CSV אין השתתפויות כשירות.',
+  'Missing required CSV columns:': 'חסרות עמודות CSV נדרשות:',
+  'The CSV has an unterminated quoted value.': 'בקובץ ה-CSV יש ערך במירכאות שלא נסגרו.',
+  'The CSV file is empty.': 'קובץ ה-CSV ריק.',
+  'Could not read that file.': 'לא ניתן לקרוא את הקובץ.',
+  'Spin the wheel': 'סובבו את הגלגל',
+  'Spin again': 'סובבו שוב',
+  'View post': 'צפייה בפוסט',
+  'View ticket': 'צפייה בכרטיס',
+  'Press spin the wheel when you are ready to draw the grand prize winner.': 'לחצו על "סובבו את הגלגל" כשתהיו מוכנים להגריל את הזוכה בפרס הגדול.',
+  'What you can expect': 'מה לצפות',
+  'Our enterprise team reviews your requirements and follows up with a tailored proposal, usually within 3 business days.':
+    'צוות ה-Enterprise שלנו בוחן את הדרישות שלכם וחוזר עם הצעה מותאמת, בדרך כלל תוך 3 ימי עסקים.',
+  'Your details have been sent successfully. We usually get back within 3 business days.':
+    'הפרטים נשלחו בהצלחה. בדרך כלל נחזור אליכם תוך 3 ימי עסקים.',
+  'Our enterprise team will review your requirements.':
+    'צוות ה-Enterprise שלנו יבחן את הדרישות שלכם.',
+  'We usually get back within 3 business days at': 'בדרך כלל נחזור אליכם תוך 3 ימי עסקים בכתובת',
+  'Compare plans and explore enterprise capabilities on our marketing site.':
+    'השוו תוכניות וגלו יכולות Enterprise באתר השיווקי שלנו.',
+  'Enterprise overview': 'סקירת Enterprise',
+  'Inquiry submitted': 'הפנייה נשלחה',
+  'Tell us about your organization and requirements. Our enterprise team will follow up with a tailored proposal.':
+    'ספרו לנו על הארגון והדרישות שלכם. צוות ה-Enterprise שלנו יחזור אליכם עם הצעה מותאמת.',
+  "We couldn't submit your inquiry": 'לא הצלחנו לשלוח את הפנייה',
+  'Sales inquiries are not configured': 'פניות מכירות אינן מוגדרות',
+  'Set VITE_GROWTH_ENDPOINT in .env to enable submission.':
+    'הגדירו VITE_GROWTH_ENDPOINT בקובץ ‎.env כדי לאפשר שליחה.',
+  'Sales inquiries are not configured. Set VITE_GROWTH_ENDPOINT in .env to enable submission.':
+    'פניות מכירות אינן מוגדרות. הגדירו VITE_GROWTH_ENDPOINT בקובץ ‎.env כדי לאפשר שליחה.',
+  'Something went wrong while sending your request. Please try again in a moment.':
+    'משהו השתבש בשליחת הבקשה. נסו שוב בעוד רגע.',
+  'Your details': 'הפרטים שלכם',
+  'Fields marked with your account email help us connect your inquiry to your Appwrite account.':
+    'שדות שמסומנים עם אימייל החשבון שלכם עוזרים לנו לקשר את הפנייה לחשבון Appwrite שלכם.', // pragma: allowlist secret
+  'You are signed in. Open the sales inquiry form to share your requirements with our enterprise team.':
+    'אתם מחוברים. פתחו את טופס פניית המכירות כדי לשתף את הדרישות שלכם עם צוות ה-Enterprise.',
+  'Open sales form': 'פתיחת טופס מכירות',
+  'SOC-2, HIPAA, SSO, extended activity logs':
+    'SOC-2, HIPAA, SSO, לוגי פעילות מורחבים',
+  'Sign in to contact sales': 'התחברו כדי לפנות למכירות',
+  'Create a free account or sign in to submit an enterprise inquiry. This helps us reduce spam and connect your request to your Appwrite account.':
+    'צרו חשבון חינמי או התחברו כדי לשלוח פניית Enterprise. זה עוזר לנו להפחית ספאם ולקשר את הבקשה לחשבון Appwrite שלכם.', // pragma: allowlist secret
+  'Sign in to your Appwrite account and submit a sales inquiry. Our team will review your use case and schedule a conversation to scope resources, support, and deployment options.':
+    'התחברו לחשבון Appwrite שלכם ושלחו פניית מכירות. הצוות שלנו יבחן את מקרה השימוש שלכם ויתאם שיחה לתכנון משאבים, תמיכה ואפשרויות פריסה.', // pragma: allowlist secret
+  'Enter the full URL, including https://': 'הזינו את כתובת הא URL המלאה, כולל https://',
 }

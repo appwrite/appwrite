@@ -153,6 +153,71 @@ function editorSurfaceHex(isDarkChrome: boolean): string {
   )
 }
 
+/**
+ * Overlay widgets (suggest, hover, parameter hints) should follow shadcn popover/menu
+ * tokens, not the editor canvas.
+ */
+function monacoOverlayWidgetColors(
+  isDarkChrome: boolean,
+): NonNullable<editor.IStandaloneThemeData['colors']> {
+  const fallbackBg = isDarkChrome ? FALLBACK_DARK_BG : FALLBACK_LIGHT_BG
+  const fallbackFg = isDarkChrome ? '#fafafa' : '#18181b'
+  const popover = readThemeColorHex('--popover', 'background', fallbackBg)
+  const popoverFg = readThemeColorHex(
+    '--popover-foreground',
+    'foreground',
+    fallbackFg,
+  )
+  const border = readThemeColorHex(
+    '--border',
+    'background',
+    isDarkChrome ? '#27272a' : '#e4e4e7',
+  )
+  const accent = readThemeColorHex(
+    '--accent',
+    'background',
+    isDarkChrome ? '#2d2d31' : '#e5e7eb',
+  )
+  const accentFg = readThemeColorHex(
+    '--accent-foreground',
+    'foreground',
+    fallbackFg,
+  )
+  const muted = readThemeColorHex('--muted-foreground', 'foreground', '#71717a')
+  const mutedBg = readThemeColorHex('--muted', 'background', accent)
+  const ring = readThemeColorHex('--ring', 'background', accent)
+
+  return {
+    'editorWidget.background': popover,
+    'editorWidget.foreground': popoverFg,
+    'editorWidget.border': border,
+    'widget.border': border,
+    'widget.shadow': isDarkChrome ? '#00000066' : '#0000001a',
+    'editorSuggestWidget.background': popover,
+    'editorSuggestWidget.foreground': popoverFg,
+    'editorSuggestWidget.border': border,
+    'editorSuggestWidget.selectedBackground': accent,
+    'editorSuggestWidget.selectedForeground': accentFg,
+    'editorSuggestWidget.selectedIconForeground': accentFg,
+    'editorSuggestWidget.highlightForeground': popoverFg,
+    'editorSuggestWidget.focusHighlightForeground': accentFg,
+    'editorSuggestWidgetStatus.foreground': muted,
+    'editorHoverWidget.background': popover,
+    'editorHoverWidget.foreground': popoverFg,
+    'editorHoverWidget.border': border,
+    'editorHoverWidget.statusBarBackground': mutedBg,
+    'editorHoverWidget.highlightForeground': accentFg,
+    'list.hoverBackground': accent,
+    'list.hoverForeground': accentFg,
+    'list.activeSelectionBackground': accent,
+    'list.activeSelectionForeground': accentFg,
+    'list.inactiveSelectionBackground': accent,
+    'list.focusBackground': accent,
+    'list.focusForeground': accentFg,
+    'focusBorder': ring,
+  }
+}
+
 export function getEffectiveConsoleTheme(
   resolvedTheme: string | undefined,
 ): string {
@@ -205,10 +270,9 @@ export function defineMonacoAppTheme(
         'editorLineNumber.activeForeground': fgDark,
         'editorCursor.foreground': fgDark,
         'editor.selectionBackground': accentDark,
-        'editorWidget.background': surface,
-        'editorSuggestWidget.background': surface,
         'minimap.background': surface,
         'minimapGutter.background': surface,
+        ...monacoOverlayWidgetColors(true),
       },
     })
     return
@@ -234,10 +298,9 @@ export function defineMonacoAppTheme(
       'editorLineNumber.activeForeground': fgLight,
       'editorCursor.foreground': fgLight,
       'editor.selectionBackground': accentLight,
-      'editorWidget.background': surface,
-      'editorSuggestWidget.background': surface,
       'minimap.background': surface,
       'minimapGutter.background': surface,
+      ...monacoOverlayWidgetColors(false),
     },
   })
 }

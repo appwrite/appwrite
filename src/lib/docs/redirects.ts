@@ -16,7 +16,8 @@ const DOCS_REDIRECTS: Record<string, string> = {
   'tooling/ai': 'tooling',
   'tooling/ai/assistant': 'products/agent',
   'tooling/skills': 'tooling/ai/skills',
-  'products/databases/spatial': 'products/databases/geo-queries#spatial-columns',
+  'products/databases/spatial':
+    'products/databases/geo-queries#spatial-columns',
   'tutorials/android': 'tutorials/android/step-1',
   'tutorials/apple': 'tutorials/apple/step-1',
   'tutorials/astro-ssr-auth': 'tutorials/astro-ssr-auth/step-1',
@@ -28,7 +29,8 @@ const DOCS_REDIRECTS: Record<string, string> = {
   'tutorials/react': 'tutorials/react/step-1',
   'tutorials/react-native': 'tutorials/react-native/step-1',
   'tutorials/refine': 'tutorials/refine/step-1',
-  'tutorials/subscriptions-with-stripe': 'tutorials/subscriptions-with-stripe/step-1',
+  'tutorials/subscriptions-with-stripe':
+    'tutorials/subscriptions-with-stripe/step-1',
   'tutorials/sveltekit': 'tutorials/sveltekit/step-1',
   'tutorials/sveltekit-csr-auth': 'tutorials/sveltekit-csr-auth/step-1',
   'tutorials/sveltekit-ssr-auth': 'tutorials/sveltekit-ssr-auth/step-1',
@@ -38,6 +40,9 @@ const DOCS_REDIRECTS: Record<string, string> = {
   'partners/guides/marketplace': 'partners/guides/marketplaces',
   'partners/guides/multi-tenant': 'partners/guides/multi-tenancy',
   'products/network/waf': 'products/firewall',
+  'products/firewall/create': 'products/firewall/quick-start',
+  'products/firewall/update': 'products/firewall/rules',
+  'products/firewall/delete': 'products/firewall/rules',
   'tooling/ai/mcp-servers/api': 'tooling/ai/mcp-servers',
   'tooling/ai/mcp-servers/docs': 'tooling/ai/mcp-servers',
 }

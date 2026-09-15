@@ -8,7 +8,7 @@ export function buildCoverExportFontStyleBlock(fontFaceCss = ''): string {
       .cover-title {
         font-family: 'Aeonik Pro', Arial, Helvetica, sans-serif;
         font-weight: 400;
-        letter-spacing: -0.022em;
+        letter-spacing: 0;
       }
       .cover-eyebrow {
         font-family: 'Inter', Arial, Helvetica, sans-serif;
@@ -19,6 +19,10 @@ export function buildCoverExportFontStyleBlock(fontFaceCss = ''): string {
       .cover-body {
         font-family: 'Inter', Arial, Helvetica, sans-serif;
         font-weight: 400;
+      }
+      .cover-cta {
+        font-family: 'Inter', Arial, Helvetica, sans-serif;
+        font-weight: 600;
       }
       .cover-code {
         font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;

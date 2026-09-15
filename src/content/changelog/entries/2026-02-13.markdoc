@@ -3,6 +3,7 @@ layout: changelog
 title: "Realtime Channel helpers: Type-safe subscriptions made simple"
 date: 2026-02-13
 cover: /images/blog/announcing-realtime-channel-helpers/cover.avif
+tags: realtime
 ---
 
 Appwrite Realtime now includes Channel helpers, a fluent, type-safe API for building channel subscriptions. Instead of manually writing channel strings, you use the `Channel` class with IDE autocomplete and compile-time validation.

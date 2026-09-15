@@ -460,7 +460,7 @@ curl -X GET \
 A branch gets its own hostname, and reuses the parent's username and password because it is a snapshot copy of the parent's storage. The port is the standard `3306`; branches have no connection pooler. Connect with the branch's `connectionString` straight from the response:
 
 ```bash
-mysql --defaults-extra-file=<(printf '[client]\npassword=%s\n' "$BRANCH_PASSWORD") -h <branch host> -P 3306 -u admin -D <branch database>
+mysql --defaults-extra-file=<(printf '[client]\npassword=%s\n' "$BRANCH_PASSWORD") -h <branch host> -P 3306 -u admin.<hash> -D <branch database>
 ```
 
 # Delete a branch {% #delete %}
@@ -675,6 +675,12 @@ curl -X DELETE \
 # Billing {% #billing %}
 
 A branch runs on fixed, lightweight compute, so its cost is dominated by storage. The snapshot is free at the moment of branching; storage cost accumulates as the branch's data diverges from the parent. There is no separate branch line item, branches roll into your regular database storage and compute totals.
+
+# Use case: a development copy of production {% #dev-prod %}
+
+Branches also separate daily development from production without maintaining seed scripts. Create a long-lived branch from the production database and point local and staging environments at the branch's hostname. Developers query production-shaped data, and every write stays on the branch, so production is never at risk from a bad migration or a careless `DELETE`.
+
+Branch data diverges from the parent from the moment of branching. To refresh, delete the branch and create a new one with the same `branchId`; the new branch starts from the parent's current state. Set a `ttl` if the branch should clean itself up, or omit it for a permanent development copy.
 
 # Use case: per-PR preview database {% #ci-example %}
 

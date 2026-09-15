@@ -28,14 +28,13 @@ import {
   useProjectDatabaseWritesChart,
   useUsageResourceBreakdownLookups,
 } from '@/lib/react-query/hooks'
-import { useDebugOverrides } from '@/lib/debug-overrides'
 import { useRefresh } from '@/components/global/shared/RefreshContext'
 import {
   collectUsageResourceBreakdownItems,
 } from '@/lib/usage/usage-resources-breakdown'
 import { DatabaseOperationBentoCard } from './_components/DatabaseOperationBentoCard'
 import { UsageTimeSeriesChartCard } from './_components/UsageTimeSeriesChartCard'
-import { shouldShowUsageChartSkeleton } from '@/lib/usage/usage-chart-loading'
+import { getUsageChartLoadingProps } from '@/lib/usage/usage-chart-loading'
 import { UsageBreakdownDrawer } from './_components/UsageBreakdownDrawer'
 
 const DATABASE_USAGE_ERROR = {
@@ -65,8 +64,7 @@ export function DatabasesSection({
 }: DatabasesSectionProps) {
   const queryClient = useQueryClient()
   const { registerRefreshHandler, unregisterRefreshHandler } = useRefresh()
-  const { disableUsageBreakdownQueries } = useDebugOverrides()
-  const showBreakdown = !disableUsageBreakdownQueries
+  const showBreakdown = true
   const [breakdownDrawer, setBreakdownDrawer] =
     useState<DatabaseBreakdownDrawerState | null>(null)
 
@@ -154,6 +152,17 @@ export function DatabasesSection({
     ? []
     : (documentsQuery.data?.chartPoints ?? [])
 
+  const readsLoading = getUsageChartLoadingProps(readsQuery, readsPoints)
+  const writesLoading = getUsageChartLoadingProps(writesQuery, writesPoints)
+  const collectionsLoading = getUsageChartLoadingProps(
+    collectionsQuery,
+    collectionsPoints,
+  )
+  const documentsLoading = getUsageChartLoadingProps(
+    documentsQuery,
+    documentsPoints,
+  )
+
   return (
     <div className="space-y-10">
       <DatabaseOperationBentoCard
@@ -166,11 +175,8 @@ export function DatabasesSection({
         chartPoints={readsPoints}
         total={sumUsageChartPoints(readsPoints)}
         changePercent={readsQuery.data?.changePercent ?? 0}
-        isLoading={shouldShowUsageChartSkeleton(
-          readsQuery.isError,
-          readsQuery.isLoading,
-          readsQuery.isPlaceholderData,
-        )}
+        isLoading={readsLoading.isLoading}
+        isRefreshing={readsLoading.isRefreshing}
         isError={readsQuery.isError}
         queryError={readsQuery.error}
         showBreakdown={showBreakdown}
@@ -194,11 +200,8 @@ export function DatabasesSection({
         chartPoints={writesPoints}
         total={sumUsageChartPoints(writesPoints)}
         changePercent={writesQuery.data?.changePercent ?? 0}
-        isLoading={shouldShowUsageChartSkeleton(
-          writesQuery.isError,
-          writesQuery.isLoading,
-          writesQuery.isPlaceholderData,
-        )}
+        isLoading={writesLoading.isLoading}
+        isRefreshing={writesLoading.isRefreshing}
         isError={writesQuery.isError}
         queryError={writesQuery.error}
         showBreakdown={showBreakdown}
@@ -220,11 +223,8 @@ export function DatabasesSection({
         total={getUsageChartLatestValue(collectionsPoints)}
         changePercent={collectionsQuery.data?.changePercent ?? 0}
         chartPoints={collectionsPoints}
-        isLoading={shouldShowUsageChartSkeleton(
-          collectionsQuery.isError,
-          collectionsQuery.isLoading,
-          collectionsQuery.isPlaceholderData,
-        )}
+        isLoading={collectionsLoading.isLoading}
+        isRefreshing={collectionsLoading.isRefreshing}
         isError={collectionsQuery.isError}
         queryError={collectionsQuery.error}
         errorTitle={DATABASE_USAGE_ERROR.title}
@@ -243,11 +243,8 @@ export function DatabasesSection({
         total={getUsageChartLatestValue(documentsPoints)}
         changePercent={documentsQuery.data?.changePercent ?? 0}
         chartPoints={documentsPoints}
-        isLoading={shouldShowUsageChartSkeleton(
-          documentsQuery.isError,
-          documentsQuery.isLoading,
-          documentsQuery.isPlaceholderData,
-        )}
+        isLoading={documentsLoading.isLoading}
+        isRefreshing={documentsLoading.isRefreshing}
         isError={documentsQuery.isError}
         queryError={documentsQuery.error}
         errorTitle={DATABASE_USAGE_ERROR.title}

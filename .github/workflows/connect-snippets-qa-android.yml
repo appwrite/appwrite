@@ -23,8 +23,7 @@ defaults:
 jobs:
   qa:
     name: ${{ matrix.id }}
-    # AWS runner via RunsOn; profile defined in .github/runs-on.yml. The
-    # emulator needs KVM, so this profile runs on nested-virt instances.
+    # The emulator needs KVM, so this profile runs on nested-virt instances.
     runs-on: runs-on=${{ github.run_id }}/runner=snippets-qa-android
     timeout-minutes: 60
     strategy:

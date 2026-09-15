@@ -9,7 +9,7 @@ lastUpdated: 2026-06-29
 author: veeresh-mulge
 callToAction: true
 unlisted: true
-category: tutorial
+category: tutorials
 faqs:
   - question: "What is the core difference between generative AI and agentic AI?"
     answer: "Generative AI predicts and produces content (text, images, code) in response to a prompt and then stops. Agentic AI uses a generative model as a reasoning engine, but adds memory, tools, planning, and feedback loops so it can pursue a goal across multiple steps without explicit prompting at each one."

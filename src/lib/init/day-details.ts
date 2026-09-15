@@ -5,6 +5,7 @@ import {
   Shield,
 } from 'lucide-react'
 import type { LaunchEventDay, LaunchEventScheduleItem } from './types'
+import { INIT_DAY_STREAM_HREFS } from './links'
 
 export const INIT_JULY_2026_DAYS: LaunchEventDay[] = [
   {
@@ -18,13 +19,13 @@ export const INIT_JULY_2026_DAYS: LaunchEventDay[] = [
     icon: Megaphone,
     visual: {
       mockVisualId: 'appwrite-2',
-      imageAlt: 'Appwrite 2.0 mock with Appwrite icon mark and 2.0 wordmark',
+      imageAlt: 'Appwrite logo and 2.0',
     },
     isLive: true,
     sessionCount: 2,
     headerNavCta: {
       label: 'Discover Appwrite 2.0',
-      href: '/home',
+      href: '/blog/post/announcing-appwrite-2',
       external: false,
     },
     resources: [
@@ -32,21 +33,21 @@ export const INIT_JULY_2026_DAYS: LaunchEventDay[] = [
         id: 'day1-announce',
         typeLabel: 'Blog',
         title: 'Announcing Appwrite 2.0',
-        href: '/blog',
+        href: '/blog/post/announcing-appwrite-2',
         actionLabel: 'Read article',
       },
       {
         id: 'day1-hyperloop',
         typeLabel: 'Blog',
         title: 'Hyperloop B - New engine behind Appwrite 2.0',
-        href: '/blog',
+        href: '/blog/post/hyperloop-b',
         actionLabel: 'Read article',
       },
       {
         id: 'day1-console-iv',
         typeLabel: 'Blog',
         title: 'Console IV - Next-gen Appwrite console, rebuilt with TanStack',
-        href: '/blog',
+        href: '/blog/post/announcing-console-iv',
         actionLabel: 'Read article',
       },
       {
@@ -81,22 +82,22 @@ export const INIT_JULY_2026_DAYS: LaunchEventDay[] = [
     sessionCount: 2,
     headerNavCta: {
       label: 'Explore PostgreSQL',
-      href: '/docs/products/databases',
+      href: '/docs/products/databases/postgresql',
       external: false,
     },
     resources: [
       {
         id: 'day2-blog',
         typeLabel: 'Blog',
-        title: 'PostgreSQL comes to Appwrite',
-        href: '/blog',
+        title: 'Appwrite now speaks Postgres',
+        href: '/blog/post/appwrite-now-speaks-postgresql',
         actionLabel: 'Read article',
       },
       {
         id: 'day2-docs',
         typeLabel: 'Docs',
         title: 'PostgreSQL documentation',
-        href: '/docs/products/databases',
+        href: '/docs/products/databases/postgresql',
         actionLabel: 'Visit docs',
       },
     ],
@@ -125,21 +126,21 @@ export const INIT_JULY_2026_DAYS: LaunchEventDay[] = [
         id: 'day3-vectorsdb-blog',
         typeLabel: 'Blog',
         title: 'VectorsDB comes to Appwrite',
-        href: '/blog',
+        href: '/blog/post/announcing-vectorsdb',
         actionLabel: 'Read article',
       },
       {
         id: 'day3-documentsdb-blog',
         typeLabel: 'Blog',
         title: 'DocumentsDB comes to Appwrite',
-        href: '/blog',
+        href: '/blog/post/announcing-documentsdb',
         actionLabel: 'Read article',
       },
       {
         id: 'day3-mysql-blog',
         typeLabel: 'Blog',
         title: 'MySQL comes to Appwrite',
-        href: '/blog',
+        href: '/blog/post/announcing-native-mysql-databases',
         actionLabel: 'Read article',
       },
       {
@@ -174,7 +175,7 @@ export const INIT_JULY_2026_DAYS: LaunchEventDay[] = [
     sessionCount: 2,
     headerNavCta: {
       label: 'Try S3 for Storage',
-      href: '/docs/products/storage',
+      href: '/docs/products/storage/s3',
       external: false,
     },
     resources: [
@@ -182,14 +183,28 @@ export const INIT_JULY_2026_DAYS: LaunchEventDay[] = [
         id: 'day4-blog',
         typeLabel: 'Blog',
         title: 'S3 support for Appwrite Storage',
-        href: '/blog',
+        href: '/blog/post/announcing-s3-api',
+        actionLabel: 'Read article',
+      },
+      {
+        id: 'day4-gitlab-blog',
+        typeLabel: 'Blog',
+        title: 'GitLab comes to Appwrite',
+        href: '/blog/post/announcing-gitlab-support',
+        actionLabel: 'Read article',
+      },
+      {
+        id: 'day4-bitbucket-blog',
+        typeLabel: 'Blog',
+        title: 'Bitbucket comes to Appwrite',
+        href: '/blog/post/announcing-bitbucket-support',
         actionLabel: 'Read article',
       },
       {
         id: 'day4-docs',
         typeLabel: 'Docs',
         title: 'Storage & S3',
-        href: '/docs/products/storage',
+        href: '/docs/products/storage/s3',
         actionLabel: 'Visit docs',
       },
     ],
@@ -198,10 +213,10 @@ export const INIT_JULY_2026_DAYS: LaunchEventDay[] = [
     day: 5,
     dateLabel: 'SEPTEMBER 4',
     weekdayLabel: 'FRIDAY, SEPTEMBER 4',
-    title: 'Appwrite Firewall & Domains',
-    description: 'Protect traffic and own your domains in Appwrite.',
+    title: 'Firewall, OAuth, and Domains',
+    description: 'Protect traffic, become an identity provider, and own your domains.',
     longDescription:
-      'Appwrite Firewall filters abuse before it reaches your APIs, Functions, and Sites. Appwrite Domains lets you buy hostnames, manage DNS, and connect custom domains with automatic TLS from the Console.',
+      'Appwrite Firewall filters abuse before it reaches your APIs, Functions, and Sites. Your project can now act as an OAuth 2.1 and OpenID Connect provider, and Appwrite Apps takes the same consent model organization-wide, so other developers install your dashboards, deployment tools, and agents with scoped tokens instead of pasted API keys. Appwrite Domains lets you buy hostnames, manage DNS, and connect custom domains with automatic TLS from the Console.',
     icon: Shield,
     visual: {
       mockVisualId: 'firewall',
@@ -209,7 +224,7 @@ export const INIT_JULY_2026_DAYS: LaunchEventDay[] = [
     },
     sessionCount: 3,
     headerNavCta: {
-      label: 'Explore Firewall & Domains',
+      label: 'Explore Firewall, OAuth, and Domains',
       href: '/docs/products/firewall',
       external: false,
     },
@@ -218,14 +233,28 @@ export const INIT_JULY_2026_DAYS: LaunchEventDay[] = [
         id: 'day5-firewall-blog',
         typeLabel: 'Blog',
         title: 'Introducing Appwrite Firewall',
-        href: '/blog',
+        href: '/blog/post/announcing-appwrite-firewall',
+        actionLabel: 'Read article',
+      },
+      {
+        id: 'day5-oauth2-blog',
+        typeLabel: 'Blog',
+        title: 'Announcing the Appwrite OAuth2 server',
+        href: '/blog/post/announcing-oauth2-server',
+        actionLabel: 'Read article',
+      },
+      {
+        id: 'day5-apps-blog',
+        typeLabel: 'Blog',
+        title: 'Announcing Appwrite Apps',
+        href: '/blog/post/announcing-apps-for-appwrite-partners',
         actionLabel: 'Read article',
       },
       {
         id: 'day5-domains-blog',
         typeLabel: 'Blog',
         title: 'Introducing Appwrite Domains',
-        href: '/blog',
+        href: '/blog/post/announcing-appwrite-domains',
         actionLabel: 'Read article',
       },
       {
@@ -233,6 +262,20 @@ export const INIT_JULY_2026_DAYS: LaunchEventDay[] = [
         typeLabel: 'Docs',
         title: 'Firewall documentation',
         href: '/docs/products/firewall',
+        actionLabel: 'Visit docs',
+      },
+      {
+        id: 'day5-oauth2-docs',
+        typeLabel: 'Docs',
+        title: 'OAuth2 server documentation',
+        href: '/docs/products/auth/oauth-server',
+        actionLabel: 'Visit docs',
+      },
+      {
+        id: 'day5-partners-docs',
+        typeLabel: 'Docs',
+        title: 'Partners and Apps documentation',
+        href: '/docs/partners/apps',
         actionLabel: 'Visit docs',
       },
       {
@@ -246,89 +289,111 @@ export const INIT_JULY_2026_DAYS: LaunchEventDay[] = [
   },
 ]
 
+/**
+ * Sessions are authored in Pacific Time: livestreams at 9:00 AM with Reddit AMAs
+ * an hour later, except day 2, which runs in the afternoon. Init week falls
+ * entirely within PDT, so every entry carries the same -07:00 offset. Times are
+ * stored as absolute instants and rendered in the viewer's own zone - see
+ * `schedule-time.ts`.
+ */
 export const INIT_JULY_2026_SCHEDULE: LaunchEventScheduleItem[] = [
   {
     id: 'sched-keynote',
     day: 1,
     platform: 'youtube',
     title: 'Appwrite 2.0 launch stream',
-    timeLabel: 'Live now',
+    startsAt: '2026-08-31T09:00:00-07:00',
     isLive: true,
+    href: INIT_DAY_STREAM_HREFS[1],
   },
   {
     id: 'sched-reddit-ama',
     day: 1,
     platform: 'reddit',
     title: 'Appwrite 2.0 AMA',
-    timeLabel: '2:00 PM',
-    href: 'https://reddit.com/r/appwrite',
+    startsAt: '2026-08-31T10:00:00-07:00',
+    href: 'https://www.reddit.com/r/appwrite/comments/1w3j9n7/appwrite_20_is_here_and_were_running_an_ama_in/',
   },
   {
     id: 'sched-yt-databases',
     day: 2,
     platform: 'youtube',
     title: 'PostgreSQL deep dive',
-    timeLabel: '10:00 AM',
+    // Day 2 runs later than the rest of the week.
+    startsAt: '2026-09-01T13:30:00-07:00',
+    isLive: true,
+    href: INIT_DAY_STREAM_HREFS[2],
   },
   {
     id: 'sched-reddit-databases-ama',
     day: 2,
     platform: 'reddit',
     title: 'PostgreSQL AMA',
-    timeLabel: '3:00 PM',
-    href: 'https://reddit.com/r/appwrite',
+    startsAt: '2026-09-01T14:30:00-07:00',
+    href: 'https://www.reddit.com/r/appwrite/comments/1w4p34s/native_postgresql_databases_are_here_and_were/',
   },
   {
     id: 'sched-yt-servers',
     day: 3,
     platform: 'youtube',
     title: 'VectorsDB, DocumentsDB & MySQL deep dive',
-    timeLabel: '10:00 AM',
+    startsAt: '2026-09-02T09:00:00-07:00',
+    isLive: true,
+    href: INIT_DAY_STREAM_HREFS[3],
   },
   {
     id: 'sched-reddit-servers-ama',
     day: 3,
     platform: 'reddit',
     title: 'VectorsDB, DocumentsDB & MySQL AMA',
-    timeLabel: '6:00 PM',
-    href: 'https://reddit.com/r/appwrite',
+    startsAt: '2026-09-02T10:00:00-07:00',
+    href: 'https://www.reddit.com/r/appwrite/comments/1w5fazf/introducing_vectorsdb_documentsdb_and_native/',
   },
   {
     id: 'sched-yt-s3',
     day: 4,
     platform: 'youtube',
     title: 'S3 for Appwrite Storage',
-    timeLabel: '10:00 AM',
+    startsAt: '2026-09-03T09:00:00-07:00',
+    isLive: true,
+    href: INIT_DAY_STREAM_HREFS[4],
   },
   {
     id: 'sched-reddit-s3-ama',
     day: 4,
     platform: 'reddit',
     title: 'S3 for Storage AMA',
-    timeLabel: '2:00 PM',
-    href: 'https://reddit.com/r/appwrite',
+    startsAt: '2026-09-03T10:00:00-07:00',
+    href: 'https://www.reddit.com/r/appwrite/comments/1w6c0qe/we_just_launched_s3_support_for_appwrite_storage/',
   },
   {
-    id: 'sched-yt-firewall',
+    id: 'sched-yt-firewall-oauth-domains',
     day: 5,
     platform: 'youtube',
-    title: 'Appwrite Firewall & Domains launch stream',
-    timeLabel: '10:00 AM',
-  },
-  {
-    id: 'sched-discord-closing',
-    day: 5,
-    platform: 'discord',
-    title: 'Init closing party',
-    timeLabel: '5:00 PM',
-    href: '/discord',
+    title: 'Firewall, OAuth, and Domains launch stream',
+    startsAt: '2026-09-04T09:00:00-07:00',
+    isLive: true,
+    href: INIT_DAY_STREAM_HREFS[5],
   },
   {
     id: 'sched-reddit-recap-ama',
     day: 5,
     platform: 'reddit',
     title: 'Init week AMA',
-    timeLabel: '7:00 PM',
-    href: 'https://reddit.com/r/appwrite',
+    startsAt: '2026-09-04T10:00:00-07:00',
+    href: 'https://www.reddit.com/r/appwrite/comments/1w7911m/introducing_appwrite_domains_firewall_and_oauth2/',
+  },
+  /**
+   * The community recap lands the day after the final launch day. It exists only
+   * in the schedule - the day timeline, event end date, and prizes section all
+   * still treat Init as a five-day week.
+   */
+  {
+    id: 'sched-discord-closing',
+    day: 6,
+    platform: 'discord',
+    title: 'Init community recap',
+    startsAt: '2026-09-05T09:00:00-07:00',
+    href: '/discord',
   },
 ]

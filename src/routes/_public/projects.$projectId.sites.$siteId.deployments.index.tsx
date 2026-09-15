@@ -10,6 +10,7 @@ import { fetchVcsInstallations } from '@/lib/react-query/hooks/vcs'
 import { Query } from '@appwrite.io/console'
 import { DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import { listSearchSchema, parseListSearch } from '@/lib/table-filters'
+import { getRedeploySourceDeploymentId } from '@/lib/utils/deployment-status'
 
 const DEPLOYMENTS_SELECT = [
   Query.select([
@@ -63,6 +64,7 @@ export const Route = createFileRoute(
     const site = await queryClient.ensureQueryData(
       siteQueryOptions(projectId, siteId),
     )
+    const redeployDeploymentId = getRedeploySourceDeploymentId(site)
 
     // Prefetch deployments only when no filters (avoids duplicate request when filters applied)
     const deploymentsPromise = hasFilterQuery
@@ -84,6 +86,15 @@ export const Route = createFileRoute(
       site.deploymentId
         ? queryClient.ensureQueryData(
             siteDeploymentQueryOptions(projectId, siteId, site.deploymentId),
+          )
+        : Promise.resolve(),
+      redeployDeploymentId && redeployDeploymentId !== site.deploymentId
+        ? queryClient.ensureQueryData(
+            siteDeploymentQueryOptions(
+              projectId,
+              siteId,
+              redeployDeploymentId,
+            ),
           )
         : Promise.resolve(),
       // Fetch VCS installations (for deployment actions)

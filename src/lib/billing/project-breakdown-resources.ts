@@ -450,8 +450,7 @@ function formatBillingBytes(bytes: number): string {
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`
 }
 
-function formatBillingHoursFromMinutes(minutes: number): string {
-  const hours = minutes / 60
+function formatBillingHours(hours: number): string {
   if (hours >= 100) {
     return `${Math.round(hours).toLocaleString()} hours`
   }
@@ -470,7 +469,7 @@ export function formatDedicatedDbBillingUsageLabel(
 
   switch (metricId) {
     case 'dedicatedDbSpecificationCost':
-      return formatBillingHoursFromMinutes(usage)
+      return formatBillingHours(usage)
     case 'dedicatedDbPitr':
     case 'dedicatedDbExtensions':
       return usage === 1 ? '1 instance' : `${usage.toLocaleString()} instances`

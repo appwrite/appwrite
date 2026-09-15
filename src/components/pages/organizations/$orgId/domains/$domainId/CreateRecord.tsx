@@ -12,6 +12,11 @@ import {
 } from '@/components/ui/select'
 import { BaseDrawer } from '@/components/global/shared/BaseDrawer'
 import { useT } from '@/lib/i18n/translate'
+import {
+  RECORD_NUMBER_MAX,
+  RECORD_TTL_MAX,
+  parseRecordNumber,
+} from '@/lib/domains/record-numeric-fields'
 
 const DNS_RECORD_TYPES = [
   'A',
@@ -100,17 +105,19 @@ export function CreateRecordDialog({
     e.preventDefault()
     if (!name.trim() || !value.trim()) return
 
+    const parsedTtl = parseRecordNumber(ttl)
+    const parsedPriority = parseRecordNumber(priority)
+    const parsedWeight = parseRecordNumber(weight)
+    const parsedPort = parseRecordNumber(port)
+
     onCreate({
       type,
       name: name.trim(),
       value: value.trim(),
-      ttl: parseInt(ttl) || DEFAULT_TTL,
-      priority:
-        type === 'MX' || type === 'SRV'
-          ? parseInt(priority) || undefined
-          : undefined,
-      weight: type === 'SRV' ? parseInt(weight) || undefined : undefined,
-      port: type === 'SRV' ? parseInt(port) || undefined : undefined,
+      ttl: parsedTtl ?? DEFAULT_TTL,
+      priority: type === 'MX' || type === 'SRV' ? parsedPriority : undefined,
+      weight: type === 'SRV' ? parsedWeight : undefined,
+      port: type === 'SRV' ? parsedPort : undefined,
       comment: comment.trim() || undefined,
     })
   }
@@ -223,6 +230,7 @@ export function CreateRecordDialog({
                     value={ttl}
                     onChange={(e) => setTtl(e.target.value)}
                     min="1"
+                    max={RECORD_TTL_MAX}
                     disabled={isLoading}
                   />
                   <p className="text-[12px] text-muted-foreground">
@@ -242,6 +250,7 @@ export function CreateRecordDialog({
                       onChange={(e) => setPriority(e.target.value)}
                       placeholder={type === 'MX' ? '10' : '0'}
                       min="0"
+                      max={RECORD_NUMBER_MAX}
                       disabled={isLoading}
                     />
                     <p className="text-[12px] text-muted-foreground">
@@ -265,6 +274,7 @@ export function CreateRecordDialog({
                         onChange={(e) => setWeight(e.target.value)}
                         placeholder="10"
                         min="0"
+                        max={RECORD_NUMBER_MAX}
                         disabled={isLoading}
                       />
                     </div>
@@ -279,8 +289,8 @@ export function CreateRecordDialog({
                         value={port}
                         onChange={(e) => setPort(e.target.value)}
                         placeholder="443"
-                        min="1"
-                        max="65535"
+                        min="0"
+                        max={RECORD_NUMBER_MAX}
                         disabled={isLoading}
                       />
                     </div>

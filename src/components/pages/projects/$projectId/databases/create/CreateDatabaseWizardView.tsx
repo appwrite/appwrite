@@ -40,6 +40,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { IdInput } from '@/components/ui/id-input'
 import { Badge } from '@/components/ui/badge'
+import { DatabaseTypeBetaBadge } from '../_components/DatabaseTypeBetaBadge'
+import { isBetaDatabaseType } from '@/lib/databases/database-type-display'
 import {
   Table,
   TableBody,
@@ -74,6 +76,7 @@ import { cn } from '@/lib/utils'
 import {
   DATABASE_HOME_TO,
   databaseRouteKindFromApiType,
+  isCloudDedicatedDatabasesEnabled,
 } from '@/lib/database-routes'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import {
@@ -137,8 +140,6 @@ type DbTypeOptionMeta = DbTypeChoice & {
 const DB_TYPE_GROUPS: {
   title: string
   description: string
-  /** Used when MySQL is hidden from the native group. */
-  descriptionPostgresOnly?: string
   options: DbTypeChoice[]
 }[] = [
   {
@@ -173,8 +174,6 @@ const DB_TYPE_GROUPS: {
     title: 'Native databases',
     description:
       'Dedicated PostgreSQL and MySQL engines for teams that need direct SQL compatibility.',
-    descriptionPostgresOnly:
-      'A dedicated PostgreSQL engine for teams that need direct SQL compatibility.',
     options: [
       {
         id: 'Postgres',
@@ -230,7 +229,11 @@ function specificationsSourceForWizardType(
   return dedicatedDatabaseSourceFromDatabaseType(wizardBackend(dbType))
 }
 
-export function CreateDatabaseWizardView() {
+export function CreateDatabaseWizardView({
+  initialDbType = null,
+}: {
+  initialDbType?: DatabaseTypeOption | null
+} = {}) {
   const t = useT()
   const { projectId } = useParams({ strict: false })
   const navigate = useNavigate()
@@ -275,42 +278,32 @@ export function CreateDatabaseWizardView() {
       ),
     [organizationPlan, specificationsData?.pricing],
   )
+  const dedicatedCloudEnabled = isCloudDedicatedDatabasesEnabled()
   const dedicatedTypeSpecSources = useMemo(() => {
     const items: { id: DatabaseTypeOption; source: DedicatedDatabaseSource }[] =
       []
-    if (features.dedicatedDbsDocumentsDB) {
+    if (dedicatedCloudEnabled) {
       items.push({
         id: 'DocumentsDB',
         source: dedicatedDatabaseSourceFromDatabaseType(
           DatabaseType.Documentsdb,
         ),
       })
-    }
-    if (features.dedicatedDbsVectorsDB) {
       items.push({
         id: 'VectorsDB',
         source: dedicatedDatabaseSourceFromDatabaseType(DatabaseType.Vectorsdb),
       })
-    }
-    if (features.nativeDbsPostgres) {
       items.push({
         id: 'Postgres',
         source: dedicatedDatabaseSourceFromEngine('postgresql'),
       })
-    }
-    if (features.nativeDbsMySQL) {
       items.push({
         id: 'MySQL',
         source: dedicatedDatabaseSourceFromEngine('mysql'),
       })
     }
     return items
-  }, [
-    features.dedicatedDbsDocumentsDB,
-    features.dedicatedDbsVectorsDB,
-    features.nativeDbsPostgres,
-    features.nativeDbsMySQL,
-  ])
+  }, [dedicatedCloudEnabled])
   const dedicatedTypeSpecQueries = useQueries({
     queries: dedicatedTypeSpecSources.map(({ source }) => ({
       ...databaseSpecificationsQueryOptions(pid, source),
@@ -391,49 +384,26 @@ export function CreateDatabaseWizardView() {
 
     return DB_TYPE_OPTIONS.map((opt) => {
       if (opt.id === 'Postgres') {
-        return resolveDedicatedType(opt, features.nativeDbsPostgres)
+        return resolveDedicatedType(opt, dedicatedCloudEnabled)
       }
       if (opt.id === 'MySQL') {
-        return resolveDedicatedType(opt, features.nativeDbsMySQL)
+        return resolveDedicatedType(opt, dedicatedCloudEnabled)
       }
       if (opt.id === 'DocumentsDB') {
-        return resolveDedicatedType(opt, features.dedicatedDbsDocumentsDB)
+        return resolveDedicatedType(opt, dedicatedCloudEnabled)
       }
       if (opt.id === 'VectorsDB') {
-        return resolveDedicatedType(opt, features.dedicatedDbsVectorsDB)
+        return resolveDedicatedType(opt, dedicatedCloudEnabled)
       }
       return { ...opt, comingSoon: opt.comingSoon }
     })
   }, [
-    features.nativeDbsPostgres,
-    features.nativeDbsMySQL,
-    features.dedicatedDbsDocumentsDB,
-    features.dedicatedDbsVectorsDB,
+    dedicatedCloudEnabled,
     regionSupportsDedicatedCompute,
     planSupportsDedicatedCompute,
     dedicatedTypesWithoutCompute,
     regionUnavailableMessage,
   ])
-
-  const visibleDbTypeGroups = useMemo(() => {
-    return DB_TYPE_GROUPS.map((group) => {
-      const options = group.options.filter((opt) => {
-        // MySQL is fully gated behind the flag (no "coming soon" teaser).
-        if (opt.id === 'MySQL') return features.nativeDbsMySQL
-        return true
-      })
-      if (options.length === 0) return null
-      const description =
-        group.title === 'Native databases' &&
-        !features.nativeDbsMySQL &&
-        group.descriptionPostgresOnly
-          ? group.descriptionPostgresOnly
-          : group.description
-      return { ...group, description, options }
-    }).filter(
-      (group): group is NonNullable<typeof group> => group != null,
-    )
-  }, [features.nativeDbsMySQL])
 
   /** Show specs when the region can list dedicated tiers. Locked rows stay visible. */
   const showSpecsForType =
@@ -630,7 +600,13 @@ export function CreateDatabaseWizardView() {
           policies: [] as Models.BackupPolicy[],
           total: 0,
         }))
-      : await fetchBackupPolicies(pid, database.$id).catch(() => ({
+      : await fetchBackupPolicies(
+          pid,
+          database.$id,
+          dbType
+            ? databaseRouteKindFromApiType(wizardBackend(dbType))
+            : undefined,
+        ).catch(() => ({
           policies: [] as Models.BackupPolicy[],
           total: 0,
         }))
@@ -758,6 +734,36 @@ export function CreateDatabaseWizardView() {
       option: option.id,
     })
   }
+
+  const initialDbTypeAppliedRef = useRef(false)
+  useEffect(() => {
+    if (initialDbTypeAppliedRef.current || !initialDbType || dbType) return
+    const option = dbTypeOptions.find((item) => item.id === initialDbType)
+    if (!option || option.comingSoon || option.requiresUpgrade) return
+    initialDbTypeAppliedRef.current = true
+    setDbType(option.id)
+    if (isAutoFilledNewDatabaseName(name)) {
+      setName(getNewDatabaseNameForType(option.id))
+    }
+    if (option.id === 'TablesDB') {
+      setSpecId(SERVERLESS_DATABASE_SPEC_ID)
+    } else {
+      setSpecId(getDefaultEnabledSpecId(apiSpecOptions))
+    }
+    track('Wizard Option Selected', {
+      surface: 'create_database_wizard',
+      resource: 'database',
+      step: 'database_type',
+      option: option.id,
+    })
+  }, [
+    initialDbType,
+    dbType,
+    dbTypeOptions,
+    name,
+    apiSpecOptions,
+    track,
+  ])
 
   const handleSpecSelect = (value: string | null) => {
     setSpecId(value)
@@ -1114,7 +1120,7 @@ export function CreateDatabaseWizardView() {
             </h2>
           </div>
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-            {visibleDbTypeGroups.map((group, groupIndex) => (
+            {DB_TYPE_GROUPS.map((group, groupIndex) => (
               <div
                 key={group.title}
                 className={cn(
@@ -1174,15 +1180,9 @@ export function CreateDatabaseWizardView() {
                           <span className="text-[14px] font-medium text-foreground">
                             {opt.label}
                           </span>
-                          {(opt.id === 'DocumentsDB' ||
-                            opt.id === 'VectorsDB') && (
-                            <Badge
-                              variant="info"
-                              className="text-[10px] shrink-0"
-                            >
-                              {t('Beta')}
-                            </Badge>
-                          )}
+                          {isBetaDatabaseType(opt.id) ? (
+                            <DatabaseTypeBetaBadge />
+                          ) : null}
                           {optionMeta.comingSoon ? (
                             <Badge
                               variant="inactive"

@@ -10,6 +10,7 @@ import {
   GraduationCap,
   Headphones,
 } from 'lucide-react'
+import { GITHUB_STARS_THOUSANDS } from '@/lib/marketing/social-stats'
 
 export type PartnerBenefit = {
   title: string
@@ -59,7 +60,7 @@ export const partnerBenefits: PartnerBenefit[] = [
   {
     title: 'Discounts',
     description:
-      'Volume discounts are available in case you handle the bill for your clients.',
+      'Volume discounts and rev-share models are available if you handle the bill for your clients.',
     icon: Percent,
   },
 ]
@@ -109,7 +110,7 @@ export const partnerWays = [
 
 export const partnerStats = [
   { value: '650k+', label: 'Community members' },
-  { value: '50k+', label: 'GitHub stars' },
+  { value: `${GITHUB_STARS_THOUSANDS}k+`, label: 'GitHub stars' },
   { value: '900+', label: 'OSS Contributors' },
   { value: '300', label: 'Top GitHub projects' },
 ] as const

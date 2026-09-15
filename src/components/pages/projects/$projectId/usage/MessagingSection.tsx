@@ -22,7 +22,7 @@ import {
 } from '@/lib/react-query/hooks'
 import { useRefresh } from '@/components/global/shared/RefreshContext'
 import { UsageTimeSeriesChartCard } from './_components/UsageTimeSeriesChartCard'
-import { shouldShowUsageChartSkeleton } from '@/lib/usage/usage-chart-loading'
+import { getUsageChartLoadingProps } from '@/lib/usage/usage-chart-loading'
 
 const MESSAGING_USAGE_ERROR = {
   title: "Couldn't load messaging usage",
@@ -88,6 +88,10 @@ export function MessagingSection({
     : (topicsQuery.data?.chartPoints ?? [])
   const smsPoints = smsQuery.isError ? [] : (smsQuery.data?.chartPoints ?? [])
 
+  const messagesLoading = getUsageChartLoadingProps(messagesQuery, messagesPoints)
+  const topicsLoading = getUsageChartLoadingProps(topicsQuery, topicsPoints)
+  const smsLoading = getUsageChartLoadingProps(smsQuery, smsPoints)
+
   return (
     <div className="space-y-6">
       <UsageTimeSeriesChartCard
@@ -98,11 +102,8 @@ export function MessagingSection({
         total={sumUsageChartPoints(messagesPoints)}
         changePercent={messagesQuery.data?.changePercent ?? 0}
         chartPoints={messagesPoints}
-        isLoading={shouldShowUsageChartSkeleton(
-          messagesQuery.isError,
-          messagesQuery.isLoading,
-          messagesQuery.isPlaceholderData,
-        )}
+        isLoading={messagesLoading.isLoading}
+        isRefreshing={messagesLoading.isRefreshing}
         isError={messagesQuery.isError}
         queryError={messagesQuery.error}
         errorTitle={MESSAGING_USAGE_ERROR.title}
@@ -121,11 +122,8 @@ export function MessagingSection({
         total={getMessagingTopicsDisplayTotal(topicsPoints)}
         changePercent={topicsQuery.data?.changePercent ?? 0}
         chartPoints={topicsPoints}
-        isLoading={shouldShowUsageChartSkeleton(
-          topicsQuery.isError,
-          topicsQuery.isLoading,
-          topicsQuery.isPlaceholderData,
-        )}
+        isLoading={topicsLoading.isLoading}
+        isRefreshing={topicsLoading.isRefreshing}
         isError={topicsQuery.isError}
         queryError={topicsQuery.error}
         errorTitle={MESSAGING_USAGE_ERROR.title}
@@ -144,11 +142,8 @@ export function MessagingSection({
         total={sumUsageChartPoints(smsPoints)}
         changePercent={smsQuery.data?.changePercent ?? 0}
         chartPoints={smsPoints}
-        isLoading={shouldShowUsageChartSkeleton(
-          smsQuery.isError,
-          smsQuery.isLoading,
-          smsQuery.isPlaceholderData,
-        )}
+        isLoading={smsLoading.isLoading}
+        isRefreshing={smsLoading.isRefreshing}
         isError={smsQuery.isError}
         queryError={smsQuery.error}
         errorTitle={MESSAGING_USAGE_ERROR.title}

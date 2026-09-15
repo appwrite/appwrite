@@ -3,12 +3,12 @@
 import { Link, useLocation } from '@tanstack/react-router'
 import type { ComponentProps, MouseEvent, ReactNode } from 'react'
 import { useDocsPreview } from '@/components/global/providers/DocsPreviewContext'
-import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { isConsoleDocsPreviewPath } from '@/lib/docs/docs-preview-context'
-import { docsHrefToPreviewSlug } from '@/lib/docs/docs-href'
+import { docsHrefToPreviewSlug, docsHrefToRoute } from '@/lib/docs/docs-href'
 import type { DocsPreviewView } from '@/lib/docs/docs-preview-menu'
 import { useDocsPreviewNavigation } from '@/lib/docs/docs-preview-navigation'
-import { getDocsPageUrl, splitHrefHash } from '@/lib/marketing/urls'
+import { getDocsPageUrl } from '@/lib/marketing/urls'
+import { useLocalMarketingEnabled } from '@/lib/marketing/local-marketing'
 import { buildConsoleUrl, openInNewTab } from '@/lib/utils/context-menu'
 import { cn } from '@/lib/utils'
 
@@ -38,24 +38,6 @@ type DocsRouteLinkProps = Omit<ComponentProps<'a'>, 'href' | 'children'> & {
   previewView?: DocsPreviewView
 }
 
-export function docsHrefToRoute(href: string) {
-  const { pathname, hash } = splitHrefHash(href)
-
-  if (pathname === '/docs' || pathname === '/docs/') {
-    return { to: '/docs' as const, params: undefined, hash: hash || undefined }
-  }
-
-  if (pathname.startsWith('/docs/')) {
-    return {
-      to: '/docs/$' as const,
-      params: { _splat: pathname.slice('/docs/'.length) },
-      hash: hash || undefined,
-    }
-  }
-
-  return null
-}
-
 function openDocsInNewTab(href: string, marketingEnabled: boolean) {
   const docsUrl = getDocsPageUrl(href, marketingEnabled)
   openInNewTab(marketingEnabled ? buildConsoleUrl(docsUrl) : docsUrl)
@@ -70,8 +52,7 @@ export function DocsRouteLink({
   ...props
 }: DocsRouteLinkProps) {
   const location = useLocation()
-  const { features } = useConsoleProfile()
-  const marketingEnabled = features.marketing
+  const marketingEnabled = useLocalMarketingEnabled()
   const previewNav = useDocsPreviewNavigation()
   const { openDocsPreview } = useDocsPreview()
   const route = docsHrefToRoute(href)

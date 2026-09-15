@@ -4,11 +4,11 @@ title: Logs
 description: Learn how Appwrite Sites handles logs
 ---
 
-Each time a URL path on an Appwrite Site is requested, a log is created. Each log has a unique ID. You can find site logs logged in the **Logs** tab.
+Each time a URL path on an Appwrite Site is requested, a log is created. Each log has a unique ID. You can find site logs logged in the **Logs** tab.
 
 # Logs table
 
-In your site's **Logs** tab, you will see a table of your recent logs. The following information is shown in this table:
+In your site's **Logs** tab, you will see a table of your recent logs. The following information is shown in this table:
 
 | Column | Description |
 | --- | --- |

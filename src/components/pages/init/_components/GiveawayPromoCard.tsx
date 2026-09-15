@@ -1,6 +1,8 @@
 import { INIT_PRIZES_SECTION_ID } from '@/lib/init/init-section-ids'
 import type { LaunchEventGiveaway } from '@/lib/init/types'
 import { useInitThemeImageSrc } from '@/lib/init/use-init-theme-image'
+import { useInitHref } from '@/lib/init/use-init-href'
+import { useT } from '@/lib/i18n/translate'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { ChevronRight, Gift } from 'lucide-react'
@@ -16,12 +18,17 @@ interface GiveawayPromoCardProps {
 }
 
 export function GiveawayPromoCard({ giveaway }: GiveawayPromoCardProps) {
+  const t = useT()
   const imageSrc = useInitThemeImageSrc(
     giveaway.imageSrcLight,
     giveaway.imageSrcDark,
   )
   const ctaLabel = giveaway.ctaLabel ?? 'View all prizes'
   const ctaHref = giveaway.ctaHref ?? `#${INIT_PRIZES_SECTION_ID}`
+  const secondaryCtaLabel = giveaway.secondaryCtaLabel
+    ? t(giveaway.secondaryCtaLabel)
+    : null
+  const resolvedSecondaryHref = useInitHref(giveaway.secondaryCtaHref)
 
   return (
     <section
@@ -69,12 +76,25 @@ export function GiveawayPromoCard({ giveaway }: GiveawayPromoCardProps) {
           </div>
         </div>
 
-        <Button variant="outline" size="sm" className="h-9 w-full text-[13px]" asChild>
-          <a href={ctaHref}>
-            {ctaLabel}
-            <ChevronRight className="size-4" aria-hidden />
-          </a>
-        </Button>
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <Button variant="outline" size="sm" className="h-9 flex-1 text-[13px]" asChild>
+            <a href={ctaHref}>
+              {ctaLabel}
+              <ChevronRight className="size-4" aria-hidden />
+            </a>
+          </Button>
+          {secondaryCtaLabel && resolvedSecondaryHref ? (
+            <Button variant="outline" size="sm" className="h-9 flex-1 text-[13px]" asChild>
+              <a
+                href={resolvedSecondaryHref.href}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {secondaryCtaLabel}
+              </a>
+            </Button>
+          ) : null}
+        </div>
       </div>
     </section>
   )

@@ -10,6 +10,7 @@ import {
   MCP_SELF_HOSTED_DOCS_URL,
   MCP_SERVER_URL,
 } from '@/lib/config/mcp'
+import { isFeatureGatedDocsSlugHidden } from '@/lib/docs/feature-gated-docs'
 import { getAllDocsSectionNavs } from '@/lib/docs/navigation/section-navs'
 import { isDocsNavGroup } from '@/lib/docs/navigation'
 import type { DocsNavLink, DocsNavTree, DocsPageMeta } from '@/lib/docs/types'
@@ -170,7 +171,14 @@ export function buildOptionalLlmsSection(origin: string): LlmsSection {
       {
         title: 'Databases',
         url: `${origin}/products/databases`,
-        description: 'Scalable and robust databases.',
+        description:
+          'Managed PostgreSQL hosting plus TablesDB, DocumentsDB, VectorsDB, and MySQL.',
+      },
+      {
+        title: 'Managed PostgreSQL',
+        url: `${origin}/docs/products/databases/postgresql`,
+        description:
+          'Hosted PostgreSQL with pgvector, Prisma, backups, replicas, and PITR.',
       },
       {
         title: 'Storage',
@@ -526,7 +534,9 @@ export function buildDocsLlmsTxt(
     parts.push('', `## ${section.parent.label}`, ...sectionLines)
   }
 
-  const orphans = pages.filter((page) => !seen.has(page.slug))
+  const orphans = pages.filter(
+    (page) => !seen.has(page.slug) && !isFeatureGatedDocsSlugHidden(page.slug),
+  )
   if (orphans.length > 0) {
     parts.push('', '## Other')
     for (const page of orphans) {
@@ -573,6 +583,7 @@ export function buildDocsMarkdownIndex(
   ]
 
   const links = hubs.flatMap((hub) => {
+    if (isFeatureGatedDocsSlugHidden(hub.slug)) return []
     const meta = metaBySlug.get(hub.slug)
     if (!meta) return []
     return [

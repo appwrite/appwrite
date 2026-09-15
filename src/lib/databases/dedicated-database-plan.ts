@@ -1,6 +1,7 @@
 import type { Models } from '@appwrite.io/console'
 import { getBillingPlanResourceLimit } from '@/lib/billing/project-breakdown-resources'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
+import { isCloudDedicatedDatabasesEnabled } from '@/lib/database-routes'
 import { formatCompactCount } from '@/lib/usage/format-metric'
 
 /**
@@ -105,7 +106,7 @@ export function planSupportsDedicatedDatabases(
 ): boolean | null {
   const features = getActiveProfileFeatures()
   if (!features.billing) {
-    return features.dedicatedDbsSupport
+    return isCloudDedicatedDatabasesEnabled()
   }
   if (plan == null) return null
   return readDedicatedDatabaseFields(plan).supportsDedicatedDatabases === true

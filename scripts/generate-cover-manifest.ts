@@ -9,50 +9,57 @@
  *
  * Run: bun run generate:cover-manifest
  */
-import { readdirSync, statSync } from 'node:fs'
+import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import sharp from 'sharp'
 import { MIN_COVER_IMAGE_WIDTH } from '../src/lib/seo/cover-constants.ts'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
-const PUBLIC_ROOT = join(__dirname, '..', 'public')
-const OUTPUT_PATH = join(__dirname, '..', 'src', 'lib', 'seo', 'cover-dimensions.json')
+const ROOT = join(__dirname, '..')
+const PUBLIC_ROOT = join(ROOT, 'public')
+const CONTENT_ROOT = join(ROOT, 'src', 'content')
+const OUTPUT_PATH = join(ROOT, 'src', 'lib', 'seo', 'cover-dimensions.json')
 
-const COVER_FILE_PATTERN = /^cover\.(avif|png|jpe?g|webp)$/i
+const COVER_FRONTMATTER_PATTERN = /^cover:\s+(\/images\/[^\s]+)\s*$/gm
 
-function listCoverPublicPaths(): string[] {
-  const paths: string[] = []
+function collectCoverPathsFromContent(): string[] {
+  const paths = new Set<string>()
 
-  for (const blogRoot of ['images/blog', 'images/blog-local']) {
-    const root = join(PUBLIC_ROOT, blogRoot)
-    for (const slug of readdirSync(root)) {
-      const dir = join(root, slug)
-      if (!statSync(dir).isDirectory()) continue
-      for (const file of readdirSync(dir)) {
-        if (COVER_FILE_PATTERN.test(file)) {
-          paths.push(`/${blogRoot}/${slug}/${file}`)
-        }
+  function walk(dir: string) {
+    for (const entry of readdirSync(dir)) {
+      const entryPath = join(dir, entry)
+      const stat = statSync(entryPath)
+      if (stat.isDirectory()) {
+        walk(entryPath)
+        continue
+      }
+      if (!entry.endsWith('.markdoc')) continue
+
+      const source = readFileSync(entryPath, 'utf8')
+      for (const match of source.matchAll(COVER_FRONTMATTER_PATTERN)) {
+        paths.add(match[1]!)
       }
     }
   }
 
-  const changelogRoot = join(PUBLIC_ROOT, 'images/changelog')
-  for (const file of readdirSync(changelogRoot)) {
-    if (/\.(avif|png|jpe?g|webp)$/i.test(file)) {
-      paths.push(`/images/changelog/${file}`)
-    }
-  }
-
-  return paths.sort()
+  walk(CONTENT_ROOT)
+  return [...paths].sort()
 }
 
 async function main() {
   const manifest: Record<string, string> = {}
   const undersized: string[] = []
+  const missing: string[] = []
 
-  for (const publicPath of listCoverPublicPaths()) {
-    const metadata = await sharp(join(PUBLIC_ROOT, publicPath.slice(1))).metadata()
+  for (const publicPath of collectCoverPathsFromContent()) {
+    const filePath = join(PUBLIC_ROOT, publicPath.slice(1))
+    if (!statSync(filePath, { throwIfNoEntry: false })) {
+      missing.push(publicPath)
+      continue
+    }
+
+    const metadata = await sharp(filePath).metadata()
     const width = metadata.width ?? 0
     const height = metadata.height ?? 0
     if (!width || !height) continue
@@ -65,6 +72,13 @@ async function main() {
 
   await Bun.write(OUTPUT_PATH, `${JSON.stringify(manifest, null, 2)}\n`)
   console.log(`Wrote ${Object.keys(manifest).length} cover dimensions to ${OUTPUT_PATH}`)
+
+  if (missing.length > 0) {
+    console.warn(`WARNING: ${missing.length} content cover paths are missing on disk:`)
+    for (const entry of missing) {
+      console.warn(`  ${entry}`)
+    }
+  }
 
   if (undersized.length > 0) {
     console.warn(

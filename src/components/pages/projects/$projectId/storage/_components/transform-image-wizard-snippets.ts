@@ -1,6 +1,9 @@
 import { ImageFormat, ImageGravity } from '@appwrite.io/console'
 import type { CodeEditorLanguage } from '@/components/global/shared/CodeEditor'
-import type { ImageTransformState } from './transform-image-wizard-state'
+import {
+  IMAGE_GRAVITY_AUTO,
+  type ImageTransformState,
+} from './transform-image-wizard-state'
 
 export type TransformImageCodeSdkId =
   | 'web'
@@ -99,7 +102,8 @@ export const TRANSFORM_IMAGE_CODE_SDK_OPTIONS: readonly TransformImageCodeSdkOpt
     },
   ] as const
 
-function gravityEnumKeyForWeb(g: ImageGravity): string {
+function gravityEnumKeyForWeb(g: ImageTransformState['gravity']): string {
+  if (g === IMAGE_GRAVITY_AUTO) return 'Auto'
   const entry = (
     Object.keys(ImageGravity) as (keyof typeof ImageGravity)[]
   ).find((k) => ImageGravity[k] === g)
@@ -113,13 +117,14 @@ function imageFormatEnumKeyForSdk(v: ImageFormat): string | null {
   return entry ?? null
 }
 
-function gravityRestString(g: ImageGravity): string {
+function gravityRestString(g: ImageTransformState['gravity']): string {
   return String(g)
 }
 
-function gravityPhpRubyMethodSuffix(g: ImageGravity): string {
+function gravityPhpRubyMethodSuffix(g: ImageTransformState['gravity']): string {
   const k = gravityEnumKeyForWeb(g)
   const map: Record<string, string> = {
+    Auto: 'AUTO',
     Center: 'CENTER',
     Topleft: 'TOP_LEFT',
     Top: 'TOP',
@@ -149,7 +154,7 @@ function pythonImageFormatRef(s: ImageTransformState): string | null {
   return `ImageFormat.${upper[k] ?? k.toUpperCase()}`
 }
 
-function pythonGravityRef(g: ImageGravity): string {
+function pythonGravityRef(g: ImageTransformState['gravity']): string {
   return `ImageGravity.${gravityPhpRubyMethodSuffix(g)}`
 }
 

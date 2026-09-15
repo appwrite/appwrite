@@ -6,7 +6,7 @@ date: 2024-11-22
 cover: /images/blog/deno-vs-bun-javascript-runtime/cover.avif
 timeToRead: 10
 author: ebenezer-don
-category: tutorial
+category: tutorials
 faqs:
   - question: "What is the difference between Deno and Bun?"
     answer: "Deno is a secure-by-default runtime built on V8 (in Rust) with native TypeScript and a strict permission model. Bun is a performance-focused runtime built on JavaScriptCore (in Zig) with a fast package manager and bundler. Deno emphasizes security and TypeScript, Bun emphasizes raw speed."

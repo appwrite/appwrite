@@ -8,7 +8,10 @@ import { buildInitCheckingScheduleActivity } from '@/lib/init/init-presence-acti
 import { Badge } from '@/components/ui/badge'
 import { ArrowUpRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { isExternalInitHref } from '@/lib/init/links'
+import { useInitHref } from '@/lib/init/use-init-href'
+import { INIT_YOUTUBE_CHANNEL_HREF } from '@/lib/init/links'
+import { useInitScheduleTime } from '@/lib/init/use-init-schedule-time'
+import { useT } from '@/lib/i18n/translate'
 import { InitScheduleCalendarButton } from './InitScheduleCalendarButton'
 import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 
@@ -21,8 +24,6 @@ export const INIT_SCHEDULE_PLATFORM_META: Record<
   reddit: { label: 'Reddit', icon: '/icons/reddit.svg' },
 }
 
-const INIT_YOUTUBE_FALLBACK_HREF = 'https://www.youtube.com/@Appwrite'
-
 export function InitScheduleRow({
   event,
   item,
@@ -34,21 +35,28 @@ export function InitScheduleRow({
   isRecapMode?: boolean
   inlineWhenWide?: boolean
 }) {
+  const t = useT()
   const meta = INIT_SCHEDULE_PLATFORM_META[item.platform]
   const { setTransientActivity } = useInitPresenceActivity()
+  const formatScheduleTime = useInitScheduleTime()
   const sessionActivity = buildInitCheckingScheduleActivity(item.day)
   const actionHref =
     item.href ??
+    (item.platform === 'youtube' ? INIT_YOUTUBE_CHANNEL_HREF : undefined)
+  const resolvedAction =
+    useInitHref(actionHref) ??
     (item.platform === 'youtube'
-      ? event.liveBanner?.href ?? INIT_YOUTUBE_FALLBACK_HREF
-      : undefined)
+      ? { href: INIT_YOUTUBE_CHANNEL_HREF, external: true }
+      : null)
   const actionLabel = item.platform === 'youtube' ? 'Watch' : 'Join event'
-  const actionExternal = actionHref ? isExternalInitHref(actionHref) : false
+  const actionExternal = resolvedAction?.external ?? false
+  const showLive = !isRecapMode && item.isLive
+  const showStartingSoon = !isRecapMode && item.isStartingSoon
   const badge = (
     <span
       className={cn(
         'flex shrink-0',
-        inlineWhenWide ? 'w-[92px]' : 'w-6',
+        inlineWhenWide ? 'order-2 sm:order-none sm:w-[92px]' : 'w-6',
       )}
     >
       <Badge
@@ -71,35 +79,48 @@ export function InitScheduleRow({
   const details = (
     <div
       className={cn(
-        'min-w-0 flex-1 space-y-1',
-        inlineWhenWide &&
-          'sm:flex sm:items-center sm:gap-3 sm:space-y-0',
+        'min-w-0 space-y-1',
+        inlineWhenWide
+          ? 'order-1 w-full flex-none sm:order-none sm:flex sm:w-auto sm:flex-1 sm:items-center sm:gap-3 sm:space-y-0'
+          : 'flex-1',
       )}
     >
       <div className="flex min-w-0 flex-wrap items-center gap-2">
-        <p className="min-w-0 truncate text-[13px] font-medium text-foreground">
+        <p
+          className={cn(
+            'min-w-0 text-[13px] font-medium text-foreground',
+            inlineWhenWide ? 'sm:truncate' : 'truncate',
+          )}
+        >
           {item.title}
         </p>
-        {!isRecapMode && item.isLive ? (
+        {showLive ? (
           <Badge variant="error" className="text-[10px] shrink-0">
-            Live
+            {t('Live')}
+          </Badge>
+        ) : showStartingSoon ? (
+          <Badge variant="warning" className="text-[10px] shrink-0">
+            {t('Starting soon')}
           </Badge>
         ) : null}
       </div>
-      <p
-        className={cn(
-          'text-[11px] text-muted-foreground',
-          inlineWhenWide && 'sm:shrink-0',
-        )}
-      >
-        {item.timeLabel}
-      </p>
+      {/* Day-card row: badge sits inline with the title, so skip the muted status. */}
+      {inlineWhenWide && (showLive || showStartingSoon) ? null : (
+        <p
+          className={cn(
+            'text-[11px] text-muted-foreground',
+            inlineWhenWide && 'sm:shrink-0',
+          )}
+        >
+          {showLive ? t('Live now') : formatScheduleTime(item.startsAt)}
+        </p>
+      )}
     </div>
   )
   const mainContent =
-    !inlineWhenWide && actionHref ? (
+    !inlineWhenWide && resolvedAction ? (
       <a
-        href={actionHref}
+        href={resolvedAction.href}
         {...(actionExternal ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
         className="flex min-w-0 flex-1 items-start gap-4"
       >
@@ -116,11 +137,17 @@ export function InitScheduleRow({
   return (
     <li
       className={cn(
-        'group flex items-start gap-4 px-6 py-3.5',
-        inlineWhenWide && 'sm:items-center',
-        !isRecapMode &&
-          item.isLive &&
+        // Phones stack the row (title, then badge + action) so the title keeps
+        // the full width instead of being squeezed into a ~50px column.
+        'group px-6 py-3.5',
+        inlineWhenWide
+          ? 'flex flex-wrap items-center gap-x-4 gap-y-2 sm:flex-nowrap sm:gap-4'
+          : 'flex items-start gap-4',
+        showLive &&
           'bg-[color-mix(in_srgb,var(--brand-cta)_5%,transparent)]',
+        showStartingSoon &&
+          !showLive &&
+          'bg-[color-mix(in_srgb,var(--brand-cta)_3%,transparent)]',
       )}
       onMouseEnter={() => setTransientActivity(sessionActivity)}
       onMouseLeave={() => setTransientActivity(null)}
@@ -128,11 +155,16 @@ export function InitScheduleRow({
       onBlur={() => setTransientActivity(null)}
     >
       {mainContent}
-      <div className="flex shrink-0 items-center gap-3">
+      <div
+        className={cn(
+          'flex shrink-0 items-center gap-3',
+          inlineWhenWide && 'order-3 ms-auto sm:order-none sm:ms-0',
+        )}
+      >
         {!isRecapMode ? (
           <InitScheduleCalendarButton event={event} item={item} />
         ) : null}
-        {inlineWhenWide && actionHref ? (
+        {inlineWhenWide && resolvedAction ? (
           <>
             {!isRecapMode ? (
               <span
@@ -141,11 +173,11 @@ export function InitScheduleRow({
               />
             ) : null}
             <a
-              href={actionHref}
+              href={resolvedAction.href}
               {...(actionExternal ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
               className="flex shrink-0 items-center gap-1 text-[12px] text-muted-foreground transition-colors group-hover:text-foreground hover:text-foreground"
             >
-              {actionLabel}
+              {t(actionLabel)}
               <ArrowUpRight className="size-3.5" aria-hidden />
             </a>
           </>

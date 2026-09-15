@@ -27,12 +27,12 @@ import { FrameworkIcon } from '@/components/global/shared/FrameworkIcon'
 import { RuntimeIcon } from '@/components/global/shared/RuntimeIcon'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
-import { Search, Lock } from 'lucide-react'
+import { Search, Lock, GitBranch, Loader2 } from 'lucide-react'
 import {
   getKnownVcsProvider,
-  VCS_PROVIDERS,
   VcsIcon,
   buildVcsOrgOptions,
+  getVisibleVcsOAuthProviders,
   type VcsProviderId,
 } from '@/lib/vcs/providers'
 import { VCSDetectionType } from '@appwrite.io/console'
@@ -46,6 +46,7 @@ import { useT } from '@/lib/i18n/translate'
 import type { Models } from '@appwrite.io/console'
 import { cn } from '@/lib/utils'
 import { RefreshButton } from '@/components/global/shared/RefreshButton'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 
 const REPO_PAGE_SIZE = 5
 
@@ -74,6 +75,8 @@ export interface RepositoryPickerProps {
     mode?: 'create' | 'update',
   ) => string
   installations: Models.Installation[]
+  /** True while installations are still loading (avoids flashing the empty state). */
+  isLoadingInstallations?: boolean
   selectedInstallationId: string
   onInstallationChange: (installationId: string) => void
   /** For connect mode: which repo is currently selected */
@@ -98,6 +101,7 @@ export function RepositoryPicker({
   getGitHubAuthUrl,
   getVcsAuthUrl,
   installations,
+  isLoadingInstallations = false,
   selectedInstallationId,
   onInstallationChange,
   selectedRepositoryId,
@@ -109,6 +113,8 @@ export function RepositoryPicker({
   className,
 }: RepositoryPickerProps) {
   const t = useT()
+  const { features } = useConsoleProfile()
+  const vcsOAuthProviders = getVisibleVcsOAuthProviders(features.extraVcsOAuth)
   const vcsAuthUrl = (
     provider?: VcsProviderId,
     mode: 'create' | 'update' = 'create',
@@ -231,6 +237,53 @@ export function RepositoryPicker({
   // error so the empty state does not claim a failure was a successful result.
   const installationErrorKind = getVcsInstallationErrorKind(reposError)
 
+  // Connect-repository modals used to render a blank body when the project had
+  // no VCS installation yet. Mirror the create-wizard empty state so users can
+  // connect a provider from the same dialog.
+  if (isLoadingInstallations) {
+    return (
+      <div
+        className={cn(
+          'flex flex-col items-center justify-center py-10',
+          className,
+        )}
+      >
+        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+      </div>
+    )
+  }
+
+  if (installations.length === 0) {
+    return (
+      <div
+        className={cn(
+          'flex flex-col items-center justify-center py-8 text-center',
+          className,
+        )}
+      >
+        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-muted mb-4">
+          <GitBranch className="h-6 w-6 text-muted-foreground" />
+        </div>
+        <h3 className="text-[13px] font-medium text-foreground mb-1">
+          {t('Connect Git provider')}
+        </h3>
+        <p className="text-[12px] text-muted-foreground mb-4 max-w-sm">
+          {t('Import repositories for automatic deployments')}
+        </p>
+        <div className="flex flex-wrap items-center justify-center gap-2">
+          {vcsOAuthProviders.map((provider) => (
+            <Button key={provider.id} size="sm" variant="secondary" asChild>
+              <a href={vcsAuthUrl(provider.id)}>
+                <provider.Icon className="me-1.5 h-3.5 w-3.5" />
+                {t(`Connect ${provider.label}`)}
+              </a>
+            </Button>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className={cn('flex flex-col', className)}>
       <div className="space-y-4">
@@ -295,7 +348,7 @@ export function RepositoryPicker({
                   </p>
                 )}
                 <div className="border-t border-border mt-1 pt-1">
-                  {Object.values(VCS_PROVIDERS).map((p) => (
+                  {vcsOAuthProviders.map((p) => (
                     <a
                       key={p.id}
                       href={vcsAuthUrl(p.id)}

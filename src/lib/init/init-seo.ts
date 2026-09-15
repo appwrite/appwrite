@@ -18,6 +18,9 @@ export const INIT_OG_CTA_LABEL = 'Claim your ticket'
 
 export const INIT_PAGE_OG_IMAGE_PATH = '/og/init.png'
 
+/** Bump when Init OG artwork or copy changes so crawlers refresh cached previews. */
+export const INIT_PAGE_OG_IMAGE_CACHE_BUST = '20260827'
+
 export const INIT_PAGE_OG_IMAGE_PARAMS = {
   title: 'Five days of Appwrite product launches',
   subtitle: 'Claim your personalized Init pass and join live sessions.',
@@ -26,7 +29,7 @@ export const INIT_PAGE_OG_IMAGE_PARAMS = {
 } as const
 
 export function getInitPageOgImageUrl(siteOrigin?: string): string {
-  return resolveSiteAssetUrl(INIT_PAGE_OG_IMAGE_PATH, siteOrigin)
+  return `${resolveSiteAssetUrl(INIT_PAGE_OG_IMAGE_PATH, siteOrigin)}?v=${INIT_PAGE_OG_IMAGE_CACHE_BUST}`
 }
 
 export function getInitPageMetaTags(siteOrigin?: string) {

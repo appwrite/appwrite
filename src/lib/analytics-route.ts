@@ -50,7 +50,8 @@ export function getAnalyticsSurface(routePath: string): AnalyticsSurface {
     root === 'projects' ||
     root === 'organizations' ||
     root === 'upgrade' ||
-    root === 'generator'
+    root === 'generator' ||
+    root === 'git'
   ) {
     return 'console'
   }

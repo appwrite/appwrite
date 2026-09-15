@@ -70,6 +70,20 @@ export const POLICIES_SETTINGS_CARD_INDEX: SettingsCardIndexEntry[] = [
   },
   {
     sectionId: 'passwords',
+    title: 'MFA factors',
+    keywords: [
+      'mfa',
+      '2fa',
+      'multi-factor',
+      'totp',
+      'authenticator',
+      'sms',
+      'custom',
+      'challenge',
+    ],
+  },
+  {
+    sectionId: 'passwords',
     title: 'Dictionary',
     keywords: ['common passwords', 'weak'],
   },

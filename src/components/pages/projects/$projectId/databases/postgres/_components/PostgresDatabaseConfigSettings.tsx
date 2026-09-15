@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/tooltip'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { formatCurrency } from '@/components/pages/organizations/$orgId/billing/utils'
-import { CONTACT_ENTERPRISE_URL } from '@/lib/pricing/constants'
+import { ContactSalesLink } from '@/components/global/shared/ContactSalesLink'
 import {
   calculateDedicatedDatabaseMonthlyCost,
   DEDICATED_DB_HA_REPLICA_OPTIONS,
@@ -165,7 +165,6 @@ export function PostgresDatabaseReplicasCard({
       databaseId,
       source,
       fetchReplicas,
-      fetchReplicas ? 5000 : false,
     )
   const { writeDisabled, writeTooltip } = useWriteAccess(
     canWrite,
@@ -376,13 +375,7 @@ export function PostgresDatabaseReplicasCard({
               className="h-8 shrink-0 text-[13px]"
               asChild
             >
-              <a
-                href={CONTACT_ENTERPRISE_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                {t('Contact sales')}
-              </a>
+              <ContactSalesLink>{t('Contact sales')}</ContactSalesLink>
             </Button>
           </div>
         ) : null}

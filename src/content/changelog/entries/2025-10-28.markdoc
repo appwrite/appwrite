@@ -3,6 +3,7 @@ layout: changelog
 title: "Appwrite Sites now supports TanStack Start"
 date: 2025-10-28
 cover: /images/blog/tanstack-start-support-in-appwrite-sites/cover.avif
+tags: sites, performance
 ---
 [TanStack Start](https://tanstack.com/start/latest) is quickly becoming the go-to framework for developers who want simplicity, type safety, and performance without the overhead. 
 

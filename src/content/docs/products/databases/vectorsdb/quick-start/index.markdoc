@@ -1,235 +1,59 @@
 ---
 layout: article
 title: Start with VectorsDB
-description: Get started with Appwrite VectorsDB. Follow a step-by-step guide to create your first database, add a collection with a fixed dimension, store embeddings with metadata, and read them back.
+description: Get started with Appwrite VectorsDB. Follow a step-by-step guide to create your first database, add a collection with a fixed dimension, store embeddings with metadata, and search them by similarity.
 ---
 
 
-VectorsDB stores embedding vectors so you can build features like semantic search, recommendations, and retrieval for AI applications.
-This guide walks through creating a database, adding a collection with a fixed `dimension`, storing a document with its `embeddings` and `metadata`, and reading it back.
+An embedding is a list of numbers that represents the meaning of a piece of text. Text that means similar things gets similar numbers, even when the wording is different. VectorsDB stores those numbers for you and finds the closest ones to a question you ask, so you can search by meaning instead of by keyword.
+
+In this guide you store three sentences about Appwrite as embeddings, then ask a question in plain English and get back the sentence that answers it. The question and the answer share no words.
 
 These steps use a [Server SDK](/docs/sdks#server), which requires an [API key](/docs/advanced/platform/api-keys).
 
 {% section #create-database step=1 title="Create database" %}
-Head to your [Appwrite Console](https://cloud.appwrite.io/console/) and click **Create database**. Name it `Knowledge base` and choose **VectorsDB** as the database type.
-Optionally, add a custom database ID. Select your preferred tier, then click **Create database**.
+{% only_dark %}
+![Create database type selection](/images/docs/products/databases/vectorsdb/dark/create-database-type.avif)
+{% /only_dark %}
+{% only_light %}
+![Create database type selection](/images/docs/products/databases/vectorsdb/create-database-type.avif)
+{% /only_light %}
 
-You can also create a database programmatically with the `create` method.
-
-{% multicode %}
-```server-nodejs
-const sdk = require('node-appwrite');
-
-const client = new sdk.Client()
-    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
-    .setProject('<YOUR_PROJECT_ID>') // Your project ID
-    .setKey('<YOUR_API_KEY>'); // Your secret API key
-
-const vectorsDB = new sdk.VectorsDB(client);
-
-const result = await vectorsDB.create({
-    databaseId: sdk.ID.unique(),
-    name: 'Knowledge base'
-});
-```
-```deno
-import * as sdk from "npm:node-appwrite";
-
-const client = new sdk.Client()
-    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
-    .setProject('<YOUR_PROJECT_ID>') // Your project ID
-    .setKey('<YOUR_API_KEY>'); // Your secret API key
-
-const vectorsDB = new sdk.VectorsDB(client);
-
-const result = await vectorsDB.create({
-    databaseId: sdk.ID.unique(),
-    name: 'Knowledge base'
-});
-```
-```php
-<?php
-
-use Appwrite\Client;
-use Appwrite\Services\VectorsDB;
-use Appwrite\ID;
-
-$client = (new Client())
-    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
-    ->setProject('<YOUR_PROJECT_ID>') // Your project ID
-    ->setKey('<YOUR_API_KEY>'); // Your secret API key
-
-$vectorsDB = new VectorsDB($client);
-
-$result = $vectorsDB->create(
-    databaseId: ID::unique(),
-    name: 'Knowledge base'
-);
-```
-```python
-from appwrite.client import Client
-from appwrite.services.vectors_db import VectorsDB
-from appwrite.id import ID
-
-client = Client()
-client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
-client.set_project('<YOUR_PROJECT_ID>') # Your project ID
-client.set_key('<YOUR_API_KEY>') # Your secret API key
-
-vectors_db = VectorsDB(client)
-
-result = vectors_db.create(
-    database_id = ID.unique(),
-    name = 'Knowledge base'
-)
-```
-```ruby
-require 'appwrite'
-
-include Appwrite
-
-client = Client.new
-    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
-    .set_project('<YOUR_PROJECT_ID>') # Your project ID
-    .set_key('<YOUR_API_KEY>') # Your secret API key
-
-vectors_db = VectorsDB.new(client)
-
-result = vectors_db.create(
-    database_id: ID.unique(),
-    name: 'Knowledge base'
-)
-```
-```csharp
-using Appwrite;
-using Appwrite.Models;
-using Appwrite.Services;
-
-Client client = new Client()
-    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
-    .SetProject("<YOUR_PROJECT_ID>") // Your project ID
-    .SetKey("<YOUR_API_KEY>"); // Your secret API key
-
-VectorsDB vectorsDB = new VectorsDB(client);
-
-Database result = await vectorsDB.Create(
-    databaseId: ID.Unique(),
-    name: "Knowledge base"
-);
-```
-```dart
-import 'package:dart_appwrite/dart_appwrite.dart';
-
-Client client = Client()
-    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
-    .setProject('<YOUR_PROJECT_ID>') // Your project ID
-    .setKey('<YOUR_API_KEY>'); // Your secret API key
-
-VectorsDB vectorsDB = VectorsDB(client);
-
-Database result = await vectorsDB.create(
-    databaseId: ID.unique(),
-    name: 'Knowledge base',
-);
-```
-```kotlin
-import io.appwrite.Client
-import io.appwrite.ID
-import io.appwrite.services.VectorsDB
-
-val client = Client(context)
-    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
-    .setProject("<YOUR_PROJECT_ID>") // Your project ID
-    .setKey("<YOUR_API_KEY>") // Your secret API key
-
-val vectorsDB = VectorsDB(client)
-
-val response = vectorsDB.create(
-    databaseId = ID.unique(),
-    name = "Knowledge base",
-)
-```
-```java
-import io.appwrite.Client;
-import io.appwrite.ID;
-import io.appwrite.coroutines.CoroutineCallback;
-import io.appwrite.services.VectorsDB;
-
-Client client = new Client()
-    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
-    .setProject("<YOUR_PROJECT_ID>") // Your project ID
-    .setKey("<YOUR_API_KEY>"); // Your secret API key
-
-VectorsDB vectorsDB = new VectorsDB(client);
-
-vectorsDB.create(
-    ID.unique(),
-    "Knowledge base",
-    new CoroutineCallback<>((result, error) -> {
-        if (error != null) {
-            error.printStackTrace();
-            return;
-        }
-
-        System.out.println(result);
-    })
-);
-```
-```swift
-import Appwrite
-
-let client = Client()
-    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
-    .setProject("<YOUR_PROJECT_ID>") // Your project ID
-    .setKey("<YOUR_API_KEY>") // Your secret API key
-
-let vectorsDB = VectorsDB(client)
-
-let database = try await vectorsDB.create(
-    databaseId: ID.unique(),
-    name: "Knowledge base"
-)
-```
-```server-rust
-use appwrite::Client;
-use appwrite::services::vectors_db::VectorsDB;
-use appwrite::id::ID;
-
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let client = Client::new();
-    client.set_endpoint("https://<REGION>.cloud.appwrite.io/v1"); // Your API Endpoint
-    client.set_project("<YOUR_PROJECT_ID>"); // Your project ID
-    client.set_key("<YOUR_API_KEY>"); // Your secret API key
-
-    let vectors_db = VectorsDB::new(&client);
-
-    let result = vectors_db.create(
-        ID::unique(),
-        "Knowledge base",
-        None, // enabled (optional)
-    ).await?;
-
-    println!("{:?}", result);
-    Ok(())
-}
-```
-```bash
-appwrite vectors-db create \
-    --database-id <DATABASE_ID> \
-    --name "Knowledge base"
-```
-{% /multicode %}
+1. In your project, go to **Databases**.
+2. Click **Create database**.
+3. Under **Choose database type**, select **VectorsDB** from the **Appwrite databases** group.
+4. Name the database `Knowledge base`, and optionally add a custom database ID.
+5. Under **Specifications**, select your preferred tier.
+6. Review the database summary and click **Create database**.
 {% /section %}
 
 {% section #create-collection step=2 title="Create collection" %}
-In the `Knowledge base` database, click **Create collection** and name it `Articles`. Optionally, add a custom collection ID.
+{% only_dark %}
+![Create collection dialog](/images/docs/products/databases/vectorsdb/dark/create-collection.avif)
+{% /only_dark %}
+{% only_light %}
+![Create collection dialog](/images/docs/products/databases/vectorsdb/create-collection.avif)
+{% /only_light %}
 
-A VectorsDB collection has a fixed `dimension`, the length of the embedding vectors it holds. All documents in the collection must use vectors of that exact length, so set the `dimension` to match the embedding model you plan to use. This guide uses `dimension: 4` to keep the vectors short and readable. The default `nomic-embed-text` [embedding model](/docs/products/databases/vectorsdb/embeddings) produces 768-dimensional vectors, so a production collection would use `dimension: 768`.
+1. Open the `Knowledge base` database and click **Create collection**.
+2. Name the collection `Articles`, and optionally add a custom collection ID.
+3. Under **Embedding model**, keep the default `nomic-embed-text`.
+4. Click **Create**.
 
-The schema is provisioned for you: an `embeddings` vector and an optional `metadata` object. There are no columns to define.
+Every model produces vectors of one fixed length, called the dimension. A collection is locked to a single dimension, so all its documents hold vectors of the same length. Picking the model in the Console sets that dimension for you. `nomic-embed-text` produces 768 values, which is why the SDK examples below pass `dimension: 768`.
 
-Set the **dimension**, then add a **Read** permission for the **Any** role so anyone can read documents.
+{% only_dark %}
+![Embedding model list](/images/docs/products/databases/vectorsdb/dark/create-collection-model.avif)
+{% /only_dark %}
+{% only_light %}
+![Embedding model list](/images/docs/products/databases/vectorsdb/create-collection-model.avif)
+{% /only_light %}
+
+The list also holds a **Custom dimension** option for a model you run yourself. `embedding-gemma` and `bge-small` are coming soon. Read what each one suits in [embeddings](/docs/products/databases/vectorsdb/embeddings).
+
+There are no columns to define. Every VectorsDB collection is provisioned with the same shape: an `embeddings` vector and an optional `metadata` object.
+
+Add a **Read** permission for the **Any** role so anyone can read documents.
 
 {% multicode %}
 ```server-nodejs
@@ -246,7 +70,7 @@ const result = await vectorsDB.createCollection({
     databaseId: '<DATABASE_ID>',
     collectionId: sdk.ID.unique(),
     name: 'Articles',
-    dimension: 4,
+    dimension: 768,
     permissions: [sdk.Permission.read(sdk.Role.any())] // optional
 });
 ```
@@ -264,7 +88,7 @@ const result = await vectorsDB.createCollection({
     databaseId: '<DATABASE_ID>',
     collectionId: sdk.ID.unique(),
     name: 'Articles',
-    dimension: 4,
+    dimension: 768,
     permissions: [sdk.Permission.read(sdk.Role.any())] // optional
 });
 ```
@@ -288,7 +112,7 @@ $result = $vectorsDB->createCollection(
     databaseId: '<DATABASE_ID>',
     collectionId: ID::unique(),
     name: 'Articles',
-    dimension: 4,
+    dimension: 768,
     permissions: [Permission::read(Role::any())] // optional
 );
 ```
@@ -310,7 +134,7 @@ result = vectors_db.create_collection(
     database_id = '<DATABASE_ID>',
     collection_id = ID.unique(),
     name = 'Articles',
-    dimension = 4,
+    dimension = 768,
     permissions = [Permission.read(Role.any())] # optional
 )
 ```
@@ -332,7 +156,7 @@ result = vectors_db.create_collection(
     database_id: '<DATABASE_ID>',
     collection_id: ID.unique(),
     name: 'Articles',
-    dimension: 4,
+    dimension: 768,
     permissions: [Permission.read(Role.any())] # optional
 )
 ```
@@ -352,7 +176,7 @@ Collection result = await vectorsDB.CreateCollection(
     databaseId: "<DATABASE_ID>",
     collectionId: ID.Unique(),
     name: "Articles",
-    dimension: 4,
+    dimension: 768,
     permissions: new List<string> { Permission.Read(Role.Any()) } // optional
 );
 ```
@@ -370,7 +194,7 @@ Collection result = await vectorsDB.createCollection(
     databaseId: '<DATABASE_ID>',
     collectionId: ID.unique(),
     name: 'Articles',
-    dimension: 4,
+    dimension: 768,
     permissions: [Permission.read(Role.any())], // optional
 );
 ```
@@ -392,7 +216,7 @@ val response = vectorsDB.createCollection(
     databaseId = "<DATABASE_ID>",
     collectionId = ID.unique(),
     name = "Articles",
-    dimension = 4,
+    dimension = 768,
     permissions = listOf(Permission.read(Role.any())), // optional
 )
 ```
@@ -416,7 +240,7 @@ vectorsDB.createCollection(
     "<DATABASE_ID>",
     ID.unique(),
     "Articles",
-    4,
+    768,
     List.of(Permission.read(Role.any())),
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
@@ -442,13 +266,13 @@ let collection = try await vectorsDB.createCollection(
     databaseId: "<DATABASE_ID>",
     collectionId: ID.unique(),
     name: "Articles",
-    dimension: 4,
+    dimension: 768,
     permissions: [Permission.read(Role.any())] // optional
 )
 ```
 ```server-rust
 use appwrite::Client;
-use appwrite::services::vectors_db::VectorsDB;
+use appwrite::services::VectorsDB;
 use appwrite::id::ID;
 use appwrite::permission::Permission;
 use appwrite::role::Role;
@@ -466,7 +290,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         "<DATABASE_ID>",
         ID::unique(),
         "Articles",
-        4,
+        768,
         Some(vec![Permission::read(Role::any()).to_string()]), // permissions (optional)
         None, // documentSecurity (optional)
         None, // enabled (optional)
@@ -477,23 +301,20 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 ```bash
-appwrite vectors-db create-collection \
+appwrite vectorsdb create-collection \
     --database-id <DATABASE_ID> \
     --collection-id <COLLECTION_ID> \
     --name "Articles" \
-    --dimension 4 \
+    --dimension 768 \
     --permissions 'read("any")'
 ```
 {% /multicode %}
 {% /section %}
 
 {% section #store-documents step=3 title="Store documents" %}
-A document's data is an `embeddings` vector and an optional `metadata` object.
-The `embeddings` array length must equal the collection's `dimension`, and `metadata` is free-form JSON you can use to store any data you want to keep alongside the vector.
+Turn each sentence into an embedding with the [Embeddings](/docs/products/databases/vectorsdb/embeddings) service, then store the embedding in a document.
 
-The vectors here are hardcoded so the example runs on its own. In an application, you generate them from your text with [embeddings](/docs/products/databases/vectorsdb/embeddings).
-
-Use the `createDocument` method to store the embedding and its metadata.
+A document holds the vector in `embeddings` and anything else you want in `metadata`, which is free-form JSON. Store the original sentence there. A search returns documents, and without the text a document is just a list of numbers.
 
 {% multicode %}
 ```server-nodejs
@@ -504,17 +325,28 @@ const client = new sdk.Client()
     .setProject('<YOUR_PROJECT_ID>') // Your project ID
     .setKey('<YOUR_API_KEY>'); // Your secret API key
 
+const embeddings = new sdk.Embeddings(client);
 const vectorsDB = new sdk.VectorsDB(client);
 
-const result = await vectorsDB.createDocument({
-    databaseId: '<DATABASE_ID>',
-    collectionId: '<COLLECTION_ID>',
-    documentId: sdk.ID.unique(),
-    data: {
-        embeddings: [0.12, 0.84, 0.33, 0.57],
-        metadata: { title: 'Getting started with Appwrite', tags: ['guide'] }
-    }
-});
+const texts = [
+    'Appwrite Functions run your code on demand.',
+    'Appwrite Storage keeps your files safe.',
+    'Appwrite Authentication signs users in and manages sessions.'
+];
+
+const generated = await embeddings.createTextEmbeddings({ texts });
+
+for (let i = 0; i < texts.length; i++) {
+    await vectorsDB.createDocument({
+        databaseId: '<DATABASE_ID>',
+        collectionId: '<COLLECTION_ID>',
+        documentId: sdk.ID.unique(),
+        data: {
+            embeddings: generated.embeddings[i].embedding,
+            metadata: { text: texts[i] }
+        }
+    });
+}
 ```
 ```deno
 import * as sdk from "npm:node-appwrite";
@@ -524,22 +356,34 @@ const client = new sdk.Client()
     .setProject('<YOUR_PROJECT_ID>') // Your project ID
     .setKey('<YOUR_API_KEY>'); // Your secret API key
 
+const embeddings = new sdk.Embeddings(client);
 const vectorsDB = new sdk.VectorsDB(client);
 
-const result = await vectorsDB.createDocument({
-    databaseId: '<DATABASE_ID>',
-    collectionId: '<COLLECTION_ID>',
-    documentId: sdk.ID.unique(),
-    data: {
-        embeddings: [0.12, 0.84, 0.33, 0.57],
-        metadata: { title: 'Getting started with Appwrite', tags: ['guide'] }
-    }
-});
+const texts = [
+    'Appwrite Functions run your code on demand.',
+    'Appwrite Storage keeps your files safe.',
+    'Appwrite Authentication signs users in and manages sessions.'
+];
+
+const generated = await embeddings.createTextEmbeddings({ texts });
+
+for (let i = 0; i < texts.length; i++) {
+    await vectorsDB.createDocument({
+        databaseId: '<DATABASE_ID>',
+        collectionId: '<COLLECTION_ID>',
+        documentId: sdk.ID.unique(),
+        data: {
+            embeddings: generated.embeddings[i].embedding,
+            metadata: { text: texts[i] }
+        }
+    });
+}
 ```
 ```php
 <?php
 
 use Appwrite\Client;
+use Appwrite\Services\Embeddings;
 use Appwrite\Services\VectorsDB;
 use Appwrite\ID;
 
@@ -548,20 +392,32 @@ $client = (new Client())
     ->setProject('<YOUR_PROJECT_ID>') // Your project ID
     ->setKey('<YOUR_API_KEY>'); // Your secret API key
 
+$embeddings = new Embeddings($client);
 $vectorsDB = new VectorsDB($client);
 
-$result = $vectorsDB->createDocument(
-    databaseId: '<DATABASE_ID>',
-    collectionId: '<COLLECTION_ID>',
-    documentId: ID::unique(),
-    data: [
-        'embeddings' => [0.12, 0.84, 0.33, 0.57],
-        'metadata' => ['title' => 'Getting started with Appwrite', 'tags' => ['guide']]
-    ]
-);
+$texts = [
+    'Appwrite Functions run your code on demand.',
+    'Appwrite Storage keeps your files safe.',
+    'Appwrite Authentication signs users in and manages sessions.'
+];
+
+$generated = $embeddings->createTextEmbeddings(texts: $texts);
+
+foreach ($texts as $i => $text) {
+    $vectorsDB->createDocument(
+        databaseId: '<DATABASE_ID>',
+        collectionId: '<COLLECTION_ID>',
+        documentId: ID::unique(),
+        data: [
+            'embeddings' => $generated['embeddings'][$i]['embedding'],
+            'metadata' => ['text' => $text]
+        ]
+    );
+}
 ```
 ```python
 from appwrite.client import Client
+from appwrite.services.embeddings import Embeddings
 from appwrite.services.vectors_db import VectorsDB
 from appwrite.id import ID
 
@@ -570,17 +426,27 @@ client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
 client.set_project('<YOUR_PROJECT_ID>') # Your project ID
 client.set_key('<YOUR_API_KEY>') # Your secret API key
 
+embeddings = Embeddings(client)
 vectors_db = VectorsDB(client)
 
-result = vectors_db.create_document(
-    database_id = '<DATABASE_ID>',
-    collection_id = '<COLLECTION_ID>',
-    document_id = ID.unique(),
-    data = {
-        "embeddings": [0.12, 0.84, 0.33, 0.57],
-        "metadata": { "title": "Getting started with Appwrite", "tags": ["guide"] }
-    }
-)
+texts = [
+    'Appwrite Functions run your code on demand.',
+    'Appwrite Storage keeps your files safe.',
+    'Appwrite Authentication signs users in and manages sessions.'
+]
+
+generated = embeddings.create_text_embeddings(texts = texts)
+
+for i, text in enumerate(texts):
+    vectors_db.create_document(
+        database_id = '<DATABASE_ID>',
+        collection_id = '<COLLECTION_ID>',
+        document_id = ID.unique(),
+        data = {
+            "embeddings": generated["embeddings"][i]["embedding"],
+            "metadata": { "text": text }
+        }
+    )
 ```
 ```ruby
 require 'appwrite'
@@ -592,17 +458,28 @@ client = Client.new
     .set_project('<YOUR_PROJECT_ID>') # Your project ID
     .set_key('<YOUR_API_KEY>') # Your secret API key
 
+embeddings = Embeddings.new(client)
 vectors_db = VectorsDB.new(client)
 
-result = vectors_db.create_document(
-    database_id: '<DATABASE_ID>',
-    collection_id: '<COLLECTION_ID>',
-    document_id: ID.unique(),
-    data: {
-        "embeddings" => [0.12, 0.84, 0.33, 0.57],
-        "metadata" => { "title" => "Getting started with Appwrite", "tags" => ["guide"] }
-    }
-)
+texts = [
+    'Appwrite Functions run your code on demand.',
+    'Appwrite Storage keeps your files safe.',
+    'Appwrite Authentication signs users in and manages sessions.'
+]
+
+generated = embeddings.create_text_embeddings(texts: texts)
+
+texts.each_with_index do |text, i|
+    vectors_db.create_document(
+        database_id: '<DATABASE_ID>',
+        collection_id: '<COLLECTION_ID>',
+        document_id: ID.unique(),
+        data: {
+            "embeddings" => generated.embeddings[i].embedding,
+            "metadata" => { "text" => text }
+        }
+    )
+end
 ```
 ```csharp
 using Appwrite;
@@ -614,17 +491,29 @@ Client client = new Client()
     .SetProject("<YOUR_PROJECT_ID>") // Your project ID
     .SetKey("<YOUR_API_KEY>"); // Your secret API key
 
+Embeddings embeddings = new Embeddings(client);
 VectorsDB vectorsDB = new VectorsDB(client);
 
-Document result = await vectorsDB.CreateDocument(
-    databaseId: "<DATABASE_ID>",
-    collectionId: "<COLLECTION_ID>",
-    documentId: ID.Unique(),
-    data: new Dictionary<string, object> {
-        { "embeddings", new List<double> { 0.12, 0.84, 0.33, 0.57 } },
-        { "metadata", new Dictionary<string, object> { { "title", "Getting started with Appwrite" }, { "tags", new List<string> { "guide" } } } }
-    }
-);
+List<string> texts = new List<string> {
+    "Appwrite Functions run your code on demand.",
+    "Appwrite Storage keeps your files safe.",
+    "Appwrite Authentication signs users in and manages sessions."
+};
+
+EmbeddingList generated = await embeddings.CreateTextEmbeddings(texts: texts);
+
+for (int i = 0; i < texts.Count; i++)
+{
+    await vectorsDB.CreateDocument(
+        databaseId: "<DATABASE_ID>",
+        collectionId: "<COLLECTION_ID>",
+        documentId: ID.Unique(),
+        data: new {
+            embeddings = generated.Embeddings[i].XEmbedding,
+            metadata = new { text = texts[i] }
+        }
+    );
+}
 ```
 ```dart
 import 'package:dart_appwrite/dart_appwrite.dart';
@@ -634,21 +523,33 @@ Client client = Client()
     .setProject('<YOUR_PROJECT_ID>') // Your project ID
     .setKey('<YOUR_API_KEY>'); // Your secret API key
 
+Embeddings embeddings = Embeddings(client);
 VectorsDB vectorsDB = VectorsDB(client);
 
-Document result = await vectorsDB.createDocument(
-    databaseId: '<DATABASE_ID>',
-    collectionId: '<COLLECTION_ID>',
-    documentId: ID.unique(),
-    data: {
-        "embeddings": [0.12, 0.84, 0.33, 0.57],
-        "metadata": { "title": "Getting started with Appwrite", "tags": ["guide"] }
-    },
-);
+final texts = [
+    'Appwrite Functions run your code on demand.',
+    'Appwrite Storage keeps your files safe.',
+    'Appwrite Authentication signs users in and manages sessions.',
+];
+
+EmbeddingList generated = await embeddings.createTextEmbeddings(texts: texts);
+
+for (var i = 0; i < texts.length; i++) {
+    await vectorsDB.createDocument(
+        databaseId: '<DATABASE_ID>',
+        collectionId: '<COLLECTION_ID>',
+        documentId: ID.unique(),
+        data: {
+            "embeddings": generated.embeddings[i].embedding,
+            "metadata": { "text": texts[i] }
+        },
+    );
+}
 ```
 ```kotlin
 import io.appwrite.Client
 import io.appwrite.ID
+import io.appwrite.services.Embeddings
 import io.appwrite.services.VectorsDB
 
 val client = Client(context)
@@ -656,22 +557,34 @@ val client = Client(context)
     .setProject("<YOUR_PROJECT_ID>") // Your project ID
     .setKey("<YOUR_API_KEY>") // Your secret API key
 
+val embeddings = Embeddings(client)
 val vectorsDB = VectorsDB(client)
 
-val response = vectorsDB.createDocument(
-    databaseId = "<DATABASE_ID>",
-    collectionId = "<COLLECTION_ID>",
-    documentId = ID.unique(),
-    data = mapOf(
-        "embeddings" to listOf(0.12, 0.84, 0.33, 0.57),
-        "metadata" to mapOf("title" to "Getting started with Appwrite", "tags" to listOf("guide"))
-    ),
+val texts = listOf(
+    "Appwrite Functions run your code on demand.",
+    "Appwrite Storage keeps your files safe.",
+    "Appwrite Authentication signs users in and manages sessions."
 )
+
+val generated = embeddings.createTextEmbeddings(texts = texts)
+
+texts.forEachIndexed { i, text ->
+    vectorsDB.createDocument(
+        databaseId = "<DATABASE_ID>",
+        collectionId = "<COLLECTION_ID>",
+        documentId = ID.unique(),
+        data = mapOf(
+            "embeddings" to generated.embeddings[i].embedding,
+            "metadata" to mapOf("text" to text)
+        ),
+    )
+}
 ```
 ```java
 import io.appwrite.Client;
 import io.appwrite.ID;
 import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.services.Embeddings;
 import io.appwrite.services.VectorsDB;
 import java.util.List;
 import java.util.Map;
@@ -681,23 +594,42 @@ Client client = new Client()
     .setProject("<YOUR_PROJECT_ID>") // Your project ID
     .setKey("<YOUR_API_KEY>"); // Your secret API key
 
+Embeddings embeddings = new Embeddings(client);
 VectorsDB vectorsDB = new VectorsDB(client);
 
-vectorsDB.createDocument(
-    "<DATABASE_ID>",
-    "<COLLECTION_ID>",
-    ID.unique(),
-    Map.of(
-        "embeddings", List.of(0.12, 0.84, 0.33, 0.57),
-        "metadata", Map.of("title", "Getting started with Appwrite", "tags", List.of("guide"))
-    ),
-    new CoroutineCallback<>((result, error) -> {
+List<String> texts = List.of(
+    "Appwrite Functions run your code on demand.",
+    "Appwrite Storage keeps your files safe.",
+    "Appwrite Authentication signs users in and manages sessions."
+);
+
+embeddings.createTextEmbeddings(
+    texts,
+    new CoroutineCallback<>((generated, error) -> {
         if (error != null) {
             error.printStackTrace();
             return;
         }
 
-        System.out.println(result);
+        for (int i = 0; i < texts.size(); i++) {
+            vectorsDB.createDocument(
+                "<DATABASE_ID>",
+                "<COLLECTION_ID>",
+                ID.unique(),
+                Map.of(
+                    "embeddings", generated.getEmbeddings().get(i).getEmbedding(),
+                    "metadata", Map.of("text", texts.get(i))
+                ),
+                new CoroutineCallback<>((result, err) -> {
+                    if (err != null) {
+                        err.printStackTrace();
+                        return;
+                    }
+
+                    System.out.println(result);
+                })
+            );
+        }
     })
 );
 ```
@@ -709,21 +641,32 @@ let client = Client()
     .setProject("<YOUR_PROJECT_ID>") // Your project ID
     .setKey("<YOUR_API_KEY>") // Your secret API key
 
+let embeddings = Embeddings(client)
 let vectorsDB = VectorsDB(client)
 
-let document = try await vectorsDB.createDocument(
-    databaseId: "<DATABASE_ID>",
-    collectionId: "<COLLECTION_ID>",
-    documentId: ID.unique(),
-    data: [
-        "embeddings": [0.12, 0.84, 0.33, 0.57],
-        "metadata": ["title": "Getting started with Appwrite", "tags": ["guide"]]
-    ]
-)
+let texts = [
+    "Appwrite Functions run your code on demand.",
+    "Appwrite Storage keeps your files safe.",
+    "Appwrite Authentication signs users in and manages sessions."
+]
+
+let generated = try await embeddings.createTextEmbeddings(texts: texts)
+
+for (i, text) in texts.enumerated() {
+    _ = try await vectorsDB.createDocument(
+        databaseId: "<DATABASE_ID>",
+        collectionId: "<COLLECTION_ID>",
+        documentId: ID.unique(),
+        data: [
+            "embeddings": generated.embeddings[i].embedding,
+            "metadata": ["text": text]
+        ]
+    )
+}
 ```
 ```server-rust
 use appwrite::Client;
-use appwrite::services::vectors_db::VectorsDB;
+use appwrite::services::{Embeddings, VectorsDB};
 use appwrite::id::ID;
 use serde_json::json;
 
@@ -734,47 +677,49 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     client.set_project("<YOUR_PROJECT_ID>"); // Your project ID
     client.set_key("<YOUR_API_KEY>"); // Your secret API key
 
+    let embeddings = Embeddings::new(&client);
     let vectors_db = VectorsDB::new(&client);
 
-    let result = vectors_db.create_document(
-        "<DATABASE_ID>",
-        "<COLLECTION_ID>",
-        ID::unique(),
-        json!({
-            "embeddings": [0.12, 0.84, 0.33, 0.57],
-            "metadata": { "title": "Getting started with Appwrite", "tags": ["guide"] }
-        }),
-        None, // permissions (optional)
+    let texts = vec![
+        "Appwrite Functions run your code on demand.",
+        "Appwrite Storage keeps your files safe.",
+        "Appwrite Authentication signs users in and manages sessions.",
+    ];
+
+    let generated = embeddings.create_text_embeddings(
+        texts.clone(),
+        None, // model (optional)
     ).await?;
 
-    println!("{:?}", result);
+    for (i, text) in texts.iter().enumerate() {
+        vectors_db.create_document(
+            "<DATABASE_ID>",
+            "<COLLECTION_ID>",
+            ID::unique(),
+            json!({
+                "embeddings": generated.embeddings[i].embedding,
+                "metadata": { "text": text }
+            }),
+            None, // permissions (optional)
+        ).await?;
+    }
+
     Ok(())
 }
 ```
 ```bash
-appwrite vectors-db create-document \
+appwrite embeddings create-text-embeddings \
+    --texts 'Appwrite Authentication signs users in and manages sessions.'
+
+appwrite vectorsdb create-document \
     --database-id <DATABASE_ID> \
     --collection-id <COLLECTION_ID> \
     --document-id 'unique()' \
-    --data '{ "embeddings": [0.12, 0.84, 0.33, 0.57], "metadata": { "title": "Getting started with Appwrite", "tags": ["guide"] } }'
+    --data '{ "embeddings": <EMBEDDING_FROM_FIRST_COMMAND>, "metadata": { "text": "Appwrite Authentication signs users in and manages sessions." } }'
 ```
 {% /multicode %}
 
-The response includes the stored `embeddings` and `metadata` alongside the document's system fields.
-
-```json
-{
-    "embeddings": [0.12, 0.84, 0.33, 0.57],
-    "metadata": { "title": "Getting started with Appwrite", "tags": ["guide"] },
-    "$id": "6a43c07100195469a012",
-    "$sequence": "1",
-    "$createdAt": "2026-06-30T13:11:13.441+00:00",
-    "$updatedAt": "2026-06-30T13:11:13.441+00:00",
-    "$permissions": [],
-    "$databaseId": "650125c64b3c25ce4bc4",
-    "$collectionId": "650125cff227cf9f95ad"
-}
-```
+You now have three documents. Each one carries the sentence it was generated from.
 {% /section %}
 
 {% section #read-documents step=4 title="Read documents" %}
@@ -988,7 +933,7 @@ let documents = try await vectorsDB.listDocuments(
 ```
 ```server-rust
 use appwrite::Client;
-use appwrite::services::vectors_db::VectorsDB;
+use appwrite::services::VectorsDB;
 use appwrite::query::Query;
 
 #[tokio::main]
@@ -1014,7 +959,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 ```bash
-appwrite vectors-db list-documents \
+appwrite vectorsdb list-documents \
     --database-id <DATABASE_ID> \
     --collection-id <COLLECTION_ID> \
     --queries '{"method":"limit","values":[10]}'
@@ -1022,13 +967,370 @@ appwrite vectors-db list-documents \
 {% /multicode %}
 {% /section %}
 
-{% section #next-steps step=5 title="Next steps" %}
-You now have a database, a collection, and a document holding an embedding with its metadata. From here:
+{% section #search-documents step=5 title="Search documents" %}
+A search starts with a question, not a vector. Turn the question into an embedding the same way you turned your documents into embeddings, then ask for the documents closest to it.
 
-- Generate vectors from your text instead of hardcoding them with [embeddings](/docs/products/databases/vectorsdb/embeddings).
-- Find the documents closest to a query vector with [vector search](/docs/products/databases/vectorsdb/vector-search).
+Use the same model for both. Two models describe meaning in their own way, so an embedding from one model tells you nothing about an embedding from another.
+
+{% multicode %}
+```server-nodejs
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your secret API key
+
+const embeddings = new sdk.Embeddings(client);
+const vectorsDB = new sdk.VectorsDB(client);
+
+const generated = await embeddings.createTextEmbeddings({
+    texts: ['How do I handle passwords?']
+});
+
+const result = await vectorsDB.listDocuments({
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    queries: [
+        sdk.Query.vectorCosine('embeddings', generated.embeddings[0].embedding),
+        sdk.Query.limit(3)
+    ]
+});
+```
+```deno
+import * as sdk from "npm:node-appwrite";
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your secret API key
+
+const embeddings = new sdk.Embeddings(client);
+const vectorsDB = new sdk.VectorsDB(client);
+
+const generated = await embeddings.createTextEmbeddings({
+    texts: ['How do I handle passwords?']
+});
+
+const result = await vectorsDB.listDocuments({
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    queries: [
+        sdk.Query.vectorCosine('embeddings', generated.embeddings[0].embedding),
+        sdk.Query.limit(3)
+    ]
+});
+```
+```php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\Embeddings;
+use Appwrite\Services\VectorsDB;
+use Appwrite\Query;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    ->setProject('<YOUR_PROJECT_ID>') // Your project ID
+    ->setKey('<YOUR_API_KEY>'); // Your secret API key
+
+$embeddings = new Embeddings($client);
+$vectorsDB = new VectorsDB($client);
+
+$generated = $embeddings->createTextEmbeddings(
+    texts: ['How do I handle passwords?']
+);
+
+$result = $vectorsDB->listDocuments(
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    queries: [
+        Query::vectorCosine('embeddings', $generated['embeddings'][0]['embedding']),
+        Query::limit(3)
+    ]
+);
+```
+```python
+from appwrite.client import Client
+from appwrite.services.embeddings import Embeddings
+from appwrite.services.vectors_db import VectorsDB
+from appwrite.query import Query
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+client.set_project('<YOUR_PROJECT_ID>') # Your project ID
+client.set_key('<YOUR_API_KEY>') # Your secret API key
+
+embeddings = Embeddings(client)
+vectors_db = VectorsDB(client)
+
+generated = embeddings.create_text_embeddings(
+    texts = ['How do I handle passwords?']
+)
+
+result = vectors_db.list_documents(
+    database_id = '<DATABASE_ID>',
+    collection_id = '<COLLECTION_ID>',
+    queries = [
+        Query.vector_cosine('embeddings', generated["embeddings"][0]["embedding"]),
+        Query.limit(3)
+    ]
+)
+```
+```ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+    .set_project('<YOUR_PROJECT_ID>') # Your project ID
+    .set_key('<YOUR_API_KEY>') # Your secret API key
+
+embeddings = Embeddings.new(client)
+vectors_db = VectorsDB.new(client)
+
+generated = embeddings.create_text_embeddings(
+    texts: ['How do I handle passwords?']
+)
+
+result = vectors_db.list_documents(
+    database_id: '<DATABASE_ID>',
+    collection_id: '<COLLECTION_ID>',
+    queries: [
+        Query.vector_cosine('embeddings', generated.embeddings[0].embedding),
+        Query.limit(3)
+    ]
+)
+```
+```csharp
+using Appwrite;
+using Appwrite.Models;
+using Appwrite.Services;
+using Appwrite.Queries;
+
+Client client = new Client()
+    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .SetProject("<YOUR_PROJECT_ID>") // Your project ID
+    .SetKey("<YOUR_API_KEY>"); // Your secret API key
+
+Embeddings embeddings = new Embeddings(client);
+VectorsDB vectorsDB = new VectorsDB(client);
+
+EmbeddingList generated = await embeddings.CreateTextEmbeddings(
+    texts: new List<string> { "How do I handle passwords?" }
+);
+
+DocumentList result = await vectorsDB.ListDocuments(
+    databaseId: "<DATABASE_ID>",
+    collectionId: "<COLLECTION_ID>",
+    queries: new List<string> {
+        Query.VectorCosine("embeddings", generated.Embeddings[0].XEmbedding),
+        Query.Limit(3)
+    }
+);
+```
+```dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your secret API key
+
+Embeddings embeddings = Embeddings(client);
+VectorsDB vectorsDB = VectorsDB(client);
+
+EmbeddingList generated = await embeddings.createTextEmbeddings(
+    texts: ['How do I handle passwords?'],
+);
+
+DocumentList result = await vectorsDB.listDocuments(
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    queries: [
+        Query.vectorCosine('embeddings', generated.embeddings[0].embedding),
+        Query.limit(3),
+    ],
+);
+```
+```kotlin
+import io.appwrite.Client
+import io.appwrite.Query
+import io.appwrite.ID
+import io.appwrite.services.Embeddings
+import io.appwrite.services.VectorsDB
+
+val client = Client(context)
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>") // Your secret API key
+
+val embeddings = Embeddings(client)
+val vectorsDB = VectorsDB(client)
+
+val generated = embeddings.createTextEmbeddings(
+    texts = listOf("How do I handle passwords?")
+)
+
+val response = vectorsDB.listDocuments(
+    databaseId = "<DATABASE_ID>",
+    collectionId = "<COLLECTION_ID>",
+    queries = listOf(
+        Query.vectorCosine("embeddings", generated.embeddings[0].embedding),
+        Query.limit(3)
+    )
+)
+```
+```java
+import io.appwrite.Client;
+import io.appwrite.Query;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.services.Embeddings;
+import io.appwrite.services.VectorsDB;
+import java.util.List;
+
+Client client = new Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>"); // Your secret API key
+
+Embeddings embeddings = new Embeddings(client);
+VectorsDB vectorsDB = new VectorsDB(client);
+
+embeddings.createTextEmbeddings(
+    List.of("How do I handle passwords?"),
+    new CoroutineCallback<>((generated, error) -> {
+        if (error != null) {
+            error.printStackTrace();
+            return;
+        }
+
+        vectorsDB.listDocuments(
+            "<DATABASE_ID>",
+            "<COLLECTION_ID>",
+            List.of(
+                Query.vectorCosine("embeddings", generated.getEmbeddings().get(0).getEmbedding()),
+                Query.limit(3)
+            ),
+            new CoroutineCallback<>((result, err) -> {
+                if (err != null) {
+                    err.printStackTrace();
+                    return;
+                }
+
+                System.out.println(result);
+            })
+        );
+    })
+);
+```
+```swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>") // Your secret API key
+
+let embeddings = Embeddings(client)
+let vectorsDB = VectorsDB(client)
+
+let generated = try await embeddings.createTextEmbeddings(
+    texts: ["How do I handle passwords?"]
+)
+
+let documentList = try await vectorsDB.listDocuments(
+    databaseId: "<DATABASE_ID>",
+    collectionId: "<COLLECTION_ID>",
+    queries: [
+        Query.vectorCosine("embeddings", vector: generated.embeddings[0].embedding),
+        Query.limit(3)
+    ]
+)
+```
+```server-rust
+use appwrite::Client;
+use appwrite::services::{Embeddings, VectorsDB};
+use appwrite::query::Query;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new();
+    client.set_endpoint("https://<REGION>.cloud.appwrite.io/v1"); // Your API Endpoint
+    client.set_project("<YOUR_PROJECT_ID>"); // Your project ID
+    client.set_key("<YOUR_API_KEY>"); // Your secret API key
+
+    let embeddings = Embeddings::new(&client);
+    let vectors_db = VectorsDB::new(&client);
+
+    let generated = embeddings.create_text_embeddings(
+        vec!["How do I handle passwords?"],
+        None, // model (optional)
+    ).await?;
+
+    let result = vectors_db.list_documents(
+        "<DATABASE_ID>",
+        "<COLLECTION_ID>",
+        Some(vec![
+            Query::vector_cosine("embeddings", generated.embeddings[0].embedding.clone()).to_string(),
+            Query::limit(3).to_string(),
+        ]),
+        None, // transactionId (optional)
+        None, // total (optional)
+        None, // ttl (optional)
+    ).await?;
+
+    println!("{:?}", result);
+    Ok(())
+}
+```
+```bash
+appwrite embeddings create-text-embeddings \
+    --texts 'How do I handle passwords?'
+
+appwrite vectorsdb list-documents \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --queries '{"method":"vectorCosine","attribute":"embeddings","values":[<EMBEDDING_FROM_FIRST_COMMAND>]}' \
+    --queries '{"method":"limit","values":[3]}'
+```
+{% /multicode %}
+
+The response ranks every document by distance from the question, closest first:
+
+```json
+{
+    "total": 3,
+    "documents": [
+        {
+            "$distance": 0.42710475406362236,
+            "metadata": { "text": "Appwrite Authentication signs users in and manages sessions." }
+        },
+        {
+            "$distance": 0.5083307502161881,
+            "metadata": { "text": "Appwrite Storage keeps your files safe." }
+        },
+        {
+            "$distance": 0.5342290087037317,
+            "metadata": { "text": "Appwrite Functions run your code on demand." }
+        }
+    ]
+}
+```
+
+Nothing in your stored text contains the word "passwords", and the sentence about signing users in still comes back first. A keyword search would have found nothing at all.
+
+A collection this small searches fine without an index. To keep searches fast as the collection grows, and to rank by dot product or Euclidean distance instead of cosine, see [vector search](/docs/products/databases/vectorsdb/vector-search).
+{% /section %}
+
+{% section #next-steps step=6 title="Next steps" %}
+You now have a database, a collection, three documents holding embeddings with their text, and a search that ranks them by meaning. From here:
+
+- Pick a different model, or embed several texts in one call, with [embeddings](/docs/products/databases/vectorsdb/embeddings).
+- Add an index, choose a distance type, and filter results with [vector search](/docs/products/databases/vectorsdb/vector-search).
 
 {% arrow_link href="/docs/products/databases/vectorsdb/vector-search" %}
-Run vector search
+Go deeper on vector search
 {% /arrow_link %}
 {% /section %}

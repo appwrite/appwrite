@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react'
-import { Eye, Flame, Heart, PartyPopper, Rocket, Sparkles } from 'lucide-react'
+import { Flame, Heart, PartyPopper, Rocket, Sparkles } from 'lucide-react'
 import { formatInitPresenceActivityDisplay } from '@/lib/init/init-presence-activity'
 
 export { formatInitPresenceActivityDisplay }
@@ -18,7 +18,6 @@ export const INIT_REACTIONS: InitReaction[] = [
   { id: 'mind-blown', icon: Sparkles, label: 'Mind blown', activity: 'Mind blown' },
   { id: 'heart', icon: Heart, label: 'Love it', activity: 'Loving it' },
   { id: 'rocket', icon: Rocket, label: 'Ship it', activity: 'Ready to ship' },
-  { id: 'eyes', icon: Eye, label: 'Watching', activity: 'Watching closely' },
 ]
 
 const REACTION_BY_ID = new Map(INIT_REACTIONS.map((reaction) => [reaction.id, reaction]))

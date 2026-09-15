@@ -6,7 +6,7 @@ date: 2026-03-11
 cover: /images/blog/solving-the-headaches-of-screenshot-automation-and-why-an-api-first-approach-works-better/cover.avif
 timeToRead: 5
 author: aishwari
-category: tutorial
+category: tutorials
 featured: false
 faqs:
   - question: "Why is screenshot automation harder than it looks?"
@@ -25,22 +25,22 @@ faqs:
 
 Automating screenshots sounds simple. Render a webpage. Capture an image. Done.
 
-In practice, teams quickly discover that screenshot automation is one of those problems that appears to be solved, until they try to implement it **reliably at scale across real-world environments**.
+In practice, teams quickly discover that screenshot automation is one of those problems that appears to be solved, until they try to implement it **reliably at scale across real-world environments**.
 
 From flaky headless browsers to inconsistent rendering across devices, locales, and user states, screenshot automation often becomes a source of ongoing maintenance rather than a productivity win. Unexpected pop-ups and ads can disrupt the screenshot process, so advanced options like blocking ads programmatically are valuable features for improving the reliability and accuracy of screenshot automation.
 
-That's why [**Appwrite includes a Screenshots API**](/blog/post/announcing-screenshots-api), so you can generate consistent screenshots without maintaining your own browser infrastructure.
+That's why [**Appwrite includes a Screenshots API**](/blog/post/announcing-screenshots-api), so you can generate consistent screenshots without maintaining your own browser infrastructure.
 
-Let's break down why screenshot automation is so painful, where existing solutions fall short, and how Appwrite's Screenshots API simplifies workflows more effectively than maintaining your own infrastructure.
+Let's break down why screenshot automation is so painful, where existing solutions fall short, and how Appwrite's Screenshots API simplifies workflows more effectively than maintaining your own infrastructure.
 
 # When a screenshots API makes sense
 
-A managed **screenshot generation API** is a strong fit if your team:
+A managed **screenshot generation API** is a strong fit if your team:
 
-- Generates **webpage screenshots** frequently
+- Generates **webpage screenshots** frequently
 - Needs consistent output across environments and devices
 - Supports multiple locales, regions, or time zones
-- Automates screenshot capturing in pipelines (CI/CD, scheduled jobs, monitoring)
+- Automates screenshot capturing in pipelines (CI/CD, scheduled jobs, monitoring)
 - Wants to reduce operational overhead and maintenance
 
 If screenshots matter to your product, they shouldn't be fragile.
@@ -67,7 +67,7 @@ Most teams start with one of these options.
 
 ## 1. Running headless browsers yourself
 
-Tools like **Playwright** and **Puppeteer** are powerful and flexible, making them an obvious first choice. Browser automation tools like Playwright, Selenium, and Puppeteer are popular choices for automating screenshots, especially for UI testing.
+Tools like **Playwright** and **Puppeteer** are powerful and flexible, making them an obvious first choice. Browser automation tools like Playwright, Selenium, and Puppeteer are popular choices for automating screenshots, especially for UI testing.
 
 ### What works:
 
@@ -159,14 +159,14 @@ To use these services, users usually need to create an account, and many provide
 
 Most third-party screenshot APIs:
 
-- Charge **per screenshot or per execution unit**
-- Optimize for **convenience over determinism**
-- Handle infrastructure, but not **render consistency**
+- Charge **per screenshot or per execution unit**
+- Optimize for **convenience over determinism**
+- Handle infrastructure, but not **render consistency**
 - Restrict advanced configuration to **paid tiers** with higher pricing
 
 While most APIs offer basic functionality, some provide advanced options and other options for customization, such as output type, delays, and element targeting, which may be plan-gated or require higher tiers. For example, certain APIs allow users to 'scroll' to specific elements or positions on the page to capture full-page screenshots.
 
-They reduce setup time, but many teams still encounter issues once screenshots become **part of their production workflows**.
+They reduce setup time, but many teams still encounter issues once screenshots become **part of their production workflows**.
 
 # Why Appwrite's screenshots API is different
 
@@ -176,7 +176,7 @@ Teams often end up managing headless browsers, flaky rendering, custom scripts, 
 
 Appwrite's Screenshots API takes a different approach.
 
-Instead of shipping screenshot *infrastructure*, we ship screenshots as a **first-class API**.
+Instead of shipping screenshot *infrastructure*, we ship screenshots as a **first-class API**.
 
 What that means in practice:
 

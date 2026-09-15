@@ -1,12 +1,16 @@
-import { UserRound } from 'lucide-react'
+import { Share, UserRound } from 'lucide-react'
 import type { Models } from '@appwrite.io/console'
 import { useEffect, useState } from 'react'
+import { toast } from 'sonner'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import {
   HeaderAlertBar,
+  headerAlertGhostButtonClass,
   headerAlertOutlineButtonClass,
 } from '@/components/global/shared/HeaderAlertBar'
+import { analyticsAttrs } from '@/lib/analytics-actions'
 import {
+  buildConsoleImpersonationShareUrl,
   CONSOLE_IMPERSONATION_CHANGED_EVENT,
   hasConsoleImpersonationSessionTarget,
   isConsoleImpersonationActive,
@@ -14,6 +18,7 @@ import {
 } from '@/lib/console-impersonation'
 import { performExitConsoleImpersonation } from '@/lib/console-impersonation-exit'
 import { useT } from '@/lib/i18n/translate'
+import { copyToClipboard } from '@/lib/utils/context-menu'
 
 /** No `account.get` - session target + operator snapshot only (e.g. account-access-blocked). */
 function ConsoleImpersonationBannerSession({ className }: { className?: string }) {
@@ -95,6 +100,15 @@ function ConsoleImpersonationBannerFull({ className }: { className?: string }) {
     (account?.$id ? `${t('User')} ${account.$id}` : t('Console user'))
 
   const summary = `Impersonation active. Operating as ${targetLabel}. Operator ${operatorLabel}.`
+  const targetEmail = account?.email?.trim()
+
+  const handleShare = async () => {
+    if (!targetEmail || typeof window === 'undefined') return
+    const url = buildConsoleImpersonationShareUrl(targetEmail, window.location)
+    if (!url) return
+    const copied = await copyToClipboard('Link', url, { showToast: false })
+    if (copied) toast.success(t('Link copied'))
+  }
 
   return (
     <HeaderAlertBar
@@ -104,14 +118,28 @@ function ConsoleImpersonationBannerFull({ className }: { className?: string }) {
       aria-label={summary}
       className={className}
       action={
-        <button
-          type="button"
-          className={headerAlertOutlineButtonClass('warning')}
-          aria-label={t('Exit impersonation')}
-          onClick={() => void performExitConsoleImpersonation()}
-        >
-          {t('Exit')}
-        </button>
+        <div className="flex w-full items-center gap-4 sm:w-auto">
+          {targetEmail ? (
+            <button
+              type="button"
+              className={headerAlertGhostButtonClass('warning')}
+              aria-label={t('Copy impersonation link')}
+              {...analyticsAttrs('impersonation-share')}
+              onClick={() => void handleShare()}
+            >
+              <Share className="size-3.5 shrink-0" aria-hidden />
+              {t('Share')}
+            </button>
+          ) : null}
+          <button
+            type="button"
+            className={headerAlertOutlineButtonClass('warning')}
+            aria-label={t('Exit impersonation')}
+            onClick={() => void performExitConsoleImpersonation()}
+          >
+            {t('Exit')}
+          </button>
+        </div>
       }
     >
       <>

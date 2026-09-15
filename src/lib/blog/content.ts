@@ -1,13 +1,16 @@
 import { isFeatureEnabled } from '@/lib/console-profiles'
 import { extractDocsToc } from '@/lib/docs/toc'
-import type { DocsTocItem } from '@/lib/docs/types'
 import { markdocToMarkdown } from '@/lib/seo/markdoc-to-markdown'
 import {
   BLOG_CATEGORY_SPOTLIGHT_POST_COUNT,
+  BLOG_FEATURED_SLUG_ORDER,
   BLOG_POSTS_PER_PAGE,
   BLOG_SECONDARY_FEATURED_COUNT,
+  BLOG_SECONDARY_LATEST_COUNT,
   BLOG_SPOTLIGHT_CATEGORY_SLUGS,
 } from './constants'
+import { BLOG_POST_MAP, BLOG_POSTS } from './generated/manifest'
+import { normalizeCategorySlug, resolveCategorySlug } from './category-slugs'
 import { preprocessBlogMarkdocContent } from './preprocess'
 import {
   getFrontmatterAuthor,
@@ -25,19 +28,14 @@ import type {
   BlogPostsPage,
 } from './types'
 
-const importedPostLoaders = import.meta.glob('/src/content/blog/posts/*.markdoc', {
+/**
+ * Lazy glob keeps the full blog corpus out of the server bundle until a post
+ * body is requested. Metadata comes from the build-time manifest.
+ */
+const postLoaders = import.meta.glob('/src/content/blog/posts/*.markdoc', {
   query: '?raw',
   import: 'default',
-  eager: true,
-}) as Record<string, string>
-
-const localPostLoaders = import.meta.glob('/src/content/blog-local/posts/*.markdoc', {
-  query: '?raw',
-  import: 'default',
-  eager: true,
-}) as Record<string, string>
-
-const postLoaders = { ...importedPostLoaders, ...localPostLoaders }
+}) as Record<string, () => Promise<string>>
 
 const categoryLoaders = import.meta.glob('/src/content/blog/categories/*.markdoc', {
   query: '?raw',
@@ -51,15 +49,34 @@ const authorLoaders = import.meta.glob('/src/content/blog/authors/*.markdoc', {
   eager: true,
 }) as Record<string, string>
 
+const postPathBySlug = new Map<string, string>()
+for (const modulePath of Object.keys(postLoaders)) {
+  postPathBySlug.set(slugFromModulePath(modulePath, 'posts'), modulePath)
+}
+
+const rawPostCache = new Map<string, string>()
+const fullPostCache = new Map<string, BlogPost>()
+/** Bound SSR post cache so crawlers cannot retain every post body in memory. */
+const FULL_POST_CACHE_MAX = 32
+
 function slugFromModulePath(modulePath: string, segment: string): string {
   const match = modulePath.match(
-    new RegExp(`/src/content/blog(?:-local)?/${segment}/(.+)\\.markdoc$`),
+    new RegExp(`/src/content/blog/${segment}/(.+)\\.markdoc$`),
   )
   return match?.[1] ?? ''
 }
 
 export function normalizeCategory(value: string): string {
-  return value.replace(/\s+/g, '-').toLowerCase()
+  return normalizeCategorySlug(value)
+}
+
+export { resolveCategorySlug } from './category-slugs'
+
+function getPostCategorySlugs(post: BlogPostMeta): string[] {
+  return post.category
+    .split(',')
+    .map((part) => resolveCategorySlug(part.trim()))
+    .filter(Boolean)
 }
 
 function parseBoolean(value: unknown): boolean | undefined {
@@ -69,8 +86,33 @@ function parseBoolean(value: unknown): boolean | undefined {
   return undefined
 }
 
-function buildBlogPost(modulePath: string, raw: string): BlogPost {
-  const slug = slugFromModulePath(modulePath, 'posts')
+function touchFullPostCache(slug: string, post: BlogPost): BlogPost {
+  if (fullPostCache.has(slug)) {
+    fullPostCache.delete(slug)
+  } else if (fullPostCache.size >= FULL_POST_CACHE_MAX) {
+    const oldest = fullPostCache.keys().next().value
+    if (oldest !== undefined) fullPostCache.delete(oldest)
+  }
+  fullPostCache.set(slug, post)
+  return post
+}
+
+async function loadRawPost(slug: string): Promise<string | null> {
+  const cached = rawPostCache.get(slug)
+  if (cached !== undefined) return cached
+
+  const modulePath = postPathBySlug.get(slug)
+  if (!modulePath) return null
+
+  const loader = postLoaders[modulePath]
+  if (!loader) return null
+
+  const raw = await loader()
+  rawPostCache.set(slug, raw)
+  return raw
+}
+
+function buildBlogPost(slug: string, raw: string): BlogPost {
   const { frontmatter, body } = parseBlogFrontmatter(raw)
   const content = preprocessBlogMarkdocContent(body.trim())
   const date =
@@ -108,14 +150,14 @@ function buildBlogPost(modulePath: string, raw: string): BlogPost {
 }
 
 function buildBlogCategory(modulePath: string, raw: string): BlogCategory {
-  const slug = slugFromModulePath(modulePath, 'categories')
+  const slug = resolveCategorySlug(slugFromModulePath(modulePath, 'categories'))
   const { frontmatter } = parseBlogFrontmatter(raw)
 
   return {
     slug,
     name: getFrontmatterString(frontmatter, 'name') ?? slug,
     description: getFrontmatterString(frontmatter, 'description') ?? '',
-    href: `/blog/category/${slug}`,
+    href: `/blog/categories/${slug}`,
   }
 }
 
@@ -138,10 +180,6 @@ function buildBlogAuthor(modulePath: string, raw: string): BlogAuthor {
   }
 }
 
-const allPosts = Object.entries(postLoaders)
-  .map(([modulePath, raw]) => buildBlogPost(modulePath, raw))
-  .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-
 const allCategories = Object.entries(categoryLoaders)
   .map(([modulePath, raw]) => buildBlogCategory(modulePath, raw))
   .sort((a, b) => a.name.localeCompare(b.name))
@@ -150,40 +188,58 @@ const allAuthors = Object.entries(authorLoaders)
   .map(([modulePath, raw]) => buildBlogAuthor(modulePath, raw))
   .sort((a, b) => a.name.localeCompare(b.name))
 
-export const blogPostCount = allPosts.length
+export const blogPostCount = BLOG_POSTS.length
 
 function isPublicPost(post: BlogPostMeta): boolean {
   return !post.draft && !post.unlisted
 }
 
 export function getPublicBlogPosts(): BlogPostMeta[] {
-  return allPosts.filter(isPublicPost).map(toBlogPostMeta)
+  return BLOG_POSTS.filter(isPublicPost)
+}
+
+// Unlisted posts stay out of the index, categories, search, and sitemap,
+// but remain visible on their author's profile.
+function getNonDraftBlogPosts(): BlogPostMeta[] {
+  return BLOG_POSTS.filter((post) => !post.draft)
 }
 
 /** Draft posts, newest first. Only surfaced when the blogDrafts flag is on. */
 export function getDraftBlogPosts(): BlogPostMeta[] {
-  return allPosts.filter((post) => post.draft).map(toBlogPostMeta)
+  return BLOG_POSTS.filter((post) => post.draft)
 }
 
-export function getAllBlogPosts(): BlogPost[] {
-  return allPosts
+export async function getAllBlogPosts(): Promise<BlogPost[]> {
+  const posts: BlogPost[] = []
+  for (const meta of BLOG_POSTS) {
+    const post = await getBlogPost(meta.slug)
+    if (post) posts.push(post)
+  }
+  return posts
 }
 
-export function getBlogPost(slug: string): BlogPost | null {
-  const post = allPosts.find((entry) => entry.slug === slug) ?? null
-  if (!post) return null
-  if (post.draft && !isFeatureEnabled('blogDrafts')) return null
-  return post
+export async function getBlogPost(slug: string): Promise<BlogPost | null> {
+  const cached = fullPostCache.get(slug)
+  if (cached) return touchFullPostCache(slug, cached)
+
+  const meta = BLOG_POST_MAP[slug]
+  if (!meta) return null
+  if (meta.draft && !isFeatureEnabled('blogDrafts')) return null
+
+  const raw = await loadRawPost(slug)
+  if (!raw) return null
+
+  return touchFullPostCache(slug, buildBlogPost(slug, raw))
 }
 
-export function getBlogMarkdownExport(slug: string): string | null {
-  if (!getBlogPost(slug)) return null
+/** Synchronous accessor for routes that already have loader-fetched post data. */
+export function getBlogPostMeta(slug: string): BlogPostMeta | null {
+  return BLOG_POST_MAP[slug] ?? null
+}
 
-  const modulePath = Object.keys(postLoaders).find(
-    (path) => slugFromModulePath(path, 'posts') === slug,
-  )
-  if (!modulePath) return null
-  const raw = postLoaders[modulePath]
+export async function getBlogMarkdownExport(slug: string): Promise<string | null> {
+  if (!getBlogPostMeta(slug)) return null
+  const raw = await loadRawPost(slug)
   return raw ? markdocToMarkdown(raw) : null
 }
 
@@ -192,7 +248,8 @@ export function getBlogAuthor(slug: string): BlogAuthor | null {
 }
 
 export function getBlogCategory(slug: string): BlogCategory | null {
-  return allCategories.find((category) => category.slug === slug) ?? null
+  const resolvedSlug = resolveCategorySlug(slug)
+  return allCategories.find((category) => category.slug === resolvedSlug) ?? null
 }
 
 export function getAllBlogAuthors(): BlogAuthor[] {
@@ -231,12 +288,13 @@ export function toBlogPostMeta(post: BlogPost | BlogPostMeta): BlogPostMeta {
 }
 
 export function postMatchesCategory(post: BlogPostMeta, categorySlug: string): boolean {
-  return normalizeCategory(post.category).includes(categorySlug)
+  const resolvedSlug = resolveCategorySlug(categorySlug)
+  return getPostCategorySlugs(post).some((slug) => slug === resolvedSlug)
 }
 
 export function getPrimaryPostCategorySlug(post: BlogPostMeta): string {
   const firstCategory = post.category.split(',')[0]?.trim() ?? ''
-  return normalizeCategory(firstCategory)
+  return resolveCategorySlug(firstCategory)
 }
 
 export function getPostCategoryLabel(post: BlogPostMeta): string {
@@ -257,7 +315,7 @@ export function postMatchesAuthor(post: BlogPostMeta, authorSlug: string): boole
 }
 
 export function getPostsForAuthor(authorSlug: string): BlogPostMeta[] {
-  return getPublicBlogPosts().filter((post) => postMatchesAuthor(post, authorSlug))
+  return getNonDraftBlogPosts().filter((post) => postMatchesAuthor(post, authorSlug))
 }
 
 export function getPostsForCategory(categorySlug: string): BlogPostMeta[] {
@@ -314,7 +372,16 @@ function buildBlogIndexSpotlights(posts: BlogPostMeta[]): {
   categorySpotlights: BlogCategorySpotlight[]
   excludedSlugs: Set<string>
 } {
-  const featuredPosts = posts.filter((post) => post.featured)
+  const featuredRank = new Map<string, number>(
+    BLOG_FEATURED_SLUG_ORDER.map((slug, index) => [slug, index]),
+  )
+  const featuredPosts = posts
+    .filter((post) => post.featured)
+    .sort((a, b) => {
+      const aRank = featuredRank.get(a.slug) ?? Number.MAX_SAFE_INTEGER
+      const bRank = featuredRank.get(b.slug) ?? Number.MAX_SAFE_INTEGER
+      return aRank - bRank
+    })
   const featured = featuredPosts[0] ?? null
   const excludedSlugs = new Set<string>()
 
@@ -337,6 +404,15 @@ function buildBlogIndexSpotlights(posts: BlogPostMeta[]): {
       excludedSlugs.add(post.slug)
       secondaryFeatured.push(post)
     }
+  }
+
+  const latestSecondary = posts
+    .filter((post) => !excludedSlugs.has(post.slug))
+    .slice(0, BLOG_SECONDARY_LATEST_COUNT)
+
+  for (const post of latestSecondary) {
+    excludedSlugs.add(post.slug)
+    secondaryFeatured.push(post)
   }
 
   const categorySpotlights: BlogCategorySpotlight[] = []
@@ -381,14 +457,12 @@ export function getBlogPostsPage(options: {
   let featured: BlogPostMeta | null = null
   let secondaryFeatured: BlogPostMeta[] = []
   let categorySpotlights: BlogCategorySpotlight[] = []
-  let excludedSlugs = new Set<string>()
 
   if (showSpotlights) {
     const spotlights = buildBlogIndexSpotlights(posts)
     featured = spotlights.featured
     secondaryFeatured = spotlights.secondaryFeatured
     categorySpotlights = spotlights.categorySpotlights
-    excludedSlugs = spotlights.excludedSlugs
   }
 
   if (searchQuery || categoryQuery) {
@@ -401,11 +475,9 @@ export function getBlogPostsPage(options: {
     })
   }
 
-  const listPosts = showSpotlights
-    ? posts.filter((post) => !excludedSlugs.has(post.slug))
-    : featured
-      ? posts.filter((post) => post.slug !== featured.slug)
-      : posts
+  // "All articles" is the full archive: posts already shown in the hero,
+  // secondary featured row, or a category spotlight still list here.
+  const listPosts = posts
 
   const totalPages = Math.max(1, Math.ceil(listPosts.length / BLOG_POSTS_PER_PAGE))
   const safePage = Math.min(currentPage, totalPages)
@@ -424,7 +496,6 @@ export function getBlogPostsPage(options: {
     navigation: generateBlogPageNavigation(safePage, totalPages),
   }
 }
-
 
 export function resolveBlogAuthors(
   authorSlugs: string | string[],

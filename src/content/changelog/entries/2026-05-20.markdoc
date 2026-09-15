@@ -3,6 +3,7 @@ layout: changelog
 title: "Announcing Email policies for Appwrite Auth"
 date: 2026-05-20
 cover: /images/blog/announcing-email-policies/cover.avif
+tags: auth
 ---
 
 Appwrite Auth now supports [**Email policies**](/docs/products/auth/email-policies), letting you restrict which email addresses can be used for user creation and email updates on a project. Three independent toggles cover the most common signup hygiene problems: free providers like Gmail and Yahoo, aliased addresses such as subaddresses and provider-specific variations of one inbox, and disposable providers like Mailinator.

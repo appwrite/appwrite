@@ -6,7 +6,7 @@ date: 2025-09-18
 cover: /images/blog/announcing-spatial-columns/cover.avif
 timeToRead: 5
 author: jake-barnby
-category: announcement
+category: announcements
 featured: false
 faqs:
   - question: "What are spatial columns in Appwrite Databases?"

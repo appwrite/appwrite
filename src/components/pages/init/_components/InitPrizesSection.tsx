@@ -12,7 +12,7 @@ import {
   buildInitViewingGrandPrizeActivity,
 } from '@/lib/init/init-presence-activity'
 import { cn } from '@/lib/utils'
-import { isExternalInitHref } from '@/lib/init/links'
+import { useInitHref } from '@/lib/init/use-init-href'
 import { ArrowUpRight, Gift, Sparkles } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import {
@@ -121,6 +121,7 @@ function DailyPrizeCell({
   className?: string
 }) {
   const meta = PLATFORM_META[giveaway.platform]
+  const resolvedHref = useInitHref(giveaway.href)
   const presenceHandlers = usePrizePresenceHandlers(
     buildInitViewingDailyPrizeActivity(giveaway.day, giveaway.prizeDescription),
   )
@@ -150,7 +151,7 @@ function DailyPrizeCell({
             <span className="mx-1.5 text-border">·</span>
             {giveaway.dateLabel}
           </p>
-          {giveaway.href ? (
+          {resolvedHref ? (
             <ArrowUpRight
               className="size-3.5 shrink-0 text-muted-foreground/70 transition-colors group-hover:text-foreground"
               aria-hidden
@@ -165,9 +166,7 @@ function DailyPrizeCell({
             </h4>
             <div className="flex min-w-0 items-center gap-1.5 text-[11px] text-muted-foreground">
               <img src={meta.icon} alt="" className="size-3 shrink-0 opacity-70" aria-hidden />
-              <span className={PRIZE_LINE}>
-                {meta.label} · {giveaway.timeLabel}
-              </span>
+              <span className={PRIZE_LINE}>{meta.label}</span>
             </div>
           </div>
 
@@ -179,12 +178,13 @@ function DailyPrizeCell({
     </>
   )
 
-  if (giveaway.href) {
-    const external = isExternalInitHref(giveaway.href)
+  if (resolvedHref) {
     return (
       <a
-        href={giveaway.href}
-        {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+        href={resolvedHref.href}
+        {...(resolvedHref.external
+          ? { target: '_blank', rel: 'noopener noreferrer' }
+          : {})}
         className={shellClass}
         {...presenceHandlers}
       >
@@ -252,7 +252,7 @@ function GrandPrizeCell({
             <div className="flex min-w-0 items-center gap-1.5 text-[11px] text-muted-foreground">
               <img src={platformMeta.icon} alt="" className="size-3 shrink-0 opacity-70" aria-hidden />
               <span className={PRIZE_LINE}>
-                {platformMeta.label} · {grandPrize.sessionTitle} · {grandPrize.timeLabel}
+                {platformMeta.label} · {grandPrize.sessionTitle}
               </span>
             </div>
           ) : null}
@@ -357,6 +357,7 @@ export function InitPrizesSection({ event }: InitPrizesSectionProps) {
                   giveaway={raffle.activeGiveaway}
                   participants={raffle.participants}
                   loadingParticipants={raffle.loadingParticipants}
+                  onReloadParticipants={raffle.reloadParticipants}
                   onClose={raffle.close}
                 />
               </div>
@@ -368,8 +369,8 @@ export function InitPrizesSection({ event }: InitPrizesSectionProps) {
               >
                 <InitGrandPrizeRevealBack
                   grandPrize={raffle.grandPrize}
-                  participants={raffle.participants}
-                  loadingParticipants={raffle.loadingParticipants}
+                  entries={raffle.grandPrizeEntries}
+                  onEntriesChange={raffle.setGrandPrizeEntries}
                   onClose={raffle.close}
                 />
               </div>

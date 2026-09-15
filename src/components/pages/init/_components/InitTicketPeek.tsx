@@ -1,6 +1,7 @@
 import type { Models } from '@appwrite.io/console'
 import { InitWordmark } from '@/components/pages/init/_components/InitWordmark'
-import { INIT_TICKET_SECTION_HASH, isExternalInitHref } from '@/lib/init/links'
+import { INIT_TICKET_SECTION_HASH } from '@/lib/init/links'
+import { useInitHref } from '@/lib/init/use-init-href'
 import { cn } from '@/lib/utils'
 
 interface InitTicketPeekProps {
@@ -17,6 +18,7 @@ export function InitTicketPeek({
   className,
 }: InitTicketPeekProps) {
   const holderName = account?.name?.trim() || account?.email?.split('@')[0] || 'Guest'
+  const resolvedHref = useInitHref(ticketHref)
 
   const ticket = (
     <div
@@ -65,10 +67,10 @@ export function InitTicketPeek({
         className,
       )}
     >
-      {ticketHref ? (
+      {resolvedHref ? (
         <a
-          href={ticketHref}
-          {...(isExternalInitHref(ticketHref)
+          href={resolvedHref.href}
+          {...(resolvedHref.external
             ? { target: '_blank', rel: 'noopener noreferrer' }
             : {})}
           className="pointer-events-auto outline-none"

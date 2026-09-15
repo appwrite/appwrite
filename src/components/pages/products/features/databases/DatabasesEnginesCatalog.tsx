@@ -3,6 +3,8 @@ import {
   MySQLDolphinIcon,
   PostgresElephantIcon,
 } from '@/components/pages/projects/$projectId/databases/_components/database-mascot-icons'
+import { Badge } from '@/components/ui/badge'
+import { isBetaDatabaseType } from '@/lib/databases/database-type-display'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 
@@ -56,13 +58,13 @@ const ENGINE_GROUPS: DatabaseEngineGroup[] = [
     id: 'native',
     title: 'Native DBs',
     description:
-      'Dedicated PostgreSQL and MySQL engines for teams that need direct SQL compatibility.',
+      'Dedicated managed PostgreSQL and MySQL engines you connect to with standard SQL clients.',
     engines: [
       {
         id: 'postgresql',
         name: 'PostgreSQL',
         description:
-          'Full SQL, extensions, and portable schemas for relational workloads and existing tooling.',
+          'Managed PostgreSQL hosting with full SQL, pgvector, and portable schemas for Prisma, Drizzle, and existing tooling.',
         icon: PostgresElephantIcon,
       },
       {
@@ -91,7 +93,14 @@ function EngineCard({ engine }: { engine: DatabaseEngine }) {
       <div className="flex items-start gap-3">
         <EngineIconBadge icon={engine.icon} />
         <div className="min-w-0">
-          <h4 className="text-[14px] font-semibold text-foreground">{engine.name}</h4>
+          <h4 className="flex flex-wrap items-center gap-2 text-[14px] font-semibold text-foreground">
+            {engine.name}
+            {isBetaDatabaseType(engine.id) ? (
+              <Badge variant="info" className="text-[10px] shrink-0">
+                {t('Beta')}
+              </Badge>
+            ) : null}
+          </h4>
           <p className="mt-1.5 text-[13px] leading-5 text-muted-foreground">
             {t(engine.description)}
           </p>

@@ -7,6 +7,7 @@ import { INIT_RELEASE_AVAILABILITY_SECTION_ID } from '@/lib/init/init-section-id
 import { isExternalInitHref } from '@/lib/init/links'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { parseDocsPagePath } from '@/lib/marketing/urls'
+import { useInitHref } from '@/lib/init/use-init-href'
 import { InitDayCountdown } from './InitDayCountdown'
 import { ChevronRight, Cloud, Lock, Server } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -29,16 +30,17 @@ function ReleaseOptionLink({
   className?: string
   locked?: boolean
 }) {
-  if (locked) {
+  const isDocsLink = Boolean(parseDocsPagePath(option.href))
+  const resolved = useInitHref(option.href)
+  const external = option.external ?? resolved?.external ?? isExternalInitHref(option.href)
+
+  if (locked || !resolved) {
     return (
       <div className={className} aria-disabled>
         {children}
       </div>
     )
   }
-
-  const isDocsLink = Boolean(parseDocsPagePath(option.href))
-  const external = option.external ?? isExternalInitHref(option.href)
 
   if (isDocsLink) {
     return (
@@ -50,7 +52,7 @@ function ReleaseOptionLink({
 
   return (
     <a
-      href={option.href}
+      href={resolved.href}
       {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
       className={className}
     >

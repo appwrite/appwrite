@@ -57,6 +57,30 @@ export function getDefaultUsageChartDateRange(): DateRange {
   }
 }
 
+/** Default database monitor chart range: rolling last hour. */
+export function getDefaultMonitorChartDateRange(): DateRange {
+  const now = new Date()
+  return {
+    from: subHours(now, 1),
+    to: now,
+  }
+}
+
+let stableDefaultMonitorChartDateRange: DateRange | null = null
+
+/** Session-stable default for database monitor when no preset is active. */
+export function getStableMonitorChartDateRange(): DateRange {
+  if (!stableDefaultMonitorChartDateRange) {
+    stableDefaultMonitorChartDateRange = getDefaultMonitorChartDateRange()
+  }
+  const { from, to } = stableDefaultMonitorChartDateRange
+  return { from: new Date(from), to: new Date(to) }
+}
+
+export function resetStableMonitorChartDateRange() {
+  stableDefaultMonitorChartDateRange = null
+}
+
 let stableDefaultUsageChartDateRange: DateRange | null = null
 
 /**

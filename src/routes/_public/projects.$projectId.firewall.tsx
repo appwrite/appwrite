@@ -1,13 +1,16 @@
 import { createFileRoute, Outlet, redirect } from '@tanstack/react-router'
 import { pageTitle } from '@/lib/utils/page-title'
-import { getActiveProfileFeatures } from '@/lib/console-profiles'
+import { isCloudProfile } from '@/lib/console-profiles'
 import {
+  attackModeRuleQueryOptions,
   firewallRulesQueryOptions,
   firewallTrafficOverviewQueryOptions,
   fetchProject,
   organizationPlanQueryOptions,
 } from '@/lib/react-query/hooks'
 import { DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
+import { resolveFirewallListSearch } from '@/lib/firewall/conditions'
+import { isAttackModeScope } from '@/lib/firewall/attack-mode'
 import {
   DEFAULT_USAGE_CHART_INTERVAL,
   resolveUsageChartIntervalForRange,
@@ -18,7 +21,7 @@ import { getUsageLogRetentionHoursFromPlan } from '@/lib/usage/usage-log-retenti
 export const Route = createFileRoute('/_public/projects/$projectId/firewall')({
   head: () => ({ meta: [{ title: pageTitle('Firewall') }] }),
   beforeLoad: ({ params }) => {
-    if (!getActiveProfileFeatures().firewall) {
+    if (!isCloudProfile()) {
       throw redirect({
         to: '/projects/$projectId',
         params: { projectId: params.projectId },
@@ -26,12 +29,17 @@ export const Route = createFileRoute('/_public/projects/$projectId/firewall')({
       })
     }
   },
-  loader: async ({ params, context }) => {
+  loader: async ({ params, context, location }) => {
     if (typeof window === 'undefined') return
 
     const { projectId } = params
     const { queryClient } = context
     if (!projectId) return
+    const search =
+      location.search && typeof location.search === 'object'
+        ? (location.search as Record<string, unknown>)
+        : {}
+    const selection = resolveFirewallListSearch(search)
 
     const project = await queryClient.ensureQueryData({
       queryKey: ['project', projectId],
@@ -54,19 +62,31 @@ export const Route = createFileRoute('/_public/projects/$projectId/firewall')({
     const logRetentionHours = getUsageLogRetentionHoursFromPlan(plan)
 
     await Promise.all([
-      // Default rules tab (API) + unfiltered total for plan limit checks.
       queryClient.ensureQueryData(
         firewallRulesQueryOptions(
           projectId,
           0,
           DEFAULT_PAGE_SIZE,
           undefined,
-          'api',
+          selection.resourceType,
+          selection.resourceId,
         ),
       ),
+      // Unfiltered total for plan limit checks.
       queryClient.ensureQueryData(
         firewallRulesQueryOptions(projectId, 0, DEFAULT_PAGE_SIZE, undefined),
       ),
+      ...(isAttackModeScope(selection.resourceType, selection.resourceId)
+        ? [
+            queryClient.ensureQueryData(
+              attackModeRuleQueryOptions(
+                projectId,
+                selection.resourceType,
+                selection.resourceId,
+              ),
+            ),
+          ]
+        : []),
     ])
 
     // Usage is non-critical: prefetch in background so a slow usage API does not
@@ -78,6 +98,8 @@ export const Route = createFileRoute('/_public/projects/$projectId/firewall')({
           dateRange,
           chartInterval,
           logRetentionHours,
+          selection.resourceType,
+          selection.resourceId,
         ),
       )
       .catch(() => undefined)

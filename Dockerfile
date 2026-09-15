@@ -1,4 +1,4 @@
-FROM oven/bun:1.3 AS base
+FROM oven/bun:1.4 AS base
 
 WORKDIR /app
 COPY package.json package.json
@@ -11,7 +11,10 @@ FROM base AS build
 # (endpoint, profile, fingerprint key, growth endpoint, Stripe key, Sentry DSN,
 # instrumentation/Plausible script srcs) is now supplied at RUNTIME via the
 # container env and injected into the browser by runtime-config.ts - so a single
-# image can be promoted across environments.
+# image uses runtime application config. CDN_ORIGIN is baked into asset URLs.
+ARG CDN_ORIGIN
+ENV CDN_ORIGIN=${CDN_ORIGIN}
+
 ARG VITE_APPWRITE_PROJECT_ID
 ENV VITE_APPWRITE_PROJECT_ID=${VITE_APPWRITE_PROJECT_ID}
 
@@ -39,6 +42,7 @@ FROM base AS final
 
 ENV NODE_ENV=production
 ENV PORT=3000
+ENV APPWRITE_SPECS_ROOT=/app/dist/specs
 
 # librsvg (Sharp SVG export) resolves fonts via fontconfig on Linux, not SVG @font-face.
 RUN apt-get update \

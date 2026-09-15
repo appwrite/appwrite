@@ -2,6 +2,7 @@
 layout: changelog
 title: "Free plan update: Automatic pausing of inactive projects"
 date: 2026-02-20
+tags: functions, infrastructure
 ---
 
 To reduce idle infrastructure costs and keep the Free plan sustainable at scale, projects on the Free plan with no development activity for 7 consecutive days will be automatically paused.

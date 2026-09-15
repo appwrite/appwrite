@@ -56,8 +56,8 @@ export const heFunctionsDictionary: Record<string, string> = {
   'Build must be ready before activating':
     'הבנייה חייבת להיות מוכנה לפני ההפעלה',
   'Build output': 'פלט הבנייה',
-  'Build output is available after the deployment has completed.':
-    'פלט הבנייה זמין לאחר שהפריסה הושלמה.',
+  'Build output is only available for ready deployments.':
+    'פלט הבנייה זמין רק לפריסות מוכנות.',
   Building: 'בבנייה',
   by: 'מאת',
   bytes: 'בייטים',
@@ -71,7 +71,6 @@ export const heFunctionsDictionary: Record<string, string> = {
   Change: 'שינוי',
   chars: 'תווים',
   'Check your permissions': 'בדקו את ההרשאות שלכם',
-  'Choose .tar.gz file': 'בחירת קובץ .tar.gz',
   'Choose the directory containing your function code':
     'בחרו את התיקייה שמכילה את קוד הפונקציה שלכם',
   'Choose who can execute this function': 'בחרו מי יכול להריץ את הפונקציה הזו',
@@ -107,6 +106,8 @@ export const heFunctionsDictionary: Record<string, string> = {
   'Connect Git repository': 'חיבור Git repo',
   'Connect GitHub': 'חיבור GitHub',
   'Connect GitLab': 'חיבור GitLab',
+  'Connect Bitbucket': 'חיבור Bitbucket',
+  'Connect Origin': 'חיבור Origin',
   'Connect later': 'חיבור מאוחר יותר',
   'Connect repository': 'חיבור repo',
   'Connect repository first': 'חברו קודם repo',
@@ -156,6 +157,7 @@ export const heFunctionsDictionary: Record<string, string> = {
   'Daily at midnight': 'יומי בחצות',
   'Daily at noon': 'יומי בצהריים',
   'Data sovereignty, compliance': 'ריבונות נתונים, תאימות רגולטורית',
+  'Default': 'ברירת מחדל',
   'DDoS Mitigation': 'מיגון DDoS',
   'DDoS protection': 'הגנת DDoS',
   Delete: 'מחיקה',
@@ -642,6 +644,8 @@ export const heFunctionsDictionary: Record<string, string> = {
     'עדכנתם את הגדרות הפונקציה, אך הן לא ייכנסו לתוקף עד שתפרסו מחדש. הפריסה הנוכחית עדיין רצה עם ההגדרות הקודמות.',
   'Your function is currently being redeployed.':
     'הפונקציה שלכם נפרסת מחדש כעת.',
+  'Your function will be accessible at this URL':
+    'הפונקציה שלכם תהיה נגישה בכתובת הזו',
   'Downloaded function.tar.gz': 'הקובץ function.tar.gz הורד',
   occurrence: 'מופע',
   Request: 'בקשה',

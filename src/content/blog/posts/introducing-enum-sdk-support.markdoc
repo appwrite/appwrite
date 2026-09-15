@@ -6,7 +6,7 @@ date: 2024-02-28
 cover: /images/blog/enum-announcement.avif
 timeToRead: 4
 author: jake-barnby
-category: product, announcement
+category: products, announcements
 featured: false
 faqs:
   - question: "What are enums in the Appwrite SDKs?"

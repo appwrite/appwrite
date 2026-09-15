@@ -28,22 +28,19 @@ import { FrameworkIcon } from '@/components/global/shared/FrameworkIcon'
 import { RuntimeIcon } from '@/components/global/shared/RuntimeIcon'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
-  functionsQueryOptions,
+  firewallResourcePickerFunctionsQueryOptions,
+  firewallResourcePickerSitesQueryOptions,
+  FIREWALL_RESOURCE_PICKER_LIMIT,
   projectFunctionQueryOptions,
   siteQueryOptions,
-  sitesQueryOptions,
 } from '@/lib/react-query/hooks'
-import type { FirewallResourceType } from '@/lib/firewall/conditions'
+import type { FirewallResourceSelection } from '@/lib/firewall/conditions'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 
-const LIST_LIMIT = 25
 const API_VALUE = 'api'
 
-export type FirewallResourceSelection = {
-  resourceType: FirewallResourceType
-  resourceId?: string
-}
+export type { FirewallResourceSelection }
 
 export interface FirewallResourceSelectorProps {
   projectId: string
@@ -109,7 +106,10 @@ export function FirewallResourceSelector({
   }, [search])
 
   useEffect(() => {
-    if (!open) setSearch('')
+    if (!open) {
+      setSearch('')
+      setDebouncedSearch('')
+    }
   }, [open])
 
   const selectedFunctionId =
@@ -127,21 +127,24 @@ export function FirewallResourceSelector({
     enabled: !!projectId && !!selectedSiteId,
   })
 
-  const listSearch = open ? debouncedSearch || undefined : undefined
+  const listSearch = debouncedSearch || undefined
 
   const { data: functionsData, isFetching: functionsFetching } = useQuery({
-    ...functionsQueryOptions(projectId, 0, LIST_LIMIT, listSearch),
+    ...firewallResourcePickerFunctionsQueryOptions(projectId, listSearch),
     enabled: !!projectId && open,
     placeholderData: keepPreviousData,
   })
 
   const { data: sitesData, isFetching: sitesFetching } = useQuery({
-    ...sitesQueryOptions(projectId, 0, LIST_LIMIT, listSearch),
+    ...firewallResourcePickerSitesQueryOptions(projectId, listSearch),
     enabled: !!projectId && open,
     placeholderData: keepPreviousData,
   })
 
-  const isFetching = functionsFetching || sitesFetching
+  const isLoadingList =
+    (functionsFetching && !functionsData) || (sitesFetching && !sitesData)
+  const isSearching = !!debouncedSearch && (functionsFetching || sitesFetching)
+  const showSearchSpinner = isLoadingList || isSearching
 
   const functionItems = useMemo(() => {
     const list = (functionsData?.functions ?? []).map((fn: Models.Function) => ({
@@ -204,14 +207,14 @@ export function FirewallResourceSelector({
   const showApi = matchesApiSearch(debouncedSearch)
   const currentValue = selectionValue(value)
   const showListSkeleton =
-    isFetching && functionItems.length === 0 && siteItems.length === 0 && !showApi
+    isLoadingList && functionItems.length === 0 && siteItems.length === 0 && !showApi
 
   const functionsTotal = functionsData?.total ?? 0
   const sitesTotal = sitesData?.total ?? 0
-  const functionsTruncated = functionsTotal > LIST_LIMIT
-  const sitesTruncated = sitesTotal > LIST_LIMIT
+  const functionsTruncated = functionsTotal > FIREWALL_RESOURCE_PICKER_LIMIT
+  const sitesTruncated = sitesTotal > FIREWALL_RESOURCE_PICKER_LIMIT
   const showTruncateHint =
-    !isFetching &&
+    !showSearchSpinner &&
     (functionsTruncated || sitesTruncated) &&
     (functionItems.length > 0 || siteItems.length > 0)
 
@@ -311,12 +314,12 @@ export function FirewallResourceSelector({
               placeholder={t('Search resources...')}
               value={search}
               onValueChange={setSearch}
-              className={cn('h-9', isFetching && 'pe-8')}
+              className={cn('h-9', showSearchSpinner && 'pe-8')}
             />
             <div
               className={cn(
                 'pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 transition-opacity duration-200',
-                isFetching ? 'opacity-100' : 'opacity-0',
+                showSearchSpinner ? 'opacity-100' : 'opacity-0',
               )}
               aria-hidden
             >

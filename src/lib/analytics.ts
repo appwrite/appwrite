@@ -2,12 +2,7 @@ import {
   getAnalyticsArea,
   getAnalyticsSurface,
 } from '@/lib/analytics-route'
-import { canTrackAnalytics } from '@/lib/cookie-consent/consent-state'
 import { getActiveLanguage, type SupportedLanguage } from '@/lib/i18n/active-language'
-import {
-  PLAUSIBLE_PROXY_EVENT_PATH,
-  PLAUSIBLE_PROXY_SCRIPT_PATH,
-} from '@/lib/plausible-proxy'
 import { getRuntimeConfig } from '@/lib/runtime-config'
 import {
   getPlanNameFromTier,
@@ -20,23 +15,36 @@ export {
   type AnalyticsSurface,
 } from '@/lib/analytics-route'
 
-/** Upstream Plausible script URL (server proxy target). Not loaded in the browser. */
-export const PLAUSIBLE_UPSTREAM_SCRIPT_SRC =
-  getRuntimeConfig().plausibleScriptSrc
+const PLAUSIBLE_EVENT_PATH = '/api/event'
+const PLAUSIBLE_ORIGIN_FALLBACK = 'https://plausible.io'
 
-export const ANALYTICS_ENABLED = Boolean(PLAUSIBLE_UPSTREAM_SCRIPT_SRC)
-
-/** First-party script path loaded in the browser (proxied; see plausible-proxy). */
-export const PLAUSIBLE_SCRIPT_SRC = ANALYTICS_ENABLED
-  ? PLAUSIBLE_PROXY_SCRIPT_PATH
-  : ''
-
-function isAnalyticsAllowed() {
-  return ANALYTICS_ENABLED && canTrackAnalytics()
+/** Plausible script URL from runtime config (read at call time, not import). */
+export function getPlausibleScriptSrc() {
+  return getRuntimeConfig().plausibleScriptSrc
 }
 
-export const PLAUSIBLE_INIT_SCRIPT = `window.plausible=window.plausible||function(){(plausible.q=plausible.q||[]).push(arguments)},plausible.init=plausible.init||function(i){plausible.o=i||{}};
-plausible.init({ autoCapturePageviews: false, endpoint: ${JSON.stringify(PLAUSIBLE_PROXY_EVENT_PATH)} })`
+export function getPlausibleEventUrl(scriptSrc = getPlausibleScriptSrc()) {
+  try {
+    return new URL(PLAUSIBLE_EVENT_PATH, new URL(scriptSrc).origin).toString()
+  } catch {
+    return `${PLAUSIBLE_ORIGIN_FALLBACK}${PLAUSIBLE_EVENT_PATH}`
+  }
+}
+
+export const ANALYTICS_ENABLED = Boolean(getPlausibleScriptSrc())
+
+function isAnalyticsAllowed() {
+  // Plausible is cookieless. Do not gate it on the cookie banner.
+  return Boolean(getPlausibleScriptSrc())
+}
+
+export function getPlausibleInitScript() {
+  const endpoint = JSON.stringify(getPlausibleEventUrl())
+  const logging = import.meta.env.DEV ? 'true' : 'false'
+
+  return `window.plausible=window.plausible||function(){(plausible.q=plausible.q||[]).push(arguments)},plausible.init=plausible.init||function(i){plausible.o=i||{}};
+plausible.init({autoCapturePageviews:false,endpoint:${endpoint},captureOnLocalhost:/^(localhost|127(?:\\.\\d+){0,2}\\.\\d+|\\[::1\\])$/.test(location.hostname),logging:${logging}})`
+}
 
 export type AnalyticsEventName =
   | 'Button Clicked'
@@ -201,11 +209,10 @@ function flushPendingAnalyticsEvents() {
 
 const MAX_PENDING_ANALYTICS_EVENTS = 20
 
-export function trackPageView(routePath: string) {
-  if (!isAnalyticsAllowed() || typeof window === 'undefined') return
-  // Plausible's init stub queues until the script loads; without it, skip so we
-  // do not mark the session as pageviewed and drop later real pageviews.
-  if (!window.plausible) return
+let pendingPageviewPath: string | null = null
+
+function sendPageView(routePath: string) {
+  if (!window.plausible) return false
 
   window.plausible('pageview', {
     url: getAnalyticsRouteUrl(routePath),
@@ -217,6 +224,29 @@ export function trackPageView(routePath: string) {
   })
   hasTrackedPageview = true
   flushPendingAnalyticsEvents()
+  return true
+}
+
+/** Flush a pageview queued before the Plausible stub was injected. */
+export function flushPendingPageView() {
+  if (!pendingPageviewPath) return
+  if (!isAnalyticsAllowed() || typeof window === 'undefined') return
+  const routePath = pendingPageviewPath
+  pendingPageviewPath = null
+  sendPageView(routePath)
+}
+
+export function trackPageView(routePath: string) {
+  if (!isAnalyticsAllowed() || typeof window === 'undefined') return
+  // Plausible's init stub queues until the remote script loads. If the stub is
+  // not in the page yet, keep the latest path and send it when the stub lands.
+  if (!window.plausible) {
+    pendingPageviewPath = routePath
+    return
+  }
+
+  pendingPageviewPath = null
+  sendPageView(routePath)
 }
 
 export function trackEvent(

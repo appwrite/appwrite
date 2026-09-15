@@ -1,5 +1,6 @@
 import {
   MARKDOC_BRAND_ICON_CLASS,
+  MARKDOC_ICON_SIZE_CLASSES,
   MARKDOC_INLINE_LUCIDE_ICON_CLASS,
   resolveMarkdocIconByName,
   resolveMarkdocIconImageSrc,
@@ -7,9 +8,12 @@ import {
 import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import { cn } from '@/lib/utils'
 
-export function MarkdocIcon({ icon }: { icon?: string; size?: string }) {
+export function MarkdocIcon({ icon, size }: { icon?: string; size?: string }) {
   const resolved = resolveMarkdocIconByName(icon)
   if (!resolved) return null
+
+  const brandSizeClass =
+    size === 's' ? MARKDOC_ICON_SIZE_CLASSES.s : MARKDOC_BRAND_ICON_CLASS
 
   if (resolved.type === 'lucide') {
     return (
@@ -28,7 +32,7 @@ export function MarkdocIcon({ icon }: { icon?: string; size?: string }) {
       alt=""
       className={cn(
         'inline-block align-middle',
-        MARKDOC_BRAND_ICON_CLASS,
+        brandSizeClass,
         PUBLIC_ICON_MUTED_CLASSES,
       )}
     />

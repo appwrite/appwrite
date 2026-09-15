@@ -1,7 +1,7 @@
 /**
  * React Query hooks for Sites
  *
- * Handles sites, deployments, logs, variables, frameworks, specifications, usage, and domains.
+ * Handles sites, deployments, logs, variables, frameworks, specifications, and domains.
  */
 
 import {
@@ -14,10 +14,18 @@ import {
 import { useMemo } from 'react'
 import { Query, ID } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
-import { buildAttributePrefixSearchQueries } from '@/lib/appwrite-id'
+import {
+  buildAttributePrefixSearchQueries,
+  buildIdLookupQueryBatches,
+  fetchLookupBatches,
+} from '@/lib/appwrite-id'
 import { sdk } from '@/lib/appwrite/sdk'
 import { SpecificationType } from '@/lib/specifications'
-import { getVariableValueError, validateVariables } from '@/lib/variables'
+import {
+  fetchAllVariables,
+  getVariableValueError,
+  validateVariables,
+} from '@/lib/variables'
 import {
   MARKETING_SITE_TEMPLATES_PROJECT_ID,
   MARKETING_SITE_TEMPLATES_PAGE_SIZE,
@@ -28,6 +36,7 @@ import {
   DEFAULT_PAGE_SIZE,
 } from './constants'
 import { Dependencies } from './dependencies'
+import { keepNewerLatestDeployment } from '@/lib/utils/deployment-status'
 
 // ============================================================================
 // QUERY FUNCTIONS
@@ -103,23 +112,13 @@ export async function fetchProjectSitesByIds(
     return { sites: [] }
   }
 
-  const validIds = [
-    ...new Set(siteIds.filter((id) => typeof id === 'string' && id.trim())),
-  ]
-  if (validIds.length === 0) {
-    return { sites: [] }
-  }
+  const projectSdk = sdk.forProject(projectId)
+  const sites = await fetchLookupBatches(
+    buildIdLookupQueryBatches(siteIds),
+    async (queries) => (await projectSdk.sites.list({ queries })).sites ?? [],
+  )
 
-  const idQuery =
-    validIds.length === 1
-      ? Query.equal('$id', validIds[0])
-      : Query.or(validIds.map((id) => Query.equal('$id', id)))
-
-  const response = await sdk.forProject(projectId).sites.list({
-    queries: [idQuery, Query.limit(validIds.length)],
-  })
-
-  return { sites: response.sites ?? [] }
+  return { sites }
 }
 
 // Object form of sites.update() params (SDK has overloads; avoid string | object union)
@@ -163,6 +162,7 @@ export function buildSiteUpdateParams(
     buildSpecification: site.buildSpecification,
     runtimeSpecification: site.runtimeSpecification,
     deploymentRetention: site.deploymentRetention,
+    scopes: site.scopes,
     ...updates,
   } as unknown as SiteUpdateParams
 }
@@ -267,8 +267,8 @@ export async function fetchSiteLog(
 }
 
 /**
- * Query function to fetch all site variables (API is not paginated).
- * Sort by `$createdAt` descending; UI paginates via `useSiteVariables` when a limit is set.
+ * Query function to fetch all site variables.
+ * The API defaults to 25 per page; we page through the rest. UI paginates via `useSiteVariables` when a limit is set.
  */
 export async function fetchSiteVariables(projectId: string, siteId: string) {
   if (!projectId || !siteId) {
@@ -276,18 +276,9 @@ export async function fetchSiteVariables(projectId: string, siteId: string) {
   }
 
   const projectSdk = sdk.forProject(projectId)
-  const response = await projectSdk.sites.listVariables({ siteId })
-  const raw = response.variables || []
-  const variables = [...raw].sort((a, b) => {
-    const aTime = new Date(a.$createdAt || 0).getTime()
-    const bTime = new Date(b.$createdAt || 0).getTime()
-    return bTime - aTime
-  })
-
-  return {
-    variables,
-    total: variables.length,
-  }
+  return await fetchAllVariables((queries) =>
+    projectSdk.sites.listVariables({ siteId, queries }),
+  )
 }
 
 /**
@@ -477,6 +468,8 @@ export function siteQueryOptions(
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     gcTime: projectId && siteId ? 5 * 60 * 1000 : 0,
+    structuralSharing: (oldData, newData) =>
+      keepNewerLatestDeployment(oldData, newData),
   })
 }
 
@@ -1631,15 +1624,15 @@ export function useCreateSiteDomainRule(projectId: string | null | undefined) {
           string,
           (typeof StatusCode)[keyof typeof StatusCode]
         > = {
-          '301': StatusCode.MovedPermanently301,
-          '302': StatusCode.Found302,
-          '307': StatusCode.TemporaryRedirect307,
-          '308': StatusCode.PermanentRedirect308,
+          '301': StatusCode.MovedPermanently,
+          '302': StatusCode.Found,
+          '307': StatusCode.TemporaryRedirect,
+          '308': StatusCode.PermanentRedirect,
         }
         return await projectSdk.proxy.createRedirectRule({
           domain: domainNorm,
           url: redirectUrl.trim(),
-          statusCode: codeMap[statusCode] ?? StatusCode.Found302,
+          statusCode: codeMap[statusCode] ?? StatusCode.Found,
           resourceId: siteId,
           resourceType: ProxyResourceType.Site,
         })

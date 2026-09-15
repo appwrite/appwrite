@@ -257,3 +257,18 @@ export function useOptionalApiReferenceUiPrefs():
   | null {
   return useContext(ApiReferenceUiPrefsContext)
 }
+
+/**
+ * Ensures API reference UI prefs context exists for this module instance.
+ * Route chunks can load a second copy of this file; a layout-level provider
+ * then does not satisfy `useContext` in the page chunk.
+ */
+export function ApiReferenceUiPrefsGate({ children }: { children: ReactNode }) {
+  const context = useContext(ApiReferenceUiPrefsContext)
+  if (context) {
+    return children
+  }
+  return (
+    <ApiReferenceUiPrefsProvider>{children}</ApiReferenceUiPrefsProvider>
+  )
+}

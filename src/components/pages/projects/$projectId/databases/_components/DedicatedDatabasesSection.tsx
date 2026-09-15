@@ -33,6 +33,7 @@ import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { Badge } from '@/components/ui/badge'
+import { DatabaseTypeBetaBadge } from './DatabaseTypeBetaBadge'
 import { Button } from '@/components/ui/button'
 import {
   Table,
@@ -193,11 +194,13 @@ function formatEngineLabel(engine: string): string {
 
 function dedicatedStatusVariant(
   status: string,
-): 'success' | 'warning' | 'error' | 'info' {
+): 'success' | 'warning' | 'error' | 'info' | 'processing' {
   switch (status.toLowerCase()) {
     case 'ready':
       return 'success'
     case 'provisioning':
+    case 'starting':
+      return 'processing'
     case 'restoring':
     case 'scaling':
     case 'upgrading':
@@ -361,6 +364,7 @@ export function DedicatedDatabasesSection({
           <h2 className="text-[15px] font-semibold text-foreground">
             {t(sectionCopy.title)}
           </h2>
+          {nativeEngine ? <DatabaseTypeBetaBadge /> : null}
           <DedicatedDatabaseRegionUnavailableBadge />
           <p className="w-full text-[13px] text-muted-foreground">
             {t(sectionCopy.description)}
@@ -434,11 +438,12 @@ function DedicatedDatabasesSectionContent({
 
   return (
     <section className="mt-10">
-      <div className="mb-4">
+      <div className="mb-4 flex flex-wrap items-center gap-2">
         <h2 className="text-[15px] font-semibold text-foreground">
           {t(sectionCopy.title)}
         </h2>
-        <p className="mt-1 text-[13px] text-muted-foreground">
+        {nativeEngine ? <DatabaseTypeBetaBadge /> : null}
+        <p className="mt-1 w-full text-[13px] text-muted-foreground">
           {t(sectionCopy.description)}
         </p>
       </div>

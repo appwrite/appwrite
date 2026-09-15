@@ -33,9 +33,11 @@ Add custom scopes in the **Scopes** field on the OAuth2 server settings, or with
 ![Configuring scopes on the OAuth2 server](/images/docs/oauth-server/oauth2-server-settings.avif)
 {% /only_light %}
 
-A project can define up to 100 scopes, each up to 128 characters. A client can only request scopes you have defined; requesting an unknown scope fails the authorization request.
+A project can define up to 100 scopes, each up to 128 characters. A client can only request scopes you have defined. Requesting an unknown scope does not return an error to the caller: Appwrite redirects the browser back to the client's redirect URI with `error=invalid_scope` and an `error_description` naming the scope.
 
-Custom scopes are labels the OAuth2 server carries through the flow and stamps onto the access token. Enforcing what each scope allows is your resource server's job: read the `scope` claim from the access token (or from an [introspection](/docs/products/auth/oauth-server/tokens#introspect) response) and allow or deny the request accordingly.
+Most custom scopes are labels the OAuth2 server carries through the flow and stamps onto the access token. Enforcing what they allow is your resource server's job. Read the `scope` claim from the access token, or from an [introspection](/docs/products/auth/oauth-server/tokens#introspect) response, and allow or deny the request accordingly.
+
+The `project:` namespace behaves differently. Appwrite resolves those scopes against your project's own API, so a token granted `project:databases.read` authorizes that Appwrite operation directly, and `project:all` grants every ordinary project scope. Define a `project:` scope only when you intend to hand a client access to your Appwrite APIs.
 
 # Requesting scopes {% #requesting %}
 
@@ -208,15 +210,6 @@ project.updateOAuth2Server(
     "https://your-product.com/oauth/consent", // authorizationUrl
     List.of("tasks.read", "tasks.write"), // scopes (optional)
     List.of("project"), // authorizationDetailsTypes (optional)
-    null, // accessTokenDuration (optional)
-    null, // refreshTokenDuration (optional)
-    null, // publicAccessTokenDuration (optional)
-    null, // publicRefreshTokenDuration (optional)
-    null, // confidentialPkce (optional)
-    null, // verificationUrl (optional)
-    null, // userCodeLength (optional)
-    null, // userCodeFormat (optional)
-    null, // deviceCodeDuration (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -249,35 +242,36 @@ package main
 
 import (
     "fmt"
-    "github.com/appwrite/sdk-for-go/client"
-    "github.com/appwrite/sdk-for-go/project"
+    "log"
+
+    "github.com/appwrite/sdk-for-go/v6/appwrite"
 )
 
 func main() {
-    c := client.New(
-        client.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
-        client.WithProject("<YOUR_PROJECT_ID>"),
-        client.WithKey("<YOUR_API_KEY>"),
+    client := appwrite.NewClient(
+        appwrite.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
+        appwrite.WithProject("<YOUR_PROJECT_ID>"),
+        appwrite.WithKey("<YOUR_API_KEY>"),
     )
 
-    service := project.New(c)
+    project := appwrite.NewProject(client)
 
-    response, err := service.UpdateOAuth2Server(
+    response, err := project.UpdateOAuth2Server(
         true,
         "https://your-product.com/oauth/consent",
         project.WithUpdateOAuth2ServerScopes([]string{"tasks.read", "tasks.write"}),
         project.WithUpdateOAuth2ServerAuthorizationDetailsTypes([]string{"project"}),
     )
     if err != nil {
-        panic(err)
+        log.Fatal(err)
     }
 
     fmt.Println(response)
 }
 ```
 ```server-rust
-use appwrite::client::Client;
-use appwrite::services::project::Project;
+use appwrite::Client;
+use appwrite::services::Project;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -292,8 +286,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .update_o_auth2_server(
             true,
             "https://your-product.com/oauth/consent",
-            Some(vec!["tasks.read".into(), "tasks.write".into()]),
-            Some(vec!["project".into()]), // authorization details types
+            Some(vec!["tasks.read".to_string(), "tasks.write".to_string()]),
+            Some(vec!["project".to_string()]), // authorization details types
+            None,
+            None,
+            None,
             None,
             None,
             None,
@@ -343,7 +340,7 @@ In a browser-based consent screen, the project session cookie is sent automatica
 
 A client that already knows the relevant resource IDs may send the same structure on its [authorize request](/docs/products/auth/oauth-server/authorization#authorize). Treat that as an optional preselection. The authorization flow should also work when the client omits it, and the consent screen should let the user review or narrow the final resource selection.
 
-For the `project` type, Appwrite accepts only `type` and a non-empty `identifiers` array. Each identifier must be a project ID, or `*` for every project. Other values fail validation before the grant is approved.
+Appwrite reserves two authorization details types, `project` and `organization`. Both accept only `type` and a non-empty `identifiers` array. For `project`, each identifier must be a project ID or `*` for every project, and the Console project is rejected because it is reserved. Other values fail validation before the grant is approved. Types you define yourself carry no such restriction and may include any extra fields your consent screen needs.
 
 ## Consent and enforcement {% #authorization-details-consent %}
 

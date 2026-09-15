@@ -6,7 +6,7 @@ date: 2024-08-02
 cover: /images/blog/swift-101/cover.avif
 timeToRead: 6
 author: jake-barnby
-category: engineering, tutorial
+category: engineering, tutorials
 featured: false
 faqs:
   - question: "What is Swift Package Manager?"
@@ -27,11 +27,11 @@ The Swift Package Manager, or SwiftPM, has been part of Swift since version 3.0.
 
 ## Modules
 
-Before looking at **packages**, we first need to understand **modules**. Swift organizes code into modules. Each module defines a namespace and which parts of the code can be used from outside the module. You can define all of your code in a single module or break it up into multiple modules that can depend on each other. Using modules lets you easily build on your own reusable code or others’ code.
+Before looking at **packages**, we first need to understand **modules**. Swift organizes code into modules. Each module defines a namespace and which parts of the code can be used from outside the module. You can define all of your code in a single module or break it up into multiple modules that can depend on each other. Using modules lets you easily build on your own reusable code or others’ code.
 
 ## Packages
 
-So, what is a Swift package? A package is a collection of Swift source code files as well as a manifest file called `Package.swift`, that defines various properties about the package, such as its name, the products it produces, any dependencies it has, and the targets it is built up of.
+So, what is a Swift package? A package is a collection of Swift source code files as well as a manifest file called `Package.swift`, that defines various properties about the package, such as its name, the products it produces, any dependencies it has, and the targets it is built up of.
 
 ## Anatomy of a package
 
@@ -41,10 +41,10 @@ So, what is a Swift package? A package is a collection of Swift source code file
 
 ## Creating a Swift package
 
-> This tutorial assumes you already have Swift installed. You can check by running swift-help from your terminal.
+> This tutorial assumes you already have Swift installed. You can check by running swift-help from your terminal.
 >
 
-Creating a Swift Package from the command line is easy and can be completed with one simple command from the directory in which you want to create your package. For this example, we'll start with a directory named `FooPackage`.
+Creating a Swift Package from the command line is easy and can be completed with one simple command from the directory in which you want to create your package. For this example, we'll start with a directory named `FooPackage`.
 
 ```
 $ mkdir FooPackage
@@ -56,15 +56,15 @@ FooPackage$ swift package init --type=library
 
 That’s it! There’ll be some output detailing the files created for your new package. You should see:
 
-- 1 source file created inside a `Sources` directory
-- 1 test source file inside a `Tests` directory
-- A `Package.swift` manifest file at the root level
+- 1 source file created inside a `Sources` directory
+- 1 test source file inside a `Tests` directory
+- A `Package.swift` manifest file at the root level
 - A README.md file at the root level
 - A .gitignore file at the root level
 
-Of these files, only the single file in the `Sources` directory and the manifest file are required for the package to build. This means you could easily create your own package by manually creating these two files as well.
+Of these files, only the single file in the `Sources` directory and the manifest file are required for the package to build. This means you could easily create your own package by manually creating these two files as well.
 
-By default, the `Sources` directory must contain all source code for the package, but you can use sub-directories to define sub-modules if they are also defined as separate targets in your manifest file. Let's take a look at the generated `Package.swift` for the new package to see the pieces we've discussed so far:
+By default, the `Sources` directory must contain all source code for the package, but you can use sub-directories to define sub-modules if they are also defined as separate targets in your manifest file. Let's take a look at the generated `Package.swift` for the new package to see the pieces we've discussed so far:
 
 ```swift
 // swift-tools-version:5.3
@@ -113,14 +113,14 @@ Because the package has no dependencies or code yet, this should be completed al
 
 ## Adding dependencies
 
-Let's add a dependency and some code. Adding dependencies with SwiftPM is easy as you can use git URL's directly. We can add the following to our `Package.swift` top-level dependencies block to allow us to the Appwrite Swift SDK in our library:
+Let's add a dependency and some code. Adding dependencies with SwiftPM is easy as you can use git URL's directly. We can add the following to our `Package.swift` top-level dependencies block to allow us to the Appwrite Swift SDK in our library:
 
 ```swift
 .package(name: "Appwrite", url: "https://github.com/appwrite/sdk-for-swift", from: "0.1.0")
 
 ```
 
-This declares that our package will pull in the code from the `Appwrite` module in the `sdk-for-swift` repository on GitHub, from the tag `0.1.0` and allow us to add it to our target dependencies as follows:
+This declares that our package will pull in the code from the `Appwrite` module in the `sdk-for-swift` repository on GitHub, from the tag `0.1.0` and allow us to add it to our target dependencies as follows:
 
 ```swift
 .target(
@@ -132,7 +132,7 @@ This declares that our package will pull in the code from the `Appwrite` modul
 
 ```
 
-Here, we added `Appwrite`, as this is the name of the library we're using from the `sdk-for-swift` repository.
+Here, we added `Appwrite`, as this is the name of the library we're using from the `sdk-for-swift` repository.
 
 Let's take a look at the full manifest file with the new dependency added:
 
@@ -170,26 +170,26 @@ let package = Package(
 
 ```
 
-Since we've changed the dependencies of our package, we need to **resolve** them. This will happen automatically the first time you run `swift build` with a new dependency, but if you manually update a version, you'll need to manually resolve the new version. This can be done by running:
+Since we've changed the dependencies of our package, we need to **resolve** them. This will happen automatically the first time you run `swift build` with a new dependency, but if you manually update a version, you'll need to manually resolve the new version. This can be done by running:
 
 ```
 $ swift package resolve
 
 ```
 
-This will update the `Package.resolved` to contain the version metadata about the `Appwrite` module we just added.
+This will update the `Package.resolved` to contain the version metadata about the `Appwrite` module we just added.
 
 > **What's going on here?**
 >
 >
-> Swift Package Manager uses a lockfile system similar to `package.lock` for NPM and `composer.lock` for Composer. This comes in the form of a file called `Package.resolved`, which contains metadata about the packages dependencies versions, as well as their transitive dependencies. When you run `swift build` and the dependencies are fetched, the versions from the `Package.resolved` file will be used if found.
+> Swift Package Manager uses a lockfile system similar to `package.lock` for NPM and `composer.lock` for Composer. This comes in the form of a file called `Package.resolved`, which contains metadata about the packages dependencies versions, as well as their transitive dependencies. When you run `swift build` and the dependencies are fetched, the versions from the `Package.resolved` file will be used if found.
 >
 
-Once resolved, we can build our package with `swift build` again. This time we'll see the `sdk-for-swift` repository pulled into the build checkouts, as well as built with the rest of the library.
+Once resolved, we can build our package with `swift build` again. This time we'll see the `sdk-for-swift` repository pulled into the build checkouts, as well as built with the rest of the library.
 
 ## Adding library code
 
-Time to add some code. Let's open up the source file created earlier as `Sources/FooPackage/FooPackage.swift` and update with the following:
+Time to add some code. Let's open up the source file created earlier as `Sources/FooPackage/FooPackage.swift` and update with the following:
 
 ```swift
 import Appwrite

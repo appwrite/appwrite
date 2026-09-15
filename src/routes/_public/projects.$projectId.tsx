@@ -17,6 +17,7 @@ import { BuildNotificationsProvider } from '@/components/global/providers/BuildN
 import { RequireAuth } from '@/components/global/auth/RequireAuth'
 import { SessionMigrationsProvider } from '@/components/global/providers/SessionMigrationsContext'
 import { OrganizationFailedInvoiceHeaderBanner } from '@/components/global/shared/OrganizationFailedInvoiceHeaderBanner'
+import { OrganizationInvoiceAuthorizeHeaderBanner } from '@/components/global/shared/OrganizationInvoiceAuthorizeHeaderBanner'
 import {
   fetchProject,
   fetchOrganizationById,
@@ -26,7 +27,7 @@ import {
   organizationsQueryOptions,
   prefetchOrganizationInvoiceDataIfAllowed,
   useProject,
-  useOrganizationFailedInvoicePresence,
+  useOrganizationBillingInvoicePresence,
   isOrganizationBillingReadonlyStatus,
   isBudgetLimitReached,
   isPlanUsageLimitReached,
@@ -41,6 +42,7 @@ import {
 import { consoleVariablesQueryOptions } from '@/lib/react-query/hooks/console-variables'
 import { ErrorComponent } from '@/components/error/Component'
 import { ConsoleImpersonationBanner } from '@/components/global/shared/ConsoleImpersonationBanner'
+import { PostgresPromoBanner } from '@/components/global/shared/PostgresPromoBanner'
 import { reportConsoleAccess } from '@/lib/appwrite/console-access'
 import {
   ensureProjectRegion,
@@ -172,10 +174,10 @@ function ProjectRouteErrorComponent({
   error,
   reset,
 }: {
-  error: Error
+  error: unknown
   reset: () => void
 }) {
-  return <ProjectAccessErrorView error={error} reset={reset} />
+  return <ProjectAccessErrorView error={error instanceof Error ? error : new Error(String(error))} reset={reset} />
 }
 
 export const Route = createFileRoute('/_public/projects/$projectId')({
@@ -366,11 +368,9 @@ export const Route = createFileRoute('/_public/projects/$projectId')({
           retry: false,
         }),
         // Header ProjectSelector uses useOrganizations; prefetch so navigation does not flash skeleton
-        features.multiTenancy
-          ? queryClient
-              .ensureQueryData(organizationsQueryOptions())
-              .catch(() => {})
-          : Promise.resolve(),
+        queryClient
+          .ensureQueryData(organizationsQueryOptions())
+          .catch(() => {}),
       ])
 
       registerProjectRegionFromProject(projectData)
@@ -546,14 +546,19 @@ function ProjectLayout() {
       ? billingOrganization.billingLimits
       : project?.billingLimits
 
-  const { data: failedInvoicePresence } = useOrganizationFailedInvoicePresence(
-    budgetLimitReached || planUsageLimitReached ? undefined : teamIdForBilling,
+  const skipInvoiceBanners = budgetLimitReached || planUsageLimitReached
+  const { data: invoicePresence } = useOrganizationBillingInvoicePresence(
+    skipInvoiceBanners ? undefined : teamIdForBilling,
   )
   const showFailedInvoiceBanner =
-    !budgetLimitReached &&
-    !planUsageLimitReached &&
+    !skipInvoiceBanners &&
     features.billing &&
-    failedInvoicePresence?.hasFailedInvoice === true
+    invoicePresence?.hasFailedInvoice === true
+  const showInvoiceAuthorizeBanner =
+    !skipInvoiceBanners &&
+    !showFailedInvoiceBanner &&
+    features.billing &&
+    invoicePresence?.hasInvoiceRequiringAuthentication === true
 
   const { data: organizationsListData } = useQuery({
     ...organizationsQueryOptions(),
@@ -670,19 +675,6 @@ function ProjectLayout() {
     isFunctionExecutionsTab ||
     isSiteLogsTab
 
-  // Hide footer for usage view, database spreadsheet / level tabs (incl. monitor, visualizer), function executions tab, site logs tab, functions editor, and storage workspace
-  const hideFooter =
-    isDatabaseSpreadsheetView ||
-    isDatabaseVisualizerView ||
-    activeSection === 'usage' ||
-    isFunctionExecutionsTab ||
-    isSiteLogsTab ||
-    activeSection === 'activity' ||
-    activeSection === 'realtime' ||
-    activeSection === 'storage' ||
-    activeSection === 'explorer' ||
-    isFunctionsEditorView
-
   // Close sidebar on route change
   useEffect(() => {
     setSidebarOpen(false)
@@ -773,7 +765,9 @@ function ProjectLayout() {
       )}
       <SessionMigrationsProvider>
         <RealtimeProvider projectId={projectId}>
-          <BuildNotificationsProvider projectId={projectId} />
+          {features.browserAlerts ? (
+            <BuildNotificationsProvider projectId={projectId} />
+          ) : null}
           <ProjectCliShellLayout
             projectId={projectId}
             sidebar={{
@@ -784,11 +778,18 @@ function ProjectLayout() {
               onMenuClick: () => setSidebarOpen(true),
             }}
             headerBanner={
-              <OrganizationFailedInvoiceHeaderBanner
-                organizationId={teamIdForBilling}
-                show={showFailedInvoiceBanner}
-                orgBillingReadonly={orgBillingReadonlyForFailedInvoice}
-              />
+              <>
+                <PostgresPromoBanner />
+                <OrganizationFailedInvoiceHeaderBanner
+                  organizationId={teamIdForBilling}
+                  show={showFailedInvoiceBanner}
+                  orgBillingReadonly={orgBillingReadonlyForFailedInvoice}
+                />
+                <OrganizationInvoiceAuthorizeHeaderBanner
+                  organizationId={teamIdForBilling}
+                  show={showInvoiceAuthorizeBanner}
+                />
+              </>
             }
             fixedLayout={isFixedLayoutView}
           >

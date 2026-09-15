@@ -4,8 +4,6 @@ import { sdk } from '@/lib/appwrite/sdk'
 import { requireOperationalDatabase } from '@/lib/databases/dedicated-database-write-lock'
 import { DEFAULT_STALE_TIME } from './constants'
 
-const EXTENSIONS_POLL_INTERVAL_MS = 3000
-
 export async function fetchPostgresDatabaseExtensions(
   projectId: string,
   databaseId: string,
@@ -16,7 +14,6 @@ export async function fetchPostgresDatabaseExtensions(
 export function postgresDatabaseExtensionsQueryOptions(
   projectId: string | null | undefined,
   databaseId: string | null | undefined,
-  options?: { pollWhilePending?: boolean },
 ) {
   return queryOptions({
     queryKey: ['postgres-database-extensions', 'project', projectId, databaseId],
@@ -28,9 +25,6 @@ export function postgresDatabaseExtensionsQueryOptions(
     refetchOnMount: false,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
-    refetchInterval: options?.pollWhilePending
-      ? EXTENSIONS_POLL_INTERVAL_MS
-      : false,
     gcTime: projectId && databaseId ? 5 * 60 * 1000 : 0,
   })
 }
@@ -38,10 +32,9 @@ export function postgresDatabaseExtensionsQueryOptions(
 export function usePostgresDatabaseExtensions(
   projectId: string | null | undefined,
   databaseId: string | null | undefined,
-  options?: { pollWhilePending?: boolean },
 ) {
   const { data, isLoading, isFetching, error, refetch } = useQuery(
-    postgresDatabaseExtensionsQueryOptions(projectId, databaseId, options),
+    postgresDatabaseExtensionsQueryOptions(projectId, databaseId),
   )
 
   return {

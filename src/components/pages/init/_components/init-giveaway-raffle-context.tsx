@@ -1,4 +1,4 @@
-import type { InitDisplayEvent, LaunchEventOnlineUser } from '@/lib/init/types'
+import type { InitDisplayEvent } from '@/lib/init/types'
 import { buildInitRunningGiveawayRaffleActivity, buildInitRunningGrandPrizeRevealActivity } from '@/lib/init/init-presence-activity'
 import { useInitPresenceActivity } from '@/lib/init/init-presence-context'
 import {
@@ -15,7 +15,8 @@ import { useInitGiveawayRaffle } from './use-init-giveaway-raffle'
 type InitGiveawayRaffleContextValue = ReturnType<typeof useInitGiveawayRaffle> & {
   raffleWinnerId: string | null
   raffleWinnerPulse: number
-  celebrateRaffleWinner: (user: LaunchEventOnlineUser) => void
+  /** Presence user ID for daily draws; a CSV entry ID for the grand prize. */
+  celebrateRaffleWinner: (winnerId: string) => void
   clearRaffleWinner: () => void
 }
 
@@ -60,8 +61,8 @@ export function InitGiveawayRaffleProvider({
     return () => setPriorityActivity(null)
   }, [raffle.activeDay, raffle.isGrandPrizeRevealOpen, setPriorityActivity])
 
-  const celebrateRaffleWinner = useCallback((user: LaunchEventOnlineUser) => {
-    setRaffleWinnerId(user.id)
+  const celebrateRaffleWinner = useCallback((winnerId: string) => {
+    setRaffleWinnerId(winnerId)
     setRaffleWinnerPulse((pulse) => pulse + 1)
   }, [])
 

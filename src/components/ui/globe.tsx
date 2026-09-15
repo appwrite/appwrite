@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { useWebGLAvailable } from '@/hooks/use-webgl-available'
 import {
   Color,
   PerspectiveCamera,
@@ -11,6 +12,9 @@ import ThreeGlobe from 'three-globe'
 import { useThree, Canvas, extend, useFrame } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
 import countries from '@/data/globe.json'
+import type { GlobeArc, GlobeConfig, GlobeMarker } from '@/components/ui/globe-types'
+
+export type { GlobeArc, GlobeConfig, GlobeMarker } from '@/components/ui/globe-types'
 
 declare module '@react-three/fiber' {
   interface ThreeElements {
@@ -38,26 +42,6 @@ function applyGlobeLand(globe: ThreeGlobe, landColor: string) {
     .polygonsData([])
 }
 
-type Position = {
-  order: number
-  startLat: number
-  startLng: number
-  endLat: number
-  endLng: number
-  arcAlt: number
-  color: string
-}
-
-export type GlobeMarker = {
-  lat: number
-  lng: number
-  color: string
-  count: number
-  pointRadius: number
-  ringMaxRadius: number
-  pointAltitude?: number
-}
-
 type GlobeRingEntry = {
   lat: number
   lng: number
@@ -74,37 +58,9 @@ function markerToRingEntry(marker: GlobeMarker): GlobeRingEntry {
   }
 }
 
-export type GlobeConfig = {
-  pointSize?: number
-  globeColor?: string
-  showAtmosphere?: boolean
-  atmosphereColor?: string
-  atmosphereAltitude?: number
-  emissive?: string
-  emissiveIntensity?: number
-  shininess?: number
-  polygonColor?: string
-  ambientLight?: string
-  directionalLeftLight?: string
-  directionalTopLight?: string
-  pointLight?: string
-  fogColor?: string
-  arcTime?: number
-  arcLength?: number
-  rings?: number
-  maxRings?: number
-  autoRotate?: boolean
-  autoRotateSpeed?: number
-  /** Even ambient lighting - no dark side on the sphere. */
-  evenLighting?: boolean
-  ambientLightIntensity?: number
-  directionalLightIntensity?: number
-  pointLightIntensity?: number
-}
-
 interface WorldProps {
   globeConfig: GlobeConfig
-  data: Position[]
+  data: GlobeArc[]
   markers?: GlobeMarker[]
   /** When false, pauses the WebGL render loop (e.g. globe scrolled off-screen). */
   active?: boolean
@@ -178,9 +134,13 @@ function WebGLRendererConfig({ maxPixelRatio = 1.5 }: { maxPixelRatio?: number }
   const { gl, size } = useThree()
 
   useEffect(() => {
-    gl.setPixelRatio(Math.min(window.devicePixelRatio, maxPixelRatio))
-    gl.setSize(size.width, size.height)
-    gl.setClearColor(0x000000, 0)
+    try {
+      gl.setPixelRatio(Math.min(window.devicePixelRatio, maxPixelRatio))
+      gl.setSize(size.width, size.height)
+      gl.setClearColor(0x000000, 0)
+    } catch {
+      /* WebGL context can be missing on low-end or blocked GPUs */
+    }
   }, [gl, maxPixelRatio, size.height, size.width])
 
   return null
@@ -221,6 +181,17 @@ export function Globe({
       groupRef.current.add(globeRef.current)
       applyGlobeLand(globeRef.current, resolvedRef.current.polygonColor)
       setIsInitialized(true)
+    }
+
+    return () => {
+      const globe = globeRef.current
+      const group = groupRef.current
+      if (globe && group) {
+        group.remove(globe)
+        globe.dispose?.()
+      }
+      globeRef.current = null
+      setIsInitialized(false)
     }
   }, [])
 
@@ -320,15 +291,15 @@ export function Globe({
 
     globeRef.current
       .arcsData(arcs)
-      .arcStartLat((entry) => (entry as Position).startLat)
-      .arcStartLng((entry) => (entry as Position).startLng)
-      .arcEndLat((entry) => (entry as Position).endLat)
-      .arcEndLng((entry) => (entry as Position).endLng)
-      .arcColor((entry) => (entry as Position).color)
-      .arcAltitude((entry: object) => (entry as Position).arcAlt)
+      .arcStartLat((entry) => (entry as GlobeArc).startLat)
+      .arcStartLng((entry) => (entry as GlobeArc).startLng)
+      .arcEndLat((entry) => (entry as GlobeArc).endLat)
+      .arcEndLng((entry) => (entry as GlobeArc).endLng)
+      .arcColor((entry) => (entry as GlobeArc).color)
+      .arcAltitude((entry: object) => (entry as GlobeArc).arcAlt)
       .arcStroke(() => ARC_STROKE)
       .arcDashLength(arcLength)
-      .arcDashInitialGap((entry) => (entry as Position).order)
+      .arcDashInitialGap((entry) => (entry as GlobeArc).order)
       .arcDashGap(15)
       .arcDashAnimateTime(() => arcTime)
 
@@ -467,44 +438,60 @@ export function World({
   maxPixelRatio = 1.5,
   onReady,
 }: WorldProps) {
+  const eventSourceRef = useRef<HTMLDivElement>(null)
+  const webglAvailable = useWebGLAvailable()
+  const skippedReadyRef = useRef(false)
+
+  useEffect(() => {
+    if (webglAvailable !== false || skippedReadyRef.current) return
+    skippedReadyRef.current = true
+    onReady?.()
+  }, [onReady, webglAvailable])
+
+  if (webglAvailable !== true) {
+    return null
+  }
+
   return (
-    <Canvas
-      className="h-full w-full"
-      dpr={[1, maxPixelRatio]}
-      frameloop={active ? 'always' : 'never'}
-      gl={{
-        alpha: true,
-        antialias: true,
-        powerPreference: 'high-performance',
-        preserveDrawingBuffer: true,
-      }}
-      camera={{
-        fov: 50,
-        position: [0, 0, CAMERA_Z],
-        near: 180,
-        far: 1800,
-      }}
-    >
-      <WebGLRendererConfig maxPixelRatio={maxPixelRatio} />
-      <CameraSync />
-      <FirstFrameNotifier onReady={onReady} />
-      <GlobeRenderControl active={active} />
-      <GlobeLights
-        key={`${globeConfig.evenLighting ? 'even' : 'dir'}-${globeConfig.ambientLight}-${globeConfig.directionalLeftLight}-${globeConfig.pointLight}`}
-        globeConfig={globeConfig}
-      />
-      <Globe globeConfig={globeConfig} data={data} markers={markers} active={active} />
-      <OrbitControls
-        enablePan={false}
-        enableZoom={false}
-        minDistance={CAMERA_Z}
-        maxDistance={CAMERA_Z}
-        autoRotateSpeed={globeConfig.autoRotateSpeed ?? 1}
-        autoRotate={active && (globeConfig.autoRotate ?? true)}
-        minPolarAngle={Math.PI / 3.5}
-        maxPolarAngle={Math.PI - Math.PI / 3}
-      />
-    </Canvas>
+    <div ref={eventSourceRef} className="h-full w-full">
+      <Canvas
+        className="h-full w-full"
+        eventSource={eventSourceRef}
+        dpr={[1, maxPixelRatio]}
+        frameloop={active ? 'always' : 'never'}
+        gl={{
+          alpha: true,
+          antialias: true,
+          powerPreference: 'high-performance',
+        }}
+        camera={{
+          fov: 50,
+          position: [0, 0, CAMERA_Z],
+          near: 180,
+          far: 1800,
+        }}
+      >
+        <WebGLRendererConfig maxPixelRatio={maxPixelRatio} />
+        <CameraSync />
+        <FirstFrameNotifier onReady={onReady} />
+        <GlobeRenderControl active={active} />
+        <GlobeLights
+          key={`${globeConfig.evenLighting ? 'even' : 'dir'}-${globeConfig.ambientLight}-${globeConfig.directionalLeftLight}-${globeConfig.pointLight}`}
+          globeConfig={globeConfig}
+        />
+        <Globe globeConfig={globeConfig} data={data} markers={markers} active={active} />
+        <OrbitControls
+          enablePan={false}
+          enableZoom={false}
+          minDistance={CAMERA_Z}
+          maxDistance={CAMERA_Z}
+          autoRotateSpeed={globeConfig.autoRotateSpeed ?? 1}
+          autoRotate={active && (globeConfig.autoRotate ?? true)}
+          minPolarAngle={Math.PI / 3.5}
+          maxPolarAngle={Math.PI - Math.PI / 3}
+        />
+      </Canvas>
+    </div>
   )
 }
 

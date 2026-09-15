@@ -7,7 +7,7 @@ date: 2025-10-14
 timeToRead: 10
 author: veeresh-mulge
 unlisted: true
-category: product
+category: products
 faqs:
   - question: "What is the Model Context Protocol (MCP)?"
     answer: "MCP is an open protocol that gives AI assistants a shared language for connecting to external tools, APIs, and data sources. Instead of building one-off integrations for every service, you expose capabilities through an MCP server and any compatible client (like Cursor, Claude Desktop, or VS Code) can use them. Read more in the [what is MCP](/blog/post/what-is-mcp) post."

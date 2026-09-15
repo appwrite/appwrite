@@ -14,6 +14,7 @@ import { DOMAINS_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import { SpecificationType } from '@/lib/specifications'
 import { pageTitle } from '@/lib/utils/page-title'
 import { listSearchSchema, parseListSearch } from '@/lib/table-filters'
+import { getRedeploySourceDeploymentId } from '@/lib/utils/deployment-status'
 
 export const Route = createFileRoute(
   '/_public/projects/$projectId/functions/$functionId/',
@@ -92,6 +93,22 @@ export const Route = createFileRoute(
             projectId,
             functionId,
             func.deploymentId,
+          ),
+        ),
+      )
+    }
+
+    const redeployDeploymentId = getRedeploySourceDeploymentId(func)
+    if (
+      redeployDeploymentId &&
+      redeployDeploymentId !== func?.deploymentId
+    ) {
+      criticalPromises.push(
+        queryClient.ensureQueryData(
+          functionDeploymentQueryOptions(
+            projectId,
+            functionId,
+            redeployDeploymentId,
           ),
         ),
       )

@@ -13,6 +13,28 @@ export const jaProductPagesDictionary: Record<string, string> = {
   'At-rest protection': '保存時保護',
   'Auth overview': '認証の概要',
   'Auth user delivery': '認証ユーザーへの配信',
+  'AutoGravity does not crop this file. It returns a focal point that the preview crop should keep visible.':
+    'AutoGravity はこのファイル自体をクロップしません。プレビューのクロップが見え続けるべき焦点を返します。',
+  'AutoGravity focal point': 'AutoGravity の焦点',
+  'Automatic crop gravity': '自動クロップ gravity',
+  'Face bounding box, if confidence is high': '信頼度が高い場合の顔バウンディングボックス',
+  'It asks AutoGravity to pick a crop focus. YuNet runs first and uses a face bounding box when confidence is high enough. Otherwise U²-Net saliency finds the strongest connected region and returns its weighted centroid as a normalized (x, y) point. The preview endpoint crops around that point. Fixed gravity values still work as before.':
+    'AutoGravity にクロップの焦点を選ばせます。まず YuNet が動き、信頼度が十分なら顔のバウンディングボックスを使います。そうでなければ U²-Net の saliency が最も強い連結領域を見つけ、重み付き重心を正規化 (x, y) として返します。preview エンドポイントはその点を中心にクロップします。固定の gravity 値はこれまでどおり使えます。',
+  'Normalized focal point for the crop': 'クロップ用の正規化焦点',
+  'Pass gravity=auto on file preview and Appwrite picks a focal point from the image. YuNet looks for a face first. If none is confident enough, U²-Net saliency finds the strongest subject. The service returns a normalized (x, y) coordinate. Existing values like center and top-right stay unchanged.':
+    'file preview で gravity=auto を渡すと、Appwrite が画像から焦点を選びます。YuNet が先に顔を探します。十分な確度がなければ、U²-Net の saliency が最も目立つ被写体を見つけます。サービスは正規化された (x, y) 座標を返します。center や top-right などの既存値はそのままです。',
+  'Saliency map, then strongest connected region': 'saliency マップ、その後に最も強い連結領域',
+  'Square crop using gravity=auto, subject kept in view': 'gravity=auto の正方形クロップ。被写体が残る',
+  'Square crop using gravity=center, mostly empty field': 'gravity=center の正方形クロップ。ほぼ空の草地',
+  'The middle of the frame is empty grass.': 'フレーム中央は空の草地です。',
+  'The same 400×400 request keeps the subject.': '同じ 400×400 のリクエストで被写体が残ります。',
+  'Keeps the subject.': '被写体が残ります。',
+  'Misses the subject.': '被写体が切れます。',
+  'What does gravity=auto do on image previews?': 'gravity=auto は画像プレビューで何をしますか?',
+  'Wide source photograph with the subject on the left': '被写体が左にある横長の元写真',
+  'YuNet looks for a face, then U²-Net saliency. AutoGravity returns a normalized (x, y) point. The uploaded file is not cropped.':
+    'YuNet が顔を探し、次に U²-Net の saliency です。AutoGravity は正規化された (x, y) を返します。アップロードしたファイル自体はクロップされません。',
+  'YuNet, then U²-Net. File is not cropped.': 'YuNet、次に U²-Net。ファイルはクロップしません。',
   'Branch URLs': 'Branch URL',
   'Bring your own providers': '独自のプロバイダーを利用',
   'Broadcast messaging': 'ブロードキャストメッセージング',
@@ -210,7 +232,7 @@ export const jaProductPagesDictionary: Record<string, string> = {
   'Draft email, SMS, and push from the Console Messages tab with channel-specific fields, topic and target selection, and delivery logs. Schedule sends for later or fire transactional flows such as OTP verification and account alerts from Functions or your backend.': 'コンソールの Messages タブから、チャネルごとの項目、トピックとターゲットの選択、配信ログを使ってメール、SMS、push の下書きを作成できます。送信を予約したり、Functions やバックエンドから OTP 認証やアカウント通知などのトランザクションフローを送信したりできます。',
   'Each Auth user can have multiple targets registered to your project. Verified emails from email/password, magic URL, and email OTP sign-up create email targets automatically. Verified phone numbers from SMS OTP sign-up create SMS targets. Push targets are added from your client app after the user grants notification permission. Inspect and manage targets from the Targets tab on user detail in Auth.': '各認証ユーザーは、プロジェクトに複数のターゲットを登録できます。メール/パスワード、Magic URL、Email OTP によるサインアップで確認済みのメールアドレスは、自動的にメールターゲットとして作成されます。SMS OTP サインアップで確認済みの電話番号は SMS ターゲットになります。push ターゲットは、ユーザーが通知の許可を付与した後にクライアントアプリから追加されます。ターゲットの確認や管理は、認証のユーザー詳細にある Targets タブから行えます。',
   'Each user can have email, phone, and push device targets registered to your project. Inspect and manage them from the Targets tab on user detail in Auth, then subscribe those targets to topics or address them directly in a message.': '各ユーザーは、プロジェクトにメール、電話、push デバイスのターゲットを登録できます。認証のユーザー詳細にある Targets タブから確認や管理を行い、それらのターゲットをトピックに登録するか、メッセージで直接指定できます。',
-  'Email: Resend, SendGrid, Mailgun, and SMTP. SMS: Twilio, Vonage, MSG91, Telesign, and Textmagic. Push: APNS and FCM. Configure multiple providers per channel and choose which one to use when sending. Discord and Slack chat integrations are coming soon.': 'メール: Resend、SendGrid、Mailgun、SMTP。SMS: Twilio、Vonage、MSG91、Telesign、Textmagic。push: APNS と FCM。チャネルごとに複数のプロバイダーを設定し、送信時にどれを使うか選択できます。Discord と Slack のチャット連携は近日公開予定です。',
+  'Email: Resend, SendGrid, Mailgun, Amazon SES, and SMTP. SMS: Twilio, Vonage, MSG91, Telesign, and Textmagic. Push: APNS and FCM. Configure multiple providers per channel and choose which one to use when sending. Discord and Slack chat integrations are coming soon.': 'メール: Resend、SendGrid、Mailgun、Amazon SES、SMTP。SMS: Twilio、Vonage、MSG91、Telesign、Textmagic。push: APNS と FCM。チャネルごとに複数のプロバイダーを設定し、送信時にどれを使うか選択できます。Discord と Slack のチャット連携は近日公開予定です。',
   'Enable 30+ social providers from the Console Social providers tab. Users sign up in one click with GitHub, Google, Apple, and the identity providers your audience already uses.': 'コンソールの OAuth プロバイダー タブから 30 以上の OAuth プロバイダーを有効化できます。ユーザーは GitHub、Google、Apple など、すでに使い慣れた ID プロバイダーでワンクリックでサインアップできます。',
   'Enable MFA in Auth settings, then let users enroll an authenticator app (TOTP) and download recovery codes. MFA adds a second step after the primary sign-in method. Require it for sensitive actions such as updating credentials or accessing protected resources. Users who lose their device can sign in with a recovery code instead of the TOTP.': '認証設定で MFA を有効にすると、ユーザーは認証アプリ (TOTP) を登録し、リカバリーコードをダウンロードできるようになります。MFA は主なサインイン方法の後に追加のステップを加えます。認証情報の更新や保護されたリソースへのアクセスなど、機密性の高い操作にはこれを必須にできます。デバイスを紛失したユーザーは、TOTP の代わりにリカバリーコードでサインインできます。',
   "Enable Magic URL, Email OTP, and Phone SMS from Auth settings in the Console. Magic URL sends a one-click sign-in link to the user's email. Email OTP delivers a time-limited code they enter in your app. Phone SMS verifies users through text messages without a password. You can offer passwordless methods alongside email and password, or disable password login entirely for a password-free experience.": 'コンソールの認証設定から Magic URL、Email OTP、Phone SMS を有効化できます。Magic URL はユーザーのメールにワンクリックのサインインリンクを送信します。Email OTP はアプリ内で入力する期限付きコードを送ります。Phone SMS は SMS でパスワードなしにユーザーを確認します。パスワードレスの方法をメールとパスワードに加えて提供することも、パスワードログインを完全に無効にしてパスワード不要の体験にすることもできます。',
@@ -255,7 +277,10 @@ export const jaProductPagesDictionary: Record<string, string> = {
   'Turn on bucket encryption from Settings so new uploads are stored encrypted at rest. If files are exposed, encrypted objects stay unreadable without your project keys.': 'Settings からバケットの暗号化を有効にすると、新しいアップロードは保存時に暗号化された状態で保存されます。万が一ファイルが流出しても、暗号化されたオブジェクトはプロジェクトの鍵がなければ読み取れません。',
   'Use Git for automatic builds on push, the Appwrite CLI in CI, or a manual tarball upload from the Console. Every path runs through the same build pipeline, logs, domains, and rollbacks.': 'push 時の自動ビルドには Git を、CI では Appwrite CLI を、あるいはコンソールから手動で tarball をアップロードすることもできます。どの方法でも、同じビルドパイプライン、ログ、ドメイン、ロールバックの仕組みを利用できます。',
   'Use the Appwrite CLI and Docker to run functions on localhost with hot reload. Test with production-style headers, impersonate users, and deploy when you are ready.': 'Appwrite CLI と Docker を使って、ホットリロード付きで関数をローカルホストで実行できます。本番相当のヘッダーでテストしたり、ユーザーになりすましたりでき、準備が整ったらデプロイできます。',
-  'Use the preview endpoint to resize, crop, convert format, set quality, add borders, and rotate images on demand. No pre-processing pipeline or duplicate files.': 'プレビューエンドポイントを使えば、画像のリサイズ、切り抜き、フォーマット変換、画質設定、枠線の追加、回転をオンデマンドで行えます。事前処理のパイプラインや重複ファイルは不要です。',
+  'Use the preview endpoint to resize, crop, convert format, set quality, add borders, and rotate from a single upload. Pass gravity=auto and YuNet looks for a face first. If none is confident enough, U²-Net saliency returns a normalized (x, y) crop focus. Fixed gravity values still work.':
+    'preview エンドポイントで、1 回のアップロードからリサイズ、クロップ、フォーマット変換、画質、枠線、回転ができます。gravity=auto を渡すと、YuNet が先に顔を探します。十分な確度がなければ、U²-Net の saliency が正規化された (x, y) のクロップ焦点を返します。固定の gravity 値はそのまま使えます。',
+  'Use the preview endpoint to resize, crop, convert format, set quality, add borders, and rotate images on demand. No pre-processing pipeline or duplicate files.':
+    'プレビューエンドポイントを使えば、画像のリサイズ、切り抜き、フォーマット変換、画質設定、枠線の追加、回転をオンデマンドで行えます。事前処理のパイプラインや重複ファイルは不要です。',
   'Verify sessions from Next.js, Nuxt, SvelteKit, and other server-rendered apps. Issue session cookies from your backend with dedicated guides and tutorials.': 'Next.js、Nuxt、SvelteKit などのサーバーレンダリングアプリからセッションを検証できます。専用ガイドとチュートリアルに沿って、バックエンドからセッション Cookie を発行できます。',
   'When you push to a branch other than your production branch, Appwrite builds a deployment but does not activate it on your primary domain. Instead, a preview URL is generated for org members to review. Pull requests can also receive preview links and optional PR comments unless silent mode is enabled.': '本番ブランチ以外のブランチに push すると、Appwrite はデプロイをビルドしますが、メインドメインでは有効化しません。代わりに、組織のメンバーがレビューできるプレビュー URL が生成されます。サイレントモードが有効でない限り、プルリクエストにもプレビューリンクとオプションの PR コメントが付与されます。',
   'Yes. Add multiple domain rules on a site: point one hostname to the active production deployment, map another to a specific Git branch for staging, or configure redirects. Branch and commit preview URLs are also generated automatically for Git deployments.': 'はい。1 つのサイトに複数のドメインルールを追加できます。あるホスト名をアクティブな本番デプロイに向けたり、別のホスト名をステージング用の特定の Git ブランチに割り当てたり、リダイレクトを設定したりできます。Git デプロイでは、ブランチやコミットごとのプレビュー URL も自動的に生成されます。',
@@ -310,6 +335,26 @@ export const jaProductPagesDictionary: Record<string, string> = {
   'Create a database, choose your engine and compute model, and query your first data in minutes.':
     'データベースを作成し、エンジンとコンピュートモデルを選んで、数分で最初のデータをクエリできます。',
   'Databases docs': 'データベースのドキュメント',
+  'Does Appwrite offer managed PostgreSQL?': 'Appwrite はマネージド PostgreSQL を提供していますか?',
+  'Managed PostgreSQL and databases for every model':
+    'マネージド PostgreSQL とあらゆるモデル向けのデータベース',
+  'Managed PostgreSQL and MySQL': 'マネージド PostgreSQL と MySQL',
+  'Managed PostgreSQL hosting and app databases':
+    'マネージド PostgreSQL ホスティングとアプリ向けデータベース',
+  'Managed PostgreSQL hosting with full SQL, pgvector, and portable schemas for Prisma, Drizzle, and existing tooling.':
+    'フル SQL、pgvector、Prisma や Drizzle などの既存ツール向けの移植可能なスキーマを備えたマネージド PostgreSQL ホスティング。',
+  'Managed PostgreSQL hosting with pgvector, plus TablesDB, DocumentsDB, and VectorsDB. Dedicated compute, backups, replicas, and PITR.':
+    'pgvector 対応のマネージド PostgreSQL ホスティングに加え、TablesDB、DocumentsDB、VectorsDB。専用コンピュート、バックアップ、レプリカ、PITR。',
+  'PostgreSQL docs': 'PostgreSQL のドキュメント',
+  'PostgreSQL quick start': 'PostgreSQL のクイックスタート',
+  'Dedicated managed PostgreSQL and MySQL engines you connect to with standard SQL clients.':
+    '標準の SQL クライアントで接続する専用マネージド PostgreSQL および MySQL エンジン。',
+  'Hosted PostgreSQL and MySQL with standard clients and the in-console SQL editor. Use pgvector, PostGIS, portable schemas, and the ORMs you already run.':
+    '標準クライアントとコンソール内 SQL エディタで使えるホスト型 PostgreSQL と MySQL。pgvector、PostGIS、移植可能なスキーマ、既存の ORM をそのまま使えます。',
+  'Run managed PostgreSQL next to tables, documents, and vectors. Connect with Prisma or psql, install pgvector, and scale dedicated compute with backups, replicas, and PITR.':
+    'テーブル、ドキュメント、ベクトルと並べてマネージド PostgreSQL を実行します。Prisma または psql で接続し、pgvector をインストールし、バックアップ、レプリカ、PITR 付きの専用コンピュートをスケールできます。',
+  'Yes. Native PostgreSQL databases are dedicated, managed PostgreSQL instances in your project region. You connect with psql, Prisma, Drizzle, or any PostgreSQL driver over TLS. Appwrite provisions compute, backups, replicas, a connection pooler, and point-in-time recovery. PostgreSQL 18 is the default, with 17 also supported.':
+    'はい。ネイティブ PostgreSQL データベースは、プロジェクトのリージョンにプロビジョニングされる専用のマネージド PostgreSQL インスタンスです。psql、Prisma、Drizzle、または任意の PostgreSQL ドライバーで TLS 経由で接続します。Appwrite がコンピュート、バックアップ、レプリカ、コネクションプーラー、ポイントインタイムリカバリを用意します。既定は PostgreSQL 18 で、17 もサポートされます。',
   'Databases for every data model': 'あらゆるデータモデル向けのデータベース',
   'Do Appwrite DBs integrate with Auth permissions?': 'Appwrite DBs は認証の権限と連携しますか?',
   'Embeddings and similarity search for semantic retrieval and AI features.':

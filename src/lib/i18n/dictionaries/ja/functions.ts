@@ -33,7 +33,6 @@ export const jaFunctionsDictionary: Record<string, string> = {
   'Cancel deployment': 'デプロイをキャンセル',
   'Certificate generation failed': '証明書の生成に失敗しました',
   'Check your permissions': '権限を確認してください',
-  'Choose .tar.gz file': '.tar.gz ファイルを選択',
   'Choose who can execute this function': 'この関数を実行できるユーザーを選択',
   'Clear filters and search': 'フィルターと検索をクリア',
   'Clone template': 'テンプレートをクローン',
@@ -46,6 +45,8 @@ export const jaFunctionsDictionary: Record<string, string> = {
   'Connect Git repository': 'Git リポジトリを接続',
   'Connect GitHub': 'GitHub を接続',
   'Connect GitLab': 'GitLab を接続',
+  'Connect Bitbucket': 'Bitbucket を接続',
+  'Connect Origin': 'Origin を接続',
   'Connect later': '後で接続',
   'Connect repository': 'リポジトリを接続',
   'Connect repository first': '先にリポジトリを接続してください',
@@ -69,6 +70,7 @@ export const jaFunctionsDictionary: Record<string, string> = {
   'Daily at midnight': '毎日 0 時',
   'Daily at noon': '毎日 12 時',
   'Data sovereignty, compliance': 'データ主権、コンプライアンス',
+  'Default': 'デフォルト',
   'DDoS Mitigation': 'DDoS 対策',
   'DDoS protection': 'DDoS 保護',
   'Delete deployment': 'デプロイを削除',
@@ -369,8 +371,8 @@ export const jaFunctionsDictionary: Record<string, string> = {
     'この関数を削除してもよろしいですか? この操作は元に戻せません。',
   'Build must be ready before activating':
     'アクティブにする前にビルドが完了している必要があります',
-  'Build output is available after the deployment has completed.':
-    'ビルド出力は、デプロイが完了した後に確認できます。',
+  'Build output is only available for ready deployments.':
+    'ビルド出力は、準備完了のデプロイでのみ利用できます。',
   'Cannot delete the active deployment. Please activate another deployment first.':
     'アクティブなデプロイは削除できません。先に別のデプロイをアクティブにしてください。',
   'Choose the directory containing your function code':
@@ -535,6 +537,8 @@ export const jaFunctionsDictionary: Record<string, string> = {
     '関数の設定を更新しましたが、再デプロイするまで反映されません。現在のデプロイは、以前の設定のまま実行され続けています。',
   'Your function is currently being redeployed.':
     '関数は現在再デプロイ中です。',
+  'Your function will be accessible at this URL':
+    '関数はこの URL でアクセスできます',
   'to see the supported data and how to log it.':
     'サポートされているデータとその記録方法を確認できます。',
   'Logging is disabled for this function. Enable logging in settings to view execution logs.':

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ArrowRight, CheckCircle2 } from 'lucide-react'
 import { ProductFeaturePublicIcon } from '@/components/pages/products/features/_components/ProductFeaturePublicIcon'
 import { useT } from '@/lib/i18n/translate'
@@ -26,6 +26,139 @@ function getBuildProgress(elapsedMs: number) {
       : Math.floor(progress * BUILD_TOTAL_SECONDS)
 
   return { progress, seconds, complete: progress >= 1 }
+}
+
+/** Appwrite supporting violet, used sparingly on feed accents. */
+const REFETCH_ACCENT = '#7C67FE'
+const REFETCH_HEADER_BG = '#19191d'
+const REFETCH_MARK = `color-mix(in srgb, ${REFETCH_ACCENT} 72%, var(--brand-cta))`
+
+function AbstractBar({
+  className,
+  width,
+}: {
+  className?: string
+  width?: string
+}) {
+  return (
+    <span
+      className={cn('block h-1 rounded-sm bg-muted-foreground/20', className)}
+      style={width ? { width } : undefined}
+      aria-hidden
+    />
+  )
+}
+
+function AbstractFeedCard({
+  titleWidth,
+  metaWidth,
+  showBadge,
+}: {
+  titleWidth: string
+  metaWidth: string
+  showBadge?: boolean
+}) {
+  return (
+    <div className="flex items-center gap-2 rounded-md border border-border/50 bg-background px-2 py-1.5">
+      <div className="flex w-3 shrink-0 flex-col items-center gap-px" aria-hidden>
+        <span
+          className="h-0 w-0 border-x-[3px] border-b-[4px] border-x-transparent"
+          style={{ borderBottomColor: REFETCH_MARK }}
+        />
+        <span className="h-1 w-2 rounded-[1px] bg-muted-foreground/20" />
+        <span className="h-0 w-0 border-x-[3px] border-t-[4px] border-x-transparent border-muted-foreground/25" />
+      </div>
+      <div className="min-w-0 flex-1 space-y-1.5">
+        <div className="flex items-center gap-1.5">
+          {showBadge ? (
+            <span
+              className="h-2 w-7 shrink-0 rounded-[3px]"
+              style={{ backgroundColor: `color-mix(in srgb, ${REFETCH_ACCENT} 28%, transparent)` }}
+              aria-hidden
+            />
+          ) : null}
+          <AbstractBar className="h-1.5 bg-muted-foreground/40" width={titleWidth} />
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="size-2 shrink-0 rounded-[2px] bg-muted-foreground/20" aria-hidden />
+          <AbstractBar className="h-[3px]" width={metaWidth} />
+          <AbstractBar className="h-[3px] w-8" />
+          <AbstractBar className="h-[3px] w-6" />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function RefetchSitePreview() {
+  return (
+    <div className="overflow-hidden bg-muted">
+      <div
+        className="flex h-6 w-full items-center justify-between gap-2 px-2.5"
+        style={{ backgroundColor: REFETCH_HEADER_BG }}
+      >
+        <div className="flex min-w-0 items-center gap-2">
+          <img
+            src="/icons/refetch.svg"
+            alt=""
+            width={72}
+            height={16}
+            className="h-3.5 w-auto sm:h-4"
+            aria-hidden
+          />
+          <span className="hidden h-3.5 w-8 rounded-[4px] border border-white/20 sm:block" aria-hidden />
+          <span className="hidden h-1.5 w-28 rounded-sm bg-white/25 lg:block" aria-hidden />
+        </div>
+        <div className="flex shrink-0 items-center gap-1.5">
+          <span className="hidden h-1.5 w-12 rounded-sm bg-white/25 sm:block" aria-hidden />
+          <span className="h-3.5 w-9 rounded-[4px] bg-white/85" aria-hidden />
+        </div>
+      </div>
+      <div className="mx-auto flex w-[88%] max-w-xl gap-2 py-2">
+        <div className="hidden w-14 shrink-0 flex-col gap-1 sm:flex">
+          <span className="h-3.5 w-full rounded-md border border-border/50 bg-background" aria-hidden />
+          <AbstractBar className="h-3 w-[88%]" />
+          <AbstractBar className="h-3 w-[72%]" />
+          <AbstractBar className="h-3 w-[80%]" />
+        </div>
+        <div className="min-w-0 flex-1 space-y-1.5">
+          <AbstractFeedCard titleWidth="88%" metaWidth="38%" showBadge />
+          <AbstractFeedCard titleWidth="74%" metaWidth="32%" />
+          <AbstractFeedCard titleWidth="82%" metaWidth="44%" />
+        </div>
+        <div className="hidden w-[4.5rem] shrink-0 flex-col gap-1.5 sm:flex">
+          <div className="rounded-md border border-border/50 bg-background px-1.5 py-1.5">
+            <AbstractBar className="h-[3px] w-10" />
+            <div className="mt-1.5 flex items-center gap-1">
+              <span className="size-1.5 rounded-full bg-emerald-500/65" aria-hidden />
+              <AbstractBar className="h-[3px] w-8" />
+            </div>
+          </div>
+          <div className="rounded-md border border-border/50 bg-background px-1.5 py-1.5">
+            <AbstractBar className="h-[3px] w-9" />
+            <svg viewBox="0 0 48 16" className="mt-1.5 h-4 w-full" aria-hidden>
+              <polyline
+                fill="none"
+                stroke={REFETCH_MARK}
+                strokeWidth="1.6"
+                strokeLinejoin="round"
+                strokeLinecap="round"
+                points="0,12 8,10 16,13 24,5 32,8 40,3 48,7"
+              />
+            </svg>
+          </div>
+          <div className="hidden rounded-md border border-border/50 bg-background px-1.5 py-1.5 lg:block">
+            <AbstractBar className="h-[3px] w-8" />
+            <div className="mt-1.5 flex flex-wrap gap-1">
+              <span className="h-2 w-6 rounded-sm bg-muted-foreground/15" aria-hidden />
+              <span className="h-2 w-8 rounded-sm bg-muted-foreground/15" aria-hidden />
+              <span className="h-2 w-5 rounded-sm bg-muted-foreground/15" aria-hidden />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 function PipelineRow({
@@ -56,6 +189,7 @@ function PipelineRow({
 
 export function SitesProductVisual() {
   const t = useT()
+  const rootRef = useRef<HTMLDivElement>(null)
   const [isHovered, setIsHovered] = useState(false)
   const [buildSeconds, setBuildSeconds] = useState<number | null>(null)
   const [buildComplete, setBuildComplete] = useState(false)
@@ -67,6 +201,21 @@ export function SitesProductVisual() {
     update()
     media.addEventListener('change', update)
     return () => media.removeEventListener('change', update)
+  }, [])
+
+  useEffect(() => {
+    const group = rootRef.current?.closest('.group')
+    if (!group) return
+
+    const onEnter = () => setIsHovered(true)
+    const onLeave = () => setIsHovered(false)
+    setIsHovered(group.matches(':hover'))
+    group.addEventListener('mouseenter', onEnter)
+    group.addEventListener('mouseleave', onLeave)
+    return () => {
+      group.removeEventListener('mouseenter', onEnter)
+      group.removeEventListener('mouseleave', onLeave)
+    }
   }, [])
 
   useEffect(() => {
@@ -102,18 +251,14 @@ export function SitesProductVisual() {
   }, [isHovered, prefersReducedMotion])
 
   return (
-    <div
-      className="absolute inset-0 flex flex-col overflow-hidden"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
-      <div className="flex h-full min-h-0 w-full flex-col justify-end space-y-3.5 transition-transform duration-500 group-hover:-translate-y-1 motion-reduce:group-hover:translate-y-0">
-        <div className="mx-auto w-full max-w-[21rem] space-y-3.5">
+    <div ref={rootRef} className="absolute inset-0 flex flex-col overflow-hidden">
+      <div className="flex h-full min-h-0 w-full flex-col justify-end space-y-3.5 pt-3 transition-transform duration-500 group-hover:-translate-y-1 motion-reduce:group-hover:translate-y-0">
+        <div className="mx-auto w-full max-w-[18.5rem] space-y-3.5">
           <div
             className={cn(
-              'flex items-center gap-2.5 px-3.5 py-3 transition-[border-color,background-color] duration-300',
+              'flex items-center gap-2.5 px-3.5 py-3 transition-colors duration-300',
               productBentoContainer.panel,
-              'group-hover:border-[color-mix(in_srgb,var(--brand-cta)_28%,var(--border))] group-hover:bg-background',
+              'group-hover:bg-background',
             )}
           >
             <div
@@ -134,7 +279,7 @@ export function SitesProductVisual() {
               <p className="mt-0.5 font-mono text-[11px] text-muted-foreground">{COMMIT_HASH}</p>
             </div>
             <ArrowRight
-              className="size-4 shrink-0 text-muted-foreground/50 transition-[color,transform] duration-300 group-hover:translate-x-0.5 group-hover:text-[var(--brand-cta)] motion-reduce:group-hover:translate-x-0"
+              className="size-4 shrink-0 text-muted-foreground/50 transition-transform duration-300 group-hover:translate-x-0.5 motion-reduce:group-hover:translate-x-0"
               aria-hidden
             />
           </div>
@@ -184,7 +329,7 @@ export function SitesProductVisual() {
 
         <PipelineRow
           revealDelayMs={1650}
-          className="w-full px-2.5 sm:px-3.5 group-hover:max-h-48 sm:group-hover:max-h-56 motion-reduce:group-hover:max-h-48 sm:motion-reduce:group-hover:max-h-56"
+          className="w-full px-2.5 sm:px-3.5 group-hover:max-h-56 sm:group-hover:max-h-64 motion-reduce:group-hover:max-h-56 sm:motion-reduce:group-hover:max-h-64"
         >
           <div className={cn('w-full overflow-hidden', productBentoContainer.shell)}>
             <div className="flex items-center gap-2 border-b border-border bg-muted/15 px-3 py-1.5">
@@ -195,37 +340,7 @@ export function SitesProductVisual() {
                 preview.appwrite.network
               </span>
             </div>
-            <div className="bg-muted/8 px-3.5 py-3">
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-1.5">
-                  <span
-                    className={cn('size-2 rounded-full', productBentoIdle.brandDot)}
-                    aria-hidden
-                  />
-                  <span className={cn('text-[11px] font-semibold', productBentoIdle.text)}>
-                    Appwrite
-                  </span>
-                </div>
-                <div className="hidden h-1.5 w-28 rounded-sm bg-muted-foreground/10 sm:block" aria-hidden />
-              </div>
-              <div className="mt-3 flex min-h-[4.5rem] items-stretch gap-3">
-                <div className="min-w-0 flex-1 space-y-2">
-                  <p className={cn('text-[12px] font-medium leading-tight', productBentoIdle.text)}>
-                    {t('Ship faster with Appwrite')} {/* pragma: allowlist secret */}
-                  </p>
-                  <div className="h-2 w-full max-w-[18rem] rounded-sm bg-muted-foreground/10" aria-hidden />
-                  <div className="h-2 w-[70%] max-w-[12rem] rounded-sm bg-muted-foreground/10" aria-hidden />
-                  <div
-                    className={cn('mt-1 h-4 w-16 rounded-sm', productBentoIdle.ctaBlock)}
-                    aria-hidden
-                  />
-                </div>
-                <div
-                  className="hidden min-h-[4.5rem] w-[42%] max-w-[16rem] shrink-0 rounded-md bg-muted-foreground/10 sm:block"
-                  aria-hidden
-                />
-              </div>
-            </div>
+            <RefetchSitePreview />
           </div>
         </PipelineRow>
       </div>

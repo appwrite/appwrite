@@ -6,6 +6,11 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { parseMysqlTableId } from '@/lib/mysql-database-routes'
 import {
   buildMysqlColumnConstraintName,
@@ -33,20 +38,37 @@ import {
   buildMysqlColumnCommentSql,
   buildMysqlDropConstraintSql,
   buildMysqlRenameColumnSql,
+  mysqlTypeRequiresIndexKeyLength,
+  mysqlTypeSupportsPrefixIndex,
 } from '@/lib/mysql-table-ddl'
 import {
   buildMysqlColumnTypeSql,
   createDefaultMysqlColumnTypeState,
   getMysqlColumnDefaultPlaceholder,
+  getMysqlColumnTypeDefinition,
   parseMysqlColumnTypeFromRow,
   mysqlColumnTypeStatesEqual,
   validateMysqlColumnTypeState,
   type MysqlColumnTypeState,
 } from '@/lib/mysql-column-types'
 import {
-  buildMysqlSingleRequestDdlSql,
+  getSqlColumnCheckExample,
+  isTextColumnComparedToNumber,
+} from '@/lib/sql-column-form-hints'
+import {
+  getPreferredSqlColumnDefaultKind,
+  parseMysqlStoredColumnDefault,
+  resolveSqlColumnDefaultEmission,
+  sqlColumnDefaultIsNull,
+  sqlColumnDefaultsEqual,
+  storedColumnDefaultForForm,
+  type SqlColumnDefaultKind,
+} from '@/lib/sql-column-default'
+import { ColumnDefaultValueField } from '@/components/pages/projects/$projectId/databases/_components/ColumnDefaultValueField'
+import {
   isMysqlPrimaryKeyColumn,
   isMysqlUniqueColumn,
+  runMysqlDdlStatements,
   type MysqlTableColumnRow,
 } from '@/lib/mysql-sql'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
@@ -75,6 +97,7 @@ function ConstraintToggle({
   checked,
   onCheckedChange,
   disabled,
+  disabledTooltip,
 }: {
   id: string
   label: string
@@ -82,7 +105,17 @@ function ConstraintToggle({
   checked: boolean
   onCheckedChange: (checked: boolean) => void
   disabled?: boolean
+  disabledTooltip?: string
 }) {
+  const switchControl = (
+    <Switch
+      id={id}
+      checked={checked}
+      onCheckedChange={onCheckedChange}
+      disabled={disabled}
+    />
+  )
+
   return (
     <div className="flex items-center justify-between gap-3 rounded-lg border border-border bg-background px-3 py-2.5">
       <div className="min-w-0">
@@ -91,14 +124,28 @@ function ConstraintToggle({
         </Label>
         <p className="text-[11px] text-muted-foreground mt-1">{description}</p>
       </div>
-      <Switch
-        id={id}
-        checked={checked}
-        onCheckedChange={onCheckedChange}
-        disabled={disabled}
-      />
+      {disabled && disabledTooltip ? (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span className="inline-flex shrink-0">{switchControl}</span>
+          </TooltipTrigger>
+          <TooltipContent className="max-w-xs">{disabledTooltip}</TooltipContent>
+        </Tooltip>
+      ) : (
+        switchControl
+      )}
     </div>
   )
+}
+
+function preferredMysqlColumnDefaultKind(
+  typeState: MysqlColumnTypeState,
+): SqlColumnDefaultKind {
+  const definition = getMysqlColumnTypeDefinition(typeState.typeId)
+  return getPreferredSqlColumnDefaultKind({
+    typeGroup: definition.group,
+    typeId: typeState.typeId,
+  })
 }
 
 export function MysqlTableColumnDrawer({
@@ -123,6 +170,8 @@ export function MysqlTableColumnDrawer({
   const [primaryKey, setPrimaryKey] = useState(false)
   const [unique, setUnique] = useState(false)
   const [defaultValue, setDefaultValue] = useState('')
+  const [defaultKind, setDefaultKind] = useState<SqlColumnDefaultKind>('value')
+  const [defaultIsNull, setDefaultIsNull] = useState(true)
   const [comment, setComment] = useState('')
   const [checkExpression, setCheckExpression] = useState('')
   const [foreignKeyState, setForeignKeyState] = useState<MysqlForeignKeyState>(
@@ -142,12 +191,19 @@ export function MysqlTableColumnDrawer({
     if (!open) return
     if (column) {
       const isPrimary = isMysqlPrimaryKeyColumn(column)
+      const nextTypeState = parseMysqlColumnTypeFromRow(column)
       setName(column.column_name)
-      setTypeState(parseMysqlColumnTypeFromRow(column))
+      setTypeState(nextTypeState)
       setNullable(column.is_nullable === 'YES')
       setPrimaryKey(isPrimary)
       setUnique(isPrimary || isMysqlUniqueColumn(column))
-      setDefaultValue(column.column_default ?? '')
+      const parsedDefault = storedColumnDefaultForForm(
+        parseMysqlStoredColumnDefault(column.column_default),
+        preferredMysqlColumnDefaultKind(nextTypeState),
+      )
+      setDefaultValue(parsedDefault.value)
+      setDefaultKind(parsedDefault.kind)
+      setDefaultIsNull(sqlColumnDefaultIsNull(parsedDefault))
       setComment(column.column_comment ?? '')
       setCheckExpression(getMysqlColumnCheckExpressionForEdit(column.check_constraints))
       setForeignKeyState(
@@ -160,6 +216,10 @@ export function MysqlTableColumnDrawer({
       setPrimaryKey(false)
       setUnique(false)
       setDefaultValue('')
+      setDefaultKind(
+        preferredMysqlColumnDefaultKind(createDefaultMysqlColumnTypeState()),
+      )
+      setDefaultIsNull(true)
       setComment('')
       setCheckExpression('')
       setForeignKeyState(createEmptyMysqlForeignKeyState(tableSchema))
@@ -171,6 +231,21 @@ export function MysqlTableColumnDrawer({
     if (checked) {
       setNullable(false)
       setUnique(true)
+      setDefaultIsNull(false)
+    }
+  }
+
+  const handleNullableChange = (checked: boolean) => {
+    setNullable(checked)
+    if (!checked) setDefaultIsNull(false)
+  }
+
+  const handleDefaultNullChange = (isNull: boolean) => {
+    setDefaultIsNull(isNull)
+    if (isNull) {
+      setDefaultValue('')
+      setNullable(true)
+      setPrimaryKey(false)
     }
   }
 
@@ -189,7 +264,11 @@ export function MysqlTableColumnDrawer({
 
     const nextComment = normalizeOptionalText(comment)
     const nextCheckExpression = normalizeOptionalText(checkExpression)
-    const nextDefault = defaultValue.trim()
+    const defaultEmission = resolveSqlColumnDefaultEmission({
+      isNull: defaultIsNull,
+      value: defaultValue,
+      kind: defaultKind,
+    })
 
     const foreignKeyError = validateMysqlForeignKeyState(foreignKeyState)
     if (foreignKeyError) {
@@ -202,6 +281,18 @@ export function MysqlTableColumnDrawer({
     )
 
     const dataType = buildMysqlColumnTypeSql(typeState)
+    if (
+      (primaryKey || unique) &&
+      mysqlTypeRequiresIndexKeyLength(dataType) &&
+      !mysqlTypeSupportsPrefixIndex(dataType)
+    ) {
+      toast.error(
+        t(
+          'JSON columns cannot be uniquely indexed. Use VARCHAR, or store a unique key in a separate column.',
+        ),
+      )
+      return
+    }
     const statements: string[] = []
 
     try {
@@ -209,9 +300,18 @@ export function MysqlTableColumnDrawer({
         statements.push(
           buildMysqlAddColumnSql(tableId, trimmedName, dataType, {
             nullable: primaryKey ? false : nullable,
-            defaultValue: nextDefault || undefined,
+            defaultIsNull: defaultEmission === 'null',
+            defaultValue:
+              typeof defaultEmission === 'object'
+                ? defaultEmission.value
+                : undefined,
+            defaultKind:
+              typeof defaultEmission === 'object'
+                ? defaultEmission.kind
+                : defaultKind,
             primaryKey,
             unique: unique && !primaryKey,
+            comment: nextComment || undefined,
           }),
         )
       } else {
@@ -243,13 +343,24 @@ export function MysqlTableColumnDrawer({
           )
         }
 
-        const previousDefault = (column.column_default ?? '').trim()
-        if (nextDefault !== previousDefault) {
+        const previousDefault = storedColumnDefaultForForm(
+          parseMysqlStoredColumnDefault(column.column_default),
+          preferredMysqlColumnDefaultKind(currentTypeState),
+        )
+        const nextParsedDefault = {
+          kind: defaultKind,
+          value: typeof defaultEmission === 'object' ? defaultEmission.value : '',
+          isNull: defaultEmission === 'null',
+        }
+        if (!sqlColumnDefaultsEqual(previousDefault, nextParsedDefault)) {
           statements.push(
             buildMysqlAlterColumnDefaultSql(
               tableId,
               trimmedName,
-              nextDefault || null,
+              typeof defaultEmission === 'object' ? defaultEmission.value : null,
+              dataType,
+              defaultKind,
+              defaultEmission === 'null',
             ),
           )
         }
@@ -271,6 +382,7 @@ export function MysqlTableColumnDrawer({
                 tableId,
                 trimmedName,
                 buildMysqlColumnConstraintName(tableName, trimmedName, 'pkey'),
+                dataType,
               ),
             )
           }
@@ -293,13 +405,14 @@ export function MysqlTableColumnDrawer({
               tableId,
               trimmedName,
               buildMysqlColumnConstraintName(tableName, trimmedName, 'key'),
+              dataType,
             ),
           )
         }
       }
 
       const previousComment = normalizeOptionalText(column?.column_comment ?? '')
-      if (nextComment !== previousComment) {
+      if (isEditing && nextComment !== previousComment) {
         statements.push(
           buildMysqlColumnCommentSql(
             tableId,
@@ -365,12 +478,7 @@ export function MysqlTableColumnDrawer({
         return
       }
 
-      await executeSql.mutateAsync(
-        buildMysqlSingleRequestDdlSql(
-          statements,
-          isEditing ? 'Update table column' : 'Add table column',
-        ),
-      )
+      await runMysqlDdlStatements(executeSql.mutateAsync, statements)
       toast.success(isEditing ? t('Column updated') : t('Column created'))
       onOpenChange(false)
       await onSuccess()
@@ -390,6 +498,19 @@ export function MysqlTableColumnDrawer({
     isEditing && parseMysqlColumnForeignKeys(column?.foreign_keys).length > 1
   const isExistingPrimaryKey =
     isEditing && column != null && isMysqlPrimaryKeyColumn(column)
+  const dataTypeSql = buildMysqlColumnTypeSql(typeState)
+  const typeGroup = getMysqlColumnTypeDefinition(typeState.typeId).group
+  const checkExample = getSqlColumnCheckExample(name, typeGroup)
+  const showTextNumberCheckHint =
+    typeGroup === 'Text' && isTextColumnComparedToNumber(checkExpression)
+  const uniqueNeedsPrefix = mysqlTypeSupportsPrefixIndex(dataTypeSql)
+  const uniqueUnsupported =
+    mysqlTypeRequiresIndexKeyLength(dataTypeSql) && !uniqueNeedsPrefix
+  const uniqueDisabledReason = uniqueUnsupported
+    ? t(
+        'JSON columns cannot be uniquely indexed. Use VARCHAR, or store a unique key in a separate column.',
+      )
+    : undefined
 
   return (
     <BaseDrawer
@@ -457,29 +578,40 @@ export function MysqlTableColumnDrawer({
               </h4>
               <MysqlColumnTypeSelector
                 value={typeState}
-                onChange={setTypeState}
+                onChange={(next) => {
+                  setTypeState(next)
+                  const nextType = buildMysqlColumnTypeSql(next)
+                  if (
+                    mysqlTypeRequiresIndexKeyLength(nextType) &&
+                    !mysqlTypeSupportsPrefixIndex(nextType)
+                  ) {
+                    setPrimaryKey(false)
+                    setUnique(false)
+                  }
+                  if (defaultIsNull || !defaultValue.trim()) {
+                    setDefaultKind(preferredMysqlColumnDefaultKind(next))
+                  }
+                }}
                 allowSerialTypes={!isEditing}
                 existing={isEditing}
               />
-              <div className="space-y-2">
-                <Label htmlFor="column-default" className="text-[12px] font-medium">
-                  {t('Default value')}
-                </Label>
-                <Input
-                  id="column-default"
-                  value={defaultValue}
-                  onChange={(event) => setDefaultValue(event.target.value)}
-                  className="font-mono"
-                  placeholder={t(
-                    getMysqlColumnDefaultPlaceholder(typeState.typeId),
-                  )}
-                />
-                <p className="text-[11px] text-muted-foreground">
-                  {t(
-                    'A literal or SQL expression, for example now() or gen_random_uuid().',
-                  )}
-                </p>
-              </div>
+              <ColumnDefaultValueField
+                id="column-default"
+                kind={defaultKind}
+                value={defaultValue}
+                isNull={defaultIsNull}
+                onKindChange={setDefaultKind}
+                onValueChange={(next) => {
+                  if (next) setDefaultIsNull(false)
+                  setDefaultValue(next)
+                }}
+                onNullChange={handleDefaultNullChange}
+                expressionPlaceholder={getMysqlColumnDefaultPlaceholder(
+                  typeState.typeId,
+                )}
+                expressionHint="Passed to the database as SQL, for example CURRENT_TIMESTAMP."
+                nullDisabled={primaryKey}
+              />
             </section>
 
             <section className="space-y-3">
@@ -505,11 +637,19 @@ export function MysqlTableColumnDrawer({
                 <ConstraintToggle
                   id="column-primary-key"
                   label={t('Primary key')}
-                  description={t(
-                    'Use this column as a unique identifier for rows in the table.',
-                  )}
+                  description={
+                    uniqueNeedsPrefix
+                      ? t(
+                          'MySQL indexes on TEXT and BLOB use the first 255 characters.',
+                        )
+                      : t(
+                          'Use this column as a unique identifier for rows in the table.',
+                        )
+                  }
                   checked={primaryKey}
                   onCheckedChange={handlePrimaryKeyChange}
+                  disabled={uniqueUnsupported}
+                  disabledTooltip={uniqueDisabledReason}
                 />
                 <ConstraintToggle
                   id="column-nullable"
@@ -518,18 +658,25 @@ export function MysqlTableColumnDrawer({
                     'Allow the column to be NULL when no value is provided.',
                   )}
                   checked={primaryKey ? false : nullable}
-                  onCheckedChange={setNullable}
+                  onCheckedChange={handleNullableChange}
                   disabled={primaryKey}
                 />
                 <ConstraintToggle
                   id="column-unique"
                   label={t('Unique')}
-                  description={t(
-                    'Require values in this column to be unique across rows.',
-                  )}
+                  description={
+                    uniqueNeedsPrefix
+                      ? t(
+                          'MySQL indexes on TEXT and BLOB use the first 255 characters.',
+                        )
+                      : t(
+                          'Require values in this column to be unique across rows.',
+                        )
+                  }
                   checked={primaryKey ? true : unique}
                   onCheckedChange={setUnique}
-                  disabled={primaryKey}
+                  disabled={primaryKey || uniqueUnsupported}
+                  disabledTooltip={uniqueDisabledReason}
                 />
               </div>
               <div className="space-y-2">
@@ -537,12 +684,15 @@ export function MysqlTableColumnDrawer({
                   {t('Check constraint')}
                 </Label>
                 <p className="text-[11px] text-muted-foreground">
-                  {t('Optional SQL expression, for example')}{' '}
-                  <code className="font-mono text-[11px]">
-                    length(column_name) &lt; 500
-                  </code>
+                  {t('Must be valid SQL for this column type, for example')}{' '}
+                  <code className="font-mono text-[11px]">{checkExample}</code>
                   .
                 </p>
+                {showTextNumberCheckHint ? (
+                  <p className="text-[11px] text-muted-foreground">
+                    {t('This check compares text to a number.')}
+                  </p>
+                ) : null}
                 {hasMultipleChecks ? (
                   <p className="text-[11px] text-muted-foreground">
                     {t(
@@ -556,7 +706,7 @@ export function MysqlTableColumnDrawer({
                   onChange={(event) => setCheckExpression(event.target.value)}
                   rows={2}
                   className="min-h-[72px] resize-y font-mono"
-                  placeholder="length(column_name) < 500"
+                  placeholder={checkExample}
                 />
               </div>
             </section>

@@ -6,7 +6,7 @@ date: 2025-11-07
 cover: /images/blog/product-update-october-2025/cover.avif
 timeToRead: 10
 author: dennis-ivy
-category: product
+category: products
 featured: false
 callToAction: true
 faqs:
@@ -100,7 +100,7 @@ This means you can:
 
 Next.js 16 brings one of the most polished releases the framework has seen in a while. Instead of chasing big rewrites, this version focuses on the fundamentals, faster builds, predictable caching, smarter routing, and better developer visibility.
 
-And if you're deploying on Appwrite Sites, you can start using Next.js 16. The latest release is fully supported, so you can build, test, and host your Next.js projects seamlessly on Appwrite's open-source infrastructure.
+And if you're deploying on Appwrite Sites, you can start using Next.js 16. The latest release is fully supported, so you can build, test, and host your Next.js projects seamlessly on Appwrite's open-source infrastructure.
 
 [Visit docs](/docs/products/sites/quick-start/nextjs)
 

@@ -5,10 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import {
-  buildPostgresCreateEnumSql,
-  buildPostgresSingleRequestDdlSql,
-} from '@/lib/postgres-enum-ddl'
+import { buildPostgresCreateEnumSql } from '@/lib/postgres-enum-ddl'
 import {
   buildPostgresEnumUpdateStatements,
   createDefaultPostgresEnumFormState,
@@ -19,7 +16,7 @@ import {
   type PostgresEnumFormState,
 } from '@/lib/postgres-enum-metadata'
 import { useExecutePostgresSql } from '@/lib/react-query/hooks'
-import type { PostgresSchemaEnumRow } from '@/lib/postgres-sql'
+import { runPostgresDdlStatements, type PostgresSchemaEnumRow } from '@/lib/postgres-sql'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { PostgresEnumValuesEditor } from './PostgresEnumValuesEditor'
 import { useT } from '@/lib/i18n/translate'
@@ -100,9 +97,7 @@ export function PostgresSchemaEnumDrawer({
       )
 
       try {
-        await executeSql.mutateAsync(
-          buildPostgresSingleRequestDdlSql(statements, 'Update enum type'),
-        )
+        await runPostgresDdlStatements(executeSql.mutateAsync, statements)
         toast.success(t('Enum updated'))
         onOpenChange(false)
         onSuccess()
@@ -122,7 +117,8 @@ export function PostgresSchemaEnumDrawer({
     const values = normalizePostgresEnumFormValues(formState.entries)
 
     try {
-      await executeSql.mutateAsync(
+      await runPostgresDdlStatements(
+        executeSql.mutateAsync,
         buildPostgresCreateEnumSql(schema, trimmedName, values, {
           comment: formState.comment.trim() || undefined,
         }),

@@ -7,9 +7,13 @@ import {
 } from '@/lib/blog/content'
 import { getBlogAuthorRouteMetaTags } from '@/lib/blog/route-meta'
 import { getRequestSiteOrigin } from '@/lib/marketing/site-origin'
-import { MARKETING_PAGE_ROUTE_STATIC_DATA } from '@/lib/marketing/route-static-data'
+import {
+  MARKETING_PAGE_ROUTE_STATIC_DATA,
+  marketingRouteLifetime,
+} from '@/lib/marketing/route-static-data'
 
 export const Route = createFileRoute('/_marketing/blog/author/$author')({
+  ...marketingRouteLifetime,
   staticData: MARKETING_PAGE_ROUTE_STATIC_DATA,
   ssr: true,
   loader: async ({ context, params }) => {

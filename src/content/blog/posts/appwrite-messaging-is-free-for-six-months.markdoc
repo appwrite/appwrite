@@ -6,7 +6,7 @@ date: 2024-05-08
 cover: /images/blog/messaging-pricing.avif
 timeToRead: 5
 author: eldad-fux
-category: Product
+category: products
 faqs:
   - question: "Why is Appwrite Messaging free for six months?"
     answer: "Messaging was still in beta when this announcement went out. The team wanted real usage data and feedback from the community before setting a final price, so they made it free for six months while collecting that input."
@@ -49,7 +49,7 @@ The release of Messaging is just the beginning. We will add many new features to
 
 Some features we will be adding: the ability to send test messages, add variables to your messages, advanced targeting, and in depth usage stats.
 
-We will add more providers and invite you to contribute with your own pull requests. Visit our [community page](https://appwrite.io/community) to learn more about contributing or add your issues directly to [GitHub](https://github.com/appwrite/appwrite).
+We will add more providers and invite you to contribute with your own pull requests. Visit our [community page](https://appwrite.io/community) to learn more about contributing or add your issues directly to [GitHub](https://github.com/appwrite/appwrite).
 
 ## A complete backend for your projects
 

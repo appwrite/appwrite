@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { ImageFormat, ImageGravity } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
+import { toResourceUrl, withAdminMode } from '@/lib/appwrite/admin-resource-url'
 
 /** Matches storage inspector: column × DPR, capped (~720–1600). Frozen per mount in the panel. */
 export function getStorageInspectorPreviewBaseWidthPx(): number {
@@ -61,12 +62,18 @@ export function buildAdminStorageInspectorPreviewUrl(
     width,
     output: options.preferAvif ? ImageFormat.Avif : undefined,
   })
-  return raw + (raw.includes('?') ? '&' : '?') + 'mode=admin'
+  return withAdminMode(raw)
 }
 
-export const PREVIEW_GRAVITY_VALUES = Object.values(
-  ImageGravity,
-) as ImageGravity[]
+/** Content-aware crop (`gravity=auto`). Not yet on `ImageGravity` in the console SDK. */
+export const IMAGE_GRAVITY_AUTO = 'auto' as const
+
+export type TransformImageGravity = ImageGravity | typeof IMAGE_GRAVITY_AUTO
+
+export const PREVIEW_GRAVITY_VALUES: TransformImageGravity[] = [
+  ...(Object.values(ImageGravity) as ImageGravity[]),
+  IMAGE_GRAVITY_AUTO,
+]
 
 /** 3×3 spatial layout for crop gravity (top → bottom, left → right). */
 export const TRANSFORM_IMAGE_GRAVITY_GRID_ROWS: readonly [
@@ -84,7 +91,7 @@ export type ImageTransformState = {
   width: number | null
   /** null = omit height (aspect from width / original) */
   height: number | null
-  gravity: ImageGravity
+  gravity: TransformImageGravity
   quality: number
   borderWidth: number
   /** Hex without leading # */
@@ -113,7 +120,9 @@ const transformJsonSchema = z
   .object({
     width: widthNullable.optional(),
     height: heightNullable.optional(),
-    gravity: z.nativeEnum(ImageGravity).optional(),
+    gravity: z
+      .union([z.nativeEnum(ImageGravity), z.literal(IMAGE_GRAVITY_AUTO)])
+      .optional(),
     quality: z.number().min(0).max(100).optional(),
     borderWidth: z.number().min(0).max(100).optional(),
     borderColor: z.string().max(12).optional(),
@@ -125,9 +134,10 @@ const transformJsonSchema = z
   })
 
 /** Maps Appwrite image gravity to CSS `object-position` for object-cover previews */
-export function gravityToObjectPosition(g: ImageGravity): string {
+export function gravityToObjectPosition(g: TransformImageGravity): string {
   const key = g as unknown as string
   const map: Record<string, string> = {
+    auto: '50% 50%',
     center: '50% 50%',
     'top-left': '0% 0%',
     top: '50% 0%',
@@ -480,7 +490,7 @@ export function buildGetFilePreviewArgs(
     args.height = Math.min(4000, Math.max(1, Math.round(s.height)))
   }
   if (s.gravity !== ImageGravity.Center) {
-    args.gravity = s.gravity
+    args.gravity = s.gravity as ImageGravity
   }
   if (s.quality > 0 && s.quality < 100) {
     args.quality = Math.round(s.quality)
@@ -524,7 +534,7 @@ export function buildAdminDesignCanvasPreviewUrl(
 ): string {
   const args = buildGetFilePreviewArgsForDesignCanvas(bucketId, fileId, s)
   const raw = sdk.forProject(projectId).storage.getFilePreview(args as never)
-  return raw + (raw.includes('?') ? '&' : '?') + 'mode=admin'
+  return withAdminMode(raw)
 }
 
 /** Project preview URL for sharing / client apps (no `mode=admin`). */
@@ -535,7 +545,9 @@ export function buildFilePreviewUrl(
   s: ImageTransformState,
 ): string {
   const args = buildGetFilePreviewArgs(bucketId, fileId, s)
-  return sdk.forProject(projectId).storage.getFilePreview(args as never)
+  return toResourceUrl(
+    sdk.forProject(projectId).storage.getFilePreview(args as never),
+  )
 }
 
 export function buildAdminPreviewUrl(
@@ -545,7 +557,7 @@ export function buildAdminPreviewUrl(
   s: ImageTransformState,
 ): string {
   const raw = buildFilePreviewUrl(projectId, bucketId, fileId, s)
-  return raw + (raw.includes('?') ? '&' : '?') + 'mode=admin'
+  return withAdminMode(raw)
 }
 
 /** Raw file view (no transform params). Same auth as preview; stable while editing transforms. */
@@ -557,7 +569,7 @@ export function buildAdminFileViewUrl(
   const raw = sdk
     .forProject(projectId)
     .storage.getFileView({ bucketId, fileId })
-  return raw + (raw.includes('?') ? '&' : '?') + 'mode=admin'
+  return withAdminMode(raw)
 }
 
 /**
@@ -572,7 +584,7 @@ export function buildAdminUntransformedPreviewUrl(
   const raw = sdk
     .forProject(projectId)
     .storage.getFilePreview({ bucketId, fileId })
-  return raw + (raw.includes('?') ? '&' : '?') + 'mode=admin'
+  return withAdminMode(raw)
 }
 
 export const OUTPUT_FORMAT_LABELS: { value: ImageFormat; label: string }[] = [

@@ -16,13 +16,51 @@ export function resolveSiteAssetUrl(path: string, siteOrigin?: string): string {
   return `${getSeoSiteOrigin(siteOrigin)}${path}`
 }
 
+function isLoopbackHostname(hostname: string): boolean {
+  return (
+    hostname === 'localhost' ||
+    hostname === '127.0.0.1' ||
+    hostname === '[::1]' ||
+    hostname === '::1'
+  )
+}
+
+function normalizeSiteOrigin(origin: string): string {
+  return origin.replace(/\/+$/, '')
+}
+
+/**
+ * TanStack prerender runs against loopback during production builds. Static HTML
+ * must not bake `http://localhost` into og:url / og:image; use the public origin.
+ */
+export function resolveServerSiteOrigin(
+  requestOrigin: string,
+  isProd: boolean = import.meta.env.PROD,
+): string {
+  try {
+    const { hostname } = new URL(requestOrigin)
+    if (!isLoopbackHostname(hostname)) {
+      return normalizeSiteOrigin(requestOrigin)
+    }
+  } catch {
+    return getDefaultSiteOrigin()
+  }
+
+  if (isProd) {
+    return getDefaultSiteOrigin()
+  }
+
+  return normalizeSiteOrigin(requestOrigin)
+}
+
 export const getRequestSiteOrigin = createIsomorphicFn()
   .server(() => {
     try {
-      return getRequestUrl({
+      const origin = getRequestUrl({
         xForwardedHost: true,
         xForwardedProto: true,
       }).origin
+      return resolveServerSiteOrigin(origin)
     } catch {
       return getDefaultSiteOrigin()
     }

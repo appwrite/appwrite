@@ -3,6 +3,7 @@ layout: changelog
 title: "Appwrite 1.5.11 is released"
 date: 2024-09-17
 cover: /images/changelog/2024-09-17.avif
+tags: integrations, functions, security
 ---
 
 A security issue was identified in the open-runtimes/executor repository, that resulted in stack traces from errors being included in build and execution logs, which in some cases, could expose sensitive information.

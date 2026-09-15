@@ -31,7 +31,7 @@ To implement the RxDB integration, there are several steps you must complete:
 
 ## Step 1: Configure Appwrite project
 
-For this step, you must [create an account on Appwrite Cloud](https://cloud.appwrite.io/register) or [self-host Appwrite](https://appwrite.io/docs/advanced/self-hosting) if you haven’t already. Head over to the Appwrite console, go to the **Settings** page, and copy your project ID and API endpoint for further usage. Next, go to the **Databases** page from the left sidebar, create a new database with the ID `mydb`, and then a collection with the ID `humans` (save both IDs for further usage).
+For this step, you must [create an account on Appwrite Cloud](https://cloud.appwrite.io/register) or [self-host Appwrite](https://appwrite.io/docs/advanced/self-hosting) if you haven’t already. Head over to the Appwrite console, go to the **Settings** page, and copy your project ID and API endpoint for further usage. Next, go to the **Databases** page from the left sidebar, create a new database with the ID `mydb`, and then a collection with the ID `humans` (save both IDs for further usage).
 
 Click on the **Attributes** tab and add the following attributes (schema used for demo purposes):
 

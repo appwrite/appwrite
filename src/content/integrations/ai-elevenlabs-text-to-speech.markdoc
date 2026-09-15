@@ -44,7 +44,7 @@ First, you must [sign up for an ElevenLabs account](https://elevenlabs.io/app/si
 
 For this step, you must [create an account on Appwrite Cloud](https://cloud.appwrite.io/register) or [self-host Appwrite](/docs/advanced/self-hosting) if you haven’t already. If you decide to self-host Appwrite, there are [additional setup steps](/docs/advanced/self-hosting/configuration/sites) to use Appwrite Sites templates.
 
-Head over to the Appwrite console, navigate to the **Sites** page, click on **Create site** and select the **Clone a template** option, and search for the **Text-to-speech with ElevenLabs** site template.
+Head over to the Appwrite console, navigate to the **Sites** page, click on **Create site** and select the **Clone a template** option, and search for the **Text-to-speech with ElevenLabs** site template.
 
 ![Site template](/images/integrations/ai-elevenlabs-text-to-speech/template.avif)
 

@@ -23,8 +23,8 @@ You may have the right to decide whether to accept or reject cookies. When you a
 ## How do we use cookies?
 
 We use cookies to:
-- Keep you signed in, manage protected site access, and remember interface preferences;
-- Track traffic flow and patterns of travel in connection with our Site (with your consent where required);
+- Keep you signed in and remember interface preferences;
+- Track traffic flow and patterns of travel in connection with our Site;
 - Understand the total number of visitors to our Sites on an ongoing basis and the types of internet browsers (e.g. Chrome, Firefox, Safari, or Internet Explorer) and operating systems (e.g. Windows or Mac) used by our visitors;
 - Monitor the performance of our Site and to continually improve it; and
 - Customize and enhance your online experience.
@@ -40,11 +40,10 @@ These cookies are essential to provide you with services available through this 
 | Cookie name | Source | Expiry (In days) | Purpose |
 | --- | --- | --- | --- |
 | a_session_console | Appwrite Console | 365 | Keeps you signed in to the Console |
-| aw_website_access | Appwrite Site | 365 | Remembers that you passed the website access gate <!-- pragma: allowlist secret --> |
 
 ## Performance / Analytics cookies
 
-We use performance/analytics cookies and similar technologies to analyze how the website is accessed, used, or is performing. We do this in order to provide you with a better user experience and to maintain, operate, and continually improve the website. These are loaded only after you accept analytics cookies where consent is required. For example, these cookies and tools allow us to:
+We use cookieless usage analytics (Plausible) and, where you allow optional cookies, error-reporting tools. Plausible does not set cookies or use cross-site identifiers, so it runs whether or not you accept optional cookies. Sentry is loaded only after you accept optional cookies where consent is required. These tools allow us to:
 
 - Better understand our website visitors so that we can improve how we present our content;
 - Collect information about Site visitors such as where they are located and what browsers they are using;
@@ -54,8 +53,7 @@ We use performance/analytics cookies and similar technologies to analyze how the
 
 | Cookie / technology | Source | Expiry (In days) | Purpose |
 | --- | --- | --- | --- |
-| Plausible analytics | Plausible | Session / none | Privacy-friendly usage analytics (no cross-site tracking cookies) |
-| Sentry | Sentry | Session | Error monitoring and performance diagnostics |
+| Sentry | Sentry | Session | Error monitoring and performance diagnostics (optional; requires consent where the banner is shown) |
 
 We also store your cookie consent choice in your browser's local storage under the key `console.cookieConsent` when you interact with our cookie banner.
 

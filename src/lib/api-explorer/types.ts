@@ -1,8 +1,16 @@
+export type AppwriteAuth = Record<string, string[]>
+export type AppwritePlatformAuth = Partial<
+  Record<ApiSpecPlatform, AppwriteAuth>
+>
+
 export type AppwriteAdditionalMethod = {
   name: string
   desc?: string
+  summary?: string
+  namespace?: string
+  platforms?: ApiSpecPlatform[]
   weight?: number
-  auth?: Record<string, string[]>
+  auth?: AppwriteAuth | AppwritePlatformAuth
   parameters?: string[]
   required?: string[]
   responses?: Array<{ code: number; model: string }>
@@ -17,10 +25,9 @@ export type AppwriteAdditionalMethod = {
 
 /** Appwrite x-appwrite OpenAPI extension (see appwrite/specs). */
 export type AppwriteOpenApiExtension = {
-  method: string
+  method?: string
   group?: string
   weight?: number
-  cookies?: boolean
   type?: string
   demo?: string
   'rate-limit'?: number
@@ -30,8 +37,7 @@ export type AppwriteOpenApiExtension = {
   platforms?: Array<'console' | 'client' | 'server'>
   packaging?: boolean
   public?: boolean
-  edit?: string
-  auth?: Record<string, string[]>
+  auth?: AppwriteAuth | AppwritePlatformAuth
   methods?: AppwriteAdditionalMethod[]
   deprecated?: {
     since?: string
@@ -76,25 +82,45 @@ export type OpenApiParameter = {
   schema?: OpenApiSchema
 }
 
+export type OpenApiDiscriminator = {
+  propertyName?: string
+  mapping?: Record<string, string>
+  /** Legacy compound mapping; prefer required enum conditions on union branches. */
+  'x-mapping'?: Record<string, Record<string, string>>
+  /** @deprecated Derive names from standard conditions or legacy x-mapping keys. */
+  'x-propertyNames'?: string[]
+}
+
 export type OpenApiSchema = {
   type?: string
+  title?: string
   description?: string
   example?: unknown
   'x-example'?: unknown
   default?: unknown
+  const?: unknown
   enum?: unknown[]
   properties?: Record<string, OpenApiSchema>
   required?: string[]
   items?: OpenApiSchema
   $ref?: string
+  nullable?: boolean
   'x-nullable'?: boolean
+  /** @deprecated Replaced by schema title. */
   'x-enum-name'?: string
+  /** @deprecated Replaced by titled singleton-enum oneOf/anyOf branches. */
   'x-enum-keys'?: string[]
-  'x-upload-id'?: string
+  /** @deprecated Inferred from multipart binary + `{name}Id`. */
+  'x-upload-id'?: boolean | string
   format?: string
   oneOf?: OpenApiSchema[]
   allOf?: OpenApiSchema[]
   anyOf?: OpenApiSchema[]
+  not?: OpenApiSchema
+  additionalProperties?: boolean | OpenApiSchema
+  minProperties?: number
+  maxProperties?: number
+  discriminator?: OpenApiDiscriminator
 }
 
 export type OpenApiRequestBody = {
@@ -132,13 +158,21 @@ export type OpenApiSpec = {
     description?: string
   }>
   paths?: Record<string, Record<string, OpenApiOperation>>
+  security?: Array<Record<string, string[]>>
   components?: {
+    securitySchemes?: Record<
+      string,
+      {
+        type?: string
+        'x-appwrite'?: { platforms?: string[] }
+      }
+    >
     schemas?: Record<string, OpenApiSchema>
   }
 }
 
 export type ApiExplorerMethod = {
-  /** SDK method id from x-appwrite.method */
+  /** SDK method name derived from operationId, or an explicit alias name. */
   id: string
   operationId: string
   path: string
@@ -157,7 +191,8 @@ export type ApiExplorerMethod = {
   requestBody?: OpenApiRequestBody
   contentType?: string
   security?: Array<Record<string, string[]>>
-  xAppwrite?: AppwriteOpenApiExtension
+  rawResponses?: OpenApiOperation['responses']
+  xAppwrite?: Omit<AppwriteOpenApiExtension, 'auth'> & { auth?: AppwriteAuth }
   authLabel: string
 }
 

@@ -29,6 +29,7 @@ import {
 } from '@/lib/databases/dedicated-database-status'
 import { usePostgresConnectDialog } from './_components/PostgresConnectDialogContext'
 import { DatabaseSidebarComputeSpec } from '../_components/DatabaseSidebarComputeSpec'
+import { DatabaseAdminNavSection } from '../_components/DatabaseAdminNavSection'
 import { DatabaseSidebarNavItem } from '../_components/DatabaseSidebarNavItem'
 import { useT } from '@/lib/i18n/translate'
 
@@ -62,7 +63,7 @@ export function PostgresDatabaseNav({
 
   return (
     <div className="flex shrink-0 flex-col border-t border-border bg-background px-2.5 pt-2 pb-2 has-[*[data-sidebar-spec]]:gap-2 has-[*[data-sidebar-spec]]:pb-0">
-      <div className="space-y-0.5">
+      <DatabaseAdminNavSection>
       {connectDialog ? (
         <DatabaseSidebarNavItem
           disabled={provisioning}
@@ -125,7 +126,7 @@ export function PostgresDatabaseNav({
           <span className={SECONDARY_SIDEBAR_NAV_LINK_LABEL_CLASS}>{t('Settings')}</span>
         </DatabaseSidebarNavItem>
       ) : null}
-      </div>
+      </DatabaseAdminNavSection>
       <DatabaseSidebarComputeSpec
         projectId={projectId}
         databaseId={databaseId}

@@ -6,7 +6,7 @@ date: 2024-03-01
 cover: /images/blog/sound-null-safety-for-your-dart-functions/cover.avif
 timeToRead: 12
 author: vincent-ge
-category: product
+category: products
 featured: false
 faqs:
   - question: "What is sound null safety in Dart?"

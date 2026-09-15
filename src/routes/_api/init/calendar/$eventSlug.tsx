@@ -1,13 +1,13 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { LAUNCH_EVENTS } from '@/lib/init/events'
 import { buildInitEventCalendarIcs } from '@/lib/init/init-calendar'
-import { getActiveProfileFeatures } from '@/lib/console-profiles'
+import { isInitSurfaceEnabled } from '@/lib/init/init-surface'
 
 export const Route = createFileRoute('/_api/init/calendar/$eventSlug')({
   server: {
     handlers: {
       GET: async ({ params, request }) => {
-        if (!getActiveProfileFeatures().init) {
+        if (!isInitSurfaceEnabled(request.headers.get('cookie'))) {
           return new Response('Not found', { status: 404 })
         }
 
@@ -20,7 +20,7 @@ export const Route = createFileRoute('/_api/init/calendar/$eventSlug')({
 
         const download =
           new URL(request.url).searchParams.get('download') === '1'
-        const ics = buildInitEventCalendarIcs(event, { now: new Date() })
+        const ics = buildInitEventCalendarIcs(event)
 
         return new Response(ics, {
           headers: {

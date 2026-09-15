@@ -7,7 +7,7 @@ lastUpdated: 2026-06-29
 cover: /images/blog/build-saas-waitlist/cover.avif
 timeToRead: 10
 author: atharva
-category: tutorial, product
+category: tutorials, products
 featured: false
 faqs:
   - question: "Why use Appwrite for a SaaS waitlist instead of a form service?"

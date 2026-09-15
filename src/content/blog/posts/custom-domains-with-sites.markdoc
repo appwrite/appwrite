@@ -6,7 +6,7 @@ date: 2025-07-31
 cover: /images/blog/custom-domains-with-sites/cover.avif
 timeToRead: 5
 author: dennis-ivy
-category: tutorial
+category: tutorials
 faqs:
   - question: "How do I add a custom domain to Appwrite Sites?"
     answer: "Open your site in the Appwrite Console, go to the Domains tab, and click Add domain. Enter your domain (for example example.com), then add the NS records Appwrite shows you (ns1.appwrite.zone and ns2.appwrite.zone) at your domain registrar. See [Appwrite Sites](/docs/products/sites)."
@@ -35,7 +35,7 @@ We’ll use Namecheap in this tutorial; however, if there are different steps fo
 
 You can also learn how to [host with Appwrite Sites](https://youtu.be/VtDe6hDw91k).
 
-# Adding a domain
+# Adding a domain
 
 In your Appwrite console, you’ll want to add a domain to your deployed website.
 
@@ -53,12 +53,12 @@ When you click **Add**, you'll see NS records that look like this:
 - `ns2.appwrite.zone`
 
 {% info title="About NS records" %}
-NS (Name Server) tells the internet which servers are responsible for knowing a domain's address (like www.example.com) and how to find it. They act like a directory listing, pointing users to the correct "address book" for a specific domain.
+NS (Name Server) tells the internet which servers are responsible for knowing a domain's address (like www.example.com) and how to find it. They act like a directory listing, pointing users to the correct "address book" for a specific domain.
 {% /info %}
 
 We can’t verify our domain until we give these to our domain name provider, so for now, you can save them or close out the tab. In the next step, we’ll cover where you can find all your DNS records.
 
-# View your DNS records
+# View your DNS records
 
 Once you’ve added a domain to your deployed Site, you’ll be able to view all your Site's DNS records from your account organization:
 
@@ -83,7 +83,7 @@ Make sure you click the green check mark to save this change.
 
 ![NS settings in Namecheap](/images/blog/custom-domains-with-sites/ns-records-namecheap.avif)
 
-# Verifying your domain
+# Verifying your domain
 
 Once you’ve added your NS records to Namecheap, you have successfully pointed your domain to Appwrite's name servers. All that's left to do is verify your domain from your Appwrite console.
 

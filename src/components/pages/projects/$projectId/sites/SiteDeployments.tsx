@@ -39,7 +39,7 @@ import {
 } from '@/components/global/shared/ContextMenuIcon'
 import {
   getDeploymentStatusBadge,
-  isDeploymentCompleted,
+  canDownloadDeploymentBuildOutput,
   isDeploymentInProgress,
   isDeploymentTimeout,
   DEPLOYMENT_TABLE_STATUS_COLUMN_CLASS,
@@ -105,6 +105,7 @@ import {
   Dependencies,
 } from '@/lib/react-query/hooks'
 import { sdk, getSiteScreenshotFilePreviewUrl } from '@/lib/appwrite/sdk'
+import { withAdminMode } from '@/lib/appwrite/admin-resource-url'
 import { getVcsProvider } from '@/lib/vcs/providers'
 import {
   SITE_SCREENSHOTS_BUCKET_ID,
@@ -197,6 +198,9 @@ export function SiteDeploymentsView() {
   const [activateDialogOpen, setActivateDialogOpen] = useState(false)
   const [cancelBuildDialogOpen, setCancelBuildDialogOpen] = useState(false)
   const [cancelTargetDeploymentId, setCancelTargetDeploymentId] = useState<
+    string | null
+  >(null)
+  const [deleteRowDeploymentId, setDeleteRowDeploymentId] = useState<
     string | null
   >(null)
   const [screenshotLoaded, setScreenshotLoaded] = useState(false)
@@ -409,7 +413,7 @@ export function SiteDeploymentsView() {
         deploymentId: activeDeploymentResolved.$id,
         type: DeploymentDownloadType.Source,
       })
-      const urlWithMode = url + (url.includes('?') ? '&' : '?') + 'mode=admin'
+      const urlWithMode = withAdminMode(url)
       window.open(urlWithMode, '_blank')
       toast.success(t('Download started'))
     } catch {
@@ -419,6 +423,8 @@ export function SiteDeploymentsView() {
 
   const handleDownloadBuild = () => {
     if (!projectId || !siteId || !activeDeploymentResolved) return
+    if (!canDownloadDeploymentBuildOutput(activeDeploymentResolved.status))
+      return
     try {
       const projectSdk = sdk.forProject(projectId)
       const url = projectSdk.sites.getDeploymentDownload({
@@ -426,7 +432,7 @@ export function SiteDeploymentsView() {
         deploymentId: activeDeploymentResolved.$id,
         type: DeploymentDownloadType.Output,
       })
-      const urlWithMode = url + (url.includes('?') ? '&' : '?') + 'mode=admin'
+      const urlWithMode = withAdminMode(url)
       window.open(urlWithMode, '_blank')
       toast.success(t('Download started'))
     } catch {
@@ -508,6 +514,27 @@ export function SiteDeploymentsView() {
     },
     onError: (error: Error) => {
       toast.error(error.message || t('Failed to cancel build'))
+    },
+  })
+
+  const deleteRowMutation = useMutation({
+    mutationFn: async (deploymentId: string) => {
+      if (!projectId || !siteId) {
+        throw new Error('Project ID and Site ID are required')
+      }
+      await deleteSiteDeployment(projectId, siteId, deploymentId)
+    },
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
+        queryKey: [...Dependencies.DEPLOYMENTS],
+      })
+      await queryClient.refetchQueries({
+        queryKey: ['site', 'project', projectId, siteId],
+      })
+      toast.success(t('Deployment deleted successfully'))
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || t('Failed to delete deployment'))
     },
   })
 
@@ -1116,22 +1143,26 @@ export function SiteDeploymentsView() {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="z-[200]">
                     <DropdownMenuItem onClick={handleDownloadSource}>
-                      {t('Source code')}
+                      <MenuItemContent icon={FileCode}>
+                        {t('Source code')}
+                      </MenuItemContent>
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={handleDownloadBuild}
                       disabled={
-                        !isDeploymentCompleted(activeDeploymentForCard?.status)
+                        !canDownloadDeploymentBuildOutput(activeDeploymentForCard?.status)
                       }
                       title={
-                        !isDeploymentCompleted(activeDeploymentForCard?.status)
+                        !canDownloadDeploymentBuildOutput(activeDeploymentForCard?.status)
                           ? t(
-                              'Build output is available after the deployment has completed.',
+                              'Build output is only available for ready deployments.',
                             )
                           : undefined
                       }
                     >
-                      {t('Build output')}
+                      <MenuItemContent icon={Package}>
+                        {t('Build output')}
+                      </MenuItemContent>
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -1739,23 +1770,23 @@ export function SiteDeploymentsView() {
                                       </DropdownMenuItem>
                                       <DropdownMenuItem
                                         disabled={
-                                          !isDeploymentCompleted(
+                                          !canDownloadDeploymentBuildOutput(
                                             deploymentData.status,
                                           )
                                         }
                                         title={
-                                          !isDeploymentCompleted(
+                                          !canDownloadDeploymentBuildOutput(
                                             deploymentData.status,
                                           )
                                             ? t(
-                                                'Build output is available after the deployment has completed.',
+                                                'Build output is only available for ready deployments.',
                                               )
                                             : undefined
                                         }
                                         onClick={(e) => {
                                           e.stopPropagation()
                                           if (
-                                            !isDeploymentCompleted(
+                                            !canDownloadDeploymentBuildOutput(
                                               deploymentData.status,
                                             )
                                           )
@@ -1812,38 +1843,12 @@ export function SiteDeploymentsView() {
                                             : undefined
                                         : undefined
                                     }
-                                    onClick={async (e) => {
-                                      e.stopPropagation()
+                                    onSelect={() => {
                                       if (!canDeleteFromMenu) return
-                                      try {
-                                        await deleteSiteDeployment(
-                                          projectId!,
-                                          siteId!,
-                                          deploymentData.$id,
-                                        )
-                                        queryClient.invalidateQueries({
-                                          queryKey: [
-                                            ...Dependencies.DEPLOYMENTS,
-                                          ],
-                                        })
-                                        queryClient.invalidateQueries({
-                                          queryKey: [
-                                            'site',
-                                            'project',
-                                            projectId,
-                                            siteId,
-                                          ],
-                                        })
-                                        toast.success(
-                                          t('Deployment deleted successfully'),
-                                        )
-                                      } catch (error) {
-                                        toast.error(
-                                          error instanceof Error
-                                            ? error.message
-                                            : t('Failed to delete deployment'),
-                                        )
-                                      }
+                                      const id = deploymentData.$id
+                                      openDialogAfterOverlayCloses(() =>
+                                        setDeleteRowDeploymentId(id),
+                                      )
                                     }}
                                   >
                                     <MenuItemContent icon={Trash2}>
@@ -1900,6 +1905,65 @@ export function SiteDeploymentsView() {
           )}
         </div>
       </div>
+
+      {/* Delete confirmation for a list row */}
+      <Dialog
+        open={deleteRowDeploymentId !== null}
+        onOpenChange={(open) => {
+          if (!open) setDeleteRowDeploymentId(null)
+        }}
+      >
+        <DialogContent className="sm:max-w-md p-0">
+          <DialogHeader className="px-6 pt-6 pb-4 text-start">
+            <DialogTitle>{t('Delete deployment')}</DialogTitle>
+            <DialogDescription className="text-[13px] mt-2">
+              {t(
+                'Are you sure you want to delete this deployment? This action cannot be undone.',
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="border-t border-border" />
+          <div className="px-6 pb-4 pt-4">
+            {displayedDeployments?.find(
+              (d) => d.$id === deleteRowDeploymentId,
+            ) && (
+              <DeploymentInfo
+                deployment={
+                  displayedDeployments.find(
+                    (d) => d.$id === deleteRowDeploymentId,
+                  )!
+                }
+                showStatus={true}
+              />
+            )}
+          </div>
+          <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <Button
+              variant="outline"
+              onClick={() => setDeleteRowDeploymentId(null)}
+              disabled={deleteRowMutation.isPending}
+              className="h-9 text-[13px]"
+            >
+              {t('Cancel')}
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                if (!deleteRowDeploymentId) return
+                const id = deleteRowDeploymentId
+                closeDialogBeforeOverlayUnmount(() =>
+                  setDeleteRowDeploymentId(null),
+                )
+                deleteRowMutation.mutate(id)
+              }}
+              disabled={deleteRowMutation.isPending || !deleteRowDeploymentId}
+              className="h-9 text-[13px]"
+            >
+              {t('Delete')}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Cancel build confirmation */}
       <Dialog

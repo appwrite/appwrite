@@ -3,6 +3,7 @@ layout: changelog
 title: "Announcing Appwrite Sites: The open source Vercel alternative"
 date: 2025-05-19
 cover: /images/changelog/2025-05-19.avif
+tags: sites, realtime
 ---
 
 You love using Appwrite to power your backend, but when it’s time to actually *ship* your website, you’re bouncing between tools, platforms, and extra accounts. That ends today.

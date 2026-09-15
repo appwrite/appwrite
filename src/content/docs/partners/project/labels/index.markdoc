@@ -6,25 +6,9 @@ description: Assign customizable labels to your Appwrite project to categorize a
 
 Labels are short alphanumeric tags you assign to a project. Use them to categorize your projects and filter them within an organization, for example by environment (`production`, `staging`), team, or region.
 
-# Manage in the Console {% #console %}
-
-{% only_dark %}
-![Project labels in the Appwrite Console](/images/docs/project/dark/labels.avif)
-{% /only_dark %}
-{% only_light %}
-![Project labels in the Appwrite Console](/images/docs/project/labels.avif)
-{% /only_light %}
-
-To manage labels from the Appwrite Console:
-
-1. Navigate to your project.
-2. Open the **Settings** section. The **Labels** card is on the **Overview** tab.
-3. In the **Labels** field, type a label and press Enter, or select one of the suggested labels. Labels may contain only alphanumeric characters.
-4. Click **Update** to save your changes.
-
 # Manage with a Server SDK {% #server-sdks %}
 
-You can also manage project labels programmatically using a [Server SDK](/docs/sdks#server).
+Manage project labels with a [Server SDK](/docs/sdks#server). Labels may contain only alphanumeric characters.
 
 {% info title="Required scope" %}
 The API key used for this call needs the `project.write` scope.
@@ -267,4 +251,4 @@ console.log(result.labels); // ['production', 'eu']
 
 - **Organize at scale.** Group related projects with shared tags such as environment, team, or region, so large organizations stay navigable.
 - **Faster filtering.** Find the projects you need by filtering an organization on its labels instead of scanning the full list.
-- **Repeatable provisioning.** Apply a consistent labeling scheme across projects from a script, keeping your organization tidy without manual Console work.
+- **Repeatable provisioning.** Apply a consistent labeling scheme across every project you create from the same provisioning script.

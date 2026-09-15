@@ -6,7 +6,7 @@ date: 2024-02-20
 cover: /images/blog/init-announcement.avif
 timeToRead: 4
 author: eldad-fux
-category: init, announcement, product
+category: init, announcements, products
 featured: false
 faqs:
   - question: "What is Appwrite Init?"

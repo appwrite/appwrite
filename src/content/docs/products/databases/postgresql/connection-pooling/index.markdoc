@@ -6,7 +6,7 @@ description: Configure the per-database connection pooler to serve many short-li
 
 PostgreSQL creates one backend process per connection, which makes each connection relatively expensive. Serverless functions, edge runtimes, and horizontally scaled application servers can easily exhaust the connection limit of your specification. The connection pooler sits in front of your database and multiplexes many client connections onto a small pool of server connections.
 
-The pooler runs next to your database and is reachable on port `6432` on the same hostname. Your application connects to the pooler exactly like it would connect to PostgreSQL directly, same credentials, same TLS. The pooler is available on specifications that run on dedicated compute; the smallest specifications run on shared capacity and do not include it.
+The pooler runs next to your database and is reachable on port `6432` on the same hostname. Your application connects to the pooler exactly like it would connect to PostgreSQL directly, same credentials, same TLS. The pooler runs on every PostgreSQL specification.
 
 # Pool modes {% #modes %}
 
@@ -35,7 +35,6 @@ const postgresql = new Postgresql(client);
 const pooler = await postgresql.updatePooler({
     databaseId: '<DATABASE_ID>',
     mode: 'transaction',
-    maxConnections: 500,
     defaultPoolSize: 25,
 });
 ```
@@ -52,7 +51,6 @@ const postgresql = new Postgresql(client);
 const pooler = await postgresql.updatePooler({
     databaseId: '<DATABASE_ID>',
     mode: 'transaction',
-    maxConnections: 500,
     defaultPoolSize: 25,
 });
 ```
@@ -72,7 +70,6 @@ $postgresql = new Postgresql($client);
 $pooler = $postgresql->updatePooler(
     databaseId: '<DATABASE_ID>',
     mode: 'transaction',
-    maxConnections: 500,
     defaultPoolSize: 25,
 );
 ```
@@ -90,7 +87,6 @@ postgresql = Postgresql(client)
 pooler = postgresql.update_pooler(
     database_id='<DATABASE_ID>',
     mode='transaction',
-    max_connections=500,
     default_pool_size=25,
 )
 ```
@@ -109,7 +105,6 @@ postgresql = Postgresql.new(client)
 pooler = postgresql.update_pooler(
     database_id: '<DATABASE_ID>',
     mode: 'transaction',
-    max_connections: 500,
     default_pool_size: 25,
 )
 ```
@@ -127,7 +122,6 @@ Postgresql postgresql = new Postgresql(client);
 var pooler = await postgresql.UpdatePooler(
     databaseId: "<DATABASE_ID>",
     mode: "transaction",
-    maxConnections: 500,
     defaultPoolSize: 25
 );
 ```
@@ -144,7 +138,6 @@ Postgresql postgresql = Postgresql(client);
 final pooler = await postgresql.updatePooler(
     databaseId: '<DATABASE_ID>',
     mode: 'transaction',
-    maxConnections: 500,
     defaultPoolSize: 25,
 );
 ```
@@ -162,7 +155,6 @@ val postgresql = Postgresql(client)
 val pooler = postgresql.updatePooler(
     databaseId = "<DATABASE_ID>",
     mode = "transaction",
-    maxConnections = 500,
     defaultPoolSize = 25,
 )
 ```
@@ -179,7 +171,6 @@ let postgresql = Postgresql(client)
 let pooler = try await postgresql.updatePooler(
     databaseId: "<DATABASE_ID>",
     mode: "transaction",
-    maxConnections: 500,
     defaultPoolSize: 25
 )
 ```
@@ -203,7 +194,6 @@ func main() {
     result, err := service.UpdatePooler(
         "<DATABASE_ID>",
         postgresql.WithUpdatePoolerMode("transaction"),
-        postgresql.WithUpdatePoolerMaxConnections(500),
         postgresql.WithUpdatePoolerDefaultPoolSize(25),
     )
     if err != nil {
@@ -225,7 +215,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let postgresql = Postgresql::new(&client);
 
-    let pooler = postgresql.update_pooler("<DATABASE_ID>", Some("transaction"), Some(500), Some(25), None, None, None, None, None).await?;
+    let pooler = postgresql.update_pooler("<DATABASE_ID>", Some("transaction"), Some(25), None, None, None, None, None).await?;
 
     Ok(())
 }
@@ -237,7 +227,6 @@ curl -X PATCH \
   -H "Content-Type: application/json" \
   -d '{
       "mode": "transaction",
-      "maxConnections": 500,
       "defaultPoolSize": 25
   }' \
   https://<REGION>.cloud.appwrite.io/v1/postgresql/<DATABASE_ID>/pooler
@@ -247,30 +236,37 @@ curl -X PATCH \
 | Parameter            | Range          | Description                                                                    |
 |----------------------|----------------|--------------------------------------------------------------------------------|
 | `mode`               | `transaction`, `session` | How long a server connection stays assigned to a client                |
-| `maxConnections`     | 10 - 10,000    | Maximum pooled client connections. Cannot exceed the connection cap of your specification |
+| `maxConnections`     | read-only      | Reports the database's advertised connection limit. The PostgreSQL pooler does not cap client connections, so set `networkMaxConnections` on the database instead |
 | `defaultPoolSize`    | 1 - 1,000      | Server connections per user in the pool                                        |
 | `readWriteSplitting` | boolean        | Route `SELECT`s to replicas, writes and locked reads to the primary. Defaults to on when high availability is enabled |
 
-The same settings are available in the Console under **Settings** > **Connection pooler**.
+Pooler configuration is API-only. The Console shows the pooled host and port in the **Credentials** dialog but has no page for changing these settings.
+
+Switching to session mode is refused while the database has high availability replicas. Set `replicas` to 0 first, or stay on transaction mode.
 
 # Connect through the pooler {% #connect %}
 
 Take your normal connection string and change the port to `6432`:
 
 ```bash
-postgresql://admin:<password>@db-<hash>.<region>.appwrite.center:6432/<database>
+postgresql://admin:<password>@db-<hash>.<region>.appwrite.center:6432/db-<hash>?sslmode=require
 ```
 
 Point your application's runtime traffic at the pooler port. Keep migrations and long-lived administrative sessions on the direct port `5432`, schema changes and tools like `pg_dump` expect session semantics and can misbehave in transaction mode.
 
 # Read/write splitting {% #read-write-splitting %}
 
-When [high availability](/docs/products/databases/postgresql/high-availability) is enabled, the pooler can route read-only statements to replicas and everything else to the primary. `SELECT ... FOR UPDATE` and statements inside explicit transactions go to the primary. Replicas replicate asynchronously by default, so a read that immediately follows a write can be stale; use `sync` or `quorum` replication mode if you need read-your-writes consistency through the pooler.
+When [high availability](/docs/products/databases/postgresql/high-availability) is enabled, the pooler can route read-only statements to replicas and everything else to the primary. `SELECT ... FOR UPDATE` and statements inside explicit transactions go to the primary. Replicas replicate asynchronously by default, so a read that immediately follows a write can be stale. Synchronous replication does not fix this. It waits for the replica to flush the write to disk, not to replay it, so a replica can still answer a read from before the write. When a read must observe the write that preceded it, send it to the primary on the direct port.
 
 # Sizing guidance {% #sizing %}
 
-A useful starting point for `defaultPoolSize` is `4 x CPU cores` of your specification, and it rarely helps to go above your specification's connection cap divided by the number of databases sharing the workload. Watch the connection metrics in the [Monitor tab](/docs/products/databases/postgresql/monitoring) and increase the pool only when clients queue for a connection.
+Appwrite already sizes the pool for you when the database is provisioned, from your specification's CPU count and connection limit. If you tune it by hand, `4 x CPU cores` is a useful starting point. Watch the connection metrics in the [Monitor tab](/docs/products/databases/postgresql/monitoring) and increase the pool only when clients queue for a connection.
 
 # When not to use the pooler {% #when-not %}
 
-Skip the pooler when you have a small, fixed number of long-lived application servers that each maintain their own driver-level pool, and their combined connection count fits comfortably in your specification's limit. Adding a pooler in that setup only adds a hop.
+The pooler adds a network hop, and transaction mode trades session-level features for connection multiplexing. Connect to the direct port `5432` instead when any of the following applies:
+
+- **A small, fixed fleet.** A few long-lived application servers that each maintain a driver-level pool, with a combined connection count that fits in your specification's limit, gain nothing from an extra hop.
+- **Session state.** Workloads that rely on advisory locks, `LISTEN/NOTIFY`, session-level prepared statements, or temporary tables break in transaction mode. Use session mode or the direct port.
+- **Migrations and administration.** Schema changes and tools like `pg_dump` expect one session for the whole run. Always run them against the direct port.
+- **Single latency-sensitive queries.** A workload of few, fast queries on an idle database pays the extra hop on every round trip without ever hitting the connection limit the pooler protects against.

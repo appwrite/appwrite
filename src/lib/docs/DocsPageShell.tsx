@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { useLocation } from '@tanstack/react-router'
 import { ConsoleLayout } from '@/components/global/layout/ConsoleLayout'
 import { DocsLeftNav } from '@/components/pages/docs/DocsLeftNav'
@@ -9,9 +9,12 @@ import {
   useDocsSearchContext,
 } from '@/components/pages/docs/DocsSearchProvider'
 import { DOCS_CONTAINER } from '@/lib/docs/docs-container'
+import { shouldResetDocsScrollOnPathChange } from '@/lib/docs/docs-scroll'
 import { isApiReferenceExplorerPath } from '@/lib/docs/references/is-api-reference-explorer-path'
 import { ApiReferenceUiPrefsProvider } from '@/lib/docs/references/ApiReferenceUiPrefsProvider'
-import { cn, resetConsoleShellDocumentScroll } from '@/lib/utils'
+import { useMarketingSiteLayoutProvided } from '@/lib/marketing/marketing-site-layout-context'
+import { cn } from '@/lib/utils'
+import { resetPageSurfaceScroll } from '@/lib/layout/marketing-document-scroll'
 
 type DocsPageShellProps = {
   children: ReactNode
@@ -19,23 +22,22 @@ type DocsPageShellProps = {
 
 function scrollDocsContentToTop() {
   if (typeof document === 'undefined') return
-
-  const main = document.getElementById('main-content')
-  if (main) {
-    main.scrollTo({ top: 0, behavior: 'auto' })
-    return
-  }
-
-  resetConsoleShellDocumentScroll()
+  resetPageSurfaceScroll('instant')
 }
 
 function DocsScrollToTop() {
   const { pathname } = useLocation()
-  const previousPathnameRef = useRef(pathname)
+  const previousNormalizedPathRef = useRef<string | null>(null)
 
-  useEffect(() => {
-    if (previousPathnameRef.current === pathname) return
-    previousPathnameRef.current = pathname
+  useLayoutEffect(() => {
+    const { nextNormalizedPath, shouldScroll } = shouldResetDocsScrollOnPathChange(
+      previousNormalizedPathRef.current,
+      pathname,
+    )
+    previousNormalizedPathRef.current = nextNormalizedPath
+    if (!shouldScroll) return
+    // The persistent shell owns cross-page resets, even when an article remounts.
+    // Run before article passive effects resolve a valid destination hash.
     scrollDocsContentToTop()
   }, [pathname])
 
@@ -43,11 +45,32 @@ function DocsScrollToTop() {
 }
 
 function DocsPageShellLayout({ children }: DocsPageShellProps) {
+  const nestedInMarketing = useMarketingSiteLayoutProvided()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const docsSearch = useDocsSearchContext()
   const { pathname } = useLocation()
   const isReferenceExplorer = isApiReferenceExplorerPath(pathname)
-  const isReferencesSection = pathname.startsWith('/docs/references')
+
+  const article = (
+    <>
+      <DocsScrollToTop />
+      <div
+        className={cn(
+          isReferenceExplorer
+            ? 'flex h-full min-h-0 w-full min-w-0 flex-col'
+            : cn(DOCS_CONTAINER, 'min-w-0 w-full'),
+        )}
+      >
+        {children}
+      </div>
+    </>
+  )
+
+  if (nestedInMarketing) {
+    return (
+      <ApiReferenceUiPrefsProvider>{article}</ApiReferenceUiPrefsProvider>
+    )
+  }
 
   const layout = (
     <ConsoleLayout
@@ -73,30 +96,18 @@ function DocsPageShellLayout({ children }: DocsPageShellProps) {
       showFooter={!isReferenceExplorer}
       footer={{ expanded: false }}
     >
-      <DocsScrollToTop />
-      <div
-        className={cn(
-          isReferenceExplorer
-            ? 'flex h-full min-h-0 w-full min-w-0 flex-col'
-            : cn(DOCS_CONTAINER, 'min-w-0 w-full'),
-        )}
-      >
-        {children}
-      </div>
+      {article}
     </ConsoleLayout>
   )
 
-  return isReferencesSection ? (
+  return (
     <ApiReferenceUiPrefsProvider>{layout}</ApiReferenceUiPrefsProvider>
-  ) : (
-    layout
   )
 }
 
 export function DocsPageShell({ children }: DocsPageShellProps) {
-  return (
-    <DocsSearchProvider>
-      <DocsPageShellLayout>{children}</DocsPageShellLayout>
-    </DocsSearchProvider>
-  )
+  const nestedInMarketing = useMarketingSiteLayoutProvided()
+  const layout = <DocsPageShellLayout>{children}</DocsPageShellLayout>
+  if (nestedInMarketing) return layout
+  return <DocsSearchProvider>{layout}</DocsSearchProvider>
 }

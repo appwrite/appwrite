@@ -48,6 +48,7 @@ import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { InitialsAvatar } from '@/components/global/shared/Avatar'
 import { CopyableId } from '@/components/global/shared/CopyableId'
+import { ConfirmActionDialog } from '@/components/global/shared/ConfirmActionDialog'
 import { AuthenticatorType, AuthenticationFactor } from '@appwrite.io/console'
 import { Link } from '@tanstack/react-router'
 import type { Models } from '@appwrite.io/console'
@@ -383,7 +384,9 @@ export function UpdatePasswordSection() {
               <Label htmlFor="old-password">{t('Old password')}</Label>
               <Input
                 id="old-password"
+                name="current-password"
                 type="password"
+                autoComplete="current-password"
                 placeholder={t('Enter password')}
                 value={oldPassword}
                 onChange={(e) => setOldPassword(e.target.value)}
@@ -396,7 +399,9 @@ export function UpdatePasswordSection() {
               <Label htmlFor="new-password">{t('New password')}</Label>
               <Input
                 id="new-password"
+                name="new-password"
                 type="password"
+                autoComplete="new-password"
                 placeholder={t('Enter password')}
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
@@ -444,6 +449,10 @@ export function IdentitiesSection({
   const queryClient = useQueryClient()
   const identities = data?.identities ?? initialData?.identities ?? []
   const hasResolvedData = isFetched || initialData !== undefined
+  // The identity stays set while the dialog animates closed.
+  const [identityToDelete, setIdentityToDelete] =
+    useState<Models.Identity | null>(null)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
 
   const deleteIdentityMutation = useMutation({
     mutationFn: async (identityId: string) => {
@@ -452,16 +461,16 @@ export function IdentitiesSection({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: Dependencies.IDENTITIES })
       toast.success(t('Identity has been deleted'))
+      setDeleteDialogOpen(false)
     },
     onError: (error: Error) => {
       toast.error(error.message || t('Failed to delete identity'))
     },
   })
 
-  const handleDelete = (identityId: string) => {
-    if (confirm(t('Are you sure you want to delete this identity?'))) {
-      deleteIdentityMutation.mutate(identityId)
-    }
+  const requestDelete = (identity: Models.Identity) => {
+    setIdentityToDelete(identity)
+    setDeleteDialogOpen(true)
   }
 
   const getProviderIcon = (provider: string) => {
@@ -471,7 +480,10 @@ export function IdentitiesSection({
       google: 'google.svg',
       apple: 'apple.svg',
       facebook: 'facebook.svg',
-      // Add more as needed
+      cursor: 'cursor-ai.svg',
+      gitlab: 'gitlab.svg',
+      bitbucket: 'bitbucket.svg',
+      resend: 'resend.svg',
     }
     return providerMap[provider.toLowerCase()] || 'empty.svg'
   }
@@ -482,6 +494,10 @@ export function IdentitiesSection({
       google: 'Google',
       apple: 'Apple',
       facebook: 'Facebook',
+      cursor: 'Cursor',
+      gitlab: 'GitLab',
+      bitbucket: 'Bitbucket',
+      resend: 'Resend',
     }
     return nameMap[provider.toLowerCase()] || provider
   }
@@ -587,8 +603,9 @@ export function IdentitiesSection({
                   variant="ghost"
                   size="sm"
                   className="h-7 w-7 p-0"
-                  onClick={() => handleDelete(identity.$id)}
+                  onClick={() => requestDelete(identity)}
                   disabled={deleteIdentityMutation.isPending}
+                  aria-label={t('Delete identity')}
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
@@ -597,6 +614,45 @@ export function IdentitiesSection({
           ))}
         </TableBody>
       </Table>
+      <ConfirmActionDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        title="Delete identity"
+        description={
+          <>
+            {t('Are you sure you want to delete this identity?')}{' '}
+            {t('This action cannot be undone.')}
+            {identityToDelete ? (
+              <span className="mt-3 flex items-center gap-2 text-foreground">
+                <img
+                  src={`/icons/${getProviderIcon(identityToDelete.provider)}`}
+                  alt=""
+                  className={`h-4 w-4 ${PUBLIC_ICON_MUTED_CLASSES}`}
+                  onError={(e) => {
+                    e.currentTarget.src = '/icons/empty.svg'
+                  }}
+                />
+                <span className="font-medium">
+                  {getProviderName(identityToDelete.provider)}
+                </span>
+                {identityToDelete.providerEmail ? (
+                  <span className="truncate text-muted-foreground">
+                    {identityToDelete.providerEmail}
+                  </span>
+                ) : null}
+              </span>
+            ) : null}
+          </>
+        }
+        confirmLabel="Delete"
+        confirmVariant="destructive"
+        onConfirm={() => {
+          if (identityToDelete) {
+            deleteIdentityMutation.mutate(identityToDelete.$id)
+          }
+        }}
+        isConfirming={deleteIdentityMutation.isPending}
+      />
     </div>
   )
 }

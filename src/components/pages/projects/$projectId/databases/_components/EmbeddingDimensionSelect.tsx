@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Check, ChevronDown } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
   Command,
@@ -90,12 +91,19 @@ export function EmbeddingDimensionSelect({
               {t('No embedding models found')}
             </CommandEmpty>
             <CommandGroup>
-              {EMBEDDING_DIMENSION_PRESETS.map((entry) => (
+              {EMBEDDING_DIMENSION_PRESETS.map((entry) => {
+                const locked = entry.comingSoon === true
+                return (
                 <CommandItem
                   key={entry.id}
                   value={getEmbeddingDimensionPresetSearchValue(entry)}
-                  className="items-start rounded-md px-2 py-2.5 aria-selected:bg-accent"
+                  disabled={locked}
+                  className={cn(
+                    'items-start rounded-md px-2 py-2.5 aria-selected:bg-accent',
+                    locked && 'opacity-60',
+                  )}
                   onSelect={() => {
+                    if (locked) return
                     onChange(entry.id)
                     setOpen(false)
                   }}
@@ -117,13 +125,22 @@ export function EmbeddingDimensionSelect({
                       <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium leading-none text-muted-foreground">
                         {entry.vendor}
                       </span>
+                      {locked ? (
+                        <Badge
+                          variant="inactive"
+                          className="text-[10px] shrink-0"
+                        >
+                          {t('Coming soon')}
+                        </Badge>
+                      ) : null}
                     </div>
                     <p className="text-pretty text-[12px] leading-relaxed text-muted-foreground">
                       {t(entry.description)}
                     </p>
                   </div>
                 </CommandItem>
-              ))}
+                )
+              })}
             </CommandGroup>
           </CommandList>
           <div className="shrink-0 border-t border-border bg-popover p-1">

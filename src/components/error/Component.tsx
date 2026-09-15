@@ -4,7 +4,7 @@ import {
   useNavigate,
   useRouter,
 } from '@tanstack/react-router'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import {
   AlertTriangle,
   ArrowLeft,
@@ -26,21 +26,30 @@ import {
   isStaleChunkLoadError,
   tryReloadForStaleChunk,
 } from '@/lib/stale-chunk-error'
+import {
+  INITIAL_LOADER_SHELL_GATE,
+  setInitialLoaderShellGate,
+} from '@/lib/initial-loader/shell-gates'
 import { useT } from '@/lib/i18n/translate'
 
 export function ErrorComponent({
-  error,
+  error: caughtError,
   info,
   reset,
   preview = false,
 }: {
-  error: Error
+  error: unknown
   info?: { componentStack: string }
   reset: () => void
   /** When true, used for debug preview: skips Sentry and parent postMessage. */
   preview?: boolean
 }) {
+  const error = useMemo(
+    () => caughtError instanceof Error ? caughtError : new Error(String(caughtError)),
+    [caughtError],
+  )
   const t = useT()
+  const [reloading, setReloading] = useState(false)
   const randomErrorId = useRef<string>(
     Math.random().toString(36).substring(2, 15),
   )
@@ -84,6 +93,12 @@ export function ErrorComponent({
   // navigator.onLine, which is unreliable). Other failures show the regular page.
   const isConnectivityError = isConfirmedOffline
   const isStaleChunkError = isStaleChunkLoadError(error)
+
+  // Route errors mount without ProjectSelector. Release the fullscreen loader
+  // gate so the branded overlay cannot cover this page or swallow the CTA.
+  useLayoutEffect(() => {
+    setInitialLoaderShellGate(INITIAL_LOADER_SHELL_GATE.projectSelector, true)
+  }, [])
 
   // Use project-specific messages for project routes
   const formattedError = isProjectNotFound
@@ -234,7 +249,10 @@ export function ErrorComponent({
   }
 
   const handleReload = () => {
-    // Cache-bust so we don't re-serve HTML that still references deleted chunks.
+    if (reloading) return
+    setReloading(true)
+    // Revalidate the HTML shell from the network, then reload. Query-param
+    // location.replace() can no-op or re-serve cached HTML after a deploy.
     forceReloadForStaleChunk()
   }
 
@@ -281,7 +299,7 @@ export function ErrorComponent({
   }
 
   return (
-    <div className="flex min-h-full w-full flex-col items-center justify-center gap-8 px-4 py-8">
+    <div className="relative z-[10000] flex min-h-full w-full flex-col items-center justify-center gap-8 px-4 py-8">
       <div className="flex flex-col items-center max-w-md w-full gap-8">
         <div
           className={cn(
@@ -369,8 +387,10 @@ export function ErrorComponent({
         {isStaleChunkError ? (
           <div className="flex w-full flex-col gap-3">
             <Button
+              type="button"
               variant="brandCta"
               onClick={handleReload}
+              disabled={reloading}
               size="sm"
               className="h-9 min-h-9 w-full shrink-0 gap-2 text-[13px] font-medium"
             >

@@ -4,7 +4,7 @@ import { Link } from '@tanstack/react-router'
 import type { ComponentProps, ReactNode } from 'react'
 import { BlogPageAnchor } from '@/components/global/shared/BlogPageAnchor'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
-import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { useLocalMarketingEnabled } from '@/lib/marketing/local-marketing'
 import {
   getSiteLinkInternalPath,
   isSiteLinkExternal,
@@ -24,7 +24,7 @@ export function MarketingSiteLink({
   className,
   ...props
 }: MarketingSiteLinkProps) {
-  const { features } = useConsoleProfile()
+  const marketingEnabled = useLocalMarketingEnabled()
 
   if (parseDocsPagePath(href)) {
     return (
@@ -42,8 +42,8 @@ export function MarketingSiteLink({
     )
   }
 
-  const external = isSiteLinkExternal(href, features.marketing)
-  const url = resolveSiteLinkUrl(href, features.marketing)
+  const external = isSiteLinkExternal(href, marketingEnabled)
+  const url = resolveSiteLinkUrl(href, marketingEnabled)
   const internalPath = getSiteLinkInternalPath(href)
 
   if (!external && internalPath) {

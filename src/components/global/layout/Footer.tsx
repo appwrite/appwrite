@@ -9,6 +9,7 @@ import {
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useIsLegacyTheme } from '@/hooks/use-is-legacy-theme'
 import { useOptionalCookieConsent } from '@/components/global/providers/CookieConsent'
+import { useDebugOverrides } from '@/lib/debug-overrides'
 import { LegacyAppwriteIcon } from '@/components/global/shared/LegacyAppwriteBrand'
 import { getFooterPolicyLinks } from '@/lib/legal/policies'
 import {
@@ -19,6 +20,7 @@ import {
   isBlogPageExternal,
   isMarketingPageExternal,
   isProductPageExternal,
+  MARKETING_SITE_ORIGIN,
   type MarketingPagePath,
 } from '@/lib/marketing/urls'
 import { ProductNewBadge } from '@/components/global/shared/ProductNewBadge'
@@ -118,8 +120,9 @@ function marketingProductFooterLink(
 function getExpandedFooterGroups(
   marketing: boolean,
   footerCopy: ReturnType<typeof useI18n>['catalog']['app']['footer'],
-  features: { agent: boolean },
+  options: { agent: boolean; isCloud: boolean },
 ): readonly ExpandedFooterGroup[] {
+  const { agent, isCloud } = options
   return [
   {
     title: footerCopy.groups.quickStarts,
@@ -151,6 +154,15 @@ function getExpandedFooterGroups(
     links: [
       productFooterLink(footerCopy.expanded.products.auth, '/products/auth', marketing, 'auth'),
       productFooterLink(footerCopy.expanded.products.databases, '/products/databases', marketing, 'databases'),
+      {
+        ...docsFooterLink(
+          footerCopy.expanded.products.postgresql,
+          '/docs/products/databases/postgresql',
+          marketing,
+        ),
+        analyticsAction: getMarketingProductAnalyticsAction('databases'),
+        isNew: isProductNavItemNew('databases'),
+      },
       productFooterLink(footerCopy.expanded.products.storage, '/products/storage', marketing, 'storage'),
       productFooterLink(footerCopy.expanded.products.functions, '/products/functions', marketing, 'functions'),
       productFooterLink(footerCopy.expanded.products.messaging, '/products/messaging', marketing, 'messaging'),
@@ -158,7 +170,7 @@ function getExpandedFooterGroups(
         ...docsFooterLink(footerCopy.expanded.products.realtime, '/docs/apis/realtime', marketing),
         analyticsAction: getMarketingProductAnalyticsAction('realtime'),
       },
-      ...(features.agent
+      ...(agent
         ? [
             {
               ...docsFooterLink(
@@ -172,14 +184,27 @@ function getExpandedFooterGroups(
           ]
         : []),
       productFooterLink(footerCopy.expanded.products.hosting, '/products/sites', marketing, 'sites'),
-      marketingProductFooterLink(
-        footerCopy.expanded.products.domains,
-        '/domains',
-        marketing,
-        'domains',
-      ),
+      ...(isCloud
+        ? [
+            marketingProductFooterLink(
+              footerCopy.expanded.products.domains,
+              '/domains',
+              marketing,
+              'domains',
+            ),
+          ]
+        : []),
       docsFooterLink(footerCopy.expanded.products.network, '/docs/products/network', marketing),
-      productFooterLink(footerCopy.expanded.products.firewall, '/products/firewall', marketing, 'firewall'),
+      ...(isCloud
+        ? [
+            productFooterLink(
+              footerCopy.expanded.products.firewall,
+              '/products/firewall',
+              marketing,
+              'firewall',
+            ),
+          ]
+        : []),
     ],
   },
   {
@@ -270,6 +295,11 @@ function getExpandedFooterGroups(
       blogFooterLink(footerCopy.expanded.compare.vsSupabase, 'appwrite-compared-to-supabase', marketing), // pragma: allowlist secret
       blogFooterLink(footerCopy.expanded.compare.vsFirebase, 'open-source-firebase-alternative', marketing),
       blogFooterLink(footerCopy.expanded.compare.vsNeon, 'appwrite-vs-neon-ai-backends', marketing), // pragma: allowlist secret
+      docsFooterLink(
+        footerCopy.expanded.compare.postgresqlHosting,
+        '/docs/products/databases/postgresql',
+        marketing,
+      ),
       blogFooterLink(footerCopy.expanded.compare.vsVercel, 'open-source-vercel-alternative', marketing),
       blogFooterLink(footerCopy.expanded.compare.vsNetlify, 'open-source-netlify-alternative', marketing),
       blogFooterLink(footerCopy.expanded.compare.vsCloudinary, 'appwrite-vs-cloudinary', marketing), // pragma: allowlist secret
@@ -332,6 +362,8 @@ export function ConsoleFooter({ expanded = false }: ConsoleFooterProps) {
   const t = useT()
   const currentYear = new Date().getFullYear()
   const { isCloud, features } = useConsoleProfile()
+  const { preLaunch } = useDebugOverrides()
+  const localMarketing = features.marketing && !preLaunch
   const { catalog } = useI18n()
   const footerCopy = catalog.app.footer
   const newLabel = catalog.website.products.navigation.newLabel
@@ -339,16 +371,16 @@ export function ConsoleFooter({ expanded = false }: ConsoleFooterProps) {
   const isLegacyTheme = useIsLegacyTheme()
   const cloudStatusEnabled = isCloud && features.systemStatus
   const expandedFooterGroups = getExpandedFooterGroups(
-    features.marketing,
+    localMarketing,
     footerCopy,
-    features,
+    { agent: features.agent, isCloud },
   )
 
   const resourceLinks = [
     {
       label: footerCopy.links.docs,
-      href: getMarketingPageUrl('/docs', features.marketing),
-      external: isMarketingPageExternal(features.marketing),
+      href: getMarketingPageUrl('/docs', localMarketing),
+      external: isMarketingPageExternal(localMarketing),
     },
     { label: footerCopy.links.store, href: 'https://store.appwrite.io/', external: true }, // pragma: allowlist secret
     ...(cloudStatusEnabled
@@ -362,7 +394,7 @@ export function ConsoleFooter({ expanded = false }: ConsoleFooterProps) {
       : []),
   ]
 
-  const legalLinks = getFooterPolicyLinks(features.marketing)
+  const legalLinks = getFooterPolicyLinks(localMarketing)
   const showCookieSettings = cookieConsent?.bannerRequired ?? false
 
   const socialLinks = [
@@ -389,7 +421,7 @@ export function ConsoleFooter({ expanded = false }: ConsoleFooterProps) {
     },
     {
       label: footerCopy.social.discord,
-      href: '/discord',
+      href: preLaunch ? `${MARKETING_SITE_ORIGIN}/discord` : '/discord',
       icon: '/icons/discord-simple.svg',
     },
     {
@@ -479,8 +511,8 @@ export function ConsoleFooter({ expanded = false }: ConsoleFooterProps) {
         {/* Right: SOC 2 (hidden on narrow containers), legal links, copyright */}
         <div className="flex shrink-0 items-center gap-2">
           <a
-            href={getDocsPageUrl('/docs/advanced/security', features.marketing)}
-            {...(isMarketingPageExternal(features.marketing)
+            href={getDocsPageUrl('/docs/advanced/security', localMarketing)}
+            {...(isMarketingPageExternal(localMarketing)
               ? { target: '_blank', rel: 'noopener noreferrer' }
               : {})}
             className={cn(

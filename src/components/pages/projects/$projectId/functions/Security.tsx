@@ -1,4 +1,5 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useMemo } from 'react'
+import { useSyncStateFromServer } from '@/hooks/use-sync-state-from-server'
 import { useParams } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
 import {
@@ -25,16 +26,10 @@ export function View() {
   )
 
   // Execute permissions live on the function's `execute` attribute (array of role names, e.g. ["any"], ["users"])
-  const [execute, setExecute] = useState<string[]>([])
-  const [scopes, setScopes] = useState<string[] | null>(null)
-
-  // Initialize state from function data
-  useEffect(() => {
-    if (func) {
-      setExecute(func.execute || [])
-      setScopes(func.scopes || [])
-    }
-  }, [func])
+  const [execute, setExecute] = useSyncStateFromServer(func?.execute || [])
+  const [scopes, setScopes] = useSyncStateFromServer<string[] | null>(
+    func ? func.scopes || [] : null,
+  )
 
   // Update function mutation
   const updateFunctionMutation = useMutation({

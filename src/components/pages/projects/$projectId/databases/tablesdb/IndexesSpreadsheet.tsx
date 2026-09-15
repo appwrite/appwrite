@@ -788,7 +788,10 @@ export function IndexesSpreadsheet({
                           variant={
                             index.status === 'available'
                               ? 'success'
-                              : 'processing'
+                              : index.status === 'failed' ||
+                                  index.status === 'stuck'
+                                ? 'error'
+                                : 'processing'
                           }
                           className="text-[11px] font-medium capitalize"
                         >

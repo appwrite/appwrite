@@ -3,6 +3,7 @@ layout: changelog
 title: "Appwrite CLI now supports multi-file project configuration"
 date: 2026-05-06
 cover:
+tags: cli, databases, storage, functions
 ---
 
 Appwrite CLI 20.0.0 adds support for splitting large `appwrite.config.json` files into multiple local JSON files with a new `includes` field.

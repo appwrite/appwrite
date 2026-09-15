@@ -1,9 +1,9 @@
+// Keep global CSS in the static entry graph so Start includes it in SSR HTML.
+import './styles.css'
 import { createRouter } from '@tanstack/react-router'
 import * as TanstackQuery from './integrations/tanstack-query/root-provider'
 import { setupQueryClientRouterIntegration } from './integrations/tanstack-query/ssr-integration'
 
-// Import the generated route tree
-import { routeTree } from './routeTree.gen'
 import { ErrorComponent } from './components/error/Component'
 import { NotFound } from './components/error/NotFound'
 import {
@@ -19,8 +19,12 @@ import {
 // static build (text "Loading data for you" then logo).
 
 // Create a new router instance
-export function getRouter() {
+export async function getRouter() {
   const rqContext = TanstackQuery.getContext()
+
+  // Dynamic import breaks routeTree.gen ↔ router circular dependency (Register
+  // augmentation type-imports this module; static import can TDZ under SSR).
+  const { routeTree } = await import('./routeTree.gen')
 
   const router = createRouter({
     routeTree,
@@ -39,6 +43,9 @@ export function getRouter() {
     // Fires when any route CatchBoundary catches - before the error UI mounts.
     // Critical for max-update-depth and other crashes that can break the error page.
     defaultOnCatch: (error, errorInfo) => {
+      // Stale hashed chunks often surface here as a generic TypeError from
+      // lazyRouteComponent, not as an unhandled import rejection.
+      if (tryReloadForStaleChunk(error)) return
       reportRouterCaughtError(error, errorInfo, {
         source: 'router-defaultOnCatch',
       })
@@ -78,13 +85,14 @@ export function getRouter() {
       if (!event.error && !event.message) return
       reportUnhandledError(event.error ?? event.message, 'window.error')
     }
-    // Vite dispatches this when a dynamically imported chunk fails to load
-    // (common right after a deploy deletes the previous hashed assets).
-    // This is the canonical signal - no message matching required.
+    // Vite dispatches this when a dynamically imported chunk fails to load.
+    // Do not reload on the event alone (Firefox cancels intent preloads with
+    // the same signal). tryReloadForStaleChunk only reloads after MIME / 404
+    // confirmation on a hashed /assets/ URL.
     const onVitePreloadError = (event: Event) => {
       const payload = (event as Event & { payload?: unknown }).payload
       if (
-        tryReloadForStaleChunk(payload ?? 'vite:preloadError', {
+        tryReloadForStaleChunk(payload, {
           event,
           fromVitePreload: true,
         })

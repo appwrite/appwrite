@@ -3,6 +3,7 @@ layout: changelog
 title: "Appwrite 1.6.1 is now available"
 date: 2025-02-06
 cover: /images/changelog/2025-02-06.avif
+tags: functions, realtime, performance, infrastructure
 ---
 
 We're excited to announce a new update packed with features, fixes, and improvements to enhance your self-hosted Appwrite instance! This release focuses on performance, stability, and expanded functionality.

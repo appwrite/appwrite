@@ -8,7 +8,7 @@ timeToRead: 06
 author: laura-du-ry
 callToAction: true
 unlisted: true
-category: product
+category: products
 faqs:
   - question: "What is the difference between IdP-initiated and SP-initiated SSO?"
     answer: "IdP-initiated SSO starts at the identity provider portal (the user picks an app from a dashboard), while SP-initiated SSO starts at the service the user is trying to use, which then redirects them to the IdP to authenticate. The end result is the same logged in session, but the trigger and redirect flow are different."

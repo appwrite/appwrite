@@ -7,7 +7,7 @@ lastUpdated: 2026-06-29
 cover: /images/blog/track-document-order-with-sequence/cover.avif
 timeToRead: 6
 author: ebenezer-don
-category: tutorial
+category: tutorials
 faqs:
   - question: "What is the $sequence column in Appwrite?"
     answer: "$sequence is a system column that Appwrite assigns to every row on creation. It is a unique, auto-incrementing integer scoped to the table, so the first row gets 1, the second gets 2, and so on. It is read only and cannot be modified or reused."

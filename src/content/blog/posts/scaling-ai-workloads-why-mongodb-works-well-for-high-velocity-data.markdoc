@@ -6,7 +6,7 @@ date: 2026-04-02
 cover: /images/blog/scaling-ai-workloads-why-mongodb-works-well-for-high-velocity-data/cover.avif
 timeToRead: 4
 author: atharva
-category: product
+category: products
 featured: false
 faqs:
   - question: "Why is MongoDB a good fit for AI workloads?"

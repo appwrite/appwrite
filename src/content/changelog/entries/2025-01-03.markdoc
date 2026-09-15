@@ -2,6 +2,7 @@
 layout: changelog
 title: Billing improvements, UI fixes, and performance updates
 date: 2025-01-03
+tags: databases, functions, messaging, performance
 ---
 
 We've shipped several improvements to make Appwrite easier to use, including a clearer billing system, UI updates, and fixes for collections and mobile experiences.

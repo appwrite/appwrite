@@ -1,4 +1,5 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useMemo } from 'react'
+import { useSyncStateFromServer } from '@/hooks/use-sync-state-from-server'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import {
@@ -50,13 +51,9 @@ export function SiteRuntimeImageCard({
     return currentFramework.runtimes || []
   }, [currentFramework])
 
-  const [buildRuntime, setBuildRuntime] = useState('')
-
-  useEffect(() => {
-    if (site) {
-      setBuildRuntime(site.buildRuntime || '')
-    }
-  }, [site])
+  const [buildRuntime, setBuildRuntime] = useSyncStateFromServer(
+    site?.buildRuntime || '',
+  )
 
   const updateSiteMutation = useMutation({
     mutationFn: async (updates: Partial<Models.Site>) => {

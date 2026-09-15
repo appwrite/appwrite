@@ -3,6 +3,7 @@
  */
 
 import {
+  Bell,
   CreditCard,
   KeyRound,
   LogOut,
@@ -24,6 +25,16 @@ const ACCOUNT: CommandEntry[] = [
     icon: User,
     keywords: ['profile', 'general', 'me', 'name', 'email'],
     to: () => '/account',
+  },
+  {
+    id: 'account.nav.notifications',
+    scopes: ['account'],
+    kind: 'navigation',
+    label: 'Account · Notifications',
+    description: 'Browser alerts and notification preferences',
+    icon: Bell,
+    keywords: ['notifications', 'alerts', 'browser', 'desktop', 'build'],
+    to: () => '/account/notifications',
   },
   {
     id: 'account.nav.security',
@@ -99,6 +110,18 @@ const ACCOUNT: CommandEntry[] = [
     keywords: ['mfa', '2fa', 'totp', 'authenticator', 'security'],
     available: (ctx) => Boolean(ctx.features.accountMfa),
     to: () => '/account/security#card-mfa',
+  },
+  {
+    id: 'account.card.notifications.browser-alerts',
+    scopes: ['account'],
+    kind: 'card',
+    group: 'Notifications',
+    label: 'Notifications · Browser alerts',
+    description: 'Desktop alerts when builds finish in the background',
+    icon: Bell,
+    keywords: ['notifications', 'alerts', 'browser', 'desktop', 'build'],
+    available: (ctx) => Boolean(ctx.features.browserAlerts),
+    to: () => '/account/notifications#card-browser-alerts',
   },
 ]
 

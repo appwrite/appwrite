@@ -44,6 +44,7 @@ import {
 } from '@/lib/usage/chart-interval'
 import { UsageChartXAxis, UsageChartYAxis } from '@/components/global/shared/ChartXAxis'
 import { USAGE_CHART_RESPONSIVE_CONTAINER_PROPS } from '@/lib/usage/chart-layout'
+import { usageChartRefreshingClassName } from '@/lib/usage/usage-chart-loading'
 
 type MetricType = OverviewChartTabId
 
@@ -63,6 +64,7 @@ interface RequestsChartProps {
   chartInterval?: UsageChartInterval
   chartData?: ChartPoint[]
   isLoading?: boolean
+  isRefreshing?: boolean
   isError?: boolean
   onRetry?: () => void
   /** When set, chart error state shows Upgrade plan instead of retry. */
@@ -130,6 +132,7 @@ function buildSkeletonChartData(
 function coarsenUsageChartInterval(
   interval: UsageChartInterval,
 ): UsageChartInterval {
+  if (interval === '1m') return '15m'
   if (interval === '15m') return '1h'
   if (interval === '1h') return '1d'
   return '1d'
@@ -262,6 +265,7 @@ export const RequestsChart = memo(function RequestsChart({
   chartInterval = DEFAULT_USAGE_CHART_INTERVAL,
   chartData: chartDataProp = [],
   isLoading = false,
+  isRefreshing = false,
   isError = false,
   onRetry,
   upgradeOrgId,
@@ -391,8 +395,9 @@ export const RequestsChart = memo(function RequestsChart({
               overviewChartPanelChartAreaClass,
               'text-muted-foreground',
               isSkeleton && 'pointer-events-none',
+              usageChartRefreshingClassName(isRefreshing && !isSkeleton),
             )}
-            aria-busy={isSkeleton}
+            aria-busy={isSkeleton || isRefreshing || undefined}
             aria-label={isSkeleton ? t('Loading usage data') : undefined}
           >
             {showEmptyState ? (

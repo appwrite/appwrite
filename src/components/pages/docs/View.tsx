@@ -1,8 +1,14 @@
+import { useLocation } from '@tanstack/react-router'
 import type { DocsPageData } from '@/lib/docs/types'
 import { getDocsPage } from '@/lib/docs/content'
 import { DOCS_CONTENT_HMR_EVENT } from '@/lib/docs/docs-content-hmr-runtime'
-import { pageHasDocsPrompt, resolveDocsPagePrompt } from '@/lib/docs/route-prompts'
-import { useEffect, useRef, useState } from 'react'
+import {
+  pageHasDocsPrompt,
+  resolveDocsPagePrompt,
+} from '@/lib/docs/route-prompts'
+import { docsArticlePathForSlug } from '@/lib/docs/docs-scroll'
+import { normalizeDocsRoutePathname } from '@/lib/docs/docs-slug'
+import { startTransition, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { DocsLayout } from './DocsLayout'
 import { DocsMarkdown } from './DocsMarkdown'
 import { DocsPageHeaderActions } from './DocsPageHeaderActions'
@@ -40,13 +46,62 @@ function isSameDocsPage(a: DocsPageData, b: DocsPageData): boolean {
 
 export function View({ page: initialPage }: ViewProps) {
   const [page, setPage] = useState(initialPage)
+  const { pathname, hash } = useLocation()
   const pageRef = useRef(page)
   pageRef.current = page
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (isSameDocsPage(pageRef.current, initialPage)) return
+    if (pageRef.current.meta.slug === initialPage.meta.slug) return
+
+    // Swap destination article content before paint so hash scrolling does not
+    // run against stale markup or snap after the user already scrolled.
     setPage(initialPage)
   }, [initialPage])
+
+  useEffect(() => {
+    if (isSameDocsPage(pageRef.current, initialPage)) return
+    if (pageRef.current.meta.slug !== initialPage.meta.slug) return
+
+    startTransition(() => {
+      setPage(initialPage)
+    })
+  }, [initialPage])
+
+  useLayoutEffect(() => {
+    // Use loader data for the destination slug so hash scrolling does not wait
+    // on deferred local page state (which lets users scroll before a late snap).
+    if (
+      normalizeDocsRoutePathname(pathname) !==
+        docsArticlePathForSlug(initialPage.meta.slug) ||
+      !hash
+    ) {
+      return
+    }
+
+    const main = document.getElementById('main-content')
+    if (!main) return
+
+    let id = hash.replace(/^#/, '')
+    try {
+      id = decodeURIComponent(id)
+    } catch {
+      // A malformed escape can still be a literal heading ID.
+    }
+    const target = document.getElementById(id)
+    if (!target || !main.contains(target)) return
+
+    const margin = parseFloat(getComputedStyle(target).scrollMarginTop) || 0
+    main.scrollTo({
+      top:
+        main.scrollTop +
+        target.getBoundingClientRect().top -
+        main.getBoundingClientRect().top -
+        main.clientTop -
+        margin,
+      behavior: 'instant',
+    })
+  }, [pathname, hash, initialPage.meta.slug])
 
   useEffect(() => {
     if (!import.meta.env.DEV) return
@@ -58,7 +113,9 @@ export function View({ page: initialPage }: ViewProps) {
       void getDocsPage(initialPage.meta.slug).then((next) => {
         if (cancelled || !next) return
         if (isSameDocsPage(pageRef.current, next)) return
-        setPage(next)
+        startTransition(() => {
+          setPage(next)
+        })
         // Restore scroll after layout so content swap does not jump to the bottom.
         requestAnimationFrame(() => {
           writeDocsScrollTop(scrollTop)
@@ -92,6 +149,7 @@ export function View({ page: initialPage }: ViewProps) {
         readingTimeMinutes={page.meta.readingTimeMinutes}
         toc={page.toc}
         headerActions={headerActions}
+        showStepNav={page.meta.layout === 'tutorial'}
       >
         {promptText ? (
           <DocsPromptBanner

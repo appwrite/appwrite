@@ -3,6 +3,7 @@ layout: changelog
 title: Announcing Deno support on Appwrite Cloud
 date: 2024-10-09
 cover: /images/changelog/2024-10-09.avif
+tags: functions, security, infrastructure
 ---
 
 Today, Appwrite expands the Cloud Function ecosystem with a new, powerful runtime that offers developers simplicity and security: introducing Deno support.

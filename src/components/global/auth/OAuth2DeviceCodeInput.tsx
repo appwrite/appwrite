@@ -1,22 +1,19 @@
 'use client'
 
-import { REGEXP_ONLY_DIGITS_AND_CHARS } from 'input-otp'
-import {
-  InputOTP,
-  InputOTPGroup,
-  InputOTPSeparator,
-  InputOTPSlot,
-} from '@/components/ui/input-otp'
+import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
 
-export const OAUTH2_DEVICE_CODE_LENGTH = 6
+// Projects choose their own user code length; the server clamps it to 6..12 and
+// Cloud's console project issues 8. The page cannot read that setting -- it runs
+// before sign-in -- so accept up to the maximum and let the server judge.
+export const OAUTH2_DEVICE_CODE_MAX_LENGTH = 12
 
 /** Keep only the characters device user codes are built from. */
 export function normalizeUserCode(value: string): string {
   return value
     .toUpperCase()
     .replace(/[^A-Z0-9]/g, '')
-    .slice(0, OAUTH2_DEVICE_CODE_LENGTH)
+    .slice(0, OAUTH2_DEVICE_CODE_MAX_LENGTH)
 }
 
 type OAuth2DeviceCodeInputProps = {
@@ -31,7 +28,8 @@ type OAuth2DeviceCodeInputProps = {
 }
 
 /**
- * Six-slot device user code input, matching the console OTP layout.
+ * Device user code input. A fixed slot count cannot hold a code whose length
+ * varies by project, so this is a plain field that normalises what it is given.
  */
 export function OAuth2DeviceCodeInput({
   id,
@@ -44,54 +42,29 @@ export function OAuth2DeviceCodeInput({
   'aria-invalid': ariaInvalid,
 }: OAuth2DeviceCodeInputProps) {
   return (
-    <InputOTP
+    <Input
       id={id}
-      maxLength={OAUTH2_DEVICE_CODE_LENGTH}
+      type="text"
       value={normalizeUserCode(value)}
-      onChange={(next) => {
+      onChange={(event) => {
         if (readOnly) return
-        onChange?.(normalizeUserCode(next))
+        onChange?.(normalizeUserCode(event.currentTarget.value))
       }}
-      disabled={disabled || readOnly}
+      disabled={disabled}
+      readOnly={readOnly}
       autoFocus={autoFocus}
+      placeholder="XXXXXXXX"
       inputMode="text"
-      autoComplete="one-time-code"
+      // Not one-time-code: the code is shown on another device, so SMS autofill
+      // would only ever offer the wrong value.
+      autoComplete="off"
+      autoCapitalize="characters"
       spellCheck={false}
-      pushPasswordManagerStrategy="none"
-      pattern={REGEXP_ONLY_DIGITS_AND_CHARS}
-      pasteTransformer={normalizeUserCode}
       aria-invalid={ariaInvalid}
-      containerClassName={cn('w-full justify-center', className)}
-    >
-      <InputOTPGroup className="flex-1">
-        <InputOTPSlot
-          index={0}
-          className="h-16 w-full font-mono text-2xl uppercase"
-        />
-        <InputOTPSlot
-          index={1}
-          className="h-16 w-full font-mono text-2xl uppercase"
-        />
-        <InputOTPSlot
-          index={2}
-          className="h-16 w-full font-mono text-2xl uppercase"
-        />
-      </InputOTPGroup>
-      <InputOTPSeparator />
-      <InputOTPGroup className="flex-1">
-        <InputOTPSlot
-          index={3}
-          className="h-16 w-full font-mono text-2xl uppercase"
-        />
-        <InputOTPSlot
-          index={4}
-          className="h-16 w-full font-mono text-2xl uppercase"
-        />
-        <InputOTPSlot
-          index={5}
-          className="h-16 w-full font-mono text-2xl uppercase"
-        />
-      </InputOTPGroup>
-    </InputOTP>
+      className={cn(
+        'h-16 text-center font-mono text-2xl tracking-[0.3em] uppercase',
+        className,
+      )}
+    />
   )
 }

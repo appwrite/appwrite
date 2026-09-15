@@ -15,7 +15,6 @@ Create `provider/src/lib/tasks.ts` with an in-memory store, keyed by user ID. It
 // provider/src/lib/tasks.ts
 // TaskFlow's task data, keyed by the owner's user ID. A stand-in for
 // your product's database so the guide stays focused on OAuth.
-import '@tanstack/react-start/server-only'
 
 export type Task = {
   id: string

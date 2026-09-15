@@ -6,7 +6,7 @@ date: 2023-12-22
 cover: /images/blog/changelog.avif
 timeToRead: 5
 author: eldad-fux
-category: product, announcement
+category: products, announcements
 faqs:
   - question: "Where can I find the Appwrite changelog?"
     answer: "The Appwrite changelog lives at [appwrite.io/changelog](/changelog) and is also surfaced through a badge in the website navigation when there are new entries. Each entry summarizes a release, feature, or fix and links to related blog posts, docs, or videos where relevant."

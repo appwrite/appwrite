@@ -583,3 +583,32 @@ export function useRepositoryContents(
     staleTime: DEFAULT_STALE_TIME,
   })
 }
+
+/**
+ * Authorize deployments for a GitHub pull request opened by an external
+ * contributor. Owners hit this from the GitHub check comment.
+ */
+export async function approveExternalDeployments(
+  projectId: string,
+  installationId: string,
+  repositoryId: string,
+  providerPullRequestId: string,
+): Promise<{}> {
+  if (
+    !projectId ||
+    !installationId ||
+    !repositoryId ||
+    !providerPullRequestId
+  ) {
+    throw new Error(
+      'Project ID, installation ID, repository ID, and pull request ID are required',
+    )
+  }
+
+  const projectSdk = sdk.forProject(projectId)
+  return await projectSdk.vcs.updateExternalDeployments({
+    installationId,
+    repositoryId,
+    providerPullRequestId,
+  })
+}

@@ -39,6 +39,7 @@ export const DEFAULT_SCOPES = [
   'migrations.write',
   'vcs.write',
   'rules.write',
+  'events.read',
   'billing.read',
 ] as const
 
@@ -60,6 +61,8 @@ export type ConsoleAccess = {
   canSeeMessages: boolean
   canSeeTeams: boolean
   canSeeSites: boolean
+  /** Activity / audit log events (`GET /activities/events`). */
+  canSeeEvents: boolean
   canSeeBilling: boolean
   // Write scopes (project level)
   canWriteProjects: boolean
@@ -107,6 +110,7 @@ export function deriveAccessFromRolesScopes(
     canSeeMessages: has('messages.read'),
     canSeeTeams: has('teams.read'),
     canSeeSites: has('sites.read'),
+    canSeeEvents: has('events.read'),
     canSeeBilling: has('billing.read'),
     canWriteProjects: has('projects.write'),
     canWriteDatabases: has('databases.write'),

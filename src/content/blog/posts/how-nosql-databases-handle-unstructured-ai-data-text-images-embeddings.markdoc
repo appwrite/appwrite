@@ -6,7 +6,7 @@ date: 2026-04-02
 cover: /images/blog/how-nosql-databases-handle-unstructured-ai-data-text-images-embeddings/cover.avif
 timeToRead: 5
 author: atharva
-category: product
+category: products
 featured: false
 faqs:
   - question: "Why are NoSQL databases better for AI applications than relational ones?"

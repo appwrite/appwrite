@@ -35,7 +35,10 @@ export function getMarketingPageUrl(
   path: MarketingPagePath,
   marketingEnabled: boolean,
 ): string {
-  return marketingEnabled ? path : `${MARKETING_SITE_ORIGIN}${path}`
+  if (marketingEnabled) return path
+  // Production homepage is `/`; `/home` is this console's marketing route.
+  if (path === '/home') return `${MARKETING_SITE_ORIGIN}/`
+  return `${MARKETING_SITE_ORIGIN}${path}`
 }
 
 export function isMarketingPageExternal(marketingEnabled: boolean): boolean {
@@ -207,9 +210,7 @@ export function resolveSiteLinkUrl(href: string, marketingEnabled: boolean): str
 
   const marketingPath = parseMarketingSitePagePath(href)
   if (marketingPath) {
-    return marketingEnabled
-      ? marketingPath
-      : `${MARKETING_SITE_ORIGIN}${marketingPath}`
+    return getMarketingPageUrl(marketingPath as MarketingPagePath, marketingEnabled)
   }
 
   return href

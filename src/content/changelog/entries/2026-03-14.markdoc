@@ -3,6 +3,7 @@ layout: changelog
 title: 'User impersonation for Appwrite Auth'
 date: 2026-03-14
 cover: /images/blog/announcing-user-impersonation/cover.avif
+tags: auth, databases, security
 ---
 
 Trusted operators can now impersonate users in Appwrite Auth to reproduce issues, validate permissions, and provide hands-on support without sharing credentials.

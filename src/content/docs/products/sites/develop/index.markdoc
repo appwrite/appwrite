@@ -70,7 +70,7 @@ To install your dependencies before your site is built, you should add the relev
 ![Install command](/images/docs/sites/build-settings-install-command.avif)
 {% /only_light %}
 
-Make sure to include dependency files like `package.json` in your site's configured root directory. Do not include the dependency folders like `node_modules` in your site’s root directory. The dependencies installed for your local OS may not work in the site's environment.
+Make sure to include dependency files like `package.json` in your site's configured root directory. Do not include the dependency folders like `node_modules` in your site’s root directory. The dependencies installed for your local OS may not work in the site's environment.
 
 Your site's dependencies should be managed by the package manager of each language. We include the following package managers and setup commands by default.
 

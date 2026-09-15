@@ -86,6 +86,7 @@ export const jaCatalog: EnCatalog = {
         cache: 'Cache',
         blocks: 'Blocks',
         generator: 'Generator',
+        impersonate: 'なりすまし',
       },
       search: {
         ...enCatalog.app.header.search,
@@ -146,6 +147,7 @@ export const jaCatalog: EnCatalog = {
           ...enCatalog.app.footer.expanded.products,
           auth: '認証',
           databases: 'データベース',
+          postgresql: 'PostgreSQL',
           storage: 'ストレージ',
           functions: 'Functions',
           messaging: 'メッセージング',
@@ -192,6 +194,7 @@ export const jaCatalog: EnCatalog = {
           vsSupabase: 'Appwrite vs. Supabase', // pragma: allowlist secret
           vsFirebase: 'Appwrite vs. Firebase', // pragma: allowlist secret
           vsNeon: 'Appwrite vs. Neon', // pragma: allowlist secret
+          postgresqlHosting: 'PostgreSQL ホスティング',
           vsVercel: 'Appwrite vs. Vercel', // pragma: allowlist secret
           vsNetlify: 'Appwrite vs. Netlify', // pragma: allowlist secret
           vsCloudinary: 'Appwrite vs. Cloudinary', // pragma: allowlist secret
@@ -239,6 +242,7 @@ export const jaCatalog: EnCatalog = {
       badges: {
         ...enCatalog.app.sidebar.badges,
         soon: '近日公開',
+        new: '新着',
       },
       accessibility: {
         ...enCatalog.app.sidebar.accessibility,
@@ -267,11 +271,6 @@ export const jaCatalog: EnCatalog = {
       noRecentPages: '最近のページはありません',
       searchPlaceholder: '検索...',
     },
-    consoleBanner: {
-      ...enCatalog.app.consoleBanner,
-      messagePrefix: 'アイデアを動くプロダクトに。Vibe coding powered by',
-      dismiss: 'バナーを閉じる',
-    },
     debugMenu: enCatalog.app.debugMenu,
   },
   website: {
@@ -294,9 +293,9 @@ export const jaCatalog: EnCatalog = {
       heroImageAlt:
         '使用量グラフ、アプリ、API キーを表示する Appwrite コンソールの概要', // pragma: allowlist secret
       startProject: 'プロジェクトを開始',
-      requestDemo: 'デモを依頼',
+      viewDocs: 'ドキュメントを見る',
+      mcpIncluded: 'MCP 同梱',
       toolsHeading: 'お気に入りのフレームワーク、言語、エージェント向けに最適化',
-      aiDocsNavLabel: 'AI と MCP ドキュメント',
       productsHeadingLineOne: '必要なサービスをすべて',
       productsHeadingLineTwo: '一つのプラットフォームに',
       productsDescription:
@@ -304,12 +303,6 @@ export const jaCatalog: EnCatalog = {
       securityHeading: 'アーキテクチャのすべてのレイヤーに組み込まれたセキュリティ',
       securityDescription:
         'セキュリティファーストのアプローチにより、Appwrite はプロダクトとユーザーをデフォルトで安全に保ち、厳格なポリシーへの準拠を容易にします。', // pragma: allowlist secret
-      aiDocLinks: {
-        ...enCatalog.website.home.aiDocLinks,
-        mcpServers: 'MCP サーバー',
-        skills: 'Appwrite Skills', // pragma: allowlist secret
-        aiArena: 'AI Arena',
-      },
       securityItems: {
         ...enCatalog.website.home.securityItems,
         ddosTitle: 'DDoS 保護',
@@ -350,7 +343,7 @@ export const jaCatalog: EnCatalog = {
         authDescription:
           'メール、SMS、OAuth、匿名セッション、Magic URL でユーザーを安全に認証します。',
         databasesDescription:
-          'Appwrite データベース、またはネイティブ PostgreSQL と MySQL でモデル化、クエリ、スケールし、ユースケースとチームのニーズに合わせられます。', // pragma: allowlist secret
+          'Appwrite データベース、またはマネージド PostgreSQL と MySQL でモデル化、クエリ、スケールし、ユースケースとチームのニーズに合わせられます。', // pragma: allowlist secret
         storageDescription:
           '圧縮、暗号化、画像変換、アクセス制御でファイルを保存します。',
         functionsDescription:
@@ -404,7 +397,7 @@ export const jaCatalog: EnCatalog = {
         items: {
           ...enCatalog.website.products.navigation.items,
           authTagline: 'メール、OAuth、SMS、MFA、チーム、セッション。',
-          databasesTagline: 'TablesDB, DocumentsDB, VectorsDB, PostgreSQL, MySQL.',
+          databasesTagline: 'マネージド PostgreSQL、TablesDB、DocumentsDB、VectorsDB、MySQL。',
           storageTagline: 'CDN でファイルをアップロード、変換、配信。',
           functionsTagline: '大規模な API、Cron ジョブ、イベントハンドラー。',
           messagingTagline: 'トピックとターゲットでメール、SMS、プッシュ。',

@@ -7,7 +7,7 @@ lastUpdated: 2026-06-29
 cover: /images/blog/pdf-generation/pdf.avif
 timeToRead: 5
 author: luke-silver
-category: tutorial
+category: tutorials
 faqs:
   - question: "Why use Appwrite Functions to generate PDFs instead of running a separate service?"
     answer: "Appwrite Functions give you scalability, reliability, and security without managing infrastructure. You write a small piece of backend code, point a domain at it, and the function handles HTTP traffic. There is no separate server to provision, monitor, or scale."

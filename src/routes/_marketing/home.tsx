@@ -1,5 +1,8 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { MARKETING_PAGE_ROUTE_STATIC_DATA } from '@/lib/marketing/route-static-data'
+import {
+  MARKETING_PAGE_ROUTE_STATIC_DATA,
+  marketingRouteLifetime,
+} from '@/lib/marketing/route-static-data'
 import {
   ArrowRight,
   BadgeCheck,
@@ -39,6 +42,7 @@ import { TestimonialsSection } from '@/components/pages/home/TestimonialsSection
 import { ProductBentoVisualDeferred } from '@/components/pages/home/product-bento/ProductBentoVisualDeferred'
 import { ProductBentoCardLink } from '@/components/pages/home/product-bento/ProductBentoCardLink'
 import { MarketingSiteLink } from '@/components/global/shared/MarketingSiteLink'
+import { McpIcon } from '@/components/global/shared/McpIcon'
 import { Button } from '@/components/ui/button'
 import { analyticsAttrs } from '@/lib/analytics-actions'
 import { marketingProductToolkit } from '@/lib/marketing/product-toolkit'
@@ -69,12 +73,6 @@ const frameworkTools = [
   { name: HOME_COPY.frameworkTools.bun, icon: '/icons/bun.svg', href: '/docs/products/functions/runtimes' },
 ] as const
 
-const aiDocLinks = [
-  { label: HOME_COPY.aiDocLinks.mcpServers, href: '/docs/tooling/ai/mcp-servers' },
-  { label: HOME_COPY.aiDocLinks.skills, href: '/docs/tooling/ai/skills' }, // pragma: allowlist secret
-  { label: HOME_COPY.aiDocLinks.aiArena, href: 'https://arena.appwrite.io/', external: true }, // pragma: allowlist secret
-] as const
-
 type ProductBentoProductId = Extract<
   ProductNavItemId,
   | 'auth'
@@ -91,6 +89,8 @@ type ProductBentoLayoutItem = {
   id: ProductBentoProductId
   icon: LucideIcon
   className: string
+  /** Separators between tiles only; never a border around the whole grid. */
+  dividerClassName: string
   tall?: boolean
   /** Tighter copy block so the visual gets more room (bottom row). */
   compact?: boolean
@@ -105,12 +105,14 @@ const productBentoLayout: ProductBentoLayoutItem[] = [
     icon: Users,
     className:
       'lg:col-span-4 lg:col-start-1 lg:row-start-1 lg:row-span-2',
+    dividerClassName: 'border-b lg:border-e',
   },
   {
     id: 'databases',
     icon: Database,
     className:
       'lg:col-span-8 lg:col-start-5 lg:row-start-1 lg:row-span-3',
+    dividerClassName: 'border-b',
     tall: true,
     mobileVisualTall: true,
   },
@@ -119,18 +121,21 @@ const productBentoLayout: ProductBentoLayoutItem[] = [
     icon: Folder,
     className:
       'lg:col-span-4 lg:col-start-1 lg:row-start-3 lg:row-span-2',
+    dividerClassName: 'border-b lg:border-e',
   },
   {
     id: 'functions',
     icon: Zap,
     className:
       'lg:col-span-4 lg:col-start-1 lg:row-start-5 lg:row-span-2',
+    dividerClassName: 'border-b lg:border-e',
   },
   {
     id: 'sites',
     icon: Globe,
     className:
       'lg:col-span-8 lg:col-start-5 lg:row-start-4 lg:row-span-3',
+    dividerClassName: 'border-b',
     tall: true,
   },
   {
@@ -138,6 +143,7 @@ const productBentoLayout: ProductBentoLayoutItem[] = [
     icon: MessageSquare,
     className:
       'lg:col-span-4 lg:col-start-1 lg:row-start-7 lg:row-span-2',
+    dividerClassName: 'border-b lg:border-b-0 lg:border-e',
     compact: true,
   },
   {
@@ -145,6 +151,7 @@ const productBentoLayout: ProductBentoLayoutItem[] = [
     icon: Shield,
     className:
       'lg:col-span-4 lg:col-start-5 lg:row-start-7 lg:row-span-2',
+    dividerClassName: 'border-b lg:border-b-0 lg:border-e',
     compact: true,
     badgeLabelKey: 'firewallNewLabel',
   },
@@ -153,6 +160,7 @@ const productBentoLayout: ProductBentoLayoutItem[] = [
     icon: Radio,
     className:
       'lg:col-span-4 lg:col-start-9 lg:row-start-7 lg:row-span-2',
+    dividerClassName: '',
     compact: true,
   },
 ]
@@ -234,6 +242,7 @@ const HOME_HERO_LIGHT_SRC = `/images/heroes/console-app-light.avif?v=${HOME_HERO
 const HOME_HERO_DARK_SRC = `/images/heroes/console-app-dark.avif?v=${HOME_HERO_IMAGE_CACHE_BUST}`
 
 export const Route = createFileRoute('/_marketing/home')({
+  ...marketingRouteLifetime,
   staticData: {
     ...MARKETING_PAGE_ROUTE_STATIC_DATA,
     headerBanner: 'init-org-promo',
@@ -308,13 +317,13 @@ function HomePage() {
               <span className="text-[var(--brand-cta)]">_</span>
             </h1>
 
-            <p className="mx-auto mt-5 max-w-4xl text-[15px] leading-6 text-muted-foreground sm:text-[16px] sm:leading-7">
+            <p className="mx-auto mt-7 max-w-4xl text-[15px] leading-6 text-muted-foreground sm:text-[16px] sm:leading-7">
               {homeCopy.heroDescriptionLineOne}
               <br />
               {homeCopy.heroDescriptionLineTwo}
             </p>
 
-            <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-2">
               <Button variant="brandCta" size="lg" className="h-10 text-[14px]" asChild>
                 <Link
                   to="/sign-up"
@@ -326,12 +335,19 @@ function HomePage() {
               </Button>
               <Button variant="outline" size="lg" className="h-10 text-[14px]" asChild>
                 <MarketingSiteLink
-                  href="/enterprise"
-                  {...analyticsAttrs('home-request-demo')}
+                  href="/docs"
+                  {...analyticsAttrs('home-view-docs')}
                 >
-                  {homeCopy.requestDemo}
+                  {homeCopy.viewDocs}
                 </MarketingSiteLink>
               </Button>
+            </div>
+          </div>
+
+          <div className="relative z-[1] mt-8 flex justify-center sm:mt-10">
+            <div className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background/80 px-3 py-1 text-[12px] text-muted-foreground">
+              <McpIcon className="size-3.5" />
+              <span>{homeCopy.mcpIncluded}</span>
             </div>
           </div>
 
@@ -407,41 +423,12 @@ function HomePage() {
               ))}
             </div>
           </div>
-
-          <nav
-            className="mt-7 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-[12px] font-medium text-muted-foreground"
-            aria-label={homeCopy.aiDocsNavLabel}
-          >
-            {aiDocLinks.map((link, index) => (
-              <span key={link.href} className="flex items-center gap-2">
-                {index > 0 ? (
-                  <span className="text-muted-foreground/40" aria-hidden>
-                    ·
-                  </span>
-                ) : null}
-                {'external' in link && link.external ? (
-                  <a
-                    href={link.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="link-neutral text-[12px]"
-                  >
-                    {link.label}
-                  </a>
-                ) : (
-                  <MarketingSiteLink href={link.href} className="link-neutral text-[12px]">
-                    {link.label}
-                  </MarketingSiteLink>
-                )}
-              </span>
-            ))}
-          </nav>
         </section>
 
         {/* Top customer logos - hidden for now. Restore from git history when needed. */}
 
         <section className="bg-background py-16 sm:py-20">
-          <div className="mx-auto w-full max-w-7xl px-4 sm:px-6">
+          <div className="mx-auto w-full max-w-[84rem] px-4 sm:px-6">
             <div className="mx-auto max-w-3xl text-center">
               <h2 className="font-aeonik-pro text-[40px] font-normal leading-none tracking-tight text-foreground sm:text-[48px]">
                 {homeCopy.productsHeadingLineOne}
@@ -461,7 +448,7 @@ function HomePage() {
               scale={{ href: '#scale' }}
             />
 
-            <div className="product-bento-grid mt-10 grid gap-3 sm:gap-4 lg:grid-cols-12 lg:grid-rows-[repeat(8,minmax(0,1fr))] lg:min-h-[960px]">
+            <div className="product-bento-grid mt-10 grid overflow-hidden rounded-xl border border-border lg:grid-cols-12 lg:grid-rows-[repeat(8,minmax(0,1fr))] lg:min-h-[960px]">
               {productBentoItems.map((item) => {
                 const Icon = item.icon
                 const href = item.href
@@ -469,7 +456,7 @@ function HomePage() {
                 return (
                   <article
                     key={item.id}
-                    className={`${item.className} group relative flex cursor-pointer flex-col overflow-hidden rounded-xl border border-border bg-card/50 hover:bg-accent/10 ${item.mobileVisualTall ? 'min-h-[540px]' : 'min-h-[380px]'} ${item.tall ? 'lg:min-h-0' : ''}`}
+                    className={`${item.className} ${item.dividerClassName} group relative flex cursor-pointer flex-col overflow-hidden border-border p-5 hover:bg-accent/10 sm:p-6 lg:p-7 ${item.mobileVisualTall ? 'min-h-[540px]' : 'min-h-[380px]'} ${item.tall ? 'lg:min-h-0' : ''}`}
                   >
                     {href ? (
                       <ProductBentoCardLink href={href} title={item.title} />
@@ -478,13 +465,11 @@ function HomePage() {
                     <div
                       className={`pointer-events-none relative z-[2] flex min-h-0 flex-1 flex-col lg:h-full ${item.tall ? 'lg:min-h-full' : ''}`}
                     >
-                      <div
-                        className={`relative z-10 shrink-0 px-4 pt-4 ${item.compact ? 'pb-2' : 'pb-2.5'}`}
-                      >
+                      <div className="relative z-10 shrink-0 pb-3">
                         <div className="flex items-center gap-2">
                           <span className="flex size-7 items-center justify-center rounded-md border border-border bg-muted/40">
                             <Icon
-                              className="size-3.5 text-[var(--brand-cta)]"
+                              className="size-3.5 text-foreground"
                               aria-hidden
                             />
                           </span>
@@ -498,31 +483,34 @@ function HomePage() {
                           ) : null}
                         </div>
                         <p
-                          className={`mt-2 min-h-10 max-w-xl text-[13px] leading-5 text-muted-foreground ${item.compact ? 'line-clamp-2' : 'line-clamp-3'}`}
+                          className={`mt-2 min-h-10 text-[13px] leading-5 text-muted-foreground ${item.compact ? 'line-clamp-2' : 'line-clamp-3'}`}
                         >
                           {item.description}
                         </p>
                       </div>
 
                       <div
-                        className={`relative flex min-h-0 flex-1 flex-col px-3 pb-3 sm:px-3.5 sm:pb-3.5 ${item.mobileVisualTall ? 'max-lg:min-h-[460px]' : ''}`}
+                        className={`relative isolate min-h-0 flex-1 overflow-hidden contain-paint ${
+                          item.mobileVisualTall
+                            ? 'min-h-[280px] max-lg:min-h-[460px] lg:min-h-[15rem]'
+                            : item.compact
+                              ? 'min-h-[240px] lg:min-h-[11rem]'
+                              : item.tall
+                                ? 'min-h-[260px] lg:min-h-[14rem]'
+                                : 'min-h-[260px] lg:min-h-[12rem]'
+                        }`}
+                        aria-hidden
                       >
-                        <div
-                          className={`relative isolate min-h-0 flex-1 overflow-hidden rounded-lg border border-border bg-muted/20 contain-paint ${
-                            item.mobileVisualTall
-                              ? 'min-h-[280px] lg:min-h-[15rem]'
-                              : item.compact
-                                ? 'min-h-[240px] lg:min-h-[11rem]'
-                                : item.tall
-                                  ? 'min-h-[260px] lg:min-h-[14rem]'
-                                  : 'min-h-[260px] lg:min-h-[12rem]'
-                          }`}
-                          aria-hidden
-                        >
-                          <ProductBentoSoftLights />
-                          <div className="absolute inset-0 p-2 sm:p-2.5">
-                            <ProductBentoVisualDeferred productId={item.id} />
-                          </div>
+                        <ProductBentoSoftLights
+                          blend
+                          placement={
+                            item.id === 'sites' || item.id === 'databases'
+                              ? 'bottom'
+                              : 'center'
+                          }
+                        />
+                        <div className="absolute inset-0">
+                          <ProductBentoVisualDeferred productId={item.id} />
                         </div>
                       </div>
                     </div>

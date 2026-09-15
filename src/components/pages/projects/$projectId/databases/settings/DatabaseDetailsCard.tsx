@@ -8,6 +8,7 @@ import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import {
   invalidateDatabaseModel,
+  refetchProjectDatabaseLists,
   updateProjectDatabase,
 } from '@/lib/react-query/hooks'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
@@ -51,19 +52,18 @@ export function DatabaseDetailsCard({
         dbKind,
       )
     },
-    onSuccess: (_data, nextEnabled) => {
+    onSuccess: async (_data, nextEnabled) => {
+      invalidateDatabaseModel(projectId, databaseId)
+      await queryClient.refetchQueries({
+        queryKey: ['database', 'project', projectId, databaseId],
+      })
+      // List queries use refetchOnMount: false, so refetch (not invalidate).
+      await refetchProjectDatabaseLists(queryClient, projectId)
       toast.success(
         nextEnabled
           ? t('Database has been enabled')
           : t('Database has been disabled'),
       )
-      invalidateDatabaseModel(projectId, databaseId)
-      queryClient.invalidateQueries({
-        queryKey: ['database', 'project', projectId, databaseId],
-      })
-      queryClient.invalidateQueries({
-        queryKey: ['databases', 'project', projectId],
-      })
     },
     onError: (error: unknown) => {
       toast.error(getErrorMessage(error))

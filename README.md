@@ -43,7 +43,7 @@ The Appwrite Console provides a comprehensive interface for managing all aspects
 
 ## Prerequisites
 
-- [Bun](https://bun.sh/) (v1.0 or later)
+- [Bun](https://bun.sh/) (v1.4 or later)
 - Node.js 18+ (if not using Bun)
 - An Appwrite instance or Appwrite Cloud account
 
@@ -117,7 +117,7 @@ bun run serve
 
 Run with `bun run <command>`. Scripts live in `scripts/`; each task maps to a file by replacing `:` with `-` (`generate:sitemap` → `generate-sitemap.ts`). Helpers without a task live in `scripts/lib/`.
 
-**Namespaces:** `import:` pulls content from the sibling [`website`](https://github.com/appwrite/website) repo (`../website`); `generate:` writes derived artifacts. Vibes-native content in `src/content/docs-local/` and `src/content/blog-local/` is never overwritten by imports.
+**Namespaces:** `generate:` writes derived artifacts (manifests, sitemaps, images) from the content in `src/content/`.
 
 | Command                               | Description                                                                                                                       |
 | ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
@@ -128,22 +128,30 @@ Run with `bun run <command>`. Scripts live in `scripts/`; each task maps to a fi
 | `e2e` / `e2e:ui` / `test` / `test:ui` | Playwright e2e smoke tests                                                                                                        |
 | `format` / `format:check`             | Prettier                                                                                                                          |
 | `install-browsers`                    | Install Chromium for Playwright                                                                                                   |
-| `lint`                                | ESLint                                                                                                                            |
+| `lint`                                | ESLint, connect-snippet width, and hidden Unicode in `src/content`                                                                |
+| `lint:content`                        | Fail if blog/docs/changelog/integrations contain NBSP, zero-width, or BOM characters (`--fix` to rewrite)                         |
 | `serve`                               | Preview production build                                                                                                          |
 | `start`                               | Production Bun server                                                                                                             |
-| `import:blog`                         | Import blog from website                                                                                                          |
-| `import:docs`                         | Import docs from website, then `generate:docs`                                                                                    |
-| `import:integrations`                 | Import integrations catalog                                                                                                       |
-| `generate:blog-local-images`          | Blog-local cover images (optional slug)                                                                                           |
+| `generate:blog-images`                | Blog cover images (optional slug)                                                                                                 |
 | `generate:content-images`             | Convert content images to AVIF                                                                                                    |
-| `generate:docs`                       | Docs manifest, nav, LLM exports, sitemap                                                                                          |
+| `generate:docs`                       | Docs manifest, LLM exports, sitemap                                                                                               |
 | `generate:docs-exports`               | Curated `llms.txt` hub, `docs/llms.txt`, section indexes (`docs.md`, `blog.md`, …), `/.well-known` discovery, and `llms-full.txt` |
-| `generate:docs-nav`                   | Docs section navigation only                                                                                                      |
 | `generate:github-stars`               | GitHub star count JSON                                                                                                            |
 | `generate:public-icon-manifest`       | Public icon picker manifest                                                                                                       |
 | `generate:routes`                     | TanStack Router types                                                                                                             |
 | `generate:sitemap`                    | Sitemap files                                                                                                                     |
 | `generate:specs`                      | API reference versions; `--copy` after build for `dist/specs/`                                                                    |
+
+## API specification source
+
+Use the pinned `@appwrite.io/specs` dependency directly, rather than maintaining local Markdown snapshots:
+
+- OpenAPI definitions: `node_modules/@appwrite.io/specs/specs/` (latest and versioned specs).
+- API Explorer loader: `src/lib/api-explorer/load-spec.ts`.
+- API reference loaders: `src/server/api-reference/`.
+- SDK method signatures and response types: `node_modules/@appwrite.io/console/src/services/` and `src/models.ts` within that package. Use these for SDK-specific arguments and `Models.*` types.
+
+`bun run generate:specs` generates reference version metadata. After the build, `bun run generate:specs --copy` copies the dependency's specs and examples into `dist/specs/` for production rendering. Keep both build steps; no root-level `specs/*.md` files are needed.
 
 ## Project Structure
 
@@ -260,11 +268,14 @@ bun run test:ui
 
 ## Linting & Formatting
 
-This project uses ESLint and Prettier for code quality:
+This project uses ESLint and Prettier for code quality. `bun run lint` also checks connect-snippet line width and hidden Unicode (NBSP, zero-width, BOM) in `src/content`.
 
 ```bash
 # Lint code
 bun run lint
+
+# Rewrite hidden Unicode in content to normal spaces
+bun run lint:content -- --fix
 
 # Format code
 bun run format
@@ -287,7 +298,7 @@ bun run format:check
 | ----------------------------- | -------- | ------------------------------ | ---------------------------------------------------------------- |
 | `VITE_APPWRITE_ENDPOINT`      | Yes      | `https://cloud.appwrite.io/v1` | Appwrite API endpoint                                            |
 | `VITE_CONSOLE_PROFILE`        | No       | `cloud`                        | `cloud` or `self-hosted` – controls which features are available |
-| `VITE_CONSOLE_WEBSITE_ACCESS` | No       | on (unset)                     | Demo password gate (`/access`). Set `false` to disable           |
+| `VITE_CONSOLE_PRE_LAUNCH`     | No       | off (unset)                    | Pre-launch lock (`/init` only). Set `true` to enable             |
 | `VITE_STRIPE_PUBLISHABLE_KEY` | No       | -                              | Stripe publishable key for billing                               |
 | `VITE_COMPANY_NAME`           | No       | `Appwrite`                     | Company name for branding                                        |
 | `VITE_CONTACT_SALES_URL`      | No       | -                              | Contact sales page URL                                           |

@@ -5,6 +5,9 @@
 export const heSharedUiDictionary: Record<string, string> = {
   // Error formatting (toast titles and static messages) // pragma: allowlist secret
   Error: 'שגיאה',
+  'Error reporting': 'דיווח שגיאות',
+  'Crash and performance diagnostics to help us fix issues in Appwrite.':
+    'שולחים נתוני קריסות וביצועים כדי שנוכל לתקן תקלות ב-Appwrite.',
   'Not Found': 'לא נמצא',
   'Access Denied': 'הגישה נדחתה',
   Forbidden: 'אין הרשאה',
@@ -68,12 +71,14 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Active session:': 'סשן פעיל:',
   'Add account': 'הוספת חשבון',
   'Add filter': 'הוספת סינון',
+  'Add value': 'הוספת ערך',
   'Add installation': 'הוספת התקנה',
   'Add one or more environment variables. You can add multiple variables at once.':
     'הוסיפו משתנה סביבה אחד או יותר. אפשר להוסיף כמה משתנים בבת אחת.',
   'Add variable': 'הוספת משתנה',
   All: 'הכול',
   'All shortcuts': 'כל הקיצורים',
+  'All timezones': 'כל אזורי הזמן',
   'All variable keys are required': 'כל מפתחות המשתנים נדרשים',
   'Always active': 'פעילות תמיד',
   Amount: 'כמות',
@@ -99,8 +104,8 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Build must be ready before activating.':
     'הבנייה חייבת להיות מוכנה לפני ההפעלה.',
   'Build output': 'פלט בנייה',
-  'Build output is available after the deployment has completed.':
-    'פלט הבנייה זמין לאחר שהפריסה הושלמה.',
+  'Build output is only available for ready deployments.':
+    'פלט הבנייה זמין רק לפריסות מוכנות.',
   // pragma: allowlist secret
   'CLI deployments are created using the Appwrite command line tool, useful for developer workflows and scripted automation.':
     'פריסות CLI נוצרות באמצעות כלי שורת הפקודה של Appwrite, שימושי לתהליכי עבודה של מפתחים ולאוטומציה בסקריפטים.', // pragma: allowlist secret
@@ -143,6 +148,8 @@ export const heSharedUiDictionary: Record<string, string> = {
   Content: 'תוכן',
   'Cookie preferences': 'העדפות עוגיות',
   'Cookies Policy': 'מדיניות העוגיות',
+  'We use cookies to improve Appwrite.':
+    'אנחנו משתמשים בעוגיות כדי לשפר את Appwrite.',
   'Copied line': 'השורה הועתקה',
   'Copied to clipboard': 'הועתק ללוח',
   Copy: 'העתקה',
@@ -220,6 +227,8 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Execution ID': 'מזהה הרצה',
   Exit: 'יציאה',
   'Exit impersonation': 'יציאה מהתחזות',
+  Share: 'שיתוף',
+  'Copy impersonation link': 'העתקת קישור התחזות',
   'Expanded image': 'תמונה מוגדלת',
 
   // Errors and failures
@@ -253,6 +262,7 @@ export const heSharedUiDictionary: Record<string, string> = {
   Filters: 'סינונים',
   'Find a branch...': 'חיפוש ענף...',
   'Fix payment': 'הסדרת התשלום',
+  'Authorize payment': 'אישור תשלום',
   'Fix with an Agent': 'תיקון עם סוכן',
   'For me': 'עבורי',
   'For team': 'עבור הצוות',
@@ -261,7 +271,7 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Get help from our support team': 'קבלו עזרה מצוות התמיכה שלנו',
   'Get started by creating your first item.':
     'התחילו ביצירת הפריט הראשון שלכם.',
-  'Organization': 'ארגון',
+  Organization: 'ארגון',
   'Git repository': 'Git repo',
   'GitHub Issues': 'GitHub Issues',
   'GitHub repository': 'GitHub repo',
@@ -415,6 +425,7 @@ export const heSharedUiDictionary: Record<string, string> = {
     'אין עדיין סינונים שמורים. הוסיפו סינונים בלשונית הסינונים ושמרו אותם כאן לגישה מהירה.',
   'No scopes match your search.': 'אין הרשאות התואמות את החיפוש.',
   'No types': 'אין סוגים',
+  'No timezones found': 'לא נמצאו אזורי זמן',
   'No units found': 'לא נמצאו יחידות',
   'No users to show': 'אין משתמשים להצגה',
   'No values found': 'לא נמצאו ערכים',
@@ -439,6 +450,8 @@ export const heSharedUiDictionary: Record<string, string> = {
   Path: 'נתיב',
   'Payment failed - act now. Unresolved billing may interrupt your projects and services.':
     'התשלום נכשל - פעלו עכשיו. בעיית חיוב שלא נפתרה עלולה לשבש את הפרויקטים והשירותים שלכם.',
+  'Payment authorization required. Complete authentication now. Unresolved billing may interrupt your projects and services.':
+    'נדרש אישור תשלום. השלימו את האימות עכשיו. בעיית חיוב שלא נפתרה עלולה לשבש את הפרויקטים והשירותים שלכם.',
   'Payment failed - your organization has restricted access due to an unresolved billing issue. Changes to projects and services are restricted until payment succeeds. Update billing to restore full access.':
     'התשלום נכשל - לארגון שלכם יש גישה מוגבלת עקב בעיית חיוב שלא נפתרה. שינויים בפרויקטים ובשירותים מוגבלים עד להשלמת התשלום. עדכנו את פרטי החיוב כדי לשחזר גישה מלאה.',
   Preview: 'תצוגה מקדימה',
@@ -535,6 +548,7 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Search repositories...': 'חיפוש repos...',
   'Search scopes...': 'חיפוש הרשאות…',
   'Search templates...': 'חיפוש תבניות...',
+  'Search timezones...': 'חיפוש אזורי זמן…',
   'Search units...': 'חיפוש יחידות…',
   'Search values...': 'חיפוש ערכים…',
   'Searching resources…': 'מחפש משאבים…',
@@ -549,6 +563,7 @@ export const heSharedUiDictionary: Record<string, string> = {
 
   Secret: 'סודי',
   'Select a bucket to browse files': 'בחרו באקט כדי לעיין בקבצים',
+  'Select a timezone': 'בחירת אזור זמן',
   'Select a service to build': 'בחרו שירות לבנייה',
   'Select all': 'בחירת הכול',
   'Select function to execute...': 'בחרו פונקציה להרצה...',
@@ -668,7 +683,8 @@ export const heSharedUiDictionary: Record<string, string> = {
     'המתינו לסיום הבנייה או בטלו אותה קודם',
   'Waiting for build logs...': 'ממתין ללוגים של הבנייה...',
   // pragma: allowlist secret
-  'We use essential cookies to keep you signed in, manage site access, and remember your preferences. With your permission, we also use analytics to understand how Appwrite is used and improve it. Read our': // pragma: allowlist secret
+  // pragma: allowlist secret
+  'We use essential cookies to keep you signed in, manage site access, and remember your preferences. With your permission, we also use analytics to understand how Appwrite is used and improve it. Read our':
     'אנחנו משתמשים בעוגיות חיוניות כדי לשמור אתכם מחוברים, לנהל גישה לאתר ולזכור את ההעדפות שלכם. באישורכם, אנחנו משתמשים גם באנליטיקה כדי להבין איך Appwrite בשימוש ולשפר אותו. קראו את', // pragma: allowlist secret
   'We value your privacy': 'הפרטיות שלכם חשובה לנו',
   'You cannot impersonate your own operator account.':
@@ -838,6 +854,11 @@ export const heSharedUiDictionary: Record<string, string> = {
 
   // Table filters: column titles from filter configs
   'Resource type': 'סוג משאב',
+  'Resource ID': 'מזהה משאב',
+  'Resource path': 'נתיב משאב',
+  'Resource parent': 'משאב אב',
+  'Actor email': 'אימייל מבצע',
+  'Event ID': 'מזהה אירוע',
   'Event path': 'נתיב אירוע',
   Signature: 'חתימה',
   'Deployment status': 'סטטוס פריסה',
@@ -847,6 +868,10 @@ export const heSharedUiDictionary: Record<string, string> = {
   // Table filters: enum value labels from filter configs
   'User / key': 'משתמש / מפתח',
   'User (client API)': 'משתמש (Client API)',
+  Hidden: 'מוסתר',
+  'App installation': 'התקנת אפליקציה',
+  Subscriber: 'מנוי',
+  Report: 'דיווח',
   Verifying: 'באימות',
   Relationship: 'קשר',
   Point: 'נקודה',
@@ -1086,6 +1111,8 @@ export const heSharedUiDictionary: Record<string, string> = {
 
   // Command center: local actions and groups
   'See all keyboard shortcuts': 'הצגת כל קיצורי המקלדת',
+  'Pick a console user to operate as. Your operator account stays signed in.':
+    'בחרו משתמש קונסול לפעול בשמו. חשבון האופרטור שלכם נשאר מחובר.',
   'Pick a function to execute': 'בחירת פונקציה להרצה',
   'Open project activity log': 'פתיחת יומן הפעילות של הפרויקט',
   'View activity log': 'צפייה ביומן הפעילות',
@@ -1218,15 +1245,10 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Light backgrounds': 'רקעים בהירים',
   'Dark backgrounds': 'רקעים כהים',
   'Plain, bottom pink & purple': 'חלק, ורוד וסגול מלמטה',
-  'Square grid': 'רשת ריבועים',
   'Plain, bottom teal ambient glow': 'חלק, זוהר טורקיז מלמטה',
   'Plain, monochrome shade glow': 'חלק, זוהר מונוכרום',
   'Solid background with soft corner glow, no texture.':
     'רקע אחיד עם זוהר רך בפינות, בלי טקסטורה.',
-  'Large square cells with scattered tinted tiles.':
-    'תאים ריבועיים עם אריחים צבעוניים מפוזרים.',
-  'Large square cells with monochrome shade tiles.':
-    'תאים ריבועיים עם אריחי מונוכרום מפוזרים.',
   'Plain dark background with a large teal light leak from the lower-left corner.':
     'רקע כהה אחיד עם דליפת אור טורקיז גדולה מהפינה השמאלית התחתונה.',
   'Plain dark background with soft corner washes in a darker shade of the same color.':
@@ -1239,4 +1261,15 @@ export const heSharedUiDictionary: Record<string, string> = {
   Red: 'אדום',
   Blue: 'כחול',
   Slate: 'אפור',
+  'Increase time': 'העלאת זמן',
+  'Decrease time': 'הורדת זמן',
+  'Start impersonation': 'התחלת התחזות',
+  'Could not load this user.': 'לא ניתן היה לטעון את המשתמש הזה.',
+  "The Console will run with this user's access until you exit impersonation. Actions stay attributed to your operator account.":
+    'המסוף יפעל עם ההרשאות של המשתמש הזה עד שתצאו ממצב ההתחזות. הפעולות יישארו משויכות לחשבון האופרטור שלכם.',
+  'Operator access': 'גישת אופרטור',
+  'Operator account': 'חשבון אופרטור',
+  'After you confirm, the Console will open this page.':
+    'אחרי שתאשרו, המסוף ייפתח בעמוד הזה.',
+  'Not set': 'לא הוגדר',
 }

@@ -1,4 +1,9 @@
 import { parseDateOnly, resolveInitDayUnlockDate } from './dates'
+import {
+  formatInitScheduleEventZoneTime,
+  INIT_SCHEDULE_LIVE_DURATION_MS,
+  parseInitScheduleTime,
+} from './schedule-time'
 import { resolveInitCurrentDay, resolveInitRecapMode } from './event-visibility'
 import type { LaunchEvent, LaunchEventScheduleItem } from './types'
 
@@ -18,16 +23,24 @@ function initPageAnchor(dayNumber: number): string {
   return `${INIT_PAGE_PATH}#day-${dayNumber}`
 }
 
+/** Schedule-only days (e.g. the community recap) have no day card to link to. */
+function initScheduleItemAnchor(
+  event: LaunchEvent,
+  item: LaunchEventScheduleItem,
+): string {
+  const hasDayCard = event.days.some((entry) => entry.day === item.day)
+  return hasDayCard ? initPageAnchor(item.day) : INIT_PAGE_PATH
+}
+
 export type InitCalendarVisibilityOptions = {
-  now?: Date
-  mockCurrentDay?: number | null
+  currentDay?: number
 }
 
 function getInitCalendarCurrentDay(
   event: LaunchEvent,
   options?: InitCalendarVisibilityOptions,
 ): number {
-  return resolveInitCurrentDay(event, options?.now, options?.mockCurrentDay ?? null)
+  return resolveInitCurrentDay(event, options?.currentDay)
 }
 
 function isInitCalendarDayLocked(
@@ -35,7 +48,7 @@ function isInitCalendarDayLocked(
   dayNumber: number,
   options?: InitCalendarVisibilityOptions,
 ): boolean {
-  if (resolveInitRecapMode(event, options?.now, options?.mockCurrentDay ?? null)) {
+  if (resolveInitRecapMode(event, options?.currentDay)) {
     return false
   }
 
@@ -213,47 +226,29 @@ function formatGoogleCalendarDate(date: Date): string {
   return formatIcsDateOnly(date)
 }
 
-function formatGoogleCalendarDateTime(date: Date): string {
-  return `${formatIcsDateOnly(date)}T${String(date.getHours()).padStart(2, '0')}${String(
-    date.getMinutes(),
-  ).padStart(2, '0')}00`
-}
-
-function parseScheduleTimeLabel(timeLabel: string): {
-  hours: number
-  minutes: number
-} | null {
-  const match = timeLabel.trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i)
-  if (!match) return null
-
-  const hour = Number.parseInt(match[1], 10)
-  const minutes = Number.parseInt(match[2], 10)
-  const period = match[3].toUpperCase()
-  if (hour < 1 || hour > 12 || minutes < 0 || minutes > 59) return null
-
-  return {
-    hours: (hour % 12) + (period === 'PM' ? 12 : 0),
-    minutes,
-  }
+/** UTC timestamp form, so calendar clients resolve the viewer's own zone. */
+function formatCalendarUtcDateTime(date: Date): string {
+  return formatIcsUtcTimestamp(date)
 }
 
 function getInitScheduleItemDateRange(
   event: LaunchEvent,
   item: LaunchEventScheduleItem,
 ): { start: Date; end: Date; allDay: boolean } {
-  const start = resolveInitDayUnlockDate(event.startDate, item.day)
-  const parsedTime = parseScheduleTimeLabel(item.timeLabel)
+  const start = parseInitScheduleTime(item.startsAt)
 
-  if (!parsedTime) {
-    const end = new Date(start)
-    end.setDate(end.getDate() + 1)
-    return { start, end, allDay: true }
+  if (!start) {
+    const fallbackStart = resolveInitDayUnlockDate(event.startDate, item.day)
+    const fallbackEnd = new Date(fallbackStart)
+    fallbackEnd.setDate(fallbackEnd.getDate() + 1)
+    return { start: fallbackStart, end: fallbackEnd, allDay: true }
   }
 
-  start.setHours(parsedTime.hours, parsedTime.minutes, 0, 0)
-  const end = new Date(start)
-  end.setHours(end.getHours() + 1)
-  return { start, end, allDay: false }
+  return {
+    start,
+    end: new Date(start.getTime() + INIT_SCHEDULE_LIVE_DURATION_MS),
+    allDay: false,
+  }
 }
 
 function getInitScheduleItemPlatformLabel(
@@ -278,9 +273,9 @@ function getInitScheduleItemDescription(
   item: LaunchEventScheduleItem,
 ): string {
   const details = [
-    `${getInitScheduleItemPlatformLabel(item.platform)} · ${item.timeLabel}`,
+    `${getInitScheduleItemPlatformLabel(item.platform)} · ${formatInitScheduleEventZoneTime(item.startsAt)}`,
     '',
-    `View on Init: ${initPageAnchor(item.day)}`,
+    `View on Init: ${initScheduleItemAnchor(event, item)}`,
   ]
 
   if (item.href) {
@@ -306,8 +301,8 @@ function buildInitScheduleItemCalendarEvent(
         `DTEND;VALUE=DATE:${formatIcsDateOnly(end)}`,
       ]
     : [
-        `DTSTART:${formatGoogleCalendarDateTime(start)}`,
-        `DTEND:${formatGoogleCalendarDateTime(end)}`,
+        `DTSTART:${formatCalendarUtcDateTime(start)}`,
+        `DTEND:${formatCalendarUtcDateTime(end)}`,
       ]
 
   return [
@@ -319,7 +314,7 @@ function buildInitScheduleItemCalendarEvent(
     foldIcsLine(
       `DESCRIPTION:${escapeIcsText(getInitScheduleItemDescription(event, item))}`,
     ),
-    `URL:${resolveInitPageUrl()}#day-${item.day}`,
+    `URL:${resolveInitPageUrl()}${initScheduleItemAnchor(event, item).slice(INIT_PAGE_PATH.length)}`,
     'END:VEVENT',
   ].join('\r\n')
 }
@@ -347,7 +342,7 @@ export function buildGoogleCalendarScheduleItemEventUrl(
   const { start, end, allDay } = getInitScheduleItemDateRange(event, item)
   const dates = allDay
     ? `${formatGoogleCalendarDate(start)}/${formatGoogleCalendarDate(end)}`
-    : `${formatGoogleCalendarDateTime(start)}/${formatGoogleCalendarDateTime(end)}`
+    : `${formatCalendarUtcDateTime(start)}/${formatCalendarUtcDateTime(end)}`
 
   const params = new URLSearchParams({
     action: 'TEMPLATE',

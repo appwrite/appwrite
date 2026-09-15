@@ -3,6 +3,7 @@ layout: changelog
 title: "Introducing the TablesDB API with updated terminology"
 date: 2025-08-26
 cover: /images/blog/announcing-appwrite-databases-new-ui/cover.avif
+tags: databases, api
 ---
 Announcing significant updates to Appwrite Databases!
 

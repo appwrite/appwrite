@@ -6,7 +6,7 @@ date: 2024-10-11
 cover: /images/blog/should-you-stop-using-otp-sms/cover.avif
 timeToRead: 7
 author: aditya-oberai
-category: product
+category: products
 featured: false
 faqs:
   - question: "Should I stop using SMS OTPs in my app?"
@@ -70,14 +70,14 @@ To overcome the limitations of SMS OTPs, several more secure and technically adv
 
 # Passwordless authentication with Appwrite
 
-Appwrite Authentication also features three passwordless authentication methods: [magic links](https://appwrite.io/docs/products/auth/magic-url), [email OTPs](https://appwrite.io/docs/products/auth/email-otp), and [SMS OTPs](https://appwrite.io/docs/products/auth/phone-sms), which can be integrated into applications seamlessly with Appwrite's client-side SDKs.
+Appwrite Authentication also features three passwordless authentication methods: [magic links](https://appwrite.io/docs/products/auth/magic-url), [email OTPs](https://appwrite.io/docs/products/auth/email-otp), and [SMS OTPs](https://appwrite.io/docs/products/auth/phone-sms), which can be integrated into applications seamlessly with Appwrite's client-side SDKs.
 
 {% tabs %}
 {% tabsitem #magicurl title="Magic URLs" %}
 
 Magic URL authentication is a two-step process in Appwrite.
 
-First, we initialize the login process by sending an email with the magic URL. If the email has never been used, a new account is also generated.
+First, we initialize the login process by sending an email with the magic URL. If the email has never been used, a new account is also generated.
 
 ```jsx
 import { Client, Account, ID } from "appwrite";
@@ -113,7 +113,7 @@ const user = await account.createSession({
 
 Email OTP authentication is a two-step process in Appwrite.
 
-First, we initialize the login process by sending an email. If the email has never been used, a new account is also generated.
+First, we initialize the login process by sending an email. If the email has never been used, a new account is also generated.
 
 ```jsx
 import { Client, Account, ID } from "appwrite";

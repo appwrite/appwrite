@@ -5,6 +5,7 @@ import { sdk } from '@/lib/appwrite/sdk'
 import { AppwriteException } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import {
+  isValidRelativeRedirect,
   prefetchPostAuthDestination,
   requiresConsoleEmailVerification,
   resolvePostAuthRedirect,
@@ -16,14 +17,6 @@ import {
   refreshConsoleAccountAfterAuth,
 } from '@/lib/react-query/hooks/auth'
 import { pageTitle } from '@/lib/utils/page-title'
-
-function isValidRelativeRedirect(url: string): boolean {
-  try {
-    return url.startsWith('/') && !url.includes('://')
-  } catch {
-    return false
-  }
-}
 
 const searchSchema = z.object({
   redirect: z
@@ -125,9 +118,11 @@ function MFAPage() {
   }
 
   return (
-    <div className="bg-background relative flex min-h-svh flex-col items-center justify-center p-6 md:p-10">
-      <div className="w-full max-w-sm md:max-w-4xl">
-        <MFAChallenge factors={loaderData.factors} redirect={search.redirect} />
+    <div className="bg-background relative h-full overflow-y-auto">
+      <div className="flex min-h-full flex-col items-center p-6 md:p-10">
+        <div className="my-auto w-full max-w-sm md:max-w-4xl">
+          <MFAChallenge factors={loaderData.factors} redirect={search.redirect} />
+        </div>
       </div>
     </div>
   )

@@ -1,10 +1,14 @@
 import type { ApiSpecPlatform, OpenApiSpec, ParsedApiSpec } from './types'
-import { mergeConsoleOnlyDatabaseServices, parseOpenApiSpec } from './parse-spec'
+import {
+  mergeConsoleOnlyDatabaseServices,
+  parseOpenApiSpec,
+} from './parse-spec'
 import { LATEST_EXAMPLES_VERSION } from '@/lib/docs/references/reference-versions'
 
 /**
  * Numbered console OpenAPI used for native DB engines (postgresql / mysql / mongo).
- * The floating `latest` console folder may still ship the legacy `/compute` surface.
+ * The floating `latest` console folder may still ship the legacy `/compute` surface;
+ * parse-time normalization rewrites that to the per-engine SDK paths.
  */
 const NUMBERED_CONSOLE_SPEC_LOADERS: Record<
   string,
@@ -20,9 +24,10 @@ const specLoaders: Record<
   ApiSpecPlatform,
   () => Promise<{ default: OpenApiSpec }>
 > = {
-  server: () => import('@appwrite.io/specs/specs/latest/open-api3-latest-server.json'),
-  client: () => import('@appwrite.io/specs/specs/latest/open-api3-latest-client.json'),
-  console: () => import('@appwrite.io/specs/specs/latest/open-api3-latest-console.json'),
+  server: () => import('@appwrite.io/specs/specs/latest/open-api3-latest.json'),
+  client: () => import('@appwrite.io/specs/specs/latest/open-api3-latest.json'),
+  console: () =>
+    import('@appwrite.io/specs/specs/latest/open-api3-latest.json'),
 }
 
 const parsedCache = new Map<ApiSpecPlatform, ParsedApiSpec>()
@@ -69,14 +74,19 @@ async function loadNumberedConsoleSpec(): Promise<OpenApiSpec> {
 function consoleSpecHasNativeDatabaseServices(spec: OpenApiSpec): boolean {
   for (const pathItem of Object.values(spec.paths ?? {})) {
     for (const [method, operation] of Object.entries(pathItem ?? {})) {
-      if (method.startsWith('x-') || !operation || typeof operation !== 'object') {
+      if (
+        method.startsWith('x-') ||
+        !operation ||
+        typeof operation !== 'object'
+      ) {
         continue
       }
       const tags = (operation as { tags?: string[] }).tags ?? []
       if (
         tags.includes('postgresql') ||
         tags.includes('mysql') ||
-        tags.includes('mongo')
+        tags.includes('mongo') ||
+        tags.includes('compute')
       ) {
         return true
       }

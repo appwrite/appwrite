@@ -70,7 +70,6 @@ const result = await documentsDB.createDocuments({
     ]
 });
 ```
-
 ```server-python
 from appwrite.client import Client
 from appwrite.services.documents_db import DocumentsDB
@@ -98,7 +97,109 @@ result = documents_db.create_documents(
     ]
 )
 ```
-
+```server-deno
+await documentsDB.createDocuments({
+  databaseId: '<DATABASE_ID>',
+  collectionId: '<COLLECTION_ID>',
+  documents: [
+    { $id: sdk.ID.unique(), name: 'Document 1' },
+    { $id: sdk.ID.unique(), name: 'Document 2' }
+  ]
+});
+```
+```server-php
+$documentsDB->createDocuments(
+  databaseId: '<DATABASE_ID>',
+  collectionId: '<COLLECTION_ID>',
+  documents: [
+    [ '$id' => ID::unique(), 'name' => 'Document 1' ],
+    [ '$id' => ID::unique(), 'name' => 'Document 2' ]
+  ]
+);
+```
+```server-ruby
+documents_db.create_documents(
+  database_id: '<DATABASE_ID>',
+  collection_id: '<COLLECTION_ID>',
+  documents: [
+    { '$id' => ID.unique(), 'name' => 'Document 1' },
+    { '$id' => ID.unique(), 'name' => 'Document 2' }
+  ]
+)
+```
+```server-dotnet
+await documentsDB.CreateDocuments(
+  databaseId: "<DATABASE_ID>",
+  collectionId: "<COLLECTION_ID>",
+  documents: new List<Dictionary<string, object>>
+  {
+    new Dictionary<string, object>
+    {
+      ["$id"] = ID.Unique(),
+      ["name"] = "Document 1"
+    },
+    new Dictionary<string, object>
+    {
+      ["$id"] = ID.Unique(),
+      ["name"] = "Document 2"
+    }
+  }
+);
+```
+```server-dart
+await documentsDB.createDocuments(
+  databaseId: '<DATABASE_ID>',
+  collectionId: '<COLLECTION_ID>',
+  documents: [
+    { '\$id': ID.unique(), 'name': 'Document 1' },
+    { '\$id': ID.unique(), 'name': 'Document 2' }
+  ]
+);
+```
+```server-swift
+try await documentsDB.createDocuments(
+  databaseId: "<DATABASE_ID>",
+  collectionId: "<COLLECTION_ID>",
+  documents: [
+    ["$id": ID.unique(), "name": "Document 1"],
+    ["$id": ID.unique(), "name": "Document 2"]
+  ]
+)
+```
+```server-kotlin
+documentsDB.createDocuments(
+  databaseId = "<DATABASE_ID>",
+  collectionId = "<COLLECTION_ID>",
+  documents = listOf(
+    mapOf("\$id" to ID.unique(), "name" to "Document 1"),
+    mapOf("\$id" to ID.unique(), "name" to "Document 2")
+  )
+)
+```
+```server-java
+documentsDB.createDocuments(
+  "<DATABASE_ID>",
+  "<COLLECTION_ID>",
+  Arrays.asList(
+    Map.of(
+      "$id", ID.unique(),
+      "name", "Document 1"
+    ),
+    Map.of(
+      "$id", ID.unique(),
+      "name", "Document 2"
+    )
+  ),
+  new CoroutineCallback<>((result, error) -> {
+    if (error != null) {
+      error.printStackTrace();
+      return null;
+    }
+    System.out.println(result);
+    return null;
+  })
+);
+```
 ```rust
 use appwrite::Client;
 use appwrite::services::documents_db::DocumentsDB;

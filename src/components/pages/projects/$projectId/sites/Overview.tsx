@@ -47,13 +47,14 @@ import {
 
 import { useQueryClient, useMutation } from '@tanstack/react-query'
 import { sdk } from '@/lib/appwrite/sdk'
+import { withAdminMode } from '@/lib/appwrite/admin-resource-url'
 import { DeploymentDownloadType } from '@appwrite.io/console'
 import { formatBytes } from '@/lib/utils/mock-data'
 import { Query } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import {
   getDeploymentStatusBadge,
-  isDeploymentCompleted,
+  canDownloadDeploymentBuildOutput,
   isDeploymentInProgress,
   isDeploymentTimeout,
 } from '@/lib/utils/deployment-status'
@@ -190,7 +191,7 @@ export function View() {
         deploymentId: activeDeploymentResolved.$id,
         type: DeploymentDownloadType.Source,
       })
-      const urlWithMode = url + (url.includes('?') ? '&' : '?') + 'mode=admin'
+      const urlWithMode = withAdminMode(url)
       window.open(urlWithMode, '_blank')
       toast.success(t('Download started'))
     } catch {
@@ -200,6 +201,8 @@ export function View() {
 
   const handleDownloadBuild = () => {
     if (!projectId || !siteId || !activeDeploymentResolved) return
+    if (!canDownloadDeploymentBuildOutput(activeDeploymentResolved.status))
+      return
     try {
       const projectSdk = sdk.forProject(projectId)
       const url = projectSdk.sites.getDeploymentDownload({
@@ -207,7 +210,7 @@ export function View() {
         deploymentId: activeDeploymentResolved.$id,
         type: DeploymentDownloadType.Output,
       })
-      const urlWithMode = url + (url.includes('?') ? '&' : '?') + 'mode=admin'
+      const urlWithMode = withAdminMode(url)
       window.open(urlWithMode, '_blank')
       toast.success(t('Download started'))
     } catch {
@@ -511,16 +514,16 @@ export function View() {
                     <DropdownMenuItem
                       onClick={handleDownloadBuild}
                       disabled={
-                        !isDeploymentCompleted(
+                        !canDownloadDeploymentBuildOutput(
                           activeDeploymentForCard?.status,
                         )
                       }
                       title={
-                        !isDeploymentCompleted(
+                        !canDownloadDeploymentBuildOutput(
                           activeDeploymentForCard?.status,
                         )
                           ? t(
-                              'Build output is available after the deployment has completed.',
+                              'Build output is only available for ready deployments.',
                             )
                           : undefined
                       }

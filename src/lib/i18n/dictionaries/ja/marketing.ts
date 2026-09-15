@@ -46,6 +46,8 @@ export const jaMarketingDictionary: Record<string, string> = {
   'Additional connections': '追加の接続',
   'Additional executions': '追加の実行',
   'Additional GB-hours': '追加のGB時間',
+  'Additional MiniLM embeddings': '追加の MiniLM embeddings',
+  'Additional Nomic embeddings': '追加の Nomic embeddings',
   'Additional projects': '追加のプロジェクト',
   'Additional reads': '追加の読み取り',
   'Additional screenshots': '追加のスクリーンショット',
@@ -72,6 +74,7 @@ export const jaMarketingDictionary: Record<string, string> = {
   'Allowed': '許可済み',
   'Analytics': 'アナリティクス',
   'and': 'および',
+  'and more below': 'その他は下記',
   'And more': 'その他多数',
   'Angel Investor': 'エンジェル投資家',
   'Angel Investors': 'エンジェル投資家',
@@ -351,6 +354,9 @@ export const jaMarketingDictionary: Record<string, string> = {
   'Errors': 'エラー',
   'EU data processing': 'EUデータ処理',
   'Evaluating vendors': 'ベンダー評価中',
+  'Just researching': '情報収集中',
+  'Comparing options': '選択肢を比較中',
+  'Ready to get started': '開始の準備ができている',
   'Event triggers': 'イベントトリガー',
   'Event-driven': 'イベント駆動',
   'Every day at midnight': '毎日深夜0時',
@@ -492,7 +498,9 @@ export const jaMarketingDictionary: Record<string, string> = {
   'Join a lean, AI-native team': 'リーンでAI-nativeなチームに参加',
   'Join a vibrant community': '活気あるコミュニティに参加',
   'Join Discord': 'Discordに参加',
+  'Join on Discord': 'Discordに参加',
   'Join Init': 'Initに参加',
+  'Join event': 'イベントに参加',
   'Join our Discord': 'Discordに参加',
   'Join the Appwrite Startups program': 'Appwrite Startupsプログラムに参加',
   'Join the community': 'コミュニティに参加',
@@ -512,6 +520,8 @@ export const jaMarketingDictionary: Record<string, string> = {
   'Learn more about': '詳しく見る',
   'Light Grey': 'ライトグレー',
   'Live': 'ライブ',
+  'Live now': '配信中',
+  'Loading online participants…': 'オンライン参加者を読み込み中…',
   'Log drains': 'ログドレイン',
   'Logging': 'ロギング',
   'Logomark': 'ロゴマーク',
@@ -572,10 +582,11 @@ export const jaMarketingDictionary: Record<string, string> = {
   'Number of projects': 'プロジェクト数',
   'of original': '元サイズ比',
   'Official': '公式',
-  'Official plugins': '公式プラグイン',
+  'Works great with your favorite agents': 'お気に入りのエージェントと相性抜群',
   'on GitHub': 'GitHubで',
   'On this page': 'このページの内容',
   'Online now': 'オンライン中',
+  invisible: '非表示',
   'on X': 'Xで',
   'On-set monitor during the first Init filming in Prague': 'プラハでの初回Init撮影時のモニター',
   'Once your Appwrite account is created, go to our Docs and get started with Appwrite Cloud.': 'Appwriteアカウント作成後、ドキュメントを参照してAppwrite Cloudを始めましょう。',
@@ -596,6 +607,7 @@ export const jaMarketingDictionary: Record<string, string> = {
   'Open-source alternative to Hacker News.': 'Hacker Newsのオープンソース代替。',
   'Open-source launch': 'オープンソースローンチ',
   'or': 'または',
+  'or Appwrite DBs': 'または Appwrite DBs',
   'Organization members': '組織メンバー',
   'Organization roles': '組織ロール',
   'Original': 'オリジナル',
@@ -619,6 +631,8 @@ export const jaMarketingDictionary: Record<string, string> = {
   'Partner Tiers': 'パートナーティア',
   'Partner with one of the fastest growing dev tool companies': '最も急成長している開発ツール企業の1つと提携',
   'Partners Program': 'パートナープログラム',
+  'participant online': '人がオンライン',
+  'participants online': '人がオンライン',
   'Pass a user JWT so Server SDKs inside the function respect Auth permissions.': 'ユーザーJWTを渡し、Function内のServer SDKが認証権限を尊重するように設定。',
   'Password policies': 'パスワードポリシー',
   'Password protected': 'パスワード保護',
@@ -703,6 +717,7 @@ export const jaMarketingDictionary: Record<string, string> = {
   'Recovery codes': 'リカバリーコード',
   'Redirect': 'リダイレクト',
   'Redo': 'やり直し',
+  'Reload list': 'リストを再読み込み',
   'Region': 'リージョン',
   'Region cache': 'リージョンキャッシュ',
   'Register a domain in Appwrite without leaving the Console.': 'コンソールを離れずにAppwriteでドメインを登録。',
@@ -836,6 +851,7 @@ export const jaMarketingDictionary: Record<string, string> = {
   'Start small, build consistently, and give things enough time to become real.': '小さく始め、着実に構築し、十分な時間をかけて形にする。',
   'Startups program': 'Startupsプログラム',
   'Startups Program': 'Startupsプログラム',
+  'Starting soon': 'まもなく開始',
   'Static assets': '静的アセット',
   'Static, SPA, and PWA': '静的、SPA、PWA',
   'Status': 'ステータス',
@@ -879,6 +895,8 @@ export const jaMarketingDictionary: Record<string, string> = {
   'Terminal': 'ターミナル',
   'Terms and Conditions': '利用規約',
   'Terms of Service': 'サービス利用規約',
+  'Text embeddings (MiniLM)': 'Text embeddings (MiniLM)',
+  'Text embeddings (Nomic)': 'Text embeddings (Nomic)',
   'Text verification': 'テキスト認証',
   'Thank you for applying': 'お申し込みありがとうございます',
   "Thanks for signing up. Here's how to get started with your new account.": 'サインアップありがとうございます。新しいアカウントの始め方をご案内します。',
@@ -946,7 +964,9 @@ export const jaMarketingDictionary: Record<string, string> = {
   'viewing': '閲覧中',
   'Visit the community': 'コミュニティを訪問',
   'Volume discounts': 'ボリューム割引',
-  'Volume discounts are available in case you handle the bill for your clients.': 'クライアントの請求を代行する場合、ボリューム割引が利用可能です。',
+  'Volume discounts and rev-share models are available if you handle the bill for your clients.':
+    'クライアントの請求を代行する場合、ボリューム割引と rev-share モデルが利用できます。',
+  'Watch': '視聴',
   'Ways to partner': 'パートナーシップの方法',
   'We adhere to all needed compliance: GDPR, HIPAA, CCPA, SOC-2.': 'GDPR、HIPAA、CCPA、SOC-2など、必要なすべてのコンプライアンスに準拠しています。',
   'We provide in-depth training and workshops to help you master Appwrite for your clients.': 'クライアント向けにAppwriteをマスターできるよう、詳細なトレーニングとワークショップを提供。',
@@ -1080,6 +1100,7 @@ export const jaMarketingDictionary: Record<string, string> = {
   'A special thanks to Appwrite for providing robust features and seamless functionality.': '堅牢な機能とシームレスな動作を提供してくれたAppwriteに特別な感謝を。',
   "Any student enrolled in the GitHub Student Developer Pack can apply for free and receive Appwrite's Education plan until graduation.": 'GitHub Student Developer Packに登録している学生は誰でも無料で申請でき、卒業までAppwriteのEducationプランを利用できます。',
   'Appwrite 2.0 introduced a refreshed platform experience and stronger foundations, powered by Hyperloop B, a new engine for the platform, and Console IV, a next-generation console rebuilt with TanStack.': 'Appwrite 2.0では、プラットフォームの新しいエンジンであるHyperloop Bと、TanStackで再構築された次世代コンソールConsole IVにより、刷新されたプラットフォーム体験とより強固な基盤が導入されました。',
+  'Appwrite 2.0 launch': 'Appwrite 2.0 launch',
   'Appwrite Arena launched as an open benchmark for evaluating how effectively AI models understand and work with Appwrite APIs and workflows.': 'Appwrite Arenaは、AIモデルがAppwriteのAPIとワークフローをどれだけ効果的に理解し活用できるかを評価するオープンベンチマークとしてローンチしました。',
   'Appwrite Cloud entered public beta, making the platform available without self-hosting and opening the door to managed infrastructure for teams of every size.': 'Appwrite Cloudがパブリックベータに入り、セルフホスティングなしでプラットフォームを利用できるようになり、あらゆる規模のチームにマネージドインフラストラクチャへの道を開きました。',
   'Appwrite Cloud reached general availability with production-grade reliability, expanded infrastructure, and the performance teams need to run applications at scale.': 'Appwrite Cloudは、本番環境レベルの信頼性、拡張されたインフラストラクチャ、そしてチームがアプリケーションをスケールで運用するために必要なパフォーマンスを備え、一般提供を開始しました。',
@@ -1165,7 +1186,7 @@ export const jaMarketingDictionary: Record<string, string> = {
   'Run Enterprise on fully managed Appwrite Cloud or as a premium self-hosted edition in your environment.': 'Enterpriseは、フルマネージドのAppwrite Cloud上で実行するか、環境内のプレミアムセルフホスト版として実行できます。',
   'Search 160+ TLDs with live pricing and private WHOIS. Manage DNS, connect Sites, Functions, or custom API domains, and provision TLS without leaving Appwrite.': 'リアルタイム料金とプライベートWHOISで160以上のTLDを検索。Appwriteを離れることなく、DNSの管理、Sites、Functions、カスタムAPIドメインの接続、TLSのプロビジョニングができます。',
   'Send OTP codes, delivery updates, and alerts outside your app through Twilio, Vonage, MSG91, Telesign, Textmagic, and other SMS vendors.': 'Twilio、Vonage、MSG91、Telesign、Textmagicなどの各種SMSベンダーを通じて、OTPコード、配送状況の更新、アラートをアプリの外に送信。',
-  'Send receipts, digests, and transactional mail through SendGrid, Mailgun, SMTP, and other email providers.': 'SendGrid、Mailgun、SMTPなどの各種メールプロバイダーを通じて、領収書、ダイジェスト、トランザクションメールを送信。',
+  'Send receipts, digests, and transactional mail through SendGrid, Mailgun, Amazon SES, SMTP, and other email providers.': 'SendGrid、Mailgun、Amazon SES、SMTPなどの各種メールプロバイダーを通じて、領収書、ダイジェスト、トランザクションメールを送信。',
   'Ship production features without stitching together multiple vendors or maintaining custom backend infrastructure.': '複数のベンダーをつなぎ合わせたり、カスタムのバックエンドインフラを維持したりすることなく、本番機能をリリース。',
   "Should you require further assistance or have specific needs beyond what's presented on this page, please don't hesitate to": 'このページに記載されている内容を超えて追加のサポートや特別なニーズがある場合は、お気軽に',
   'Socialaize runs hundreds of thousands of function executions per day on Cloud': 'SocialaizeはCloudで1日に数十万件のFunction実行を処理',
@@ -1326,4 +1347,137 @@ export const jaMarketingDictionary: Record<string, string> = {
   'Create and share your first link': '最初のリンクを作成して共有',
   'Generate an invite link for each campaign or channel. Signups stay attributed for 180 days, and you earn $15 when a referral upgrades to Pro.':
     'キャンペーンやチャネルごとに招待リンクを作成します。サインアップは 180 日間アトリビュートされ、紹介ユーザーが Pro にアップグレードすると $15 を獲得できます。',
+  'A skill loads first, then MCP tools fetch live Auth and Functions data.':
+    '最初に Skill を読み込み、その後 MCP ツールが Auth と Functions のライブデータを取得します。',
+  'Agents call Appwrite MCP and Skills from the same composer you already use.': // pragma: allowlist secret
+    'エージェントは、いつも使っている同じ Composer から Appwrite の MCP と Skills を呼び出します。',
+  'Ask to chart usage, scaffold auth, or query tables...':
+    '使用状況のチャート作成、Auth のスキャフォールド、テーブルの照会を依頼...',
+  'Artifact': 'Artifact',
+  'Auth is up 18% week over week. Functions executions followed the same curve after the Friday deploy.':
+    'Auth は前週比 18% 増加しています。Functions の実行数は金曜のデプロイ後に同じ曲線をたどりました。',
+  'Auth signups vs function executions': 'Auth の登録数と Functions の実行数',
+  "Chart this week's Auth signups against Functions executions":
+    '今週の Auth 登録数を Functions の実行数とグラフにして',
+  'Compare layouts': 'レイアウトを比較',
+  'Composer': 'Composer',
+  'Install Appwrite in Cursor, Claude Code, Codex, and other agents.': // pragma: allowlist secret
+    'Cursor、Claude Code、Codex、その他のエージェントに Appwrite をインストール。',
+  'MCP and Skills show up in the chat, complete with live Appwrite data and a usage chart.': // pragma: allowlist secret
+    'MCP と Skills がチャットに表示され、Appwrite のライブデータと使用状況チャートが揃います。',
+  'Query Postgres, chart traffic, and ship a campaign. Your agent does it on a live Appwrite project.': // pragma: allowlist secret
+    'Postgres の照会、トラフィックのチャート化、キャンペーンの配信。エージェントがライブの Appwrite プロジェクト上で実行します。',
+  'MCP docs': 'MCP ドキュメント',
+  'Official plugin with MCP and Skills.': 'MCP と Skills を含む公式プラグイン。',
+  'Plugins and integrations': 'プラグインとインテグレーション',
+  'Ran MCP': 'MCP を実行',
+  'Rendered chart': 'チャートを描画',
+  'Skills docs': 'Skills ドキュメント',
+  'Skills ready': 'Skills 準備完了',
+  'Spotlight': 'Spotlight',
+  'Steps': 'ステップ',
+  'Using skill': 'Skill を使用',
+  'Usage chart from Appwrite MCP': 'Appwrite MCP からの使用状況チャート',
+  'Weekly activity': '週間アクティビティ',
+  'Workbench': 'Workbench',
+  'Agent chat with Appwrite MCP': 'Appwrite MCP を使ったエージェントチャット',
+  "Query Postgres for Friday's new users. Did the launch convert?":
+    '金曜の新規ユーザーを Postgres から取得してください。ローンチはコンバージョンしましたか?',
+  '2,184 new accounts since Friday. Email verification is at 91%, so they are staying.':
+    '金曜以降、2,184件の新規アカウントです。メール認証は91%なので、定着しています。',
+  'Show requests since Friday. Did the launch spike traffic?':
+    '金曜以降のリクエストを表示して。ローンチでトラフィックは急増しましたか?',
+  '184K requests since Friday, 3.2x Thursday. Traffic is holding through the weekend.':
+    '金曜以降のリクエストは184Kで、木曜の3.2倍です。週末もトラフィックは維持されています。',
+  'Queue a Messaging campaign for the 9% who have not verified yet.':
+    'まだ認証していない9%向けに Messaging キャンペーンをキューに入れてください。',
+  'Draft is ready for 187 unverified accounts, scheduled tomorrow at 9am.':
+    '未認証の187アカウント向けの下書きが準備でき、明日9時に予約されています。',
+  'Ask to inspect logs, ship a campaign, or query tables...':
+    'ログの確認、キャンペーンの配信、テーブルの照会を依頼...',
+  '2,184 new rows in users since Friday. Email verification is at 91%. Opening the latest signups.':
+    '金曜以降、users に2,184件の新規行があります。メール認証は91%です。最新の登録を開きます。',
+  '2,184 rows since Friday': '金曜以降 2,184 行',
+  'Postgres': 'Postgres',
+  'Any failed executions from Friday?': '金曜に失敗した実行はありますか?',
+  '12 executions timed out on cold start. The rest completed.':
+    '12件の実行がコールドスタートでタイムアウトしました。残りは完了しています。',
+  'Latest signups': '最新の登録',
+  '2,184 accounts since Friday': '金曜以降 2,184 アカウント',
+  'Friday executions': '金曜の実行',
+  '12 timed out on cold start': 'コールドスタートで12件がタイムアウト',
+  'Verify your account': 'アカウントを確認',
+  '187 unverified accounts': '未確認の187アカウント',
+  'Audience': '対象',
+  'Unverified users': '未確認ユーザー',
+  'Schedule': 'スケジュール',
+  'Tomorrow, 9:00 AM': '明日 9:00',
+  'Finish creating your account to keep your data and start building.':
+    'データをを保持して構築を始めるには、アカウント作成を完了してください。',
+  'Campaign': 'キャンペーン',
+  'Upload this photo to a new Storage bucket.':
+    'この写真を新しい Storage バケットにアップロードしてください。',
+  'Created the campaign-assets bucket and uploaded kittens.jpg.':
+    'バケット campaign-assets を作成し、kittens.jpg をアップロードしました。',
+  '1 file': '1件のファイル',
+  'Remote MCP': 'リモート MCP',
+  'Authorize Appwrite MCP': 'Appwrite MCP を許可',
+  'No API key needed. Sign in with OAuth.':
+    'API キーは不要です。OAuth でサインインしてください。',
+  'Allow access': 'アクセスを許可',
+  'Authenticated with OAuth': 'OAuth で認証済み',
+  // Init day 5 grand prize CSV draw
+  'Live winner draw': 'ライブ当選者抽選',
+  'Drawn only from the verified social entries in the uploaded CSV. Online users are not part of this draw.': 'アップロードした CSV に含まれる検証済みのソーシャル投稿エントリーのみから抽選します。オンラインユーザーはこの抽選の対象外です。',
+  'Upload the verified entries CSV to build the wheel.': '検証済みエントリーの CSV をアップロードしてホイールを作成してください。',
+  'Upload the CSV first. Drop it anywhere on this card or use Upload CSV.': 'まず CSV をアップロードしてください。このカードのどこかにドロップするか、「CSV をアップロード」を使用します。',
+  'Upload CSV': 'CSV をアップロード',
+  'Replace CSV': 'CSV を置き換え',
+  'Only CSV files are accepted.': 'CSV ファイルのみ受け付けます。',
+  'The CSV has no eligible entries.': 'この CSV には対象となるエントリーがありません。',
+  'Missing required CSV columns:': '必須の CSV 列がありません:',
+  'The CSV has an unterminated quoted value.': 'CSV に閉じられていない引用符付きの値があります。',
+  'The CSV file is empty.': 'CSV ファイルが空です。',
+  'Could not read that file.': 'ファイルを読み取れませんでした。',
+  'Spin the wheel': 'ホイールを回す',
+  'Spin again': 'もう一度回す',
+  'View post': '投稿を表示',
+  'View ticket': 'チケットを表示',
+  'Press spin the wheel when you are ready to draw the grand prize winner.': '準備ができたら「ホイールを回す」を押してグランプライズの当選者を抽選してください。',
+  'What you can expect': 'ご提供内容',
+  'Our enterprise team reviews your requirements and follows up with a tailored proposal, usually within 3 business days.':
+    'Enterprise チームが要件を確認し、通常 3 営業日以内にカスタム提案でご連絡します。',
+  'Your details have been sent successfully. We usually get back within 3 business days.':
+    'お問い合わせ内容を送信しました。通常 3 営業日以内にご連絡します。',
+  'Our enterprise team will review your requirements.':
+    'Enterprise チームが要件を確認します。',
+  'We usually get back within 3 business days at': '通常 3 営業日以内に次のメールアドレス宛にご連絡します:',
+  'Compare plans and explore enterprise capabilities on our marketing site.':
+    'マーケティングサイトでプラン比較と Enterprise 機能をご確認ください。',
+  'Enterprise overview': 'Enterprise 概要',
+  'Inquiry submitted': 'お問い合わせを送信しました',
+  'Tell us about your organization and requirements. Our enterprise team will follow up with a tailored proposal.':
+    '組織と要件をお知らせください。Enterprise チームがカスタム提案でご連絡します。',
+  "We couldn't submit your inquiry": 'お問い合わせを送信できませんでした',
+  'Sales inquiries are not configured': '営業お問い合わせが設定されていません',
+  'Set VITE_GROWTH_ENDPOINT in .env to enable submission.':
+    '送信を有効にするには、.env で VITE_GROWTH_ENDPOINT を設定してください。',
+  'Sales inquiries are not configured. Set VITE_GROWTH_ENDPOINT in .env to enable submission.':
+    '営業お問い合わせが設定されていません。送信を有効にするには、.env で VITE_GROWTH_ENDPOINT を設定してください。',
+  'Something went wrong while sending your request. Please try again in a moment.':
+    'リクエストの送信中に問題が発生しました。しばらくしてからもう一度お試しください。',
+  'Your details': 'お客様情報',
+  'Fields marked with your account email help us connect your inquiry to your Appwrite account.':
+    'アカウントのメールアドレスは、お問い合わせを Appwrite アカウントと紐づけるために使用します。',
+  'You are signed in. Open the sales inquiry form to share your requirements with our enterprise team.':
+    'サインイン済みです。営業お問い合わせフォームを開いて、Enterprise チームに要件を共有してください。',
+  'Open sales form': '営業フォームを開く',
+  'SOC-2, HIPAA, SSO, extended activity logs':
+    'SOC-2、HIPAA、SSO、拡張アクティビティログ',
+  'Sign in to contact sales': 'サインインして営業に問い合わせ',
+  'Create a free account or sign in to submit an enterprise inquiry. This helps us reduce spam and connect your request to your Appwrite account.':
+    '無料アカウントを作成するかサインインして Enterprise のお問い合わせを送信してください。スパム防止と Appwrite アカウントとの紐づけに役立ちます。',
+  'Sign in to your Appwrite account and submit a sales inquiry. Our team will review your use case and schedule a conversation to scope resources, support, and deployment options.':
+    'Appwrite アカウントにサインインして営業お問い合わせを送信してください。チームがユースケースを確認し、リソース、サポート、デプロイオプションについて打ち合わせの日程を調整します。',
+  'Enter the full URL, including https://': 'https:// を含む完全な URL を入力してください',
 }

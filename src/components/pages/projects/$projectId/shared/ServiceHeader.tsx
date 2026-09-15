@@ -69,7 +69,7 @@ interface ServiceHeaderProps {
   createDisabledTooltip?: string
   showFilters?: boolean
   onFilterClick?: () => void
-  /** When provided, renders this instead of the default Filters button (e.g. a Popover trigger + content) */
+  /** When provided, renders this instead of the default Filters button (e.g. a Popover trigger + content). Implies filters are visible even when showFilters is false. */
   filterTrigger?: React.ReactNode
   /** When true, the tabs border extends full-width while tabs content stays constrained */
   fullWidthBorder?: boolean
@@ -271,9 +271,12 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
     const t = useT()
     const searchInputRef = useRef<HTMLInputElement>(null)
     const [isCollapsed, setIsCollapsed] = useState(false)
+    // A custom filterTrigger (e.g. FiltersPopover) implies filters are on;
+    // showFilters alone enables the default Filters button.
+    const filtersVisible = showFilters || Boolean(filterTrigger)
     const hasToolbar =
       onSearchChange ||
-      showFilters ||
+      filtersVisible ||
       (createLabel && (onCreate || (createTo && createParams))) ||
       rightContent ||
       showRefresh ||
@@ -548,7 +551,7 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
               )}
 
               {/* Filters */}
-              {showFilters &&
+              {filtersVisible &&
                 (filterTrigger ?? (
                   <Button
                     variant="outline"

@@ -1,5 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { MARKETING_PAGE_ROUTE_STATIC_DATA } from '@/lib/marketing/route-static-data'
+import {
+  MARKETING_PAGE_ROUTE_STATIC_DATA,
+  marketingRouteLifetime,
+} from '@/lib/marketing/route-static-data'
 import { ChangelogSeenSync } from '@/components/pages/changelog/ChangelogSeenSync'
 import { View } from '@/components/pages/changelog/View'
 import { getChangelogEntriesPage } from '@/lib/changelog/content'
@@ -8,6 +11,7 @@ import { getMarketingPageMetaTags } from '@/lib/marketing/route-meta'
 import { CHANGELOG_RSS_PATH } from '@/lib/seo/rss'
 
 export const Route = createFileRoute('/_marketing/changelog/')({
+  ...marketingRouteLifetime,
   staticData: MARKETING_PAGE_ROUTE_STATIC_DATA,
   ssr: true,
   head: () => ({
@@ -25,8 +29,9 @@ export const Route = createFileRoute('/_marketing/changelog/')({
       },
     ],
   }),
-  loader: async ({ context }) => {
-    return getChangelogEntriesPage(1)
+  loader: async () => {
+    const { entries, nextPage } = getChangelogEntriesPage(1)
+    return { entries, nextPage }
   },
   component: ChangelogPage,
 })

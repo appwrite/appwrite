@@ -1,9 +1,6 @@
+import { ContactSalesLink } from '@/components/global/shared/ContactSalesLink'
 import { UpgradePlanLink } from '@/components/global/shared/UpgradePlanLink'
-import { CONTACT_ENTERPRISE_URL } from '@/lib/pricing/constants'
 import { useT } from '@/lib/i18n/translate'
-
-const CONTACT_SALES_URL =
-  import.meta.env.VITE_CONTACT_SALES_URL || CONTACT_ENTERPRISE_URL
 
 type SpecificationsUpgradeNoteProps = {
   orgId?: string | null
@@ -26,14 +23,9 @@ export function SpecificationsUpgradeNote({
         {showContactSales ? (
           <>
             {t('or')}{' '}
-            <a
-              href={CONTACT_SALES_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-medium text-foreground underline hover:no-underline"
-            >
+            <ContactSalesLink className="font-medium text-foreground underline hover:no-underline">
               {t('contact sales')}
-            </a>{' '}
+            </ContactSalesLink>{' '}
           </>
         ) : null}
         {t('to unlock additional specifications.')}

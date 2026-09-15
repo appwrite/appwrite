@@ -20,11 +20,6 @@ export type MarketplaceAppCategory =
 
 export type MarketplaceAppStatus = 'published' | 'draft'
 
-export type MarketplaceAppCreator = {
-  name: string
-  role?: string
-}
-
 export type MarketplaceApp = {
   $id: string
   name: string
@@ -33,12 +28,15 @@ export type MarketplaceApp = {
   shortDescription: string
   category: MarketplaceAppCategory
   author: string
-  creators: MarketplaceAppCreator[]
   featured: boolean
+  /** Curated position from a `rank:N` tag; lower ranks list first, unranked apps last. */
+  rank?: number
   /** Published by Appwrite. */
   isOfficial: boolean
   /** Reviewed and trusted by Appwrite. */
   isVerified: boolean
+  /** Curated into the Explore "Suggested" section by Appwrite. */
+  isSuggested: boolean
   isOwned: boolean
   status: MarketplaceAppStatus
   tags: string[]
@@ -57,6 +55,8 @@ export type MarketplaceApp = {
   type?: string
   deviceFlow?: boolean
   teamId?: string
+  /** Empty when the app does not allow installation. */
+  installationScopes: string[]
 }
 
 export const MARKETPLACE_CATEGORY_LABELS: Record<
@@ -83,6 +83,16 @@ export const MARKETPLACE_CATEGORY_ICONS: Record<
   ai: Sparkles,
   devtools: Wrench,
   messaging: MessageSquare,
+}
+
+/** Appwrite list APIs cap `total` at 5000. */
+export const MARKETPLACE_TOTAL_CAP = 5000
+
+/** Display form of a list total: caps at "5000+". */
+export function formatMarketplaceCount(total: number): string {
+  return total >= MARKETPLACE_TOTAL_CAP
+    ? `${MARKETPLACE_TOTAL_CAP}+`
+    : String(total)
 }
 
 export const MARKETPLACE_CATEGORY_ORDER: MarketplaceAppCategory[] = [

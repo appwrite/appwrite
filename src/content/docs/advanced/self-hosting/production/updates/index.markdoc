@@ -20,6 +20,22 @@ Before upgrading, be sure to:
 1. review the [changelog](https://github.com/appwrite/appwrite/releases) for any breaking changes
 1. test the migration process on a non-production instance to make sure your application is working well
 
+# Upgrading to 2.1.0 {% #upgrading-to-2-1 %}
+
+Appwrite 2.1.0 upgrades from `2.0.0`. Run the upgrade command with the `2.1.0` tag, then run the migration. If your instance is still on 1.9.x, upgrade to `1.9.6`, then `2.0.0`, then `2.1.0`.
+
+The upgrade adds the `appwrite-autogravity` container and leaves `_APP_AUTOGRAVITY_HOST` empty in your `.env`. Set it to `http://appwrite-autogravity:8080` to turn on [AutoGravity](/docs/products/storage/images) for file previews.
+
+Error reporting is Sentry-only from 2.1.0. `_APP_LOGGING_PROVIDER` is removed, and `_APP_LOGGING_CONFIG` accepts only a `sentry://` DSN. If your `.env` holds a Raygun, AppSignal, or LogOwl DSN, Appwrite rejects it at startup and turns error reporting off, so replace it with a Sentry DSN or leave the variable empty. See [environment variables](/docs/advanced/self-hosting/configuration/environment-variables).
+
+# Upgrading to 2.0.0 {% #upgrading-to-2 %}
+
+Appwrite 2.0.0 requires a migration. Upgrade to `1.9.6` first, then to `2.0.0`.
+
+Your existing database stays as it is. The database you installed with, whether MariaDB, MongoDB, or PostgreSQL, is the database you keep. PostgreSQL is the default for new installations only, and upgrading does not move your data onto it.
+
+The upgrade also keeps the [worker topology](/docs/advanced/self-hosting/configuration/topologies) of your existing installation. Appwrite reads the topology from your Compose file and writes the new one to match. To change the topology at the same time, pass `--topology=combined` or `--topology=separate` to the upgrade command.
+
 # Installing the next version {% #install-next-version %}
 
 The first step is to install the latest version of Appwrite. Head to the directory where you ran your previous Appwrite install command.
@@ -37,7 +53,7 @@ Your Appwrite installation's parent directory name is expected to be `appwrite`.
 {% /info %}
 
 {% info title="Choose an image tag" %}
-Replace `<APPWRITE_VERSION>` below with the specific Appwrite image tag you intend to run (for example, `1.7.4`). Avoid using `latest` in production.
+Replace `<APPWRITE_VERSION>` below with the specific Appwrite image tag you intend to run (for example, `2.1.0`). Avoid using `latest` in production.
 {% /info %}
 
 ## Unix
@@ -82,7 +98,7 @@ docker ps | grep appwrite/appwrite
 
 Verify that the `STATUS` doesn't have any errors and all the `appwrite/appwrite` containers have the same version.
 
-# Running the Migration {% #running-the-migration %}
+# Running the migration {% #running-the-migration %}
 
 We can now start the migration. Navigate to the `appwrite` directory where your `docker-compose.yml` is present and run the following command.
 

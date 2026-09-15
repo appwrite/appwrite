@@ -3,6 +3,7 @@ layout: changelog
 title: Memberships privacy is now available for all plans
 date: 2024-12-10
 cover: /images/blog/memberships-privacy-announcement/cover.avif
+tags: security
 ---
 
 You can now manage memberships privacy across all Appwrite plans, helping you protect sensitive member details.

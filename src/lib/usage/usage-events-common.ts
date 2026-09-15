@@ -16,6 +16,10 @@ import {
   DEFAULT_USAGE_LOG_RETENTION_HOURS,
   getUsageLogRetentionFloor,
 } from '@/lib/usage/usage-log-retention'
+import {
+  clampUsageChartFetchBounds,
+  hasFiniteLogRetentionHours,
+} from '@/lib/date-range-retention'
 import { formatLocalizedDate } from '@/lib/i18n/date-format'
 import type { DateRange } from 'react-day-picker'
 import type { Models } from '@appwrite.io/console'
@@ -31,7 +35,6 @@ import {
   OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT,
   resolveUsageListOrder,
 } from '@/lib/usage/breakdown-limits'
-import { areUsageBreakdownQueriesEnabled } from '@/lib/debug-overrides'
 import { isUsageProjectResourceType } from '@/lib/usage/usage-resource-filters'
 import { isScreenshotModeActive } from '@/lib/screenshot-mode'
 
@@ -74,6 +77,12 @@ export type UsageEventBreakdownDimension =
   | 'clientType'
   | 'clientName'
   | 'deviceName'
+  | 'isp'
+  | 'autonomousSystemNumber'
+  | 'autonomousSystemOrganization'
+  | 'connectionType'
+  | 'connectionUsageType'
+  | 'connectionOrganization'
   | 'teamId'
   | 'resourceId'
   | 'resourceType'
@@ -106,6 +115,12 @@ export type UsageEventApiDimension =
   | 'clientType'
   | 'clientName'
   | 'deviceName'
+  | 'isp'
+  | 'autonomousSystemNumber'
+  | 'autonomousSystemOrganization'
+  | 'connectionType'
+  | 'connectionUsageType'
+  | 'connectionOrganization'
   | 'sdk'
   | 'sdkVersion'
   | 'teamId'
@@ -150,6 +165,18 @@ function getUsageDataPointBreakdownLabel(
       return point.clientName?.trim() || 'Unknown'
     case 'deviceName':
       return point.deviceName?.trim() || 'Unknown'
+    case 'isp':
+      return point.isp?.trim() || 'Unknown'
+    case 'autonomousSystemNumber':
+      return point.autonomousSystemNumber?.trim() || 'Unknown'
+    case 'autonomousSystemOrganization':
+      return point.autonomousSystemOrganization?.trim() || 'Unknown'
+    case 'connectionType':
+      return point.connectionType?.trim() || 'Unknown'
+    case 'connectionUsageType':
+      return point.connectionUsageType?.trim() || 'Unknown'
+    case 'connectionOrganization':
+      return point.connectionOrganization?.trim() || 'Unknown'
     case 'teamId':
       return point.teamId?.trim() || 'Unknown'
     case 'resourceId':
@@ -296,12 +323,17 @@ export async function fetchProjectUsageEventBreakdown(
   queries?: string[],
   resourceId?: string,
   resourceType?: string,
+  logRetentionHours: number = DEFAULT_USAGE_LOG_RETENTION_HOURS,
 ): Promise<UsageBreakdownItem[]> {
   if (!projectId) {
     return []
   }
 
-  const { from, to } = resolveOverviewUsagePeriod(dateRange)
+  const { from, to } = resolveOverviewUsagePeriod(
+    dateRange,
+    DEFAULT_USAGE_CHART_INTERVAL,
+    logRetentionHours,
+  )
 
   const dimensions =
     dimension === 'resource'
@@ -348,13 +380,6 @@ export interface OverviewUsagePeriod {
   comparisonMode: UsagePeriodComparisonMode
 }
 
-export function resolveDateBounds(dateRange: DateRange | undefined): {
-  from: Date
-  to: Date
-} {
-  return resolveUsageDateBounds(dateRange)
-}
-
 function resolveFirstHalfComparisonPeriod(
   from: Date,
   to: Date,
@@ -381,29 +406,57 @@ export function resolveOverviewUsagePeriod(
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
   logRetentionHours: number = DEFAULT_USAGE_LOG_RETENTION_HOURS,
 ): OverviewUsagePeriod {
-  const { from, to } = resolveUsageDateBounds(dateRange)
-  const calendarRange = isFullCalendarDayRange(from, to)
+  const nowMs = Date.now()
+  const rawBounds = resolveUsageDateBounds(dateRange)
+  const bounded = hasFiniteLogRetentionHours(logRetentionHours)
+    ? clampUsageChartFetchBounds(rawBounds, logRetentionHours, {
+        nowMs,
+        applyApiBuffer: true,
+      })
+    : rawBounds
+  let effectiveFrom = bounded.from
+  let to = bounded.to
+  const calendarRange = isFullCalendarDayRange(effectiveFrom, to)
 
   let previousFrom: Date
   let previousTo: Date
 
   if (calendarRange) {
-    const rangeDays = Math.max(1, differenceInCalendarDays(to, from) + 1)
-    previousTo = endOfDay(subDays(from, 1))
+    const rangeDays = Math.max(1, differenceInCalendarDays(to, effectiveFrom) + 1)
+    previousTo = endOfDay(subDays(effectiveFrom, 1))
     previousFrom = startOfDay(subDays(previousTo, rangeDays - 1))
   } else {
-    const durationMs = to.getTime() - from.getTime()
-    previousTo = new Date(from.getTime())
-    previousFrom = new Date(from.getTime() - durationMs)
+    const durationMs = to.getTime() - effectiveFrom.getTime()
+    previousTo = new Date(effectiveFrom.getTime())
+    previousFrom = new Date(effectiveFrom.getTime() - durationMs)
   }
 
   let comparisonMode: UsagePeriodComparisonMode = 'prior_window'
 
-  if (logRetentionHours > 0) {
-    const retentionFloor = getUsageLogRetentionFloor(logRetentionHours)
-    if (previousFrom.getTime() < retentionFloor.getTime()) {
+  if (hasFiniteLogRetentionHours(logRetentionHours)) {
+    const retentionFloor = getUsageLogRetentionFloor(logRetentionHours, nowMs)
+
+    if (previousFrom.getTime() <= retentionFloor.getTime()) {
       const firstHalf = resolveFirstHalfComparisonPeriod(
-        from,
+        effectiveFrom,
+        to,
+        calendarRange,
+      )
+      previousFrom = firstHalf.previousFrom
+      previousTo = firstHalf.previousTo
+      comparisonMode = 'first_half'
+    } else {
+      previousFrom = new Date(
+        Math.max(previousFrom.getTime(), retentionFloor.getTime()),
+      )
+    }
+
+    if (
+      comparisonMode === 'prior_window' &&
+      previousFrom.getTime() >= previousTo.getTime()
+    ) {
+      const firstHalf = resolveFirstHalfComparisonPeriod(
+        effectiveFrom,
         to,
         calendarRange,
       )
@@ -413,7 +466,14 @@ export function resolveOverviewUsagePeriod(
     }
   }
 
-  return { from, to, previousFrom, previousTo, interval, comparisonMode }
+  return {
+    from: effectiveFrom,
+    to,
+    previousFrom,
+    previousTo,
+    interval,
+    comparisonMode,
+  }
 }
 
 /**
@@ -447,12 +507,14 @@ function get15MinuteIntervalStart(date: Date): Date {
 }
 
 function getIntervalStart(date: Date, interval: UsageChartInterval): Date {
+  if (interval === '1m') return startOfMinute(date)
   if (interval === '15m') return get15MinuteIntervalStart(date)
   if (interval === '1h') return startOfHour(date)
   return startOfDay(date)
 }
 
 function advanceIntervalCursor(date: Date, interval: UsageChartInterval): Date {
+  if (interval === '1m') return addMinutes(date, 1)
   if (interval === '15m') return addMinutes(date, 15)
   if (interval === '1h') return addHours(date, 1)
   return addDays(date, 1)
@@ -511,7 +573,7 @@ function formatChartPointLabel(
   rangeFrom: Date,
   rangeTo: Date,
 ): string {
-  if (interval === '15m' || interval === '1h') {
+  if (interval === '1m' || interval === '15m' || interval === '1h') {
     const spansMultipleDays = !isSameDay(rangeFrom, rangeTo)
     return spansMultipleDays
       ? formatLocalizedDate(day, 'd MMM HH:mm')
@@ -833,10 +895,17 @@ export async function fetchUsageMetricsBreakdownByMetric(
   queries?: string[],
   resourceId?: string,
   resourceType?: string,
+  logRetentionHours: number = DEFAULT_USAGE_LOG_RETENTION_HOURS,
 ): Promise<Map<string, UsageTopEndpoint[]>> {
   if (metrics.length === 0) {
     return new Map()
   }
+
+  const { from, to } = resolveOverviewUsagePeriod(
+    dateRange,
+    DEFAULT_USAGE_CHART_INTERVAL,
+    logRetentionHours,
+  )
 
   // listEvents applies `limit` to the whole request. Batching metrics (e.g.
   // network.inbound + network.outbound) with a small top-N limit under-fills
@@ -845,23 +914,28 @@ export async function fetchUsageMetricsBreakdownByMetric(
   if (metrics.length > 1) {
     const entries = await Promise.all(
       metrics.map(async (metric) => {
-        const breakdown = await fetchUsageMetricsBreakdownByMetric(
-          projectId,
-          [metric],
-          dateRange,
-          dimensions,
-          breakdownLimit,
+        const groupsByMetric = await listUsageEventGroupsByMetric(projectId, {
+          metrics: [metric],
+          dimensions: [...dimensions],
+          startAt: from.toISOString(),
+          endAt: to.toISOString(),
           queries,
           resourceId,
           resourceType,
-        )
-        return [metric, breakdown.get(metric) ?? []] as const
+          limit: breakdownLimit,
+        })
+        return [
+          metric,
+          mapBreakdownGroupsToEndpoints(
+            groupsByMetric.get(metric) ?? [],
+            dimensions,
+            breakdownLimit,
+          ),
+        ] as const
       }),
     )
     return new Map(entries)
   }
-
-  const { from, to } = resolveOverviewUsagePeriod(dateRange)
   const groupsByMetric = await listUsageEventGroupsByMetric(projectId, {
     metrics,
     dimensions: [...dimensions],
@@ -921,8 +995,7 @@ async function fetchUsageMetricSeries(
   breakdownLimit = OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT,
   options?: FetchUsageOverviewOptions,
 ): Promise<UsageMetricSeriesResult> {
-  const includeBreakdown =
-    options?.includeBreakdown !== false && areUsageBreakdownQueriesEnabled()
+  const includeBreakdown = options?.includeBreakdown !== false
   const queries = options?.queries
   const resourceId = options?.resourceId
   const resourceType = options?.resourceType
@@ -975,8 +1048,7 @@ export async function fetchProjectUsageMetricsOverview(
     return { changePercent: 0, chartPoints: [], topEndpoints: [] }
   }
 
-  const includeBreakdown =
-    options?.includeBreakdown !== false && areUsageBreakdownQueriesEnabled()
+  const includeBreakdown = options?.includeBreakdown !== false
   const queries = options?.queries
   const resourceId = options?.resourceId
   const resourceType = options?.resourceType
@@ -1009,6 +1081,7 @@ export async function fetchProjectUsageMetricsOverview(
           queries,
           resourceId,
           resourceType,
+          logRetentionHours,
         )
       : Promise.resolve(new Map<string, UsageTopEndpoint[]>()),
   ])
@@ -1261,7 +1334,14 @@ async function listUsageEventGroupsByMetric(
     request.queries = queries
   }
 
-  const response = await projectSdk.usage.listEvents(request)
+  // The bundled SDK's dimension enum is generated from the backend and lags the
+  // newer network/geo dimensions (isp / ASN / connection*) the backend already
+  // accepts via VALID_DIMENSIONS. Bridge past the stale enum here until the SDK
+  // is regenerated; the values are validated server-side regardless.
+  const response = await projectSdk.usage.listEvents({
+    ...request,
+    dimensions: request.dimensions as unknown as never[] | undefined,
+  })
   const result = new Map<string, Models.UsageDataPoint[]>()
 
   for (const metric of params.metrics) {

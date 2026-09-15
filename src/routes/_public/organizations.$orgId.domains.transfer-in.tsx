@@ -1,6 +1,7 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, redirect } from '@tanstack/react-router'
 import { z } from 'zod'
 import { TransferDomainInWizard } from '@/components/pages/organizations/$orgId/domains/_components/TransferDomainInWizard'
+import { isCloudProfile } from '@/lib/console-profiles'
 import { pageTitle } from '@/lib/utils/page-title'
 import {
   DOMAINS_DEFAULT_SORT_BY,
@@ -23,6 +24,15 @@ export const Route = createFileRoute(
     meta: [{ title: pageTitle('Transfer domain in', 'Domains') }],
   }),
   validateSearch: transferInSearchSchema,
+  beforeLoad: ({ params }) => {
+    if (!isCloudProfile()) {
+      throw redirect({
+        to: '/organizations/$orgId/domains',
+        params: { orgId: params.orgId },
+        replace: true,
+      })
+    }
+  },
   loader: async ({ params, context }) => {
     if (typeof window === 'undefined') return
 

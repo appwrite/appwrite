@@ -19,6 +19,7 @@ import {
   Query,
 } from '@appwrite.io/console' // pragma: allowlist secret
 import {
+  applyConsoleImpersonateUserId,
   clearConsoleImpersonateUser,
   clearConsoleSessionLocally,
   sdk,
@@ -39,8 +40,12 @@ import {
   clearConsoleImpersonationSession,
   getConsoleAccountQueryRevision,
   hasConsoleImpersonationSessionTarget,
+  readConsoleImpersonationTargetUserId,
 } from '@/lib/console-impersonation'
-import { resolvePostAuthRedirect } from '@/lib/post-auth-navigation'
+import {
+  isValidRelativeRedirect,
+  resolvePostAuthRedirect,
+} from '@/lib/post-auth-navigation'
 import { isHttpUnauthorizedError } from '@/lib/utils/error-formatting'
 import {
   buildDatabasesSidebarWidthPrefs,
@@ -62,6 +67,7 @@ import {
   MAX_SAVED_IMAGE_TRANSFORM_PRESET_JSON_CHARS,
   MAX_SAVED_IMAGE_TRANSFORM_PRESET_NAME_LENGTH,
   MAX_SAVED_IMAGE_TRANSFORM_PRESETS,
+  appendRecentImpersonationUser,
   clearRecentImpersonationSessionList,
   mergeRecentImpersonationIntoAccountPrefs,
   mergeRecentImpersonationLists,
@@ -70,6 +76,8 @@ import {
   parseTablesDbRowsListColumnsFromPrefs,
   readRecentImpersonationSessionList,
   writeRecentImpersonationDetails,
+  writeRecentImpersonationSavedList,
+  writeRecentImpersonationSessionList,
   clearLegacyAIChatLocalStorage,
   clearLegacyBuildNotificationsOptedOutLocalStorage,
   clearLegacyCliShellHeightLocalStorage,
@@ -101,6 +109,7 @@ import {
   mergeCliShellSessionsIntoPrefs,
   mergeCliShellSessionsSidebarWidthPxIntoPrefs,
   mergeConnectProjectTabIntoPrefs,
+  mergeDatabaseAdminNavCollapsedIntoPrefs,
   mergeSidebarCollapsedIntoPrefs,
   getCliShellSessionsKey,
   parseCliShellHistory,
@@ -127,6 +136,7 @@ import {
   parseCliShellOpen,
   parseCliShellSessionsSidebarWidthPx,
   parseConnectProjectTab,
+  parseDatabaseAdminNavCollapsed,
   parseSidebarCollapsed,
   parseStorageFilesTablePaneWidthPx,
   readLegacyAIChatPanelOpenFromLocalStorage,
@@ -135,6 +145,8 @@ import {
   readLegacyCliShellHeightFromLocalStorage,
   readLegacyStorageFilesTablePaneWidthFromLocalStorage,
   sanitizeAccountPrefsForWrite,
+  mergeDismissedBannerPrefs,
+  clearDismissedBannerPrefs,
   USER_PREFS_KEY_FEATURE_NOTIFICATIONS,
   type UserPrefs,
 } from '@/lib/user-prefs-keys'
@@ -160,6 +172,7 @@ import type {
 } from '@/lib/user-prefs-keys'
 import { DEFAULT_STALE_TIME } from './constants'
 import { useConsoleTeam, useUpdateConsoleTeamPrefs } from './teams'
+import { randomUUID } from '@/lib/random-uuid'
 
 export type ConsoleAccountCache = { prefs?: Record<string, unknown> }
 
@@ -293,6 +306,7 @@ export function consoleAccountQueryOptions(options?: {
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     enabled: typeof window !== 'undefined',
+    placeholderData: () => getConsoleAccountSync(revision),
   })
 }
 
@@ -353,13 +367,8 @@ function showConsoleSignOutCover(): void {
 /** Hard navigation so protected routes (org overview) do not flash during SPA transitions. */
 export function redirectToSignInAfterConsoleSignOut(redirect?: string): void {
   if (typeof window === 'undefined') return
-  const isValidRelativeRedirect =
-    !!redirect &&
-    redirect.startsWith('/') &&
-    !redirect.startsWith('//') &&
-    !redirect.includes('://')
   window.location.replace(
-    isValidRelativeRedirect
+    redirect && isValidRelativeRedirect(redirect)
       ? `/sign-in?redirect=${encodeURIComponent(redirect)}`
       : '/sign-in',
   )
@@ -379,11 +388,41 @@ export function redirectToSignInAfterConsoleSignOut(redirect?: string): void {
  */
 export async function performConsoleSignOut(
   queryClient: QueryClient,
-  options?: { redirect?: string },
+  options?: { redirect?: string; requireServerRevocation?: boolean },
 ): Promise<void> {
-  if (consoleSigningOut) return
+  if (consoleSigningOut) {
+    if (options?.requireServerRevocation) {
+      throw new Error('Console sign-out is already in progress')
+    }
+    return
+  }
   consoleSigningOut = true
   showConsoleSignOutCover()
+
+  // Consent switching must revoke the underlying operator session, never an
+  // impersonated identity. Suspend headers only; preserve credentials, persisted
+  // impersonation and account caches so a failed revoke can restore the same UI.
+  if (options?.requireServerRevocation) {
+    const impersonatedUserId = readConsoleImpersonationTargetUserId()
+    clearConsoleImpersonateUser()
+    try {
+      await sdk.forConsole.account.deleteSession({ sessionId: 'current' })
+    } catch {
+      if (impersonatedUserId) {
+        applyConsoleImpersonateUserId(impersonatedUserId)
+      }
+      consoleSigningOut = false
+      if (typeof document !== 'undefined') {
+        document.getElementById(CONSOLE_SIGN_OUT_COVER_ID)?.remove()
+      }
+      // Do not propagate credential-bearing SDK errors into UI or telemetry.
+      throw new Error('Current console session could not be revoked')
+    }
+    clearConsoleSessionLocally()
+    purgeConsoleAccountCaches(queryClient)
+    redirectToSignInAfterConsoleSignOut(options.redirect)
+    return
+  }
 
   // Drop impersonation headers only. Do not clear session credentials before
   // the delete call or the API request may go out unauthenticated.
@@ -524,7 +563,7 @@ export async function ensureConsoleAccountOnAuthRoute(
 export async function ensureConsoleAccountQueryData(
   queryClient: QueryClient,
 ): Promise<Models.User | undefined> {
-  if (shouldRevalidateConsoleAccount(queryClient)) {
+  if (shouldRevalidateConsoleAccountOnAuthRoute(queryClient)) {
     try {
       return await refreshConsoleAccountAfterAuth(queryClient)
     } catch {
@@ -913,6 +952,40 @@ export function useUpdateMembershipsPrivacy(
   })
 }
 
+/**
+ * Hook to update which factors can complete an MFA challenge.
+ *
+ * @param projectId - The project ID
+ */
+export function useUpdateMfaFactorsPolicy(
+  projectId: string | null | undefined,
+) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (factors: {
+      totp: boolean
+      email: boolean
+      phone: boolean
+      custom: boolean
+    }) => {
+      if (!projectId) {
+        throw new Error('Project ID is required')
+      }
+
+      return await sdk.forProject(projectId).project.updateMFAFactorsPolicy({
+        totp: factors.totp,
+        email: factors.email,
+        phone: factors.phone,
+        custom: factors.custom,
+      })
+    },
+    onSuccess: () => {
+      invalidateProjectAuthQueries(queryClient, projectId)
+    },
+  })
+}
+
 type ProjectEmailPolicyService = {
   updateDenyFreeEmailPolicy: (params: {
     enabled: boolean
@@ -1201,6 +1274,7 @@ export function accountIdentitiesQueryOptions() {
     queryKey: ['identities', 'account'],
     queryFn: fetchAccountIdentities,
     staleTime: DEFAULT_STALE_TIME,
+    gcTime: DEFAULT_STALE_TIME,
     retry: false, // Don't retry on error
     refetchOnMount: false, // Data is prefetched in route loader, no need to refetch on mount
     refetchOnWindowFocus: false, // Prevent refetch when switching tabs/windows
@@ -1311,10 +1385,14 @@ function getAccountPrefsCallerStack(): string[] {
  * React Query with `{ prefs }` only - that crashed account UI after impersonation.
  *
  * @param reason - Short label for debug logs (which feature/hook requested the write).
+ * @param options.force - Send `updatePrefs` even when sanitized prefs match the
+ *   in-memory singleton. Needed after optimistic cache patches (the singleton
+ *   already looks like the write, so the unchanged check would skip the API).
  */
 export async function updateAccountPrefs(
   prefs: Record<string, unknown>,
   reason = 'unknown',
+  options?: { force?: boolean },
 ): Promise<Models.User | undefined> {
   if (hasConsoleImpersonationSessionTarget()) {
     return undefined
@@ -1329,8 +1407,9 @@ export async function updateAccountPrefs(
     Object.keys(diff.changed).length > 0 ||
     diff.removed.length > 0
   const caller = getAccountPrefsCallerStack()
+  const force = options?.force === true
 
-  if (!hasDiff) {
+  if (!hasDiff && !force) {
     console.log('[account prefs] skip (unchanged)', {
       reason,
       keyCount: Object.keys(sanitized).length,
@@ -1343,6 +1422,7 @@ export async function updateAccountPrefs(
 
   console.log('[account prefs] update', diff, {
     reason,
+    force,
     keyCount: Object.keys(sanitized).length,
     caller,
   })
@@ -1352,37 +1432,77 @@ export async function updateAccountPrefs(
   })) as Models.User
 }
 
+/** Longest an impersonation start or exit waits on the recent-targets prefs write. */
+const RECENT_IMPERSONATION_SYNC_TIMEOUT_MS = 3000
+
 /**
- * Merge session-stored recent impersonation targets (while operator was impersonating)
- * into the operator account prefs. Call after impersonation headers are cleared so
- * `account.get()` resolves to the operator.
+ * Wait for a recent impersonation targets write before a hard navigation, but no
+ * longer than `RECENT_IMPERSONATION_SYNC_TIMEOUT_MS`. A write the navigation cuts off
+ * is not lost: the targets stay in sessionStorage and the next flush retries them.
+ */
+export function waitForRecentImpersonationSync(
+  task: Promise<unknown>,
+): Promise<void> {
+  return new Promise((resolve) => {
+    const timer = setTimeout(resolve, RECENT_IMPERSONATION_SYNC_TIMEOUT_MS)
+    task
+      .catch((e) => console.error(e))
+      .finally(() => {
+        clearTimeout(timer)
+        resolve()
+      })
+  })
+}
+
+/**
+ * Merge this tab's unsaved recent impersonation targets into the operator account prefs.
+ * No-op during an impersonation session (prefs would belong to the target), so call
+ * before headers are applied or after they are cleared. Unsaved targets are cleared
+ * only once the write lands, so a cut-off request is retried.
  */
 export async function flushRecentImpersonationUsersToAccountPrefs(
   operatorId: string,
 ) {
-  const list = readRecentImpersonationSessionList(operatorId)
-  if (list.length === 0) return
-  clearRecentImpersonationSessionList(operatorId)
-  // Labels stay in localStorage; account prefs only get ID references.
-  writeRecentImpersonationDetails(operatorId, list)
+  const unsaved = readRecentImpersonationSessionList(operatorId)
+  if (unsaved.length === 0 || hasConsoleImpersonationSessionTarget()) return
   const account = await fetchConsoleAccount({ force: true })
-  const fromPrefs = parseRecentImpersonationUsers(
-    account.prefs as UserPrefs,
-    operatorId,
+  if (account.$id !== operatorId) return
+  // Unsaved picks are newer than what prefs hold, so they lead. Merging with fresh
+  // prefs keeps targets another tab saved in the meantime.
+  const merged = mergeRecentImpersonationLists(
+    unsaved,
+    parseRecentImpersonationUsers(account.prefs as UserPrefs, operatorId),
   )
-  const merged = mergeRecentImpersonationLists(fromPrefs, list)
+  // Labels stay in localStorage; account prefs only get ID references.
   writeRecentImpersonationDetails(operatorId, merged)
   const updatedPrefs = mergeRecentImpersonationIntoAccountPrefs(
     account.prefs as UserPrefs,
     merged,
   )
   const updatedAccount = await updateAccountPrefs(updatedPrefs, 'flush-recent-impersonation-users')
-  setConsoleAccountCache(
-    updatedAccount && isConsoleAccountUser(updatedAccount)
-      ? updatedAccount
-      : ({ ...account, prefs: updatedPrefs } as Models.User),
-    getConsoleAccountQueryRevision(),
+  if (!updatedAccount || !isConsoleAccountUser(updatedAccount)) return
+  clearRecentImpersonationSessionList(operatorId)
+  writeRecentImpersonationSavedList(operatorId, merged)
+  setConsoleAccountCache(updatedAccount, getConsoleAccountQueryRevision())
+}
+
+/**
+ * Put `target` first in the operator's recent impersonation targets. Call before
+ * impersonation headers are applied so the operator prefs write can happen; a switch
+ * made mid-impersonation waits in sessionStorage until the exit flush.
+ */
+export async function recordRecentImpersonationTarget(
+  operatorId: string,
+  target: { $id: string; name?: string | null; email?: string | null },
+) {
+  writeRecentImpersonationSessionList(
+    operatorId,
+    appendRecentImpersonationUser(
+      readRecentImpersonationSessionList(operatorId),
+      target,
+    ),
   )
+  await flushRecentImpersonationUsersToAccountPrefs(operatorId)
 }
 
 /**
@@ -1443,6 +1563,61 @@ export function useToggleFeatureNotification() {
   })
 }
 
+/**
+ * Persist dismissal of a console banner in `console.dismissedBanners`.
+ */
+export function useDismissConsoleBanner() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (bannerId: string) => {
+      const account = getConsoleAccountFromCache(queryClient)
+
+      if (!account) {
+        throw new Error('Account data not available')
+      }
+
+      const updatedPrefs = mergeDismissedBannerPrefs(account.prefs, bannerId)
+
+      return await updateAccountPrefs(updatedPrefs, 'dismiss-console-banner')
+    },
+    onSuccess: (updatedAccount) => {
+      syncConsoleAccountAfterMutation(queryClient, {
+        apiResult: updatedAccount,
+      })
+    },
+  })
+}
+
+/**
+ * Remove a banner id from `console.dismissedBanners` (undo dismiss).
+ */
+export function useClearConsoleBannerDismissal() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (bannerId: string) => {
+      const account = getConsoleAccountFromCache(queryClient)
+
+      if (!account) {
+        throw new Error('Account data not available')
+      }
+
+      const updatedPrefs = clearDismissedBannerPrefs(account.prefs, bannerId)
+
+      return await updateAccountPrefs(
+        updatedPrefs,
+        'clear-console-banner-dismissal',
+      )
+    },
+    onSuccess: (updatedAccount) => {
+      syncConsoleAccountAfterMutation(queryClient, {
+        apiResult: updatedAccount,
+      })
+    },
+  })
+}
+
 // ============================================================================
 // SIDEBAR COLLAPSED PREFERENCE
 // ============================================================================
@@ -1485,6 +1660,66 @@ export function useSidebarCollapsed(
             ? {
                 ...current,
                 prefs: mergeSidebarCollapsedIntoPrefs(
+                  { ...(current.prefs ?? {}) },
+                  value,
+                ),
+              }
+            : current,
+      )
+    },
+    onSuccess: (updatedAccount) => {
+      syncConsoleAccountAfterMutation(queryClient, {
+        apiResult: updatedAccount,
+      })
+    },
+  })
+
+  const setCollapsed = useCallback(
+    (value: boolean | ((prev: boolean) => boolean)) => {
+      const nextValue = typeof value === 'function' ? value(collapsed) : value
+      updateMutation.mutate(nextValue)
+    },
+    [collapsed, updateMutation],
+  )
+
+  return { collapsed, setCollapsed }
+}
+
+/**
+ * Hook for PostgreSQL / MySQL sidebar admin links collapsed state.
+ * Uses `console.databases.adminNavCollapsed` in account prefs.
+ *
+ * Must be used within RequireAuth (or where account is available).
+ */
+export function useDatabaseAdminNavCollapsed(
+  account: { prefs?: Record<string, unknown> } | undefined,
+) {
+  const queryClient = useQueryClient()
+
+  const accountPrefs = account?.prefs as UserPrefs | undefined
+  const collapsed = parseDatabaseAdminNavCollapsed(accountPrefs)
+
+  const updateMutation = useMutation({
+    mutationFn: async (value: boolean) => {
+      if (!account) {
+        throw new Error('Account data not available')
+      }
+      return await updateAccountPrefs(
+        mergeDatabaseAdminNavCollapsedIntoPrefs(
+          { ...(account.prefs ?? {}) },
+          value,
+        ),
+        'database-admin-nav-collapsed',
+      )
+    },
+    onMutate: async (value) => {
+      queryClient.setQueriesData<{ prefs?: Record<string, unknown> }>(
+        { queryKey: ['account', 'console'] },
+        (current) =>
+          current
+            ? {
+                ...current,
+                prefs: mergeDatabaseAdminNavCollapsedIntoPrefs(
                   { ...(current.prefs ?? {}) },
                   value,
                 ),
@@ -3349,7 +3584,7 @@ export function useSavedFilters(
       const trimmedName = name.trim().slice(0, MAX_SAVED_FILTER_NAME_LENGTH)
       if (!trimmedName) throw new Error('Name is required')
       const newFilter: SavedFilter = {
-        id: crypto.randomUUID(),
+        id: randomUUID(),
         name: trimmedName,
         query,
         ...(sort ? { sort } : {}),
@@ -3386,7 +3621,7 @@ export function useSavedFilters(
       await updateTeamPrefs.mutateAsync((freshPrefs) => {
         const current = parseSavedFilters(freshPrefs, scope)
         const newFilter: SavedFilter = {
-          id: crypto.randomUUID(),
+          id: randomUUID(),
           name: trimmedName,
           query,
           ...(sort ? { sort } : {}),
@@ -3678,7 +3913,7 @@ export function useImageTransformSavedPresets(
       }
       const next: SavedImageTransformPreset[] = [
         {
-          id: crypto.randomUUID(),
+          id: randomUUID(),
           name: trimmedName,
           json,
         },
@@ -3715,7 +3950,7 @@ export function useImageTransformSavedPresets(
           )
         }
         const next: SavedImageTransformPreset[] = [
-          { id: crypto.randomUUID(), name: trimmedName, json },
+          { id: randomUUID(), name: trimmedName, json },
           ...current,
         ]
         return buildSavedImageTransformPresetsPrefs(next)

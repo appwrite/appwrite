@@ -7,7 +7,7 @@ lastUpdated: 2026-06-29
 cover: /images/blog/how-to-migrate-database-with-cli/cover.avif
 timeToRead: 5
 author: ebenezer-don
-category: product
+category: products
 faqs:
   - question: "What does `appwrite.config.json` do in the Appwrite CLI?"
     answer: "`appwrite.config.json` is the source of truth for your project's tables, functions, and other resources. You commit it to Git, edit it like any other config, and use `appwrite push` to apply changes. This lets you track schema history, code-review migrations, and replicate projects across environments."
@@ -26,11 +26,11 @@ Database migration is a critical task in the lifecycle of any application. It in
 
 # The new Appwrite CLI
 
-The new Appwrite CLI introduces several enhancements to improve the developer experience in managing database schemas. One of the standout features is the ability to use your `appwrite.config.json` file as the source of truth for your database tables' schema. This approach brings numerous benefits, including better change tracking, seamless migrations using GitOps, and simplified project replication. Let's explore these advantages in more detail:
+The new Appwrite CLI introduces several enhancements to improve the developer experience in managing database schemas. One of the standout features is the ability to use your `appwrite.config.json` file as the source of truth for your database tables' schema. This approach brings numerous benefits, including better change tracking, seamless migrations using GitOps, and simplified project replication. Let's explore these advantages in more detail:
 
 **1. Tracking changes**
 
-By using `appwrite.config.json` as the source for your tables schema, you can easily track changes over time. This file can be version-controlled with Git, allowing you to see a detailed history of modifications and collaborate effectively with your team.
+By using `appwrite.config.json` as the source for your tables schema, you can easily track changes over time. This file can be version-controlled with Git, allowing you to see a detailed history of modifications and collaborate effectively with your team.
 
 **2. Migrating database changes with GitOps**
 
@@ -38,7 +38,7 @@ GitOps is a methodology that uses Git repositories to manage and deploy infrastr
 
 **3. Easy project replication**
 
-When you need to replicate a project, having the database schema defined in `appwrite.config.json` allows you to recreate the database setup effortlessly in different instances or environments, as well as in different projects within the same environment and instance.
+When you need to replicate a project, having the database schema defined in `appwrite.config.json` allows you to recreate the database setup effortlessly in different instances or environments, as well as in different projects within the same environment and instance.
 
 # Step-by-step guide to database migration with the new Appwrite CLI
 
@@ -46,7 +46,7 @@ Let's walk through the process of planning and executing a database migration us
 
 ## Step 1: Pull existing database configuration
 
-If you already have a database setup, start by pulling the current configuration into your `appwrite.config.json` file. This step ensures that you have the latest schema as a baseline.
+If you already have a database setup, start by pulling the current configuration into your `appwrite.config.json` file. This step ensures that you have the latest schema as a baseline.
 
 ```bash
 appwrite pull tables --all
@@ -72,7 +72,7 @@ If you are starting from scratch, you can initialize a new table and push it to 
 
 ## Step 3: Modifying tables
 
-To make changes to your tables, edit the `appwrite.config.json` file. For instance, you might want to change a column's type or add a new column. Here’s an example:
+To make changes to your tables, edit the `appwrite.config.json` file. For instance, you might want to change a column's type or add a new column. Here’s an example:
 
 ### Original columns
 
@@ -131,11 +131,11 @@ The Appwrite CLI will display a table summarizing all pending changes, allowing 
 
 ## Step 5: Confirming changes
 
-To apply the changes, type `YES` to confirm. This step ensures that no changes are made accidentally and gives you full control over the migration process. In the case of CI/CD pipelines, you can use the --force flag to push the changes automatically; however, exercise caution when using this option.
+To apply the changes, type `YES` to confirm. This step ensures that no changes are made accidentally and gives you full control over the migration process. In the case of CI/CD pipelines, you can use the --force flag to push the changes automatically; however, exercise caution when using this option.
 
 # Conclusion
 
-The new Appwrite CLI makes database migration a more manageable and streamlined process. By using `appwrite.config.json` as your schema’s source of truth, you can take advantage of better change tracking, seamless GitOps-based migrations, and simplified project replication. Whether you are starting from scratch or managing an existing database, these features enhance your ability to plan and execute migrations successfully.
+The new Appwrite CLI makes database migration a more manageable and streamlined process. By using `appwrite.config.json` as your schema’s source of truth, you can take advantage of better change tracking, seamless GitOps-based migrations, and simplified project replication. Whether you are starting from scratch or managing an existing database, these features enhance your ability to plan and execute migrations successfully.
 
 - [Appwrite CLI docs](https://appwrite.io/docs/tooling/command-line/installation)
 - [Join our Discord server](https://appwrite.io/discord)

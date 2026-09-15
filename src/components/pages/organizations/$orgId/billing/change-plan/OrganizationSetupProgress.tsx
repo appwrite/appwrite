@@ -1,6 +1,7 @@
 import { Check, Loader2 } from '@/lib/icons'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
+import type { DowngradeDeletionStep } from '@/lib/billing/downgrade-deletion-steps'
 
 export type OrganizationSetupPhase =
   | 'submitting'
@@ -25,6 +26,11 @@ export type OrganizationSetupProgressState = {
   showResourceDeletionStep?: boolean
   showMembershipDeletionStep?: boolean
   showOrganizationDeletionStep?: boolean
+  /** What the run deletes, with live status. Listed order, not run order. */
+  deletionSummary?: (DowngradeDeletionStep & {
+    status: 'pending' | 'running' | 'done'
+  })[]
+  deletedOrganizationName?: string
 }
 
 type SetupStep = {
@@ -54,7 +60,7 @@ function buildSteps(state: OrganizationSetupProgressState): SetupStep[] {
       steps.push({
         phase: 'deleting-resources',
         label: 'Deleting resources',
-        description: 'Removing resources that are not kept for the target plan.',
+        description: 'Removing the items you marked for deletion.',
       })
     }
 
@@ -102,19 +108,12 @@ function buildSteps(state: OrganizationSetupProgressState): SetupStep[] {
   const steps: SetupStep[] = [
     {
       phase: 'submitting',
-      label:
-        mode === 'create'
-          ? 'Creating organization'
-          : mode === 'downgrade'
-            ? 'Preparing downgrade'
-            : 'Updating plan',
+      label: mode === 'create' ? 'Creating organization' : 'Updating plan',
       description:
         mode === 'create'
           ? organizationName
             ? `Setting up ${organizationName} and your billing profile.`
             : 'Setting up your workspace and billing profile.'
-          : mode === 'downgrade'
-            ? `Preparing your ${planLabel} plan changes.`
           : `Applying your ${planLabel} plan changes.`,
     },
   ]
@@ -183,6 +182,9 @@ export function OrganizationSetupProgress({
   const t = useT()
   const steps = buildSteps(progress)
   const activeIndex = getPhaseIndex(steps, progress.phase)
+  const deletionSummary = progress.deletionSummary ?? []
+  const showDeletionSummary =
+    deletionSummary.length > 0 || !!progress.deletedOrganizationName
   const headline =
     progress.mode === 'create'
       ? t('Setting up your organization')
@@ -202,6 +204,55 @@ export function OrganizationSetupProgress({
       <p className="mt-2 max-w-xs text-center text-[13px] leading-relaxed text-muted-foreground">
         {t('This usually takes a few seconds. Please keep this window open.')}
       </p>
+
+      {showDeletionSummary ? (
+        <div className="mt-8 w-full max-w-xs rounded-lg border border-border bg-background/60 p-4">
+          <p className="text-[13px] font-medium text-foreground">
+            {t('Will be deleted')}
+          </p>
+          <ul className="mt-2 space-y-1.5">
+            {progress.deletedOrganizationName ? (
+              <li className="text-[13px] leading-normal text-foreground">
+                {progress.deletedOrganizationName} {t('and all its resources')}
+              </li>
+            ) : null}
+            {deletionSummary.map(({ id, label, count, status }) => (
+              <li
+                key={id}
+                className="flex items-start justify-between gap-3 text-[13px] leading-normal"
+              >
+                <span className="flex min-w-0 items-center gap-2">
+                  <span className="flex h-3.5 w-3.5 shrink-0 items-center justify-center">
+                    {status === 'done' ? (
+                      <Check
+                        className="h-3.5 w-3.5 text-green-600 dark:text-green-500"
+                        strokeWidth={2.5}
+                      />
+                    ) : status === 'running' ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin text-foreground" />
+                    ) : (
+                      <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/40" />
+                    )}
+                  </span>
+                  <span
+                    className={cn(
+                      'truncate',
+                      status === 'pending'
+                        ? 'text-muted-foreground'
+                        : 'text-foreground',
+                    )}
+                  >
+                    {t(label)}
+                  </span>
+                </span>
+                <span className="shrink-0 tabular-nums text-muted-foreground">
+                  {count}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
 
       <ol className="mt-10 mx-auto w-full max-w-xs space-y-0">
         {steps.map((step, index) => {

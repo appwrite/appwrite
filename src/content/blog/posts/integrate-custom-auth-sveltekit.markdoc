@@ -7,7 +7,7 @@ lastUpdated: 2026-06-29
 cover: /images/blog/integrate-custom-auth-sveltekit/cover.avif
 timeToRead: 6
 author: aditya-oberai
-category: product
+category: products
 featured: false
 faqs:
   - question: "What is custom token authentication in Appwrite?"
@@ -30,7 +30,7 @@ Therefore, in this blog, we will learn about Appwrite’s custom token authentic
 
 # What is custom token authentication?
 
-Custom token authentication allows you to use one of Appwrite’s [Server SDKs](https://appwrite.io/docs/sdks#server) to generate tokens, short-lived secrets that can be exchanged for a session by a [Client SDK](https://appwrite.io/docs/sdks#client) to log in users. This allows you to code your own authentication methods using Appwrite Functions or your own server-side APIs. This can be beneficial in a number of scenarios, such as:
+Custom token authentication allows you to use one of Appwrite’s [Server SDKs](https://appwrite.io/docs/sdks#server) to generate tokens, short-lived secrets that can be exchanged for a session by a [Client SDK](https://appwrite.io/docs/sdks#client) to log in users. This allows you to code your own authentication methods using Appwrite Functions or your own server-side APIs. This can be beneficial in a number of scenarios, such as:
 
 1. **Legacy system integration**: Integrate with old systems using unique authentication methods without major changes.
 2. **Custom security needs**: Implement special security features like hardware tokens or voice recognition.
@@ -57,7 +57,7 @@ Before we implement our auth flow, we must first:
 
 ### Appwrite
 
-First, we must create an account on [Appwrite Cloud](https://cloud.appwrite.io/), followed by creating a new project and an API key with the scopes `users.read` and `users.write`.
+First, we must create an account on [Appwrite Cloud](https://cloud.appwrite.io/), followed by creating a new project and an API key with the scopes `users.read` and `users.write`.
 
 ![Appwrite Project Overview](/images/blog/integrate-custom-auth-sveltekit/overview.avif)
 
@@ -316,7 +316,7 @@ npm run dev
 
 # Next steps
 
-And with that, our demo project to try custom token authentication in Appwrite is ready! You can find the application’s complete source code at this [GitHub Repo](https://github.com/appwrite-community/appwrite-custom-token-auth-demo).
+And with that, our demo project to try custom token authentication in Appwrite is ready! You can find the application’s complete source code at this [GitHub Repo](https://github.com/appwrite-community/appwrite-custom-token-auth-demo).
 
 Additionally, if you would like to learn more about Appwrite Auth, here are some resources:
 

@@ -7,7 +7,7 @@ lastUpdated: 2026-06-29
 cover: /images/blog/type-generation-feature/cover.avif
 timeToRead: 4
 author: chirag-aggarwal
-category: announcement
+category: announcements
 faqs:
   - question: "What is Appwrite type generation?"
     answer: "Type generation is a CLI command that produces type definitions in your project's language directly from your Appwrite tables. It keeps client code in sync with your database schema, reducing the chance of typos and stale types when the schema changes."

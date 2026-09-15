@@ -1102,25 +1102,68 @@ Profiles control which features are available based on deployment type (cloud vs
 **Profiles:**
 
 - **Cloud** (default): Full feature set – billing, domains, usage stats, activity, org roles, system status, account MFA, account identities, **user verification** (redirect to verify-email page after signup), **cookie banner** (locale-gated GDPR consent). **Notifications** center is off by default in both profiles.
-- **Self-hosted**: Cloud-only features disabled (user verification off; signup redirects directly to console; cookie banner off; notifications off)
+- **Self-hosted**: Cloud-only features disabled (user verification off; signup redirects directly to console; cookie banner off; notifications off). Usage stats follow `_APP_USAGE_STATS` (on by default)
+
+### Browser flag API for agents
+
+`window.__vibes` is always available after hydration in development. In production,
+set `VITE_CONSOLE_BROWSER_API=true` in the server environment to expose it. Unset,
+false, and unrecognized values leave the global absent. This uses shared runtime
+config, so changing production exposure requires a server restart and page reload,
+but no rebuild. The API is available to all scripts on an enabled page.
+
+Run these calls in the target browser page, using browser JavaScript evaluation:
+
+```js
+window.__vibes.flags.list()
+window.__vibes.flags.set({ agent: true, showActivityChart: true })
+window.__vibes.flags.set({ agent: false })
+window.__vibes.flags.reset('agent')
+window.__vibes.flags.resetAll()
+
+window.__vibes.screenshotMode.enable()
+window.__vibes.screenshotMode.disable()
+window.__vibes.screenshotMode.isEnabled()
+```
+
+Screenshot mode is separate from feature flags and uses the same API exposure
+setting. Its methods return the current enabled boolean. Enable and disable use
+the existing screenshot-mode storage and events, updating the UI and persisting
+across reloads. `flags.resetAll()` leaves screenshot mode unchanged.
+
+`list()` and flag mutations return a record keyed by flag name, with `default`,
+`override` (`null` when unset), and `effective` boolean values. All keys and values
+are validated before a set request changes anything. Profile restrictions still
+apply, so inspect `effective` to verify a change. Calls use the debug menu setters
+and persist browser-local overrides across reloads. Reset restores configured
+defaults, while setting false explicitly disables a flag. `resetAll()` clears only
+feature flag overrides, preserving the selected profile and other debug settings.
+Wait for the resulting UI render before interacting with an enabled feature.
+These flags do not grant backend permissions. Curl cannot call this browser API.
 
 **Env var:** `VITE_CONSOLE_PROFILE=cloud` or `VITE_CONSOLE_PROFILE=self-hosted`
 
 **Per-feature env overrides** (optional; unset = profile default):
 
 - `VITE_CONSOLE_USER_VERIFICATION` – `true`/`false` to force post-signup email verification
-- `VITE_CONSOLE_COOKIE_BANNER` – `true`/`false` to enable/disable the cookie consent banner logic (GDPR prompt, not the demo password gate)
+- `VITE_CONSOLE_COOKIE_BANNER` – `true`/`false` to enable/disable the cookie consent banner logic (GDPR prompt)
 - `VITE_CONSOLE_BLOG_DRAFTS` – `true`/`false` to show draft blog posts (off in both profiles by default)
+- `VITE_CONSOLE_EXTRA_VCS_OAUTH` – `true`/`false` to show extra Git connect OAuth providers (Origin). GitHub, GitLab, and Bitbucket stay available. Off in both profiles by default.
 
-**Demo password gate** (not a profile feature; unset = on):
+**Pre-launch mode** (not a profile feature; unset = off):
 
-- `VITE_CONSOLE_WEBSITE_ACCESS` – `true`/`false` for the soft-launch `/access` password (Appwrite2 cookie). `false` disables the middleware redirect, boot cover, and password screen
+- `VITE_CONSOLE_PRE_LAUNCH` – locks the site so only `/init` is public (`/` redirects there). Sign-in/sign-up stay open and return to `/init` instead of the console. `true` / `1` / `enabled` turns it on. Debug menu → Settings → Flags → **Pre-launch** overrides this (stored in localStorage).
 
+**Init day unlocks** (always controlled; never calendar-driven):
+
+- Default is **post-event, no banner** (`getInitMockCurrentDayDefault()` in `src/lib/init/mock-current-day.ts` → `getInitMockDayBannerExpired()`, recap mode with all days unlocked and the org promo banner hidden).
+- Advance the day from debug menu → Init → **Day** (slider: Before → Day 1–5 → After → Banner off).
+- When ready for a new default for everyone, change `getInitMockCurrentDayDefault()` to the day you want unlocked.
 **Debug mode:** When debug menu is open (type `pink`, case-insensitive), use Console profile submenu to override the env-selected profile. Override is stored in localStorage and takes precedence until "Use env var" is selected.
 
-**Feature flags:** Use `useConsoleProfile()` or `getActiveProfileFeatures()` to check feature flags (e.g. `features.billing`, `features.domains`, `features.compliance`, `features.databaseBackups`, `features.agent`, `features.notifications`, `features.cookieBanner`).
+**Feature flags:** Use `useConsoleProfile()` or `getActiveProfileFeatures()` for flags that still vary by profile or env (e.g. `features.billing`, `features.compliance`, `features.databaseBackups`, `features.nativeDbsMongo`, `features.agent`, `features.notifications`, `features.cookieBanner`). Cloud-only surfaces that shipped during Init (domains, marketplace, firewall, storage S3, OAuth2 server, OAuth apps, dedicated/product/native Postgres and MySQL databases) no longer have profile flags; gate them with `isCloudProfile()` from `@/lib/console-profiles` or helpers such as `isCloudDedicatedDatabasesEnabled()` from `@/lib/database-routes`.
 
-**Feature-driven keys:** Each flag must map to a single, specific feature. Do not use generic or grouped flags (e.g. `orgCloudSettings`, `databaseCloudFeatures`). Split into explicit flags per feature (e.g. `compliance`, `oauthApps`, `orgApiKeys` for org settings; `databaseBackups`, `databaseInsights` for database).
+**Feature-driven keys:** Each remaining flag must map to a single, specific feature. Do not use generic or grouped flags (e.g. `orgCloudSettings`, `databaseCloudFeatures`). Split into explicit flags per feature (e.g. `compliance`, `orgApiKeys` for org settings; `databaseBackups`, `databasePitrRestore`, `nativeDbsMongo` for database).
 
 ---
 
@@ -1333,7 +1376,7 @@ Console uses **team** (organization) and **user** (account) preferences to store
 ### Key format
 
 - **Pattern**: `console.<feature>.<optionalSubKey>`
-- **Examples**: `console.pinnedProjectIds`, `console.sidebarCollapsed`, `organization` (preferred org on account prefs).
+- **Examples**: `console.pinnedProjectIds`, `console.sidebarCollapsed`, `console.databases.adminNavCollapsed`, `organization` (preferred org on account prefs).
 - **Scope**: Team prefs are per organization (`sdk.forConsole.teams.get/updatePrefs` with `teamId`). User/account prefs are per user (`sdk.forConsole.account.updatePrefs`).
 
 ### Value format
@@ -1602,9 +1645,10 @@ Blog posts and changelog entries are optimized for Google Search and Google Disc
 
 - **Minimum width: 1200px** (`MIN_COVER_IMAGE_WIDTH` in `src/lib/seo/cover-constants.ts`). Google Discover only features content with large images (at least 1200px wide) combined with the `max-image-preview:large` robots directive (set site-wide in `src/lib/seo/indexing.ts`).
 - **Recommended size**: 1920x1080 (the `blog` preset in the cover generator) or any 16:9 image at 1200px+ wide.
-- **New blog post covers**: place them at `public/images/blog/<slug>/cover.avif` (or `blog-local` for vibes-native posts) and set `cover:` in the post frontmatter. `scripts/generate-blog-local-images.ts` automatically upscales sources below 1200px and warns; prefer sources that are already large enough.
+- **New blog post covers**: place them at `public/images/blog/<slug>/cover.avif` and set `cover:` in the post frontmatter. `scripts/generate-blog-images.ts` automatically upscales sources below 1200px and warns; prefer sources that are already large enough.
 - **After adding or changing any cover**: run `bun run generate:cover-manifest`. This regenerates `src/lib/seo/cover-dimensions.json`, which the SEO helpers use to emit accurate `og:image:width` / `og:image:height`. The script warns about undersized covers; fix them with `bun run generate:content-covers` (upscales in place, aspect ratio preserved). The manifest is also regenerated during `bun run build`.
 - **Never** claim 1200x630 for a cover that has different dimensions; the manifest lookup handles this - do not hardcode dimensions in meta tags.
+- **Never add a per-post cover generator function.** A cover is a finished image that ships in `public/images/`, not code. Do not add a `generate<Post>Cover` function or an `IMAGE_GENERATORS` entry to `scripts/generate-blog-images.ts` for a new post, and never run that script for a slug whose cover already exists: the generator re-renders `cover.avif` and silently overwrites the shipped one. To convert an inline screenshot for a post without a generator, convert it outside the cover path and commit only the `.avif`.
 
 ### Article meta and structured data
 
@@ -1625,6 +1669,8 @@ Blog posts and changelog entries are optimized for Google Search and Google Disc
 
 ## Environment
 
+For screenshot captures, set `VITE_CONSOLE_SCREENSHOT_MODE=true` before starting the dev or production server. Screenshot mode defaults to off when unset. A saved browser preference overrides the environment default; typing `smile` outside an input or editor toggles the mode and saves that choice. Remove `screenshot:modeOpen` from localStorage to use the environment default again.
+
 Set `VITE_APPWRITE_ENDPOINT` in `.env` (default: `https://cloud.appwrite.io/v1`). Project endpoints are dynamic (per-project region); use `getApiEndpoint(region)` and `getProjectApiEndpoint(projectId)` from `@/lib/appwrite/sdk` for URL construction.
 
 ---
@@ -1635,9 +1681,8 @@ Set `VITE_APPWRITE_ENDPOINT` in `.env` (default: `https://cloud.appwrite.io/v1`)
 - **No local backend**: There is no local backend server and no `docker-compose`. The console is a client-side app that talks to a **remote backend** whose endpoint is set via the `VITE_*` endpoint variable documented in the `## Environment` section above. Copy `.env` from `.env.example` (`.env` is gitignored). In Cloud Agent VMs, the endpoint, the console fingerprint key, and other `VITE_*` values are injected as secrets and take precedence over the placeholder values in `.env.example`.
 - **Standard commands** (see README "Scripts" and `package.json`): `bun run dev` (Vite dev server on port 3000), `bun run lint` (ESLint), `bun run check` (`tsc --noEmit`), `bun run test` / `bun run e2e` (Playwright; needs `bun run install-browsers` first plus a reachable backend and `E2E_TEST_EMAIL`/`E2E_TEST_PASSWORD` or `E2E_TEST_SESSION_SECRET`). Database write suites need `E2E_ORG_ID` (Frankfurt). Use `bun run e2e:mysql`, `bun run e2e:postgres`, `bun run e2e:tablesdb`, `bun run e2e:documentsdb`, `bun run e2e:vectorsdb`, or `bun run e2e:databases` to run only those projects.
 - **Pre-existing lint/type issues**: `bun run lint` and `bun run check` currently report many pre-existing errors in the repo (e.g. unused imports, and config-file type mismatches from the `rolldown-vite` alias in `vite.config.ts`). These are not caused by environment setup; do not treat them as setup failures.
-- **Login for manual testing**: To exercise authenticated flows, log into the dev server (`http://localhost:3000/sign-in`) with the injected `E2E_TEST_EMAIL` / `E2E_TEST_PASSWORD` secrets. The account's project creation may be blocked by org permissions/plan limits on some orgs; project-scoped write actions (e.g. creating an Auth user, storage bucket, or database inside an existing project) work for hello-world verification.
+- **Login for manual testing**: Log into the dev server (`http://localhost:3000/sign-in`) with the injected `E2E_TEST_EMAIL` / `E2E_TEST_PASSWORD` secrets. Pre-launch is off by default; if it was enabled via env or debug menu, turn it off first (debug menu → Settings → Flags → Pre-launch, or unset / set `VITE_CONSOLE_PRE_LAUNCH=false`). The account's project creation may be blocked by org permissions/plan limits on some orgs; project-scoped write actions (e.g. creating an Auth user, storage bucket, or database inside an existing project) work for hello-world verification.
 - **Vite alias**: `vite` is aliased to `npm:rolldown-vite` (Rolldown), so dev/build logs mention `ROLLDOWN-VITE`; this is expected.
-- **`remotion/` subfolder** is an independent package (launch video) with its own deps and no lockfile; it is not needed to run or test the console.
 
 ### Console database e2e
 

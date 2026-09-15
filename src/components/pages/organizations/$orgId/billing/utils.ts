@@ -197,7 +197,15 @@ export function formatPaymentMethodSummary(
 export type OrganizationPaymentRefs = {
   paymentMethodId?: string | null
   backupPaymentMethodId?: string | null
-  failedInvoice?: { $id: string; lastError?: string; type?: string } | null
+  failedInvoice?: {
+    $id: string
+    lastError?: string
+    type?: string
+    grossAmount?: number
+    amount?: number
+    currency?: string
+    dueAt?: string
+  } | null
   billingPlanDowngrade?: unknown
 }
 

@@ -180,6 +180,8 @@ export const FRAMEWORK_ICON_MAP: Record<string, string> = {
   vercel: 'vercel.svg',
   digitalocean: 'digitalocean.svg',
   'digital-ocean': 'digitalocean.svg',
+  akamai: 'akamai.svg',
+  linode: 'akamai.svg',
   coolify: 'coolify.svg',
   rxdb: 'rxdb.svg',
   firebase: 'firebase.svg',
@@ -215,6 +217,9 @@ export const FRAMEWORK_ICON_MAP: Record<string, string> = {
   // Messaging & email providers
   mailgun: 'mailgun.svg',
   sendgrid: 'sendgrid.svg',
+  resend: 'resend.svg',
+  ses: 'amazon.svg',
+  'amazon-ses': 'amazon.svg',
   twilio: 'twilio.svg',
   msg91: 'msg91.svg',
   vonage: 'vonage.svg',

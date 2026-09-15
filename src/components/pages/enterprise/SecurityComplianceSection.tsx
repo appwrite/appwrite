@@ -1,6 +1,7 @@
 import { ArrowRight } from 'lucide-react'
 import { SectionSoftLight } from '@/components/pages/home/HomeSoftLights'
 import { Button } from '@/components/ui/button'
+import { ContactSalesLink } from '@/components/global/shared/ContactSalesLink'
 import {
   enterpriseComplianceFrameworks,
   enterpriseSecurityControls,
@@ -11,11 +12,7 @@ import { cn } from '@/lib/utils'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { analyticsAttrs } from '@/lib/analytics-actions'
 
-type SecurityComplianceSectionProps = {
-  onContactSales?: () => void
-}
-
-function SecuritySectionLinks({ onContactSales }: SecurityComplianceSectionProps) {
+function SecuritySectionLinks() {
   const t = useT()
   return (
     <div className="flex flex-wrap items-center justify-center gap-3">
@@ -25,22 +22,21 @@ function SecuritySectionLinks({ onContactSales }: SecurityComplianceSectionProps
           <ArrowRight className="ms-1.5 size-3.5" aria-hidden />
         </DocsRouteLink>
       </Button>
-      {onContactSales ? (
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-9 text-[13px] text-muted-foreground"
-          onClick={onContactSales}
-          {...analyticsAttrs('enterprise-contact-sales')}
-        >
+      <Button
+        variant="ghost"
+        size="sm"
+        className="h-9 text-[13px] text-muted-foreground"
+        asChild
+      >
+        <ContactSalesLink {...analyticsAttrs('enterprise-contact-sales')}>
           {t('Contact sales')}
-        </Button>
-      ) : null}
+        </ContactSalesLink>
+      </Button>
     </div>
   )
 }
 
-export function SecurityComplianceSection({ onContactSales }: SecurityComplianceSectionProps) {
+export function SecurityComplianceSection() {
   const t = useT()
   return (
     <section className="relative isolate overflow-hidden border-b border-border py-16 sm:py-20">
@@ -59,7 +55,7 @@ export function SecurityComplianceSection({ onContactSales }: SecurityCompliance
             {t(enterpriseSecuritySection.description)}
           </p>
           <div className="mt-6">
-            <SecuritySectionLinks onContactSales={onContactSales} />
+            <SecuritySectionLinks />
           </div>
         </div>
 

@@ -1,3 +1,5 @@
+import { getActiveProfileFeatures } from '@/lib/console-profiles'
+
 /**
  * Converts Markdoc source (docs, blog, changelog, integrations) into plain
  * CommonMark for the .md export endpoints and the llms.txt exports.
@@ -174,6 +176,37 @@ export function markdocToMarkdown(source: string): string {
       void tag
       const { title } = parseTagAttrs(rawAttrs)
       return title ? `\n**${title}**\n` : ''
+    },
+  )
+
+  // {% feature_gate anyOf|allOf %}...{% /feature_gate %} keeps body when flags allow.
+  text = text.replace(
+    /\{%\s*feature_gate\s+([^%]*?)%\}([\s\S]*?)\{%\s*\/feature_gate\s*%\}/g,
+    (_, rawAttrs: string, content: string) => {
+      const attrs = parseTagAttrs(rawAttrs)
+      const features = getActiveProfileFeatures()
+      const anyKeys = (attrs.anyOf ?? '')
+        .split(',')
+        .map((key) => key.trim())
+        .filter(Boolean)
+      const allKeys = (attrs.allOf ?? '')
+        .split(',')
+        .map((key) => key.trim())
+        .filter(Boolean)
+
+      if (anyKeys.length > 0) {
+        const enabled = anyKeys.some(
+          (key) => Boolean(features[key as keyof typeof features]),
+        )
+        if (!enabled) return ''
+      }
+      if (allKeys.length > 0) {
+        const enabled = allKeys.every(
+          (key) => Boolean(features[key as keyof typeof features]),
+        )
+        if (!enabled) return ''
+      }
+      return content
     },
   )
 

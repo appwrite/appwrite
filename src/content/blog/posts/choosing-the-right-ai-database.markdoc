@@ -8,7 +8,7 @@ author: veeresh-mulge
 date: 2025-10-23
 callToAction: true
 unlisted: false
-category: product
+category: products
 faqs:
   - question: "Which is the best database for AI applications?"
     answer: "There isn't a single \"best\" database for AI. It depends on your use case. If you're dealing with unstructured or rapidly changing data, MongoDB is a strong choice thanks to its flexible schema, native vector search, and scalability. For structured or transactional workloads, PostgreSQL works great, especially with the pgvector extension for embeddings. For large-scale similarity search or LLM retrieval, purpose-built vector databases like Pinecone, Weaviate, or Milvus can also play a key role."

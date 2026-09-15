@@ -142,8 +142,8 @@ export function OAuth2RelayCard({
   }
 
   return (
-    <div className="bg-background relative min-h-svh overflow-y-auto">
-      <div className="flex min-h-svh flex-col items-center p-6 md:p-10">
+    <div className="bg-background relative h-full overflow-y-auto">
+      <div className="flex min-h-full flex-col items-center p-6 md:p-10">
         <div className="my-auto w-full max-w-xl">
           {content}
           <div className="mt-10 flex justify-center md:mt-16">

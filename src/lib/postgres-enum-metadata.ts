@@ -5,6 +5,7 @@ import {
   buildPostgresRenameEnumTypeSql,
   buildPostgresRenameEnumValueSql,
 } from '@/lib/postgres-enum-ddl'
+import { randomUUID } from '@/lib/random-uuid'
 
 export type PostgresEnumValueEntry = {
   id: string
@@ -24,7 +25,7 @@ export function createEnumValueEntry(
   originalValue?: string,
 ): PostgresEnumValueEntry {
   return {
-    id: crypto.randomUUID(),
+    id: randomUUID(),
     value,
     originalValue,
   }

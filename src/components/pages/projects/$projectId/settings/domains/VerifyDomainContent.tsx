@@ -56,7 +56,8 @@ interface VerifyDomainContentProps {
    * - 'api' → use `_APP_DOMAIN_TARGET_CNAME` from console variables (project endpoint host).
    * - 'function' / 'site' → when the active profile has `edgeNetwork` enabled,
    *   use the edge network CNAME (`appwrite.network`) instead of the project
-   *   endpoint host. Falls back to console variables when edge network is off.
+   *   endpoint host. When edge network is off (self-hosted), use
+   *   `_APP_DOMAIN_FUNCTIONS` / `_APP_DOMAIN_SITES`.
    * Defaults to 'api' for backward compatibility.
    */
   resourceType?: 'api' | 'function' | 'site'
@@ -184,6 +185,8 @@ export function VerifyDomainContent({
     aaaa,
     caa,
     nameservers,
+    functionsDomain,
+    sitesDomain,
     isLoading,
     error,
   } = useConsoleVariables(region)
@@ -204,15 +207,24 @@ export function VerifyDomainContent({
   // (`appwrite.network`) - not the project endpoint host returned by
   // `_APP_DOMAIN_TARGET_CNAME` (which only applies to custom API domains).
   // For region-pinned routing users can use `<region>.appwrite.run`.
+  // Self-hosted uses `_APP_DOMAIN_FUNCTIONS` / `_APP_DOMAIN_SITES` instead.
   const cname = useMemo(() => {
-    if (
-      edgeNetworkEnabled &&
-      (resourceType === 'function' || resourceType === 'site')
-    ) {
-      return 'appwrite.network'
+    if (resourceType === 'function' || resourceType === 'site') {
+      if (edgeNetworkEnabled) {
+        return 'appwrite.network'
+      }
+      const serviceDomain =
+        resourceType === 'function' ? functionsDomain : sitesDomain
+      return serviceDomain || rawCname
     }
     return rawCname
-  }, [edgeNetworkEnabled, resourceType, rawCname])
+  }, [
+    edgeNetworkEnabled,
+    resourceType,
+    rawCname,
+    functionsDomain,
+    sitesDomain,
+  ])
 
   const handleCopy = (text: string, field: string) => {
     navigator.clipboard.writeText(text)

@@ -24,9 +24,6 @@ export function buildInitTicketImageUrl(params: {
   if (params.consoleUserId) {
     search.set('userId', params.consoleUserId)
   }
-  if (renderData.githubUsername) {
-    search.set('github', renderData.githubUsername)
-  }
 
   return `/init/ticket/${params.eventSlug}?${search.toString()}`
 }

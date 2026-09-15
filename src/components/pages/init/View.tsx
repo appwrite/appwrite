@@ -7,6 +7,7 @@ import { OPEN_COMMAND_CENTER_SHORTCUT_OPTIONS } from '@/lib/keyboard-shortcuts/u
 import { useDebugOverrides } from '@/lib/debug-overrides'
 import { getActiveLaunchEvent } from '@/lib/init/events'
 import { applyInitEventVisibility } from '@/lib/init/event-visibility'
+import { useInitLiveClock } from '@/lib/init/use-init-live-clock'
 import { isLaunchEventDayLocked } from '@/lib/init/types'
 import { InitPresenceProvider, useInitPresence } from '@/lib/init/init-presence-context'
 import { scrollToInitDayFromHash } from '@/lib/init/scroll-to-day-card'
@@ -55,6 +56,7 @@ function InitPageContent({
 }) {
   const [commandCenterOpen, setCommandCenterOpen] = useState(false)
   const [onlineNavOpen, setOnlineNavOpen] = useState(false)
+  const { preLaunch } = useDebugOverrides()
   const presence = useInitPresence()
   const raffle = useInitGiveawayRaffleContext()
   const communityGlobe = useInitCommunityGlobeData(baseEvent, {
@@ -70,12 +72,26 @@ function InitPageContent({
       onlineUsers: presence.onlineUsers,
       recentlyOnlineUsers: presence.recentlyOnlineUsers,
       onlineCount: presence.onlineCount,
+      hiddenOnlineCount: presence.hiddenOnlineCount,
+      onlineCountCapped: presence.onlineCountCapped,
       othersOnlineCount: presence.othersOnlineCount,
     }
   }, [baseEvent, presence])
 
-  useKeyboardShortcut('meta+k', () => setCommandCenterOpen(true), OPEN_COMMAND_CENTER_SHORTCUT_OPTIONS)
-  useKeyboardShortcut('control+k', () => setCommandCenterOpen(true), OPEN_COMMAND_CENTER_SHORTCUT_OPTIONS)
+  useKeyboardShortcut(
+    'meta+k',
+    () => {
+      if (!preLaunch) setCommandCenterOpen(true)
+    },
+    OPEN_COMMAND_CENTER_SHORTCUT_OPTIONS,
+  )
+  useKeyboardShortcut(
+    'control+k',
+    () => {
+      if (!preLaunch) setCommandCenterOpen(true)
+    },
+    OPEN_COMMAND_CENTER_SHORTCUT_OPTIONS,
+  )
 
   useEffect(() => {
     const frame = requestAnimationFrame(() => scrollToInitDayFromHash())
@@ -95,7 +111,9 @@ function InitPageContent({
       ) : null}
       <ConsoleLayout
         header={{
-          onCommandCenterOpen: () => setCommandCenterOpen(true),
+          onCommandCenterOpen: preLaunch
+            ? undefined
+            : () => setCommandCenterOpen(true),
         }}
         leftSidebar={
           showOnlineNav
@@ -152,7 +170,7 @@ function InitPageContent({
           <div className="mx-auto w-full max-w-7xl space-y-8 px-4 pb-8 pt-8 sm:px-6 sm:pb-10">
             <InitRecapIntro event={event} />
 
-            <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px] xl:grid-cols-[minmax(0,1fr)_360px]">
+            <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_320px] xl:grid-cols-[minmax(0,1fr)_360px]">
               <div className="space-y-6">
                 {event.days.map((day) =>
                   isLaunchEventDayLocked(day) ? (
@@ -193,6 +211,7 @@ function InitPageContent({
             <InitGlobalCommunitySection
               countries={communityGlobe.countries}
               developerCount={communityGlobe.developerCount}
+              developerCountCapped={communityGlobe.developerCountCapped}
               isLive={communityGlobe.isLive}
               isAuthenticated={Boolean(account)}
             />
@@ -218,22 +237,28 @@ function InitPageContent({
         </>
       ) : null}
 
-      <CommandCenter
-        open={commandCenterOpen}
-        onOpenChange={setCommandCenterOpen}
-        context="account"
-      />
+      {preLaunch ? null : (
+        <CommandCenter
+          open={commandCenterOpen}
+          onOpenChange={setCommandCenterOpen}
+          context="account"
+        />
+      )}
     </>
   )
 }
 
 export function View() {
   const { mockInitCurrentDay } = useDebugOverrides()
+  const nowMs = useInitLiveClock(mockInitCurrentDay)
   const baseEvent = useMemo(() => {
     const active = getActiveLaunchEvent()
     if (!active) return undefined
-    return applyInitEventVisibility(active, { mockCurrentDay: mockInitCurrentDay })
-  }, [mockInitCurrentDay])
+    return applyInitEventVisibility(active, {
+      currentDay: mockInitCurrentDay,
+      nowMs,
+    })
+  }, [mockInitCurrentDay, nowMs])
 
   const {
     data: account,
@@ -268,11 +293,16 @@ export function View() {
 
 function InitEmptyState() {
   const [commandCenterOpen, setCommandCenterOpen] = useState(false)
+  const { preLaunch } = useDebugOverrides()
 
   return (
     <>
       <ConsoleLayout
-        header={{ onCommandCenterOpen: () => setCommandCenterOpen(true) }}
+        header={{
+          onCommandCenterOpen: preLaunch
+            ? undefined
+            : () => setCommandCenterOpen(true),
+        }}
         showFooter
       >
         <div className="mx-auto flex w-full max-w-7xl flex-col items-center justify-center px-4 py-24 sm:px-6">
@@ -285,11 +315,13 @@ function InitEmptyState() {
         </div>
       </ConsoleLayout>
 
-      <CommandCenter
-        open={commandCenterOpen}
-        onOpenChange={setCommandCenterOpen}
-        context="account"
-      />
+      {preLaunch ? null : (
+        <CommandCenter
+          open={commandCenterOpen}
+          onOpenChange={setCommandCenterOpen}
+          context="account"
+        />
+      )}
     </>
   )
 }

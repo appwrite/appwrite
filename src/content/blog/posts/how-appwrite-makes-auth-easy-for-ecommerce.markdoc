@@ -8,7 +8,7 @@ timeToRead: 6
 author: laura-du-ry
 callToAction: true
 unlisted: true
-category: product
+category: products
 faqs:
   - question: "What sign-in methods does Appwrite support for an e-commerce store?"
     answer: "[Appwrite Auth](/docs/products/auth) supports email/password, anonymous login (useful for guest checkout), OAuth providers like Google, Apple, GitHub, and Discord, and Magic URL passwordless sign-in. You can combine them so users pick whichever flow suits them."

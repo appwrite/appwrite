@@ -7,7 +7,7 @@ lastUpdated: 2026-06-29
 cover: /images/blog/go-cover.avif
 timeToRead: 7
 author: matej-baco
-category: init, announcement
+category: init, announcements
 featured: false
 faqs:
   - question: "Which Go version does Appwrite Functions support?"

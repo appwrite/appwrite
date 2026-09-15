@@ -38,7 +38,7 @@ docker run -it --rm \
     --volume /var/run/docker.sock:/var/run/docker.sock \
     --volume "$(pwd)"/appwrite:/usr/src/code/appwrite:rw \
     --entrypoint="install" \
-    appwrite/appwrite:1.9.6
+    appwrite/appwrite:2.1.0
 ```
 {% /tabsitem %}
 
@@ -49,7 +49,7 @@ docker run -it --rm ^
     --volume //var/run/docker.sock:/var/run/docker.sock ^
     --volume "%cd%"/appwrite:/usr/src/code/appwrite:rw ^
     --entrypoint="install" ^
-    appwrite/appwrite:1.9.6
+    appwrite/appwrite:2.1.0
 ```
 {% /tabsitem %}
 
@@ -60,7 +60,7 @@ docker run -it --rm `
     --volume /var/run/docker.sock:/var/run/docker.sock `
     --volume ${pwd}/appwrite:/usr/src/code/appwrite:rw `
     --entrypoint="install" `
-    appwrite/appwrite:1.9.6
+    appwrite/appwrite:2.1.0
 ```
 {% /tabsitem %}
 {% /tabs %}
@@ -76,15 +76,16 @@ The setup wizard walks you through four steps to configure your Appwrite instanc
 Configure your Appwrite instance's basic settings.
 
 {% only_dark %}
-![Setup your app](/images/docs/advanced/self-hosting/installation/dark/wizard-setup.avif)
+![Setup your app](/images/docs/advanced/self-hosting/installation/dark/wizard-setup-app.avif)
 {% /only_dark %}
 {% only_light %}
-![Setup your app](/images/docs/advanced/self-hosting/installation/wizard-setup.avif)
+![Setup your app](/images/docs/advanced/self-hosting/installation/wizard-setup-app.avif)
 {% /only_light %}
 
 - **Hostname** - The domain or IP address where your Appwrite instance will be accessible.
-- **Database** - Choose between [MongoDB or MariaDB](/docs/advanced/self-hosting/configuration/databases) as your database backend. MongoDB is selected by default.
-- **Advanced settings** - Optionally configure HTTP and HTTPS ports, SSL certificate email, and an OpenAI API key for the [Appwrite Assistant](/docs/tooling/assistant).
+- **Use HTTPS** - Turn this on when your Appwrite domain uses HTTPS, including behind a reverse proxy.
+- **Database** - Choose [PostgreSQL, MariaDB, or MongoDB](/docs/advanced/self-hosting/configuration/databases) as your database backend. PostgreSQL is selected by default.
+- **Advanced settings** - Optionally configure the [worker topology](/docs/advanced/self-hosting/configuration/topologies) under **Workers and schedulers**, HTTP and HTTPS ports, SSL certificate email, and an OpenAI API key for the [Appwrite Assistant](/docs/tooling/assistant).
 
 ## Step 2: Secure your app {% #wizard-secure %}
 
@@ -135,13 +136,17 @@ For advanced users who prefer manual setup, you can install Appwrite using Docke
 
 ## Install Appwrite {% #install-appwrite %}
 
-1. Create a directory named `appwrite` and place both `docker-compose.yml` and `.env` inside
+1. Create a directory named `appwrite` and place the generated files inside. Every installation needs `docker-compose.yml` and `.env`; MongoDB installations also need `mongo-init.js` and `mongo-entrypoint.sh`
 2. Edit the `.env` file to customize your installation. At minimum, update `_APP_OPENSSL_KEY_V1` and `_APP_EXECUTOR_SECRET` with unique secret values
 3. Start the Appwrite stack:
 
 ```bash
 docker compose up -d --remove-orphans
 ```
+
+{% info title="Worker topologies" %}
+By default, Appwrite runs all queue workers in a single container. To run one container per queue instead, see [Worker topologies](/docs/advanced/self-hosting/configuration/topologies).
+{% /info %}
 
 # Post-installation {% #post-installation %}
 
@@ -154,9 +159,21 @@ After installation completes:
 On non-Linux hosts, the server might take a few minutes to start after installation completes. This is normal behavior.
 {% /info %}
 
+## Organizations {% #organizations %}
+
+A self-hosted instance allows one organization to be created. The Console creates it, along with an initial project, when the first user signs in. The limit applies to the instance, not to each account.
+
+Invite other users to the organization to share its existing projects. Creating an account alone does not grant organization or project access, and signing up does not create a separate project for each user. If you allow additional accounts to register with `_APP_CONSOLE_WHITELIST_ROOT=disabled`, they still need to accept an organization invitation.
+
+Existing organizations from an upgrade are preserved; they are not merged or deleted. Accounts belonging to several organizations can still switch between them and transfer projects. The Console hides the organization switcher when an account belongs to only one organization.
+
+Organizations use console teams, but this restriction does not apply to teams inside application projects. You can continue creating those teams through the API and SDKs.
+
 ## SDK version compatibility {% #sdk-version-compatibility %}
 
-The tables below map each released self-hosted Appwrite version to the SDK versions that were current at the time of that release. Use this to pin your SDK to a version known to work with your server. The latest stable self-hosted Appwrite release is 1.9.6.
+The tables below map each released self-hosted Appwrite version to the SDK versions built against it. Every SDK sends an `X-Appwrite-Response-Format` header that names the Appwrite version whose response shapes it expects, and each row lists the SDK versions that send that row's version. Use this to pin your SDK to a version known to work with your server. The latest stable self-hosted Appwrite release is 2.1.0.
+
+The Appwrite CLI is not listed by response format. It pins an older format on purpose so that one CLI build works against a range of server versions.
 
 ### Client SDKs {% #client-compatibility %}
 
@@ -230,6 +247,20 @@ The tables below map each released self-hosted Appwrite version to the SDK versi
 * 0.34.0
 * 18.3.0
 * 26.0.0
+---
+* 2.0.0
+* 27.0.0
+* 26.2.0
+* 0.35.0
+* 19.0.0
+* 27.2.0
+---
+* 2.1.0
+* 27.0.0
+* 26.2.0
+* 0.35.0
+* 19.0.0
+* 27.2.0
 {% /table %}
 
 ### Server SDKs {% #server-compatibility %}
@@ -354,6 +385,30 @@ The tables below map each released self-hosted Appwrite version to the SDK versi
 * 20.0.0
 * 19.0.0
 * 23.0.0
+---
+* 2.0.0
+* 29.0.0
+* 24.0.0
+* 30.0.0
+* 29.0.0
+* 28.0.0
+* 8.0.0
+* v7.2.0
+* 22.0.0
+* 22.0.0
+* 27.3.0
+---
+* 2.1.0
+* 29.0.0
+* 24.0.0
+* 30.0.0
+* 29.0.0
+* 28.0.0
+* 8.0.0
+* v7.3.0
+* 22.0.0
+* 22.0.0
+* 27.3.0
 {% /table %}
 
 # Managing your installation {% #managing-installation %}

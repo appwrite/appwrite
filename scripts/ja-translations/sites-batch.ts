@@ -10,8 +10,8 @@ export const jaSitesBatch: Record<string, string> = {
     'Appwrite の CDN は世界 120 以上の PoP でグローバルにカバーし、エッジキャッシュとコンテンツ最適化でレイテンシを低減します。すべてのコンテンツは TLS 経由で安全に暗号化配信されます。',
   "Appwrite's network includes built-in DDoS mitigation to protect against distributed denial-of-service attacks, ensuring uninterrupted access to your sites and maintaining high availability even during high traffic loads.":
     'Appwrite のネットワークには DDoS 緩和が組み込まれており、分散型サービス拒否攻撃からサイトを保護し、高トラフィック時でも高可用性を維持します。',
-  'Build output is available after the deployment has completed.':
-    'ビルド出力はデプロイ完了後に利用できます。',
+  'Build output is only available for ready deployments.':
+    'ビルド出力は、準備完了のデプロイでのみ利用できます。',
   'Create your first deployment to activate this site.':
     'このサイトを有効化するには最初のデプロイを作成してください。',
   'The active deployment cannot be deleted from the list':

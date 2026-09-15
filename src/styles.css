@@ -109,6 +109,17 @@ html .toaster-at-inline-end[data-sonner-toaster] [data-sonner-toast] {
 }
 
 :root {
+  /* Code syntax palette. Server HTML cannot know the theme, so CodeBlock emits
+     these variables instead of hex and the active theme class supplies values. */
+  --code-plain: #000000;
+  --code-module-keyword: #7b6aee;
+  --code-function: #4a8fe8;
+  --code-keyword: #e85d8a;
+  --code-escape: #4a8fe8;
+  --code-comment: #6e6e71;
+  --code-property: #4a8fe8;
+  --code-string: #2db88a;
+
   /* Text ::selection highlight */
   --selection-background: hsl(178 54% 69%);
   --background: oklch(1 0 0);
@@ -145,7 +156,7 @@ html .toaster-at-inline-end[data-sonner-toaster] [data-sonner-toast] {
   --sidebar-accent-foreground: oklch(0.21 0.006 285.885);
   --sidebar-border: oklch(0.93 0.0035 286.32);
   --sidebar-ring: oklch(0.898 0.004 286.286);
-  /* Cloud profile - matches appwrite/website; files in public/fonts/aeonik-pro */
+  /* Cloud profile - matches appwrite/website; files in src/assets/fonts/aeonik-pro */
   --font-aeonik-pro:
     'Aeonik Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
   /* Long-form content body copy - matches appwrite/website (--web-font-family-inter) */
@@ -166,6 +177,22 @@ html[lang='he'] {
 
 html:not([lang='en']):not([lang='he']) {
   --font-aeonik-pro: var(--font-inter);
+}
+
+/* Dark chrome themes share the dark code palette. */
+.dark,
+.crazy,
+.stealth,
+.premium,
+.high-contrast {
+  --code-plain: #9cdcfe;
+  --code-module-keyword: #9685fe;
+  --code-function: #67a3fe;
+  --code-keyword: #fe86a8;
+  --code-escape: #67a3fe;
+  --code-comment: #6e6e71;
+  --code-property: #67a3fe;
+  --code-string: #4ad4ab;
 }
 
 .dark {
@@ -894,6 +921,55 @@ html:not([lang='en']):not([lang='he']) {
     height: 100dvh;
   }
 
+  /*
+    Marketing/docs scroll the document so Plausible can measure scroll depth.
+    The console shell is otherwise position:fixed with overflow on #main-content,
+    which makes document height === viewport and reports 100% depth on every visit.
+    API reference explorer keeps the nested scroller (class is not applied).
+  */
+  html.marketing-document-scroll {
+    height: auto;
+    overscroll-behavior: auto;
+  }
+
+  html.marketing-document-scroll body {
+    height: auto;
+    overflow: auto;
+    overscroll-behavior: auto;
+  }
+
+  html.marketing-document-scroll .root-container {
+    position: relative;
+    inset: auto;
+    width: 100%;
+    height: auto;
+    min-height: 100dvh;
+    overflow: visible !important;
+  }
+
+  html.marketing-document-scroll .root-container > .flex,
+  html.marketing-document-scroll .root-scroll-container,
+  html.marketing-document-scroll .org-layout-container,
+  html.marketing-document-scroll .project-layout-container {
+    height: auto !important;
+    max-height: none !important;
+    min-height: 100dvh;
+    overflow: visible !important;
+  }
+
+  /* The sidebar/content row clips overflow-y for the console's left nav. In
+     document-scroll mode that clip would make the row the scrollport for
+     sticky in-page TOCs, so it has to flow with the document as well. */
+  html.marketing-document-scroll .console-layout-row {
+    overflow: visible !important;
+  }
+
+  html.marketing-document-scroll #main-content {
+    overflow: visible !important;
+    max-height: none !important;
+    flex: 1 0 auto;
+  }
+
   /* Mobile/tablet flex constraints. The root chain already sizes to 100dvh, so
      these rules only need to ensure inner flex containers stay bounded and
      scroll regions claim remaining space. */
@@ -1095,6 +1171,256 @@ html:is(.crazy, .stealth, .premium, .high-contrast, .barbie, .nineties) .upgrade
 .monaco-editor .monaco-editor-background,
 .monaco-editor .margin {
   background-color: var(--editor-bg, var(--background)) !important;
+}
+
+/* Suggest/hover widgets are portaled here so overflow-hidden SQL panes cannot clip them. */
+.monaco-overflow-widgets-root {
+  position: relative;
+  z-index: 10050;
+  pointer-events: none;
+}
+
+.monaco-overflow-widgets-root .overflowingContentWidgets,
+.monaco-overflow-widgets-root .overflowingOverlayWidgets,
+.monaco-overflow-widgets-root .editor-widget,
+.monaco-overflow-widgets-root .suggest-details,
+.monaco-overflow-widgets-root .monaco-hover {
+  pointer-events: auto;
+}
+
+/*
+ * Suggest / hover / parameter-hint overlays: match shadcn popover + command menus.
+ * Colors also come from monaco-app-theme.ts. Layout overrides Monaco's VS Code
+ * defaults (empty file-icon gutter, details only on the focused row, mixed fonts).
+ */
+.monaco-editor .suggest-widget,
+.editor-widget.suggest-widget,
+.monaco-editor .suggest-details,
+.suggest-details,
+.monaco-editor .parameter-hints-widget,
+.editor-widget.parameter-hints-widget,
+.monaco-editor .monaco-hover,
+.monaco-hover {
+  overflow: hidden;
+  border-radius: var(--radius) !important;
+  border: 1px solid var(--border) !important;
+  background: var(--popover) !important;
+  color: var(--popover-foreground) !important;
+  box-shadow:
+    0 4px 6px -1px rgb(0 0 0 / 0.1),
+    0 2px 4px -2px rgb(0 0 0 / 0.1);
+}
+
+/* Extra inset around the list. content-box so Monaco's fixed height still fits every row. */
+.monaco-editor .suggest-widget,
+.editor-widget.suggest-widget,
+.monaco-editor .suggest-details,
+.suggest-details {
+  box-sizing: content-box !important;
+  padding: 4px;
+}
+
+.monaco-editor .suggest-widget,
+.editor-widget.suggest-widget {
+  z-index: 10050;
+}
+
+.monaco-editor .suggest-widget.docs-side,
+.editor-widget.suggest-widget.docs-side {
+  overflow: visible;
+}
+
+.monaco-editor .suggest-widget .monaco-list .monaco-list-row,
+.editor-widget.suggest-widget .monaco-list .monaco-list-row {
+  display: flex;
+  align-items: center;
+  padding: 0 8px !important;
+  border-radius: var(--radius-sm);
+}
+
+/*
+ * Monaco always prepends a file/folder color-swatch `.icon` and sizes it to the
+ * suggest line height (28px). SQL completions use `.suggest-icon` instead, and
+ * the hide rule lives under `.monaco-editor`, so the empty slot was still
+ * taking a full column when the widget is portaled to body.
+ */
+.monaco-editor .suggest-widget .monaco-list .monaco-list-row > .icon,
+.editor-widget.suggest-widget .monaco-list .monaco-list-row > .icon {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden;
+}
+
+.monaco-editor .suggest-widget .monaco-list .monaco-list-row > .contents,
+.editor-widget.suggest-widget .monaco-list .monaco-list-row > .contents {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  padding-left: 0 !important;
+}
+
+.monaco-editor .suggest-widget .monaco-list .monaco-list-row > .contents > .main,
+.editor-widget.suggest-widget .monaco-list .monaco-list-row > .contents > .main {
+  display: flex;
+  align-items: center !important;
+  justify-content: flex-start;
+  width: 100%;
+  min-width: 0;
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu',
+    'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif !important;
+  font-size: 13px;
+  letter-spacing: 0 !important;
+}
+
+.monaco-editor .suggest-widget .monaco-list .monaco-list-row > .contents > .main > .left,
+.editor-widget.suggest-widget .monaco-list .monaco-list-row > .contents > .main > .left {
+  display: flex;
+  flex: 0 1 auto;
+  align-items: center;
+  min-width: 0;
+  gap: 0;
+}
+
+.monaco-editor .suggest-widget .monaco-list .monaco-list-row > .contents > .main > .right,
+.editor-widget.suggest-widget .monaco-list .monaco-list-row > .contents > .main > .right {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.monaco-editor .suggest-widget .monaco-list .monaco-list-row > .contents > .main > .left > .monaco-icon-label,
+.editor-widget.suggest-widget .monaco-list .monaco-list-row > .contents > .main > .left > .monaco-icon-label {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  flex-shrink: 1 !important;
+}
+
+.monaco-editor .suggest-widget .monaco-icon-label > .monaco-icon-label-container,
+.editor-widget.suggest-widget .monaco-icon-label > .monaco-icon-label-container {
+  display: flex;
+  align-items: center;
+}
+
+/* Monaco always reserves a 16×22 file-icon ::before slot, even when empty. */
+.monaco-editor .suggest-widget .monaco-icon-label::before,
+.editor-widget.suggest-widget .monaco-icon-label::before,
+.monaco-editor .suggest-widget .monaco-icon-label::after,
+.editor-widget.suggest-widget .monaco-icon-label::after {
+  content: none !important;
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.monaco-editor .suggest-widget .monaco-list .monaco-list-row .suggest-icon,
+.editor-widget.suggest-widget .monaco-list .monaco-list-row .suggest-icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  margin-right: 8px !important;
+  font-size: 14px;
+  line-height: 1;
+  color: var(--muted-foreground) !important;
+}
+
+.monaco-editor .suggest-widget .monaco-list .monaco-list-row .suggest-icon::before,
+.editor-widget.suggest-widget .monaco-list .monaco-list-row .suggest-icon::before {
+  display: block;
+  width: 16px;
+  height: 16px;
+  line-height: 16px;
+  text-align: center;
+}
+
+.monaco-editor .suggest-widget .monaco-list .monaco-list-row > .contents > .main > .right > .details-label,
+.editor-widget.suggest-widget .monaco-list .monaco-list-row > .contents > .main > .right > .details-label {
+  display: inline !important;
+  flex: 0 1 auto;
+  margin-left: 8px !important;
+  overflow: hidden;
+  font-size: 12px !important;
+  line-height: 16px;
+  color: var(--muted-foreground) !important;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  opacity: 1 !important;
+}
+
+/*
+ * Suggest is portaled to body, so Monaco's `.monaco-editor .suggest-widget`
+ * readMore rules never apply. Keep chevrons in-flow, 16px, right-aligned.
+ * Inline width/height is the suggest line height (28px); override that box.
+ */
+.monaco-editor .suggest-widget .monaco-list .monaco-list-row > .contents > .main > .right > .readMore,
+.editor-widget.suggest-widget .monaco-list .monaco-list-row > .contents > .main > .right > .readMore {
+  display: inline-flex;
+  position: static;
+  top: auto;
+  right: auto;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 16px !important;
+  height: 16px !important;
+  margin-left: auto;
+  font-size: 14px;
+  line-height: 1;
+  visibility: visible;
+}
+
+.monaco-editor .suggest-widget .monaco-list .monaco-list-row > .contents > .main > .right > .readMore::before,
+.editor-widget.suggest-widget .monaco-list .monaco-list-row > .contents > .main > .right > .readMore::before {
+  display: block;
+  width: 16px;
+  height: 16px;
+  line-height: 16px;
+  text-align: center;
+}
+
+.monaco-editor .suggest-widget .monaco-icon-description-container,
+.editor-widget.suggest-widget .monaco-icon-description-container,
+.suggest-details .type,
+.suggest-details .docs,
+.parameter-hints-widget .signature,
+.monaco-hover .hover-row .hover-contents .value {
+  color: var(--muted-foreground) !important;
+}
+
+.monaco-editor .suggest-widget .monaco-list .monaco-list-row.focused,
+.editor-widget.suggest-widget .monaco-list .monaco-list-row.focused {
+  background: var(--accent) !important;
+  color: var(--accent-foreground) !important;
+}
+
+.monaco-editor .suggest-widget .monaco-list .monaco-list-row.focused .details-label,
+.editor-widget.suggest-widget .monaco-list .monaco-list-row.focused .details-label,
+.monaco-editor .suggest-widget .monaco-list .monaco-list-row.focused .suggest-icon,
+.editor-widget.suggest-widget .monaco-list .monaco-list-row.focused .suggest-icon,
+.monaco-editor .suggest-widget .monaco-list .monaco-list-row.focused .codicon,
+.editor-widget.suggest-widget .monaco-list .monaco-list-row.focused .codicon {
+  color: var(--accent-foreground) !important;
+}
+
+.monaco-hover .monaco-hover-content,
+.parameter-hints-widget {
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu',
+    'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  font-size: 13px;
 }
 
 /* Find in file highlight in Monaco editor */
@@ -1383,6 +1709,11 @@ html[data-init-ticket-video-capturing] [data-init-ticket-video-capture] * {
   animation-play-state: running !important;
 }
 
+html[data-init-ticket-video-capturing] [data-init-ticket-export-control],
+html[data-init-ticket-video-capturing] [data-init-ticket-export-control] * {
+  animation-play-state: running !important;
+}
+
 /* Home AI feature card mock UI */
 @keyframes ai-mock-fade-in {
   from {
@@ -1467,23 +1798,158 @@ html[data-init-ticket-video-capturing] [data-init-ticket-video-capture] * {
   }
 }
 
+@keyframes home-ai-msg-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes home-ai-chart-reveal {
+  from {
+    opacity: 0;
+    clip-path: inset(100% 0 0 0);
+  }
+
+  to {
+    opacity: 1;
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes home-ai-status-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+
+  50% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+}
+
+.home-ai-msg-in {
+  animation: home-ai-msg-in 360ms ease-out both;
+}
+
+.home-ai-chart-reveal {
+  animation: home-ai-chart-reveal 700ms ease-out both;
+}
+
+.home-ai-status-pulse {
+  animation: home-ai-status-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes home-ai-pane-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.home-ai-pane-in {
+  animation: home-ai-pane-in 500ms ease-out both;
+}
+
+.home-ai-layout-pane {
+  transition:
+    height 500ms ease-out,
+    opacity 480ms ease-out,
+    transform 480ms ease-out,
+    border-color 400ms ease-out;
+}
+
+.home-ai-chat-spacer {
+  flex-grow: 1;
+  flex-basis: 0;
+  min-width: 0;
+  overflow: hidden;
+  transition: flex-grow 700ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.home-ai-chat-spacer.shifted {
+  flex-grow: 0;
+}
+
+.home-ai-composer-grow-ready {
+  transition: height 360ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes home-ai-oauth-sheet {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.home-ai-oauth-sheet {
+  animation: home-ai-oauth-sheet 420ms ease-out both;
+}
+
+@keyframes home-ai-oauth-press {
+  0%,
+  40% {
+    transform: scale(1);
+  }
+
+  52% {
+    transform: scale(0.96);
+  }
+
+  68%,
+  100% {
+    transform: scale(1);
+  }
+}
+
+.home-ai-oauth-press {
+  animation: home-ai-oauth-press 1100ms ease-out both;
+  transform-origin: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-ai-msg-in,
+  .home-ai-chart-reveal,
+  .home-ai-status-pulse,
+  .home-ai-pane-in,
+  .home-ai-oauth-sheet,
+  .home-ai-oauth-press {
+    animation: none;
+  }
+
+  .home-ai-layout-pane,
+  .home-ai-chat-spacer,
+  .home-ai-composer-grow-ready {
+    transition: none;
+  }
+}
+
 /* Home product bento tile hover */
 .product-bento-hover-light {
   z-index: 20;
-  border-radius: calc(0.75rem - 1px);
 }
 
-/* Skip layout/paint for off-screen bento tiles while scrolling the home page. */
-.product-bento-grid > article {
-  content-visibility: auto;
-  contain-intrinsic-size: auto 420px;
-  contain: layout paint style;
-}
-
-@media (min-width: 1024px) {
-  .product-bento-grid > article {
-    contain-intrinsic-size: auto 240px;
-  }
+/* Keep bento tiles in normal layout. content-visibility/contain on these
+   articles jumps #main-content back to top when hover styles change. */
+.product-bento-grid {
+  overflow-anchor: none;
 }
 
 /* Home product bento mock UI */
@@ -1575,19 +2041,45 @@ html[data-init-ticket-video-capturing] [data-init-ticket-video-capture] * {
   0% {
     transform: scale(1);
     border-color: var(--border);
-    background-color: color-mix(in oklch, var(--background) 80%, transparent);
+    background-color: var(--background);
+    color: var(--muted-foreground);
   }
 
   45% {
     transform: scale(0.96);
-    border-color: color-mix(in oklch, var(--brand-cta) 30%, var(--border));
-    background-color: color-mix(in oklch, var(--brand-cta) 12%, var(--background));
+    border-color: var(--brand-cta);
+    background-color: var(--brand-cta);
+    color: #fff;
   }
 
   100% {
     transform: scale(1);
-    border-color: color-mix(in oklch, var(--brand-cta) 18%, var(--border));
-    background-color: color-mix(in oklch, var(--brand-cta) 6%, var(--background));
+    border-color: var(--brand-cta);
+    background-color: var(--brand-cta);
+    color: #fff;
+  }
+}
+
+.group:hover .product-bento-pink-cta {
+  background-color: var(--brand-cta);
+  border-color: transparent;
+  color: #fff !important;
+}
+
+.group:hover .product-bento-pink-cta :is(p, span, svg, [class*='text-']) {
+  color: #fff !important;
+}
+
+.group:hover .product-bento-pink-cta img {
+  filter: brightness(0) invert(1);
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .group:hover .product-bento-pink-cta {
+    background-color: var(--brand-cta);
+    border-color: transparent;
+    color: #fff;
   }
 }
 
@@ -1973,6 +2465,53 @@ pre.prism-code .token-line > span {
   box-shadow: none !important;
 }
 
+/* Blog code fences: Prism tokens rendered at build/server time. Same palette
+   as CodeBlock (prismSyntaxHighlightStyles) via the --code-* theme variables. */
+.blog-code .token.comment,
+.blog-code .token.prolog,
+.blog-code .token.doctype,
+.blog-code .token.cdata {
+  color: var(--code-comment);
+}
+.blog-code .token.namespace,
+.blog-code .token.class-name,
+.blog-code .language-markup .token.doctype {
+  color: var(--code-module-keyword);
+}
+.blog-code .token.keyword,
+.blog-code .token.builtin,
+.blog-code .token.changed,
+.blog-code .token.interpolation-punctuation,
+.blog-code .token.boolean,
+.blog-code .token.selector,
+.blog-code .language-markup .token.tag {
+  color: var(--code-keyword);
+}
+.blog-code .token.function {
+  color: var(--code-function);
+}
+.blog-code .token.attr-name,
+.blog-code .token.variable,
+.blog-code .token.property {
+  color: var(--code-property);
+}
+.blog-code .token.tag,
+.blog-code .token.deleted,
+.blog-code .token.string,
+.blog-code .token.attr-value,
+.blog-code .token.template-punctuation,
+.blog-code .token.char,
+.blog-code .token.regexp,
+.blog-code .token.number,
+.blog-code .token.inserted,
+.blog-code .token.constant {
+  color: var(--code-string);
+}
+.blog-code .token.punctuation,
+.blog-code .token.operator {
+  color: inherit;
+}
+
 /* Overlay scrollbar - hidden until hover/focus; thin rounded thumb on Windows/Linux */
 .overlay-scrollbar {
   scrollbar-width: none;
@@ -1981,6 +2520,7 @@ pre.prism-code .token-line > span {
 
 .overlay-scrollbar::-webkit-scrollbar {
   width: 0;
+  height: 0;
 }
 
 .overlay-scrollbar:hover,
@@ -1992,6 +2532,7 @@ pre.prism-code .token-line > span {
 .overlay-scrollbar:hover::-webkit-scrollbar,
 .overlay-scrollbar:focus-within::-webkit-scrollbar {
   width: 6px;
+  height: 6px;
 }
 
 .overlay-scrollbar:hover::-webkit-scrollbar-track,

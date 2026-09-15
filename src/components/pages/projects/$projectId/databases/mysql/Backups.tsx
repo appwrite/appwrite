@@ -9,6 +9,7 @@ import {
   MYSQL_BACKUPS_PAGE_SIZE,
   useMysqlBackupPolicies,
   useMysqlBackups,
+  useMysqlDatabase,
 } from '@/lib/react-query/hooks'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -64,6 +65,12 @@ import {
 } from '@/components/ui/select'
 import type { Models } from '@appwrite.io/console' // pragma: allowlist secret
 import { cn } from '@/lib/utils'
+import {
+  BACKUPS_VIEW_CONTAINER,
+  backupsViewArchivesColumnClass,
+  backupsViewGridClass,
+  backupsViewPoliciesColumnClass,
+} from '../_components/backups-view-container'
 import { useT } from '@/lib/i18n/translate'
 import { toByteCount } from '@/lib/utils/byte-display-unit'
 import { useOrganizationPlan, useProject } from '@/lib/react-query/hooks'
@@ -73,6 +80,8 @@ import {
   supportsAdvancedBackupPolicies,
 } from '@/lib/databases/backup-policy-plan-limits'
 import { PlanLimitWarning } from '../../shared/PlanLimitWarning'
+import { RestorePitrButton } from '../_components/RestorePitr'
+import { useDatabaseAdminOperationsAccess } from '../_components/DatabaseOperationsLockContext'
 import { resolveOrganizationPlanDisplayLabel } from '@/lib/utils/plan-filter'
 import {
   Tooltip,
@@ -156,6 +165,8 @@ export function View({ projectId, databaseId }: ViewProps) {
   const t = useT()
   const queryClient = useQueryClient()
   const { project } = useProject(projectId)
+  const { database } = useMysqlDatabase(projectId, databaseId)
+  const { canWrite } = useDatabaseAdminOperationsAccess()
   const { plan: organizationPlan } = useOrganizationPlan(project?.teamId)
   const backupPoliciesLimit = getBackupPoliciesPlanLimit(organizationPlan)
   const planName = resolveOrganizationPlanDisplayLabel({
@@ -413,13 +424,14 @@ export function View({ projectId, databaseId }: ViewProps) {
       ) : null}
       <div
         className={cn(
+          BACKUPS_VIEW_CONTAINER,
           'mx-auto w-full max-w-7xl px-4 pb-4 sm:px-6 sm:pb-6',
           !showPlanLimitWarning && 'mt-4 sm:mt-6',
           showPlanLimitWarning && 'pt-4 sm:pt-6',
         )}
       >
-      <div className="grid gap-6 lg:grid-cols-3 lg:items-stretch">
-        <div className="lg:col-span-1 flex flex-col">
+      <div className={backupsViewGridClass}>
+        <div className={backupsViewPoliciesColumnClass}>
           <div className="mb-4 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <h3 className="text-[15px] font-semibold text-foreground">
@@ -575,20 +587,31 @@ export function View({ projectId, databaseId }: ViewProps) {
           </div>
         </div>
 
-        <div className="lg:col-span-2 flex flex-col">
+        <div className={backupsViewArchivesColumnClass}>
           <div className="mb-4 flex items-center justify-between">
             <h3 className="text-[15px] font-semibold text-foreground">
               {t('Backups')}
             </h3>
-            <Button
-              variant="brandCta"
-              onClick={() => setCreateManualBackupDialogOpen(true)}
-              size="sm"
-              className="h-8 gap-1.5 text-[12px] font-medium"
-            >
-              <Plus className="h-3.5 w-3.5" />
-              {t('Manual backup')}
-            </Button>
+            <div className="flex items-center gap-2">
+              {database ? (
+                <RestorePitrButton
+                  projectId={projectId}
+                  databaseId={databaseId}
+                  database={database}
+                  engine="mysql"
+                  canWrite={canWrite}
+                />
+              ) : null}
+              <Button
+                variant="brandCta"
+                onClick={() => setCreateManualBackupDialogOpen(true)}
+                size="sm"
+                className="h-8 gap-1.5 text-[12px] font-medium"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                {t('Manual backup')}
+              </Button>
+            </div>
           </div>
           <div className="flex-1">
             {isBackupsActuallyLoading ? (

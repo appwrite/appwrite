@@ -1,56 +1,16 @@
 import { sdk } from '@/lib/appwrite/sdk'
+import type { DowngradeAddonRemoval } from '@/lib/billing/downgrade-addons'
 import { deleteOrganizationDomain } from '@/lib/react-query/hooks/domains'
 
-async function tryUpdateSelectedMemberships(
-  organizationId: string,
-  membershipIds: string[],
-) {
-  if ((sdk.forConsole as unknown).billing?.updateSelectedMemberships) {
-    return await (sdk.forConsole as unknown).billing.updateSelectedMemberships(
-      organizationId,
-      membershipIds,
-    )
-  }
-  if ((sdk.forConsole.organizations as unknown).updateSelectedMemberships) {
-    return await (
-      sdk.forConsole.organizations as unknown
-    ).updateSelectedMemberships(organizationId, membershipIds)
-  }
-  return null
-}
-
-async function tryUpdateSelectedDomains(
-  organizationId: string,
-  domainIds: string[],
-) {
-  if ((sdk.forConsole as unknown).billing?.updateSelectedDomains) {
-    return await (sdk.forConsole as unknown).billing.updateSelectedDomains(
-      organizationId,
-      domainIds,
-    )
-  }
-  if ((sdk.forConsole.organizations as unknown).updateSelectedDomains) {
-    return await (
-      sdk.forConsole.organizations as unknown
-    ).updateSelectedDomains(organizationId, domainIds)
-  }
-  return null
-}
-
+/**
+ * Only the ids the user confirmed. An earlier version passed the complement of
+ * a client-side snapshot to a bulk "keep these" API, which would delete
+ * anything added to the organization after that snapshot was taken.
+ */
 export async function deleteDowngradeMemberships(
   organizationId: string,
   membershipIds: string[],
-  selectedMembershipIds: string[],
 ): Promise<void> {
-  if (membershipIds.length === 0) return
-
-  const updated = await tryUpdateSelectedMemberships(
-    organizationId,
-    selectedMembershipIds,
-  ).catch(() => null)
-
-  if (updated) return
-
   await Promise.all(
     membershipIds.map((membershipId) =>
       sdk.forConsole.teams.deleteMembership(organizationId, membershipId),
@@ -59,20 +19,34 @@ export async function deleteDowngradeMemberships(
 }
 
 export async function deleteDowngradeDomains(
-  organizationId: string,
   domainIds: string[],
-  selectedDomainIds: string[],
 ): Promise<void> {
-  if (domainIds.length === 0) return
-
-  const updated = await tryUpdateSelectedDomains(
-    organizationId,
-    selectedDomainIds,
-  ).catch(() => null)
-
-  if (updated) return
-
   await Promise.all(
     domainIds.map((domainId) => deleteOrganizationDomain(domainId)),
+  )
+}
+
+/**
+ * On an active addon this only sets `nextValue = 0`; the addon stays on until
+ * the current billing cycle closes.
+ */
+export async function deleteDowngradeAddons(
+  addons: DowngradeAddonRemoval[],
+): Promise<void> {
+  // Best effort: the server removes addons the new plan does not support at
+  // cycle close anyway, so one refusing to disable must not abort a run whose
+  // deletions have already happened.
+  await Promise.allSettled(
+    addons.map((addon) =>
+      addon.scope === 'organization'
+        ? sdk.forConsole.organizations.deleteAddon({
+            organizationId: addon.resourceId,
+            addonId: addon.addonId,
+          })
+        : sdk.forConsole.projects.deleteAddon({
+            projectId: addon.resourceId,
+            addonId: addon.addonId,
+          }),
+    ),
   )
 }

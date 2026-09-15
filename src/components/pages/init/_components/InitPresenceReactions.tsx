@@ -27,6 +27,8 @@ interface InitPresenceReactionsProps {
 const REACTIONS_SECTION_CLASS =
   'shrink-0 border-t border-border bg-background px-3 py-2 sm:px-3'
 
+const REACTIONS_ROW_CLASS = 'flex w-full items-center gap-1'
+
 function InitPresenceReactionsSkeleton({
   isMobile = false,
 }: {
@@ -38,11 +40,12 @@ function InitPresenceReactionsSkeleton({
       aria-busy="true"
       aria-label="Loading reactions"
     >
-      <div className="grid w-full grid-cols-6 items-center gap-0">
+      <div className={REACTIONS_ROW_CLASS}>
         {INIT_REACTIONS.map((reaction) => (
-          <div key={reaction.id} className="flex justify-center">
-            <Skeleton className="size-7 rounded-md bg-muted/80 dark:bg-muted/40" />
-          </div>
+          <Skeleton
+            key={reaction.id}
+            className="h-7 min-w-0 flex-1 rounded-md bg-muted/80 dark:bg-muted/40"
+          />
         ))}
       </div>
     </div>
@@ -67,9 +70,8 @@ function ReactionButton({
     <Button
       type="button"
       variant="ghost"
-      size="icon"
       disabled={disabled}
-      className="relative size-7 shrink-0 overflow-visible rounded-md text-muted-foreground"
+      className="relative h-7 min-w-0 flex-1 shrink px-0 overflow-visible rounded-md text-muted-foreground"
       aria-label={reaction.label}
       onClick={onClick}
     >
@@ -182,20 +184,15 @@ export function InitPresenceReactions({
     <div
       className={cn(REACTIONS_SECTION_CLASS, isMobile && 'px-4')}
     >
-      <div
-        className="grid w-full grid-cols-6 items-center gap-0"
-        role="group"
-        aria-label="React to Init"
-      >
+      <div className={REACTIONS_ROW_CLASS} role="group" aria-label="React to Init">
         {INIT_REACTIONS.map((reaction) => (
-          <div key={reaction.id} className="flex justify-center">
-            <ReactionButton
-              reaction={reaction}
-              disabled={!isOnline}
-              burstKey={burstKeys[reaction.id] ?? 0}
-              onClick={() => handleReaction(reaction.id)}
-            />
-          </div>
+          <ReactionButton
+            key={reaction.id}
+            reaction={reaction}
+            disabled={!isOnline}
+            burstKey={burstKeys[reaction.id] ?? 0}
+            onClick={() => handleReaction(reaction.id)}
+          />
         ))}
       </div>
     </div>

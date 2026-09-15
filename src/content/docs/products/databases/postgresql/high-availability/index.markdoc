@@ -6,7 +6,9 @@ description: Run up to five read replicas with asynchronous, synchronous, or quo
 
 A single database instance is a single point of failure. High availability (HA) adds streaming replicas next to your primary: they replicate continuously, serve read traffic through the [connection pooler](/docs/products/databases/postgresql/connection-pooling), and take over automatically when the primary becomes unhealthy.
 
-High availability requires a specification that runs on dedicated compute; the smallest specifications run on shared capacity and do not support replicas.
+High availability works on every PostgreSQL specification. How many replicas you can add depends on your plan: the Pro and Scale plans allow up to five, and the free plan allows none.
+
+The connection pooler must be in transaction mode. Adding replicas is refused while the pooler is in session mode.
 
 # How it works {% #how-it-works %}
 
@@ -18,9 +20,15 @@ Replicas receive changes from the primary through PostgreSQL streaming replicati
 |----------|----------------------------------------------------------------------------------|--------------------------------------------------|
 | `async`  | The primary commits without waiting for replicas                                | Fastest writes; a failover can lose the last moments of writes |
 | `sync`   | The primary waits for one replica to confirm each commit                        | No data loss on single failure; slightly higher write latency |
-| `quorum` | The primary waits for a majority of replicas to confirm each commit             | Strongest durability; highest write latency       |
+| `quorum` | The primary waits for a majority of the replica set, counting the primary itself | Scales the number of confirmations with the replica count |
 
-`async` is the default. For production workloads that cannot lose acknowledged writes, use `sync` with at least two replicas.
+`async` is the default. For production workloads that cannot lose acknowledged writes, use `sync` or `quorum` with at least one replica.
+
+`quorum` needs `(replicas + 1) / 2` confirmations, rounded down. At one and two replicas that is a single confirmation, the same as `sync`, so the two modes behave identically until you run three or more replicas.
+
+Both `sync` and `quorum` wait for the replica to write the change to disk, not to apply it. A replica can still answer a read from before a write that the primary has already acknowledged.
+
+If replicas fall behind or disappear, the primary lowers the number of confirmations it waits for rather than blocking writes, and raises it again once the replicas recover. The replication status reports the mode in effect alongside the one you configured.
 
 # Enable high availability {% #enable %}
 
@@ -31,7 +39,7 @@ Replicas receive changes from the primary through PostgreSQL streaming replicati
 ![High availability settings](/images/docs/products/databases/postgresql/settings-high-availability.avif)
 {% /only_light %}
 
-Set the replica count and replication mode on the database, from **Settings** > **High availability** in the Console or through the API:
+Set the replica count and replication mode on the database, from **Settings** > **Replication** in the Console or through the API:
 
 {% multicode %}
 ```server-nodejs
@@ -226,7 +234,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let postgresql = Postgresql::new(&client);
 
-    postgresql.update("<DATABASE_ID>", None, None, None, None, Some("sync"), None, None, None, None, None, None, None, None, None, None, None, None, None, None, None).await?;
+    postgresql.update("<DATABASE_ID>", None, None, None, Some(2), Some("sync"), None, None, None, None, None, None, None, None, None, None, None, None, None, None, None).await?;
 
     Ok(())
 }
@@ -244,7 +252,7 @@ curl -X PATCH \
 ```
 {% /multicode %}
 
-Adding replicas provisions them online; the primary keeps serving traffic while each replica seeds from a snapshot and catches up. Setting `replicas` back to `0` disables HA.
+Adding replicas provisions them online; the primary keeps serving traffic while each replica seeds from a snapshot and catches up. Setting `replicas` back to `0` disables HA and resets `syncMode` to `async`.
 
 # Check replication status {% #status %}
 
@@ -436,7 +444,7 @@ curl -X GET \
 
 # Automatic failover {% #automatic-failover %}
 
-Appwrite continuously health-checks the primary. When it becomes unresponsive, the platform promotes the replica with the least replication lag, repoints the database hostname, and marks the old primary for replacement. Your application reconnects to the same hostname; a well-configured driver pool retries and recovers without intervention.
+Appwrite continuously health-checks the primary. When it becomes unresponsive, the platform promotes the replica with the least replication lag, repoints the database hostname, and rebuilds the old primary as a replica of the new one. Your application reconnects to the same hostname; a well-configured driver pool retries and recovers without intervention.
 
 With `async` replication, writes that had not yet reached the promoted replica are lost in a failover. Use `sync` or `quorum` if that is unacceptable.
 
@@ -629,7 +637,7 @@ curl -X POST \
 
 # Reading from replicas {% #reads %}
 
-Replicas serve read traffic when [read/write splitting](/docs/products/databases/postgresql/connection-pooling#read-write-splitting) is enabled on the connection pooler. With `async` replication, a read that immediately follows a write can return stale data. Route reads that must see the latest write to the primary, or use `sync` replication.
+Replicas serve read traffic when [read/write splitting](/docs/products/databases/postgresql/connection-pooling#read-write-splitting) is enabled on the connection pooler. A read that immediately follows a write can return stale data, and synchronous replication does not change that, because it waits for the replica to store the write rather than apply it. Route reads that must see the latest write to the primary.
 
 # Limits and billing {% #limits %}
 

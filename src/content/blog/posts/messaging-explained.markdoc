@@ -7,7 +7,7 @@ lastUpdated: 2026-06-29
 cover: /images/blog/messaging-explained/cover.avif
 timeToRead: 5
 author: aditya-oberai
-category: product
+category: products
 faqs:
   - question: "What is Appwrite Messaging?"
     answer: "[Appwrite Messaging](/docs/products/messaging) is an open source product that sends push notifications, emails, and SMS from your Appwrite project through one unified API. It connects with third party providers like Vonage, Twilio, and Mailgun to handle the actual delivery. You get one consistent interface across channels without managing each provider's SDK separately."
@@ -93,7 +93,7 @@ You can also watch the [product tour](https://www.youtube.com/watch?v=QdDgPeuBZ1
 
 # How Messaging works
 
-Now that we have learned about the three core concepts of Appwrite Messaging, let us dive deeper into how the product works. Each time you send or schedule a push notification, email, or SMS text, it's recorded in Appwrite as a **message** is displayed in the **Messages** tab. However, there is a lot more that goes on under the hood. 
+Now that we have learned about the three core concepts of Appwrite Messaging, let us dive deeper into how the product works. Each time you send or schedule a push notification, email, or SMS text, it's recorded in Appwrite as a **message** is displayed in the **Messages** tab. However, there is a lot more that goes on under the hood. 
 
 Here's a step-by-step breakdown of how Appwrite Messaging works:
 

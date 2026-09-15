@@ -6,11 +6,6 @@ export const heSitesDictionary: Record<string, string> = {
   // Placeholder pages
   'Add Domain': 'הוספת דומיין',
   'Add a custom domain to your site': 'הוסיפו דומיין מותאם אישית לאתר שלכם',
-  'Sites Usage': 'שימוש באתרים',
-  'View aggregated usage statistics across all sites':
-    'צפייה בנתוני שימוש מצטברים בכל האתרים',
-  Usage: 'שימוש',
-  'View usage statistics for this site': 'צפייה בנתוני השימוש של האתר הזה',
   'Verify Domain': 'אימות דומיין',
   'Configure DNS settings to verify your domain':
     'הגדירו את רשומות ה-DNS כדי לאמת את הדומיין שלכם',
@@ -93,8 +88,8 @@ export const heSitesDictionary: Record<string, string> = {
   Download: 'הורדה',
   'Source code': 'קוד מקור',
   'Build output': 'פלט בנייה',
-  'Build output is available after the deployment has completed.':
-    'פלט הבנייה זמין לאחר שהפריסה הושלמה.',
+  'Build output is only available for ready deployments.':
+    'פלט הבנייה זמין רק לפריסות מוכנות.',
   Redeploy: 'פריסה מחדש',
   'Settings changes are not live yet': 'שינויי ההגדרות עדיין לא פעילים',
   "You've updated site settings, but they won't take effect until you redeploy. The current deployment is still running with the previous settings.":
@@ -421,6 +416,8 @@ export const heSitesDictionary: Record<string, string> = {
     'ייבאו repos לפריסות אוטומטיות',
   'Connect GitHub': 'חיבור GitHub',
   'Connect GitLab': 'חיבור GitLab',
+  'Connect Bitbucket': 'חיבור Bitbucket',
+  'Connect Origin': 'חיבור Origin',
   'Select organization': 'בחירת ארגון',
   'Add account': 'הוספת חשבון',
   'Search...': 'חיפוש...',
@@ -552,4 +549,18 @@ export const heSitesDictionary: Record<string, string> = {
   'Site URL is not available yet': 'כתובת האתר עדיין אינה זמינה',
   'Deployment successful!': 'הפריסה הצליחה!',
   'Your site is now live': 'האתר שלכם באוויר',
+
+  // Protected preview authorization
+  'Opening preview…': 'פותחים את התצוגה המקדימה…',
+  'Checking your access to this preview deployment.':
+    'בודקים את הרשאת הגישה שלכם לפריסת התצוגה המקדימה הזו.',
+  'Preview is private': 'התצוגה המקדימה פרטית',
+  "You don't have access to this preview. Ask a member of the project's organization to add you.":
+    'אין לכם גישה לתצוגה המקדימה הזו. בקשו מחבר בארגון של הפרויקט לצרף אתכם.',
+  'Invalid preview link': 'הקישור לתצוגה המקדימה אינו תקין',
+  'This link is missing or has a malformed preview address. Open the preview URL again to start over.':
+    'כתובת התצוגה המקדימה בקישור הזה חסרה או אינה תקינה. פתחו שוב את כתובת התצוגה המקדימה כדי להתחיל מחדש.',
+  "Couldn't open preview": 'לא ניתן היה לפתוח את התצוגה המקדימה',
+  'Something went wrong while checking your access to this preview. Try again in a moment.':
+    'משהו השתבש בבדיקת הגישה שלכם לתצוגה המקדימה הזו. נסו שוב בעוד רגע.',
 }

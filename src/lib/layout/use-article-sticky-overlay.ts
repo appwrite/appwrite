@@ -12,12 +12,15 @@ type UseArticleStickyOverlayOptions = {
   /** Measured for horizontal alignment; falls back to closest `article`. */
   contentAnchorRef?: RefObject<HTMLElement | null>
   resetKey?: unknown
+  /** Skip observers on viewports where the toolbar is not shown (mobile). */
+  enabled?: boolean
 }
 
 export function useArticleStickyOverlay({
   sentinelRef,
   contentAnchorRef,
   resetKey,
+  enabled = true,
 }: UseArticleStickyOverlayOptions) {
   const [pinned, setPinned] = useState(false)
   const [bounds, setBounds] = useState<StickyOverlayBounds | null>(null)
@@ -27,7 +30,7 @@ export function useArticleStickyOverlay({
     setBounds(null)
 
     const sentinel = sentinelRef.current
-    if (!sentinel) return
+    if (!enabled || !sentinel) return
 
     const updateOverlay = () => {
       const currentSentinel = sentinelRef.current
@@ -83,7 +86,7 @@ export function useArticleStickyOverlay({
       window.removeEventListener('scroll', updateOverlay)
       window.removeEventListener('resize', updateOverlay)
     }
-  }, [resetKey])
+  }, [resetKey, enabled])
 
   return { pinned, bounds }
 }

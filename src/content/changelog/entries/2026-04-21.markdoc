@@ -3,6 +3,7 @@ layout: changelog
 title: "More control over your API protocols"
 date: 2026-04-21
 cover: /images/changelog/2026-04-21.avif
+tags: console, realtime, api
 ---
 
 You can now choose exactly which **API protocols** your project exposes from the Appwrite Console. A new project setting lets you explicitly enable or disable each protocol so your application only talks to Appwrite the way you intend.

@@ -12,9 +12,14 @@ import { SignIn } from '@/components/global/auth/SignIn'
 import { AppwriteLogo } from '@/components/global/auth/AppwriteLogo'
 import { sdk } from '@/lib/appwrite/sdk'
 import { fetchConsoleAccount } from '@/lib/console-account-get'
-import { AppwriteException, ID, OAuthProvider } from '@appwrite.io/console'
+import { CONSOLE_ENTRY_PATH } from '@/lib/root-guest-redirect'
+import { AppwriteException, ID } from '@appwrite.io/console'
 import { toast } from 'sonner'
-import { setLastLoginMethod } from '@/lib/utils/auth-storage'
+import { setLastLoginMethod, type OAuthLoginMethod } from '@/lib/utils/auth-storage'
+import {
+  CONSOLE_OAUTH_PROVIDERS,
+  OAUTH_LOGIN_ERROR,
+} from '@/lib/utils/console-oauth'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { useT } from '@/lib/i18n/translate'
 import { pageTitle } from '@/lib/utils/page-title'
@@ -26,22 +31,13 @@ import {
   isConsoleMfaRequiredError,
 } from '@/lib/react-query/hooks/auth'
 import {
+  isValidRelativeRedirect,
   prefetchPostAuthDestination,
   requiresConsoleEmailVerification,
   resolvePostAuthRedirect,
   toRedirectNavigateOptions,
 } from '@/lib/post-auth-navigation'
 import { MarketingSiteLink } from '@/components/global/shared/MarketingSiteLink'
-
-// Helper function to validate that a redirect URL is relative (prevents redirect hijacking)
-function isValidRelativeRedirect(url: string): boolean {
-  try {
-    // Must start with / and not contain :// (which would indicate a protocol)
-    return url.startsWith('/') && !url.includes('://')
-  } catch {
-    return false
-  }
-}
 
 const searchSchema = z.object({
   redirect: z
@@ -55,6 +51,8 @@ const searchSchema = z.object({
 export const Route = createFileRoute('/_auth/sign-up')({
   component: SignUpPage,
   validateSearch: searchSchema,
+  // Keep the visible header stable while this link is hovered or focused.
+  preload: false,
   loader: async ({ context, location }) => {
     if (typeof window === 'undefined') return
     const account = await ensureConsoleAccountQueryData(context.queryClient)
@@ -68,7 +66,13 @@ export const Route = createFileRoute('/_auth/sign-up')({
           replace: true,
         })
       }
-      throw redirect({ to: '/', replace: true })
+      const target = resolvePostAuthRedirect(
+        (location.search as { redirect?: string }).redirect,
+      )
+      if (target) {
+        throw redirect({ ...toRedirectNavigateOptions(target), replace: true })
+      }
+      throw redirect({ to: CONSOLE_ENTRY_PATH, replace: true })
     }
   },
   head: () => ({ meta: [{ title: pageTitle('Sign up') }] }),
@@ -80,38 +84,35 @@ function SignUpPage() {
   const navigate = useNavigate()
   const router = useRouter()
   const queryClient = useQueryClient()
-  const [isGitHubLoading, setIsGitHubLoading] = useState(false)
+  const [oauthLoading, setOauthLoading] = useState<OAuthLoginMethod | null>(
+    null,
+  )
   const [isOpeningMfa, setIsOpeningMfa] = useState(false)
 
-  const handleGitHubLogin = async () => {
-    setIsGitHubLoading(true)
+  const handleOAuthLogin = async (provider: OAuthLoginMethod) => {
+    setOauthLoading(provider)
     try {
-      // Build success and failure URLs
       const resolvedRedirect = resolvePostAuthRedirect(search.redirect)
       const successUrl = resolvedRedirect
         ? `${window.location.origin}${resolvedRedirect}`
-        : `${window.location.origin}/`
+        : `${window.location.origin}${CONSOLE_ENTRY_PATH}`
       const failureUrl = `${window.location.origin}/sign-up${search.redirect ? `?redirect=${encodeURIComponent(search.redirect)}` : ''}`
 
-      // Store GitHub as last login method before redirecting
-      setLastLoginMethod('github')
+      setLastLoginMethod(provider)
 
-      // Create OAuth2 session - this may return a URL or void (if it redirects automatically)
       const url = await sdk.forConsole.account.createOAuth2Session({
-        provider: OAuthProvider.Github,
+        provider: CONSOLE_OAUTH_PROVIDERS[provider],
         success: successUrl,
         failure: failureUrl,
       })
 
-      // If URL is returned, redirect manually; otherwise SDK handles redirect automatically
       if (typeof url === 'string') {
         window.location.href = url
       }
-      // If void, the SDK has already initiated the redirect, so we don't need to do anything
     } catch (error: unknown) {
-      setIsGitHubLoading(false)
-      toast.error(getErrorMessage(error, t('Failed to initiate GitHub login')))
-      console.error('GitHub OAuth error:', error)
+      setOauthLoading(null)
+      toast.error(getErrorMessage(error, t(OAUTH_LOGIN_ERROR[provider])))
+      console.error(`${provider} OAuth error:`, error)
     }
   }
 
@@ -245,34 +246,36 @@ function SignUpPage() {
   })
 
   return (
-    <div className="bg-background relative flex min-h-svh flex-col items-center justify-center p-6 md:p-10">
-      <div className="w-full max-w-sm md:max-w-4xl">
-        <SignIn
-          mode="sign-up"
-          onSubmit={(data, options) =>
-            signUpMutation.mutate({
-              ...data,
-              skipAccountCreate: options?.skipAccountCreate,
-            })
-          }
-          onGitHubLogin={handleGitHubLogin}
-          isLoading={signUpMutation.isPending || isOpeningMfa}
-          isGitHubLoading={isGitHubLoading}
-          redirect={search.redirect}
-        />
-        <p className="mt-6 text-center text-xs text-muted-foreground">
-          {t('By clicking continue, you agree to our')}{' '}
-          <MarketingSiteLink className="link-neutral" href="/terms">
-            {t('Terms of Service')}
-          </MarketingSiteLink>{' '}
-          {t('and')}{' '}
-          <MarketingSiteLink className="link-neutral" href="/privacy">
-            {t('Privacy Policy')}
-          </MarketingSiteLink>
-          .
-        </p>
-        <div className="mt-10 md:mt-16 flex justify-center">
-          <AppwriteLogo className="h-6 w-auto" />
+    <div className="bg-background relative h-full overflow-y-auto">
+      <div className="flex min-h-full flex-col items-center p-6 md:p-10">
+        <div className="my-auto w-full max-w-sm md:max-w-4xl">
+          <SignIn
+            mode="sign-up"
+            onSubmit={(data, options) =>
+              signUpMutation.mutate({
+                ...data,
+                skipAccountCreate: options?.skipAccountCreate,
+              })
+            }
+            onOAuthLogin={handleOAuthLogin}
+            isLoading={signUpMutation.isPending || isOpeningMfa}
+            oauthLoading={oauthLoading}
+            redirect={search.redirect}
+          />
+          <p className="mt-6 text-center text-xs text-muted-foreground">
+            {t('By clicking continue, you agree to our')}{' '}
+            <MarketingSiteLink className="link-neutral" href="/terms">
+              {t('Terms of Service')}
+            </MarketingSiteLink>{' '}
+            {t('and')}{' '}
+            <MarketingSiteLink className="link-neutral" href="/privacy">
+              {t('Privacy Policy')}
+            </MarketingSiteLink>
+            .
+          </p>
+          <div className="mt-10 md:mt-16 flex justify-center">
+            <AppwriteLogo className="h-6 w-auto" />
+          </div>
         </div>
       </div>
     </div>

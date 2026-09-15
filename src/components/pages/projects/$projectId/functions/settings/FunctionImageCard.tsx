@@ -1,4 +1,5 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useMemo } from 'react'
+import { useSyncStateFromServer } from '@/hooks/use-sync-state-from-server'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -36,15 +37,12 @@ export function FunctionImageCard({
   const queryClient = useQueryClient()
   const { data: runtimesData } = useProjectRuntimes(projectId)
 
-  const [runtime, setRuntime] = useState('')
-  const [entrypoint, setEntrypoint] = useState('')
+  const [runtime, setRuntime] = useSyncStateFromServer(func.runtime || '')
+  const [entrypoint, setEntrypoint] = useSyncStateFromServer(
+    func.entrypoint || '',
+  )
 
   const runtimes = useMemo(() => runtimesData?.runtimes || [], [runtimesData])
-
-  useEffect(() => {
-    setRuntime(func.runtime || '')
-    setEntrypoint(func.entrypoint || '')
-  }, [func])
 
   const updateMutation = useMutation({
     mutationFn: async (updates: Partial<Models.Function>) => {

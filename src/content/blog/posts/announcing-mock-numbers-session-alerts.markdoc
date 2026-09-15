@@ -6,7 +6,7 @@ date: 2024-08-23
 cover: /images/blog/init-day4/cover.avif
 timeToRead: 4
 author: luke-silver
-category: init, announcement, product
+category: init, announcements, products
 featured: false
 faqs:
   - question: "What are mock numbers in Appwrite Auth?"

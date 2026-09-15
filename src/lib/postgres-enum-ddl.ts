@@ -1,11 +1,8 @@
 import { quotePostgresIdentifier } from '@/lib/postgres-database-routes'
 import {
-  buildPostgresSingleRequestDdlSql,
   prefixPostgresSqlComment,
   quotePostgresStringLiteral,
 } from '@/lib/postgres-sql'
-
-export { buildPostgresSingleRequestDdlSql } from '@/lib/postgres-sql'
 
 function qualifiedEnumType(schema: string, enumName: string): string {
   return `${quotePostgresIdentifier(schema)}.${quotePostgresIdentifier(enumName)}`
@@ -16,23 +13,20 @@ export function buildPostgresCreateEnumSql(
   enumName: string,
   values: string[],
   options?: { comment?: string },
-): string {
+): string[] {
   const qualified = qualifiedEnumType(schema, enumName)
   const literals = values.map((value) => quotePostgresStringLiteral(value)).join(', ')
-  const createSql = `CREATE TYPE ${qualified} AS ENUM (${literals})`
+  const statements = [
+    prefixPostgresSqlComment(
+      `CREATE TYPE ${qualified} AS ENUM (${literals})`,
+      'Create enum type',
+    ),
+  ]
   const comment = options?.comment?.trim()
-
-  if (!comment) {
-    return prefixPostgresSqlComment(createSql, 'Create enum type')
+  if (comment) {
+    statements.push(buildPostgresEnumCommentSql(schema, enumName, comment))
   }
-
-  return buildPostgresSingleRequestDdlSql(
-    [
-      createSql,
-      `EXECUTE format('COMMENT ON TYPE %I.%I IS %L', ${quotePostgresStringLiteral(schema)}, ${quotePostgresStringLiteral(enumName)}, ${quotePostgresStringLiteral(comment)})`,
-    ],
-    'Create enum type',
-  )
+  return statements
 }
 
 export function buildPostgresAddEnumValueSql(

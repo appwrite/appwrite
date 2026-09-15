@@ -33,6 +33,8 @@ export const jaAuthStorageDictionary: Record<string, string> = {
   'App enabled': 'アプリを有効にしました',
   'App updated': 'アプリを更新しました',
   'Activity': 'アクティビティ',
+  'Auto crops around the main subject when both width and height are set.':
+    '幅と高さの両方を指定すると、Auto は主要な被写体を中心にクロップします。',
   'Back to apps': 'アプリ一覧に戻る',
   'Disabled apps cannot start new authorization flows. Existing tokens remain until revoked.':
     '無効なアプリは新しい認可フローを開始できません。既存のトークンは取り消されるまで有効です。',
@@ -605,6 +607,7 @@ export const jaAuthStorageDictionary: Record<string, string> = {
   'No OAuth2 apps': 'OAuth2 アプリはありません',
   'Connect with': '接続先',
   'Connect with Appwrite': 'Appwrite に接続',
+  'Connect with S3': 'S3 と接続',
   'Connect with this project': 'このプロジェクトへの接続',
   'Register OAuth2 clients here when you want other products to let users connect with this project. Organization apps serve a different purpose. Create those under your organization when you want your users to connect their Appwrite account with your application.':
     '他のプロダクトからユーザーをこのプロジェクトへ接続させたい場合は、ここに OAuth2 クライアントを登録します。組織アプリの用途は異なります。ユーザーが Appwrite アカウントをあなたのアプリケーションに接続できるようにしたい場合は、組織側で作成します。',
@@ -876,6 +879,7 @@ export const jaAuthStorageDictionary: Record<string, string> = {
   'Sessions': 'セッション',
   'Sessions limit': 'セッション上限',
   'Sessions limit has been updated': 'セッション上限を更新しました',
+  'Set an authorization URL below, then click Update.': '下の認可 URL を設定してから「更新」をクリックしてください。',
   'Set authorization, token, and user info URLs manually only when your provider does not expose a well-known metadata URL.': 'プロバイダーが well-known メタデータ URL を公開していない場合にのみ、認可、トークン、ユーザー情報 URL を手動で設定してください。',
   'Set minimum length and character requirements for user passwords. Rules apply when users sign up, reset their password, or change their password through your app. Existing passwords stay valid until the user sets a new one. Password updates from the Appwrite console also validate against this policy.': 'ユーザーパスワードの最小長と文字要件を設定します。ルールは、ユーザーのサインアップ、パスワードリセット、アプリ経由のパスワード変更時に適用されます。既存パスワードは、ユーザーが新しいものを設定するまで有効です。Appwrite コンソールからのパスワード更新もこのポリシーで検証されます。', // pragma: allowlist secret
   'Set the locale using': '次を使用してロケールを設定:',
@@ -1081,6 +1085,7 @@ export const jaAuthStorageDictionary: Record<string, string> = {
   "You don't have permission to perform this action.": 'この操作を実行する権限がありません。',
   "You don't have permission to remove team presets.": 'チームプリセットを削除する権限がありません。',
   "You don't have permission to save team presets.": 'チームプリセットを保存する権限がありません。',
+  "You don't have permission to update OAuth2 server settings.": 'OAuth2 サーバー設定を更新する権限がありません。',
   'You have not saved any presets yet. Use': 'まだプリセットを保存していません。次を使用:',
   'Your API is the OAuth client; mobile or SPA apps get a session without holding secrets.': 'あなたの API が OAuth クライアントです。モバイルや SPA アプリはシークレットを保持せずにセッションを取得します。',
   'Your consent screen URL. Users are redirected here during authorization.': '同意画面の URL です。認可中にユーザーはここへリダイレクトされます。',

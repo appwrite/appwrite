@@ -29,26 +29,40 @@ export function WizardProgress({ stage }: { stage: WizardStage }) {
     stage === 'platform' ? 0 : stage === 'details' ? 1 : 2
 
   return (
-    <div className="w-full bg-muted/20">
-      <div className="mx-auto w-full max-w-7xl px-6 py-3.5">
-        <div className="flex w-full flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
+    <div className="w-full">
+      <nav aria-label={t('Progress')} className="w-full">
+        <ol className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           {STEPS.map((s, i) => {
-          const isComplete = i < activeIndex
-          const isCurrent = i === activeIndex
+            const isComplete = i < activeIndex
+            const isCurrent = i === activeIndex
 
             return (
-              <div key={s.id} className="flex min-w-0 flex-1 gap-3">
+              <li
+                key={s.id}
+                aria-current={isCurrent ? 'step' : undefined}
+                className={cn(
+                  'flex min-w-0 gap-3 rounded-xl border p-4 transition-colors',
+                  isCurrent &&
+                    'border-primary/40 bg-card ring-1 ring-primary/15',
+                  isComplete &&
+                    !isCurrent &&
+                    'border-border bg-card/50',
+                  !isCurrent &&
+                    !isComplete &&
+                    'border-border bg-muted/20',
+                )}
+              >
                 <div
                   className={cn(
-                    'flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 text-[12px] font-semibold transition-colors',
+                    'flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[12px] font-semibold transition-colors',
                     isComplete &&
-                      'border-primary bg-primary text-primary-foreground',
+                      'bg-primary text-primary-foreground',
                     isCurrent &&
                       !isComplete &&
-                      'border-primary bg-background text-primary',
+                      'bg-background text-primary',
                     !isCurrent &&
                       !isComplete &&
-                      'border-border bg-muted/50 text-muted-foreground',
+                      'bg-muted/50 text-muted-foreground',
                   )}
                 >
                   {isComplete ? (
@@ -61,7 +75,9 @@ export function WizardProgress({ stage }: { stage: WizardStage }) {
                   <p
                     className={cn(
                       'text-[13px] font-semibold',
-                      isCurrent ? 'text-foreground' : 'text-muted-foreground',
+                      isCurrent || isComplete
+                        ? 'text-foreground'
+                        : 'text-muted-foreground',
                     )}
                   >
                     {t(s.title)}
@@ -70,11 +86,11 @@ export function WizardProgress({ stage }: { stage: WizardStage }) {
                     {t(s.description)}
                   </p>
                 </div>
-              </div>
+              </li>
             )
           })}
-        </div>
-      </div>
+        </ol>
+      </nav>
     </div>
   )
 }

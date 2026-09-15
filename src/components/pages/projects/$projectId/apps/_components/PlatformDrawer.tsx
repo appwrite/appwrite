@@ -20,12 +20,14 @@ import {
   getPlatformIdentifier,
   type ProjectPlatform,
 } from '@/lib/utils/platform'
+import { HOSTNAME_PRESETS } from '@/lib/add-app-wizard/platform-map'
 import { PlatformIcon } from '@/components/global/shared/Icon'
 import { toast } from 'sonner'
 import { Trash2, ExternalLink } from 'lucide-react'
 import { BlogPageAnchor } from '@/components/global/shared/BlogPageAnchor'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { useT } from '@/lib/i18n/translate'
+import { cn } from '@/lib/utils'
 interface PlatformDrawerProps {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -217,6 +219,29 @@ export function PlatformDrawer({
                           onChange={(e) => setHostname(e.target.value)}
                           disabled={isPending}
                         />
+                        <div className="flex flex-wrap gap-2">
+                          {HOSTNAME_PRESETS.map((preset) => {
+                            const selected = hostname.trim() === preset
+                            return (
+                              <Button
+                                key={preset}
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                className={cn(
+                                  'h-8 text-[12px] font-normal',
+                                  selected &&
+                                    'border-foreground bg-muted text-foreground',
+                                )}
+                                aria-pressed={selected}
+                                disabled={isPending}
+                                onClick={() => setHostname(preset)}
+                              >
+                                {preset}
+                              </Button>
+                            )
+                          })}
+                        </div>
                         <p className="text-[12px] text-muted-foreground">
                           {t('The domain your app makes requests from. Use')}{' '}
                           <code className="rounded bg-muted px-1 py-0.5 text-[11px]">

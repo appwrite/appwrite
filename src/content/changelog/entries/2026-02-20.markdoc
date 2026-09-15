@@ -2,6 +2,7 @@
 layout: changelog
 title: "DNS: TXT record encoding and truncation handling"
 date: 2026-02-20
+tags: domains
 ---
 
 Two fixes are now live for DNS used by custom domains and network features.

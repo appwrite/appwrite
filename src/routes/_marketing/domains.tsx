@@ -1,6 +1,9 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { z } from 'zod'
-import { MARKETING_PAGE_ROUTE_STATIC_DATA } from '@/lib/marketing/route-static-data'
+import {
+  MARKETING_PAGE_ROUTE_STATIC_DATA,
+  marketingRouteLifetime,
+} from '@/lib/marketing/route-static-data'
 import { View } from '@/components/pages/domains/View'
 import { getMarketingPageMetaTags } from '@/lib/marketing/route-meta'
 import { domainsHero } from '@/lib/domains/marketing-content'
@@ -10,6 +13,7 @@ const domainsSearchSchema = z.object({
 })
 
 export const Route = createFileRoute('/_marketing/domains')({
+  ...marketingRouteLifetime,
   staticData: {
     ...MARKETING_PAGE_ROUTE_STATIC_DATA,
     showFooter: false,
@@ -22,13 +26,23 @@ export const Route = createFileRoute('/_marketing/domains')({
       description: domainsHero.description,
     }),
   }),
-  loader: async ({ context }) => {
-  },
   component: DomainsPage,
 })
 
 function DomainsPage() {
   const { q } = Route.useSearch()
+  const navigate = Route.useNavigate()
 
-  return <View initialSearch={q?.trim() ?? ''} />
+  return (
+    <View
+      initialSearch={q ?? ''}
+      onSearchValueChange={(value) => {
+        void navigate({
+          search: (previous) => ({ ...previous, q: value || undefined }),
+          replace: true,
+          resetScroll: false,
+        })
+      }}
+    />
+  )
 }

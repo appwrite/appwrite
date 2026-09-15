@@ -36,6 +36,7 @@ import {
 import { useRouteGenerationEditor } from '@/lib/generator/use-route-generation-editor'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { cn } from '@/lib/utils'
+import { randomUUID } from '@/lib/random-uuid'
 
 const RESIZE_HANDLE_CLASS = cn(
   'relative z-[45] w-[0.5px] bg-border',
@@ -233,7 +234,7 @@ export function DiagramsView({ generationId: routeGenerationId }: DiagramsViewPr
   const handleSelectTemplate = useCallback(
     (templateId: DiagramTemplateId) => {
       const nextDocument = normalizeDiagramDocument(createDiagramFromTemplate(templateId))
-      openEditor(crypto.randomUUID(), nextDocument, templateId)
+      openEditor(randomUUID(), nextDocument, templateId)
     },
     [openEditor],
   )
@@ -410,7 +411,7 @@ export function DiagramsView({ generationId: routeGenerationId }: DiagramsViewPr
       if (isMeta && !event.shiftKey) {
         if (isEditableTarget(target)) return
 
-        const key = event.key.toLowerCase()
+        const key = event.key?.toLowerCase()
         if (key === 'c') {
           if (copySelection()) {
             event.preventDefault()

@@ -21,15 +21,28 @@ export interface RuntimeConfig {
   userVerification: string
   /** Override for the profile's cookieBanner feature ('' = profile default). */
   cookieBanner: string
+  /** Expose the browser flag API in production only when explicitly true. */
+  browserApi: string
+  /** Override for the profile's browserAlerts feature ('' = profile default). */
+  browserAlerts: string
   /** Override for the profile's blogDrafts feature ('' = profile default). */
   blogDrafts: string
+  /** Default screenshot mode when the browser has no saved preference. */
+  screenshotMode: string
+  /** Override for dedicated database PITR restore UI ('' = profile default). */
+  databasePitrRestore: string
+  /**
+   * Override for extra Git (VCS) OAuth connect providers
+   * ('' = profile default, off).
+   */
+  extraVcsOAuth: string
   /** Override for backend-powered usage statistics ('' = Console variables). */
   usageStats: string
   /**
-   * Demo / soft-launch website password gate (`/access`, Appwrite2 cookie).
-   * '' = enabled; `false` / `0` / `disabled` turns the gate off.
+   * Pre-launch lock: only `/init` (and sign-in) is public; `/` redirects to `/init`.
+   * '' = enabled; `false` / `0` / `disabled` turns it off.
    */
-  websiteAccess: string
+  preLaunch: string
 }
 
 /**
@@ -112,9 +125,14 @@ export function readRuntimeConfigFromEnv(env: EnvRecord): RuntimeConfig {
     plausibleScriptSrc: read('VITE_PLAUSIBLE_SCRIPT_SRC'),
     userVerification: read('VITE_CONSOLE_USER_VERIFICATION'),
     cookieBanner: read('VITE_CONSOLE_COOKIE_BANNER'),
+    browserApi: read('VITE_CONSOLE_BROWSER_API'),
+    browserAlerts: read('VITE_CONSOLE_BROWSER_ALERTS'),
     blogDrafts: read('VITE_CONSOLE_BLOG_DRAFTS'),
+    screenshotMode: read('VITE_CONSOLE_SCREENSHOT_MODE'),
+    databasePitrRestore: read('VITE_CONSOLE_DATABASE_PITR_RESTORE'),
+    extraVcsOAuth: read('VITE_CONSOLE_EXTRA_VCS_OAUTH'),
     usageStats: read('VITE_CONSOLE_USAGE_STATS'),
-    websiteAccess: read('VITE_CONSOLE_WEBSITE_ACCESS'),
+    preLaunch: read('VITE_CONSOLE_PRE_LAUNCH'),
   }
 }
 

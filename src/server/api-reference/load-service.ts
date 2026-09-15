@@ -204,7 +204,9 @@ export async function loadApiReferenceService(
   if (!service) {
     return {
       id: serviceId,
-      label: SERVICE_LABELS[serviceId as ReferenceService] ?? getServiceLabel(serviceId),
+      label:
+        SERVICE_LABELS[serviceId as ReferenceService] ??
+        getServiceLabel(serviceId),
       description: getServiceDescriptionFromSpec(serviceSpec, serviceId),
       methods: [],
     }
@@ -218,7 +220,7 @@ export async function loadApiReferenceService(
       ...method,
       demo: demos.get(method.id),
       responses: collectMethodResponses(
-        rawOperation,
+        { ...rawOperation, responses: method.rawResponses },
         serviceSpec,
         consoleSpec,
         version,

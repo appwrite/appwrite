@@ -3,6 +3,7 @@ layout: changelog
 title: "Realtime queries: Server-side event filtering for subscriptions"
 date: 2026-02-16
 cover: /images/blog/announcing-realtime-queries/cover.avif
+tags: realtime
 ---
 
 Appwrite Realtime now supports passing SDK queries when subscribing to channels. Events are filtered server-side based on your queries, so your callbacks only receive updates that match your conditions.

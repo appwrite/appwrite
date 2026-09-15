@@ -6,8 +6,6 @@ export const jaSitesDictionary: Record<string, string> = {
   // Placeholder pages
   'Add Domain': 'ドメインの追加',
   'Add a custom domain to your site': 'サイトにカスタムドメインを追加',
-  'Sites Usage': 'サイトの使用量',
-  'View usage statistics for this site': 'このサイトの使用統計を表示',
   'Verify Domain': 'ドメインの検証',
   'Search sites...': 'サイトを検索...',
   'Create site': 'サイトの作成',
@@ -220,6 +218,8 @@ export const jaSitesDictionary: Record<string, string> = {
   'Connect Git provider': 'Git プロバイダーの接続',
   'Connect GitHub': 'GitHub の接続',
   'Connect GitLab': 'GitLab の接続',
+  'Connect Bitbucket': 'Bitbucket の接続',
+  'Connect Origin': 'Origin の接続',
   'Select organization': 'Organization を選択',
   'Add account': 'アカウントの追加',
   'Search...': '検索...',
@@ -293,8 +293,6 @@ export const jaSitesDictionary: Record<string, string> = {
   'Site URL is not available yet': 'サイト URL はまだ利用できません',
   'Deployment successful!': 'デプロイに成功しました!',
   'Your site is now live': 'サイトが公開されました',
-  'View aggregated usage statistics across all sites':
-    'すべてのサイトにわたる集計使用統計を表示',
   'Configure DNS settings to verify your domain':
     'ドメインを検証するために DNS 設定を構成',
   'Create your first site to get started': '最初のサイトを作成して始めましょう',
@@ -304,8 +302,8 @@ export const jaSitesDictionary: Record<string, string> = {
     'Appwrite の CDN は世界 120 以上の PoP でグローバルにカバーし、エッジキャッシュとコンテンツ最適化でレイテンシを低減します。すべてのコンテンツは TLS 経由で安全に暗号化配信されます。',
   "Appwrite's network includes built-in DDoS mitigation to protect against distributed denial-of-service attacks, ensuring uninterrupted access to your sites and maintaining high availability even during high traffic loads.":
     'Appwrite のネットワークには DDoS 緩和が組み込まれており、分散型サービス拒否攻撃からサイトを保護し、高トラフィック時でも高可用性を維持します。',
-  'Build output is available after the deployment has completed.':
-    'ビルド出力はデプロイ完了後に利用できます。',
+  'Build output is only available for ready deployments.':
+    'ビルド出力は、準備完了のデプロイでのみ利用できます。',
   'Create your first deployment to activate this site.':
     'このサイトを有効化するには最初のデプロイを作成してください。',
   'The active deployment cannot be deleted from the list':
@@ -513,4 +511,18 @@ export const jaSitesDictionary: Record<string, string> = {
   Secret: 'シークレット',
   Size: 'サイズ',
   Close: '閉じる',
+
+  // Protected preview authorization
+  'Opening preview…': 'プレビューを開いています…',
+  'Checking your access to this preview deployment.':
+    'このプレビューデプロイへのアクセス権を確認しています。',
+  'Preview is private': 'このプレビューは非公開です',
+  "You don't have access to this preview. Ask a member of the project's organization to add you.":
+    'このプレビューへのアクセス権がありません。プロジェクトの組織のメンバーに追加を依頼してください。',
+  'Invalid preview link': 'プレビューリンクが無効です',
+  'This link is missing or has a malformed preview address. Open the preview URL again to start over.':
+    'このリンクにはプレビューのアドレスがないか、アドレスが正しくありません。プレビューの URL をもう一度開いてやり直してください。',
+  "Couldn't open preview": 'プレビューを開けませんでした',
+  'Something went wrong while checking your access to this preview. Try again in a moment.':
+    'このプレビューへのアクセス権の確認中に問題が発生しました。しばらくしてからもう一度お試しください。',
 }

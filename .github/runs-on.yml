@@ -1,4 +1,24 @@
 runners:
+  # Lint, typecheck and build: the same balanced x64 pool cloud's `checks` uses.
+  checks:
+    cpu: 4
+    family: &balanced [m6a, m6i, m7i, m7a]
+    image: &image ubuntu24-full-x64
+    volume: 80gb
+    spot: price-capacity-optimized
+    retry: when-interrupted
+    extras: [otel]
+
+  # Playwright E2E per project: compute-optimised pool, same shape as cloud's `e2e`.
+  e2e:
+    cpu: 4
+    family: [c5a, c6a, c7i, c7a, c8a, m6a, m6i, m7i, m7a]
+    image: *image
+    volume: 80gb
+    spot: price-capacity-optimized
+    retry: when-interrupted
+    extras: [otel]
+
   # Connect snippets QA (web + server): scaffold a starter app, paste the
   # snippets, build and assert. The full image mirrors GitHub's ubuntu-latest
   # tooling (python, php, ruby, go, rust, dotnet, ...), which the server
@@ -6,7 +26,7 @@ runners:
   snippets-qa:
     cpu: 4
     family: [c7i, c7a, m7i, m7a]
-    image: ubuntu24-full-x64
+    image: *image
     volume: 80gb
 
   # Connect snippets QA (Android): Gradle builds plus an x86_64 emulator.
@@ -15,6 +35,6 @@ runners:
   snippets-qa-android:
     cpu: 8
     family: [c8i, m8i]
-    image: ubuntu24-full-x64
+    image: *image
     volume: 80gb
     nested-virt: true

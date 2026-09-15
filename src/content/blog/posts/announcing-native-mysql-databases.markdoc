@@ -2,14 +2,13 @@
 layout: post
 title: "Announcing native MySQL databases: Bring your MySQL workloads to Appwrite"
 description: Provision a managed MySQL 8.4 instance inside your Appwrite project and keep using the drivers, ORMs, and tools your applications already depend on.
-date: 2026-07-09
-cover: /images/blog/announcing-native-mysql-databases/cover.png
+date: 2026-09-02
+cover: /images/blog/announcing-native-mysql-databases/cover.avif
 timeToRead: 5
-author: atharva
-category: announcement
+author: jake-barnby
+category: announcements
 featured: false
 callToAction: true
-draft: true
 faqs:
   - question: "What is a native MySQL database in Appwrite?"
     answer: "It is a managed MySQL instance running on dedicated compute inside your Appwrite project. Appwrite provisions the engine with its own hostname, credentials, and TLS, and you connect with the mysql client or any MySQL driver. Appwrite manages the infrastructure; your code talks to MySQL directly."

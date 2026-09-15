@@ -13,6 +13,13 @@ You can create collections using the Appwrite Console, a [Server SDK](/docs/sdks
 {% tabsitem #console title="Console" %}
 Head to the **Databases** page, open a [database](/docs/products/databases/documentsdb/databases), and click **Create collection**.
 
+{% only_dark %}
+![Create collection dialog](/images/docs/databases/documentsdb/dark/create-collection.avif)
+{% /only_dark %}
+{% only_light %}
+![Create collection dialog](/images/docs/databases/documentsdb/create-collection.avif)
+{% /only_light %}
+
 {% /tabsitem %}
 
 {% tabsitem #server-sdk title="Server SDK" %}

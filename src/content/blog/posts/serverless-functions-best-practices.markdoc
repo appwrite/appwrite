@@ -6,7 +6,7 @@ date: 2024-08-19
 cover: /images/blog/serverless-functions/cover.avif
 timeToRead: 5
 author: ebenezer-don
-category: product
+category: products
 featured: false
 lastUpdated: 2026-06-29
 faqs:
@@ -82,7 +82,7 @@ Detail the configuration needed for deployment on your chosen platform. For exam
 
 ## Development setup
 
-Explain how to run the function in a development environment. For Appwrite, this would include using the command `appwrite run function`.
+Explain how to run the function in a development environment. For Appwrite, this would include using the command `appwrite run function`.
 
 Proper documentation ensures that other developers can understand and work with your code efficiently.
 
@@ -203,7 +203,7 @@ Versioning your functions helps you manage updates and rollbacks effectively, es
 
 Design your serverless architecture to minimize costs. Use event-driven models and offload heavy processing to external services to optimize resource usage and reduce expenses. For example, instead of processing tasks like image recognition within your functions, you can use specialized services like AWS Rekognition or Google Cloud Vision to handle these tasks more efficiently.
 
-Another tip is to use event triggers to invoke functions only when necessary. This ensures that resources are used efficiently and costs are minimized. Appwrite provides built-in support for event triggers, allowing you to trigger functions based on events like database changes, file uploads, or HTTP requests. Here's a more detailed guide on [Appwrite Events](https://appwrite.io/docs/advanced/platform/events).
+Another tip is to use event triggers to invoke functions only when necessary. This ensures that resources are used efficiently and costs are minimized. Appwrite provides built-in support for event triggers, allowing you to trigger functions based on events like database changes, file uploads, or HTTP requests. Here's a more detailed guide on [Appwrite Events](https://appwrite.io/docs/advanced/platform/events).
 
 # Avoid long-running functions
 

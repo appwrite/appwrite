@@ -3,7 +3,6 @@ import {
   MARKETPLACE_CATEGORY_ORDER,
   type MarketplaceApp,
   type MarketplaceAppCategory,
-  type MarketplaceAppCreator,
 } from './types'
 
 const CATEGORY_SET = new Set<string>(MARKETPLACE_CATEGORY_ORDER)
@@ -27,18 +26,14 @@ function resolveCategory(tags: string[]): MarketplaceAppCategory {
   return 'devtools'
 }
 
-function resolveCreators(contacts: string[]): MarketplaceAppCreator[] {
-  if (!contacts.length) return []
-  return contacts.map((contact) => {
-    const trimmed = contact.trim()
-    if (!trimmed) return { name: 'Contact' }
-    if (trimmed.includes('@')) {
-      const local = trimmed.split('@')[0] ?? trimmed
-      const name = local.replace(/[._-]+/g, ' ').trim() || trimmed
-      return { name, role: 'Contact' }
-    }
-    return { name: trimmed }
-  })
+const RANK_TAG_PATTERN = /^rank:(\d+)$/
+
+function resolveRank(tags: string[]): number | undefined {
+  for (const tag of tags) {
+    const match = normalizeTag(tag).match(RANK_TAG_PATTERN)
+    if (match) return Number(match[1])
+  }
+  return undefined
 }
 
 export function mapAppToMarketplaceApp(
@@ -50,12 +45,18 @@ export function mapAppToMarketplaceApp(
   },
 ): MarketplaceApp {
   const tags = app.tags ?? []
+  // Curation markers (official/verified/featured/rank) live in labels, which
+  // only Appwrite can set — tags are editable by the app owner.
+  const labels = app.labels ?? []
   const isOwned = app.teamId === options.organizationId
+  const isOfficial = hasTag(labels, 'official')
   const author =
     options.authorOverride ??
-    (app.teamId
-      ? (options.teamNamesById?.[app.teamId] ?? 'Community')
-      : 'Community')
+    (isOfficial
+      ? 'Appwrite'
+      : app.teamId
+        ? (options.teamNamesById?.[app.teamId] ?? 'Community')
+        : 'Community')
 
   return {
     $id: app.$id,
@@ -64,11 +65,12 @@ export function mapAppToMarketplaceApp(
     description: app.description?.trim() || app.tagline?.trim() || app.name,
     shortDescription: app.tagline?.trim() || app.description?.trim() || app.name,
     category: resolveCategory(tags),
-    author: isOwned ? 'Your organization' : author,
-    creators: resolveCreators(app.contacts ?? []),
-    featured: hasTag(tags, 'featured'),
-    isOfficial: hasTag(tags, 'official'),
-    isVerified: hasTag(tags, 'verified'),
+    author,
+    featured: hasTag(labels, 'featured'),
+    rank: resolveRank(labels),
+    isOfficial,
+    isVerified: hasTag(labels, 'verified'),
+    isSuggested: hasTag(labels, 'suggested'),
     isOwned,
     status: app.enabled ? 'published' : 'draft',
     tags,
@@ -87,7 +89,22 @@ export function mapAppToMarketplaceApp(
     type: app.type || undefined,
     deviceFlow: app.deviceFlow,
     teamId: app.teamId || undefined,
+    installationScopes: app.installationScopes ?? [],
   }
+}
+
+/**
+ * Curated catalog order: `rank:N`-tagged apps first (ascending), unranked
+ * apps after, alphabetical within ties. Sections filtered from a sorted
+ * list (featured, categories, search) keep this order.
+ */
+export function sortMarketplaceApps(apps: MarketplaceApp[]): MarketplaceApp[] {
+  return [...apps].sort((a, b) => {
+    const rankA = a.rank ?? Number.POSITIVE_INFINITY
+    const rankB = b.rank ?? Number.POSITIVE_INFINITY
+    if (rankA !== rankB) return rankA - rankB
+    return a.name.localeCompare(b.name)
+  })
 }
 
 export function mapAppsToMarketplaceApps(

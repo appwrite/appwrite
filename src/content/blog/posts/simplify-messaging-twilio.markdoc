@@ -32,7 +32,7 @@ Messaging refers to sending messages directly to a user's mobile device from an 
 
 It can be used for various reasons, including:
 
-- **Transactional messages:** These messages relate to the user's actions or account, such as payment confirmation.
+- **Transactional messages:** These messages relate to the user's actions or account, such as payment confirmation.
 - **Promotional messages**: These marketing messages promote products, services, or offers.
 - **Reminder messages**: These remind users about events, tasks, or actions they must take.
 - **Location-based messages**: These are triggered by the user's location.
@@ -50,7 +50,7 @@ In terms of scalability, some common challenges faced are:
 
 # How Twilio can simplify implementation
 
-[Twilio](https://www.notion.so/How-tools-like-Twilio-can-simplify-messaging-for-developers-9475a3f11992419c9266cf8af703c95e?pvs=21) is a cloud communications platform that offers a wide range of services, including SMS, voice, video, and email. It's known for its flexibility, scalability, and ease of integration into various applications. Twilio also provides a robust push notification service, part of its broader suite of communication tools.
+[Twilio](https://www.notion.so/How-tools-like-Twilio-can-simplify-messaging-for-developers-9475a3f11992419c9266cf8af703c95e?pvs=21) is a cloud communications platform that offers a wide range of services, including SMS, voice, video, and email. It's known for its flexibility, scalability, and ease of integration into various applications. Twilio also provides a robust push notification service, part of its broader suite of communication tools.
 
 Here are some of the benefits of using Twilio:
 

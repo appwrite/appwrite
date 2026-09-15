@@ -7,6 +7,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { useBackupPolicies } from '@/lib/react-query/hooks'
+import type { DatabaseRouteKind } from '@/lib/database-routes'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
 
@@ -16,6 +17,7 @@ const NO_BACKUP_POLICIES_TOOLTIP =
 type DatabaseBackupsNavLinkProps = {
   projectId: string
   databaseId: string
+  dbKind?: DatabaseRouteKind
   className?: string
   labelClassName?: string
   disabled?: boolean
@@ -56,6 +58,7 @@ export function NoBackupPoliciesWarningIcon({
 export function DatabaseBackupsNavLink({
   projectId,
   databaseId,
+  dbKind,
   className,
   labelClassName,
   disabled = false,
@@ -67,7 +70,7 @@ export function DatabaseBackupsNavLink({
   const { data: policiesData, isLoading } = useBackupPolicies(
     projectId,
     databaseId,
-    { enabled: !disabled },
+    { enabled: !disabled, dbKind },
   )
   const hasBackupPolicies = (policiesData?.policies?.length ?? 0) > 0
   const showWarning = !disabled && !isLoading && !hasBackupPolicies

@@ -3,6 +3,7 @@ layout: changelog
 title: "Appwrite is now CCPA compliant: Build privacy-first applications with confidence"
 date: 2024-09-19
 cover: /images/changelog/2024-09-19.avif
+tags: infrastructure
 ---
 At Appwrite, we're committed to helping you build secure, privacy-focused applications that meet the highest data protection standards. Now, Appwrite is fully CCPA-compliant, providing secure and reliable data management.
 

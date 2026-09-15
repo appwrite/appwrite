@@ -1,7 +1,6 @@
 import {
-  COVER_HEIGHT,
   COVER_IMAGE_FORMATS,
-  COVER_WIDTH,
+  getDefaultCoverSize,
   isCoverTemplateId,
   type CoverImageFormat,
   type CoverTemplateId,
@@ -9,7 +8,6 @@ import {
 } from '@/lib/cover-generator/constants'
 import {
   DEFAULT_COVER_THEME_ID,
-  isCoverThemeId,
   resolveCoverThemeId,
 } from '@/lib/cover-generator/themes'
 import {
@@ -168,9 +166,8 @@ export const DEFAULT_COVER_VALUES = {
   template: 'simple-title' satisfies CoverTemplateId,
   theme: DEFAULT_COVER_THEME_ID satisfies CoverThemeId,
   format: 'png' satisfies CoverImageFormat,
-  width: COVER_WIDTH,
-  height: COVER_HEIGHT,
-  title: 'The open-source cloud for agents and developers',
+  ...getDefaultCoverSize(),
+  title: 'Build like a team of hundreds',
   subtitle: 'The open-source developer platform',
   eyebrow: 'Cover generator',
   connector: '×',
@@ -208,9 +205,7 @@ function parseTemplate(value: string | null): CoverTemplateId {
 }
 
 function parseTheme(value: string | null): CoverThemeId {
-  const normalized = value?.trim().toLowerCase()
-  if (normalized && isCoverThemeId(normalized)) return normalized
-  return DEFAULT_COVER_THEME_ID
+  return resolveCoverThemeId(value?.trim().toLowerCase())
 }
 
 function parseCoverScreenshotFields(
@@ -741,7 +736,10 @@ export function coverRenderDataToSearchParams(data: CoverRenderData): URLSearchP
   params.set('template', data.template)
   params.set('theme', data.theme)
   params.set('format', data.format)
-  if (data.width !== COVER_WIDTH || data.height !== COVER_HEIGHT) {
+  if (
+    data.width !== DEFAULT_COVER_VALUES.width ||
+    data.height !== DEFAULT_COVER_VALUES.height
+  ) {
     params.set('width', String(data.width))
     params.set('height', String(data.height))
   }

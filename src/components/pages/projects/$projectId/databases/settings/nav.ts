@@ -1,5 +1,6 @@
 import { Cpu, Settings, Shield, ShieldCheck } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
+import type { SettingsCardIndexEntry } from '@/lib/settings-search'
 
 export type DatabaseSettingsPathSuffix =
   | ''
@@ -15,6 +16,46 @@ export type DatabaseSettingsNavItem = {
   keywords: string[]
   /** When false, item is omitted from nav (e.g. serverless product DBs). */
   visible?: boolean
+}
+
+export type DatabaseSettingsVisibility = {
+  /** Dedicated compute (specification, replication) only exists on Cloud. */
+  isCloud: boolean
+  /** Replication needs a dedicated database that supports replicas. */
+  showReplication: boolean
+}
+
+const CLOUD_ONLY_SECTIONS: ReadonlySet<string> = new Set([
+  'specification',
+  'replication',
+])
+
+export function isDatabaseSettingsSectionVisible(
+  sectionId: string,
+  visibility: DatabaseSettingsVisibility,
+): boolean {
+  if (CLOUD_ONLY_SECTIONS.has(sectionId) && !visibility.isCloud) return false
+  if (sectionId === 'replication') return visibility.showReplication
+  return true
+}
+
+export function visibleDatabaseSettingsNav(
+  visibility: DatabaseSettingsVisibility,
+): DatabaseSettingsNavItem[] {
+  return DATABASE_SETTINGS_NAV.filter(
+    (item) =>
+      item.visible !== false &&
+      isDatabaseSettingsSectionVisible(item.id, visibility),
+  )
+}
+
+export function visibleDatabaseSettingsCards(
+  cards: SettingsCardIndexEntry[],
+  visibility: DatabaseSettingsVisibility,
+): SettingsCardIndexEntry[] {
+  return cards.filter((card) =>
+    isDatabaseSettingsSectionVisible(card.sectionId, visibility),
+  )
 }
 
 export const DATABASE_SETTINGS_NAV: DatabaseSettingsNavItem[] = [

@@ -14,6 +14,7 @@ import {
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { sdk } from '@/lib/appwrite/sdk'
+import { withAdminMode } from '@/lib/appwrite/admin-resource-url'
 import { useAvifSupport } from '@/lib/avif-support'
 import {
   useFile,
@@ -275,7 +276,7 @@ export function FileInspectorPanel({
       bucketId,
       fileId: file.$id,
     })
-    const urlWithMode = url + (url.includes('?') ? '&' : '?') + 'mode=admin'
+    const urlWithMode = withAdminMode(url)
     window.open(urlWithMode, '_blank')
   }
 
@@ -285,7 +286,7 @@ export function FileInspectorPanel({
     const raw = file.mimeType?.toLowerCase().startsWith('video/')
       ? projectSdk.storage.getFileView({ bucketId, fileId: file.$id })
       : projectSdk.storage.getFilePreview({ bucketId, fileId: file.$id })
-    const urlWithMode = raw + (raw.includes('?') ? '&' : '?') + 'mode=admin'
+    const urlWithMode = withAdminMode(raw)
     window.open(urlWithMode, '_blank')
   }
 
@@ -673,7 +674,10 @@ export function FileInspectorPanel({
                 {t('Delete')}
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-md p-0">
+            <DialogContent
+              className="sm:max-w-md p-0 z-[130]"
+              overlayClassName="z-[130]"
+            >
               <DialogHeader className="px-6 pt-6 text-start">
                 <DialogTitle>{t('Delete file')}</DialogTitle>
                 <DialogDescription className="text-[13px] mt-2">

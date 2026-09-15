@@ -31,8 +31,8 @@ export const jaSharedUiTranslations: Record<string, string> = {
     'このデプロイを削除してもよろしいですか?この操作は元に戻せません。',
   'Are you sure you want to delete this variable? This action cannot be undone.':
     'この変数を削除してもよろしいですか?この操作は元に戻せません。',
-  'Build output is available after the deployment has completed.':
-    'ビルド出力は、デプロイが完了した後に表示されます。',
+  'Build output is only available for ready deployments.':
+    'ビルド出力は、準備完了のデプロイでのみ利用できます。',
   'CLI deployments are created using the Appwrite command line tool, useful for developer workflows and scripted automation.':
     'CLI デプロイは Appwrite のコマンドラインツールを使用して作成され、開発者のワークフローやスクリプトによる自動化に役立ちます。', // pragma: allowlist secret
   'Cannot delete the active deployment. Activate another deployment first.':

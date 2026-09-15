@@ -41,6 +41,7 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { sdk } from '@/lib/appwrite/sdk'
+import { withAdminMode } from '@/lib/appwrite/admin-resource-url'
 import {
   buildConsoleUrl,
   copyResourceAsJson,
@@ -57,7 +58,7 @@ import {
   Dependencies,
 } from '@/lib/react-query/hooks'
 import {
-  isDeploymentCompleted,
+  canDownloadDeploymentBuildOutput,
   isDeploymentInProgress,
 } from '@/lib/utils/deployment-status'
 import { useT } from '@/lib/i18n/translate'
@@ -122,13 +123,13 @@ export function DeploymentListRowContextMenu({
   }
 
   const inProgress = isDeploymentInProgress(deployment.status)
-  const canDownloadBuild = isDeploymentCompleted(deployment.status)
+  const canDownloadBuild = canDownloadDeploymentBuildOutput(deployment.status)
   const canActivate = !isActive && deployment.status === 'ready'
   const canDeleteFromMenu = !isActive && !inProgress
 
   const invalidateAfterFunctionMutation = async () => {
     await queryClient.refetchQueries({
-      queryKey: ['deployments', 'project', projectId, resourceId],
+      queryKey: ['deployments', 'function', projectId, resourceId],
     })
     await queryClient.refetchQueries({
       queryKey: ['function', 'project', projectId, resourceId],
@@ -159,7 +160,7 @@ export function DeploymentListRowContextMenu({
               deploymentId: deployment.$id,
               type: DeploymentDownloadType.Source,
             })
-      const urlWithMode = url + (url.includes('?') ? '&' : '?') + 'mode=admin'
+      const urlWithMode = withAdminMode(url)
       window.open(urlWithMode, '_blank')
       toast.success(t('Download started'))
     } catch {
@@ -183,7 +184,7 @@ export function DeploymentListRowContextMenu({
               deploymentId: deployment.$id,
               type: DeploymentDownloadType.Output,
             })
-      const urlWithMode = url + (url.includes('?') ? '&' : '?') + 'mode=admin'
+      const urlWithMode = withAdminMode(url)
       window.open(urlWithMode, '_blank')
       toast.success(t('Download started'))
     } catch {
@@ -242,7 +243,7 @@ export function DeploymentListRowContextMenu({
                 title={
                   !canDownloadBuild
                     ? t(
-                        'Build output is available after the deployment has completed.',
+                        'Build output is only available for ready deployments.',
                       )
                     : undefined
                 }

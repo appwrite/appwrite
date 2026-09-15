@@ -3,6 +3,13 @@
  * Keys are the exact English source strings (English is the source of truth).
  */
 export const heOrganizationsDictionary: Record<string, string> = {
+  'A valid transfer price is required to continue.':
+    'כדי להמשיך נדרש מחיר תקף להעברת הדומיין.',
+  "We couldn't load a transfer price. Try again to continue.":
+    'לא הצלחנו לטעון מחיר להעברת הדומיין. נסו שוב כדי להמשיך.',
+  'Transfer pricing is unavailable for this domain. Try another domain or contact support.':
+    'מחיר ההעברה אינו זמין עבור הדומיין הזה. נסו דומיין אחר או פנו לתמיכה.',
+
   '(optional)': '(אופציונלי)',
   ', all billable services will be paused until the next billing cycle or until you increase your limit.':
     ', כל השירותים בתשלום יושהו עד מחזור החיוב הבא או עד שתגדילו את המגבלה.',
@@ -55,6 +62,10 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Add alert': 'הוספת התראה',
   'Add another member': 'הוספת חבר נוסף',
   'Add app': 'הוספת אפליקציה',
+  'Create app': 'יצירת אפליקציה',
+  Team: 'צוות',
+  'The app is created in your current team. Switch teams to create it in another team.':
+    'האפליקציה נוצרת בצוות הנוכחי שלכם. החליפו צוות כדי ליצור אותה בצוות אחר.',
   'Add backup': 'הוספת גיבוי',
   'Add billing address': 'הוספת כתובת חיוב',
   'Add credits': 'הוספת קרדיטים',
@@ -96,18 +107,20 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Allow OAuth2 Device Authorization Grant (RFC 8628).':
     'אפשרו OAuth2 Device Authorization Grant (RFC 8628).',
   Amount: 'סכום',
+  'Amount due': 'סכום לתשלום',
   'An error occurred': 'אירעה שגיאה',
   Analyst: 'אנליסט',
   Analytics: 'אנליטיקה',
   'App ID': 'מזהה אפליקציה',
-  'App created as draft': 'האפליקציה נוצרה כטיוטה',
+  'App created': 'האפליקציה נוצרה',
   'App deleted': 'האפליקציה נמחקה',
   'App logo preview': 'תצוגה מקדימה של לוגו האפליקציה',
   'App not found': 'האפליקציה לא נמצאה',
-  'App published': 'האפליקציה פורסמה',
+  'App enabled': 'האפליקציה הופעלה',
+  'App disabled': 'האפליקציה הושבתה',
+  'App status': 'סטטוס האפליקציה',
   'App settings': 'הגדרות אפליקציה',
   'App settings sections': 'מקטעי הגדרות אפליקציה',
-  'App unpublished': 'פרסום האפליקציה בוטל',
   'Apply Appwrite credits to your organization. Credits expire after a set period and do not roll over.': // pragma: allowlist secret
     'החילו קרדיטים של Appwrite על הארגון שלכם. תוקף הקרדיטים פג לאחר תקופה מוגדרת והם אינם נצברים.', // pragma: allowlist secret
   'Apply coupon': 'החלת קופון',
@@ -154,7 +167,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Available credits': 'קרדיטים זמינים',
   Avatars: 'אווטארים',
   Back: 'חזרה',
-  'Back to OAuth apps': 'חזרה לאפליקציות OAuth',
+  'Back to apps': 'חזרה לאפליקציות',
   'Back to domains': 'חזרה לדומיינים',
   'Backup methods': 'אמצעי תשלום לגיבוי',
   'Backup payment method updated': 'אמצעי התשלום לגיבוי עודכן',
@@ -207,6 +220,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   Catalog: 'קטלוג',
   Categories: 'קטגוריות',
   Category: 'קטגוריה',
+  'Catch up on Init': 'צפו בסיכום Init',
   'Change organization': 'החלפת ארגון',
   'Change plan': 'שינוי תוכנית',
   'Changes to projects and services are limited until the outstanding invoice is paid. Complete payment to restore full access.':
@@ -215,8 +229,6 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Choose File': 'בחירת קובץ',
   'Choose a PNG from the app assets bucket or upload a new one.':
     'בחרו קובץ PNG מבאקט נכסי האפליקציה או העלו קובץ חדש.',
-  'Choose a paid plan for the new organization instead.':
-    'בחרו תוכנית בתשלום עבור הארגון החדש במקום זאת.',
   'Choose domains to keep': 'בחרו דומיינים לשמירה',
   'Choose exactly': 'בחרו בדיוק',
   'Choose existing address': 'בחירת כתובת קיימת',
@@ -227,7 +239,6 @@ export const heOrganizationsDictionary: Record<string, string> = {
     'בחרו את התוכנית המתאימה ביותר לצרכים שלכם.',
   'Choose whether this domain should renew automatically before it expires.':
     'בחרו אם הדומיין הזה יתחדש אוטומטית לפני שתוקפו יפוג.',
-  'Choose which organization to keep': 'בחרו איזה ארגון לשמור',
   City: 'עיר',
   'Clear search': 'ניקוי חיפוש',
   'Click to upload or drag and drop': 'לחצו להעלאה או גררו ושחררו',
@@ -258,7 +269,11 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Contact emails': 'אימיילים ליצירת קשר',
   'Contact for price': 'צרו קשר לקבלת מחיר',
   'Contact sales': 'צרו קשר עם צוות המכירות',
+  'Continue in the old console': 'המשך בקונסול הישן',
   'Copied to clipboard': 'הועתק ללוח',
+  'Client ID': 'מזהה לקוח',
+  'Last used': 'שימוש אחרון',
+  'Never used': 'לא היה בשימוש',
   Copy: 'העתקה',
   'Copy ID': 'העתקת מזהה',
   'Copy as JSON': 'העתקה כ-JSON',
@@ -288,8 +303,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Create a project first': 'צרו פרויקט תחילה',
   'Create a secret for confidential OAuth flows such as authorization code with server-side token exchange.':
     'צרו סוד לתהליכי OAuth חסויים, כמו קוד הרשאה עם החלפת טוקנים בצד השרת.',
-  'Create an OAuth2 app listing for the marketplace. It is saved as a draft until you publish it.':
-    'צרו דף אפליקציית OAuth2 למרקטפלייס. הדף נשמר כטיוטה עד שתפרסמו אותו.',
+  'Create an OAuth2 app listing for the marketplace.':
+    'צרו דף אפליקציית OAuth2 למרקטפלייס.',
   'Create an app to share it with other organizations on the marketplace.':
     'צרו אפליקציה כדי לשתף אותה עם ארגונים אחרים במרקטפלייס.',
   'Create organization': 'יצירת ארגון',
@@ -300,7 +315,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Create your first project to get started':
     'צרו את הפרויקט הראשון שלכם כדי להתחיל',
   Created: 'נוצר',
-  Creators: 'יוצרים',
+  Contacts: 'אנשי קשר',
   'Credit History': 'היסטוריית קרדיטים',
   'Credit expiration': 'תפוגת קרדיט',
   'Credit expires': 'הקרדיט פג בתאריך',
@@ -378,6 +393,9 @@ export const heOrganizationsDictionary: Record<string, string> = {
   Domains: 'דומיינים',
   Done: 'סיום',
   'Downgrade impact': 'השפעת השנמוך',
+  'Downgrade to Free': 'שנמוך ל-Free',
+  'Downgrade to Free is temporarily unavailable here. Continue in the old console.':
+    'שנמוך לתוכנית Free אינו זמין כאן כרגע. המשיכו בקונסול הישן.',
   Downgraded: 'שונמך',
   'Downgrading to Free Plan': 'שנמוך לתוכנית Free',
   'Downgrading your plan': 'משנמך את התוכנית שלכם',
@@ -493,6 +511,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Failed to upload logo': 'העלאת הלוגו נכשלה',
   'Failed to validate payment': 'אימות התשלום נכשל',
   'Failed to view invoice': 'הצגת החשבונית נכשלה',
+  'Browse official apps, or explore by category.':
+    'עיינו באפליקציות רשמיות או חקרו לפי קטגוריה.',
   'Featured apps, popular integrations, and browse by category.':
     'אפליקציות מומלצות, אינטגרציות פופולריות ועיון לפי קטגוריה.',
   Feedback: 'משוב',
@@ -533,6 +553,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Healthcare providers, health plans, healthcare clearinghouses, and their business associates building HIPAA-compliant applications.':
     'ספקי בריאות, תוכניות בריאות, מסלקות בריאות ושותפיהם העסקיים שבונים אפליקציות תואמות HIPAA.',
   'Hide code': 'הסתרת קוד',
+  Homepage: 'דף הבית',
   'Homepage URL': 'כתובת דף הבית',
   'Homepage:': 'דף הבית:',
   'How users can get help with your app during OAuth2 consent.':
@@ -671,7 +692,6 @@ export const heOrganizationsDictionary: Record<string, string> = {
   Network: 'רשת',
   'Never embed OAuth secrets in mobile apps, SPAs, or public repositories. Use environment variables such as':
     'לעולם אל תטמיעו סודות OAuth באפליקציות מובייל, ב-SPA או ב-repos ציבוריים. השתמשו במשתני סביבה כגון',
-  'New organization': 'ארגון חדש',
   Next: 'הבא',
   'Next page': 'הדף הבא',
   'Next payment of': 'התשלום הבא בסך',
@@ -723,6 +743,10 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'OAuth2 apps published by your organization to the marketplace.':
     'אפליקציות OAuth2 שפורסמו על ידי הארגון שלכם למרקטפלייס.',
   Official: 'רשמי',
+  'We invite app makers to contact us and get your integrations published.':
+    'אנחנו מזמינים יוצרי אפליקציות לפנות אלינו ולפרסם את האינטגרציות שלהם.',
+  'Add your first app to get started.':
+    'הוסיפו את האפליקציה הראשונה שלכם כדי להתחיל.',
   Offline: 'לא מקוון',
   'One line summary': 'תקציר בשורה אחת',
   'One-time display': 'תצוגה חד-פעמית',
@@ -748,18 +772,38 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Organization is required': 'ארגון הוא שדה חובה',
   'Organization name': 'שם הארגון',
   'Organization name updated successfully': 'שם הארגון עודכן בהצלחה',
+  'Partners keys': 'מפתחות שותפים',
+  'Authenticate Console APIs from your backend. Create and manage projects, members, and domains across this organization.':
+    'אמתו קריאות Console API מהבקאנד שלכם. צרו ונהלו פרויקטים, חברים ודומיינים בכל הארגון.',
+  'Project keys vs Partners keys': 'מפתחות פרויקט מול מפתחות שותפים',
+  'Partners keys cannot access data inside a project. For databases, storage, users, and functions, create a project key instead.':
+    'מפתחות שותפים לא יכולים לגשת לנתונים בתוך פרויקט. למסדי נתונים, אחסון, משתמשים ופונקציות, צרו מפתח פרויקט.',
+  'Open a project, go to API keys in the project sidebar, and create a key with the scopes your backend needs.':
+    'פתחו פרויקט, עברו למפתחות API בסרגל הצד של הפרויקט, וצרו מפתח עם היקפי הגישה שהבקאנד שלכם צריך.',
+  'No Partners keys yet': 'אין עדיין מפתחות שותפים',
+  'Create your first Partners key to authenticate Console APIs from your backend.':
+    'צרו את מפתח השותפים הראשון שלכם כדי לאמת קריאות Console API מהבקאנד.',
+  'Learn more about Partners key scopes':
+    'למידע נוסף על היקפי גישה של מפתחות שותפים',
+  'Create Partners key': 'יצירת מפתח שותפים',
+  'Create a Partners key for Console automation':
+    'צרו מפתח שותפים לאוטומציה של Console',
+  'Partners keys for partner platforms': 'מפתחות שותפים לפלטפורמות שותפים',
   'Organization-level keys will be manageable here once available. Meanwhile, use project keys for server-side access.':
     'מפתחות ברמת הארגון יהיו ניתנים לניהול כאן כשיהיו זמינים. בינתיים, השתמשו במפתחות פרויקט לגישה בצד השרת.',
   Overview: 'סקירה כללית',
   Owner: 'בעלים',
   Page: 'דף',
+  Partners: 'שותפים',
   Paused: 'מושהה',
   Locked: 'נעול',
   'Pay and register': 'תשלום ורישום',
   Payment: 'תשלום',
   'Payment authorized': 'התשלום אושר',
+  'Payment authorization required': 'נדרש אישור תשלום',
   'Payment confirmed': 'התשלום אושר',
   'Payment confirmed successfully': 'התשלום אושר בהצלחה',
+  'Payment has been successfully processed': 'התשלום עובד בהצלחה',
   'Payment failed': 'התשלום נכשל',
   'Payment failed - organization has restricted access':
     'התשלום נכשל, לארגון יש גישה מוגבלת',
@@ -841,7 +885,6 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Project keys': 'מפתחות פרויקט',
   'Project pinned': 'הפרויקט הוצמד',
   'Project unpinned': 'הצמדת הפרויקט בוטלה',
-  Projects: 'פרויקטים',
   'Projects that will be deleted:': 'פרויקטים שיימחקו:',
   'Promo code': 'קוד קופון',
   Public: 'ציבורי',
@@ -850,10 +893,11 @@ export const heOrganizationsDictionary: Record<string, string> = {
     'לקוחות ציבוריים דורשים PKCE. לקוחות חסויים משתמשים בסוד לקוח.',
   'Public clients use PKCE and do not require OAuth secrets. Switch to a confidential client on the OAuth client tab if you need server-side secret authentication.':
     'לקוחות ציבוריים משתמשים ב-PKCE ואינם דורשים סודות OAuth. עברו ללקוח חסוי בלשונית לקוח OAuth אם אתם זקוקים לאימות סוד בצד השרת.',
-  Publish: 'פרסום',
-  Published: 'פורסם',
-  'Published apps appear in the marketplace catalog for other organizations.':
-    'אפליקציות שפורסמו מופיעות בקטלוג המרקטפלייס עבור ארגונים אחרים.',
+  'Marketplace page': 'דף המרקטפלייס',
+  'Public listing page for this app in the marketplace.':
+    'דף הרישום הציבורי של האפליקציה במרקטפלייס.',
+  'Control whether this app can be used to authorize users.':
+    'קבעו האם ניתן להשתמש באפליקציה לאימות משתמשים.',
   'Published apps from other organizations will appear here.':
     'אפליקציות שפורסמו על ידי ארגונים אחרים יופיעו כאן.',
   'Publisher guidelines': 'הנחיות למפרסמים',
@@ -864,6 +908,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Ready to start': 'מוכן להתחלה',
   Realtime: 'Realtime',
   Recap: 'סיכום',
+  'Rewatch sessions and explore every launch from Init week.':
+    'צפו שוב במפגשים ובכל ההשקות משבוע Init.',
   Recommended: 'מומלץ',
   'Recurring Charge': 'חיוב חוזר',
   'Redirect URIs': 'כתובות URI להפניה',
@@ -914,6 +960,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
   Retry: 'ניסיון חוזר',
   'Retry Verification': 'אימות מחדש',
   'Retry payment': 'ניסיון תשלום חוזר',
+  'Retry your payment to avoid service interruptions with your projects.':
+    'נסו שוב את התשלום כדי למנוע הפרעות בשירות בפרויקטים שלכם.',
   'Retry verification': 'אימות מחדש',
   'Retrying...': 'מנסה שוב...',
   'Review charges before you complete payment.':
@@ -973,6 +1021,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Served by Appwrite': 'מוגש על ידי Appwrite', // pragma: allowlist secret
   'Server-side only': 'צד שרת בלבד',
   'Set a monthly spending limit': 'הגדירו מגבלת הוצאה חודשית',
+  'Set as default payment method': 'הגדירו כאמצעי התשלום הראשי',
   'Setting up your organization': 'מגדיר את הארגון שלכם',
   Settings: 'הגדרות',
   'Short description': 'תיאור קצר',
@@ -1019,6 +1068,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Tax ID': 'מספר זיהוי מס',
   'Tax ID (Optional)': 'מספר זיהוי מס (אופציונלי)',
   'Tax ID updated': 'מספר זיהוי המס עודכן',
+  'Temporarily available in the old console': 'זמין זמנית בקונסול הישן',
   'Team ID is required': 'מזהה צוות הוא שדה חובה',
   'Terms of service': 'תנאי שירות',
   'The address will remain on your account; only the link to this organization will be removed.':
@@ -1031,13 +1081,16 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'They will not be able to join the organization.':
     'הם לא יוכלו להצטרף לארגון.',
   'This action cannot be undone.': 'פעולה זו אינה ניתנת לביטול.',
-  'This app is a draft and not listed publicly.':
-    'האפליקציה הזו היא טיוטה ואינה מוצגת באופן ציבורי.',
-  'This app is visible in the marketplace.': 'האפליקציה הזו מוצגת במרקטפלייס.',
+  'This app is enabled and can authorize users.':
+    'האפליקציה מופעלת ויכולה לאמת משתמשים.',
+  'This app is disabled and cannot authorize users.':
+    'האפליקציה מושבתת ואינה יכולה לאמת משתמשים.',
   'This app may have been deleted or you do not have access.':
     'ייתכן שהאפליקציה נמחקה או שאין לכם גישה.',
   'This entire organization will be deleted, including all of its projects and resources.':
     'כל הארגון הזה יימחק, כולל כל הפרויקטים והמשאבים שלו.',
+  'Downgrading to the Free plan is temporarily unavailable here while we refine the experience. You can complete this change in the old console.':
+    'שנמוך לתוכנית Free אינו זמין כאן כרגע בזמן שאנחנו משפרים את החוויה. אפשר להשלים את השינוי בקונסול הישן.',
   'This invoice is missing authentication details.':
     'בחשבונית זו חסרים פרטי אימות.',
   'This name is listed as premium. Final transfer pricing is confirmed when you submit payment.':
@@ -1156,6 +1209,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'View invoice': 'צפייה בחשבונית',
   'View members': 'צפייה בחברים',
   'View project': 'צפייה בפרויקט',
+  'View recap': 'צפייה בסיכום',
   'We could not confirm Appwrite nameservers for this domain yet. DNS changes can take up to 48 hours to propagate. Confirm the nameservers below at your registrar, wait a bit, then try again.': // pragma: allowlist secret
     'עדיין לא הצלחנו לאשר שרתי שמות של Appwrite עבור הדומיין הזה. שינויי DNS יכולים לקחת עד 48 שעות להתפשט. ודאו אצל הרשם שהשרתים למטה מוגדרים, המתינו מעט, ונסו שוב.', // pragma: allowlist secret
   "We couldn't load a quote for this domain. You can still continue - the amount due is confirmed when you complete payment.":
@@ -1191,6 +1245,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
     'אין לכם הרשאה ליצור פרויקטים.',
   "You don't have permission to invite members.":
     'אין לכם הרשאה להזמין חברים.',
+  "You don't have permission to manage members.":
+    'אין לכם הרשאה לנהל חברים.',
   'You have': 'יש לכם',
   'You have reached your member limit.': 'הגעתם למגבלת החברים שלכם.',
   'You will be charged': 'תחויבו בסך',
@@ -1210,6 +1266,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Your feedback': 'המשוב שלכם',
   'Your last payment attempt failed. Please update your payment method and try again.':
     'ניסיון התשלום האחרון שלכם נכשל. עדכנו את אמצעי התשלום ונסו שוב.',
+  'Your card issuer needs you to confirm this payment. Use Authorize on the invoice in payment history.':
+    'מנפיק הכרטיס צריך שתאשרו את התשלום הזה. אשרו את החשבונית בהיסטוריית התשלומים.',
   "Your plan will change at the end of your current billing period. You'll keep access to your current plan features until then.":
     'התוכנית שלכם תשתנה בסוף תקופת החיוב הנוכחית. עד אז תשמרו על גישה לתכונות התוכנית הנוכחית.',
   'Your plan will change on': 'התוכנית שלכם תשתנה בתאריך',
@@ -1277,7 +1335,6 @@ export const heOrganizationsDictionary: Record<string, string> = {
   "processes personal data on your behalf. It's required for GDPR compliance when handling EU residents' data.":
     'מעבדת נתונים אישיים בשמכם. הוא נדרש לציות ל-GDPR בעת טיפול בנתוני תושבי האיחוד האירופי.',
   project: 'פרויקט',
-  projects: 'פרויקטים',
   'projects, but the selected plan allows only':
     'פרויקטים, אך התוכנית שנבחרה מאפשרת רק',
   record: 'רשומה',
@@ -1366,4 +1423,89 @@ export const heOrganizationsDictionary: Record<string, string> = {
   Addons: 'תוספים',
   'Premium Geo DB': 'Premium Geo DB',
   'Dedicated DB compute credit': 'זיכוי חישוב למסד נתונים ייעודי',
+  'Organization resources': 'משאבי הארגון',
+  'Project resources': 'משאבי פרויקט',
+  'Compare organization usage with the selected plan. Mark extras to delete. Only selected items are removed after you confirm.':
+    'השוו את השימוש בארגון לתוכנית שנבחרה. סמנו עודפים למחיקה. רק הפריטים שנבחרו יימחקו אחרי האישור.',
+  'Compare each remaining project with the selected plan. Mark extras to delete. Only selected items are removed after you confirm.':
+    'השוו כל פרויקט שנותר לתוכנית שנבחרה. סמנו עודפים למחיקה. רק הפריטים שנבחרו יימחקו אחרי האישור.',
+  'Mark the extras you want to remove. Only selected items are deleted after you confirm.':
+    'סמנו את העודפים שברצונכם להסיר. רק הפריטים שנבחרו יימחקו אחרי האישור.',
+  'The selected plan allows': 'התוכנית שנבחרה מאפשרת',
+  'Still over the plan limit.': 'עדיין מעל מגבלת התוכנית.',
+  'Delete at least': 'מחקו לפחות',
+  'to fit the selected plan.': 'כדי להתאים לתוכנית שנבחרה.',
+  'Delete selected projects': 'מחיקת הפרויקטים שנבחרו',
+  'Delete selected members': 'מחיקת החברים שנבחרו',
+  'Delete selected domains': 'מחיקת הדומיינים שנבחרו',
+  'Only the selected items will be deleted.': 'רק הפריטים שנבחרו יימחקו.',
+  'Finish deleting project resources that exceed the selected plan.':
+    'סיימו למחוק משאבי פרויקט שחורגים מהתוכנית שנבחרה.',
+  'Checking whether the plan can be changed...': 'בודקים אם אפשר לשנות את התוכנית...',
+  'Could not change plan. Remaining usage still exceeds the selected plan.':
+    'לא ניתן לשנות תוכנית. השימוש שנותר עדיין חורג מהתוכנית שנבחרה.',
+  'Remaining extras that still exceed the selected plan. Nothing else is deleted.':
+    'עודפים שנותרו וחורגים מהתוכנית שנבחרה. שום דבר אחר לא יימחק.',
+  'Usage fits the selected plan. No further deletions are required.':
+    'השימוש מתאים לתוכנית שנבחרה. אין צורך במחיקות נוספות.',
+  'Calculating remaining extras...': 'מחשבים עודפים שנותרו...',
+  'Extras still over the selected plan. Delete only the items you mark.':
+    'עודפים שעדיין מעל התוכנית שנבחרה. מחקו רק את הפריטים שסימנתם.',
+  'still over limit': 'עדיין מעל המגבלה',
+  'Mark extras to delete in each project. Only selected items are removed after you confirm.':
+    'סמנו עודפים למחיקה בכל פרויקט. רק הפריטים שנבחרו יוסרו אחרי האישור.',
+  'Over limit': 'מעל המגבלה',
+  Marked: 'מסומן',
+  'This resource type fits the selected plan.':
+    'סוג המשאב הזה מתאים לתוכנית שנבחרה.',
+  'Confirm selection': 'אישור הבחירה',
+  'marked for deletion': 'מסומנים למחיקה',
+  'Edit selection': 'עריכת הבחירה',
+  'Will be deleted': 'פריטים שיימחקו',
+  'and all its resources': 'וכל המשאבים שלו',
+  'Removing the items you marked for deletion.':
+    'מוחקים את הפריטים שסימנתם למחיקה.',
+  'Choose which organization to delete': 'בחרו איזה ארגון למחוק',
+  'Choose which organization to delete.': 'בחרו איזה ארגון למחוק.',
+  'You may hit limits on the selected plan':
+    'ייתכן שתגיעו למגבלות בתוכנית שנבחרה',
+  'Your usage in the last 30 days was above these limits. This is a rolling window, not your billing cycle.':
+    'השימוש שלכם ב-30 הימים האחרונים היה מעל המגבלות האלה. זהו חלון מתגלגל, לא מחזור החיוב שלכם.',
+  'Going over a plan limit can block the affected projects until the next billing cycle.':
+    'חריגה ממגבלת התוכנית עלולה לחסום את הפרויקטים המושפעים עד מחזור החיוב הבא.',
+  '1 organization marked for deletion': 'ארגון אחד מסומן למחיקה',
+  'Confirm which organization to delete.': 'אשרו איזה ארגון למחוק.',
+  'Confirm plan change': 'אישור שינוי התוכנית',
+  'Confirm organization deletion': 'אישור מחיקת הארגון',
+  'Your organization will move to the {plan} plan.':
+    'הארגון שלכם יעבור לתוכנית {plan}.',
+  'Delete and change plan': 'מחיקה ושינוי תוכנית',
+  'Confirm which projects to delete first. The projects you keep are then checked against the selected plan.':
+    'אשרו קודם אילו פרויקטים למחוק. הפרויקטים שתשאירו ייבדקו אז מול התוכנית שנבחרה.',
+  'Could not load': 'לא ניתן לטעון',
+  'for this project.': 'עבור הפרויקט הזה.',
+  'Some project resources could not be loaded. Reload and try again.':
+    'חלק ממשאבי הפרויקט לא נטענו. רעננו ונסו שוב.',
+  'Addons not available on the selected plan': 'תוספים שאינם זמינים בתוכנית שנבחרה',
+  'These addons will be disabled as part of this plan change. You do not need to turn them off first.':
+    'התוספים האלה יבוטלו כחלק משינוי התוכנית. אין צורך לכבות אותם מראש.',
+  'They stay active until the end of your current billing cycle, then they are removed.':
+    'הם יישארו פעילים עד סוף מחזור החיוב הנוכחי, ואז יוסרו.',
+  'What changes in the projects you are keeping': 'מה משתנה בפרויקטים שאתם שומרים',
+  'These changes happen on their own when your plan changes. There is nothing to select or clean up first.':
+    'השינויים האלה מתרחשים מעצמם כשהתוכנית משתנה. אין מה לבחור או לנקות מראש.',
+  'Backups stop running': 'הגיבויים מפסיקים לפעול',
+  'At the end of your current billing cycle these backup policies are turned off and stop creating backups. The policies are not deleted, but the selected plan has no Backups screen, so you will not be able to see or manage them.':
+    'בסוף מחזור החיוב הנוכחי מדיניות הגיבוי הזו תכובה ותפסיק ליצור גיבויים. המדיניות לא נמחקת, אבל בתוכנית שנבחרה אין מסך גיבויים, כך שלא תוכלו לראות או לנהל אותה.',
+  'Dedicated databases are spun down': 'מסדי נתונים ייעודיים מושבתים',
+  'The selected plan does not include dedicated databases, so these are spun down when your plan changes. Your data is preserved, but the database stops serving requests and cannot be started again, even if you move back to a plan that includes them.':
+    'התוכנית שנבחרה אינה כוללת מסדי נתונים ייעודיים, ולכן הם מושבתים כשהתוכנית משתנה. הנתונים נשמרים, אבל מסד הנתונים מפסיק לשרת בקשות ולא ניתן להפעיל אותו מחדש, גם אם תחזרו לתוכנית שכוללת אותם.',
+  'The following is deleted as soon as you confirm.': 'הפריטים הבאים יימחקו מיד עם האישור.',
+  'The deletions happen now. Your organization moves to the {plan} plan on {date}, when the current billing cycle ends.':
+    'המחיקות מתבצעות עכשיו. הארגון שלכם יעבור לתוכנית {plan} בתאריך {date}, בתום מחזור החיוב הנוכחי.',
+  'Deleted data cannot be recovered.': 'לא ניתן לשחזר נתונים שנמחקו.',
+  'Could not load which backup policies stop running when your plan changes.':
+    'לא ניתן היה לטעון אילו מדיניות גיבוי יפסיקו לפעול כשהתוכנית תשתנה.',
+  'Could not load which dedicated databases are spun down when your plan changes.':
+    'לא ניתן היה לטעון אילו מסדי נתונים ייעודיים יושבתו כשהתוכנית תשתנה.',
 }

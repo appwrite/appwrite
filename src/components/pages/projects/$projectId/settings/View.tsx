@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { useParams, useLocation } from '@tanstack/react-router'
 import { useProject, useOrganizationScopes } from '@/lib/react-query/hooks'
 import {
-  canWriteDomains,
+  canWriteProjectDomains,
   canWriteWebhooks,
   canCreateMigration,
 } from '@/lib/console-access-checks'
@@ -100,7 +100,7 @@ export function View({ initialMigrationsData }: SettingsViewProps = {}) {
   const { project } = useProject(projectId)
   const { features } = useConsoleProfile()
   const { access } = useOrganizationScopes(project?.teamId)
-  const noDomainsPermission = !canWriteDomains(access, features)
+  const noDomainsPermission = !canWriteProjectDomains(access, features)
   const noWebhooksPermission = !canWriteWebhooks(access, features)
   const noMigrationsPermission = !canCreateMigration(access, features)
   const createDisabled =

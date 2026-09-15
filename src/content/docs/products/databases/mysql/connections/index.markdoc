@@ -219,20 +219,20 @@ The response includes the connection fields alongside the database configuration
   "status": "ready",
   "hostname": "db-<hash>.<region>.appwrite.center",
   "connectionPort": 3306,
-  "connectionUser": "admin",
+  "connectionUser": "admin.<hash>",
   "connectionPassword": "<password>",
-  "connectionString": "mysql://admin:<password>@db-<hash>.<region>.appwrite.center:3306/<database>"
+  "connectionString": "mysql://admin.<hash>:<password>@db-<hash>.<region>.appwrite.center:3306/default?ssl=true"
 }
 ```
 
-The primary user is `admin` and the database name is generated per database.
+The username is `admin.<hash>`, where the hash is the same one that appears in the hostname, and the database name is `default` for every database. The proxy routes your connection by this username, so always use the full value from the connection string.
 
 # Connect with the mysql client {% #mysql-client %}
 
 Pass the individual connection values to the `mysql` command-line client and enter the password when prompted:
 
 ```bash
-mysql -h db-<hash>.<region>.appwrite.center -P 3306 -u admin -p -D <database>
+mysql -h db-<hash>.<region>.appwrite.center -P 3306 -u admin.<hash> -p -D default
 ```
 
 # Rotate the primary password {% #rotate %}
@@ -442,7 +442,7 @@ import mysql.connector
 conn = mysql.connector.connect(
     host=os.environ['DB_HOST'],
     port=3306,
-    user='admin',
+    user='admin.<hash>',
     password=os.environ['DB_PASSWORD'],
     database=os.environ['DB_NAME'],
 )
@@ -456,7 +456,7 @@ conn.close()
 
 $pdo = new PDO(
     sprintf('mysql:host=%s;port=3306;dbname=%s', getenv('DB_HOST'), getenv('DB_NAME')),
-    'admin',
+    'admin.<hash>',
     getenv('DB_PASSWORD')
 );
 

@@ -28,6 +28,8 @@ interface ApiKeyDrawerProps {
   initialName?: string
   /** Pre-selected scopes when opening the create drawer */
   initialScopes?: string[]
+  /** Project key scopes vs organization Console scopes */
+  scopeCatalog?: 'project' | 'organization'
 }
 
 function maskKey(key: string) {
@@ -46,6 +48,7 @@ export function ApiKeyDrawer({
   copiedField,
   initialName,
   initialScopes,
+  scopeCatalog = 'project',
 }: ApiKeyDrawerProps) {
   const t = useT()
   const [name, setName] = useState('')
@@ -433,11 +436,21 @@ export function ApiKeyDrawer({
                       value={scopes}
                       onChange={setScopes}
                       disabled={isLoading}
+                      catalog={scopeCatalog}
                     />
                     <p className="text-[12px] text-muted-foreground">
                       {t('Select the scopes this API key will have access to.')}{' '}
-                      <DocsRouteLink className="link-neutral" href="/docs/advanced/platform/api-keys">
-                        {t('Learn more about API key scopes')}
+                      <DocsRouteLink
+                        className="link-neutral"
+                        href={
+                          scopeCatalog === 'organization'
+                            ? '/docs/partners/org-api-keys#scopes'
+                            : '/docs/advanced/platform/api-keys'
+                        }
+                      >
+                        {scopeCatalog === 'organization'
+                          ? t('Learn more about Partners key scopes')
+                          : t('Learn more about API key scopes')}
                       </DocsRouteLink>
                       .
                     </p>

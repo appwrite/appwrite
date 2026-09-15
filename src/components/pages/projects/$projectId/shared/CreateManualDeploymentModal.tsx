@@ -17,7 +17,12 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { useT } from '@/lib/i18n/translate'
 import { closeDialogBeforeOverlayUnmount } from '@/lib/utils/overlay-lock'
+import { cn } from '@/lib/utils'
 import { sdk } from '@/lib/appwrite/sdk'
+import {
+  DEPLOYMENT_ARCHIVE_ACCEPT,
+  isDeploymentArchive,
+} from '@/lib/deployment-archive'
 
 export type CreateManualDeploymentResourceType = 'function' | 'site'
 
@@ -35,11 +40,6 @@ export interface CreateManualDeploymentModalProps {
   maxFileSizeBytes?: number
 }
 
-function isTarGzFile(file: File): boolean {
-  const name = file.name?.toLowerCase() ?? ''
-  return name.endsWith('.tar.gz') || name.endsWith('.tgz')
-}
-
 export function CreateManualDeploymentModal({
   open,
   onOpenChange,
@@ -53,11 +53,13 @@ export function CreateManualDeploymentModal({
   const queryClient = useQueryClient()
   const inputRef = useRef<HTMLInputElement>(null)
   const [file, setFile] = useState<File | null>(null)
+  const [isDragging, setIsDragging] = useState(false)
   const [uploadProgress, setUploadProgress] = useState<number | null>(null)
   const [validationError, setValidationError] = useState<string | null>(null)
 
   const reset = () => {
     setFile(null)
+    setIsDragging(false)
     setUploadProgress(null)
     setValidationError(null)
     if (inputRef.current) {
@@ -71,7 +73,7 @@ export function CreateManualDeploymentModal({
   }
 
   const validateFile = (f: File): string | null => {
-    if (!isTarGzFile(f)) {
+    if (!isDeploymentArchive(f)) {
       return t('Only .tar.gz files are allowed.')
     }
     if (f.size > maxFileSizeBytes) {
@@ -81,8 +83,7 @@ export function CreateManualDeploymentModal({
     return null
   }
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const chosen = e.target.files?.[0]
+  const applyFile = (chosen: File | undefined) => {
     setValidationError(null)
     if (!chosen) {
       setFile(null)
@@ -92,9 +93,14 @@ export function CreateManualDeploymentModal({
     if (err) {
       setValidationError(err)
       setFile(null)
+      if (inputRef.current) inputRef.current.value = ''
       return
     }
     setFile(chosen)
+  }
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    applyFile(e.target.files?.[0])
   }
 
   const mutation = useMutation({
@@ -155,6 +161,28 @@ export function CreateManualDeploymentModal({
     },
   })
 
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (mutation.isPending) return
+    e.dataTransfer.dropEffect = 'copy'
+    setIsDragging(true)
+  }
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(false)
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(false)
+    if (mutation.isPending) return
+    applyFile(e.dataTransfer.files?.[0])
+  }
+
   const handleSubmit = () => {
     if (!file) {
       setValidationError(t('Please select a .tar.gz file.'))
@@ -186,16 +214,29 @@ export function CreateManualDeploymentModal({
           <input
             ref={inputRef}
             type="file"
-            accept=".tar.gz,.tgz,application/gzip"
+            accept={DEPLOYMENT_ARCHIVE_ACCEPT}
             className="hidden"
             onChange={handleFileChange}
           />
-          <div
-            onClick={() => inputRef.current?.click()}
-            className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border bg-muted/20 py-8 px-4 cursor-pointer hover:bg-muted/30 transition-colors"
+          <button
+            type="button"
+            onClick={() => {
+              if (!mutation.isPending) inputRef.current?.click()
+            }}
+            onDragOver={handleDragOver}
+            onDragEnter={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            className={cn(
+              'flex w-full flex-col items-center justify-center rounded-lg border-2 border-dashed py-8 px-4 cursor-pointer transition-colors outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
+              isDragging
+                ? 'border-primary bg-primary/5'
+                : 'border-border bg-muted/20 hover:bg-muted/30',
+              mutation.isPending && 'pointer-events-none opacity-60',
+            )}
           >
             {file ? (
-              <div className="flex items-center gap-2 text-[13px] text-foreground">
+              <span className="pointer-events-none flex items-center gap-2 text-[13px] text-foreground">
                 <FileArchive className="h-5 w-5 text-muted-foreground" />
                 <span className="font-medium truncate max-w-[240px]">
                   {file.name}
@@ -203,16 +244,16 @@ export function CreateManualDeploymentModal({
                 <span className="text-muted-foreground">
                   ({(file.size / 1024).toFixed(1)} KB)
                 </span>
-              </div>
+              </span>
             ) : (
-              <>
+              <span className="pointer-events-none flex flex-col items-center">
                 <Upload className="h-10 w-10 text-muted-foreground mb-2" />
-                <p className="text-[13px] text-muted-foreground text-center">
-                  {t('Click to select a .tar.gz file')}
-                </p>
-              </>
+                <span className="text-[13px] text-muted-foreground text-center">
+                  {t('Drop a .tar.gz file here or click to browse')}
+                </span>
+              </span>
             )}
-          </div>
+          </button>
           {validationError && (
             <p className="mt-2 text-[12px] text-destructive">
               {validationError}

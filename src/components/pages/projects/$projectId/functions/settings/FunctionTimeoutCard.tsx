@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useSyncStateFromServer } from '@/hooks/use-sync-state-from-server'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -23,11 +23,9 @@ export function FunctionTimeoutCard({
 }: FunctionTimeoutCardProps) {
   const t = useT()
   const queryClient = useQueryClient()
-  const [requestTimeout, setRequestTimeout] = useState(15)
-
-  useEffect(() => {
-    setRequestTimeout(func.timeout || 15)
-  }, [func])
+  const [requestTimeout, setRequestTimeout] = useSyncStateFromServer(
+    func.timeout || 15,
+  )
 
   const updateMutation = useMutation({
     mutationFn: async (updates: Partial<Models.Function>) => {

@@ -3,6 +3,7 @@ layout: changelog
 title: "Terraform provider for Appwrite"
 date: 2026-04-24
 cover: /images/blog/terraform-provider-appwrite/cover.avif
+tags: auth, databases, storage, messaging
 ---
 
 You can now learn how to manage Appwrite **project configuration as code** with the official [**Terraform provider**](https://registry.terraform.io/providers/appwrite/appwrite/latest) directly in our documentation. Define TablesDB resources, storage buckets and files, Auth users and teams, Functions and Sites, messaging providers, topics, subscribers, webhooks, backup policies, and more in `.tf` files, keep changes in version control, and apply the same setup across staging and production with less manual work in the Console.

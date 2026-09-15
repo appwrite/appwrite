@@ -9,6 +9,7 @@ import {
 import { fetchProjectUsageGaugesChartOverview } from '@/lib/usage/usage-gauges-common'
 import { DEFAULT_USAGE_CHART_INTERVAL } from '@/lib/usage/chart-interval'
 import { getUsageChartLatestValue } from '@/lib/usage/database-usage'
+import { DEFAULT_USAGE_LOG_RETENTION_HOURS } from '@/lib/usage/usage-log-retention'
 
 /** Messages delivered across all channels (event counter). */
 export const MESSAGING_MESSAGES_SENT_EVENT_METRIC = 'messages.sent' as const
@@ -106,12 +107,16 @@ export async function fetchProjectMessagingTopicsOverview(
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
   options?: FetchUsageOverviewOptions,
 ): Promise<MessagingUsageChartOverview> {
+  const logRetentionHours =
+    options?.logRetentionHours ?? DEFAULT_USAGE_LOG_RETENTION_HOURS
+
   const overview = await fetchProjectUsageGaugesChartOverview(
     projectId,
     dateRange,
     MESSAGING_TOPICS_GAUGE_METRICS,
     interval,
     options?.queries,
+    logRetentionHours,
   )
 
   return {

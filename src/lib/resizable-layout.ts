@@ -345,3 +345,16 @@ export function normalizeLegacySidebarWidthPrefValue(raw: number): number {
   }
   return clampTableViewSidebarWidthPx(raw)
 }
+
+/** Shallow compare for persisted spreadsheet column width maps. */
+export function areColumnWidthRecordsEqual(
+  a: Record<string, number>,
+  b: Record<string, number>,
+): boolean {
+  const aKeys = Object.keys(a)
+  if (aKeys.length !== Object.keys(b).length) return false
+  for (const key of aKeys) {
+    if (a[key] !== b[key]) return false
+  }
+  return true
+}

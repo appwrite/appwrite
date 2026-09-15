@@ -1,6 +1,11 @@
 import { buildSampleValue, isOpenApiPlaceholderExample } from './parse-spec'
 import { attachFieldHelper } from './field-helpers'
 import type { RequestFormFieldHelper } from './field-helpers'
+import {
+  getOpenApiEnumInfo,
+  inferResumableUploadIdPropertyName,
+  type OpenApiEnumMember,
+} from './openapi-schema'
 import type {
   ApiExplorerMethod,
   OpenApiParameter,
@@ -83,7 +88,9 @@ export function getFormFieldTypeLabel(kind: RequestFormFieldKind): string {
 }
 
 /** Base OpenAPI primitive for API reference type badges and tables. */
-export function getFormFieldOpenApiTypeLabel(kind: RequestFormFieldKind): string {
+export function getFormFieldOpenApiTypeLabel(
+  kind: RequestFormFieldKind,
+): string {
   switch (kind) {
     case 'boolean':
       return 'boolean'
@@ -132,7 +139,9 @@ export function getFormFieldPlaceholder(
     case 'ip':
       return '// 127.0.0.1'
     case 'id':
-      return options?.required ? '// required custom ID' : '// optional custom ID'
+      return options?.required
+        ? '// required custom ID'
+        : '// optional custom ID'
     case 'json':
       return '// enter JSON object'
     case 'integer':
@@ -179,6 +188,9 @@ export type RequestFormField = {
   required: boolean
   kind: RequestFormFieldKind
   enumValues?: string[]
+  enumMembers?: OpenApiEnumMember[]
+  /** Open enums accept arbitrary strings in addition to the known values. */
+  enumOpen?: boolean
   nullable?: boolean
   helper?: RequestFormFieldHelper
 }
@@ -243,6 +255,18 @@ export function hasRequestBodyForMethod(method: ApiExplorerMethod): boolean {
   return getRequestBodyFormFields(method).length > 0
 }
 
+function applyEnumInfo(
+  field: RequestFormField,
+  enumInfo: NonNullable<ReturnType<typeof getOpenApiEnumInfo>>,
+): RequestFormField {
+  return {
+    ...field,
+    enumValues: enumInfo.values,
+    enumMembers: enumInfo.members,
+    enumOpen: enumInfo.open || undefined,
+  }
+}
+
 export function getRequestBodyFormFields(
   method: ApiExplorerMethod,
 ): RequestFormField[] {
@@ -250,14 +274,19 @@ export function getRequestBodyFormFields(
   if (!schema?.properties) return []
 
   const requiredSet = new Set(schema.required ?? [])
-  return Object.entries(schema.properties).map(([name, propertySchema]) =>
-    attachFieldHelper(
+  const uploadIdName = inferResumableUploadIdPropertyName(schema)
+  return Object.entries(schema.properties).map(([name, propertySchema]) => {
+    const field = attachFieldHelper(
       schemaToFormField(name, propertySchema, requiredSet.has(name)),
       propertySchema,
       undefined,
       method,
-    ),
-  )
+    )
+    if (name === uploadIdName && field.kind === 'string') {
+      return { ...field, kind: 'id' }
+    }
+    return field
+  })
 }
 
 export function parameterToFormField(
@@ -291,7 +320,7 @@ function schemaToFormField(
     label: name,
     description: paramDescription?.trim() || schema.description,
     required,
-    nullable: schema['x-nullable'] === true,
+    nullable: (schema.nullable ?? schema['x-nullable']) === true,
   }
 
   if (isCreatableIdField(schema, paramIn)) {
@@ -319,12 +348,9 @@ function schemaToFormField(
 
   if (schema.type === 'array') {
     const items = schema.items ?? {}
-    if (items.enum?.length) {
-      return {
-        ...base,
-        kind: 'array-enum',
-        enumValues: items.enum.map(String),
-      }
+    const itemEnum = getOpenApiEnumInfo(items)
+    if (itemEnum) {
+      return applyEnumInfo({ ...base, kind: 'array-enum' }, itemEnum)
     }
     if (items.type === 'integer' || items.type === 'number') {
       return { ...base, kind: 'array-number' }
@@ -335,16 +361,13 @@ function schemaToFormField(
     return { ...base, kind: 'json' }
   }
 
-  if (schema.type === 'object' || (!schema.type && !schema.enum?.length)) {
-    return { ...base, kind: 'json' }
+  const enumInfo = getOpenApiEnumInfo(schema)
+  if (enumInfo) {
+    return applyEnumInfo({ ...base, kind: 'enum' }, enumInfo)
   }
 
-  if (schema.enum?.length) {
-    return {
-      ...base,
-      kind: 'enum',
-      enumValues: schema.enum.map(String),
-    }
+  if (schema.type === 'object' || !schema.type) {
+    return { ...base, kind: 'json' }
   }
 
   if (schema.type === 'string' || (!schema.type && schema.format)) {
@@ -354,7 +377,10 @@ function schemaToFormField(
   return { ...base, kind: 'string' }
 }
 
-function defaultValueForField(field: RequestFormField, schema?: OpenApiSchema): FormValue {
+function defaultValueForField(
+  field: RequestFormField,
+  schema?: OpenApiSchema,
+): FormValue {
   if (schema) {
     const sample = buildSampleValue(schema)
     return valueFromParsed(field, sample)
@@ -407,9 +433,7 @@ function valueFromParsed(field: RequestFormField, value: unknown): FormValue {
     case 'array-number':
       return Array.isArray(value) ? value.map(String) : []
     case 'json':
-      return typeof value === 'string'
-        ? value
-        : JSON.stringify(value, null, 2)
+      return typeof value === 'string' ? value : JSON.stringify(value, null, 2)
     default:
       return String(value)
   }
@@ -421,7 +445,10 @@ export function buildDefaultFormValues(
 ): Record<string, FormValue> {
   const values: Record<string, FormValue> = {}
   for (const field of fields) {
-    values[field.name] = defaultValueForField(field, schemaProperties?.[field.name])
+    values[field.name] = defaultValueForField(
+      field,
+      schemaProperties?.[field.name],
+    )
   }
   return values
 }
@@ -549,10 +576,7 @@ export function buildMultipartFormData(
         formData.append(field.name, String(value))
         break
       case 'datetime':
-        formData.append(
-          field.name,
-          serializeDatetimeApiValue(String(value)),
-        )
+        formData.append(field.name, serializeDatetimeApiValue(String(value)))
         break
       default:
         formData.append(field.name, String(value))
@@ -568,14 +592,19 @@ function parseJsonFieldValue(raw: string): unknown {
   return JSON.parse(trimmed)
 }
 
-function serializeFieldValue(field: RequestFormField, value: FormValue): unknown {
+function serializeFieldValue(
+  field: RequestFormField,
+  value: FormValue,
+): unknown {
   if (value === null) return null
 
   switch (field.kind) {
     case 'boolean':
       return Boolean(value)
     case 'integer':
-      return typeof value === 'number' ? Math.trunc(value) : parseInt(String(value), 10) || 0
+      return typeof value === 'number'
+        ? Math.trunc(value)
+        : parseInt(String(value), 10) || 0
     case 'number':
       return typeof value === 'number' ? value : Number(value) || 0
     case 'array-string':
@@ -606,7 +635,10 @@ export function serializeBodyFromForm(
         continue
       }
       if (field.required) {
-        payload[field.name] = serializeFieldValue(field, value ?? defaultValueForField(field))
+        payload[field.name] = serializeFieldValue(
+          field,
+          value ?? defaultValueForField(field),
+        )
       }
       continue
     }
@@ -704,9 +736,7 @@ export function buildInitialParamFormValues(
   const values: Record<string, FormValue> = {}
   for (const param of parameters) {
     const field = parameterToFormField(param, method)
-    const raw = param.schema
-      ? getSchemaDefaultString(param.schema)
-      : ''
+    const raw = param.schema ? getSchemaDefaultString(param.schema) : ''
     values[param.name] = raw
       ? parseParamFormValue(field, raw)
       : defaultValueForField(field, param.schema)
@@ -729,7 +759,8 @@ function getSchemaDefaultString(schema: OpenApiSchema): string {
     if (typeof example === 'object') return JSON.stringify(example)
     return String(example)
   }
-  if (schema.enum?.length) return String(schema.enum[0])
+  const enumValues = getOpenApiEnumInfo(schema)?.values
+  if (enumValues?.length) return enumValues[0]!
   return ''
 }
 

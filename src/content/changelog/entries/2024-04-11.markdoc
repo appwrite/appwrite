@@ -3,6 +3,7 @@ layout: changelog
 title: Appwrite is now HIPAA compliant
 date: 2024-04-11
 cover: /images/changelog/2024-04-11.avif
+tags: auth
 ---
 
 We’re happy to announce that Appwrite fully complies with the Health Insurance Portability and Accountability Act (HIPAA), alowing developers who handle sensitive health data to trust Appwrite as their backend.

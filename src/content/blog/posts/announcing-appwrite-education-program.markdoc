@@ -6,7 +6,7 @@ date: 2024-11-12
 cover: /images/blog/education-program.avif
 timeToRead: 4
 author: aditya-oberai
-category: announcement
+category: announcements
 faqs:
   - question: "Who can join the Appwrite Education program?"
     answer: "The program is open to students who are verified through the [GitHub Student Developer Pack](https://education.github.com/pack). If you can prove your academic status to GitHub (usually with a .edu email or a school document), you qualify for the Appwrite portion of the pack."

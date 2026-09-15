@@ -3,7 +3,6 @@ import {
   formatCompactBytes,
   formatCompactBytesAxis,
 } from '@/lib/usage/format-metric'
-import { areUsageBreakdownQueriesEnabled } from '@/lib/debug-overrides'
 import {
   computeChangePercent,
   fetchUsageMetricsChartSeriesByMetric,
@@ -136,8 +135,7 @@ export async function fetchProjectBandwidthOverview(
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
   options?: FetchUsageOverviewOptions,
 ): Promise<ProjectBandwidthOverview> {
-  const includeBreakdown =
-    options?.includeBreakdown !== false && areUsageBreakdownQueriesEnabled()
+  const includeBreakdown = options?.includeBreakdown !== false
   const queries = options?.queries
   const logRetentionHours =
     options?.logRetentionHours ?? DEFAULT_USAGE_LOG_RETENTION_HOURS
@@ -159,6 +157,9 @@ export async function fetchProjectBandwidthOverview(
           ['path'],
           OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT,
           queries,
+          undefined,
+          undefined,
+          logRetentionHours,
         )
       : Promise.resolve(new Map<string, UsageTopEndpoint[]>()),
   ])

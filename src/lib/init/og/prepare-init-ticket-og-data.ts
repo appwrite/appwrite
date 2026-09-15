@@ -9,7 +9,6 @@ export type PreparedInitTicketOgData = {
   uiBackgroundSrc: string
   backgroundSrc: string | null
   stackIcons: Array<{ src: string | null; label: string; iconKey: string }>
-  githubIconSrc: string | null
 }
 
 async function bufferToPngDataUri(buffer: Buffer): Promise<string> {
@@ -91,9 +90,8 @@ export async function prepareInitTicketOgData(
     usesDarkChrome,
   )
 
-  const [backgroundSrc, githubIconSrc, stackIcons] = await Promise.all([
+  const [backgroundSrc, stackIcons] = await Promise.all([
     loadRasterImageDataUri(data.ticketAppearance.backgroundSrc),
-    loadTicketIconDataUri('/icons/github.svg', 'github', usesDarkChrome),
     Promise.all(
       data.prefs.stack.map(async (id) => {
         const option = getInitTicketStackOption(id)
@@ -114,5 +112,5 @@ export async function prepareInitTicketOgData(
     ),
   ])
 
-  return { uiBackgroundSrc, backgroundSrc, stackIcons, githubIconSrc }
+  return { uiBackgroundSrc, backgroundSrc, stackIcons }
 }

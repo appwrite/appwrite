@@ -6,7 +6,7 @@ date: 2024-10-29
 cover: /images/blog/sql-vs-nosql/cover.avif
 timeToRead: 9
 author: ebenezer-don
-category: tutorial
+category: tutorials
 featured: false
 faqs:
   - question: "When should I pick SQL over NoSQL?"

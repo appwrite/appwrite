@@ -19,19 +19,21 @@
  * ASSET_PRELOAD_MAX_SIZE (number)
  *   - Maximum file size in bytes to preload into memory
  *   - Files larger than this will be served on-demand from disk
- *   - Default: 5242880 (5MB)
- *   - Example: ASSET_PRELOAD_MAX_SIZE=5242880 (5MB)
+ *   - Default: 1048576 (1MB)
+ *   - Example: ASSET_PRELOAD_MAX_SIZE=1048576 (1MB)
  *
  * ASSET_PRELOAD_INCLUDE_PATTERNS (string)
  *   - Comma-separated list of glob patterns for files to include
- *   - If specified, only matching files are eligible for preloading
+ *   - Only matching files are eligible for preloading
  *   - Patterns are matched against filenames only, not full paths
+ *   - Default: *.js,*.mjs,*.css,*.woff2,*.woff,*.wasm
  *   - Example: ASSET_PRELOAD_INCLUDE_PATTERNS="*.js,*.css,*.woff2"
  *
  * ASSET_PRELOAD_EXCLUDE_PATTERNS (string)
  *   - Comma-separated list of glob patterns for files to exclude
  *   - Applied after include patterns
  *   - Patterns are matched against filenames only, not full paths
+ *   - Default: *.map
  *   - Example: ASSET_PRELOAD_EXCLUDE_PATTERNS="*.map,*.txt"
  *
  * ASSET_PRELOAD_VERBOSE_LOGGING (boolean)
@@ -75,6 +77,7 @@ import {
   getAllMarketingPrerenderPaths,
   getMarketingPrerenderHtmlFile,
 } from './src/lib/marketing/marketing-build-paths.ts'
+import { getInitPrerenderHtmlFile } from './src/lib/init/init-prerender-paths.ts'
 import { isThreadsRoutePath } from './src/lib/threads/prerender-paths.ts'
 import {
   isLegacyConsolePath,
@@ -88,6 +91,7 @@ import {
 } from './src/lib/runtime-config-shared.ts'
 import {
   applyNoIndexResponseHeaders,
+  getCanonicalHostRedirectResponse,
   getRequestHostFromHeaders,
   isSeoIndexableHost,
 } from './src/lib/seo/indexing.ts'
@@ -103,6 +107,11 @@ import {
   buildMcpServerCard,
   serializeDiscoveryJson,
 } from './src/lib/seo/agent-discovery.ts'
+import {
+  CHANGE_PASSWORD_WELL_KNOWN_PATH,
+  HTTP_STATUS_RELIABILITY_WELL_KNOWN_PATH,
+  wellKnownChangePasswordResponse,
+} from './src/lib/seo/change-password-url.ts'
 import { trackServerPageview } from './src/lib/server-analytics.ts'
 
 // Configuration
@@ -170,11 +179,26 @@ async function readClientExportOrFallback(
 function htmlResponse(
   req: Request,
   html: string,
-  headers: Record<string, string>,
+  headers: HeadersInit,
+  status: number = 200,
+  statusText?: string,
 ): Response {
+  // Prerendered HTML (/init, marketing pages) is served from Bun routes and
+  // never reaches TanStack host-canonical middleware.
+  const canonicalRedirect = getCanonicalHostRedirectResponse(req)
+  if (canonicalRedirect) return canonicalRedirect
+
+  const responseHeaders = new Headers(headers)
+  // Runtime config injection changes the body length.
+  responseHeaders.delete('content-length')
+
   return withSeoIndexingHeaders(
     req,
-    new Response(injectRuntimeConfig(html), { headers }),
+    new Response(injectRuntimeConfig(html), {
+      headers: responseHeaders,
+      status,
+      statusText,
+    }),
   )
 }
 
@@ -210,20 +234,28 @@ if (
 
 // Preloading configuration from environment variables
 const MAX_PRELOAD_BYTES = Number(
-  process.env.ASSET_PRELOAD_MAX_SIZE ?? 5 * 1024 * 1024, // 5MB default
+  process.env.ASSET_PRELOAD_MAX_SIZE ?? 1024 * 1024, // 1MB default
 )
 
-// Parse comma-separated include patterns (no defaults)
-const INCLUDE_PATTERNS = (process.env.ASSET_PRELOAD_INCLUDE_PATTERNS ?? '')
+// Default to hashed JS/CSS/fonts only. Without include patterns every file under
+// 5MB was preloaded (~120MB+ of images/fonts/maps) and OOMed small containers.
+const DEFAULT_PRELOAD_INCLUDE_PATTERNS =
+  '*.js,*.mjs,*.css,*.woff2,*.woff,*.wasm'
+const DEFAULT_PRELOAD_EXCLUDE_PATTERNS = '*.map'
+
+// Parse comma-separated include patterns
+const INCLUDE_PATTERNS = (
+  process.env.ASSET_PRELOAD_INCLUDE_PATTERNS ?? DEFAULT_PRELOAD_INCLUDE_PATTERNS
+)
   .split(',')
   .map((s) => s.trim())
   .filter(Boolean)
   .map((pattern: string) => convertGlobToRegExp(pattern))
 
-// Parse comma-separated exclude patterns (no defaults)
+// Parse comma-separated exclude patterns
 const EXCLUDE_PATTERNS = [
   convertGlobToRegExp('*.html'),
-  ...(process.env.ASSET_PRELOAD_EXCLUDE_PATTERNS ?? '')
+  ...(process.env.ASSET_PRELOAD_EXCLUDE_PATTERNS ?? DEFAULT_PRELOAD_EXCLUDE_PATTERNS)
     .split(',')
     .map((s) => s.trim())
     .filter(Boolean)
@@ -252,6 +284,7 @@ function isServerTrackedExportFile(relativePath: string): boolean {
     normalized === 'changelog.md' ||
     normalized === 'integrations.md' ||
     normalized === 'robots.txt' ||
+    normalized === 'sitemap.xml' ||
     normalized === '.well-known/mcp/server-card.json' ||
     normalized === '.well-known/ai-catalog.json' ||
     normalized === '.well-known/agent-skills/index.json'
@@ -433,14 +466,12 @@ function createResponseHandler(
 /**
  * Create composite glob pattern from include patterns
  */
+/**
+ * Always scan recursively; include/exclude patterns filter by filename in
+ * isFileEligibleForPreloading (e.g. assets/index-abc123.js matches *.js).
+ */
 function createCompositeGlobPattern(): Bun.Glob {
-  const raw = (process.env.ASSET_PRELOAD_INCLUDE_PATTERNS ?? '')
-    .split(',')
-    .map((s) => s.trim())
-    .filter(Boolean)
-  if (raw.length === 0) return new Bun.Glob('**/*')
-  if (raw.length === 1) return new Bun.Glob(raw[0])
-  return new Bun.Glob(`{${raw.join(',')}}`)
+  return new Bun.Glob('**/*')
 }
 
 /**
@@ -594,6 +625,27 @@ async function initializeStaticRoutes(
       })
     }
 
+    // Init is client-only but prerendered so production serves static HTML
+    // (avoids root SSR memory growth under pre-launch traffic).
+    const initHtmlFile = getInitPrerenderHtmlFile('/init')
+    if (initHtmlFile) {
+      const initFilepath = path.join(clientDirectory, initHtmlFile)
+      const initFile = Bun.file(initFilepath)
+      if (await initFile.exists()) {
+        routes['/init'] = async (req: Request) =>
+          htmlResponse(req, await initFile.text(), {
+            'Content-Type': 'text/html; charset=utf-8',
+            'Cache-Control': 'no-store',
+          })
+
+        skipped.push({
+          route: '/init',
+          size: initFile.size,
+          type: 'text/html; charset=utf-8',
+        })
+      }
+    }
+
     // Show detailed file overview only when verbose mode is enabled
     if (VERBOSE && (loaded.length > 0 || skipped.length > 0)) {
       const allFiles = [...loaded, ...skipped].sort((a, b) =>
@@ -726,7 +778,8 @@ async function initializeStaticRoutes(
 /** Redirect pre-2.0 `/console/...` and typed-resource deep links to vibes routes. */
 function redirectLegacyConsolePath(req: Request): Response {
   const url = new URL(req.url)
-  const location = rewriteLegacyConsolePath(url.pathname) + url.search
+  const location =
+    rewriteLegacyConsolePath(url.pathname, url.search) + url.search
   return new Response(null, {
     status: 302,
     headers: {
@@ -830,15 +883,26 @@ async function initializeServer() {
           'application/json; charset=utf-8',
         ),
 
-      // Serve static assets (preloaded or on-demand). robots.txt, llms exports,
-      // and discovery documents are excluded so they use tracked handlers above
-      // or fall through to TanStack.
+      // W3C change-password well-known URL (password managers).
+      [CHANGE_PASSWORD_WELL_KNOWN_PATH]: (req: Request) =>
+        wellKnownChangePasswordResponse(req) ??
+        new Response('Not Found', { status: 404 }),
+      [HTTP_STATUS_RELIABILITY_WELL_KNOWN_PATH]: (req: Request) =>
+        wellKnownChangePasswordResponse(req) ??
+        new Response('Not Found', { status: 404 }),
+
+      // Serve static assets (preloaded or on-demand). robots.txt, sitemap.xml,
+      // llms exports, and discovery documents are excluded so they use tracked
+      // handlers above or fall through to TanStack.
       ...staticRoutes,
 
       // Fallback to TanStack Start handler for all other routes. HTML responses
       // get the runtime config stamped in (the SSR shell emits a placeholder).
       '/*': async (req: Request) => {
         try {
+          const canonicalRedirect = getCanonicalHostRedirectResponse(req)
+          if (canonicalRedirect) return canonicalRedirect
+
           const url = new URL(req.url)
           // Missing hashed build assets must not fall through to the SPA HTML
           // shell. Browsers reject HTML as a module script (MIME type error),
@@ -865,10 +929,11 @@ async function initializeServer() {
             return withSeoIndexingHeaders(req, res)
           }
           const html = await res.text()
-          return htmlResponse(req, html, {
-            'Content-Type': contentType,
-            'Cache-Control': res.headers.get('cache-control') ?? 'no-store',
-          })
+          const headers = new Headers(res.headers)
+          if (!headers.has('cache-control')) {
+            headers.set('Cache-Control', 'no-store')
+          }
+          return htmlResponse(req, html, headers, res.status, res.statusText)
         } catch (error) {
           log.error(`Server handler error: ${String(error)}`)
           captureServerException(error, {

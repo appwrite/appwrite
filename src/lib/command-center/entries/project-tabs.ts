@@ -27,6 +27,7 @@ import {
   Users,
   Zap,
 } from 'lucide-react'
+import { isCloudProfile } from '@/lib/console-profiles'
 import {
   canShowAuthSecuritySettings,
   canShowProjectOAuth2Server,
@@ -256,7 +257,7 @@ const PROJECT_TABS: CommandEntry[] = [
     label: 'Messaging · Providers',
     description: 'Email, SMS and push providers',
     icon: Bell,
-    keywords: ['providers', 'twilio', 'sendgrid', 'fcm', 'apns', 'mailgun'],
+    keywords: ['providers', 'twilio', 'sendgrid', 'fcm', 'apns', 'mailgun', 'ses', 'amazon'],
     to: (ctx) => `/projects/${ctx.projectId}/messaging/providers`,
   },
 
@@ -344,7 +345,7 @@ const PROJECT_TABS: CommandEntry[] = [
     description: 'IP allow/block lists and request rules',
     icon: Shield,
     keywords: ['firewall', 'rules', 'ip', 'allowlist', 'deny', 'rate limit'],
-    available: (ctx) => Boolean(ctx.features.firewall),
+    available: () => isCloudProfile(),
     to: (ctx) => `/projects/${ctx.projectId}/firewall`,
   },
   {
@@ -356,7 +357,7 @@ const PROJECT_TABS: CommandEntry[] = [
     description: 'Add a Firewall rule for this project',
     icon: Shield,
     keywords: ['firewall', 'create', 'rule', 'deny', 'rate limit'],
-    available: (ctx) => Boolean(ctx.features.firewall),
+    available: () => isCloudProfile(),
     to: (ctx) => `/projects/${ctx.projectId}/firewall/create`,
   },
 ]

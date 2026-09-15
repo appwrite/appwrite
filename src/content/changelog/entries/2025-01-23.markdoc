@@ -3,6 +3,7 @@ layout: changelog
 title: The Appwrite Scale plan is now publicly available
 date: 2025-01-23
 cover: /images/changelog/2025-01-23.avif
+tags: sdk
 ---
 
 Over a year ago, we launched our pricing structure and introduced the Pro plan. Today, we’re excited to unveil the Scale plan. A new offering that provides more support and flexibility. This plan is specifically tailored for teams within agencies, startups, scale-ups, and SMBs, ensuring they have the tools and resources to drive their business forward.

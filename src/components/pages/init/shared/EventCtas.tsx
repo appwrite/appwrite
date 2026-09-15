@@ -2,6 +2,7 @@ import type { LaunchEvent } from '@/lib/init/types'
 import { Link } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
 import { Ticket } from 'lucide-react'
+import { useInitHref } from '@/lib/init/use-init-href'
 
 export function EventCtaButton({
   cta,
@@ -13,6 +14,7 @@ export function EventCtaButton({
   size?: 'sm' | 'default' | 'lg'
 }) {
   const showTicketIcon = cta.label.toLowerCase().includes('ticket')
+  const resolvedHref = useInitHref(cta.href)
 
   const content = (
     <>
@@ -37,13 +39,14 @@ export function EventCtaButton({
     )
   }
 
-  if (cta.href) {
+  if (resolvedHref) {
+    const external = cta.external !== false || resolvedHref.external
     return (
       <Button variant={variant} size={size} className={sizeClass} asChild>
         <a
-          href={cta.href}
-          target={cta.external !== false ? '_blank' : undefined}
-          rel={cta.external !== false ? 'noopener noreferrer' : undefined}
+          href={resolvedHref.href}
+          target={external ? '_blank' : undefined}
+          rel={external ? 'noopener noreferrer' : undefined}
         >
           {content}
         </a>

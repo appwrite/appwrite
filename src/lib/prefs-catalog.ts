@@ -13,6 +13,7 @@
 import { USER_PREFS_KEY_COVER_GENERATIONS } from '@/lib/cover-generator/cover-generation-prefs'
 import { USER_PREFS_KEY_DIAGRAM_GENERATIONS } from '@/lib/diagram-generator/generation-prefs'
 import { USER_PREFS_KEY_API_REFERENCE_UI } from '@/lib/docs/references/api-reference-ui-prefs'
+import { INIT_PRESENCE_PREFS_KEY_PREFIX } from '@/lib/init/init-presence-prefs'
 import { INIT_TICKET_PREFS_KEY_PREFIX } from '@/lib/init/ticket-prefs'
 import { USER_PREFS_KEY_REALTIME_DEBUGGER_PREFIX } from '@/lib/realtime/debugger-prefs'
 import { TEAM_PREFS_KEY_PINNED_PROJECT_IDS } from '@/lib/team-prefs-keys'
@@ -38,9 +39,12 @@ import {
   USER_PREFS_KEY_CONSOLE_IMPERSONATION_RECENT,
   USER_PREFS_KEY_COVER_GENERATOR_COLUMNS_LAYOUT,
   USER_PREFS_KEY_DATABASE_TABLE_ROW_COLUMN_WIDTHS,
+  USER_PREFS_KEY_DATABASE_ADMIN_NAV_COLLAPSED,
   USER_PREFS_KEY_DATABASES_SIDEBAR_WIDTH,
   USER_PREFS_KEY_DIAGRAM_GENERATOR_PROPERTIES_SPLIT_LAYOUT,
   USER_PREFS_KEY_FEATURE_NOTIFICATIONS,
+  USER_PREFS_KEY_DISMISSED_BANNERS,
+  USER_PREFS_KEY_FIREWALL_TRAFFIC_LIVE,
   USER_PREFS_KEY_FUNCTIONS_LIST_VIEW_MODE,
   USER_PREFS_KEY_GENERATOR_PANEL_VISIBILITY,
   USER_PREFS_KEY_IMAGE_TRANSFORM_PRESETS,
@@ -119,7 +123,13 @@ export const PREFS_CATALOG: readonly PrefsCatalogEntry[] = [
     description: 'Dismissed coming-soon feature IDs (comma-separated).',
     category: 'Account',
   },
-
+  {
+    id: 'dismissedBanners',
+    scope: 'account',
+    key: USER_PREFS_KEY_DISMISSED_BANNERS,
+    description: 'Dismissed console banner IDs (comma-separated).',
+    category: 'Account',
+  },
   // Layout / chrome
   {
     id: 'sidebarCollapsed',
@@ -305,6 +315,14 @@ export const PREFS_CATALOG: readonly PrefsCatalogEntry[] = [
     category: 'Databases',
   },
   {
+    id: 'databaseAdminNavCollapsed',
+    scope: 'account',
+    key: USER_PREFS_KEY_DATABASE_ADMIN_NAV_COLLAPSED,
+    description:
+      'PostgreSQL, MySQL, TablesDB, DocumentsDB, and VectorsDB sidebar admin links collapsed, including Settings.',
+    category: 'Databases',
+  },
+  {
     id: 'databaseTableRowColumnWidths',
     scope: 'account',
     key: USER_PREFS_KEY_DATABASE_TABLE_ROW_COLUMN_WIDTHS,
@@ -466,7 +484,15 @@ export const PREFS_CATALOG: readonly PrefsCatalogEntry[] = [
     id: 'usageChartInterval',
     scope: 'account',
     key: USER_PREFS_KEY_USAGE_CHART_INTERVAL,
-    description: 'Usage chart interval (15m, 1h, or 1d).',
+    description: 'Usage chart interval (1m, 15m, 1h, or 1d).',
+    category: 'Usage',
+  },
+  {
+    id: 'firewallTrafficLive',
+    scope: 'account',
+    key: USER_PREFS_KEY_FIREWALL_TRAFFIC_LIVE,
+    description:
+      'Firewall traffic chart live polling enabled (shared across projects).',
     category: 'Usage',
   },
 
@@ -547,8 +573,8 @@ export const PREFS_CATALOG: readonly PrefsCatalogEntry[] = [
     id: 'buildNotificationsOptedOut',
     scope: 'account',
     key: USER_PREFS_KEY_BUILD_NOTIFICATIONS_OPTED_OUT,
-    description: 'User dismissed the build completion notifications prompt.',
-    category: 'Notifications',
+    description: 'User opted out of Console browser alerts.',
+    category: 'Browser alerts',
   },
   {
     id: 'communitySupport',
@@ -574,6 +600,13 @@ export const PREFS_CATALOG: readonly PrefsCatalogEntry[] = [
     scope: 'account',
     prefix: INIT_TICKET_PREFS_KEY_PREFIX,
     description: 'Per-event Init ticket prefs (JSON).',
+    category: 'Init',
+  },
+  {
+    id: 'initPresence',
+    scope: 'account',
+    prefix: INIT_PRESENCE_PREFS_KEY_PREFIX,
+    description: 'Per-event Init presence prefs (identity visibility, online list).',
     category: 'Init',
   },
 

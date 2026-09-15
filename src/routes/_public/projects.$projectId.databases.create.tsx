@@ -1,7 +1,11 @@
 import { createFileRoute, useNavigate, useParams } from '@tanstack/react-router'
 import { useEffect } from 'react'
 import { CreateDatabaseWizardView } from '@/components/pages/projects/$projectId/databases/create/CreateDatabaseWizardView'
-import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { isCloudDedicatedDatabasesEnabled } from '@/lib/database-routes'
+import {
+  createDatabaseWizardSearchSchema,
+  parseCreateDatabaseWizardInitialDbType,
+} from '@/lib/databases/create-database-wizard-search'
 import {
   databaseSpecificationsQueryOptions,
   enabledDatabaseSpecificationsSources,
@@ -17,6 +21,7 @@ export const Route = createFileRoute(
   head: () => ({
     meta: [{ title: pageTitle('Create database', 'Databases') }],
   }),
+  validateSearch: createDatabaseWizardSearchSchema,
   loader: async ({ params, context }) => {
     if (typeof window === 'undefined') return
     const { projectId } = params
@@ -52,9 +57,10 @@ export const Route = createFileRoute(
 
 function CreateDatabaseWizardPage() {
   const { projectId } = useParams({ strict: false })
+  const { type } = Route.useSearch({ strict: false })
   const navigate = useNavigate()
-  const { features } = useConsoleProfile()
-  const showWizard = features.dedicatedDbsSupport
+  const showWizard = isCloudDedicatedDatabasesEnabled()
+  const initialDbType = parseCreateDatabaseWizardInitialDbType(type)
 
   useEffect(() => {
     if (!showWizard && projectId) {
@@ -71,5 +77,5 @@ function CreateDatabaseWizardPage() {
     return null
   }
 
-  return <CreateDatabaseWizardView />
+  return <CreateDatabaseWizardView initialDbType={initialDbType} />
 }

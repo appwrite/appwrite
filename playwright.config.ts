@@ -2,7 +2,6 @@ import 'dotenv/config'
 import { devices, type PlaywrightTestConfig } from '@playwright/test'
 import { env } from './e2e/config/env'
 import { E2E_VIEWPORT } from './e2e/config/viewport'
-import { websiteAccessStorageState } from './e2e/helpers/website-access'
 
 const isCI = env.CI
 const storageState = 'e2e/.auth/auth.json'
@@ -59,8 +58,6 @@ const config: PlaywrightTestConfig = {
       timeout: 20 * 60_000,
       use: {
         ...desktopChrome,
-        // Soft-launch gate: unlock /sign-in before capturing auth state.
-        storageState: websiteAccessStorageState,
       },
     },
     {
@@ -68,7 +65,6 @@ const config: PlaywrightTestConfig = {
       testMatch: /website\..*\.spec\.ts/,
       use: {
         ...desktopChrome,
-        storageState: websiteAccessStorageState,
       },
     },
     {
@@ -76,10 +72,19 @@ const config: PlaywrightTestConfig = {
       dependencies: ['setup'],
       // Smoke / read-only console specs only (exclude write database suites).
       testMatch:
-        /console\.(?!mysql\.|postgres\.|tablesdb\.|documentsdb\.|vectorsdb\.|usage\.).*\.spec\.ts/,
+        /console\.(?!mysql\.|postgres\.|tablesdb\.|documentsdb\.|vectorsdb\.|usage\.|mocked\.).*\.spec\.ts/,
       use: {
         ...desktopChrome,
         storageState,
+      },
+    },
+    {
+      // Console flows that mock the Appwrite API at the network layer. No auth
+      // setup: the specs fulfil `account.get` themselves.
+      name: 'console-mocked',
+      testMatch: /console\.mocked\..*\.spec\.ts/,
+      use: {
+        ...desktopChrome,
       },
     },
     {
@@ -99,6 +104,18 @@ const config: PlaywrightTestConfig = {
       name: 'self-hosted-usage',
       dependencies: ['setup'],
       testMatch: /self-hosted\.usage\.spec\.ts/,
+      use: {
+        ...desktopChrome,
+        storageState,
+      },
+    },
+    {
+      // Local-only, same as self-hosted-usage: needs a self-hosted backend where
+      // the test account belongs to several organizations.
+      // Run with `bun run e2e:organizations-self-hosted`.
+      name: 'self-hosted-organizations',
+      dependencies: ['setup'],
+      testMatch: /self-hosted\.organizations\.spec\.ts/,
       use: {
         ...desktopChrome,
         storageState,
@@ -183,8 +200,8 @@ const config: PlaywrightTestConfig = {
       // Left empty so the backend's `_APP_USAGE_STATS` decides, which is what
       // the self-hosted lane asserts against.
       VITE_CONSOLE_USAGE_STATS: process.env.VITE_CONSOLE_USAGE_STATS || '',
-      VITE_CONSOLE_WEBSITE_ACCESS:
-        process.env.VITE_CONSOLE_WEBSITE_ACCESS || '',
+      // Pre-launch locks the app to /init; e2e must keep the full console/site reachable.
+      VITE_CONSOLE_PRE_LAUNCH: process.env.VITE_CONSOLE_PRE_LAUNCH || 'false',
     },
     // Set E2E_SKIP_BUILD=1 to reuse an existing `dist/` (faster local iteration).
     command:

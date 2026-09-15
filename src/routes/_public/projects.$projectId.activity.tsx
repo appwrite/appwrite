@@ -3,7 +3,16 @@ import { z } from 'zod'
 import { View } from '@/components/pages/projects/$projectId/activity/View'
 import { pageTitle } from '@/lib/utils/page-title'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
-import { countriesQueryOptions } from '@/lib/react-query/hooks'
+import { canAccessProjectActivity } from '@/lib/console-rbac-loader'
+import { getActivityLogRetentionHoursFromPlan } from '@/lib/activity/activity-log-retention'
+import {
+  activitiesQueryOptions,
+  countriesQueryOptions,
+  organizationPlanQueryOptions,
+  projectQueryOptions,
+} from '@/lib/react-query/hooks'
+import { ACTIVITY_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
+import { isUsageHistoryLimitExceededError } from '@/lib/usage/usage-history-errors'
 
 const activitySearchSchema = z.object({
   /** Activity event `$id` - opens the detail drawer when valid. */
@@ -24,22 +33,66 @@ export const Route = createFileRoute('/_public/projects/$projectId/activity')({
       })
     }
   },
-  loader: async ({ params, context }) => {
-    if (typeof window === 'undefined') return
+  loaderDeps: ({ search }) => ({ query: search?.query }),
+  loader: async ({ params, context, deps }) => {
+    if (typeof window === 'undefined') return undefined
     const { projectId } = params
     const { queryClient } = context
-    if (!projectId) return
+    if (!projectId) return undefined
 
-    // Activity list uses an in-table skeleton; fetch runs once from `useProjectActivities`.
-    // Prefetch only filter UI data (country enum for filters).
+    const canAccess = await canAccessProjectActivity(queryClient, projectId)
+    if (!canAccess) {
+      throw redirect({
+        to: '/projects/$projectId',
+        params: { projectId },
+        replace: true,
+      })
+    }
+
+    const project = await queryClient.ensureQueryData(
+      projectQueryOptions(projectId),
+    )
+    const plan = project?.teamId
+      ? await queryClient
+          .ensureQueryData(organizationPlanQueryOptions(project.teamId))
+          .catch(() => undefined)
+      : undefined
+    const planRetentionHours = getActivityLogRetentionHoursFromPlan(plan)
+    const filterQueryKey = deps?.query ?? null
+
+    const activitiesOptions = activitiesQueryOptions({
+      projectId,
+      limit: ACTIVITY_DEFAULT_PAGE_SIZE,
+      cursorAfter: null,
+      cursorBefore: null,
+      planRetentionHours,
+      filterQueryKey,
+    })
+
+    let activities
+    try {
+      activities = await queryClient.ensureQueryData(activitiesOptions)
+    } catch (error) {
+      if (!isUsageHistoryLimitExceededError(error)) throw error
+    }
+
     await queryClient
       .ensureQueryData(countriesQueryOptions())
       .catch(() => undefined)
+
+    return { activities }
   },
   component: ActivityPage,
 })
 
 function ActivityPage() {
   const { projectId } = Route.useParams()
-  return <View projectId={projectId} />
+  const loaderData = Route.useLoaderData()
+  return (
+    <View
+      key={`activity-${projectId}`}
+      projectId={projectId}
+      initialData={loaderData?.activities}
+    />
+  )
 }

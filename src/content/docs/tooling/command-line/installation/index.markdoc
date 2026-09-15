@@ -138,7 +138,7 @@ After you're logged in, the CLI needs to be initialized with your Appwrite proje
 appwrite init project
 ```
 
-This will create your `appwrite.config.json` file, where you will configure your various services like tables, functions, teams, topics, and buckets.
+This will create your `appwrite.config.json` file, where you will configure your various services like tables, functions, teams, topics, and buckets. For table column definitions, see [Column types and formats](/docs/tooling/command-line/tables#column-types-and-formats), including email, enum, and floating-point configuration examples.
 
 ```json
 {

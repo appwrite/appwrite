@@ -20,7 +20,7 @@ import {
 import { sdk } from '@/lib/appwrite/sdk'
 import { canShowFunctionSecuritySettings } from '@/lib/console-access-checks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
-import { AlertCircle, ArrowLeft } from 'lucide-react'
+import { AlertCircle, ArrowLeft, Info } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
@@ -54,6 +54,15 @@ import { CreateCliDeploymentModal } from '../shared/CreateCliDeploymentModal'
 import { CreateManualDeploymentModal } from '../shared/CreateManualDeploymentModal'
 import { CreateDeploymentProvider } from '../shared/CreateDeploymentContext'
 import { useT } from '@/lib/i18n/translate'
+import {
+  getRedeploySourceDeploymentId,
+  shouldShowBuildingInsteadOfSettingsAlert,
+} from '@/lib/utils/deployment-status'
+import {
+  applySettingsRedeploySuccess,
+  clearSettingsRedeployPending,
+  useSettingsRedeployPending,
+} from '@/lib/utils/settings-redeploy-alert'
 
 /** When provided, Deployments view renders this below the active deployment card (filter + create). */
 export const DeploymentsToolbarContext =
@@ -110,7 +119,7 @@ function FunctionLayoutContent() {
   }, [location.pathname])
 
   const { data: func, isLoading } = useProjectFunction(projectId, functionId)
-  const activeDeploymentId = func?.deploymentId
+  const activeDeploymentId = getRedeploySourceDeploymentId(func)
   const isExecutionsTab = activeTab === 'executions'
   const cachedActiveDeployment =
     projectId && functionId && activeDeploymentId
@@ -309,6 +318,23 @@ function FunctionLayoutContent() {
   const [executeDrawerOpen, setExecuteDrawerOpen] = useState(false)
   const [redeployDialogOpen, setRedeployDialogOpen] = useState(false)
 
+  const settingsRedeployPending = useSettingsRedeployPending(
+    'function',
+    projectId,
+    functionId,
+    func,
+  )
+
+  const isBuilding = useMemo(
+    () =>
+      shouldShowBuildingInsteadOfSettingsAlert(
+        func,
+        activeDeployment,
+        settingsRedeployPending,
+      ),
+    [settingsRedeployPending, func, activeDeployment],
+  )
+
   const redeployMutation = useMutation({
     mutationFn: async () => {
       if (!projectId || !functionId || !activeDeployment) {
@@ -322,17 +348,33 @@ function FunctionLayoutContent() {
         deploymentId: activeDeployment.$id,
       })
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['deployments', 'project', projectId, functionId],
-      })
-      queryClient.invalidateQueries({
-        queryKey: ['function', 'project', projectId, functionId],
+    onSuccess: async (deployment) => {
+      if (!projectId || !functionId) return
+      await applySettingsRedeploySuccess(queryClient, {
+        resourceType: 'function',
+        projectId,
+        resourceId: functionId,
+        resourceQueryKey: ['function', 'project', projectId, functionId],
+        deploymentQueryKey: functionDeploymentQueryOptions(
+          projectId,
+          functionId,
+          deployment.$id,
+        ).queryKey,
+        deploymentsQueryKey: ['deployments', 'function', projectId, functionId],
+        deployment,
       })
       toast.success(t('Deployment rebuild started'))
       setRedeployDialogOpen(false)
     },
     onError: (error: Error) => {
+      if (projectId && functionId) {
+        clearSettingsRedeployPending(
+          queryClient,
+          'function',
+          projectId,
+          functionId,
+        )
+      }
       toast.error(error.message || t('Failed to redeploy'))
     },
   })
@@ -429,8 +471,21 @@ function FunctionLayoutContent() {
     ) : undefined
 
   // Settings changes alert
+  const buildingAlert = isBuilding ? (
+    <div className="border-b border-border bg-blue-500/5">
+      <div className="mx-auto w-full max-w-7xl px-4 py-3 sm:px-6">
+        <Alert variant="default" className="border-blue-500/30 bg-transparent">
+          <Info className="h-4 w-4 text-blue-500 shrink-0" />
+          <AlertDescription className="text-[12px] text-blue-600/80 dark:text-blue-400/80">
+            {t('Your function is currently being redeployed.')}
+          </AlertDescription>
+        </Alert>
+      </div>
+    </div>
+  ) : undefined
+
   const configAlert =
-    !func?.live && func ? (
+    !isBuilding && !func?.live && func ? (
       <div className="border-b border-border bg-amber-500/5">
         <div className="mx-auto w-full max-w-7xl px-4 py-3 sm:px-6">
           <Alert
@@ -456,7 +511,7 @@ function FunctionLayoutContent() {
                 className="h-8 shrink-0 bg-amber-500 px-3 text-[12px] font-medium text-amber-950 hover:bg-amber-400 dark:bg-amber-500 dark:text-amber-950 dark:hover:bg-amber-400"
                 onClick={() => setRedeployDialogOpen(true)}
                 disabled={
-                  !func.deploymentId ||
+                  !activeDeploymentId ||
                   !activeDeployment ||
                   redeployMutation.isPending
                 }
@@ -574,9 +629,10 @@ function FunctionLayoutContent() {
           }
           createDisabled={activeTab === 'executions' && !func?.deploymentId}
           contentAfterBorder={
-            disabledAlert || configAlert ? (
+            disabledAlert || buildingAlert || configAlert ? (
               <div>
                 {disabledAlert}
+                {buildingAlert}
                 {configAlert}
               </div>
             ) : undefined

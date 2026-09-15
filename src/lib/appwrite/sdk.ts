@@ -55,6 +55,7 @@ import {
   subscribeToDebugEndpointChange,
 } from '@/lib/debug-endpoint'
 import { wrapServiceObject } from '@/lib/appwrite/slow-call-reporting'
+import { toResourceUrl } from '@/lib/appwrite/admin-resource-url'
 import { getRuntimeConfig } from '@/lib/runtime-config'
 import { resolveAppwriteEndpointFallback } from '@/lib/runtime-config-shared'
 import { clearConsoleAccountCache } from '@/lib/console-account-cache'
@@ -500,7 +501,7 @@ export function getSiteScreenshotFilePreviewUrl(
   Object.assign(c.config, clientConsole.config)
   Object.assign(c.headers, clientConsole.headers)
   c.setEndpoint(getProjectApiEndpoint(projectId)).setProject('console')
-  return new Storage(c).getFilePreview(params)
+  return toResourceUrl(new Storage(c).getFilePreview(params))
 }
 
 /**
@@ -590,10 +591,7 @@ function installProductDatabaseUpdateSpecificationSupport(
   }) as typeof service.update
 }
 
-installProductDatabaseUpdateSpecificationSupport(
-  tablesDBForProject,
-  'tablesdb',
-)
+installProductDatabaseUpdateSpecificationSupport(tablesDBForProject, 'tablesdb')
 installProductDatabaseUpdateSpecificationSupport(
   documentsDBForProject,
   'documentsdb',

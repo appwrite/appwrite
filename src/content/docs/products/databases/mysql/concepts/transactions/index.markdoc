@@ -6,13 +6,6 @@ description: Group MySQL statements into atomic transactions. Covers COMMIT, ROL
 
 A transaction groups statements into a single all-or-nothing unit. Either every statement takes effect, or none do, and no other connection ever sees a half-finished state.
 
-Two distinct things go wrong without that:
-
-- **Partial failure**: a crash or dropped connection after the debit but before the credit leaves data in a state that was never supposed to exist.
-- **Interleaving**: two concurrent processes both read a balance of 100, both compute a new value, both write, and one update silently vanishes.
-
-Transactions address both, which is why they exist: statements apply atomically, and the database isolates transactions from each other's unfinished work. InnoDB, the default storage engine, provides full transaction support.
-
 # How a transaction works {% #how-it-works %}
 
 Think of a transaction as a private draft of the database that only your connection can see:
@@ -24,6 +17,15 @@ Think of a transaction as a private draft of the database that only your connect
 - If your connection drops mid-transaction, the database rolls the draft back automatically.
 
 Everything else on this page, isolation levels, locks, deadlocks, is about what happens when several connections work on their drafts at the same time.
+
+# What goes wrong without transactions {% #why %}
+
+Two distinct things go wrong without them:
+
+- **Partial failure**: a crash or dropped connection after the debit but before the credit leaves data in a state that was never supposed to exist.
+- **Interleaving**: two concurrent processes both read a balance of 100, both compute a new value, both write, and one update silently vanishes.
+
+Transactions address both: statements apply atomically, and the database isolates transactions from each other's unfinished work. InnoDB, the default storage engine, provides full transaction support.
 
 # Setup {% #setup %}
 

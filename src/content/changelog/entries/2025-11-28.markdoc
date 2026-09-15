@@ -3,6 +3,7 @@ layout: changelog
 title: "Database AI suggestions"
 date: 2025-11-28
 cover: /images/blog/announcing-database-ai-suggestions/cover.avif
+tags: databases, performance
 ---
 This release introduces AI-assisted schema generation to simplify database schema creation.
 

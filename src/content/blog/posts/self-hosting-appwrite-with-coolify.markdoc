@@ -6,7 +6,7 @@ date: 2025-02-28
 cover: /images/blog/self-hosting-appwrite-with-coolify/cover.avif
 timeToRead: 15
 author: chirag-aggarwal
-category: tutorial
+category: tutorials
 faqs:
   - question: "Can I self-host Appwrite on my own server?"
     answer: "Yes, absolutely! Appwrite was built with self-hosting in mind. You can run it on your own hardware, a VPS, or cloud providers like DigitalOcean, AWS, or Azure. Self-hosting gives you control over your data, security, and setup. You can even modify the source code to fit your exact needs. Tools like Coolify make it even easier by handling the deployment for you, so you don't have to manage containers or complex configurations manually."
@@ -117,16 +117,16 @@ curl -sSL <https://coolify.io/install> | bash
 Once the installation is complete, open the Coolify dashboard in your web browser.
 
 1. Sign up for a new account.
-2. Click the **Create Project** button to start a new project.
-3. Select or create an environment type. By default, a **production** environment is already available.
-4. Click **Add new resource**.
-5. Search for and select **Appwrite** from the list of services.
+2. Click the **Create Project** button to start a new project.
+3. Select or create an environment type. By default, a **production** environment is already available.
+4. Click **Add new resource**.
+5. Search for and select **Appwrite** from the list of services.
 
 ![Add Appwrite](/images/blog/self-hosting-appwrite-with-coolify/add-appwrite.avif)
 
-The configuration fields will be pre-filled with the recommended settings, but you can customise them. When ready, click the **Deploy** button to initiate the deployment process.
+The configuration fields will be pre-filled with the recommended settings, but you can customise them. When ready, click the **Deploy** button to initiate the deployment process.
 
-After deployment, access your Appwrite instance's console by clicking the console link in the **Links** section of the Appwrite service.
+After deployment, access your Appwrite instance's console by clicking the console link in the **Links** section of the Appwrite service.
 
 # Troubleshooting common Issues
 
@@ -134,7 +134,7 @@ After deployment, access your Appwrite instance's console by clicking the consol
 
 While accessing the console, you might run into the error `ERR_TOO_MANY_REDIRECTS` *(Site redirected you too many times)*. There can be a couple of issues here:
 
-1. Since Coolify uses its configuration of **Traefik**, which is a reverse proxy and load balancer, instead of the official Appwrite one, you will have to turn off the **Strip Prefixes** option in the **Settings** page for the Appwrite console and Appwrite Realtime service.
+1. Since Coolify uses its configuration of **Traefik**, which is a reverse proxy and load balancer, instead of the official Appwrite one, you will have to turn off the **Strip Prefixes** option in the **Settings** page for the Appwrite console and Appwrite Realtime service.
 2. If you are using Cloudflare to manage your deployment's DNS and turning off the above option doesn't help, you must update the SSL/TLS encryption setting to **Full** in the Cloudflare dashboard. From the dashboard, navigate to Your Domain -> SSL/TLS -> Overview and change the setting to Full.
 
 ## Container Health Checks Failing

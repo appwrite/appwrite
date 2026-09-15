@@ -186,7 +186,7 @@ Each of these options has its own use cases, and the choice ultimately depends o
 
 In addition to simplifying your table management, database relationships also provide several other benefits. First, they can help to ensure data consistency and integrity by enforcing referential constraints between related tables. This means that you can prevent orphaned rows or other data inconsistencies that might arise if you were to manage the relationships between tables manually. Additionally, using relationships can also improve the performance of your requests and reduce the amount of code you need to write, since you can retrieve related data in a single request rather than having to fetch it separately.
 
-Overall, database relationships are a powerful tool that simplifies your table management and saves you time and effort. By easily linking your tables and retrieving related data, you can focus on developing your application's core features. Check out the [docs](/docs/products/databases/relationships) for more information. We encourage you to give it a try today and see how it can benefit your development process.
+Overall, database relationships are a powerful tool that simplifies your table management and saves you time and effort. By easily linking your tables and retrieving related data, you can focus on developing your application's core features. Check out the [docs](/docs/products/databases/relationships) for more information. We encourage you to give it a try today and see how it can benefit your development process.
 
 - [Appwrite GitHub](https://github.com/appwrite)
 - [Appwrite Docs](/docs)

@@ -241,9 +241,7 @@ export function PostgresExtensionsPanel({
     isFetching,
     error,
     refetch,
-  } = usePostgresDatabaseExtensions(projectId, databaseId, {
-    pollWhilePending: hasPendingOperations,
-  })
+  } = usePostgresDatabaseExtensions(projectId, databaseId)
 
   const installMutation = useInstallPostgresDatabaseExtension(
     projectId,

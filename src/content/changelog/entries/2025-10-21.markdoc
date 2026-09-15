@@ -3,6 +3,7 @@ layout: changelog
 title: "Self-hosted Appwrite 1.8.0 is now available"
 date: 2025-10-21
 cover: /images/changelog/2025-10-21.avif
+tags: databases, functions, messaging, infrastructure
 ---
 
 Self-hosted Appwrite 1.8.0 is now available, bringing a host of new features, improvements, and bug fixes to enhance your experience.

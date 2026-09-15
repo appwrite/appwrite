@@ -9,11 +9,10 @@ Start with Vantage, the consumer. It needs a helper for the OAuth values, a land
 
 # The OAuth helper {% #helper %}
 
-Create `consumer/src/lib/oauth.ts`. It reads the config and builds the authorization URL. Import `@tanstack/react-start/server-only` at the top: it makes the build fail if this module is ever pulled into the browser bundle, which keeps the client secret server-side.
+Create `consumer/src/lib/oauth.ts`. It reads the config and builds the authorization URL. Only server functions import this module, and TanStack Start strips server function bodies out of the browser bundle, so the client secret stays on the server. Never import it from a component.
 
 ```ts
 // consumer/src/lib/oauth.ts
-import '@tanstack/react-start/server-only'
 import { useSession } from '@tanstack/react-start/server'
 
 const issuer = process.env.OAUTH_ISSUER!

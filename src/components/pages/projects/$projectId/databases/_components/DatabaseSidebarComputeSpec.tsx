@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/tooltip'
 import { canCreateDatabase } from '@/lib/console-access-checks'
 import type { DatabaseRouteKind } from '@/lib/database-routes'
-import { dbNavLink } from '@/lib/database-routes'
+import { dbNavLink, isCloudDedicatedDatabasesEnabled } from '@/lib/database-routes'
 import {
   formatDatabaseSpecDisplayTooltip,
   getEffectiveDatabaseSpecIdForMonitoring,
@@ -90,12 +90,9 @@ function getNextLockedSpec(
 }
 
 function isDedicatedDbFeatureEnabled(
-  dbKind: DatabaseRouteKind | undefined,
-  features: ReturnType<typeof useConsoleProfile>['features'],
+  _dbKind: DatabaseRouteKind | undefined,
 ): boolean {
-  if (dbKind === 'documentsdb') return features.dedicatedDbsDocumentsDB
-  if (dbKind === 'vectorsdb') return features.dedicatedDbsVectorsDB
-  return features.dedicatedDbsSupport
+  return isCloudDedicatedDatabasesEnabled()
 }
 
 export function DatabaseSidebarComputeSpec({
@@ -305,7 +302,7 @@ export function DatabaseSidebarComputeSpec({
     billingEnabled &&
     (planSupportsDedicatedCompute === false || !!nextLockedSpec)
 
-  if (!isDedicatedDbFeatureEnabled(dbKind, features) && mode === 'product') {
+  if (!isDedicatedDbFeatureEnabled(dbKind) && mode === 'product') {
     return null
   }
 

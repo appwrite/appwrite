@@ -25,6 +25,7 @@ import {
 } from '@/lib/usage/usage-date-range'
 import { getUsageChartLatestValue } from '@/lib/usage/database-usage'
 import { DEFAULT_STALE_TIME } from './constants'
+import { dedicatedDatabaseUsageServiceQueries } from '@/lib/usage/usage-resource-queries'
 import {
   DEDICATED_DATABASE_USAGE_RESOURCE_TYPE,
   fetchDedicatedDatabaseConnectionsOverview,
@@ -32,6 +33,10 @@ import {
   fetchDedicatedDatabaseIopsReadOverview,
   fetchDedicatedDatabaseIopsWriteOverview,
   fetchDedicatedDatabaseMemoryOverview,
+  fetchDedicatedDatabaseNetworkComputeOverview,
+  fetchDedicatedDatabaseNetworkInboundOverview,
+  fetchDedicatedDatabaseNetworkOutboundOverview,
+  fetchDedicatedDatabaseColdStartsOverview,
   fetchDedicatedDatabaseQpsOverview,
   fetchDedicatedDatabaseStorageOverview,
   type DedicatedDatabaseUsageChartOverview,
@@ -49,7 +54,6 @@ import {
 } from '@/lib/usage/database-operations-breakdowns'
 import type { UsageEventBreakdownDimension } from '@/lib/usage/usage-events-common'
 import { OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT } from '@/lib/usage/breakdown-limits'
-import { areUsageBreakdownQueriesEnabled } from '@/lib/debug-overrides'
 
 function normalizeDateRangeKey(dateRange: DateRange | undefined): {
   rangeKeyPart: string
@@ -115,12 +119,14 @@ function dedicatedMetricFetchOptions(
   resourceId: string
   resourceType: typeof DEDICATED_DATABASE_USAGE_RESOURCE_TYPE
   includeBreakdown: false
+  queries: string[]
   ordinal?: number
 } {
   return {
     resourceId: databaseId,
     resourceType: DEDICATED_DATABASE_USAGE_RESOURCE_TYPE,
     includeBreakdown: false,
+    queries: dedicatedDatabaseUsageServiceQueries(),
     ...(ordinal !== undefined ? { ordinal } : {}),
   }
 }
@@ -135,6 +141,7 @@ function dedicatedDatabaseMetricChartQueryOptions(
       resourceId: string
       includeBreakdown?: boolean
       ordinal?: number
+      queries?: string[]
     },
   ) => Promise<DedicatedDatabaseUsageChartOverview>,
   projectId: string | null | undefined,
@@ -308,6 +315,216 @@ export function dedicatedDatabaseIopsWriteChartQueryOptions(
   )
 }
 
+function dedicatedDatabaseEventMetricChartQueryOptions(
+  metricKey: string,
+  fetchFn: (
+    projectId: string,
+    dateRange: DateRange | undefined,
+    interval: UsageChartInterval,
+    options?: {
+      resourceId: string
+      includeBreakdown?: boolean
+      ordinal?: number
+      queries?: string[]
+    },
+  ) => Promise<DedicatedDatabaseUsageChartOverview>,
+  projectId: string | null | undefined,
+  databaseId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  ordinal?: number,
+) {
+  const { rangeKeyPart, getBounds, refetchOnMountRolling } =
+    normalizeDateRangeKey(dateRange)
+
+  return queryOptions({
+    queryKey: [
+      'usage-events',
+      'dedicated-databases',
+      metricKey,
+      'chart',
+      'project',
+      projectId,
+      'database',
+      databaseId,
+      'ordinal',
+      ordinal ?? 'all',
+      rangeKeyPart,
+      interval,
+    ],
+    queryFn: () =>
+      fetchFn(
+        projectId!,
+        getBounds(),
+        interval,
+        dedicatedMetricFetchOptions(databaseId!, ordinal),
+      ),
+    enabled: !!projectId && !!databaseId,
+    ...usageQueryOptionsBase,
+    placeholderData: keepPreviousDedicatedChartData(
+      projectId,
+      databaseId,
+      ordinal,
+    ),
+    refetchOnMount: refetchOnMountRolling
+      ? 'always'
+      : usageQueryOptionsBase.refetchOnMount,
+    gcTime: projectId && databaseId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+export function dedicatedDatabaseNetworkInboundChartQueryOptions(
+  projectId: string | null | undefined,
+  databaseId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  ordinal?: number,
+) {
+  return dedicatedDatabaseEventMetricChartQueryOptions(
+    'network-inbound',
+    fetchDedicatedDatabaseNetworkInboundOverview,
+    projectId,
+    databaseId,
+    dateRange,
+    interval,
+    ordinal,
+  )
+}
+
+export function dedicatedDatabaseNetworkOutboundChartQueryOptions(
+  projectId: string | null | undefined,
+  databaseId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  ordinal?: number,
+) {
+  return dedicatedDatabaseEventMetricChartQueryOptions(
+    'network-outbound',
+    fetchDedicatedDatabaseNetworkOutboundOverview,
+    projectId,
+    databaseId,
+    dateRange,
+    interval,
+    ordinal,
+  )
+}
+
+export function dedicatedDatabaseNetworkComputeChartQueryOptions(
+  projectId: string | null | undefined,
+  databaseId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  ordinal?: number,
+) {
+  return dedicatedDatabaseEventMetricChartQueryOptions(
+    'network-compute',
+    fetchDedicatedDatabaseNetworkComputeOverview,
+    projectId,
+    databaseId,
+    dateRange,
+    interval,
+    ordinal,
+  )
+}
+
+export function dedicatedDatabaseColdStartsChartQueryOptions(
+  projectId: string | null | undefined,
+  databaseId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  ordinal?: number,
+) {
+  return dedicatedDatabaseEventMetricChartQueryOptions(
+    'cold-starts',
+    fetchDedicatedDatabaseColdStartsOverview,
+    projectId,
+    databaseId,
+    dateRange,
+    interval,
+    ordinal,
+  )
+}
+
+export function useDedicatedDatabaseNetworkInboundChart(
+  projectId: string | null | undefined,
+  databaseId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  enabled = true,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  ordinal?: number,
+) {
+  return useQuery({
+    ...dedicatedDatabaseNetworkInboundChartQueryOptions(
+      projectId,
+      databaseId,
+      dateRange,
+      interval,
+      ordinal,
+    ),
+    enabled: !!projectId && !!databaseId && enabled,
+  })
+}
+
+export function useDedicatedDatabaseNetworkOutboundChart(
+  projectId: string | null | undefined,
+  databaseId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  enabled = true,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  ordinal?: number,
+) {
+  return useQuery({
+    ...dedicatedDatabaseNetworkOutboundChartQueryOptions(
+      projectId,
+      databaseId,
+      dateRange,
+      interval,
+      ordinal,
+    ),
+    enabled: !!projectId && !!databaseId && enabled,
+  })
+}
+
+export function useDedicatedDatabaseNetworkComputeChart(
+  projectId: string | null | undefined,
+  databaseId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  enabled = true,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  ordinal?: number,
+) {
+  return useQuery({
+    ...dedicatedDatabaseNetworkComputeChartQueryOptions(
+      projectId,
+      databaseId,
+      dateRange,
+      interval,
+      ordinal,
+    ),
+    enabled: !!projectId && !!databaseId && enabled,
+  })
+}
+
+export function useDedicatedDatabaseColdStartsChart(
+  projectId: string | null | undefined,
+  databaseId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  enabled = true,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  ordinal?: number,
+) {
+  return useQuery({
+    ...dedicatedDatabaseColdStartsChartQueryOptions(
+      projectId,
+      databaseId,
+      dateRange,
+      interval,
+      ordinal,
+    ),
+    enabled: !!projectId && !!databaseId && enabled,
+  })
+}
+
 export function useDedicatedDatabaseStorageChart(
   projectId: string | null | undefined,
   databaseId: string | null | undefined,
@@ -455,7 +672,9 @@ export function useDedicatedDatabaseMonitorMetrics(
   enabled = true,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
   ordinal?: number,
+  options?: { includeDebugMetrics?: boolean },
 ) {
+  const includeDebugMetrics = options?.includeDebugMetrics ?? false
   const storage = useDedicatedDatabaseStorageChart(
     projectId,
     databaseId,
@@ -512,6 +731,38 @@ export function useDedicatedDatabaseMonitorMetrics(
     interval,
     ordinal,
   )
+  const networkInbound = useDedicatedDatabaseNetworkInboundChart(
+    projectId,
+    databaseId,
+    dateRange,
+    enabled,
+    interval,
+    ordinal,
+  )
+  const networkOutbound = useDedicatedDatabaseNetworkOutboundChart(
+    projectId,
+    databaseId,
+    dateRange,
+    enabled,
+    interval,
+    ordinal,
+  )
+  const networkCompute = useDedicatedDatabaseNetworkComputeChart(
+    projectId,
+    databaseId,
+    dateRange,
+    enabled && includeDebugMetrics,
+    interval,
+    ordinal,
+  )
+  const coldStarts = useDedicatedDatabaseColdStartsChart(
+    projectId,
+    databaseId,
+    dateRange,
+    enabled && includeDebugMetrics,
+    interval,
+    ordinal,
+  )
 
   const refetchAll = useCallback(async () => {
     await Promise.all([
@@ -522,6 +773,11 @@ export function useDedicatedDatabaseMonitorMetrics(
       qps.refetch(),
       iopsRead.refetch(),
       iopsWrite.refetch(),
+      networkInbound.refetch(),
+      networkOutbound.refetch(),
+      ...(includeDebugMetrics
+        ? [networkCompute.refetch(), coldStarts.refetch()]
+        : []),
     ])
   }, [
     storage.refetch,
@@ -531,6 +787,11 @@ export function useDedicatedDatabaseMonitorMetrics(
     qps.refetch,
     iopsRead.refetch,
     iopsWrite.refetch,
+    networkInbound.refetch,
+    networkOutbound.refetch,
+    networkCompute.refetch,
+    coldStarts.refetch,
+    includeDebugMetrics,
   ])
 
   return {
@@ -541,6 +802,10 @@ export function useDedicatedDatabaseMonitorMetrics(
     qps,
     iopsRead,
     iopsWrite,
+    networkInbound,
+    networkOutbound,
+    networkCompute,
+    coldStarts,
     refetchAll,
   }
 }
@@ -671,7 +936,7 @@ export function useDatabaseReadsForDatabaseBreakdowns(
   dateRange: DateRange | undefined,
   enabled = true,
 ) {
-  const showBreakdown = enabled && areUsageBreakdownQueriesEnabled()
+  const showBreakdown = enabled
   const { rangeKeyPart, getBounds } = normalizeDateRangeKey(dateRange)
 
   const queries = useQueries({
@@ -721,7 +986,7 @@ export function useDatabaseWritesForDatabaseBreakdowns(
   dateRange: DateRange | undefined,
   enabled = true,
 ) {
-  const showBreakdown = enabled && areUsageBreakdownQueriesEnabled()
+  const showBreakdown = enabled
   const { rangeKeyPart, getBounds } = normalizeDateRangeKey(dateRange)
 
   const queries = useQueries({
@@ -779,6 +1044,10 @@ export async function refetchDedicatedDatabaseMonitorQueries(
       predicate: (query) =>
         query.queryKey.includes(projectId) &&
         query.queryKey.includes(databaseId),
+    }),
+    queryClient.refetchQueries({
+      queryKey: ['usage-events', 'dedicated-databases'],
+      predicate: (query) => query.queryKey.includes(projectId),
     }),
     queryClient.refetchQueries({
       queryKey: ['usage-events', 'databases'],

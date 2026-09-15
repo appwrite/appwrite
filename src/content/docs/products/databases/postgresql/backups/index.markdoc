@@ -8,11 +8,36 @@ Native databases are backed up automatically. Backups are stored off the databas
 
 # Automatic backups {% #automatic %}
 
+{% only_dark %}
+![Backups page with policies and completed backups](/images/docs/products/databases/postgresql/dark/backups-tab.avif)
+{% /only_dark %}
+{% only_light %}
+![Backups page with policies and completed backups](/images/docs/products/databases/postgresql/backups-tab.avif)
+{% /only_light %}
+
 Every database gets a default backup policy when it is provisioned, so you have scheduled backups from day one. You can adjust the default policy, or add more policies with different schedules and retention windows.
 
 # Backup policies {% #policies %}
 
-A policy defines a schedule (cron expression) and a retention period in days. Create one with:
+{% only_dark %}
+![Create backup policy dialog](/images/docs/products/databases/postgresql/dark/backups-create-policy.avif)
+{% /only_dark %}
+{% only_light %}
+![Create backup policy dialog](/images/docs/products/databases/postgresql/backups-create-policy.avif)
+{% /only_light %}
+
+A policy defines a schedule and a retention period in days. In the Console, open your database's **Backups** page and click **Create policy**, then pick a preset schedule or add a custom policy with its own schedule and retention.
+
+Your plan decides how many policies you can create, which schedules they can run on, and how long they can retain backups:
+
+| Plan  | Policies  | Schedule          | Retention   |
+|-------|-----------|-------------------|-------------|
+| Pro   | 1         | Daily             | 7 days      |
+| Scale | Unlimited | Any cron schedule | 1-36500 days |
+
+On the Pro plan the values are fixed, so the default daily policy created with the database is the only one you get. Requesting a different schedule or retention returns an error.
+
+You can also create a policy with a Server SDK:
 
 {% multicode %}
 ```server-nodejs
@@ -220,7 +245,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let postgresql = Postgresql::new(&client);
 
-    postgresql.create_backup_policy("<DATABASE_ID>", "hourly", "Hourly", "0 * * * *", "<ETENTION>", None, None).await?;
+    postgresql.create_backup_policy("<DATABASE_ID>", "hourly", "Hourly", "0 * * * *", 30, None, None).await?;
 
     Ok(())
 }
@@ -245,13 +270,22 @@ curl -X POST \
 | `policyId`  | custom ID or `unique()`             | Policy identifier                             |
 | `name`      | text                                | Display name                                  |
 | `schedule`  | cron expression                     | When backups run, for example `0 3 * * *`     |
-| `retention` | 1 - 365 days                        | How long backups from this policy are kept    |
+| `retention` | 7 days on Pro, 1-36500 on Scale     | How long backups from this policy are kept    |
 
 List, update, and delete policies with `listBackupPolicies`, `updateBackupPolicy`, and `deleteBackupPolicy`. The number of policies you can create depends on your plan.
 
 # Manual backups {% #manual %}
 
-Take an on-demand backup before a risky change:
+{% only_dark %}
+![Create manual backup dialog](/images/docs/products/databases/postgresql/dark/backups-manual.avif)
+{% /only_dark %}
+{% only_light %}
+![Create manual backup dialog](/images/docs/products/databases/postgresql/backups-manual.avif)
+{% /only_light %}
+
+Take an on-demand backup before a risky change. In the Console, click **Manual backup** on the **Backups** page. Policy backups are pruned once they pass their retention window. Manual backups are not pruned on that schedule, so remove them yourself when you no longer need them.
+
+You can also take one with a Server SDK:
 
 {% multicode %}
 ```server-nodejs
@@ -441,7 +475,16 @@ The backup runs asynchronously with status `pending` until it completes. List ba
 
 # Restore from a backup {% #restore %}
 
+{% only_dark %}
+![Restore backup confirmation dialog](/images/docs/products/databases/postgresql/dark/backups-restore.avif)
+{% /only_dark %}
+{% only_light %}
+![Restore backup confirmation dialog](/images/docs/products/databases/postgresql/backups-restore.avif)
+{% /only_light %}
+
 Restoring replaces the database's current data with the backup's contents. The database status moves to `restoring` and returns to `ready` when the restore completes; connections are unavailable during the restore.
+
+In the Console, open the **Actions** menu on a backup row, click **Restore**, then acknowledge that the current data will be replaced. You can also restore with a Server SDK:
 
 {% multicode %}
 ```server-nodejs
@@ -647,7 +690,8 @@ curl -X POST \
   -H "X-Appwrite-Key: <API_KEY>" \
   -H "Content-Type: application/json" \
   -d '{
-      "type": "backup"
+      "type": "backup",
+      "backupId": "<BACKUP_ID>"
   }' \
   https://<REGION>.cloud.appwrite.io/v1/postgresql/<DATABASE_ID>/restorations
 ```
@@ -887,7 +931,7 @@ curl -X PATCH \
 
 ## Check the recovery window {% #pitr-windows %}
 
-You can retrieve the time ranges you can restore to. Right after enabling PITR, no recovery window is available yet; the window opens once continuous archiving has captured its first segment.
+You can retrieve the time range you can restore to, as an earliest and latest pair. Right after enabling PITR the call returns an error rather than an empty window, because continuous archiving has not captured its first segment yet.
 
 {% multicode %}
 ```server-nodejs
@@ -1075,7 +1119,7 @@ curl -X GET \
 
 ## Restore to a point in time {% #pitr-restore %}
 
-Pass a Unix timestamp inside the recovery window:
+Pass an ISO 8601 datetime inside the recovery window:
 
 {% multicode %}
 ```server-nodejs
@@ -1091,7 +1135,7 @@ const postgresql = new Postgresql(client);
 await postgresql.createRestoration({
     databaseId: '<DATABASE_ID>',
     type: 'pitr',
-    targetTime: 1767225600,
+    targetTime: '2026-01-01T00:00:00.000+00:00',
 });
 ```
 ```server-deno
@@ -1107,7 +1151,7 @@ const postgresql = new Postgresql(client);
 await postgresql.createRestoration({
     databaseId: '<DATABASE_ID>',
     type: 'pitr',
-    targetTime: 1767225600,
+    targetTime: '2026-01-01T00:00:00.000+00:00',
 });
 ```
 ```server-php
@@ -1126,7 +1170,7 @@ $postgresql = new Postgresql($client);
 $postgresql->createRestoration(
     databaseId: '<DATABASE_ID>',
     type: 'pitr',
-    targetTime: 1767225600,
+    targetTime: '2026-01-01T00:00:00.000+00:00',
 );
 ```
 ```server-python
@@ -1143,7 +1187,7 @@ postgresql = Postgresql(client)
 postgresql.create_restoration(
     database_id='<DATABASE_ID>',
     type='pitr',
-    target_time=1767225600,
+    target_time='2026-01-01T00:00:00.000+00:00',
 )
 ```
 ```server-ruby
@@ -1161,7 +1205,7 @@ postgresql = Postgresql.new(client)
 postgresql.create_restoration(
     database_id: '<DATABASE_ID>',
     type: 'pitr',
-    target_time: 1767225600,
+    target_time: '2026-01-01T00:00:00.000+00:00',
 )
 ```
 ```server-dotnet
@@ -1178,7 +1222,7 @@ Postgresql postgresql = new Postgresql(client);
 await postgresql.CreateRestoration(
     databaseId: "<DATABASE_ID>",
     type: "pitr",
-    targetTime: 1767225600
+    targetTime: "2026-01-01T00:00:00.000+00:00"
 );
 ```
 ```server-dart
@@ -1194,7 +1238,7 @@ Postgresql postgresql = Postgresql(client);
 await postgresql.createRestoration(
     databaseId: '<DATABASE_ID>',
     type: 'pitr',
-    targetTime: 1767225600,
+    targetTime: '2026-01-01T00:00:00.000+00:00',
 );
 ```
 ```server-kotlin
@@ -1211,7 +1255,7 @@ val postgresql = Postgresql(client)
 postgresql.createRestoration(
     databaseId = "<DATABASE_ID>",
     type = "pitr",
-    targetTime = 1767225600,
+    targetTime = "2026-01-01T00:00:00.000+00:00",
 )
 ```
 ```server-swift
@@ -1227,7 +1271,7 @@ let postgresql = Postgresql(client)
 _ = try await postgresql.createRestoration(
     databaseId: "<DATABASE_ID>",
     type: "pitr",
-    targetTime: 1767225600
+    targetTime: "2026-01-01T00:00:00.000+00:00"
 )
 ```
 ```server-go
@@ -1250,7 +1294,7 @@ func main() {
     _, err := service.CreateRestoration(
         "<DATABASE_ID>",
         postgresql.WithCreateRestorationType("pitr"),
-        postgresql.WithCreateRestorationTargetTime(1767225600),
+        postgresql.WithCreateRestorationTargetTime("2026-01-01T00:00:00.000+00:00"),
     )
     if err != nil {
         panic(err)
@@ -1270,7 +1314,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let postgresql = Postgresql::new(&client);
 
-    postgresql.create_restoration("<DATABASE_ID>", Some("pitr"), None, Some(1767225600)).await?;
+    postgresql.create_restoration("<DATABASE_ID>", Some("pitr"), None, Some("2026-01-01T00:00:00.000+00:00")).await?;
 
     Ok(())
 }
@@ -1282,7 +1326,7 @@ curl -X POST \
   -H "Content-Type: application/json" \
   -d '{
       "type": "pitr",
-      "targetTime": 1767225600
+      "targetTime": "2026-01-01T00:00:00.000+00:00"
   }' \
   https://<REGION>.cloud.appwrite.io/v1/postgresql/<DATABASE_ID>/restorations
 ```
@@ -1294,6 +1338,6 @@ Like a backup restore, a PITR restore is in-place: the database is unavailable w
 
 | Limit            | Value          |
 |------------------|-----------------|
-| Backup retention | 1 - 365 days    |
+| Backup retention | 7 days on Pro, 1-36500 days on Scale |
 | PITR retention   | 1 - 35 days     |
-| Backup policies  | Plan-dependent  |
+| Backup policies  | 1 on Pro, unlimited on Scale |

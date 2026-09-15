@@ -29,7 +29,7 @@ API keys are for server SDKs and the CLI in production environments, while Dev k
 ![Project settings screen](/images/docs/project/create-api-key.avif)
 {% /only_light %}
 
-To create a new API key, navigate to **Overview** > **Integration** > **API keys** and click **Create API key**.
+To create a new API key, open **API Keys** in the project sidebar and click **Create API key**.
 
 You can then use the API key to initialize the Appwrite client in your server-side apps.
 
@@ -155,8 +155,12 @@ If you need to replace your API Key, create a new key, update your app credentia
 
 You can also manage API keys programmatically using a Server SDK. This requires an API key with the `keys.read` and `keys.write` [scopes](#scopes).
 
+{% info title="Creating keys" %}
+Creating API keys with the Project API is deprecated as of 17 August 2026. Create long-lived keys in the Appwrite Console. The Project API can list, update, and delete existing keys, and can issue [ephemeral keys](#create-an-ephemeral-key) for short-lived access. [Learn more in the changelog](/changelog/entry/2026-08-17).
+{% /info %}
+
 {% info title="Sensitive scopes" %}
-The `keys.read` and `keys.write` scopes are very sensitive. An API key with `keys.write` can create new keys with any scope, effectively granting full access to your project. Only assign these scopes to keys used in trusted, secure environments, and never expose them in client-side applications.
+The `keys.read` and `keys.write` scopes are sensitive. An API key with `keys.write` can change the scopes of existing keys and delete them. Only assign these scopes to keys used in trusted, secure environments, and never expose them in client-side applications.
 {% /info %}
 
 ## List API keys {% #list-api-keys %}
@@ -555,268 +559,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let result = project.get_key(
         "<KEY_ID>",
-    ).await?;
-
-    println!("{:?}", result);
-    Ok(())
-}
-```
-{% /multicode %}
-
-## Create an API key {% #create-an-api-key %}
-
-{% multicode %}
-```server-nodejs
-import { Client, Project, ID, ProjectKeyScopes } from 'node-appwrite';
-
-const client = new Client()
-    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
-    .setProject('<PROJECT_ID>')
-    .setKey('<YOUR_API_KEY>');
-
-const project = new Project(client);
-
-const result = await project.createKey({
-    keyId: ID.unique(),
-    name: 'My API Key',
-    scopes: [ProjectKeyScopes.DatabasesRead, ProjectKeyScopes.DatabasesWrite],
-    expire: '2026-12-31T23:59:59.000+00:00'
-});
-```
-```server-deno
-import { Client, Project, ID, ProjectKeyScopes } from "npm:node-appwrite";
-
-const client = new Client()
-    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
-    .setProject('<PROJECT_ID>')
-    .setKey('<YOUR_API_KEY>');
-
-const project = new Project(client);
-
-const result = await project.createKey({
-    keyId: ID.unique(),
-    name: 'My API Key',
-    scopes: [ProjectKeyScopes.DatabasesRead, ProjectKeyScopes.DatabasesWrite],
-    expire: '2026-12-31T23:59:59.000+00:00'
-});
-```
-```server-php
-<?php
-
-use Appwrite\Client;
-use Appwrite\ID;
-use Appwrite\Services\Project;
-
-$client = new Client();
-
-$client
-    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
-    ->setProject('<PROJECT_ID>')
-    ->setKey('<YOUR_API_KEY>');
-
-$project = new Project($client);
-
-$result = $project->createKey(
-    keyId: ID::unique(),
-    name: 'My API Key',
-    scopes: ['databases.read', 'databases.write'],
-    expire: '2026-12-31T23:59:59.000+00:00'
-);
-```
-```server-python
-from appwrite.client import Client
-from appwrite.id import ID
-from appwrite.services.project import Project
-from appwrite.enums import ProjectKeyScopes
-
-client = Client()
-client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
-client.set_project('<PROJECT_ID>')
-client.set_key('<YOUR_API_KEY>')
-
-project = Project(client)
-
-result = project.create_key(
-    key_id=ID.unique(),
-    name='My API Key',
-    scopes=[ProjectKeyScopes.DATABASES_READ, ProjectKeyScopes.DATABASES_WRITE],
-    expire='2026-12-31T23:59:59.000+00:00'
-)
-```
-```server-ruby
-require 'appwrite'
-
-include Appwrite
-
-client = Client.new
-    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
-    .set_project('<PROJECT_ID>')
-    .set_key('<YOUR_API_KEY>')
-
-project = Project.new(client)
-
-response = project.create_key(
-    key_id: ID.unique(),
-    name: 'My API Key',
-    scopes: ['databases.read', 'databases.write'],
-    expire: '2026-12-31T23:59:59.000+00:00'
-)
-```
-```server-dotnet
-using Appwrite;
-using Appwrite.Enums;
-using Appwrite.Services;
-using Appwrite.Models;
-
-Client client = new Client()
-    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1")
-    .SetProject("<PROJECT_ID>")
-    .SetKey("<YOUR_API_KEY>");
-
-Project project = new Project(client);
-
-var result = await project.CreateKey(
-    keyId: ID.Unique(),
-    name: "My API Key",
-    scopes: new List<ProjectKeyScopes> {ProjectKeyScopes.DatabasesRead, ProjectKeyScopes.DatabasesWrite},
-    expire: "2026-12-31T23:59:59.000+00:00"
-);
-```
-```server-dart
-import 'package:dart_appwrite/dart_appwrite.dart';
-import 'package:dart_appwrite/enums.dart' as enums;
-
-Client client = Client()
-    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
-    .setProject('<PROJECT_ID>')
-    .setKey('<YOUR_API_KEY>');
-
-Project project = Project(client);
-
-final result = await project.createKey(
-    keyId: ID.unique(),
-    name: 'My API Key',
-    scopes: [enums.ProjectKeyScopes.databasesRead, enums.ProjectKeyScopes.databasesWrite],
-    expire: '2026-12-31T23:59:59.000+00:00',
-);
-```
-```server-kotlin
-import io.appwrite.Client
-import io.appwrite.ID
-import io.appwrite.enums.ProjectKeyScopes
-import io.appwrite.services.Project
-
-val client = Client()
-    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
-    .setProject("<PROJECT_ID>")
-    .setKey("<YOUR_API_KEY>")
-
-val project = Project(client)
-
-val result = project.createKey(
-    keyId = ID.unique(),
-    name = "My API Key",
-    scopes = listOf(ProjectKeyScopes.DATABASES_READ, ProjectKeyScopes.DATABASES_WRITE),
-    expire = "2026-12-31T23:59:59.000+00:00"
-)
-```
-```server-java
-import io.appwrite.Client;
-import io.appwrite.ID;
-import io.appwrite.enums.ProjectKeyScopes;
-import io.appwrite.coroutines.CoroutineCallback;
-import io.appwrite.services.Project;
-
-Client client = new Client()
-    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
-    .setProject("<PROJECT_ID>")
-    .setKey("<YOUR_API_KEY>");
-
-Project project = new Project(client);
-
-project.createKey(
-    ID.unique(),                                     // keyId
-    "My API Key",                                    // name
-    List.of(ProjectKeyScopes.DATABASES_READ, ProjectKeyScopes.DATABASES_WRITE), // scopes
-    "2026-12-31T23:59:59.000+00:00",                // expire
-    new CoroutineCallback<>((result, error) -> {
-        if (error != null) {
-            error.printStackTrace();
-            return;
-        }
-        System.out.println(result);
-    })
-);
-```
-```server-swift
-import Appwrite
-import AppwriteEnums
-
-let client = Client()
-    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
-    .setProject("<PROJECT_ID>")
-    .setKey("<YOUR_API_KEY>")
-
-let project = Project(client)
-
-let result = try await project.createKey(
-    keyId: ID.unique(),
-    name: "My API Key",
-    scopes: [ProjectKeyScopes.databasesRead, ProjectKeyScopes.databasesWrite],
-    expire: "2026-12-31T23:59:59.000+00:00"
-)
-```
-```server-go
-package main
-
-import (
-    "fmt"
-    "github.com/appwrite/sdk-for-go/appwrite"
-    "github.com/appwrite/sdk-for-go/id"
-)
-
-func main() {
-    client := appwrite.NewClient(
-        appwrite.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
-        appwrite.WithProject("<PROJECT_ID>"),
-        appwrite.WithKey("<YOUR_API_KEY>"),
-    )
-
-    project := appwrite.NewProject(client)
-    result, err := project.CreateKey(
-        id.Unique(),
-        "My API Key",
-        []string{"databases.read", "databases.write"},
-        project.WithCreateKeyExpire("2026-12-31T23:59:59.000+00:00"),
-    )
-
-    if err != nil {
-        panic(err)
-    }
-
-    fmt.Println(result)
-}
-```
-```server-rust
-use appwrite::Client;
-use appwrite::id::ID;
-use appwrite::enums::ProjectKeyScopes;
-use appwrite::services::project::Project;
-
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let client = Client::new()
-        .set_endpoint("https://<REGION>.cloud.appwrite.io/v1")
-        .set_project("<PROJECT_ID>")
-        .set_key("<YOUR_API_KEY>");
-
-    let project = Project::new(&client);
-
-    let result = project.create_key(
-        ID::unique(),                                  // key_id
-        "My API Key",                                  // name
-        vec![ProjectKeyScopes::DatabasesRead, ProjectKeyScopes::DatabasesWrite], // scopes
-        Some("2026-12-31T23:59:59.000+00:00"),         // expire
     ).await?;
 
     println!("{:?}", result);
@@ -1555,6 +1297,23 @@ When adding a new API key, you choose which scopes to grant. Scopes are grouped 
 | `indexes.write`       | Access to create, update, and delete your project's database table indexes      |
 | `rows.read`           | Access to read your project's database rows                                     |
 | `rows.write`          | Access to create, update, and delete your project's database rows               |
+| `embeddings.write`    | Access to generate vector embeddings                                            |
+| `documentsdb.read`    | Access to read your project's document databases                                |
+| `documentsdb.write`   | Access to create, update, and delete your project's document databases          |
+| `documentsdb.collections.read` | Access to read your project's document database collections            |
+| `documentsdb.collections.write` | Access to create, update, and delete your project's document database collections |
+| `documentsdb.documents.read` | Access to read your project's document database documents                |
+| `documentsdb.documents.write` | Access to create, update, and delete your project's document database documents |
+| `documentsdb.indexes.read` | Access to read your project's document database collection indexes         |
+| `documentsdb.indexes.write` | Access to create, update, and delete your project's document database collection indexes |
+| `vectorsdb.read`      | Access to read your project's vector databases                                  |
+| `vectorsdb.write`     | Access to create, update, and delete your project's vector databases            |
+| `vectorsdb.collections.read` | Access to read your project's vector database collections                |
+| `vectorsdb.collections.write` | Access to create, update, and delete your project's vector database collections |
+| `vectorsdb.documents.read` | Access to read your project's vector database documents                    |
+| `vectorsdb.documents.write` | Access to create, update, and delete your project's vector database documents |
+| `vectorsdb.indexes.read` | Access to read your project's vector database collection indexes             |
+| `vectorsdb.indexes.write` | Access to create, update, and delete your project's vector database collection indexes |
 
 {% /accordion_item %}
 {% accordion_item title="Functions" %}
@@ -1617,7 +1376,7 @@ When adding a new API key, you choose which scopes to grant. Scopes are grouped 
 | `webhooks.read`       | Access to read your project's webhooks                                          |
 | `webhooks.write`      | Access to create, update, and delete your project's webhooks                    |
 | `keys.read`           | Access to read your project's API keys                                          |
-| `keys.write`          | Access to create, update, and delete your project's API keys                    |
+| `keys.write`          | Access to update and delete your project's API keys                             |
 | `rules.read`          | Access to read your project's proxy rules                                       |
 | `rules.write`         | Access to create, update, and delete your project's proxy rules                 |
 | `vcs.read`            | Access to read your project's VCS repositories                                  |

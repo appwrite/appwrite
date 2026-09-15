@@ -44,6 +44,7 @@ import {
   type MouseEvent,
 } from 'react'
 import { useT } from '@/lib/i18n/translate'
+import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react'
 
 type MysqlRowsSpreadsheetProps = {
   databaseId: string
@@ -61,6 +62,9 @@ type MysqlRowsSpreadsheetProps = {
     rows: Array<{ rowKey: string; identity: MysqlRowIdentity }>,
     selectAll: boolean,
   ) => void
+  sortBy?: string
+  sortOrder?: 'asc' | 'desc'
+  onSortColumn?: (columnKey: string) => void
   currentPage: number
   totalItems: number
   pageSize: number
@@ -82,6 +86,9 @@ export function MysqlRowsSpreadsheet({
   selectedRowKeys,
   onToggleRow,
   onToggleAllRows,
+  sortBy,
+  sortOrder,
+  onSortColumn,
   currentPage,
   totalItems,
   pageSize,
@@ -319,6 +326,24 @@ export function MysqlRowsSpreadsheet({
                                 {t('Primary key')}
                               </TooltipContent>
                             </Tooltip>
+                          ) : null}
+                          <span className="min-w-0 flex-1 shrink" aria-hidden />
+                          {onSortColumn ? (
+                            <button
+                              type="button"
+                              onClick={() => onSortColumn(key)}
+                              className="shrink-0 cursor-pointer rounded p-0.5 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                            >
+                              {sortBy === key ? (
+                                sortOrder === 'asc' ? (
+                                  <ArrowUp className="h-3 w-3 shrink-0 text-chart-brand" />
+                                ) : (
+                                  <ArrowDown className="h-3 w-3 shrink-0 text-chart-brand" />
+                                )
+                              ) : (
+                                <ArrowUpDown className="h-3 w-3 shrink-0 text-muted-foreground" />
+                              )}
+                            </button>
                           ) : null}
                         </div>
                       </th>

@@ -39,7 +39,7 @@ export interface ListActivitiesResponse {
 }
 
 export const listActivitiesFn = createServerFn({ method: 'GET' })
-  .inputValidator(listActivitiesSchema)
+  .validator(listActivitiesSchema)
   .handler(async ({ data }): Promise<ListActivitiesResponse> => {
     const { plan, action, resourceType, userId, search, limit, offset } = data
 

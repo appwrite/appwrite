@@ -3,6 +3,7 @@ layout: changelog
 title: "Announcing the Appwrite Network: Appwrite’s vision for a global cloud infrastructure"
 date: 2025-04-16
 cover: /images/changelog/2025-04-15.avif
+tags: firewall, performance, security, infrastructure
 ---
 
 We’re excited to launch the **Appwrite Network**, a global network of cloud regions and edge locations designed to enhance Appwrite Cloud’s availability, performance, and regulatory compliance.
