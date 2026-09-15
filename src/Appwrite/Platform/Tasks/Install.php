@@ -568,7 +568,17 @@ class Install extends Action
 
         $database = $input['_APP_DB_ADAPTER'] ?? 'postgresql';
 
-        $version = \getenv('_APP_VERSION') ?: (\defined('APP_VERSION_STABLE') ? APP_VERSION_STABLE : 'latest');
+        $stableVersion = \defined('APP_VERSION_STABLE') ? APP_VERSION_STABLE : 'latest';
+        $version = \getenv('_APP_VERSION') ?: $stableVersion;
+
+        // A nightly image reports the tag it was pulled under -- 2.0-nightly.<date> --
+        // which names a channel rather than a release, and so cannot be carried forward:
+        // there is no X.Y to re-derive a nightly tag from, and writing it back would keep
+        // an install asking for the stable channel on nightly. The release the image was
+        // built from is compiled in, and both channels take their tag from it.
+        if (\str_contains($version, 'nightly')) {
+            $version = $stableVersion;
+        }
 
         // The nightly channel tracks the minor line rather than one release, so the
         // tag has to stay rolling -- pinning X.Y.Z would freeze the install on a
