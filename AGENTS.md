@@ -1156,7 +1156,7 @@ These flags do not grant backend permissions. Curl cannot call this browser API.
 
 **Init day unlocks** (always controlled; never calendar-driven):
 
-- Default is **after the event** (`getInitMockCurrentDayDefault()` in `src/lib/init/mock-current-day.ts` → `getInitMockDayAfter()`, recap mode with all days unlocked).
+- Default is **post-event, no banner** (`getInitMockCurrentDayDefault()` in `src/lib/init/mock-current-day.ts` → `getInitMockDayBannerExpired()`, recap mode with all days unlocked and the org promo banner hidden).
 - Advance the day from debug menu → Init → **Day** (slider: Before → Day 1–5 → After → Banner off).
 - When ready for a new default for everyone, change `getInitMockCurrentDayDefault()` to the day you want unlocked.
 **Debug mode:** When debug menu is open (type `pink`, case-insensitive), use Console profile submenu to override the env-selected profile. Override is stored in localStorage and takes precedence until "Use env var" is selected.

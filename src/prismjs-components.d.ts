@@ -22,3 +22,8 @@ declare module 'prismjs/components/prism-c' {}
 declare module 'prismjs/components/prism-cpp' {}
 declare module 'prismjs/components/prism-markdown' {}
 declare module 'prismjs/components/prism-diff' {}
+declare module 'prismjs/components/prism-bash' {}
+declare module 'prismjs/components/prism-json' {}
+declare module 'prismjs/components/prism-java' {}
+declare module 'prismjs/components/prism-sql' {}
+declare module 'prismjs/components/prism-powershell' {}

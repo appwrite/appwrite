@@ -79,6 +79,9 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Contact sales': '営業に連絡',
   'Cookie preferences': 'Cookie の設定',
   'Cookies Policy': 'Cookie ポリシー',
+  'Crash and performance diagnostics to help us fix issues in Appwrite.':
+    'クラッシュとパフォーマンスの診断を送信し、Appwrite の不具合修正に役立てます。',
+  'Error reporting': 'エラー報告',
   'We use cookies to improve Appwrite.':
     'Appwrite の改善のために Cookie を使用しています。',
   'Copied line': '行をコピーしました',
@@ -152,6 +155,7 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Filter name': 'フィルター名',
   'Find a branch...': 'ブランチを検索...',
   'Fix payment': '支払いを修正',
+  'Authorize payment': '支払いを承認',
   'Fix with an Agent': 'Agent で修正',
   'For me': '自分用',
   'For team': 'チーム用',
@@ -849,6 +853,8 @@ export const jaSharedUiDictionary: Record<string, string> = {
     'オペレーターのコンテキストが失われました。なりすましを停止してから、もう一度開始してください。',
   'Payment failed - act now. Unresolved billing may interrupt your projects and services.':
     '支払いに失敗しました。今すぐ対応してください。未解決の請求により、プロジェクトとサービスが中断される可能性があります。',
+  'Payment authorization required. Complete authentication now. Unresolved billing may interrupt your projects and services.':
+    '支払いの承認が必要です。今すぐ認証を完了してください。未解決の請求により、プロジェクトとサービスが中断される可能性があります。',
   'Payment failed - your organization has restricted access due to an unresolved billing issue. Changes to projects and services are restricted until payment succeeds. Update billing to restore full access.':
     '支払いに失敗しました。未解決の請求問題により、組織は制限付きアクセスになっています。支払いが完了するまで、プロジェクトとサービスへの変更は制限されます。請求情報を更新して、完全なアクセスを回復してください。',
   'Privacy-friendly usage analytics and error reporting to help us improve Appwrite.':

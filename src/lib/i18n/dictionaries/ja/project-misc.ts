@@ -2827,6 +2827,90 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   avatars: 'アバター',
   Organizations: '組織',
   Install: 'インストール',
+  // SMTP quick setup (universal card: Resend today, Mailgun and SendGrid next)
+  'Connect an email provider and Appwrite fills in your SMTP settings automatically.':
+    'メールプロバイダーを接続すると、Appwrite が SMTP 設定を自動で入力します。',
+  'Set up': 'セットアップ',
+  'Creates a sending-only API key for a verified domain.':
+    '検証済みドメイン用の送信専用 API キーを作成します。',
+  'Creates a domain sending key for a verified domain.':
+    '検証済みドメイン用のドメイン送信キーを作成します。',
+  'Creates a restricted API key with mail send access.':
+    'メール送信権限を持つ制限付き API キーを作成します。',
+  'Failed to connect the email provider':
+    'メールプロバイダーへの接続に失敗しました',
+  'The provider was authorized for a different Appwrite account. Try again while signed in to this account.':
+    'プロバイダーは別の Appwrite アカウントに対して認可されました。このアカウントにサインインした状態でもう一度お試しください。',
+  'Loading domains…': 'ドメインを読み込み中…',
+  'Failed to load domains from the email provider':
+    'メールプロバイダーからドメインを読み込めませんでした',
+  'No verified domains': '検証済みのドメインがありません',
+  'Add and verify a sending domain, then check again.':
+    '送信ドメインを追加して検証し、もう一度確認してください。',
+  'Manage domains': 'ドメインを管理',
+  'Check again': '再確認',
+  'The credential is restricted to this domain and can only send email.':
+    'この認証情報はこのドメインに制限され、メール送信のみ行えます。',
+  'Must use the selected domain.': '選択したドメインを使用する必要があります。',
+  'Enter a sender name.': '送信者名を入力してください。',
+  'Enter a sender email on the selected domain.':
+    '選択したドメインの送信者メールアドレスを入力してください。',
+  'Authorization expired': '認可の有効期限が切れました',
+  'Reconnect your provider account to continue.':
+    '続行するにはプロバイダーアカウントを再接続してください。',
+  'Failed to set up SMTP with the email provider':
+    'メールプロバイダーでの SMTP セットアップに失敗しました',
+  'Let Appwrite create the API key for a verified domain and fill these fields.':
+    'Appwrite が検証済みドメイン用の API キーを作成し、これらの項目を入力します。',
+  'Generate API key': 'API キーを生成',
+  'One-click Resend sender': 'ワンクリック Resend 送信者',
+  'Creating the sending credential…': '送信用の認証情報を作成中…',
+  'Failed to create the API key with the email provider':
+    'メールプロバイダーでの API キーの作成に失敗しました',
+  'API key created and filled in below. Review and create the provider.':
+    'API キーを作成し、以下に入力しました。内容を確認してプロバイダーを作成してください。',
+  'One-click setup': 'ワンクリックセットアップ',
+  'Notify me': '通知を受け取る',
+  'You will be notified': '通知されます',
+  "You'll no longer be notified about this provider.":
+    'このプロバイダーについては今後通知しません。',
+  'Failed to update notification preferences': '通知設定を更新できませんでした',
+  "You'll be notified when this provider is available.":
+    'このプロバイダーが利用可能になったらお知らせします。',
+  'Sending domain': '送信ドメイン',
+  Sender: '送信者',
+  'Disconnect Resend': 'Resend を切断',
+  'Disconnect Mailgun': 'Mailgun を切断',
+  'Disconnect SendGrid': 'SendGrid を切断',
+  'Provider actions': 'プロバイダーの操作',
+  'Set up SMTP with Resend': 'Resend で SMTP をセットアップ',
+  'Set up SMTP with Mailgun': 'Mailgun で SMTP をセットアップ',
+  'Set up SMTP with SendGrid': 'SendGrid で SMTP をセットアップ',
+  'Creating credential and saving SMTP settings…':
+    '認証情報を作成して SMTP 設定を保存中…',
+  'Custom SMTP is enabled and your project now sends emails through this provider.':
+    'カスタム SMTP が有効になり、プロジェクトはこのプロバイダー経由でメールを送信するようになりました。',
+  'Connect with Resend': 'Resend に接続',
+  'Connect with Mailgun': 'Mailgun に接続',
+  'Connect with SendGrid': 'SendGrid に接続',
+  'Appwrite will no longer be able to create sending credentials for this provider. Credentials already saved in your SMTP settings keep working.':
+    'Appwrite はこのプロバイダーの送信用認証情報を作成できなくなります。SMTP 設定に保存済みの認証情報は引き続き動作します。',
+  'Provider disconnected': 'プロバイダーを切断しました',
+  'Failed to disconnect the provider': 'プロバイダーの切断に失敗しました',
+  'Confirm setup': 'セットアップの確認',
+  'This browser has no record of starting this authorization, so we will not sign you in automatically.':
+    'このブラウザーにはこの認可を開始した記録がないため、自動的にはサインインしません。',
+  'Continuing signs you in to the Appwrite account that authorized this provider.':
+    '続行すると、このプロバイダーを認可した Appwrite アカウントにサインインします。',
+  'This authorization link was already used or has expired. Start the setup again from the console.':
+    'この認可リンクは既に使用されたか、有効期限が切れています。コンソールからもう一度セットアップを開始してください。',
+  'Back to setup': 'セットアップに戻る',
+  'Unable to finish setup': 'セットアップを完了できません',
+  'Finishing setup': 'セットアップを完了しています',
+  'Restoring your session and returning to the setup.':
+    'セッションを復元してセットアップに戻ります。',
+  'This link is missing required parameters.':
+    'このリンクには必要なパラメーターがありません。',
   // Usage log retention
   'Usage history limit reached': '利用履歴の上限に達しました',
   'Your plan includes': 'ご利用中のプランには',

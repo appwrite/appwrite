@@ -112,12 +112,26 @@ function renderHeading(tag: MarkdocTag): string {
   return `<${tagName} id="${escapeHtml(id)}" class="${headingClass(level)} group"><span class="inline-flex max-w-full items-center gap-2"><a href="#${escapeHtml(id)}" class="${HEADING_LINK_TEXT_CLASS}">${escapeHtml(title)}</a><button type="button" class="${iconSize} inline-flex shrink-0 cursor-pointer items-center justify-center rounded-sm text-muted-foreground opacity-0 transition-opacity duration-150 hover:text-foreground focus:outline-none focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background group-hover:opacity-100 group-focus-within:opacity-100" data-blog-heading-copy="${escapeHtml(id)}" aria-label="Copy link">${COPY_ICON_SVG}</button></span></${tagName}>`
 }
 
+export type BlogCodeHighlighter = (
+  code: string,
+  language: string,
+) => { html: string; language: string } | null
+
+// Set for the duration of one synchronous render so the recursive node
+// walkers do not need an options parameter threaded through every call.
+let activeHighlighter: BlogCodeHighlighter | null = null
+
 function renderFence(tag: MarkdocTag): string {
   const content = String(tag.attributes.content ?? collectText(tag))
   const language = String(tag.attributes.language ?? 'plaintext')
   const encoded = encodeURIComponent(content)
+  const highlighted = activeHighlighter?.(content, language) ?? null
+  const codeClass = highlighted
+    ? ` class="language-${escapeHtml(highlighted.language)}"`
+    : ''
+  const body = highlighted ? highlighted.html : escapeHtml(content)
 
-  return `<div class="not-prose my-4 w-full overflow-hidden rounded-xl border border-border bg-card/50"><div class="flex items-center justify-between gap-2 border-b border-border px-3 py-1.5"><span class="text-[12px] font-medium text-muted-foreground">${escapeHtml(language)}</span><button type="button" class="h-7 shrink-0 rounded-md px-2 text-[12px] text-muted-foreground hover:text-foreground" data-blog-copy="${encoded}">Copy</button></div><pre class="overflow-x-auto p-4 font-mono text-[13px] leading-6 text-foreground/90"><code>${escapeHtml(content)}</code></pre></div>`
+  return `<div class="not-prose my-4 w-full overflow-hidden rounded-xl border border-border bg-card/50"><div class="flex items-center justify-between gap-2 border-b border-border px-3 py-1.5"><span class="text-[12px] font-medium text-muted-foreground">${escapeHtml(language)}</span><button type="button" class="h-7 shrink-0 rounded-md px-2 text-[12px] text-muted-foreground hover:text-foreground" data-blog-copy="${encoded}">Copy</button></div><pre class="blog-code overflow-x-auto p-4 font-mono text-[13px] leading-6 text-foreground/90"><code${codeClass}>${body}</code></pre></div>`
 }
 
 function renderImage(tag: MarkdocTag): string {
@@ -252,21 +266,33 @@ function renderNode(node: RenderableTreeNode): string {
   return ''
 }
 
-export function renderBlogMarkdocHtml(content: string): string {
-  const ast = Markdoc.parse(content)
-  const transformed = Markdoc.transform(ast, docsMarkdocConfig)
-  return renderNode(transformed)
+export function renderBlogMarkdocHtml(
+  content: string,
+  options?: { highlight?: BlogCodeHighlighter },
+): string {
+  const previous = activeHighlighter
+  activeHighlighter = options?.highlight ?? null
+  try {
+    const ast = Markdoc.parse(content)
+    const transformed = Markdoc.transform(ast, docsMarkdocConfig)
+    return renderNode(transformed)
+  } finally {
+    activeHighlighter = previous
+  }
 }
 
-export function renderBlogPostBodies(post: {
+export async function renderBlogPostBodies(post: {
   content: string
   faqs?: Array<{ question: string; answer: string }>
 }) {
+  // Prism and its grammars load as their own chunk, only when a post renders.
+  const { highlightCode } = await import('./highlight-code')
+  const options = { highlight: highlightCode }
   return {
-    contentHtml: renderBlogMarkdocHtml(post.content),
+    contentHtml: renderBlogMarkdocHtml(post.content, options),
     faqs: (post.faqs ?? []).map((faq) => ({
       question: faq.question,
-      html: renderBlogMarkdocHtml(faq.answer),
+      html: renderBlogMarkdocHtml(faq.answer, options),
     })),
   }
 }

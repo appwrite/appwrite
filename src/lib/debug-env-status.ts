@@ -74,7 +74,7 @@ export const DEBUG_ENV_CATALOG: readonly DebugEnvEntry[] = [
     key: 'VITE_PLAUSIBLE_SCRIPT_SRC',
     group: 'Runtime',
     description:
-      'Upstream Plausible script URL (proxied via /r/v.js?v=… and /r/e)',
+      'Plausible script URL loaded in the browser (SSR exports POST to /api/event)',
   },
   {
     key: 'VITE_CONSOLE_USER_VERIFICATION',

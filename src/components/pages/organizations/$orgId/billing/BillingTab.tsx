@@ -26,6 +26,7 @@ import {
 import {
   useOrganizationById,
   useOrganizationPaymentMethod,
+  useOrganizationBillingInvoicePresence,
   isOrganizationBillingReadonlyStatus,
 } from '@/lib/react-query/hooks'
 import { useT } from '@/lib/i18n/translate'
@@ -58,6 +59,11 @@ export function BillingTab() {
 
   const failedInvoice = orgRefs?.failedInvoice
   const hasFailedInvoice = isSubscriptionFailedInvoiceWithError(failedInvoice)
+  const { data: invoicePresence } =
+    useOrganizationBillingInvoicePresence(orgId)
+  const hasInvoiceRequiringAuthentication =
+    !hasFailedInvoice &&
+    invoicePresence?.hasInvoiceRequiringAuthentication === true
 
   const primaryFailed = primaryPaymentMethod.paymentMethod?.failed === true
   const hasExpiredPaymentMethod =
@@ -94,6 +100,29 @@ export function BillingTab() {
     const items: SettingsCardItem[] = []
 
     if (!orgLoading) {
+      if (hasInvoiceRequiringAuthentication) {
+        items.push({
+          id: 'alert-invoice-authorization',
+          search: {
+            title: 'Payment authorization required',
+            keywords: [
+              'authorize',
+              'authentication',
+              '3ds',
+              'action required',
+              'invoice',
+            ],
+          },
+          node: (
+            <WarningAlert title={t('Payment authorization required')}>
+              {t(
+                'Your card issuer needs you to confirm this payment. Use Authorize on the invoice in payment history.',
+              )}
+            </WarningAlert>
+          ),
+        })
+      }
+
       if (hasFailedInvoice) {
         items.push({
           id: 'alert-failed-invoice',
@@ -282,6 +311,7 @@ export function BillingTab() {
   }, [
     orgLoading,
     hasFailedInvoice,
+    hasInvoiceRequiringAuthentication,
     hasExpiredPaymentMethod,
     hasPlanDowngrade,
     orgBillingReadonly,

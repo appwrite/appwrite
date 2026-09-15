@@ -24,22 +24,25 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { clearConsoleImpersonateUser } from '@/lib/appwrite/sdk'
 import {
-  clearConsoleImpersonationSession,
-  hardNavigateToAccountAfterImpersonation,
   readConsoleImpersonationOperatorSnapshot,
   resolveConsoleImpersonationOperator,
 } from '@/lib/console-impersonation'
-import { beginConsoleImpersonation } from '@/lib/console-impersonation-start'
-import { flushRecentImpersonationUsersToAccountPrefs } from '@/lib/react-query/hooks/auth'
-import { consoleUsersImpersonationSearchQueryOptions } from '@/lib/react-query/hooks/console-user-search'
+import { performExitConsoleImpersonation } from '@/lib/console-impersonation-exit'
 import {
-  appendRecentImpersonationUser,
+  beginConsoleImpersonation,
+  type ConsoleImpersonationTarget,
+} from '@/lib/console-impersonation-start'
+import {
+  consoleUsersByIdQueryOptions,
+  consoleUsersImpersonationSearchQueryOptions,
+} from '@/lib/react-query/hooks/console-user-search'
+import {
   mergeRecentImpersonationLists,
   parseRecentImpersonationUsers,
+  readRecentImpersonationSavedList,
   readRecentImpersonationSessionList,
-  writeRecentImpersonationSessionList,
+  writeRecentImpersonationDetails,
   type RecentImpersonationUser,
 } from '@/lib/user-prefs-keys'
 import { cn } from '@/lib/utils'
@@ -48,16 +51,6 @@ import { useT } from '@/lib/i18n/translate'
 type ConsoleAccount = Models.User & {
   impersonator?: boolean
   impersonatorUserId?: string
-}
-
-function recentImpersonationUserToModel(
-  r: RecentImpersonationUser,
-): Models.User {
-  return {
-    $id: r.$id,
-    name: r.name ?? '',
-    email: r.email ?? '',
-  } as Models.User
 }
 
 export function ImpersonateConsoleUserDialog({
@@ -97,44 +90,62 @@ export function ImpersonateConsoleUserDialog({
 
   const operatorSnapshot = readConsoleImpersonationOperatorSnapshot()
   const operatorId = isImpersonating ? operatorSnapshot?.$id : account?.$id
+  const [startingUserId, setStartingUserId] = useState<string | null>(null)
+
+  /**
+   * Unsaved picks lead. Operator prefs are unreadable while impersonating, so the
+   * list this tab last saved to them stands in until impersonation ends.
+   */
+  const storedRecentUsers = useMemo((): RecentImpersonationUser[] => {
+    if (!open || !operatorId?.trim()) return []
+    const saved = isImpersonating
+      ? readRecentImpersonationSavedList(operatorId)
+      : parseRecentImpersonationUsers(
+          (account as { prefs?: Record<string, unknown> } | undefined)?.prefs,
+          operatorId,
+        )
+    return mergeRecentImpersonationLists(
+      readRecentImpersonationSessionList(operatorId),
+      saved,
+    )
+  }, [account, isImpersonating, open, operatorId])
+
+  // Names and emails are cached per browser; look up the ones this browser lacks.
+  const unlabeledRecentIds = useMemo(
+    () =>
+      storedRecentUsers.filter((u) => !u.name && !u.email).map((u) => u.$id),
+    [storedRecentUsers],
+  )
+  const { data: unlabeledRecentData } = useQuery({
+    ...consoleUsersByIdQueryOptions(unlabeledRecentIds),
+    enabled: open && canImpersonate && unlabeledRecentIds.length > 0,
+  })
+
+  useEffect(() => {
+    if (!operatorId || !unlabeledRecentData?.users.length) return
+    writeRecentImpersonationDetails(operatorId, unlabeledRecentData.users)
+  }, [operatorId, unlabeledRecentData])
 
   const recentImpersonationUsers = useMemo((): RecentImpersonationUser[] => {
-    if (!operatorId?.trim()) return []
-    if (isImpersonating) {
-      return readRecentImpersonationSessionList(operatorId)
-    }
-    const fromPrefs = parseRecentImpersonationUsers(
-      (account as { prefs?: Record<string, unknown> } | undefined)?.prefs,
-      operatorId,
+    const fetched = new Map(
+      (unlabeledRecentData?.users ?? []).map((u) => [u.$id, u]),
     )
-    const fromSession = readRecentImpersonationSessionList(operatorId)
-    return mergeRecentImpersonationLists(fromPrefs, fromSession)
-  }, [account, isImpersonating, operatorId])
+    return storedRecentUsers.map((recent) => {
+      const user = fetched.get(recent.$id)
+      if (!user) return recent
+      return {
+        $id: recent.$id,
+        name: user.name || undefined,
+        email: user.email || undefined,
+      }
+    })
+  }, [storedRecentUsers, unlabeledRecentData])
 
   const showRecentSection =
     !debouncedSearch.trim() && recentImpersonationUsers.length > 0
 
-  /**
-   * Recent targets are session-only while impersonating (and on start).
-   * Operator account prefs get ID references on exit via
-   * `flushRecentImpersonationUsersToAccountPrefs`; name/email stay in localStorage.
-   */
-  const persistRecentImpersonation = (user: Models.User) => {
-    if (!operatorId?.trim()) return
-    const currentList = isImpersonating
-      ? readRecentImpersonationSessionList(operatorId)
-      : mergeRecentImpersonationLists(
-          parseRecentImpersonationUsers(
-            (account as { prefs?: Record<string, unknown> } | undefined)?.prefs,
-            operatorId,
-          ),
-          readRecentImpersonationSessionList(operatorId),
-        )
-    const next = appendRecentImpersonationUser(currentList, user)
-    writeRecentImpersonationSessionList(operatorId, next)
-  }
-
-  const handleSelectUser = (user: Models.User) => {
+  const handleSelectUser = async (user: ConsoleImpersonationTarget) => {
+    if (startingUserId) return
     const targetId = user?.$id
     if (!targetId?.trim()) {
       toast.error(t('This user has no valid ID; pick another user.'))
@@ -161,10 +172,11 @@ export function ImpersonateConsoleUserDialog({
       return
     }
 
+    setStartingUserId(targetId)
     try {
-      persistRecentImpersonation(user)
-      beginConsoleImpersonation(targetId, operator)
+      await beginConsoleImpersonation(user, operator)
     } catch (e) {
+      setStartingUserId(null)
       console.error(e)
       const message =
         e instanceof AppwriteException
@@ -177,16 +189,8 @@ export function ImpersonateConsoleUserDialog({
   }
 
   const handleStop = async () => {
-    const opId = readConsoleImpersonationOperatorSnapshot()?.$id
-    clearConsoleImpersonateUser()
-    clearConsoleImpersonationSession({ skipNotify: true })
     onOpenChange(false)
-    if (opId) {
-      void flushRecentImpersonationUsersToAccountPrefs(opId).catch((e) => {
-        console.error(e)
-      })
-    }
-    hardNavigateToAccountAfterImpersonation()
+    await performExitConsoleImpersonation()
   }
 
   if (!canImpersonate) return null
@@ -245,7 +249,7 @@ export function ImpersonateConsoleUserDialog({
             <div
               className={cn(
                 'pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 transition-opacity',
-                isFetching ? 'opacity-100' : 'opacity-0',
+                isFetching || startingUserId ? 'opacity-100' : 'opacity-0',
               )}
               aria-hidden
             >
@@ -258,7 +262,8 @@ export function ImpersonateConsoleUserDialog({
                 {recentImpersonationUsers.map((recent) => {
                   const disabled =
                     recent.$id === account?.$id ||
-                    (!!operatorId && recent.$id === operatorId)
+                    (!!operatorId && recent.$id === operatorId) ||
+                    !!startingUserId
                   const label = recent.name || recent.email || recent.$id
                   const cmdkValue = [
                     recent.$id,
@@ -273,9 +278,7 @@ export function ImpersonateConsoleUserDialog({
                       key={`recent-${recent.$id}`}
                       value={cmdkValue}
                       disabled={disabled}
-                      onSelect={() =>
-                        handleSelectUser(recentImpersonationUserToModel(recent))
-                      }
+                      onSelect={() => void handleSelectUser(recent)}
                       className="cursor-pointer gap-2 px-3 py-2.5 aria-disabled:opacity-50"
                     >
                       <InitialsAvatar
@@ -349,7 +352,8 @@ export function ImpersonateConsoleUserDialog({
               {users.map((user) => {
                 const disabled =
                   user.$id === account?.$id ||
-                  (!!operatorId && user.$id === operatorId)
+                  (!!operatorId && user.$id === operatorId) ||
+                  !!startingUserId
                 const label = user.name || user.email || user.$id
                 const cmdkValue = [user.$id, user.name, user.email]
                   .filter(Boolean)
@@ -359,7 +363,7 @@ export function ImpersonateConsoleUserDialog({
                     key={user.$id}
                     value={cmdkValue}
                     disabled={disabled}
-                    onSelect={() => handleSelectUser(user)}
+                    onSelect={() => void handleSelectUser(user)}
                     className="cursor-pointer gap-2 px-3 py-2.5 aria-disabled:opacity-50"
                   >
                     <InitialsAvatar

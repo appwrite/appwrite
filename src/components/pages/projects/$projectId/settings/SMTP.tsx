@@ -6,6 +6,8 @@ import {
   useOrganizationPlan,
 } from '@/lib/react-query/hooks'
 import { SendSMTPTestDialog } from './_components/SendSMTPTestDialog'
+import { SmtpQuickSetupCard } from './_components/SmtpQuickSetupCard'
+import { isCloudProfile } from '@/lib/console-profiles'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -86,7 +88,9 @@ export function SMTP({ projectId }: SMTPProps) {
       host !== (project.smtpHost || '') ||
       port !== (project.smtpPort || 587) ||
       username !== (project.smtpUsername || '') ||
-      secure !== secureFromProject(project.smtpSecure)
+      secure !== secureFromProject(project.smtpSecure) ||
+      // A typed or quick-setup password is itself an unsaved change.
+      password.trim() !== ''
     )
   }, [
     enabled,
@@ -97,6 +101,7 @@ export function SMTP({ projectId }: SMTPProps) {
     port,
     username,
     secure,
+    password,
     project,
   ])
 
@@ -167,6 +172,15 @@ export function SMTP({ projectId }: SMTPProps) {
 
   return (
     <div className="mx-auto w-full max-w-7xl space-y-6 px-4 py-4 sm:px-6">
+      {/* One-click setup through a console OAuth2 email provider (cloud only) */}
+      {isCloudProfile() ? (
+        <SmtpQuickSetupCard
+          projectId={projectId}
+          project={project}
+          supportsCustomSmtp={supportsCustomSmtp}
+        />
+      ) : null}
+
       {/* SMTP Configuration Card */}
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         {/* Header */}

@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 import { getColumnIcon } from '@/lib/utils/column-icons'
-import { productBentoContainer, productBentoIdle, QueryEqualFilter, Syn, VectorsDbSearchSnippet } from './MockSyntax'
+import { productBentoBrand, productBentoContainer, productBentoIdle, productBentoLightAngle, productBentoLightStyle, productBentoSoftFillHover, QueryEqualFilter, Syn, VectorsDbSearchSnippet } from './MockSyntax'
 
 type IconComponent = LucideIcon | typeof PostgresElephantIcon
 
@@ -485,7 +485,11 @@ function VectorsDbPanel({ playKey }: { playKey: number }) {
             </Badge>
             <Badge
               variant="inactive"
-              className="h-5 px-1.5 text-[9px] transition-colors duration-300 group-hover:bg-[var(--brand-cta)]/10 group-hover:text-[var(--brand-cta)] sm:text-[10px]"
+              className={cn(
+                'h-5 px-1.5 text-[9px] transition-colors duration-300 group-hover:text-foreground sm:text-[10px]',
+                productBentoSoftFillHover,
+              )}
+              style={productBentoLightStyle(productBentoBrand.pink, productBentoLightAngle(1))}
             >
               cosine
             </Badge>
@@ -517,9 +521,14 @@ function VectorsDbPanel({ playKey }: { playKey: number }) {
               key={filter}
               className={cn(
                 'rounded-md border border-border bg-background px-1.5 py-0.5 font-mono text-[9px] text-muted-foreground transition-colors duration-300 sm:text-[10px]',
-                'group-hover:bg-[color-mix(in_srgb,var(--brand-cta)_8%,var(--background))] group-hover:text-foreground motion-reduce:group-hover:bg-background motion-reduce:group-hover:text-muted-foreground',
+                'group-hover:text-foreground motion-reduce:group-hover:text-muted-foreground',
+                productBentoSoftFillHover,
               )}
-              style={{ transitionDelay: `${index * 40}ms` }}
+              style={productBentoLightStyle(
+                index === 0 ? productBentoBrand.mint : productBentoBrand.orange,
+                productBentoLightAngle(index),
+                { transitionDelay: `${index * 40}ms` },
+              )}
             >
               {filter}
             </span>
@@ -583,18 +592,23 @@ function VectorsDbPanel({ playKey }: { playKey: number }) {
 function NativeDbSelectionCard({
   label,
   Icon,
+  color,
+  angleIndex,
 }: {
   label: string
   Icon: IconComponent
+  color: string
+  angleIndex: number
 }) {
   const t = useT()
   return (
     <div
       className={cn(
-        'flex min-w-0 items-center gap-2.5 px-2.5 py-2 transition-colors duration-300 sm:gap-3 sm:px-3 sm:py-2.5',
+        'flex min-w-0 items-center gap-2.5 px-2.5 py-2 sm:gap-3 sm:px-3 sm:py-2.5',
         productBentoContainer.panel,
-        'group-hover:bg-accent/15 motion-reduce:group-hover:bg-card/70',
+        productBentoSoftFillHover,
       )}
+      style={productBentoLightStyle(color, productBentoLightAngle(angleIndex))}
     >
       <span className="flex size-8 shrink-0 items-center justify-center rounded-md border border-border bg-muted/40 text-muted-foreground">
         <Icon className="size-4" aria-hidden />
@@ -632,8 +646,18 @@ function NativeDbSelectionStrip() {
 
   return (
     <div className="grid w-full grid-cols-2 gap-2">
-      <NativeDbSelectionCard label={postgres.label} Icon={postgres.Icon} />
-      <NativeDbSelectionCard label={mysql.label} Icon={mysql.Icon} />
+      <NativeDbSelectionCard
+        label={postgres.label}
+        Icon={postgres.Icon}
+        color={productBentoBrand.purple}
+        angleIndex={0}
+      />
+      <NativeDbSelectionCard
+        label={mysql.label}
+        Icon={mysql.Icon}
+        color={productBentoBrand.orange}
+        angleIndex={2}
+      />
     </div>
   )
 }
