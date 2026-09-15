@@ -128,6 +128,39 @@ final class JobsTest extends TestCase
         $this->assertSame([], $this->realtime->payloads);
     }
 
+    #[\PHPUnit\Framework\Attributes\DataProvider('resources')]
+    public function testCompleteCurrentResource(string $collection): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $resource = $this->resource($collection);
+        $deployment = $this->deployment($resource);
+        $this->cache->save('jobs-exit-' . $deployment->getId(), true);
+        $this->cache->save('jobs-manifest-' . $deployment->getId(), ['files' => ['index.html']]);
+
+        $this->enqueue($deployment, 'complete');
+        $this->runWorker();
+
+        $current = $this->database->getDocument($collection, $resource->getId());
+        $this->assertSame($resource->getSequence(), $current->getSequence());
+        $this->assertSame($deployment->getId(), $current->getAttribute('deploymentId'));
+        $this->assertSame($deployment->getId(), $current->getAttribute('latestDeploymentId'));
+        $this->assertSame('ready', $current->getAttribute('latestDeploymentStatus'));
+        $this->assertTrue($current->getAttribute('live'));
+        $this->assertCount(1, $this->realtime->payloads);
+        $this->assertSame('ready', $this->realtime->payloads[0]['status']);
+        if ($collection === 'sites') {
+            $this->assertSame('static', $current->getAttribute('adapter'));
+        }
+    }
+
+    public static function resources(): \Iterator
+    {
+        yield 'function' => ['functions'];
+        yield 'site' => ['sites'];
+    }
+
     private function project(): Document
     {
         return new Document(['$id' => 'console', '$sequence' => '0', 'region' => 'default']);
