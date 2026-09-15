@@ -11,6 +11,7 @@ use PHPUnit\Framework\TestCase;
 use Tests\Unit\Event\MockPublisher;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Queue\Publisher\Synchronous as QueuePublisher;
 use Utopia\Queue\Queue;
 
 final class IntervalTest extends TestCase
@@ -141,6 +142,52 @@ final class IntervalTest extends TestCase
         $this->assertCount(1, $this->publisher->getEvents('certificates'), 'Claimed work must not be queued again on the next tick');
     }
 
+    public function testRejectedPublishReleasesTheClaim(): void
+    {
+        /**
+         * Test for FAILURE
+         */
+        $this->seed('rejected', 2);
+        $rejecting = new Publisher();
+        $rejecting->reject = true;
+
+        $this->runTask($rejecting);
+
+        $this->assertNull($rejecting->getEvents('certificates'), 'Nothing reached the queue');
+        $this->assertSame(
+            '2020-01-01T00:00:00.000+00:00',
+            $this->database->getDocument('rules', 'rejected')->getUpdatedAt(),
+            'A claim whose job was rejected must be handed back'
+        );
+
+        // The whole point: the next tick retries rather than waiting out the lease.
+        $this->runTask();
+        $domains = array_column(array_column($this->publisher->getEvents('certificates') ?? [], 'domain'), 'domain');
+        $this->assertSame(['rejected.example.com'], $domains);
+    }
+
+    public function testFailedPublishReleasesTheClaim(): void
+    {
+        /**
+         * Test for FAILURE
+         */
+        $this->seed('unreachable', 2);
+        $throwing = new Publisher();
+        $throwing->throw = true;
+
+        $this->runTask($throwing);
+
+        $this->assertSame(
+            '2020-01-01T00:00:00.000+00:00',
+            $this->database->getDocument('rules', 'unreachable')->getUpdatedAt(),
+            'A claim whose publish threw must be handed back'
+        );
+
+        $this->runTask();
+        $domains = array_column(array_column($this->publisher->getEvents('certificates') ?? [], 'domain'), 'domain');
+        $this->assertSame(['unreachable.example.com'], $domains);
+    }
+
     private function seed(string $id, int $attempts, array $rule = [], array $certificate = []): void
     {
         $this->database->createDocument('certificates', new Document(array_merge([
@@ -156,7 +203,7 @@ final class IntervalTest extends TestCase
         ], $rule)));
     }
 
-    private function runTask(): void
+    private function runTask(?QueuePublisher $publisher = null): void
     {
         // Exercise the registered callback without starting Swoole's timer loop.
         $interval = new class () extends Interval {
@@ -167,7 +214,7 @@ final class IntervalTest extends TestCase
         };
         foreach ($interval->getTasks() as $task) {
             if ($task['name'] === 'certificateGeneration') {
-                $task['callback']($this->database, static fn () => null, new Certificate($this->publisher, new Queue('certificates')));
+                $task['callback']($this->database, static fn () => null, new Certificate($publisher ?? $this->publisher, new Queue('certificates')));
                 return;
             }
         }

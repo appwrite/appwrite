@@ -213,17 +213,32 @@ class Interval extends Action
                     continue;
                 }
 
-                $publisherForCertificates->enqueue(new \Appwrite\Event\Message\Certificate(
-                    project: new Document([
-                        '$id' => $claimed->getAttribute('projectId', ''),
-                        '$sequence' => $claimed->getAttribute('projectInternalId', 0),
-                    ]),
-                    domain: new Document([
-                        'domain' => $claimed->getAttribute('domain'),
-                        'domainType' => $claimed->getAttribute('deploymentResourceType', $claimed->getAttribute('type')),
-                    ]),
-                    action: \Appwrite\Event\Certificate::ACTION_GENERATION,
-                ));
+                // enqueue() returns false on a rejected publish as well as
+                // throwing, and the claim is committed either way. A job that
+                // never reaches the queue would leave this rule suppressed for
+                // the rest of the lease, so put $updatedAt back.
+                try {
+                    $published = $publisherForCertificates->enqueue(new \Appwrite\Event\Message\Certificate(
+                        project: new Document([
+                            '$id' => $claimed->getAttribute('projectId', ''),
+                            '$sequence' => $claimed->getAttribute('projectInternalId', 0),
+                        ]),
+                        domain: new Document([
+                            'domain' => $claimed->getAttribute('domain'),
+                            'domainType' => $claimed->getAttribute('deploymentResourceType', $claimed->getAttribute('type')),
+                        ]),
+                        action: \Appwrite\Event\Certificate::ACTION_GENERATION,
+                    ));
+                } catch (\Throwable) {
+                    $published = false;
+                }
+
+                if ($published === false) {
+                    $this->releaseClaim($dbForPlatform, $claimed, $rule->getUpdatedAt());
+                    $failed++;
+                    continue;
+                }
+
                 $processed++;
             } catch (\Throwable $th) {
                 $failed++;
@@ -234,5 +249,34 @@ class Interval extends Action
         Span::add("interval.certificate_generation.processed", $processed);
         Span::add("interval.certificate_generation.skipped", $skipped);
         Span::add("interval.certificate_generation.failed", $failed);
+    }
+
+    /**
+     * Hand a scheduler claim back when its job never reached the queue, so the
+     * next tick retries the rule instead of waiting out the whole lease.
+     *
+     * @param Database $dbForPlatform Database connection for console
+     * @param Document $claimed Rule as written by the claim
+     * @param string $updatedAt Value $updatedAt held before the claim
+     */
+    private function releaseClaim(Database $dbForPlatform, Document $claimed, string $updatedAt): void
+    {
+        try {
+            $dbForPlatform->withTransaction(function () use ($dbForPlatform, $claimed, $updatedAt): void {
+                $current = $dbForPlatform->getDocument('rules', $claimed->getId(), forUpdate: true);
+                // Only roll back our own claim; anything newer owns the rule now.
+                if ($current->isEmpty()
+                    || $current->getSequence() !== $claimed->getSequence()
+                    || $current->getUpdatedAt() !== $claimed->getUpdatedAt()) {
+                    return;
+                }
+
+                $dbForPlatform->updateDocument('rules', $current->getId(), new Document([
+                    '$updatedAt' => $updatedAt,
+                ]));
+            });
+        } catch (\Throwable) {
+            // Best effort only; the lease expiry is still the backstop.
+        }
     }
 }
