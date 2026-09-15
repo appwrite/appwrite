@@ -122,22 +122,17 @@ MongoDB consistently ranks as the most popular document database in the [DB-Engi
 
 # How Appwrite implements the document model
 
-Appwrite DocumentsDB is a document database that stores data in collections of JSON-like documents. It combines the flexibility of the document model with built-in queries, relationships, permissions, and realtime updates.
+Appwrite DocumentsDB stores schemaless JSON documents in collections. Each document can have its own fields, so you can evolve your data model without defining a fixed schema up front.
 
-* [Queries](/docs/products/databases/queries) let you filter, sort, and paginate documents without writing raw query syntax. For a walkthrough, see [understand Appwrite queries](/blog/post/understand-data-queries).
-* [Relationships](/docs/products/databases/relationships) give you first-class one-to-many and many-to-many links between collections.
-* [Permissions](/docs/products/databases/permissions) are enforced at the document level, so access control is part of the data model rather than a separate layer.
-* **Realtime updates** push changes to connected clients as documents change, which fits chat, dashboards, and collaborative apps.
+* [Documents](/docs/products/databases/documentsdb/documents) can be created, read, updated, upserted, and deleted through the DocumentsDB API.
+* [Queries](/docs/products/databases/documentsdb/queries) let you filter, sort, and paginate documents using Appwrite's Query class.
+* [Permissions](/docs/products/databases/documentsdb/permissions) let you control access at the collection and document level.
+* [Realtime](/docs/apis/realtime) lets connected clients subscribe to changes as they happen.
 
-Appwrite is also flexible about its storage engine. It originally shipped with MariaDB and, since version 1.9, supports MongoDB as the underlying database, while your application code talks to the same Databases API regardless. If you want to connect an external engine instead, see [integrate SQL, NoSQL, vector, graph, or any database into your Appwrite project](/blog/post/integrate-sql-nosql-vector-graph-or-any-database-into-your-appwrite-project).
+DocumentsDB is one of several database options available in Appwrite. Alongside schemaless document storage, Appwrite also provides TablesDB for structured relational data, VectorsDB for embeddings and similarity search, and native PostgreSQL and MySQL for direct database access. See the [Appwrite Databases documentation](/docs/products/databases) for an overview.
 
 # Getting started with Appwrite DocumentsDB
 
-Appwrite DocumentsDB is a good fit when your application data is flexible, nested, or still evolving. It gives you the document model along with built-in queries, relationships, permissions, and realtime updates.
+DocumentsDB is a good fit when your application data is flexible, nested, or changes frequently. You can create a database, organize documents into collections, configure permissions, and query your data through the Appwrite SDKs.
 
-If you want to build with a document database while keeping these capabilities in the same backend, Appwrite DocumentsDB is designed for that kind of fast, iterative application development. Start with the [databases quick start](/docs/products/databases/quick-start), or read one of the guides below to go deeper.
-
-* [Document vs relational databases: finding the right fit for your project](/blog/post/document-vs-relational-databases-vibecoding)
-* [SQL vs NoSQL: choosing the right database for your project](/blog/post/sql-vs-nosql)
-* [Choosing the right database for AI applications: when to use MongoDB](/blog/post/choosing-the-right-database-for-ai-applications-when-to-use-mongodb)
-* [Integrate SQL, NoSQL, vector, graph, or any database into your Appwrite project](/blog/post/integrate-sql-nosql-vector-graph-or-any-database-into-your-appwrite-project)
+Start with the [DocumentsDB quick start](/docs/products/databases/documentsdb/quick-start) to create your first database, collection, and documents.
