@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Functions\Workers;
 
 use Appwrite\Bus\Events\RuleUpdated;
+use Appwrite\Deployment\Deployments;
 use Appwrite\Deployment\Detection;
 use Appwrite\Deployment\GitAction;
 use Appwrite\Event\Event;
@@ -132,6 +133,13 @@ class Jobs extends Action
                 return;
             }
 
+            $resource = $dbForProject->getDocument($deployment->getAttribute('resourceType', 'functions'), $deployment->getAttribute('resourceId'));
+            if (! Deployments::belongsTo($deployment, $resource)) {
+                // The owner was deleted or its public ID was reused. Acknowledge
+                // the callback without publishing it to the replacement resource.
+                return;
+            }
+
             $statusBefore = $deployment->getAttribute('status');
 
             $deployment = match ($event->event) {
@@ -141,6 +149,11 @@ class Jobs extends Action
                 'orchestrator.job.complete' => $this->onComplete($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
                 default => $this->onCallback($event->event, $dbForProject, $dbForPlatform, $project, $deployment, $event->data, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
             };
+
+            $resource = $dbForProject->getDocument($deployment->getAttribute('resourceType', 'functions'), $deployment->getAttribute('resourceId'));
+            if (! Deployments::belongsTo($deployment, $resource)) {
+                return;
+            }
 
             // Console realtime on every callback (log stream + status).
             $queueForRealtime
@@ -440,6 +453,12 @@ class Jobs extends Action
             return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, 'Build size should be less than ' . \number_format($limit / (1000 * 1000), 2) . ' MBs.', $usage, $publisherForUsage, $publisherForScreenshots, $vcsFactory, $platform, $bus);
         }
 
+        // Artifact reads can outlive deletion and recreation of the owner.
+        $resource = $dbForProject->getDocument($deployment->getAttribute('resourceType', 'functions'), $deployment->getAttribute('resourceId'));
+        if (! Deployments::belongsTo($deployment, $resource)) {
+            return $deployment;
+        }
+
         // Every check this worker makes has passed, so the deployment is publishable
         // as far as it is concerned. Idempotent: each retry of the join arrives here.
         $this->onVerified($dbForProject, $project, $deployment, $cache);
@@ -463,7 +482,7 @@ class Jobs extends Action
     protected function detect(Database $dbForProject, Document $deployment, array $files): array
     {
         $site = empty($files) ? new Document() : $dbForProject->getDocument('sites', $deployment->getAttribute('resourceId'));
-        if ($site->isEmpty()) {
+        if (! Deployments::belongsTo($deployment, $site)) {
             return [$deployment, null];
         }
 
@@ -475,7 +494,17 @@ class Jobs extends Action
                 'adapter' => $detection->getName(),
                 'fallbackFile' => $detection->getFallbackFile() ?? '',
             ];
-            $dbForProject->updateDocument('sites', $site->getId(), new Document($update));
+            $dbForProject->updateDocuments('sites', new Document($update), [
+                Query::equal('$id', [$site->getId()]),
+                Query::equal('$sequence', [$site->getSequence()]),
+            ]);
+            $current = $dbForProject->findOne('sites', [
+                Query::equal('$id', [$site->getId()]),
+                Query::equal('$sequence', [$site->getSequence()]),
+            ]);
+            if (! Deployments::belongsTo($deployment, $current)) {
+                return [$deployment, null];
+            }
 
             return [$dbForProject->updateDocument('deployments', $deployment->getId(), new Document($update)), null];
         }
@@ -509,6 +538,9 @@ class Jobs extends Action
     ): Document {
         $collection = $deployment->getAttribute('resourceType', 'functions');
         $resource = $dbForProject->getDocument($collection, $deployment->getAttribute('resourceId'));
+        if (! Deployments::belongsTo($deployment, $resource)) {
+            return $deployment;
+        }
 
         $logs = $deployment->getAttribute('buildLogs', '');
         $trailer = $success
@@ -533,6 +565,10 @@ class Jobs extends Action
             Query::notEqual('status', 'canceled'),
         ]);
         $deployment = $dbForProject->getDocument('deployments', $deployment->getId());
+        $resource = $dbForProject->getDocument($collection, $resource->getId());
+        if (! Deployments::belongsTo($deployment, $resource)) {
+            return $deployment;
+        }
 
         // latestDeployment* must be written before activate(). activate() sets
         // deploymentId then walks platform rules; under parallel Sites e2e that
@@ -546,10 +582,19 @@ class Jobs extends Action
             $this->activate($dbForProject, $dbForPlatform, $project, $resource, $deployment, $bus);
         }
 
+        $resource = $dbForProject->getDocument($collection, $resource->getId());
+        if (! Deployments::belongsTo($deployment, $resource)) {
+            return $deployment;
+        }
+
         if ($applied > 0 && $success && $collection === 'sites' && ! $resource->isEmpty()) {
             // Every successful site build, activated or not, repoints the
             // branch preview rule and refreshes the console screenshots.
             Base::activateBranchPreviewRule($project, $resource, $deployment, $dbForPlatform, $bus, $platform['sitesDomain']);
+            $resource = $dbForProject->getDocument($collection, $resource->getId());
+            if (! Deployments::belongsTo($deployment, $resource)) {
+                return $deployment;
+            }
             $publisherForScreenshots->enqueue(new \Appwrite\Event\Message\Screenshot(
                 project: $project,
                 deploymentId: $deployment->getId(),
@@ -565,8 +610,31 @@ class Jobs extends Action
 
         // (Re)activate its schedule so the scheduler enqueues cron executions
         // (sites have no scheduleId, so schedule() no-ops for them).
-        if (! $resource->isEmpty()) {
-            $this->schedule($dbForProject, $dbForPlatform, $resource);
+        $resourceForSchedule = $dbForProject->findOne($collection, [
+            Query::equal('$id', [$resource->getId()]),
+            Query::equal('$sequence', [$resource->getSequence()]),
+        ]);
+        $scheduleId = $resourceForSchedule->getAttribute('scheduleId', '');
+        if (! $resourceForSchedule->isEmpty() && $scheduleId !== '') {
+            $queries = [
+                Query::equal('$id', [$scheduleId]),
+                Query::equal('projectInternalId', [$project->getSequence()]),
+                Query::equal('resourceType', [SCHEDULE_RESOURCE_TYPE_FUNCTION]),
+                Query::equal('resourceId', [$resourceForSchedule->getId()]),
+                Query::equal('resourceInternalId', [$resourceForSchedule->getSequence()]),
+            ];
+            $scheduleInternalId = $resourceForSchedule->getAttribute('scheduleInternalId');
+            if ($scheduleInternalId !== null && $scheduleInternalId !== '') {
+                $queries[] = Query::equal('$sequence', [$scheduleInternalId]);
+            }
+            $schedule = $dbForPlatform->findOne('schedules', $queries);
+            if (! $schedule->isEmpty()) {
+                // Legacy resources may not persist scheduleInternalId. Bind the
+                // validated row in a local snapshot without changing the resource.
+                $resourceForSchedule = clone $resourceForSchedule;
+                $resourceForSchedule->setAttribute('scheduleInternalId', $schedule->getSequence());
+                $this->schedule($dbForProject, $dbForPlatform, $resourceForSchedule);
+            }
         }
 
         $status = $deployment->getAttribute('status');
@@ -626,6 +694,9 @@ class Jobs extends Action
 
         try {
             $resource = $dbForProject->getDocument($deployment->getAttribute('resourceType', 'functions'), $deployment->getAttribute('resourceId'));
+            if (! Deployments::belongsTo($deployment, $resource)) {
+                return;
+            }
             $installation = $dbForPlatform->getDocument('installations', $resource->getAttribute('installationId', ''));
             if ($resource->isEmpty() || $installation->getAttribute('providerInstallationId', '') === '') {
                 return;
@@ -654,22 +725,43 @@ class Jobs extends Action
      */
     protected function activate(Database $dbForProject, Database $dbForPlatform, Document $project, Document $resource, Document $deployment, Bus $bus): void
     {
-        $resource = $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), new Document([
+        $dbForProject->updateDocuments($resource->getCollection(), new Document([
             'live' => true,
             'deploymentId' => $deployment->getId(),
             'deploymentInternalId' => $deployment->getSequence(),
             'deploymentCreatedAt' => $deployment->getCreatedAt(),
-        ]));
+        ]), [
+            Query::equal('$id', [$resource->getId()]),
+            Query::equal('$sequence', [$resource->getSequence()]),
+        ]);
+        $current = $dbForProject->findOne($resource->getCollection(), [
+            Query::equal('$id', [$resource->getId()]),
+            Query::equal('$sequence', [$resource->getSequence()]),
+        ]);
+        if (! Deployments::belongsTo($deployment, $current)) {
+            return;
+        }
 
         $branch = $deployment->getAttribute('providerBranch', '');
         $branches = $branch === '' ? [''] : ['', $branch];
 
         $dbForPlatform->forEach('rules', function (Document $rule) use ($dbForPlatform, $deployment, $bus) {
-            $rule = $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
+            $queries = [
+                Query::equal('$id', [$rule->getId()]),
+                Query::equal('$sequence', [$rule->getSequence()]),
+                Query::equal('projectInternalId', [$rule->getAttribute('projectInternalId')]),
+                Query::equal('deploymentResourceType', [$rule->getAttribute('deploymentResourceType')]),
+                Query::equal('deploymentResourceId', [$rule->getAttribute('deploymentResourceId')]),
+                Query::equal('deploymentResourceInternalId', [$deployment->getAttribute('resourceInternalId')]),
+            ];
+            $dbForPlatform->updateDocuments('rules', new Document([
                 'deploymentId' => $deployment->getId(),
                 'deploymentInternalId' => $deployment->getSequence(),
-            ]));
-            $bus->dispatch(new RuleUpdated($rule->getArrayCopy()));
+            ]), $queries);
+            $rule = $dbForPlatform->findOne('rules', $queries);
+            if (! $rule->isEmpty()) {
+                $bus->dispatch(new RuleUpdated($rule->getArrayCopy()));
+            }
         }, [
             Query::equal('projectInternalId', [$project->getSequence()]),
             Query::equal('type', ['deployment']),
@@ -698,12 +790,15 @@ class Jobs extends Action
             return;
         }
 
-        $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), new Document([
+        $dbForProject->updateDocuments($resource->getCollection(), new Document([
             'latestDeploymentId' => $latest->getId(),
             'latestDeploymentInternalId' => $latest->getSequence(),
             'latestDeploymentCreatedAt' => $latest->getCreatedAt(),
             'latestDeploymentStatus' => $latest->getAttribute('status', ''),
-        ]));
+        ]), [
+            Query::equal('$id', [$resource->getId()]),
+            Query::equal('$sequence', [$resource->getSequence()]),
+        ]);
     }
 
     /**
@@ -715,22 +810,36 @@ class Jobs extends Action
      */
     protected function schedule(Database $dbForProject, Database $dbForPlatform, Document $resource): void
     {
+        // finalize() validated this schedule's project and owner. Retain that
+        // identity while re-reading the resource's current activation state.
         $scheduleId = $resource->getAttribute('scheduleId', '');
-        if ($scheduleId === '') {
+        $scheduleInternalId = $resource->getAttribute('scheduleInternalId');
+        if ($scheduleId === '' || $scheduleInternalId === null || $scheduleInternalId === '') {
+            return;
+        }
+        $resource = $dbForProject->findOne($resource->getCollection(), [
+            Query::equal('$id', [$resource->getId()]),
+            Query::equal('$sequence', [$resource->getSequence()]),
+        ]);
+        if ($resource->isEmpty() || $resource->getAttribute('scheduleId') !== $scheduleId) {
+            return;
+        }
+        $currentScheduleInternalId = $resource->getAttribute('scheduleInternalId');
+        if ($currentScheduleInternalId !== null && $currentScheduleInternalId !== '' && $currentScheduleInternalId !== $scheduleInternalId) {
             return;
         }
 
-        $resource = $dbForProject->getDocument($resource->getCollection(), $resource->getId());
-        $schedule = $dbForPlatform->getDocument('schedules', $scheduleId);
-        if ($schedule->isEmpty()) {
-            return;
-        }
-
-        $dbForPlatform->updateDocument('schedules', $schedule->getId(), new Document([
+        $dbForPlatform->updateDocuments('schedules', new Document([
             'resourceUpdatedAt' => DateTime::now(),
             'schedule' => $resource->getAttribute('schedule', ''),
             'active' => ! empty($resource->getAttribute('schedule')) && ! empty($resource->getAttribute('deploymentId')),
-        ]));
+        ]), [
+            Query::equal('$id', [$scheduleId]),
+            Query::equal('$sequence', [$scheduleInternalId]),
+            Query::equal('resourceType', [SCHEDULE_RESOURCE_TYPE_FUNCTION]),
+            Query::equal('resourceId', [$resource->getId()]),
+            Query::equal('resourceInternalId', [$resource->getSequence()]),
+        ]);
     }
 
     /**
