@@ -13,7 +13,8 @@ return [
     'project.createWindowsPlatform' => true,
     'project.createLinuxPlatform' => true,
     // Connect — API key
-    'project.createKey' => true,
+    'project.createKey' => true, // TODO: Remove with the project-scoped keys endpoints
+    'organization.createProjectKey' => true,
 
     // Auth
     'users.create' => true,

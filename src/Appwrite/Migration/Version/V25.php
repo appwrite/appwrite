@@ -101,6 +101,28 @@ class V25 extends Migration
                     $this->dbForProject->purgeCachedCollection($id);
                     break;
 
+                case 'notifications':
+                    if ($collectionType === 'console') {
+                        $attributes = ['teamId', 'teamInternalId'];
+                        foreach ($attributes as $attribute) {
+                            try {
+                                $this->createAttributeFromCollection($this->dbForProject, $id, $attribute);
+                            } catch (Throwable $th) {
+                                Console::warning("Failed to create attribute \"{$attribute}\" in collection {$id}: {$th->getMessage()}");
+                            }
+                        }
+
+                        $this->dbForProject->purgeCachedCollection($id);
+
+                        try {
+                            $this->createIndexFromCollection($this->dbForProject, $id, '_key_team');
+                        } catch (Throwable $th) {
+                            Console::warning("Failed to create index \"_key_team\" from {$id}: {$th->getMessage()}");
+                        }
+                    }
+                    $this->dbForProject->purgeCachedCollection($id);
+                    break;
+
                 case 'installations':
                     if ($collectionType === 'console') {
                         foreach (['personalAccessToken', 'personalRefreshToken'] as $attribute) {

@@ -16,6 +16,78 @@ final class TeamsCustomClientTest extends Scope
     use ProjectCustom;
     use SideClient;
 
+    public function testCreateMembershipByPhone(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $team = $this->createTeamHelper('Research & Development');
+        $phone = '+1202' . random_int(1000000, 9999999);
+
+        /**
+         * Test for SUCCESS
+         */
+        $membership = $this->client->call(Client::METHOD_POST, '/teams/' . $team['teamUid'] . '/memberships', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'phone' => $phone,
+            'roles' => ['developer'],
+            'url' => 'http://localhost:5000/join-us?source=sms&campaign=team%20invite#invitation',
+        ]);
+
+        $this->assertEquals(201, $membership['headers']['status-code']);
+        $this->assertFalse($membership['body']['confirm']);
+
+        $sms = $this->getLastRequestForProject($projectId, Scope::REQUEST_TYPE_SMS, [
+            'header_X-Username' => 'username',
+            'header_X-Key' => 'password',
+            'method' => 'POST',
+        ], probe: function (array $request) use ($phone) {
+            $this->assertEquals($phone, $request['data']['to'] ?? null);
+        });
+
+        $this->assertNotEmpty($sms);
+        $url = (string) $sms['data']['message'];
+        $this->assertStringNotContainsString('&amp;', $url);
+        $this->assertEquals('/join-us', parse_url($url, PHP_URL_PATH));
+        $this->assertEquals('invitation', parse_url($url, PHP_URL_FRAGMENT));
+        parse_str(parse_url($url, PHP_URL_QUERY), $params);
+        $this->assertEquals('sms', $params['source']);
+        $this->assertEquals('team invite', $params['campaign']);
+        $this->assertEquals($team['teamUid'], $params['teamId']);
+        $this->assertEquals($team['teamName'], $params['teamName']);
+        $this->assertEquals($membership['body']['$id'], $params['membershipId']);
+        $this->assertEquals($membership['body']['userId'], $params['userId']);
+        $this->assertNotEmpty($params['secret']);
+
+        $confirmation = $this->client->call(Client::METHOD_PATCH, '/teams/' . $params['teamId'] . '/memberships/' . $params['membershipId'] . '/status', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'userId' => $params['userId'],
+            'secret' => $params['secret'],
+        ]);
+
+        $this->assertEquals(200, $confirmation['headers']['status-code']);
+        $this->assertTrue($confirmation['body']['confirm']);
+
+        /**
+         * Test for FAILURE
+         * The invitation cannot be accepted again.
+         */
+        $confirmation = $this->client->call(Client::METHOD_PATCH, '/teams/' . $params['teamId'] . '/memberships/' . $params['membershipId'] . '/status', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'userId' => $params['userId'],
+            'secret' => $params['secret'],
+        ]);
+
+        $this->assertEquals(409, $confirmation['headers']['status-code']);
+        $this->assertEquals('membership_already_confirmed', $confirmation['body']['type']);
+    }
+
     public function testGetMembershipPrivacy(): void
     {
         $teamData = $this->createTeamHelper();

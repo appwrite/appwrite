@@ -521,14 +521,9 @@ final class VCSGiteaConsoleClientTest extends Scope
         $this->assertSame(0, $exitCode, "Git command failed: {$command}\n" . \implode("\n", $output));
     }
 
-    private function writeFunctionHelper(string $workdir, string $output, string $path = ''): void
+    private function writeFunctionHelper(string $workdir, string $output): void
     {
-        $directory = $workdir . ($path === '' ? '' : '/' . $path);
-        if (! \is_dir($directory)) {
-            \mkdir($directory, 0o777, true);
-        }
-
-        \file_put_contents($directory . '/index.js', "module.exports = async (context) => context.res.send('{$output}');\n");
+        \file_put_contents($workdir . '/index.js', "module.exports = async (context) => context.res.send('{$output}');\n");
     }
 
     private function waitForDeploymentReadyHelper(string $functionId, string $deploymentId): void

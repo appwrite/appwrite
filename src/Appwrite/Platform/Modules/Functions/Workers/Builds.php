@@ -10,6 +10,7 @@ use Appwrite\Usage\Build as BuildUsage;
 use Appwrite\Usage\Context;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Exception;
+use Utopia\Command;
 use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Database;
@@ -275,7 +276,10 @@ class Builds extends Action
         try {
             // VCS and VCS+Temaplte
             $tmpDirectory = '/tmp/builds/' . $deploymentId . '/code';
-            $rootDirectory = Deployments::rootDirectory($resource->getAttribute('providerRootDirectory', ''));
+            $rootDirectory = $resource->getAttribute('providerRootDirectory', '');
+            $rootDirectory = \rtrim($rootDirectory, '/');
+            $rootDirectory = \ltrim($rootDirectory, '.');
+            $rootDirectory = \ltrim($rootDirectory, '/');
 
             $owner = $providerAdapter->getOwnerName($providerInstallationId);
             $repositoryName = $providerAdapter->getRepositoryName($providerRepositoryId);
@@ -297,7 +301,7 @@ class Builds extends Action
             $stdout = '';
             $stderr = '';
 
-            Console::execute('mkdir -p ' . \escapeshellarg('/tmp/builds/' . $deploymentId), '', $stdout, $stderr);
+            Console::execute((new Command('mkdir'))->flag('-p')->argument('/tmp/builds/' . $deploymentId), '', $stdout, $stderr);
 
             if ($dbForProject->getDocument('deployments', $deploymentId)->getAttribute('status') === 'canceled') {
                 $this->finalizeCanceledDeployment($deployment->getId(), $dbForProject, $queueForRealtime);
@@ -316,7 +320,7 @@ class Builds extends Action
                 $rootDirectoryWithoutSpaces = str_replace(' ', '', $rootDirectory);
                 $from = $tmpDirectory . '/' . $rootDirectory;
                 $to = $tmpDirectory . '/' . $rootDirectoryWithoutSpaces;
-                $exit = Console::execute('mv ' . \escapeshellarg($from) . ' ' . \escapeshellarg($to), '', $stdout, $stderr);
+                $exit = Console::execute((new Command('mv'))->argument($from)->argument($to), '', $stdout, $stderr);
 
                 if ($exit !== 0) {
                     throw new \Exception('Unable to move function with spaces' . $stderr);
@@ -330,7 +334,10 @@ class Builds extends Action
             $templateReferenceType = $template->getAttribute('referenceType', '');
             $templateReferenceValue = $template->getAttribute('referenceValue', '');
 
-            $templateRootDirectory = Deployments::rootDirectory($template->getAttribute('rootDirectory', ''));
+            $templateRootDirectory = $template->getAttribute('rootDirectory', '');
+            $templateRootDirectory = \rtrim($templateRootDirectory, '/');
+            $templateRootDirectory = \ltrim($templateRootDirectory, '.');
+            $templateRootDirectory = \ltrim($templateRootDirectory, '/');
 
             if (! empty($templateRepositoryName) && ! empty($templateOwnerName) && ! empty($templateReferenceType) && ! empty($templateReferenceValue)) {
                 // Clone template repo
@@ -344,21 +351,34 @@ class Builds extends Action
                 }
 
                 // Ensure directories
-                Console::execute('mkdir -p ' . \escapeshellarg($tmpTemplateDirectory . '/' . $templateRootDirectory), '', $stdout, $stderr);
-                Console::execute('mkdir -p ' . \escapeshellarg($tmpDirectory . '/' . $rootDirectory), '', $stdout, $stderr);
+                Console::execute((new Command('mkdir'))->flag('-p')->argument($tmpTemplateDirectory . '/' . $templateRootDirectory), '', $stdout, $stderr);
+                Console::execute((new Command('mkdir'))->flag('-p')->argument($tmpDirectory . '/' . $rootDirectory), '', $stdout, $stderr);
 
                 // Merge template into user repo
-                Console::execute('rsync -av --exclude \'.git\' ' . \escapeshellarg($tmpTemplateDirectory . '/' . $templateRootDirectory . '/') . ' ' . \escapeshellarg($tmpDirectory . '/' . $rootDirectory), '', $stdout, $stderr);
+                $rsync = (new Command('rsync'))
+                    ->flag('-av')
+                    ->option('--exclude', '.git')
+                    ->argument($tmpTemplateDirectory . '/' . $templateRootDirectory . '/')
+                    ->argument($tmpDirectory . '/' . $rootDirectory);
+                Console::execute($rsync, '', $stdout, $stderr);
 
                 // Commit and push
-                $commitMessage = \escapeshellarg('Create ' . $resource->getAttribute('name', '') . ' function');
-                $exit = Console::execute('git config --global user.email ' . \escapeshellarg(APP_VCS_GITHUB_EMAIL) . ' && git config --global user.name ' . \escapeshellarg(APP_VCS_GITHUB_USERNAME) . ' && cd ' . \escapeshellarg($tmpDirectory) . ' && git checkout -b ' . \escapeshellarg($branchName) . ' && git add . && git commit -m ' . $commitMessage . ' && git push origin ' . \escapeshellarg($branchName), '', $stdout, $stderr);
+                $commitMessage = 'Create ' . $resource->getAttribute('name', '') . ' function';
+                $push = Command::and(
+                    (new Command('git'))->argument('config')->flag('--global')->argument('user.email')->argument(APP_VCS_GITHUB_EMAIL),
+                    (new Command('git'))->argument('config')->flag('--global')->argument('user.name')->argument(APP_VCS_GITHUB_USERNAME),
+                    (new Command('git'))->option('-C', $tmpDirectory)->argument('checkout')->flag('-b')->argument($branchName),
+                    (new Command('git'))->option('-C', $tmpDirectory)->argument('add')->argument('.'),
+                    (new Command('git'))->option('-C', $tmpDirectory)->argument('commit')->option('-m', $commitMessage),
+                    (new Command('git'))->option('-C', $tmpDirectory)->argument('push')->argument('origin')->argument($branchName),
+                );
+                $exit = Console::execute($push, '', $stdout, $stderr);
 
                 if ($exit !== 0) {
                     throw new \Exception('Unable to push code repository: ' . $stderr);
                 }
 
-                $exit = Console::execute('cd ' . \escapeshellarg($tmpDirectory) . ' && git rev-parse HEAD', '', $stdout, $stderr);
+                $exit = Console::execute((new Command('git'))->option('-C', $tmpDirectory)->argument('rev-parse')->argument('HEAD'), '', $stdout, $stderr);
 
                 if ($exit !== 0) {
                     throw new \Exception('Unable to get vcs commit SHA: ' . $stderr);
@@ -393,14 +413,15 @@ class Builds extends Action
             $deployments->createFromVcs(
                 $resource,
                 $deployment,
+                $timeout,
                 $providerAdapter,
                 $cloneOwner,
                 $cloneRepository,
                 $ref,
-                $rootDirectory,
+                $resource->getAttribute('providerRootDirectory', ''),
             );
 
-            Console::execute('rm -rf ' . \escapeshellarg('/tmp/builds/' . $deploymentId), '', $stdout, $stderr);
+            Console::execute((new Command('rm'))->flag('-rf')->argument('/tmp/builds/' . $deploymentId), '', $stdout, $stderr);
         } catch (\Throwable $th) {
             if ($dbForProject->getDocument('deployments', $deploymentId)->getAttribute('status') === 'canceled') {
                 $this->finalizeCanceledDeployment($deployment->getId(), $dbForProject, $queueForRealtime);

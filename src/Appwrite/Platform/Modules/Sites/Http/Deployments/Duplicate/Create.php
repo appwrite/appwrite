@@ -69,6 +69,7 @@ class Create extends Action
             ->inject('dbForPlatform')
             ->inject('queueForEvents')
             ->inject('deployments')
+            ->inject('buildTimeout')
             ->inject('deviceForSites')
             ->inject('vcsFactory')
             ->inject('authorization')
@@ -87,6 +88,7 @@ class Create extends Action
         Database $dbForPlatform,
         Event $queueForEvents,
         Deployments $deployments,
+        int $buildTimeout,
         Device $deviceForSites,
         VcsFactory $vcsFactory,
         Authorization $authorization,
@@ -172,7 +174,7 @@ class Create extends Action
         ]);
 
         if ($hasSource) {
-            $deployment = $deployments->createFromUpload($site, $deployment);
+            $deployment = $deployments->createFromUpload($site, $deployment, $buildTimeout);
         } elseif ($installationId !== '') {
             $installation = $dbForPlatform->getDocument('installations', $installationId);
             if ($installation->isEmpty()) {
@@ -185,6 +187,7 @@ class Create extends Action
             $deployment = $deployments->createFromVcs(
                 $site,
                 $deployment,
+                $buildTimeout,
                 $vcs,
                 $owner,
                 $repository,
@@ -198,6 +201,7 @@ class Create extends Action
             $deployment = $deployments->createFromRef(
                 $site,
                 $deployment,
+                $buildTimeout,
                 $owner,
                 $repository,
                 GitHub::CLONE_TYPE_COMMIT,

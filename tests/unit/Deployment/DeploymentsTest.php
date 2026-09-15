@@ -48,6 +48,7 @@ final class DeploymentsTest extends TestCase
                     'providerRootDirectory' => 'changed/function/setting',
                 ]),
                 new Document(['$id' => 'deployment', 'buildCommands' => 'npm ci']),
+                900,
                 new VcsRepository($archives),
                 'owner',
                 'repository',
@@ -86,32 +87,6 @@ final class DeploymentsTest extends TestCase
             'cp .env.example .env && npm run build && npm run bundle',
             Deployments::command($resource, $deployment)
         );
-    }
-
-    public static function rootDirectories(): \Iterator
-    {
-        yield 'repository root' => ['', ''];
-        yield 'dot' => ['.', ''];
-        yield 'dot slash' => ['./', ''];
-        yield 'bare' => ['docs', 'docs'];
-        yield 'trailing slash' => ['docs/', 'docs'];
-        yield 'dot slash prefix' => ['./docs', 'docs'];
-        yield 'dot slash prefix and trailing slash' => ['./docs/', 'docs'];
-        yield 'leading slash' => ['/docs', 'docs'];
-        yield 'nested' => ['docs/nested', 'docs/nested'];
-        yield 'nested with prefix and trailing slash' => ['./docs/nested/', 'docs/nested'];
-        yield 'shipped site template' => ['./astro/starter', 'astro/starter'];
-        yield 'hidden directory' => ['.github', '.github'];
-        yield 'dot-prefixed name' => ['..foo', '..foo'];
-        yield 'parent' => ['docs/../x', 'docs/../x'];
-        yield 'parent with prefix' => ['./docs/../x', 'docs/../x'];
-        yield 'nested hidden directory' => ['./.github/actions', '.github/actions'];
-    }
-
-    #[DataProvider('rootDirectories')]
-    public function testRootDirectoryCanonicalizes(string $rootDirectory, string $expected): void
-    {
-        $this->assertSame($expected, Deployments::rootDirectory($rootDirectory));
     }
 
     public function testFunctionCommandIsDeploymentBuildCommands(): void
@@ -207,7 +182,7 @@ final class DeploymentsTest extends TestCase
         $this->assertSame(['users.read'], Deployments::scopes($site));
     }
 
-    private function buildPayload(array $vars, ?array $source = null): array
+    private function buildPayload(array $vars): array
     {
         // Presigned-URL and ephemeral-key signing both run before the
         // variables are assembled, and refuse an empty key.
@@ -229,48 +204,7 @@ final class DeploymentsTest extends TestCase
             ]),
             new Document(['$id' => 'deployment1', 'buildCommands' => 'npm install']),
             ['apiHostname' => 'localhost'],
-            $source,
         );
-    }
-
-    private function artifact(array $payload, string $id): object
-    {
-        foreach ($payload['artifacts'] as $artifact) {
-            if ($artifact->id === $id) {
-                return $artifact;
-            }
-        }
-
-        $this->fail("No '{$id}' artifact in the payload");
-    }
-
-    public function testPayloadUnarchivesFromCanonicalSubdirectory(): void
-    {
-        $payload = $this->buildPayload([], ['url' => 'https://example.com/x.tar.gz', 'subdir' => './docs/nested/']);
-
-        $this->assertSame('docs/nested', $this->artifact($payload, 'extract')->subdir);
-    }
-
-    #[DataProvider('repositoryRoots')]
-    public function testPayloadOmitsSubdirectoryForRepositoryRoot(string $rootDirectory): void
-    {
-        $payload = $this->buildPayload([], ['url' => 'https://example.com/x.tar.gz', 'subdir' => $rootDirectory]);
-
-        $this->assertNull($this->artifact($payload, 'extract')->subdir);
-    }
-
-    public static function repositoryRoots(): \Iterator
-    {
-        yield 'empty' => [''];
-        yield 'dot' => ['.'];
-        yield 'dot slash' => ['./'];
-    }
-
-    public function testPayloadClonesFromCanonicalSubdirectory(): void
-    {
-        $payload = $this->buildPayload([], ['clone' => 'https://example.com/r.git', 'ref' => 'main', 'subdir' => './docs']);
-
-        $this->assertSame('docs', $this->artifact($payload, 'source')->subdir);
     }
 
     public function testPayloadRefusesVariableKeyTheClusterWouldRefuse(): void
@@ -298,9 +232,9 @@ final class DeploymentsTest extends TestCase
 
 final readonly class ExposedDeployments extends Deployments
 {
-    public static function submitPayload(Document $project, Document $resource, Document $deployment, array $platform, ?array $source = null): array
+    public static function submitPayload(Document $project, Document $resource, Document $deployment, array $platform): array
     {
-        return static::payload($project, $resource, $deployment, $platform, $source);
+        return static::payload($project, $resource, $deployment, $platform, 137);
     }
 }
 
