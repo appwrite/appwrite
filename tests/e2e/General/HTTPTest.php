@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\E2E\General;
 
+use PHPUnit\Framework\Attributes\Group;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectNone;
 use Tests\E2E\Scopes\Scope;
@@ -254,6 +255,7 @@ final class HTTPTest extends Scope
         $this->assertEquals('http://localhost/join?membershipId=123&userId=asdf', $response['headers']['location']);
     }
 
+    #[Group('consoleProxy')]
     public function testConsoleServed()
     {
         /**
