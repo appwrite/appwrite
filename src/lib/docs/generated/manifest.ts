@@ -3545,7 +3545,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     title: 'Develop Appwrite Sites',
     description: 'Master site development with Appwrite.',
     layout: 'article',
-    readingTimeMinutes: 5,
+    readingTimeMinutes: 6,
   },
   {
     slug: 'products/sites/domains',

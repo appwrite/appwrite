@@ -68,9 +68,13 @@ Dynamic API keys act without a session and bypass permissions, so use them only 
 
 ## Scopes {% #scopes %}
 
-A site starts with no scopes, so its dynamic API key can call nothing until you grant some. Scopes are stored on the site itself and set with the `scopes` parameter of the create site and update site endpoints, through a [Server SDK](/docs/sdks#server) or the [Appwrite CLI](/docs/tooling/command-line/sites). Site scopes cannot be edited in the Appwrite Console yet. Grant only the scopes your server code needs.
+A site starts with no scopes, so its dynamic API key can call nothing until you grant some. Grant only the scopes your server code needs.
 
-The update site endpoint replaces every setting you omit with its default, so read the site first and pass its existing settings back along with the new scopes.
+1. In the Appwrite Console, navigate to **Sites** and open the site.
+2. Under the **Settings** tab, navigate to **Build settings**.
+3. Select the scopes to grant the dynamic key and click **Update**.
+
+Scopes are stored on the site itself, so you can also set them with the `scopes` parameter of the create site and update site endpoints through a [Server SDK](/docs/sdks#server), or with the repeatable `--scopes` flag of `appwrite sites create` and `appwrite sites update` in the [Appwrite CLI](/docs/tooling/command-line/sites). The update site endpoint replaces every setting you omit with its default. Only `scopes` and the Git connection are kept when omitted, so read the site first and pass every existing setting back along with the new scopes.
 
 {% multicode %}
 ```server-nodejs
@@ -106,6 +110,8 @@ await sites.update({
     providerBranch: site.providerBranch ?? undefined,
     providerSilentMode: site.providerSilentMode ?? undefined,
     providerRootDirectory: site.providerRootDirectory ?? undefined,
+    providerBranches: site.providerBranches ?? undefined,
+    providerPaths: site.providerPaths ?? undefined,
     buildSpecification: site.buildSpecification ?? undefined,
     runtimeSpecification: site.runtimeSpecification ?? undefined,
     deploymentRetention: site.deploymentRetention ?? undefined,
@@ -114,22 +120,13 @@ await sites.update({
 ```
 {% /multicode %}
 
-With the CLI, repeat `--scopes` once per scope and pass the other settings the site already has:
-
-```sh
-appwrite sites update --site-id <SITE_ID> --name <SITE_NAME> --framework sveltekit \
-    --timeout 30 --install-command "npm install" --build-command "npm run build" \
-    --output-directory ./build --build-runtime node-22 --adapter ssr \
-    --scopes users.read --scopes users.write --scopes sessions.write
-```
-
 {% arrow_link href="/docs/partners/project/api-keys#scopes" %}
 Learn more about scopes
 {% /arrow_link %}
 
 ## Use the key in SSR code {% #use-the-dynamic-api-key %}
 
-Read the `x-appwrite-key` header on the server and pass it to `setKey`. Create the client per request instead of sharing one, because each key belongs to the request that carried it. Fall back to an environment variable for local development, where Appwrite is not serving the site and the header is absent.
+Read the `x-appwrite-key` header on the server and pass it to `setKey`. Create the client per request instead of sharing one, because each key belongs to the request that carried it. The endpoint and project ID come from the `APPWRITE_SITE_API_ENDPOINT` and `APPWRITE_SITE_PROJECT_ID` variables that Appwrite [injects at run time](/docs/products/sites/environment-variables), so nothing has to be configured. Fall back to an `APPWRITE_API_KEY` variable for local development, where Appwrite is not serving the site and the header is absent.
 
 {% tabs %}
 
@@ -142,8 +139,8 @@ import { Client, Users } from 'node-appwrite';
 export function createAdminClient(request: Request) {
     const key = request.headers.get('x-appwrite-key') ?? env.APPWRITE_API_KEY;
     const client = new Client()
-        .setEndpoint(env.APPWRITE_ENDPOINT)
-        .setProject(env.APPWRITE_PROJECT_ID)
+        .setEndpoint(env.APPWRITE_SITE_API_ENDPOINT)
+        .setProject(env.APPWRITE_SITE_PROJECT_ID)
         .setKey(key);
 
     return { users: new Users(client) };
@@ -171,8 +168,8 @@ import { Client, Users } from 'node-appwrite';
 export async function createAdminClient() {
     const key = (await headers()).get('x-appwrite-key') ?? process.env.APPWRITE_API_KEY!;
     const client = new Client()
-        .setEndpoint(process.env.APPWRITE_ENDPOINT!)
-        .setProject(process.env.APPWRITE_PROJECT_ID!)
+        .setEndpoint(process.env.APPWRITE_SITE_API_ENDPOINT!)
+        .setProject(process.env.APPWRITE_SITE_PROJECT_ID!)
         .setKey(key);
 
     return { users: new Users(client) };
@@ -199,8 +196,8 @@ import { Client, Users } from 'node-appwrite';
 export default defineEventHandler(async (event) => {
     const key = getRequestHeader(event, 'x-appwrite-key') ?? process.env.APPWRITE_API_KEY!;
     const client = new Client()
-        .setEndpoint(process.env.APPWRITE_ENDPOINT!)
-        .setProject(process.env.APPWRITE_PROJECT_ID!)
+        .setEndpoint(process.env.APPWRITE_SITE_API_ENDPOINT!)
+        .setProject(process.env.APPWRITE_SITE_PROJECT_ID!)
         .setKey(key);
 
     const { total } = await new Users(client).list();
@@ -216,10 +213,10 @@ import type { APIRoute } from 'astro';
 import { Client, Users } from 'node-appwrite';
 
 export const GET: APIRoute = async ({ request }) => {
-    const key = request.headers.get('x-appwrite-key') ?? import.meta.env.APPWRITE_API_KEY;
+    const key = request.headers.get('x-appwrite-key') ?? process.env.APPWRITE_API_KEY!;
     const client = new Client()
-        .setEndpoint(import.meta.env.APPWRITE_ENDPOINT)
-        .setProject(import.meta.env.APPWRITE_PROJECT_ID)
+        .setEndpoint(process.env.APPWRITE_SITE_API_ENDPOINT!)
+        .setProject(process.env.APPWRITE_SITE_PROJECT_ID!)
         .setKey(key);
 
     const { total } = await new Users(client).list();
@@ -231,7 +228,7 @@ export const GET: APIRoute = async ({ request }) => {
 {% /tabs %}
 
 {% info title="Local development" %}
-The `x-appwrite-key` header exists only when Appwrite runs your site. For local development, create an [API key](/docs/partners/project/api-keys) with the same scopes as the site and read it from an environment variable, as the examples above do. Do not set that variable on the deployed site.
+The `x-appwrite-key` header and the `APPWRITE_SITE_*` variables exist only when Appwrite runs your site. For local development, create an [API key](/docs/partners/project/api-keys) with the same scopes as the site and put it in a local `APPWRITE_API_KEY` variable, together with `APPWRITE_SITE_API_ENDPOINT` and `APPWRITE_SITE_PROJECT_ID` for your project. Do not set the API key variable on the deployed site.
 {% /info %}
 
 # Project dependencies
