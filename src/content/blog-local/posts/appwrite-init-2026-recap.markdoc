@@ -10,20 +10,18 @@ category: init
 featured: false
 callToAction: true
 faqs:
-  - question: "What is Appwrite Init?"
-    answer: "Init is Appwrite's launch week. Over five days the team ships a new product or feature every day, goes live to walk through it, and runs community sessions, AMAs, and giveaways on Discord alongside the launches."
-  - question: "What did Appwrite ship during Init 2026?"
-    answer: "Appwrite 2.0 with a rebuilt Console and Appwrite Explorer on Day 1, native PostgreSQL on Day 2, VectorsDB, DocumentsDB, and native MySQL on Day 3, an S3-compatible Storage API on Day 4, and Appwrite Firewall, the Appwrite OAuth2 server, and Appwrite Domains on Day 5."
-  - question: "What is Hyperloop B?"
-    answer: "Hyperloop B is the rebuilt engine underneath Appwrite 2.0. It changes how Appwrite handles concurrent traffic and allows the platform to serve up to 7x more requests than the previous architecture."
-  - question: "Is PostgreSQL on Appwrite a real PostgreSQL database?"
-    answer: "Yes. Appwrite provisions and manages a PostgreSQL database inside your project, and you connect to it with the drivers, ORMs, and extensions you already use. Tools such as pgvector and PostGIS work as they normally do. See the [PostgreSQL documentation](/docs/products/databases/postgresql)."
-  - question: "Which database should I pick after Init 2026?"
-    answer: "Pick by workload. Use [PostgreSQL](/docs/products/databases/postgresql) or [MySQL](/docs/products/databases/mysql) when you want a relational database and its ecosystem, [DocumentsDB](/docs/products/databases/documentsdb) for flexible JSON documents, and [VectorsDB](/docs/products/databases/vectorsdb) for embeddings and similarity search."
-  - question: "Do I need to migrate anything to use the S3 API?"
-    answer: "No. Your existing buckets and files are addressable over both the native Storage API and the S3 API at the same time, so pointing an S3 client at Appwrite is a configuration change rather than a migration."
-  - question: "Where can I catch up on everything from Init 2026?"
-    answer: "Every launch, livestream, and recap is collected at [appwrite.io/init](https://appwrite.io/init), and each announcement has its own post on the Appwrite blog."
+  - question: What is Appwrite Init?
+    answer: Init is Appwrite's launch week. Over five days the team ships a new product or feature every day, goes live to walk through it, and runs community sessions, AMAs, and giveaways on Discord alongside the launches.
+  - question: What did Appwrite ship during Init 2026?
+    answer: Appwrite 2.0 with a rebuilt Console and Appwrite Explorer on Day 1, native PostgreSQL on Day 2, VectorsDB, DocumentsDB, and native MySQL on Day 3, an S3-compatible Storage API on Day 4, and Appwrite Firewall, the Appwrite OAuth2 server, and Appwrite Domains on Day 5.
+  - question: What is Hyperloop B?"
+    answer: Hyperloop B is the rebuilt engine underneath Appwrite 2.0. It changes how Appwrite handles concurrent traffic and allows the platform to serve up to 7x more requests than the previous architecture.
+  - question: Is PostgreSQL on Appwrite a real PostgreSQL database?"
+    answer: Yes. Appwrite provisions and manages a PostgreSQL database inside your project, and you connect to it with the drivers, ORMs, and extensions you already use. Tools such as pgvector and PostGIS work as they normally do. See the [PostgreSQL documentation](/docs/products/databases/postgresql).
+  - question: Which database should I pick after Init 2026?"
+    answer: Pick by workload. Use [PostgreSQL](/docs/products/databases/postgresql) or [MySQL](/docs/products/databases/mysql) when you want a relational database and its ecosystem, [DocumentsDB](/docs/products/databases/documentsdb) for flexible JSON documents, and [VectorsDB](/docs/products/databases/vectorsdb) for embeddings and similarity search.
+  - question: Do I need to migrate anything to use the S3 API?
+    answer: No. Your existing buckets and files are addressable over both the native Storage API and the S3 API at the same time, so pointing an S3 client at Appwrite is a configuration change rather than a migration.
 ---
 
 Init 2026 is officially a wrap.
