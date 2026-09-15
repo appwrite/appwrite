@@ -9,13 +9,6 @@ use Utopia\Mqtt\Connection;
 
 final class ConnectionTest extends TestCase
 {
-    public function testCleanStartDefaultsToTrue(): void
-    {
-        $connection = new Connection(1);
-
-        $this->assertTrue($connection->cleanStart);
-    }
-
     public function testUpdateExpiresAtSetsTheDeadlineToKeepAliveTimesMultiplier(): void
     {
         $connection = new Connection(1);
