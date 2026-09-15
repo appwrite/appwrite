@@ -1,0 +1,148 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Pet API",
+    "description": "Cross-version parser fixture",
+    "version": "1.0.0",
+    "x-owner": "platform"
+  },
+  "host": "api.example.com",
+  "basePath": "/v1",
+  "schemes": ["https"],
+  "consumes": ["application/json"],
+  "produces": ["application/json"],
+  "tags": [
+    {
+      "name": "pets",
+      "description": "Pet operations"
+    }
+  ],
+  "securityDefinitions": {
+    "Project": {
+      "type": "apiKey",
+      "name": "X-Project",
+      "in": "header"
+    },
+    "Basic": {
+      "type": "basic"
+    }
+  },
+  "security": [
+    {
+      "Project": [],
+      "Basic": []
+    },
+    {
+      "Project": []
+    }
+  ],
+  "paths": {
+    "/pets": {
+      "post": {
+        "operationId": "createPet",
+        "tags": ["pets"],
+        "summary": "Create a pet",
+        "parameters": [
+          {
+            "name": "pet",
+            "in": "body",
+            "description": "Pet to create",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Pet"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "schema": {
+              "$ref": "#/definitions/Pet"
+            },
+            "headers": {
+              "X-Request-Id": {
+                "description": "Request identifier",
+                "type": "string"
+              }
+            }
+          }
+        },
+        "x-stability": "stable"
+      }
+    },
+    "/pets/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "description": "Inherited identifier",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "get": {
+        "operationId": "getPet",
+        "tags": ["pets"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Operation identifier",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Found",
+            "schema": {
+              "$ref": "#/definitions/Pet"
+            }
+          },
+          "default": {
+            "description": "Unexpected error"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deletePet",
+        "tags": ["pets"],
+        "security": [],
+        "responses": {
+          "204": {
+            "description": "Deleted"
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "Pet": {
+      "type": "object",
+      "description": "A pet",
+      "required": ["id", "name"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "nickname": {
+          "type": "string",
+          "x-nullable": true
+        },
+        "parent": {
+          "$ref": "#/definitions/Pet"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["available", "adopted"]
+        }
+      }
+    }
+  }
+}

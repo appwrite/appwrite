@@ -1,0 +1,24 @@
+[package]
+name = "utopia-openapi"
+description = "OpenAPI 2/3/3.1 parser and model types (Rust port of utopia-php/openapi)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+rust-version.workspace = true
+readme = "README.md"
+keywords = ["openapi", "swagger", "parser", "utopia"]
+categories = ["parser-implementations", "web-programming"]
+
+[dependencies]
+indexmap = { workspace = true }
+serde_json = { workspace = true, features = ["preserve_order"] }
+thiserror = { workspace = true }
+
+[[bench]]
+name = "openapi"
+harness = false
+
+[lints]
+workspace = true

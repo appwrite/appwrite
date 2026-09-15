@@ -1,0 +1,23 @@
+[package]
+name = "utopia-di"
+description = "Lightweight parent/child dependency injection container (Rust port of utopia-php/di)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+rust-version.workspace = true
+readme = "README.md"
+keywords = ["di", "dependency-injection", "utopia", "container"]
+categories = ["data-structures", "rust-patterns"]
+
+[dependencies]
+thiserror = { workspace = true }
+parking_lot = { workspace = true }
+
+[[bench]]
+name = "container"
+harness = false
+
+[lints]
+workspace = true

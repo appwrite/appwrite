@@ -1,0 +1,34 @@
+[package]
+name = "appwrite-server"
+description = "Appwrite Rust HTTP server binary"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+rust-version.workspace = true
+readme = "README.md"
+keywords = ["appwrite", "server", "http"]
+categories = ["web-programming"]
+publish = false
+
+[[bin]]
+name = "appwrite-server"
+path = "src/main.rs"
+
+[dependencies]
+utopia-http = { workspace = true }
+utopia-platform = { workspace = true }
+utopia-di = { workspace = true }
+utopia-console = { workspace = true }
+utopia-database = { workspace = true, features = ["postgres", "mysql", "mongo"] }
+appwrite-platform = { workspace = true, features = ["postgres", "mysql", "mongo"] }
+tokio = { workspace = true }
+serde_json = { workspace = true }
+
+[[bench]]
+name = "users"
+harness = false
+
+[lints]
+workspace = true

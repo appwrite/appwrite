@@ -1,0 +1,34 @@
+[package]
+name = "utopia-circuit-breaker"
+description = "Circuit breaker for Utopia (Rust port of utopia-php/circuit-breaker)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+rust-version.workspace = true
+readme = "README.md"
+keywords = ["circuit-breaker", "resilience", "fault-tolerance", "utopia"]
+categories = ["web-programming"]
+
+[features]
+default = []
+redis = ["dep:redis"]
+
+[dependencies]
+parking_lot = { workspace = true }
+sha1 = { workspace = true }
+hex = { workspace = true }
+thiserror = { workspace = true }
+utopia-telemetry = { workspace = true }
+redis = { workspace = true, optional = true }
+
+[dev-dependencies]
+utopia-telemetry = { workspace = true }
+
+[[bench]]
+name = "circuit_breaker"
+harness = false
+
+[lints]
+workspace = true

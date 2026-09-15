@@ -1,0 +1,13 @@
+# Shared rustfmt config for the Utopia Rust workspace (stable channel).
+# https://rust-lang.github.io/rustfmt/
+
+edition = "2021"
+style_edition = "2021"
+max_width = 100
+use_small_heuristics = "Default"
+newline_style = "Unix"
+use_field_init_shorthand = true
+use_try_shorthand = true
+merge_derives = true
+reorder_imports = true
+reorder_modules = true

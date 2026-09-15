@@ -1,0 +1,33 @@
+[package]
+name = "utopia-pools"
+description = "Generic resource pools for Utopia (Rust port of utopia-php/pools)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+rust-version.workspace = true
+readme = "README.md"
+keywords = ["pool", "connection-pool", "utopia"]
+categories = ["asynchronous", "web-programming"]
+
+[dependencies]
+async-trait = { workspace = true }
+# `arc_lock` backs `Connection::resource_owned()`: an owned guard (no borrow
+# back into a local `Connection`) for callers that check a connection out
+# once and hold it across several operations.
+parking_lot = { workspace = true, features = ["arc_lock"] }
+thiserror = { workspace = true }
+tokio = { workspace = true, features = ["sync", "time", "rt", "rt-multi-thread"] }
+utopia-telemetry = { workspace = true }
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["macros", "rt-multi-thread", "time"] }
+utopia-telemetry = { workspace = true }
+
+[[bench]]
+name = "pools"
+harness = false
+
+[lints]
+workspace = true

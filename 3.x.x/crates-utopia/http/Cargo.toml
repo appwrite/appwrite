@@ -1,0 +1,58 @@
+[package]
+name = "utopia-http"
+description = "Lite & fast micro HTTP framework (Rust port of utopia-php/http)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+rust-version.workspace = true
+readme = "README.md"
+keywords = ["http", "framework", "router", "utopia", "hyper"]
+categories = ["web-programming::http-server"]
+
+[[example]]
+name = "hello"
+path = "examples/hello.rs"
+
+[dependencies]
+utopia-di = { workspace = true }
+utopia-validators = { workspace = true }
+utopia-servers = { workspace = true }
+utopia-compression = { workspace = true }
+utopia-telemetry = { workspace = true }
+utopia-system = { workspace = true }
+utopia-console = { workspace = true }
+bytes = { workspace = true }
+http = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+tokio = { workspace = true }
+hyper = { workspace = true }
+hyper-util = { workspace = true }
+http-body-util = { workspace = true }
+async-trait = { workspace = true }
+futures = { workspace = true }
+parking_lot = { workspace = true }
+mime_guess = { workspace = true }
+sha2 = { workspace = true }
+hex = { workspace = true }
+anyhow = { workspace = true }
+socket2 = { workspace = true }
+
+[dev-dependencies]
+reqwest = { workspace = true }
+tempfile = { workspace = true }
+tokio = { workspace = true }
+
+[[bench]]
+name = "router"
+harness = false
+
+[[bench]]
+name = "dispatch"
+harness = false
+
+[lints]
+workspace = true

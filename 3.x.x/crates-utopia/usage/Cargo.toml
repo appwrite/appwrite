@@ -1,0 +1,34 @@
+[package]
+name = "utopia-usage"
+description = "Usage metrics for Utopia (Rust port of utopia-php/usage)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+rust-version.workspace = true
+readme = "README.md"
+keywords = ["usage", "metrics", "clickhouse", "utopia"]
+categories = ["web-programming", "database"]
+
+[dependencies]
+bytes = { workspace = true }
+chrono = { workspace = true }
+http = { workspace = true }
+md5 = { workspace = true }
+rand = { workspace = true }
+regex = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true, features = ["preserve_order"] }
+thiserror = { workspace = true }
+utopia-client = { workspace = true }
+utopia-database = { workspace = true }
+utopia-query = { workspace = true }
+utopia-validators = { workspace = true }
+
+[[bench]]
+name = "usage_run"
+harness = false
+
+[lints]
+workspace = true

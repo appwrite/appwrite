@@ -1,0 +1,26 @@
+[package]
+name = "utopia-detector"
+description = "Environment detection for Utopia (Rust port of utopia-php/detector)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+rust-version.workspace = true
+readme = "README.md"
+keywords = ["detector", "framework", "runtime", "packager", "utopia"]
+categories = ["development-tools", "web-programming"]
+
+[dependencies]
+regex = { workspace = true }
+thiserror = { workspace = true }
+
+[dev-dependencies]
+serde_json = { workspace = true }
+
+[[bench]]
+name = "detector"
+harness = false
+
+[lints]
+workspace = true

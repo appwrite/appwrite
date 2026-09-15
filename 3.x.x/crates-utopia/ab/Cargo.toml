@@ -1,0 +1,23 @@
+[package]
+name = "utopia-ab"
+description = "Server-side A/B tests for Utopia (Rust port of utopia-php/ab)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+rust-version.workspace = true
+readme = "README.md"
+keywords = ["ab-testing", "experiment", "variation", "utopia"]
+categories = ["web-programming"]
+
+[dependencies]
+rand = { workspace = true }
+thiserror = { workspace = true }
+
+[[bench]]
+name = "ab_run"
+harness = false
+
+[lints]
+workspace = true

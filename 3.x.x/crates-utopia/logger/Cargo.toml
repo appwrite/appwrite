@@ -1,0 +1,32 @@
+[package]
+name = "utopia-logger"
+description = "Error and warning logging adapters for Utopia (Rust port of utopia-php/logger)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+rust-version.workspace = true
+readme = "README.md"
+keywords = ["logger", "logging", "sentry", "raygun", "utopia"]
+categories = ["development-tools::debugging", "web-programming"]
+
+[dependencies]
+bytes = { workspace = true }
+http = { workspace = true }
+rand = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+utopia-client = { workspace = true }
+
+[dev-dependencies]
+serde_json = { workspace = true }
+tokio = { workspace = true }
+utopia-test-wiremock = { workspace = true }
+
+[[bench]]
+name = "logger"
+harness = false
+
+[lints]
+workspace = true

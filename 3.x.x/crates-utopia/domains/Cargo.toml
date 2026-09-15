@@ -1,0 +1,45 @@
+[package]
+name = "utopia-domains"
+description = "Domain parsing, public-suffix matching, and registrar adapters for Utopia (Rust port of utopia-php/domains)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+rust-version.workspace = true
+readme = "README.md"
+keywords = ["domain", "tld", "public-suffix", "registrar", "utopia"]
+categories = ["web-programming", "parsing"]
+
+[dependencies]
+bytes = { workspace = true }
+http = { workspace = true }
+md-5 = { workspace = true }
+parking_lot = { workspace = true }
+quick-xml = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+time = { workspace = true, features = ["formatting", "parsing", "macros"] }
+url = { workspace = true }
+utopia-cache = { workspace = true }
+utopia-cli = { workspace = true }
+utopia-client = { workspace = true }
+utopia-console = { workspace = true }
+utopia-validators = { workspace = true }
+
+[dev-dependencies]
+serde_json = { workspace = true }
+tokio = { workspace = true }
+utopia-test-wiremock = { workspace = true }
+
+[[bin]]
+name = "utopia-domains-sync"
+path = "src/bin/utopia-domains-sync.rs"
+
+[[bench]]
+name = "domains"
+harness = false
+
+[lints]
+workspace = true

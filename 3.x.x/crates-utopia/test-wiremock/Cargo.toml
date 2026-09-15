@@ -1,0 +1,24 @@
+[package]
+name = "utopia-test-wiremock"
+description = "Shared WireMock container harness for Utopia Rust tests"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+rust-version.workspace = true
+publish = false
+
+[dependencies]
+base64 = { workspace = true }
+http = { workspace = true }
+once_cell = { workspace = true }
+parking_lot = { workspace = true }
+reqwest = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+tokio = { workspace = true }
+url = { workspace = true }
+
+[lints]
+workspace = true

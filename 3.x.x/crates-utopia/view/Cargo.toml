@@ -1,0 +1,25 @@
+[package]
+name = "utopia-view"
+description = "A simple, light view rendering engine for Utopia (Rust port of utopia-php/view)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+rust-version.workspace = true
+readme = "README.md"
+keywords = ["view", "template", "render", "phtml", "utopia"]
+categories = ["template-engine", "web-programming"]
+
+[dependencies]
+parking_lot = { workspace = true }
+regex = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+
+[[bench]]
+name = "view"
+harness = false
+
+[lints]
+workspace = true

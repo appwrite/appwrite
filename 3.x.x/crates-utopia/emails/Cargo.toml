@@ -1,0 +1,37 @@
+[package]
+name = "utopia-emails"
+description = "Email parsing, classification, and canonicalization for Utopia (Rust port of utopia-php/emails)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+rust-version.workspace = true
+readme = "README.md"
+keywords = ["email", "validation", "canonical", "disposable", "utopia"]
+categories = ["parsing", "web-programming"]
+
+[dependencies]
+bytes = { workspace = true }
+http = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+utopia-cli = { workspace = true }
+utopia-client = { workspace = true }
+utopia-console = { workspace = true }
+utopia-domains = { workspace = true }
+utopia-validators = { workspace = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }
+
+[[bin]]
+name = "utopia-emails-sync"
+path = "src/bin/utopia-emails-sync.rs"
+
+[[bench]]
+name = "emails"
+harness = false
+
+[lints]
+workspace = true

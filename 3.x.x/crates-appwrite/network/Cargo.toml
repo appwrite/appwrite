@@ -1,0 +1,23 @@
+[package]
+name = "appwrite-network"
+description = "Appwrite CORS, origin, and platform hostname helpers"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+rust-version.workspace = true
+readme = "README.md"
+keywords = ["appwrite", "cors", "origin"]
+categories = ["web-programming"]
+
+[dependencies]
+serde_json = { workspace = true }
+utopia-system = { workspace = true }
+
+[[bench]]
+name = "smoke"
+harness = false
+
+[lints]
+workspace = true
