@@ -21,6 +21,8 @@ class V19 extends Filter
             Response::MODEL_PROXY_RULE_LIST => $this->handleList($content, 'rules', fn ($item) => $this->parseProxyRule($item)),
             Response::MODEL_MIGRATION => $this->parseMigration($content),
             Response::MODEL_MIGRATION_LIST => $this->handleList($content, 'migrations', fn ($item) => $this->parseMigration($item)),
+            Response::MODEL_PROJECT => $this->parseProject($content),
+            Response::MODEL_PROJECT_LIST => $this->handleList($content, 'projects', fn ($item) => $this->parseProject($item)),
             Response::MODEL_PROVIDER_REPOSITORY => $this->parseProviderRepository($content),
             Response::MODEL_TEMPLATE_VARIABLE => $this->parseTemplateVariable($content),
             Response::MODEL_VARIABLE => $this->parseVariable($content),
@@ -72,6 +74,12 @@ class V19 extends Filter
     protected function parseMigration(array $content)
     {
         unset($content['resourceId']);
+        return $content;
+    }
+
+    protected function parseProject(array $content)
+    {
+        unset($content['devKeys']);
         return $content;
     }
 
