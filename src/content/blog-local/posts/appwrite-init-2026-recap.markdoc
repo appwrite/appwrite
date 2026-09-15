@@ -98,7 +98,7 @@ We brought all three databases together during the Day 3 livestream to show how 
 
 After a few database-heavy days, we turned our attention to Storage.
 
-On Day 4, we introduced **S3-compatible API support for Appwrite Storage**.
+On Day 4, we introduced [S3-compatible API support for Appwrite Storage](/blog/post/announcing-s3-api).
 
 The S3 API has become a standard interface across a huge ecosystem of storage tools, SDKs, and workflows. With S3 compatibility in Appwrite, developers can bring many of those existing tools and workflows to Appwrite Storage without having to rebuild their integrations around a different API.
 
