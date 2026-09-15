@@ -74,7 +74,9 @@ class Create extends Base
 
     public function action(string $userId, ?string $email, ?string $phone, ?string $password, ?string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks, array $plan, PasswordPwned $pwnedPasswords): void
     {
-        $passwordPwned = empty($password) ? null : $pwnedPasswords->check($password);
+        $passwordPwned = empty($password) || !$pwnedPasswords->isEnabled()
+            ? null
+            : !$pwnedPasswords->isValid($password);
         if ($passwordPwned) {
             throw new Exception(Exception::USER_PASSWORD_PWNED);
         }

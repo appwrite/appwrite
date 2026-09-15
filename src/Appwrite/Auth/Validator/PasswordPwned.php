@@ -2,30 +2,32 @@
 
 namespace Appwrite\Auth\Validator;
 
-use Appwrite\Auth\Pwned;
 use Appwrite\Extend\Exception;
+use Utopia\Fetch\Client;
 
 /**
  * Validates a password against the project's `password-pwned` policy.
  *
- * The lookup itself belongs to the configured adapter, see `Appwrite\Auth\Pwned`.
- * This class only decides whether the policy asks for one.
+ * Subclasses differ in who answers the question and in what leaves the server,
+ * so read the one you are configuring. `_APP_PWNED_PASSWORDS_DSN` picks it, and
+ * the DSN scheme matches the subclass.
  */
-class PasswordPwned extends Password
+abstract class PasswordPwned extends Password
 {
+    private const CONNECT_TIMEOUT = 3 * 1000; // milliseconds
+    private const REQUEST_TIMEOUT = 5 * 1000; // milliseconds
+
     protected bool $enabled;
     protected bool $sessions;
     protected bool $users;
-    protected Pwned $adapter;
 
     /**
      * @param array<string, mixed> $policy the project's `passwordPwned` auth settings
      */
-    public function __construct(Pwned $adapter, array $policy = [], bool $allowEmpty = false)
+    public function __construct(array $policy = [], bool $allowEmpty = false)
     {
         parent::__construct($allowEmpty);
 
-        $this->adapter = $adapter;
         $this->enabled = (bool) ($policy['enabled'] ?? true);
         $this->sessions = (bool) ($policy['sessions'] ?? false);
         $this->users = (bool) ($policy['users'] ?? false);
@@ -70,23 +72,10 @@ class PasswordPwned extends Password
     }
 
     /**
-     * Whether the password appears in a known breach.
-     *
-     * Returns null only when the policy is disabled.
-     *
-     * @throws Exception when the breach service cannot be reached
-     */
-    public function check(string $password): ?bool
-    {
-        if (!$this->enabled) {
-            return null;
-        }
-
-        return $this->adapter->isPwned($password);
-    }
-
-    /**
      * Is valid.
+     *
+     * A password the policy did not look at is valid, so callers that need to
+     * tell "clean" from "never checked" ask `isEnabled()` first.
      *
      * @param mixed $value
      *
@@ -103,7 +92,11 @@ class PasswordPwned extends Password
             return true;
         }
 
-        return $this->check($value) !== true;
+        if (!$this->enabled) {
+            return true;
+        }
+
+        return !$this->isPwned($value);
     }
 
     /**
@@ -128,5 +121,34 @@ class PasswordPwned extends Password
     public function getType(): string
     {
         return self::TYPE_STRING;
+    }
+
+    /**
+     * Whether the password appears in a known data breach.
+     *
+     * @throws Exception when the breach service cannot be reached or answers with nonsense
+     */
+    abstract protected function isPwned(string $password): bool;
+
+    /**
+     * A client with the timeouts a password check can afford to wait.
+     */
+    protected function client(?Client $client = null): Client
+    {
+        return $client ?? (new Client())
+            ->setConnectTimeout(self::CONNECT_TIMEOUT)
+            ->setTimeout(self::REQUEST_TIMEOUT)
+            ->setAllowRedirects(false)
+            ->setUserAgent('Appwrite');
+    }
+
+    /**
+     * A password is never silently accepted when the lookup did not happen.
+     *
+     * @throws Exception
+     */
+    protected function unavailable(): never
+    {
+        throw new Exception(Exception::GENERAL_PWNED_PASSWORDS_UNAVAILABLE);
     }
 }

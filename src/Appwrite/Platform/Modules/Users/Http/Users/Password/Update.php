@@ -86,7 +86,9 @@ class Update extends Action
             }
         }
 
-        $passwordPwned = \strlen($password) === 0 ? null : $pwnedPasswords->check($password);
+        $passwordPwned = \strlen($password) === 0 || !$pwnedPasswords->isEnabled()
+            ? null
+            : !$pwnedPasswords->isValid($password);
         if ($passwordPwned) {
             throw new Exception(Exception::USER_PASSWORD_PWNED);
         }

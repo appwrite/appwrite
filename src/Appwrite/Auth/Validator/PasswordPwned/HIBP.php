@@ -1,13 +1,13 @@
 <?php
 
-namespace Appwrite\Auth\Pwned;
+namespace Appwrite\Auth\Validator\PasswordPwned;
 
-use Appwrite\Auth\Pwned;
+use Appwrite\Auth\Validator\PasswordPwned;
 use Utopia\Cache\Cache;
 use Utopia\Fetch\Client;
 
 /**
- * Talks to the public Have I Been Pwned range API.
+ * Asks the public Have I Been Pwned range API.
  *
  * Uses k-anonymity: only the first five characters of the password's SHA-1 hash
  * leave the server, and the candidate suffixes that come back are compared
@@ -16,7 +16,7 @@ use Utopia\Fetch\Client;
  *
  * DSN: `hibp://localhost`, no details are read.
  */
-class HIBP extends Pwned
+class HIBP extends PasswordPwned
 {
     public const ENDPOINT = 'https://api.pwnedpasswords.com/range';
     public const CACHE_TTL = 3600; // seconds
@@ -27,19 +27,19 @@ class HIBP extends Pwned
     protected Client $client;
     protected string $endpoint;
 
-    public function __construct(?Cache $cache = null, ?Client $client = null, string $endpoint = self::ENDPOINT)
+    /**
+     * @param array<string, mixed> $policy
+     */
+    public function __construct(array $policy = [], ?Cache $cache = null, ?Client $client = null, string $endpoint = self::ENDPOINT)
     {
+        parent::__construct($policy);
+
         $this->cache = $cache;
         $this->client = $this->client($client);
         $this->endpoint = \rtrim($endpoint, '/');
     }
 
-    public function getName(): string
-    {
-        return 'hibp';
-    }
-
-    public function isPwned(string $password): bool
+    protected function isPwned(string $password): bool
     {
         $hash = \strtoupper(\sha1($password));
         $prefix = \substr($hash, 0, self::PREFIX_LENGTH);

@@ -363,7 +363,8 @@ Http::post('/v1/account')
             }
         }
 
-        $passwordPwned = $pwnedPasswords->check($password);
+        // null when the policy did not look, false when it looked and found nothing
+        $passwordPwned = $pwnedPasswords->isEnabled() ? !$pwnedPasswords->isValid($password) : null;
         if ($passwordPwned) {
             throw new Exception(Exception::USER_PASSWORD_PWNED);
         }
@@ -1050,9 +1051,9 @@ Http::post('/v1/account/sessions/email')
 
         if ($pwnedPasswords->checksSessions()) {
             // The outcome is recorded either way; only a forced reset needs an answer, so an outage never blocks a plain sign-in
-            $passwordPwned = $pwnedPasswords->check($password);
+            $passwordPwned = !$pwnedPasswords->isValid($password);
 
-            if ($passwordPwned !== null && $passwordPwned !== $user->getAttribute('passwordPwned')) {
+            if ($passwordPwned !== $user->getAttribute('passwordPwned')) {
                 $user->setAttribute('passwordPwned', $passwordPwned);
                 $dbForProject->updateDocument('users', $user->getId(), new Document([
                     'passwordPwned' => $passwordPwned,
@@ -3509,7 +3510,8 @@ Http::patch('/v1/account/password')
             }
         }
 
-        $passwordPwned = $pwnedPasswords->check($password);
+        // null when the policy did not look, false when it looked and found nothing
+        $passwordPwned = $pwnedPasswords->isEnabled() ? !$pwnedPasswords->isValid($password) : null;
         if ($passwordPwned) {
             throw new Exception(Exception::USER_PASSWORD_PWNED);
         }
@@ -3613,7 +3615,7 @@ Http::patch('/v1/account/email')
                 }
             }
 
-            $passwordPwned = $pwnedPasswords->check($password);
+            $passwordPwned = $pwnedPasswords->isEnabled() ? !$pwnedPasswords->isValid($password) : null;
             if ($passwordPwned) {
                 throw new Exception(Exception::USER_PASSWORD_PWNED);
             }
@@ -3787,7 +3789,7 @@ Http::patch('/v1/account/phone')
                 }
             }
 
-            $passwordPwned = $pwnedPasswords->check($password);
+            $passwordPwned = $pwnedPasswords->isEnabled() ? !$pwnedPasswords->isValid($password) : null;
             if ($passwordPwned) {
                 throw new Exception(Exception::USER_PASSWORD_PWNED);
             }
@@ -4234,7 +4236,8 @@ Http::put('/v1/account/recovery')
             $history = array_slice($history, (count($history) - $historyLimit), $historyLimit);
         }
 
-        $passwordPwned = $pwnedPasswords->check($password);
+        // null when the policy did not look, false when it looked and found nothing
+        $passwordPwned = $pwnedPasswords->isEnabled() ? !$pwnedPasswords->isValid($password) : null;
         if ($passwordPwned) {
             throw new Exception(Exception::USER_PASSWORD_PWNED);
         }

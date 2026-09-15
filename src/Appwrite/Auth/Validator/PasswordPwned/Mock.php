@@ -1,8 +1,8 @@
 <?php
 
-namespace Appwrite\Auth\Pwned;
+namespace Appwrite\Auth\Validator\PasswordPwned;
 
-use Appwrite\Auth\Pwned;
+use Appwrite\Auth\Validator\PasswordPwned;
 
 /**
  * Reports a fixed set of passwords as breached, without leaving the process.
@@ -13,10 +13,10 @@ use Appwrite\Auth\Pwned;
  *
  * DSN: `mock://localhost`, no details are read.
  */
-class Mock extends Pwned
+class Mock extends PasswordPwned
 {
     /**
-     * The passwords this adapter reports as breached.
+     * The passwords this validator reports as breached.
      */
     public const BREACHED = [
         'pwned-fixture-common',
@@ -24,12 +24,7 @@ class Mock extends Pwned
         'pwned-fixture-rare',
     ];
 
-    public function getName(): string
-    {
-        return 'mock';
-    }
-
-    public function isPwned(string $password): bool
+    protected function isPwned(string $password): bool
     {
         return \in_array($password, self::BREACHED, true);
     }

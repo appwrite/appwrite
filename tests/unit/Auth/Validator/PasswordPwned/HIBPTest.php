@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Tests\Unit\Auth\Pwned;
+namespace Tests\Unit\Auth\Validator\PasswordPwned;
 
-use Appwrite\Auth\Pwned\HIBP;
+use Appwrite\Auth\Validator\PasswordPwned\HIBP;
 use Appwrite\Extend\Exception;
 use PHPUnit\Framework\TestCase;
 use Utopia\Cache\Adapter\Memory;
@@ -19,46 +19,46 @@ final class HIBPTest extends TestCase
     private const LEAKED = 'Password123!';
     private const ENDPOINT = 'https://breaches.test/range';
 
-    public function testLeakedPasswordIsReported(): void
+    public function testLeakedPasswordIsRejected(): void
     {
         $fetch = new RangeFetch(body: $this->range([self::LEAKED => 42]));
 
-        $this->assertTrue($this->adapter($fetch)->isPwned(self::LEAKED));
+        $this->assertFalse($this->validator($fetch)->isValid(self::LEAKED));
     }
 
-    public function testCleanPasswordIsNotReported(): void
+    public function testCleanPasswordIsAccepted(): void
     {
         $fetch = new RangeFetch(body: $this->range([self::LEAKED => 42]));
 
-        $this->assertFalse($this->adapter($fetch)->isPwned('never-leaked-' . \uniqid()));
+        $this->assertTrue($this->validator($fetch)->isValid('never-leaked-' . \uniqid()));
     }
 
-    public function testAnySingleBreachCounts(): void
+    public function testAnySingleBreachIsEnough(): void
     {
         $fetch = new RangeFetch(body: $this->range([self::LEAKED => 1]));
 
-        $this->assertTrue($this->adapter($fetch)->isPwned(self::LEAKED));
+        $this->assertFalse($this->validator($fetch)->isValid(self::LEAKED));
     }
 
     public function testPaddedEntryWithZeroCountIsNotABreach(): void
     {
         $fetch = new RangeFetch(body: $this->range([self::LEAKED => 0]));
 
-        $this->assertFalse($this->adapter($fetch)->isPwned(self::LEAKED));
+        $this->assertTrue($this->validator($fetch)->isValid(self::LEAKED));
     }
 
     public function testSuffixComparisonIgnoresCase(): void
     {
         $fetch = new RangeFetch(body: \strtolower($this->range([self::LEAKED => 3])));
 
-        $this->assertTrue($this->adapter($fetch)->isPwned(self::LEAKED));
+        $this->assertFalse($this->validator($fetch)->isValid(self::LEAKED));
     }
 
     public function testOnlyTheHashPrefixLeavesTheServer(): void
     {
         $fetch = new RangeFetch(body: '');
 
-        $this->adapter($fetch)->isPwned(self::LEAKED);
+        $this->validator($fetch)->isValid(self::LEAKED);
 
         $this->assertCount(1, $fetch->urls);
 
@@ -74,13 +74,21 @@ final class HIBPTest extends TestCase
         $this->assertStringEndsWith(\substr($hash, 0, 5), $url);
     }
 
+    public function testDisabledPolicyNeverAsksTheService(): void
+    {
+        $fetch = new RangeFetch(body: $this->range([self::LEAKED => 42]));
+
+        $this->assertTrue((new HIBP(['enabled' => false], null, new Client($fetch), self::ENDPOINT))->isValid(self::LEAKED));
+        $this->assertCount(0, $fetch->urls);
+    }
+
     public function testRangeIsCachedPerPrefix(): void
     {
         $fetch = new RangeFetch(body: $this->range([self::LEAKED => 42]));
         $cache = new Cache(new Memory());
 
-        $this->assertTrue((new HIBP($cache, new Client($fetch), self::ENDPOINT))->isPwned(self::LEAKED));
-        $this->assertTrue((new HIBP($cache, new Client($fetch), self::ENDPOINT))->isPwned(self::LEAKED));
+        $this->assertFalse((new HIBP([], $cache, new Client($fetch), self::ENDPOINT))->isValid(self::LEAKED));
+        $this->assertFalse((new HIBP([], $cache, new Client($fetch), self::ENDPOINT))->isValid(self::LEAKED));
 
         $this->assertCount(1, $fetch->urls);
     }
@@ -90,8 +98,8 @@ final class HIBPTest extends TestCase
         $fetch = new RangeFetch(body: $this->range([self::LEAKED => 42]));
         $cache = new Cache(new Memory());
 
-        (new HIBP($cache, new Client($fetch), 'https://one.test/range'))->isPwned(self::LEAKED);
-        (new HIBP($cache, new Client($fetch), 'https://two.test/range'))->isPwned(self::LEAKED);
+        (new HIBP([], $cache, new Client($fetch), 'https://one.test/range'))->isValid(self::LEAKED);
+        (new HIBP([], $cache, new Client($fetch), 'https://two.test/range'))->isValid(self::LEAKED);
 
         $this->assertCount(2, $fetch->urls);
     }
@@ -100,8 +108,8 @@ final class HIBPTest extends TestCase
     {
         $fetch = new RangeFetch(body: '');
 
-        (new HIBP(null, new Client($fetch), 'https://server.test/range'))->isPwned(self::LEAKED);
-        (new HIBP(null, new Client($fetch), 'https://other.test/range/'))->isPwned(self::LEAKED);
+        (new HIBP([], null, new Client($fetch), 'https://server.test/range'))->isValid(self::LEAKED);
+        (new HIBP([], null, new Client($fetch), 'https://other.test/range/'))->isValid(self::LEAKED);
 
         $this->assertStringStartsWith('https://server.test/range/', $fetch->urls[0]);
         $this->assertStringStartsWith('https://other.test/range/', $fetch->urls[1]);
@@ -112,7 +120,7 @@ final class HIBPTest extends TestCase
         $fetch = new RangeFetch(failure: new \RuntimeException('connection refused'));
 
         try {
-            $this->adapter($fetch)->isPwned(self::LEAKED);
+            $this->validator($fetch)->isValid(self::LEAKED);
             $this->fail('Expected the unreachable service to surface');
         } catch (Exception $e) {
             $this->assertSame(Exception::GENERAL_PWNED_PASSWORDS_UNAVAILABLE, $e->getType());
@@ -125,17 +133,17 @@ final class HIBPTest extends TestCase
 
         $this->expectException(Exception::class);
 
-        $this->adapter($fetch)->isPwned(self::LEAKED);
+        $this->validator($fetch)->isValid(self::LEAKED);
     }
 
     public function testFailedLookupIsNotCached(): void
     {
         $fetch = new RangeFetch(failure: new \RuntimeException('connection refused'));
-        $adapter = new HIBP(new Cache(new Memory()), new Client($fetch), self::ENDPOINT);
+        $validator = new HIBP([], new Cache(new Memory()), new Client($fetch), self::ENDPOINT);
 
         foreach ([1, 2] as $attempt) {
             try {
-                $adapter->isPwned(self::LEAKED);
+                $validator->isValid(self::LEAKED);
             } catch (Exception) {
                 // The lookup failed, which is the point; it must be retried rather than remembered
             }
@@ -144,9 +152,9 @@ final class HIBPTest extends TestCase
         $this->assertCount(2, $fetch->urls);
     }
 
-    private function adapter(RangeFetch $fetch): HIBP
+    private function validator(RangeFetch $fetch): HIBP
     {
-        return new HIBP(null, new Client($fetch), self::ENDPOINT);
+        return new HIBP([], null, new Client($fetch), self::ENDPOINT);
     }
 
     /**
@@ -169,7 +177,7 @@ final class HIBPTest extends TestCase
 
 final class RangeFetch implements Adapter
 {
-    /** @var array<int, string> URLs the adapter asked the breach service for */
+    /** @var array<int, string> URLs the validator asked the breach service for */
     public array $urls = [];
 
     public function __construct(

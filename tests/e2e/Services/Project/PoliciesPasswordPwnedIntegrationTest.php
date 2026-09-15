@@ -20,7 +20,7 @@ final class PoliciesPasswordPwnedIntegrationTest extends Scope
     use ProjectCustom;
     use SideServer;
 
-    // Reported as breached by the mock adapter, see Appwrite\Auth\Pwned\Mock
+    // Reported as breached by the mock adapter, see Appwrite\Auth\Validator\PasswordPwned\Mock
     private const PWNED_PASSWORD = 'pwned-fixture-common';
 
     public function testDefaultsOnNewProject(): void

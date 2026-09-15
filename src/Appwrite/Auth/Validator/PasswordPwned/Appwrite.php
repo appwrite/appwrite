@@ -1,14 +1,14 @@
 <?php
 
-namespace Appwrite\Auth\Pwned;
+namespace Appwrite\Auth\Validator\PasswordPwned;
 
 use Ahc\Jwt\JWT;
-use Appwrite\Auth\Pwned;
+use Appwrite\Auth\Validator\PasswordPwned;
 use Utopia\DSN\DSN;
 use Utopia\Fetch\Client;
 
 /**
- * Talks to an Appwrite Pwned service, https://github.com/appwrite-labs/pwned.
+ * Asks an Appwrite Pwned service, https://github.com/appwrite-labs/pwned.
  *
  * The service answers for a whole password rather than a hash prefix, so unlike
  * `HIBP` this sends the password itself. It travels inside a short-lived JWT
@@ -20,7 +20,7 @@ use Utopia\Fetch\Client;
  * the service's `APPWRITE_PWNED_JWT_SECRET`, the path defaults to
  * `v1/detection`, and the connection is plain HTTP unless `tls=true`.
  */
-class Appwrite extends Pwned
+class Appwrite extends PasswordPwned
 {
     private const PATH = 'v1/detection';
 
@@ -32,8 +32,13 @@ class Appwrite extends Pwned
     protected string $secret;
     protected Client $client;
 
-    public function __construct(DSN $dsn, ?Client $client = null)
+    /**
+     * @param array<string, mixed> $policy
+     */
+    public function __construct(array $policy, DSN $dsn, ?Client $client = null)
     {
+        parent::__construct($policy);
+
         $scheme = $dsn->getParam('tls') === 'true' ? 'https' : 'http';
         $port = $dsn->getPort() !== null ? ':' . $dsn->getPort() : '';
         $path = $dsn->getPath();
@@ -43,12 +48,7 @@ class Appwrite extends Pwned
         $this->client = $this->client($client);
     }
 
-    public function getName(): string
-    {
-        return 'appwrite';
-    }
-
-    public function isPwned(string $password): bool
+    protected function isPwned(string $password): bool
     {
         $jwt = new JWT($this->secret, 'HS256', self::TOKEN_EXPIRY, self::TOKEN_LEEWAY);
 
