@@ -74,7 +74,7 @@ $server->start();
 - **`Property`** and **`Properties`** model the MQTT 5.0 property block as objects. `new Property(Property::SESSION_EXPIRY_INTERVAL, 60)` knows its wire type, and a `Properties` collection encodes and parses the block (`(new Properties())->add(new Property(Property::USER, ['projectId' => 'p1']))`).
 - **`Subscription\Store`** (with **`Subscription\Node`**) is a topic-filter trie. It indexes subscriptions by a prefix (an isolation key) and topic level, and resolves a publish to its subscribers with `+` / `#` wildcards in one walk (`getSubscribers`), each fd mapped to its highest granted QoS; `subscribe` / `unsubscribe` / `close` keep the trie pruned, and non-`$` wildcards never match `$`-prefixed system topics.
 - **`Keepalive`** is a hashed timing wheel for keep-alive expiry. `schedule` buckets an fd by its deadline second and `drain` returns everything due in one pass; `interval` (tick period) and `multiplier` (reap after `keepAlive * multiplier` seconds) are constructor config your reaper reads back.
-- **`Connection`** is per-fd state a broker mutates across the packet lifecycle: protocol, clean-start, keep-alive deadline and wheel slot, the outbound packet-id sequence (`nextPacketId`), and QoS 1 in-flight tracking (`track` / `acknowledge`) whose cursor only ever advances to the highest *contiguous* ack. Application data (identity, metadata) lives in an opaque `context` the library never reads.
+- **`Connection`** is per-fd state a broker mutates across the packet lifecycle: protocol, clean-start, keep-alive deadline and wheel slot, the outbound packet-id sequence (`nextPacketId`), and QoS 1 in-flight tracking (`track` / `acknowledge`) whose cursor only ever advances to the highest *contiguous* ack. Application data (identity, metadata) lives in an opaque `identity` the library never reads.
 
 ## Encoding packets (v3.1.1 and v5)
 
@@ -270,14 +270,14 @@ $keepalive->remove($fd); // e.g. on an explicit DISCONNECT
 
 ### Per-connection state (`Connection`)
 
-The state a broker keeps per fd. Beyond the transport fields (protocol, clean-start, keep-alive) it draws outbound packet ids and tracks QoS 1 deliveries until their PUBACK, advancing a cursor only to the highest *contiguous* ack so a non-contiguous ack never skips an unacked message. Whatever identity or metadata you resolved is yours to stash in `$context`.
+The state a broker keeps per fd. Beyond the transport fields (protocol, clean-start, keep-alive) it draws outbound packet ids and tracks QoS 1 deliveries until their PUBACK, advancing a cursor only to the highest *contiguous* ack so a non-contiguous ack never skips an unacked message. Whatever identity or metadata you resolved is yours to stash in `$identity`.
 
 ```php
 use Utopia\Mqtt\Connection;
 
 $connection = new Connection($fd);
 $connection->prefix = 'p1';
-$connection->context = ['userId' => 'user-1']; // opaque to the library
+$connection->identity = ['userId' => 'user-1']; // opaque to the library
 $connection->setClientId($clientId);           // '' is server-assigned
 
 // Refresh the keep-alive deadline on every inbound packet.

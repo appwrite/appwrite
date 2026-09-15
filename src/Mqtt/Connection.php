@@ -7,7 +7,7 @@ namespace Utopia\Mqtt;
  * across the packet lifecycle: CONNECT records the protocol level, client id and clean-start
  * flag; delivery draws outbound packet ids and tracks each QoS 1 message in flight until its
  * PUBACK. Application-specific data (whatever identity or metadata the broker resolved) is the
- * caller's to stash in `$context`; the library never interprets it.
+ * caller's to stash in `$identity`; the library never interprets it.
  */
 class Connection
 {
@@ -24,12 +24,12 @@ class Connection
     public bool $cleanStart = true;
 
     /**
-     * Opaque per-connection data the broker attaches (resolved identity, metadata, …).
-     * The library stores it and hands it back; it never reads or interprets it.
+     * The identity (or any metadata) the broker resolved for this connection. Opaque to the
+     * library — it stores it and hands it back, never reading or interpreting it.
      *
      * @var array<string, mixed>
      */
-    public array $context = [];
+    public array $identity = [];
 
     /** Counted as active (accepted CONNECT), for a balanced gauge. */
     public bool $active = false;
