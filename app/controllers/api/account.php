@@ -3118,7 +3118,7 @@ Http::post('/v1/account/tokens/phone')
     ->label('abuse-key', ['url:{url},phone:{param-phone}', 'url:{url},ip:{ip}'])
     ->param('userId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars. If the phone number has never been used, a new account is created using the provided userId. Otherwise, if the phone number is already attached to an account, the user ID is ignored.', false, ['dbForProject'])
     ->param('phone', '', new Phone(), 'Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.')
-    ->param('channel', null, new WhiteList([PHONE_OTP_CHANNEL_SMS, PHONE_OTP_CHANNEL_WHATSAPP], true), 'Delivery channel for the OTP. Only honoured when the project phone OTP channel is `whatsapp-sms`; any other project setting rejects this parameter.', optional: true, enum: new Enum(name: 'AccountPhoneOtpChannel'))
+    ->param('channel', null, new WhiteList([PHONE_OTP_CHANNEL_SMS, PHONE_OTP_CHANNEL_WHATSAPP], true), 'Delivery channel for the OTP. Only honored when the project phone OTP channel is `whatsapp-sms`; any other project setting rejects this parameter.', optional: true, enum: new Enum(name: 'AccountPhoneOtpChannel'))
     ->inject('request')
     ->inject('response')
     ->inject('user')
@@ -3135,16 +3135,19 @@ Http::post('/v1/account/tokens/phone')
     ->inject('authorization')
     ->action(function (string $userId, string $phone, ?string $channel, Request $request, Response $response, User $user, Document $project, array $platform, Database $dbForProject, Event $queueForEvents, MessagingPublisher $publisherForMessaging, Locale $locale, Context $usage, array $plan, Store $store, ProofsCode $proofForCode, Authorization $authorization) {
         $policy = $project->getAttribute('auths', [])['phoneOtpChannel'] ?? PHONE_OTP_CHANNEL_SMS;
-        $resolved = PhoneOtpChannel::resolve(
-            $policy,
-            $channel,
-            !empty(System::getEnv('_APP_SMS_PROVIDER')),
-            !empty(System::getEnv('_APP_WHATSAPP_PROVIDER')),
-        );
+        $smsConfigured = !empty(System::getEnv('_APP_SMS_PROVIDER'));
+        $whatsappConfigured = !empty(System::getEnv('_APP_WHATSAPP_PROVIDER'));
+        $resolved = PhoneOtpChannel::resolve($policy, $channel, $smsConfigured, $whatsappConfigured);
 
         if ($resolved === null) {
             if ($channel !== null && $policy !== PHONE_OTP_CHANNEL_WHATSAPP_SMS) {
                 throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Channel "' . $channel . '" cannot be requested while the project phone OTP channel is "' . $policy . '"');
+            }
+
+            // A provider is up, so the phone channel as a whole is not disabled: the policy
+            // simply resolved to a channel this instance has no provider for.
+            if ($smsConfigured || $whatsappConfigured) {
+                throw new Exception(Exception::PROJECT_PHONE_OTP_CHANNEL_UNAVAILABLE, 'No provider is configured for the channel the phone OTP channel policy "' . $policy . '" resolved to' . ($channel === null ? '' : ', requested channel "' . $channel . '"'));
             }
 
             throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
@@ -4564,14 +4567,18 @@ Http::post('/v1/account/verifications/phone')
     ->inject('proofForCode')
                 ->inject('authorization')
     ->action(function (Request $request, Response $response, User $user, Database $dbForProject, Event $queueForEvents, MessagingPublisher $publisherForMessaging, Document $project, Locale $locale, Context $usage, array $plan, ProofsCode $proofForCode, Authorization $authorization) {
-        $resolved = PhoneOtpChannel::resolve(
-            $project->getAttribute('auths', [])['phoneOtpChannel'] ?? PHONE_OTP_CHANNEL_SMS,
-            null,
-            !empty(System::getEnv('_APP_SMS_PROVIDER')),
-            !empty(System::getEnv('_APP_WHATSAPP_PROVIDER')),
-        );
+        $policy = $project->getAttribute('auths', [])['phoneOtpChannel'] ?? PHONE_OTP_CHANNEL_SMS;
+        $smsConfigured = !empty(System::getEnv('_APP_SMS_PROVIDER'));
+        $whatsappConfigured = !empty(System::getEnv('_APP_WHATSAPP_PROVIDER'));
+        $resolved = PhoneOtpChannel::resolve($policy, null, $smsConfigured, $whatsappConfigured);
 
         if ($resolved === null) {
+            // A provider is up, so the phone channel as a whole is not disabled: the policy
+            // simply resolved to a channel this instance has no provider for.
+            if ($smsConfigured || $whatsappConfigured) {
+                throw new Exception(Exception::PROJECT_PHONE_OTP_CHANNEL_UNAVAILABLE, 'No provider is configured for the channel the phone OTP channel policy "' . $policy . '" resolved to');
+            }
+
             throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
         }
 

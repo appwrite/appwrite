@@ -172,14 +172,18 @@ class Create extends Action
 
         switch ($factor) {
             case Type::PHONE:
-                $resolved = PhoneOtpChannel::resolve(
-                    $project->getAttribute('auths', [])['phoneOtpChannel'] ?? PHONE_OTP_CHANNEL_SMS,
-                    null,
-                    !empty(System::getEnv('_APP_SMS_PROVIDER')),
-                    !empty(System::getEnv('_APP_WHATSAPP_PROVIDER')),
-                );
+                $policy = $project->getAttribute('auths', [])['phoneOtpChannel'] ?? PHONE_OTP_CHANNEL_SMS;
+                $smsConfigured = !empty(System::getEnv('_APP_SMS_PROVIDER'));
+                $whatsappConfigured = !empty(System::getEnv('_APP_WHATSAPP_PROVIDER'));
+                $resolved = PhoneOtpChannel::resolve($policy, null, $smsConfigured, $whatsappConfigured);
 
                 if ($resolved === null) {
+                    // A provider is up, so the phone channel as a whole is not disabled: the policy
+                    // simply resolved to a channel this instance has no provider for.
+                    if ($smsConfigured || $whatsappConfigured) {
+                        throw new Exception(Exception::PROJECT_PHONE_OTP_CHANNEL_UNAVAILABLE, 'No provider is configured for the channel the phone OTP channel policy "' . $policy . '" resolved to');
+                    }
+
                     throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
                 }
                 if (empty($user->getAttribute('phone'))) {

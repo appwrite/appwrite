@@ -11,7 +11,7 @@ namespace Appwrite\Auth;
  * PHONE_OTP_CHANNEL_SMS, PHONE_OTP_CHANNEL_WHATSAPP and
  * PHONE_OTP_CHANNEL_WHATSAPP_SMS. This class holds only the decision.
  */
-final class PhoneOtpChannel
+final readonly class PhoneOtpChannel
 {
     private function __construct(
         public readonly string $channel,
@@ -22,9 +22,15 @@ final class PhoneOtpChannel
     /**
      * Resolve the channel to deliver on, or null when the request cannot be
      * delivered at all — either because the instance has no provider for the
-     * channel, or because the client asked for a channel under a policy that
-     * does not let it choose. Callers turn null into
-     * Exception::PROJECT_PHONE_OTP_CHANNEL_UNAVAILABLE.
+     * channel the policy resolved to, or because the client asked for a channel
+     * under a policy that does not let it choose.
+     *
+     * Null on its own does not say which of the two happened, so callers tell
+     * them apart from the arguments they already hold: a non-null requested
+     * channel under a policy other than whatsapp-sms is the client's mistake
+     * (Exception::GENERAL_ARGUMENT_INVALID), a null with no provider configured
+     * at all is Exception::GENERAL_PHONE_DISABLED, and a null with at least one
+     * provider configured is Exception::PROJECT_PHONE_OTP_CHANNEL_UNAVAILABLE.
      *
      * A client-requested channel narrows the policy, so requesting WhatsApp
      * under the whatsapp-sms policy delivers on WhatsApp without falling back
