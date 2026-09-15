@@ -4,6 +4,7 @@ namespace Appwrite\Auth\Validator\PasswordPwned;
 
 use Ahc\Jwt\JWT;
 use Appwrite\Auth\Validator\PasswordPwned;
+use Appwrite\Extend\Exception;
 use Utopia\DSN\DSN;
 use Utopia\Fetch\Client;
 
@@ -23,6 +24,8 @@ use Utopia\Fetch\Client;
 class Appwrite extends PasswordPwned
 {
     private const PATH = 'v1/detection';
+    private const CONNECT_TIMEOUT = 3 * 1000; // milliseconds
+    private const REQUEST_TIMEOUT = 5 * 1000; // milliseconds
 
     // The service decodes with the same window
     private const TOKEN_EXPIRY = 900; // seconds
@@ -40,7 +43,11 @@ class Appwrite extends PasswordPwned
 
         $this->endpoint = $scheme . '://' . $dsn->getHost() . $port . '/' . ($path === '' || $path === null ? self::PATH : $path);
         $this->secret = $dsn->getUser() ?? '';
-        $this->client = $this->client($client);
+        $this->client = $client ?? (new Client())
+            ->setConnectTimeout(self::CONNECT_TIMEOUT)
+            ->setTimeout(self::REQUEST_TIMEOUT)
+            ->setAllowRedirects(false)
+            ->setUserAgent('Appwrite');
     }
 
     protected function isPwned(string $password): bool
@@ -54,17 +61,17 @@ class Appwrite extends PasswordPwned
                     'password' => $jwt->encode(['password' => $password]),
                 ]);
         } catch (\Throwable) {
-            $this->unavailable();
+            throw new Exception(Exception::GENERAL_PWNED_PASSWORDS_UNAVAILABLE);
         }
 
         if ($response->getStatusCode() !== 200) {
-            $this->unavailable();
+            throw new Exception(Exception::GENERAL_PWNED_PASSWORDS_UNAVAILABLE);
         }
 
         $body = \json_decode($response->text(), true);
 
         if (!\is_array($body) || !\is_bool($body['leaked'] ?? null)) {
-            $this->unavailable();
+            throw new Exception(Exception::GENERAL_PWNED_PASSWORDS_UNAVAILABLE);
         }
 
         return $body['leaked'];

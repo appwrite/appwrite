@@ -3,6 +3,7 @@
 namespace Appwrite\Auth\Validator\PasswordPwned;
 
 use Appwrite\Auth\Validator\PasswordPwned;
+use Appwrite\Extend\Exception;
 use Utopia\Cache\Cache;
 use Utopia\Fetch\Client;
 
@@ -22,6 +23,8 @@ class HIBP extends PasswordPwned
     public const CACHE_TTL = 3600; // seconds
 
     private const PREFIX_LENGTH = 5;
+    private const CONNECT_TIMEOUT = 3 * 1000; // milliseconds
+    private const REQUEST_TIMEOUT = 5 * 1000; // milliseconds
 
     protected ?Cache $cache;
     protected Client $client;
@@ -30,7 +33,11 @@ class HIBP extends PasswordPwned
     public function __construct(?Cache $cache = null, ?Client $client = null, string $endpoint = self::ENDPOINT)
     {
         $this->cache = $cache;
-        $this->client = $this->client($client);
+        $this->client = $client ?? (new Client())
+            ->setConnectTimeout(self::CONNECT_TIMEOUT)
+            ->setTimeout(self::REQUEST_TIMEOUT)
+            ->setAllowRedirects(false)
+            ->setUserAgent('Appwrite');
         $this->endpoint = \rtrim($endpoint, '/');
     }
 
@@ -48,6 +55,7 @@ class HIBP extends PasswordPwned
      * Breach counts for every known hash sharing the prefix, from cache or the service.
      *
      * @return array<string, int> hash suffix => breach count
+     * @throws Exception when the service cannot be reached
      */
     private function range(string $prefix): array
     {
@@ -65,11 +73,11 @@ class HIBP extends PasswordPwned
                 ->addHeader('Add-Padding', 'true')
                 ->fetch($this->endpoint . '/' . $prefix);
         } catch (\Throwable) {
-            $this->unavailable();
+            throw new Exception(Exception::GENERAL_PWNED_PASSWORDS_UNAVAILABLE);
         }
 
         if ($response->getStatusCode() !== 200) {
-            $this->unavailable();
+            throw new Exception(Exception::GENERAL_PWNED_PASSWORDS_UNAVAILABLE);
         }
 
         // Each line is `HASH_SUFFIX:COUNT`; padded entries carry a count of 0 and are not breaches

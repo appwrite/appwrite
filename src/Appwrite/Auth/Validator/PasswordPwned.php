@@ -3,7 +3,6 @@
 namespace Appwrite\Auth\Validator;
 
 use Appwrite\Extend\Exception;
-use Utopia\Fetch\Client;
 
 /**
  * Validates that a password has not been exposed in a known data breach.
@@ -16,9 +15,6 @@ use Utopia\Fetch\Client;
  */
 abstract class PasswordPwned extends Password
 {
-    private const CONNECT_TIMEOUT = 3 * 1000; // milliseconds
-    private const REQUEST_TIMEOUT = 5 * 1000; // milliseconds
-
     /**
      * Get Description.
      *
@@ -79,29 +75,10 @@ abstract class PasswordPwned extends Password
     /**
      * Whether the password appears in a known data breach.
      *
+     * A password is never silently accepted when the lookup did not happen, so
+     * an unreachable service raises `GENERAL_PWNED_PASSWORDS_UNAVAILABLE`.
+     *
      * @throws Exception when the breach service cannot be reached or answers with nonsense
      */
     abstract protected function isPwned(string $password): bool;
-
-    /**
-     * A client with the timeouts a password check can afford to wait.
-     */
-    protected function client(?Client $client = null): Client
-    {
-        return $client ?? (new Client())
-            ->setConnectTimeout(self::CONNECT_TIMEOUT)
-            ->setTimeout(self::REQUEST_TIMEOUT)
-            ->setAllowRedirects(false)
-            ->setUserAgent('Appwrite');
-    }
-
-    /**
-     * A password is never silently accepted when the lookup did not happen.
-     *
-     * @throws Exception
-     */
-    protected function unavailable(): never
-    {
-        throw new Exception(Exception::GENERAL_PWNED_PASSWORDS_UNAVAILABLE);
-    }
 }
