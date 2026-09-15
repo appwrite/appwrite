@@ -170,14 +170,14 @@ trait ProxyHelpers
         $this->assertEquals(204, $function['headers']['status-code'], 'Failed to cleanup function: ' . \json_encode($function));
     }
 
-    protected function setupSite(): mixed
+    protected function setupSite(?string $siteId = null, bool $deploy = true): mixed
     {
         // Site
         $site = $this->client->call(Client::METHOD_POST, '/sites', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'siteId' => ID::unique(),
+            'siteId' => $siteId ?? ID::unique(),
             'name' => 'Proxy site',
             'framework' => 'other',
             'adapter' => 'static',
@@ -191,6 +191,9 @@ trait ProxyHelpers
         $this->assertEquals($site['headers']['status-code'], 201, 'Setup site failed with status code: ' . $site['headers']['status-code'] . ' and response: ' . json_encode($site['body'], JSON_PRETTY_PRINT));
 
         $siteId = $site['body']['$id'];
+        if (!$deploy) {
+            return ['siteId' => $siteId];
+        }
 
         // Deployment
         $deployment = $this->client->call(Client::METHOD_POST, '/sites/' . $siteId . '/deployments', array_merge([

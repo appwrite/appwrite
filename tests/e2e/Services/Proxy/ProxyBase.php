@@ -59,6 +59,25 @@ trait ProxyBase
         $this->assertSame(0, $rules['body']['total']);
     }
 
+    public function testDeleteSiteRules(): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $siteId = $this->setupSite(deploy: false)['siteId'];
+        $domain = \uniqid() . '-deleted-site.custom.localhost';
+        $ruleId = $this->setupSiteRule($domain, $siteId);
+
+        $this->cleanupSite($siteId);
+
+        $rule = $this->getRule($ruleId);
+        $this->assertEquals(404, $rule['headers']['status-code']);
+        $this->assertSame('rule_not_found', $rule['body']['type']);
+        $rules = $this->listRules(['queries' => [Query::equal('domain', [$domain])->toString()]]);
+        $this->assertEquals(200, $rules['headers']['status-code']);
+        $this->assertSame(0, $rules['body']['total']);
+    }
+
     public function testCreateRule(): void
     {
         $domain = \uniqid() . '-api.myapp.com';
