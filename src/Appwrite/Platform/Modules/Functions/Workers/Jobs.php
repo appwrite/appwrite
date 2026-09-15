@@ -667,6 +667,9 @@ class Jobs extends Action
 
         try {
             $resource = $dbForProject->getDocument($deployment->getAttribute('resourceType', 'functions'), $deployment->getAttribute('resourceId'));
+            if (! Deployments::belongsTo($deployment, $resource)) {
+                return;
+            }
             $installation = $dbForPlatform->getDocument('installations', $resource->getAttribute('installationId', ''));
             if ($resource->isEmpty() || $installation->getAttribute('providerInstallationId', '') === '') {
                 return;
@@ -719,6 +722,9 @@ class Jobs extends Action
             $queries = [
                 Query::equal('$id', [$rule->getId()]),
                 Query::equal('$sequence', [$rule->getSequence()]),
+                Query::equal('projectInternalId', [$rule->getAttribute('projectInternalId')]),
+                Query::equal('deploymentResourceType', [$rule->getAttribute('deploymentResourceType')]),
+                Query::equal('deploymentResourceId', [$rule->getAttribute('deploymentResourceId')]),
                 Query::equal('deploymentResourceInternalId', [$deployment->getAttribute('resourceInternalId')]),
             ];
             $dbForPlatform->updateDocuments('rules', new Document([
@@ -782,17 +788,26 @@ class Jobs extends Action
             return;
         }
 
-        $resource = $dbForProject->getDocument($resource->getCollection(), $resource->getId());
+        $resource = $dbForProject->findOne($resource->getCollection(), [
+            Query::equal('$id', [$resource->getId()]),
+            Query::equal('$sequence', [$resource->getSequence()]),
+        ]);
+        if ($resource->isEmpty()) {
+            return;
+        }
         $schedule = $dbForPlatform->getDocument('schedules', $scheduleId);
         if ($schedule->isEmpty()) {
             return;
         }
 
-        $dbForPlatform->updateDocument('schedules', $schedule->getId(), new Document([
+        $dbForPlatform->updateDocuments('schedules', new Document([
             'resourceUpdatedAt' => DateTime::now(),
             'schedule' => $resource->getAttribute('schedule', ''),
             'active' => ! empty($resource->getAttribute('schedule')) && ! empty($resource->getAttribute('deploymentId')),
-        ]));
+        ]), [
+            Query::equal('$id', [$schedule->getId()]),
+            Query::equal('$sequence', [$schedule->getSequence()]),
+        ]);
     }
 
     /**

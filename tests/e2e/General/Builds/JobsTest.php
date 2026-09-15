@@ -347,6 +347,55 @@ final class JobsTest extends TestCase
         $this->assertNoEvents();
     }
 
+    #[\PHPUnit\Framework\Attributes\DataProvider('schedules')]
+    public function testCompleteScheduledFunction(bool $replaceSchedule): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        if ($replaceSchedule && ! $this->database->getAdapter() instanceof \Utopia\Database\Adapter\SQL) {
+            $this->markTestSkipped('The controlled statement boundary requires a SQL adapter.');
+        }
+        $resource = $this->resource('functions', ['scheduleId' => 'schedule', 'schedule' => '* * * * *']);
+        $deployment = $this->deployment($resource);
+        $schedule = $this->database->createDocument('schedules', new Document([
+            '$id' => 'schedule', 'region' => 'default', 'resourceId' => $resource->getId(), 'resourceInternalId' => $resource->getSequence(),
+            'resourceType' => 'function', 'active' => false, 'schedule' => '* * * * *',
+        ]));
+        $this->cache->save('jobs-exit-' . $deployment->getId(), true);
+        if ($replaceSchedule) {
+            $this->database->before(Database::EVENT_DOCUMENTS_UPDATE, 'replace-schedule', function (string $sql): string {
+                if (! str_contains($sql, '_schedules')) {
+                    return $sql;
+                }
+                $this->database->before(Database::EVENT_DOCUMENTS_UPDATE, 'replace-schedule', null);
+                $this->database->deleteDocument('schedules', 'schedule');
+                $this->database->createDocument('schedules', new Document([
+                    '$id' => 'schedule', 'region' => 'default', 'resourceId' => 'another-function', 'resourceInternalId' => '900',
+                    'resourceType' => 'function', 'active' => false, 'schedule' => '0 * * * *',
+                ]));
+
+                return $sql;
+            });
+        }
+
+        $this->enqueue($deployment, 'complete');
+        $this->runWorker();
+
+        $current = $this->database->getDocument('schedules', 'schedule');
+        $this->assertSame(! $replaceSchedule, $current->getAttribute('active'));
+        $this->assertSame($replaceSchedule ? '0 * * * *' : '* * * * *', $current->getAttribute('schedule'));
+        if ($replaceSchedule) {
+            $this->assertNotSame($schedule->getSequence(), $current->getSequence());
+        }
+    }
+
+    public static function schedules(): \Iterator
+    {
+        yield 'current schedule' => [false];
+        yield 'recreated schedule' => [true];
+    }
+
     private function project(): Document
     {
         return new Document(['$id' => 'console', '$sequence' => '0', 'region' => 'default']);
