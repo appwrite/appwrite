@@ -138,7 +138,7 @@ class Project extends Model
             ])
             ->addRule('mcpLastAccessAt', [
                 'type' => self::TYPE_DATETIME,
-                'description' => 'Last time an MCP client accessed this project, in ISO 8601 format. Updated when a request sends `x-sdk-name: mcp`.',
+                'description' => 'Last time an MCP client accessed this project, in ISO 8601 format.',
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
