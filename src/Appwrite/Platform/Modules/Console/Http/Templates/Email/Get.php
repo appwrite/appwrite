@@ -90,6 +90,10 @@ class Get extends Action
                 'file' => 'email-otp.tpl',
                 'placeholders' => ['description', 'clientInfo', 'securityPhrase']
             ],
+            'otpVerification' => [
+                'file' => 'email-otp.tpl',
+                'placeholders' => ['description', 'clientInfo', 'securityPhrase']
+            ],
             'sessionAlert' => [
                 'file' => 'email-session-alert.tpl',
                 'placeholders' => ['body', 'listDevice', 'listIpAddress', 'listCountry', 'footer']
