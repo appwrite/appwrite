@@ -18,22 +18,24 @@ class Base extends Queries
     /**
      * Expression constructor
      *
-     * @param string $collection
+     * @param string|array<string, mixed> $collection
      * @param string[] $allowedAttributes
      * @throws \Exception
      */
-    public function __construct(string $collection, array $allowedAttributes)
+    public function __construct(string|array $collection, array $allowedAttributes)
     {
-        $config = Config::getParam('collections', []);
+        if (\is_string($collection)) {
+            $config = Config::getParam('collections', []);
 
-        $collections = \array_merge(
-            $config['projects'],
-            $config['buckets'],
-            $config['databases'],
-            $config['console']
-        );
+            $collections = \array_merge(
+                $config['projects'],
+                $config['buckets'],
+                $config['databases'],
+                $config['console']
+            );
 
-        $collection = $collections[$collection];
+            $collection = $collections[$collection];
+        }
 
         $allowedAttributesLookup = [];
         foreach ($allowedAttributes as $attribute) {

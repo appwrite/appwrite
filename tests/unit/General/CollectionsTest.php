@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Tests\Unit\General;
 
+use Appwrite\Utopia\Database\Validator\Queries\Executions;
+use Appwrite\Utopia\Database\Validator\Queries\Logs;
 use PHPUnit\Framework\TestCase;
+use Utopia\Database\Query;
 
 final class CollectionsTest extends TestCase
 {
@@ -32,5 +35,20 @@ final class CollectionsTest extends TestCase
                 }
             }
         }
+    }
+
+    public function testProjectsDoNotDefineExecutionsCollection(): void
+    {
+        $this->assertArrayNotHasKey('executions', $this->collections['projects']);
+    }
+
+    public function testExecutionQueryValidatorsDoNotNeedCollectionSchema(): void
+    {
+        $this->assertTrue((new Executions())->isValid([
+            Query::equal('status', ['completed']),
+        ]));
+        $this->assertTrue((new Logs())->isValid([
+            Query::equal('status', ['completed']),
+        ]));
     }
 }
