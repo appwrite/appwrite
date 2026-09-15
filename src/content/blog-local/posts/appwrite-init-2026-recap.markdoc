@@ -80,7 +80,7 @@ We explored the new PostgreSQL experience with the team during our Day 2 livestr
 
 PostgreSQL was only the beginning of our database announcements.
 
-On Day 3, we introduced **VectorsDB, DocumentsDB, and native MySQL databases**, giving developers more flexibility to choose the right database for different workloads.
+On Day 3, we introduced [VectorsDB](/blog/post/announcing-vectorsdb), [DocumentsDB](/blog/post/announcing-documentsdb), and [native MySQL databases](/blog/post/announcing-native-mysql-databases), giving developers more flexibility to choose the right database for different workloads.
 
 **VectorsDB** brings embeddings and similarity search directly into Appwrite, making it easier to build semantic search, recommendation systems, RAG applications, and other AI-powered experiences without introducing a separate vector database. We followed the launch with a [help center built on VectorsDB](/blog/post/build-a-help-center-with-appwrite-vectorsdb) and a rundown of [where VectorsDB fits](/blog/post/vectorsdb-use-cases).
 
