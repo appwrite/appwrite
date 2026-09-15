@@ -142,7 +142,7 @@ class Get extends Action
                     'threshold' => 1,
                     'sessions' => false,
                     'forceReset' => false,
-                    'failClosed' => true,
+                    'failClosed' => false,
                 ], $auths['passwordPwned'] ?? [], [
                     '$id' => 'password-pwned',
                 ])),

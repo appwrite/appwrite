@@ -46,7 +46,7 @@ class PasswordPwned extends Password
         $this->threshold = \max(1, (int) ($policy['threshold'] ?? 1));
         $this->sessions = (bool) ($policy['sessions'] ?? false);
         $this->forceReset = (bool) ($policy['forceReset'] ?? false);
-        $this->failClosed = (bool) ($policy['failClosed'] ?? true);
+        $this->failClosed = (bool) ($policy['failClosed'] ?? false);
         $this->cache = $cache;
         $this->client = $client ?? (new Client())
             ->setConnectTimeout(self::CONNECT_TIMEOUT)

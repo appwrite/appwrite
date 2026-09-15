@@ -97,7 +97,7 @@ class Create extends Action
                 'threshold' => 1,
                 'sessions' => false,
                 'forceReset' => false,
-                'failClosed' => true,
+                'failClosed' => false,
             ],
             'disposableEmails' => false,
             'canonicalEmails' => false,

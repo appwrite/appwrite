@@ -60,7 +60,7 @@ class Update extends Action
             ->param('threshold', null, new Range(1, PHP_INT_MAX), 'Minimum number of known breaches a password must appear in before it is rejected. Default is 1.', optional: true)
             ->param('sessions', null, new Boolean(), 'Whether passwords are checked when a session is created. When enabled, signing in records whether the password appears in a known data breach. Default is false.', optional: true)
             ->param('forceReset', null, new Boolean(), 'Whether signing in with a breached password is blocked until the password is reset. Only applies when sessions are checked. Default is false, which allows the sign-in.', optional: true)
-            ->param('failClosed', null, new Boolean(), 'Whether passwords are rejected when the breach service cannot be reached. Default is true. Set to false to skip the check instead.', optional: true)
+            ->param('failClosed', null, new Boolean(), 'Whether passwords are rejected when the breach service cannot be reached. Default is false, which skips the check so an outage never blocks your users. Set to true to reject the password instead.', optional: true)
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('project')
@@ -89,7 +89,7 @@ class Update extends Action
             'threshold' => 1,
             'sessions' => false,
             'forceReset' => false,
-            'failClosed' => true,
+            'failClosed' => false,
         ], $auths['passwordPwned'] ?? []);
 
         if ($enabled !== null) {

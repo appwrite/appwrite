@@ -48,7 +48,7 @@ final class PoliciesPasswordPwnedIntegrationTest extends Scope
 
         // Breached passwords are rejected out of the box
         $this->assertTrue($response['body']['enabled']);
-        $this->assertTrue($response['body']['failClosed']);
+        $this->assertFalse($response['body']['failClosed']);
         $this->assertSame(1, $response['body']['threshold']);
         $this->assertSame('', $response['body']['endpoint']);
 
@@ -468,7 +468,7 @@ final class PoliciesPasswordPwnedIntegrationTest extends Scope
 
         $this->assertSame(201, $response['headers']['status-code']);
 
-        $this->updatePolicy(['enabled' => false, 'endpoint' => '', 'sessions' => false, 'forceReset' => false, 'failClosed' => true]);
+        $this->updatePolicy(['enabled' => false, 'endpoint' => '', 'sessions' => false, 'forceReset' => false, 'failClosed' => false]);
     }
 
     public function testForceResetOnSignIn(): void
@@ -1153,7 +1153,7 @@ final class PoliciesPasswordPwnedIntegrationTest extends Scope
 
         $this->assertSame(400, $response['headers']['status-code']);
 
-        $this->updatePolicy(['enabled' => false, 'endpoint' => '', 'sessions' => false, 'forceReset' => false, 'failClosed' => true]);
+        $this->updatePolicy(['enabled' => false, 'endpoint' => '', 'sessions' => false, 'forceReset' => false, 'failClosed' => false]);
     }
 
     /**

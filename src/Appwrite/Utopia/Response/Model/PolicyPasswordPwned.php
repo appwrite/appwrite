@@ -48,8 +48,8 @@ class PolicyPasswordPwned extends PolicyBase
             ->addRule('failClosed', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Whether passwords are rejected when the breach service cannot be reached. When false, the check is skipped instead.',
-                'default' => true,
-                'example' => true,
+                'default' => false,
+                'example' => false,
             ]);
     }
 

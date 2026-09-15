@@ -156,10 +156,27 @@ final class PasswordPwnedTest extends TestCase
         $this->assertCount(2, $adapter->requests);
     }
 
-    public function testUnreachableServiceFailsClosedByDefault(): void
+    public function testUnreachableServiceSkipsTheCheckByDefault(): void
     {
         $adapter = new RangeAdapter(failure: new \RuntimeException('connection refused'));
         $validator = $this->validator([], $adapter);
+
+        // An outage of the breach service must not stop people setting a password
+        $this->assertTrue($validator->isValid(self::LEAKED));
+    }
+
+    public function testUnexpectedStatusSkipsTheCheckByDefault(): void
+    {
+        $adapter = new RangeAdapter(statusCode: 503, body: '');
+        $validator = $this->validator([], $adapter);
+
+        $this->assertTrue($validator->isValid(self::LEAKED));
+    }
+
+    public function testUnreachableServiceIsRejectedWhenFailingClosed(): void
+    {
+        $adapter = new RangeAdapter(failure: new \RuntimeException('connection refused'));
+        $validator = $this->validator(['failClosed' => true], $adapter);
 
         try {
             $validator->isValid(self::LEAKED);
@@ -169,29 +186,21 @@ final class PasswordPwnedTest extends TestCase
         }
     }
 
-    public function testUnexpectedStatusFailsClosedByDefault(): void
+    public function testUnexpectedStatusIsRejectedWhenFailingClosed(): void
     {
         $adapter = new RangeAdapter(statusCode: 503, body: '');
-        $validator = $this->validator([], $adapter);
+        $validator = $this->validator(['failClosed' => true], $adapter);
 
         $this->expectException(Exception::class);
 
         $validator->isValid(self::LEAKED);
     }
 
-    public function testUnreachableServiceSkipsTheCheckWhenFailingOpen(): void
-    {
-        $adapter = new RangeAdapter(failure: new \RuntimeException('connection refused'));
-        $validator = $this->validator(['failClosed' => false], $adapter);
-
-        $this->assertTrue($validator->isValid(self::LEAKED));
-    }
-
     public function testFailedLookupIsNotCached(): void
     {
         $adapter = new RangeAdapter(failure: new \RuntimeException('connection refused'));
         $cache = new Cache(new Memory());
-        $validator = new PasswordPwned(['enabled' => true, 'failClosed' => false], $cache, self::ENDPOINT, new Client($adapter));
+        $validator = new PasswordPwned(['enabled' => true], $cache, self::ENDPOINT, new Client($adapter));
 
         $validator->isValid(self::LEAKED);
         $validator->isValid(self::LEAKED);

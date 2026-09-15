@@ -654,7 +654,7 @@ trait PoliciesBase
         $this->assertSame(1, $policy['body']['threshold']);
         $this->assertSame(false, $policy['body']['sessions']);
         $this->assertSame(false, $policy['body']['forceReset']);
-        $this->assertSame(true, $policy['body']['failClosed']);
+        $this->assertSame(false, $policy['body']['failClosed']);
 
         // Cleanup
         $this->updatePasswordPwnedPolicy(['enabled' => false]);
@@ -686,7 +686,7 @@ trait PoliciesBase
         $this->assertSame(1, $policy['body']['threshold']);
         $this->assertSame(false, $policy['body']['sessions']);
         $this->assertSame(false, $policy['body']['forceReset']);
-        $this->assertSame(true, $policy['body']['failClosed']);
+        $this->assertSame(false, $policy['body']['failClosed']);
     }
 
     public function testUpdatePasswordPwnedPolicySessions(): void
@@ -713,7 +713,7 @@ trait PoliciesBase
             'threshold' => 5,
             'sessions' => true,
             'forceReset' => true,
-            'failClosed' => false,
+            'failClosed' => true,
         ]);
 
         $this->assertSame(200, $response['headers']['status-code']);
@@ -728,7 +728,7 @@ trait PoliciesBase
         $this->assertSame(5, $policy['body']['threshold']);
         $this->assertSame(true, $policy['body']['sessions']);
         $this->assertSame(true, $policy['body']['forceReset']);
-        $this->assertSame(false, $policy['body']['failClosed']);
+        $this->assertSame(true, $policy['body']['failClosed']);
 
         // Cleanup
         $this->resetPasswordPwnedPolicy();
@@ -748,7 +748,7 @@ trait PoliciesBase
         $this->assertSame(1, $policy['body']['threshold']);
         $this->assertSame(false, $policy['body']['sessions']);
         $this->assertSame(false, $policy['body']['forceReset']);
-        $this->assertSame(true, $policy['body']['failClosed']);
+        $this->assertSame(false, $policy['body']['failClosed']);
     }
 
     public function testUpdatePasswordPwnedPolicyInvalidType(): void
@@ -1497,7 +1497,7 @@ trait PoliciesBase
             'threshold' => 1,
             'sessions' => false,
             'forceReset' => false,
-            'failClosed' => true,
+            'failClosed' => false,
         ]);
     }
 
