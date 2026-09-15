@@ -172,4 +172,9 @@ trait RealtimeRelationshipBase
     {
         $this->assertRelationshipRemovalEvent('manyToMany', 'child');
     }
+
+    public function testDeleteManyToManyParentRealtime(): void
+    {
+        $this->assertRelationshipRemovalEvent('manyToMany', 'parent');
+    }
 }
