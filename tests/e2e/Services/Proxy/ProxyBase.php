@@ -273,6 +273,10 @@ trait ProxyBase
         $resourceId = $type === 'function'
             ? $this->setupFunction()['functionId']
             : $this->setupSite()['siteId'];
+        $manualDomain = \uniqid() . '-deleted-manual.custom.localhost';
+        $manualRuleId = $type === 'function'
+            ? $this->setupFunctionRule($manualDomain, $resourceId)
+            : $this->setupSiteRule($manualDomain, $resourceId);
         $domain = \uniqid() . '-deleted-branch.custom.localhost';
         $ruleId = $type === 'function'
             ? $this->setupFunctionRule($domain, $resourceId, 'dev')
@@ -288,6 +292,15 @@ trait ProxyBase
         $this->assertEquals(200, $rules['headers']['status-code']);
         $this->assertGreaterThan(1, $rules['body']['total']);
 
+        if ($type === 'site') {
+            $previews = $this->listRules(['queries' => [
+                ...$queries,
+                Query::equal('trigger', ['deployment'])->toString(),
+            ]]);
+            $this->assertEquals(200, $previews['headers']['status-code']);
+            $this->assertGreaterThan(0, $previews['body']['total']);
+        }
+
         if ($type === 'function') {
             $this->cleanupFunction($resourceId);
         } else {
@@ -298,6 +311,7 @@ trait ProxyBase
         $this->assertEquals(200, $rules['headers']['status-code']);
         $this->assertSame(0, $rules['body']['total']);
         $this->assertEquals(404, $this->getRule($ruleId)['headers']['status-code']);
+        $this->assertEquals(404, $this->getRule($manualRuleId)['headers']['status-code']);
     }
 
     public function testCreateRule(): void
