@@ -6,6 +6,7 @@ use Tests\E2E\Client;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
+use Utopia\Database\Query;
 use WebSocket\Client as WebSocketClient;
 use WebSocket\TimeoutException;
 
@@ -132,7 +133,9 @@ trait RealtimeRelationshipBase
             $this->assertSame($fixture['databaseId'], $event['data']['payload']['$databaseId']);
             $this->assertSame($fixture[$survivor]['collectionId'], $event['data']['payload'][$api === 'tablesdb' ? '$tableId' : '$collectionId']);
 
-            $remaining = $this->client->call(Client::METHOD_GET, $fixture[$survivor]['path'], $fixture['headers']);
+            $remaining = $this->client->call(Client::METHOD_GET, $fixture[$survivor]['path'], $fixture['headers'], [
+                'queries' => [Query::select(['*', $key . '.*'])->toString()],
+            ]);
             $this->assertSame(200, $remaining['headers']['status-code']);
             $many = $survivor === 'parent'
                 ? \in_array($type, ['oneToMany', 'manyToMany'])
@@ -215,7 +218,9 @@ trait RealtimeRelationshipBase
             $deleted = $this->client->call(Client::METHOD_DELETE, $fixture['child']['path'], $headers);
             $this->assertSame(204, $deleted['headers']['status-code']);
             $this->assertNoRelationshipEvent($socket);
-            $parent = $this->client->call(Client::METHOD_GET, $fixture['parent']['path'], $fixture['headers']);
+            $parent = $this->client->call(Client::METHOD_GET, $fixture['parent']['path'], $fixture['headers'], [
+                'queries' => [Query::select(['*', 'children.*'])->toString()],
+            ]);
             $this->assertSame([], $parent['body']['children']);
         } finally {
             $socket->close();
@@ -252,7 +257,9 @@ trait RealtimeRelationshipBase
             $this->assertArrayNotHasKey('children', $event['data']['payload']);
             $this->assertArrayNotHasKey('extras', $event['data']['payload']);
             $this->assertNoRelationshipEvent($socket);
-            $parent = $this->client->call(Client::METHOD_GET, $fixture['parent']['path'], $fixture['headers']);
+            $parent = $this->client->call(Client::METHOD_GET, $fixture['parent']['path'], $fixture['headers'], [
+                'queries' => [Query::select(['*', 'children.*', 'extras.*'])->toString()],
+            ]);
             $this->assertSame([], $parent['body']['children']);
             $this->assertSame([], $parent['body']['extras']);
         } finally {
@@ -270,7 +277,9 @@ trait RealtimeRelationshipBase
             $this->assertSame(403, $deleted['headers']['status-code']);
             $this->assertSame('document_delete_restricted', $deleted['body']['type']);
             $this->assertNoRelationshipEvent($socket);
-            $child = $this->client->call(Client::METHOD_GET, $fixture['child']['path'], $fixture['headers']);
+            $child = $this->client->call(Client::METHOD_GET, $fixture['child']['path'], $fixture['headers'], [
+                'queries' => [Query::select(['*', 'parents.*'])->toString()],
+            ]);
             $this->assertSame($fixture['parent']['id'], $child['body']['parents']['$id']);
         } finally {
             $socket->close();
@@ -292,7 +301,9 @@ trait RealtimeRelationshipBase
             $deleted = $this->client->call(Client::METHOD_DELETE, $fixture['child']['path'], $headers);
             $this->assertSame(401, $deleted['headers']['status-code']);
             $this->assertNoRelationshipEvent($socket);
-            $parent = $this->client->call(Client::METHOD_GET, $fixture['parent']['path'], $fixture['headers']);
+            $parent = $this->client->call(Client::METHOD_GET, $fixture['parent']['path'], $fixture['headers'], [
+                'queries' => [Query::select(['*', 'children.*'])->toString()],
+            ]);
             $this->assertSame($fixture['child']['id'], $parent['body']['children'][0]['$id']);
         } finally {
             $socket->close();
@@ -314,7 +325,9 @@ trait RealtimeRelationshipBase
             ]);
             $this->assertSame(204, $staged['headers']['status-code']);
             $this->assertNoRelationshipEvent($socket);
-            $parent = $this->client->call(Client::METHOD_GET, $fixture['parent']['path'], $fixture['headers']);
+            $parent = $this->client->call(Client::METHOD_GET, $fixture['parent']['path'], $fixture['headers'], [
+                'queries' => [Query::select(['*', 'children.*'])->toString()],
+            ]);
             $this->assertSame($fixture['child']['id'], $parent['body']['children'][0]['$id']);
             $child = $this->client->call(Client::METHOD_GET, $fixture['child']['path'], $fixture['headers']);
             $this->assertSame(200, $child['headers']['status-code']);
