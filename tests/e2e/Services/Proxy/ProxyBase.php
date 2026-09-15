@@ -78,6 +78,33 @@ trait ProxyBase
         $this->assertSame(0, $rules['body']['total']);
     }
 
+    public function testDeleteFunctionRecreateId(): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $functionId = $this->setupFunction(deploy: false)['functionId'];
+        $domain = \uniqid() . '-recreated-function.custom.localhost';
+        $this->setupFunctionRule($domain, $functionId);
+        $this->cleanupFunction($functionId);
+
+        $replacement = $this->setupFunction($functionId, deploy: false);
+        $this->assertSame($functionId, $replacement['functionId']);
+        $rules = $this->listRules(['queries' => [
+            Query::equal('deploymentResourceType', ['function'])->toString(),
+            Query::equal('deploymentResourceId', [$functionId])->toString(),
+            Query::equal('domain', [$domain])->toString(),
+        ]]);
+        $this->assertEquals(200, $rules['headers']['status-code']);
+        $this->assertSame(0, $rules['body']['total']);
+
+        $ruleId = $this->setupFunctionRule($domain, $functionId);
+        $rule = $this->getRule($ruleId);
+        $this->assertEquals(200, $rule['headers']['status-code']);
+        $this->assertSame($functionId, $rule['body']['deploymentResourceId']);
+        $this->cleanupFunction($functionId);
+    }
+
     public function testCreateRule(): void
     {
         $domain = \uniqid() . '-api.myapp.com';
