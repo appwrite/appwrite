@@ -6295,4 +6295,132 @@ final class AccountCustomClientTest extends Scope
 
         return $color['r'] === 0 && $color['g'] === 255 && $color['b'] === 0;
     }
+
+    /**
+     * The raw ID token is stored on the identity and handed back verbatim, so a
+     * client can decode claims Appwrite does not model. Google's `locale` is the
+     * motivating case: useful for picking a UI language, but not worth an
+     * attribute of its own.
+     */
+    public function testCreateIdTokenSessionStoresIdToken(): void
+    {
+        $this->updateMockProvider(true);
+
+        $projectId = $this->getProject()['$id'];
+        $sub = 'idtoken-stored-' . \uniqid('', true);
+        $email = 'idtoken.stored.' . \uniqid('', true) . '@localhost.test';
+
+        $idToken = $this->mintIdToken([
+            'sub' => $sub,
+            'email' => $email,
+            'email_verified' => true,
+            'name' => 'Jane Doe',
+            'given_name' => 'Jane',
+            'family_name' => 'Doe',
+            'picture' => 'http://localhost/v1/mock/tests/general/oauth2/photo',
+            'locale' => 'en',
+        ]);
+
+        $response = $this->createIdTokenSession([
+            'provider' => 'mock',
+            'idToken' => $idToken,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        $session = $response['cookies']['a_session_' . $projectId] ?? '';
+        $this->assertNotEmpty($session);
+
+        $identity = $this->findMockIdentity($session, $sub);
+
+        // Stored byte for byte, so the signature still verifies downstream
+        $this->assertEquals($idToken, $identity['providerIdToken']);
+
+        // ... and it is still a decodable JWT carrying the claims it was minted with
+        $claims = $this->decodeJwtPayload($identity['providerIdToken']);
+        $this->assertEquals($sub, $claims['sub']);
+        $this->assertEquals($email, $claims['email']);
+        $this->assertEquals('Jane Doe', $claims['name']);
+        // The claim Appwrite deliberately does not store as its own attribute
+        $this->assertEquals('en', $claims['locale']);
+
+        /**
+         * Signing in again replaces the stored token: the old one expires within
+         * the hour, and its claims — `locale` among them — may have changed.
+         */
+        $refreshed = $this->mintIdToken([
+            'sub' => $sub,
+            'email' => $email,
+            'email_verified' => true,
+            'name' => 'Jane Doe',
+            'locale' => 'cs',
+        ]);
+
+        $this->assertNotSame($idToken, $refreshed);
+
+        $response = $this->createIdTokenSession([
+            'provider' => 'mock',
+            'idToken' => $refreshed,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        $session = $response['cookies']['a_session_' . $projectId] ?? '';
+        $this->assertNotEmpty($session);
+
+        $identity = $this->findMockIdentity($session, $sub);
+        $this->assertEquals($refreshed, $identity['providerIdToken']);
+        $this->assertEquals('cs', $this->decodeJwtPayload($identity['providerIdToken'])['locale']);
+    }
+
+    /**
+     * The mock provider identity for a subject, from the signed-in account's
+     * own identity list.
+     */
+    private function findMockIdentity(string $session, string $sub): array
+    {
+        $projectId = $this->getProject()['$id'];
+
+        $identities = $this->client->call(Client::METHOD_GET, '/account/identities', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ]);
+
+        $this->assertEquals(200, $identities['headers']['status-code']);
+
+        foreach ($identities['body']['identities'] as $identity) {
+            if ($identity['provider'] === 'mock' && $identity['providerUid'] === $sub) {
+                return $identity;
+            }
+        }
+
+        $this->fail('No mock identity was stored for subject ' . $sub);
+    }
+
+    /**
+     * Decode a JWT payload the way a client would: base64url, no verification.
+     */
+    private function decodeJwtPayload(string $jwt): array
+    {
+        $parts = \explode('.', $jwt);
+        $this->assertCount(3, $parts, 'Stored ID token is not a three-part JWT.');
+
+        // Strict, so a payload that is not really base64url fails here rather
+        // than being silently scrubbed into something that decodes to nothing.
+        $payload = \base64_decode(\str_pad(
+            \strtr($parts[1], '-_', '+/'),
+            (int) (\ceil(\strlen($parts[1]) / 4) * 4),
+            '=',
+            STR_PAD_RIGHT
+        ), true);
+
+        $this->assertNotFalse($payload, 'Stored ID token payload is not valid base64url.');
+
+        $claims = \json_decode($payload, true);
+        $this->assertIsArray($claims, 'Stored ID token payload is not JSON.');
+
+        return $claims;
+    }
 }
