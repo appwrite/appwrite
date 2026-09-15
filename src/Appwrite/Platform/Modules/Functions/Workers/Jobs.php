@@ -716,11 +716,19 @@ class Jobs extends Action
         $branches = $branch === '' ? [''] : ['', $branch];
 
         $dbForPlatform->forEach('rules', function (Document $rule) use ($dbForPlatform, $deployment, $bus) {
-            $rule = $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
+            $queries = [
+                Query::equal('$id', [$rule->getId()]),
+                Query::equal('$sequence', [$rule->getSequence()]),
+                Query::equal('deploymentResourceInternalId', [$deployment->getAttribute('resourceInternalId')]),
+            ];
+            $dbForPlatform->updateDocuments('rules', new Document([
                 'deploymentId' => $deployment->getId(),
                 'deploymentInternalId' => $deployment->getSequence(),
-            ]));
-            $bus->dispatch(new RuleUpdated($rule->getArrayCopy()));
+            ]), $queries);
+            $rule = $dbForPlatform->findOne('rules', $queries);
+            if (! $rule->isEmpty()) {
+                $bus->dispatch(new RuleUpdated($rule->getArrayCopy()));
+            }
         }, [
             Query::equal('projectInternalId', [$project->getSequence()]),
             Query::equal('type', ['deployment']),

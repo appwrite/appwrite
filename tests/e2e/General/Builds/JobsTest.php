@@ -310,6 +310,43 @@ final class JobsTest extends TestCase
         }
     }
 
+    public function testCompleteReassignedManualRule(): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        if (! $this->database->getAdapter() instanceof \Utopia\Database\Adapter\SQL) {
+            $this->markTestSkipped('The controlled statement boundary requires a SQL adapter.');
+        }
+        $resource = $this->resource('functions');
+        $deployment = $this->deployment($resource);
+        $this->database->createDocument('rules', new Document([
+            '$id' => 'new-rule', 'domain' => 'replacement.example.com', 'type' => 'deployment', 'trigger' => 'manual',
+            'projectId' => 'console', 'projectInternalId' => '0', 'region' => 'default',
+            'deploymentResourceType' => 'function', 'deploymentResourceId' => $resource->getId(), 'deploymentResourceInternalId' => $resource->getSequence(),
+        ]));
+        $this->cache->save('jobs-exit-' . $deployment->getId(), true);
+        $replacement = null;
+        $this->database->before(Database::EVENT_DOCUMENTS_UPDATE, 'replace-rule', function (string $sql) use ($resource, &$replacement): string {
+            if (! str_contains($sql, '_rules')) {
+                return $sql;
+            }
+            $this->database->before(Database::EVENT_DOCUMENTS_UPDATE, 'replace-rule', null);
+            $this->database->deleteDocument('rules', 'new-rule');
+            $replacement = $this->replace($resource);
+
+            return $sql;
+        });
+
+        $this->enqueue($deployment, 'complete');
+        $this->runWorker();
+
+        $this->assertInstanceOf(Document::class, $replacement);
+        $this->assertReplacement($replacement);
+        $this->assertSame([], $this->realtime->payloads);
+        $this->assertNoEvents();
+    }
+
     private function project(): Document
     {
         return new Document(['$id' => 'console', '$sequence' => '0', 'region' => 'default']);
