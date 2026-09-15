@@ -12,6 +12,7 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Utopia\Bus\Bus;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -65,6 +66,7 @@ class Delete extends Base
             ->inject('queueForEvents')
             ->inject('dbForPlatform')
             ->inject('authorization')
+            ->inject('bus')
             ->callback($this->action(...));
     }
 
@@ -75,7 +77,8 @@ class Delete extends Base
         DeletePublisher $publisherForDeletes,
         Event $queueForEvents,
         Database $dbForPlatform,
-        Authorization $authorization
+        Authorization $authorization,
+        Bus $bus,
     ) {
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -86,6 +89,8 @@ class Delete extends Base
         if (!$dbForProject->deleteDocument('functions', $function->getId())) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove function from DB');
         }
+
+        $this->deleteRules($function, $queueForEvents->getProject(), 'function', $dbForPlatform, $publisherForDeletes, $authorization, $bus);
 
         // Inform scheduler to no longer run function
         $schedule = $dbForPlatform->getDocument('schedules', $function->getAttribute('scheduleId'));

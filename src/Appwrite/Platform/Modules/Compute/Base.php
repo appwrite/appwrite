@@ -3,10 +3,13 @@
 namespace Appwrite\Platform\Modules\Compute;
 
 use Appwrite\Bus\Events\RuleCreated;
+use Appwrite\Bus\Events\RuleDeleted;
 use Appwrite\Bus\Events\RuleUpdated;
 use Appwrite\Deployment\Deployments;
 use Appwrite\Event\Message\Build as BuildMessage;
+use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
+use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Filter\BranchDomain as BranchDomainFilter;
 use Appwrite\Platform\Action;
@@ -31,6 +34,24 @@ use Utopia\VCS\Exception\RepositoryNotFound;
 class Base extends Action
 {
     use AppwritePermission;
+
+    protected function deleteRules(Document $resource, Document $project, string $type, Database $dbForPlatform, DeletePublisher $publisherForDeletes, Authorization $authorization, Bus $bus): void
+    {
+        // Release domains before returning. Provider and certificate cleanup stays
+        // queued, carrying the removed rule's identity instead of its replacement.
+        $authorization->skip(fn () => $dbForPlatform->deleteDocuments('rules', [
+            Query::equal('projectInternalId', [$project->getSequence()]),
+            Query::equal('deploymentResourceType', [$type]),
+            Query::equal('deploymentResourceInternalId', [$resource->getSequence()]),
+        ], onNext: function (Document $rule) use ($project, $publisherForDeletes, $bus): void {
+            $bus->dispatch(new RuleDeleted($rule->getArrayCopy()));
+            $publisherForDeletes->enqueue(new DeleteMessage(
+                project: $project,
+                type: DELETE_TYPE_DOCUMENT,
+                document: $rule,
+            ));
+        }));
+    }
 
     /**
      * Get default specification based on plan and available specifications.
