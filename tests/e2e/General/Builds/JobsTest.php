@@ -396,6 +396,44 @@ final class JobsTest extends TestCase
         yield 'recreated schedule' => [true];
     }
 
+    #[\PHPUnit\Framework\Attributes\DataProvider('previews')]
+    public function testCompleteBranchPreview(string $owner): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $resource = $this->resource('sites');
+        $deployment = $this->deployment($resource, ['providerBranch' => 'main', 'installationId' => 'installation']);
+        $this->cache->save('jobs-exit-' . $deployment->getId(), true);
+        $this->cache->save('jobs-manifest-' . $deployment->getId(), ['files' => []]);
+        $domain = (new \Appwrite\Filter\BranchDomain())->apply([
+            'branch' => 'main', 'resourceId' => $resource->getId(), 'projectId' => 'console', 'sitesDomain' => 'sites.example.com',
+        ]);
+        $this->database->createDocument('rules', new Document([
+            '$id' => md5($domain), 'domain' => $domain, 'type' => 'deployment', 'trigger' => 'deployment',
+            'projectId' => $owner === 'other project' ? 'other' : 'console',
+            'projectInternalId' => $owner === 'other project' ? '9' : '0', 'region' => 'default',
+            'deploymentId' => 'existing-deployment', 'deploymentResourceType' => 'site',
+            'deploymentResourceId' => $resource->getId(),
+            'deploymentResourceInternalId' => $owner === 'other resource' ? '900' : $resource->getSequence(),
+            'deploymentVcsProviderBranch' => 'main',
+        ]));
+
+        $this->enqueue($deployment, 'complete');
+        $this->runWorker();
+
+        $this->assertSame($owner === 'current' ? $deployment->getId() : 'existing-deployment', $this->database->getDocument('rules', md5($domain))->getAttribute('deploymentId'));
+        $this->assertSame($deployment->getId(), $this->database->getDocument('sites', $resource->getId())->getAttribute('deploymentId'));
+        $this->assertCount(1, $this->realtime->payloads);
+    }
+
+    public static function previews(): \Iterator
+    {
+        yield 'current owner' => ['current'];
+        yield 'reused resource ID' => ['other resource'];
+        yield 'other project' => ['other project'];
+    }
+
     private function project(): Document
     {
         return new Document(['$id' => 'console', '$sequence' => '0', 'region' => 'default']);
@@ -467,6 +505,7 @@ final class JobsTest extends TestCase
         $resources->set('cache', fn () => $this->cache);
         $resources->set('locks', fn () => new Lock());
         $resources->set('plan', fn () => []);
+        $resources->set('platform', fn () => array_merge(\Utopia\Config\Config::getParam('platform', []), ['sitesDomain' => 'sites.example.com']));
         $bus = new Bus();
         $worker = new Server(new KubernetesJob($this->broker, 1, $this->queue->namespace, $resources));
         $register = require __DIR__ . '/../../../../app/init/worker/message.php';

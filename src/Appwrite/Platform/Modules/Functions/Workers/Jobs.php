@@ -591,6 +591,10 @@ class Jobs extends Action
             // Every successful site build, activated or not, repoints the
             // branch preview rule and refreshes the console screenshots.
             Base::activateBranchPreviewRule($project, $resource, $deployment, $dbForPlatform, $bus, $platform['sitesDomain']);
+            $resource = $dbForProject->getDocument($collection, $resource->getId());
+            if (! Deployments::belongsTo($deployment, $resource)) {
+                return $deployment;
+            }
             $publisherForScreenshots->enqueue(new \Appwrite\Event\Message\Screenshot(
                 project: $project,
                 deploymentId: $deployment->getId(),

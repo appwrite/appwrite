@@ -452,6 +452,10 @@ class Base extends Action
      */
     public static function activateBranchPreviewRule(Document $project, Document $site, Document $deployment, Database $dbForPlatform, Bus $bus, string $sitesDomain): void
     {
+        if (! Deployments::belongsTo($deployment, $site)) {
+            return;
+        }
+
         // Template deployments reuse providerBranch for their resolved ref
         // (tags included), which must not mint a preview domain.
         $branchName = $deployment->getAttribute('providerBranch', '');
@@ -489,19 +493,44 @@ class Base extends Action
             ]));
             $bus->dispatch(new RuleCreated($rule->getArrayCopy()));
         } catch (Duplicate) {
-            $rule = $dbForPlatform->updateDocument('rules', $ruleId, new Document([
-                'deploymentId' => $deployment->getId(),
-                'deploymentInternalId' => $deployment->getSequence(),
-            ]));
-            $bus->dispatch(new RuleUpdated($rule->getArrayCopy()));
+            $queries = [
+                Query::equal('$id', [$ruleId]),
+                Query::equal('projectInternalId', [$project->getSequence()]),
+                Query::equal('deploymentResourceType', ['site']),
+                Query::equal('deploymentResourceId', [$site->getId()]),
+                Query::equal('deploymentResourceInternalId', [$site->getSequence()]),
+            ];
+            $rule = $dbForPlatform->findOne('rules', $queries);
+            if (! $rule->isEmpty()) {
+                $queries[] = Query::equal('$sequence', [$rule->getSequence()]);
+                $dbForPlatform->updateDocuments('rules', new Document([
+                    'deploymentId' => $deployment->getId(),
+                    'deploymentInternalId' => $deployment->getSequence(),
+                ]), $queries);
+                $rule = $dbForPlatform->findOne('rules', $queries);
+                if (! $rule->isEmpty()) {
+                    $bus->dispatch(new RuleUpdated($rule->getArrayCopy()));
+                }
+            }
         }
 
         $dbForPlatform->forEach('rules', function (Document $rule) use ($dbForPlatform, $deployment, $bus) {
-            $rule = $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
+            $queries = [
+                Query::equal('$id', [$rule->getId()]),
+                Query::equal('$sequence', [$rule->getSequence()]),
+                Query::equal('projectInternalId', [$rule->getAttribute('projectInternalId')]),
+                Query::equal('deploymentResourceType', ['site']),
+                Query::equal('deploymentResourceId', [$rule->getAttribute('deploymentResourceId')]),
+                Query::equal('deploymentResourceInternalId', [$deployment->getAttribute('resourceInternalId')]),
+            ];
+            $dbForPlatform->updateDocuments('rules', new Document([
                 'deploymentId' => $deployment->getId(),
                 'deploymentInternalId' => $deployment->getSequence(),
-            ]));
-            $bus->dispatch(new RuleUpdated($rule->getArrayCopy()));
+            ]), $queries);
+            $rule = $dbForPlatform->findOne('rules', $queries);
+            if (! $rule->isEmpty()) {
+                $bus->dispatch(new RuleUpdated($rule->getArrayCopy()));
+            }
         }, [
             Query::equal('projectInternalId', [$project->getSequence()]),
             Query::equal('type', ['deployment']),
