@@ -12,15 +12,15 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 
 /**
- * The stack points `_APP_PWNED_PASSWORDS_ENDPOINT` at the mock range endpoint in
- * `app/controllers/mock.php`, so no request ever reaches the real Have I Been Pwned service.
+ * The stack sets `_APP_PWNED_PASSWORDS_DSN` to `mock://localhost`, so the breach
+ * lookup answers from a fixed list in process and never reaches a real service.
  */
 final class PoliciesPasswordPwnedIntegrationTest extends Scope
 {
     use ProjectCustom;
     use SideServer;
 
-    // Reported as breached by the mock range endpoint
+    // Reported as breached by the mock adapter, see Appwrite\Auth\Pwned\Mock
     private const PWNED_PASSWORD = 'pwned-fixture-common';
 
     public function testDefaultsOnNewProject(): void

@@ -13,6 +13,8 @@ use Utopia\Fetch\Client;
  * leave the server, and the candidate suffixes that come back are compared
  * locally. Range responses are cached per prefix, so a busy project does not
  * ask the service the same question twice.
+ *
+ * DSN: `hibp://localhost`, no details are read.
  */
 class HIBP extends Pwned
 {
@@ -22,12 +24,14 @@ class HIBP extends Pwned
     private const PREFIX_LENGTH = 5;
 
     protected ?Cache $cache;
+    protected Client $client;
+    protected string $endpoint;
 
-    public function __construct(string $endpoint = '', ?Cache $cache = null, ?Client $client = null)
+    public function __construct(?Cache $cache = null, ?Client $client = null, string $endpoint = self::ENDPOINT)
     {
-        parent::__construct($endpoint ?: self::ENDPOINT, $client);
-
         $this->cache = $cache;
+        $this->client = $this->client($client);
+        $this->endpoint = \rtrim($endpoint, '/');
     }
 
     public function getName(): string

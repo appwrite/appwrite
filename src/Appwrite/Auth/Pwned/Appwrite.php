@@ -4,6 +4,7 @@ namespace Appwrite\Auth\Pwned;
 
 use Ahc\Jwt\JWT;
 use Appwrite\Auth\Pwned;
+use Utopia\DSN\DSN;
 use Utopia\Fetch\Client;
 
 /**
@@ -11,25 +12,35 @@ use Utopia\Fetch\Client;
  *
  * The service answers for a whole password rather than a hash prefix, so unlike
  * `HIBP` this sends the password itself. It travels inside a short-lived JWT
- * signed with a secret shared with the service, which is only safe on a network
- * you control. In exchange the service caches answers and can front Have I Been
- * Pwned or another detector without the server knowing which.
+ * signed with a secret the service shares, which is only safe on a network you
+ * control. In exchange the service caches answers and can front Have I Been
+ * Pwned or another detector without this server knowing which.
+ *
+ * DSN: `appwrite://SECRET@HOST[:PORT][/PATH][?tls=true]`. The secret must match
+ * the service's `APPWRITE_PWNED_JWT_SECRET`, the path defaults to
+ * `v1/detection`, and the connection is plain HTTP unless `tls=true`.
  */
 class Appwrite extends Pwned
 {
-    public const ENDPOINT = 'http://appwrite-pwned/v1/detection';
+    private const PATH = 'v1/detection';
 
     // The service decodes with the same window
     private const TOKEN_EXPIRY = 900; // seconds
     private const TOKEN_LEEWAY = 10; // seconds
 
+    protected string $endpoint;
     protected string $secret;
+    protected Client $client;
 
-    public function __construct(string $endpoint = '', string $secret = '', ?Client $client = null)
+    public function __construct(DSN $dsn, ?Client $client = null)
     {
-        parent::__construct($endpoint ?: self::ENDPOINT, $client);
+        $scheme = $dsn->getParam('tls') === 'true' ? 'https' : 'http';
+        $port = $dsn->getPort() !== null ? ':' . $dsn->getPort() : '';
+        $path = $dsn->getPath();
 
-        $this->secret = $secret;
+        $this->endpoint = $scheme . '://' . $dsn->getHost() . $port . '/' . ($path === '' || $path === null ? self::PATH : $path);
+        $this->secret = $dsn->getUser() ?? '';
+        $this->client = $this->client($client);
     }
 
     public function getName(): string

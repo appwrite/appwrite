@@ -501,35 +501,3 @@ Http::shutdown()
 
         $response->dynamic(new Document(['result' => \implode(',', $methods) . ':' . $route->getPath() . ':passed']), Response::MODEL_MOCK);
     });
-
-Http::get('/v1/mock/tests/general/pwned-passwords/:prefix')
-    ->desc('Pwned Passwords range')
-    ->groups(['mock'])
-    ->label('scope', 'public')
-    ->label('docs', false)
-    ->label('mock', true)
-    ->param('prefix', '', new Text(5, 5), 'First five characters of the SHA-1 password hash.')
-    ->inject('response')
-    ->action(function (string $prefix, Response $response) {
-        // Mirrors the Have I Been Pwned range API: every leaked hash sharing the
-        // requested prefix comes back as `SUFFIX:COUNT`, one per line.
-        $leaked = [
-            'pwned-fixture-common' => 12345,
-            'pwned-fixture-uncommon' => 678,
-            'pwned-fixture-rare' => 9,
-        ];
-
-        $prefix = \strtoupper($prefix);
-        $lines = [];
-        foreach ($leaked as $password => $count) {
-            $hash = \strtoupper(\sha1($password));
-            if (\str_starts_with($hash, $prefix)) {
-                $lines[] = \substr($hash, 5) . ':' . $count;
-            }
-        }
-
-        // Padded entries carry a count of 0 and must never be treated as a breach
-        $lines[] = \str_repeat('0', 35) . ':0';
-
-        $response->text(\implode("\r\n", $lines));
-    });

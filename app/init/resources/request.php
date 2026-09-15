@@ -5,6 +5,7 @@ use Ahc\Jwt\JWTException;
 use Appwrite\Auth\Key;
 use Appwrite\Auth\Pwned\Appwrite as PwnedAppwrite;
 use Appwrite\Auth\Pwned\HIBP as PwnedHIBP;
+use Appwrite\Auth\Pwned\Mock as PwnedMock;
 use Appwrite\Auth\Validator\PasswordPwned;
 use Appwrite\Database\Factory as DatabaseFactory;
 use Appwrite\Databases\TransactionState;
@@ -52,6 +53,7 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Container;
 use Utopia\Domains\Domain;
+use Utopia\DSN\DSN;
 use Utopia\Http\Http;
 use Utopia\Locale\Locale;
 use Utopia\Lock\Distributed as DistributedLock;
@@ -677,13 +679,16 @@ return function (Container $context): void {
     }, ['user', 'store', 'proofForToken']);
 
     $context->set('pwnedPasswords', function (Document $project, Cache $cache) {
-        $endpoint = System::getEnv('_APP_PWNED_PASSWORDS_ENDPOINT', '');
-        $name = \strtolower(System::getEnv('_APP_PWNED_PASSWORDS_ADAPTER', 'hibp'));
+        $dsn = new DSN(System::getEnv('_APP_PWNED_PASSWORDS_DSN', 'hibp://localhost'));
 
-        $adapter = match ($name) {
-            'hibp' => new PwnedHIBP($endpoint, $cache),
-            'appwrite' => new PwnedAppwrite($endpoint, System::getEnv('_APP_OPENSSL_KEY_V1', '')),
-            default => throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Unknown _APP_PWNED_PASSWORDS_ADAPTER: ' . $name),
+        $adapter = match ($dsn->getScheme()) {
+            'hibp' => new PwnedHIBP($cache),
+            'appwrite' => new PwnedAppwrite($dsn),
+            // Reports almost every password as safe, so it must never be reachable on a real server
+            'mock' => Http::isProduction()
+                ? throw new Exception(Exception::GENERAL_SERVER_ERROR, 'The mock breach adapter cannot be used in production.')
+                : new PwnedMock(),
+            default => throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Unknown _APP_PWNED_PASSWORDS_DSN scheme: ' . $dsn->getScheme()),
         };
 
         return new PasswordPwned($adapter, $project->getAttribute('auths', [])['passwordPwned'] ?? []);

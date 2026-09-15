@@ -8,6 +8,7 @@ use Ahc\Jwt\JWT;
 use Appwrite\Auth\Pwned\Appwrite;
 use Appwrite\Extend\Exception;
 use PHPUnit\Framework\TestCase;
+use Utopia\DSN\DSN;
 use Utopia\Fetch\Adapter;
 use Utopia\Fetch\Client;
 use Utopia\Fetch\Options\Request as RequestOptions;
@@ -16,8 +17,8 @@ use Utopia\Fetch\Response;
 final class AppwriteTest extends TestCase
 {
     private const PASSWORD = 'Password123!';
-    private const ENDPOINT = 'https://pwned.test/v1/detection';
     private const SECRET = 'shared-with-the-service';
+    private const DSN = 'appwrite://' . self::SECRET . '@pwned.test/v1/detection';
 
     public function testLeakedPasswordIsReported(): void
     {
@@ -41,7 +42,7 @@ final class AppwriteTest extends TestCase
 
         $this->assertCount(1, $fetch->requests);
         $this->assertSame('POST', $fetch->requests[0]['method']);
-        $this->assertSame(self::ENDPOINT, $fetch->requests[0]['url']);
+        $this->assertSame('http://pwned.test/v1/detection', $fetch->requests[0]['url']);
 
         $sent = \json_decode($fetch->requests[0]['body'], true);
         $this->assertIsArray($sent);
@@ -113,9 +114,29 @@ final class AppwriteTest extends TestCase
         }
     }
 
+    public function testTheDsnDescribesWhereAndHowToConnect(): void
+    {
+        $cases = [
+            'appwrite://secret@pwned.test/v1/detection' => 'http://pwned.test/v1/detection',
+            // The path the service exposes is assumed when the DSN leaves it out
+            'appwrite://secret@pwned.test' => 'http://pwned.test/v1/detection',
+            'appwrite://secret@pwned.test:8088' => 'http://pwned.test:8088/v1/detection',
+            'appwrite://secret@pwned.test/custom/path' => 'http://pwned.test/custom/path',
+            'appwrite://secret@pwned.test?tls=true' => 'https://pwned.test/v1/detection',
+        ];
+
+        foreach ($cases as $dsn => $expected) {
+            $fetch = new DetectionFetch(body: '{"leaked":false}');
+
+            (new Appwrite(new DSN($dsn), new Client($fetch)))->isPwned(self::PASSWORD);
+
+            $this->assertSame($expected, $fetch->requests[0]['url'], $dsn);
+        }
+    }
+
     private function adapter(DetectionFetch $fetch): Appwrite
     {
-        return new Appwrite(self::ENDPOINT, self::SECRET, new Client($fetch));
+        return new Appwrite(new DSN(self::DSN), new Client($fetch));
     }
 }
 

@@ -79,8 +79,8 @@ final class HIBPTest extends TestCase
         $fetch = new RangeFetch(body: $this->range([self::LEAKED => 42]));
         $cache = new Cache(new Memory());
 
-        $this->assertTrue((new HIBP(self::ENDPOINT, $cache, new Client($fetch)))->isPwned(self::LEAKED));
-        $this->assertTrue((new HIBP(self::ENDPOINT, $cache, new Client($fetch)))->isPwned(self::LEAKED));
+        $this->assertTrue((new HIBP($cache, new Client($fetch), self::ENDPOINT))->isPwned(self::LEAKED));
+        $this->assertTrue((new HIBP($cache, new Client($fetch), self::ENDPOINT))->isPwned(self::LEAKED));
 
         $this->assertCount(1, $fetch->urls);
     }
@@ -90,8 +90,8 @@ final class HIBPTest extends TestCase
         $fetch = new RangeFetch(body: $this->range([self::LEAKED => 42]));
         $cache = new Cache(new Memory());
 
-        (new HIBP('https://one.test/range', $cache, new Client($fetch)))->isPwned(self::LEAKED);
-        (new HIBP('https://two.test/range', $cache, new Client($fetch)))->isPwned(self::LEAKED);
+        (new HIBP($cache, new Client($fetch), 'https://one.test/range'))->isPwned(self::LEAKED);
+        (new HIBP($cache, new Client($fetch), 'https://two.test/range'))->isPwned(self::LEAKED);
 
         $this->assertCount(2, $fetch->urls);
     }
@@ -100,8 +100,8 @@ final class HIBPTest extends TestCase
     {
         $fetch = new RangeFetch(body: '');
 
-        (new HIBP('https://server.test/range', null, new Client($fetch)))->isPwned(self::LEAKED);
-        (new HIBP('https://other.test/range/', null, new Client($fetch)))->isPwned(self::LEAKED);
+        (new HIBP(null, new Client($fetch), 'https://server.test/range'))->isPwned(self::LEAKED);
+        (new HIBP(null, new Client($fetch), 'https://other.test/range/'))->isPwned(self::LEAKED);
 
         $this->assertStringStartsWith('https://server.test/range/', $fetch->urls[0]);
         $this->assertStringStartsWith('https://other.test/range/', $fetch->urls[1]);
@@ -131,7 +131,7 @@ final class HIBPTest extends TestCase
     public function testFailedLookupIsNotCached(): void
     {
         $fetch = new RangeFetch(failure: new \RuntimeException('connection refused'));
-        $adapter = new HIBP(self::ENDPOINT, new Cache(new Memory()), new Client($fetch));
+        $adapter = new HIBP(new Cache(new Memory()), new Client($fetch), self::ENDPOINT);
 
         foreach ([1, 2] as $attempt) {
             try {
@@ -146,7 +146,7 @@ final class HIBPTest extends TestCase
 
     private function adapter(RangeFetch $fetch): HIBP
     {
-        return new HIBP(self::ENDPOINT, null, new Client($fetch));
+        return new HIBP(null, new Client($fetch), self::ENDPOINT);
     }
 
     /**

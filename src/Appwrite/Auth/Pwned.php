@@ -8,31 +8,17 @@ use Utopia\Fetch\Client;
 /**
  * Looks a password up in a database of known data breaches.
  *
- * Adapters differ in what leaves the server and where it goes, so read the
- * concrete class before choosing one. Pick the adapter with
- * `_APP_PWNED_PASSWORDS_ADAPTER` and the address with
- * `_APP_PWNED_PASSWORDS_ENDPOINT`.
+ * The adapter and its details both come from `_APP_PWNED_PASSWORDS_DSN`, whose
+ * scheme picks the adapter. Adapters differ in what leaves the server and where
+ * it goes, so read the concrete class before choosing one.
  */
 abstract class Pwned
 {
-    protected const CONNECT_TIMEOUT = 3 * 1000; // milliseconds
-    protected const REQUEST_TIMEOUT = 5 * 1000; // milliseconds
-
-    protected string $endpoint;
-    protected Client $client;
-
-    public function __construct(string $endpoint, ?Client $client = null)
-    {
-        $this->endpoint = \rtrim($endpoint, '/');
-        $this->client = $client ?? (new Client())
-            ->setConnectTimeout(self::CONNECT_TIMEOUT)
-            ->setTimeout(self::REQUEST_TIMEOUT)
-            ->setAllowRedirects(false)
-            ->setUserAgent('Appwrite');
-    }
+    private const CONNECT_TIMEOUT = 3 * 1000; // milliseconds
+    private const REQUEST_TIMEOUT = 5 * 1000; // milliseconds
 
     /**
-     * Adapter name, as accepted by `_APP_PWNED_PASSWORDS_ADAPTER`.
+     * Adapter name, matching the DSN scheme that selects it.
      */
     abstract public function getName(): string;
 
@@ -42,6 +28,18 @@ abstract class Pwned
      * @throws Exception when the breach service cannot be reached or answers with nonsense
      */
     abstract public function isPwned(string $password): bool;
+
+    /**
+     * A client with the timeouts a password check can afford to wait.
+     */
+    protected function client(?Client $client = null): Client
+    {
+        return $client ?? (new Client())
+            ->setConnectTimeout(self::CONNECT_TIMEOUT)
+            ->setTimeout(self::REQUEST_TIMEOUT)
+            ->setAllowRedirects(false)
+            ->setUserAgent('Appwrite');
+    }
 
     /**
      * A password is never silently accepted when the lookup did not happen.
