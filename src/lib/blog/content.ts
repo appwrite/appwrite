@@ -198,6 +198,12 @@ export function getPublicBlogPosts(): BlogPostMeta[] {
   return BLOG_POSTS.filter(isPublicPost)
 }
 
+// Unlisted posts stay out of the index, categories, search, and sitemap,
+// but remain visible on their author's profile.
+function getNonDraftBlogPosts(): BlogPostMeta[] {
+  return BLOG_POSTS.filter((post) => !post.draft)
+}
+
 /** Draft posts, newest first. Only surfaced when the blogDrafts flag is on. */
 export function getDraftBlogPosts(): BlogPostMeta[] {
   return BLOG_POSTS.filter((post) => post.draft)
@@ -309,7 +315,7 @@ export function postMatchesAuthor(post: BlogPostMeta, authorSlug: string): boole
 }
 
 export function getPostsForAuthor(authorSlug: string): BlogPostMeta[] {
-  return getPublicBlogPosts().filter((post) => postMatchesAuthor(post, authorSlug))
+  return getNonDraftBlogPosts().filter((post) => postMatchesAuthor(post, authorSlug))
 }
 
 export function getPostsForCategory(categorySlug: string): BlogPostMeta[] {

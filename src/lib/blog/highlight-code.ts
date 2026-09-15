@@ -64,10 +64,16 @@ const RUNTIME_TO_PRISM: Record<string, string> = {
 
 function resolvePrismLanguage(fenceLanguage: string): string | null {
   const normalized = fenceLanguage.toLowerCase().trim()
-  // `server-nodejs`, `client-web`, `server-dart` and friends name a platform.
+  // Platform fences such as `client-flutter` or `server-nodejs` are aliased
+  // in full, so resolve the whole name before falling back to the bare
+  // runtime key (`nodejs`, `web`) for fences that omit the prefix.
+  const aliased = resolveFenceCodeLanguage(normalized)
   const platform = normalized.replace(/^(server|client)-/, '')
   const candidate =
-    RUNTIME_TO_PRISM[platform] ?? resolveFenceCodeLanguage(platform)
+    RUNTIME_TO_PRISM[normalized] ??
+    (aliased !== 'plaintext'
+      ? aliased
+      : (RUNTIME_TO_PRISM[platform] ?? resolveFenceCodeLanguage(platform)))
   const language = RUNTIME_TO_PRISM[candidate] ?? candidate
   if (language === 'plaintext' || language === 'env') return null
   return Prism.languages[language] ? language : null

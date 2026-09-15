@@ -922,7 +922,6 @@ export function ColumnDrawer({
                   value={enumElements}
                   onChange={setEnumElements}
                   placeholder={t('Add elements here')}
-                  splitOnComma
                   maxTagLength={255}
                   disabled={isLoading}
                 />

@@ -21,7 +21,7 @@ import {
 import { IdInput } from '@/components/ui/id-input'
 import { WizardLayout } from '@/components/global/shared/WizardLayout'
 import { RuntimeIcon } from '@/components/global/shared/RuntimeIcon'
-import { Upload } from 'lucide-react'
+import { FileArchive, Upload, X } from 'lucide-react'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { ID } from '@appwrite.io/console'
@@ -44,6 +44,12 @@ import { VariablesSettingsCard } from '@/components/global/shared/VariablesSetti
 import type { FunctionWizardVariable } from './RepositoryConfigView'
 import { useT } from '@/lib/i18n/translate'
 import { validateVariables } from '@/lib/variables'
+import { cn } from '@/lib/utils'
+import { formatDecimalBytes } from '@/lib/utils/byte-display-unit'
+import {
+  DEPLOYMENT_ARCHIVE_ACCEPT,
+  isDeploymentArchive,
+} from '@/lib/deployment-archive'
 
 interface ManualCreateViewProps {
   runtimeFromSearch?: string
@@ -70,6 +76,42 @@ export function ManualCreateView({ runtimeFromSearch }: ManualCreateViewProps) {
   const [specification, setSpecification] = useState('')
   const [file, setFile] = useState<File | null>(null)
   const [isDeploying, setIsDeploying] = useState(false)
+  const [isDragging, setIsDragging] = useState(false)
+
+  const handleFileSelect = (files: FileList | null) => {
+    const selected = files?.[0]
+    if (!selected) return
+    if (!isDeploymentArchive(selected)) {
+      toast.error(t('Only .tar.gz files are supported'))
+      if (fileInputRef.current) fileInputRef.current.value = ''
+      return
+    }
+    setFile(selected)
+  }
+
+  const clearFile = () => {
+    setFile(null)
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(true)
+  }
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(false)
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(false)
+    handleFileSelect(e.dataTransfer.files)
+  }
 
   const { data: runtimesData } = useProjectRuntimes(projectId)
   const { data: specificationsData } = useFunctionSpecifications(
@@ -382,19 +424,56 @@ export function ManualCreateView({ runtimeFromSearch }: ManualCreateViewProps) {
           <input
             ref={fileInputRef}
             type="file"
-            accept=".tar.gz,.tgz"
+            accept={DEPLOYMENT_ARCHIVE_ACCEPT}
             className="hidden"
-            onChange={(e) => setFile(e.target.files?.[0] || null)}
+            onChange={(e) => handleFileSelect(e.target.files)}
           />
-          <Button
-            type="button"
-            variant="outline"
-            className="h-9 text-[13px] gap-1.5"
-            onClick={() => fileInputRef.current?.click()}
-          >
-            <Upload className="h-4 w-4" />
-            {file ? file.name : t('Choose .tar.gz file')}
-          </Button>
+          {!file ? (
+            <button
+              type="button"
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              onClick={() => fileInputRef.current?.click()}
+              className={cn(
+                'flex w-full flex-col items-center justify-center rounded-lg border-2 border-dashed py-12 px-6 cursor-pointer transition-colors outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
+                isDragging
+                  ? 'border-primary bg-primary/5'
+                  : 'border-border hover:border-muted-foreground hover:bg-accent/50',
+              )}
+            >
+              <span className="pointer-events-none flex flex-col items-center">
+                <Upload className="h-8 w-8 text-muted-foreground mb-3" />
+                <span className="text-[13px] font-medium text-foreground">
+                  {t('Drop your file here or click to browse')}
+                </span>
+              </span>
+            </button>
+          ) : (
+            <div className="flex items-center gap-3 rounded-lg border border-border bg-background px-4 py-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
+                <FileArchive className="h-5 w-5 text-muted-foreground" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="truncate text-[13px] font-medium text-foreground">
+                  {file.name}
+                </p>
+                <p className="text-[12px] text-muted-foreground">
+                  {formatDecimalBytes(file.size)}
+                </p>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={clearFile}
+                aria-label={t('Remove file')}
+                className="h-8 w-8 p-0"
+                disabled={isDeploying}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
         </div>
       </div>
 

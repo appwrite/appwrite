@@ -80,7 +80,20 @@ export function nativeDatabasePath(
 }
 
 function nativeSqlEditorMount(page: Page) {
-  return page.locator('.monaco-editor, textarea.inputarea').first()
+  return page.locator('.monaco-editor').first()
+}
+
+/**
+ * Monaco's focusable input. Chromium supports the EditContext API, so Monaco
+ * 0.55 renders a `div.native-edit-context` there instead of the legacy
+ * `textarea.inputarea` it still uses in Firefox and WebKit.
+ */
+function nativeSqlEditorInput(page: Page) {
+  return page
+    .locator(
+      '.monaco-editor .native-edit-context, .monaco-editor textarea.inputarea',
+    )
+    .first()
 }
 
 /** Shell chrome is up; do not sit on "Loading database..." for minutes. */
@@ -400,11 +413,10 @@ export async function typeNativeSql(page: Page, sql: string): Promise<void> {
     // Insert the text in one shot instead of typing it: per-key typing opens
     // Monaco's suggest widget, which then swallows keystrokes and leaves
     // garbled statements such as `SELok` in the editor. Focus Monaco's own
-    // textarea first so select-all clears the previous statement instead of
+    // input first so select-all clears the previous statement instead of
     // selecting the page and leaving two statements in the editor.
     const modifier = process.platform === 'darwin' ? 'Meta' : 'Control'
-    const input = page.locator('textarea.inputarea').first()
-    await input.focus()
+    await nativeSqlEditorInput(page).focus()
     await page.keyboard.press(`${modifier}+KeyA`)
     await page.keyboard.press('Backspace')
     await page.keyboard.insertText(sql)

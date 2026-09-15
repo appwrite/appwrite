@@ -182,8 +182,9 @@ export function ConsoleLayout({
         />
       )}
 
-      {/* Sidebar + content below header */}
-      <div className="@container flex flex-1 min-h-0 overflow-x-visible overflow-y-hidden">
+      {/* Sidebar + content below header. `console-layout-row` lets the
+          marketing document-scroll mode lift the overflow clip (styles.css). */}
+      <div className="console-layout-row @container flex flex-1 min-h-0 overflow-x-visible overflow-y-hidden">
         {sidebar && (
           <ConsoleSidebar
             projectId={sidebar.projectId}

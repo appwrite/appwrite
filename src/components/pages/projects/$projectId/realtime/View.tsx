@@ -198,7 +198,9 @@ function RealtimePanelHeader({
         {title}
       </h3>
       {actions ? (
-        <div className="flex shrink-0 items-center gap-2">{actions}</div>
+        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+          {actions}
+        </div>
       ) : null}
     </div>
   )
@@ -288,7 +290,7 @@ function RealtimeWebSocketUrlField({
         <TooltipTrigger asChild>
           <div
             className={cn(
-              'flex w-[7.25rem] shrink-0 items-center justify-center gap-1.5 border-e border-border px-2 sm:gap-2 sm:px-2.5',
+              'flex w-9 shrink-0 items-center justify-center gap-1.5 border-e border-border px-2 sm:w-[7.25rem] sm:gap-2 sm:px-2.5',
               connectionStatusSegmentClass(status, socketOpen),
             )}
           >
@@ -983,10 +985,12 @@ export function View() {
   if (!projectId) return null
 
   return (
-    <div className="flex h-full min-h-0 flex-col">
+    // Below lg the panels stack and the whole page scrolls; at lg they split
+    // into a viewport-height grid where each panel owns its scroll area.
+    <div className="flex h-full min-h-0 flex-col overflow-y-auto lg:overflow-hidden">
       <ServiceHeader title={t('Realtime')} fullWidthBorder fullWidth />
 
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+      <div className="flex flex-col lg:min-h-0 lg:flex-1 lg:overflow-hidden">
         <TooltipProvider delayDuration={300}>
           <div
             className={cn(
@@ -1084,7 +1088,7 @@ export function View() {
 
         <div
           className={cn(
-            'flex min-h-0 flex-1 flex-col overflow-hidden lg:grid',
+            'flex flex-col lg:grid lg:min-h-0 lg:flex-1 lg:overflow-hidden',
             REALTIME_LAYOUT_GRID,
             'lg:grid-rows-[3rem_minmax(0,1fr)]',
           )}
@@ -1099,7 +1103,7 @@ export function View() {
             }
           />
 
-          <div className="order-2 flex max-h-[min(50dvh,28rem)] min-h-0 flex-col overflow-hidden border-b border-border lg:col-start-1 lg:row-start-2 lg:max-h-none lg:min-h-0 lg:border-b-0 lg:border-e">
+          <div className="order-2 flex flex-col overflow-hidden border-b border-border lg:col-start-1 lg:row-start-2 lg:min-h-0 lg:border-b-0 lg:border-e">
             <ConfigurationPanel
               isConnected={isConnected}
               configuredSubscriptions={configuredSubscriptions}
@@ -1138,16 +1142,17 @@ export function View() {
                   size="sm"
                   className="h-7 text-[12px]"
                   onClick={() => setIsPaused((current) => !current)}
+                  aria-label={isPaused ? t('Resume') : t('Pause')}
                 >
                   {isPaused ? (
                     <>
-                      <Play className="me-1.5 h-3.5 w-3.5" />
-                      {t('Resume')}
+                      <Play className="h-3.5 w-3.5 sm:me-1.5" />
+                      <span className="hidden sm:inline">{t('Resume')}</span>
                     </>
                   ) : (
                     <>
-                      <Pause className="me-1.5 h-3.5 w-3.5" />
-                      {t('Pause')}
+                      <Pause className="h-3.5 w-3.5 sm:me-1.5" />
+                      <span className="hidden sm:inline">{t('Pause')}</span>
                     </>
                   )}
                 </Button>
@@ -1158,9 +1163,10 @@ export function View() {
                   className="h-7 text-[12px]"
                   onClick={handleClearLogs}
                   disabled={logs.length === 0}
+                  aria-label={t('Clear')}
                 >
-                  <Trash2 className="me-1.5 h-3.5 w-3.5" />
-                  {t('Clear')}
+                  <Trash2 className="h-3.5 w-3.5 sm:me-1.5" />
+                  <span className="hidden sm:inline">{t('Clear')}</span>
                 </Button>
                 <TooltipProvider delayDuration={0}>
                   <Tooltip>
@@ -1195,7 +1201,7 @@ export function View() {
               filters={messageFilters}
               onChange={setMessageFilters}
             />
-            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+            <div className="flex-1 lg:min-h-0 lg:overflow-y-auto lg:overscroll-contain">
               {logs.length === 0 ? (
                 <div className="flex min-h-[200px] flex-1 items-center justify-center px-4 py-12">
                   <div className="w-full max-w-sm">

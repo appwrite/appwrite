@@ -511,4 +511,18 @@ export const jaSitesDictionary: Record<string, string> = {
   Secret: 'シークレット',
   Size: 'サイズ',
   Close: '閉じる',
+
+  // Protected preview authorization
+  'Opening preview…': 'プレビューを開いています…',
+  'Checking your access to this preview deployment.':
+    'このプレビューデプロイへのアクセス権を確認しています。',
+  'Preview is private': 'このプレビューは非公開です',
+  "You don't have access to this preview. Ask a member of the project's organization to add you.":
+    'このプレビューへのアクセス権がありません。プロジェクトの組織のメンバーに追加を依頼してください。',
+  'Invalid preview link': 'プレビューリンクが無効です',
+  'This link is missing or has a malformed preview address. Open the preview URL again to start over.':
+    'このリンクにはプレビューのアドレスがないか、アドレスが正しくありません。プレビューの URL をもう一度開いてやり直してください。',
+  "Couldn't open preview": 'プレビューを開けませんでした',
+  'Something went wrong while checking your access to this preview. Try again in a moment.':
+    'このプレビューへのアクセス権の確認中に問題が発生しました。しばらくしてからもう一度お試しください。',
 }
