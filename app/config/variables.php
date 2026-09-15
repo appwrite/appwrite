@@ -880,6 +880,15 @@ return [
                 'question' => '',
                 'filter' => ''
             ],
+            [
+                'name' => '_APP_WHATSAPP_PROVIDER',
+                'description' => "Provider used for delivering WhatsApp messages for Phone authentication. Use the following format: 'sms://[PHONE_NUMBER_ID]:[ACCESS_TOKEN]@whatsapp?template=[TEMPLATE_NAME]&language=[LANGUAGE]'.\n\nEnsure `[PHONE_NUMBER_ID]` and `[ACCESS_TOKEN]` are URL encoded if they contain any non-alphanumeric characters.\n\n`[TEMPLATE_NAME]` is the name of an approved WhatsApp authentication template. `language` is optional and defaults to 'en_US'.\n\n`_APP_SMS_FROM` is not required for WhatsApp, the sender is the phone number behind `[PHONE_NUMBER_ID]`.\n\nThe SMS fallback of the `whatsapp-sms` phone OTP channel policy covers API-level rejections only. Meta answers a message addressed to a number with no WhatsApp account with HTTP 200 and reports the real failure asynchronously on a status webhook, which Appwrite does not consume, so `whatsapp-sms` does not currently fall back for recipients who are simply not on WhatsApp.",
+                'introduction' => '2.2.1',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
         ],
     ],
     [

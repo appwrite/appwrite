@@ -324,6 +324,8 @@ class Exception extends \Exception
 
     public const string PROJECT_REGION_UNSUPPORTED = 'project_region_unsupported';
 
+    public const string PROJECT_PHONE_OTP_CHANNEL_UNAVAILABLE = 'project_phone_otp_channel_unavailable';
+
     /** Webhooks */
     public const string WEBHOOK_NOT_FOUND = 'webhook_not_found';
     public const string WEBHOOK_ALREADY_EXISTS = 'webhook_already_exists';

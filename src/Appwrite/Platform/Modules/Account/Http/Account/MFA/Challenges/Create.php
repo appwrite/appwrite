@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Account\Http\Account\MFA\Challenges;
 
 use Appwrite\Auth\MFA\Type;
+use Appwrite\Auth\PhoneOtpChannel;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Mail as MailMessage;
@@ -171,7 +172,21 @@ class Create extends Action
 
         switch ($factor) {
             case Type::PHONE:
-                if (empty(System::getEnv('_APP_SMS_PROVIDER'))) {
+                $policy = $project->getAttribute('auths', [])['phoneOtpChannel'] ?? PHONE_OTP_CHANNEL_SMS;
+                $smsConfigured = PhoneOtpChannel::isSmsConfigured(
+                    !empty(System::getEnv('_APP_SMS_PROVIDER')),
+                    !empty(System::getEnv('_APP_SMS_FROM')),
+                );
+                $whatsappConfigured = !empty(System::getEnv('_APP_WHATSAPP_PROVIDER'));
+                $resolved = PhoneOtpChannel::resolve($policy, null, $smsConfigured, $whatsappConfigured);
+
+                if ($resolved === null) {
+                    // A provider is up, so the phone channel as a whole is not disabled: the policy
+                    // simply resolved to a channel this instance has no provider for.
+                    if ($smsConfigured || $whatsappConfigured) {
+                        throw new Exception(Exception::PROJECT_PHONE_OTP_CHANNEL_UNAVAILABLE, 'No provider is configured for the channel the phone OTP channel policy "' . $policy . '" resolved to');
+                    }
+
                     throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
                 }
                 if (empty($user->getAttribute('phone'))) {
@@ -199,18 +214,22 @@ class Create extends Action
                     message: new Document([
                         '$id' => $challenge->getId(),
                         'data' => [
-                            'content' => $code,
+                            'content' => $message,
+                            'code' => $code,
                         ],
                     ]),
                     recipients: [$phone],
                     providerType: MESSAGE_TYPE_SMS,
+                    channel: $resolved->channel,
+                    fallback: $resolved->fallback,
                 ));
 
+                $whatsapp = $resolved->channel === PHONE_OTP_CHANNEL_WHATSAPP;
                 $countryCode = CallingCode::fromPhoneNumber($phone);
                 if (!empty($countryCode)) {
-                    $usage->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
+                    $usage->addMetric(str_replace('{countryCode}', $countryCode, $whatsapp ? METRIC_AUTH_METHOD_WHATSAPP_COUNTRY_CODE : METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
                 }
-                $usage->addMetric(METRIC_AUTH_METHOD_PHONE, 1);
+                $usage->addMetric($whatsapp ? METRIC_AUTH_METHOD_WHATSAPP : METRIC_AUTH_METHOD_PHONE, 1);
                 break;
             case Type::EMAIL:
                 if (empty(System::getEnv('_APP_SMTP_HOST'))) {

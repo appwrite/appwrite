@@ -14,6 +14,8 @@ final class Messaging extends Base
         public readonly ?Document $message = null,
         public readonly ?array $recipients = null,
         public readonly ?string $providerType = null,
+        public readonly ?string $channel = null,
+        public readonly ?bool $fallback = null,
     ) {
     }
 
@@ -27,6 +29,8 @@ final class Messaging extends Base
             'message' => $this->message?->getArrayCopy(),
             'recipients' => $this->recipients,
             'providerType' => $this->providerType,
+            'channel' => $this->channel,
+            'fallback' => $this->fallback,
         ];
     }
 
@@ -40,6 +44,8 @@ final class Messaging extends Base
             message: !empty($data['message']) ? new Document($data['message']) : null,
             recipients: $data['recipients'] ?? null,
             providerType: $data['providerType'] ?? null,
+            channel: $data['channel'] ?? null,
+            fallback: $data['fallback'] ?? null,
         );
     }
 }
