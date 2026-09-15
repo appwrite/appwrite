@@ -146,6 +146,6 @@ A huge thank you to everyone who joined us during the week, shared an Init ticke
 
 # Start building with everything from Init 2026
 
-The fastest way to try any of this is to open a project on [Appwrite Cloud](https://cloud.appwrite.io) and pick the piece that matches what you are building: a relational database, a vector store, storage your existing S3 tooling can already talk to, or an auth server your other apps can sign into.
+The fastest way to try any of this is to open a project on [Appwrite Cloud](https://appwrite.io) and pick the piece that matches what you are building: a relational database, a vector store, storage your existing S3 tooling can already talk to, or an auth server your other apps can sign into.
 
 Catch up on everything from Init 2026 at [appwrite.io/init](https://appwrite.io/init).
