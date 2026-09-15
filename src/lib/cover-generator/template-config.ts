@@ -196,6 +196,26 @@ const COVER_SCREENSHOT_TEMPLATE_FIELDS: CoverFieldDefinition[] = [
   },
 ]
 
+const COVER_SCREENSHOT_TWO_LINE_TEMPLATE_FIELDS: CoverFieldDefinition[] = [
+  ...COVER_SCREENSHOT_ANGLED_TEMPLATE_FIELDS.slice(0, 4),
+  COVER_SCREENSHOT_FRAME_WIDTH_FIELD,
+  COVER_SCREENSHOT_FRAME_HEIGHT_FIELD,
+  {
+    key: 'title',
+    label: 'Title',
+    type: 'textarea',
+    placeholder: 'The open source cloud\nfor agents & devs',
+    description:
+      'Press Enter to break the title onto a second line. Long titles wrap automatically to two lines.',
+  },
+  {
+    key: 'subtitle',
+    label: 'Subtitle',
+    type: 'textarea',
+    placeholder: 'Manage projects, databases, and storage in one place',
+  },
+]
+
 const COVER_SCREENSHOT_SIDE_FRAME_WIDTH_FIELD: CoverFieldDefinition = {
   ...COVER_SCREENSHOT_FRAME_WIDTH_FIELD,
   label: 'Screenshot width',
@@ -662,6 +682,13 @@ export const COVER_TEMPLATE_DEFINITIONS: CoverTemplateDefinition[] = [
     label: 'Screenshot',
     description: 'Product screenshot with zoom and crop controls.',
     fields: COVER_SCREENSHOT_TEMPLATE_FIELDS,
+  },
+  {
+    id: 'screenshot-two-line',
+    label: 'Screenshot two-line',
+    description:
+      'Product screenshot with a title that can break onto a second line.',
+    fields: COVER_SCREENSHOT_TWO_LINE_TEMPLATE_FIELDS,
   },
   {
     id: 'screenshot-side',
