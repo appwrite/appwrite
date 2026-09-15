@@ -3440,7 +3440,7 @@ final class AccountCustomClientTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
 
-        // Omit failure so Appwrite uses the default relay URL (/auth/oauth2/failure or legacy /console/...)
+        // Omit failure so Appwrite uses the default relay URL (/auth/oauth2/failure)
         $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/' . $provider, [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
@@ -3481,7 +3481,7 @@ final class AccountCustomClientTest extends Scope
         $query = [];
         \parse_str((string) \parse_url($location, PHP_URL_QUERY), $query);
 
-        $this->assertContains($path, ['/auth/oauth2/failure', '/console/auth/oauth2/failure']);
+        $this->assertEquals('/auth/oauth2/failure', $path);
         $this->assertEquals($projectId, $query['project'] ?? null);
         $this->assertNotEmpty($query['error'] ?? null);
 

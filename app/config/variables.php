@@ -242,10 +242,10 @@ return [
                 'filter' => ''
             ],
             [
-                'name' => '_APP_CONSOLE_URL_SCHEME',
-                'description' => 'Console URL scheme used when the backend generates links to the console (OAuth callbacks, emails, error page CTAs, VCS comments). Set to \'root\' for the new console served at the root path (appwrite/new), or \'legacy\' for the older console served under the /console path prefix. The default value is \'legacy\'.',
-                'introduction' => '2.0.0',
-                'default' => 'legacy',
+                'name' => '_APP_CONSOLE_URL',
+                'description' => 'Origin of the Appwrite console web app, such as https://console.example.com, used when the backend generates links to the console (OAuth callbacks, emails, error page CTAs, VCS comments and commit statuses). Set it when the console is served on a different host than the API. When empty, links use _APP_CONSOLE_DOMAIN (or _APP_DOMAIN) over https, or over http when _APP_OPTIONS_FORCE_HTTPS is disabled.',
+                'introduction' => '2.1.1',
+                'default' => '',
                 'required' => false,
                 'question' => '',
                 'filter' => ''

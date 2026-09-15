@@ -19,6 +19,8 @@ if (\str_contains($functionsDomain, ',')) {
 return [
     'apiHostname' => System::getEnv('_APP_DOMAIN', 'localhost'),
     'consoleHostname' => System::getEnv('_APP_CONSOLE_DOMAIN', System::getEnv('_APP_DOMAIN', 'localhost')),
+    // Console web app origin for links; it can live apart from the API host above
+    'consoleUrl' => \rtrim(System::getEnv('_APP_CONSOLE_URL', (System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https') . '://' . System::getEnv('_APP_CONSOLE_DOMAIN', System::getEnv('_APP_DOMAIN', 'localhost'))), '/'),
     'hostnames' => array_filter(array_unique([
         System::getEnv('_APP_DOMAIN', 'localhost'),
         System::getEnv('_APP_CONSOLE_DOMAIN', 'localhost'),

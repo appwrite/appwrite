@@ -77,10 +77,8 @@ use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
-$legacyConsolePaths = System::getEnv('_APP_CONSOLE_URL_SCHEME', 'legacy') !== 'root';
-
-$oauthDefaultSuccess = $legacyConsolePaths ? '/console/auth/oauth2/success' : '/auth/oauth2/success';
-$oauthDefaultFailure = $legacyConsolePaths ? '/console/auth/oauth2/failure' : '/auth/oauth2/failure';
+$oauthDefaultSuccess = '/auth/oauth2/success';
+$oauthDefaultFailure = '/auth/oauth2/failure';
 
 $createSession = function (string $userId, string $secret, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, Geo $geo, Event $queueForEvents, Bus $bus, Store $store, ProofsToken $proofForToken, ProofsCode $proofForCode, bool $domainVerification, ?string $cookieDomain, Authorization $authorization) {
 
@@ -1378,11 +1376,9 @@ Http::get('/v1/account/sessions/oauth2/:provider')
             throw new Exception(Exception::PROJECT_PROVIDER_UNSUPPORTED);
         }
 
-        $host = $platform['consoleHostname'] ?? '';
-        $redirectBase = $protocol . '://' . $host;
-        if ($protocol === 'https' && $port !== '443') {
-            $redirectBase .= ':' . $port;
-        } elseif ($protocol === 'http' && $port !== '80') {
+        $redirectBase = $platform['consoleUrl'] ?? '';
+        // Only the derived console URL follows the request port; an explicit one carries its own
+        if (empty(System::getEnv('_APP_CONSOLE_URL')) && $port !== ($protocol === 'https' ? '443' : '80')) {
             $redirectBase .= ':' . $port;
         }
 
@@ -2285,13 +2281,11 @@ Http::get('/v1/account/tokens/oauth2/:provider')
             throw new Exception(Exception::PROJECT_PROVIDER_UNSUPPORTED);
         }
 
-        $host = $platform['consoleHostname'] ?? '';
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
         $port = $request->getPort();
-        $redirectBase = $protocol . '://' . $host;
-        if ($protocol === 'https' && $port !== '443') {
-            $redirectBase .= ':' . $port;
-        } elseif ($protocol === 'http' && $port !== '80') {
+        $redirectBase = $platform['consoleUrl'] ?? '';
+        // Only the derived console URL follows the request port; an explicit one carries its own
+        if (empty(System::getEnv('_APP_CONSOLE_URL')) && $port !== ($protocol === 'https' ? '443' : '80')) {
             $redirectBase .= ':' . $port;
         }
 
@@ -2358,7 +2352,7 @@ Http::post('/v1/account/tokens/magic-url')
     ->inject('proofForPassword')
     ->inject('platform')
     ->inject('authorization')
-    ->action(function (string $userId, string $email, string $url, bool $phrase, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, MailPublisher $publisherForMails, array $plan, ProofsPassword $proofForPassword, array $platform, Authorization $authorization) use ($legacyConsolePaths) {
+    ->action(function (string $userId, string $email, string $url, bool $phrase, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, MailPublisher $publisherForMails, array $plan, ProofsPassword $proofForPassword, array $platform, Authorization $authorization) {
         if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
         }
@@ -2496,17 +2490,13 @@ Http::post('/v1/account/tokens/magic-url')
 
         if (empty($url)) {
             $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
-            $host = $platform['consoleHostname'] ?? '';
             $port = $request->getPort();
-            $callbackBase = $protocol . '://' . $host;
-            if ($protocol === 'https' && $port !== '443') {
-                $callbackBase .= ':' . $port;
-            } elseif ($protocol === 'http' && $port !== '80') {
+            $callbackBase = $platform['consoleUrl'] ?? '';
+            // Only the derived console URL follows the request port; an explicit one carries its own
+            if (empty(System::getEnv('_APP_CONSOLE_URL')) && $port !== ($protocol === 'https' ? '443' : '80')) {
                 $callbackBase .= ':' . $port;
             }
-            $url = $legacyConsolePaths
-                ? "{$callbackBase}/console/auth/magic-url"
-                : "{$callbackBase}/auth/magic-url";
+            $url = "{$callbackBase}/auth/magic-url";
         }
 
         $url = Template::parseURL($url);

@@ -276,11 +276,10 @@ class Webhooks extends Action
 
         $projectId = $project->getId();
         $projectInternalId = $project->getSequence();
-        $region = $project->getAttribute('region', 'default');
-        $webhookId = $webhook->getId();
 
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled') === 'disabled' ? 'http' : 'https';
         $consoleHostname = System::getEnv('_APP_CONSOLE_DOMAIN', System::getEnv('_APP_DOMAIN', 'localhost'));
+        $consoleUrl = \rtrim(System::getEnv('_APP_CONSOLE_URL', $protocol . '://' . $consoleHostname), '/');
 
         $subject = 'Webhook deliveries have been paused';
         $preview = 'Webhook "' . $webhook->getAttribute('name') . '" has been paused after ' . $attempts . ' failed delivery attempts.';
@@ -320,10 +319,8 @@ class Webhooks extends Action
             $template->setParam('{{project}}', $project->getAttribute('name'));
             $template->setParam('{{url}}', $webhook->getAttribute('url'));
             $template->setParam('{{error}}', 'The server returned ' . $statusCode . ' status code');
-            $template->setParam('{{host}}', $protocol . '://' . $consoleHostname);
-            $template->setParam('{{path}}', System::getEnv('_APP_CONSOLE_URL_SCHEME', 'legacy') !== 'root'
-                ? "/console/project-{$region}-{$projectId}/settings/webhooks/{$webhookId}"
-                : "/projects/{$projectId}/settings/webhooks");
+            $template->setParam('{{host}}', $consoleUrl);
+            $template->setParam('{{path}}', "/projects/{$projectId}/settings/webhooks");
             $template->setParam('{{attempts}}', $attempts);
 
             $publisherForNotifications->enqueue(new NotificationMessage(
