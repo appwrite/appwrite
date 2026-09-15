@@ -58,7 +58,7 @@ Here is what a single user document looks like:
 
 In a relational database, this single record would likely be split across a `users` table, a `roles` join table, and an `addresses` table, then reassembled with JOINs at query time. In a document database, it is one read. The data is stored in the same shape your application code already uses, which removes much of the translation work an object-relational mapper (ORM) exists to handle.
 
-## How document databases differ from relational databases
+# How document databases differ from relational databases
 
 The core difference is where structure lives. In a **relational database**, the schema is defined up front at the table level and enforced on every row. In a **document database**, the structure lives inside each document and can vary between records.
 
