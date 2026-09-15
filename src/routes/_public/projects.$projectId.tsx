@@ -671,6 +671,7 @@ function ProjectLayout() {
     activeSection === 'realtime' ||
     activeSection === 'storage' ||
     activeSection === 'explorer' ||
+    activeSection === 'agents' ||
     isFunctionsEditorView ||
     isFunctionExecutionsTab ||
     isSiteLogsTab

@@ -1357,6 +1357,9 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Continue to Try it': 'המשך ל-נסו',
   'Open your coding agent and ask one of these prompts to confirm Appwrite MCP is working.':
     'פתחו את סוכן הפיתוח שלכם ובקשו אחת מהבקשות האלה כדי לוודא ש-Appwrite MCP פועל.',
+  'Explore Appwrite': 'גלו את Appwrite',
+  'Open a product in this project and keep building with your agent.':
+    'פתחו מוצר בפרויקט הזה והמשיכו לבנות עם הסוכן שלכם.',
   'Use Appwrite MCP to list the databases in project {projectName}':
     'השתמשו ב-Appwrite MCP כדי להציג את מסדי הנתונים בפרויקט {projectName}',
   'Use Appwrite MCP to list the storage buckets in project {projectName}':
@@ -1369,8 +1372,41 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Install Appwrite MCP': 'התקנת Appwrite MCP',
   'Build with an agent': 'בנו עם סוכן',
   'Connect your coding agent': 'חיבור סוכן הפיתוח שלכם',
+  'Connect Appwrite with your agents': 'חברו את Appwrite לסוכנים שלכם',
+  'Choose your agent': 'בחרו סוכן',
+  'List databases, buckets, and users from your editor.':
+    'הציגו מסדי נתונים, באקטים ומשתמשים מהעורך.',
+  'Run approved actions without leaving your agent.':
+    'הריצו פעולות מאושרות בלי לעזוב את הסוכן.',
+  'Authorize once with OAuth. No API key in the prompt.':
+    'אשרו פעם אחת עם OAuth. בלי מפתח API בפרומפט.',
+  'Authorize Appwrite MCP': 'אישור Appwrite MCP',
+  'Install in your editor': 'התקנה בעורך',
+  'Ask your agent to list project resources':
+    'בקשו מהסוכן להציג את משאבי הפרויקט',
+  'Show details': 'הצגת פרטים',
+  'Hide details': 'הסתרת פרטים',
+  'Next: install MCP in your editor': 'השלב הבא: התקינו MCP בעורך',
   'Install Appwrite MCP in Cursor, Claude Code, Codex, or VS Code so your agent can manage this project.':
     'התקינו את Appwrite MCP ב-Cursor, Claude Code, Codex או VS Code כדי שהסוכן שלכם יוכל לנהל את הפרויקט.',
+  'What you get': 'מה תקבלו',
+  'Why connect': 'למה להתחבר',
+  'Without MCP': 'בלי MCP',
+  'With MCP': 'עם MCP',
+  'The agent can explain Appwrite, but it cannot change this project.':
+    'הסוכן יכול להסביר את Appwrite, אבל הוא לא יכול לשנות את הפרויקט הזה.',
+  'The agent can list resources and run approved actions in this project.':
+    'הסוכן יכול להציג משאבים ולהריץ פעולות מאושרות בפרויקט הזה.',
+  'Recommended next step': 'השלב הבא המומלץ',
+  'To do': 'לביצוע',
+  'Coding agent': 'סוכן פיתוח',
+  'Pick an editor, install Appwrite MCP, then authorize with OAuth.':
+    'בחרו עורך, התקינו Appwrite MCP, ואז אשרו עם OAuth.',
+  'MCP is authorized. Finish install in your editor if you still need to.':
+    'MCP מאושר. השלימו את ההתקנה בעורך אם עדיין צריך.',
+  'Paste this prompt into any coding agent. It follows a public setup page to install Appwrite MCP for this project.':
+    'הדביקו את הפרומפט בכל סוכן פיתוח. הוא יעקוב אחר דף ההתקנה הציבורי כדי להתקין Appwrite MCP לפרויקט הזה.',
+  'Or install Appwrite MCP manually': 'או התקינו Appwrite MCP ידנית',
   'Install MCP': 'התקנת MCP',
   'Open MCP': 'פתיחת MCP',
   'Register where your app runs, add API credentials, and connect a coding agent with MCP.':

@@ -241,6 +241,12 @@ export function buildAppwriteLlmsTxt(
         'Add Appwrite to Cursor, Claude, and other MCP clients so agents can call the Appwrite API and search the docs.',
       links: [
         {
+          title: 'Agent setup',
+          url: `${origin}/setup.md`,
+          description:
+            'Instructions a coding agent should fetch to install Appwrite MCP.',
+        },
+        {
           title: 'Remote MCP Server',
           url: MCP_SERVER_URL,
           description: 'Hosted streamable HTTP MCP endpoint.',

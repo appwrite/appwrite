@@ -38,6 +38,8 @@ export interface MCPSectionProps {
   projectName: string
   /** When true, render without the outer card (e.g. inside a modal tab) */
   compact?: boolean
+  /** Render both steps, or only install / try-it. */
+  parts?: 'all' | 'install' | 'try'
 }
 
 type McpToolId =
@@ -177,6 +179,7 @@ export function MCPSection({
   projectId,
   projectName,
   compact = false,
+  parts = 'all',
 }: MCPSectionProps) {
   const t = useT()
   const { isSelfHosted } = useConsoleProfile()
@@ -265,9 +268,11 @@ export function MCPSection({
 
   const installContent = (
     <div className="space-y-2">
-      <h4 className="text-[13px] font-semibold text-foreground">
-        {t('1. Install')}
-      </h4>
+      {parts === 'all' ? (
+        <h4 className="text-[13px] font-semibold text-foreground">
+          {t('1. Install')}
+        </h4>
+      ) : null}
       <ConnectCodeExample
         code={selectedTool.code}
         language={selectedTool.language}
@@ -302,16 +307,32 @@ export function MCPSection({
   )
 
   const tryItContent = (
-    <div className="space-y-4">
-      <h4 className="text-[13px] font-semibold text-foreground">
-        {t('2. Try it')}
+    <div
+      className={
+        parts === 'try' ? 'space-y-4 text-center' : 'space-y-4'
+      }
+    >
+      <h4
+        className={
+          parts === 'try'
+            ? 'text-[15px] font-semibold text-foreground'
+            : 'text-[13px] font-semibold text-foreground'
+        }
+      >
+        {parts === 'try' ? t('Try it') : t('2. Try it')}
       </h4>
-      <p className="text-[13px] text-muted-foreground leading-relaxed">
+      <p
+        className={
+          parts === 'try'
+            ? 'mx-auto max-w-xl text-[13px] leading-relaxed text-muted-foreground'
+            : 'text-[13px] text-muted-foreground leading-relaxed'
+        }
+      >
         {t(
           'Open your coding agent and ask one of these prompts to confirm Appwrite MCP is working.',
         )}
       </p>
-      <ul className="space-y-2">
+      <ul className={parts === 'try' ? 'space-y-2 text-start' : 'space-y-2'}>
         {MCP_TRY_IT_PROMPT_TEMPLATES.map((template, index) => {
           const prompt = tryItPrompts[index]!
           return (
@@ -342,18 +363,21 @@ export function MCPSection({
     </div>
   )
 
+  const showInstall = parts !== 'try'
+  const showTry = parts !== 'install'
+
   const mainContent = (
     <div className="space-y-6">
-      {installContent}
-      <div className="border-t border-border" />
-      {tryItContent}
+      {showInstall ? installContent : null}
+      {showInstall && showTry ? <div className="border-t border-border" /> : null}
+      {showTry ? tryItContent : null}
     </div>
   )
 
   if (compact) {
     return (
-      <div className="pt-4">
-        {description}
+      <div className={parts === 'all' ? 'pt-4' : undefined}>
+        {showInstall ? description : null}
         {mainContent}
       </div>
     )

@@ -130,7 +130,7 @@ export const ONBOARDING_AGENT_STEP = {
   hint: 'Install Appwrite MCP in Cursor, Claude Code, Codex, or VS Code so your agent can manage this project.',
   cta: 'Install MCP',
   ctaDone: 'Open MCP',
-  debug: 'Done when the user opens Connect → MCP or skips this step (local only).',
+  debug: 'Done when an MCP client other than Appwrite Agent is authorized on the account, or when skipped locally.',
 }
 
 export interface OnboardingProductGroupDef {

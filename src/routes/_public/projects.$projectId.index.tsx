@@ -11,7 +11,9 @@ import {
   overviewStorageOverviewQueryOptions,
   fetchProject,
   organizationPlanQueryOptions,
+  accountConnectedAppsQueryOptions,
 } from '@/lib/react-query/hooks'
+import { hasAccountMcpAgentConnected } from '@/lib/mcp-adoption'
 import { consoleAccountQueryOptions } from '@/lib/react-query/hooks/auth'
 import { ensureProjectRegion } from '@/lib/project-region'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
@@ -107,18 +109,22 @@ export const Route = createFileRoute('/_public/projects/$projectId/')({
 
       // API keys can hang when billable services are blocked. Bound the wait so the
       // project layout (and budget curtain) can still mount.
-      const apiKeysRaw = await Promise.race([
+      const [apiKeysRaw, account, connectedApps] = await Promise.all([
+        Promise.race([
+          queryClient
+            .ensureQueryData(apiKeysQueryOptions(projectId))
+            .catch(() => null),
+          new Promise<null>((resolve) => {
+            window.setTimeout(() => resolve(null), 4000)
+          }),
+        ]),
         queryClient
-          .ensureQueryData(apiKeysQueryOptions(projectId))
+          .ensureQueryData(consoleAccountQueryOptions())
           .catch(() => null),
-        new Promise<null>((resolve) => {
-          window.setTimeout(() => resolve(null), 4000)
-        }),
+        queryClient
+          .ensureQueryData(accountConnectedAppsQueryOptions())
+          .catch(() => null),
       ])
-
-      const account = await queryClient
-        .ensureQueryData(consoleAccountQueryOptions())
-        .catch(() => null)
       const usageStatsEnabled = getActiveProfileFeatures().usageStats
 
       // Non-critical data: prefetch in the background so the page can render immediately.
@@ -172,6 +178,7 @@ export const Route = createFileRoute('/_public/projects/$projectId/')({
       return {
         apiKeys: mapApiKeysFromResponse(apiKeysRaw),
         apiKeysRaw,
+        mcpAgentConnected: hasAccountMcpAgentConnected(connectedApps?.groups),
       }
     } catch (error) {
       console.warn('Failed to fetch overview data in loader:', error)
@@ -192,6 +199,7 @@ function ProjectOverviewPage() {
           ? {
               apiKeys: loaderData.apiKeys,
               apiKeysRaw: loaderData.apiKeysRaw,
+              mcpAgentConnected: loaderData.mcpAgentConnected,
             }
           : undefined
       }

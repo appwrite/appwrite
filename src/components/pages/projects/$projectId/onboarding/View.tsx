@@ -52,9 +52,11 @@ import {
 } from '@/lib/onboarding/progress-encouragement'
 import {
   getOnboardingAgentStepState,
+  hasAccountMcpAgentConnected,
   markOnboardingAgentStepDone,
   markOnboardingAgentStepSkipped,
 } from '@/lib/mcp-adoption'
+import { useAccountConnectedApps } from '@/lib/react-query/hooks'
 import { useProjectConnectDialog } from '@/components/pages/projects/$projectId/shared/ProjectConnectDialogContext'
 import { cn } from '@/lib/utils'
 import { useI18n } from '@/lib/i18n'
@@ -586,27 +588,34 @@ function AgentConnectStepRow({
 }) {
   const t = useT()
   const projectConnect = useProjectConnectDialog()
-  const [state, setState] = useState<OnboardingStepState>(() =>
+  const { data: connectedApps, isFetched: consentsFetched } =
+    useAccountConnectedApps({ refetchOnWindowFocus: true })
+  const mcpConnected = hasAccountMcpAgentConnected(connectedApps?.groups)
+  const [localState, setLocalState] = useState<OnboardingStepState>(() =>
     getOnboardingAgentStepState(projectId),
   )
 
   useEffect(() => {
-    setState(getOnboardingAgentStepState(projectId))
+    setLocalState(getOnboardingAgentStepState(projectId))
   }, [projectId])
 
+  const state: OnboardingStepState = mcpConnected ? 'completed' : localState
   const fulfilled = state !== 'pending'
   const ctaLabel = t(
     fulfilled ? ONBOARDING_AGENT_STEP.ctaDone : ONBOARDING_AGENT_STEP.cta,
   )
+  const showSkip = consentsFetched && !fulfilled
 
   const handleSkip = () => {
     markOnboardingAgentStepSkipped(projectId)
-    setState('skipped')
+    setLocalState('skipped')
   }
 
   const handleOpen = () => {
-    markOnboardingAgentStepDone(projectId)
-    setState('completed')
+    if (!mcpConnected) {
+      markOnboardingAgentStepDone(projectId)
+      setLocalState('completed')
+    }
     projectConnect?.openConnect('mcp')
   }
 
@@ -651,7 +660,7 @@ function AgentConnectStepRow({
         </div>
       </div>
       <div className="flex w-full shrink-0 items-center justify-end gap-1.5 sm:w-auto sm:self-center sm:ps-0">
-        {!fulfilled ? (
+        {showSkip ? (
           <Button
             type="button"
             variant="ghost"

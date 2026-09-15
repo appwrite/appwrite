@@ -196,6 +196,7 @@ export const enCatalog = {
       items: {
         overview: 'Overview',
         apps: 'Apps',
+        agents: 'Agents',
         apiKeys: 'API Keys',
         explorer: 'Explorer',
         auth: 'Auth',
