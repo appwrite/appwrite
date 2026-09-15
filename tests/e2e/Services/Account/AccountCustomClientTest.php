@@ -6339,4 +6339,165 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals($email, $account['body']['email']);
         $this->assertTrue($account['body']['emailVerification']);
     }
+
+    /**
+     * A verbatim Google ID token payload — every claim Google actually mints,
+     * not just the handful the flow reads. The extras (`azp`, `hd`, `at_hash`,
+     * `given_name`, `family_name`, `locale`) must be carried without upsetting
+     * verification, while `name` and `picture` reach the account and identity.
+     *
+     * `iss`, `aud` and `picture` are necessarily the mock provider's: the token
+     * has to verify against the mock JWKS, and the avatar has to be fetchable
+     * from the test network. Every other claim is Google's own shape.
+     */
+    public function testCreateIdTokenSessionGoogleShapedClaims(): void
+    {
+        $this->updateMockProvider(true);
+
+        $projectId = $this->getProject()['$id'];
+        $sub = '11016948447438627' . \random_int(1000, 9999); // Google subs are numeric strings
+        $email = 'jane.doe.' . \uniqid('', true) . '@localhost.test';
+
+        $response = $this->createIdTokenSession([
+            'provider' => 'mock',
+            'idToken' => $this->mintIdToken([
+                'azp' => '407408718192.apps.googleusercontent.com',
+                'sub' => $sub,
+                'hd' => 'localhost.test',
+                'email' => $email,
+                'email_verified' => true,
+                'at_hash' => 'HK6E_P6Dh8Y93mRNtsDB1Q',
+                'name' => 'Jane Doe',
+                'given_name' => 'Jane',
+                'family_name' => 'Doe',
+                'picture' => 'http://localhost/v1/mock/tests/general/oauth2/photo',
+                'locale' => 'en',
+            ]),
+            'name' => 'Param Name',
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        $session = $response['cookies']['a_session_' . $projectId] ?? '';
+        $this->assertNotEmpty($session);
+
+        $account = $this->client->call(Client::METHOD_GET, '/account', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ]);
+
+        $this->assertEquals(200, $account['headers']['status-code']);
+        $this->assertEquals($email, $account['body']['email']);
+        $this->assertTrue($account['body']['emailVerification']);
+        // The `name` claim beats the request parameter
+        $this->assertEquals('Jane Doe', $account['body']['name']);
+
+        // `picture` reached the identity, so it wins the avatar chain
+        $photo = $this->client->call(Client::METHOD_GET, '/avatars/photo', [
+            'origin' => 'http://localhost',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ], []);
+
+        $this->assertEquals(200, $photo['headers']['status-code']);
+        $this->assertTrue(
+            $this->isMockOAuth2Photo($photo['body']),
+            'The `picture` claim did not reach the identity — the avatar chain fell through.'
+        );
+    }
+
+    /**
+     * A verbatim Apple ID token payload. Apple differs from Google in ways the
+     * flow has to absorb: `email_verified` and `is_private_email` arrive as the
+     * strings "true" rather than JSON booleans, the nonce is carried as the
+     * SHA-256 of the raw value, and there is never a `name` or `picture` claim
+     * — the name reaches the server only as the request parameter, which Apple
+     * hands the client once, on the first authorization.
+     *
+     * `mock-unverified` stands in for Apple here because it is the mock profile
+     * that requires a nonce, exactly as Apple's does.
+     */
+    public function testCreateIdTokenSessionAppleShapedClaims(): void
+    {
+        $this->updateMockProvider(true, provider: 'mock-unverified');
+
+        $projectId = $this->getProject()['$id'];
+        $raw = 'nonce-' . \uniqid('', true);
+        $sub = '001234.' . \bin2hex(\random_bytes(16)) . '.1234'; // Apple's sub shape
+        $email = \bin2hex(\random_bytes(5)) . '@privaterelay.localhost.test';
+
+        $response = $this->createIdTokenSession([
+            'provider' => 'mock-unverified',
+            'idToken' => $this->mintIdToken([
+                'sub' => $sub,
+                'nonce' => \hash('sha256', $raw),
+                'c_hash' => 'agyAh42Gdk6hZ_v6Lrn3QQ',
+                'auth_time' => \time(),
+                'nonce_supported' => true,
+                'email' => $email,
+                // Apple serialises both of these as strings, not JSON booleans
+                'email_verified' => 'true',
+                'is_private_email' => 'true',
+                'real_user_status' => 2,
+            ]),
+            'nonce' => $raw,
+            'name' => 'Apple User',
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        $session = $response['cookies']['a_session_' . $projectId] ?? '';
+        $this->assertNotEmpty($session);
+
+        $account = $this->client->call(Client::METHOD_GET, '/account', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ]);
+
+        $this->assertEquals(200, $account['headers']['status-code']);
+        $this->assertEquals($email, $account['body']['email']);
+        // The string "true" still attests the address
+        $this->assertTrue($account['body']['emailVerification']);
+        // No `name` claim, so the request parameter supplies it
+        $this->assertEquals('Apple User', $account['body']['name']);
+
+        // Apple never sends `picture`, so nothing lands on the identity and the
+        // avatar falls through to a generated one
+        $photo = $this->client->call(Client::METHOD_GET, '/avatars/photo', [
+            'origin' => 'http://localhost',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ], []);
+
+        $this->assertEquals(200, $photo['headers']['status-code']);
+        $this->assertFalse(
+            $this->isMockOAuth2Photo($photo['body']),
+            'An identity photo was stored for a token that carried no `picture` claim.'
+        );
+    }
+
+    /**
+     * The mock provider's photo endpoint serves a solid #00FF00 PNG, so that
+     * green in the centre means the OAuth2 identity photo won the avatar chain
+     * rather than one of the generated fallbacks.
+     */
+    private function isMockOAuth2Photo(string $blob): bool
+    {
+        if ($blob === '') {
+            return false;
+        }
+
+        $image = new \Imagick();
+        $image->readImageBlob($blob);
+
+        $color = $image
+            ->getImagePixelColor(\intdiv($image->getImageWidth(), 2), \intdiv($image->getImageHeight(), 2))
+            ->getColor();
+
+        return $color['r'] === 0 && $color['g'] === 255 && $color['b'] === 0;
+    }
 }
