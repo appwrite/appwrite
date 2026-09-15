@@ -26,6 +26,7 @@ final class JobsTest extends TestCase
     private Database $database;
     private Cache $cache;
     private Realtime $realtime;
+    private Rules $rules;
     private Redis $broker;
     private Queue $queue;
     private JobsPublisher $publisher;
@@ -36,6 +37,7 @@ final class JobsTest extends TestCase
         $this->database = new Database();
         $this->cache = new Cache(new Memory());
         $this->realtime = new Realtime();
+        $this->rules = new Rules();
         $connection = new InMemoryConnection();
         $this->broker = new Redis($connection, $connection);
         $this->queue = new Queue('v1-jobs', 'build-test-' . bin2hex(random_bytes(6)));
@@ -607,6 +609,67 @@ final class JobsTest extends TestCase
         yield 'changed schedule sequence' => [true];
     }
 
+    #[\PHPUnit\Framework\Attributes\DataProvider('branches')]
+    public function testCompleteActivatesMatchingManualRules(string $collection, string $branch): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $resource = $this->resource($collection);
+        $deployment = $this->deployment($resource, ['providerBranch' => $branch]);
+        $this->cache->save('jobs-exit-' . $deployment->getId(), true);
+        $this->cache->save('jobs-manifest-' . $deployment->getId(), ['files' => []]);
+        $rules = ['general' => '', 'branch' => 'main', 'other' => 'another-branch'];
+        foreach ($rules as $id => $ruleBranch) {
+            $this->database->createDocument('rules', new Document([
+                '$id' => $id, 'domain' => $id . '.example.com', 'type' => 'deployment', 'trigger' => 'manual',
+                'projectId' => 'console', 'projectInternalId' => '0', 'region' => 'default',
+                'deploymentId' => 'existing-deployment', 'deploymentResourceType' => $collection === 'sites' ? 'site' : 'function',
+                'deploymentResourceId' => $resource->getId(), 'deploymentResourceInternalId' => $resource->getSequence(),
+                'deploymentVcsProviderBranch' => $ruleBranch,
+            ]));
+        }
+
+        $otherCollection = $collection === 'functions' ? 'sites' : 'functions';
+        $other = $this->resource($otherCollection);
+        $this->assertSame($resource->getSequence(), $other->getSequence());
+        $this->database->createDocument('rules', new Document([
+            '$id' => 'other-type', 'domain' => 'other-type.example.com', 'type' => 'deployment', 'trigger' => 'manual',
+            'projectId' => 'console', 'projectInternalId' => '0', 'region' => 'default',
+            'deploymentId' => 'other-type-deployment', 'deploymentResourceType' => $otherCollection === 'sites' ? 'site' : 'function',
+            'deploymentResourceId' => $other->getId(), 'deploymentResourceInternalId' => $other->getSequence(),
+            'deploymentVcsProviderBranch' => $branch,
+        ]));
+
+        $this->enqueue($deployment, 'complete');
+        $this->runWorker();
+
+        $this->assertSame('other-type-deployment', $this->database->getDocument('rules', 'other-type')->getAttribute('deploymentId'));
+        $expected = [];
+        foreach ($rules as $id => $ruleBranch) {
+            $matches = $ruleBranch === '' || $ruleBranch === $branch;
+            $this->assertSame($matches ? $deployment->getId() : 'existing-deployment', $this->database->getDocument('rules', $id)->getAttribute('deploymentId'));
+            if ($matches) {
+                $expected[] = $id;
+            }
+        }
+        $updated = array_column($this->rules->updated, '$id');
+        sort($expected);
+        sort($updated);
+        $this->assertSame($expected, $updated);
+        foreach ($this->rules->updated as $rule) {
+            $this->assertSame($deployment->getId(), $rule['deploymentId']);
+        }
+    }
+
+    public static function branches(): \Iterator
+    {
+        foreach (['functions', 'sites'] as $collection) {
+            yield "$collection VCS build" => [$collection, 'main'];
+            yield "$collection manual build" => [$collection, ''];
+        }
+    }
+
     private function project(): Document
     {
         return new Document(['$id' => 'console', '$sequence' => '0', 'region' => 'default']);
@@ -679,7 +742,7 @@ final class JobsTest extends TestCase
         $resources->set('locks', fn () => new Lock());
         $resources->set('plan', fn () => []);
         $resources->set('platform', fn () => array_merge(\Utopia\Config\Config::getParam('platform', []), ['sitesDomain' => 'sites.example.com']));
-        $bus = new Bus();
+        $bus = (new Bus())->subscribe($this->rules);
         $worker = new Server(new KubernetesJob($this->broker, 1, $this->queue->namespace, $resources));
         $register = require __DIR__ . '/../../../../app/init/worker/message.php';
         $worker->init()->action(function () use ($worker, $register, $bus, $device): void {
