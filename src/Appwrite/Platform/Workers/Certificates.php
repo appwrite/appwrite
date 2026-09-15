@@ -437,10 +437,10 @@ class Certificates extends Action
         ]));
         $bus->dispatch(new RuleUpdated($rule->getArrayCopy()));
 
-        $projectId = $rule->getAttribute('projectId');
+        $projectId = (string) $rule->getAttribute('projectId', '');
 
         // Skip events for console project (triggered by auto-ssl generation for 1 click setups)
-        if ($projectId === 'console') {
+        if ($projectId === '' || $projectId === 'console') {
             return;
         }
 
