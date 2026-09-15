@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "0a60910dd69a4d3386b0e335fd893dd7",
+    "content-hash": "02bce1235d28e61929137ec27ab100de",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1401,16 +1401,16 @@
         },
         {
             "name": "open-telemetry/sem-conv",
-            "version": "1.38.0",
+            "version": "1.44.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/opentelemetry-php/sem-conv.git",
-                "reference": "e613bc640a407def4991b8a936a9b27edd9a3240"
+                "reference": "c94bc7ebacef039cda4f4c9270807dcc58b4e3af"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/opentelemetry-php/sem-conv/zipball/e613bc640a407def4991b8a936a9b27edd9a3240",
-                "reference": "e613bc640a407def4991b8a936a9b27edd9a3240",
+                "url": "https://api.github.com/repos/opentelemetry-php/sem-conv/zipball/c94bc7ebacef039cda4f4c9270807dcc58b4e3af",
+                "reference": "c94bc7ebacef039cda4f4c9270807dcc58b4e3af",
                 "shasum": ""
             },
             "require": {
@@ -1454,7 +1454,7 @@
                 "issues": "https://github.com/open-telemetry/opentelemetry-php/issues",
                 "source": "https://github.com/open-telemetry/opentelemetry-php"
             },
-            "time": "2026-01-21T04:14:03+00:00"
+            "time": "2026-09-09T22:06:17+00:00"
         },
         {
             "name": "paragonie/constant_time_encoding",
@@ -2212,16 +2212,16 @@
         },
         {
             "name": "symfony/http-client",
-            "version": "v7.4.18",
+            "version": "v7.4.19",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/http-client.git",
-                "reference": "68d81f78d127984ff2e741f0e0d9cb1078f8f3ea"
+                "reference": "3a523f38dc399337ec45b2ab9628e8c37ceb23c7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/http-client/zipball/68d81f78d127984ff2e741f0e0d9cb1078f8f3ea",
-                "reference": "68d81f78d127984ff2e741f0e0d9cb1078f8f3ea",
+                "url": "https://api.github.com/repos/symfony/http-client/zipball/3a523f38dc399337ec45b2ab9628e8c37ceb23c7",
+                "reference": "3a523f38dc399337ec45b2ab9628e8c37ceb23c7",
                 "shasum": ""
             },
             "require": {
@@ -2289,7 +2289,7 @@
                 "http"
             ],
             "support": {
-                "source": "https://github.com/symfony/http-client/tree/v7.4.18"
+                "source": "https://github.com/symfony/http-client/tree/v7.4.19"
             },
             "funding": [
                 {
@@ -2309,7 +2309,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-08-30T13:49:59+00:00"
+            "time": "2026-09-08T13:28:43+00:00"
         },
         {
             "name": "symfony/http-client-contracts",
@@ -3037,16 +3037,16 @@
         },
         {
             "name": "utopia-php/cache",
-            "version": "5.0.0",
+            "version": "5.0.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/cache.git",
-                "reference": "0d0752785fc81b5afd6571f4291763166a6532bc"
+                "reference": "f808a39d018e1f325ac553b8de39798cae40c1f9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/cache/zipball/0d0752785fc81b5afd6571f4291763166a6532bc",
-                "reference": "0d0752785fc81b5afd6571f4291763166a6532bc",
+                "url": "https://api.github.com/repos/utopia-php/cache/zipball/f808a39d018e1f325ac553b8de39798cae40c1f9",
+                "reference": "f808a39d018e1f325ac553b8de39798cae40c1f9",
                 "shasum": ""
             },
             "require": {
@@ -3090,9 +3090,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/cache/issues",
-                "source": "https://github.com/utopia-php/cache/tree/5.0.0"
+                "source": "https://github.com/utopia-php/cache/tree/5.0.3"
             },
-            "time": "2026-08-21T11:04:48+00:00"
+            "time": "2026-09-11T08:23:02+00:00"
         },
         {
             "name": "utopia-php/cdn",
@@ -4327,16 +4327,16 @@
         },
         {
             "name": "utopia-php/pools",
-            "version": "2.1.1",
+            "version": "2.1.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/pools.git",
-                "reference": "bc689b818fe1de0df72db6e51ab2f52b838b1209"
+                "reference": "a45d867e56de82a2eb6e1eb3ea78d4c2f6059f4a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/pools/zipball/bc689b818fe1de0df72db6e51ab2f52b838b1209",
-                "reference": "bc689b818fe1de0df72db6e51ab2f52b838b1209",
+                "url": "https://api.github.com/repos/utopia-php/pools/zipball/a45d867e56de82a2eb6e1eb3ea78d4c2f6059f4a",
+                "reference": "a45d867e56de82a2eb6e1eb3ea78d4c2f6059f4a",
                 "shasum": ""
             },
             "require": {
@@ -4377,9 +4377,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/pools/issues",
-                "source": "https://github.com/utopia-php/pools/tree/2.1.1"
+                "source": "https://github.com/utopia-php/pools/tree/2.1.2"
             },
-            "time": "2026-09-02T15:57:19+00:00"
+            "time": "2026-09-07T07:02:57+00:00"
         },
         {
             "name": "utopia-php/psr7",
@@ -4893,16 +4893,16 @@
         },
         {
             "name": "utopia-php/telemetry",
-            "version": "0.4.8",
+            "version": "0.4.10",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/telemetry.git",
-                "reference": "6fb0bb579b3e249be720010bc12434c2ec6194bb"
+                "reference": "29432a590bf96597ba8f0e767c966be16481651a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/telemetry/zipball/6fb0bb579b3e249be720010bc12434c2ec6194bb",
-                "reference": "6fb0bb579b3e249be720010bc12434c2ec6194bb",
+                "url": "https://api.github.com/repos/utopia-php/telemetry/zipball/29432a590bf96597ba8f0e767c966be16481651a",
+                "reference": "29432a590bf96597ba8f0e767c966be16481651a",
                 "shasum": ""
             },
             "require": {
@@ -4938,22 +4938,22 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/telemetry/issues",
-                "source": "https://github.com/utopia-php/telemetry/tree/0.4.8"
+                "source": "https://github.com/utopia-php/telemetry/tree/0.4.10"
             },
-            "time": "2026-09-02T15:57:19+00:00"
+            "time": "2026-09-11T06:27:08+00:00"
         },
         {
             "name": "utopia-php/usage",
-            "version": "0.16.4",
+            "version": "dev-feat-new-usage-stats",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/usage.git",
-                "reference": "519e0987a2cf3b9a0c6c96029c8347f2039b3ac5"
+                "reference": "51a4f728b0e2040cec6610c52095a479c160f2ea"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/usage/zipball/519e0987a2cf3b9a0c6c96029c8347f2039b3ac5",
-                "reference": "519e0987a2cf3b9a0c6c96029c8347f2039b3ac5",
+                "url": "https://api.github.com/repos/utopia-php/usage/zipball/51a4f728b0e2040cec6610c52095a479c160f2ea",
+                "reference": "51a4f728b0e2040cec6610c52095a479c160f2ea",
                 "shasum": ""
             },
             "require": {
@@ -4991,9 +4991,9 @@
             "description": "Light and Fast Usage library",
             "support": {
                 "issues": "https://github.com/utopia-php/usage/issues",
-                "source": "https://github.com/utopia-php/usage/tree/0.16.4"
+                "source": "https://github.com/utopia-php/usage/tree/feat-new-usage-stats"
             },
-            "time": "2026-09-09T14:56:37+00:00"
+            "time": "2026-09-15T08:02:42+00:00"
         },
         {
             "name": "utopia-php/user-agent",
@@ -8486,10 +8486,18 @@
             "time": "2026-07-03T20:44:34+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/usage",
+            "version": "dev-feat-new-usage-stats",
+            "alias": "0.16.88",
+            "alias_normalized": "0.16.88.0"
+        }
+    ],
     "minimum-stability": "dev",
     "stability-flags": {
-        "utopia-php/http": 5
+        "utopia-php/http": 5,
+        "utopia-php/usage": 20
     },
     "prefer-stable": true,
     "prefer-lowest": false,
