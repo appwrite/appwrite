@@ -26,8 +26,8 @@
         "psr-4": {
             "Appwrite\\": "src/Appwrite",
             "Executor\\": "src/Executor",
-            "Utopia\\Bus\\": "src/Utopia/Bus",
-            "Utopia\\Agents\\": "packages/agents/src"
+            "Utopia\\Agents\\": "packages/agents/src",
+            "Utopia\\Bus\\": "packages/bus/src"
         }
     },
     "autoload-dev": {
@@ -35,7 +35,8 @@
             "Tests\\E2E\\": "tests/e2e",
             "Tests\\Unit\\": "tests/unit",
             "Appwrite\\Tests\\": "tests/extensions",
-            "Utopia\\Agents\\Tests\\": "packages/agents/tests"
+            "Utopia\\Agents\\Tests\\": "packages/agents/tests",
+            "Utopia\\Bus\\Tests\\": "packages/bus/tests"
         }
     },
     "minimum-stability": "dev",
