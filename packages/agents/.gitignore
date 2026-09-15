@@ -1,0 +1,9 @@
+/vendor/
+/.vscode/
+.phpunit.result.cache
+tests/chunk.php
+.idea/
+.env
+example.php
+example.md
+/blueprints/
