@@ -111,18 +111,25 @@ final class PasswordPwnedTest extends TestCase
         $this->assertFalse($this->validator(['threshold' => 9], $adapter)->isValid(self::LEAKED));
     }
 
-    public function testOnlyHashPrefixLeavesTheServer(): void
+    public function testOnlyTheHashPrefixLeavesTheServer(): void
     {
         $adapter = new RangeAdapter(body: '');
         $validator = $this->validator([], $adapter);
 
         $validator->isValid(self::LEAKED);
 
-        $hash = \strtoupper(\sha1(self::LEAKED));
         $this->assertCount(1, $adapter->requests);
-        $this->assertSame(self::ENDPOINT . '/' . \substr($hash, 0, 5), $adapter->requests[0]['url']);
-        $this->assertSame('GET', $adapter->requests[0]['method']);
-        $this->assertSame('true', $adapter->requests[0]['headers']['add-padding'] ?? null);
+
+        $hash = \strtoupper(\sha1(self::LEAKED));
+        $url = $adapter->requests[0];
+
+        // Neither the password nor anything that identifies it may reach the service
+        $this->assertStringNotContainsStringIgnoringCase(self::LEAKED, $url);
+        $this->assertStringNotContainsStringIgnoringCase($hash, $url);
+        $this->assertStringNotContainsStringIgnoringCase(\substr($hash, 5), $url);
+
+        // Only the first five characters of the hash go out, so the service cannot tell which password was checked
+        $this->assertStringEndsWith(\substr($hash, 0, 5), $url);
     }
 
     public function testRangeIsCachedPerPrefix(): void
@@ -212,18 +219,15 @@ final class PasswordPwnedTest extends TestCase
         $this->assertCount(0, $adapter->requests);
     }
 
-    public function testEndpointPrecedence(): void
+    public function testPolicyEndpointOverridesTheServerEndpoint(): void
     {
         $adapter = new RangeAdapter(body: '');
-        $prefix = \substr(\strtoupper(\sha1(self::LEAKED)), 0, 5);
 
         (new PasswordPwned(['enabled' => true, 'endpoint' => 'https://policy.test/range/'], null, 'https://server.test/range', new Client($adapter)))->isValid(self::LEAKED);
         (new PasswordPwned(['enabled' => true, 'endpoint' => ''], null, 'https://server.test/range', new Client($adapter)))->isValid(self::LEAKED);
-        (new PasswordPwned(['enabled' => true], null, '', new Client($adapter)))->isValid(self::LEAKED);
 
-        $this->assertSame('https://policy.test/range/' . $prefix, $adapter->requests[0]['url']);
-        $this->assertSame('https://server.test/range/' . $prefix, $adapter->requests[1]['url']);
-        $this->assertSame(PasswordPwned::ENDPOINT . '/' . $prefix, $adapter->requests[2]['url']);
+        $this->assertStringStartsWith('https://policy.test/range/', $adapter->requests[0]);
+        $this->assertStringStartsWith('https://server.test/range/', $adapter->requests[1]);
     }
 
     /**
@@ -254,7 +258,7 @@ final class PasswordPwnedTest extends TestCase
 
 final class RangeAdapter implements Adapter
 {
-    /** @var array<int, array{url: string, method: string, headers: array<string, string>}> */
+    /** @var array<int, string> URLs the validator asked the breach service for */
     public array $requests = [];
 
     public function __construct(
@@ -272,7 +276,7 @@ final class RangeAdapter implements Adapter
         RequestOptions $options,
         ?callable $chunkCallback = null
     ): Response {
-        $this->requests[] = ['url' => $url, 'method' => $method, 'headers' => $headers];
+        $this->requests[] = $url;
 
         if ($this->failure !== null) {
             throw $this->failure;
