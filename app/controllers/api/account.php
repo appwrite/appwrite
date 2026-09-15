@@ -77,10 +77,8 @@ use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
-$legacyConsolePaths = System::getEnv('_APP_CONSOLE_URL_SCHEME', 'legacy') !== 'root';
-
-$oauthDefaultSuccess = $legacyConsolePaths ? '/console/auth/oauth2/success' : '/auth/oauth2/success';
-$oauthDefaultFailure = $legacyConsolePaths ? '/console/auth/oauth2/failure' : '/auth/oauth2/failure';
+$oauthDefaultSuccess = '/auth/oauth2/success';
+$oauthDefaultFailure = '/auth/oauth2/failure';
 
 $createSession = function (string $userId, string $secret, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, Geo $geo, Event $queueForEvents, Bus $bus, Store $store, ProofsToken $proofForToken, ProofsCode $proofForCode, bool $domainVerification, ?string $cookieDomain, Authorization $authorization) {
 
@@ -316,8 +314,8 @@ Http::post('/v1/account')
     ->inject('authorization')
     ->inject('hooks')
     ->inject('plan')
-    ->action(function (string $userId, string $email, string $password, string $name, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Authorization $authorization, Hooks $hooks, array $plan) {
-
+    ->action(function (string $userId, string $email, string $password, ?string $name, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Authorization $authorization, Hooks $hooks, array $plan) {
+        $name ??= '';
         $email = \strtolower($email);
         if ('console' === $project->getId()) {
             $whitelistEmails = $project->getAttribute('authWhitelistEmails');
@@ -388,19 +386,19 @@ Http::post('/v1/account')
             throw new Exception(Exception::GENERAL_INVALID_EMAIL);
         }
 
-        if ((($project->getId() === 'console') || ($plan['supportsDisposableEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['disposableEmails'] ?? false) && $emailMetadata['emailIsDisposable']) {
+        if ((($project->getId() === 'console') || empty($plan) || ($plan['supportsDisposableEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['disposableEmails'] ?? false) && $emailMetadata['emailIsDisposable']) {
             throw new Exception(Exception::USER_EMAIL_DISPOSABLE);
         }
 
-        if ((($project->getId() === 'console') || ($plan['supportsCanonicalEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false) && $emailMetadata['emailIsCanonical'] === false) {
+        if ((($project->getId() === 'console') || empty($plan) || ($plan['supportsCanonicalEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false) && $emailMetadata['emailIsCanonical'] === false) {
             throw new Exception(Exception::USER_EMAIL_NOT_CANONICAL);
         }
 
-        if ((($project->getId() === 'console') || ($plan['supportsFreeEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['freeEmails'] ?? false) && $emailMetadata['emailIsFree']) {
+        if ((($project->getId() === 'console') || empty($plan) || ($plan['supportsFreeEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['freeEmails'] ?? false) && $emailMetadata['emailIsFree']) {
             throw new Exception(Exception::USER_EMAIL_FREE);
         }
 
-        if ((($project->getId() === 'console') || ($plan['supportsCorporateEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['corporateEmails'] ?? false) && !$emailMetadata['emailIsCorporate']) {
+        if ((($project->getId() === 'console') || empty($plan) || ($plan['supportsCorporateEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['corporateEmails'] ?? false) && !$emailMetadata['emailIsCorporate']) {
             throw new Exception(Exception::USER_EMAIL_NOT_CORPORATE);
         }
 
@@ -903,7 +901,11 @@ Http::patch('/v1/account/sessions/:sessionId')
             throw new Exception(Exception::PROJECT_PROVIDER_UNSUPPORTED);
         }
 
-        if ($className !== null && \class_exists($className)) {
+        // Only flows that request offline access come back with a refresh token;
+        // native ID token sign-ins never do. Without one there is nothing to
+        // exchange, and posting an empty refresh_token makes the provider fail
+        // the request, so leave the stored credentials untouched.
+        if (!empty($refreshToken) && $className !== null && \class_exists($className)) {
             $appId = $project->getAttribute('oAuthProviders', [])[$provider . 'Appid'] ?? '';
             $appSecret = $project->getAttribute('oAuthProviders', [])[$provider . 'Secret'] ?? '{}';
 
@@ -914,6 +916,7 @@ Http::patch('/v1/account/sessions/:sessionId')
                 ->setAttribute('providerAccessToken', $oauth2->getAccessToken(''))
                 ->setAttribute('providerRefreshToken', $oauth2->getRefreshToken(''))
                 ->setAttribute('providerAccessTokenExpiry', DateTime::formatTz(DateTime::addSeconds(new \DateTime(), (int) $oauth2->getAccessTokenExpiry(''))));
+
         }
 
         // Save changes
@@ -1373,11 +1376,9 @@ Http::get('/v1/account/sessions/oauth2/:provider')
             throw new Exception(Exception::PROJECT_PROVIDER_UNSUPPORTED);
         }
 
-        $host = $platform['consoleHostname'] ?? '';
-        $redirectBase = $protocol . '://' . $host;
-        if ($protocol === 'https' && $port !== '443') {
-            $redirectBase .= ':' . $port;
-        } elseif ($protocol === 'http' && $port !== '80') {
+        $redirectBase = $platform['consoleUrl'] ?? '';
+        // Only the derived console URL follows the request port; an explicit one carries its own
+        if (empty(System::getEnv('_APP_CONSOLE_URL')) && $port !== ($protocol === 'https' ? '443' : '80')) {
             $redirectBase .= ':' . $port;
         }
 
@@ -1475,6 +1476,7 @@ Http::post('/v1/account/sessions/oauth2/callback/:provider/:projectId')
 Http::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->desc('Get OAuth2 redirect')
     ->groups(['api', 'account', 'session'])
+    ->label('session.allowActive', true)
     ->label('error', __DIR__ . '/../../views/general/error.phtml')
     ->label('event', 'users.[userId].sessions.[sessionId].create')
     ->label('scope', 'public')
@@ -1506,7 +1508,8 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->inject('domainVerification')
     ->inject('cookieDomain')
     ->inject('authorization')
-    ->action(function (string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response, Document $project, Validator $redirectValidator, Document $devKey, User $user, Database $dbForProject, Geo $geo, Database $dbForPlatform, Event $queueForEvents, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken, array $plan, bool $domainVerification, ?string $cookieDomain, Authorization $authorization) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
+    ->inject('platform')
+    ->action(function (string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response, Document $project, Validator $redirectValidator, Document $devKey, User $user, Database $dbForProject, Geo $geo, Database $dbForPlatform, Event $queueForEvents, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken, array $plan, bool $domainVerification, ?string $cookieDomain, Authorization $authorization, array $platform) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
         $port = $request->getPort();
         $callbackBase = $protocol . '://' . $request->getHostname();
@@ -1574,12 +1577,15 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
         if ($devKey->isEmpty() && !empty($state['failure']) && !$redirectValidator->isValid($state['failure'])) {
             throw new Exception(Exception::PROJECT_INVALID_FAILURE_URL);
         }
+        // The default relays live on the console host; the same path on any other allowed host is a customer page
+        $consoleHostname = \parse_url($platform['consoleUrl'] ?? '', PHP_URL_HOST);
+
         $failure = [];
         if (!empty($state['failure'])) {
             $failure = URLParser::parse($state['failure']);
         }
 
-        $failureRedirect = (function (string $type, ?string $message = null, ?int $code = null, ?\Throwable $previous = null, array $params = []) use ($failure, $response, $project, $oauthDefaultFailure) {
+        $failureRedirect = (function (string $type, ?string $message = null, ?int $code = null, ?\Throwable $previous = null, array $params = []) use ($failure, $response, $project, $oauthDefaultFailure, $consoleHostname) {
             $exception = new Exception($type, $message, $code, $previous, params: $params);
             if (!empty($failure)) {
                 $query = URLParser::parseQuery($failure['query']);
@@ -1590,7 +1596,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                 ]);
                 // Mirror success path: default OAuth failure relay needs project to deep-link
                 // back into the native app via appwrite-callback-{project}://
-                if (($failure['path'] ?? '') === $oauthDefaultFailure) {
+                if ($failure['host'] === $consoleHostname && $failure['path'] === $oauthDefaultFailure) {
                     $query['project'] = $project->getId();
                 }
                 $failure['query'] = URLParser::unparseQuery($query);
@@ -1693,13 +1699,20 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
             $sessionUpgrade = true;
         }
 
-        $current = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken);
+        // The session flow replaces the caller's current session with the one
+        // created below, so the browser stays signed in. The token flow creates
+        // no session here; the app exchanges the returned token through
+        // createSession later. Deleting the current session in that flow would
+        // sign the caller out until the exchange, so it is left in place.
+        if (empty($state['token'])) {
+            $current = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken);
 
-        if ($current) { // Delete current session of new one.
-            $currentDocument = $dbForProject->getDocument('sessions', $current);
-            if (!$currentDocument->isEmpty()) {
-                $dbForProject->deleteDocument('sessions', $currentDocument->getId());
-                $dbForProject->purgeCachedDocument('users', $user->getId());
+            if ($current) { // Replace the current session with the new one.
+                $currentDocument = $dbForProject->getDocument('sessions', $current);
+                if (!$currentDocument->isEmpty()) {
+                    $dbForProject->deleteDocument('sessions', $currentDocument->getId());
+                    $dbForProject->purgeCachedDocument('users', $user->getId());
+                }
             }
         }
 
@@ -1743,6 +1756,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                     $canonical = $parsedEmail->getCanonical();
                     $canonicalize = (
                         $project->getId() === 'console'
+                        || empty($plan)
                         || ($plan['supportsCanonicalEmailValidation'] ?? false)
                     )
                         && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false)
@@ -1807,21 +1821,21 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                     }
                 }
 
-                if (!empty($email) && (($project->getId() === 'console') || ($plan['supportsDisposableEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['disposableEmails'] ?? false) && $emailMetadata['emailIsDisposable']) {
+                if (!empty($email) && (($project->getId() === 'console') || empty($plan) || ($plan['supportsDisposableEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['disposableEmails'] ?? false) && $emailMetadata['emailIsDisposable']) {
                     $failureRedirect(Exception::USER_EMAIL_DISPOSABLE);
                 }
 
                 // When $canonicalize is true we already applied delivery-safe
                 // local-part normalization while preserving the provider domain.
-                if (!empty($email) && (($project->getId() === 'console') || ($plan['supportsCanonicalEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false) && $emailMetadata['emailIsCanonical'] === false && !$canonicalize) {
+                if (!empty($email) && (($project->getId() === 'console') || empty($plan) || ($plan['supportsCanonicalEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false) && $emailMetadata['emailIsCanonical'] === false && !$canonicalize) {
                     $failureRedirect(Exception::USER_EMAIL_NOT_CANONICAL);
                 }
 
-                if (!empty($email) && (($project->getId() === 'console') || ($plan['supportsFreeEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['freeEmails'] ?? false) && $emailMetadata['emailIsFree']) {
+                if (!empty($email) && (($project->getId() === 'console') || empty($plan) || ($plan['supportsFreeEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['freeEmails'] ?? false) && $emailMetadata['emailIsFree']) {
                     $failureRedirect(Exception::USER_EMAIL_FREE);
                 }
 
-                if (!empty($email) && (($project->getId() === 'console') || ($plan['supportsCorporateEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['corporateEmails'] ?? false) && !$emailMetadata['emailIsCorporate']) {
+                if (!empty($email) && (($project->getId() === 'console') || empty($plan) || ($plan['supportsCorporateEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['corporateEmails'] ?? false) && !$emailMetadata['emailIsCorporate']) {
                     $failureRedirect(Exception::USER_EMAIL_NOT_CORPORATE);
                 }
 
@@ -1904,6 +1918,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                 $canonical = $parsedEmail->getCanonical();
                 $canonicalize = (
                     $project->getId() === 'console'
+                    || empty($plan)
                     || ($plan['supportsCanonicalEmailValidation'] ?? false)
                 )
                     && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false)
@@ -1938,21 +1953,21 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                 $failureRedirect(Exception::USER_ALREADY_EXISTS);
             }
 
-            if ((($project->getId() === 'console') || ($plan['supportsDisposableEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['disposableEmails'] ?? false) && $emailMetadata['emailIsDisposable']) {
+            if ((($project->getId() === 'console') || empty($plan) || ($plan['supportsDisposableEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['disposableEmails'] ?? false) && $emailMetadata['emailIsDisposable']) {
                 $failureRedirect(Exception::USER_EMAIL_DISPOSABLE);
             }
 
             // When $canonicalize is true we already applied delivery-safe
             // local-part normalization while preserving the provider domain.
-            if ((($project->getId() === 'console') || ($plan['supportsCanonicalEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false) && $emailMetadata['emailIsCanonical'] === false && !$canonicalize) {
+            if ((($project->getId() === 'console') || empty($plan) || ($plan['supportsCanonicalEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false) && $emailMetadata['emailIsCanonical'] === false && !$canonicalize) {
                 $failureRedirect(Exception::USER_EMAIL_NOT_CANONICAL);
             }
 
-            if ((($project->getId() === 'console') || ($plan['supportsFreeEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['freeEmails'] ?? false) && $emailMetadata['emailIsFree']) {
+            if ((($project->getId() === 'console') || empty($plan) || ($plan['supportsFreeEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['freeEmails'] ?? false) && $emailMetadata['emailIsFree']) {
                 $failureRedirect(Exception::USER_EMAIL_FREE);
             }
 
-            if ((($project->getId() === 'console') || ($plan['supportsCorporateEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['corporateEmails'] ?? false) && !$emailMetadata['emailIsCorporate']) {
+            if ((($project->getId() === 'console') || empty($plan) || ($plan['supportsCorporateEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['corporateEmails'] ?? false) && !$emailMetadata['emailIsCorporate']) {
                 $failureRedirect(Exception::USER_EMAIL_NOT_CORPORATE);
             }
 
@@ -2164,7 +2179,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
             ;
 
             // TODO: Remove this deprecated workaround - support only token
-            if ($state['success']['path'] == $oauthDefaultSuccess) {
+            if ($state['success']['host'] === $consoleHostname && $state['success']['path'] === $oauthDefaultSuccess) {
                 $query['project'] = $project->getId();
                 $query['domain'] = $cookieDomain;
                 $query['key'] = $store->getKey();
@@ -2270,13 +2285,11 @@ Http::get('/v1/account/tokens/oauth2/:provider')
             throw new Exception(Exception::PROJECT_PROVIDER_UNSUPPORTED);
         }
 
-        $host = $platform['consoleHostname'] ?? '';
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
         $port = $request->getPort();
-        $redirectBase = $protocol . '://' . $host;
-        if ($protocol === 'https' && $port !== '443') {
-            $redirectBase .= ':' . $port;
-        } elseif ($protocol === 'http' && $port !== '80') {
+        $redirectBase = $platform['consoleUrl'] ?? '';
+        // Only the derived console URL follows the request port; an explicit one carries its own
+        if (empty(System::getEnv('_APP_CONSOLE_URL')) && $port !== ($protocol === 'https' ? '443' : '80')) {
             $redirectBase .= ':' . $port;
         }
 
@@ -2343,7 +2356,7 @@ Http::post('/v1/account/tokens/magic-url')
     ->inject('proofForPassword')
     ->inject('platform')
     ->inject('authorization')
-    ->action(function (string $userId, string $email, string $url, bool $phrase, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, MailPublisher $publisherForMails, array $plan, ProofsPassword $proofForPassword, array $platform, Authorization $authorization) use ($legacyConsolePaths) {
+    ->action(function (string $userId, string $email, string $url, bool $phrase, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, MailPublisher $publisherForMails, array $plan, ProofsPassword $proofForPassword, array $platform, Authorization $authorization) {
         if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
         }
@@ -2400,19 +2413,19 @@ Http::post('/v1/account/tokens/magic-url')
                 throw new Exception(Exception::GENERAL_INVALID_EMAIL);
             }
 
-            if ((($project->getId() === 'console') || ($plan['supportsDisposableEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['disposableEmails'] ?? false) && $emailMetadata['emailIsDisposable']) {
+            if ((($project->getId() === 'console') || empty($plan) || ($plan['supportsDisposableEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['disposableEmails'] ?? false) && $emailMetadata['emailIsDisposable']) {
                 throw new Exception(Exception::USER_EMAIL_DISPOSABLE);
             }
 
-            if ((($project->getId() === 'console') || ($plan['supportsCanonicalEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false) && $emailMetadata['emailIsCanonical'] === false) {
+            if ((($project->getId() === 'console') || empty($plan) || ($plan['supportsCanonicalEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false) && $emailMetadata['emailIsCanonical'] === false) {
                 throw new Exception(Exception::USER_EMAIL_NOT_CANONICAL);
             }
 
-            if ((($project->getId() === 'console') || ($plan['supportsFreeEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['freeEmails'] ?? false) && $emailMetadata['emailIsFree']) {
+            if ((($project->getId() === 'console') || empty($plan) || ($plan['supportsFreeEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['freeEmails'] ?? false) && $emailMetadata['emailIsFree']) {
                 throw new Exception(Exception::USER_EMAIL_FREE);
             }
 
-            if ((($project->getId() === 'console') || ($plan['supportsCorporateEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['corporateEmails'] ?? false) && !$emailMetadata['emailIsCorporate']) {
+            if ((($project->getId() === 'console') || empty($plan) || ($plan['supportsCorporateEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['corporateEmails'] ?? false) && !$emailMetadata['emailIsCorporate']) {
                 throw new Exception(Exception::USER_EMAIL_NOT_CORPORATE);
             }
 
@@ -2481,17 +2494,13 @@ Http::post('/v1/account/tokens/magic-url')
 
         if (empty($url)) {
             $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
-            $host = $platform['consoleHostname'] ?? '';
             $port = $request->getPort();
-            $callbackBase = $protocol . '://' . $host;
-            if ($protocol === 'https' && $port !== '443') {
-                $callbackBase .= ':' . $port;
-            } elseif ($protocol === 'http' && $port !== '80') {
+            $callbackBase = $platform['consoleUrl'] ?? '';
+            // Only the derived console URL follows the request port; an explicit one carries its own
+            if (empty(System::getEnv('_APP_CONSOLE_URL')) && $port !== ($protocol === 'https' ? '443' : '80')) {
                 $callbackBase .= ':' . $port;
             }
-            $url = $legacyConsolePaths
-                ? "{$callbackBase}/console/auth/magic-url"
-                : "{$callbackBase}/auth/magic-url";
+            $url = "{$callbackBase}/auth/magic-url";
         }
 
         $url = Template::parseURL($url);
@@ -2728,19 +2737,19 @@ Http::post('/v1/account/tokens/email')
                 throw new Exception(Exception::GENERAL_INVALID_EMAIL);
             }
 
-            if ((($project->getId() === 'console') || ($plan['supportsDisposableEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['disposableEmails'] ?? false) && $emailMetadata['emailIsDisposable']) {
+            if ((($project->getId() === 'console') || empty($plan) || ($plan['supportsDisposableEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['disposableEmails'] ?? false) && $emailMetadata['emailIsDisposable']) {
                 throw new Exception(Exception::USER_EMAIL_DISPOSABLE);
             }
 
-            if ((($project->getId() === 'console') || ($plan['supportsCanonicalEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false) && $emailMetadata['emailIsCanonical'] === false) {
+            if ((($project->getId() === 'console') || empty($plan) || ($plan['supportsCanonicalEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false) && $emailMetadata['emailIsCanonical'] === false) {
                 throw new Exception(Exception::USER_EMAIL_NOT_CANONICAL);
             }
 
-            if ((($project->getId() === 'console') || ($plan['supportsFreeEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['freeEmails'] ?? false) && $emailMetadata['emailIsFree']) {
+            if ((($project->getId() === 'console') || empty($plan) || ($plan['supportsFreeEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['freeEmails'] ?? false) && $emailMetadata['emailIsFree']) {
                 throw new Exception(Exception::USER_EMAIL_FREE);
             }
 
-            if ((($project->getId() === 'console') || ($plan['supportsCorporateEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['corporateEmails'] ?? false) && !$emailMetadata['emailIsCorporate']) {
+            if ((($project->getId() === 'console') || empty($plan) || ($plan['supportsCorporateEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['corporateEmails'] ?? false) && !$emailMetadata['emailIsCorporate']) {
                 throw new Exception(Exception::USER_EMAIL_NOT_CORPORATE);
             }
 
@@ -3117,13 +3126,12 @@ Http::post('/v1/account/tokens/phone')
     ->inject('queueForEvents')
     ->inject('publisherForMessaging')
     ->inject('locale')
-    ->inject('timelimit')
     ->inject('usage')
     ->inject('plan')
     ->inject('store')
     ->inject('proofForCode')
     ->inject('authorization')
-    ->action(function (string $userId, string $phone, Request $request, Response $response, User $user, Document $project, array $platform, Database $dbForProject, Event $queueForEvents, MessagingPublisher $publisherForMessaging, Locale $locale, callable $timelimit, Context $usage, array $plan, Store $store, ProofsCode $proofForCode, Authorization $authorization) {
+    ->action(function (string $userId, string $phone, Request $request, Response $response, User $user, Document $project, array $platform, Database $dbForProject, Event $queueForEvents, MessagingPublisher $publisherForMessaging, Locale $locale, Context $usage, array $plan, Store $store, ProofsCode $proofForCode, Authorization $authorization) {
         if (empty(System::getEnv('_APP_SMS_PROVIDER'))) {
             throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
         }
@@ -3583,19 +3591,19 @@ Http::patch('/v1/account/email')
             throw new Exception(Exception::GENERAL_INVALID_EMAIL);
         }
 
-        if ((($project->getId() === 'console') || ($plan['supportsDisposableEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['disposableEmails'] ?? false) && $emailMetadata['emailIsDisposable']) {
+        if ((($project->getId() === 'console') || empty($plan) || ($plan['supportsDisposableEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['disposableEmails'] ?? false) && $emailMetadata['emailIsDisposable']) {
             throw new Exception(Exception::USER_EMAIL_DISPOSABLE);
         }
 
-        if ((($project->getId() === 'console') || ($plan['supportsCanonicalEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false) && $emailMetadata['emailIsCanonical'] === false) {
+        if ((($project->getId() === 'console') || empty($plan) || ($plan['supportsCanonicalEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false) && $emailMetadata['emailIsCanonical'] === false) {
             throw new Exception(Exception::USER_EMAIL_NOT_CANONICAL);
         }
 
-        if ((($project->getId() === 'console') || ($plan['supportsFreeEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['freeEmails'] ?? false) && $emailMetadata['emailIsFree']) {
+        if ((($project->getId() === 'console') || empty($plan) || ($plan['supportsFreeEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['freeEmails'] ?? false) && $emailMetadata['emailIsFree']) {
             throw new Exception(Exception::USER_EMAIL_FREE);
         }
 
-        if ((($project->getId() === 'console') || ($plan['supportsCorporateEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['corporateEmails'] ?? false) && !$emailMetadata['emailIsCorporate']) {
+        if ((($project->getId() === 'console') || empty($plan) || ($plan['supportsCorporateEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['corporateEmails'] ?? false) && !$emailMetadata['emailIsCorporate']) {
             throw new Exception(Exception::USER_EMAIL_NOT_CORPORATE);
         }
 
@@ -4533,12 +4541,11 @@ Http::post('/v1/account/verifications/phone')
     ->inject('publisherForMessaging')
     ->inject('project')
     ->inject('locale')
-    ->inject('timelimit')
     ->inject('usage')
     ->inject('plan')
     ->inject('proofForCode')
                 ->inject('authorization')
-    ->action(function (Request $request, Response $response, User $user, Database $dbForProject, Event $queueForEvents, MessagingPublisher $publisherForMessaging, Document $project, Locale $locale, callable $timelimit, Context $usage, array $plan, ProofsCode $proofForCode, Authorization $authorization) {
+    ->action(function (Request $request, Response $response, User $user, Database $dbForProject, Event $queueForEvents, MessagingPublisher $publisherForMessaging, Document $project, Locale $locale, Context $usage, array $plan, ProofsCode $proofForCode, Authorization $authorization) {
         if (empty(System::getEnv('_APP_SMS_PROVIDER'))) {
             throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
         }

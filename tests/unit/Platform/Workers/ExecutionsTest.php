@@ -10,93 +10,33 @@ use Appwrite\Event\Message\Executions as ExecutionsMessage;
 use Appwrite\Execution\Store;
 use Appwrite\Platform\Workers\Executions;
 use PHPUnit\Framework\TestCase;
-use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Exception\Duplicate;
 use Utopia\Queue\Message;
 
 require_once __DIR__ . '/../../../../app/init.php';
 
 final class ExecutionsTest extends TestCase
 {
-    public function testCreatesPendingExecutionWithoutUpsert(): void
+    public function testPersistsPendingExecution(): void
     {
-        $created = null;
-        $dbForProject = $this->createMock(Database::class);
-        $dbForProject->expects($this->once())
-            ->method('createDocument')
-            ->with('executions', $this->isInstanceOf(Document::class))
-            ->willReturnCallback(function (string $collection, Document $execution) use (&$created): Document {
-                $created = $execution;
-                return $execution;
-            });
-        $dbForProject->expects($this->never())->method('upsertDocuments');
-        $store = $this->createMock(Store::class);
-        $store->expects($this->once())->method('upsert')->with('project', $this->isInstanceOf(Document::class));
+        $store = new MemoryStore();
 
         (new Executions())->action(
             $this->message((new Execution(
                 project: new Document(['$id' => 'project']),
                 execution: new Document(['$id' => 'execution', 'status' => 'waiting']),
             ))->toArray()),
-            $dbForProject,
             $store,
         );
 
-        $this->assertInstanceOf(Document::class, $created);
-        $this->assertSame('waiting', $created->getAttribute('status'));
+        $execution = $store->get('project', 'execution');
+        $this->assertFalse($execution->isEmpty());
+        $this->assertSame('waiting', $execution->getAttribute('status'));
     }
 
-    public function testPendingExecutionDoesNotReplaceExistingTerminalExecution(): void
+    public function testPersistsCompletedExecutionWithLogs(): void
     {
-        $dbForProject = $this->createMock(Database::class);
-        $dbForProject->expects($this->once())
-            ->method('createDocument')
-            ->willThrowException(new Duplicate('Execution already exists'));
-        $dbForProject->expects($this->never())->method('upsertDocuments');
-        $dbForProject->expects($this->once())
-            ->method('getDocument')
-            ->with('executions', 'execution')
-            ->willReturn(new Document(['$id' => 'execution', 'status' => 'completed']));
-        $store = $this->createMock(Store::class);
-        $store->expects($this->once())
-            ->method('upsert')
-            ->willReturnCallback(function (string $projectId, Document $execution): void {
-                $this->assertSame('project', $projectId);
-                $this->assertSame('completed', $execution->getAttribute('status'));
-            });
-
-        (new Executions())->action(
-            $this->message((new Execution(
-                project: new Document(['$id' => 'project']),
-                execution: new Document(['$id' => 'execution', 'status' => 'waiting']),
-            ))->toArray()),
-            $dbForProject,
-            $store,
-        );
-    }
-
-    public function testUpsertsCompletedExecutionWithLogs(): void
-    {
-        $upserted = null;
-        $dbForProject = $this->createMock(Database::class);
-        $dbForProject->expects($this->never())->method('createDocument');
-        $dbForProject->expects($this->once())
-            ->method('upsertDocuments')
-            ->with('executions', $this->isArray())
-            ->willReturnCallback(function (
-                string $collection,
-                array $executions,
-                int $batchSize = 0,
-                ?callable $onNext = null,
-                ?callable $onError = null
-            ) use (&$upserted): int {
-                $upserted = $executions[0];
-                $onNext($upserted);
-                return \count($executions);
-            });
-        $store = $this->createMock(Store::class);
-        $store->expects($this->once())->method('upsert')->with('project', $this->isInstanceOf(Document::class));
+        $store = new MemoryStore();
 
         (new Executions())->action(
             $this->message((new Execution(
@@ -107,130 +47,54 @@ final class ExecutionsTest extends TestCase
                     'logs' => 'output',
                 ]),
             ))->toArray()),
-            $dbForProject,
             $store,
         );
 
-        $this->assertInstanceOf(Document::class, $upserted);
-        $this->assertSame('completed', $upserted->getAttribute('status'));
-        $this->assertSame('output', $upserted->getAttribute('logs'));
+        $execution = $store->get('project', 'execution');
+        $this->assertSame('completed', $execution->getAttribute('status'));
+        $this->assertSame('output', $execution->getAttribute('logs'));
     }
 
-    public function testBatchMirrorsDatabaseAssignedSequences(): void
+    public function testPersistsBatchExecutions(): void
     {
-        $stored = new Document([
-            '$id' => 'execution',
-            '$sequence' => 42,
-            'status' => 'completed',
-        ]);
-        $dbForProject = $this->createMock(Database::class);
-        $dbForProject->expects($this->once())
-            ->method('upsertDocuments')
-            ->willReturnCallback(function (string $collection, array $executions, int $batchSize, callable $onNext) use ($stored): int {
-                $onNext($stored);
-                return 1;
-            });
-        $store = $this->createMock(Store::class);
-        $store->expects($this->once())
-            ->method('upsertMany')
-            ->willReturnCallback(function (string $projectId, array $executions): void {
-                $this->assertSame('project', $projectId);
-                $this->assertSame('42', $executions[0]->getSequence());
-            });
+        $store = new MemoryStore();
 
         (new Executions())->action(
             $this->message((new ExecutionsMessage(
                 project: new Document(['$id' => 'project']),
-                executions: [new Document(['$id' => 'execution', 'status' => 'completed'])],
+                executions: [
+                    new Document(['$id' => 'execution-a', 'status' => 'completed']),
+                    new Document(['$id' => 'execution-b', 'status' => 'failed']),
+                ],
             ))->toArray()),
-            $dbForProject,
             $store,
         );
+
+        $this->assertSame('completed', $store->get('project', 'execution-a')->getAttribute('status'));
+        $this->assertSame('failed', $store->get('project', 'execution-b')->getAttribute('status'));
     }
 
-    public function testBatchRedeliveryHealsClickHouseAfterDatabaseNoOp(): void
+    public function testRemovesCancelledExecution(): void
     {
-        $stored = new Document([
-            '$id' => 'execution',
-            '$sequence' => 42,
-            'status' => 'completed',
-        ]);
-        $dbForProject = $this->createMock(Database::class);
-        $dbForProject->expects($this->once())
-            ->method('upsertDocuments')
-            ->willReturn(0);
-        $dbForProject->expects($this->once())
-            ->method('getDocument')
-            ->with('executions', 'execution')
-            ->willReturn($stored);
-        $store = $this->createMock(Store::class);
-        $store->expects($this->once())
-            ->method('upsertMany')
-            ->with('project', [$stored]);
-
-        (new Executions())->action(
-            $this->message((new ExecutionsMessage(
-                project: new Document(['$id' => 'project']),
-                executions: [new Document(['$id' => 'execution', 'status' => 'completed'])],
-            ))->toArray()),
-            $dbForProject,
-            $store,
-        );
-    }
-
-    public function testDeletesCancelledExecution(): void
-    {
-        $dbForProject = $this->createMock(Database::class);
-        $dbForProject->expects($this->once())
-            ->method('deleteDocument')
-            ->with('executions', 'execution')
-            ->willReturn(true);
-        $store = $this->createMock(Store::class);
-        $store->expects($this->once())->method('delete')->with('project', $this->isInstanceOf(Document::class));
+        $store = new MemoryStore();
+        $store->upsert('project', new Document(['$id' => 'execution', 'status' => 'scheduled']));
 
         (new Executions())->action(
             $this->message((new ExecutionCancelled(
                 project: new Document(['$id' => 'project']),
                 execution: new Document(['$id' => 'execution']),
             ))->toArray()),
-            $dbForProject,
             $store,
         );
-    }
 
-    public function testRetriesCancelledExecutionWhenDeletionReturnsFalse(): void
-    {
-        $dbForProject = $this->createMock(Database::class);
-        $dbForProject->expects($this->once())
-            ->method('deleteDocument')
-            ->with('executions', 'execution')
-            ->willReturn(false);
-        $store = $this->createMock(Store::class);
-        $store->expects($this->once())->method('delete')->with('project', $this->isInstanceOf(Document::class));
-
-        $this->expectException(\Exception::class);
-        $this->expectExceptionMessage('Failed to remove cancelled execution');
-
-        (new Executions())->action(
-            $this->message((new ExecutionCancelled(
-                project: new Document(['$id' => 'project']),
-                execution: new Document(['$id' => 'execution']),
-            ))->toArray()),
-            $dbForProject,
-            $store,
-        );
+        $this->assertTrue($store->get('project', 'execution')->isEmpty());
     }
 
     public function testPropagatesCancelledExecutionDeletionFailure(): void
     {
-        $error = new \RuntimeException('Database unavailable');
-        $dbForProject = $this->createMock(Database::class);
-        $dbForProject->expects($this->once())
-            ->method('deleteDocument')
-            ->with('executions', 'execution')
-            ->willThrowException($error);
-        $store = $this->createMock(Store::class);
-        $store->expects($this->once())->method('delete')->with('project', $this->isInstanceOf(Document::class));
+        $error = new \RuntimeException('ClickHouse unavailable');
+        $store = new MemoryStore();
+        $store->failure = $error;
 
         $this->expectExceptionObject($error);
 
@@ -239,7 +103,23 @@ final class ExecutionsTest extends TestCase
                 project: new Document(['$id' => 'project']),
                 execution: new Document(['$id' => 'execution']),
             ))->toArray()),
-            $dbForProject,
+            $store,
+        );
+    }
+
+    public function testPropagatesUpsertFailure(): void
+    {
+        $error = new \RuntimeException('ClickHouse unavailable');
+        $store = new MemoryStore();
+        $store->failure = $error;
+
+        $this->expectExceptionObject($error);
+
+        (new Executions())->action(
+            $this->message((new Execution(
+                project: new Document(['$id' => 'project']),
+                execution: new Document(['$id' => 'execution', 'status' => 'completed']),
+            ))->toArray()),
             $store,
         );
     }
@@ -252,5 +132,50 @@ final class ExecutionsTest extends TestCase
             'timestamp' => \time(),
             'payload' => $payload,
         ]);
+    }
+}
+
+final class MemoryStore extends Store
+{
+    /** @var array<string, array<string, Document>> */
+    private array $executions = [];
+
+    public ?\Throwable $failure = null;
+
+    public function __construct()
+    {
+        parent::__construct(dsn: 'http://unused', client: null);
+    }
+
+    public function upsert(string $projectId, Document $execution): void
+    {
+        $this->upsertMany($projectId, [$execution]);
+    }
+
+    /** @param array<Document> $executions */
+    public function upsertMany(string $projectId, array $executions): void
+    {
+        $this->failIfNeeded();
+        foreach ($executions as $execution) {
+            $this->executions[$projectId][$execution->getId()] = clone $execution;
+        }
+    }
+
+    public function delete(string $projectId, Document $execution): void
+    {
+        $this->failIfNeeded();
+        unset($this->executions[$projectId][$execution->getId()]);
+    }
+
+    public function get(string $projectId, string $executionId, ?array $roles = null): Document
+    {
+        return $this->executions[$projectId][$executionId] ?? new Document();
+    }
+
+    private function failIfNeeded(): void
+    {
+        if ($this->failure !== null) {
+            throw $this->failure;
+        }
     }
 }

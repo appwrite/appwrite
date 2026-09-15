@@ -44,32 +44,32 @@ $register->set('pools', function () {
         'scheme' => System::getEnv('_APP_DB_ADAPTER', 'postgresql'),
         'host' => System::getEnv('_APP_DB_HOST', 'postgresql'),
         'port' => System::getEnv('_APP_DB_PORT', '5432'),
-        'user' => System::getEnv('_APP_DB_USER', ''),
-        'pass' => System::getEnv('_APP_DB_PASS', ''),
+        'user' => \rawurlencode(System::getEnv('_APP_DB_USER', '')),
+        'pass' => \rawurlencode(System::getEnv('_APP_DB_PASS', '')),
         'path' => System::getEnv('_APP_DB_SCHEMA', ''),
     ]);
     $fallbackForRedis = 'redis_main=' . AppwriteURL::unparse([
         'scheme' => 'redis',
         'host' => System::getEnv('_APP_REDIS_HOST', 'redis'),
         'port' => System::getEnv('_APP_REDIS_PORT', '6379'),
-        'user' => System::getEnv('_APP_REDIS_USER', ''),
-        'pass' => System::getEnv('_APP_REDIS_PASS', ''),
+        'user' => \rawurlencode(System::getEnv('_APP_REDIS_USER', '')),
+        'pass' => \rawurlencode(System::getEnv('_APP_REDIS_PASS', '')),
     ]);
 
     $fallbackForDocumentsDB = 'db_main=' . AppwriteURL::unparse([
         'scheme' => System::getEnv('_APP_DB_ADAPTER_DOCUMENTSDB', 'mongodb'),
         'host' => System::getEnv('_APP_DB_HOST_DOCUMENTSDB', 'mongodb'),
         'port' => System::getEnv('_APP_DB_PORT_DOCUMENTSDB', '27017'),
-        'user' => System::getEnv('_APP_DB_USER_DOCUMENTSDB', '') ?: System::getEnv('_APP_DB_USER', ''),
-        'pass' => System::getEnv('_APP_DB_PASS_DOCUMENTSDB', '') ?: System::getEnv('_APP_DB_PASS', ''),
+        'user' => \rawurlencode(System::getEnv('_APP_DB_USER_DOCUMENTSDB', '') ?: System::getEnv('_APP_DB_USER', '')),
+        'pass' => \rawurlencode(System::getEnv('_APP_DB_PASS_DOCUMENTSDB', '') ?: System::getEnv('_APP_DB_PASS', '')),
         'path' => System::getEnv('_APP_DB_SCHEMA_DOCUMENTSDB', '') ?: System::getEnv('_APP_DB_SCHEMA', ''),
     ]);
     $fallbackForVectorsDB = 'db_main=' . AppwriteURL::unparse([
         'scheme' => System::getEnv('_APP_DB_ADAPTER_VECTORSDB', 'postgresql'),
         'host' => System::getEnv('_APP_DB_HOST_VECTORSDB', 'postgresql'),
         'port' => System::getEnv('_APP_DB_PORT_VECTORSDB', '5432'),
-        'user' => System::getEnv('_APP_DB_USER_VECTORSDB', '') ?: System::getEnv('_APP_DB_USER', ''),
-        'pass' => System::getEnv('_APP_DB_PASS_VECTORSDB', '') ?: System::getEnv('_APP_DB_PASS', ''),
+        'user' => \rawurlencode(System::getEnv('_APP_DB_USER_VECTORSDB', '') ?: System::getEnv('_APP_DB_USER', '')),
+        'pass' => \rawurlencode(System::getEnv('_APP_DB_PASS_VECTORSDB', '') ?: System::getEnv('_APP_DB_PASS', '')),
         'path' => System::getEnv('_APP_DB_SCHEMA_VECTORSDB', '') ?: System::getEnv('_APP_DB_SCHEMA', ''),
     ]);
 
@@ -98,12 +98,6 @@ $register->set('pools', function () {
             'multiple' => true,
             'schemes' => ['postgresql'],
         ],
-        'logs' => [
-            'type' => 'database',
-            'dsns' => System::getEnv('_APP_CONNECTIONS_DB_LOGS', $fallbackForDB),
-            'multiple' => false,
-            'schemes' => ['mongodb','mariadb', 'mysql','postgresql'],
-        ],
         'publisher' => [
             'type' => 'publisher',
             'dsns' => $fallbackForRedis,
@@ -128,10 +122,19 @@ $register->set('pools', function () {
             'multiple' => false,
             'schemes' => ['redis'],
         ],
+        // Abuse gets its own pool rather than sharing 'lock': lock leases are
+        // held for the whole guarded callback, which for storage chunk uploads
+        // spans the transfer. Rate limit checks must not queue behind those.
+        'abuse' => [
+            'type' => 'abuse',
+            'dsns' => $fallbackForRedis,
+            'multiple' => false,
+            'schemes' => ['redis'],
+        ],
     ];
 
     $maxConnections = (int) System::getEnv('_APP_CONNECTIONS_MAX', 151);
-    $instanceConnections = $maxConnections / (int) System::getEnv('_APP_POOL_CLIENTS', 14);
+    $instanceConnections = $maxConnections / (int) System::getEnv('_APP_POOL_CLIENTS', 15);
 
     $workerCount = intval(System::getEnv('_APP_CPU_NUM', swoole_cpu_num())) * intval(System::getEnv('_APP_WORKER_PER_CORE', 6));
     $poolSize = max(1, (int)($instanceConnections / $workerCount));
@@ -210,11 +213,11 @@ $register->set('pools', function () {
                         \PDO::ATTR_STRINGIFY_FETCHES => true
                     ));
                 },
-                default => function () use ($dsnHost, $dsnPort, $dsnPass) {
+                default => function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass) {
                     $redis = new \Redis();
                     @$redis->pconnect($dsnHost, (int)$dsnPort);
-                    if ($dsnPass) {
-                        $redis->auth($dsnPass);
+                    if ($dsnPass !== null && $dsnPass !== '') {
+                        $redis->auth($dsnUser !== null && $dsnUser !== '' ? [$dsnUser, $dsnPass] : $dsnPass);
                     }
                     $redis->setOption(\Redis::OPT_READ_TIMEOUT, -1);
 
@@ -252,7 +255,12 @@ $register->set('pools', function () {
                         // Publishers never block on receive, so one connection backs both broker slots.
                         return match ($dsn->getScheme()) {
                             'redis' => (function () use ($dsn) {
-                                $connection = new Queue\Connection\Redis($dsn->getHost(), $dsn->getPort());
+                                $connection = new Queue\Connection\Redis(
+                                    $dsn->getHost(),
+                                    $dsn->getPort(),
+                                    $dsn->getUser() === '' ? null : $dsn->getUser(),
+                                    $dsn->getPassword() === '' ? null : $dsn->getPassword(),
+                                );
                                 return new Queue\Broker\Redis($connection, $connection);
                             })(),
                             default => null
@@ -269,6 +277,7 @@ $register->set('pools', function () {
                         }
 
                         return $adapter;
+                    case 'abuse':
                     case 'lock':
                         return $resource();
                     default:

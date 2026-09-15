@@ -188,27 +188,18 @@ class Specs extends Action
                     'name' => 'X-Appwrite-Impersonate-User-Id',
                     'description' => 'Impersonate a user by ID',
                     'in' => 'header',
-                    'x-appwrite' => [
-                        'optional' => true,
-                    ],
                 ],
                 'ImpersonateUserEmail' => [
                     'type' => 'apiKey',
                     'name' => 'X-Appwrite-Impersonate-User-Email',
                     'description' => 'Impersonate a user by email',
                     'in' => 'header',
-                    'x-appwrite' => [
-                        'optional' => true,
-                    ],
                 ],
                 'ImpersonateUserPhone' => [
                     'type' => 'apiKey',
                     'name' => 'X-Appwrite-Impersonate-User-Phone',
                     'description' => 'Impersonate a user by phone',
                     'in' => 'header',
-                    'x-appwrite' => [
-                        'optional' => true,
-                    ],
                 ],
             ],
             APP_SDK_PLATFORM_SERVER => [
@@ -287,27 +278,18 @@ class Specs extends Action
                     'name' => 'X-Appwrite-Impersonate-User-Id',
                     'description' => 'Impersonate a user by ID',
                     'in' => 'header',
-                    'x-appwrite' => [
-                        'optional' => true,
-                    ],
                 ],
                 'ImpersonateUserEmail' => [
                     'type' => 'apiKey',
                     'name' => 'X-Appwrite-Impersonate-User-Email',
                     'description' => 'Impersonate a user by email',
                     'in' => 'header',
-                    'x-appwrite' => [
-                        'optional' => true,
-                    ],
                 ],
                 'ImpersonateUserPhone' => [
                     'type' => 'apiKey',
                     'name' => 'X-Appwrite-Impersonate-User-Phone',
                     'description' => 'Impersonate a user by phone',
                     'in' => 'header',
-                    'x-appwrite' => [
-                        'optional' => true,
-                    ],
                 ],
             ],
             APP_SDK_PLATFORM_CONSOLE => [
@@ -386,27 +368,18 @@ class Specs extends Action
                     'name' => 'X-Appwrite-Impersonate-User-Id',
                     'description' => 'Impersonate a user by ID',
                     'in' => 'header',
-                    'x-appwrite' => [
-                        'optional' => true,
-                    ],
                 ],
                 'ImpersonateUserEmail' => [
                     'type' => 'apiKey',
                     'name' => 'X-Appwrite-Impersonate-User-Email',
                     'description' => 'Impersonate a user by email',
                     'in' => 'header',
-                    'x-appwrite' => [
-                        'optional' => true,
-                    ],
                 ],
                 'ImpersonateUserPhone' => [
                     'type' => 'apiKey',
                     'name' => 'X-Appwrite-Impersonate-User-Phone',
                     'description' => 'Impersonate a user by phone',
                     'in' => 'header',
-                    'x-appwrite' => [
-                        'optional' => true,
-                    ],
                 ],
             ],
         ];

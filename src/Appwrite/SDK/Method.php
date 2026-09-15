@@ -35,7 +35,7 @@ class Method
      * @param array $additionalParameters
      * @param string $desc
      * @param bool $public Whether this method should be rendered on the website/documentation
-     * @param array<string> $locationAuth Security scheme keys injected for location-type methods (includes project auth)
+     * @param array<string> $locationAuth Security scheme keys for location-type methods: first is the required project binding; additional keys supplement the base auth as an optional alternative
      */
     public function __construct(
         protected string $namespace,

@@ -428,7 +428,7 @@ class Certificates extends Action
             if ($saved !== null && !$saved->isEmpty()) {
                 $this->sendEvents($saved, $dbForPlatform, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $queueForRealtime, $bus);
                 if ($error !== null) {
-                    $this->notifyError($domain->get(), $error->getMessage(), $certificate->getAttribute('attempts', 0), $publisherForMails, $plan);
+                    $this->notifyError($domain->get(), $error->getMessage(), $certificate->getAttribute('attempts', 0), $publisherForMails, $plan, $dbForPlatform->getDocument('projects', 'console'));
                 }
             }
         }
@@ -474,10 +474,10 @@ class Certificates extends Action
     ): void {
         $bus->dispatch(new RuleUpdated($rule->getArrayCopy()));
 
-        $projectId = $rule->getAttribute('projectId');
+        $projectId = (string) $rule->getAttribute('projectId', '');
 
         // Skip events for console project (triggered by auto-ssl generation for 1 click setups)
-        if ($projectId === 'console') {
+        if ($projectId === '' || $projectId === 'console') {
             return;
         }
 
@@ -579,7 +579,7 @@ class Certificates extends Action
      * @return void
      * @throws Exception
      */
-    private function notifyError(string $domain, string $errorMessage, int $attempt, MailPublisher $publisherForMails, array $plan): void
+    private function notifyError(string $domain, string $errorMessage, int $attempt, MailPublisher $publisherForMails, array $plan, Document $console): void
     {
         // Log error into console
         Console::warning('Cannot renew domain (' . $domain . ') on attempt no. ' . $attempt . ' certificate: ' . $errorMessage);
@@ -611,6 +611,7 @@ class Certificates extends Action
         $preview = $locale->getText("emails.certificate.preview");
 
         $publisherForMails->enqueue(new MailMessage(
+            project: $console,
             recipient: System::getEnv('_APP_EMAIL_CERTIFICATES', System::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS')),
             name: 'Appwrite Administrator',
             subject: $subject,
