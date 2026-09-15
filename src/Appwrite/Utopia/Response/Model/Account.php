@@ -113,7 +113,7 @@ class Account extends Model
                 'default' => null,
                 'example' => true,
             ])
-            ->addRule('passwordPwned', [
+            ->addRule('pwned', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Whether the password was found in a known data breach the last time it was checked. Null when the password has never been checked.',
                 'required' => false,

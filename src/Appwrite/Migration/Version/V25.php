@@ -242,15 +242,15 @@ class V25 extends Migration
 
                 case 'users':
                     try {
-                        $this->createAttributeFromCollection($this->dbForProject, $id, 'passwordPwned');
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'pwned');
                     } catch (Throwable $th) {
-                        Console::warning("Failed to create attribute \"passwordPwned\" in collection {$id}: {$th->getMessage()}");
+                        Console::warning("Failed to create attribute \"pwned\" in collection {$id}: {$th->getMessage()}");
                     }
 
                     try {
-                        $this->createIndexFromCollection($this->dbForProject, $id, '_key_passwordPwned');
+                        $this->createIndexFromCollection($this->dbForProject, $id, '_key_pwned');
                     } catch (Throwable $th) {
-                        Console::warning("Failed to create index \"_key_passwordPwned\" from {$id}: {$th->getMessage()}");
+                        Console::warning("Failed to create index \"_key_pwned\" from {$id}: {$th->getMessage()}");
                     }
 
                     $this->dbForProject->purgeCachedCollection($id);
