@@ -73,16 +73,16 @@ class V25 extends Migration
                             Console::warning("Failed to create index \"_key_accessedAt\" from {$id}: {$th->getMessage()}");
                         }
 
-                        try {
+                        $attributes = \array_map(
+                            fn (Document $attribute) => $attribute->getId(),
+                            $this->dbForProject->getCollection($id)->getAttribute('attributes', [])
+                        );
+                        if (\in_array('devKeys', $attributes, true)) {
                             $this->dbForProject->deleteAttribute($id, 'devKeys');
-                        } catch (Throwable $th) {
-                            Console::warning("Failed to delete attribute \"devKeys\" from {$id}: {$th->getMessage()}");
                         }
 
-                        try {
+                        if (!$this->dbForProject->getCollection('devKeys')->isEmpty()) {
                             $this->dbForProject->deleteCollection('devKeys');
-                        } catch (Throwable $th) {
-                            Console::warning("Failed to delete collection \"devKeys\": {$th->getMessage()}");
                         }
                     }
                     $this->dbForProject->purgeCachedCollection($id);
@@ -267,6 +267,15 @@ class V25 extends Migration
 
     protected function migrateDocument(Document $document): Document
     {
+        if (\in_array($document->getCollection(), ['keys', 'functions', 'sites'], true)) {
+            $scopes = $document->getAttribute('scopes', []);
+            if (\is_array($scopes) && \array_intersect($scopes, ['devKeys.read', 'devKeys.write']) !== []) {
+                $document->setAttribute('scopes', \array_values(\array_diff($scopes, ['devKeys.read', 'devKeys.write'])));
+            }
+
+            return $document;
+        }
+
         if ($document->getCollection() !== 'migrations') {
             return $document;
         }
