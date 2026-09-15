@@ -111,6 +111,23 @@ final class JobsTest extends TestCase
         $this->assertSame([], $this->realtime->payloads);
     }
 
+    public function testCompleteWithoutOwnerSequence(): void
+    {
+        /**
+         * Test for FAILURE
+         */
+        $resource = $this->resource('functions');
+        $deployment = $this->deployment($resource, ['resourceInternalId' => null]);
+        $this->cache->save('jobs-exit-' . $deployment->getId(), true);
+
+        $this->enqueue($deployment, 'complete');
+        $this->runWorker();
+
+        $this->assertEmpty($this->database->getDocument('functions', $resource->getId())->getAttribute('deploymentId'));
+        $this->assertSame('building', $this->database->getDocument('deployments', $deployment->getId())->getAttribute('status'));
+        $this->assertSame([], $this->realtime->payloads);
+    }
+
     private function project(): Document
     {
         return new Document(['$id' => 'console', '$sequence' => '0', 'region' => 'default']);
