@@ -208,6 +208,26 @@ trait ProxyBase
         $this->cleanupSite($id);
     }
 
+    public function testDeleteFunctionPreservesUnrelatedRules(): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $deleted = $this->setupFunction(deploy: false)['functionId'];
+        $retained = $this->setupFunction(deploy: false)['functionId'];
+        $deletedRule = $this->setupFunctionRule(\uniqid() . '-deleted.custom.localhost', $deleted);
+        $retainedRule = $this->setupFunctionRule(\uniqid() . '-retained.custom.localhost', $retained);
+        $apiRule = $this->setupAPIRule(\uniqid() . '-api.custom.localhost');
+
+        $this->cleanupFunction($deleted);
+
+        $this->assertEquals(404, $this->getRule($deletedRule)['headers']['status-code']);
+        $this->assertEquals(200, $this->getRule($retainedRule)['headers']['status-code']);
+        $this->assertEquals(200, $this->getRule($apiRule)['headers']['status-code']);
+        $this->cleanupFunction($retained);
+        $this->cleanupRule($apiRule);
+    }
+
     public function testCreateRule(): void
     {
         $domain = \uniqid() . '-api.myapp.com';
