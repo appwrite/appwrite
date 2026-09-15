@@ -110,7 +110,7 @@ We demonstrated the new S3 support during the fourth Init livestream and showed 
 
 # Day 5: Firewall, OAuth2, and Domains
 
-We closed Init with three launches focused on the infrastructure around your application: **Appwrite Firewall, the Appwrite OAuth2 server, and Appwrite Domains**.
+We closed Init with three launches focused on the infrastructure around your application: [Appwrite Firewall](/blog/post/announcing-appwrite-firewall), the [Appwrite OAuth2 server](/blog/post/announcing-oauth2-server), and [Appwrite Domains](/blog/post/announcing-appwrite-domains).
 
 **Appwrite Firewall** gives developers project-level control over incoming traffic. Requests to APIs, Functions, and Sites can be denied, challenged, rate limited, redirected, or bypassed based on the rules you configure, with an impact preview available before changes are applied. We went deeper on how to combine those rules in [Firewall rate limit strategies](/blog/post/firewall-rate-limit-strategies).
 
