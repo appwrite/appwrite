@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "a6c7073c169d41bd738310bdb883d0e3",
+    "content-hash": "8e82aa5125ccfa17c4a8ac67d128e3f5",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4249,12 +4249,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/mqtt.git",
-                "reference": "15a8f532d2a5310e20587b0f61c0e82c183419aa"
+                "reference": "a4dafdebd5634ab64ebb08ad5930b603c5fc5d02"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/mqtt/zipball/15a8f532d2a5310e20587b0f61c0e82c183419aa",
-                "reference": "15a8f532d2a5310e20587b0f61c0e82c183419aa",
+                "url": "https://api.github.com/repos/utopia-php/mqtt/zipball/a4dafdebd5634ab64ebb08ad5930b603c5fc5d02",
+                "reference": "a4dafdebd5634ab64ebb08ad5930b603c5fc5d02",
                 "shasum": ""
             },
             "require": {
@@ -4307,7 +4307,7 @@
                 "source": "https://github.com/utopia-php/mqtt/tree/dev",
                 "issues": "https://github.com/utopia-php/mqtt/issues"
             },
-            "time": "2026-09-15T05:25:54+00:00"
+            "time": "2026-09-15T07:09:28+00:00"
         },
         {
             "name": "utopia-php/openapi",
