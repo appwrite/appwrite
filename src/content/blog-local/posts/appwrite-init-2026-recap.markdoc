@@ -19,7 +19,7 @@ faqs:
   - question: Is PostgreSQL on Appwrite a real PostgreSQL database?"
     answer: Yes. Appwrite provisions and manages a PostgreSQL database inside your project, and you connect to it with the drivers, ORMs, and extensions you already use. Tools such as pgvector and PostGIS work as they normally do. See the [PostgreSQL documentation](/docs/products/databases/postgresql).
   - question: Which database should I pick after Init 2026?"
-    answer: Pick by workload. Use [PostgreSQL](/docs/products/databases/postgresql) or [MySQL](/docs/products/databases/mysql) when you want a relational database and its ecosystem, [DocumentsDB](/docs/products/databases/documentsdb) for flexible JSON documents, and [VectorsDB](/docs/products/databases/vectorsdb) for embeddings and similarity search.
+    answer: Pick based on how you want to work with your data. Use native [PostgreSQL](/docs/products/databases/postgresql) or [MySQL](/docs/products/databases/mysql) when you want direct access to the database engine with SQL, ORMs, and existing database tooling. Choose Appwrite Databases when you want to stay within the Appwrite ecosystem and use Appwrite APIs, SDKs, permissions, and realtime. That includes TablesDB for structured relational data, [DocumentsDB](/docs/products/databases/documentsdb) for flexible JSON documents, and [VectorsDB](/docs/products/databases/vectorsdb) for embeddings and similarity search.
   - question: Do I need to migrate anything to use the S3 API?
     answer: No. Your existing buckets and files are addressable over both the native Storage API and the S3 API at the same time, so pointing an S3 client at Appwrite is a configuration change rather than a migration.
 ---
