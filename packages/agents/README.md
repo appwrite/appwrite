@@ -1,5 +1,8 @@
 # Utopia Agents
 
+> [!IMPORTANT]
+> This repository is a read-only mirror of [`packages/agents`](https://github.com/appwrite/appwrite/tree/main/packages/agents) in [appwrite/appwrite](https://github.com/appwrite/appwrite). Development happens there — please open issues and pull requests against appwrite/appwrite.
+
 [![Build Status](https://travis-ci.org/utopia-php/agents.svg?branch=master)](https://travis-ci.org/utopia-php/agents)
 ![Total Downloads](https://img.shields.io/packagist/dt/utopia-php/agents.svg)
 [![Discord](https://img.shields.io/discord/564160730845151244?label=discord)](https://appwrite.io/discord)
