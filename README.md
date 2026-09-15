@@ -115,6 +115,7 @@ $messaging->send($message);
 - [x] [Clickatell](https://www.clickatell.com/)
 - [ ] [AfricasTalking](https://africastalking.com/)
 - [x] [Sinch](https://www.sinch.com/)
+- [x] [Bird](https://bird.com/) (formerly MessageBird)
 - [x] [Seven](https://www.seven.io/)
 - [ ] [SmsGlobal](https://www.smsglobal.com/)
 - [x] [Inforu](https://www.inforu.co.il/)
