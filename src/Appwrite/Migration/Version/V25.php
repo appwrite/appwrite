@@ -241,10 +241,12 @@ class V25 extends Migration
                     break;
 
                 case 'identities':
-                    try {
-                        $this->createAttributeFromCollection($this->dbForProject, $id, 'photo');
-                    } catch (Throwable $th) {
-                        Console::warning("Failed to create attribute \"photo\" in collection {$id}: {$th->getMessage()}");
+                    foreach (['photo', 'providerIdToken'] as $attribute) {
+                        try {
+                            $this->createAttributeFromCollection($this->dbForProject, $id, $attribute);
+                        } catch (Throwable $th) {
+                            Console::warning("Failed to create attribute \"{$attribute}\" in collection {$id}: {$th->getMessage()}");
+                        }
                     }
 
                     $this->dbForProject->purgeCachedCollection($id);
