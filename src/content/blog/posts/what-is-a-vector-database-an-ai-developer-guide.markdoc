@@ -95,7 +95,7 @@ Vector databases are the retrieval layer of most modern AI applications. The mai
 
 For how these workloads handle unstructured inputs like text and images, see [how NoSQL databases handle unstructured AI data](/blog/post/how-nosql-databases-handle-unstructured-ai-data-text-images-embeddings).
 
-## When to use a vector database
+# When to use a vector database
 
 Reach for a vector database when similarity, not exact matching, is the core of the feature you are building. It is a strong fit when:
 
