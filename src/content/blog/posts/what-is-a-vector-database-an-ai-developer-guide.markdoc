@@ -136,7 +136,7 @@ Appwrite gives you multiple ways to add vector search to your application. You c
 * **Keep source files in Storage.** Documents, images, and other files used in your AI workflows can live in [Appwrite Storage](/docs/products/storage).
 * **Build AI workflows with Functions.** [Appwrite Functions](/docs/products/functions) can run server-side logic for embedding generation, retrieval, and other AI workflows.
 
-## Getting started with VectorsDB on Appwrite
+# Getting started with VectorsDB on Appwrite
 
 Appwrite VectorsDB is built for storing embeddings and performing similarity search, making it a natural fit for AI workloads such as RAG, semantic search, and recommendations.
 
