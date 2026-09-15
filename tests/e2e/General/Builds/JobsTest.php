@@ -359,7 +359,7 @@ final class JobsTest extends TestCase
         $resource = $this->resource('functions', ['scheduleId' => 'schedule', 'schedule' => '* * * * *']);
         $deployment = $this->deployment($resource);
         $schedule = $this->database->createDocument('schedules', new Document([
-            '$id' => 'schedule', 'region' => 'default', 'resourceId' => $resource->getId(), 'resourceInternalId' => $resource->getSequence(),
+            '$id' => 'schedule', 'region' => 'default', 'projectId' => 'console', 'projectInternalId' => '0', 'resourceId' => $resource->getId(), 'resourceInternalId' => $resource->getSequence(),
             'resourceType' => 'function', 'active' => false, 'schedule' => '* * * * *',
         ]));
         $this->cache->save('jobs-exit-' . $deployment->getId(), true);
@@ -371,7 +371,7 @@ final class JobsTest extends TestCase
                 $this->database->before(Database::EVENT_DOCUMENTS_UPDATE, 'replace-schedule', null);
                 $this->database->deleteDocument('schedules', 'schedule');
                 $this->database->createDocument('schedules', new Document([
-                    '$id' => 'schedule', 'region' => 'default', 'resourceId' => 'another-function', 'resourceInternalId' => '900',
+                    '$id' => 'schedule', 'region' => 'default', 'projectId' => 'console', 'projectInternalId' => '0', 'resourceId' => 'another-function', 'resourceInternalId' => '900',
                     'resourceType' => 'function', 'active' => false, 'schedule' => '0 * * * *',
                 ]));
 
@@ -432,6 +432,37 @@ final class JobsTest extends TestCase
         yield 'current owner' => ['current'];
         yield 'reused resource ID' => ['other resource'];
         yield 'other project' => ['other project'];
+    }
+
+    #[\PHPUnit\Framework\Attributes\DataProvider('foreignSchedules')]
+    public function testCompleteForeignSchedule(array $owner): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $resource = $this->resource('functions', ['scheduleId' => 'schedule', 'schedule' => '* * * * *']);
+        $deployment = $this->deployment($resource);
+        $this->database->createDocument('schedules', new Document(array_merge([
+            '$id' => 'schedule', 'region' => 'default', 'projectId' => 'console', 'projectInternalId' => '0',
+            'resourceId' => $resource->getId(), 'resourceInternalId' => $resource->getSequence(),
+            'resourceType' => SCHEDULE_RESOURCE_TYPE_FUNCTION, 'active' => false, 'schedule' => '0 * * * *',
+        ], $owner)));
+        $this->cache->save('jobs-exit-' . $deployment->getId(), true);
+
+        $this->enqueue($deployment, 'complete');
+        $this->runWorker();
+
+        $schedule = $this->database->getDocument('schedules', 'schedule');
+        $this->assertFalse($schedule->getAttribute('active'));
+        $this->assertSame('0 * * * *', $schedule->getAttribute('schedule'));
+    }
+
+    public static function foreignSchedules(): \Iterator
+    {
+        yield 'other project' => [['projectInternalId' => '9']];
+        yield 'reused public ID' => [['resourceInternalId' => '900']];
+        yield 'other resource ID' => [['resourceId' => 'another-function']];
+        yield 'other resource type' => [['resourceType' => 'execution']];
     }
 
     private function project(): Document

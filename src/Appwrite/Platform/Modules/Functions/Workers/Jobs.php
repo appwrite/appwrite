@@ -611,7 +611,7 @@ class Jobs extends Action
         // (Re)activate its schedule so the scheduler enqueues cron executions
         // (sites have no scheduleId, so schedule() no-ops for them).
         if (! $resource->isEmpty()) {
-            $this->schedule($dbForProject, $dbForPlatform, $resource);
+            $this->schedule($dbForProject, $dbForPlatform, $resource, $project);
         }
 
         $status = $deployment->getAttribute('status');
@@ -785,7 +785,7 @@ class Jobs extends Action
      * deployment. Re-reads the resource so it sees a deploymentId just set by
      * activate().
      */
-    protected function schedule(Database $dbForProject, Database $dbForPlatform, Document $resource): void
+    protected function schedule(Database $dbForProject, Database $dbForPlatform, Document $resource, Document $project): void
     {
         $scheduleId = $resource->getAttribute('scheduleId', '');
         if ($scheduleId === '') {
@@ -799,19 +799,24 @@ class Jobs extends Action
         if ($resource->isEmpty()) {
             return;
         }
-        $schedule = $dbForPlatform->getDocument('schedules', $scheduleId);
+        $queries = [
+            Query::equal('$id', [$scheduleId]),
+            Query::equal('projectInternalId', [$project->getSequence()]),
+            Query::equal('resourceType', [SCHEDULE_RESOURCE_TYPE_FUNCTION]),
+            Query::equal('resourceId', [$resource->getId()]),
+            Query::equal('resourceInternalId', [$resource->getSequence()]),
+        ];
+        $schedule = $dbForPlatform->findOne('schedules', $queries);
         if ($schedule->isEmpty()) {
             return;
         }
 
+        $queries[] = Query::equal('$sequence', [$schedule->getSequence()]);
         $dbForPlatform->updateDocuments('schedules', new Document([
             'resourceUpdatedAt' => DateTime::now(),
             'schedule' => $resource->getAttribute('schedule', ''),
             'active' => ! empty($resource->getAttribute('schedule')) && ! empty($resource->getAttribute('deploymentId')),
-        ]), [
-            Query::equal('$id', [$schedule->getId()]),
-            Query::equal('$sequence', [$schedule->getSequence()]),
-        ]);
+        ]), $queries);
     }
 
     /**
