@@ -20,6 +20,7 @@ use Appwrite\Platform\Modules\Console\Http\Scopes\Project\XList as ListKeyScopes
 use Appwrite\Platform\Modules\Console\Http\Templates\Email\Get as GetEmailTemplate;
 use Appwrite\Platform\Modules\Console\Http\Variables\Get as GetVariables;
 use Utopia\Platform\Service;
+use Utopia\System\System;
 
 class Http extends Service
 {
@@ -39,14 +40,16 @@ class Http extends Service
         $this->addAction(CreateAssistantQuery::getName(), new CreateAssistantQuery());
         $this->addAction(GetResourceAvailability::getName(), new GetResourceAvailability());
 
-        // web redirects to /console
-        $this->addAction(RedirectRoot::getName(), new RedirectRoot());
-        $this->addAction(RedirectAuth::getName(), new RedirectAuth());
-        $this->addAction(RedirectInvite::getName(), new RedirectInvite());
-        $this->addAction(RedirectLogin::getName(), new RedirectLogin());
-        $this->addAction(RedirectMFA::getName(), new RedirectMFA());
-        $this->addAction(RedirectCard::getName(), new RedirectCard());
-        $this->addAction(RedirectRecover::getName(), new RedirectRecover());
-        $this->addAction(RedirectRegister::getName(), new RedirectRegister());
+        // web redirects to /console; root-scheme consoles serve these paths themselves
+        if (System::getEnv('_APP_CONSOLE_URL_SCHEME', 'legacy') !== 'root') {
+            $this->addAction(RedirectRoot::getName(), new RedirectRoot());
+            $this->addAction(RedirectAuth::getName(), new RedirectAuth());
+            $this->addAction(RedirectInvite::getName(), new RedirectInvite());
+            $this->addAction(RedirectLogin::getName(), new RedirectLogin());
+            $this->addAction(RedirectMFA::getName(), new RedirectMFA());
+            $this->addAction(RedirectCard::getName(), new RedirectCard());
+            $this->addAction(RedirectRecover::getName(), new RedirectRecover());
+            $this->addAction(RedirectRegister::getName(), new RedirectRegister());
+        }
     }
 }

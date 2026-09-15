@@ -9,6 +9,7 @@ use Tests\E2E\Scopes\ProjectNone;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideNone;
 use Utopia\Config\Config;
+use Utopia\System\System;
 
 final class HTTPTest extends Scope
 {
@@ -241,7 +242,8 @@ final class HTTPTest extends Scope
 
         $response = $this->client->call(Client::METHOD_GET, $endpoint, [], [], true, false);
 
-        $this->assertEquals('/console' . $endpoint, $response['headers']['location']);
+        $location = System::getEnv('_APP_CONSOLE_URL_SCHEME', 'legacy') !== 'root' ? '/console' . $endpoint : null;
+        $this->assertEquals($location, $response['headers']['location'] ?? null);
     }
 
     public function testConsoleServed()
