@@ -558,6 +558,55 @@ final class JobsTest extends TestCase
         yield 'reused schedule ID with same owner' => [false, true];
     }
 
+    #[\PHPUnit\Framework\Attributes\DataProvider('scheduleChanges')]
+    public function testCompleteChangedScheduleSelection(bool $reuseId): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $resource = $this->resource('functions', ['scheduleId' => 'schedule', 'schedule' => '* * * * *']);
+        $deployment = $this->deployment($resource);
+        $attributes = [
+            'region' => 'default', 'projectId' => 'console', 'projectInternalId' => '0',
+            'resourceId' => $resource->getId(), 'resourceInternalId' => $resource->getSequence(),
+            'resourceType' => SCHEDULE_RESOURCE_TYPE_FUNCTION, 'active' => false, 'schedule' => '0 * * * *',
+        ];
+        $schedule = $this->database->createDocument('schedules', new Document(array_merge($attributes, ['$id' => 'schedule'])));
+        $this->database->updateDocument('functions', $resource->getId(), new Document(['scheduleInternalId' => $schedule->getSequence()]));
+        $selected = false;
+        $this->database->on(Database::EVENT_DOCUMENT_FIND, 'switch-schedule', function (string $event, Document|array $documents) use ($resource, $attributes, $reuseId, &$selected): void {
+            $document = $documents instanceof Document ? $documents : ($documents[0] ?? new Document());
+            if ($document->getCollection() !== 'schedules') {
+                return;
+            }
+            $this->database->on(Database::EVENT_DOCUMENT_FIND, 'switch-schedule', null);
+            $selected = true;
+            if ($reuseId) {
+                $this->database->deleteDocument('schedules', 'schedule');
+            }
+            $replacement = $this->database->createDocument('schedules', new Document(array_merge($attributes, ['$id' => $reuseId ? 'schedule' : 'new-schedule'])));
+            $this->database->updateDocument('functions', $resource->getId(), new Document([
+                'scheduleId' => $replacement->getId(), 'scheduleInternalId' => $replacement->getSequence(),
+            ]));
+        });
+        $this->cache->save('jobs-exit-' . $deployment->getId(), true);
+
+        $this->enqueue($deployment, 'complete');
+        $this->runWorker();
+
+        $this->assertTrue($selected);
+        $this->assertFalse($this->database->getDocument('schedules', 'schedule')->getAttribute('active'));
+        if (! $reuseId) {
+            $this->assertFalse($this->database->getDocument('schedules', 'new-schedule')->getAttribute('active'));
+        }
+    }
+
+    public static function scheduleChanges(): \Iterator
+    {
+        yield 'changed schedule ID' => [false];
+        yield 'changed schedule sequence' => [true];
+    }
+
     private function project(): Document
     {
         return new Document(['$id' => 'console', '$sequence' => '0', 'region' => 'default']);

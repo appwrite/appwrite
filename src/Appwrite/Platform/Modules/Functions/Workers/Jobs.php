@@ -610,8 +610,31 @@ class Jobs extends Action
 
         // (Re)activate its schedule so the scheduler enqueues cron executions
         // (sites have no scheduleId, so schedule() no-ops for them).
-        if (! $resource->isEmpty()) {
-            $this->schedule($dbForProject, $dbForPlatform, $resource, $project);
+        $resourceForSchedule = $dbForProject->findOne($collection, [
+            Query::equal('$id', [$resource->getId()]),
+            Query::equal('$sequence', [$resource->getSequence()]),
+        ]);
+        $scheduleId = $resourceForSchedule->getAttribute('scheduleId', '');
+        if (! $resourceForSchedule->isEmpty() && $scheduleId !== '') {
+            $queries = [
+                Query::equal('$id', [$scheduleId]),
+                Query::equal('projectInternalId', [$project->getSequence()]),
+                Query::equal('resourceType', [SCHEDULE_RESOURCE_TYPE_FUNCTION]),
+                Query::equal('resourceId', [$resourceForSchedule->getId()]),
+                Query::equal('resourceInternalId', [$resourceForSchedule->getSequence()]),
+            ];
+            $scheduleInternalId = $resourceForSchedule->getAttribute('scheduleInternalId');
+            if ($scheduleInternalId !== null && $scheduleInternalId !== '') {
+                $queries[] = Query::equal('$sequence', [$scheduleInternalId]);
+            }
+            $schedule = $dbForPlatform->findOne('schedules', $queries);
+            if (! $schedule->isEmpty()) {
+                // Legacy resources may not persist scheduleInternalId. Bind the
+                // validated row in a local snapshot without changing the resource.
+                $resourceForSchedule = clone $resourceForSchedule;
+                $resourceForSchedule->setAttribute('scheduleInternalId', $schedule->getSequence());
+                $this->schedule($dbForProject, $dbForPlatform, $resourceForSchedule);
+            }
         }
 
         $status = $deployment->getAttribute('status');
@@ -785,44 +808,38 @@ class Jobs extends Action
      * deployment. Re-reads the resource so it sees a deploymentId just set by
      * activate().
      */
-    protected function schedule(Database $dbForProject, Database $dbForPlatform, Document $resource, Document $project): void
+    protected function schedule(Database $dbForProject, Database $dbForPlatform, Document $resource): void
     {
+        // finalize() validated this schedule's project and owner. Retain that
+        // identity while re-reading the resource's current activation state.
+        $scheduleId = $resource->getAttribute('scheduleId', '');
+        $scheduleInternalId = $resource->getAttribute('scheduleInternalId');
+        if ($scheduleId === '' || $scheduleInternalId === null || $scheduleInternalId === '') {
+            return;
+        }
         $resource = $dbForProject->findOne($resource->getCollection(), [
             Query::equal('$id', [$resource->getId()]),
             Query::equal('$sequence', [$resource->getSequence()]),
         ]);
-        if ($resource->isEmpty()) {
+        if ($resource->isEmpty() || $resource->getAttribute('scheduleId') !== $scheduleId) {
             return;
         }
-        $scheduleId = $resource->getAttribute('scheduleId', '');
-        if ($scheduleId === '') {
-            return;
-        }
-
-        $queries = [
-            Query::equal('$id', [$scheduleId]),
-            Query::equal('projectInternalId', [$project->getSequence()]),
-            Query::equal('resourceType', [SCHEDULE_RESOURCE_TYPE_FUNCTION]),
-            Query::equal('resourceId', [$resource->getId()]),
-            Query::equal('resourceInternalId', [$resource->getSequence()]),
-        ];
-        // Legacy resources may predate scheduleInternalId. Their full owner
-        // identity still scopes the lookup; newer resources also bind the row.
-        $scheduleInternalId = $resource->getAttribute('scheduleInternalId');
-        if ($scheduleInternalId !== null && $scheduleInternalId !== '') {
-            $queries[] = Query::equal('$sequence', [$scheduleInternalId]);
-        }
-        $schedule = $dbForPlatform->findOne('schedules', $queries);
-        if ($schedule->isEmpty()) {
+        $currentScheduleInternalId = $resource->getAttribute('scheduleInternalId');
+        if ($currentScheduleInternalId !== null && $currentScheduleInternalId !== '' && $currentScheduleInternalId !== $scheduleInternalId) {
             return;
         }
 
-        $queries[] = Query::equal('$sequence', [$schedule->getSequence()]);
         $dbForPlatform->updateDocuments('schedules', new Document([
             'resourceUpdatedAt' => DateTime::now(),
             'schedule' => $resource->getAttribute('schedule', ''),
             'active' => ! empty($resource->getAttribute('schedule')) && ! empty($resource->getAttribute('deploymentId')),
-        ]), $queries);
+        ]), [
+            Query::equal('$id', [$scheduleId]),
+            Query::equal('$sequence', [$scheduleInternalId]),
+            Query::equal('resourceType', [SCHEDULE_RESOURCE_TYPE_FUNCTION]),
+            Query::equal('resourceId', [$resource->getId()]),
+            Query::equal('resourceInternalId', [$resource->getSequence()]),
+        ]);
     }
 
     /**
