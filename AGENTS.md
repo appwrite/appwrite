@@ -351,7 +351,7 @@ Ask the user to review, publish notes on the [Appwrite changelog](https://appwri
 
 A release is not ready until a **fresh install** and an **upgrade from the previous stable** both work with realistic data. Previous baseline = highest stable semver tag lower than the target (ignore RC/beta/alpha; prefer `git ls-remote --tags origin`).
 
-Both gates run in CI on release branches — the `install` and `upgrade` jobs in [`ci.yml`](.github/workflows/ci.yml), seeding through the public API with [`upgrade-seed.sh`](.github/scripts/upgrade-seed.sh) and asserting with [`upgrade-verify.sh`](.github/scripts/upgrade-verify.sh). Read those jobs before doing the work by hand; do it by hand when the release changes something they do not cover (a new service, a data shape they do not seed).
+Both gates run in CI on release branches — the `install` and `upgrade` jobs in [`ci.yml`](.github/workflows/ci.yml), seeding and asserting through the public API with [`upgrade.sh`](.github/scripts/upgrade.sh). Read those jobs before doing the work by hand; do it by hand when the release changes something they do not cover (a new service, a data shape they do not seed).
 
 **Fresh install:** `docker compose down -v` then `up -d --force-recreate --build --wait`. Check `docker compose ps` / logs for crash loops, missing env, failed workers. Hit `/v1/health/version` on the public port. Run unit tests, `tests/e2e/General`, and service e2e. Exercise console users, projects, databases/rows, storage, and (when in scope) functions/sites through public APIs — not empty-stack health checks alone.
 

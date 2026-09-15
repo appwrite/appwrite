@@ -1021,19 +1021,14 @@ jobs:
         timeout-minutes: 10
         run: docker compose up -d --quiet-pull --wait
 
-      - name: Report version
-        run: |
-          set -euo pipefail
-          curl --silent --fail --retry 10 --retry-all-errors --retry-delay 3 \
-            "${ENDPOINT}/health/version" | tee /dev/stderr | jq -e '.version'
-
-      # A stack that answers /health/version can still be unusable, so drive the
-      # console and project APIs a self-hoster actually starts with.
+      # A stack that boots can still be unusable, so drive the console and
+      # project APIs a self-hoster actually starts with. The script reports the
+      # version it reached before it seeds anything.
       - name: Exercise the public API
         timeout-minutes: 10
         env:
           MANIFEST: ${{ runner.temp }}/install-gate.json
-        run: .github/scripts/upgrade-seed.sh
+        run: .github/scripts/upgrade.sh seed
 
       - name: Check for crash loops
         if: always()
@@ -1136,7 +1131,7 @@ jobs:
 
       - name: Seed through the public API
         timeout-minutes: 10
-        run: .github/scripts/upgrade-seed.sh
+        run: .github/scripts/upgrade.sh seed
 
       - name: Stop the previous stable, keeping volumes
         env:
@@ -1160,7 +1155,7 @@ jobs:
 
       - name: Verify the seeded data survived
         timeout-minutes: 10
-        run: .github/scripts/upgrade-verify.sh
+        run: .github/scripts/upgrade.sh verify
 
       # A migration that is not idempotent breaks every retried or resumed
       # upgrade.
@@ -1170,7 +1165,7 @@ jobs:
 
       - name: Verify again, and that writes still work
         timeout-minutes: 10
-        run: .github/scripts/upgrade-verify.sh --write
+        run: .github/scripts/upgrade.sh verify --write
 
       - name: Collect logs on failure
         if: failure()
