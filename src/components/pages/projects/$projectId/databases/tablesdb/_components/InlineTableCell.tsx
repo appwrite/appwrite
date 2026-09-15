@@ -407,6 +407,7 @@ export function InlineTableCell({
               'h-7 w-full justify-start border border-amber-500/40 bg-background px-2 text-[12px] font-normal shadow-none',
               validationError && 'border-destructive',
             )}
+            timeZoneMode="preferred"
           />
           {validationError ? (
             <span className="truncate text-[10px] text-destructive">

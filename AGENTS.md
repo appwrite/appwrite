@@ -488,6 +488,12 @@ Checklist (in this order):
 - **Button icon spacing**: Use `mr-1.5` or `gap-1.5`, not `mr-2` or larger
 - **Date tooltips**: Always include when showing dates for timezone clarity
 
+### Date and time (Appwrite datetimes)
+
+- **`DateTimePicker timeZoneMode="preferred"`**: Appwrite datetime fields only. Postgres/MySQL columns (any datetime type), `FiltersPopoverContent` and role drawers keep the default browser mode.
+- **Display zone**: Per device in localStorage `console.datetime.timeZone`, read with `useDisplayTimeZone()` from `@/lib/timezones`. No stored value means the browser zone.
+- **Grid cells**: Format Appwrite datetime cells with `createInstantCellFormatter(timeZone)` from `@/lib/spreadsheet-cell-formatting` and put `<DisplayTimeZoneBadge />` in their headers; copy paths keep reading raw values.
+
 ### Viewport units (CRITICAL - fixes mobile/iPad layout bugs)
 
 **Never use `vh`** (or `h-screen`, `min-h-screen`, `max-h-screen`). On iOS Safari, iPadOS, Chrome on Android, and any browser with a dynamic toolbar, `100vh` refers to the _layout viewport_, which is taller than the actually visible viewport when browser chrome (URL bar, toolbar) is on screen. Anything sized via `vh` extends below the visible area, hiding sticky footers, CTAs, and dialog actions.

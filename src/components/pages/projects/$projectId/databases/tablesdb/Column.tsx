@@ -1424,6 +1424,8 @@ export function ColumnDrawer({
                     }}
                     disabled={isLoading}
                     clearable
+                    timeZoneMode="preferred"
+                    showTimeZoneInTrigger
                   />
                 ) : formData.type === 'enum' ? (
                   <Select
