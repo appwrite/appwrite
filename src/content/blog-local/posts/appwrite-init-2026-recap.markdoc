@@ -138,6 +138,8 @@ Five days later, Init 2026 has come to an end, but there is a lot more Appwrite 
 
 This week brought some of our biggest updates yet, from Appwrite 2.0 and native PostgreSQL to new database options, S3 support, Firewall, OAuth2, and Domains. More importantly, we got to share every launch with the people building alongside us through livestreams, AMAs, Discord conversations, feedback, and plenty of community reactions along the way.
 
+We have already started building on those foundations with Appwrite 2.1 for self-hosted deployments, which followed 2.0 with fixes and improvements based on what we learned after the release. With the foundations from Init now in place, the focus shifts to continuing to refine and improve the self-hosted experience.
+
 A huge thank you to everyone who joined us during the week, shared an Init ticket, asked a question, tried something we launched, or simply tuned in to see what was next.
 
 We have shown you what's new. Now we cannot wait to see what you build with it.
