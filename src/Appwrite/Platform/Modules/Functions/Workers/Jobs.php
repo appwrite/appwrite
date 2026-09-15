@@ -150,6 +150,11 @@ class Jobs extends Action
                 default => $this->onCallback($event->event, $dbForProject, $dbForPlatform, $project, $deployment, $event->data, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
             };
 
+            $resource = $dbForProject->getDocument($deployment->getAttribute('resourceType', 'functions'), $deployment->getAttribute('resourceId'));
+            if (! Deployments::belongsTo($deployment, $resource)) {
+                return;
+            }
+
             // Console realtime on every callback (log stream + status).
             $queueForRealtime
                 ->setSubscribers(['console'])
@@ -448,6 +453,12 @@ class Jobs extends Action
             return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, 'Build size should be less than ' . \number_format($limit / (1000 * 1000), 2) . ' MBs.', $usage, $publisherForUsage, $publisherForScreenshots, $vcsFactory, $platform, $bus);
         }
 
+        // Artifact reads can outlive deletion and recreation of the owner.
+        $resource = $dbForProject->getDocument($deployment->getAttribute('resourceType', 'functions'), $deployment->getAttribute('resourceId'));
+        if (! Deployments::belongsTo($deployment, $resource)) {
+            return $deployment;
+        }
+
         // Every check this worker makes has passed, so the deployment is publishable
         // as far as it is concerned. Idempotent: each retry of the join arrives here.
         $this->onVerified($dbForProject, $project, $deployment, $cache);
@@ -517,6 +528,9 @@ class Jobs extends Action
     ): Document {
         $collection = $deployment->getAttribute('resourceType', 'functions');
         $resource = $dbForProject->getDocument($collection, $deployment->getAttribute('resourceId'));
+        if (! Deployments::belongsTo($deployment, $resource)) {
+            return $deployment;
+        }
 
         $logs = $deployment->getAttribute('buildLogs', '');
         $trailer = $success

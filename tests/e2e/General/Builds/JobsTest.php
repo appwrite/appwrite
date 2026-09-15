@@ -161,6 +161,30 @@ final class JobsTest extends TestCase
         yield 'site' => ['sites'];
     }
 
+    #[\PHPUnit\Framework\Attributes\DataProvider('resources')]
+    public function testCompleteRecreatedDuringArtifactRead(string $collection): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $resource = $this->resource($collection);
+        $deployment = $this->deployment($resource);
+        $this->cache->save('jobs-exit-' . $deployment->getId(), true);
+        $this->cache->save('jobs-manifest-' . $deployment->getId(), ['files' => []]);
+        $replacement = null;
+        $device = new Artifact(function () use ($resource, &$replacement): void {
+            $replacement = $this->replace($resource);
+        });
+
+        $this->enqueue($deployment, 'complete');
+        $this->runWorker($device);
+
+        $this->assertInstanceOf(Document::class, $replacement);
+        $this->assertReplacement($replacement);
+        $this->assertSame('building', $this->database->getDocument('deployments', $deployment->getId())->getAttribute('status'));
+        $this->assertSame([], $this->realtime->payloads);
+    }
+
     private function project(): Document
     {
         return new Document(['$id' => 'console', '$sequence' => '0', 'region' => 'default']);
