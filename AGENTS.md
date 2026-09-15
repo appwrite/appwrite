@@ -304,14 +304,14 @@ Self-hosted ships on two channels. Cloud is separate: it builds from `cl-*` tags
 | Channel | Source | Trigger | Tags on `appwrite/appwrite` |
 |---------|--------|---------|------------------------------|
 | stable | active release branch (`2.0.x`) | GitHub Release, published by a human | `X.Y.Z` (immutable), `X.Y`, `X`, `latest` |
-| nightly | same branch, newest CI-green commit | daily at 00:00 UTC, or `workflow_dispatch` | `X.Y.Z-nightly.<date>` (one a day), `X.Y-nightly`, `nightly` |
+| nightly | same branch, newest CI-green commit | daily at 00:00 UTC, or `workflow_dispatch` | `X.Y-nightly.<date>` (one a day), `X.Y-nightly`, `nightly` |
 
-[`nightly.yml`](.github/workflows/nightly.yml) builds the channel; [`security-scan.yml`](.github/workflows/security-scan.yml) is the Trivy scan that used to own that file name. `X.Y.Z` in a nightly tag is the **next** patch on the line — the nightly is a prerelease of the version it is heading for, so `2.0.2-nightly.20260915` sorts below `2.0.2` — and `<date>` is `YYYYMMDD`.
+[`nightly.yml`](.github/workflows/nightly.yml) builds the channel; [`security-scan.yml`](.github/workflows/security-scan.yml) is the Trivy scan that used to own that file name. `X.Y` comes from the branch name and `<date>` is `YYYYMMDD`, so `2.0.x` publishes `2.0-nightly.20260915`. The tag is a label, not a version the product reads: `migrate` keys off `APP_VERSION_STABLE` compiled into the image, and the `VERSION` build arg only sets `_APP_VERSION`. The branch is rebuilt daily whether or not it moved, so the channel carries base image security fixes.
 
 Four rules keep the channel safe. They are requirements, not preferences:
 
 1. **A patch never adds a migration.** Map a new patch to the previous version's class in `Migration::$versions`. A fix that needs a schema change is a minor. This is what lets a nightly user roll back to yesterday's build, and `1.9.6` (which introduced V25) is the exception not to repeat.
-2. **Nightly publishes only a CI-green commit**, walking back from the tip rather than shipping it, so a red branch delays the channel instead of breaking it.
+2. **Nightly publishes only a CI-green commit** rather than the tip, so a red branch delays the channel instead of breaking it.
 3. **The release branch stays releasable.** Backports land as complete cherry-picks, behind a flag when the fix is not finished.
 4. **Nightly publishes to `appwrite/appwrite` only.** It must never be able to push to `appwrite/ce`.
 

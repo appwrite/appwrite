@@ -5,9 +5,13 @@ name: "Nightly"
 # Cloud builds from cl-* tags through publish.yml and is not part of this channel.
 #
 # Tags pushed (see the Releases section of AGENTS.md):
-#   X.Y.Z-nightly.<date>  the rollback anchor, one per day
-#   X.Y-nightly           rolling, per minor line. The form to recommend.
-#   nightly               rolling, newest line only.
+#   X.Y-nightly.<date>  the day's build, to pin or roll back to
+#   X.Y-nightly         rolling, per minor line. The form to recommend.
+#   nightly             rolling, newest line only.
+#
+# The line comes from the branch name, not from APP_VERSION_STABLE: migrate keys
+# off the constant compiled into the image, and VERSION only sets _APP_VERSION,
+# so a nightly tag is a label rather than something the product reads.
 
 on:
   schedule:
@@ -36,15 +40,12 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       skip: ${{ steps.resolve.outputs.skip }}
-      branch: ${{ steps.resolve.outputs.branch }}
       sha: ${{ steps.resolve.outputs.sha }}
       version: ${{ steps.resolve.outputs.version }}
       tags: ${{ steps.resolve.outputs.tags }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          fetch-depth: 0
 
       - name: Resolve branch, commit and version
         id: resolve
@@ -55,25 +56,19 @@ jobs:
           set -euo pipefail
 
           # The active release branch, unless workflow_dispatch named one.
-          newest=$(git branch -r --format='%(refname:short)' \
-            | sed -n 's#^origin/##p' \
+          branches=$(git ls-remote --heads origin \
+            | sed -n 's#.*refs/heads/##p' \
             | grep -E '^[0-9]+\.[0-9]+\.x$' \
-            | sort -V \
-            | tail -1)
-
-          if [ -z "$newest" ]; then
-            echo "::error::No X.Y.x release branch found on origin."
-            exit 1
-          fi
-
+            | sort -V)
+          newest=$(echo "$branches" | tail -1)
           branch="${REQUESTED_BRANCH:-$newest}"
 
-          if ! git rev-parse --verify "origin/${branch}" >/dev/null 2>&1; then
-            echo "::error::Branch ${branch} does not exist on origin."
+          if ! echo "$branches" | grep -qx -- "$branch"; then
+            echo "::error::'${branch}' is not an X.Y.x release branch on origin."
             exit 1
           fi
 
-          echo "branch=${branch}" >> "$GITHUB_OUTPUT"
+          line="${branch%.x}"
 
           # Invariant 2: build the newest CI-green commit, not the tip, so a red
           # branch delays the channel instead of shipping through it.
@@ -94,35 +89,12 @@ jobs:
 
           echo "sha=${sha}" >> "$GITHUB_OUTPUT"
 
-          # Nothing new since the last nightly. The marker tag is moved by the
-          # build job below and is the only state this workflow keeps.
-          previous=$(git rev-parse -q --verify "refs/tags/nightly-${branch}^{commit}" || true)
-
-          if [ "$previous" = "$sha" ]; then
-            echo "::notice::${branch} has not moved since the last nightly (${sha}); skipping."
-            echo "skip=true" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          # A nightly is a prerelease of the next patch on the line, so read the
-          # branch's own stable version and bump the patch.
-          stable=$(git show "${sha}:app/init/constants.php" \
-            | sed -n "s/^const APP_VERSION_STABLE = '\([^']*\)';.*/\1/p")
-
-          if ! printf '%s' "$stable" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
-            echo "::error::APP_VERSION_STABLE on ${branch} is '${stable}', which is not a released X.Y.Z. Refusing to guess a nightly version."
-            exit 1
-          fi
-
-          major=${stable%%.*}
-          rest=${stable#*.}
-          minor=${rest%%.*}
-          patch=${rest#*.}
-
-          version="${major}.${minor}.$((patch + 1))-nightly.$(date -u +%Y%m%d)"
+          # An unchanged branch still gets a build: it picks up base image
+          # security fixes, which is most of what a nightly is good for.
+          version="${line}-nightly.$(date -u +%Y%m%d)"
           echo "version=${version}" >> "$GITHUB_OUTPUT"
 
-          tags="${IMAGE}:${version},${IMAGE}:${major}.${minor}-nightly"
+          tags="${IMAGE}:${version},${IMAGE}:${line}-nightly"
 
           # The bare tag follows the newest line only, so a dispatched build of an
           # older branch cannot drag it backwards.
@@ -141,8 +113,6 @@ jobs:
     if: needs.resolve.outputs.skip == 'false'
     runs-on: ubuntu-latest
     timeout-minutes: 120
-    permissions:
-      contents: write  # moves the nightly-<branch> marker tag
     steps:
       - name: Checkout the resolved commit
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -176,12 +146,3 @@ jobs:
             org.opencontainers.image.revision=${{ needs.resolve.outputs.sha }}
             org.opencontainers.image.version=${{ needs.resolve.outputs.version }}
             io.appwrite.channel=nightly
-
-      - name: Move the marker tag
-        env:
-          BRANCH: ${{ needs.resolve.outputs.branch }}
-          SHA: ${{ needs.resolve.outputs.sha }}
-        run: |
-          set -euo pipefail
-          git tag --force "nightly-${BRANCH}" "${SHA}"
-          git push --force origin "nightly-${BRANCH}"
