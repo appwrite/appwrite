@@ -33,7 +33,6 @@ export const jaFunctionsDictionary: Record<string, string> = {
   'Cancel deployment': 'デプロイをキャンセル',
   'Certificate generation failed': '証明書の生成に失敗しました',
   'Check your permissions': '権限を確認してください',
-  'Choose .tar.gz file': '.tar.gz ファイルを選択',
   'Choose who can execute this function': 'この関数を実行できるユーザーを選択',
   'Clear filters and search': 'フィルターと検索をクリア',
   'Clone template': 'テンプレートをクローン',
