@@ -336,7 +336,8 @@ class Delete extends Action
                     ->setParam('tableId', $collectionId)
                     ->setParam('documentId', $current->getId())
                     ->setParam('rowId', $current->getId())
-                    ->setContext($this->getCollectionsEventsContext(), $relatedCollection)
+                    ->setContext('collection', $relatedCollection)
+                    ->setContext('table', $relatedCollection)
                     ->setPayload($response->output($current, $this->getResponseModel()), sensitive: $sensitive);
 
                 $queueForRealtime->from($event)->trigger();
