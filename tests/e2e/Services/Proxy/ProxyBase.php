@@ -188,6 +188,26 @@ trait ProxyBase
         $this->cleanupSite($replacement);
     }
 
+    public function testDeleteFunctionPreservesSiteRules(): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $id = $this->setupFunction(deploy: false)['functionId'];
+        $this->setupSite($id, deploy: false);
+        $functionRule = $this->setupFunctionRule(\uniqid() . '-function.custom.localhost', $id);
+        $siteRule = $this->setupSiteRule(\uniqid() . '-site.custom.localhost', $id);
+
+        $this->cleanupFunction($id);
+
+        $this->assertEquals(404, $this->getRule($functionRule)['headers']['status-code']);
+        $rule = $this->getRule($siteRule);
+        $this->assertEquals(200, $rule['headers']['status-code']);
+        $this->assertSame('site', $rule['body']['deploymentResourceType']);
+        $this->assertSame($id, $rule['body']['deploymentResourceId']);
+        $this->cleanupSite($id);
+    }
+
     public function testCreateRule(): void
     {
         $domain = \uniqid() . '-api.myapp.com';
