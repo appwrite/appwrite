@@ -55,6 +55,9 @@ class Connection
      */
     private array $inflight = [];
 
+    /** @var array<string, int> topic => highest sequence ever delivered on this connection */
+    private array $highWater = [];
+
     /** Wall-clock time (fractional unix seconds) the connection was opened, for its lifetime metric. */
     public readonly float $openedAt;
 
@@ -87,22 +90,24 @@ class Connection
     public function track(int $packetId, string $topic, int $sequence): void
     {
         $this->inflight[$packetId] = ['topic' => $topic, 'sequence' => $sequence];
+        $this->highWater[$topic] = max($this->highWater[$topic] ?? 0, $sequence);
     }
 
     /**
      * Resolve a PUBACK to the delivery it acknowledges, removing it from the in-flight set.
      * Returns the topic, the acked sequence, and `cursor`: the highest sequence safe to persist
-     * — one below the lowest sequence still in flight for the topic, or this ack's sequence once
-     * nothing is pending. Advancing to `cursor` (not `sequence`) keeps a non-contiguous ack from
-     * skipping an earlier unacked message; the worst case is a harmless tail re-delivery on
+     * — one below the lowest sequence still in flight for the topic, or, once nothing is pending,
+     * the highest sequence delivered on this topic (every delivery through it is now acked).
+     * Advancing to `cursor` (not `sequence`) keeps a non-contiguous ack from skipping an earlier
+     * unacked message; while a gap stays unfilled the worst case is a harmless tail re-delivery on
      * reconnect, never a lost message. Returns null for an unknown or duplicate ack.
      *
      * Example — messages 5, 6, 7 were delivered and the client acks 5, then 7 (6 is still
      * pending):
      *   ack 5 -> in flight {6, 7}, cursor = 5   (lowest pending is 6, so stop at 5)
      *   ack 7 -> in flight {6},    cursor = 5   (6 is still the gap, don't jump to 7)
-     *   ack 6 -> in flight {},     cursor = 6   (nothing pending; 7 may be re-sent later)
-     * The cursor never moves past the unacked 6, so on reconnect 6 is replayed, not lost.
+     *   ack 6 -> in flight {},     cursor = 7   (gap filled; every delivery through 7 is acked)
+     * The cursor never moves past the unacked 6, so a reconnect before that last ack replays 6.
      *
      * @return array{topic: string, sequence: int, cursor: int}|null
      */
@@ -122,7 +127,9 @@ class Connection
             }
         }
 
-        $cursor = $pending === [] ? $delivery['sequence'] : (min($pending) - 1);
+        // With a gap still open, stop one below it; with none, every delivery up to the topic's
+        // high-water mark is acked, so advance to it rather than just this (possibly lower) ack.
+        $cursor = $pending === [] ? ($this->highWater[$topic] ?? $delivery['sequence']) : (min($pending) - 1);
 
         return ['topic' => $topic, 'sequence' => $delivery['sequence'], 'cursor' => $cursor];
     }

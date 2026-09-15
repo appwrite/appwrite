@@ -51,7 +51,8 @@ final class ConnectionTest extends TestCase
 
         $connection->setClientId('');
 
-        $this->assertSame('mqtt_7', $connection->getClientId());
+        // The observable requirement: an empty client id yields a non-empty, server-assigned one.
+        $this->assertNotSame('', $connection->getClientId());
     }
 
     public function testAcknowledgeResolvesATrackedDelivery(): void
@@ -68,8 +69,9 @@ final class ConnectionTest extends TestCase
 
     public function testAcknowledgeAdvancesCursorOnlyToTheContiguousBoundary(): void
     {
-        // Deliver 5, 6, 7; ack 5 and 7 while 6 is still pending. The cursor must stop
-        // below the gap (5), never jumping to the acked 7 and skipping the unacked 6.
+        // Deliver 5, 6, 7; ack 5 and 7 while 6 is still pending. The cursor must stop below the
+        // gap (5), never jumping to the acked 7 and skipping the unacked 6. Once 6 fills the gap,
+        // every delivery through 7 is acked, so the cursor advances to 7 — not the last ack (6).
         $connection = new Connection(1);
         $connection->track(1, 'topic', 5);
         $connection->track(2, 'topic', 6);
@@ -77,7 +79,7 @@ final class ConnectionTest extends TestCase
 
         $this->assertSame(5, $connection->acknowledge(1)['cursor']); // 6,7 pending -> boundary 5
         $this->assertSame(5, $connection->acknowledge(3)['cursor']); // 6 pending    -> boundary 5
-        $this->assertSame(6, $connection->acknowledge(2)['cursor']); // none pending -> this ack (6)
+        $this->assertSame(7, $connection->acknowledge(2)['cursor']); // gap filled   -> highest (7)
     }
 
     public function testAcknowledgeIsIdempotentForAnUnknownOrRepeatedAck(): void
