@@ -71,8 +71,8 @@ Dynamic API keys act without a session and bypass permissions, so use them only 
 A site starts with no scopes, so its dynamic API key can call nothing until you grant some. Grant only the scopes your server code needs.
 
 1. In the Appwrite Console, navigate to **Sites** and open the site.
-2. Under the **Settings** tab, navigate to **Build settings**.
-3. Select the scopes to grant the dynamic key and click **Update**.
+2. Under the **Settings** tab, navigate to the **Build** section.
+3. In the **Scopes** card, select the scopes to grant the dynamic key and click **Update**.
 
 Scopes are stored on the site itself, so you can also set them with the `scopes` parameter of the create site and update site endpoints through a [Server SDK](/docs/sdks#server), or with the repeatable `--scopes` flag of `appwrite sites create` and `appwrite sites update` in the [Appwrite CLI](/docs/tooling/command-line/sites). The update site endpoint replaces every setting you omit with its default. Only `scopes` and the Git connection are kept when omitted, so read the site first and pass every existing setting back along with the new scopes.
 
