@@ -154,6 +154,74 @@ final class DeletesTest extends TestCase
         $this->assertFalse($database->getDocument('certificates', 'certificate')->isEmpty());
     }
 
+    #[DataProvider('resources')]
+    public function testDeleteRecreatedComputeRule(string $type): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $database = $this->database;
+        $provider = new Provider();
+        $database->createDocument('certificates', new Document(['$id' => 'certificate']));
+        $original = $this->enqueue([
+            '$id' => md5('example.com'),
+            'type' => 'deployment',
+            'deploymentResourceType' => $type,
+            'deploymentResourceId' => 'reused-id',
+            'deploymentResourceInternalId' => '11',
+        ]);
+        $replacement = $database->createDocument('rules', new Document([
+            '$id' => $original->getId(), 'domain' => 'example.com', 'certificateId' => 'certificate',
+            'type' => 'deployment', 'deploymentResourceType' => $type,
+            'deploymentResourceId' => 'reused-id', 'deploymentResourceInternalId' => '12',
+            'projectId' => 'console', 'projectInternalId' => '0', 'region' => 'default',
+        ]));
+        $this->assertNotSame($original->getSequence(), $replacement->getSequence());
+
+        $this->assertSame([], $this->runWorker($provider));
+
+        $this->assertSame([], $provider->deleted);
+        $rule = $database->getDocument('rules', $replacement->getId());
+        $this->assertSame($replacement->getSequence(), $rule->getSequence());
+        $this->assertSame('12', $rule->getAttribute('deploymentResourceInternalId'));
+        $this->assertFalse($database->getDocument('certificates', 'certificate')->isEmpty());
+    }
+
+    public static function resources(): \Iterator
+    {
+        yield 'function' => ['function'];
+        yield 'site' => ['site'];
+    }
+
+    #[DataProvider('resources')]
+    public function testDeleteReassignedComputeDomain(string $type): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $database = $this->database;
+        $provider = new Provider();
+        $database->createDocument('certificates', new Document(['$id' => 'certificate', 'domain' => 'example.com']));
+        $database->createDocument('certificates', new Document(['$id' => 'new-certificate', 'domain' => 'example.com']));
+        $this->enqueue([
+            'type' => 'deployment', 'deploymentResourceType' => $type,
+            'deploymentResourceId' => 'original', 'deploymentResourceInternalId' => '11',
+        ]);
+        $replacement = $database->createDocument('rules', new Document([
+            '$id' => 'replacement', 'domain' => 'example.com', 'certificateId' => 'new-certificate',
+            'type' => 'deployment', 'deploymentResourceType' => $type === 'function' ? 'site' : 'function',
+            'deploymentResourceId' => 'replacement', 'deploymentResourceInternalId' => '11',
+            'projectId' => 'other-project', 'projectInternalId' => '7', 'region' => 'default',
+        ]));
+
+        $this->assertSame([], $this->runWorker($provider));
+
+        $this->assertSame([], $provider->deleted);
+        $this->assertSame($replacement->getSequence(), $database->getDocument('rules', 'replacement')->getSequence());
+        $this->assertFalse($database->getDocument('certificates', 'new-certificate')->isEmpty());
+        $this->assertTrue($database->getDocument('certificates', 'certificate')->isEmpty());
+    }
+
     private function enqueue(array $attributes = []): Document
     {
         $rule = $this->database->createDocument('rules', new Document(array_merge([

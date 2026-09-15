@@ -12,6 +12,7 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Utopia\Bus\Bus;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -65,6 +66,7 @@ class Delete extends Base
             ->inject('queueForEvents')
             ->inject('dbForPlatform')
             ->inject('authorization')
+            ->inject('bus')
             ->callback($this->action(...));
     }
 
@@ -75,7 +77,8 @@ class Delete extends Base
         DeletePublisher $publisherForDeletes,
         Event $queueForEvents,
         Database $dbForPlatform,
-        Authorization $authorization
+        Authorization $authorization,
+        Bus $bus,
     ) {
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -104,6 +107,9 @@ class Delete extends Base
             type: DELETE_TYPE_DOCUMENT,
             document: $function,
         ));
+
+        // Keep the resource cleanup queued if immediate rule removal fails.
+        $this->deleteRules($function, $queueForEvents->getProject(), 'function', $dbForPlatform, $publisherForDeletes, $authorization, $bus);
 
         $queueForEvents->setParam('functionId', $function->getId());
 
