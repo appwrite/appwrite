@@ -844,13 +844,15 @@ class Install extends Action
      */
     private function nightlyTag(string $version): string
     {
-        if (\preg_match('/^(\d+)\.(\d+)\./', $version, $matches) !== 1) {
+        [$major, $minor] = \array_pad(\explode('.', $version), 2, '');
+
+        if (!\ctype_digit($major) || !\ctype_digit($minor)) {
             Console::warning("Cannot derive a nightly tag from '{$version}'; using the bare nightly tag.");
 
             return 'nightly';
         }
 
-        return "{$matches[1]}.{$matches[2]}-nightly";
+        return "{$major}.{$minor}-nightly";
     }
 
     private function createInitialAdminAccount(array $account, ?callable $progress, string $apiUrl, string $domain): void

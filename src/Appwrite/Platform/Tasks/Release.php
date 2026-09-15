@@ -44,7 +44,7 @@ class Release extends Action
 
     public function action(string $version, string $migration, string $console, string $dryRun): void
     {
-        if (\preg_match('/^\d+\.\d+\.\d+(-rc\.\d+)?$/', $version) !== 1) {
+        if (!$this->isVersion($version)) {
             Console::error("'{$version}' is not an X.Y.Z or X.Y.Z-rc.N version.");
 
             return;
@@ -110,6 +110,32 @@ class Release extends Action
 
         Console::success(\count($changes) . ' file(s) written.');
         Console::info('Still by hand: release notes on the changelog, specs if the API changed, and request/response filters for public breaks.');
+    }
+
+    /**
+     * X.Y.Z, optionally an -rc.N candidate of it.
+     */
+    private function isVersion(string $version): bool
+    {
+        $parts = \explode('-rc.', $version, 2);
+
+        if (\count($parts) === 2 && !\ctype_digit($parts[1])) {
+            return false;
+        }
+
+        $numbers = \explode('.', $parts[0]);
+
+        if (\count($numbers) !== 3) {
+            return false;
+        }
+
+        foreach ($numbers as $number) {
+            if (!\ctype_digit($number)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private function isPatch(string $current, string $version): bool
@@ -189,7 +215,7 @@ class Release extends Action
     {
         $contents = $this->read(self::MIGRATION);
 
-        if (\preg_match("/^\s*'" . \preg_quote($version, '/') . "'\s*=>/m", $contents) === 1) {
+        if (\str_contains($contents, "'{$version}' =>")) {
             return [];
         }
 
@@ -216,18 +242,24 @@ class Release extends Action
     {
         $contents = $this->read(self::COMPOSE);
 
-        if (\preg_match('/image: appwrite\/new:(\S+)/', $contents, $matches) !== 1) {
+        $pin = 'image: appwrite/new:';
+        $start = \strpos($contents, $pin);
+
+        if ($start === false) {
             throw new \RuntimeException(self::COMPOSE . ' does not pin an appwrite/new image.');
         }
 
-        if ($matches[1] === $console) {
+        $start += \strlen($pin);
+        $current = \substr($contents, $start, \strcspn($contents, " \t\r\n", $start));
+
+        if ($current === $console) {
             return [];
         }
 
         return [self::COMPOSE => [
-            'from' => "- image: appwrite/new:{$matches[1]}",
-            'to' => "+ image: appwrite/new:{$console}",
-            'contents' => \str_replace($matches[0], "image: appwrite/new:{$console}", $contents),
+            'from' => "- {$pin}{$current}",
+            'to' => "+ {$pin}{$console}",
+            'contents' => \str_replace($pin . $current, $pin . $console, $contents),
         ]];
     }
 }
