@@ -74,7 +74,7 @@ class Create extends Base
 
     public function action(string $userId, ?string $email, ?string $phone, ?string $password, ?string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks, array $plan, PasswordPwned $pwnedPasswords): void
     {
-        $passwordPwned = empty($password) || !$pwnedPasswords->isEnabled()
+        $passwordPwned = empty($password) || !($project->getAttribute('auths', [])['passwordPwned']['enabled'] ?? true)
             ? null
             : !$pwnedPasswords->isValid($password);
         if ($passwordPwned) {

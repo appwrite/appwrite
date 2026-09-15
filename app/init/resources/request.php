@@ -677,21 +677,19 @@ return function (Container $context): void {
         return;
     }, ['user', 'store', 'proofForToken']);
 
-    $context->set('pwnedPasswords', function (Document $project, Cache $cache) {
+    $context->set('pwnedPasswords', function (Cache $cache) {
         $dsn = new DSN(System::getEnv('_APP_PWNED_PASSWORDS_DSN', 'hibp://localhost'));
 
-        $policy = $project->getAttribute('auths', [])['passwordPwned'] ?? [];
-
         return match ($dsn->getScheme()) {
-            'hibp' => new PasswordPwnedHIBP($policy, $cache),
-            'appwrite' => new PasswordPwnedAppwrite($policy, $dsn),
+            'hibp' => new PasswordPwnedHIBP($cache),
+            'appwrite' => new PasswordPwnedAppwrite($dsn),
             // Reports almost every password as safe, so it must never be reachable on a real server
             'mock' => Http::isProduction()
                 ? throw new Exception(Exception::GENERAL_SERVER_ERROR, 'The mock breach validator cannot be used in production.')
-                : new PasswordPwnedMock($policy),
+                : new PasswordPwnedMock(),
             default => throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Unknown _APP_PWNED_PASSWORDS_DSN scheme: ' . $dsn->getScheme()),
         };
-    }, ['project', 'cache']);
+    }, ['cache']);
 
     $context->set('dbForProject', function (DatabaseFactory $databaseFactory, Database $dbForPlatform, Document $project, Response $response, Publisher $publisher, Event $queueForEvents, FunctionPublisher $publisherForFunctions, Webhook $queueForWebhooks, Realtime $queueForRealtime, UsageContext $usage, Request $request) {
         if ($project->isEmpty() || $project->getId() === 'console') {

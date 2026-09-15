@@ -6,58 +6,18 @@ use Appwrite\Extend\Exception;
 use Utopia\Fetch\Client;
 
 /**
- * Validates a password against the project's `password-pwned` policy.
+ * Validates that a password has not been exposed in a known data breach.
  *
- * Subclasses differ in who answers the question and in what leaves the server,
- * so read the one you are configuring. `_APP_PWNED_PASSWORDS_DSN` picks it, and
- * the DSN scheme matches the subclass.
+ * Whether to ask at all is the caller's decision, read from the project's
+ * `passwordPwned` policy, the same way the personal data and history checks
+ * work. Subclasses differ in who answers the question and in what leaves the
+ * server, so read the one you are configuring. `_APP_PWNED_PASSWORDS_DSN` picks
+ * it, and the DSN scheme matches the subclass.
  */
 abstract class PasswordPwned extends Password
 {
     private const CONNECT_TIMEOUT = 3 * 1000; // milliseconds
     private const REQUEST_TIMEOUT = 5 * 1000; // milliseconds
-
-    protected bool $enabled;
-    protected bool $sessions;
-    protected bool $users;
-
-    /**
-     * @param array<string, mixed> $policy the project's `passwordPwned` auth settings
-     */
-    public function __construct(array $policy = [], bool $allowEmpty = false)
-    {
-        parent::__construct($allowEmpty);
-
-        $this->enabled = (bool) ($policy['enabled'] ?? true);
-        $this->sessions = (bool) ($policy['sessions'] ?? false);
-        $this->users = (bool) ($policy['users'] ?? false);
-    }
-
-    /**
-     * Whether the project enforces the policy at all.
-     */
-    public function isEnabled(): bool
-    {
-        return $this->enabled;
-    }
-
-    /**
-     * Whether passwords are checked when a session is created.
-     */
-    public function checksSessions(): bool
-    {
-        return $this->enabled && $this->sessions;
-    }
-
-    /**
-     * Whether users signing in with a breached password are blocked until they reset it.
-     *
-     * Only takes effect when sessions are checked.
-     */
-    public function blocksUsers(): bool
-    {
-        return $this->users;
-    }
 
     /**
      * Get Description.
@@ -74,9 +34,6 @@ abstract class PasswordPwned extends Password
     /**
      * Is valid.
      *
-     * A password the policy did not look at is valid, so callers that need to
-     * tell "clean" from "never checked" ask `isEnabled()` first.
-     *
      * @param mixed $value
      *
      * @return bool
@@ -89,10 +46,6 @@ abstract class PasswordPwned extends Password
         }
 
         if ($this->allowEmpty && \strlen($value) === 0) {
-            return true;
-        }
-
-        if (!$this->enabled) {
             return true;
         }
 

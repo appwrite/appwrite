@@ -27,13 +27,8 @@ class HIBP extends PasswordPwned
     protected Client $client;
     protected string $endpoint;
 
-    /**
-     * @param array<string, mixed> $policy
-     */
-    public function __construct(array $policy = [], ?Cache $cache = null, ?Client $client = null, string $endpoint = self::ENDPOINT)
+    public function __construct(?Cache $cache = null, ?Client $client = null, string $endpoint = self::ENDPOINT)
     {
-        parent::__construct($policy);
-
         $this->cache = $cache;
         $this->client = $this->client($client);
         $this->endpoint = \rtrim($endpoint, '/');

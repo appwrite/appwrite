@@ -34,14 +34,6 @@ final class AppwriteTest extends TestCase
         $this->assertTrue($this->validator($fetch)->isValid(self::PASSWORD));
     }
 
-    public function testDisabledPolicyNeverAsksTheService(): void
-    {
-        $fetch = new DetectionFetch(body: '{"leaked":true}');
-
-        $this->assertTrue((new Appwrite(['enabled' => false], new DSN(self::DSN), new Client($fetch)))->isValid(self::PASSWORD));
-        $this->assertCount(0, $fetch->requests);
-    }
-
     public function testThePasswordTravelsInAJwtTheServiceCanOpen(): void
     {
         $fetch = new DetectionFetch(body: '{"leaked":false}');
@@ -87,7 +79,7 @@ final class AppwriteTest extends TestCase
         foreach ($cases as $dsn => $expected) {
             $fetch = new DetectionFetch(body: '{"leaked":false}');
 
-            (new Appwrite([], new DSN($dsn), new Client($fetch)))->isValid(self::PASSWORD);
+            (new Appwrite(new DSN($dsn), new Client($fetch)))->isValid(self::PASSWORD);
 
             $this->assertSame($expected, $fetch->requests[0]['url'], $dsn);
         }
@@ -143,7 +135,7 @@ final class AppwriteTest extends TestCase
 
     private function validator(DetectionFetch $fetch): Appwrite
     {
-        return new Appwrite([], new DSN(self::DSN), new Client($fetch));
+        return new Appwrite(new DSN(self::DSN), new Client($fetch));
     }
 }
 

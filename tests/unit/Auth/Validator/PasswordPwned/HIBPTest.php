@@ -74,21 +74,13 @@ final class HIBPTest extends TestCase
         $this->assertStringEndsWith(\substr($hash, 0, 5), $url);
     }
 
-    public function testDisabledPolicyNeverAsksTheService(): void
-    {
-        $fetch = new RangeFetch(body: $this->range([self::LEAKED => 42]));
-
-        $this->assertTrue((new HIBP(['enabled' => false], null, new Client($fetch), self::ENDPOINT))->isValid(self::LEAKED));
-        $this->assertCount(0, $fetch->urls);
-    }
-
     public function testRangeIsCachedPerPrefix(): void
     {
         $fetch = new RangeFetch(body: $this->range([self::LEAKED => 42]));
         $cache = new Cache(new Memory());
 
-        $this->assertFalse((new HIBP([], $cache, new Client($fetch), self::ENDPOINT))->isValid(self::LEAKED));
-        $this->assertFalse((new HIBP([], $cache, new Client($fetch), self::ENDPOINT))->isValid(self::LEAKED));
+        $this->assertFalse((new HIBP($cache, new Client($fetch), self::ENDPOINT))->isValid(self::LEAKED));
+        $this->assertFalse((new HIBP($cache, new Client($fetch), self::ENDPOINT))->isValid(self::LEAKED));
 
         $this->assertCount(1, $fetch->urls);
     }
@@ -98,8 +90,8 @@ final class HIBPTest extends TestCase
         $fetch = new RangeFetch(body: $this->range([self::LEAKED => 42]));
         $cache = new Cache(new Memory());
 
-        (new HIBP([], $cache, new Client($fetch), 'https://one.test/range'))->isValid(self::LEAKED);
-        (new HIBP([], $cache, new Client($fetch), 'https://two.test/range'))->isValid(self::LEAKED);
+        (new HIBP($cache, new Client($fetch), 'https://one.test/range'))->isValid(self::LEAKED);
+        (new HIBP($cache, new Client($fetch), 'https://two.test/range'))->isValid(self::LEAKED);
 
         $this->assertCount(2, $fetch->urls);
     }
@@ -108,8 +100,8 @@ final class HIBPTest extends TestCase
     {
         $fetch = new RangeFetch(body: '');
 
-        (new HIBP([], null, new Client($fetch), 'https://server.test/range'))->isValid(self::LEAKED);
-        (new HIBP([], null, new Client($fetch), 'https://other.test/range/'))->isValid(self::LEAKED);
+        (new HIBP(null, new Client($fetch), 'https://server.test/range'))->isValid(self::LEAKED);
+        (new HIBP(null, new Client($fetch), 'https://other.test/range/'))->isValid(self::LEAKED);
 
         $this->assertStringStartsWith('https://server.test/range/', $fetch->urls[0]);
         $this->assertStringStartsWith('https://other.test/range/', $fetch->urls[1]);
@@ -139,7 +131,7 @@ final class HIBPTest extends TestCase
     public function testFailedLookupIsNotCached(): void
     {
         $fetch = new RangeFetch(failure: new \RuntimeException('connection refused'));
-        $validator = new HIBP([], new Cache(new Memory()), new Client($fetch), self::ENDPOINT);
+        $validator = new HIBP(new Cache(new Memory()), new Client($fetch), self::ENDPOINT);
 
         foreach ([1, 2] as $attempt) {
             try {
@@ -154,7 +146,7 @@ final class HIBPTest extends TestCase
 
     private function validator(RangeFetch $fetch): HIBP
     {
-        return new HIBP([], null, new Client($fetch), self::ENDPOINT);
+        return new HIBP(null, new Client($fetch), self::ENDPOINT);
     }
 
     /**
