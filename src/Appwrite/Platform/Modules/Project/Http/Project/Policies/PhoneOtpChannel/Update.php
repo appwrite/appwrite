@@ -42,7 +42,7 @@ class Update extends Action
                 group: 'policies',
                 name: 'updatePhoneOtpChannelPolicy',
                 description: <<<EOT
-                Updating this policy allows you to control how phone OTP messages are delivered to your users. Choose `sms` to always send over SMS, `whatsapp` to always send over WhatsApp, or `whatsapp-sms` to send over WhatsApp and fall back to SMS. Any channel other than `sms` requires a configured WhatsApp provider.
+                Updating this policy allows you to control how phone OTP messages are delivered to your users. Choose `sms` to always send over SMS, `whatsapp` to always send over WhatsApp, or `whatsapp-sms` to send over WhatsApp and fall back to SMS. Any channel other than `sms` requires a configured WhatsApp provider. The `whatsapp-sms` fallback covers API-level rejections only: Meta accepts a message to a number with no WhatsApp account and reports the failure asynchronously, so that case does not currently fall back to SMS.
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
