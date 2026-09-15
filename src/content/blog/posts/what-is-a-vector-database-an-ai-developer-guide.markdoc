@@ -104,7 +104,7 @@ Reach for a vector database when similarity, not exact matching, is the core of 
 * **Your data is unstructured.** Text, images, audio, and video all embed cleanly into vectors.
 * **You work at scale.** Purpose-built vector databases handle billions of embeddings with predictable latency.
 
-## When you may not need a dedicated vector database
+# When you may not need a dedicated vector database
 
 Being honest about the trade-offs matters more than defending the tool. You can often skip a separate vector database when:
 
