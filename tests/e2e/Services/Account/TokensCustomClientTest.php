@@ -16,13 +16,11 @@ final class TokensCustomClientTest extends Scope
     use ProjectCustom;
     use SideClient;
 
-    public static function verificationTokens(): array
+    public static function verificationTokens(): \Iterator
     {
-        return [
-            'recovery' => ['/account/recovery', 256],
-            'email verification' => ['/account/verifications/email', 256],
-            'phone verification' => ['/account/verifications/phone', 6],
-        ];
+        yield 'recovery' => ['/account/recovery', 256];
+        yield 'email verification' => ['/account/verifications/email', 256];
+        yield 'phone verification' => ['/account/verifications/phone', 6];
     }
 
     #[DataProvider('verificationTokens')]
@@ -99,12 +97,10 @@ final class TokensCustomClientTest extends Scope
         $this->assertInvalidTokenOptions($path, $headers, $params, $maxLength);
     }
 
-    public static function challengeFactors(): array
+    public static function challengeFactors(): \Iterator
     {
-        return [
-            'email' => ['email'],
-            'phone' => ['phone'],
-        ];
+        yield 'email' => ['email'];
+        yield 'phone' => ['phone'];
     }
 
     #[DataProvider('challengeFactors')]

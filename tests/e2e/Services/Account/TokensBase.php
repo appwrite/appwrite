@@ -12,13 +12,11 @@ use Utopia\Database\Helpers\ID;
 
 trait TokensBase
 {
-    public static function loginTokens(): array
+    public static function loginTokens(): \Iterator
     {
-        return [
-            'magic URL' => ['magic-url', 64, 3600],
-            'email OTP' => ['email', 6, 900],
-            'phone OTP' => ['phone', 6, 900],
-        ];
+        yield 'magic URL' => ['magic-url', 64, 3600];
+        yield 'email OTP' => ['email', 6, 900];
+        yield 'phone OTP' => ['phone', 6, 900];
     }
 
     #[DataProvider('loginTokens')]
