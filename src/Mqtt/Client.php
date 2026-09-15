@@ -105,10 +105,14 @@ class Client
             if ($this->timedOut()) {
                 return null;
             }
-            $this->emit('error', new \RuntimeException(
-                "Failed to receive data: {$this->client->errCode} - {$this->client->errMsg}"
-            ));
-            $this->handleClose();
+            // Tear the connection down even if the error handler throws.
+            try {
+                $this->emit('error', new \RuntimeException(
+                    "Failed to receive data: {$this->client->errCode} - {$this->client->errMsg}"
+                ));
+            } finally {
+                $this->handleClose();
+            }
             return null;
         }
 
@@ -128,30 +132,38 @@ class Client
     public function listen(): void
     {
         while ($this->connected) {
-            try {
-                $data = $this->client->recv($this->timeout);
+            $data = $this->client->recv($this->timeout);
 
-                // '' is a peer close; false is a timeout (keep listening) or a socket error.
-                if ($data === '') {
-                    $this->handleClose();
-                    break;
+            // '' is a peer close; false is a timeout (keep listening) or a socket error.
+            if ($data === '') {
+                $this->handleClose();
+                break;
+            }
+
+            if ($data === false) {
+                if ($this->timedOut()) {
+                    continue;
                 }
-
-                if ($data === false) {
-                    if ($this->timedOut()) {
-                        continue;
-                    }
+                // Tear the connection down even if the error handler throws.
+                try {
                     $this->emit('error', new \RuntimeException(
                         "Failed to receive data: {$this->client->errCode} - {$this->client->errMsg}"
                     ));
+                } finally {
                     $this->handleClose();
-                    break;
                 }
+                break;
+            }
 
+            // A throwing receive handler is reported once, then the connection closes.
+            try {
                 $this->emit('receive', $data);
             } catch (\Throwable $error) {
-                $this->emit('error', $error);
-                $this->handleClose();
+                try {
+                    $this->emit('error', $error);
+                } finally {
+                    $this->handleClose();
+                }
                 break;
             }
         }
@@ -193,9 +205,16 @@ class Client
 
     private function handleClose(): void
     {
-        if ($this->connected) {
-            $this->connected = false;
+        if (!$this->connected) {
+            return;
+        }
+
+        $this->connected = false;
+
+        // Close the socket even if the close handler throws.
+        try {
             $this->emit('close');
+        } finally {
             $this->client->close();
         }
     }
