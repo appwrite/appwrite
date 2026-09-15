@@ -2961,7 +2961,7 @@ trait UsersBase
     }
 
     /**
-     * Test impersonation via URL query params — mirrors the ?project= and ?devKey= pattern.
+     * Test impersonation via URL query params — mirrors the ?project= pattern.
      * Allows Console to embed impersonation in direct file/image URLs where headers cannot be set.
      */
     public function testImpersonateByQueryParams(): void

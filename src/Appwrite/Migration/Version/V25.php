@@ -72,6 +72,18 @@ class V25 extends Migration
                         } catch (Throwable $th) {
                             Console::warning("Failed to create index \"_key_accessedAt\" from {$id}: {$th->getMessage()}");
                         }
+
+                        try {
+                            $this->dbForProject->deleteAttribute($id, 'devKeys');
+                        } catch (Throwable $th) {
+                            Console::warning("Failed to delete attribute \"devKeys\" from {$id}: {$th->getMessage()}");
+                        }
+
+                        try {
+                            $this->dbForProject->deleteCollection('devKeys');
+                        } catch (Throwable $th) {
+                            Console::warning("Failed to delete collection \"devKeys\": {$th->getMessage()}");
+                        }
                     }
                     $this->dbForProject->purgeCachedCollection($id);
                     break;

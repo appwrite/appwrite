@@ -76,9 +76,6 @@ class V22 extends Migration
                 case '_metadata':
                     $this->createCollection('sites');
                     $this->createCollection('resourceTokens');
-                    if ($projectInternalId === 'console') {
-                        $this->createCollection('devKeys');
-                    }
                     break;
                 case 'identities':
                     $attributes = [
@@ -86,17 +83,6 @@ class V22 extends Migration
                         'expire',
                     ];
                     try {
-                        $this->createAttributesFromCollection($this->dbForProject, $id, $attributes);
-                    } catch (\Throwable $th) {
-                        Console::warning('Failed to create attributes "' . \implode(', ', $attributes) . "\" in collection {$id}: {$th->getMessage()}");
-                    }
-                    $this->dbForProject->purgeCachedCollection($id);
-                    break;
-                case 'projects':
-                    try {
-                        $attributes = [
-                            'devKeys',
-                        ];
                         $this->createAttributesFromCollection($this->dbForProject, $id, $attributes);
                     } catch (\Throwable $th) {
                         Console::warning('Failed to create attributes "' . \implode(', ', $attributes) . "\" in collection {$id}: {$th->getMessage()}");
