@@ -917,6 +917,20 @@ Http::patch('/v1/account/sessions/:sessionId')
                 ->setAttribute('providerRefreshToken', $oauth2->getRefreshToken(''))
                 ->setAttribute('providerAccessTokenExpiry', DateTime::formatTz(DateTime::addSeconds(new \DateTime(), (int) $oauth2->getAccessTokenExpiry(''))));
 
+            try {
+                $identity = $dbForProject->findOne('identities', [
+                    Query::equal('provider', [$provider]),
+                    Query::equal('providerUid', [$session->getAttribute('providerUid', '')]),
+                ]);
+
+                if (!$identity->isEmpty()) {
+                    $dbForProject->updateDocument('identities', $identity->getId(), new Document([
+                        'photo' => $oauth2->getUserPhoto($oauth2->getAccessToken('')),
+                    ]));
+                }
+            } catch (\Throwable $th) {
+                // Photo refresh is best-effort and must not block session token refresh
+            }
         }
 
         // Save changes
