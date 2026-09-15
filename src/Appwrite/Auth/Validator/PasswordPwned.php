@@ -3,6 +3,7 @@
 namespace Appwrite\Auth\Validator;
 
 use Appwrite\Extend\Exception;
+use Utopia\Cache\Cache;
 
 /**
  * Validates that a password has not been exposed in a known data breach.
@@ -15,6 +16,13 @@ use Appwrite\Extend\Exception;
  */
 abstract class PasswordPwned extends Password
 {
+    /**
+     * How long an answer from a breach service stays good for.
+     */
+    protected const CACHE_TTL = 3600; // seconds
+
+    protected ?Cache $cache = null;
+
     /**
      * Get Description.
      *
@@ -81,4 +89,31 @@ abstract class PasswordPwned extends Password
      * @throws Exception when the breach service cannot be reached or answers with nonsense
      */
     abstract protected function isPwned(string $password): bool;
+
+    /**
+     * Remembers what a breach service said, so the same question is not asked twice.
+     *
+     * Subclasses choose the key, because what is worth remembering differs: a
+     * whole range of hashes for one, a single answer for another. Nothing is
+     * stored when the lookup throws, so an outage is retried rather than
+     * remembered.
+     *
+     * @param  callable(): array<mixed>  $resolve
+     * @return array<mixed>
+     */
+    protected function remember(string $key, callable $resolve): array
+    {
+        // A miss reads back as false, so an answer is always wrapped in an array
+        $cached = $this->cache?->load($key, static::CACHE_TTL);
+
+        if (\is_array($cached)) {
+            return $cached;
+        }
+
+        $answer = $resolve();
+
+        $this->cache?->save($key, $answer);
+
+        return $answer;
+    }
 }

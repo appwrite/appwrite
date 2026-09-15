@@ -5,6 +5,7 @@ namespace Appwrite\Auth\Validator\PasswordPwned;
 use Ahc\Jwt\JWT;
 use Appwrite\Auth\Validator\PasswordPwned;
 use Appwrite\Extend\Exception;
+use Utopia\Cache\Cache;
 use Utopia\DSN\DSN;
 use Utopia\Fetch\Client;
 
@@ -35,8 +36,9 @@ class Appwrite extends PasswordPwned
     protected string $secret;
     protected Client $client;
 
-    public function __construct(DSN $dsn, ?Client $client = null)
+    public function __construct(DSN $dsn, ?Cache $cache = null, ?Client $client = null)
     {
+        $this->cache = $cache;
         $scheme = $dsn->getParam('tls') === 'true' ? 'https' : 'http';
         $port = $dsn->getPort() !== null ? ':' . $dsn->getPort() : '';
         $path = $dsn->getPath();
@@ -52,28 +54,35 @@ class Appwrite extends PasswordPwned
 
     protected function isPwned(string $password): bool
     {
-        $jwt = new JWT($this->secret, 'HS256', self::TOKEN_EXPIRY, self::TOKEN_LEEWAY);
+        // Keyed with the secret the service shares, so the cache never holds a crackable password hash
+        $key = 'pwned-passwords:' . \md5($this->endpoint) . ':' . \hash_hmac('sha256', $password, $this->secret);
 
-        try {
-            $response = $this->client
-                ->addHeader('content-type', Client::CONTENT_TYPE_APPLICATION_JSON)
-                ->fetch($this->endpoint, Client::METHOD_POST, [
-                    'password' => $jwt->encode(['password' => $password]),
-                ]);
-        } catch (\Throwable) {
-            throw new Exception(Exception::GENERAL_PWNED_PASSWORDS_UNAVAILABLE);
-        }
+        $answer = $this->remember($key, function () use ($password) {
+            $jwt = new JWT($this->secret, 'HS256', self::TOKEN_EXPIRY, self::TOKEN_LEEWAY);
 
-        if ($response->getStatusCode() !== 200) {
-            throw new Exception(Exception::GENERAL_PWNED_PASSWORDS_UNAVAILABLE);
-        }
+            try {
+                $response = $this->client
+                    ->addHeader('content-type', Client::CONTENT_TYPE_APPLICATION_JSON)
+                    ->fetch($this->endpoint, Client::METHOD_POST, [
+                        'password' => $jwt->encode(['password' => $password]),
+                    ]);
+            } catch (\Throwable) {
+                throw new Exception(Exception::GENERAL_PWNED_PASSWORDS_UNAVAILABLE);
+            }
 
-        $body = \json_decode($response->text(), true);
+            if ($response->getStatusCode() !== 200) {
+                throw new Exception(Exception::GENERAL_PWNED_PASSWORDS_UNAVAILABLE);
+            }
 
-        if (!\is_array($body) || !\is_bool($body['leaked'] ?? null)) {
-            throw new Exception(Exception::GENERAL_PWNED_PASSWORDS_UNAVAILABLE);
-        }
+            $body = \json_decode($response->text(), true);
 
-        return $body['leaked'];
+            if (!\is_array($body) || !\is_bool($body['leaked'] ?? null)) {
+                throw new Exception(Exception::GENERAL_PWNED_PASSWORDS_UNAVAILABLE);
+            }
+
+            return ['leaked' => $body['leaked']];
+        });
+
+        return (bool) ($answer['leaked'] ?? false);
     }
 }

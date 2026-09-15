@@ -20,13 +20,11 @@ use Utopia\Fetch\Client;
 class HIBP extends PasswordPwned
 {
     public const ENDPOINT = 'https://api.pwnedpasswords.com/range';
-    public const CACHE_TTL = 3600; // seconds
 
     private const PREFIX_LENGTH = 5;
     private const CONNECT_TIMEOUT = 3 * 1000; // milliseconds
     private const REQUEST_TIMEOUT = 5 * 1000; // milliseconds
 
-    protected ?Cache $cache;
     protected Client $client;
     protected string $endpoint;
 
@@ -59,44 +57,35 @@ class HIBP extends PasswordPwned
      */
     private function range(string $prefix): array
     {
-        $key = 'pwned-passwords:' . \md5($this->endpoint) . ':' . $prefix;
-
-        if ($this->cache !== null) {
-            $cached = $this->cache->load($key, self::CACHE_TTL);
-            if (\is_array($cached)) {
-                return $cached;
-            }
-        }
-
-        try {
-            $response = $this->client
-                ->addHeader('Add-Padding', 'true')
-                ->fetch($this->endpoint . '/' . $prefix);
-        } catch (\Throwable) {
-            throw new Exception(Exception::GENERAL_PWNED_PASSWORDS_UNAVAILABLE);
-        }
-
-        if ($response->getStatusCode() !== 200) {
-            throw new Exception(Exception::GENERAL_PWNED_PASSWORDS_UNAVAILABLE);
-        }
-
-        // Each line is `HASH_SUFFIX:COUNT`; padded entries carry a count of 0 and are not breaches
-        $breaches = [];
-        foreach (\explode("\n", $response->text()) as $line) {
-            $line = \trim($line);
-            $separator = \strpos($line, ':');
-            if ($line === '' || $separator === false) {
-                continue;
+        return $this->remember('pwned-passwords:' . \md5($this->endpoint) . ':' . $prefix, function () use ($prefix) {
+            try {
+                $response = $this->client
+                    ->addHeader('Add-Padding', 'true')
+                    ->fetch($this->endpoint . '/' . $prefix);
+            } catch (\Throwable) {
+                throw new Exception(Exception::GENERAL_PWNED_PASSWORDS_UNAVAILABLE);
             }
 
-            $count = (int) \substr($line, $separator + 1);
-            if ($count > 0) {
-                $breaches[\strtoupper(\substr($line, 0, $separator))] = $count;
+            if ($response->getStatusCode() !== 200) {
+                throw new Exception(Exception::GENERAL_PWNED_PASSWORDS_UNAVAILABLE);
             }
-        }
 
-        $this->cache?->save($key, $breaches);
+            // Each line is `HASH_SUFFIX:COUNT`; padded entries carry a count of 0 and are not breaches
+            $breaches = [];
+            foreach (\explode("\n", $response->text()) as $line) {
+                $line = \trim($line);
+                $separator = \strpos($line, ':');
+                if ($line === '' || $separator === false) {
+                    continue;
+                }
 
-        return $breaches;
+                $count = (int) \substr($line, $separator + 1);
+                if ($count > 0) {
+                    $breaches[\strtoupper(\substr($line, 0, $separator))] = $count;
+                }
+            }
+
+            return $breaches;
+        });
     }
 }

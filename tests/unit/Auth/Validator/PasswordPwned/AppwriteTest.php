@@ -8,6 +8,8 @@ use Ahc\Jwt\JWT;
 use Appwrite\Auth\Validator\PasswordPwned\Appwrite;
 use Appwrite\Extend\Exception;
 use PHPUnit\Framework\TestCase;
+use Utopia\Cache\Adapter\Memory;
+use Utopia\Cache\Cache;
 use Utopia\DSN\DSN;
 use Utopia\Fetch\Adapter;
 use Utopia\Fetch\Client;
@@ -79,7 +81,7 @@ final class AppwriteTest extends TestCase
         foreach ($cases as $dsn => $expected) {
             $fetch = new DetectionFetch(body: '{"leaked":false}');
 
-            (new Appwrite(new DSN($dsn), new Client($fetch)))->isValid(self::PASSWORD);
+            (new Appwrite(new DSN($dsn), null, new Client($fetch)))->isValid(self::PASSWORD);
 
             $this->assertSame($expected, $fetch->requests[0]['url'], $dsn);
         }
@@ -133,9 +135,59 @@ final class AppwriteTest extends TestCase
         }
     }
 
+    public function testAnswersAreCached(): void
+    {
+        $fetch = new DetectionFetch(body: '{"leaked":true}');
+        $cache = new Cache(new Memory());
+
+        $this->assertFalse((new Appwrite(new DSN(self::DSN), $cache, new Client($fetch)))->isValid(self::PASSWORD));
+        $this->assertFalse((new Appwrite(new DSN(self::DSN), $cache, new Client($fetch)))->isValid(self::PASSWORD));
+
+        $this->assertCount(1, $fetch->requests);
+    }
+
+    public function testEachPasswordGetsItsOwnAnswer(): void
+    {
+        $fetch = new DetectionFetch(body: '{"leaked":true}');
+        $cache = new Cache(new Memory());
+        $validator = new Appwrite(new DSN(self::DSN), $cache, new Client($fetch));
+
+        $validator->isValid(self::PASSWORD);
+        $validator->isValid('a-completely-different-password');
+
+        $this->assertCount(2, $fetch->requests);
+    }
+
+    public function testCacheIsScopedToEndpoint(): void
+    {
+        $fetch = new DetectionFetch(body: '{"leaked":true}');
+        $cache = new Cache(new Memory());
+
+        (new Appwrite(new DSN('appwrite://secret@one.test'), $cache, new Client($fetch)))->isValid(self::PASSWORD);
+        (new Appwrite(new DSN('appwrite://secret@two.test'), $cache, new Client($fetch)))->isValid(self::PASSWORD);
+
+        $this->assertCount(2, $fetch->requests);
+    }
+
+    public function testFailedLookupIsNotCached(): void
+    {
+        $fetch = new DetectionFetch(failure: new \RuntimeException('connection refused'));
+        $validator = new Appwrite(new DSN(self::DSN), new Cache(new Memory()), new Client($fetch));
+
+        foreach ([1, 2] as $attempt) {
+            try {
+                $validator->isValid(self::PASSWORD);
+            } catch (Exception) {
+                // The lookup failed, which is the point; it must be retried rather than remembered
+            }
+        }
+
+        $this->assertCount(2, $fetch->requests);
+    }
+
     private function validator(DetectionFetch $fetch): Appwrite
     {
-        return new Appwrite(new DSN(self::DSN), new Client($fetch));
+        return new Appwrite(new DSN(self::DSN), null, new Client($fetch));
     }
 }
 

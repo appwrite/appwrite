@@ -682,7 +682,7 @@ return function (Container $context): void {
 
         return match ($dsn->getScheme()) {
             'hibp' => new PasswordPwnedHIBP($cache),
-            'appwrite' => new PasswordPwnedAppwrite($dsn),
+            'appwrite' => new PasswordPwnedAppwrite($dsn, $cache),
             // Reports almost every password as safe, so it must never be reachable on a real server
             'mock' => Http::isProduction()
                 ? throw new Exception(Exception::GENERAL_SERVER_ERROR, 'The mock breach validator cannot be used in production.')
