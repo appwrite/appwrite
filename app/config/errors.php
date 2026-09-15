@@ -1226,6 +1226,11 @@ return [
         'description' => 'The requested region is either inactive or unsupported. Please check the value of the _APP_REGIONS environment variable.',
         'code' => 400,
     ],
+    Exception::PROJECT_PHONE_OTP_CHANNEL_UNAVAILABLE => [
+        'name' => Exception::PROJECT_PHONE_OTP_CHANNEL_UNAVAILABLE,
+        'description' => 'The requested phone OTP channel is not configured. Please check the value of the _APP_WHATSAPP_PROVIDER environment variable.',
+        'code' => 400,
+    ],
     Exception::WEBHOOK_NOT_FOUND => [
         'name' => Exception::WEBHOOK_NOT_FOUND,
         'description' => 'Webhook with the requested ID could not be found.',

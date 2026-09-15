@@ -880,6 +880,15 @@ return [
                 'question' => '',
                 'filter' => ''
             ],
+            [
+                'name' => '_APP_WHATSAPP_PROVIDER',
+                'description' => "Provider used for delivering WhatsApp messages for Phone authentication. Use the following format: 'sms://[PHONE_NUMBER_ID]:[ACCESS_TOKEN]@whatsapp?template=[TEMPLATE_NAME]&language=[LANGUAGE]'.\n\nEnsure `[PHONE_NUMBER_ID]` and `[ACCESS_TOKEN]` are URL encoded if they contain any non-alphanumeric characters.\n\n`[TEMPLATE_NAME]` is the name of an approved WhatsApp authentication template. `language` is optional and defaults to 'en_US'.\n\n`_APP_SMS_FROM` is not required for WhatsApp, the sender is the phone number behind `[PHONE_NUMBER_ID]`.",
+                'introduction' => '2.2.1',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
         ],
     ],
     [

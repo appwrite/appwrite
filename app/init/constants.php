@@ -362,6 +362,11 @@ const API_KEY_OAUTH2 = 'oauth2';
 // Realtime
 const CONSOLE_TAIL_CHANNEL_PREFIX = 'console.tail';
 
+// Phone OTP channels
+const PHONE_OTP_CHANNEL_SMS = 'sms';
+const PHONE_OTP_CHANNEL_WHATSAPP = 'whatsapp';
+const PHONE_OTP_CHANNEL_WHATSAPP_SMS = 'whatsapp-sms';
+
 // Usage metrics
 const METRIC_TEAMS = 'teams';
 const METRIC_USERS = 'users';
@@ -369,6 +374,8 @@ const METRIC_WEBHOOKS_SENT  = 'webhooks.events.sent';
 const METRIC_WEBHOOKS_FAILED  = 'webhooks.events.failed';
 const METRIC_AUTH_METHOD_PHONE  = 'auth.method.phone';
 const METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE  = METRIC_AUTH_METHOD_PHONE . '.{countryCode}';
+const METRIC_AUTH_METHOD_WHATSAPP = 'auth.method.whatsapp';
+const METRIC_AUTH_METHOD_WHATSAPP_COUNTRY_CODE = METRIC_AUTH_METHOD_WHATSAPP . '.{countryCode}';
 const METRIC_MESSAGES = 'messages';
 const METRIC_MESSAGES_SENT = METRIC_MESSAGES . '.sent';
 const METRIC_MESSAGES_FAILED = METRIC_MESSAGES . '.failed';
