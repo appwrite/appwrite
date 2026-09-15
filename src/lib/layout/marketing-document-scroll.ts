@@ -53,3 +53,48 @@ export function scrollPageSurfaceTo(
 export function resetPageSurfaceScroll(behavior: ScrollBehavior = 'auto') {
   scrollPageSurfaceTo(0, behavior)
 }
+
+/** Current scroll offset and viewport height of the active page surface. */
+export function getPageSurfaceScrollState(): {
+  scrollTop: number
+  viewportHeight: number
+} {
+  if (typeof window === 'undefined') {
+    return { scrollTop: 0, viewportHeight: 0 }
+  }
+
+  if (isMarketingDocumentScroll()) {
+    return {
+      scrollTop: window.scrollY || document.documentElement.scrollTop,
+      viewportHeight: window.innerHeight,
+    }
+  }
+
+  const main = document.getElementById('main-content')
+  if (main) {
+    return { scrollTop: main.scrollTop, viewportHeight: main.clientHeight }
+  }
+
+  return {
+    scrollTop: window.scrollY || document.documentElement.scrollTop,
+    viewportHeight: window.innerHeight,
+  }
+}
+
+/**
+ * Subscribe to the active page surface. Marketing pages scroll the window;
+ * console pages scroll `#main-content`. Listen to both so a late switch to
+ * document-scroll still delivers events.
+ */
+export function subscribePageSurfaceScroll(onScroll: () => void): () => void {
+  if (typeof window === 'undefined') return () => {}
+
+  window.addEventListener('scroll', onScroll, { passive: true })
+  const main = document.getElementById('main-content')
+  main?.addEventListener('scroll', onScroll, { passive: true })
+
+  return () => {
+    window.removeEventListener('scroll', onScroll)
+    main?.removeEventListener('scroll', onScroll)
+  }
+}
