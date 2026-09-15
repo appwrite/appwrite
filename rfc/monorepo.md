@@ -158,7 +158,7 @@ Direct loading means Appwrite runs the head of every library, so a package where
 | Package | Appwrite | Latest | Gap | Action |
 |---|---|---|---|---|
 | `config` | 1.0.0 | 2.0.8 | 1.x is a static key/value registry (`load`, `getParam`, `setParam`); 2.x loads typed config classes from a `Source` plus `Parser`. ~300 call sites, 44 loads in `app/init/configs.php`. | Do not rewrite. Move the 1.x registry (about 100 lines) into `src/Appwrite/Config/`; it only serves Appwrite's product config under `app/config/`. Drop the dependency. 2.x needs a home only if something adopts it. |
-| `console` | 0.1.1 → 0.2.9 | 0.2.9 | Additive (`Utopia\Command`). | Merged in #13616 (2026-09-14), which supersedes #11937 and requires `database ^7.3.8`, the first release accepting console 0.2 (utopia-php/database#965). Cloud followed in appwrite-labs/cloud#5817 (merged 2026-09-14), pinned to that merge commit; the abuse Redis pool change (#13640) still needs its own Cloud follow-up for the `timelimit` resource signature. |
+| `console` | 0.1.1 → 0.2.9 | 0.2.9 | Additive (`Utopia\Command`). | Merged in #13616 (2026-09-14), which supersedes #11937 and requires `database ^7.3.8`, the first release accepting console 0.2 (utopia-php/database#965). Cloud followed in appwrite-labs/cloud#5817 (merged 2026-09-14). |
 | `system` | 0.10.6 | 0.11.0 | Additive (`getMemory()`). `main` already allows `^0.10 \|\| ^0.11`. | `composer update utopia-php/system` in its absorb PR. |
 | `vcs` | 5.2.5 | 5.3.0 | Additive. | Absorb PR. |
 | `auth` | 0.12.0 | 0.12.x | Bumped on `main` by the 2.1.0 release. | None. |

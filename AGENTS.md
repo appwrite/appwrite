@@ -53,8 +53,7 @@ Self-hosted Backend-as-a-Service. Hybrid monolithic-microservice architecture on
   - **Extend** -- shared exceptions
 - **src/Appwrite/Platform/** -- HTTP modules, workers, CLI tasks. Register modules in `src/Appwrite/Platform/Appwrite.php`. See [Modules](#modules).
 - **src/Executor/** -- Open Runtimes executor HTTP client (create/run/delete function and site runtimes)
-- **src/Utopia/** -- Composer PSR-4 overrides of Utopia packages (currently `Bus` only)
-- **packages/** -- Utopia libraries absorbed into this repository and autoloaded directly (`agents` so far); each is an independent Composer package mirrored to `utopia-php/<name>`, managed with `bin/monorepo`. See [rfc/monorepo.md](rfc/monorepo.md)
+- **packages/** -- Utopia libraries absorbed into this repository and autoloaded directly (`agents`, `bus`); each is an independent Composer package mirrored to `utopia-php/<name>`, managed with `bin/monorepo`. See [rfc/monorepo.md](rfc/monorepo.md)
 - **app/config/** -- static product config (collections, locales, SDKs, runtimes, scopes, errors, OAuth, storage)
 - **app/assets/** -- bundled data (fonts, common-password dictionary)
 - **app/views/** -- server-side templates (installer, errors, proxy)
@@ -69,7 +68,7 @@ Self-hosted Backend-as-a-Service. Hybrid monolithic-microservice architecture on
 
 `src/Appwrite/` is domain libraries, not a dumping ground. Each directory solves **one problem**. Do not grow a library into a second concern; add a new directory instead. See [Layout](#layout) for the current set.
 
-Keep Appwrite-specific domain here (product events, SDK specs, GraphQL, usage, migrations, platform modules). If a library is **generic enough to build any kind of app** — validators, storage, cache, queues, HTTP, databases, locks, DNS — it is a Utopia package, not `src/Appwrite/` code. Packages already absorbed live under `packages/<name>` in the standard shape described in [rfc/monorepo.md](rfc/monorepo.md) and are loaded directly through the root autoload; the rest are still Composer dependencies until their absorb PR lands. Overrides of Utopia packages live in `src/Utopia/` (currently `Bus` only).
+Keep Appwrite-specific domain here (product events, SDK specs, GraphQL, usage, migrations, platform modules). If a library is **generic enough to build any kind of app** — validators, storage, cache, queues, HTTP, databases, locks, DNS — it is a Utopia package, not `src/Appwrite/` code. Packages already absorbed live under `packages/<name>` in the standard shape described in [rfc/monorepo.md](rfc/monorepo.md) and are loaded directly through the root autoload; the rest are still Composer dependencies until their absorb PR lands.
 
 ## Modules
 
