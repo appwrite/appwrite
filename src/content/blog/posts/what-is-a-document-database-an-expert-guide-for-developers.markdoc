@@ -88,7 +88,7 @@ The rule of thumb: embed data that is read together and changes together, refere
 
 For very deep, many-table analytical JOINs across normalized data, a relational database is still the stronger tool. Most applications do not need that, but it is an honest limit of the model.
 
-## When to use a document database
+# When to use a document database
 
 Reach for a document database when flexibility and iteration speed matter more than rigid structure. It is a strong fit when:
 
