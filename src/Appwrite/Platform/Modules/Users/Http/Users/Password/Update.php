@@ -86,7 +86,8 @@ class Update extends Action
             }
         }
 
-        if (\strlen($password) > 0 && $pwnedPasswords->isEnabled() && !$pwnedPasswords->isValid($password)) {
+        $passwordPwned = \strlen($password) === 0 ? null : $pwnedPasswords->check($password);
+        if ($passwordPwned) {
             throw new Exception(Exception::USER_PASSWORD_PWNED);
         }
 
@@ -97,6 +98,7 @@ class Update extends Action
 
             $user = $dbForProject->updateDocument('users', $user->getId(), new Document([
                 'password' => $user->getAttribute('password'),
+                'passwordPwned' => null,
                 'passwordUpdate' => $user->getAttribute('passwordUpdate'),
             ]));
             $queueForEvents->setParam('userId', $user->getId());
@@ -127,6 +129,7 @@ class Update extends Action
         $user
             ->setAttribute('password', $newPassword)
             ->setAttribute('passwordHistory', $history)
+            ->setAttribute('passwordPwned', $passwordPwned)
             ->setAttribute('passwordUpdate', DateTime::now())
             ->setAttribute('hash', $hasher->getName())
             ->setAttribute('hashOptions', $hasher->getOptions());
@@ -134,6 +137,7 @@ class Update extends Action
         $user = $dbForProject->updateDocument('users', $user->getId(), new Document([
             'password' => $user->getAttribute('password'),
             'passwordHistory' => $user->getAttribute('passwordHistory'),
+            'passwordPwned' => $user->getAttribute('passwordPwned'),
             'passwordUpdate' => $user->getAttribute('passwordUpdate'),
             'hash' => $user->getAttribute('hash'),
             'hashOptions' => $user->getAttribute('hashOptions'),

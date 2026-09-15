@@ -240,6 +240,22 @@ class V25 extends Migration
                     }
                     break;
 
+                case 'users':
+                    try {
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'passwordPwned');
+                    } catch (Throwable $th) {
+                        Console::warning("Failed to create attribute \"passwordPwned\" in collection {$id}: {$th->getMessage()}");
+                    }
+
+                    try {
+                        $this->createIndexFromCollection($this->dbForProject, $id, '_key_passwordPwned');
+                    } catch (Throwable $th) {
+                        Console::warning("Failed to create index \"_key_passwordPwned\" from {$id}: {$th->getMessage()}");
+                    }
+
+                    $this->dbForProject->purgeCachedCollection($id);
+                    break;
+
                 case 'identities':
                     try {
                         $this->createAttributeFromCollection($this->dbForProject, $id, 'photo');

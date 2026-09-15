@@ -9,6 +9,7 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
 use Utopia\Database\Helpers\ID;
+use Utopia\Database\Query;
 
 /**
  * The stack points `_APP_PWNED_PASSWORDS_ENDPOINT` at the mock range endpoint in
@@ -721,6 +722,286 @@ final class PoliciesPasswordPwnedIntegrationTest extends Scope
 
         $this->client->call(Client::METHOD_PATCH, '/project/policies/password-strength', $this->serverHeaders(), ['min' => 8]);
         $this->updatePolicy(['enabled' => false]);
+    }
+
+    public function testPasswordPwnedFlag(): void
+    {
+        // Policy off: nothing is known about the password
+        $this->updatePolicy(['enabled' => false]);
+
+        $emailA = 'pwned_flag_a_' . \uniqid() . '@localhost.test';
+
+        $userA = $this->client->call(Client::METHOD_POST, '/users', $this->serverHeaders(), [
+            'userId' => ID::unique(),
+            'email' => $emailA,
+            'password' => self::PWNED_PASSWORD,
+            'name' => 'Flag User A',
+        ]);
+
+        $this->assertSame(201, $userA['headers']['status-code']);
+        $this->assertArrayHasKey('passwordPwned', $userA['body']);
+        $this->assertNull($userA['body']['passwordPwned']);
+
+        // Policy on: a clean password is recorded as clean
+        $this->updatePolicy(['enabled' => true]);
+
+        $userB = $this->client->call(Client::METHOD_POST, '/users', $this->serverHeaders(), [
+            'userId' => ID::unique(),
+            'email' => 'pwned_flag_b_' . \uniqid() . '@localhost.test',
+            'password' => $this->cleanPassword(),
+            'name' => 'Flag User B',
+        ]);
+
+        $this->assertSame(201, $userB['headers']['status-code']);
+        $this->assertFalse($userB['body']['passwordPwned']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/users/' . $userB['body']['$id'], $this->serverHeaders());
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertFalse($response['body']['passwordPwned']);
+
+        // A hashed import never sees the plaintext, so nothing is known
+        $userC = $this->client->call(Client::METHOD_POST, '/users/sha', $this->serverHeaders(), [
+            'userId' => ID::unique(),
+            'email' => 'pwned_flag_c_' . \uniqid() . '@localhost.test',
+            'password' => \sha1(self::PWNED_PASSWORD),
+            'passwordVersion' => 'sha1',
+            'name' => 'Flag User C',
+        ]);
+
+        $this->assertSame(201, $userC['headers']['status-code']);
+        $this->assertNull($userC['body']['passwordPwned']);
+
+        // Signing in records a breached password, on the users and the account API
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $this->clientHeaders(), [
+            'email' => $emailA,
+            'password' => self::PWNED_PASSWORD,
+        ]);
+
+        $this->assertSame(201, $session['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/users/' . $userA['body']['$id'], $this->serverHeaders());
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertTrue($response['body']['passwordPwned']);
+
+        $projectId = $this->getProject()['$id'];
+        $response = $this->client->call(Client::METHOD_GET, '/account', \array_merge($this->clientHeaders(), [
+            'cookie' => 'a_session_' . $projectId . '=' . $session['cookies']['a_session_' . $projectId],
+        ]));
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertTrue($response['body']['passwordPwned']);
+
+        // Listing users can filter on the flag
+        $ids = fn (array $response) => \array_column($response['body']['users'], '$id');
+
+        $response = $this->client->call(Client::METHOD_GET, '/users', $this->serverHeaders(), [
+            'queries' => [
+                Query::equal('passwordPwned', [true])->toString(),
+                Query::orderDesc('$createdAt')->toString(),
+                Query::limit(100)->toString(),
+            ],
+        ]);
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertContains($userA['body']['$id'], $ids($response));
+        $this->assertNotContains($userB['body']['$id'], $ids($response));
+        $this->assertNotContains($userC['body']['$id'], $ids($response));
+
+        $response = $this->client->call(Client::METHOD_GET, '/users', $this->serverHeaders(), [
+            'queries' => [
+                Query::equal('passwordPwned', [false])->toString(),
+                Query::orderDesc('$createdAt')->toString(),
+                Query::limit(100)->toString(),
+            ],
+        ]);
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertContains($userB['body']['$id'], $ids($response));
+        $this->assertNotContains($userA['body']['$id'], $ids($response));
+        $this->assertNotContains($userC['body']['$id'], $ids($response));
+
+        $response = $this->client->call(Client::METHOD_GET, '/users', $this->serverHeaders(), [
+            'queries' => [
+                Query::isNull('passwordPwned')->toString(),
+                Query::orderDesc('$createdAt')->toString(),
+                Query::limit(100)->toString(),
+            ],
+        ]);
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertContains($userC['body']['$id'], $ids($response));
+        $this->assertNotContains($userA['body']['$id'], $ids($response));
+        $this->assertNotContains($userB['body']['$id'], $ids($response));
+
+        // A clean password clears the flag
+        $response = $this->client->call(Client::METHOD_PATCH, '/users/' . $userA['body']['$id'] . '/password', $this->serverHeaders(), [
+            'password' => $this->cleanPassword(),
+        ]);
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertFalse($response['body']['passwordPwned']);
+
+        // Without the policy a new password is unknown again
+        $this->updatePolicy(['enabled' => false]);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/users/' . $userA['body']['$id'] . '/password', $this->serverHeaders(), [
+            'password' => $this->cleanPassword(),
+        ]);
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertNull($response['body']['passwordPwned']);
+
+        // Clearing the password clears the flag
+        $this->updatePolicy(['enabled' => true]);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/users/' . $userB['body']['$id'] . '/password', $this->serverHeaders(), [
+            'password' => '',
+        ]);
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertNull($response['body']['passwordPwned']);
+
+        $this->updatePolicy(['enabled' => false]);
+    }
+
+    public function testPasswordPwnedFlagOnAccount(): void
+    {
+        $this->updatePolicy(['enabled' => true]);
+
+        $email = 'pwned_flag_account_' . \uniqid() . '@localhost.test';
+        $password = $this->cleanPassword();
+
+        /**
+         * Test for SUCCESS
+         */
+        $account = $this->client->call(Client::METHOD_POST, '/account', $this->clientHeaders(), [
+            'userId' => ID::unique(),
+            'email' => $email,
+            'password' => $password,
+            'name' => 'Flag Account',
+        ]);
+
+        $this->assertSame(201, $account['headers']['status-code']);
+        $this->assertFalse($account['body']['passwordPwned']);
+
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $this->clientHeaders(), [
+            'email' => $email,
+            'password' => $password,
+        ]);
+
+        $this->assertSame(201, $session['headers']['status-code']);
+
+        $projectId = $this->getProject()['$id'];
+        $headers = \array_merge($this->clientHeaders(), [
+            'cookie' => 'a_session_' . $projectId . '=' . $session['cookies']['a_session_' . $projectId],
+        ]);
+
+        $response = $this->client->call(Client::METHOD_GET, '/account', $headers);
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertFalse($response['body']['passwordPwned']);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/account/password', $headers, [
+            'password' => $this->cleanPassword(),
+            'oldPassword' => $password,
+        ]);
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertFalse($response['body']['passwordPwned']);
+
+        // Recovery records the new password too
+        $recovery = $this->client->call(Client::METHOD_POST, '/account/recovery', $this->clientHeaders(), [
+            'email' => $email,
+            'url' => 'http://localhost/recovery',
+        ]);
+
+        $this->assertSame(201, $recovery['headers']['status-code']);
+
+        $lastEmail = $this->getLastEmailByAddress($email, function ($email) {
+            $this->assertStringContainsString('Password Reset', (string) $email['subject']);
+        });
+        $secret = $this->extractQueryParamsFromEmailLink($lastEmail['html'])['secret'];
+
+        $response = $this->client->call(Client::METHOD_PUT, '/account/recovery', $this->clientHeaders(), [
+            'userId' => $account['body']['$id'],
+            'secret' => $secret,
+            'password' => $this->cleanPassword(),
+        ]);
+
+        $this->assertSame(200, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/users/' . $account['body']['$id'], $this->serverHeaders());
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertFalse($response['body']['passwordPwned']);
+
+        // Anonymous conversions record the first password
+        $response = $this->client->call(Client::METHOD_PATCH, '/account/email', $this->anonymousHeaders(), [
+            'email' => 'pwned_flag_anonymous_' . \uniqid() . '@localhost.test',
+            'password' => $this->cleanPassword(),
+        ]);
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertFalse($response['body']['passwordPwned']);
+
+        /**
+         * Test for FAILURE
+         */
+        // A forced reset still records the breach before blocking the sign-in
+        $this->updatePolicy(['enabled' => false]);
+
+        $emailD = 'pwned_flag_d_' . \uniqid() . '@localhost.test';
+
+        $userD = $this->client->call(Client::METHOD_POST, '/users', $this->serverHeaders(), [
+            'userId' => ID::unique(),
+            'email' => $emailD,
+            'password' => self::PWNED_PASSWORD,
+            'name' => 'Flag User D',
+        ]);
+
+        $this->assertSame(201, $userD['headers']['status-code']);
+        $this->assertNull($userD['body']['passwordPwned']);
+
+        $this->updatePolicy(['enabled' => true, 'forceReset' => true]);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $this->clientHeaders(), [
+            'email' => $emailD,
+            'password' => self::PWNED_PASSWORD,
+        ]);
+
+        $this->assertSame(412, $response['headers']['status-code']);
+        $this->assertSame('user_password_reset_required', $response['body']['type']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/users/' . $userD['body']['$id'], $this->serverHeaders());
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertTrue($response['body']['passwordPwned']);
+
+        // An outage with a fail-open policy leaves the recorded state untouched and lets the sign-in through
+        $this->updatePolicy(['endpoint' => self::DEAD_ENDPOINT, 'failClosed' => false]);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $this->clientHeaders(), [
+            'email' => $emailD,
+            'password' => self::PWNED_PASSWORD,
+        ]);
+
+        $this->assertSame(201, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/users/' . $userD['body']['$id'], $this->serverHeaders());
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertTrue($response['body']['passwordPwned']);
+
+        // Filtering on an attribute outside the whitelist is rejected
+        $response = $this->client->call(Client::METHOD_GET, '/users', $this->serverHeaders(), [
+            'queries' => [Query::equal('passwordHistory', ['x'])->toString()],
+        ]);
+
+        $this->assertSame(400, $response['headers']['status-code']);
+
+        $this->updatePolicy(['enabled' => false, 'endpoint' => '', 'forceReset' => false, 'failClosed' => true]);
     }
 
     /**

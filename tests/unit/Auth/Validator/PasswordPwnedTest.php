@@ -35,6 +35,33 @@ final class PasswordPwnedTest extends TestCase
         $this->assertTrue($validator->isForceReset());
     }
 
+    public function testDisabledPolicyNeverChecks(): void
+    {
+        $adapter = new RangeAdapter(body: $this->range([self::LEAKED => 42]));
+        $validator = new PasswordPwned(['enabled' => false], null, self::ENDPOINT, new Client($adapter));
+
+        $this->assertNull($validator->check(self::LEAKED));
+        $this->assertTrue($validator->isValid(self::LEAKED));
+        $this->assertCount(0, $adapter->requests);
+    }
+
+    public function testCheckReportsBreachState(): void
+    {
+        $adapter = new RangeAdapter(body: $this->range([self::LEAKED => 42]));
+        $validator = $this->validator([], $adapter);
+
+        $this->assertTrue($validator->check(self::LEAKED));
+        $this->assertFalse($validator->check('never-leaked-' . \uniqid()));
+    }
+
+    public function testCheckNotRequiredReturnsUnknownOnOutage(): void
+    {
+        $adapter = new RangeAdapter(failure: new \RuntimeException('connection refused'));
+        $validator = $this->validator(['failClosed' => true], $adapter);
+
+        $this->assertNull($validator->check(self::LEAKED, required: false));
+    }
+
     public function testLeakedPasswordIsRejected(): void
     {
         $adapter = new RangeAdapter(body: $this->range([self::LEAKED => 42]));
@@ -107,8 +134,8 @@ final class PasswordPwnedTest extends TestCase
         $adapter = new RangeAdapter(body: $this->range([self::LEAKED => 42]));
         $cache = new Cache(new Memory());
 
-        (new PasswordPwned([], $cache, 'https://one.test/range', new Client($adapter)))->isValid(self::LEAKED);
-        (new PasswordPwned([], $cache, 'https://two.test/range', new Client($adapter)))->isValid(self::LEAKED);
+        (new PasswordPwned(['enabled' => true], $cache, 'https://one.test/range', new Client($adapter)))->isValid(self::LEAKED);
+        (new PasswordPwned(['enabled' => true], $cache, 'https://two.test/range', new Client($adapter)))->isValid(self::LEAKED);
 
         $this->assertCount(2, $adapter->requests);
     }
@@ -148,7 +175,7 @@ final class PasswordPwnedTest extends TestCase
     {
         $adapter = new RangeAdapter(failure: new \RuntimeException('connection refused'));
         $cache = new Cache(new Memory());
-        $validator = new PasswordPwned(['failClosed' => false], $cache, self::ENDPOINT, new Client($adapter));
+        $validator = new PasswordPwned(['enabled' => true, 'failClosed' => false], $cache, self::ENDPOINT, new Client($adapter));
 
         $validator->isValid(self::LEAKED);
         $validator->isValid(self::LEAKED);
@@ -170,7 +197,7 @@ final class PasswordPwnedTest extends TestCase
     public function testAllowEmptySkipsTheLookup(): void
     {
         $adapter = new RangeAdapter(body: '');
-        $validator = new PasswordPwned([], null, self::ENDPOINT, new Client($adapter), allowEmpty: true);
+        $validator = new PasswordPwned(['enabled' => true], null, self::ENDPOINT, new Client($adapter), allowEmpty: true);
 
         $this->assertTrue($validator->isValid(''));
         $this->assertCount(0, $adapter->requests);
@@ -181,9 +208,9 @@ final class PasswordPwnedTest extends TestCase
         $adapter = new RangeAdapter(body: '');
         $prefix = \substr(\strtoupper(\sha1(self::LEAKED)), 0, 5);
 
-        (new PasswordPwned(['endpoint' => 'https://policy.test/range/'], null, 'https://server.test/range', new Client($adapter)))->isValid(self::LEAKED);
-        (new PasswordPwned(['endpoint' => ''], null, 'https://server.test/range', new Client($adapter)))->isValid(self::LEAKED);
-        (new PasswordPwned([], null, '', new Client($adapter)))->isValid(self::LEAKED);
+        (new PasswordPwned(['enabled' => true, 'endpoint' => 'https://policy.test/range/'], null, 'https://server.test/range', new Client($adapter)))->isValid(self::LEAKED);
+        (new PasswordPwned(['enabled' => true, 'endpoint' => ''], null, 'https://server.test/range', new Client($adapter)))->isValid(self::LEAKED);
+        (new PasswordPwned(['enabled' => true], null, '', new Client($adapter)))->isValid(self::LEAKED);
 
         $this->assertSame('https://policy.test/range/' . $prefix, $adapter->requests[0]['url']);
         $this->assertSame('https://server.test/range/' . $prefix, $adapter->requests[1]['url']);
@@ -195,7 +222,7 @@ final class PasswordPwnedTest extends TestCase
      */
     private function validator(array $policy, RangeAdapter $adapter): PasswordPwned
     {
-        return new PasswordPwned($policy, null, self::ENDPOINT, new Client($adapter));
+        return new PasswordPwned(\array_merge(['enabled' => true], $policy), null, self::ENDPOINT, new Client($adapter));
     }
 
     /**

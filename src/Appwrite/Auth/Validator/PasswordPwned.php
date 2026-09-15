@@ -82,6 +82,37 @@ class PasswordPwned extends Password
     }
 
     /**
+     * Whether the password appears in at least `threshold` known breaches.
+     *
+     * Returns null when the policy is disabled, or when the service could not
+     * be reached and the answer is not required by a fail-closed policy.
+     *
+     * @throws Exception when the answer is required, the policy fails closed, and the service is unreachable
+     */
+    public function check(string $password, bool $required = true): ?bool
+    {
+        if (!$this->enabled) {
+            return null;
+        }
+
+        $hash = \strtoupper(\sha1($password));
+        $prefix = \substr($hash, 0, self::PREFIX_LENGTH);
+        $suffix = \substr($hash, self::PREFIX_LENGTH);
+
+        $breaches = $this->range($prefix);
+
+        if ($breaches === null) {
+            if ($required && $this->failClosed) {
+                throw new Exception(Exception::GENERAL_PWNED_PASSWORDS_UNAVAILABLE);
+            }
+
+            return null;
+        }
+
+        return ($breaches[$suffix] ?? 0) >= $this->threshold;
+    }
+
+    /**
      * Is valid.
      *
      * @param mixed $value
@@ -99,21 +130,7 @@ class PasswordPwned extends Password
             return true;
         }
 
-        $hash = \strtoupper(\sha1($value));
-        $prefix = \substr($hash, 0, self::PREFIX_LENGTH);
-        $suffix = \substr($hash, self::PREFIX_LENGTH);
-
-        $breaches = $this->range($prefix);
-
-        if ($breaches === null) {
-            if ($this->failClosed) {
-                throw new Exception(Exception::GENERAL_PWNED_PASSWORDS_UNAVAILABLE);
-            }
-
-            return true;
-        }
-
-        return ($breaches[$suffix] ?? 0) < $this->threshold;
+        return $this->check($value) !== true;
     }
 
     /**

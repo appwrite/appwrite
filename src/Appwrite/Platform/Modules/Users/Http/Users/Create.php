@@ -74,13 +74,14 @@ class Create extends Base
 
     public function action(string $userId, ?string $email, ?string $phone, ?string $password, ?string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks, array $plan, PasswordPwned $pwnedPasswords): void
     {
-        if (!empty($password) && $pwnedPasswords->isEnabled() && !$pwnedPasswords->isValid($password)) {
+        $passwordPwned = empty($password) ? null : $pwnedPasswords->check($password);
+        if ($passwordPwned) {
             throw new Exception(Exception::USER_PASSWORD_PWNED);
         }
 
         $plaintext = new Plaintext();
 
-        $user = $this->createUser($plaintext, $userId, $email, $password, $phone, $name, $project, $dbForProject, $hooks, $plan);
+        $user = $this->createUser($plaintext, $userId, $email, $password, $phone, $name, $project, $dbForProject, $hooks, $plan, $passwordPwned);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
