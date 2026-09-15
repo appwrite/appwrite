@@ -613,24 +613,9 @@ If you would rather have an accept step, use the client-side invite flow through
 
 Formwrite runs on [Appwrite Sites](https://appwrite.io/docs/products/sites) as a server-rendered SvelteKit app, and the deployment stores no API key variable at all. Appwrite Sites generates a [dynamic API key](https://appwrite.io/docs/products/sites/develop#dynamic-api-key) for every SSR request and delivers it on the `x-appwrite-key` header. The key carries only the scopes granted to the site and expires shortly after the request's timeout, so there is nothing long-lived to leak, rotate, or forget in a variable list. Every request Appwrite routes to the site gets one, including form actions and the logo endpoint, so all six admin-client paths receive their key the same way.
 
-The scopes live on the site rather than on a key. The Console does not expose them for sites yet, so set them with the [Appwrite CLI](https://appwrite.io/docs/tooling/command-line/sites), which signs in with your Appwrite account and needs no key of its own. One catch: the update site endpoint replaces any setting you leave out with its default, so pass the build settings the site already has, which `appwrite sites get` prints, along with the new scopes.
+The scopes live on the site rather than on a key, and they are set in the same Console you used for the database and the auth method. Open the site, go to the **Settings** tab, and under **Build settings** select the scopes listed in the prerequisites: `sessions.write`, `users.read`, `users.write`, `teams.read`, `teams.write`, `documentsdb.read`, `documentsdb.write`, `documentsdb.collections.read`, `documentsdb.collections.write`, `documentsdb.documents.read`, `documentsdb.documents.write`, `documentsdb.indexes.read`, `documentsdb.indexes.write`, `buckets.read`, `buckets.write`, `files.read`, and `files.write`. Click **Update** and the next request to the site carries a key with exactly those scopes.
 
-```bash
-appwrite login
-appwrite sites update --project-id <PROJECT_ID> --site-id <SITE_ID> \
-    --name formwrite --framework sveltekit --adapter ssr --build-runtime node-22 \
-    --install-command "npm install" --build-command "npm run build" \
-    --output-directory ./build --timeout 30 \
-    --scopes sessions.write --scopes users.read --scopes users.write \
-    --scopes teams.read --scopes teams.write \
-    --scopes documentsdb.read --scopes documentsdb.write \
-    --scopes documentsdb.collections.read --scopes documentsdb.collections.write \
-    --scopes documentsdb.documents.read --scopes documentsdb.documents.write \
-    --scopes documentsdb.indexes.read --scopes documentsdb.indexes.write \
-    --scopes buckets.read --scopes buckets.write --scopes files.read --scopes files.write
-```
-
-If you keep the site in `appwrite.config.json`, note that the config has no `scopes` field for sites yet, and `appwrite push sites` leaves the scopes you set this way untouched. Grant exactly what the admin client needs and nothing more. A dynamic key with `documentsdb.write` but no `users.write` fails loudly on the first sign-in, which is much easier to notice than a key that can do everything.
+Grant exactly what the admin client needs and nothing more. A dynamic key with `documentsdb.write` but no `users.write` fails loudly on the first sign-in, which is much easier to notice than a key that can do everything.
 
 If you are migrating a site that already stores an API key variable, deploy the code that reads the header first, then delete the variable once that deployment is live. After that, the only key in the project is the one Appwrite makes and discards per request.
 
