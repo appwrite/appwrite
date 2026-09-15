@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Tests\Unit\Appwrite\Messaging\Adapter;
 
 use Appwrite\Messaging\Adapter\Mqtt;
-use Appwrite\Mqtt\Connection;
 use Appwrite\PubSub\Adapter as PubSub;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Utopia\Mqtt\Connection;
 use Utopia\Telemetry\Adapter\None as NoTelemetry;
 
 /**

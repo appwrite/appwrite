@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Tests\E2E\Services\Mqtt;
 
 use Appwrite\Messaging\Status as MessageStatus;
-use Appwrite\Mqtt\KeepAlive;
 use PHPUnit\Framework\Attributes\Group;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
@@ -224,7 +223,7 @@ final class MqttServerTest extends Scope
         $this->assertSame(0, $subscriber->connect($projectId, $jwt, 'e2e-ping-' . $userId, cleanStart: true, keepAlive: 1));
 
         try {
-            $deadline = microtime(true) + KeepAlive::INTERVAL + 5; // span at least one reaper tick
+            $deadline = microtime(true) + 25; // span at least one reaper tick (broker interval is 20s)
             while (microtime(true) < $deadline) {
                 $this->assertTrue($subscriber->ping(2.0), 'broker did not answer PINGRESP');
                 usleep(800_000); // < the 1.5s deadline, so activity stays ahead of the reaper
