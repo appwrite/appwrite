@@ -72,6 +72,27 @@ final class JobsTest extends TestCase
         $this->assertSame([], $this->realtime->payloads);
     }
 
+    public function testCompleteRecreatedSite(): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $site = $this->resource('sites');
+        $deployment = $this->deployment($site);
+        $replacement = $this->replace($site);
+        $this->cache->save('jobs-exit-' . $deployment->getId(), true);
+        $this->cache->save('jobs-manifest-' . $deployment->getId(), ['files' => ['index.html']]);
+
+        $this->enqueue($deployment, 'complete');
+        $this->runWorker();
+
+        $this->assertReplacement($replacement);
+        $site = $this->database->getDocument('sites', $replacement->getId());
+        $this->assertEmpty($site->getAttribute('adapter'));
+        $this->assertEmpty($site->getAttribute('fallbackFile'));
+        $this->assertSame([], $this->realtime->payloads);
+    }
+
     private function project(): Document
     {
         return new Document(['$id' => 'console', '$sequence' => '0', 'region' => 'default']);
