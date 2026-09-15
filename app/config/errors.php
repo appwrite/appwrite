@@ -69,6 +69,11 @@ return [
         'description' => 'Phone provider is not configured. Please check the _APP_SMS_PROVIDER environment variable of your Appwrite server.',
         'code' => 503,
     ],
+    Exception::GENERAL_PWNED_PASSWORDS_UNAVAILABLE => [
+        'name' => Exception::GENERAL_PWNED_PASSWORDS_UNAVAILABLE,
+        'description' => 'The breached password service could not be reached, so the password could not be verified. Please try again later.',
+        'code' => 503,
+    ],
     Exception::GENERAL_ARGUMENT_INVALID => [
         'name' => Exception::GENERAL_ARGUMENT_INVALID,
         'description' => 'The request contains one or more invalid arguments. Please refer to the endpoint documentation.',

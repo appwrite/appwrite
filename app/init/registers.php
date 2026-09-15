@@ -35,6 +35,7 @@ if (!Http::isProduction()) {
     // Useful for existing tests involving webhooks
     PublicDomain::allow(['request-catcher-sms']);
     PublicDomain::allow(['request-catcher-webhook']);
+    PublicDomain::allow(['localhost']); // Lets the pwned passwords policy point at the mock range endpoint
 }
 
 $register->set('pools', function () {

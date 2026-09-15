@@ -136,10 +136,15 @@ class Get extends Action
                 Response::MODEL_POLICY_PASSWORD_PERSONAL_DATA,
             ],
             'password-pwned' => [
-                new Document([
+                new Document(\array_merge([
+                    'enabled' => false,
+                    'endpoint' => '',
+                    'threshold' => 1,
+                    'forceReset' => false,
+                    'failClosed' => true,
+                ], $auths['passwordPwned'] ?? [], [
                     '$id' => 'password-pwned',
-                    'enabled' => $auths['passwordPwned'] ?? false,
-                ]),
+                ])),
                 Response::MODEL_POLICY_PASSWORD_PWNED,
             ],
             'session-alert' => [

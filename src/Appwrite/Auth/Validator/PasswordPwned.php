@@ -2,37 +2,71 @@
 
 namespace Appwrite\Auth\Validator;
 
+use Appwrite\Extend\Exception;
+use Utopia\Cache\Cache;
 use Utopia\Fetch\Client;
 
 /**
  * Validates that a password has not been exposed in a known data breach.
  *
- * Uses the Have I Been Pwned range API with k-anonymity: only the first five
- * characters of the SHA-1 hash leave the server, and the returned candidate
- * suffixes are compared locally. When the breach service cannot be reached the
- * check is skipped, so an outage of the third party never blocks sign-ups or
- * password changes.
+ * Configured from the project's `password-pwned` policy. Uses the Have I Been
+ * Pwned range API with k-anonymity: only the first five characters of the
+ * SHA-1 hash leave the server, and the returned suffixes are compared locally.
+ * Range responses are cached per prefix so repeated checks do not hit the
+ * service again.
  */
 class PasswordPwned extends Password
 {
     public const ENDPOINT = 'https://api.pwnedpasswords.com/range';
+    public const CACHE_TTL = 3600; // seconds
 
     private const PREFIX_LENGTH = 5;
     private const CONNECT_TIMEOUT = 3 * 1000; // milliseconds
     private const REQUEST_TIMEOUT = 5 * 1000; // milliseconds
 
+    protected bool $enabled;
     protected string $endpoint;
+    protected int $threshold;
+    protected bool $forceReset;
+    protected bool $failClosed;
+    protected ?Cache $cache;
     protected Client $client;
 
-    public function __construct(?string $endpoint = null, ?Client $client = null, bool $allowEmpty = false)
+    /**
+     * @param array<string, mixed> $policy the project's `passwordPwned` auth settings
+     * @param ?string $endpoint server-wide endpoint, used when the policy sets none
+     */
+    public function __construct(array $policy = [], ?Cache $cache = null, ?string $endpoint = null, ?Client $client = null, bool $allowEmpty = false)
     {
         parent::__construct($allowEmpty);
-        $this->endpoint = \rtrim($endpoint ?: self::ENDPOINT, '/');
+
+        $this->enabled = (bool) ($policy['enabled'] ?? false);
+        $this->endpoint = \rtrim(($policy['endpoint'] ?? '') ?: ($endpoint ?: self::ENDPOINT), '/');
+        $this->threshold = \max(1, (int) ($policy['threshold'] ?? 1));
+        $this->forceReset = (bool) ($policy['forceReset'] ?? false);
+        $this->failClosed = (bool) ($policy['failClosed'] ?? true);
+        $this->cache = $cache;
         $this->client = $client ?? (new Client())
             ->setConnectTimeout(self::CONNECT_TIMEOUT)
             ->setTimeout(self::REQUEST_TIMEOUT)
             ->setAllowRedirects(false)
             ->setUserAgent('Appwrite');
+    }
+
+    /**
+     * Whether the project enforces the policy at all.
+     */
+    public function isEnabled(): bool
+    {
+        return $this->enabled;
+    }
+
+    /**
+     * Whether a breached password blocks sign-in until it is reset.
+     */
+    public function isForceReset(): bool
+    {
+        return $this->forceReset;
     }
 
     /**
@@ -53,6 +87,7 @@ class PasswordPwned extends Password
      * @param mixed $value
      *
      * @return bool
+     * @throws Exception when the breach service is unreachable and the policy fails closed
      */
     public function isValid($value): bool
     {
@@ -68,39 +103,65 @@ class PasswordPwned extends Password
         $prefix = \substr($hash, 0, self::PREFIX_LENGTH);
         $suffix = \substr($hash, self::PREFIX_LENGTH);
 
+        $breaches = $this->range($prefix);
+
+        if ($breaches === null) {
+            if ($this->failClosed) {
+                throw new Exception(Exception::GENERAL_PWNED_PASSWORDS_UNAVAILABLE);
+            }
+
+            return true;
+        }
+
+        return ($breaches[$suffix] ?? 0) < $this->threshold;
+    }
+
+    /**
+     * Breach counts for every known hash sharing the prefix, from cache or the service.
+     *
+     * @return ?array<string, int> hash suffix => breach count, null when the service could not be reached
+     */
+    private function range(string $prefix): ?array
+    {
+        $key = 'pwned-passwords:' . \md5($this->endpoint) . ':' . $prefix;
+
+        if ($this->cache !== null) {
+            $cached = $this->cache->load($key, self::CACHE_TTL);
+            if (\is_array($cached)) {
+                return $cached;
+            }
+        }
+
         try {
             $response = $this->client
                 ->addHeader('Add-Padding', 'true')
                 ->fetch($this->endpoint . '/' . $prefix);
         } catch (\Throwable) {
-            return true;
+            return null;
         }
 
         if ($response->getStatusCode() !== 200) {
-            return true;
+            return null;
         }
 
         // Each line is `HASH_SUFFIX:COUNT`; padded entries carry a count of 0 and are not breaches
+        $breaches = [];
         foreach (\explode("\n", $response->text()) as $line) {
             $line = \trim($line);
-            if ($line === '') {
-                continue;
-            }
-
             $separator = \strpos($line, ':');
-            if ($separator === false) {
+            if ($line === '' || $separator === false) {
                 continue;
             }
 
-            $candidate = \strtoupper(\substr($line, 0, $separator));
             $count = (int) \substr($line, $separator + 1);
-
-            if ($candidate === $suffix && $count > 0) {
-                return false;
+            if ($count > 0) {
+                $breaches[\strtoupper(\substr($line, 0, $separator))] = $count;
             }
         }
 
-        return true;
+        $this->cache?->save($key, $breaches);
+
+        return $breaches;
     }
 
     /**

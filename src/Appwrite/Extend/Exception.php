@@ -48,6 +48,7 @@ class Exception extends \Exception
     public const string GENERAL_RESOURCE_LOCKED = 'general_resource_locked';
     public const string GENERAL_SMTP_DISABLED = 'general_smtp_disabled';
     public const string GENERAL_PHONE_DISABLED = 'general_phone_disabled';
+    public const string GENERAL_PWNED_PASSWORDS_UNAVAILABLE = 'general_pwned_passwords_unavailable';
     public const string GENERAL_ARGUMENT_INVALID = 'general_argument_invalid';
     public const string GENERAL_COLUMN_QUERY_LIMIT_EXCEEDED = 'general_column_query_limit_exceeded';
     public const string GENERAL_ATTRIBUTE_QUERY_LIMIT_EXCEEDED = 'general_attribute_query_limit_exceeded';

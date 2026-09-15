@@ -3,6 +3,7 @@
 use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
 use Appwrite\Auth\Key;
+use Appwrite\Auth\Validator\PasswordPwned;
 use Appwrite\Database\Factory as DatabaseFactory;
 use Appwrite\Databases\TransactionState;
 use Appwrite\Deployment\Deployments;
@@ -672,6 +673,10 @@ return function (Container $context): void {
 
         return;
     }, ['user', 'store', 'proofForToken']);
+
+    $context->set('pwnedPasswords', function (Document $project, Cache $cache) {
+        return new PasswordPwned($project->getAttribute('auths', [])['passwordPwned'] ?? [], $cache, System::getEnv('_APP_PWNED_PASSWORDS_ENDPOINT'));
+    }, ['project', 'cache']);
 
     $context->set('dbForProject', function (DatabaseFactory $databaseFactory, Database $dbForPlatform, Document $project, Response $response, Publisher $publisher, Event $queueForEvents, FunctionPublisher $publisherForFunctions, Webhook $queueForWebhooks, Realtime $queueForRealtime, UsageContext $usage, Request $request) {
         if ($project->isEmpty() || $project->getId() === 'console') {

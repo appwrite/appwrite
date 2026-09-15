@@ -23,7 +23,6 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\System\System;
 use Utopia\Validator;
 use Utopia\Validator\AllOf;
 
@@ -68,10 +67,11 @@ class Update extends Action
             ->inject('dbForProject')
             ->inject('queueForEvents')
             ->inject('hooks')
+            ->inject('pwnedPasswords')
             ->callback($this->action(...));
     }
 
-    public function action(string $userId, string $password, Response $response, Document $project, Database $dbForProject, Event $queueForEvents, Hooks $hooks): void
+    public function action(string $userId, string $password, Response $response, Document $project, Database $dbForProject, Event $queueForEvents, Hooks $hooks, PasswordPwned $pwnedPasswords): void
     {
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -86,11 +86,8 @@ class Update extends Action
             }
         }
 
-        if ($project->getAttribute('auths', [])['passwordPwned'] ?? false) {
-            $pwnedValidator = new PasswordPwned(System::getEnv('_APP_PWNED_PASSWORDS_ENDPOINT'), allowEmpty: true);
-            if (!$pwnedValidator->isValid($password)) {
-                throw new Exception(Exception::USER_PASSWORD_PWNED);
-            }
+        if (\strlen($password) > 0 && $pwnedPasswords->isEnabled() && !$pwnedPasswords->isValid($password)) {
+            throw new Exception(Exception::USER_PASSWORD_PWNED);
         }
 
         if (\strlen($password) === 0) {

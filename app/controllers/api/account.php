@@ -317,7 +317,8 @@ Http::post('/v1/account')
     ->inject('authorization')
     ->inject('hooks')
     ->inject('plan')
-    ->action(function (string $userId, string $email, string $password, string $name, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Authorization $authorization, Hooks $hooks, array $plan) {
+    ->inject('pwnedPasswords')
+    ->action(function (string $userId, string $email, string $password, string $name, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Authorization $authorization, Hooks $hooks, array $plan, PasswordPwned $pwnedPasswords) {
 
         $email = \strtolower($email);
         if ('console' === $project->getId()) {
@@ -362,11 +363,8 @@ Http::post('/v1/account')
             }
         }
 
-        if ($project->getAttribute('auths', [])['passwordPwned'] ?? false) {
-            $pwnedValidator = new PasswordPwned(System::getEnv('_APP_PWNED_PASSWORDS_ENDPOINT'));
-            if (!$pwnedValidator->isValid($password)) {
-                throw new Exception(Exception::USER_PASSWORD_PWNED);
-            }
+        if ($pwnedPasswords->isEnabled() && !$pwnedPasswords->isValid($password)) {
+            throw new Exception(Exception::USER_PASSWORD_PWNED);
         }
 
         $hooks->trigger('passwordValidator', [$dbForProject, $project, $password, &$user, true]);
@@ -988,7 +986,8 @@ Http::post('/v1/account/sessions/email')
     ->inject('domainVerification')
     ->inject('cookieDomain')
     ->inject('authorization')
-    ->action(function (string $email, string $password, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, Geo $geo, Event $queueForEvents, Bus $bus, Hooks $hooks, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken, bool $domainVerification, ?string $cookieDomain, Authorization $authorization) {
+    ->inject('pwnedPasswords')
+    ->action(function (string $email, string $password, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, Geo $geo, Event $queueForEvents, Bus $bus, Hooks $hooks, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken, bool $domainVerification, ?string $cookieDomain, Authorization $authorization, PasswordPwned $pwnedPasswords) {
         $email = \strtolower($email);
         $protocol = $request->getProtocol();
 
@@ -1007,6 +1006,10 @@ Http::post('/v1/account/sessions/email')
         }
 
         $user->setAttributes($profile->getArrayCopy());
+
+        if ($pwnedPasswords->isEnabled() && $pwnedPasswords->isForceReset() && !$pwnedPasswords->isValid($password)) {
+            throw new Exception(Exception::USER_PASSWORD_RESET_REQUIRED);
+        }
 
         $hooks->trigger('passwordValidator', [$dbForProject, $project, $password, &$user, false]);
 
@@ -3462,7 +3465,8 @@ Http::patch('/v1/account/password')
     ->inject('store')
     ->inject('proofForPassword')
     ->inject('proofForToken')
-    ->action(function (string $password, string $oldPassword, Response $response, User $user, Document $project, Database $dbForProject, Event $queueForEvents, Hooks $hooks, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken) {
+    ->inject('pwnedPasswords')
+    ->action(function (string $password, string $oldPassword, Response $response, User $user, Document $project, Database $dbForProject, Event $queueForEvents, Hooks $hooks, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken, PasswordPwned $pwnedPasswords) {
         $userProofForPassword = ProofsPassword::createHash($user->getAttribute('hash'), $user->getAttribute('hashOptions'));
         // Check old password only if its an existing user.
         if (!empty($user->getAttribute('passwordUpdate')) && !$userProofForPassword->verify($oldPassword, $user->getAttribute('password'))) { // Double check user password
@@ -3491,11 +3495,8 @@ Http::patch('/v1/account/password')
             }
         }
 
-        if ($project->getAttribute('auths', [])['passwordPwned'] ?? false) {
-            $pwnedValidator = new PasswordPwned(System::getEnv('_APP_PWNED_PASSWORDS_ENDPOINT'));
-            if (!$pwnedValidator->isValid($password)) {
-                throw new Exception(Exception::USER_PASSWORD_PWNED);
-            }
+        if ($pwnedPasswords->isEnabled() && !$pwnedPasswords->isValid($password)) {
+            throw new Exception(Exception::USER_PASSWORD_PWNED);
         }
 
         $hooks->trigger('passwordValidator', [$dbForProject, $project, $password, &$user, true]);
@@ -3561,7 +3562,9 @@ Http::patch('/v1/account/email')
     ->inject('plan')
     ->inject('proofForPassword')
     ->inject('authorization')
-    ->action(function (string $email, string $password, ?\DateTime $requestTimestamp, Response $response, User $user, Database $dbForProject, Event $queueForEvents, Document $project, Hooks $hooks, array $plan, ProofsPassword $proofForPassword, Authorization $authorization) {
+    ->inject('passwordsDictionary')
+    ->inject('pwnedPasswords')
+    ->action(function (string $email, string $password, ?\DateTime $requestTimestamp, Response $response, User $user, Database $dbForProject, Event $queueForEvents, Document $project, Hooks $hooks, array $plan, ProofsPassword $proofForPassword, Authorization $authorization, array $passwordsDictionary, PasswordPwned $pwnedPasswords) {
         // passwordUpdate will be empty if the user has never set a password
         $passwordUpdate = $user->getAttribute('passwordUpdate');
 
@@ -3572,6 +3575,30 @@ Http::patch('/v1/account/email')
             !$userProofForPassword->verify($password, $user->getAttribute('password'))
         ) { // Double check user password
             throw new Exception(Exception::USER_INVALID_CREDENTIALS);
+        }
+
+        if (empty($passwordUpdate)) {
+            // First password for an anonymous account: apply the same policies as account creation
+            $strength = new PasswordStrength($project->getAttribute('auths', [])['passwordStrength'] ?? []);
+            if (!$strength->isValid($password)) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid `password` param: ' . $strength->getDescription());
+            }
+
+            $dictionary = new PasswordDictionary($passwordsDictionary, enabled: $project->getAttribute('auths', [])['passwordDictionary'] ?? false);
+            if (!$dictionary->isValid($password)) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid `password` param: ' . $dictionary->getDescription());
+            }
+
+            if ($project->getAttribute('auths', [])['personalDataCheck'] ?? false) {
+                $personalDataValidator = new PersonalData($user->getId(), $email, $user->getAttribute('name'), $user->getAttribute('phone'));
+                if (!$personalDataValidator->isValid($password)) {
+                    throw new Exception(Exception::USER_PASSWORD_PERSONAL_DATA);
+                }
+            }
+
+            if ($pwnedPasswords->isEnabled() && !$pwnedPasswords->isValid($password)) {
+                throw new Exception(Exception::USER_PASSWORD_PWNED);
+            }
         }
 
         $hooks->trigger('passwordValidator', [$dbForProject, $project, $password, &$user, false]);
@@ -3639,8 +3666,11 @@ Http::patch('/v1/account/email')
         ;
 
         if (empty($passwordUpdate)) {
+            $newPassword = $proofForPassword->hash($password);
+            $historyLimit = $project->getAttribute('auths', [])['passwordHistory'] ?? 0;
             $user
-                ->setAttribute('password', $proofForPassword->hash($password))
+                ->setAttribute('password', $newPassword)
+                ->setAttribute('passwordHistory', $historyLimit > 0 ? [$newPassword] : [])
                 ->setAttribute('hash', $proofForPassword->getHash()->getName())
                 ->setAttribute('hashOptions', $proofForPassword->getHash()->getOptions())
                 ->setAttribute('passwordUpdate', DateTime::now());
@@ -3703,7 +3733,9 @@ Http::patch('/v1/account/phone')
     ->inject('hooks')
                 ->inject('proofForPassword')
 ->inject('authorization')
-    ->action(function (string $phone, string $password, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Document $project, Hooks $hooks, ProofsPassword $proofForPassword, Authorization $authorization) {
+    ->inject('passwordsDictionary')
+    ->inject('pwnedPasswords')
+    ->action(function (string $phone, string $password, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Document $project, Hooks $hooks, ProofsPassword $proofForPassword, Authorization $authorization, array $passwordsDictionary, PasswordPwned $pwnedPasswords) {
         // passwordUpdate will be empty if the user has never set a password
         $passwordUpdate = $user->getAttribute('passwordUpdate');
 
@@ -3714,6 +3746,30 @@ Http::patch('/v1/account/phone')
             !$userProofForPassword->verify($password, $user->getAttribute('password'))
         ) { // Double check user password
             throw new Exception(Exception::USER_INVALID_CREDENTIALS);
+        }
+
+        if (empty($passwordUpdate)) {
+            // First password for an anonymous account: apply the same policies as account creation
+            $strength = new PasswordStrength($project->getAttribute('auths', [])['passwordStrength'] ?? []);
+            if (!$strength->isValid($password)) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid `password` param: ' . $strength->getDescription());
+            }
+
+            $dictionary = new PasswordDictionary($passwordsDictionary, enabled: $project->getAttribute('auths', [])['passwordDictionary'] ?? false);
+            if (!$dictionary->isValid($password)) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid `password` param: ' . $dictionary->getDescription());
+            }
+
+            if ($project->getAttribute('auths', [])['personalDataCheck'] ?? false) {
+                $personalDataValidator = new PersonalData($user->getId(), $user->getAttribute('email'), $user->getAttribute('name'), $phone);
+                if (!$personalDataValidator->isValid($password)) {
+                    throw new Exception(Exception::USER_PASSWORD_PERSONAL_DATA);
+                }
+            }
+
+            if ($pwnedPasswords->isEnabled() && !$pwnedPasswords->isValid($password)) {
+                throw new Exception(Exception::USER_PASSWORD_PWNED);
+            }
         }
 
         $hooks->trigger('passwordValidator', [$dbForProject, $project, $password, &$user, false]);
@@ -3734,8 +3790,11 @@ Http::patch('/v1/account/phone')
         ;
 
         if (empty($passwordUpdate)) {
+            $newPassword = $proofForPassword->hash($password);
+            $historyLimit = $project->getAttribute('auths', [])['passwordHistory'] ?? 0;
             $user
-                ->setAttribute('password', $proofForPassword->hash($password))
+                ->setAttribute('password', $newPassword)
+                ->setAttribute('passwordHistory', $historyLimit > 0 ? [$newPassword] : [])
                 ->setAttribute('hash', $proofForPassword->getHash()->getName())
                 ->setAttribute('hashOptions', $proofForPassword->getHash()->getOptions())
                 ->setAttribute('passwordUpdate', DateTime::now());
@@ -4120,7 +4179,8 @@ Http::put('/v1/account/recovery')
     ->inject('proofForPassword')
     ->inject('proofForToken')
 ->inject('authorization')
-    ->action(function (string $userId, string $secret, string $password, Response $response, User $user, Database $dbForProject, Document $project, Event $queueForEvents, Hooks $hooks, ProofsPassword $proofForPassword, ProofsToken $proofForToken, Authorization $authorization) {
+    ->inject('pwnedPasswords')
+    ->action(function (string $userId, string $secret, string $password, Response $response, User $user, Database $dbForProject, Document $project, Event $queueForEvents, Hooks $hooks, ProofsPassword $proofForPassword, ProofsToken $proofForToken, Authorization $authorization, PasswordPwned $pwnedPasswords) {
         /** @var Appwrite\Utopia\Database\Documents\User $profile */
         $profile = $dbForProject->getDocument('users', $userId);
 
@@ -4152,11 +4212,8 @@ Http::put('/v1/account/recovery')
             $history = array_slice($history, (count($history) - $historyLimit), $historyLimit);
         }
 
-        if ($project->getAttribute('auths', [])['passwordPwned'] ?? false) {
-            $pwnedValidator = new PasswordPwned(System::getEnv('_APP_PWNED_PASSWORDS_ENDPOINT'));
-            if (!$pwnedValidator->isValid($password)) {
-                throw new Exception(Exception::USER_PASSWORD_PWNED);
-            }
+        if ($pwnedPasswords->isEnabled() && !$pwnedPasswords->isValid($password)) {
+            throw new Exception(Exception::USER_PASSWORD_PWNED);
         }
 
         $hooks->trigger('passwordValidator', [$dbForProject, $project, $password, &$user, true]);
