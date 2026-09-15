@@ -109,7 +109,7 @@ Being direct about the trade-offs matters more than defending one model. A docum
 
 A useful decision guide for the AI-specific version of this question is [choosing the right database for AI applications: when to use MongoDB](/blog/post/choosing-the-right-database-for-ai-applications-when-to-use-mongodb).
 
-## Popular document databases
+# Popular document databases
 
 A few document databases dominate real-world usage:
 
