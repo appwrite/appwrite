@@ -152,4 +152,9 @@ trait RealtimeRelationshipBase
     {
         $this->assertRelationshipRemovalEvent('oneToOne', 'child');
     }
+
+    public function testDeleteOneToOneParentRealtime(): void
+    {
+        $this->assertRelationshipRemovalEvent('oneToOne', 'parent');
+    }
 }
