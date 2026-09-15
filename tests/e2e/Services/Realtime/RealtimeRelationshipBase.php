@@ -221,4 +221,42 @@ trait RealtimeRelationshipBase
             $socket->close();
         }
     }
+
+    public function testDeleteMultipleRelationshipsRealtime(): void
+    {
+        $fixture = $this->createRelationshipRecords('oneToMany');
+        $path = $fixture['base'] . '/' . $fixture['parent']['collectionId'] . '/attributes';
+        $attribute = $this->client->call(Client::METHOD_POST, $path . '/relationship', $fixture['headers'], [
+            'relatedCollectionId' => $fixture['child']['collectionId'],
+            'type' => 'oneToMany',
+            'twoWay' => true,
+            'key' => 'extras',
+            'twoWayKey' => 'owners',
+            'onDelete' => 'setNull',
+        ]);
+        $this->assertSame(202, $attribute['headers']['status-code']);
+        $this->assertEventually(function () use ($path, $fixture): void {
+            $attribute = $this->client->call(Client::METHOD_GET, $path . '/extras', $fixture['headers']);
+            $this->assertSame('available', $attribute['body']['status']);
+        }, 30000, 100);
+        $linked = $this->client->call(Client::METHOD_PATCH, $fixture['parent']['path'], $fixture['headers'], [
+            'data' => ['extras' => [$fixture['child']['id']]],
+        ]);
+        $this->assertSame(200, $linked['headers']['status-code']);
+        $socket = $this->subscribeToRelationshipRecord($fixture, 'parent');
+        try {
+            // Test for SUCCESS: a peer linked through two attributes receives one update.
+            $deleted = $this->client->call(Client::METHOD_DELETE, $fixture['child']['path'], $fixture['headers']);
+            $this->assertSame(204, $deleted['headers']['status-code']);
+            $event = $this->receiveUntilEvent($socket, fn (array $message): bool => ($message['data']['payload']['$id'] ?? null) === $fixture['parent']['id']);
+            $this->assertArrayNotHasKey('children', $event['data']['payload']);
+            $this->assertArrayNotHasKey('extras', $event['data']['payload']);
+            $this->assertNoRelationshipEvent($socket);
+            $parent = $this->client->call(Client::METHOD_GET, $fixture['parent']['path'], $fixture['headers']);
+            $this->assertSame([], $parent['body']['children']);
+            $this->assertSame([], $parent['body']['extras']);
+        } finally {
+            $socket->close();
+        }
+    }
 }
