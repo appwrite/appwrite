@@ -26,3 +26,7 @@ Install Appwrite 2.2
 {% arrow_link href="/docs/advanced/self-hosting/production/updates#upgrading-to-2-2" %}
 Upgrade your self-hosted instance
 {% /arrow_link %}
+
+{% arrow_link href="https://github.com/appwrite/appwrite/releases/tag/2.2.0" %}
+View the release notes on GitHub
+{% /arrow_link %}
