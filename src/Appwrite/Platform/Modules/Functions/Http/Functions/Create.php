@@ -153,7 +153,7 @@ class Create extends Base
         string $runtime,
         array $execute,
         array $events,
-        string $schedule,
+        ?string $schedule,
         int $timeout,
         bool $enabled,
         bool $logging,
@@ -195,6 +195,7 @@ class Create extends Base
         Bus $bus,
         array $platform
     ) {
+        $schedule ??= '';
 
         // Temporary abuse check
         $abuseCheck = function () use ($project, $timelimit, $response): void {
