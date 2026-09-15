@@ -45,7 +45,7 @@ class Update extends Action
                 group: 'policies',
                 name: 'updatePasswordPwnedPolicy',
                 description: <<<EOT
-                Updating this policy allows you to control if passwords are checked against the Have I Been Pwned breach database. When enabled, a password that appears in at least `threshold` known breaches cannot be set or changed. Only the first five characters of the password hash are ever shared with the service. Options left out keep their current value.
+                Updating this policy allows you to control if passwords are checked against the Have I Been Pwned breach database. When enabled, a password that appears in at least `threshold` known breaches cannot be set or changed. Enable `sessions` to check passwords on sign-in too. Only the first five characters of the password hash are ever shared with the service. Options left out keep their current value.
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
@@ -55,10 +55,11 @@ class Update extends Action
                     )
                 ],
             ))
-            ->param('enabled', null, new Boolean(), 'Toggle password pwned policy. Set to true to block passwords exposed in known data breaches, or false to allow them. When changing this policy, existing passwords remain valid.', optional: true)
+            ->param('enabled', null, new Boolean(), 'Toggle password pwned policy. Set to true to block passwords exposed in known data breaches, or false to allow them. Default is true. When changing this policy, existing passwords remain valid.', optional: true)
             ->param('endpoint', null, new AnyOf([new WhiteList([''], true), new Multiple([new URL(['http', 'https']), new PublicDomain()], Multiple::TYPE_STRING)], AnyOf::TYPE_STRING), 'Custom endpoint of a Have I Been Pwned compatible range API, for example a self-hosted mirror. Pass an empty string to use the server default.', optional: true)
             ->param('threshold', null, new Range(1, PHP_INT_MAX), 'Minimum number of known breaches a password must appear in before it is rejected. Default is 1.', optional: true)
-            ->param('forceReset', null, new Boolean(), 'Whether signing in with a breached password is blocked until the password is reset. Default is false, which allows the sign-in.', optional: true)
+            ->param('sessions', null, new Boolean(), 'Whether passwords are checked when a session is created. When enabled, signing in records whether the password appears in a known data breach. Default is false.', optional: true)
+            ->param('forceReset', null, new Boolean(), 'Whether signing in with a breached password is blocked until the password is reset. Only applies when sessions are checked. Default is false, which allows the sign-in.', optional: true)
             ->param('failClosed', null, new Boolean(), 'Whether passwords are rejected when the breach service cannot be reached. Default is true. Set to false to skip the check instead.', optional: true)
             ->inject('response')
             ->inject('dbForPlatform')
@@ -72,6 +73,7 @@ class Update extends Action
         ?bool $enabled,
         ?string $endpoint,
         ?int $threshold,
+        ?bool $sessions,
         ?bool $forceReset,
         ?bool $failClosed,
         Response $response,
@@ -82,9 +84,10 @@ class Update extends Action
     ): void {
         $auths = $project->getAttribute('auths', []);
         $auths['passwordPwned'] = \array_merge([
-            'enabled' => false,
+            'enabled' => true,
             'endpoint' => '',
             'threshold' => 1,
+            'sessions' => false,
             'forceReset' => false,
             'failClosed' => true,
         ], $auths['passwordPwned'] ?? []);
@@ -97,6 +100,9 @@ class Update extends Action
         }
         if ($threshold !== null) {
             $auths['passwordPwned']['threshold'] = $threshold;
+        }
+        if ($sessions !== null) {
+            $auths['passwordPwned']['sessions'] = $sessions;
         }
         if ($forceReset !== null) {
             $auths['passwordPwned']['forceReset'] = $forceReset;

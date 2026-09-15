@@ -18,7 +18,7 @@ class PolicyPasswordPwned extends PolicyBase
             ->addRule('enabled', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Whether password pwned policy is enabled.',
-                'default' => false,
+                'default' => true,
                 'example' => true,
             ])
             ->addRule('endpoint', [
@@ -33,9 +33,15 @@ class PolicyPasswordPwned extends PolicyBase
                 'default' => 1,
                 'example' => 1,
             ])
+            ->addRule('sessions', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether passwords are checked when a session is created.',
+                'default' => false,
+                'example' => false,
+            ])
             ->addRule('forceReset', [
                 'type' => self::TYPE_BOOLEAN,
-                'description' => 'Whether signing in with a breached password is blocked until the password is reset.',
+                'description' => 'Whether signing in with a breached password is blocked until the password is reset. Only applies when sessions are checked.',
                 'default' => false,
                 'example' => false,
             ])

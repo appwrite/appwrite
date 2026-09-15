@@ -137,9 +137,10 @@ class Get extends Action
             ],
             'password-pwned' => [
                 new Document(\array_merge([
-                    'enabled' => false,
+                    'enabled' => true,
                     'endpoint' => '',
                     'threshold' => 1,
+                    'sessions' => false,
                     'forceReset' => false,
                     'failClosed' => true,
                 ], $auths['passwordPwned'] ?? [], [

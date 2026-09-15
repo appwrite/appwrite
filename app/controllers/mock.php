@@ -514,9 +514,9 @@ Http::get('/v1/mock/tests/general/pwned-passwords/:prefix')
         // Mirrors the Have I Been Pwned range API: every leaked hash sharing the
         // requested prefix comes back as `SUFFIX:COUNT`, one per line.
         $leaked = [
-            'Password123!' => 12345,
-            'Summer2024!' => 678,
-            'letmein1234' => 9,
+            'pwned-fixture-common' => 12345,
+            'pwned-fixture-uncommon' => 678,
+            'pwned-fixture-rare' => 9,
         ];
 
         $prefix = \strtoupper($prefix);

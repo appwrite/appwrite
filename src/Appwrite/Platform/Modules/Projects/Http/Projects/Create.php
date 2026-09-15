@@ -89,9 +89,10 @@ class Create extends Action
             'duration' => TOKEN_EXPIRATION_LOGIN_LONG,
             'personalDataCheck' => false,
             'passwordPwned' => [
-                'enabled' => false,
+                'enabled' => true,
                 'endpoint' => '',
                 'threshold' => 1,
+                'sessions' => false,
                 'forceReset' => false,
                 'failClosed' => true,
             ],

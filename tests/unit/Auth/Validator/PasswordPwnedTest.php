@@ -19,20 +19,29 @@ final class PasswordPwnedTest extends TestCase
     private const LEAKED = 'Password123!';
     private const ENDPOINT = 'https://breaches.test/range';
 
-    public function testDisabledByDefault(): void
+    public function testEnabledByDefaultWithoutSessionChecks(): void
     {
         $validator = new PasswordPwned();
 
-        $this->assertFalse($validator->isEnabled());
+        $this->assertTrue($validator->isEnabled());
+        $this->assertFalse($validator->checksSessions());
         $this->assertFalse($validator->isForceReset());
     }
 
     public function testPolicyFlags(): void
     {
-        $validator = new PasswordPwned(['enabled' => true, 'forceReset' => true]);
+        $validator = new PasswordPwned(['enabled' => true, 'sessions' => true, 'forceReset' => true]);
 
         $this->assertTrue($validator->isEnabled());
+        $this->assertTrue($validator->checksSessions());
         $this->assertTrue($validator->isForceReset());
+    }
+
+    public function testSessionChecksNeedAnEnabledPolicy(): void
+    {
+        $validator = new PasswordPwned(['enabled' => false, 'sessions' => true, 'forceReset' => true]);
+
+        $this->assertFalse($validator->checksSessions());
     }
 
     public function testDisabledPolicyNeverChecks(): void

@@ -27,6 +27,7 @@ class PasswordPwned extends Password
     protected bool $enabled;
     protected string $endpoint;
     protected int $threshold;
+    protected bool $sessions;
     protected bool $forceReset;
     protected bool $failClosed;
     protected ?Cache $cache;
@@ -40,9 +41,10 @@ class PasswordPwned extends Password
     {
         parent::__construct($allowEmpty);
 
-        $this->enabled = (bool) ($policy['enabled'] ?? false);
+        $this->enabled = (bool) ($policy['enabled'] ?? true);
         $this->endpoint = \rtrim(($policy['endpoint'] ?? '') ?: ($endpoint ?: self::ENDPOINT), '/');
         $this->threshold = \max(1, (int) ($policy['threshold'] ?? 1));
+        $this->sessions = (bool) ($policy['sessions'] ?? false);
         $this->forceReset = (bool) ($policy['forceReset'] ?? false);
         $this->failClosed = (bool) ($policy['failClosed'] ?? true);
         $this->cache = $cache;
@@ -62,7 +64,17 @@ class PasswordPwned extends Password
     }
 
     /**
+     * Whether passwords are checked when a session is created.
+     */
+    public function checksSessions(): bool
+    {
+        return $this->enabled && $this->sessions;
+    }
+
+    /**
      * Whether a breached password blocks sign-in until it is reset.
+     *
+     * Only takes effect when sessions are checked.
      */
     public function isForceReset(): bool
     {
