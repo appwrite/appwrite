@@ -33,7 +33,7 @@ The core idea is simple. You convert your data, whether text, images, or audio, 
 
 This is a fundamentally different job from what relational or document databases do, which is why it gets its own category of tooling. For a broader map of database types, see [SQL vs NoSQL: choosing the right database for your project](/blog/post/sql-vs-nosql).
 
-## What is an embedding?
+# What is an embedding?
 
 An **embedding** is a vector, a fixed-length array of floating point numbers, that captures the semantic meaning of a piece of data. You generate embeddings by passing your data through an **embedding model**, such as OpenAI's `text-embedding-3` models or an open model from Hugging Face.
 
