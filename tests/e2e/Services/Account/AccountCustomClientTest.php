@@ -6407,14 +6407,16 @@ final class AccountCustomClientTest extends Scope
         $parts = \explode('.', $jwt);
         $this->assertCount(3, $parts, 'Stored ID token is not a three-part JWT.');
 
+        // Strict, so a payload that is not really base64url fails here rather
+        // than being silently scrubbed into something that decodes to nothing.
         $payload = \base64_decode(\str_pad(
             \strtr($parts[1], '-_', '+/'),
             (int) (\ceil(\strlen($parts[1]) / 4) * 4),
             '=',
             STR_PAD_RIGHT
-        ));
+        ), true);
 
-        $this->assertIsString($payload, 'Stored ID token payload is not valid base64url.');
+        $this->assertNotFalse($payload, 'Stored ID token payload is not valid base64url.');
 
         $claims = \json_decode($payload, true);
         $this->assertIsArray($claims, 'Stored ID token payload is not JSON.');
