@@ -94,6 +94,20 @@ final class ConnectionTest extends TestCase
         $this->assertSame(5, $connection->acknowledge(2)['cursor'], 'the gap at 6 blocks the cursor');
     }
 
+    public function testResumeAnchorsTheCursorRegardlessOfTrackOrder(): void
+    {
+        // Seeded with the persisted resume cursor (4), then deliveries are tracked out of order
+        // (7 before 5). Acking 7 first must not advance past the still-missing 6 — the anchor
+        // comes from resume(), not from whichever sequence happened to be tracked first.
+        $connection = new Connection(1);
+        $connection->resume('topic', 4);
+        $connection->track(1, 'topic', 7);
+        $connection->track(2, 'topic', 5);
+
+        $this->assertSame(4, $connection->acknowledge(1)['cursor'], 'acking 7 first stops below the gap');
+        $this->assertSame(5, $connection->acknowledge(2)['cursor'], 'acking 5 advances the cursor to 5');
+    }
+
     public function testAcknowledgeIsIdempotentForAnUnknownOrRepeatedAck(): void
     {
         $connection = new Connection(1);

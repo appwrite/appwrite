@@ -88,10 +88,21 @@ class Connection
     }
 
     /**
+     * Anchor a topic's cursor at the sequence the broker is resuming from — its persisted cursor,
+     * so replayed and live deliveries are acknowledged against a known-safe baseline. Call this
+     * before delivering a topic; it is the order-independent way to seed the cursor. Without it,
+     * track() falls back to anchoring at the first delivery, which is safe only when a topic's
+     * deliveries are tracked in non-decreasing sequence order.
+     */
+    public function resume(string $topic, int $cursor): void
+    {
+        $this->cursors[$topic] = $cursor;
+    }
+
+    /**
      * Record an outbound QoS 1 delivery so its PUBACK can be matched back to a topic and sequence.
-     * The first delivery on a topic anchors that topic's cursor one below it — everything up to
-     * there was settled before this connection resumed, and deliveries are contiguous (a replay
-     * walks a monotonic sequence in order), so it is the correct resume point.
+     * When the topic has not been seeded with resume(), the first delivery anchors its cursor one
+     * below its sequence — correct only when deliveries for the topic are tracked in order.
      */
     public function track(int $packetId, string $topic, int $sequence): void
     {

@@ -283,7 +283,9 @@ $connection->setClientId($clientId);           // '' is server-assigned
 // Refresh the keep-alive deadline on every inbound packet.
 $connection->updateExpiresAt(microtime(true), $keepalive->multiplier);
 
-// On a QoS 1 delivery, track it; on its PUBACK, learn how far the client has caught up.
+// Seed a topic's resume cursor (its persisted value) before delivering it, then track each
+// QoS 1 delivery; a PUBACK reports how far the client has caught up (the `cursor`).
+$connection->resume($topic, $persistedCursor);
 $connection->track($packetId, $topic, $sequence);
 $ack = $connection->acknowledge($packetId);     // ['topic' => …, 'sequence' => …, 'cursor' => …]
 ```
