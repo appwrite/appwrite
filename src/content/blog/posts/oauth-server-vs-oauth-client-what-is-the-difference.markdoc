@@ -2,7 +2,7 @@
 layout: post
 title: "OAuth server vs. OAuth client: What is the difference?"
 description: Learn the difference between an OAuth server and OAuth client, how each works, and the role they play in secure authorization flows.
-date: 2026-07-21
+date: 2026-09-14
 cover: /images/blog/oauth-server-vs-oauth-client-what-is-the-difference/cover.avif
 timeToRead: 5
 author: atharva
