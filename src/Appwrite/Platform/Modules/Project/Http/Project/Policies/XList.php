@@ -116,6 +116,13 @@ class XList extends Action
                 '$id' => 'password-personal-data',
                 'enabled' => $auths['personalDataCheck'] ?? false,
             ]),
+            new Document(\array_merge([
+                'enabled' => true,
+                'sessions' => false,
+                'users' => false,
+            ], $auths['passwordPwned'] ?? [], [
+                '$id' => 'password-pwned',
+            ])),
             new Document([
                 '$id' => 'session-alert',
                 'enabled' => $auths['sessionAlerts'] ?? false,

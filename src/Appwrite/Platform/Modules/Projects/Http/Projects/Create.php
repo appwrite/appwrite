@@ -88,6 +88,11 @@ class Create extends Action
             'passwordDictionary' => false,
             'duration' => TOKEN_EXPIRATION_LOGIN_LONG,
             'personalDataCheck' => false,
+            'passwordPwned' => [
+                'enabled' => true,
+                'sessions' => false,
+                'users' => false,
+            ],
             'disposableEmails' => false,
             'canonicalEmails' => false,
             'freeEmails' => false,

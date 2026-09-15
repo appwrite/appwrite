@@ -483,6 +483,15 @@ return [
                 'required' => false,
                 'question' => '',
                 'filter' => 'token'
+            ],
+            [
+                'name' => '_APP_PWNED_PASSWORDS_DSN',
+                'description' => "DSN of the service the password pwned project policy asks whether a password has been breached. The scheme picks the adapter.\n\nExamples:\n- Have I Been Pwned: `hibp://localhost` — the public range API, which only ever receives the first five characters of the password SHA-1 hash. No other detail is read from the DSN\n- [Appwrite Pwned](https://github.com/appwrite-labs/pwned): `appwrite://SECRET@appwrite-pwned/v1/detection` — a service you run yourself, which caches answers and can front a detector of your choice. It receives the whole password inside a JWT signed with `SECRET`, which must match the service's `APPWRITE_PWNED_JWT_SECRET`, so only point it at a service on your own network. The path defaults to `v1/detection` and the connection is plain HTTP unless you add `?tls=true`\n- Testing: `mock://localhost` — reports a fixed list of passwords as breached without leaving the process. Refused on a production server, since it would report every real password as safe",
+                'introduction' => 'TBD',
+                'default' => 'hibp://localhost',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
             ]
         ],
     ],

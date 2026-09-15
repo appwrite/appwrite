@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Modules\Users\Http\Users\Password;
 
 use Appwrite\Auth\Validator\PasswordDictionary;
 use Appwrite\Auth\Validator\PasswordHistory;
+use Appwrite\Auth\Validator\PasswordPwned;
 use Appwrite\Auth\Validator\PasswordStrength;
 use Appwrite\Auth\Validator\PersonalData;
 use Appwrite\Event\Event;
@@ -66,10 +67,11 @@ class Update extends Action
             ->inject('dbForProject')
             ->inject('queueForEvents')
             ->inject('hooks')
+            ->inject('pwnedPasswords')
             ->callback($this->action(...));
     }
 
-    public function action(string $userId, string $password, Response $response, Document $project, Database $dbForProject, Event $queueForEvents, Hooks $hooks): void
+    public function action(string $userId, string $password, Response $response, Document $project, Database $dbForProject, Event $queueForEvents, Hooks $hooks, PasswordPwned $pwnedPasswords): void
     {
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -84,6 +86,13 @@ class Update extends Action
             }
         }
 
+        $passwordPwned = \strlen($password) === 0 || !($project->getAttribute('auths', [])['passwordPwned']['enabled'] ?? true)
+            ? null
+            : !$pwnedPasswords->isValid($password);
+        if ($passwordPwned) {
+            throw new Exception(Exception::USER_PASSWORD_PWNED);
+        }
+
         if (\strlen($password) === 0) {
             $user
                 ->setAttribute('password', '')
@@ -91,6 +100,7 @@ class Update extends Action
 
             $user = $dbForProject->updateDocument('users', $user->getId(), new Document([
                 'password' => $user->getAttribute('password'),
+                'passwordPwned' => null,
                 'passwordUpdate' => $user->getAttribute('passwordUpdate'),
             ]));
             $queueForEvents->setParam('userId', $user->getId());
@@ -121,6 +131,7 @@ class Update extends Action
         $user
             ->setAttribute('password', $newPassword)
             ->setAttribute('passwordHistory', $history)
+            ->setAttribute('passwordPwned', $passwordPwned)
             ->setAttribute('passwordUpdate', DateTime::now())
             ->setAttribute('hash', $hasher->getName())
             ->setAttribute('hashOptions', $hasher->getOptions());
@@ -128,6 +139,7 @@ class Update extends Action
         $user = $dbForProject->updateDocument('users', $user->getId(), new Document([
             'password' => $user->getAttribute('password'),
             'passwordHistory' => $user->getAttribute('passwordHistory'),
+            'passwordPwned' => $user->getAttribute('passwordPwned'),
             'passwordUpdate' => $user->getAttribute('passwordUpdate'),
             'hash' => $user->getAttribute('hash'),
             'hashOptions' => $user->getAttribute('hashOptions'),
