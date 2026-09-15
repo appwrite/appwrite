@@ -160,6 +160,34 @@ trait ProxyBase
         $this->cleanupFunction($replacement);
     }
 
+    public function testDeleteSiteReassignDomain(): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $original = $this->setupSite(deploy: false)['siteId'];
+        $replacement = $this->setupSite(deploy: false)['siteId'];
+        $domain = \uniqid() . '-reassigned-site.custom.localhost';
+        $this->setupSiteRule($domain, $original);
+
+        /**
+         * Test for FAILURE
+         */
+        $duplicate = $this->createSiteRule($domain, $replacement);
+        $this->assertEquals(409, $duplicate['headers']['status-code']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $this->cleanupSite($original);
+        $ruleId = $this->setupSiteRule($domain, $replacement);
+        $rule = $this->getRule($ruleId);
+        $this->assertEquals(200, $rule['headers']['status-code']);
+        $this->assertSame($replacement, $rule['body']['deploymentResourceId']);
+        $this->assertSame($domain, $rule['body']['domain']);
+        $this->cleanupSite($replacement);
+    }
+
     public function testCreateRule(): void
     {
         $domain = \uniqid() . '-api.myapp.com';
