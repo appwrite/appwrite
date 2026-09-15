@@ -115,6 +115,7 @@ import {
   type McpEndpointPresetId,
 } from '@/lib/debug-mcp-endpoint'
 import { useDebugMcpEndpoint } from '@/hooks/use-debug-mcp-endpoint'
+import { usePromptDialog } from '@/hooks/use-prompt-dialog'
 import { McpIcon } from '@/components/global/shared/McpIcon'
 import { useNavigate } from '@tanstack/react-router'
 import { useQueryClient } from '@tanstack/react-query'
@@ -141,6 +142,7 @@ import {
 } from '@/lib/init/use-init-low-power-animations'
 import {
   clampDebugMenuPosition,
+  DEBUG_MENU_DIALOG_LAYER,
   DEBUG_MENU_EDGE_OFFSET_PX,
   getDebugMenuPopoverPlacement,
   getDebugMenuTooltipSide,
@@ -991,6 +993,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
   const { isScreenshotModeActive, setScreenshotModeActive } = useScreenshotMode()
   const queryClient = useQueryClient()
   const [isOpen, setIsOpen] = useState(false)
+  const { prompt, promptDialog } = usePromptDialog(DEBUG_MENU_DIALOG_LAYER)
   const [overrides, setOverrides] = useState<DebugOverrides>(loadDebugOverrides)
   const { addMockBanner, clearAllBanners, banners } = usePromoBanner()
   const [faviconStatus, setFaviconStatus] = useState<FaviconStatus>(() =>
@@ -2412,19 +2415,30 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 label: 'Add custom...',
                 description: 'Save a custom API URL to this list',
                 onClick: () => {
-                  const url = window.prompt(
-                    'Enter API endpoint URL (e.g. https://my-appwrite.example/v1)',
-                    endpointPreset === 'custom' && endpointCustomUrl
-                      ? endpointCustomUrl
-                      : activeEndpointUrl !== '—'
-                        ? activeEndpointUrl
-                        : 'http://localhost/v1',
-                  )
-                  if (url?.trim()) {
-                    applyOverrideAndGoHome(() =>
-                      setDebugEndpointOverride('custom', url.trim()),
-                    )
-                  }
+                  void prompt({
+                    title: 'Custom API endpoint',
+                    fields: [
+                      {
+                        name: 'url',
+                        label: 'API endpoint URL',
+                        placeholder: 'https://my-appwrite.example/v1',
+                        defaultValue:
+                          endpointPreset === 'custom' && endpointCustomUrl
+                            ? endpointCustomUrl
+                            : activeEndpointUrl !== '—'
+                              ? activeEndpointUrl
+                              : 'http://localhost:9601/v1',
+                      },
+                    ],
+                    confirmLabel: 'Use endpoint',
+                  }).then((values) => {
+                    const url = values?.url.trim()
+                    if (url) {
+                      applyOverrideAndGoHome(() =>
+                        setDebugEndpointOverride('custom', url),
+                      )
+                    }
+                  })
                 },
                 icon: <Plus className="h-3 w-3" />,
                 rowClassName:
@@ -2475,16 +2489,27 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                     ? mcpEndpointCustomUrl
                     : 'Enter a custom MCP URL',
                 onClick: () => {
-                  const url = window.prompt(
-                    'Enter Appwrite MCP endpoint URL (e.g. http://localhost:8100/)',
-                    mcpEndpointPreset === 'custom' && mcpEndpointCustomUrl
-                      ? mcpEndpointCustomUrl
-                      : activeMcpEndpointUrl || 'http://localhost:8100/',
-                  )
-                  if (url?.trim()) {
-                    setDebugMcpEndpointOverride('custom', url.trim())
-                    setIsOpen(false)
-                  }
+                  void prompt({
+                    title: 'Custom MCP endpoint',
+                    fields: [
+                      {
+                        name: 'url',
+                        label: 'MCP endpoint URL',
+                        placeholder: 'http://localhost:8100/',
+                        defaultValue:
+                          mcpEndpointPreset === 'custom' && mcpEndpointCustomUrl
+                            ? mcpEndpointCustomUrl
+                            : activeMcpEndpointUrl || 'http://localhost:8100/',
+                      },
+                    ],
+                    confirmLabel: 'Use endpoint',
+                  }).then((values) => {
+                    const url = values?.url.trim()
+                    if (url) {
+                      setDebugMcpEndpointOverride('custom', url)
+                      setIsOpen(false)
+                    }
+                  })
                 },
                 active: mcpEndpointPreset === 'custom',
                 icon: <McpIcon className="h-3 w-3" />,
@@ -2563,6 +2588,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     clearAllBanners,
     languageCopy,
     applyOverrideAndGoHome,
+    prompt,
   ])
 
   const currentSubmenu = useMemo(
@@ -3236,6 +3262,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
               </div>
             )}
           </div>
+          {promptDialog}
         </PopoverContent>
       </Popover>
     </DismissableLayerBranch>

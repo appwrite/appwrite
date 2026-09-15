@@ -360,7 +360,8 @@ export function CodeBlock({
   }, [prismLanguage, languageIsRegistered])
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(displayCode)
+    // Render trims a fence's trailing newline; the clipboard gets the input as given.
+    navigator.clipboard.writeText(code)
     setCopied(true)
     toast.success(t('Copied to clipboard'))
     setTimeout(() => setCopied(false), 2000)
@@ -377,7 +378,13 @@ export function CodeBlock({
     ? 'overflow-x-hidden whitespace-pre-wrap break-words [overflow-wrap:anywhere]'
     : 'overflow-x-auto'
 
-  const lineWrapClasses = wrapLines ? 'min-w-0 w-full break-all' : undefined
+  // `break-all` breaks at any character even when a space was available, so
+  // prose in a wrapped block splits mid-word ("Bonjou|r"). `anywhere` only
+  // breaks a run that has no other break opportunity, which is what minified
+  // markup needs.
+  const lineWrapClasses = wrapLines
+    ? 'min-w-0 w-full [overflow-wrap:anywhere]'
+    : undefined
 
   const renderCopyButton = () => {
     if (!showCopy) return null

@@ -7,7 +7,7 @@ date: 2025-09-26
 timeToRead: 10
 author: veeresh-mulge
 unlisted: true
-category: product
+category: products
 faqs:
   - question: "What is the best open-source alternative to Vercel?"
     answer: "Appwrite Sites is one of the good open-source options to consider. It lets you host static sites and connect directly to built-in backend services like authentication, databases, and functions. Unlike Vercel or Netlify, you can self-host Appwrite if you want full control."

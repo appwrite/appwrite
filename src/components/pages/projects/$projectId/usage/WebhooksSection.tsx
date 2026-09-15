@@ -22,7 +22,7 @@ import {
 } from '@/lib/react-query/hooks'
 import { useRefresh } from '@/components/global/shared/RefreshContext'
 import { UsageTimeSeriesChartCard } from './_components/UsageTimeSeriesChartCard'
-import { shouldShowUsageChartSkeleton } from '@/lib/usage/usage-chart-loading'
+import { getUsageChartLoadingProps } from '@/lib/usage/usage-chart-loading'
 
 const WEBHOOKS_USAGE_ERROR = {
   title: "Couldn't load webhooks usage",
@@ -90,6 +90,16 @@ export function WebhooksSection({
     ? []
     : (countQuery.data?.chartPoints ?? [])
 
+  const eventsSentLoading = getUsageChartLoadingProps(
+    eventsSentQuery,
+    eventsSentPoints,
+  )
+  const eventsFailedLoading = getUsageChartLoadingProps(
+    eventsFailedQuery,
+    eventsFailedPoints,
+  )
+  const countLoading = getUsageChartLoadingProps(countQuery, countPoints)
+
   return (
     <div className="space-y-6">
       <UsageTimeSeriesChartCard
@@ -100,11 +110,8 @@ export function WebhooksSection({
         total={sumUsageChartPoints(eventsSentPoints)}
         changePercent={eventsSentQuery.data?.changePercent ?? 0}
         chartPoints={eventsSentPoints}
-        isLoading={shouldShowUsageChartSkeleton(
-          eventsSentQuery.isError,
-          eventsSentQuery.isLoading,
-          eventsSentQuery.isPlaceholderData,
-        )}
+        isLoading={eventsSentLoading.isLoading}
+        isRefreshing={eventsSentLoading.isRefreshing}
         isError={eventsSentQuery.isError}
         queryError={eventsSentQuery.error}
         errorTitle={WEBHOOKS_USAGE_ERROR.title}
@@ -123,11 +130,8 @@ export function WebhooksSection({
         total={sumUsageChartPoints(eventsFailedPoints)}
         changePercent={eventsFailedQuery.data?.changePercent ?? 0}
         chartPoints={eventsFailedPoints}
-        isLoading={shouldShowUsageChartSkeleton(
-          eventsFailedQuery.isError,
-          eventsFailedQuery.isLoading,
-          eventsFailedQuery.isPlaceholderData,
-        )}
+        isLoading={eventsFailedLoading.isLoading}
+        isRefreshing={eventsFailedLoading.isRefreshing}
         isError={eventsFailedQuery.isError}
         queryError={eventsFailedQuery.error}
         errorTitle={WEBHOOKS_USAGE_ERROR.title}
@@ -146,11 +150,8 @@ export function WebhooksSection({
         total={getWebhooksCountDisplayTotal(countPoints)}
         changePercent={countQuery.data?.changePercent ?? 0}
         chartPoints={countPoints}
-        isLoading={shouldShowUsageChartSkeleton(
-          countQuery.isError,
-          countQuery.isLoading,
-          countQuery.isPlaceholderData,
-        )}
+        isLoading={countLoading.isLoading}
+        isRefreshing={countLoading.isRefreshing}
         isError={countQuery.isError}
         queryError={countQuery.error}
         errorTitle={WEBHOOKS_USAGE_ERROR.title}

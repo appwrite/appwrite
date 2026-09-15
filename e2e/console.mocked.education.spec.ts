@@ -1,6 +1,7 @@
 import type { Page, Route } from '@playwright/test'
 import type { Models } from '@appwrite.io/console'
 import { expect, test } from './fixtures'
+import { CONSOLE_SESSION_COOKIE_NAME } from '../src/lib/console-session-cookie'
 
 const NOW = '2026-09-08T00:00:00.000Z'
 const PROGRAM_PATH = '/console/programs/github-student-developer/memberships'
@@ -79,6 +80,18 @@ function corsHeaders(route: Route) {
 
 /** All external traffic is intercepted, including OAuth and the mailing list. */
 async function mockEducationApi(page: Page, scenario: Scenario) {
+  if (scenario.account) {
+    // The localhost root route checks for a session hint before account.get.
+    // Model signed-in browser state as well as the mocked API response, including
+    // on reload. This cookie is synthetic and scoped to the local test server.
+    await page.context().addCookies([
+      {
+        name: CONSOLE_SESSION_COOKIE_NAME,
+        value: 'mock-education-session',
+        url: String(test.info().project.use.baseURL),
+      },
+    ])
+  }
   await page.addInitScript((profile) => {
     window.localStorage.setItem(
       'debug:consoleProfile',

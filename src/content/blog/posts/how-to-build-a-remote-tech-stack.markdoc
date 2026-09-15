@@ -7,7 +7,7 @@ lastUpdated: 2026-06-29
 cover: /images/blog/how-to-build-remote-tech-stack/cover.avif
 timeToRead: 5
 author: snezhanna
-category: product
+category: products
 faqs:
   - question: "What tools does Appwrite use for remote team communication?"
     answer: "Appwrite uses Discord for real-time team chat, including a lobby channel that mimics a virtual water cooler. Each team has its own channels for focused work and there are cross-team channels for shared topics. Discord doubles as both internal communication and the home of the public Appwrite community server."

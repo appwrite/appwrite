@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
 import { useParams } from '@tanstack/react-router'
 import { useQueryClient } from '@tanstack/react-query'
 import {
+  AppWindow,
   Brain,
   Cpu,
   Database,
@@ -10,11 +11,13 @@ import {
   FolderKanban,
   Globe,
   HardDrive,
+  KeyRound,
   Loader2,
   Table2,
   User,
   Users,
   UsersRound,
+  Zap,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { ID } from '@appwrite.io/console'
@@ -55,6 +58,9 @@ type ResourceKind =
   | 'domains'
   | 'models'
   | 'memories'
+  | 'projectVariables'
+  | 'functionVariables'
+  | 'siteVariables'
 
 type SeedProgress = {
   kind: ResourceKind
@@ -118,6 +124,45 @@ const RESOURCE_LABELS: Record<
   domains: { singular: 'domain', plural: 'domains' },
   models: { singular: 'model', plural: 'models' },
   memories: { singular: 'memory', plural: 'memories' },
+  projectVariables: { singular: 'variable', plural: 'variables' },
+  functionVariables: { singular: 'variable', plural: 'variables' },
+  siteVariables: { singular: 'variable', plural: 'variables' },
+}
+
+const SEED_VARIABLE_KINDS = [
+  {
+    secret: false,
+    value: (seed: string, index: number) =>
+      `https://debug.example.com/${seed}/${index}`,
+  },
+  {
+    secret: true,
+    value: (seed: string, index: number) => `sk_debug_${seed}_${index}`,
+  },
+  {
+    secret: false,
+    value: (seed: string, index: number) =>
+      JSON.stringify({ seed, index, source: 'debug-menu' }),
+  },
+  {
+    secret: false,
+    value: (_seed: string, index: number) =>
+      index % 2 === 0 ? 'production' : 'development',
+  },
+] as const
+
+function buildSeedEnvKey(seed: string, index: number) {
+  const token = seed.replace(/[^A-Za-z0-9]/g, '_').toUpperCase()
+  return `${token}_${index}`
+}
+
+function buildSeedVariable(index: number, seed: string) {
+  const kind = SEED_VARIABLE_KINDS[(index - 1) % SEED_VARIABLE_KINDS.length]!
+  return {
+    key: buildSeedEnvKey(seed, index),
+    value: kind.value(seed, index),
+    secret: kind.secret,
+  }
 }
 
 function buildSeedLabel(prefix: string) {
@@ -152,11 +197,16 @@ export function DebugMenuSeedResourcesPanel() {
     databaseId?: string
     dbKind?: string
     bucketId?: string
+    functionId?: string
+    siteId?: string
   }
 
   const routeOrgId = typeof params.orgId === 'string' ? params.orgId : undefined
   const projectId =
     typeof params.projectId === 'string' ? params.projectId : undefined
+  const functionId =
+    typeof params.functionId === 'string' ? params.functionId : undefined
+  const siteId = typeof params.siteId === 'string' ? params.siteId : undefined
   const databaseId =
     typeof params.databaseId === 'string' ? params.databaseId : undefined
   const routeBucketId =
@@ -188,11 +238,13 @@ export function DebugMenuSeedResourcesPanel() {
     const parts: string[] = []
     if (projectId) parts.push(`Project ${projectId}`)
     if (organizationId) parts.push(`organization ${organizationId}`)
+    if (functionId) parts.push(`function ${functionId}`)
+    if (siteId) parts.push(`site ${siteId}`)
     if (databaseId) parts.push(`database ${databaseId}`)
     if (bucketId) parts.push(`bucket ${bucketId}`)
     if (parts.length > 0) return parts.join(', ')
     return 'Agent models and memories work anywhere. Open a project or organization route for the rest.'
-  }, [bucketId, databaseId, organizationId, projectId])
+  }, [bucketId, databaseId, functionId, organizationId, projectId, siteId])
 
   const runSeed = async (
     kind: ResourceKind,
@@ -460,6 +512,86 @@ export function DebugMenuSeedResourcesPanel() {
     )
   }
 
+  const seedProjectVariables = () => {
+    if (!projectId) return
+    void runSeed(
+      'projectVariables',
+      (index, seed) => {
+        const variable = buildSeedVariable(index, seed)
+        return sdk.forProject(projectId).projectApi.createVariable({
+          variableId: ID.unique(),
+          key: variable.key,
+          value: variable.value,
+          secret: variable.secret,
+        })
+      },
+      async () => {
+        await queryClient.refetchQueries({
+          queryKey: ['variables', 'project', projectId],
+        })
+        await queryClient.refetchQueries({
+          queryKey: ['project-variables'],
+        })
+      },
+    )
+  }
+
+  const seedFunctionVariables = () => {
+    if (!projectId || !functionId) return
+    void runSeed(
+      'functionVariables',
+      (index, seed) => {
+        const variable = buildSeedVariable(index, seed)
+        return sdk.forProject(projectId).functions.createVariable({
+          functionId,
+          variableId: ID.unique(),
+          key: variable.key,
+          value: variable.value,
+          secret: variable.secret,
+        })
+      },
+      async () => {
+        await queryClient.refetchQueries({
+          queryKey: ['variables', 'function', projectId, functionId],
+        })
+        await queryClient.refetchQueries({
+          queryKey: ['function', 'project', projectId, functionId],
+        })
+        await queryClient.refetchQueries({
+          queryKey: ['functions', 'project', projectId],
+        })
+      },
+    )
+  }
+
+  const seedSiteVariables = () => {
+    if (!projectId || !siteId) return
+    void runSeed(
+      'siteVariables',
+      (index, seed) => {
+        const variable = buildSeedVariable(index, seed)
+        return sdk.forProject(projectId).sites.createVariable({
+          siteId,
+          variableId: ID.unique(),
+          key: variable.key,
+          value: variable.value,
+          secret: variable.secret,
+        })
+      },
+      async () => {
+        await queryClient.refetchQueries({
+          queryKey: ['variables', 'site', projectId, siteId],
+        })
+        await queryClient.refetchQueries({
+          queryKey: ['site', 'project', projectId, siteId],
+        })
+        await queryClient.refetchQueries({
+          queryKey: ['sites', 'project', projectId],
+        })
+      },
+    )
+  }
+
   const cards: SeedCard[] = [
     {
       kind: 'models',
@@ -552,6 +684,33 @@ export function DebugMenuSeedResourcesPanel() {
       disabled: !organizationId,
       disabledReason: 'Open an organization or project route first.',
     },
+    {
+      kind: 'projectVariables',
+      title: 'Project variables',
+      description:
+        'Create dummy env vars (including secrets) on the current project.',
+      icon: <KeyRound className="h-3.5 w-3.5" />,
+      disabled: !projectId,
+      disabledReason: 'Open a project route first.',
+    },
+    {
+      kind: 'functionVariables',
+      title: 'Function variables',
+      description:
+        'Create dummy env vars (including secrets) on the current function.',
+      icon: <Zap className="h-3.5 w-3.5" />,
+      disabled: !projectId || !functionId,
+      disabledReason: 'Open a function route first.',
+    },
+    {
+      kind: 'siteVariables',
+      title: 'Site variables',
+      description:
+        'Create dummy env vars (including secrets) on the current site.',
+      icon: <AppWindow className="h-3.5 w-3.5" />,
+      disabled: !projectId || !siteId,
+      disabledReason: 'Open a site route first.',
+    },
   ]
 
   const actions: Record<ResourceKind, () => void> = {
@@ -566,6 +725,9 @@ export function DebugMenuSeedResourcesPanel() {
     domains: seedDomains,
     models: seedModels,
     memories: seedMemories,
+    projectVariables: seedProjectVariables,
+    functionVariables: seedFunctionVariables,
+    siteVariables: seedSiteVariables,
   }
 
   return (

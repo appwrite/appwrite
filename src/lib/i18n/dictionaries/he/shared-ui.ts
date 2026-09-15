@@ -5,6 +5,9 @@
 export const heSharedUiDictionary: Record<string, string> = {
   // Error formatting (toast titles and static messages) // pragma: allowlist secret
   Error: 'שגיאה',
+  'Error reporting': 'דיווח שגיאות',
+  'Crash and performance diagnostics to help us fix issues in Appwrite.':
+    'שולחים נתוני קריסות וביצועים כדי שנוכל לתקן תקלות ב-Appwrite.',
   'Not Found': 'לא נמצא',
   'Access Denied': 'הגישה נדחתה',
   Forbidden: 'אין הרשאה',
@@ -145,6 +148,8 @@ export const heSharedUiDictionary: Record<string, string> = {
   Content: 'תוכן',
   'Cookie preferences': 'העדפות עוגיות',
   'Cookies Policy': 'מדיניות העוגיות',
+  'We use cookies to improve Appwrite.':
+    'אנחנו משתמשים בעוגיות כדי לשפר את Appwrite.',
   'Copied line': 'השורה הועתקה',
   'Copied to clipboard': 'הועתק ללוח',
   Copy: 'העתקה',
@@ -257,6 +262,7 @@ export const heSharedUiDictionary: Record<string, string> = {
   Filters: 'סינונים',
   'Find a branch...': 'חיפוש ענף...',
   'Fix payment': 'הסדרת התשלום',
+  'Authorize payment': 'אישור תשלום',
   'Fix with an Agent': 'תיקון עם סוכן',
   'For me': 'עבורי',
   'For team': 'עבור הצוות',
@@ -444,6 +450,8 @@ export const heSharedUiDictionary: Record<string, string> = {
   Path: 'נתיב',
   'Payment failed - act now. Unresolved billing may interrupt your projects and services.':
     'התשלום נכשל - פעלו עכשיו. בעיית חיוב שלא נפתרה עלולה לשבש את הפרויקטים והשירותים שלכם.',
+  'Payment authorization required. Complete authentication now. Unresolved billing may interrupt your projects and services.':
+    'נדרש אישור תשלום. השלימו את האימות עכשיו. בעיית חיוב שלא נפתרה עלולה לשבש את הפרויקטים והשירותים שלכם.',
   'Payment failed - your organization has restricted access due to an unresolved billing issue. Changes to projects and services are restricted until payment succeeds. Update billing to restore full access.':
     'התשלום נכשל - לארגון שלכם יש גישה מוגבלת עקב בעיית חיוב שלא נפתרה. שינויים בפרויקטים ובשירותים מוגבלים עד להשלמת התשלום. עדכנו את פרטי החיוב כדי לשחזר גישה מלאה.',
   Preview: 'תצוגה מקדימה',

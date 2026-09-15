@@ -6,7 +6,7 @@ date: 2024-08-07
 cover: /images/blog/appwrite-backups-and-restores/cover.avif
 timeToRead: 3
 author: bradley-schofield
-category: product
+category: products
 faqs:
   - question: "Why should I back up my Appwrite instance regularly?"
     answer: "Backups protect your data from accidental deletions, failed updates, or hardware issues. They also make it easy to migrate between servers or environments. Regular backups ensure you can restore your setup quickly without losing user data or configurations."

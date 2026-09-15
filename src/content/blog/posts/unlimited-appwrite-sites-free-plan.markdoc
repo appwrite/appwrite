@@ -6,7 +6,7 @@ date: 2025-10-28
 cover: /images/blog/sites-free-plan.avif
 timeToRead: 4
 author: laura-du-ry
-category: announcement
+category: announcements
 faqs:
   - question: "How many sites can I deploy on the Appwrite free plan?"
     answer: "There is no per project cap on Sites for the free plan. You can deploy unlimited sites under a single Appwrite project for staging, previews, internal tools, and production, all without upgrading."

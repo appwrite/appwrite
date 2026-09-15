@@ -5,6 +5,7 @@ import { sdk } from '@/lib/appwrite/sdk'
 import { AppwriteException } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import {
+  isValidRelativeRedirect,
   prefetchPostAuthDestination,
   requiresConsoleEmailVerification,
   resolvePostAuthRedirect,
@@ -16,14 +17,6 @@ import {
   refreshConsoleAccountAfterAuth,
 } from '@/lib/react-query/hooks/auth'
 import { pageTitle } from '@/lib/utils/page-title'
-
-function isValidRelativeRedirect(url: string): boolean {
-  try {
-    return url.startsWith('/') && !url.includes('://')
-  } catch {
-    return false
-  }
-}
 
 const searchSchema = z.object({
   redirect: z

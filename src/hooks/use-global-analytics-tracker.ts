@@ -5,6 +5,7 @@ import {
   getSafeInternalPathParts,
 } from '@/lib/analytics'
 import { getAnalyticsActionEventName } from '@/lib/analytics-actions'
+import { deferAfterPaint } from '@/lib/defer-after-paint'
 import { useAnalytics } from './use-analytics'
 
 const CLICK_SELECTOR = [
@@ -29,6 +30,9 @@ const CHANGE_SELECTOR = [
   '[role="switch"]',
   '[role="checkbox"]',
 ].join(',')
+
+const DIALOG_SELECTOR = '[role="dialog"], [role="alertdialog"]'
+const DIALOG_ATTR_FILTER = ['aria-hidden', 'data-state', 'inert']
 
 function isHTMLElement(value: EventTarget | null): value is HTMLElement {
   return value instanceof HTMLElement
@@ -176,15 +180,13 @@ function getDialogElements(element: Element) {
   const dialogs: HTMLElement[] = []
   if (
     element instanceof HTMLElement &&
-    element.matches('[role="dialog"], [role="alertdialog"]')
+    element.matches(DIALOG_SELECTOR)
   ) {
     dialogs.push(element)
   }
   dialogs.push(
     ...Array.from(
-      element.querySelectorAll<HTMLElement>(
-        '[role="dialog"], [role="alertdialog"]',
-      ),
+      element.querySelectorAll<HTMLElement>(DIALOG_SELECTOR),
     ),
   )
   return dialogs
@@ -209,6 +211,16 @@ export function useGlobalAnalyticsTracker() {
 
   useEffect(() => {
     const activeDialogs = new Set<HTMLElement>()
+    const dialogObservers = new Map<HTMLElement, MutationObserver>()
+
+    const trackDeferred = (
+      eventName: AnalyticsEventName,
+      props: AnalyticsProps = {},
+    ) => {
+      deferAfterPaint(() => {
+        track(eventName, props)
+      })
+    }
 
     const syncDialog = (dialog: HTMLElement) => {
       const isOpen = isDialogOpen(dialog)
@@ -216,11 +228,34 @@ export function useGlobalAnalyticsTracker() {
 
       if (isOpen && !isActive) {
         activeDialogs.add(dialog)
-        track('Dialog Opened', getDialogProps(dialog))
+        trackDeferred('Dialog Opened', getDialogProps(dialog))
       } else if (!isOpen && isActive) {
         activeDialogs.delete(dialog)
-        track('Dialog Closed', getDialogProps(dialog))
+        trackDeferred('Dialog Closed', getDialogProps(dialog))
       }
+    }
+
+    const observeDialog = (dialog: HTMLElement) => {
+      if (dialogObservers.has(dialog)) return
+
+      const dialogObserver = new MutationObserver(() => {
+        syncDialog(dialog)
+      })
+
+      dialogObserver.observe(dialog, {
+        attributes: true,
+        attributeFilter: DIALOG_ATTR_FILTER,
+      })
+
+      dialogObservers.set(dialog, dialogObserver)
+      syncDialog(dialog)
+    }
+
+    const unobserveDialog = (dialog: HTMLElement) => {
+      const dialogObserver = dialogObservers.get(dialog)
+      if (!dialogObserver) return
+      dialogObserver.disconnect()
+      dialogObservers.delete(dialog)
     }
 
     const handleClick = (event: MouseEvent) => {
@@ -235,10 +270,11 @@ export function useGlobalAnalyticsTracker() {
       }
 
       const baseEventName = getBaseClickEventName(element)
-      track(
-        getDynamicEventName(element, baseEventName),
-        getClickProps(element, event),
-      )
+      const eventName = getDynamicEventName(element, baseEventName)
+      const props = getClickProps(element, event)
+      deferAfterPaint(() => {
+        track(eventName, props)
+      })
     }
 
     const handleChange = (event: Event) => {
@@ -246,54 +282,47 @@ export function useGlobalAnalyticsTracker() {
       const element = event.target.closest<HTMLElement>(CHANGE_SELECTOR)
       if (!element || shouldSkipAnalytics(element)) return
 
-      track(
-        getDynamicEventName(element, 'Control Changed'),
-        getChangeProps(element),
-      )
+      const eventName = getDynamicEventName(element, 'Control Changed')
+      const props = getChangeProps(element)
+      deferAfterPaint(() => {
+        track(eventName, props)
+      })
     }
 
     const handleSubmit = (event: SubmitEvent) => {
       if (!isFormElement(event.target) || shouldSkipAnalytics(event.target))
         return
-      track('Form Submitted', getFormProps())
+      deferAfterPaint(() => {
+        track('Form Submitted', getFormProps())
+      })
     }
 
     document.addEventListener('click', handleClick)
     document.addEventListener('change', handleChange)
     document.addEventListener('submit', handleSubmit)
-    document
-      .querySelectorAll<HTMLElement>('[role="dialog"], [role="alertdialog"]')
-      .forEach(syncDialog)
 
-    const observer = new MutationObserver((mutations) => {
+    document.querySelectorAll<HTMLElement>(DIALOG_SELECTOR).forEach(observeDialog)
+
+    const domObserver = new MutationObserver((mutations) => {
       mutations.forEach((mutation) => {
-        if (
-          mutation.type === 'attributes' &&
-          mutation.target instanceof HTMLElement
-        ) {
-          syncDialog(mutation.target)
-          return
-        }
-
         mutation.addedNodes.forEach((node) => {
           if (!(node instanceof Element)) return
-          getDialogElements(node).forEach(syncDialog)
+          getDialogElements(node).forEach(observeDialog)
         })
 
         mutation.removedNodes.forEach((node) => {
           if (!(node instanceof Element)) return
           getDialogElements(node).forEach((dialog) => {
+            unobserveDialog(dialog)
             if (!activeDialogs.has(dialog)) return
             activeDialogs.delete(dialog)
-            track('Dialog Closed', getDialogProps(dialog))
+            trackDeferred('Dialog Closed', getDialogProps(dialog))
           })
         })
       })
     })
 
-    observer.observe(document.body, {
-      attributes: true,
-      attributeFilter: ['aria-hidden', 'data-state', 'inert'],
+    domObserver.observe(document.body, {
       childList: true,
       subtree: true,
     })
@@ -302,7 +331,9 @@ export function useGlobalAnalyticsTracker() {
       document.removeEventListener('click', handleClick)
       document.removeEventListener('change', handleChange)
       document.removeEventListener('submit', handleSubmit)
-      observer.disconnect()
+      domObserver.disconnect()
+      dialogObservers.forEach((observer) => observer.disconnect())
+      dialogObservers.clear()
     }
   }, [track])
 }

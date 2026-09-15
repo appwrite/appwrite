@@ -2,6 +2,7 @@
 
 import { createClientOnlyFn } from '@tanstack/react-start'
 import { lazy, Suspense, useEffect, useRef, useState } from 'react'
+import { useHomeFoldPassed } from '@/hooks/use-home-fold-passed'
 import { useIntersectionVisible } from '@/hooks/use-intersection-visible'
 import { useT } from '@/lib/i18n/translate'
 import { importNamedDefault } from '@/lib/stale-chunk-error'
@@ -50,15 +51,17 @@ function NetworkGlobeLegend({ className }: { className?: string }) {
 }
 
 /**
- * Stable globe frame that never swaps placeholders. The WebGL canvas mounts on
- * idle, paints its first frame off-screen, then appears instantly over the
- * matching backdrop. After that it stays mounted and only pauses rendering.
+ * Stable globe frame that never swaps placeholders. The WebGL canvas mounts once
+ * the user scrolls past the hero fold, paints its first frame off-screen, then
+ * appears over the matching backdrop when the network section is near. After
+ * that it stays mounted and only pauses rendering when far off-screen.
  */
 export function NetworkGlobeMount({ className }: { className?: string }) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [mounted, setMounted] = useState(false)
   const [shouldMountGlobe, setShouldMountGlobe] = useState(false)
   const [isReady, setIsReady] = useState(false)
+  const passedHomeFold = useHomeFoldPassed()
   const { isVisible } = useIntersectionVisible(containerRef, {
     rootMargin: '480px 0px',
   })
@@ -68,21 +71,30 @@ export function NetworkGlobeMount({ className }: { className?: string }) {
   }, [])
 
   useEffect(() => {
-    if (!mounted) return
+    if (!mounted || !passedHomeFold || shouldMountGlobe) return
+
+    let cancelled = false
+    let idleId: number | undefined
+    let timeoutId: number | undefined
 
     const preloadGlobe = () => {
+      if (cancelled) return
       void loadNetworkGlobe()
       setShouldMountGlobe(true)
     }
 
     if ('requestIdleCallback' in window) {
-      const idleId = window.requestIdleCallback(preloadGlobe)
-      return () => window.cancelIdleCallback(idleId)
+      idleId = window.requestIdleCallback(preloadGlobe, { timeout: 1500 })
+    } else {
+      timeoutId = window.setTimeout(preloadGlobe, 150)
     }
 
-    const timeoutId = window.setTimeout(preloadGlobe, 300)
-    return () => window.clearTimeout(timeoutId)
-  }, [mounted])
+    return () => {
+      cancelled = true
+      if (idleId !== undefined) window.cancelIdleCallback(idleId)
+      if (timeoutId !== undefined) window.clearTimeout(timeoutId)
+    }
+  }, [mounted, passedHomeFold, shouldMountGlobe])
 
   // Paint the first frame even while off-screen; after that pause when far away.
   const globeActive = isVisible || !isReady

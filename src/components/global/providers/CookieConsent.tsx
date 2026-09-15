@@ -35,23 +35,23 @@ const CookieConsentContext = createContext<CookieConsentContextValue | null>(
 )
 
 function applyAnalyticsConsent(analytics: boolean) {
+  if (analytics) {
+    loadTrackingScriptsAfterConsent()
+  }
   setCookieConsentState({
     resolved: true,
     bannerRequired: true,
     analyticsGranted: analytics,
   })
-  if (analytics) {
-    loadTrackingScriptsAfterConsent()
-  }
 }
 
 function applyNonRegulatedRegion() {
+  loadTrackingScriptsAfterConsent()
   setCookieConsentState({
     resolved: true,
     bannerRequired: false,
     analyticsGranted: true,
   })
-  loadTrackingScriptsAfterConsent()
 }
 
 export function CookieConsentProvider({ children }: { children: ReactNode }) {
@@ -64,7 +64,7 @@ export function CookieConsentProvider({ children }: { children: ReactNode }) {
     isError: localeError,
   } = useQuery({
     ...localeQueryOptions(),
-    enabled: cookieBannerEnabled,
+    enabled: cookieBannerEnabled && typeof window !== 'undefined',
   })
   const bannerRequired = !cookieBannerEnabled
     ? false
@@ -123,11 +123,11 @@ export function CookieConsentProvider({ children }: { children: ReactNode }) {
     (preferences: CookieConsentPreferences) => {
       writeStoredCookieConsent(preferences.analytics)
       setDraftAnalytics(preferences.analytics)
-      applyAnalyticsConsent(preferences.analytics)
       setShowBanner(false)
       setPreferencesOpen(false)
       setIsReopening(false)
       setCustomizeOpen(false)
+      applyAnalyticsConsent(preferences.analytics)
     },
     [],
   )
@@ -196,8 +196,9 @@ export function CookieConsentProvider({ children }: { children: ReactNode }) {
   return (
     <CookieConsentContext.Provider value={contextValue}>
       {children}
-      {cookieBannerEnabled && showBanner ? (
+      {cookieBannerEnabled ? (
         <CookieConsentBanner
+          open={showBanner}
           customizeOpen={customizeOpen}
           draftAnalytics={draftAnalytics}
           onAcceptAll={acceptAll}

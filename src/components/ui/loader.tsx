@@ -15,7 +15,13 @@ const EXIT_DURATION_S = 0.22
 
 function LoaderBrandMark() {
   return (
-    <div className={cn('inline-flex items-end gap-1.5', FORCE_LTR_CLASS)} dir="ltr">
+    <div
+      className={cn(
+        'inline-flex items-end gap-1.5 animate-in fade-in duration-500 motion-reduce:animate-none',
+        FORCE_LTR_CLASS,
+      )}
+      dir="ltr"
+    >
       <AppwriteWordmark className="h-8" />
       <span className="pb-0.5 text-xs font-extralight tracking-tight text-muted-foreground">
         / 2.0

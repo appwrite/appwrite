@@ -1,4 +1,8 @@
 import { resetConsoleShellDocumentScroll } from '@/lib/utils'
+import {
+  getPageSurfaceOffsetTop,
+  scrollPageSurfaceTo,
+} from '@/lib/layout/marketing-document-scroll'
 
 /** Matches marketing section `scroll-mt-28` offset (px). */
 export const MARKETING_SECTION_SCROLL_OFFSET_PX = 112
@@ -15,21 +19,14 @@ export function scrollToMarketingSection(
 ) {
   if (typeof document === 'undefined') return
 
-  const main = document.getElementById('main-content')
   const el = document.getElementById(sectionId)
-  if (!main || !el) return
+  if (!el) return
 
   resetConsoleShellDocumentScroll()
 
-  const mainRect = main.getBoundingClientRect()
-  const elRect = el.getBoundingClientRect()
   const targetTop =
-    main.scrollTop +
-    elRect.top -
-    mainRect.top -
-    MARKETING_SECTION_SCROLL_OFFSET_PX
-
-  main.scrollTo({ top: Math.max(0, targetTop), behavior })
+    getPageSurfaceOffsetTop(el) - MARKETING_SECTION_SCROLL_OFFSET_PX
+  scrollPageSurfaceTo(targetTop, behavior)
 
   if (typeof window !== 'undefined') {
     const nextHash = `#${sectionId}`

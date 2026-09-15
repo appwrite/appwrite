@@ -6,7 +6,7 @@ date: 2026-04-29
 cover: /images/blog/announcing-message-based-realtime-sdk/cover.avif
 timeToRead: 9
 author: eldad-fux
-category: announcement
+category: announcements
 featured: false
 faqs:
   - question: "How does Appwrite Realtime work in the new message-based model?"

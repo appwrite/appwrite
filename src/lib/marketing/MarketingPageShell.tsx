@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { ConsoleLayout } from '@/components/global/layout/ConsoleLayout'
-import { StandaloneCommandCenterScope } from '@/components/global/providers/KeyboardShortcuts'
+import { StandaloneCommandCenterScope } from '@/components/global/providers/StandaloneCommandCenterScope'
 import { MarketingScrollToTop } from '@/lib/marketing/MarketingScrollToTop'
 import { useMarketingSiteLayoutProvided } from '@/lib/marketing/marketing-site-layout-context'
 

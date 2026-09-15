@@ -8,7 +8,7 @@ date: 2025-10-27
 author: veeresh-mulge
 callToAction: true
 unlisted: true
-category: tutorial
+category: tutorials
 faqs:
   - question: "What are some real examples of vibe coding projects?"
     answer: "There are tons, but some standouts include Refetch, an open-source Hacker News alternative built with Appwrite and Cursor in just 15 hours; Mealmuse, which turns fridge photos into meal plans; and Found My Focus, a psychology-based productivity app built with Bolt. These projects show how both developers and non-developers are turning ideas into live products fast using AI-assisted workflows."

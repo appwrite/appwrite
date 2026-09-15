@@ -6,7 +6,7 @@ date: 2025-09-10
 cover: /images/blog/client-vs-server-components-react/cover.avif
 timeToRead: 5
 author: atharva
-category: tutorial
+category: tutorials
 faqs:
   - question: "What is the difference between client and server components in React?"
     answer: "Client components run on the user's browser using JavaScript and can use hooks like `useState`, `useEffect`, and browser APIs. Server components run on the server, return HTML, and have no client-side JavaScript by default. Server components are great for data fetching and SEO; client components are needed wherever you have interactivity."

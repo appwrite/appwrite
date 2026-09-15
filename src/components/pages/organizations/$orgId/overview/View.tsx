@@ -57,7 +57,7 @@ import {
   DOMAINS_DEFAULT_SORT_BY,
   DOMAINS_DEFAULT_SORT_ORDER,
   useOrganizationPlan,
-  useOrganizationFailedInvoicePresence,
+  useOrganizationBillingInvoicePresence,
   isOrganizationBillingReadonlyStatus,
   isBudgetLimitReached,
   isPlanUsageLimitReached,
@@ -399,7 +399,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     useServiceListViewMode('projects')
 
   const { data: failedInvoicePresence } =
-    useOrganizationFailedInvoicePresence(orgId)
+    useOrganizationBillingInvoicePresence(orgId)
   const showFailedInvoiceOrgAlert =
     features.billing && failedInvoicePresence?.hasFailedInvoice === true
   const { showSuccessTeamCard: debugShowSuccessTeamCard } = useDebugOverrides()

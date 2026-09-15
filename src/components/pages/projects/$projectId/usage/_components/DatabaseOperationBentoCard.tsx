@@ -53,6 +53,7 @@ type DatabaseOperationBentoCardProps = {
   total: number
   changePercent: number
   isLoading: boolean
+  isRefreshing?: boolean
   isError: boolean
   queryError?: unknown
   showBreakdown: boolean
@@ -95,6 +96,7 @@ export function DatabaseOperationBentoCard({
   total,
   changePercent,
   isLoading,
+  isRefreshing = false,
   isError,
   queryError,
   showBreakdown,
@@ -134,6 +136,7 @@ export function DatabaseOperationBentoCard({
         changePercent={changePercent}
         chartPoints={chartPoints}
         isLoading={isLoading}
+        isRefreshing={isRefreshing}
         isError={isError}
         queryError={queryError}
         errorTitle={DATABASE_USAGE_ERROR.title}

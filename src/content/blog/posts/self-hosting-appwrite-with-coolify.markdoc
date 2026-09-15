@@ -6,7 +6,7 @@ date: 2025-02-28
 cover: /images/blog/self-hosting-appwrite-with-coolify/cover.avif
 timeToRead: 15
 author: chirag-aggarwal
-category: tutorial
+category: tutorials
 faqs:
   - question: "Can I self-host Appwrite on my own server?"
     answer: "Yes, absolutely! Appwrite was built with self-hosting in mind. You can run it on your own hardware, a VPS, or cloud providers like DigitalOcean, AWS, or Azure. Self-hosting gives you control over your data, security, and setup. You can even modify the source code to fit your exact needs. Tools like Coolify make it even easier by handling the deployment for you, so you don't have to manage containers or complex configurations manually."

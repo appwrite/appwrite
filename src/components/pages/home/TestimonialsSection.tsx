@@ -501,7 +501,7 @@ export function TestimonialsSection() {
 
             <div className="relative z-[1] col-span-6 mt-8 text-center lg:mt-10">
               <BlogPageAnchor
-                href="/blog/category/customer-stories"
+                href="/blog/categories/customer-stories"
                 className="link-neutral inline-flex items-center gap-1.5 text-[13px]"
               >
                 {t('Read our case studies')}

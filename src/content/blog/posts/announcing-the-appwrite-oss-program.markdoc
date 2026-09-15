@@ -6,7 +6,7 @@ date: 2023-12-28
 cover: /images/blog/OSS-program.avif
 timeToRead: 3
 author: laura-du-ry
-category: open-source, announcement
+category: open-source, announcements
 faqs:
   - question: "What is the Appwrite OSS Program?"
     answer: "The Appwrite OSS Program gives qualifying open source maintainers free access to Appwrite Pro on Appwrite Cloud. It is designed to reduce infrastructure costs for nonprofit and pre-revenue open source projects so maintainers can focus on building rather than billing."

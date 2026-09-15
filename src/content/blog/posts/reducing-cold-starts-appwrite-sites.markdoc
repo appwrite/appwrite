@@ -6,7 +6,7 @@ date: 2026-04-24
 cover: /images/blog/reducing-cold-starts-appwrite-sites/cover.avif
 timeToRead: 5
 author: levi-van-noort
-category: product
+category: products
 faqs:
   - question: "What is a cold start on [Appwrite Sites](/docs/products/sites)?"
     answer: "A cold start is the extra time the first request takes when a new instance has to be spun up before serving traffic. For SSR sites, it includes downloading the build artifact, extracting it, and initializing the runtime."

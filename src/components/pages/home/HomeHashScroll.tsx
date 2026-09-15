@@ -6,6 +6,7 @@ import {
   isHomeHashTarget,
   scrollToMarketingSection,
 } from '@/lib/marketing/section-scroll'
+import { deferAfterPaint } from '@/lib/defer-after-paint'
 import { resetConsoleShellDocumentScroll } from '@/lib/utils'
 
 const MAX_HASH_SCROLL_ATTEMPTS = 24
@@ -109,18 +110,20 @@ export function HomeHashScroll() {
       if (!isHomeHashTarget(hash)) return
 
       event.preventDefault()
-      scrollHomeHashTarget(hash, 'smooth', false)
+      deferAfterPaint(() => {
+        scrollHomeHashTarget(hash, 'smooth', false)
+      })
     }
 
     window.addEventListener('hashchange', onHashChange)
-    document.addEventListener('click', onHomeHashClick, true)
+    document.addEventListener('click', onHomeHashClick)
 
     return () => {
       if (root instanceof HTMLElement) {
         root.removeEventListener('scroll', lockRootScroll)
       }
       window.removeEventListener('hashchange', onHashChange)
-      document.removeEventListener('click', onHomeHashClick, true)
+      document.removeEventListener('click', onHomeHashClick)
     }
   }, [])
 

@@ -6,7 +6,7 @@ date: 2024-07-23
 cover: /images/blog/announcing-appwrite-daily-dot-dev-squad/daily.dev-squad.avif
 timeToRead: 3
 author: laura-du-ry
-category: announcement
+category: announcements
 faqs:
   - question: "What is daily.dev?"
     answer: "daily.dev is a developer news aggregator that curates articles, tutorials, and updates from across the web into a personalized feed. It is widely used as a way to keep up with frameworks, libraries, and industry trends without manually following dozens of blogs."

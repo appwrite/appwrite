@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import type { Models } from '@appwrite.io/console'
 import { useProjectConnectDialog } from '@/components/pages/projects/$projectId/shared/ProjectConnectDialogContext'
@@ -90,7 +90,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet'
-import { useKeyboardShortcutsContext } from '@/components/global/providers/KeyboardShortcuts'
+import { useKeyboardShortcutsContext } from '@/components/global/providers/keyboard-shortcuts-context'
 import { ThemeToggle } from '@/components/global/shared/ThemeToggle'
 import { SupportPopover } from '@/components/global/shared/SupportPopover'
 import { FeedbackPopover } from '@/components/global/shared/FeedbackPopover'
@@ -159,7 +159,7 @@ function getDefaultMarketingHeaderNav(
     },
     {
       label: copy.customers,
-      href: '/blog/category/customer-stories',
+      href: '/blog/categories/customer-stories',
     },
     {
       label: copy.blog,
@@ -172,13 +172,52 @@ function getDefaultMarketingHeaderNav(
   ] as const
 }
 
+function normalizeMarketingNavPath(pathname: string): string {
+  return pathname.replace(/\/+$/, '') || '/'
+}
+
+function isProductsMarketingPath(pathname: string): boolean {
+  const path = normalizeMarketingNavPath(pathname)
+  return (
+    path === '/products' ||
+    path.startsWith('/products/') ||
+    path === '/domains' ||
+    path.startsWith('/domains/')
+  )
+}
+
+function getActiveMarketingNavHref(
+  pathname: string,
+  items: readonly MarketingHeaderNavItem[],
+): string | null {
+  if (isProductsMarketingPath(pathname)) {
+    return items.find((item) => item.menu === 'products')?.href ?? null
+  }
+
+  const path = normalizeMarketingNavPath(pathname)
+  let bestHref: string | null = null
+  let bestLength = 0
+
+  for (const item of items) {
+    if (item.menu === 'products') continue
+    const href = normalizeMarketingNavPath(item.href)
+    if (path !== href && !path.startsWith(`${href}/`)) continue
+    if (href.length > bestLength) {
+      bestHref = item.href
+      bestLength = href.length
+    }
+  }
+
+  return bestHref
+}
+
 function getMarketingNavAnalyticsAction(
   href: string,
 ): AnalyticsActionId | undefined {
   if (href === '/docs') return 'marketing-nav-docs'
   if (href === '/pricing') return 'marketing-nav-pricing'
   if (href === '/enterprise') return 'marketing-nav-enterprise'
-  if (href === '/blog/category/customer-stories')
+  if (href === '/blog/categories/customer-stories')
     return 'marketing-nav-customers'
   if (href === '/blog') return 'marketing-nav-blog'
   if (href === '/changelog') return 'marketing-nav-changelog'
@@ -208,35 +247,78 @@ function MarketingNavLabel({
   )
 }
 
+const MARKETING_NAV_LINK_CLASS =
+  'link-unstyled inline-flex h-9 items-center gap-1 rounded-md px-2.5 text-start text-[13px] font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground'
+const MARKETING_NAV_LINK_ACTIVE_CLASS = 'bg-accent text-foreground'
+
+function marketingNavLinkAria(
+  item: MarketingHeaderNavItem,
+  showChangelogBadge: boolean,
+  changelogAriaLabel: string,
+) {
+  return item.href === '/changelog' && showChangelogBadge
+    ? { 'aria-label': changelogAriaLabel }
+    : {}
+}
+
+function MarketingNavItemLabel({
+  item,
+  showChangelogBadge,
+}: {
+  item: MarketingHeaderNavItem
+  showChangelogBadge: boolean
+}) {
+  return (
+    <MarketingNavLabel
+      label={item.label}
+      showNewIndicator={item.href === '/changelog' && showChangelogBadge}
+    />
+  )
+}
+
 function MarketingNavLink({
   item,
   showChangelogBadge,
   changelogAriaLabel,
+  isActive,
   className,
 }: {
   item: MarketingHeaderNavItem
   showChangelogBadge: boolean
   changelogAriaLabel: string
+  isActive: boolean
   className?: string
 }) {
   const navAnalytics = getMarketingNavAnalyticsAction(item.href)
+  const linkProps = {
+    className: cn(
+      MARKETING_NAV_LINK_CLASS,
+      isActive && MARKETING_NAV_LINK_ACTIVE_CLASS,
+      className,
+    ),
+    'aria-current': isActive ? ('page' as const) : undefined,
+    ...(navAnalytics ? analyticsAttrs(navAnalytics) : {}),
+    ...marketingNavLinkAria(item, showChangelogBadge, changelogAriaLabel),
+  }
+  const label = (
+    <MarketingNavItemLabel
+      item={item}
+      showChangelogBadge={showChangelogBadge}
+    />
+  )
+
+  if (item.href.startsWith('http://') || item.href.startsWith('https://')) {
+    return (
+      <a href={item.href} {...linkProps}>
+        {label}
+      </a>
+    )
+  }
+
   return (
-    <a
-      href={item.href}
-      className={cn(
-        'link-unstyled inline-flex h-9 items-center gap-1 rounded-md px-2.5 text-start text-[13px] font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground',
-        className,
-      )}
-      {...(navAnalytics ? analyticsAttrs(navAnalytics) : {})}
-      {...(item.href === '/changelog' && showChangelogBadge
-        ? { 'aria-label': changelogAriaLabel }
-        : {})}
-    >
-      <MarketingNavLabel
-        label={item.label}
-        showNewIndicator={item.href === '/changelog' && showChangelogBadge}
-      />
-    </a>
+    <Link to={item.href} activeOptions={{ exact: true }} {...linkProps}>
+      {label}
+    </Link>
   )
 }
 
@@ -244,27 +326,41 @@ function MarketingMobileNavLink({
   item,
   showChangelogBadge,
   changelogAriaLabel,
+  isActive,
 }: {
   item: MarketingHeaderNavItem
   showChangelogBadge: boolean
   changelogAriaLabel: string
+  isActive: boolean
 }) {
   const navAnalytics = getMarketingNavAnalyticsAction(item.href)
+  const linkProps = {
+    className: cn(
+      'link-unstyled flex h-10 w-full items-center justify-start rounded-md px-3 text-start text-[13px] font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground',
+      isActive && MARKETING_NAV_LINK_ACTIVE_CLASS,
+    ),
+    'aria-current': isActive ? ('page' as const) : undefined,
+    ...(navAnalytics ? analyticsAttrs(navAnalytics) : {}),
+    ...marketingNavLinkAria(item, showChangelogBadge, changelogAriaLabel),
+  }
+  const label = (
+    <MarketingNavItemLabel
+      item={item}
+      showChangelogBadge={showChangelogBadge}
+    />
+  )
+
   return (
     <SheetClose asChild>
-      <a
-        href={item.href}
-        className="link-unstyled flex h-10 w-full items-center justify-start rounded-md px-3 text-start text-[13px] font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-        {...(navAnalytics ? analyticsAttrs(navAnalytics) : {})}
-        {...(item.href === '/changelog' && showChangelogBadge
-          ? { 'aria-label': changelogAriaLabel }
-          : {})}
-      >
-        <MarketingNavLabel
-          label={item.label}
-          showNewIndicator={item.href === '/changelog' && showChangelogBadge}
-        />
-      </a>
+      {item.href.startsWith('http://') || item.href.startsWith('https://') ? (
+        <a href={item.href} {...linkProps}>
+          {label}
+        </a>
+      ) : (
+        <Link to={item.href} activeOptions={{ exact: true }} {...linkProps}>
+          {label}
+        </Link>
+      )}
     </SheetClose>
   )
 }
@@ -284,6 +380,13 @@ interface ConsoleHeaderProps {
   centerSearchPlaceholder?: string
   /** When true, search is hidden (e.g. when native app bar is shown above) */
   hideSearch?: boolean
+}
+
+/** Survives header remounts: fade once on first reveal, then keep the last auth UI. */
+let marketingHeaderAuthSnapshot = {
+  revealed: false,
+  authenticated: false,
+  playedFade: false,
 }
 
 export function ConsoleHeader({
@@ -355,7 +458,7 @@ export function ConsoleHeader({
   const supportsMultiTenancy = features.multiTenancy
   const overrides = useDebugOverrides()
   const preLaunch = overrides.preLaunch
-  const localMarketing = features.marketing && !preLaunch
+  const inAppMarketingNav = Boolean(marketingNav) && !preLaunch
   const { access } = useOrganizationScopes(orgId ?? project?.teamId)
   const defaultMarketingHeaderNav = getDefaultMarketingHeaderNav(
     headerCopy.marketingNav,
@@ -368,25 +471,29 @@ export function ConsoleHeader({
         : []
   ).map((item) => {
     if (item.href === '/blog') {
-      return { ...item, href: getBlogPageUrl('/blog', localMarketing) }
+      return { ...item, href: getBlogPageUrl('/blog', inAppMarketingNav) }
     }
-    if (item.href === '/blog/category/customer-stories') {
+    if (item.href === '/blog/categories/customer-stories') {
       return {
         ...item,
-        href: getBlogPageUrl('/blog/category/customer-stories', localMarketing),
+        href: getBlogPageUrl('/blog/categories/customer-stories', inAppMarketingNav),
       }
     }
     if (item.href === '/docs') {
-      return { ...item, href: getMarketingPageUrl('/docs', localMarketing) }
+      return { ...item, href: getMarketingPageUrl('/docs', inAppMarketingNav) }
     }
     if (item.href === '/changelog') {
       return {
         ...item,
-        href: getMarketingPageUrl('/changelog', localMarketing),
+        href: getMarketingPageUrl('/changelog', inAppMarketingNav),
       }
     }
     return item
   })
+  const activeMarketingNavHref = getActiveMarketingNavHref(
+    location.pathname,
+    marketingNavItems,
+  )
   const showMarketingNav = marketingNavItems.length > 0 && !preLaunch
   const showAgent = features.agent && !showMarketingNav && !preLaunch
   const showNotifications =
@@ -466,10 +573,27 @@ export function ConsoleHeader({
     !!headerAccount ||
     getConsoleAccountUnauthenticatedError(getConsoleAccountQueryRevision()) !==
       undefined
-  const optionalAuthPending = isOptionalAuth && !optionalAuthResolved
-  const headerAuthenticated = isAuthenticated || !!headerAccount
-  const showGuestHeader =
-    isOptionalAuth && optionalAuthResolved && !headerAuthenticated
+  const playAccountFadeRef = useRef(false)
+  if (typeof window !== 'undefined' && optionalAuthResolved) {
+    if (!marketingHeaderAuthSnapshot.playedFade) {
+      playAccountFadeRef.current = true
+      marketingHeaderAuthSnapshot.playedFade = true
+    }
+    marketingHeaderAuthSnapshot.revealed = true
+    marketingHeaderAuthSnapshot.authenticated = Boolean(
+      isAuthenticated || headerAccount,
+    )
+  }
+  const authAlreadyRevealed = marketingHeaderAuthSnapshot.revealed
+  const fadeInAccountCluster = playAccountFadeRef.current
+  const optionalAuthPending =
+    isOptionalAuth && !optionalAuthResolved && !authAlreadyRevealed
+  const headerAuthenticated =
+    isAuthenticated ||
+    !!headerAccount ||
+    (authAlreadyRevealed && marketingHeaderAuthSnapshot.authenticated)
+  // The pending pathname changes before this header unmounts on auth navigation.
+  const showGuestHeader = !headerAuthenticated
   const authRedirect = resolvePostAuthRedirect(location.pathname)
   const showMarketingLinks = showMarketingNav && !centerSearch
   // Only show upgrade when current plan cost is 0 (free); hide when already on a paid plan.
@@ -486,10 +610,17 @@ export function ConsoleHeader({
   const showOrgDomainsLink = Boolean(
     orgId && canShowOrgDomainsTab(access, features),
   )
-  const docsHref = getMarketingPageUrl('/docs', localMarketing)
-  const changelogHref = getMarketingPageUrl('/changelog', localMarketing)
-  const homeHref = getMarketingPageUrl('/home', localMarketing)
-  const marketingNavLinksExternal = isMarketingPageExternal(localMarketing)
+  // Cloud: in-app `/home` (signed-in `/` is the console). Self-hosted: appwrite.io.
+  const accountMenuMarketingLocal = features.marketing && !preLaunch
+  const docsHref = getMarketingPageUrl('/docs', accountMenuMarketingLocal)
+  const changelogHref = getMarketingPageUrl(
+    '/changelog',
+    accountMenuMarketingLocal,
+  )
+  const homeHref = getMarketingPageUrl('/home', accountMenuMarketingLocal)
+  const marketingNavLinksExternal = isMarketingPageExternal(
+    accountMenuMarketingLocal,
+  )
   // The account menu links elsewhere: drop the entry for the page you are on.
   const accountMenuLinks = getAccountMenuLinks({
     pathname: location.pathname,
@@ -567,11 +698,15 @@ export function ConsoleHeader({
                 >
                   {marketingNavItems.map((item) =>
                     isMarketingProductsNavItem(item) ? (
-                      <MarketingProductsMobileNav key={item.label} />
+                      <MarketingProductsMobileNav
+                        key={item.label}
+                        isActive={item.href === activeMarketingNavHref}
+                      />
                     ) : (
                       <MarketingMobileNavLink
                         key={item.label}
                         item={item}
+                        isActive={item.href === activeMarketingNavHref}
                         showChangelogBadge={showChangelogBadge}
                         changelogAriaLabel={
                           headerCopy.marketingNav.changelogNewUpdatesAria
@@ -1149,11 +1284,15 @@ export function ConsoleHeader({
             >
               {marketingNavItems.map((item) =>
                 isMarketingProductsNavItem(item) ? (
-                  <MarketingProductsNavPopover key={item.label} />
+                  <MarketingProductsNavPopover
+                    key={item.label}
+                    isActive={item.href === activeMarketingNavHref}
+                  />
                 ) : (
                   <MarketingNavLink
                     key={item.label}
                     item={item}
+                    isActive={item.href === activeMarketingNavHref}
                     showChangelogBadge={showChangelogBadge}
                     changelogAriaLabel={
                       headerCopy.marketingNav.changelogNewUpdatesAria
@@ -1203,20 +1342,30 @@ export function ConsoleHeader({
         >
           {optionalAuthPending ? (
             <div
+              data-marketing-header-auth=""
               className="flex h-9 items-center gap-1 @[640px]:gap-2"
               aria-hidden
             >
               <div className="h-9 w-[4.75rem] shrink-0 rounded-md @[640px]:w-[4.875rem]" />
               <div className="h-9 w-[4.875rem] shrink-0 rounded-md" />
             </div>
-          ) : showGuestHeader ? (
+          ) : (
+            <div
+              data-marketing-header-auth=""
+              className={cn(
+                'flex min-w-0 items-center gap-1 @[640px]:gap-2',
+                fadeInAccountCluster &&
+                  'animate-in fade-in-0 duration-700 ease-out motion-reduce:animate-none',
+              )}
+            >
+          {showGuestHeader ? (
             <>
               {showCenterSearch ? (
                 <button
                   type="button"
                   {...analyticsAttrs('command-center')}
                   onClick={openCommandCenter}
-                  className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                  className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[900px]:hidden"
                   aria-label={resolvedCenterSearchPlaceholder}
                 >
                   <Search className="h-4 w-4" />
@@ -1829,6 +1978,8 @@ export function ConsoleHeader({
                 onOpenChange={setImpersonateDialogOpen}
               />
             </>
+          )}
+            </div>
           )}
         </div>
       </header>

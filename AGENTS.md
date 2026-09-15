@@ -1104,6 +1104,43 @@ Profiles control which features are available based on deployment type (cloud vs
 - **Cloud** (default): Full feature set – billing, domains, usage stats, activity, org roles, system status, account MFA, account identities, **user verification** (redirect to verify-email page after signup), **cookie banner** (locale-gated GDPR consent). **Notifications** center is off by default in both profiles.
 - **Self-hosted**: Cloud-only features disabled (user verification off; signup redirects directly to console; cookie banner off; notifications off). Usage stats follow `_APP_USAGE_STATS` (on by default)
 
+### Browser flag API for agents
+
+`window.__vibes` is always available after hydration in development. In production,
+set `VITE_CONSOLE_BROWSER_API=true` in the server environment to expose it. Unset,
+false, and unrecognized values leave the global absent. This uses shared runtime
+config, so changing production exposure requires a server restart and page reload,
+but no rebuild. The API is available to all scripts on an enabled page.
+
+Run these calls in the target browser page, using browser JavaScript evaluation:
+
+```js
+window.__vibes.flags.list()
+window.__vibes.flags.set({ agent: true, showActivityChart: true })
+window.__vibes.flags.set({ agent: false })
+window.__vibes.flags.reset('agent')
+window.__vibes.flags.resetAll()
+
+window.__vibes.screenshotMode.enable()
+window.__vibes.screenshotMode.disable()
+window.__vibes.screenshotMode.isEnabled()
+```
+
+Screenshot mode is separate from feature flags and uses the same API exposure
+setting. Its methods return the current enabled boolean. Enable and disable use
+the existing screenshot-mode storage and events, updating the UI and persisting
+across reloads. `flags.resetAll()` leaves screenshot mode unchanged.
+
+`list()` and flag mutations return a record keyed by flag name, with `default`,
+`override` (`null` when unset), and `effective` boolean values. All keys and values
+are validated before a set request changes anything. Profile restrictions still
+apply, so inspect `effective` to verify a change. Calls use the debug menu setters
+and persist browser-local overrides across reloads. Reset restores configured
+defaults, while setting false explicitly disables a flag. `resetAll()` clears only
+feature flag overrides, preserving the selected profile and other debug settings.
+Wait for the resulting UI render before interacting with an enabled feature.
+These flags do not grant backend permissions. Curl cannot call this browser API.
+
 **Env var:** `VITE_CONSOLE_PROFILE=cloud` or `VITE_CONSOLE_PROFILE=self-hosted`
 
 **Per-feature env overrides** (optional; unset = profile default):
@@ -1119,7 +1156,7 @@ Profiles control which features are available based on deployment type (cloud vs
 
 **Init day unlocks** (always controlled; never calendar-driven):
 
-- Default is **after the event** (`getInitMockCurrentDayDefault()` in `src/lib/init/mock-current-day.ts` → `getInitMockDayAfter()`, recap mode with all days unlocked).
+- Default is **post-event, no banner** (`getInitMockCurrentDayDefault()` in `src/lib/init/mock-current-day.ts` → `getInitMockDayBannerExpired()`, recap mode with all days unlocked and the org promo banner hidden).
 - Advance the day from debug menu → Init → **Day** (slider: Before → Day 1–5 → After → Banner off).
 - When ready for a new default for everyone, change `getInitMockCurrentDayDefault()` to the day you want unlocked.
 **Debug mode:** When debug menu is open (type `pink`, case-insensitive), use Console profile submenu to override the env-selected profile. Override is stored in localStorage and takes precedence until "Use env var" is selected.
@@ -1608,10 +1645,10 @@ Blog posts and changelog entries are optimized for Google Search and Google Disc
 
 - **Minimum width: 1200px** (`MIN_COVER_IMAGE_WIDTH` in `src/lib/seo/cover-constants.ts`). Google Discover only features content with large images (at least 1200px wide) combined with the `max-image-preview:large` robots directive (set site-wide in `src/lib/seo/indexing.ts`).
 - **Recommended size**: 1920x1080 (the `blog` preset in the cover generator) or any 16:9 image at 1200px+ wide.
-- **New blog post covers**: place them at `public/images/blog/<slug>/cover.avif` (or `blog-local` for vibes-native posts) and set `cover:` in the post frontmatter. `scripts/generate-blog-local-images.ts` automatically upscales sources below 1200px and warns; prefer sources that are already large enough.
+- **New blog post covers**: place them at `public/images/blog/<slug>/cover.avif` and set `cover:` in the post frontmatter. `scripts/generate-blog-images.ts` automatically upscales sources below 1200px and warns; prefer sources that are already large enough.
 - **After adding or changing any cover**: run `bun run generate:cover-manifest`. This regenerates `src/lib/seo/cover-dimensions.json`, which the SEO helpers use to emit accurate `og:image:width` / `og:image:height`. The script warns about undersized covers; fix them with `bun run generate:content-covers` (upscales in place, aspect ratio preserved). The manifest is also regenerated during `bun run build`.
 - **Never** claim 1200x630 for a cover that has different dimensions; the manifest lookup handles this - do not hardcode dimensions in meta tags.
-- **Never add a per-post cover generator function.** A cover is a finished image that ships in `public/images/`, not code. Do not add a `generate<Post>Cover` function or an `IMAGE_GENERATORS` entry to `scripts/generate-blog-local-images.ts` for a new post, and never run that script for a slug whose cover already exists: the generator re-renders `cover.avif` and silently overwrites the shipped one. To convert an inline screenshot for a post without a generator, convert it outside the cover path and commit only the `.avif`.
+- **Never add a per-post cover generator function.** A cover is a finished image that ships in `public/images/`, not code. Do not add a `generate<Post>Cover` function or an `IMAGE_GENERATORS` entry to `scripts/generate-blog-images.ts` for a new post, and never run that script for a slug whose cover already exists: the generator re-renders `cover.avif` and silently overwrites the shipped one. To convert an inline screenshot for a post without a generator, convert it outside the cover path and commit only the `.avif`.
 
 ### Article meta and structured data
 
@@ -1631,6 +1668,8 @@ Blog posts and changelog entries are optimized for Google Search and Google Disc
 ---
 
 ## Environment
+
+For screenshot captures, set `VITE_CONSOLE_SCREENSHOT_MODE=true` before starting the dev or production server. Screenshot mode defaults to off when unset. A saved browser preference overrides the environment default; typing `smile` outside an input or editor toggles the mode and saves that choice. Remove `screenshot:modeOpen` from localStorage to use the environment default again.
 
 Set `VITE_APPWRITE_ENDPOINT` in `.env` (default: `https://cloud.appwrite.io/v1`). Project endpoints are dynamic (per-project region); use `getApiEndpoint(region)` and `getProjectApiEndpoint(projectId)` from `@/lib/appwrite/sdk` for URL construction.
 

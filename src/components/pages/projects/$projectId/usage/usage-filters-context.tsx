@@ -14,7 +14,10 @@ export type UsageFiltersContextValue = {
   organizationId?: string | null
   usageLogRetentionHours: number
   usageLogRetentionDays: number
+  /** False until org plan retention is known (avoids fetching with wrong defaults). */
+  usageLogRetentionReady: boolean
   dateRange: DateRange | undefined
+  dateRangePresetId?: string | null
   chartInterval: UsageChartInterval
   /** Persist a new chart date range (picker or chart brush selection). */
   onDateRangeChange: (dateRange: DateRange | undefined) => void

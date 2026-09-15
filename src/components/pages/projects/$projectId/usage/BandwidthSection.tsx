@@ -39,7 +39,7 @@ import {
   resolveBandwidthStackedYAxisDomain,
   type BandwidthDualChartPoint,
 } from '@/lib/usage/bandwidth-events'
-import { shouldShowUsageChartSkeleton } from '@/lib/usage/usage-chart-loading'
+import { getUsageChartLoadingProps } from '@/lib/usage/usage-chart-loading'
 import {
   sumUsageChartPoints,
   type UsageEventBreakdownDimension,
@@ -67,6 +67,7 @@ import {
 } from './_components/UsageMetricCard'
 import { UsageSectionChartError } from './_components/UsageSectionChartError'
 import { UsageChartBrushReferenceArea } from './_components/UsageChartBrushReferenceArea'
+import { UsageChartRefreshingOverlay } from './_components/UsageChartRefreshingOverlay'
 
 const BANDWIDTH_DESCRIPTION =
   'Total inbound and outbound network traffic during the selected period. Includes API responses, file transfers, and function I/O.'
@@ -142,6 +143,7 @@ type BandwidthChartCardProps = {
   changePercent: number
   dualChartPoints: BandwidthDualChartPoint[]
   isLoading: boolean
+  isRefreshing?: boolean
   isError: boolean
   chartError?: unknown
   onRetry?: () => void
@@ -152,6 +154,7 @@ function BandwidthChartCard({
   changePercent,
   dualChartPoints,
   isLoading,
+  isRefreshing = false,
   isError,
   chartError,
   onRetry,
@@ -217,31 +220,36 @@ function BandwidthChartCard({
             {isLoading ? (
               <ChartMetricHeaderSkeleton />
             ) : (
-              <>
-                <span className="text-[24px] font-semibold tabular-nums text-foreground">
-                  {formattedTotal}
-                </span>
-                {!isError && dualChartPoints.length > 0 ? (
-                  <span
-                    className={cn(
-                      'text-[12px] font-medium tabular-nums',
-                      changePercent > 0 &&
-                        'text-emerald-600 dark:text-emerald-400',
-                      changePercent < 0 && 'text-amber-600 dark:text-amber-400',
-                      changePercent === 0 && 'text-muted-foreground',
-                    )}
-                  >
-                    {changeLabel} {t('vs previous period')}
+              <UsageChartRefreshingOverlay
+                isRefreshing={isRefreshing}
+                className="flex flex-wrap items-baseline gap-x-2 gap-y-1"
+              >
+                <>
+                  <span className="text-[24px] font-semibold tabular-nums text-foreground">
+                    {formattedTotal}
                   </span>
-                ) : !isLoading ? (
-                  <span
-                    className="invisible text-[12px] font-medium tabular-nums"
-                    aria-hidden
-                  >
-                    0% {t('vs previous period')}
-                  </span>
-                ) : null}
-              </>
+                  {!isError && dualChartPoints.length > 0 ? (
+                    <span
+                      className={cn(
+                        'text-[12px] font-medium tabular-nums',
+                        changePercent > 0 &&
+                          'text-emerald-600 dark:text-emerald-400',
+                        changePercent < 0 && 'text-amber-600 dark:text-amber-400',
+                        changePercent === 0 && 'text-muted-foreground',
+                      )}
+                    >
+                      {changeLabel} {t('vs previous period')}
+                    </span>
+                  ) : (
+                    <span
+                      className="invisible text-[12px] font-medium tabular-nums"
+                      aria-hidden
+                    >
+                      0% {t('vs previous period')}
+                    </span>
+                  )}
+                </>
+              </UsageChartRefreshingOverlay>
             )}
           </div>
         </div>
@@ -283,17 +291,18 @@ function BandwidthChartCard({
           </UsageBandwidthChartArea>
         ) : (
           <UsageBandwidthChartArea>
-            <div
-              className={surfaceClassName}
-              aria-label={
-                canSelect
-                  ? t('Drag on the chart to select a date range')
-                  : undefined
-              }
-            >
-              <ResponsiveContainer {...USAGE_CHART_RESPONSIVE_CONTAINER_PROPS}>
-                <AreaChart
-                  data={chartData}
+            <UsageChartRefreshingOverlay isRefreshing={isRefreshing}>
+              <div
+                className={surfaceClassName}
+                aria-label={
+                  canSelect
+                    ? t('Drag on the chart to select a date range')
+                    : undefined
+                }
+              >
+                <ResponsiveContainer {...USAGE_CHART_RESPONSIVE_CONTAINER_PROPS}>
+                  <AreaChart
+                    data={chartData}
                   margin={USAGE_CHART_MARGIN}
                   {...chartProps}
                 >
@@ -441,6 +450,7 @@ function BandwidthChartCard({
                 </AreaChart>
               </ResponsiveContainer>
             </div>
+            </UsageChartRefreshingOverlay>
           </UsageBandwidthChartArea>
         )}
       </div>
@@ -475,6 +485,7 @@ export function BandwidthSection({
   const {
     data: chartOverview,
     isLoading: isChartLoading,
+    isFetching: isChartFetching,
     isPlaceholderData: isChartPlaceholderData,
     isError: isChartError,
     error: chartError,
@@ -516,10 +527,14 @@ export function BandwidthSection({
   const dualChartPoints = isChartError
     ? []
     : (chartOverview?.dualChartPoints ?? [])
-  const showChartLoading = shouldShowUsageChartSkeleton(
-    isChartError,
-    isChartLoading,
-    isChartPlaceholderData,
+  const chartLoading = getUsageChartLoadingProps(
+    {
+      isError: isChartError,
+      isLoading: isChartLoading,
+      isFetching: isChartFetching,
+      isPlaceholderData: isChartPlaceholderData,
+    },
+    dualChartPoints,
   )
   const total = sumUsageChartPoints(chartOverview?.chartPoints ?? [])
   const changePercent = chartOverview?.changePercent ?? 0
@@ -535,7 +550,8 @@ export function BandwidthSection({
         total={total}
         changePercent={changePercent}
         dualChartPoints={dualChartPoints}
-        isLoading={showChartLoading}
+        isLoading={chartLoading.isLoading}
+        isRefreshing={chartLoading.isRefreshing}
         isError={isChartError}
         chartError={chartError}
         onRetry={handleRetryChart}

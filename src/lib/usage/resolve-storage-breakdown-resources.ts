@@ -1,6 +1,9 @@
-import { Query } from '@appwrite.io/console'
+import {
+  buildIdLookupQueryBatches,
+  fetchLookupBatches,
+  normalizeIds,
+} from '@/lib/appwrite-id'
 import { sdk } from '@/lib/appwrite/sdk'
-import { OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT } from '@/lib/usage/breakdown-limits'
 
 export interface StorageBreakdownResource {
   id: string
@@ -15,35 +18,26 @@ export type StorageBreakdownResourceMap = Record<
 export function normalizeStorageBreakdownResourceIds(
   resourceIds: string[],
 ): string[] {
-  return [
-    ...new Set(resourceIds.filter((id) => typeof id === 'string' && id.trim())),
-  ].slice(0, OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT)
+  return normalizeIds(resourceIds)
 }
 
 export async function fetchProjectBucketsByIds(
   projectId: string,
   bucketIds: string[],
 ): Promise<{ buckets: StorageBreakdownResource[] }> {
-  const ids = normalizeStorageBreakdownResourceIds(bucketIds)
-  if (!projectId || ids.length === 0) {
+  const batches = buildIdLookupQueryBatches(bucketIds)
+  if (!projectId || batches.length === 0) {
     return { buckets: [] }
   }
 
-  const idQuery =
-    ids.length === 1
-      ? Query.equal('$id', ids[0])
-      : Query.or(ids.map((id) => Query.equal('$id', id)))
+  const projectSdk = sdk.forProject(projectId)
+  const buckets = await fetchLookupBatches(batches, async (queries) =>
+    ((await projectSdk.storage.listBuckets({ queries })).buckets ?? []).map(
+      (bucket) => ({ id: bucket.$id, name: bucket.name }),
+    ),
+  )
 
-  const response = await sdk.forProject(projectId).storage.listBuckets({
-    queries: [idQuery, Query.limit(ids.length)],
-  })
-
-  return {
-    buckets: (response.buckets ?? []).map((bucket) => ({
-      id: bucket.$id,
-      name: bucket.name,
-    })),
-  }
+  return { buckets }
 }
 
 export async function fetchStorageBreakdownResources(

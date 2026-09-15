@@ -13,7 +13,6 @@ import {
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb'
 import { Button } from '@/components/ui/button'
-import { formatDate } from '@/lib/date-utils'
 import {
   getAllBlogAuthors,
   getPrimaryPostCategorySlug,
@@ -37,9 +36,11 @@ import { BlogToc } from './BlogToc'
 
 type PostViewProps = {
   post: BlogPost
+  contentHtml: string
+  faqs: Array<{ question: string; html: string }>
 }
 
-export function PostView({ post }: PostViewProps) {
+export function PostView({ post, contentHtml, faqs }: PostViewProps) {
   const authors = resolveBlogAuthors(post.author)
   const allAuthors = getAllBlogAuthors()
   const relatedPosts = getRelatedBlogPosts(post.slug)
@@ -63,7 +64,7 @@ export function PostView({ post }: PostViewProps) {
               <BreadcrumbItem className="min-w-0">
                 <BreadcrumbLink asChild>
                   <Link
-                    to="/blog/category/$category"
+                    to="/blog/categories/$category"
                     params={{ category: categorySlug }}
                     className="cursor-pointer"
                   >
@@ -87,14 +88,14 @@ export function PostView({ post }: PostViewProps) {
               />
 
               <div className="mt-8">
-                <BlogCover title={post.title} cover={post.cover} />
+                <BlogCover title={post.title} cover={post.cover} priority />
               </div>
 
               <div className="mt-8 min-w-0 overflow-x-hidden">
-                <BlogMarkdown content={post.content} />
+                <BlogMarkdown html={contentHtml} />
               </div>
 
-              {post.faqs?.length ? <BlogFaqSection faqs={post.faqs} /> : null}
+              {faqs.length > 0 ? <BlogFaqSection faqs={faqs} /> : null}
             </article>
 
             <div

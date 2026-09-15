@@ -16,8 +16,11 @@ import { ConsoleImpersonationBanner } from '@/components/global/shared/ConsoleIm
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import { EDUCATION_JOIN_PATH } from '@/lib/education/paths'
 import { isInitSurfaceEnabled } from '@/lib/init/init-surface'
-import { isMarketingPagePath } from '@/lib/marketing/is-marketing-page'
-import { requiresConsoleEmailVerification } from '@/lib/post-auth-navigation'
+import { matchesMarketingPagePath } from '@/lib/marketing/is-marketing-page-path'
+import {
+  isValidRelativeRedirect,
+  requiresConsoleEmailVerification,
+} from '@/lib/post-auth-navigation'
 import {
   applyScreenshotModeAccount,
   subscribeScreenshotMode,
@@ -39,6 +42,8 @@ function isAuthPage(pathname: string): boolean {
 
 /** Console routes that work without sign-in; account is optional. */
 export function isOptionalAuthPage(pathname: string): boolean {
+  // Native consent owns guest PAR/sign-in; the global guard must not preempt it.
+  if (pathname === '/oauth2/consent') return true
   const features = getActiveProfileFeatures()
   if (pathname === '/init' || pathname.startsWith('/init/')) {
     return isInitSurfaceEnabled()
@@ -65,88 +70,37 @@ export function isOptionalAuthPage(pathname: string): boolean {
   // Debug demos must stay reachable without auth redirects (and without
   // signing the user out via linked auth routes).
   if (pathname.startsWith('/debug/')) return true
-  return isMarketingPagePath(pathname)
+  // Do not gate on the marketing feature flag. Debug profile overrides can flip
+  // that after hydrate; a guest 401 must not bounce /blog to /sign-in.
+  return matchesMarketingPagePath(pathname)
 }
 
-// Helper function to extract redirect from search params
-function extractRedirectFromSearch(
-  search: string | URLSearchParams | undefined,
-): string | null {
-  if (!search) return null
-
-  const searchParams =
-    search instanceof URLSearchParams
-      ? search
-      : new URLSearchParams(typeof search === 'string' ? search : '')
-
-  const redirect = searchParams.get('redirect')
-  return redirect && redirect.startsWith('/') && !redirect.includes('://')
-    ? redirect
-    : null
-}
-
-// Helper function to get relative redirect URL from current location
-// If we're already on an auth page, extract the original redirect from search params
-function getRelativeRedirectUrl(location: unknown): string | null {
-  // If we're already on an auth page, extract the original redirect from search params
-  if (isAuthPage(location.pathname)) {
-    // Handle TanStack Router's parsed search params
-    if (
-      location.search &&
-      typeof location.search === 'object' &&
-      'redirect' in location.search
-    ) {
-      const redirect = location.search.redirect
-      return redirect &&
-        typeof redirect === 'string' &&
-        isValidRelativeRedirect(redirect)
-        ? redirect
-        : null
-    }
-    // Fallback to string/URLSearchParams handling
-    return extractRedirectFromSearch(
-      location.search as string | URLSearchParams | undefined,
-    )
-  }
-
-  // Otherwise, use the current location as redirect
-  // Build search string from parsed params or raw string
-  let searchStr = ''
-  if (location.search) {
-    if (typeof location.search === 'string') {
-      searchStr = location.search
-    } else if (location.search instanceof URLSearchParams) {
-      searchStr = location.search.toString()
-    } else if (typeof location.search === 'object') {
-      // Convert parsed search object to query string
-      const params = new URLSearchParams()
-      Object.entries(location.search).forEach(([key, value]) => {
-        if (value !== undefined && value !== null) {
-          params.set(key, String(value))
-        }
-      })
-      searchStr = params.toString()
-    }
-  }
-
-  const redirectUrl = `${location.pathname}${searchStr ? `?${searchStr}` : ''}`
-
-  // Validate that the redirect is relative (prevents redirect hijacking)
-  if (redirectUrl.startsWith('/') && !redirectUrl.includes('://')) {
-    return redirectUrl
-  }
-
-  return null
-}
-
-// Helper function to validate that a redirect URL is relative (prevents redirect hijacking)
-function isValidRelativeRedirect(url: string): boolean {
+/** Undefined means the effect is stale (or server-side), so do not navigate. */
+function getRelativeRedirectUrl(
+  expectedPathname: string,
+): string | null | undefined {
+  if (typeof window === 'undefined') return undefined
+  const { pathname, search } = window.location
   try {
-    // Must start with / and not contain :// (which would indicate a protocol)
-    return url.startsWith('/') && !url.includes('://')
+    if (
+      pathname !== expectedPathname &&
+      decodeURI(pathname) !== expectedPathname
+    ) {
+      return undefined
+    }
   } catch {
-    return false
+    return undefined
   }
+
+  // Even router searchStr is parsed and re-stringified. Preserve the current
+  // browser query bytes, including JSON, repeated keys and numeric-looking state.
+  const suppliedRedirects = new URLSearchParams(search).getAll('redirect')
+  const redirect = isAuthPage(pathname)
+    ? suppliedRedirects.length === 1
+      ? suppliedRedirects[0]
+      : null
+    : `${pathname}${search}`
+  return redirect && isValidRelativeRedirect(redirect) ? redirect : null
 }
 
 type RouterLocation = ReturnType<typeof useLocation>
@@ -186,7 +140,8 @@ function useAuthErrorNavigation(error: unknown, location: RouterLocation) {
     // Sign-out uses a hard redirect; SPA MFA navigation would flash under it.
     if (isConsoleSigningOut()) return
     if (!needsMfa || location.pathname === '/mfa') return
-    const redirectUrl = getRelativeRedirectUrl(location as unknown)
+    const redirectUrl = getRelativeRedirectUrl(location.pathname)
+    if (redirectUrl === undefined) return
     const redirectKey = `mfa:${redirectUrl ?? ''}`
     if (shouldSkipDuplicateAuthRedirect(redirectKey)) return
     if (redirectUrl && isValidRelativeRedirect(redirectUrl)) {
@@ -207,14 +162,14 @@ function useAuthErrorNavigation(error: unknown, location: RouterLocation) {
     if (isConsoleSigningOut()) return
     if (
       !is401 ||
-      // The root loader chooses home, init, or sign-in for guests.
       location.pathname === '/' ||
       isAuthPage(location.pathname) ||
       isOptionalAuthPage(location.pathname)
     ) {
       return
     }
-    const redirectUrl = getRelativeRedirectUrl(location as unknown)
+    const redirectUrl = getRelativeRedirectUrl(location.pathname)
+    if (redirectUrl === undefined) return
     const redirectKey = `signin:${redirectUrl ?? ''}`
     if (shouldSkipDuplicateAuthRedirect(redirectKey)) return
     if (redirectUrl && isValidRelativeRedirect(redirectUrl)) {
@@ -352,7 +307,8 @@ export function RequireAuth({
     if (isAuthPage(location.pathname) || isOptionalAuthPage(location.pathname)) {
       return
     }
-    const redirectUrl = getRelativeRedirectUrl(location as unknown)
+    const redirectUrl = getRelativeRedirectUrl(location.pathname)
+    if (redirectUrl === undefined) return
     if (redirectUrl && isValidRelativeRedirect(redirectUrl)) {
       navigate({
         to: '/verify-email',

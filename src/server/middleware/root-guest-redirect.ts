@@ -1,27 +1,45 @@
 import { createMiddleware } from '@tanstack/react-start'
-import { hasConsoleSessionCookieFromHeader } from '@/lib/console-session-cookie'
-
-function isRootPath(pathname: string): boolean {
-  return pathname === '/' || pathname === ''
-}
+import {
+  isRootRedirectPath,
+  resolveRootGuestRedirect,
+  rootRedirectLocationPath,
+} from '@/lib/root-guest-redirect'
+import { applyNoIndexResponseHeaders } from '@/lib/seo/indexing'
 
 /**
- * SSR redirect for `/`: guests without a console session cookie go to `/home`
- * before the app shell is rendered. Logged-in users keep the existing client
- * redirect flow in `routes/_public/index.tsx`.
+ * SSR redirect for `/` on production hosts: guests 301 to `/home` (or /init /
+ * sign-in). A console session cookie stays on `/`, where the client calls
+ * `account.get` (HttpOnly cookies are not visible to JS). Localhost skips this
+ * and uses the client loader in `routes/_public/index.tsx` (`cookieFallback`).
+ *
+ * `/home` uses 301 so crawlers index the marketing homepage. Pre-launch `/init`
+ * stays 302. Any HTML that still renders `/` is noindexed.
  */
 export const rootGuestRedirectMiddleware = createMiddleware({
   type: 'request',
 }).server(async ({ request, pathname, next }) => {
-  if (!isRootPath(pathname)) {
-    return next()
+  const redirect = resolveRootGuestRedirect(request, pathname)
+  if (redirect) {
+    const headers = new Headers({
+      Location: rootRedirectLocationPath(redirect.url),
+      Vary: 'Cookie',
+      'Cache-Control': 'private, no-store',
+    })
+    throw new Response(null, { status: redirect.status, headers })
   }
 
-  if (
-    hasConsoleSessionCookieFromHeader(request.headers.get('cookie'))
-  ) {
-    return next()
+  const result = await next()
+  if (!isRootRedirectPath(pathname) || !result.response) {
+    return result
   }
 
-  throw Response.redirect(new URL('/home', request.url), 302)
+  const { response } = result
+  return {
+    ...result,
+    response: new Response(response.body, {
+      status: response.status,
+      statusText: response.statusText,
+      headers: applyNoIndexResponseHeaders(response.headers),
+    }),
+  }
 })

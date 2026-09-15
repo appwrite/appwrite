@@ -6,7 +6,7 @@ date: 2024-09-24
 cover: /images/blog/appwrite-competitor-comparison/cover.avif
 timeToRead: 7
 author: aditya-oberai
-category: product
+category: products
 unlisted: true
 faqs:
   - question: "Is Appwrite Messaging a drop-in replacement for FCM?"

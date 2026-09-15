@@ -1,6 +1,7 @@
 import {
   APPWRITE_VERSION,
   ASSISTANT_SERVICE,
+  AUTOGRAVITY_SERVICE,
   COMPOSE_NETWORKS,
   COMPOSE_PREFIX,
   COMPOSE_SERVICES,
@@ -20,7 +21,10 @@ export type ComposeOptions = {
   database: ComposeDatabase
   topology: ComposeTopology
   assistant: boolean
+  autogravity: boolean
 }
+
+const AUTOGRAVITY_HOST = `http://${AUTOGRAVITY_SERVICE}:8080`
 
 const DATABASE_PORTS: Record<ComposeDatabase, string> = {
   postgresql: '5432',
@@ -32,19 +36,25 @@ export { APPWRITE_VERSION }
 
 /**
  * Assembles a flat docker-compose.yml for the selected database, worker
- * topology, and assistant choice, mirroring the filtering the Appwrite
- * installer performs (src/Appwrite/Docker/Compose/Generator.php).
+ * topology, assistant, and AutoGravity choices, mirroring the filtering the
+ * Appwrite installer performs (src/Appwrite/Docker/Compose/Generator.php).
+ * AutoGravity is not an installer option; the installer always ships the
+ * container and leaves _APP_AUTOGRAVITY_HOST empty, so the feature is off.
+ * The generator instead drops the container and its depends_on entry when
+ * AutoGravity is off, and fills the host when it is on.
  */
 export function generateCompose({
   database,
   topology,
   assistant,
+  autogravity,
 }: ComposeOptions): string {
   const excluded = new Set<string>([
     ...DATABASE_SERVICES.filter((service) => service !== database),
     ...TOPOLOGY_SERVICES[topology === 'combined' ? 'separate' : 'combined'],
   ])
   if (!assistant) excluded.add(ASSISTANT_SERVICE)
+  if (!autogravity) excluded.add(AUTOGRAVITY_SERVICE)
 
   const excludedVolumes = new Set(
     Object.entries(DATABASE_VOLUMES)
@@ -53,7 +63,14 @@ export function generateCompose({
   )
 
   const services = COMPOSE_SERVICES.filter((s) => !excluded.has(s.name))
-    .map((s) => s.block)
+    .map((s) =>
+      autogravity
+        ? s.block
+        : s.block.replace(
+            new RegExp(`^[ \\t]+- ${AUTOGRAVITY_SERVICE}\\n`, 'm'),
+            '',
+          ),
+    )
     .join('\n')
   const volumes = COMPOSE_VOLUMES.filter((v) => !excludedVolumes.has(v.name))
     .map((v) => v.block)
@@ -66,6 +83,7 @@ export function generateCompose({
 export function generateEnv({
   database,
   assistant,
+  autogravity,
 }: Omit<ComposeOptions, 'topology'> & { topology?: ComposeTopology }): string {
   return ENV_TEMPLATE.replace(
     /^_APP_DB_ADAPTER=.*$/m,
@@ -76,6 +94,10 @@ export function generateEnv({
     .replace(
       /^_APP_ASSISTANT_OPENAI_API_KEY=.*$/m,
       `_APP_ASSISTANT_OPENAI_API_KEY=${assistant ? 'your-openai-api-key' : ''}`,
+    )
+    .replace(
+      /^_APP_AUTOGRAVITY_HOST=.*$/m,
+      `_APP_AUTOGRAVITY_HOST=${autogravity ? AUTOGRAVITY_HOST : ''}`,
     )
 }
 

@@ -25,7 +25,7 @@ import {
   organizationProjectScopeQueryOptions,
   pinnedProjectsQueryOptions,
   consoleTeamQueryOptions,
-  useOrganizationFailedInvoicePresence,
+  useOrganizationBillingInvoicePresence,
   isOrganizationBillingReadonlyStatus,
 } from '@/lib/react-query/hooks'
 import {
@@ -274,7 +274,7 @@ export function ProjectSelector({
   const projectAccessFailed = isHttpProjectAccessError(currentProjectError)
 
   const { data: routeFailedInvoicePresence, isLoading: invoicePresenceLoading } =
-    useOrganizationFailedInvoicePresence(
+    useOrganizationBillingInvoicePresence(
       projectId ? currentProject?.teamId : undefined,
     )
   const billingFailureTeamId =

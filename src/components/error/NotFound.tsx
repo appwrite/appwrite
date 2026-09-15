@@ -9,7 +9,7 @@ import {
 import { useEffect } from 'react'
 import { ArrowLeft, FileQuestion, Home } from 'lucide-react'
 import { ConsoleLayout } from '@/components/global/layout/ConsoleLayout'
-import { StandaloneCommandCenterScope } from '@/components/global/providers/KeyboardShortcuts'
+import { StandaloneCommandCenterScope } from '@/components/global/providers/StandaloneCommandCenterScope'
 import { Button } from '@/components/ui/button'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { isMarketingPagePath } from '@/lib/marketing/is-marketing-page'
@@ -25,6 +25,8 @@ const CONSOLE_AREA_PREFIXES = new Set([
   'projects',
   'organizations',
   'account',
+  'app',
+  'console',
   'blocks',
   'init',
   'generator',

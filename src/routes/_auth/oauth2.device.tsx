@@ -13,7 +13,6 @@ import {
   type OAuth2Flow,
 } from '@/components/global/auth/OAuth2ConsentCard'
 import {
-  OAUTH2_DEVICE_CODE_LENGTH,
   OAuth2DeviceCodeInput,
   normalizeUserCode,
 } from '@/components/global/auth/OAuth2DeviceCodeInput'
@@ -216,10 +215,7 @@ function OAuth2DevicePage() {
                     type="submit"
                     variant="brandCta"
                     className="w-full"
-                    disabled={
-                      code.length < OAUTH2_DEVICE_CODE_LENGTH ||
-                      submitMutation.isPending
-                    }
+                    disabled={code.length === 0 || submitMutation.isPending}
                   >
                     {t('Continue')}
                   </Button>

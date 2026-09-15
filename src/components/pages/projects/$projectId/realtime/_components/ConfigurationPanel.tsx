@@ -75,7 +75,7 @@ export function ConfigurationPanel({
   )
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+    <div className="flex flex-col overflow-hidden lg:min-h-0 lg:flex-1">
       <div className="shrink-0 border-b border-border px-4 py-2.5">
         <Popover
           open={subscriptionPopoverOpen}
@@ -167,7 +167,8 @@ export function ConfigurationPanel({
         </Popover>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+      {/* Below lg the page is the only scroller, so the list grows with its content. */}
+      <div className="lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:overscroll-contain">
         <ConfigurationItemsList
           configuredSubscriptions={configuredSubscriptions}
           isConnected={isConnected}

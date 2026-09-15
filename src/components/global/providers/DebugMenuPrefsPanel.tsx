@@ -25,6 +25,10 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { CodeEditor } from '@/components/global/shared/CodeEditor'
+import type { PromptDialogField } from '@/components/global/shared/PromptDialog'
+import { useConfirmDialog } from '@/hooks/use-confirm-dialog'
+import { usePromptDialog } from '@/hooks/use-prompt-dialog'
+import { DEBUG_MENU_DIALOG_LAYER } from '@/lib/debug-menu-position'
 import { cn } from '@/lib/utils'
 
 function stringifyPrefs(prefs: Record<string, unknown> | null | undefined) {
@@ -48,6 +52,23 @@ function parseValueInput(raw: string): unknown {
     return raw
   }
 }
+
+const PREF_KEY_FIELD: PromptDialogField = {
+  name: 'key',
+  label: 'Key',
+  placeholder: 'e.g. theme',
+}
+
+const PREF_KEY_VALUE_FIELDS: PromptDialogField[] = [
+  PREF_KEY_FIELD,
+  {
+    name: 'value',
+    label: 'Value (JSON or plain text)',
+    placeholder: '"dark", 42, { "nested": true }',
+    multiline: true,
+    required: false,
+  },
+]
 
 type PrefSearchMatch = {
   key: string
@@ -511,6 +532,8 @@ export function DebugMenuPrefsPanel() {
   const projectId =
     typeof params.projectId === 'string' ? params.projectId : undefined
   const { project } = useProject(projectId)
+  const { confirm, confirmDialog } = useConfirmDialog(DEBUG_MENU_DIALOG_LAYER)
+  const { prompt, promptDialog } = usePromptDialog(DEBUG_MENU_DIALOG_LAYER)
 
   const resolvedTeamId = useMemo(
     () => orgId || project?.teamId || null,
@@ -722,9 +745,13 @@ export function DebugMenuPrefsPanel() {
 
   const resetAccountPrefs = async () => {
     if (
-      !window.confirm(
-        'Clear all account preference keys? This sends an empty prefs object to the server.',
-      )
+      !(await confirm({
+        title: 'Clear account preferences',
+        description:
+          'Clear all account preference keys? This sends an empty prefs object to the server.',
+        confirmLabel: 'Clear',
+        confirmVariant: 'destructive',
+      }))
     ) {
       return
     }
@@ -754,9 +781,13 @@ export function DebugMenuPrefsPanel() {
   const resetTeamPrefs = async () => {
     if (!resolvedTeamId) return
     if (
-      !window.confirm(
-        'Clear all team preference keys? This sends an empty prefs object to the server.',
-      )
+      !(await confirm({
+        title: 'Clear team preferences',
+        description:
+          'Clear all team preference keys? This sends an empty prefs object to the server.',
+        confirmLabel: 'Clear',
+        confirmVariant: 'destructive',
+      }))
     ) {
       return
     }
@@ -791,7 +822,12 @@ export function DebugMenuPrefsPanel() {
     if (scope === 'team' && !resolvedTeamId) return
     if (
       confirmPrompt &&
-      !window.confirm(`Remove preference key "${key}"?`)
+      !(await confirm({
+        title: 'Remove preference key',
+        description: `Remove preference key "${key}"?`,
+        confirmLabel: 'Remove',
+        confirmVariant: 'destructive',
+      }))
     ) {
       return
     }
@@ -853,22 +889,37 @@ export function DebugMenuPrefsPanel() {
   }
 
   const deleteAccountKey = async () => {
-    const key = window.prompt('Account prefs: key to remove')?.trim()
+    const values = await prompt({
+      title: 'Remove account preference',
+      fields: [PREF_KEY_FIELD],
+      confirmLabel: 'Remove',
+    })
+    const key = values?.key.trim()
     if (!key) return
     await deletePrefKey('account', key, false)
   }
 
   const deleteTeamKey = async () => {
     if (!resolvedTeamId) return
-    const key = window.prompt('Team prefs: key to remove')?.trim()
+    const values = await prompt({
+      title: 'Remove team preference',
+      fields: [PREF_KEY_FIELD],
+      confirmLabel: 'Remove',
+    })
+    const key = values?.key.trim()
     if (!key) return
     await deletePrefKey('team', key, false)
   }
 
   const setAccountKey = async () => {
-    const key = window.prompt('Account prefs: key')?.trim()
+    const values = await prompt({
+      title: 'Set account preference',
+      fields: PREF_KEY_VALUE_FIELDS,
+    })
+    if (!values) return
+    const key = values.key.trim()
     if (!key) return
-    const raw = window.prompt('Value (JSON or plain text)', '') ?? ''
+    const raw = values.value
     setAccountBusy(true)
     try {
       const base = parsePrefsJson(accountDraft)
@@ -894,9 +945,14 @@ export function DebugMenuPrefsPanel() {
 
   const setTeamKey = async () => {
     if (!resolvedTeamId) return
-    const key = window.prompt('Team prefs: key')?.trim()
+    const values = await prompt({
+      title: 'Set team preference',
+      fields: PREF_KEY_VALUE_FIELDS,
+    })
+    if (!values) return
+    const key = values.key.trim()
     if (!key) return
-    const raw = window.prompt('Value (JSON or plain text)', '') ?? ''
+    const raw = values.value
     setTeamBusy(true)
     try {
       const base = parsePrefsJson(teamDraft)
@@ -1253,6 +1309,8 @@ export function DebugMenuPrefsPanel() {
           )}
         </TabsContent>
       </Tabs>
+      {confirmDialog}
+      {promptDialog}
     </div>
   )
 }

@@ -34,11 +34,25 @@ function BlogRouterLink({
     )
   }
 
+  if (blogPath.startsWith('/blog/categories/')) {
+    const category = blogPath.slice('/blog/categories/'.length)
+    return (
+      <Link
+        to="/blog/categories/$category"
+        params={{ category }}
+        className={className}
+        {...props}
+      >
+        {children}
+      </Link>
+    )
+  }
+
   if (blogPath.startsWith('/blog/category/')) {
     const category = blogPath.slice('/blog/category/'.length)
     return (
       <Link
-        to="/blog/category/$category"
+        to="/blog/categories/$category"
         params={{ category }}
         className={className}
         {...props}

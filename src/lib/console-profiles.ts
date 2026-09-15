@@ -385,6 +385,11 @@ function getStoredProfile(): StoredConsoleProfile | null {
   return stored
 }
 
+/** Snapshot of explicitly stored feature overrides for the active profile. */
+export function getDebugProfileFeatureOverrides(): Partial<ConsoleProfileFeatures> {
+  return { ...getStoredProfile()?.features }
+}
+
 /** Whether a debug localStorage profile override is active (vs env). */
 export function hasDebugProfileOverride(): boolean {
   return getStoredProfile() !== null

@@ -7,7 +7,7 @@ timeToRead: 5
 date: 2023-11-17
 lastUpdated: 2026-06-29
 author: haimantika-mitra
-category: tutorial
+category: tutorials
 featured: false
 faqs:
   - question: "Why use Meilisearch instead of Appwrite's built-in queries?"

@@ -97,7 +97,7 @@ export function View({ userId, email, redirect, initialData }: ViewProps) {
             : t('Could not load this user.')
           : null
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     if (!operator || !target || blockingMessage || isStarting) return
     setStartError(null)
     setIsStarting(true)
@@ -106,7 +106,7 @@ export function View({ userId, email, redirect, initialData }: ViewProps) {
         window.location.replace(afterPath)
         return
       }
-      beginConsoleImpersonation(target.$id, operator, { redirect: afterPath })
+      await beginConsoleImpersonation(target, operator, { redirect: afterPath })
     } catch (error) {
       console.error(error)
       setIsStarting(false)

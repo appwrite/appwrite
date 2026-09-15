@@ -4,6 +4,9 @@
  */
 export const heAccountGlobalDictionary: Record<string, string> = {
   // Account pages
+  'Join an organization': 'הצטרפו לארגון',
+  'Your account is ready. Ask an organization owner to invite you, then accept the invitation in your email to access existing projects.':
+    'החשבון שלכם מוכן. בקשו מבעלי הארגון להזמין אתכם, ואז אשרו את ההזמנה באימייל כדי לקבל גישה לפרויקטים הקיימים.',
   '123 Main St': 'הרצל 1',
   Account: 'חשבון',
   'Account ID': 'מזהה חשבון',
@@ -185,6 +188,7 @@ export const heAccountGlobalDictionary: Record<string, string> = {
   Current: 'נוכחי',
   Delete: 'מחיקה',
   'Delete account': 'מחיקת חשבון',
+  'Delete identity': 'מחיקת זהות',
   'Delete all sessions': 'מחיקת כל הסשנים',
   'Delete authenticator app': 'מחיקת אפליקציית האימות',
   'Delete billing address': 'מחיקת כתובת חיוב',
@@ -1110,6 +1114,8 @@ export const heAccountGlobalDictionary: Record<string, string> = {
     'עברו לחשבון שאליו נשלחה ההזמנה כדי לאשר אותה.',
   'Switch account': 'החלפת חשבון',
   'Use a different account': 'שימוש בחשבון אחר',
+  'Could not sign out. Try switching accounts again.':
+    'לא הצלחנו לנתק את החשבון. נסו שוב להחליף חשבון.',
   'Signing out...': 'מתנתקים...',
   'Go to dashboard': 'מעבר ללוח הבקרה',
   'Invalid invitation link': 'קישור הזמנה לא תקין',

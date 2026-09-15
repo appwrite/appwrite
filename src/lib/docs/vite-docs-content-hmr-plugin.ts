@@ -7,7 +7,6 @@ function isDocsContentFile(file: string): boolean {
   const normalized = file.replaceAll('\\', '/')
   return (
     normalized.includes('/src/content/docs/') ||
-    normalized.includes('/src/content/docs-local/') ||
     normalized.includes('/src/content/docs-partials/')
   ) && /\.(?:markdoc|md)$/.test(normalized)
 }

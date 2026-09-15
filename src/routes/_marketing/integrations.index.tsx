@@ -3,7 +3,10 @@ import { z } from 'zod'
 import { View } from '@/components/pages/integrations/View'
 import { getFilteredIntegrationsCatalog } from '@/lib/integrations/content'
 import { getIntegrationsIndexRouteMetaTags } from '@/lib/integrations/route-meta'
-import { MARKETING_PAGE_ROUTE_STATIC_DATA } from '@/lib/marketing/route-static-data'
+import {
+  MARKETING_PAGE_ROUTE_STATIC_DATA,
+  marketingRouteLifetime,
+} from '@/lib/marketing/route-static-data'
 
 const integrationsSearchSchema = z.object({
   search: z.string().optional(),
@@ -12,6 +15,7 @@ const integrationsSearchSchema = z.object({
 })
 
 export const Route = createFileRoute('/_marketing/integrations/')({
+  ...marketingRouteLifetime,
   staticData: MARKETING_PAGE_ROUTE_STATIC_DATA,
   ssr: true,
   validateSearch: integrationsSearchSchema,

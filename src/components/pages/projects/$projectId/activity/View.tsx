@@ -74,6 +74,7 @@ import {
   getActivityLogRetentionDaysFromPlan,
   getActivityLogRetentionHoursFromPlan,
   getDefaultActivityDateRangeFromRetentionDays,
+  hasFiniteActivityLogRetention,
 } from '@/lib/activity/activity-log-retention'
 import { getPlanNameFromTier } from '@/lib/utils/plan-filter'
 import { ActivityLogDrawer } from '@/components/pages/projects/$projectId/activity/ActivityLogDrawer'
@@ -89,6 +90,9 @@ import {
 import type { CountryLookups } from '@/lib/locale/country-lookups'
 import { UserTypeAvatar } from '@/components/pages/projects/$projectId/activity/UserTypeAvatar'
 import { McpIcon } from '@/components/global/shared/McpIcon'
+import {
+  clampDateRangeToRetentionFloor,
+} from '@/lib/date-range-retention'
 
 const activityRouteApi = getRouteApi('/_public/projects/$projectId/activity')
 
@@ -115,13 +119,17 @@ function ActivityTableCountryCell({
   )
 }
 
+/** Min width keeps columns legible on narrow screens - the table scrolls horizontally instead of squeezing every cell. */
+const ACTIVITY_TABLE_CLASS_NAME = 'w-full min-w-[60rem] table-fixed'
+
 /** Column widths for activity log table - shared by `colgroup` and kept in sync with header labels. */
 function ActivityLogsTableColGroup() {
   return (
     <colgroup>
       <col className="w-[14%]" />
       <col className="w-[12%]" />
-      <col className="w-[10%]" />
+      {/* Fixed so the longest actor badge (PROJECT KEY) fits without spilling into Resource. */}
+      <col className="w-[8.5rem]" />
       <col className="" />
       <col className="w-[12%]" />
       <col className="w-[10%]" />
@@ -245,7 +253,7 @@ function ActivityLogsLoadingTable({ rowCount }: { rowCount: number }) {
       >
         <Table
           withScrollContainer={false}
-          className="table-fixed w-full"
+          className={ACTIVITY_TABLE_CLASS_NAME}
         >
           <ActivityLogsTableColGroup />
           <ActivityLogsTableHead />
@@ -606,7 +614,18 @@ export function View({ projectId, initialData }: ViewProps) {
     return undefined
   }, [filterMap])
 
-  const dateRangeForPicker = dateRangeFromFilters ?? defaultActivityDateRange
+  const dateRangeForPicker = useMemo(() => {
+    const base = dateRangeFromFilters ?? defaultActivityDateRange
+    if (!hasFiniteActivityLogRetention(organizationPlan)) return base
+    return (
+      clampDateRangeToRetentionFloor(base, activityLogRetentionHours) ?? base
+    )
+  }, [
+    activityLogRetentionHours,
+    dateRangeFromFilters,
+    defaultActivityDateRange,
+    organizationPlan,
+  ])
 
   const volumeChartRange = useMemo(() => {
     const from = dateRangeFromFilters?.from ?? defaultActivityDateRange.from
@@ -681,12 +700,17 @@ export function View({ projectId, initialData }: ViewProps) {
 
   const handleDateRangeChange = useCallback(
     (range: DateRange | undefined) => {
+      const clampedRange =
+        hasFiniteActivityLogRetention(organizationPlan) && range
+          ? clampDateRangeToRetentionFloor(range, activityLogRetentionHours)
+          : range
+
       const next = new Map(filterMap)
       for (const key of [...next.keys()]) {
         if (key.c === 'time') next.delete(key)
       }
-      if (range?.from && range?.to) {
-        const v = `${range.from.toISOString()},${range.to.toISOString()}`
+      if (clampedRange?.from && clampedRange?.to) {
+        const v = `${clampedRange.from.toISOString()},${clampedRange.to.toISOString()}`
         const compactKey: CompactFilterKey = { c: 'time', o: 'between', v }
         next.set(
           compactKey,
@@ -701,7 +725,12 @@ export function View({ projectId, initialData }: ViewProps) {
         replace: true,
       })
     },
-    [filterMap, navigate],
+    [
+      activityLogRetentionHours,
+      filterMap,
+      navigate,
+      organizationPlan,
+    ],
   )
 
   const activeResourceTypeFilter = useMemo(() => {
@@ -883,7 +912,7 @@ export function View({ projectId, initialData }: ViewProps) {
           title={t('Activity')}
           showFilters
           filterTrigger={
-            <div className="flex shrink-0 items-center gap-2">
+            <div className="flex min-w-0 items-center gap-2">
               <FiltersPopover
                 open={filtersOpen}
                 onOpenChange={setFiltersOpen}
@@ -917,8 +946,13 @@ export function View({ projectId, initialData }: ViewProps) {
               <DateRangePicker
                 dateRange={dateRangeForPicker}
                 onDateRangeChange={handleDateRangeChange}
-                className="h-9 min-w-[200px]"
+                className="h-9 min-w-0 shrink @[640px]:min-w-[200px]"
                 popoverContentAlign="start"
+                retentionHours={
+                  hasFiniteActivityLogRetention(organizationPlan)
+                    ? activityLogRetentionHours
+                    : null
+                }
               />
             </div>
           }
@@ -927,6 +961,7 @@ export function View({ projectId, initialData }: ViewProps) {
               <TooltipTrigger asChild>
                 <button
                   type="button"
+                  aria-label={`${t('Retention')} ${t(activityLogRetentionLabel)}`}
                   className={cn(
                     'inline-flex max-w-[10.5rem] shrink-0 items-center gap-1.5 rounded-md px-1.5 py-1 text-start sm:max-w-[13rem]',
                     'border border-transparent text-muted-foreground',
@@ -936,7 +971,7 @@ export function View({ projectId, initialData }: ViewProps) {
                 >
                   <Clock className="h-3.5 w-3.5 shrink-0 text-blue-600 dark:text-blue-400" />
                   <span className="min-w-0 truncate text-[11px] leading-tight">
-                    <span className="text-muted-foreground">
+                    <span className="hidden text-muted-foreground @[560px]:inline">
                       {t('Retention')}{' '}
                     </span>
                     <span className="font-medium text-foreground">
@@ -1040,7 +1075,7 @@ export function View({ projectId, initialData }: ViewProps) {
             <div className="min-h-0 flex-1 overflow-auto">
               <Table
                 withScrollContainer={false}
-                className="table-fixed w-full"
+                className={ACTIVITY_TABLE_CLASS_NAME}
               >
                 <ActivityLogsTableColGroup />
                 <ActivityLogsTableHead />
@@ -1168,7 +1203,7 @@ export function View({ projectId, initialData }: ViewProps) {
                           return (
                             <span
                               className={cn(
-                                'inline-block rounded px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider',
+                                'inline-block max-w-full truncate rounded px-1.5 py-0.5 align-middle text-[10px] font-medium uppercase tracking-wider',
                                 badge.tone,
                               )}
                             >

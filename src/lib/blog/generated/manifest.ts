@@ -7,13 +7,72 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "href": "/blog/post/appwrite-init-2026-recap",
     "title": "Appwrite Init 2026 recap: Everything we shipped",
     "description": "An Appwrite Init 2026 recap of all five days of launches, from Appwrite 2.0 and native PostgreSQL to VectorsDB, S3 support, Firewall, OAuth2, and Domains.",
-    "date": "2026-09-09",
-    "lastUpdated": "2026-09-09",
+    "date": "2026-09-15",
+    "lastUpdated": "2026-09-15",
     "timeToRead": 8,
     "author": "aishwari",
     "category": "init",
     "featured": false,
-    "cover": "/images/blog-local/appwrite-init-2026-recap/cover.avif",
+    "cover": "/images/blog/appwrite-init-2026-recap/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "appwrite-2-1-self-hosted",
+    "href": "/blog/post/appwrite-2-1-self-hosted",
+    "title": "Appwrite 2.1 is now available for self-hosting",
+    "description": "Appwrite 2.1 brings the S3 API and AutoGravity to self-hosted instances, adds TikTok and Kakao sign-in, and fixes for Appwrite Console.",
+    "date": "2026-09-14",
+    "lastUpdated": "2026-09-14",
+    "timeToRead": 5,
+    "author": "atharva",
+    "category": "products, announcements",
+    "cover": "/images/blog/appwrite-2-1-self-hosted/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "introducing-the-affiliates-program",
+    "href": "/blog/post/introducing-the-affiliates-program",
+    "title": "Introducing the Affiliates program",
+    "description": "Introducing the Affiliates program, a new way to share Appwrite, track referrals, and earn Cloud credits when people you refer upgrade to Pro.",
+    "date": "2026-09-11",
+    "lastUpdated": "2026-09-11",
+    "timeToRead": 5,
+    "author": "aishwari",
+    "category": "announcements",
+    "featured": false,
+    "unlisted": false,
+    "cover": "/images/blog/introducing-the-affiliates-program/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "introducing-autogravity",
+    "href": "/blog/post/introducing-autogravity",
+    "title": "Automatic image cropping in Appwrite with AutoGravity",
+    "description": "AutoGravity brings automatic image cropping to Appwrite Storage. Learn how saliency detection and face detection pick the focal point behind gravity=auto.",
+    "date": "2026-09-10",
+    "lastUpdated": "2026-09-10",
+    "timeToRead": 6,
+    "author": "torsten-dittmann",
+    "category": "announcements",
+    "featured": false,
+    "unlisted": false,
+    "draft": false,
+    "cover": "/images/blog/introducing-autogravity/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "phone-duo-whats-new-and-what-developers-can-build",
+    "href": "/blog/post/phone-duo-whats-new-and-what-developers-can-build",
+    "title": "iPhone Duo: What’s new and what developers can build",
+    "description": "See how iPhone Duo could change app development, from adaptive interfaces and testing to new experiences built for foldable screens.",
+    "date": "2026-09-10",
+    "lastUpdated": "2026-09-10",
+    "timeToRead": 5,
+    "author": "atharva",
+    "category": "news",
+    "featured": false,
+    "unlisted": true,
+    "cover": "/images/blog/phone-duo-whats-new-and-what-developers-can-build/cover.avif",
     "hasCover": true
   },
   {
@@ -39,7 +98,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-09-08",
     "timeToRead": 8,
     "author": "atharva",
-    "category": "tutorial",
+    "category": "tutorials",
     "featured": false,
     "cover": "/images/blog/drizzle-orm-appwrite-postgres/cover.avif",
     "hasCover": true
@@ -53,7 +112,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-09-08",
     "timeToRead": 8,
     "author": "atharva",
-    "category": "tutorial",
+    "category": "tutorials",
     "featured": false,
     "cover": "/images/blog/prisma-orm-appwrite-postgres/cover.avif",
     "hasCover": true
@@ -67,7 +126,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-09-07",
     "timeToRead": 5,
     "author": "atharva",
-    "category": "announcement",
+    "category": "announcements",
     "featured": false,
     "cover": "/images/blog/announcing-worker-topologies/cover.avif",
     "hasCover": true
@@ -81,8 +140,8 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-09-07",
     "timeToRead": 4,
     "author": "atharva",
-    "category": "product, announcement",
-    "cover": "/images/blog-local/appwrite-2-0-postgres-by-default/cover.avif",
+    "category": "products, announcements",
+    "cover": "/images/blog/appwrite-2-0-postgres-by-default/cover.avif",
     "hasCover": true
   },
   {
@@ -94,8 +153,8 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-09-07",
     "timeToRead": 6,
     "author": "atharva",
-    "category": "product, announcement",
-    "cover": "/images/blog-local/announcing-appwrite-2/cover.avif",
+    "category": "products, announcements",
+    "cover": "/images/blog/announcing-appwrite-2/cover.avif",
     "hasCover": true
   },
   {
@@ -107,7 +166,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-09-04",
     "timeToRead": 6,
     "author": "atharva",
-    "category": "announcement",
+    "category": "announcements",
     "featured": false,
     "cover": "/images/blog/announcing-apps-for-appwrite-partners/cover.avif",
     "hasCover": true
@@ -121,9 +180,9 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-09-04",
     "timeToRead": 7,
     "author": "aditya-oberai",
-    "category": "product, announcement",
+    "category": "products, announcements",
     "featured": false,
-    "cover": "/images/blog-local/announcing-appwrite-domains/cover.avif",
+    "cover": "/images/blog/announcing-appwrite-domains/cover.avif",
     "hasCover": true
   },
   {
@@ -135,9 +194,9 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-09-04",
     "timeToRead": 6,
     "author": "arnab-chatterjee",
-    "category": "product, announcement",
+    "category": "products, announcements",
     "featured": false,
-    "cover": "/images/blog-local/announcing-appwrite-firewall/cover.avif",
+    "cover": "/images/blog/announcing-appwrite-firewall/cover.avif",
     "hasCover": true
   },
   {
@@ -149,7 +208,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-09-04",
     "timeToRead": 6,
     "author": "matej-baco",
-    "category": "announcement",
+    "category": "announcements",
     "featured": false,
     "cover": "/images/blog/announcing-oauth2-server/cover.avif",
     "hasCover": true
@@ -163,8 +222,8 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-09-04",
     "timeToRead": 14,
     "author": "atharva",
-    "category": "tutorial",
-    "cover": "/images/blog-local/build-a-memory-mcp-server/cover.avif",
+    "category": "tutorials",
+    "cover": "/images/blog/build-a-memory-mcp-server/cover.avif",
     "hasCover": true
   },
   {
@@ -177,7 +236,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "timeToRead": 9,
     "author": "atharva",
     "category": "security, best-practices",
-    "cover": "/images/blog-local/firewall-rate-limit-strategies/cover.avif",
+    "cover": "/images/blog/firewall-rate-limit-strategies/cover.avif",
     "hasCover": true
   },
   {
@@ -189,7 +248,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-09-04",
     "timeToRead": 6,
     "author": "matej-baco",
-    "category": "tutorial",
+    "category": "tutorials",
     "featured": false,
     "cover": "/images/blog/sign-in-with-appwrite-guide/cover.avif",
     "hasCover": true
@@ -203,9 +262,9 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-09-04",
     "timeToRead": 14,
     "author": "atharva",
-    "category": "tutorial",
+    "category": "tutorials",
     "featured": false,
-    "cover": "/images/blog-local/turn-your-app-into-an-mcp-server/cover.avif",
+    "cover": "/images/blog/turn-your-app-into-an-mcp-server/cover.avif",
     "hasCover": true
   },
   {
@@ -217,9 +276,9 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-09-03",
     "timeToRead": 6,
     "author": "harsh-mahajan",
-    "category": "announcement",
+    "category": "announcements",
     "featured": false,
-    "cover": "/images/blog-local/announcing-bitbucket-support/cover.avif",
+    "cover": "/images/blog/announcing-bitbucket-support/cover.avif",
     "hasCover": true
   },
   {
@@ -231,9 +290,9 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-09-03",
     "timeToRead": 7,
     "author": "matej-baco",
-    "category": "announcement",
+    "category": "announcements",
     "featured": false,
-    "cover": "/images/blog-local/announcing-gitlab-support/cover.avif",
+    "cover": "/images/blog/announcing-gitlab-support/cover.avif",
     "hasCover": true
   },
   {
@@ -245,7 +304,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-09-03",
     "timeToRead": 7,
     "author": "torsten-dittmann",
-    "category": "announcement",
+    "category": "announcements",
     "featured": false,
     "cover": "/images/blog/announcing-s3-api/cover.avif",
     "hasCover": true
@@ -259,7 +318,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-09-02",
     "timeToRead": 5,
     "author": "arnab-chatterjee",
-    "category": "announcement",
+    "category": "announcements",
     "featured": false,
     "cover": "/images/blog/announcing-documentsdb/cover.avif",
     "hasCover": true
@@ -273,7 +332,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-09-02",
     "timeToRead": 5,
     "author": "jake-barnby",
-    "category": "announcement",
+    "category": "announcements",
     "featured": false,
     "cover": "/images/blog/announcing-native-mysql-databases/cover.avif",
     "hasCover": true
@@ -287,7 +346,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-09-02",
     "timeToRead": 6,
     "author": "arnab-chatterjee",
-    "category": "announcement",
+    "category": "announcements",
     "featured": false,
     "cover": "/images/blog/announcing-vectorsdb/cover.avif",
     "hasCover": true
@@ -301,7 +360,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-09-02",
     "timeToRead": 11,
     "author": "atharva",
-    "category": "tutorial",
+    "category": "tutorials",
     "featured": false,
     "cover": "/images/blog/build-a-help-center-with-appwrite-vectorsdb/cover.avif",
     "hasCover": true
@@ -344,7 +403,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-09-01",
     "timeToRead": 6,
     "author": "jake-barnby",
-    "category": "announcement",
+    "category": "announcements",
     "featured": true,
     "metaTitle": "Managed PostgreSQL hosting with pgvector in Appwrite",
     "cover": "/images/blog/appwrite-now-speaks-postgresql/cover.avif",
@@ -373,9 +432,9 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-08-31",
     "timeToRead": 7,
     "author": "eldad-fux",
-    "category": "product, announcement",
+    "category": "products, announcements",
     "featured": true,
-    "cover": "/images/blog-local/announcing-appwrite-2/cover.avif",
+    "cover": "/images/blog/announcing-appwrite-2/cover.avif",
     "hasCover": true
   },
   {
@@ -387,9 +446,9 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-08-31",
     "timeToRead": 8,
     "author": "eldad-fux",
-    "category": "product, announcement",
+    "category": "products, announcements",
     "featured": true,
-    "cover": "/images/blog-local/announcing-appwrite-explorer/cover.avif",
+    "cover": "/images/blog/announcing-appwrite-explorer/cover.avif",
     "hasCover": true
   },
   {
@@ -401,9 +460,9 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-08-31",
     "timeToRead": 7,
     "author": "aditya-oberai",
-    "category": "product, announcement",
+    "category": "products, announcements",
     "featured": true,
-    "cover": "/images/blog-local/announcing-console-iv/cover.avif",
+    "cover": "/images/blog/announcing-console-iv/cover.avif",
     "hasCover": true
   },
   {
@@ -415,9 +474,9 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-08-31",
     "timeToRead": 7,
     "author": "eldad-fux",
-    "category": "product, announcement",
+    "category": "products, announcements",
     "featured": false,
-    "cover": "/images/blog-local/announcing-console-terminal/cover.avif",
+    "cover": "/images/blog/announcing-console-terminal/cover.avif",
     "hasCover": true
   },
   {
@@ -429,9 +488,9 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-08-31",
     "timeToRead": 7,
     "author": "luke-silver",
-    "category": "architecture, announcement",
+    "category": "architectures, announcements",
     "featured": true,
-    "cover": "/images/blog-local/hyperloop-b/cover.avif",
+    "cover": "/images/blog/hyperloop-b/cover.avif",
     "hasCover": true
   },
   {
@@ -443,7 +502,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-08-21",
     "timeToRead": 6,
     "author": "atharva",
-    "category": "announcement",
+    "category": "announcements",
     "featured": false,
     "cover": "/images/blog/announcing-bun-1-4-runtime/cover.avif",
     "hasCover": true
@@ -500,7 +559,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-08-14",
     "timeToRead": 8,
     "author": "atharva",
-    "category": "announcement, authentication",
+    "category": "announcements, authentication",
     "featured": false,
     "cover": "/images/blog/custom-mfa-factor/cover.avif",
     "hasCover": true
@@ -557,7 +616,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-08-12",
     "timeToRead": 8,
     "author": "luke-silver",
-    "category": "announcement",
+    "category": "announcements",
     "featured": false,
     "cover": "/images/blog/announcing-deployment-retention/cover.avif",
     "hasCover": true
@@ -586,7 +645,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-08-11",
     "timeToRead": 9,
     "author": "chirag-aggarwal",
-    "category": "announcement",
+    "category": "announcements",
     "featured": false,
     "draft": false,
     "cover": "/images/blog/rewriting-the-appwrite-cli-in-go/cover.avif",
@@ -615,7 +674,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-08-06",
     "timeToRead": 6,
     "author": "chirag-aggarwal",
-    "category": "announcement, ai",
+    "category": "announcements, ai",
     "featured": false,
     "cover": "/images/blog/announcing-mcp-server-template/cover.avif",
     "hasCover": true
@@ -643,7 +702,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-08-06",
     "timeToRead": 8,
     "author": "aditya-oberai",
-    "category": "tutorial, ai",
+    "category": "tutorials, ai",
     "featured": false,
     "cover": "/images/blog/financial-analysis-mcp-server/cover.avif",
     "hasCover": true
@@ -657,7 +716,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-08-05",
     "timeToRead": 5,
     "author": "aishwari",
-    "category": "product",
+    "category": "products",
     "featured": false,
     "cover": "/images/blog/july-product-update-remote-mcp-server-projects-api-and-more/cover.avif",
     "hasCover": true
@@ -685,7 +744,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-07-31",
     "timeToRead": 4,
     "author": "aditya-oberai",
-    "category": "product, announcement",
+    "category": "products, announcements",
     "featured": true,
     "cover": "/images/blog/announcing-remote-appwrite-mcp-server/cover.avif",
     "hasCover": true
@@ -741,7 +800,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-07-29",
     "timeToRead": 4,
     "author": "chirag-aggarwal",
-    "category": "announcement",
+    "category": "announcements",
     "featured": false,
     "cover": "/images/blog/announcing-cli-device-authorization/cover.avif",
     "hasCover": true
@@ -812,7 +871,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-07-24",
     "timeToRead": 5,
     "author": "aditya-oberai",
-    "category": "architecture",
+    "category": "architectures",
     "featured": false,
     "unlisted": true,
     "cover": "/images/blog/what-is-crud-explained/cover.avif",
@@ -827,7 +886,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-07-23",
     "timeToRead": 3,
     "author": "chirag-aggarwal",
-    "category": "announcement",
+    "category": "announcements",
     "featured": false,
     "cover": "/images/blog/appwrite-1-9-6-self-hosted-release/cover.avif",
     "hasCover": true
@@ -855,7 +914,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-07-23",
     "timeToRead": 5,
     "author": "atharva",
-    "category": "architecture",
+    "category": "architectures",
     "featured": false,
     "unlisted": true,
     "cover": "/images/blog/what-is-database-sharding-a-beginners-guide/cover.avif",
@@ -870,7 +929,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-07-22",
     "timeToRead": 5,
     "author": "matej-baco",
-    "category": "announcement",
+    "category": "announcements",
     "featured": false,
     "cover": "/images/blog/announcing-projects-api/cover.avif",
     "hasCover": true
@@ -899,7 +958,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-07-22",
     "timeToRead": 5,
     "author": "atharva",
-    "category": "architecture",
+    "category": "architectures",
     "featured": false,
     "unlisted": true,
     "cover": "/images/blog/what-is-server-side-rendering-a-beginners-guide/cover.avif",
@@ -1002,7 +1061,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-07-10",
     "timeToRead": 5,
     "author": "aishwari",
-    "category": "product",
+    "category": "products",
     "featured": false,
     "cover": "/images/blog/june-product-update-react-library-password-strength-baa-and-more/cover.avif",
     "hasCover": true
@@ -1074,7 +1133,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-07-01",
     "timeToRead": 5,
     "author": "aditya-oberai",
-    "category": "architecture",
+    "category": "architectures",
     "featured": false,
     "unlisted": true,
     "cover": "/images/blog/what-is-cloud-storage-an-expert-guide-for-developers/cover.avif",
@@ -1089,7 +1148,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-30",
     "timeToRead": 6,
     "author": "chirag-aggarwal",
-    "category": "announcement",
+    "category": "announcements",
     "featured": false,
     "cover": "/images/blog/appwrite-1-9-5-self-hosted-release/cover.avif",
     "hasCover": true
@@ -1103,7 +1162,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-30",
     "timeToRead": 5,
     "author": "aditya-oberai",
-    "category": "architecture",
+    "category": "architectures",
     "featured": false,
     "unlisted": true,
     "cover": "/images/blog/what-is-redis-a-complete-guide-for-developers/cover.avif",
@@ -1118,7 +1177,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-30",
     "timeToRead": 5,
     "author": "atharva",
-    "category": "architecture",
+    "category": "architectures",
     "featured": false,
     "unlisted": true,
     "cover": "/images/blog/what-is-serverless-an-expert-guide-for-developers/cover.avif",
@@ -1133,7 +1192,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-26",
     "timeToRead": 5,
     "author": "atharva",
-    "category": "announcement, authentication",
+    "category": "announcements, authentication",
     "cover": "/images/blog/announcing-appwrite-react-library/cover.avif",
     "hasCover": true
   },
@@ -1204,7 +1263,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-11",
     "timeToRead": 5,
     "author": "aishwari",
-    "category": "product",
+    "category": "products",
     "featured": false,
     "cover": "/images/blog/may-product-update-presences-api-rust-runtime-7x-faster-storage-uploads-and-more/cover.avif",
     "hasCover": true
@@ -1218,7 +1277,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-10",
     "timeToRead": 4,
     "author": "eldad-fux",
-    "category": "announcement",
+    "category": "announcements",
     "featured": false,
     "cover": "/images/blog/announcing-self-serve-baa.avif",
     "hasCover": true
@@ -1246,7 +1305,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-09",
     "timeToRead": 4,
     "author": "harsh-mahajan",
-    "category": "announcement",
+    "category": "announcements",
     "featured": false,
     "cover": "/images/blog/announcing-password-strength/cover.avif",
     "hasCover": true
@@ -1289,7 +1348,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-05-29",
     "timeToRead": 4,
     "author": "harsh-mahajan",
-    "category": "announcement",
+    "category": "announcements",
     "featured": false,
     "cover": "/images/blog/announcing-git-deployment-triggers/cover.avif",
     "hasCover": true
@@ -1317,7 +1376,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-05-27",
     "timeToRead": 12,
     "author": "atharva",
-    "category": "tutorial",
+    "category": "tutorials",
     "cover": "/images/blog/building-snapchat-clone-with-presences-and-realtime/cover.avif",
     "hasCover": true
   },
@@ -1330,7 +1389,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-05-26",
     "timeToRead": 5,
     "author": "damodar-lohani",
-    "category": "announcement",
+    "category": "announcements",
     "featured": false,
     "cover": "/images/blog/announcing-dart-flutter-runtimes/cover.avif",
     "hasCover": true
@@ -1344,7 +1403,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-05-25",
     "timeToRead": 5,
     "author": "aditya-oberai",
-    "category": "announcement",
+    "category": "announcements",
     "featured": true,
     "cover": "/images/blog/announcing-presences-api/cover.avif",
     "hasCover": true
@@ -1403,7 +1462,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-05-21",
     "timeToRead": 9,
     "author": "eldad-fux",
-    "category": "announcement",
+    "category": "announcements",
     "featured": false,
     "cover": "/images/blog/faster-storage-uploads-parallel-chunks/cover.avif",
     "hasCover": true
@@ -1417,7 +1476,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-05-20",
     "timeToRead": 4,
     "author": "matej-baco",
-    "category": "announcement",
+    "category": "announcements",
     "featured": false,
     "cover": "/images/blog/announcing-email-policies/cover.avif",
     "hasCover": true
@@ -1444,7 +1503,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-05-19",
     "timeToRead": 4,
     "author": "atharva",
-    "category": "announcement",
+    "category": "announcements",
     "featured": false,
     "cover": "/images/blog/announcing-bun-deno-runtimes/cover.avif",
     "hasCover": true
@@ -1530,7 +1589,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-05-15",
     "timeToRead": 4,
     "author": "aditya-oberai",
-    "category": "announcement",
+    "category": "announcements",
     "featured": false,
     "cover": "/images/blog/announcing-deployment-retention/cover.avif",
     "hasCover": true
@@ -1628,7 +1687,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 5,
     "author": "arnab-chatterjee",
-    "category": "announcement",
+    "category": "announcements",
     "featured": false,
     "cover": "/images/blog/announcing-bigint-columns/cover.avif",
     "hasCover": true
@@ -1656,7 +1715,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-05-12",
     "timeToRead": 5,
     "author": "jake-barnby",
-    "category": "announcement",
+    "category": "announcements",
     "featured": true,
     "cover": "/images/blog/relationships-are-out-of-beta/cover.avif",
     "hasCover": true
@@ -1684,7 +1743,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 12,
     "author": "aditya-oberai",
-    "category": "startup",
+    "category": "startups",
     "unlisted": true,
     "cover": "/images/blog/25-startup-ideas-you-can-build-with-vibe-coding/cover.avif",
     "hasCover": true
@@ -1698,7 +1757,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-05-11",
     "timeToRead": 10,
     "author": "atharva",
-    "category": "product",
+    "category": "products",
     "featured": false,
     "cover": "/images/blog/3-things-you-can-build-with-rust-runtime/cover.avif",
     "hasCover": true
@@ -1726,7 +1785,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-05-11",
     "timeToRead": 4,
     "author": "aditya-oberai",
-    "category": "announcement",
+    "category": "announcements",
     "featured": false,
     "cover": "/images/blog/announcing-appwrite-codex-plugin/cover.avif",
     "hasCover": true
@@ -1740,7 +1799,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 5,
     "author": "aishwari",
-    "category": "product",
+    "category": "products",
     "featured": false,
     "cover": "/images/blog/april-product-update-mongodb-support-appwrite-190-realtime-upgrades-and-ai-tooling/cover.avif",
     "hasCover": true
@@ -1781,7 +1840,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-05-04",
     "timeToRead": 6,
     "author": "chirag-aggarwal",
-    "category": "announcement",
+    "category": "announcements",
     "featured": false,
     "cover": "/images/blog/announcing-rust-runtime/cover.avif",
     "hasCover": true
@@ -1809,7 +1868,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-04-30",
     "timeToRead": 4,
     "author": "matej-baco",
-    "category": "announcement",
+    "category": "announcements",
     "featured": false,
     "cover": "/images/blog/announcing-variables-api/cover.avif",
     "hasCover": true
@@ -1865,7 +1924,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-04-29",
     "timeToRead": 9,
     "author": "eldad-fux",
-    "category": "announcement",
+    "category": "announcements",
     "featured": false,
     "cover": "/images/blog/announcing-message-based-realtime-sdk/cover.avif",
     "hasCover": true
@@ -1980,7 +2039,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-04-27",
     "timeToRead": 6,
     "author": "aditya-oberai",
-    "category": "product",
+    "category": "products",
     "cover": "/images/blog/baas-backend-as-a-service/cover.avif",
     "hasCover": true
   },
@@ -2065,7 +2124,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-04-25",
     "timeToRead": 10,
     "author": "atharva",
-    "category": "tutorial",
+    "category": "tutorials",
     "featured": false,
     "cover": "/images/blog/backend-for-claude-code-apps/cover.avif",
     "hasCover": true
@@ -2107,7 +2166,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 5,
     "author": "aishwari",
-    "category": "product",
+    "category": "products",
     "featured": false,
     "cover": "/images/blog/february-and-march-product-update-realtime-queries-appwrite-skills-and-new-database-features/cover.avif",
     "hasCover": true
@@ -2135,7 +2194,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-04-24",
     "timeToRead": 10,
     "author": "levi-van-noort",
-    "category": "product, announcement",
+    "category": "products, announcements",
     "featured": false,
     "cover": "/images/blog/terraform-provider-appwrite/cover.avif",
     "hasCover": true
@@ -2163,7 +2222,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-04-24",
     "timeToRead": 5,
     "author": "levi-van-noort",
-    "category": "product",
+    "category": "products",
     "cover": "/images/blog/reducing-cold-starts-appwrite-sites/cover.avif",
     "hasCover": true
   },
@@ -2189,7 +2248,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 10,
     "author": "atharva",
-    "category": "tutorial, product",
+    "category": "tutorials, products",
     "featured": false,
     "cover": "/images/blog/build-saas-waitlist/cover.avif",
     "hasCover": true
@@ -2231,7 +2290,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-04-22",
     "timeToRead": 4,
     "author": "matej-baco",
-    "category": "announcement",
+    "category": "announcements",
     "featured": false,
     "cover": "/images/blog/announcing-webhooks-api/cover.avif",
     "hasCover": true
@@ -2273,7 +2332,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-04-20",
     "timeToRead": 4,
     "author": "atharva",
-    "category": "announcement",
+    "category": "announcements",
     "featured": false,
     "cover": "/images/blog/announcing-appwrite-claude-code-plugin/cover.avif",
     "hasCover": true
@@ -2327,7 +2386,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-04-17",
     "timeToRead": 4,
     "author": "jake-barnby",
-    "category": "announcement",
+    "category": "announcements",
     "featured": false,
     "cover": "/images/blog/announcing-list-cache-ttl/cover.avif",
     "hasCover": true
@@ -2341,7 +2400,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-04-17",
     "timeToRead": 5,
     "author": "atharva",
-    "category": "product",
+    "category": "products",
     "featured": false,
     "unlisted": true,
     "cover": "/images/blog/why-documentation-is-the-most-underrated-developer-feature/cover.avif",
@@ -2356,7 +2415,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-04-16",
     "timeToRead": 4,
     "author": "matej-baco",
-    "category": "announcement",
+    "category": "announcements",
     "featured": false,
     "cover": "/images/blog/improve-devex-dev-keys/cover.avif",
     "hasCover": true
@@ -2370,7 +2429,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 5,
     "author": "aishwari",
-    "category": "product",
+    "category": "products",
     "featured": false,
     "unlisted": true,
     "cover": "/images/blog/what-developers-actually-want-from-a-backend-platform/cover.avif",
@@ -2385,7 +2444,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 5,
     "author": "aishwari",
-    "category": "product",
+    "category": "products",
     "featured": false,
     "unlisted": true,
     "cover": "/images/blog/the-underrated-value-of-great-sdk-design/cover.avif",
@@ -2400,7 +2459,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-04-13",
     "timeToRead": 4,
     "author": "chirag-aggarwal",
-    "category": "product, announcement",
+    "category": "products, announcements",
     "featured": false,
     "cover": "/images/blog/announcing-appwrite-mcp-server-2/cover.avif",
     "hasCover": true
@@ -2442,7 +2501,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-04-09",
     "timeToRead": 5,
     "author": "aditya-oberai",
-    "category": "startup",
+    "category": "startups",
     "featured": false,
     "unlisted": true,
     "cover": "/images/blog/how-to-build-and-ship-a-side-project-alone-the-backend-stack-that-works/cover.avif",
@@ -2457,7 +2516,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-04-09",
     "timeToRead": 5,
     "author": "atharva",
-    "category": "architecture",
+    "category": "architectures",
     "featured": false,
     "unlisted": true,
     "cover": "/images/blog/the-mental-model-every-developer-needs-for-backend-architecture/cover.avif",
@@ -2472,7 +2531,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-04-09",
     "timeToRead": 5,
     "author": "aditya-oberai",
-    "category": "announcement, tutorial",
+    "category": "announcements, tutorials",
     "featured": false,
     "cover": "/images/blog/x-oauth2-appwrite/cover.avif",
     "hasCover": true
@@ -2486,7 +2545,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-04-08",
     "timeToRead": 4,
     "author": "chirag-aggarwal",
-    "category": "announcement",
+    "category": "announcements",
     "featured": false,
     "cover": "/images/blog/announcing-appwrite-rust-sdk/cover.avif",
     "hasCover": true
@@ -2530,7 +2589,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-04-06",
     "timeToRead": 4,
     "author": "atharva",
-    "category": "announcement",
+    "category": "announcements",
     "featured": false,
     "cover": "/images/blog/announcing-appwrite-cursor-plugin/cover.avif",
     "hasCover": true
@@ -2544,7 +2603,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 5,
     "author": "aditya-oberai",
-    "category": "product",
+    "category": "products",
     "featured": false,
     "cover": "/images/blog/choosing-the-right-database-for-ai-applications-when-to-use-mongodb/cover.avif",
     "hasCover": true
@@ -2572,7 +2631,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-04-03",
     "timeToRead": 5,
     "author": "aditya-oberai",
-    "category": "product",
+    "category": "products",
     "featured": false,
     "cover": "/images/blog/from-prototype-to-production-why-ai-teams-prefer-nosql-databases/cover.avif",
     "hasCover": true
@@ -2586,7 +2645,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-04-03",
     "timeToRead": 5,
     "author": "aditya-oberai",
-    "category": "tutorial",
+    "category": "tutorials",
     "featured": false,
     "cover": "/images/blog/react-admin-template-sites/cover.avif",
     "hasCover": true
@@ -2600,7 +2659,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 15,
     "author": "atharva",
-    "category": "tutorial, product",
+    "category": "tutorials, products",
     "featured": false,
     "cover": "/images/blog/uber-clone-nextjs-appwrite/cover.avif",
     "hasCover": true
@@ -2614,7 +2673,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-04-02",
     "timeToRead": 5,
     "author": "atharva",
-    "category": "product",
+    "category": "products",
     "featured": false,
     "cover": "/images/blog/how-nosql-databases-handle-unstructured-ai-data-text-images-embeddings/cover.avif",
     "hasCover": true
@@ -2628,7 +2687,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-04-02",
     "timeToRead": 4,
     "author": "atharva",
-    "category": "product",
+    "category": "products",
     "featured": false,
     "cover": "/images/blog/scaling-ai-workloads-why-mongodb-works-well-for-high-velocity-data/cover.avif",
     "hasCover": true
@@ -2645,7 +2704,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
       "eldad-fux",
       "jake-barnby"
     ],
-    "category": "announcement",
+    "category": "announcements",
     "featured": true,
     "cover": "/images/blog/appwrite-mongodb-partnership-self-hosted/cover.avif",
     "hasCover": true
@@ -2659,7 +2718,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-04-01",
     "timeToRead": 6,
     "author": "atharva",
-    "category": "tutorial",
+    "category": "tutorials",
     "cover": "/images/blog/self-hosting-appwrite-with-mongodb/cover.avif",
     "hasCover": true
   },
@@ -2672,7 +2731,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-04-01",
     "timeToRead": 5,
     "author": "jake-barnby",
-    "category": "product",
+    "category": "products",
     "featured": false,
     "cover": "/images/blog/why-nosql-databases-are-a-better-fit-for-ai-applications-than-relational-databases/cover.avif",
     "hasCover": true
@@ -2686,7 +2745,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-04-01",
     "timeToRead": 5,
     "author": "jake-barnby",
-    "category": "product",
+    "category": "products",
     "featured": false,
     "cover": "/images/blog/why-schema-less-databases-are-better-for-modern-ai-workloads/cover.avif",
     "hasCover": true
@@ -2714,7 +2773,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-03-31",
     "timeToRead": 12,
     "author": "atharva",
-    "category": "tutorial, product",
+    "category": "tutorials, products",
     "featured": false,
     "cover": "/images/blog/user-impersonation-tutorial/cover.avif",
     "hasCover": true
@@ -2728,7 +2787,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-03-30",
     "timeToRead": 4,
     "author": "eldad-fux",
-    "category": "announcement, product",
+    "category": "announcements, products",
     "featured": false,
     "cover": "/images/blog/announcing-user-impersonation/cover.avif",
     "hasCover": true
@@ -2742,7 +2801,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 5,
     "author": "aditya-oberai",
-    "category": "hackathon",
+    "category": "hackathons",
     "featured": false,
     "cover": "/images/blog/appwrite-for-hackathons-build-fast-ship-faster/cover.avif",
     "hasCover": true
@@ -2786,7 +2845,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 5,
     "author": "aishwari",
-    "category": "product",
+    "category": "products",
     "featured": false,
     "unlisted": true,
     "cover": "/images/blog/how-modern-developers-choose-tech-stacks-today/cover.avif",
@@ -2801,7 +2860,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-03-27",
     "timeToRead": 4,
     "author": "aditya-oberai",
-    "category": "product, tutorial, security",
+    "category": "products, tutorials, security",
     "featured": false,
     "unlisted": true,
     "cover": "/images/blog/appwrite-custom-domains/cover.avif",
@@ -2816,7 +2875,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-03-27",
     "timeToRead": 4,
     "author": "aditya-oberai",
-    "category": "product, tutorial, security",
+    "category": "products, tutorials, security",
     "featured": false,
     "unlisted": true,
     "cover": "/images/blog/appwrite-magic-link/cover.avif",
@@ -2831,7 +2890,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-03-27",
     "timeToRead": 5,
     "author": "aishwari",
-    "category": "startup",
+    "category": "startups",
     "featured": false,
     "unlisted": true,
     "cover": "/images/blog/choosing-a-backend-when-you-manage-multiple-client-projects/cover.avif",
@@ -2846,7 +2905,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 5,
     "author": "aditya-oberai",
-    "category": "product, tutorial",
+    "category": "products, tutorials",
     "featured": false,
     "unlisted": true,
     "cover": "/images/blog/appwrite-indexes/cover.avif",
@@ -2861,7 +2920,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-03-26",
     "timeToRead": 5,
     "author": "aditya-oberai",
-    "category": "product, tutorial",
+    "category": "products, tutorials",
     "featured": false,
     "unlisted": true,
     "cover": "/images/blog/appwrite-messaging-push-email/cover.avif",
@@ -2876,7 +2935,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 5,
     "author": "aditya-oberai",
-    "category": "product, tutorial",
+    "category": "products, tutorials",
     "featured": false,
     "unlisted": true,
     "cover": "/images/blog/appwrite-server-sdk-vs-client-sdk/cover.avif",
@@ -2891,7 +2950,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-03-25",
     "timeToRead": 5,
     "author": "aditya-oberai",
-    "category": "product, tutorial, security",
+    "category": "products, tutorials, security",
     "featured": false,
     "unlisted": true,
     "cover": "/images/blog/appwrite-oauth/cover.avif",
@@ -2906,7 +2965,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 5,
     "author": "aditya-oberai",
-    "category": "product, tutorial",
+    "category": "products, tutorials",
     "featured": false,
     "unlisted": true,
     "cover": "/images/blog/appwrite-query-api/cover.avif",
@@ -2921,7 +2980,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-03-25",
     "timeToRead": 4,
     "author": "aditya-oberai",
-    "category": "product, tutorial",
+    "category": "products, tutorials",
     "featured": false,
     "unlisted": true,
     "cover": "/images/blog/appwrite-webhooks/cover.avif",
@@ -2936,7 +2995,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 5,
     "author": "aditya-oberai",
-    "category": "product, tutorial",
+    "category": "products, tutorials",
     "featured": false,
     "unlisted": true,
     "cover": "/images/blog/appwrite-functions-guide/cover.avif",
@@ -2951,7 +3010,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 5,
     "author": "aditya-oberai",
-    "category": "product, tutorial",
+    "category": "products, tutorials",
     "featured": false,
     "unlisted": true,
     "cover": "/images/blog/appwrite-storage-file-manager/cover.avif",
@@ -2966,7 +3025,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-03-24",
     "timeToRead": 5,
     "author": "aditya-oberai",
-    "category": "product, tutorial",
+    "category": "products, tutorials",
     "featured": false,
     "unlisted": true,
     "cover": "/images/blog/appwrite-teams-roles/cover.avif",
@@ -2981,7 +3040,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-05-20",
     "timeToRead": 5,
     "author": "aditya-oberai",
-    "category": "product, tutorial, security",
+    "category": "products, tutorials, security",
     "featured": false,
     "unlisted": true,
     "cover": "/images/blog/appwrite-auth-methods/cover.avif",
@@ -2996,7 +3055,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-03-23",
     "timeToRead": 5,
     "author": "aditya-oberai",
-    "category": "product, tutorial, security",
+    "category": "products, tutorials, security",
     "featured": false,
     "unlisted": true,
     "cover": "/images/blog/appwrite-permissions/cover.avif",
@@ -3011,7 +3070,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-03-23",
     "timeToRead": 4,
     "author": "aditya-oberai",
-    "category": "product, tutorial",
+    "category": "products, tutorials",
     "featured": false,
     "unlisted": true,
     "cover": "/images/blog/appwrite-realtime/cover.avif",
@@ -3041,7 +3100,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-03-20",
     "timeToRead": 7,
     "author": "aditya-oberai",
-    "category": "product",
+    "category": "products",
     "featured": false,
     "cover": "/images/blog/appwrite-vs-vercel-vs-netlify/cover.avif",
     "hasCover": true
@@ -3070,7 +3129,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 6,
     "author": "aditya-oberai",
-    "category": "product",
+    "category": "products",
     "featured": false,
     "unlisted": true,
     "cover": "/images/blog/client-dashboards-internal-tools/cover.avif",
@@ -3085,7 +3144,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 7,
     "author": "aditya-oberai",
-    "category": "product",
+    "category": "products",
     "featured": false,
     "unlisted": true,
     "cover": "/images/blog/firebase-vs-open-source-tradeoffs/cover.avif",
@@ -3130,7 +3189,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-03-19",
     "timeToRead": 5,
     "author": "atharva",
-    "category": "tutorial",
+    "category": "tutorials",
     "featured": false,
     "unlisted": true,
     "cover": "/images/blog/building-a-production-ready-backend-with-appwrite/cover.avif",
@@ -3145,7 +3204,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-03-19",
     "timeToRead": 6,
     "author": "aditya-oberai",
-    "category": "product",
+    "category": "products",
     "featured": false,
     "unlisted": true,
     "cover": "/images/blog/evaluate-backend-tools-no-lock-in/cover.avif",
@@ -3160,7 +3219,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-03-19",
     "timeToRead": 5,
     "author": "aishwari",
-    "category": "product",
+    "category": "products",
     "featured": false,
     "unlisted": true,
     "cover": "/images/blog/how-developer-tools-are-evolving-in-2026/cover.avif",
@@ -3175,7 +3234,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-03-19",
     "timeToRead": 6,
     "author": "aditya-oberai",
-    "category": "product",
+    "category": "products",
     "featured": false,
     "unlisted": true,
     "cover": "/images/blog/open-source-backend-vs-managed-saas/cover.avif",
@@ -3190,7 +3249,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-03-19",
     "timeToRead": 5,
     "author": "aishwari",
-    "category": "product",
+    "category": "products",
     "featured": false,
     "unlisted": true,
     "cover": "/images/blog/self-hosted-vs-managed-backends-a-practical-comparison/cover.avif",
@@ -3205,7 +3264,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 5,
     "author": "aishwari",
-    "category": "startup",
+    "category": "startups",
     "featured": false,
     "cover": "/images/blog/the-fastest-way-to-launch-your-next-side-project/cover.avif",
     "hasCover": true
@@ -3219,7 +3278,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-03-18",
     "timeToRead": 6,
     "author": "aditya-oberai",
-    "category": "product",
+    "category": "products",
     "featured": false,
     "unlisted": true,
     "cover": "/images/blog/avoid-backend-overengineering/cover.avif",
@@ -3234,7 +3293,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 7,
     "author": "aditya-oberai",
-    "category": "tutorial",
+    "category": "tutorials",
     "featured": false,
     "unlisted": true,
     "cover": "/images/blog/build-internal-tools-quickly/cover.avif",
@@ -3249,7 +3308,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 6,
     "author": "aditya-oberai",
-    "category": "tutorial",
+    "category": "tutorials",
     "featured": false,
     "unlisted": true,
     "cover": "/images/blog/easiest-file-uploads/cover.avif",
@@ -3264,7 +3323,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-03-18",
     "timeToRead": 6,
     "author": "aditya-oberai",
-    "category": "product",
+    "category": "products",
     "featured": false,
     "unlisted": true,
     "cover": "/images/blog/open-source-baas-alternatives/cover.avif",
@@ -3279,7 +3338,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 6,
     "author": "aditya-oberai",
-    "category": "product",
+    "category": "products",
     "featured": false,
     "unlisted": true,
     "cover": "/images/blog/when-custom-backend-stops-being-worth-it/cover.avif",
@@ -3294,7 +3353,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-03-17",
     "timeToRead": 4,
     "author": "matej-baco",
-    "category": "announcement",
+    "category": "announcements",
     "featured": true,
     "cover": "/images/blog/announcing-appwrite-arena/cover.avif",
     "hasCover": true
@@ -3308,7 +3367,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-03-17",
     "timeToRead": 5,
     "author": "atharva",
-    "category": "startup",
+    "category": "startups",
     "featured": false,
     "unlisted": true,
     "cover": "/images/blog/appwrite-for-startups-ship-faster-without-backend-headaches/cover.avif",
@@ -3323,7 +3382,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 5,
     "author": "aishwari",
-    "category": "product",
+    "category": "products",
     "featured": false,
     "unlisted": true,
     "cover": "/images/blog/backend-mistakes-that-quietly-cost-small-teams-weeks/cover.avif",
@@ -3338,7 +3397,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-03-17",
     "timeToRead": 6,
     "author": "aditya-oberai",
-    "category": "product",
+    "category": "products",
     "featured": false,
     "unlisted": true,
     "cover": "/images/blog/build-from-scratch-productivity/cover.avif",
@@ -3368,7 +3427,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-03-17",
     "timeToRead": 6,
     "author": "aditya-oberai",
-    "category": "product",
+    "category": "products",
     "featured": false,
     "unlisted": true,
     "cover": "/images/blog/indie-hackers-shipping-faster/cover.avif",
@@ -3383,7 +3442,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-03-17",
     "timeToRead": 5,
     "author": "aishwari",
-    "category": "product",
+    "category": "products",
     "featured": false,
     "unlisted": true,
     "cover": "/images/blog/scaling-applications-with-appwrite-what-you-need-to-know/cover.avif",
@@ -3413,7 +3472,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 6,
     "author": "aditya-oberai",
-    "category": "product",
+    "category": "products",
     "featured": false,
     "unlisted": true,
     "cover": "/images/blog/agency-backend-standardization/cover.avif",
@@ -3428,7 +3487,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-03-16",
     "timeToRead": 7,
     "author": "aditya-oberai",
-    "category": "product",
+    "category": "products",
     "featured": false,
     "unlisted": true,
     "cover": "/images/blog/backend-that-scales/cover.avif",
@@ -3443,7 +3502,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-03-16",
     "timeToRead": 5,
     "author": "aishwari",
-    "category": "tutorial",
+    "category": "tutorials",
     "featured": false,
     "unlisted": true,
     "cover": "/images/blog/cname-flattening-for-appwrite-sites/cover.avif",
@@ -3458,7 +3517,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 5,
     "author": "aishwari",
-    "category": "product",
+    "category": "products",
     "featured": false,
     "cover": "/images/blog/common-appwrite-mistakes-and-how-to-avoid-them/cover.avif",
     "hasCover": true
@@ -3487,7 +3546,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 5,
     "author": "atharva",
-    "category": "product",
+    "category": "products",
     "featured": false,
     "unlisted": true,
     "cover": "/images/blog/how-appwrite-simplifies-backend-development-for-frontend-devs/cover.avif",
@@ -3502,7 +3561,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 6,
     "author": "aditya-oberai",
-    "category": "product",
+    "category": "products",
     "featured": false,
     "unlisted": true,
     "cover": "/images/blog/save-weeks-managed-backends/cover.avif",
@@ -3517,7 +3576,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-03-11",
     "timeToRead": 8,
     "author": "eldad-fux",
-    "category": "product",
+    "category": "products",
     "featured": false,
     "draft": false,
     "cover": "/images/blog/managing-website-assets-repo-cold-start/cover.avif",
@@ -3532,7 +3591,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-03-11",
     "timeToRead": 5,
     "author": "aishwari",
-    "category": "tutorial",
+    "category": "tutorials",
     "featured": false,
     "cover": "/images/blog/solving-the-headaches-of-screenshot-automation-and-why-an-api-first-approach-works-better/cover.avif",
     "hasCover": true
@@ -3561,7 +3620,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-03-09",
     "timeToRead": 4,
     "author": "atharva",
-    "category": "product, announcement",
+    "category": "products, announcements",
     "featured": false,
     "cover": "/images/blog/introducing-appwrite-skills/cover.avif",
     "hasCover": true
@@ -3575,7 +3634,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-03-06",
     "timeToRead": 4,
     "author": "matej-baco",
-    "category": "announcement",
+    "category": "announcements",
     "featured": false,
     "cover": "/images/blog/announcing-cname-flattening/cover.avif",
     "hasCover": true
@@ -3604,7 +3663,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-02-16",
     "timeToRead": 4,
     "author": "jake-barnby",
-    "category": "announcement",
+    "category": "announcements",
     "featured": false,
     "cover": "/images/blog/announcing-realtime-queries/cover.avif",
     "hasCover": true
@@ -3618,7 +3677,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 5,
     "author": "jake-barnby",
-    "category": "announcement",
+    "category": "announcements",
     "featured": false,
     "cover": "/images/blog/announcing-realtime-channel-helpers/cover.avif",
     "hasCover": true
@@ -3632,7 +3691,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 5,
     "author": "eldad-fux",
-    "category": "announcement",
+    "category": "announcements",
     "featured": false,
     "cover": "/images/blog/new-string-types/cover.avif",
     "hasCover": true
@@ -3646,7 +3705,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-02-09",
     "timeToRead": 5,
     "author": "chirag-aggarwal",
-    "category": "announcement",
+    "category": "announcements",
     "featured": false,
     "draft": false,
     "cover": "/images/blog/appwrite-generate/cover.avif",
@@ -3661,7 +3720,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-02-06",
     "timeToRead": 5,
     "author": "jake-barnby",
-    "category": "announcement",
+    "category": "announcements",
     "featured": false,
     "cover": "/images/blog/announcing-relationship-queries/cover.avif",
     "hasCover": true
@@ -3675,7 +3734,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 5,
     "author": "jake-barnby",
-    "category": "announcement",
+    "category": "announcements",
     "featured": false,
     "cover": "/images/blog/announcing-csv-export/cover.avif",
     "hasCover": true
@@ -3689,7 +3748,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-01-30",
     "timeToRead": 5,
     "author": "atharva",
-    "category": "tutorial",
+    "category": "tutorials",
     "featured": false,
     "cover": "/images/blog/screenshots-best-practices/cover.avif",
     "hasCover": true
@@ -3703,7 +3762,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 8,
     "author": "atharva",
-    "category": "tutorial",
+    "category": "tutorials",
     "featured": false,
     "cover": "/images/blog/using-nextjs-wrong/cover.avif",
     "hasCover": true
@@ -3717,7 +3776,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-01-21",
     "timeToRead": 5,
     "author": "aditya-oberai",
-    "category": "announcement",
+    "category": "announcements",
     "featured": false,
     "cover": "/images/blog/announcing-screenshots-api/cover.avif",
     "hasCover": true
@@ -3731,7 +3790,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-12-31",
     "timeToRead": 7,
     "author": "steven",
-    "category": "announcement",
+    "category": "announcements",
     "featured": false,
     "cover": "/images/blog/appwrite-1-8-1-self-hosted-release/cover.avif",
     "hasCover": true
@@ -3745,7 +3804,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 5,
     "author": "aditya-oberai",
-    "category": "announcement",
+    "category": "announcements",
     "featured": false,
     "cover": "/images/blog/full-schema.avif",
     "hasCover": true
@@ -3762,7 +3821,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
       "eldad-fux",
       "ariel-weinberger"
     ],
-    "category": "announcement",
+    "category": "announcements",
     "cover": "/images/blog/introducing-imagine/cover.avif",
     "hasCover": true
   },
@@ -3775,7 +3834,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-12-12",
     "timeToRead": 5,
     "author": "atharva",
-    "category": "tutorial",
+    "category": "tutorials",
     "featured": false,
     "cover": "/images/blog/nextjs-output-modes/cover.avif",
     "hasCover": true
@@ -3789,7 +3848,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-12-09",
     "timeToRead": 8,
     "author": "dennis-ivy",
-    "category": "product",
+    "category": "products",
     "featured": false,
     "cover": "/images/blog/product-update-november-2025/cover.avif",
     "hasCover": true
@@ -3803,7 +3862,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-12-02",
     "timeToRead": 8,
     "author": "ebenezer-don",
-    "category": "tutorial",
+    "category": "tutorials",
     "featured": false,
     "cover": "/images/blog/document-vs-relational-databases-vibecoding/cover.avif",
     "hasCover": true
@@ -3817,7 +3876,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 5,
     "author": "darshan-pandya",
-    "category": "announcement",
+    "category": "announcements",
     "featured": false,
     "cover": "/images/blog/announcing-database-ai-suggestions/cover.avif",
     "hasCover": true
@@ -3858,7 +3917,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-11-18",
     "timeToRead": 10,
     "author": "laura-du-ry",
-    "category": "tutorial",
+    "category": "tutorials",
     "featured": false,
     "unlisted": true,
     "cover": "/images/blog/top-6-vector-databases-2025/cover.avif",
@@ -3873,7 +3932,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-11-14",
     "timeToRead": 7,
     "author": "eldad-fux",
-    "category": "announcement",
+    "category": "announcements",
     "featured": true,
     "cover": "/images/blog/the-developers-cloud/dev-cloud-cover.avif",
     "hasCover": true
@@ -3887,7 +3946,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-11-12",
     "timeToRead": 4,
     "author": "ebenezer-don",
-    "category": "announcement",
+    "category": "announcements",
     "cover": "/images/blog/nextjs-standalone-builds/cover.avif",
     "hasCover": true
   },
@@ -3900,7 +3959,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-11-07",
     "timeToRead": 10,
     "author": "dennis-ivy",
-    "category": "product",
+    "category": "products",
     "featured": false,
     "cover": "/images/blog/product-update-october-2025/cover.avif",
     "hasCover": true
@@ -3914,7 +3973,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-11-06",
     "timeToRead": 5,
     "author": "atharva",
-    "category": "tutorial",
+    "category": "tutorials",
     "featured": false,
     "cover": "/images/blog/race-conditions-db-operators/cover.avif",
     "hasCover": true
@@ -3928,7 +3987,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-05-22",
     "timeToRead": 8,
     "author": "ebenezer-don",
-    "category": "product",
+    "category": "products",
     "featured": false,
     "cover": "/images/blog/storage-previews-vs-ssr-image-optimization/cover.avif",
     "hasCover": true
@@ -3956,7 +4015,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 15,
     "author": "tessa",
-    "category": "tutorial",
+    "category": "tutorials",
     "featured": false,
     "draft": false,
     "cover": "/images/blog/build-fullstack-notes-app-cursor-appwrite-tanstack-start/cover.avif",
@@ -3971,7 +4030,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-11-04",
     "timeToRead": 5,
     "author": "jake-barnby",
-    "category": "announcement",
+    "category": "announcements",
     "featured": false,
     "cover": "/images/blog/announcing-db-operators/cover.avif",
     "hasCover": true
@@ -3999,7 +4058,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 5,
     "author": "steven",
-    "category": "announcement",
+    "category": "announcements",
     "cover": "/images/blog/appwrite-1-8-0-self-hosted-release/cover.avif",
     "hasCover": true
   },
@@ -4012,7 +4071,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-10-31",
     "timeToRead": 6,
     "author": "eldad-fux",
-    "category": "product",
+    "category": "products",
     "featured": false,
     "cover": "/images/blog/best-postman-alternative-options/cover.avif",
     "hasCover": true
@@ -4026,7 +4085,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-10-31",
     "timeToRead": 10,
     "author": "veeresh-mulge",
-    "category": "tutorial",
+    "category": "tutorials",
     "unlisted": true,
     "cover": "/images/blog/best-vibe-coding-tips/cover.avif",
     "hasCover": true
@@ -4040,7 +4099,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-10-31",
     "timeToRead": 10,
     "author": "veeresh-mulge",
-    "category": "tutorial",
+    "category": "tutorials",
     "unlisted": true,
     "cover": "/images/blog/context-engineering-intro/cover.avif",
     "hasCover": true
@@ -4054,7 +4113,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-10-31",
     "timeToRead": 5,
     "author": "atharva",
-    "category": "tutorial",
+    "category": "tutorials",
     "featured": false,
     "cover": "/images/blog/deploy-tanstack-start-app-to-appwrite-sites/cover.avif",
     "hasCover": true
@@ -4068,7 +4127,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-10-31",
     "timeToRead": 10,
     "author": "veeresh-mulge",
-    "category": "tutorial",
+    "category": "tutorials",
     "unlisted": true,
     "cover": "/images/blog/the-complete-vibe-coding-guide-2025/cover.avif",
     "hasCover": true
@@ -4082,7 +4141,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-10-30",
     "timeToRead": 5,
     "author": "matej-baco",
-    "category": "tutorial",
+    "category": "tutorials",
     "cover": "/images/blog/everything-new-in-nextjs16/cover.avif",
     "hasCover": true
   },
@@ -4095,7 +4154,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-10-28",
     "timeToRead": 5,
     "author": "matej-baco",
-    "category": "announcement",
+    "category": "announcements",
     "cover": "/images/blog/tanstack-start-support-in-appwrite-sites/cover.avif",
     "hasCover": true
   },
@@ -4108,7 +4167,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-10-28",
     "timeToRead": 4,
     "author": "laura-du-ry",
-    "category": "announcement",
+    "category": "announcements",
     "cover": "/images/blog/sites-free-plan.avif",
     "hasCover": true
   },
@@ -4121,7 +4180,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-10-27",
     "timeToRead": 10,
     "author": "veeresh-mulge",
-    "category": "tutorial",
+    "category": "tutorials",
     "unlisted": true,
     "cover": "/images/blog/examples-of-vibe-coding/cover.avif",
     "hasCover": true
@@ -4135,7 +4194,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-10-24",
     "timeToRead": 8,
     "author": "tessa",
-    "category": "tutorial",
+    "category": "tutorials",
     "featured": false,
     "cover": "/images/blog/why-developers-leaving-nextjs-tanstack-start/cover.avif",
     "hasCover": true
@@ -4149,7 +4208,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 10,
     "author": "veeresh-mulge",
-    "category": "tutorial",
+    "category": "tutorials",
     "unlisted": true,
     "cover": "/images/blog/agentic-ai-vs-generative-ai/cover.avif",
     "hasCover": true
@@ -4163,7 +4222,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-10-23",
     "timeToRead": 6,
     "author": "veeresh-mulge",
-    "category": "product",
+    "category": "products",
     "unlisted": false,
     "cover": "/images/blog/choosing-the-right-ai-database/cover.avif",
     "hasCover": true
@@ -4177,7 +4236,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-10-23",
     "timeToRead": 6,
     "author": "eldad-fux",
-    "category": "product",
+    "category": "products",
     "featured": false,
     "cover": "/images/blog/reasons-to-run-your-ci-pipeline-on-appwrite/cover.avif",
     "hasCover": true
@@ -4191,7 +4250,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-10-16",
     "timeToRead": 6,
     "author": "eldad-fux",
-    "category": "product",
+    "category": "products",
     "featured": false,
     "cover": "/images/blog/migrate-from-vercel-to-appwrite-sites/cover.avif",
     "hasCover": true
@@ -4205,7 +4264,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-10-14",
     "timeToRead": 10,
     "author": "veeresh-mulge",
-    "category": "product",
+    "category": "products",
     "unlisted": true,
     "cover": "/images/blog/10-best-mcp-server-client/cover.avif",
     "hasCover": true
@@ -4219,7 +4278,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 5,
     "author": "jake-barnby",
-    "category": "announcement",
+    "category": "announcements",
     "featured": false,
     "cover": "/images/blog/announcing-transactions-api/cover.avif",
     "hasCover": true
@@ -4233,7 +4292,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-10-08",
     "timeToRead": 7,
     "author": "dennis-ivy",
-    "category": "product",
+    "category": "products",
     "featured": false,
     "cover": "/images/blog/product-update-september-2025/cover.avif",
     "hasCover": true
@@ -4247,7 +4306,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-10-04",
     "timeToRead": 10,
     "author": "veeresh-mulge",
-    "category": "product",
+    "category": "products",
     "unlisted": true,
     "cover": "/images/blog/best-free-static-website-hosting/cover.avif",
     "hasCover": true
@@ -4261,7 +4320,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-10-04",
     "timeToRead": 10,
     "author": "veeresh-mulge",
-    "category": "product",
+    "category": "products",
     "unlisted": true,
     "cover": "/images/blog/best-push-notification-strategies/cover.avif",
     "hasCover": true
@@ -4275,7 +4334,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-10-01",
     "timeToRead": 5,
     "author": "atharva",
-    "category": "tutorial",
+    "category": "tutorials",
     "cover": "/images/blog/claude-code-tips-tricks/cover.avif",
     "hasCover": true
   },
@@ -4288,7 +4347,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-09-26",
     "timeToRead": 10,
     "author": "veeresh-mulge",
-    "category": "product",
+    "category": "products",
     "unlisted": true,
     "cover": "/images/blog/netlify-vs-vercel-vs-amplify-vs-appwrite-sites/cover.avif",
     "hasCover": true
@@ -4302,7 +4361,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-09-26",
     "timeToRead": 10,
     "author": "veeresh-mulge",
-    "category": "product",
+    "category": "products",
     "unlisted": true,
     "cover": "/images/blog/netlify-vs-vercel-vs-azure-vs-appwrite-sites/cover.avif",
     "hasCover": true
@@ -4330,7 +4389,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-09-25",
     "timeToRead": 6,
     "author": "veeresh-mulge",
-    "category": "product",
+    "category": "products",
     "unlisted": true,
     "cover": "/images/blog/why-developers-choose-appwrite-auth/cover.avif",
     "hasCover": true
@@ -4344,7 +4403,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-09-23",
     "timeToRead": 5,
     "author": "veeresh-mulge",
-    "category": "tutorial",
+    "category": "tutorials",
     "unlisted": true,
     "cover": "/images/blog/what-is-cdn/cover.avif",
     "hasCover": true
@@ -4358,7 +4417,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-09-18",
     "timeToRead": 5,
     "author": "jake-barnby",
-    "category": "announcement",
+    "category": "announcements",
     "featured": false,
     "cover": "/images/blog/announcing-spatial-columns/cover.avif",
     "hasCover": true
@@ -4372,7 +4431,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-09-18",
     "timeToRead": 5,
     "author": "atharva",
-    "category": "tutorial",
+    "category": "tutorials",
     "cover": "/images/blog/build-delivery-store-locator-spatial-columns/cover.avif",
     "hasCover": true
   },
@@ -4388,7 +4447,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
       "eldad-fux",
       "ebenezer-don"
     ],
-    "category": "tutorial",
+    "category": "tutorials",
     "metaTitle": "Best vibe coding tools in 2026: Cursor, Windsurf, Claude Code, Antigravity, and more",
     "cover": "/images/blog/comparing-vibe-coding-tools/cover.avif",
     "hasCover": true
@@ -4402,7 +4461,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-09-17",
     "timeToRead": 3,
     "author": "ebenezer-don",
-    "category": "announcement",
+    "category": "announcements",
     "cover": "/images/blog/turbopack-support-appwrite-sites/cover.avif",
     "hasCover": true
   },
@@ -4415,7 +4474,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 7,
     "author": "atharva",
-    "category": "tutorial",
+    "category": "tutorials",
     "cover": "/images/blog/google-oauth-expo/cover.avif",
     "hasCover": true
   },
@@ -4428,7 +4487,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-09-10",
     "timeToRead": 5,
     "author": "atharva",
-    "category": "tutorial",
+    "category": "tutorials",
     "cover": "/images/blog/client-vs-server-components-react/cover.avif",
     "hasCover": true
   },
@@ -4441,7 +4500,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 5,
     "author": "atharva",
-    "category": "tutorial",
+    "category": "tutorials",
     "cover": "/images/blog/setting-up-google-signin/cover.avif",
     "hasCover": true
   },
@@ -4454,7 +4513,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-09-05",
     "timeToRead": 5,
     "author": "atharva",
-    "category": "tutorial",
+    "category": "tutorials",
     "cover": "/images/blog/make-best-use-appwrite-mcp/cover.avif",
     "hasCover": true
   },
@@ -4467,7 +4526,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 5,
     "author": "jake-barnby",
-    "category": "announcement",
+    "category": "announcements",
     "featured": false,
     "cover": "/images/blog/announcing-inversion-queries/cover.avif",
     "hasCover": true
@@ -4481,7 +4540,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-05-22",
     "timeToRead": 6,
     "author": "laura-du-ry",
-    "category": "tutorial",
+    "category": "tutorials",
     "featured": false,
     "unlisted": true,
     "cover": "/images/blog/free-hosting-platform/cover.avif",
@@ -4496,7 +4555,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-09-03",
     "timeToRead": 10,
     "author": "laura-du-ry",
-    "category": "startup",
+    "category": "startups",
     "unlisted": true,
     "cover": "/images/blog/master-prompt-engineering-tools/cover.avif",
     "hasCover": true
@@ -4510,7 +4569,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 6,
     "author": "dennis-ivy",
-    "category": "product",
+    "category": "products",
     "featured": false,
     "cover": "/images/blog/product-update-august-2025/cover.avif",
     "hasCover": true
@@ -4524,7 +4583,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 5,
     "author": "jake-barnby",
-    "category": "announcement",
+    "category": "announcements",
     "featured": false,
     "cover": "/images/blog/announcing-time-helper-queries/cover.avif",
     "hasCover": true
@@ -4538,7 +4597,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-09-02",
     "timeToRead": 6,
     "author": "laura-du-ry",
-    "category": "product",
+    "category": "products",
     "featured": false,
     "unlisted": true,
     "cover": "/images/blog/startup-dev-tools.avif",
@@ -4553,7 +4612,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-09-02",
     "timeToRead": 10,
     "author": "laura-du-ry",
-    "category": "product",
+    "category": "products",
     "featured": false,
     "unlisted": true,
     "cover": "/images/blog/startups-benefits.avif",
@@ -4568,7 +4627,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-08-28",
     "timeToRead": 5,
     "author": "darshan-pandya",
-    "category": "announcement",
+    "category": "announcements",
     "featured": false,
     "cover": "/images/blog/announcing-opt-in-relationship-loading/cover.avif",
     "hasCover": true
@@ -4582,7 +4641,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-08-28",
     "timeToRead": 5,
     "author": "atharva",
-    "category": "tutorial",
+    "category": "tutorials",
     "cover": "/images/blog/deploy-nextjs-app-to-appwrite-sites/cover.avif",
     "hasCover": true
   },
@@ -4595,7 +4654,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 5,
     "author": "darshan-pandya",
-    "category": "announcement",
+    "category": "announcements",
     "featured": false,
     "cover": "/images/blog/announcing-appwrite-databases-new-ui/cover.avif",
     "hasCover": true
@@ -4609,7 +4668,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 10,
     "author": "laura-du-ry",
-    "category": "tutorial",
+    "category": "tutorials",
     "cover": "/images/blog/ai-vibe-coding-insights/cover.avif",
     "hasCover": true
   },
@@ -4636,7 +4695,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 5,
     "author": "jake-barnby",
-    "category": "announcement",
+    "category": "announcements",
     "featured": false,
     "cover": "/images/blog/announcing-timestamp-overrides/cover.avif",
     "hasCover": true
@@ -4650,7 +4709,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-10-29",
     "timeToRead": 7,
     "author": "eldad-fux",
-    "category": "announcement",
+    "category": "announcements",
     "cover": "/images/blog/appwrite-pricing-update/cover-pricing.avif",
     "hasCover": true
   },
@@ -4663,7 +4722,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 5,
     "author": "jake-barnby",
-    "category": "announcement",
+    "category": "announcements",
     "featured": false,
     "cover": "/images/blog/announcing-atomic-numeric-operations/cover.avif",
     "hasCover": true
@@ -4677,7 +4736,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-07-31",
     "timeToRead": 5,
     "author": "dennis-ivy",
-    "category": "tutorial",
+    "category": "tutorials",
     "cover": "/images/blog/custom-domains-with-sites/cover.avif",
     "hasCover": true
   },
@@ -4690,7 +4749,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 3,
     "author": "dennis-ivy",
-    "category": "product",
+    "category": "products",
     "featured": false,
     "cover": "/images/blog/product-update-july-2025/cover.avif",
     "hasCover": true
@@ -4704,7 +4763,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-07-21",
     "timeToRead": 10,
     "author": "laura-du-ry",
-    "category": "tutorial",
+    "category": "tutorials",
     "featured": false,
     "unlisted": true,
     "cover": "/images/blog/top-25-vibe-coding-tools/cover.avif",
@@ -4719,7 +4778,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 6,
     "author": "ebenezer-don",
-    "category": "tutorial",
+    "category": "tutorials",
     "cover": "/images/blog/track-document-order-with-sequence/cover.avif",
     "hasCover": true
   },
@@ -4732,7 +4791,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 5,
     "author": "jake-barnby",
-    "category": "announcement",
+    "category": "announcements",
     "featured": false,
     "cover": "/images/blog/announcing-auto-increment-support/cover.avif",
     "hasCover": true
@@ -4746,7 +4805,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-07-11",
     "timeToRead": 10,
     "author": "laura-du-ry",
-    "category": "product",
+    "category": "products",
     "unlisted": true,
     "cover": "/images/blog/role-based-access-control-with-appwrite/cover.avif",
     "hasCover": true
@@ -4760,7 +4819,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 5,
     "author": "jake-barnby",
-    "category": "announcement",
+    "category": "announcements",
     "featured": false,
     "cover": "/images/blog/announcing-encrypted-string-attributes/cover.avif",
     "hasCover": true
@@ -4774,7 +4833,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 5,
     "author": "ebenezer-don",
-    "category": "tutorial",
+    "category": "tutorials",
     "cover": "/images/blog/encrypted-attributes-for-sensitive-fields/cover.avif",
     "hasCover": true
   },
@@ -4787,7 +4846,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 5,
     "author": "jake-barnby",
-    "category": "announcement",
+    "category": "announcements",
     "featured": false,
     "cover": "/images/blog/announcing-database-upsert/cover.avif",
     "hasCover": true
@@ -4801,7 +4860,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-07-04",
     "timeToRead": 10,
     "author": "veeresh-mulge",
-    "category": "tutorial",
+    "category": "tutorials",
     "unlisted": true,
     "cover": "/images/blog/dev-tools-for-agencies/cover.avif",
     "hasCover": true
@@ -4815,7 +4874,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 5,
     "author": "jake-barnby",
-    "category": "announcement",
+    "category": "announcements",
     "featured": false,
     "cover": "/images/blog/announcing-bulk-api/cover.avif",
     "hasCover": true
@@ -4829,7 +4888,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 10,
     "author": "aditya-oberai",
-    "category": "tutorial",
+    "category": "tutorials",
     "cover": "/images/blog/build-personal-crm-sveltekit/cover.avif",
     "hasCover": true
   },
@@ -4842,7 +4901,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 5,
     "author": "darshan-pandya",
-    "category": "announcement",
+    "category": "announcements",
     "featured": false,
     "cover": "/images/blog/announcing-csv-imports/cover.avif",
     "hasCover": true
@@ -4856,7 +4915,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-06-27",
     "timeToRead": 10,
     "author": "veeresh-mulge",
-    "category": "tutorial",
+    "category": "tutorials",
     "featured": false,
     "unlisted": true,
     "cover": "/images/blog/top-auth0-alternatives/cover.avif",
@@ -4871,7 +4930,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-06-27",
     "timeToRead": 10,
     "author": "laura-du-ry",
-    "category": "product",
+    "category": "products",
     "unlisted": true,
     "cover": "/images/blog/top-australia-incubators-accelerators/cover.avif",
     "hasCover": true
@@ -4885,7 +4944,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-06-27",
     "timeToRead": 10,
     "author": "laura-du-ry",
-    "category": "product",
+    "category": "products",
     "unlisted": true,
     "cover": "/images/blog/top-eu-incubators-accelerators/cover.avif",
     "hasCover": true
@@ -4899,7 +4958,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-06-27",
     "timeToRead": 10,
     "author": "laura-du-ry",
-    "category": "product",
+    "category": "products",
     "unlisted": true,
     "cover": "/images/blog/top-singapore-incubators-accelerators/cover.avif",
     "hasCover": true
@@ -4913,7 +4972,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-06-25",
     "timeToRead": 6,
     "author": "laura-du-ry",
-    "category": "product",
+    "category": "products",
     "unlisted": true,
     "cover": "/images/blog/what-is-ciam/cover.avif",
     "hasCover": true
@@ -4927,7 +4986,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 4,
     "author": "chirag-aggarwal",
-    "category": "announcement",
+    "category": "announcements",
     "cover": "/images/blog/type-generation-feature/cover.avif",
     "hasCover": true
   },
@@ -4940,7 +4999,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-06-23",
     "timeToRead": 6,
     "author": "laura-du-ry",
-    "category": "product",
+    "category": "products",
     "unlisted": true,
     "cover": "/images/blog/how-appwrite-makes-auth-easy-for-ecommerce/cover.avif",
     "hasCover": true
@@ -4954,7 +5013,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-06-23",
     "timeToRead": 10,
     "author": "veeresh-mulge",
-    "category": "startup",
+    "category": "startups",
     "unlisted": true,
     "cover": "/images/blog/startup-accelerator-guide/cover.avif",
     "hasCover": true
@@ -4968,7 +5027,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-06-22",
     "timeToRead": 10,
     "author": "veeresh-mulge",
-    "category": "product",
+    "category": "products",
     "unlisted": true,
     "cover": "/images/blog/top-us-incubators-accelerators/cover.avif",
     "hasCover": true
@@ -4982,7 +5041,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-06-19",
     "timeToRead": 6,
     "author": "laura-du-ry",
-    "category": "product",
+    "category": "products",
     "unlisted": true,
     "cover": "/images/blog/rethinking-saas-authentication/cover.avif",
     "hasCover": true
@@ -4996,7 +5055,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-06-18",
     "timeToRead": 10,
     "author": "veeresh-mulge",
-    "category": "startup",
+    "category": "startups",
     "unlisted": true,
     "cover": "/images/blog/startup-incubator-guide/cover.avif",
     "hasCover": true
@@ -5010,7 +5069,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-06-16",
     "timeToRead": 6,
     "author": "laura-du-ry",
-    "category": "product",
+    "category": "products",
     "unlisted": true,
     "cover": "/images/blog/understanding-idp-vs-sp-initiated-sso/cover.avif",
     "hasCover": true
@@ -5024,7 +5083,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-06-12",
     "timeToRead": 6,
     "author": "laura-du-ry",
-    "category": "product",
+    "category": "products",
     "unlisted": true,
     "cover": "/images/blog/understand-oauth2/cover.avif",
     "hasCover": true
@@ -5052,7 +5111,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-10-14",
     "timeToRead": 13,
     "author": "ebenezer-don",
-    "category": "tutorial",
+    "category": "tutorials",
     "featured": false,
     "cover": "/images/blog/chatbot-with-webllm-and-webgpu/cover.avif",
     "hasCover": true
@@ -5066,7 +5125,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-05-29",
     "timeToRead": 5,
     "author": "veeresh-mulge",
-    "category": "startup",
+    "category": "startups",
     "unlisted": true,
     "cover": "/images/blog/10-open-source-alternatives-to-popular-software-for-startups/cover-image.avif",
     "hasCover": true
@@ -5080,7 +5139,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-10-14",
     "timeToRead": 7,
     "author": "aditya-oberai",
-    "category": "tutorial",
+    "category": "tutorials",
     "featured": false,
     "cover": "/images/blog/portfolio-template-sites/cover.avif",
     "hasCover": true
@@ -5094,7 +5153,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-05-24",
     "timeToRead": 5,
     "author": "veeresh-mulge",
-    "category": "startup",
+    "category": "startups",
     "unlisted": true,
     "cover": "/images/blog/the-shift-from-SaaS-to-Vertical-AI-what-startup-founders-need-to-know/cover-image.avif",
     "hasCover": true
@@ -5108,7 +5167,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-05-23",
     "timeToRead": 5,
     "author": "darshan-pandya",
-    "category": "product",
+    "category": "products",
     "featured": false,
     "cover": "/images/blog/file-tokens.avif",
     "hasCover": true
@@ -5122,7 +5181,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-05-22",
     "timeToRead": 6,
     "author": "ebenezer-don",
-    "category": "tutorial",
+    "category": "tutorials",
     "featured": false,
     "cover": "/images/blog/avif-in-storage/cover.avif",
     "hasCover": true
@@ -5136,7 +5195,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-05-22",
     "timeToRead": 6,
     "author": "damodar-lohani",
-    "category": "product, announcement",
+    "category": "products, announcements",
     "featured": false,
     "cover": "/images/blog/new-image-formats.avif",
     "hasCover": true
@@ -5150,7 +5209,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-05-21",
     "timeToRead": 6,
     "author": "chirag-aggarwal",
-    "category": "product",
+    "category": "products",
     "featured": false,
     "cover": "/images/blog/dev-keys.avif",
     "hasCover": true
@@ -5164,7 +5223,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 7,
     "author": "aditya-oberai",
-    "category": "tutorial",
+    "category": "tutorials",
     "featured": false,
     "cover": "/images/blog/improve-devex-dev-keys/cover.avif",
     "hasCover": true
@@ -5178,7 +5237,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-05-20",
     "timeToRead": 5,
     "author": "aditya-oberai",
-    "category": "tutorial",
+    "category": "tutorials",
     "featured": false,
     "cover": "/images/blog/flutter-starter-sites/cover.avif",
     "hasCover": true
@@ -5192,7 +5251,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-05-20",
     "timeToRead": 6,
     "author": "eldad-fux",
-    "category": "tutorial",
+    "category": "tutorials",
     "unlisted": true,
     "cover": "/images/blog/free-angular-hosting/cover.avif",
     "hasCover": true
@@ -5206,7 +5265,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-05-20",
     "timeToRead": 6,
     "author": "eldad-fux",
-    "category": "tutorial",
+    "category": "tutorials",
     "unlisted": true,
     "cover": "/images/blog/free-astro-hosting/cover.avif",
     "hasCover": true
@@ -5220,7 +5279,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-05-20",
     "timeToRead": 6,
     "author": "eldad-fux",
-    "category": "tutorial",
+    "category": "tutorials",
     "unlisted": true,
     "cover": "/images/blog/free-flutter-web-hosting/cover.avif",
     "hasCover": true
@@ -5234,7 +5293,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-05-20",
     "timeToRead": 6,
     "author": "eldad-fux",
-    "category": "tutorial",
+    "category": "tutorials",
     "unlisted": true,
     "cover": "/images/blog/free-nextjs-hosting/cover.avif",
     "hasCover": true
@@ -5248,7 +5307,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-05-20",
     "timeToRead": 6,
     "author": "eldad-fux",
-    "category": "tutorial",
+    "category": "tutorials",
     "unlisted": true,
     "cover": "/images/blog/free-nuxt-hosting/cover.avif",
     "hasCover": true
@@ -5262,7 +5321,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-05-20",
     "timeToRead": 6,
     "author": "eldad-fux",
-    "category": "tutorial",
+    "category": "tutorials",
     "unlisted": true,
     "cover": "/images/blog/free-react-hosting/cover.avif",
     "hasCover": true
@@ -5276,7 +5335,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-05-20",
     "timeToRead": 6,
     "author": "eldad-fux",
-    "category": "tutorial",
+    "category": "tutorials",
     "unlisted": true,
     "cover": "/images/blog/free-react-native-hosting/cover.avif",
     "hasCover": true
@@ -5290,7 +5349,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-05-20",
     "timeToRead": 6,
     "author": "eldad-fux",
-    "category": "tutorial",
+    "category": "tutorials",
     "unlisted": true,
     "cover": "/images/blog/free-remix-hosting/cover.avif",
     "hasCover": true
@@ -5304,7 +5363,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-05-20",
     "timeToRead": 6,
     "author": "eldad-fux",
-    "category": "tutorial",
+    "category": "tutorials",
     "unlisted": true,
     "cover": "/images/blog/free-svelte-and-sveltekit-hosting/cover.avif",
     "hasCover": true
@@ -5318,7 +5377,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-05-20",
     "timeToRead": 6,
     "author": "eldad-fux",
-    "category": "tutorial",
+    "category": "tutorials",
     "unlisted": true,
     "cover": "/images/blog/free-vuejs-hosting/cover.avif",
     "hasCover": true
@@ -5332,7 +5391,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-05-20",
     "timeToRead": 5,
     "author": "steven",
-    "category": "product, init",
+    "category": "products, init",
     "featured": false,
     "cover": "/images/blog/hosting-flutter-web/cover.avif",
     "hasCover": true
@@ -5346,7 +5405,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-05-20",
     "timeToRead": 5,
     "author": "aditya-oberai",
-    "category": "tutorial",
+    "category": "tutorials",
     "featured": false,
     "cover": "/images/blog/nextjs-starter-sites/cover.avif",
     "hasCover": true
@@ -5360,7 +5419,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-05-20",
     "timeToRead": 5,
     "author": "aditya-oberai",
-    "category": "tutorial",
+    "category": "tutorials",
     "featured": false,
     "cover": "/images/blog/nuxt-starter-sites/cover.avif",
     "hasCover": true
@@ -5374,7 +5433,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-05-20",
     "timeToRead": 5,
     "author": "aditya-oberai",
-    "category": "tutorial",
+    "category": "tutorials",
     "featured": false,
     "cover": "/images/blog/sveltekit-starter-sites/cover.avif",
     "hasCover": true
@@ -5388,7 +5447,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-05-19",
     "timeToRead": 5,
     "author": "veeresh-mulge",
-    "category": "startup",
+    "category": "startups",
     "unlisted": true,
     "cover": "/images/blog/top-5-tips-to-build-an-AI-agent-startup/cover-image.avif",
     "hasCover": true
@@ -5402,7 +5461,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-05-19",
     "timeToRead": 6,
     "author": "matej-baco",
-    "category": "product,init",
+    "category": "products, init",
     "featured": false,
     "cover": "/images/blog/sites-announcement/sites-cover.avif",
     "hasCover": true
@@ -5416,7 +5475,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-05-19",
     "timeToRead": 9,
     "author": "ebenezer-don",
-    "category": "tutorial",
+    "category": "tutorials",
     "featured": false,
     "cover": "/images/blog/sites-templates/templates-cover.avif",
     "hasCover": true
@@ -5430,7 +5489,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-05-19",
     "timeToRead": 10,
     "author": "ebenezer-don",
-    "category": "product,init",
+    "category": "products, init",
     "featured": true,
     "cover": "/images/blog/csr-ssg-ssr.avif",
     "hasCover": true
@@ -5444,7 +5503,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-05-19",
     "timeToRead": 6,
     "author": "ebenezer-don",
-    "category": "tutorial",
+    "category": "tutorials",
     "featured": false,
     "cover": "/images/blog/host-ssr-web-cover.avif",
     "hasCover": true
@@ -5458,7 +5517,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-05-19",
     "timeToRead": 8,
     "author": "ebenezer-don",
-    "category": "product,init",
+    "category": "products, init",
     "featured": false,
     "cover": "/images/blog/oss-netlify-cover.avif",
     "hasCover": true
@@ -5472,7 +5531,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 10,
     "author": "ebenezer-don",
-    "category": "tutorial",
+    "category": "tutorials",
     "featured": false,
     "cover": "/images/blog/oss-vercel-cover.avif",
     "hasCover": true
@@ -5486,7 +5545,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-05-14",
     "timeToRead": 5,
     "author": "veeresh-mulge",
-    "category": "startup",
+    "category": "startups",
     "unlisted": true,
     "cover": "/images/blog/5-MCP-startup-ideas-to-build-in-2025/cover-image.avif",
     "hasCover": true
@@ -5500,7 +5559,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-05-22",
     "timeToRead": 5,
     "author": "ebenezer-don",
-    "category": "product",
+    "category": "products",
     "cover": "/images/blog/appwrite-vs-auth0-b2c/cover.avif",
     "hasCover": true
   },
@@ -5513,7 +5572,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-05-09",
     "timeToRead": 10,
     "author": "dennis-ivy",
-    "category": "product",
+    "category": "products",
     "featured": false,
     "cover": "/images/blog/product-update-april-2025/cover-image.avif",
     "hasCover": true
@@ -5527,7 +5586,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-05-09",
     "timeToRead": 5,
     "author": "veeresh-mulge",
-    "category": "startup",
+    "category": "startups",
     "unlisted": true,
     "cover": "/images/blog/how-can-you-rapidly-build-an-mvp-for-your-startup/cover-image.avif",
     "hasCover": true
@@ -5555,7 +5614,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-05-07",
     "timeToRead": 5,
     "author": "ebenezer-don",
-    "category": "tutorial",
+    "category": "tutorials",
     "featured": false,
     "cover": "/images/blog/add-figma-oauth2-appwrite/cover.avif",
     "hasCover": true
@@ -5583,7 +5642,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-04-17",
     "timeToRead": 9,
     "author": "christy-jacob",
-    "category": "Tutorial",
+    "category": "tutorials",
     "cover": "/images/blog/how-to-reduce-cloud-latency/cover.avif",
     "hasCover": true
   },
@@ -5609,7 +5668,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-04-17",
     "timeToRead": 4,
     "author": "aditya-oberai",
-    "category": "product",
+    "category": "products",
     "cover": "/images/blog/why-multi-cloud-is-taking-over/cover.avif",
     "hasCover": true
   },
@@ -5622,7 +5681,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 10,
     "author": "ebenezer-don",
-    "category": "tutorial",
+    "category": "tutorials",
     "featured": false,
     "cover": "/images/blog/change-regions-with-migrations/cover.avif",
     "hasCover": true
@@ -5636,7 +5695,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-04-16",
     "timeToRead": 5,
     "author": "christy-jacob",
-    "category": "product",
+    "category": "products",
     "featured": false,
     "cover": "/images/blog/the-appwrite-network/network-cover-image.avif",
     "hasCover": true
@@ -5650,7 +5709,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-04-11",
     "timeToRead": 10,
     "author": "dennis-ivy",
-    "category": "product",
+    "category": "products",
     "featured": false,
     "cover": "/images/blog/product-update-march-2025/cover-image.avif",
     "hasCover": true
@@ -5664,7 +5723,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 15,
     "author": "ebenezer-don",
-    "category": "tutorial",
+    "category": "tutorials",
     "featured": false,
     "cover": "/images/blog/vibe-coding-security-best-practices/cover.avif",
     "hasCover": true
@@ -5678,7 +5737,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-03-18",
     "timeToRead": 5,
     "author": "ebenezer-don",
-    "category": "tutorial",
+    "category": "tutorials",
     "cover": "/images/blog/typescript-7-faster-with-go/cover.avif",
     "hasCover": true
   },
@@ -5691,7 +5750,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 6,
     "author": "eldad-fux",
-    "category": "announcement",
+    "category": "announcements",
     "featured": false,
     "cover": "/images/blog/announcing-database-reads-and-writes-pricing/cover.avif",
     "hasCover": true
@@ -5705,7 +5764,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-03-13",
     "timeToRead": 7,
     "author": "ebenezer-don",
-    "category": "tutorial",
+    "category": "tutorials",
     "featured": false,
     "cover": "/images/blog/what-is-mcp/cover.avif",
     "hasCover": true
@@ -5719,7 +5778,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-03-10",
     "timeToRead": 6,
     "author": "ebenezer-don",
-    "category": "tutorial",
+    "category": "tutorials",
     "cover": "/images/blog/image-transformation-with-appwrite-storage/cover.avif",
     "hasCover": true
   },
@@ -5745,7 +5804,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-03-06",
     "timeToRead": 10,
     "author": "ebenezer-don",
-    "category": "tutorial",
+    "category": "tutorials",
     "cover": "/images/blog/bytedance-lynx-vs-react-native/cover.avif",
     "hasCover": true
   },
@@ -5758,7 +5817,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-03-06",
     "timeToRead": 10,
     "author": "dennis-ivy",
-    "category": "product",
+    "category": "products",
     "featured": false,
     "cover": "/images/blog/product-update-feb-2025/cover-image.avif",
     "hasCover": true
@@ -5772,7 +5831,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-05-22",
     "timeToRead": 4,
     "author": "eldad-fux",
-    "category": "product",
+    "category": "products",
     "featured": false,
     "cover": "/images/blog/announcing-image-transformations-pricing/cover.avif",
     "hasCover": true
@@ -5786,7 +5845,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-02-28",
     "timeToRead": 15,
     "author": "chirag-aggarwal",
-    "category": "tutorial",
+    "category": "tutorials",
     "cover": "/images/blog/self-hosting-appwrite-with-coolify/cover.avif",
     "hasCover": true
   },
@@ -5813,7 +5872,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 5,
     "author": "ebenezer-don",
-    "category": "tutorial",
+    "category": "tutorials",
     "cover": "/images/blog/fixing-oauth2-issues-in-appwrite-cloud/cover.avif",
     "hasCover": true
   },
@@ -5826,7 +5885,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-02-08",
     "timeToRead": 4,
     "author": "nishant-jain",
-    "category": "tutorial",
+    "category": "tutorials",
     "featured": false,
     "cover": "/images/blog/setting-up-route-protection-in-react-native/cover.avif",
     "hasCover": true
@@ -5840,7 +5899,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 10,
     "author": "dennis-ivy",
-    "category": "product",
+    "category": "products",
     "featured": false,
     "cover": "/images/blog/product-update-jan-2025/cover-image.avif",
     "hasCover": true
@@ -5854,7 +5913,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 15,
     "author": "ebenezer-don",
-    "category": "tutorial",
+    "category": "tutorials",
     "cover": "/images/blog/build-fullstack-svelte-appwrite/cover.avif",
     "hasCover": true
   },
@@ -5867,7 +5926,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-01-28",
     "timeToRead": 6,
     "author": "laura-du-ry",
-    "category": "tutorial",
+    "category": "tutorials",
     "featured": false,
     "cover": "/images/blog/partners.avif",
     "hasCover": true
@@ -5881,7 +5940,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-01-23",
     "timeToRead": 3,
     "author": "ebenezer-don",
-    "category": "tutorial",
+    "category": "tutorials",
     "featured": false,
     "cover": "/images/blog/budget-caps-stop-unexpected-cloud-bills/cover.avif",
     "hasCover": true
@@ -5908,7 +5967,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-05-22",
     "timeToRead": 4,
     "author": "laura-du-ry",
-    "category": "product",
+    "category": "products",
     "featured": false,
     "cover": "/images/blog/scale-plan.avif",
     "hasCover": true
@@ -5922,7 +5981,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-01-22",
     "timeToRead": 5,
     "author": "jake-barnby",
-    "category": "product",
+    "category": "products",
     "cover": "/images/blog/announcing-new-push-notifications-features/cover.avif",
     "hasCover": true
   },
@@ -5935,7 +5994,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-01-21",
     "timeToRead": 7,
     "author": "ebenezer-don",
-    "category": "tutorial",
+    "category": "tutorials",
     "featured": false,
     "cover": "/images/blog/5-vs-code-extensions-that-replace-entire-dev-tools/cover.avif",
     "hasCover": true
@@ -5949,7 +6008,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 10,
     "author": "aditya-oberai",
-    "category": "tutorial",
+    "category": "tutorials",
     "cover": "/images/blog/hooks-appwrite-databases/cover.avif",
     "hasCover": true
   },
@@ -5962,7 +6021,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 11,
     "author": "ebenezer-don",
-    "category": "tutorial",
+    "category": "tutorials",
     "cover": "/images/blog/building-custom-auth-flows/cover.avif",
     "hasCover": true
   },
@@ -5975,7 +6034,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-01-10",
     "timeToRead": 4,
     "author": "eldad-fux",
-    "category": "product, announcement",
+    "category": "products, announcements",
     "featured": false,
     "cover": "/images/blog/announcing-phone-OTP-pricing/cover.avif",
     "hasCover": true
@@ -5989,7 +6048,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 10,
     "author": "dennis-ivy",
-    "category": "product",
+    "category": "products",
     "featured": false,
     "cover": "/images/blog/product-update-december-2024/cover-image.avif",
     "hasCover": true
@@ -6003,7 +6062,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-05-22",
     "timeToRead": 6,
     "author": "eldad-fux",
-    "category": "product, announcement",
+    "category": "products, announcements",
     "featured": true,
     "cover": "/images/blog/gb-hours.avif",
     "hasCover": true
@@ -6017,7 +6076,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2024-12-12",
     "timeToRead": 10,
     "author": "ebenezer-don",
-    "category": "tutorial",
+    "category": "tutorials",
     "featured": false,
     "cover": "/images/blog/10-git-commands-you-should-start-using/cover.avif",
     "hasCover": true
@@ -6031,7 +6090,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2024-12-10",
     "timeToRead": 4,
     "author": "ebenezer-don",
-    "category": "product, announcement",
+    "category": "products, announcements",
     "cover": "/images/blog/memberships-privacy-announcement/cover.avif",
     "hasCover": true
   },
@@ -6044,7 +6103,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2024-11-22",
     "timeToRead": 10,
     "author": "ebenezer-don",
-    "category": "tutorial",
+    "category": "tutorials",
     "cover": "/images/blog/deno-vs-bun-javascript-runtime/cover.avif",
     "hasCover": true
   },
@@ -6057,7 +6116,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2024-11-12",
     "timeToRead": 4,
     "author": "aditya-oberai",
-    "category": "announcement",
+    "category": "announcements",
     "cover": "/images/blog/education-program.avif",
     "hasCover": true
   },
@@ -6070,7 +6129,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2024-11-06",
     "timeToRead": 6,
     "author": "ebenezer-don",
-    "category": "tutorial",
+    "category": "tutorials",
     "featured": false,
     "cover": "/images/blog/15-git-cli-tips/cover.avif",
     "hasCover": true
@@ -6084,7 +6143,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2024-10-29",
     "timeToRead": 9,
     "author": "ebenezer-don",
-    "category": "tutorial",
+    "category": "tutorials",
     "featured": false,
     "cover": "/images/blog/sql-vs-nosql/cover.avif",
     "hasCover": true
@@ -6098,7 +6157,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2024-10-25",
     "timeToRead": 8,
     "author": "ebenezer-don",
-    "category": "product",
+    "category": "products",
     "cover": "/images/blog/flutter-vs-react-native/cover.avif",
     "hasCover": true
   },
@@ -6124,7 +6183,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2024-10-18",
     "timeToRead": 12,
     "author": "ebenezer-don",
-    "category": "tutorial",
+    "category": "tutorials",
     "cover": "/images/blog/build-a-currency-converter-with-deno2/cover.avif",
     "hasCover": true
   },
@@ -6137,7 +6196,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-05-22",
     "timeToRead": 5,
     "author": "aditya-oberai",
-    "category": "product, security",
+    "category": "products, security",
     "cover": "/images/blog/custom-backup-policy/cover.avif",
     "hasCover": true
   },
@@ -6150,7 +6209,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2024-10-15",
     "timeToRead": 5,
     "author": "aditya-oberai",
-    "category": "product, security",
+    "category": "products, security",
     "cover": "/images/blog/backup-encryption/cover.avif",
     "hasCover": true
   },
@@ -6163,7 +6222,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-05-22",
     "timeToRead": 3,
     "author": "jake-barnby",
-    "category": "product, announcement",
+    "category": "products, announcements",
     "featured": false,
     "cover": "/images/blog/introducing-database-backups/cover.avif",
     "hasCover": true
@@ -6177,7 +6236,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2024-10-11",
     "timeToRead": 10,
     "author": "ebenezer-don",
-    "category": "tutorial",
+    "category": "tutorials",
     "cover": "/images/blog/implement-sign-in-with-github/cover.avif",
     "hasCover": true
   },
@@ -6190,7 +6249,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2024-10-11",
     "timeToRead": 7,
     "author": "aditya-oberai",
-    "category": "product",
+    "category": "products",
     "featured": false,
     "cover": "/images/blog/should-you-stop-using-otp-sms/cover.avif",
     "hasCover": true
@@ -6204,7 +6263,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 12,
     "author": "aditya-oberai",
-    "category": "product",
+    "category": "products",
     "metaTitle": "Backend as a Service (BaaS): Firebase vs Supabase vs Appwrite",
     "cover": "/images/blog/baas-backend-as-a-service/cover.avif",
     "hasCover": true
@@ -6218,7 +6277,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2024-10-09",
     "timeToRead": 6,
     "author": "ebenezer-don",
-    "category": "product",
+    "category": "products",
     "cover": "/images/blog/deno-2-appwrite-functions/cover.avif",
     "hasCover": true
   },
@@ -6231,7 +6290,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2024-10-09",
     "timeToRead": 3,
     "author": "laura-du-ry",
-    "category": "announcement",
+    "category": "announcements",
     "cover": "/images/blog/deno-runtime-announcment/cover.avif",
     "hasCover": true
   },
@@ -6244,7 +6303,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2024-10-08",
     "timeToRead": 8,
     "author": "matej-baco",
-    "category": "product",
+    "category": "products",
     "cover": "/images/blog/go-function-benchmarks/cover.avif",
     "hasCover": true
   },
@@ -6257,7 +6316,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2024-10-08",
     "timeToRead": 5,
     "author": "snezhanna",
-    "category": "product",
+    "category": "products",
     "cover": "/images/blog/startups-ideas-2024/cover.avif",
     "hasCover": true
   },
@@ -6270,7 +6329,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-10-14",
     "timeToRead": 13,
     "author": "ebenezer-don",
-    "category": "tutorial",
+    "category": "tutorials",
     "featured": false,
     "cover": "/images/blog/how-to-set-up-sign-in-with-apple/cover.avif",
     "hasCover": true
@@ -6284,7 +6343,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 4,
     "author": "dennis-ivy",
-    "category": "tutorial",
+    "category": "tutorials",
     "featured": false,
     "cover": "/images/blog/react-protected-routes/cover.avif",
     "hasCover": true
@@ -6298,7 +6357,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2024-10-02",
     "timeToRead": 3,
     "author": "eldad-fux",
-    "category": "product",
+    "category": "products",
     "cover": "/images/blog/webp-support-for-safari/cover.avif",
     "hasCover": true
   },
@@ -6311,7 +6370,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 5,
     "author": "dennis-ivy",
-    "category": "product",
+    "category": "products",
     "cover": "/images/blog/product-update-september/cover.avif",
     "hasCover": true
   },
@@ -6337,7 +6396,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2024-09-27",
     "timeToRead": 8,
     "author": "aditya-oberai",
-    "category": "product, tutorial",
+    "category": "products, tutorials",
     "cover": "/images/blog/best-ios-android-app-development-platform/cover.avif",
     "hasCover": true
   },
@@ -6350,7 +6409,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2025-10-14",
     "timeToRead": 15,
     "author": "ebenezer-don",
-    "category": "tutorial",
+    "category": "tutorials",
     "featured": false,
     "cover": "/images/blog/build-a-chat-app-with-appwrite-and-gemini/cover.avif",
     "hasCover": true
@@ -6364,7 +6423,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 4,
     "author": "snezhanna",
-    "category": "hackathon",
+    "category": "hackathons",
     "cover": "/images/blog/get-inspired-for-hackathon/cover.avif",
     "hasCover": true
   },
@@ -6377,7 +6436,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2024-09-26",
     "timeToRead": 5,
     "author": "aditya-oberai",
-    "category": "hackathon",
+    "category": "hackathons",
     "featured": false,
     "cover": "/images/blog/hf-hackathon-24/hf-hackathon.avif",
     "hasCover": true
@@ -6405,7 +6464,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-05-22",
     "timeToRead": 8,
     "author": "eldad-fux",
-    "category": "product, announcement",
+    "category": "products, announcements",
     "featured": false,
     "cover": "/images/blog/new-roles/cover.avif",
     "hasCover": true
@@ -6419,7 +6478,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2024-09-24",
     "timeToRead": 4,
     "author": "laura-du-ry",
-    "category": "announcement, open-source",
+    "category": "announcements, open-source",
     "featured": false,
     "cover": "/images/blog/openjs.avif",
     "hasCover": true
@@ -6433,7 +6492,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2024-09-24",
     "timeToRead": 7,
     "author": "aditya-oberai",
-    "category": "product",
+    "category": "products",
     "unlisted": true,
     "cover": "/images/blog/appwrite-competitor-comparison/cover.avif",
     "hasCover": true
@@ -6447,7 +6506,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 12,
     "author": "ebenezer-don",
-    "category": "product",
+    "category": "products",
     "featured": false,
     "cover": "/images/blog/how-to-optimize-your-appwrite-project/cover.avif",
     "hasCover": true
@@ -6488,7 +6547,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2024-09-16",
     "timeToRead": 5,
     "author": "aditya-oberai",
-    "category": "product",
+    "category": "products",
     "unlisted": true,
     "cover": "/images/blog/appwrite-competitor-comparison/cover.avif",
     "hasCover": true
@@ -6516,7 +6575,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 6,
     "author": "damodar-lohani",
-    "category": "tutorial",
+    "category": "tutorials",
     "cover": "/images/blog/appwrite-realtime-with-flutter/cover.avif",
     "hasCover": true
   },
@@ -6529,7 +6588,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2024-09-02",
     "timeToRead": 7,
     "author": "dennis-ivy",
-    "category": "product",
+    "category": "products",
     "featured": false,
     "cover": "/images/blog/init-recap-august/product-update.avif",
     "hasCover": true
@@ -6543,7 +6602,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 5,
     "author": "ebenezer-don",
-    "category": "product",
+    "category": "products",
     "cover": "/images/blog/how-to-migrate-database-with-cli/cover.avif",
     "hasCover": true
   },
@@ -6556,7 +6615,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2024-08-23",
     "timeToRead": 4,
     "author": "luke-silver",
-    "category": "init, announcement, product",
+    "category": "init, announcements, products",
     "featured": false,
     "cover": "/images/blog/init-day4/cover.avif",
     "hasCover": true
@@ -6584,7 +6643,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2024-08-23",
     "timeToRead": 5,
     "author": "ebenezer-don",
-    "category": "product",
+    "category": "products",
     "featured": false,
     "cover": "/images/blog/mock-numbers-use-cases/cover.avif",
     "hasCover": true
@@ -6612,7 +6671,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 8,
     "author": "aditya-oberai",
-    "category": "product",
+    "category": "products",
     "featured": false,
     "cover": "/images/blog/building-with-go-cover.avif",
     "hasCover": true
@@ -6626,7 +6685,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 7,
     "author": "matej-baco",
-    "category": "init, announcement",
+    "category": "init, announcements",
     "featured": false,
     "cover": "/images/blog/go-cover.avif",
     "hasCover": true
@@ -6640,7 +6699,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2024-08-22",
     "timeToRead": 6,
     "author": "aditya-oberai",
-    "category": "product",
+    "category": "products",
     "featured": false,
     "cover": "/images/blog/why-use-go-cover.avif",
     "hasCover": true
@@ -6654,7 +6713,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2024-08-21",
     "timeToRead": 8,
     "author": "aditya-oberai",
-    "category": "product",
+    "category": "products",
     "featured": false,
     "cover": "/images/blog/comparing-functions/cover.avif",
     "hasCover": true
@@ -6668,7 +6727,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 5,
     "author": "ebenezer-don",
-    "category": "product",
+    "category": "products",
     "featured": false,
     "cover": "/images/blog/how-to-leverage-dynamic-api-keys-for-better-security/cover.avif",
     "hasCover": true
@@ -6682,7 +6741,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 5,
     "author": "luke-silver",
-    "category": "product, announcement",
+    "category": "products, announcements",
     "featured": false,
     "cover": "/images/blog/init-day2/cover.avif",
     "hasCover": true
@@ -6696,7 +6755,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 5,
     "author": "ebenezer-don",
-    "category": "product",
+    "category": "products",
     "featured": false,
     "cover": "/images/blog/cdi-cover.avif",
     "hasCover": true
@@ -6710,7 +6769,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 5,
     "author": "binyamin-yawitz",
-    "category": "product, announcement",
+    "category": "products, announcements",
     "featured": false,
     "cover": "/images/blog/day1-cover.avif",
     "hasCover": true
@@ -6724,7 +6783,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2024-08-19",
     "timeToRead": 5,
     "author": "matej-baco",
-    "category": "init, announcement, product",
+    "category": "init, announcements, products",
     "featured": false,
     "cover": "/images/blog/init-day0/cover.avif",
     "hasCover": true
@@ -6738,7 +6797,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2024-08-19",
     "timeToRead": 5,
     "author": "ebenezer-don",
-    "category": "product",
+    "category": "products",
     "featured": false,
     "cover": "/images/blog/local-development-guide/localdev-cover.avif",
     "hasCover": true
@@ -6752,7 +6811,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 5,
     "author": "ebenezer-don",
-    "category": "product",
+    "category": "products",
     "featured": false,
     "cover": "/images/blog/serverless-functions/cover.avif",
     "hasCover": true
@@ -6766,7 +6825,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2024-08-10",
     "timeToRead": 4,
     "author": "eldad-fux",
-    "category": "init, announcement",
+    "category": "init, announcements",
     "featured": false,
     "cover": "/images/blog/announcing-init-faster-smoother-better/init-cover.avif",
     "hasCover": true
@@ -6780,7 +6839,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2024-08-07",
     "timeToRead": 3,
     "author": "bradley-schofield",
-    "category": "product",
+    "category": "products",
     "cover": "/images/blog/appwrite-backups-and-restores/cover.avif",
     "hasCover": true
   },
@@ -6793,7 +6852,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 9,
     "author": "bradley-schofield",
-    "category": "product",
+    "category": "products",
     "cover": "/images/blog/image-classification.avif",
     "hasCover": true
   },
@@ -6806,7 +6865,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 8,
     "author": "matej-baco",
-    "category": "tutorial",
+    "category": "tutorials",
     "cover": "/images/blog/best-pagination-technique/cover.avif",
     "hasCover": true
   },
@@ -6819,7 +6878,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2024-08-02",
     "timeToRead": 6,
     "author": "jake-barnby",
-    "category": "engineering, tutorial",
+    "category": "engineering, tutorials",
     "featured": false,
     "cover": "/images/blog/swift-101/cover.avif",
     "hasCover": true
@@ -6833,7 +6892,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 12,
     "author": "aditya-oberai",
-    "category": "integrations, announcement",
+    "category": "integrations, announcements",
     "featured": false,
     "cover": "/images/blog/integrations-catalog.avif",
     "hasCover": true
@@ -6847,7 +6906,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2024-07-23",
     "timeToRead": 3,
     "author": "laura-du-ry",
-    "category": "announcement",
+    "category": "announcements",
     "cover": "/images/blog/announcing-appwrite-daily-dot-dev-squad/daily.dev-squad.avif",
     "hasCover": true
   },
@@ -6860,7 +6919,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 9,
     "author": "ebenezer-don",
-    "category": "tutorial",
+    "category": "tutorials",
     "featured": false,
     "cover": "/images/blog/set-up-google-auth-appwrite-react/cover.avif",
     "hasCover": true
@@ -6874,7 +6933,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 5,
     "author": "snezhanna",
-    "category": "product",
+    "category": "products",
     "cover": "/images/blog/how-to-build-remote-tech-stack/cover.avif",
     "hasCover": true
   },
@@ -6887,7 +6946,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2024-07-12",
     "timeToRead": 5,
     "author": "eldad-fux",
-    "category": "product",
+    "category": "products",
     "cover": "/images/blog/rest-vs-graphql-websockets/cover.avif",
     "hasCover": true
   },
@@ -6913,7 +6972,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2024-07-08",
     "timeToRead": 3,
     "author": "ebenezer-don",
-    "category": "product",
+    "category": "products",
     "featured": false,
     "cover": "/images/blog/handle-cors-in-serverless-functions/cover.avif",
     "hasCover": true
@@ -6927,7 +6986,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 5,
     "author": "aditya-oberai",
-    "category": "product",
+    "category": "products",
     "cover": "/images/blog/messaging-explained/cover.avif",
     "hasCover": true
   },
@@ -6953,7 +7012,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 5,
     "author": "dennis-ivy",
-    "category": "product",
+    "category": "products",
     "cover": "/images/blog/product-update-june/product-update-june-2024.avif",
     "hasCover": true
   },
@@ -6966,7 +7025,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2024-06-20",
     "timeToRead": 6,
     "author": "aditya-oberai",
-    "category": "product",
+    "category": "products",
     "cover": "/images/blog/baas-vs-custom-backend/cover.avif",
     "hasCover": true
   },
@@ -6979,7 +7038,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2024-06-19",
     "timeToRead": 5,
     "author": "eldad-fux",
-    "category": "open-source, announcement",
+    "category": "open-source, announcements",
     "cover": "/images/blog/public-roadmap-announcement/cover.avif",
     "hasCover": true
   },
@@ -7018,7 +7077,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 6,
     "author": "aditya-oberai",
-    "category": "product",
+    "category": "products",
     "featured": false,
     "cover": "/images/blog/integrate-custom-auth-sveltekit/cover.avif",
     "hasCover": true
@@ -7032,7 +7091,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2024-05-24",
     "timeToRead": 9,
     "author": "matej-baco",
-    "category": "product",
+    "category": "products",
     "featured": false,
     "cover": "/images/blog/integrate-sql-nosql-vector-graph-or-any-database-into-your-appwrite-project/cover.avif",
     "hasCover": true
@@ -7059,7 +7118,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2024-05-21",
     "timeToRead": 5,
     "author": "luke-silver",
-    "category": "product, announcement",
+    "category": "products, announcements",
     "featured": false,
     "cover": "/images/blog/introducing-python-machine-learning-runtime/cover.avif",
     "hasCover": true
@@ -7073,7 +7132,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 5,
     "author": "aditya-oberai",
-    "category": "tutorial",
+    "category": "tutorials",
     "cover": "/images/blog/personal-chatbot-gpt-4o/cover.avif",
     "hasCover": true
   },
@@ -7086,7 +7145,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2024-05-16",
     "timeToRead": 7,
     "author": "aditya-oberai",
-    "category": "tutorial",
+    "category": "tutorials",
     "cover": "/images/blog/building-with-ai-function-templates/function-templates.avif",
     "hasCover": true
   },
@@ -7099,7 +7158,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2024-05-14",
     "timeToRead": 5,
     "author": "christy-jacob",
-    "category": "integrations, announcement",
+    "category": "integrations, announcements",
     "featured": false,
     "cover": "/images/blog/ai-announcement.avif",
     "hasCover": true
@@ -7113,7 +7172,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 9,
     "author": "aditya-oberai",
-    "category": "tutorial",
+    "category": "tutorials",
     "cover": "/images/blog/ai-crystal-ball/cover.avif",
     "hasCover": true
   },
@@ -7126,7 +7185,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2024-05-08",
     "timeToRead": 5,
     "author": "eldad-fux",
-    "category": "Product",
+    "category": "products",
     "cover": "/images/blog/messaging-pricing.avif",
     "hasCover": true
   },
@@ -7139,7 +7198,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2024-05-05",
     "timeToRead": 9,
     "author": "damodar-lohani",
-    "category": "tutorial",
+    "category": "tutorials",
     "cover": "/images/blog/react-nativecross.avif",
     "hasCover": true
   },
@@ -7166,7 +7225,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2024-05-01",
     "timeToRead": 15,
     "author": "vincent-ge",
-    "category": "tutorial",
+    "category": "tutorials",
     "cover": "/images/blog/receipt-scan.avif",
     "hasCover": true
   },
@@ -7179,7 +7238,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 8,
     "author": "eldad-fux",
-    "category": "product, announcement",
+    "category": "products, announcements",
     "featured": false,
     "cover": "/images/blog/appwrite-1.5-now-available-on-cloud/cloud15.avif",
     "hasCover": true
@@ -7193,7 +7252,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-05-22",
     "timeToRead": 5,
     "author": "eldad-fux",
-    "category": "announcement",
+    "category": "announcements",
     "featured": false,
     "cover": "/images/blog/startups.avif",
     "hasCover": true
@@ -7260,7 +7319,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2024-04-09",
     "timeToRead": 4,
     "author": "vincent-ge",
-    "category": "product, announcement",
+    "category": "products, announcements",
     "cover": "/images/blog/introducing-appwrite-react-native-sdk/cover.avif",
     "hasCover": true
   },
@@ -7286,7 +7345,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2024-04-04",
     "timeToRead": 6,
     "author": "aditya-oberai",
-    "category": "tutorial",
+    "category": "tutorials",
     "cover": "/images/blog/function-chat-fictional-character/cover.avif",
     "hasCover": true
   },
@@ -7313,7 +7372,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2024-03-27",
     "timeToRead": 15,
     "author": "luke-silver",
-    "category": "product",
+    "category": "products",
     "featured": false,
     "cover": "/images/blog/state-of-audio-processing/cover.avif",
     "hasCover": true
@@ -7327,7 +7386,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2024-03-27",
     "timeToRead": 15,
     "author": "luke-silver",
-    "category": "product",
+    "category": "products",
     "featured": false,
     "cover": "/images/blog/state-of-natural-language-processing/cover.avif",
     "hasCover": true
@@ -7341,7 +7400,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2024-03-25",
     "timeToRead": 15,
     "author": "bradley-schofield",
-    "category": "product",
+    "category": "products",
     "featured": false,
     "cover": "/images/blog/state-of-computer-vision/cover.avif",
     "hasCover": true
@@ -7421,7 +7480,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 7,
     "author": "aditya-oberai",
-    "category": "product",
+    "category": "products",
     "cover": "/images/blog/planetscale-databases-alternative/cover.avif",
     "hasCover": true
   },
@@ -7447,7 +7506,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 7,
     "author": "aditya-oberai",
-    "category": "tutorial",
+    "category": "tutorials",
     "cover": "/images/blog/bun-function-resume/cover.avif",
     "hasCover": true
   },
@@ -7513,7 +7572,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 6,
     "author": "dennis-ivy",
-    "category": "product",
+    "category": "products",
     "featured": false,
     "cover": "/images/blog/everything-new-with-appwrite-1.5/1.5-recap.avif",
     "hasCover": true
@@ -7567,7 +7626,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2024-03-01",
     "timeToRead": 6,
     "author": "vincent-ge",
-    "category": "product, announcement",
+    "category": "products, announcements",
     "cover": "/images/blog/runtimes.avif",
     "hasCover": true
   },
@@ -7580,7 +7639,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2024-03-01",
     "timeToRead": 7,
     "author": "aditya-oberai",
-    "category": "product",
+    "category": "products",
     "unlisted": true,
     "cover": "/images/blog/appwrite-competitor-comparison/cover.avif",
     "hasCover": true
@@ -7594,7 +7653,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2024-03-01",
     "timeToRead": 12,
     "author": "vincent-ge",
-    "category": "product",
+    "category": "products",
     "featured": false,
     "cover": "/images/blog/sound-null-safety-for-your-dart-functions/cover.avif",
     "hasCover": true
@@ -7608,7 +7667,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2024-03-01",
     "timeToRead": 15,
     "author": "vincent-ge",
-    "category": "product",
+    "category": "products",
     "featured": false,
     "cover": "/images/blog/why-you-need-to-try-the-new-bun-runtime/cover.avif",
     "hasCover": true
@@ -7622,7 +7681,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 5,
     "author": "dennis-ivy",
-    "category": "product, announcement",
+    "category": "products, announcements",
     "featured": false,
     "cover": "/images/blog/db-operators-overview.avif",
     "hasCover": true
@@ -7636,7 +7695,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 6,
     "author": "aditya-oberai",
-    "category": "engineering, tutorial",
+    "category": "engineering, tutorials",
     "featured": false,
     "cover": "/images/blog/understand-data-queries.avif",
     "hasCover": true
@@ -7678,7 +7737,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2024-02-28",
     "timeToRead": 4,
     "author": "jake-barnby",
-    "category": "product, announcement",
+    "category": "products, announcements",
     "featured": false,
     "cover": "/images/blog/enum-announcement.avif",
     "hasCover": true
@@ -7706,7 +7765,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2024-02-27",
     "timeToRead": 6,
     "author": "eldad-fux",
-    "category": "product, announcement",
+    "category": "products, announcements",
     "featured": false,
     "cover": "/images/blog/announcing-2fa.avif",
     "hasCover": true
@@ -7720,7 +7779,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2024-02-27",
     "timeToRead": 10,
     "author": "dennis-ivy",
-    "category": "product",
+    "category": "products",
     "featured": false,
     "cover": "/images/blog/ssr-vs-csr/cover.avif",
     "hasCover": true
@@ -7734,7 +7793,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2024-02-27",
     "timeToRead": 7,
     "author": "dennis-ivy",
-    "category": "product, announcement",
+    "category": "products, announcements",
     "featured": false,
     "cover": "/images/blog/ssr-announcement.avif",
     "hasCover": true
@@ -7748,7 +7807,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 6,
     "author": "eldad-fux",
-    "category": "init, announcement, product",
+    "category": "init, announcements, products",
     "featured": false,
     "cover": "/images/blog/messaging-announcement.avif",
     "hasCover": true
@@ -7762,7 +7821,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2024-02-26",
     "timeToRead": 6,
     "author": "aditya-oberai",
-    "category": "product",
+    "category": "products",
     "featured": false,
     "cover": "/images/blog/push-notifications-best-practices.avif",
     "hasCover": true
@@ -7790,7 +7849,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2024-02-20",
     "timeToRead": 4,
     "author": "eldad-fux",
-    "category": "init, announcement, product",
+    "category": "init, announcements, products",
     "featured": false,
     "cover": "/images/blog/init-announcement.avif",
     "hasCover": true
@@ -7804,7 +7863,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 3,
     "author": "dennis-ivy",
-    "category": "product",
+    "category": "products",
     "cover": "/images/blog/three-important-steps-you-need-to-complete-with-appwrite/3-important-steps.avif",
     "hasCover": true
   },
@@ -7830,7 +7889,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2024-02-03",
     "timeToRead": 7,
     "author": "aditya-oberai",
-    "category": "product",
+    "category": "products",
     "cover": "/images/blog/open-source-firebase-alternative/cover.avif",
     "hasCover": true
   },
@@ -7869,7 +7928,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 3,
     "author": "dennis-ivy",
-    "category": "tutorial",
+    "category": "tutorials",
     "featured": false,
     "cover": "/images/blog/cors-error/cors_cover.avif",
     "hasCover": true
@@ -7883,7 +7942,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 8,
     "author": "dennis-ivy",
-    "category": "tutorial",
+    "category": "tutorials",
     "featured": false,
     "cover": "/images/blog/manage-user-permissions-with-labels-and-teams/labels_cover.avif",
     "hasCover": true
@@ -7910,7 +7969,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2024-01-10",
     "timeToRead": 9,
     "author": "aditya-oberai",
-    "category": "tutorial",
+    "category": "tutorials",
     "cover": "/images/blog/building-apps-with-bun-and-appwrite/bun-cover.avif",
     "hasCover": true
   },
@@ -7923,7 +7982,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2024-01-09",
     "timeToRead": 3,
     "author": "may-ender",
-    "category": "security, announcement",
+    "category": "security, announcements",
     "cover": "/images/blog/announcing-appwrite-is-gdpr-compliant/GDPR-Announcement.avif",
     "hasCover": true
   },
@@ -7936,7 +7995,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2024-01-08",
     "timeToRead": 4,
     "author": "aditya-oberai",
-    "category": "hackathon",
+    "category": "hackathons",
     "cover": "/images/blog/the-subtle-art-of-hackathon ideation/cover.avif",
     "hasCover": true
   },
@@ -8001,7 +8060,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2023-12-28",
     "timeToRead": 3,
     "author": "laura-du-ry",
-    "category": "open-source, announcement",
+    "category": "open-source, announcements",
     "cover": "/images/blog/OSS-program.avif",
     "hasCover": true
   },
@@ -8014,7 +8073,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2023-12-22",
     "timeToRead": 5,
     "author": "eldad-fux",
-    "category": "product, announcement",
+    "category": "products, announcements",
     "cover": "/images/blog/changelog.avif",
     "hasCover": true
   },
@@ -8027,7 +8086,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-05-22",
     "timeToRead": 5,
     "author": "christy-jacob",
-    "category": "announcement",
+    "category": "announcements",
     "featured": false,
     "cover": "/images/blog/announcing-appwrite-pro/header.avif",
     "hasCover": true
@@ -8067,7 +8126,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 5,
     "author": "haimantika-mitra",
-    "category": "tutorial",
+    "category": "tutorials",
     "featured": false,
     "cover": "/images/blog/add-a-search-function-to-your-app/cover.avif",
     "hasCover": true
@@ -8081,7 +8140,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2023-11-15",
     "timeToRead": 5,
     "author": "aditya-oberai",
-    "category": "tutorial",
+    "category": "tutorials",
     "cover": "/images/blog/function-template-prompt-chatgpt/cover.avif",
     "hasCover": true
   },
@@ -8107,7 +8166,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 5,
     "author": "luke-silver",
-    "category": "tutorial",
+    "category": "tutorials",
     "cover": "/images/blog/pdf-generation/pdf.avif",
     "hasCover": true
   },
@@ -8120,7 +8179,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 5,
     "author": "haimantika-mitra",
-    "category": "tutorial",
+    "category": "tutorials",
     "featured": false,
     "cover": "/images/blog/adding-url-shortener/cover.avif",
     "hasCover": true
@@ -8134,7 +8193,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-06-29",
     "timeToRead": 10,
     "author": "vincent-ge",
-    "category": "migration",
+    "category": "migrations",
     "cover": "/images/blog/migrate-firebase-projects-to-appwrite/migrate-firebase-projects-to-appwrite.avif",
     "hasCover": true
   },
@@ -8147,7 +8206,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2023-11-01",
     "timeToRead": 5,
     "author": "aditya-oberai",
-    "category": "hackathon",
+    "category": "hackathons",
     "cover": "/images/blog/hf-2023-journey/cover.avif",
     "hasCover": true
   },
@@ -8160,7 +8219,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2023-10-30",
     "timeToRead": 4,
     "author": "haimantika-mitra",
-    "category": "hackathon, contributors, open-source",
+    "category": "hackathons, contributors, open-source",
     "featured": false,
     "cover": "/images/blog/Behind_the_pull_request_Stories_from_contributors.avif",
     "hasCover": true
@@ -8200,7 +8259,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2023-10-18",
     "timeToRead": 10,
     "author": "thomas-g-lopes",
-    "category": "tutorial",
+    "category": "tutorials",
     "cover": "/images/blog/defying-the-laws-of-web-animations/cover.avif",
     "hasCover": true
   },
@@ -8265,7 +8324,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2023-10-01",
     "timeToRead": 3,
     "author": "eldad-fux",
-    "category": "hackathon",
+    "category": "hackathons",
     "cover": "/images/blog/hacktoberfest-2023.avif",
     "hasCover": true
   },
@@ -8278,7 +8337,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2023-10-01",
     "timeToRead": 4,
     "author": "haimantika-mitra",
-    "category": "hackathon, contributors, open-source",
+    "category": "hackathons, contributors, open-source",
     "featured": false,
     "cover": "/images/blog/contributors-post-1.4.avif",
     "hasCover": true
@@ -8292,7 +8351,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2023-09-27",
     "timeToRead": 6,
     "author": "dennis-ivy",
-    "category": "product",
+    "category": "products",
     "featured": false,
     "cover": "/images/blog/baas.avif",
     "hasCover": true
@@ -8320,7 +8379,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2026-05-22",
     "timeToRead": 5,
     "author": "laura-du-ry",
-    "category": "announcement",
+    "category": "announcements",
     "cover": "/images/blog/cloud-pricing.avif",
     "hasCover": true
   },
@@ -8333,7 +8392,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "lastUpdated": "2023-05-02",
     "timeToRead": 5,
     "author": "christy-jacob",
-    "category": "cloud, announcement",
+    "category": "cloud, announcements",
     "cover": "/images/blog/cloud-beta.avif",
     "hasCover": true
   },

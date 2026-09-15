@@ -5,6 +5,7 @@
  * Uses shared VariablesSettingsCard with site-specific configuration.
  */
 
+import { useMemo, useState } from 'react'
 import {
   useSiteVariables,
   useCreateSiteVariable,
@@ -13,6 +14,7 @@ import {
   useProjectVariables,
 } from '@/lib/react-query/hooks'
 import { VariablesSettingsCard } from '@/components/global/shared/VariablesSettingsCard'
+import { SMALL_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import { useT } from '@/lib/i18n/translate'
 
 interface SiteVariablesCardProps {
@@ -25,11 +27,13 @@ export function SiteVariablesCard({
   siteId,
 }: SiteVariablesCardProps) {
   const t = useT()
+  const [page, setPage] = useState(0)
+  const [limit, setLimit] = useState(SMALL_PAGE_SIZE)
   const {
     variables: siteVariables,
     total,
     isLoading,
-  } = useSiteVariables(projectId, siteId)
+  } = useSiteVariables(projectId, siteId, page, limit)
 
   const { variables: projectVariablesList } = useProjectVariables(projectId)
 
@@ -37,8 +41,9 @@ export function SiteVariablesCard({
   const updateMutation = useUpdateSiteVariable(projectId, siteId)
   const deleteMutation = useDeleteSiteVariable(projectId, siteId)
 
-  const globalVariableKeys = new Set(
-    projectVariablesList.map((v) => v.key),
+  const globalVariableKeys = useMemo(
+    () => new Set(projectVariablesList.map((v) => v.key)),
+    [projectVariablesList],
   )
 
   return (
@@ -54,6 +59,14 @@ export function SiteVariablesCard({
       updateMutation={updateMutation}
       deleteMutation={deleteMutation}
       scopeLabel={t('Site')}
+      page={page}
+      limit={limit}
+      onPageChange={setPage}
+      onPageSizeChange={(newLimit) => {
+        setLimit(newLimit)
+        setPage(0)
+      }}
+      itemLabel={t('variables')}
       isVariableEditable={(v) => !globalVariableKeys.has(v.key)}
       getVariableBadge={(v) =>
         globalVariableKeys.has(v.key) ? t('Global') : undefined

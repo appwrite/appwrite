@@ -1,20 +1,30 @@
 import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Outlet, useLocation, useNavigate, useParams } from '@tanstack/react-router'
+import {
+  Outlet,
+  useLocation,
+  useNavigate,
+  useParams,
+} from '@tanstack/react-router'
 import { SettingsLayoutShell } from '@/components/global/shared/settings-search/SettingsLayoutShell'
 import { DATABASE_SETTINGS_CARD_INDEX } from '@/lib/settings-search/database-settings-cards'
 import { useT } from '@/lib/i18n/translate'
 import {
-  DATABASE_SETTINGS_NAV,
   type DatabaseSettingsNavItem,
   type DatabaseSettingsPathSuffix,
+  visibleDatabaseSettingsCards,
+  visibleDatabaseSettingsNav,
 } from './nav'
 import {
   dedicatedDatabaseByIdQueryOptions,
   useProjectDatabase,
 } from '@/lib/react-query/hooks'
 import { canConfigureDedicatedReplication } from '@/lib/databases/database-compute'
-import { isDatabaseRouteKind, type DatabaseRouteKind } from '@/lib/database-routes'
+import {
+  isCloudDedicatedDatabasesEnabled,
+  isDatabaseRouteKind,
+  type DatabaseRouteKind,
+} from '@/lib/database-routes'
 
 type DatabaseSettingsPath =
   | '/projects/$projectId/databases/$dbKind/$databaseId/settings'
@@ -46,7 +56,9 @@ function useActiveSettingsSection(pathname: string): string {
   }, [pathname])
 }
 
-function toForItem(pathSuffix: DatabaseSettingsPathSuffix): DatabaseSettingsPath {
+function toForItem(
+  pathSuffix: DatabaseSettingsPathSuffix,
+): DatabaseSettingsPath {
   return DATABASE_SETTINGS_TO[pathSuffix]
 }
 
@@ -54,7 +66,11 @@ export function DatabaseSettingsShell() {
   const t = useT()
   const location = useLocation()
   const navigate = useNavigate()
-  const { projectId, dbKind: rawDbKind, databaseId } = useParams({
+  const {
+    projectId,
+    dbKind: rawDbKind,
+    databaseId,
+  } = useParams({
     strict: false,
   })
   const dbKind = (
@@ -95,23 +111,20 @@ export function DatabaseSettingsShell() {
     databaseId: databaseId!,
   }
 
+  const isCloud = isCloudDedicatedDatabasesEnabled()
+
   const visibleNav = useMemo(
-    () =>
-      DATABASE_SETTINGS_NAV.filter((item) => {
-        if (item.id === 'replication') return showReplication
-        return item.visible !== false
-      }),
-    [showReplication],
+    () => visibleDatabaseSettingsNav({ isCloud, showReplication }),
+    [isCloud, showReplication],
   )
 
   const cardIndex = useMemo(
     () =>
-      showReplication
-        ? DATABASE_SETTINGS_CARD_INDEX
-        : DATABASE_SETTINGS_CARD_INDEX.filter(
-            (card) => card.sectionId !== 'replication',
-          ),
-    [showReplication],
+      visibleDatabaseSettingsCards(DATABASE_SETTINGS_CARD_INDEX, {
+        isCloud,
+        showReplication,
+      }),
+    [isCloud, showReplication],
   )
 
   const layoutNavItems = useMemo(

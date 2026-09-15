@@ -766,6 +766,7 @@ export const heMarketingDictionary: Record<string, string> = {
   'Open-source alternative to Hacker News.': 'אלטרנטיבה בקוד פתוח ל-Hacker News.',
   'Open-source launch': 'השקת קוד פתוח',
   'or': 'או',
+  'or Appwrite DBs': 'או Appwrite DBs',
   'Organization members': 'חברי ארגון',
   'Organization roles': 'תפקידי ארגון',
   'Original': 'מקור',

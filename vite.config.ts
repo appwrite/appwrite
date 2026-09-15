@@ -7,6 +7,7 @@ import viteTsConfigPaths from 'vite-tsconfig-paths'
 import tailwindcss from '@tailwindcss/vite'
 import devtoolsJson from 'vite-plugin-devtools-json'
 import { docsContentHmrPlugin } from './src/lib/docs/vite-docs-content-hmr-plugin'
+import { silenceAbortedSsrPlugin } from './src/lib/vite/silence-aborted-ssr-plugin'
 import {
   getAllMarketingPrerenderPaths,
   getSitesPrerenderBuildSummary,
@@ -126,6 +127,7 @@ export default defineConfig(async () => {
       ? `${process.env.CDN_ORIGIN.replace(/\/$/, '')}/`
       : '/',
     plugins: [
+      silenceAbortedSsrPlugin(),
       // this is the plugin that enables path aliases
       viteTsConfigPaths({
         projects: ['./tsconfig.json'],
@@ -191,11 +193,14 @@ export default defineConfig(async () => {
         '@appwrite.io/console',
         'json-bigint',
       ],
-      // Serve TanStack store packages as native ESM. Pre-bundling cached an older
-      // @tanstack/react-store without createAtom when router upgraded first.
+      // Serve TanStack store/router packages as native ESM. Pre-bundling cached an
+      // older @tanstack/react-store without createAtom when router upgraded first, and
+      // discovering @tanstack/router-core mid-session rewrites hashed React chunks.
       exclude: [
         '@tanstack/react-store',
         '@tanstack/store',
+        '@tanstack/router-core',
+        '@tanstack/history',
         'sharp',
         // Pre-bundling inlines nested @radix-ui copies and can load a second React
         // instance, breaking hooks (useState of null) in ScrollArea / Avatar.
