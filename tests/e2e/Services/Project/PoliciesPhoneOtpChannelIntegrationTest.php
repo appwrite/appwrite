@@ -70,58 +70,64 @@ final class PoliciesPhoneOtpChannelIntegrationTest extends Scope
 
     public function testPhoneOtpChannelRoundTrip(): void
     {
-        // Test for SUCCESS
-        foreach ($this->channels() as $channel) {
-            $update = $this->setChannel($channel);
+        try {
+            // Test for SUCCESS
+            foreach ($this->channels() as $channel) {
+                $update = $this->setChannel($channel);
 
-            $this->assertSame(200, $update['headers']['status-code']);
-            $this->assertSame('phone-otp-channel', $update['body']['$id']);
-            $this->assertSame($channel, $update['body']['channel']);
+                // Updating a policy responds with the project, in step with every sibling policy
+                // route, so the stored channel is read back below rather than asserted here.
+                $this->assertSame(200, $update['headers']['status-code']);
+                $this->assertNotEmpty($update['body']['$id']);
 
-            $single = $this->getChannelPolicy();
+                $single = $this->getChannelPolicy();
 
-            $this->assertSame(200, $single['headers']['status-code']);
-            $this->assertSame('phone-otp-channel', $single['body']['$id']);
-            $this->assertSame($channel, $single['body']['channel']);
+                $this->assertSame(200, $single['headers']['status-code']);
+                $this->assertSame('phone-otp-channel', $single['body']['$id']);
+                $this->assertSame($channel, $single['body']['channel']);
 
-            $listed = $this->findChannelPolicyInList();
+                $listed = $this->findChannelPolicyInList();
 
-            $this->assertSame($channel, $listed['channel']);
-            $this->assertSame($single['body'], $listed);
+                $this->assertSame($channel, $listed['channel']);
+                $this->assertSame($single['body'], $listed);
+            }
+
+            // Test for FAILURE
+            $invalid = $this->setChannel('carrier-pigeon');
+
+            $this->assertSame(400, $invalid['headers']['status-code']);
+
+            $missing = $this->client->call(Client::METHOD_PATCH, '/project/policies/phone-otp-channel', $this->serverHeaders(), []);
+
+            $this->assertSame(400, $missing['headers']['status-code']);
+
+            $unauthenticated = $this->client->call(Client::METHOD_PATCH, '/project/policies/phone-otp-channel', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], [
+                'channel' => PHONE_OTP_CHANNEL_SMS,
+            ]);
+
+            $this->assertSame(401, $unauthenticated['headers']['status-code']);
+
+            // A rejected update must not have moved the stored channel off the last accepted value.
+            $unchanged = $this->getChannelPolicy();
+
+            $this->assertSame(200, $unchanged['headers']['status-code']);
+            $this->assertSame(PHONE_OTP_CHANNEL_WHATSAPP_SMS, $unchanged['body']['channel']);
+
+            $reset = $this->setChannel(PHONE_OTP_CHANNEL_SMS);
+
+            $this->assertSame(200, $reset['headers']['status-code']);
+
+            $final = $this->getChannelPolicy();
+
+            $this->assertSame(200, $final['headers']['status-code']);
+            $this->assertSame(PHONE_OTP_CHANNEL_SMS, $final['body']['channel']);
+        } finally {
+            // Restore the default channel even when an assertion above fails, so a parallel suite
+            // sharing this project is not left on WhatsApp.
+            $this->setChannel(PHONE_OTP_CHANNEL_SMS);
         }
-
-        // Test for FAILURE
-        $invalid = $this->setChannel('carrier-pigeon');
-
-        $this->assertSame(400, $invalid['headers']['status-code']);
-
-        $missing = $this->client->call(Client::METHOD_PATCH, '/project/policies/phone-otp-channel', $this->serverHeaders(), []);
-
-        $this->assertSame(400, $missing['headers']['status-code']);
-
-        $unauthenticated = $this->client->call(Client::METHOD_PATCH, '/project/policies/phone-otp-channel', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], [
-            'channel' => PHONE_OTP_CHANNEL_SMS,
-        ]);
-
-        $this->assertSame(401, $unauthenticated['headers']['status-code']);
-
-        // A rejected update must not have moved the stored channel off the last accepted value.
-        $unchanged = $this->getChannelPolicy();
-
-        $this->assertSame(200, $unchanged['headers']['status-code']);
-        $this->assertSame(PHONE_OTP_CHANNEL_WHATSAPP_SMS, $unchanged['body']['channel']);
-
-        $reset = $this->setChannel(PHONE_OTP_CHANNEL_SMS);
-
-        $this->assertSame(200, $reset['headers']['status-code']);
-        $this->assertSame(PHONE_OTP_CHANNEL_SMS, $reset['body']['channel']);
-
-        $final = $this->getChannelPolicy();
-
-        $this->assertSame(200, $final['headers']['status-code']);
-        $this->assertSame(PHONE_OTP_CHANNEL_SMS, $final['body']['channel']);
     }
 }

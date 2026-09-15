@@ -1285,13 +1285,6 @@ trait PoliciesBase
         ]);
     }
 
-    protected function updatePhoneOtpChannelPolicy(string $channel, bool $authenticated = true): mixed
-    {
-        return $this->client->call(Client::METHOD_PATCH, '/project/policies/phone-otp-channel', $this->buildHeaders($authenticated), [
-            'channel' => $channel,
-        ]);
-    }
-
     protected function updateSessionDurationPolicy(int $duration, bool $authenticated = true): mixed
     {
         return $this->client->call(Client::METHOD_PATCH, '/project/policies/session-duration', $this->buildHeaders($authenticated), [
