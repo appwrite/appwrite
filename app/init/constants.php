@@ -49,7 +49,6 @@ const APP_PROJECTS_SUBQUERIES = [
     'subQueryWebhooks',
     'subQueryPlatforms',
     'subQueryBlocks',
-    'subQueryDevKeys',
 ];
 
 const APP_USERS_SUBQUERIES = [

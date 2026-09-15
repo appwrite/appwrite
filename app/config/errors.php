@@ -1251,11 +1251,6 @@ return [
         'description' => 'An API key cannot be created from a request authorized with an API key. Authenticate with a session instead. To create a short-lived key from a server, use the ephemeral key endpoint.',
         'code' => 403,
     ],
-    Exception::DEV_KEY_GONE => [
-        'name' => Exception::DEV_KEY_GONE,
-        'description' => 'Dev key creation is no longer available.',
-        'code' => 410,
-    ],
     Exception::PLATFORM_NOT_FOUND => [
         'name' => Exception::PLATFORM_NOT_FOUND,
         'description' => 'Platform with the requested ID could not be found.',

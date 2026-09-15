@@ -171,12 +171,6 @@ class Specs extends Action
                     'description' => 'The user session to authenticate with',
                     'in' => 'header',
                 ],
-                'DevKey' => [
-                    'type' => 'apiKey',
-                    'name' => 'X-Appwrite-Dev-Key',
-                    'description' => 'Your secret dev API key',
-                    'in' => 'header',
-                ],
                 'Cookie' => [
                     'type' => 'apiKey',
                     'name' => 'Cookie',
@@ -259,12 +253,6 @@ class Specs extends Action
                     'type' => 'apiKey',
                     'name' => 'X-Forwarded-User-Agent',
                     'description' => 'The user agent string of the client that made the request',
-                    'in' => 'header',
-                ],
-                'DevKey' => [
-                    'type' => 'apiKey',
-                    'name' => 'X-Appwrite-Dev-Key',
-                    'description' => 'Your secret dev API key',
                     'in' => 'header',
                 ],
                 'Cookie' => [
@@ -355,12 +343,6 @@ class Specs extends Action
                     'type' => 'apiKey',
                     'name' => 'X-Appwrite-Session',
                     'description' => 'The user session to authenticate with',
-                    'in' => 'header',
-                ],
-                'DevKey' => [
-                    'type' => 'apiKey',
-                    'name' => 'X-Appwrite-Dev-Key',
-                    'description' => 'Your secret dev API key',
                     'in' => 'header',
                 ],
                 'ImpersonateUserId' => [

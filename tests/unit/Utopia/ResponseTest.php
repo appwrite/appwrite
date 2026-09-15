@@ -6,6 +6,7 @@ namespace Tests\Unit\Utopia;
 
 use Appwrite\Models\Project as GeneratedProject;
 use Appwrite\Utopia\Response;
+use Appwrite\Utopia\Response\Filters\V28;
 use Appwrite\Utopia\Response\Model\Project as ProjectModel;
 use Appwrite\Utopia\Response\Model\Provider as ProviderModel;
 use Exception;
@@ -118,14 +119,18 @@ final class ResponseTest extends TestCase
         $this->response->setModel(new ProjectModel());
         $this->response->setModel(new ProviderModel());
 
-        $project = $this->response->output(new Document([
+        // The generated PHP SDK sends a response format older than 2.3.0, so its responses pass through V28.
+        $this->response->addFilter(new V28());
+
+        $document = new Document([
             '$id' => 'project',
             '$createdAt' => '2026-06-19T00:00:00.000+00:00',
             '$updatedAt' => '2026-06-19T00:00:00.000+00:00',
             'name' => 'Project',
             'teamId' => 'team',
             'region' => 'default',
-        ]), Response::MODEL_PROJECT);
+        ]);
+        $project = $this->response->applyFilters($this->response->output($document, Response::MODEL_PROJECT), Response::MODEL_PROJECT, raw: $document);
 
         $project['wafEnabled'] = false;
 

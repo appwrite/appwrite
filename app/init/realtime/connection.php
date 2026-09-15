@@ -16,8 +16,6 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Container;
 use Utopia\System\System;
-use Utopia\Validator\URL;
-use Utopia\Validator\WhiteList;
 
 /**
  * Register the minimal per-connection resources required by realtime.
@@ -112,52 +110,6 @@ return function (Container $container): void {
         return $rule;
     };
 
-    $findDevKey = static function (Request $request, Document $project, array $servers, Authorization $authorization) use ($getDbForPlatform): Document {
-        $devKey = $request->getHeaderLine('x-appwrite-dev-key', $request->getParam('devKey', ''));
-        $key = $project->find('secret', $devKey, 'devKeys');
-
-        if (!$key) {
-            return new Document([]);
-        }
-
-        $expire = $key->getAttribute('expire');
-        if (!empty($expire) && $expire < DatabaseDateTime::formatTz(DatabaseDateTime::now())) {
-            return new Document([]);
-        }
-
-        $dbForPlatform = $getDbForPlatform($authorization);
-        $accessedAt = $key->getAttribute('accessedAt', 0);
-
-        if (empty($accessedAt) || DatabaseDateTime::formatTz(DatabaseDateTime::addSeconds(new \DateTime(), -APP_KEY_ACCESS)) > $accessedAt) {
-            $key->setAttribute('accessedAt', DatabaseDateTime::now());
-            $authorization->skip(fn () => $dbForPlatform->updateDocument('devKeys', $key->getId(), new Document([
-                'accessedAt' => $key->getAttribute('accessedAt'),
-            ])));
-            $dbForPlatform->purgeCachedDocument('projects', $project->getId());
-        }
-
-        $sdkValidator = new WhiteList($servers, true);
-        $sdk = \strtolower($request->getHeaderLine('x-sdk-name', 'UNKNOWN'));
-
-        if ($sdk !== 'unknown' && $sdkValidator->isValid($sdk)) {
-            $sdks = $key->getAttribute('sdks', []);
-
-            if (!\in_array($sdk, $sdks, true)) {
-                $sdks[] = $sdk;
-                $key->setAttribute('sdks', $sdks);
-                $key->setAttribute('accessedAt', DatabaseDateTime::now());
-
-                $key = $authorization->skip(fn () => $dbForPlatform->updateDocument('devKeys', $key->getId(), new Document([
-                    'sdks' => $key->getAttribute('sdks'),
-                    'accessedAt' => $key->getAttribute('accessedAt'),
-                ])));
-                $dbForPlatform->purgeCachedDocument('projects', $project->getId());
-            }
-        }
-
-        return $key;
-    };
-
     $container->set('authorization', function () {
         return new Authorization();
     }, []);
@@ -174,13 +126,7 @@ return function (Container $container): void {
         return $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
     }, ['request', 'console', 'authorization']);
 
-    $container->set('originValidator', function (array $platform, Request $request, Document $project, array $servers, Authorization $authorization) use ($findDevKey, $findRule) {
-        $devKey = $findDevKey($request, $project, $servers, $authorization);
-
-        if (!$devKey->isEmpty()) {
-            return new URL();
-        }
-
+    $container->set('originValidator', function (array $platform, Request $request, Document $project, Authorization $authorization) use ($findRule) {
         $allowedHostnames = [...($platform['hostnames'] ?? [])];
 
         $consoleHostnames = \array_filter(\array_map('trim', \explode(',', System::getEnv('_APP_CONSOLE_HOSTNAMES', ''))));
@@ -211,7 +157,7 @@ return function (Container $container): void {
         }
 
         return new Origin(\array_unique($allowedHostnames), \array_unique($allowedSchemes));
-    }, ['platform', 'request', 'project', 'servers', 'authorization']);
+    }, ['platform', 'request', 'project', 'authorization']);
 
     $container->set('user', function (Request $request, Document $project, Document $console, Authorization $authorization) use ($getMode, $getDbForPlatform, $getDbForProject) {
         $mode = $getMode($request, $project);
@@ -344,7 +290,7 @@ return function (Container $container): void {
             return new Document();
         }
 
-        // Query params mirror the header fallback pattern used by ?project= and ?devKey=,
+        // Query params mirror the header fallback pattern used by ?project=,
         // allowing Console to embed impersonation in direct file/image URLs where headers cannot be set.
         $impersonateUserId = $request->getHeaderLine('x-appwrite-impersonate-user-id', (string)($request->getParam('impersonateuserid', '') ?: $request->getParam('impersonateUserId', '')));
         $impersonateEmail = $request->getHeaderLine('x-appwrite-impersonate-user-email', (string)($request->getParam('impersonateemail', '') ?: $request->getParam('impersonateEmail', '')));
