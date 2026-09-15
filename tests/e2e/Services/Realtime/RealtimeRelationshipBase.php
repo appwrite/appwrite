@@ -276,4 +276,26 @@ trait RealtimeRelationshipBase
             $socket->close();
         }
     }
+
+    public function testUnauthorizedRelationshipDeleteRealtime(): void
+    {
+        $fixture = $this->createRelationshipRecords('oneToMany');
+        $protected = $this->client->call(Client::METHOD_PATCH, $fixture['child']['path'], $fixture['headers'], [
+            'permissions' => [Permission::read(Role::any())],
+        ]);
+        $this->assertSame(200, $protected['headers']['status-code']);
+        $socket = $this->subscribeToRelationshipRecord($fixture, 'parent');
+        try {
+            // Test for FAILURE: delete permission is required before publishing any parent update.
+            $headers = $fixture['headers'];
+            unset($headers['x-appwrite-key']);
+            $deleted = $this->client->call(Client::METHOD_DELETE, $fixture['child']['path'], $headers);
+            $this->assertSame(401, $deleted['headers']['status-code']);
+            $this->assertNoRelationshipEvent($socket);
+            $parent = $this->client->call(Client::METHOD_GET, $fixture['parent']['path'], $fixture['headers']);
+            $this->assertSame($fixture['child']['id'], $parent['body']['children'][0]['$id']);
+        } finally {
+            $socket->close();
+        }
+    }
 }
