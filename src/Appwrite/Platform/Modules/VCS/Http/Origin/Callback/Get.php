@@ -104,13 +104,9 @@ class Get extends Action
             return;
         }
 
-        $region = $project->getAttribute('region', 'default');
-        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
-        $hostname = $platform['consoleHostname'] ?? '';
-
         $defaultState = [
-            'success' => $protocol . '://' . $hostname . "/console/project-$region-$projectId/settings/git-installations",
-            'failure' => $protocol . '://' . $hostname . "/console/project-$region-$projectId/settings/git-installations",
+            'success' => ($platform['consoleUrl'] ?? '') . "/projects/$projectId/settings",
+            'failure' => ($platform['consoleUrl'] ?? '') . "/projects/$projectId/settings",
         ];
 
         $state = \array_merge($defaultState, \array_filter($state));
