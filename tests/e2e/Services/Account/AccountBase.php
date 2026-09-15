@@ -188,9 +188,7 @@ trait AccountBase
         $this->assertEmpty($response['body']['secret']);
         $this->assertEmpty($response['body']['phrase']);
 
-        $defaultExpire = \strtotime($response['body']['expire']);
-        $this->assertGreaterThanOrEqual(\time() + TOKEN_EXPIRATION_OTP - 10, $defaultExpire);
-        $this->assertLessThanOrEqual(\time() + TOKEN_EXPIRATION_OTP + 10, $defaultExpire);
+        $this->assertEqualsWithDelta(900, \strtotime($response['body']['expire']) - \strtotime($response['body']['$createdAt']), 1);
 
         $userId = $response['body']['userId'];
 
@@ -204,7 +202,7 @@ trait AccountBase
         $code = $matches[0][0] ?? '';
 
         $this->assertNotEmpty($code);
-        $this->assertStringContainsStringIgnoringCase('Use OTP ' . $code . ' to sign in to '. $this->getProject()['name'] . '. Expires in 15 minutes.', $lastEmail['text']);
+        $this->assertStringContainsStringIgnoringCase('Use OTP ' . $code . ' to sign in to '. $this->getProject()['name'] . '. Expires at ' . $response['body']['expire'] . '.', $lastEmail['text']);
 
         // Only Console project has branded logo in email.
         if ($isConsoleProject) {
@@ -295,9 +293,7 @@ trait AccountBase
 
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['expire']);
-        $customExpire = \strtotime($response['body']['expire']);
-        $this->assertGreaterThanOrEqual(\time() + 300 - 10, $customExpire);
-        $this->assertLessThanOrEqual(\time() + 300 + 10, $customExpire);
+        $this->assertEqualsWithDelta(300, \strtotime($response['body']['expire']) - \strtotime($response['body']['$createdAt']), 1);
 
         $response = $this->client->call(Client::METHOD_POST, '/account/tokens/email', array_merge([
             'origin' => 'http://localhost',
