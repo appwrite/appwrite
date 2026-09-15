@@ -36,6 +36,19 @@ final readonly class PhoneOtpChannel
      * under the whatsapp-sms policy delivers on WhatsApp without falling back
      * to SMS — falling back would ignore what the client asked for.
      */
+    /**
+     * Whether the instance can actually deliver over SMS.
+     *
+     * The worker builds its internal SMS adapter only when both the provider DSN and the
+     * sender are set, so a caller that treats the DSN alone as "SMS is configured" resolves
+     * whatsapp-sms to a fallback the worker then silently declines to take. Both facts are
+     * read by the caller and passed in: this class never touches the environment.
+     */
+    public static function isSmsConfigured(bool $providerConfigured, bool $senderConfigured): bool
+    {
+        return $providerConfigured && $senderConfigured;
+    }
+
     public static function resolve(
         string $policy,
         ?string $requested,

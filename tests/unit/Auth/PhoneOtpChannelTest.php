@@ -11,6 +11,23 @@ use PHPUnit\Framework\TestCase;
 
 final class PhoneOtpChannelTest extends TestCase
 {
+    #[DataProvider('provideSmsConfigurations')]
+    public function testIsSmsConfigured(bool $providerConfigured, bool $senderConfigured, bool $expected): void
+    {
+        $this->assertSame($expected, PhoneOtpChannel::isSmsConfigured($providerConfigured, $senderConfigured));
+    }
+
+    /**
+     * @return Generator<string, array{bool, bool, bool}>
+     */
+    public static function provideSmsConfigurations(): Generator
+    {
+        yield 'neither provider nor sender' => [false, false, false];
+        yield 'provider without a sender' => [true, false, false];
+        yield 'sender without a provider' => [false, true, false];
+        yield 'both provider and sender' => [true, true, true];
+    }
+
     #[DataProvider('provideResolutions')]
     public function testResolve(
         string $policy,

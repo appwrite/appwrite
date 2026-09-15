@@ -3135,7 +3135,10 @@ Http::post('/v1/account/tokens/phone')
     ->inject('authorization')
     ->action(function (string $userId, string $phone, ?string $channel, Request $request, Response $response, User $user, Document $project, array $platform, Database $dbForProject, Event $queueForEvents, MessagingPublisher $publisherForMessaging, Locale $locale, Context $usage, array $plan, Store $store, ProofsCode $proofForCode, Authorization $authorization) {
         $policy = $project->getAttribute('auths', [])['phoneOtpChannel'] ?? PHONE_OTP_CHANNEL_SMS;
-        $smsConfigured = !empty(System::getEnv('_APP_SMS_PROVIDER'));
+        $smsConfigured = PhoneOtpChannel::isSmsConfigured(
+            !empty(System::getEnv('_APP_SMS_PROVIDER')),
+            !empty(System::getEnv('_APP_SMS_FROM')),
+        );
         $whatsappConfigured = !empty(System::getEnv('_APP_WHATSAPP_PROVIDER'));
         $resolved = PhoneOtpChannel::resolve($policy, $channel, $smsConfigured, $whatsappConfigured);
 
@@ -4568,7 +4571,10 @@ Http::post('/v1/account/verifications/phone')
                 ->inject('authorization')
     ->action(function (Request $request, Response $response, User $user, Database $dbForProject, Event $queueForEvents, MessagingPublisher $publisherForMessaging, Document $project, Locale $locale, Context $usage, array $plan, ProofsCode $proofForCode, Authorization $authorization) {
         $policy = $project->getAttribute('auths', [])['phoneOtpChannel'] ?? PHONE_OTP_CHANNEL_SMS;
-        $smsConfigured = !empty(System::getEnv('_APP_SMS_PROVIDER'));
+        $smsConfigured = PhoneOtpChannel::isSmsConfigured(
+            !empty(System::getEnv('_APP_SMS_PROVIDER')),
+            !empty(System::getEnv('_APP_SMS_FROM')),
+        );
         $whatsappConfigured = !empty(System::getEnv('_APP_WHATSAPP_PROVIDER'));
         $resolved = PhoneOtpChannel::resolve($policy, null, $smsConfigured, $whatsappConfigured);
 

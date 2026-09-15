@@ -173,7 +173,10 @@ class Create extends Action
         switch ($factor) {
             case Type::PHONE:
                 $policy = $project->getAttribute('auths', [])['phoneOtpChannel'] ?? PHONE_OTP_CHANNEL_SMS;
-                $smsConfigured = !empty(System::getEnv('_APP_SMS_PROVIDER'));
+                $smsConfigured = PhoneOtpChannel::isSmsConfigured(
+                    !empty(System::getEnv('_APP_SMS_PROVIDER')),
+                    !empty(System::getEnv('_APP_SMS_FROM')),
+                );
                 $whatsappConfigured = !empty(System::getEnv('_APP_WHATSAPP_PROVIDER'));
                 $resolved = PhoneOtpChannel::resolve($policy, null, $smsConfigured, $whatsappConfigured);
 
