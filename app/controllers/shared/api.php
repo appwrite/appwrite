@@ -26,6 +26,7 @@ use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Abuse\Abuse;
+use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\Bus\Bus;
 use Utopia\Cache\Adapter\Filesystem;
 use Utopia\Cache\Cache;
@@ -465,14 +466,18 @@ Http::init()
             // installation deploys just the engine backing the platform, so neither is on
             // until an operator provisions that engine and says so. Closed to everyone --
             // keys and privileged roles included -- rather than answering and then failing
-            // on the first write with the reason only in the logs.
+            // against an absent service with the reason only in the logs. Embeddings ran
+            // on every installation before it had a switch, so it stays on unless an
+            // operator turns it off; the resource-heavy container is what sits behind a
+            // Compose profile.
             $products = [
-                'documentsdb' => '_APP_DOCUMENTSDB',
-                'vectorsdb' => '_APP_VECTORSDB',
+                'documentsdb' => ['_APP_DOCUMENTSDB', 'disabled'],
+                'vectorsdb' => ['_APP_VECTORSDB', 'disabled'],
+                'embeddings' => ['_APP_EMBEDDING', 'enabled'],
             ];
             if (
                 isset($products[$namespace])
-                && System::getEnv($products[$namespace], 'disabled') !== 'enabled'
+                && System::getEnv(...$products[$namespace]) !== 'enabled'
             ) {
                 throw new Exception(Exception::GENERAL_SERVICE_DISABLED);
             }
@@ -563,38 +568,37 @@ Http::init()
             try {
                 $start = $request->getContentRangeStart();
                 $end = $request->getContentRangeEnd();
-                $timeLimit = $timelimit($abuseKey, $abuseLimit, $route->getLabel('abuse-time', 3600));
-                $timeLimit
-                    ->setParam('{projectId}', $project->getId())
-                    ->setParam('{userId}', $user->getId())
-                    ->setParam('{userAgent}', $request->getUserAgent(''))
-                    ->setParam('{ip}', $request->getIP())
-                    ->setParam('{url}', $request->getHostname() . $route->getPath())
-                    ->setParam('{method}', $request->getMethod())
-                    ->setParam('{chunkId}', (int) ($start / ($end + 1 - $start)));
+                $isRateLimited = $timelimit($abuseKey, $abuseLimit, $route->getLabel('abuse-time', 3600), function (TimeLimit $timeLimit) use ($route, $request, $response, $project, $user, $start, $end, $shouldCheckAbuse, &$closestLimit): bool {
+                    $timeLimit
+                        ->setParam('{projectId}', $project->getId())
+                        ->setParam('{userId}', $user->getId())
+                        ->setParam('{userAgent}', $request->getUserAgent(''))
+                        ->setParam('{ip}', $request->getIP())
+                        ->setParam('{url}', $request->getHostname() . $route->getPath())
+                        ->setParam('{method}', $request->getMethod())
+                        ->setParam('{chunkId}', (int) ($start / ($end + 1 - $start)));
 
-                foreach ($request->getParams() as $key => $value) {
-                    if (! empty($value)) {
-                        $timeLimit->setParam('{param-' . $key . '}', (\is_array($value) || \is_object($value)) ? \json_encode($value) : $value);
+                    foreach ($request->getParams() as $key => $value) {
+                        if (! empty($value)) {
+                            $timeLimit->setParam('{param-' . $key . '}', (\is_array($value) || \is_object($value)) ? \json_encode($value) : $value);
+                        }
                     }
-                }
 
-                $abuse = new Abuse($timeLimit);
-                $remaining = $timeLimit->remaining();
-                $limit = $timeLimit->limit();
-                $time = $timeLimit->time() + $route->getLabel('abuse-time', 3600);
+                    $abuse = new Abuse($timeLimit);
+                    $remaining = $timeLimit->remaining();
+                    $limit = $timeLimit->limit();
+                    $time = $timeLimit->time() + $route->getLabel('abuse-time', 3600);
 
-                if ($limit && ($remaining < $closestLimit || is_null($closestLimit))) {
-                    $closestLimit = $remaining;
-                    $response
-                        ->addHeader('X-RateLimit-Limit', $limit)
-                        ->addHeader('X-RateLimit-Remaining', $remaining)
-                        ->addHeader('X-RateLimit-Reset', $time);
-                }
+                    if ($limit && ($remaining < $closestLimit || is_null($closestLimit))) {
+                        $closestLimit = $remaining;
+                        $response
+                            ->addHeader('X-RateLimit-Limit', $limit)
+                            ->addHeader('X-RateLimit-Remaining', $remaining)
+                            ->addHeader('X-RateLimit-Reset', $time);
+                    }
 
-                if ($shouldCheckAbuse) {
-                    $isRateLimited = $abuse->check();
-                }
+                    return $shouldCheckAbuse && $abuse->check();
+                });
             } catch (\Throwable $th) {
                 \error_log((string) $th);
 
@@ -796,10 +800,12 @@ Http::init()
 
 Http::init()
     ->groups(['session'])
+    ->inject('route')
     ->inject('user')
-    ->inject('request')
-    ->action(function (User $user, Request $request) {
-        if (\str_contains($request->getURI(), 'oauth2')) {
+    ->action(function (Route $route, User $user) {
+        // Sign-ins that link to or upgrade the current account accept a caller
+        // who is already logged in (e.g. converting an anonymous account)
+        if ($route->getLabel('session.allowActive', false)) {
             return;
         }
 
@@ -879,7 +885,8 @@ Http::shutdown()
         // Generate events for this operation
         $generatedEvents = Event::generateEvents(
             $queueForEvents->getEvent(),
-            $queueForEvents->getParams()
+            $queueForEvents->getParams(),
+            $queueForEvents->getContext('database')
         );
 
         $allowedOnConsole = !empty(\array_intersect($route->getGroups(), Realtime::CONSOLE_ALLOWLIST));
@@ -901,6 +908,7 @@ Http::shutdown()
                         userId: $queueForEvents->getUserId(),
                         payload: $queueForEvents->getPayload(),
                         platform: $queueForEvents->getPlatform(),
+                        database: $queueForEvents->getContext('database'),
                     ));
                     break;
                 }
@@ -943,24 +951,24 @@ Http::shutdown()
         foreach ($abuseKeyLabel as $abuseKey) {
             $start = $request->getContentRangeStart();
             $end = $request->getContentRangeEnd();
-            $timeLimit = $timelimit($abuseKey, $route->getLabel('abuse-limit', 0), $route->getLabel('abuse-time', 3600));
-            $timeLimit
-                ->setParam('{projectId}', $project->getId())
-                ->setParam('{userId}', $user->getId())
-                ->setParam('{userAgent}', $request->getUserAgent(''))
-                ->setParam('{ip}', $request->getIP())
-                ->setParam('{url}', $request->getHostname() . $route->getPath())
-                ->setParam('{method}', $request->getMethod())
-                ->setParam('{chunkId}', (int) ($start / ($end + 1 - $start)));
+            $timelimit($abuseKey, $route->getLabel('abuse-limit', 0), $route->getLabel('abuse-time', 3600), function (TimeLimit $timeLimit) use ($route, $request, $project, $user, $start, $end): void {
+                $timeLimit
+                    ->setParam('{projectId}', $project->getId())
+                    ->setParam('{userId}', $user->getId())
+                    ->setParam('{userAgent}', $request->getUserAgent(''))
+                    ->setParam('{ip}', $request->getIP())
+                    ->setParam('{url}', $request->getHostname() . $route->getPath())
+                    ->setParam('{method}', $request->getMethod())
+                    ->setParam('{chunkId}', (int) ($start / ($end + 1 - $start)));
 
-            foreach ($request->getParams() as $key => $value) { // Set request params as potential abuse keys
-                if (! empty($value)) {
-                    $timeLimit->setParam('{param-' . $key . '}', (\is_array($value) || \is_object($value)) ? \json_encode($value) : $value);
+                foreach ($request->getParams() as $key => $value) { // Set request params as potential abuse keys
+                    if (! empty($value)) {
+                        $timeLimit->setParam('{param-' . $key . '}', (\is_array($value) || \is_object($value)) ? \json_encode($value) : $value);
+                    }
                 }
-            }
 
-            $abuse = new Abuse($timeLimit);
-            $abuse->reset();
+                (new Abuse($timeLimit))->reset();
+            });
         }
     });
 
@@ -1184,7 +1192,7 @@ Http::shutdown()
          * cannot suppress RequestCompleted or usage metrics on the same request.
          */
         $statusCode = $response->getStatusCode();
-        if ($statusCode < 200 || $statusCode >= 300 || $project->getId() === 'console') {
+        if ($statusCode < 200 || $statusCode >= 300) {
             return;
         }
 
@@ -1220,6 +1228,19 @@ Http::shutdown()
 
         if ($method === null) {
             return;
+        }
+
+        // Organization routes act on the project named in the path, not on the console project.
+        if ($project->getId() === 'console') {
+            $projectId = (string) ($route->getParamsValues()['projectId'] ?? '');
+            if ($projectId === '') {
+                return;
+            }
+
+            $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
+            if ($project->isEmpty()) {
+                return;
+            }
         }
 
         $byMethod = $project->getAttribute('onboarding', []);

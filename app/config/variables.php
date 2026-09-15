@@ -404,17 +404,8 @@ return [
                 'filter' => ''
             ],
             [
-                'name' => '_APP_LOGGING_PROVIDER',
-                'description' => 'Deprecated since 1.6.0, use `_APP_LOGGING_CONFIG` with DSN value instead. This variable allows you to enable logging errors to 3rd party providers. This value is empty by default, set the value to one of \'sentry\', \'raygun\', \'appSignal\', \'logOwl\' to enable the logger.',
-                'introduction' => '0.12.0',
-                'default' => '',
-                'required' => false,
-                'question' => '',
-                'filter' => ''
-            ],
-            [
                 'name' => '_APP_LOGGING_CONFIG',
-                'description' => 'This variable allows you to enable logging errors to third party providers. This value is empty by default, set a DSN value to one of the following `sentry://PROJECT_ID:SENTRY_API_KEY@SENTRY_HOST/`, , `logowl://SERVICE_TICKET@SERIVCE_HOST/` `raygun://RAYGUN_API_KEY/`, `appSignal://API_KEY/` to enable the logger.\n\nFor versions prior `1.5.6` you can use the old syntax.\n\nOld syntax: If using Sentry, this should be \'SENTRY_API_KEY;SENTRY_APP_ID\'. If using Raygun, this should be Raygun API key. If using AppSignal, this should be AppSignal API key. If using LogOwl, this should be LogOwl Service Ticket.',
+                'description' => 'This variable allows you to report server errors to Sentry. This value is empty by default, set a DSN value `sentry://PROJECT_ID:SENTRY_API_KEY@SENTRY_HOST/` to enable it. Sentry is the only supported provider; other DSN schemes are rejected at startup and disable reporting. The same DSN is used by the API, workers, CLI tasks and the realtime server. Errors are exported as spans, so every attribute added with `Span::add()` during the request or job is attached to the Sentry event.',
                 'introduction' => '0.12.0',
                 'default' => '',
                 'required' => false,
@@ -715,6 +706,15 @@ return [
                 'question' => '',
                 'filter' => ''
             ],
+            [
+                'name' => '_APP_EMBEDDING',
+                'description' => 'Enables the embeddings API, backed by the resource-heavy appwrite-embedding container. That container sits behind the "embedding" Compose profile, so add "embedding" to COMPOSE_PROFILES to start it. Set this to "disabled" to have the /v1/embeddings routes return a service disabled error instead of reaching for the container. Default value is: enabled.',
+                'introduction' => '2.0.0',
+                'default' => 'enabled',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
         ],
     ],
     [
@@ -873,7 +873,7 @@ return [
             ],
             [
                 'name' => '_APP_SMS_FROM',
-                'description' => 'Phone number used for sending out messages. If using Twilio, this may be a Messaging Service SID, starting with MG. Otherwise, the number must start with a leading \'+\' and maximum of 15 digits without spaces (+123456789). ',
+                'description' => 'Phone number, or an alphanumeric sender ID where the provider supports it, used for sending out messages. A phone number must start with a leading \'+\' and have a maximum of 15 digits without spaces (+123456789). If using Twilio, this may also be a Messaging Service SID, starting with MG.',
                 'introduction' => '0.15.0',
                 'default' => '',
                 'required' => false,
@@ -901,6 +901,16 @@ return [
                 'introduction' => '0.13.4',
                 'default' => '20000000',
                 'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_AUTOGRAVITY_HOST',
+                'description' => 'The host of the Autogravity service (for example `http://appwrite-autogravity:8080`) used to detect the focal point when a file preview requests `gravity=auto`. Leave empty to disable automatic gravity; the other gravity values keep working.',
+                'introduction' => '2.1.0',
+                'default' => '',
+                'required' => false,
+                'overwrite' => true,
                 'question' => '',
                 'filter' => ''
             ],
@@ -933,7 +943,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_DEVICE',
-                'description' => 'Select default storage device. The default value is \'local\'. List of supported adapters are \'local\', \'s3\', \'dospaces\', \'backblaze\', \'linode\' and \'wasabi\'.',
+                'description' => 'Select the default storage device. Supported adapters are \'local\', \'s3\', \'dospaces\', \'backblaze\', \'linode\', and \'wasabi\'. Configure object storage with _APP_STORAGE_S3_* variables. Deprecated provider-specific variables remain available as fallbacks for backward compatibility, but Open Runtimes Orchestrator does not support those fallback variables.',
                 'introduction' => '0.13.0',
                 'default' => 'local',
                 'required' => false,
@@ -981,7 +991,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_DO_SPACES_ACCESS_KEY',
-                'description' => 'DigitalOcean spaces access key. Required when the storage adapter is set to DOSpaces. You can get your access key from your DigitalOcean console.',
+                'description' => 'Deprecated. DigitalOcean Spaces access key retained for backward compatibility. Use _APP_STORAGE_S3_ACCESS_KEY instead; Open Runtimes Orchestrator does not support this provider-specific variable.',
                 'introduction' => '0.13.0',
                 'default' => '',
                 'required' => false,
@@ -989,7 +999,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_DO_SPACES_SECRET',
-                'description' => 'DigitalOcean spaces secret key. Required when the storage adapter is set to DOSpaces. You can get your secret key from your DigitalOcean console.',
+                'description' => 'Deprecated. DigitalOcean Spaces secret key retained for backward compatibility. Use _APP_STORAGE_S3_SECRET instead; Open Runtimes Orchestrator does not support this provider-specific variable.',
                 'introduction' => '0.13.0',
                 'default' => '',
                 'required' => false,
@@ -997,7 +1007,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_DO_SPACES_REGION',
-                'description' => 'DigitalOcean spaces region. Required when storage adapter is set to DOSpaces. You can find your region info for your space from DigitalOcean console.',
+                'description' => 'Deprecated. DigitalOcean Spaces region retained for backward compatibility. Use _APP_STORAGE_S3_REGION instead; Open Runtimes Orchestrator does not support this provider-specific variable.',
                 'introduction' => '0.13.0',
                 'default' => 'us-east-1',
                 'required' => false,
@@ -1005,7 +1015,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_DO_SPACES_BUCKET',
-                'description' => 'DigitalOcean spaces bucket. Required when storage adapter is set to DOSpaces. You can create spaces in your DigitalOcean console.',
+                'description' => 'Deprecated. DigitalOcean Spaces bucket retained for backward compatibility. Use _APP_STORAGE_S3_BUCKET instead; Open Runtimes Orchestrator does not support this provider-specific variable.',
                 'introduction' => '0.13.0',
                 'default' => '',
                 'required' => false,
@@ -1013,7 +1023,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_BACKBLAZE_ACCESS_KEY',
-                'description' => 'Backblaze access key. Required when the storage adapter is set to Backblaze. Your Backblaze keyID will be your access key. You can get your keyID from your Backblaze console.',
+                'description' => 'Deprecated. Backblaze access key retained for backward compatibility. Use _APP_STORAGE_S3_ACCESS_KEY instead; Open Runtimes Orchestrator does not support this provider-specific variable.',
                 'introduction' => '0.14.2',
                 'default' => '',
                 'required' => false,
@@ -1021,7 +1031,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_BACKBLAZE_SECRET',
-                'description' => 'Backblaze secret key. Required when the storage adapter is set to Backblaze. Your Backblaze applicationKey will be your secret key. You can get your applicationKey from your Backblaze console.',
+                'description' => 'Deprecated. Backblaze secret key retained for backward compatibility. Use _APP_STORAGE_S3_SECRET instead; Open Runtimes Orchestrator does not support this provider-specific variable.',
                 'introduction' => '0.14.2',
                 'default' => '',
                 'required' => false,
@@ -1029,7 +1039,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_BACKBLAZE_REGION',
-                'description' => 'Backblaze region. Required when storage adapter is set to Backblaze. You can find your region info from your Backblaze console.',
+                'description' => 'Deprecated. Backblaze region retained for backward compatibility. Use _APP_STORAGE_S3_REGION instead; Open Runtimes Orchestrator does not support this provider-specific variable.',
                 'introduction' => '0.14.2',
                 'default' => 'us-west-004',
                 'required' => false,
@@ -1037,7 +1047,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_BACKBLAZE_BUCKET',
-                'description' => 'Backblaze bucket. Required when storage adapter is set to Backblaze. You can create your bucket from your Backblaze console.',
+                'description' => 'Deprecated. Backblaze bucket retained for backward compatibility. Use _APP_STORAGE_S3_BUCKET instead; Open Runtimes Orchestrator does not support this provider-specific variable.',
                 'introduction' => '0.14.2',
                 'default' => '',
                 'required' => false,
@@ -1045,7 +1055,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_LINODE_ACCESS_KEY',
-                'description' => 'Linode object storage access key. Required when the storage adapter is set to Linode. You can get your access key from your Linode console.',
+                'description' => 'Deprecated. Linode Object Storage access key retained for backward compatibility. Use _APP_STORAGE_S3_ACCESS_KEY instead; Open Runtimes Orchestrator does not support this provider-specific variable.',
                 'introduction' => '0.14.2',
                 'default' => '',
                 'required' => false,
@@ -1053,7 +1063,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_LINODE_SECRET',
-                'description' => 'Linode object storage secret key. Required when the storage adapter is set to Linode. You can get your secret key from your Linode console.',
+                'description' => 'Deprecated. Linode Object Storage secret key retained for backward compatibility. Use _APP_STORAGE_S3_SECRET instead; Open Runtimes Orchestrator does not support this provider-specific variable.',
                 'introduction' => '0.14.2',
                 'default' => '',
                 'required' => false,
@@ -1061,7 +1071,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_LINODE_REGION',
-                'description' => 'Linode object storage region. Required when storage adapter is set to Linode. You can find your region info from your Linode console.',
+                'description' => 'Deprecated. Linode Object Storage region retained for backward compatibility. Use _APP_STORAGE_S3_REGION instead; Open Runtimes Orchestrator does not support this provider-specific variable.',
                 'introduction' => '0.14.2',
                 'default' => 'eu-central-1',
                 'required' => false,
@@ -1069,7 +1079,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_LINODE_BUCKET',
-                'description' => 'Linode object storage bucket. Required when storage adapter is set to Linode. You can create buckets in your Linode console.',
+                'description' => 'Deprecated. Linode Object Storage bucket retained for backward compatibility. Use _APP_STORAGE_S3_BUCKET instead; Open Runtimes Orchestrator does not support this provider-specific variable.',
                 'introduction' => '0.14.2',
                 'default' => '',
                 'required' => false,
@@ -1077,7 +1087,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_WASABI_ACCESS_KEY',
-                'description' => 'Wasabi access key. Required when the storage adapter is set to Wasabi. You can get your access key from your Wasabi console.',
+                'description' => 'Deprecated. Wasabi access key retained for backward compatibility. Use _APP_STORAGE_S3_ACCESS_KEY instead; Open Runtimes Orchestrator does not support this provider-specific variable.',
                 'introduction' => '0.14.2',
                 'default' => '',
                 'required' => false,
@@ -1085,7 +1095,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_WASABI_SECRET',
-                'description' => 'Wasabi secret key. Required when the storage adapter is set to Wasabi. You can get your secret key from your Wasabi console.',
+                'description' => 'Deprecated. Wasabi secret key retained for backward compatibility. Use _APP_STORAGE_S3_SECRET instead; Open Runtimes Orchestrator does not support this provider-specific variable.',
                 'introduction' => '0.14.2',
                 'default' => '',
                 'required' => false,
@@ -1093,7 +1103,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_WASABI_REGION',
-                'description' => 'Wasabi region. Required when storage adapter is set to Wasabi. You can find your region info from your Wasabi console.',
+                'description' => 'Deprecated. Wasabi region retained for backward compatibility. Use _APP_STORAGE_S3_REGION instead; Open Runtimes Orchestrator does not support this provider-specific variable.',
                 'introduction' => '0.14.2',
                 'default' => 'eu-central-1',
                 'required' => false,
@@ -1101,7 +1111,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_WASABI_BUCKET',
-                'description' => 'Wasabi bucket. Required when storage adapter is set to Wasabi. You can create buckets in your Wasabi console.',
+                'description' => 'Deprecated. Wasabi bucket retained for backward compatibility. Use _APP_STORAGE_S3_BUCKET instead; Open Runtimes Orchestrator does not support this provider-specific variable.',
                 'introduction' => '0.14.2',
                 'default' => '',
                 'required' => false,
@@ -1133,8 +1143,17 @@ return [
             ],
             [
                 'name' => '_APP_FUNCTIONS_BUILD_SIZE_LIMIT',
-                'description' => 'The maximum size of a built deployment in bytes. The default value is 2,000,000,000 (2GB), and the maximum value is 4,294,967,295 (4.2GB).',
+                'description' => 'Deprecated since 1.7.0, use _APP_COMPUTE_BUILD_SIZE_LIMIT instead. The maximum size of a built deployment in bytes. The default value is 2,000,000,000 (2GB), and the maximum value is 4,294,967,295 (4.2GB).',
                 'introduction' => '1.6.0',
+                'default' => '2000000000',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_COMPUTE_BUILD_SIZE_LIMIT',
+                'description' => 'The maximum size of a built function or site deployment in bytes. The default value is 2,000,000,000 (2GB), and the maximum value is 4,294,967,295 (4.2GB).',
+                'introduction' => '1.7.0',
                 'default' => '2000000000',
                 'required' => false,
                 'question' => '',
@@ -1750,15 +1769,6 @@ return [
                 'filter' => ''
             ],
             [
-                'name' => '_APP_MAINTENANCE_RETENTION_USAGE_HOURLY',
-                'description' => 'The maximum duration (in seconds) upto which to retain hourly usage metrics. The default value is 8640000 seconds (100 days).',
-                'introduction' => '',
-                'default' => '8640000',
-                'required' => false,
-                'question' => '',
-                'filter' => ''
-            ],
-            [
                 'name' => '_APP_MAINTENANCE_RETENTION_SCHEDULES',
                 'description' => 'Schedules deletion interval ( in seconds ) ',
                 'introduction' => 'TBD',
@@ -1805,15 +1815,6 @@ return [
                 'description' => 'Maximum number of pooled ClickHouse HTTP clients per process.',
                 'introduction' => '',
                 'default' => '2',
-                'required' => false,
-                'question' => '',
-                'filter' => ''
-            ],
-            [
-                'name' => '_APP_EXECUTIONS_DUAL_WRITE',
-                'description' => 'Mirror function and site execution writes to ClickHouse while retaining the project database copy.',
-                'introduction' => '',
-                'default' => 'enabled',
                 'required' => false,
                 'question' => '',
                 'filter' => ''

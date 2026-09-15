@@ -92,7 +92,7 @@ final class AvatarsTest extends Scope
             'query' => $query,
             'variables' => [
                 // Same URL as REST AvatarsBase::testGetImage (Google logo fetches flake in CI)
-                'url' => 'https://appwrite.io/images/open-graph/website.avif',
+                'url' => 'https://cloud.appwrite.io/images/github.png',
             ],
         ];
 

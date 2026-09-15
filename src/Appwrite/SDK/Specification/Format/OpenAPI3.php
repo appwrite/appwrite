@@ -2,7 +2,6 @@
 
 namespace Appwrite\SDK\Specification\Format;
 
-use Appwrite\Platform\Tasks\Specs;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
@@ -18,6 +17,7 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Queries;
 use Utopia\Database\Validator\Spatial;
+use Utopia\OpenAPI\Model\Composition;
 use Utopia\Platform\Enum;
 use Utopia\Validator;
 use Utopia\Validator\ArrayList;
@@ -165,8 +165,40 @@ class OpenAPI3 extends Format
         return \strtolower((string) \preg_replace('/[^a-z0-9]/i', '', $name));
     }
 
+    /**
+     * The schemes an SDK example configures before calling a method: the first
+     * `authCount` accepted schemes offered on the platform, plus the path-bound
+     * schemes of a location method. Flat for a platform document; keyed by
+     * platform for the canonical document.
+     *
+     * @param array<string, list<string>> $securities
+     * @param list<string> $locationKeys
+     * @param list<string> $platforms
+     * @return array<string, mixed>
+     */
+    private function getExampleAuth(array $securities, array $locationKeys, array $platforms): array
+    {
+        $auth = [];
+
+        foreach ($this->platform === null ? $platforms : [$this->platform] as $platform) {
+            $offered = \array_intersect_key($securities, $this->keys[$platform] ?? []);
+            $slice = \array_slice($offered, 0, $this->authCounts[$platform] ?? 0);
+
+            foreach ($locationKeys as $key) {
+                if (isset($this->keys[$platform][$key])) {
+                    $slice[$key] = [];
+                }
+            }
+
+            $auth[$platform] = $slice;
+        }
+
+        return $this->platform === null ? $auth : ($auth[$this->platform] ?? []);
+    }
+
     public function parse(): array
     {
+        $schemes = $this->getSecuritySchemes();
         /**
          * Specifications (v3.0.0):
          * https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.0.md
@@ -208,7 +240,7 @@ class OpenAPI3 extends Format
             'tags' => $this->services,
             'components' => [
                 'schemas' => [],
-                'securitySchemes' => $this->keys,
+                'securitySchemes' => $schemes,
             ],
             'externalDocs' => [
                 'description' => $this->getParam('docs.description'),
@@ -245,9 +277,19 @@ class OpenAPI3 extends Format
                 continue;
             }
 
+            $sdkPlatforms = [];
+            foreach (\is_array($sdk) ? $sdk : [$sdk] as $method) {
+                $sdkPlatforms = \array_merge($sdkPlatforms, $method->getPlatforms());
+            }
+            $sdkPlatforms = \array_values(\array_unique($sdkPlatforms));
+            if ($this->platform === null ? $sdkPlatforms === [] : !\in_array($this->platform, $sdkPlatforms, true)) {
+                continue;
+            }
+
             $additionalMethods = null;
             if (\is_array($sdk)) {
                 $additionalMethods = $sdk;
+                // Keep the original base descriptor's schemas and auth, even when only a sibling is eligible.
                 $sdk = $sdk[0];
             }
 
@@ -260,12 +302,6 @@ class OpenAPI3 extends Format
 
             $desc = $sdk->getDescriptionFilePath() ?: $sdk->getDescription();
             $produces = ($sdk->getContentType())->value;
-            $routeSecurity = $sdk->getAuth();
-
-            $specs = new Specs();
-            $sdkPlatforms = $specs->getSDKPlatformsForRouteSecurity($routeSecurity);
-
-            $sdkPlatforms = array_values(array_unique($sdkPlatforms));
             $namespace = $sdk->getNamespace();
 
             $descContents = $this->getDescriptionContents($desc);
@@ -279,8 +315,6 @@ class OpenAPI3 extends Format
                 'deprecated' => $sdk->isDeprecated(),
                 'x-appwrite' => [ // Appwrite related metadata
                     'group' => $sdk->getGroup(),
-                    'cookies' => $route->getLabel('sdk.cookies', false),
-                    'type' => $sdk->getType()->value ?? '',
                     'demo' => \strtolower($namespace) . '/' . Template::fromCamelCaseToDash($methodName) . '.md',
                     'rate-limit' => $route->getLabel('abuse-limit', 0),
                     'rate-time' => $route->getLabel('abuse-time', 3600),
@@ -291,10 +325,6 @@ class OpenAPI3 extends Format
                     'public' => $sdk->isPublic(),
                 ],
             ];
-
-            if ($sdk->getDescriptionFilePath() !== null) {
-                $temp['x-appwrite']['edit'] = 'https://github.com/appwrite/appwrite/edit/master' . $sdk->getDescription();
-            }
 
             if ($sdk->getDeprecated()) {
                 $temp['x-appwrite']['deprecated'] = [
@@ -309,16 +339,15 @@ class OpenAPI3 extends Format
                     /** @var Method $methodObj */
                     $desc = $methodObj->getDescriptionFilePath();
 
-                    $methodSecurities = $methodObj->getAuth();
-                    $methodSdkPlatforms = $specs->getSDKPlatformsForRouteSecurity($methodSecurities);
+                    $methodSdkPlatforms = $methodObj->getPlatforms();
 
-                    if (!\in_array($this->platform, $methodSdkPlatforms)) {
+                    if ($this->platform === null ? $methodSdkPlatforms === [] : !\in_array($this->platform, $methodSdkPlatforms, true)) {
                         continue;
                     }
 
                     $methodSecurities = [($methodObj->getLocationAuth()[0] ?? 'Project') => []];
                     foreach ($methodObj->getAuth() as $security) {
-                        if (\array_key_exists($security->value, $this->keys)) {
+                        if (\array_key_exists($security->value, $schemes)) {
                             $methodSecurities[$security->value] = [];
                         }
                     }
@@ -326,8 +355,9 @@ class OpenAPI3 extends Format
                     $additionalMethod = [
                         'name' => $methodObj->getMethodName(),
                         'namespace' => $methodObj->getNamespace(),
+                        'platforms' => $methodSdkPlatforms,
                         'desc' => $methodObj->getDesc(),
-                        'auth' => \array_slice($methodSecurities, 0, $this->authCount),
+                        'auth' => $this->getExampleAuth($methodSecurities, [], $methodSdkPlatforms),
                         'parameters' => [],
                         'required' => [],
                         'responses' => [],
@@ -484,10 +514,7 @@ class OpenAPI3 extends Format
                             'description' => $modelDescription,
                             'content' => [
                                 $produces => [
-                                    'schema' => \array_filter([
-                                        'oneOf' => \array_map(fn ($m) => ['$ref' => '#/components/schemas/' . $m->getType()], $model),
-                                        'discriminator' => $this->getDiscriminator($model, '#/components/schemas/'),
-                                    ]),
+                                    'schema' => $this->getUnion($model, '#/components/schemas/'),
                                 ],
                             ],
                         ];
@@ -516,42 +543,32 @@ class OpenAPI3 extends Format
                 }
             }
 
-            // No response declares content (e.g. 204 No content): keep the produced
-            // content type available for SDK generation.
-            $hasResponseContent = false;
-            foreach ($temp['responses'] as $responseData) {
-                if (isset($responseData['content'])) {
-                    $hasResponseContent = true;
-                    break;
-                }
-            }
-
-            if (!$hasResponseContent && $produces !== '') {
-                $temp['x-appwrite']['produces'] = [$produces];
-            }
-
             if (!empty($scope)) {
                 $securities = [($sdk->getLocationAuth()[0] ?? 'Project') => []];
 
                 foreach ($sdk->getAuth() as $security) {
                     /** @var AuthType $security */
-                    if (array_key_exists($security->value, $this->keys)) {
+                    if (\array_key_exists($security->value, $schemes)) {
                         $securities[$security->value] = [];
                     }
                 }
 
-                $temp['x-appwrite']['auth'] = array_slice($securities, 0, $this->authCount);
-
-                if ($sdk->getType() === MethodType::LOCATION) {
-                    foreach ($sdk->getLocationAuth() as $key) {
-                        if (\array_key_exists($key, $this->keys)) {
-                            $securities[$key] = [];
-                            $temp['x-appwrite']['auth'][$key] = [];
-                        }
-                    }
-                }
+                $locationKeys = $sdk->getType() === MethodType::LOCATION
+                    ? \array_values(\array_filter($sdk->getLocationAuth(), fn (string $key) => \array_key_exists($key, $schemes)))
+                    : [];
+                $temp['x-appwrite']['auth'] = $this->getExampleAuth($securities, $locationKeys, $sdkPlatforms);
 
                 $temp['security'][] = $securities;
+                // Location credentials supplement the base authentication. The
+                // first location key (project binding) is already required;
+                // impersonation can be supplied without making it mandatory.
+                $withLocationAuth = $securities;
+                foreach ($locationKeys as $key) {
+                    $withLocationAuth[$key] = [];
+                }
+                if ($withLocationAuth !== $securities) {
+                    $temp['security'][] = $withLocationAuth;
+                }
             }
 
             $parameterNodes = [];
@@ -962,7 +979,11 @@ class OpenAPI3 extends Format
                 }
 
                 if ($parameter['emitDefault'] && $this->shouldEmitDefaultForSchema($param['default'], $node['schema'])) { // Param has default value
-                    $node['schema']['default'] = $param['default'];
+                    // PHP uses [] for empty maps too; preserve the declared
+                    // object type when serializing its default to JSON.
+                    $node['schema']['default'] = $node['schema']['type'] === 'object' && $param['default'] === []
+                        ? new \stdClass()
+                        : $param['default'];
                 }
 
                 $pathAliases = [$name, ...($param['aliases'] ?? [])];
@@ -1187,21 +1208,7 @@ class OpenAPI3 extends Format
                                 throw new \RuntimeException("Unresolved model '{$type}'. Ensure the model is registered.");
                             }, $rule['type']);
 
-                            if ($rule['array']) {
-                                $items = \array_filter([
-                                    'anyOf' => \array_map(function ($type) {
-                                        return ['$ref' => '#/components/schemas/' . $type];
-                                    }, $rule['type']),
-                                    'discriminator' => $this->getDiscriminator($resolvedModels, '#/components/schemas/'),
-                                ]);
-                            } else {
-                                $items = \array_filter([
-                                    'oneOf' => \array_map(function ($type) {
-                                        return ['$ref' => '#/components/schemas/' . $type];
-                                    }, $rule['type']),
-                                    'discriminator' => $this->getDiscriminator($resolvedModels, '#/components/schemas/'),
-                                ]);
-                            }
+                            $items = $this->getUnion($resolvedModels, '#/components/schemas/', $rule['array'] ? Composition::ANY_OF : Composition::ONE_OF);
                         } else {
                             $items = [
                                 '$ref' => '#/components/schemas/' . $rule['type'],

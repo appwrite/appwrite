@@ -52,10 +52,8 @@ use Utopia\Domains\Domain;
 use Utopia\Http\Http;
 use Utopia\Locale\Locale;
 use Utopia\Lock\Distributed as DistributedLock;
-use Utopia\Logger\Log;
-use Utopia\Logger\Logger;
 use Utopia\Pools\Group;
-use Utopia\Queue\Publisher;
+use Utopia\Queue\Publisher\Synchronous as Publisher;
 use Utopia\Queue\Queue;
 use Utopia\Storage\Device;
 use Utopia\System\System;
@@ -72,20 +70,15 @@ use Utopia\Validator\WhiteList;
 return function (Container $context): void {
     $context->set('utopia:graphql', fn ($utopia) => $utopia, ['utopia']);
 
-    $context->set('log', fn () => new Log(), []);
-
-    $context->set('logger', fn ($register) => $register->get('logger'), ['register']);
-
-    $context->set('lock', function (Group $pools, Telemetry $telemetry, ?Logger $logger, Document $project): Lock {
+    $context->set('lock', function (Group $pools, Telemetry $telemetry, Document $project): Lock {
         return new Lock(
             fn (string $key, int $ttl, Closure $callback): mixed => $pools->get('lock')->use(
                 fn (\Redis $redis): mixed => $callback(new DistributedLock($redis, $key, $ttl))
             ),
             $telemetry,
-            $logger,
             $project
         );
-    }, ['pools', 'telemetry', 'logger', 'project']);
+    }, ['pools', 'telemetry', 'project']);
 
     $context->set('authorization', fn () => new Authorization(), []);
 
@@ -213,15 +206,10 @@ return function (Container $context): void {
     ), ['publisher']);
     // Builds a Deployments bound to a given project — webhook handlers resolve
     // their tenant projects mid-request, after this container is initialized.
-    $context->set('deploymentsFactory', function (Jobs $jobs, array $platform, Telemetry $telemetry) {
-        return fn (Database $dbForProject, Document $project): Deployments => new Deployments(
-            $jobs,
-            $dbForProject,
-            $project,
-            $platform,
-            new Device\Telemetry($telemetry, getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId())),
-        );
-    }, ['jobs', 'platform', 'telemetry']);
+    $context->set('deploymentsFactory', function (Jobs $jobs, array $platform) {
+        return fn (Database $dbForProject, Document $project): Deployments => new Deployments($jobs, $dbForProject, $project, $platform);
+    }, ['jobs', 'platform']);
+    $context->set('buildTimeout', fn () => (int) System::getEnv('_APP_COMPUTE_BUILD_TIMEOUT', 900));
     $context->set('deployments', fn (callable $deploymentsFactory, Database $dbForProject, Document $project) => $deploymentsFactory($dbForProject, $project), ['deploymentsFactory', 'dbForProject', 'project']);
     $context->set('eventProcessor', fn () => new EventProcessor(), []);
     $context->set('databaseFactory', fn (Group $pools, Cache $cache, Authorization $authorization) => new DatabaseFactory(
@@ -256,17 +244,6 @@ return function (Container $context): void {
             );
         };
     }, ['databaseFactory', 'dbForPlatform']);
-
-    $context->set('getLogsDB', function (DatabaseFactory $databaseFactory) {
-
-        return function (?Document $project = null) use ($databaseFactory) {
-            return $databaseFactory->logs(
-                $project,
-                APP_DATABASE_TIMEOUT_MILLISECONDS_API,
-                APP_DATABASE_QUERY_MAX_VALUES
-            );
-        };
-    }, ['databaseFactory']);
 
     /**
      * List of allowed request hostnames for the request.
@@ -634,11 +611,29 @@ return function (Container $context): void {
             $projectId = (string) $request->getQuery('project', '');
         }
 
+        $route = $utopia->match($request)?->route;
+
+        // S3 uses the Appwrite project ID as its SigV4 access key. Header-signed
+        // requests carry the credential scope in Authorization; presigned URLs
+        // carry it in the X-Amz-Credential query parameter.
+        if ($projectId === '' && \in_array('s3', $route?->getGroups() ?? [], true)) {
+            $credential = '';
+            $authorizationHeader = $request->getHeaderLine('authorization', '');
+            if (\preg_match('/Credential=([^\s,]+)/', $authorizationHeader, $matches) === 1) {
+                $credential = $matches[1];
+            } else {
+                $credential = $request->getQuery('X-Amz-Credential', '');
+            }
+
+            if (\is_string($credential)) {
+                $projectId = \explode('/', $credential, 2)[0];
+            }
+        }
+
         // Backwards compatibility for new services, originally project resources
         // These endpoints moved from /v1/projects/:projectId/<resource> to /v1/<resource>
         // When accessed via the old alias path, extract projectId from the URI
         $deprecatedProjectPathPrefix = '/v1/projects/';
-        $route = $utopia->match($request)?->route;
         if (!empty($route)) {
             $isDeprecatedAlias = $projectIdFromPath !== '' &&
                 !\str_starts_with($route->getPath(), $deprecatedProjectPathPrefix);

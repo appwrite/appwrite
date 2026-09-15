@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Users\Http\Users\Scrypt\Modified;
 
 use Appwrite\Auth\Validator\Password;
+use Appwrite\Extend\Exception;
 use Appwrite\Hooks\Hooks;
 use Appwrite\Platform\Action;
 use Appwrite\Platform\Modules\Users\Base;
@@ -11,6 +12,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response;
+use InvalidArgumentException;
 use Utopia\Auth\Hashes\ScryptModified;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -68,10 +70,14 @@ class Create extends Base
     public function action(string $userId, string $email, string $password, string $passwordSalt, string $passwordSaltSeparator, string $passwordSignerKey, ?string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks, array $plan): void
     {
         $scryptModified = new ScryptModified();
-        $scryptModified
-            ->setSalt($passwordSalt)
-            ->setSaltSeparator($passwordSaltSeparator)
-            ->setSignerKey($passwordSignerKey);
+        try {
+            $scryptModified
+                ->setSalt($passwordSalt)
+                ->setSaltSeparator($passwordSaltSeparator)
+                ->setSignerKey($passwordSignerKey);
+        } catch (InvalidArgumentException $e) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $e->getMessage());
+        }
 
         $user = $this->createUser($scryptModified, $userId, $email, $password, null, $name, $project, $dbForProject, $hooks, $plan);
 

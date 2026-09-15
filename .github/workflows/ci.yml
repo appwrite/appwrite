@@ -196,7 +196,7 @@ jobs:
               { name: 'Account',           runner: runner4, functional: true,  processes: null },
               { name: 'Avatars',           runner: runner4, functional: true,  processes: null },
               { name: 'Console',           runner: runner4, functional: true,  processes: null },
-              { name: 'Databases',         runner: runner8, functional: false, processes: 3, documentsdb: true },
+              { name: 'Databases',         runner: runner8, functional: false, processes: 3, documentsdb: true, embedding: true },
               { name: 'TablesDB',          runner: runner8, functional: false, processes: 3 },
               { name: 'Functions',         runner: runner4, functional: false, processes: null },
               { name: 'FunctionsSchedule', runner: runner4, functional: true,  processes: null },
@@ -221,6 +221,7 @@ jobs:
               { name: 'Notifications',     runner: runner4, functional: true,  processes: null },
               { name: 'Migrations',        runner: runner4, functional: true,  processes: 1, documentsdb: true },
               { name: 'Project',           runner: runner4, functional: true,  processes: null },
+              { name: 'Organization',      runner: runner4, functional: true,  processes: null },
               { name: 'Presences',         runner: runner4, functional: true,  processes: null },
             ];
             core.setOutput('services', JSON.stringify(services));
@@ -440,6 +441,11 @@ jobs:
         run: |
           echo "_APP_OPTIONS_ROUTER_PROTECTION=enabled" >> $GITHUB_ENV
 
+          # Exercise empty functions-domain entries through the existing Proxy API tests.
+          if [ "${{ matrix.service.name }}" = "Proxy" ]; then
+            echo "_APP_DOMAIN_FUNCTIONS=functions.localhost," >> $GITHUB_ENV
+          fi
+
           if [ "${{ matrix.database }}" = "MariaDB" ]; then
             COMPOSE_PROFILES=mariadb
             echo "_APP_DB_ADAPTER=mariadb" >> $GITHUB_ENV
@@ -467,6 +473,13 @@ jobs:
           # Gitea runs alongside Appwrite only where VCS tests need it.
           if [ "${{ matrix.service.name }}" = "VCSGitea" ]; then
             COMPOSE_PROFILES="${COMPOSE_PROFILES},gitea"
+          fi
+
+          # The embedding container is resource-heavy and off by default, so start it and
+          # enable the API only for the suites that exercise the embeddings routes.
+          if [ "${{ matrix.service.embedding }}" = "true" ]; then
+            COMPOSE_PROFILES="${COMPOSE_PROFILES},embedding"
+            echo "_APP_EMBEDDING=enabled" >> $GITHUB_ENV
           fi
 
           echo "COMPOSE_PROFILES=${COMPOSE_PROFILES}" >> $GITHUB_ENV
@@ -531,6 +544,18 @@ jobs:
             echo "Waiting for Executor to come online"
             sleep 1
           done
+
+      - name: Test first organization creation
+        if: matrix.service.name == 'Teams'
+        timeout-minutes: 2
+        run: |
+          # Health/version can respond before the platform schema is initialized.
+          while [ "$(docker compose exec -T appwrite curl -s -o /dev/null -w '%{http_code}' -H 'X-Appwrite-Project: console' http://appwrite/v1/account)" != "401" ]; do
+            sleep 1
+          done
+          docker compose exec -T -e _APP_E2E_FRESH_INSTANCE=enabled \
+            -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}" \
+            appwrite test tests/e2e/Services/Teams/TeamsConsoleClientTest.php --filter=testCreateOrganization
 
       - name: Run tests
         timeout-minutes: 15

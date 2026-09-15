@@ -146,6 +146,7 @@ class SDKs extends Action
                 '1.7.x',
                 '1.8.x',
                 '1.9.x',
+                '2.0.x',
                 'latest',
             ])) {
                 throw new \Exception('Unknown version given');

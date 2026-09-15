@@ -29,15 +29,13 @@ class Resend extends OAuth2
     protected array $claims = [];
 
     /**
-     * Resend has no identity-only scope; `emails:send` is the narrowest
-     * scope the authorization server issues. Omitting the scope entirely
-     * would grant `full_access` as well.
+     * Resend has no identity-only scope;
+     * Available are `emails:send` or `full_access`.
+     * Developer can decide which they request with custom scopes.
      *
      * @var array
      */
-    protected array $scopes = [
-        'emails:send',
-    ];
+    protected array $scopes = [];
 
     /**
      * @return string

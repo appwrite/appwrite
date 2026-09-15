@@ -77,7 +77,8 @@ trait Deployment
                     throw new Exception(Exception::PROJECT_NOT_FOUND, 'Repository references non-existent project');
                 }
 
-                $this->beforeCreateGitDeployment($project, $repository, $dbForPlatform, $authorization);
+                $timeout = $this->beforeCreateGitDeployment($project, $repository, $dbForPlatform, $authorization)
+                    ?? (int) System::getEnv('_APP_COMPUTE_BUILD_TIMEOUT', 900);
 
                 try {
                     $dsn = new DSN($project->getAttribute('database'));
@@ -165,7 +166,9 @@ trait Deployment
                 $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
                 $hostname = $platform['consoleHostname'] ?? '';
 
-                $authorizeUrl = $protocol . '://' . $hostname . "/console/git/authorize-contributor?projectId={$projectId}&installationId={$installationId}&repositoryId={$repositoryId}&providerPullRequestId={$providerPullRequestId}";
+                $authorizeUrl = System::getEnv('_APP_CONSOLE_URL_SCHEME', 'legacy') !== 'root'
+                    ? $protocol . '://' . $hostname . "/console/git/authorize-contributor?projectId={$projectId}&installationId={$installationId}&repositoryId={$repositoryId}&providerPullRequestId={$providerPullRequestId}"
+                    : $protocol . '://' . $hostname . "/git/authorize-contributor?projectId={$projectId}&installationId={$installationId}&repositoryId={$repositoryId}&providerPullRequestId={$providerPullRequestId}";
 
                 $action = $isAuthorized ? ['type' => 'logs'] : ['type' => 'authorize', 'url' => $authorizeUrl];
 
@@ -398,6 +401,7 @@ trait Deployment
                     ->createFromVcs(
                         $resource,
                         $deployment,
+                        $timeout,
                         $vcs,
                         $providerRepositoryOwner,
                         $providerRepositoryName,
@@ -565,7 +569,9 @@ trait Deployment
                     }
                     $owner = $vcs->getOwnerName($providerInstallationId, (int) $providerRepositoryId);
 
-                    $providerTargetUrl = $protocol . '://' . $hostname . "/console/project-$region-$projectId/$resourceCollection/$resourceType-$resourceId";
+                    $providerTargetUrl = System::getEnv('_APP_CONSOLE_URL_SCHEME', 'legacy') !== 'root'
+                        ? $protocol . '://' . $hostname . "/console/project-$region-$projectId/$resourceCollection/$resourceType-$resourceId"
+                        : $protocol . '://' . $hostname . "/projects/$projectId/$resourceCollection/$resourceId";
                     $vcs->updateCommitStatus($repositoryName, $providerCommitHash, $owner, 'pending', $message, $providerTargetUrl, $name);
                 }
 
@@ -590,8 +596,10 @@ trait Deployment
         }
     }
 
-    protected function beforeCreateGitDeployment(Document $project, Document $repository, Database $dbForPlatform, Authorization $authorization): void
+    /** Validate the tenant before submission and optionally supply its build budget. */
+    protected function beforeCreateGitDeployment(Document $project, Document $repository, Database $dbForPlatform, Authorization $authorization): ?int
     {
+        return null;
     }
 
 }
