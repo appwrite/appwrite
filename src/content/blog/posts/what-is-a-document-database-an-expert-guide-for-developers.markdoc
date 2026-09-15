@@ -120,7 +120,7 @@ A few document databases dominate real-world usage:
 
 MongoDB consistently ranks as the most popular document database in the [DB-Engines ranking](https://db-engines.com/en/ranking), which tracks database popularity across search, job listings, and community signals.
 
-## How Appwrite implements the document model
+# How Appwrite implements the document model
 
 Appwrite DocumentsDB is a document database that stores data in collections of JSON-like documents. It combines the flexibility of the document model with built-in queries, relationships, permissions, and realtime updates.
 
