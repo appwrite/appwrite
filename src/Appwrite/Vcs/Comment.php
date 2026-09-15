@@ -171,10 +171,10 @@ class Comment
                     $qrImagePathLight = '/images/vcs/qr-light.svg';
                     $qrImagePathDark = '/images/vcs/qr-dark.svg';
 
-                    $consoleUrl = $protocol . '://' . $hostname . '/v1/avatars/qr?text=' . \urlencode($site['previewUrl']);
+                    $qrUrl = $protocol . '://' . $hostname . '/v1/avatars/qr?text=' . \urlencode($site['previewUrl']);
                     $qr = $this->withImages
-                        ? '[' . $this->generatImage($qrImagePathLight, $qrImagePathDark, 'QR Code', 28) . '](' . $consoleUrl . ')'
-                        : '[QR Code](' . $consoleUrl . ')';
+                        ? '[' . $this->generatImage($qrImagePathLight, $qrImagePathDark, 'QR Code', 28) . '](' . $qrUrl . ')'
+                        : '[QR Code](' . $qrUrl . ')';
 
                     $preview = '[Preview URL](' . $site['previewUrl'] . ')';
 
