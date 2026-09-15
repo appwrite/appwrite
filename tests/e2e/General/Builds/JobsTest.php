@@ -237,6 +237,34 @@ final class JobsTest extends TestCase
         }
     }
 
+    #[\PHPUnit\Framework\Attributes\DataProvider('resources')]
+    public function testCompleteRecreatedDuringStatusUpdate(string $collection): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $resource = $this->resource($collection);
+        $deployment = $this->deployment($resource);
+        $this->cache->save('jobs-exit-' . $deployment->getId(), true);
+        $this->cache->save('jobs-manifest-' . $deployment->getId(), ['files' => []]);
+        $replacement = null;
+        $this->database->on(Database::EVENT_DOCUMENTS_UPDATE, 'replace-owner', function (string $event, Document $updated) use ($resource, &$replacement): void {
+            if ($updated->getCollection() !== 'deployments') {
+                return;
+            }
+            $this->database->on(Database::EVENT_DOCUMENTS_UPDATE, 'replace-owner', null);
+            $replacement = $this->replace($resource);
+        });
+
+        $this->enqueue($deployment, 'complete');
+        $this->runWorker();
+
+        $this->assertInstanceOf(Document::class, $replacement);
+        $this->assertReplacement($replacement);
+        $this->assertSame([], $this->realtime->payloads);
+        $this->assertNoEvents();
+    }
+
     private function project(): Document
     {
         return new Document(['$id' => 'console', '$sequence' => '0', 'region' => 'default']);

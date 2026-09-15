@@ -555,6 +555,10 @@ class Jobs extends Action
             Query::notEqual('status', 'canceled'),
         ]);
         $deployment = $dbForProject->getDocument('deployments', $deployment->getId());
+        $resource = $dbForProject->getDocument($collection, $resource->getId());
+        if (! Deployments::belongsTo($deployment, $resource)) {
+            return $deployment;
+        }
 
         // latestDeployment* must be written before activate(). activate() sets
         // deploymentId then walks platform rules; under parallel Sites e2e that
@@ -566,6 +570,11 @@ class Jobs extends Action
 
         if ($applied > 0 && $success && $deployment->getAttribute('activate') === true && ! $resource->isEmpty()) {
             $this->activate($dbForProject, $dbForPlatform, $project, $resource, $deployment, $bus);
+        }
+
+        $resource = $dbForProject->getDocument($collection, $resource->getId());
+        if (! Deployments::belongsTo($deployment, $resource)) {
+            return $deployment;
         }
 
         if ($applied > 0 && $success && $collection === 'sites' && ! $resource->isEmpty()) {
@@ -676,12 +685,22 @@ class Jobs extends Action
      */
     protected function activate(Database $dbForProject, Database $dbForPlatform, Document $project, Document $resource, Document $deployment, Bus $bus): void
     {
-        $resource = $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), new Document([
+        $dbForProject->updateDocuments($resource->getCollection(), new Document([
             'live' => true,
             'deploymentId' => $deployment->getId(),
             'deploymentInternalId' => $deployment->getSequence(),
             'deploymentCreatedAt' => $deployment->getCreatedAt(),
-        ]));
+        ]), [
+            Query::equal('$id', [$resource->getId()]),
+            Query::equal('$sequence', [$resource->getSequence()]),
+        ]);
+        $current = $dbForProject->findOne($resource->getCollection(), [
+            Query::equal('$id', [$resource->getId()]),
+            Query::equal('$sequence', [$resource->getSequence()]),
+        ]);
+        if (! Deployments::belongsTo($deployment, $current)) {
+            return;
+        }
 
         $branch = $deployment->getAttribute('providerBranch', '');
         $branches = $branch === '' ? [''] : ['', $branch];
@@ -720,12 +739,15 @@ class Jobs extends Action
             return;
         }
 
-        $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), new Document([
+        $dbForProject->updateDocuments($resource->getCollection(), new Document([
             'latestDeploymentId' => $latest->getId(),
             'latestDeploymentInternalId' => $latest->getSequence(),
             'latestDeploymentCreatedAt' => $latest->getCreatedAt(),
             'latestDeploymentStatus' => $latest->getAttribute('status', ''),
-        ]));
+        ]), [
+            Query::equal('$id', [$resource->getId()]),
+            Query::equal('$sequence', [$resource->getSequence()]),
+        ]);
     }
 
     /**
