@@ -99,7 +99,7 @@ Reach for a document database when flexibility and iteration speed matter more t
 
 Common real-world use cases include content management systems, user profiles, product catalogs, real-time chat, event logging, and IoT data streams.
 
-## When a relational database is the better choice
+# When a relational database is the better choice
 
 Being direct about the trade-offs matters more than defending one model. A document database is the wrong default when:
 
