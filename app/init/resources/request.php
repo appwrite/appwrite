@@ -209,6 +209,7 @@ return function (Container $context): void {
     $context->set('deploymentsFactory', function (Jobs $jobs, array $platform) {
         return fn (Database $dbForProject, Document $project): Deployments => new Deployments($jobs, $dbForProject, $project, $platform);
     }, ['jobs', 'platform']);
+    $context->set('buildTimeout', fn () => (int) System::getEnv('_APP_COMPUTE_BUILD_TIMEOUT', 900));
     $context->set('deployments', fn (callable $deploymentsFactory, Database $dbForProject, Document $project) => $deploymentsFactory($dbForProject, $project), ['deploymentsFactory', 'dbForProject', 'project']);
     $context->set('eventProcessor', fn () => new EventProcessor(), []);
     $context->set('databaseFactory', fn (Group $pools, Cache $cache, Authorization $authorization) => new DatabaseFactory(
@@ -243,17 +244,6 @@ return function (Container $context): void {
             );
         };
     }, ['databaseFactory', 'dbForPlatform']);
-
-    $context->set('getLogsDB', function (DatabaseFactory $databaseFactory) {
-
-        return function (?Document $project = null) use ($databaseFactory) {
-            return $databaseFactory->logs(
-                $project,
-                APP_DATABASE_TIMEOUT_MILLISECONDS_API,
-                APP_DATABASE_QUERY_MAX_VALUES
-            );
-        };
-    }, ['databaseFactory']);
 
     /**
      * List of allowed request hostnames for the request.
