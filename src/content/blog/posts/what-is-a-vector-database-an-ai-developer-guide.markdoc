@@ -69,7 +69,7 @@ ANN relies on specialized indexes rather than the B-trees relational databases u
 
 If you want the underlying theory, the original [HNSW paper](https://arxiv.org/abs/1603.09320) is the standard reference. In practice you rarely tune these by hand, but knowing the trade-off helps: higher recall costs more memory and latency, and every vector database exposes knobs to balance the two.
 
-## How a vector database differs from a traditional database
+# How a vector database differs from a traditional database
 
 The core difference is what "match" means. A **traditional database** matches exact values or ranges. A **vector database** matches by proximity in vector space. That single distinction drives the rest of the trade-offs.
 
