@@ -298,18 +298,6 @@ class Update extends Action
                     }
 
                 });
-
-                $transaction = $authorization->skip(fn () => $dbForProject->updateDocument(
-                    'transactions',
-                    $transactionId,
-                    new Document(['status' => 'committed'])
-                ));
-
-                $publisherForDeletes->enqueue(new DeleteMessage(
-                    project: $project,
-                    type: DELETE_TYPE_DOCUMENT,
-                    document: $transaction,
-                ));
             } catch (NotFoundException $e) {
                 $authorization->skip(fn () => $dbForProject->updateDocument('transactions', $transactionId, new Document([
                     'status' => 'failed',
@@ -352,11 +340,28 @@ class Update extends Action
                 ])));
                 throw new Exception(Exception::USER_UNAUTHORIZED, previous: $e);
             } catch (\Throwable $e) {
+                // Never leave a transaction stuck in 'committing'. The staged writes
+                // already rolled back with the DB transaction above; reset the status
+                // document (which lives outside that transaction) before rethrowing.
                 $authorization->skip(fn () => $dbForProject->updateDocument('transactions', $transactionId, new Document([
                     'status' => 'failed',
                 ])));
                 throw $e;
             }
+
+            // The tenant writes are now durably committed. Everything past this point is
+            // post-commit bookkeeping and must never flip the status back to failed.
+            $transaction = $authorization->skip(fn () => $dbForProject->updateDocument(
+                'transactions',
+                $transactionId,
+                new Document(['status' => 'committed'])
+            ));
+
+            $publisherForDeletes->enqueue(new DeleteMessage(
+                project: $project,
+                type: DELETE_TYPE_DOCUMENT,
+                document: $transaction,
+            ));
 
             foreach ($databaseOperations as $databaseInternalId => $count) {
                 $database = $authorization->skip(fn () => $dbForProject->skipFilters(
