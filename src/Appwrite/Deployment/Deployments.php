@@ -65,6 +65,18 @@ readonly class Deployments
     ) {
     }
 
+    public static function belongsTo(Document $deployment, Document $resource): bool
+    {
+        // Public IDs can be reused after deletion; the persisted sequence binds
+        // a deployment to the resource that actually created it.
+        return $resource->getId() !== ''
+            && $resource->getSequence() !== null
+            && $resource->getSequence() !== ''
+            && $deployment->getAttribute('resourceId') === $resource->getId()
+            && $deployment->getAttribute('resourceType') === $resource->getCollection()
+            && (string) $deployment->getAttribute('resourceInternalId', '') === $resource->getSequence();
+    }
+
     /**
      * Saves chunked-upload progress onto the deployment — source path/size,
      * chunk counters, metadata. Never triggers a build; call createFromUpload()

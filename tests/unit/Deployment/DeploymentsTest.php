@@ -6,12 +6,36 @@ namespace Tests\Unit\Deployment;
 
 use Appwrite\Deployment\Deployments;
 use Appwrite\Extend\Exception;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Utopia\Config\Config;
 use Utopia\Database\Document;
 
 final class DeploymentsTest extends TestCase
 {
+    #[DataProvider('ownership')]
+    public function testDeploymentOwnership(array $deployment, array $resource, bool $expected): void
+    {
+        $this->assertSame($expected, Deployments::belongsTo(new Document($deployment), new Document($resource)));
+    }
+
+    public static function ownership(): \Iterator
+    {
+        foreach (['functions', 'sites'] as $type) {
+            $resource = ['$id' => 'resource', '$sequence' => '7', '$collection' => $type];
+            $deployment = ['resourceId' => 'resource', 'resourceInternalId' => '7', 'resourceType' => $type];
+
+            yield "$type current resource" => [$deployment, $resource, true];
+            yield "$type numeric legacy sequence" => [array_replace($deployment, ['resourceInternalId' => 7]), $resource, true];
+            yield "$type recreated resource" => [$deployment, array_replace($resource, ['$sequence' => '8']), false];
+            yield "$type other public ID" => [$deployment, array_replace($resource, ['$id' => 'other']), false];
+            yield "$type other collection" => [$deployment, array_replace($resource, ['$collection' => $type === 'sites' ? 'functions' : 'sites']), false];
+            yield "$type unsaved resource" => [$deployment, ['$id' => 'resource', '$collection' => $type], false];
+            yield "$type missing resource" => [$deployment, [], false];
+            yield "$type missing deployment owner" => [array_diff_key($deployment, ['resourceInternalId' => true]), $resource, false];
+        }
+    }
+
     public function testSiteCommandIncludesFrameworkAndDeploymentCommands(): void
     {
         Config::setParam('frameworks', [

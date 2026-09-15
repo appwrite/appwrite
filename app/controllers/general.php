@@ -318,7 +318,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
             $request->getHeaders()
         );
 
-        if ($resource->isEmpty() || !$resource->getAttribute('enabled')) {
+        if ($resource->isEmpty() || !$resource->getAttribute('enabled') || !Deployments::belongsTo($deployment, $resource)) {
             if ($type === 'function') {
                 throw new AppwriteException(AppwriteException::FUNCTION_NOT_FOUND, view: $errorView);
             } else {
