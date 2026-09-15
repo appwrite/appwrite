@@ -128,6 +128,7 @@ final class ResponseTest extends TestCase
         ]), Response::MODEL_PROJECT);
 
         $project['wafEnabled'] = false;
+        $project['devKeys'] = [];
 
         $provider = $this->response->output(new Document([
             'credentials' => [],
