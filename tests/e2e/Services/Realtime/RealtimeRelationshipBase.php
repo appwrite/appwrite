@@ -259,4 +259,21 @@ trait RealtimeRelationshipBase
             $socket->close();
         }
     }
+
+    public function testRestrictedRelationshipDeleteRealtime(): void
+    {
+        $fixture = $this->createRelationshipRecords('oneToMany', onDelete: 'restrict');
+        $socket = $this->subscribeToRelationshipRecord($fixture, 'child');
+        try {
+            // Test for FAILURE: a rejected delete leaves both the relationship and realtime stream unchanged.
+            $deleted = $this->client->call(Client::METHOD_DELETE, $fixture['parent']['path'], $fixture['headers']);
+            $this->assertSame(403, $deleted['headers']['status-code']);
+            $this->assertSame('document_delete_restricted', $deleted['body']['type']);
+            $this->assertNoRelationshipEvent($socket);
+            $child = $this->client->call(Client::METHOD_GET, $fixture['child']['path'], $fixture['headers']);
+            $this->assertSame($fixture['parent']['id'], $child['body']['parents']['$id']);
+        } finally {
+            $socket->close();
+        }
+    }
 }
