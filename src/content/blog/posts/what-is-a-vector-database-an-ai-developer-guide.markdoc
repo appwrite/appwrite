@@ -25,7 +25,7 @@ Traditional databases are built to answer one kind of question: does this value 
 
 AI applications ask that fuzzier question constantly. A **vector database** exists to answer it. Instead of matching exact values, it finds items by meaning. This guide explains what a vector database is, how embeddings and similarity search work, where it fits in an AI stack, the trade-offs to weigh, and how to choose one.
 
-## What is a vector database?
+# What is a vector database?
 
 A **vector database** is a database built to store **embeddings**, which are numerical representations of data, and to run **similarity search** across them. Rather than returning rows that match a value exactly, it returns the items whose meaning is closest to your query.
 
