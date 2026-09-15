@@ -19,8 +19,6 @@ faqs:
   - question: When should I use a dedicated vector database?
     answer: Use a dedicated vector database when your application needs low-latency similarity search across a large number of embeddings or requires advanced indexing, filtering, scaling, and retrieval features.
 ---
-# What is a vector database? An AI developer guide
-
 Traditional databases are built to answer one kind of question: does this value exactly match that value? That works when you are looking up a user by ID or filtering orders by status. It falls apart the moment you ask a fuzzier question, like "which support articles are about this problem" or "which products feel similar to this one."
 
 AI applications ask that fuzzier question constantly. A **vector database** exists to answer it. Instead of matching exact values, it finds items by meaning. This guide explains what a vector database is, how embeddings and similarity search work, where it fits in an AI stack, the trade-offs to weigh, and how to choose one.
