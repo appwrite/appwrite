@@ -114,6 +114,7 @@ final class ProjectConsoleClientTest extends Scope
         $this->assertIsArray($response['body']['labels']);
         $this->assertSame(0, $response['body']['pingCount']);
         $this->assertSame('', $response['body']['pingedAt']);
+        $this->assertSame('', $response['body']['mcpLastAccessAt']);
 
         // Ensure old flattened fields are not present
         $this->assertArrayNotHasKey('description', $response['body']);

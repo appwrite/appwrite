@@ -332,6 +332,17 @@ $platformCollections = [
                 'filters' => ['datetime'],
             ],
             [
+                '$id' => ID::custom('mcpLastAccessAt'),
+                'type' => Database::VAR_DATETIME,
+                'format' => '',
+                'size' => 0,
+                'signed' => false,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => ['datetime'],
+            ],
+            [
                 '$id' => ID::custom('labels'),
                 'type' => Database::VAR_STRING,
                 'format' => '',

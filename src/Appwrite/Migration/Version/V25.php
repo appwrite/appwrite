@@ -72,6 +72,12 @@ class V25 extends Migration
                         } catch (Throwable $th) {
                             Console::warning("Failed to create index \"_key_accessedAt\" from {$id}: {$th->getMessage()}");
                         }
+
+                        try {
+                            $this->createAttributeFromCollection($this->dbForProject, $id, 'mcpLastAccessAt');
+                        } catch (Throwable $th) {
+                            Console::warning("Failed to create attribute \"mcpLastAccessAt\" in collection {$id}: {$th->getMessage()}");
+                        }
                     }
                     $this->dbForProject->purgeCachedCollection($id);
                     break;

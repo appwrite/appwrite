@@ -409,6 +409,30 @@ Http::init()
                     target: 'projects'
                 );
             }
+
+            $sdkName = \strtolower($request->getHeaderLine('x-sdk-name', ''));
+            $mcpLastAccessAt = $project->getAttribute('mcpLastAccessAt', '');
+            if (
+                $mode !== APP_MODE_ADMIN
+                && $sdkName === 'mcp'
+                && (
+                    empty($mcpLastAccessAt)
+                    || DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_MCP_ACCESS)) > $mcpLastAccessAt
+                )
+            ) {
+                $lock->tryWithKey(
+                    'lock:platform:projects:'.$project->getId().':mcpLastAccessAt',
+                    fn () => $authorization->skip(fn () => $dbForPlatform->skipFilters(
+                        fn () => $dbForPlatform->updateDocument(
+                            'projects',
+                            $project->getId(),
+                            new Document(['mcpLastAccessAt' => DateTime::now()])
+                        ),
+                        APP_PROJECTS_SUBQUERIES
+                    )),
+                    target: 'projects'
+                );
+            }
         }
 
         if (! empty($user->getId())) {
