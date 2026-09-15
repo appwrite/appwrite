@@ -310,7 +310,7 @@ final class JobsTest extends TestCase
         }
     }
 
-    public function testCompleteReassignedManualRule(): void
+    public function testCompleteRecreatedManualRule(): void
     {
         /**
          * Test for SUCCESS
@@ -463,6 +463,62 @@ final class JobsTest extends TestCase
         yield 'reused public ID' => [['resourceInternalId' => '900']];
         yield 'other resource ID' => [['resourceId' => 'another-function']];
         yield 'other resource type' => [['resourceType' => 'execution']];
+    }
+
+    #[\PHPUnit\Framework\Attributes\DataProvider('unavailableDeployments')]
+    public function testCallbackForUnavailableDeployment(bool $deleted): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $resource = $this->resource('functions');
+        $deployment = $this->deployment($resource, ['status' => 'canceled']);
+        if ($deleted) {
+            $this->database->deleteDocument('deployments', $deployment->getId());
+        }
+
+        $this->enqueue($deployment, 'exit', ['exitCode' => 1]);
+        $this->runWorker();
+
+        $current = $this->database->getDocument('deployments', $deployment->getId());
+        $this->assertSame($deleted, $current->isEmpty());
+        if (! $deleted) {
+            $this->assertSame('canceled', $current->getAttribute('status'));
+        }
+        $this->assertEmpty($this->database->getDocument('functions', $resource->getId())->getAttribute('deploymentId'));
+        $this->assertSame([], $this->realtime->payloads);
+        $this->assertNoEvents();
+    }
+
+    public static function unavailableDeployments(): \Iterator
+    {
+        yield 'canceled' => [false];
+        yield 'deleted' => [true];
+    }
+
+    #[\PHPUnit\Framework\Attributes\DataProvider('currentCallbacks')]
+    public function testCallbackForCurrentOwner(string $event, array $data, string $status): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $resource = $this->resource('functions');
+        $deployment = $this->deployment($resource, ['status' => 'waiting']);
+
+        $this->enqueue($deployment, $event, $data);
+        $this->runWorker();
+
+        $current = $this->database->getDocument('deployments', $deployment->getId());
+        $this->assertSame($status, $current->getAttribute('status'));
+        $this->assertNotEmpty($current->getAttribute('buildLogs'));
+        $this->assertCount(1, $this->realtime->payloads);
+        $this->assertSame($status, $this->realtime->payloads[0]['status']);
+    }
+
+    public static function currentCallbacks(): \Iterator
+    {
+        yield 'log' => ['log', ['lines' => ['current output']], 'building'];
+        yield 'failed exit' => ['exit', ['exitCode' => 1], 'failed'];
     }
 
     private function project(): Document
