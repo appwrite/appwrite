@@ -1,13 +1,11 @@
 'use client'
 
 import * as React from 'react'
-import { format } from 'date-fns'
 import { Calendar as CalendarIcon, ChevronDown } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
-import { Input } from '@/components/ui/input'
 import {
   Popover,
   PopoverContent,
@@ -15,10 +13,18 @@ import {
 } from '@/components/ui/popover'
 import { useT } from '@/lib/i18n/translate'
 import { useLocalizedDateFormat } from '@/lib/i18n/use-localized-date-format'
+import type { HourMinute } from '@/lib/time-segments'
+import { DateTimePickerTimeFields } from './DateTimePickerTimeFields'
 
 export interface DateTimePickerProps {
   /** ISO string or null/empty for unset */
   value: string | null | undefined
+  /**
+   * Receives an ISO string or null. Fires once per accepted keystroke, day
+   * pick or Clear (including intermediate values like 01:00 before 15:00);
+   * never on focus, blur, open or close. Parents must not run side effects
+   * on change.
+   */
   onChange: (value: string | null) => void
   disabled?: boolean
   placeholder?: string
@@ -58,12 +64,14 @@ function clampToBounds(next: Date, min: Date | null, max: Date | null): Date {
   return new Date(time)
 }
 
-function digitsOnly(value: string, maxLength: number): string {
-  return value.replace(/\D/g, '').slice(0, maxLength)
-}
-
-function pad2(value: number): string {
-  return String(value).padStart(2, '0')
+/**
+ * Local wall clock on `base`'s local day. setHours resolves DST like the Date
+ * constructor (gap forward, overlap earlier) without remapping years 0-99.
+ */
+function withLocalTime(base: Date, { hour, minute }: HourMinute): Date {
+  const next = new Date(base)
+  next.setHours(hour, minute, 0, 0)
+  return next
 }
 
 export function DateTimePicker({
@@ -87,23 +95,18 @@ export function DateTimePicker({
   const t = useT()
   const { formatDate } = useLocalizedDateFormat()
   const [open, setOpen] = React.useState(false)
+  const [openedByKeyboard, setOpenedByKeyboard] = React.useState(false)
+  const keyboardActivationRef = React.useRef(false)
+  const timeLabelId = React.useId()
   const date = React.useMemo(() => parseISO(value), [value])
   const minDate = React.useMemo(() => parseISO(min), [min])
   const maxDate = React.useMemo(() => parseISO(max), [max])
-  const hourRef = React.useRef<HTMLInputElement>(null)
-  const minuteRef = React.useRef<HTMLInputElement>(null)
-  const [hourStr, setHourStr] = React.useState(() =>
-    date ? format(date, 'HH') : '',
-  )
-  const [minuteStr, setMinuteStr] = React.useState(() =>
-    date ? format(date, 'mm') : '',
-  )
+  // Latest emitted instant, so consecutive keystrokes build on each other
+  // before the parent re-renders with the new value.
+  const latestDateRef = React.useRef<Date | null>(date)
 
-  React.useEffect(() => {
-    const active = document.activeElement
-    if (active === hourRef.current || active === minuteRef.current) return
-    setHourStr(date ? format(date, 'HH') : '')
-    setMinuteStr(date ? format(date, 'mm') : '')
+  React.useLayoutEffect(() => {
+    latestDateRef.current = date
   }, [date])
 
   const formatted = date ? formatDate(date, "MMM d, yyyy '·' HH:mm") : ''
@@ -114,57 +117,34 @@ export function DateTimePicker({
     return matchers.length > 0 ? matchers : undefined
   }, [minDate, maxDate])
 
-  function commit(next: Date) {
-    onChange(clampToBounds(next, minDate, maxDate).toISOString())
+  function emit(next: Date): Date {
+    const clamped = clampToBounds(next, minDate, maxDate)
+    latestDateRef.current = clamped
+    onChange(clamped.toISOString())
+    return clamped
   }
 
-  function mergeTime(base: Date, hourValue: string, minuteValue: string): Date {
-    const hour = Math.min(23, Math.max(0, parseInt(hourValue, 10) || 0))
-    const minute = Math.min(59, Math.max(0, parseInt(minuteValue, 10) || 0))
-    const merged = new Date(base)
-    merged.setHours(hour, minute, 0, 0)
-    return merged
+  function handleTimeChange(time: HourMinute): HourMinute {
+    const applied = emit(
+      withLocalTime(latestDateRef.current ?? new Date(), time),
+    )
+    return { hour: applied.getHours(), minute: applied.getMinutes() }
   }
 
-  function handleSelectDate(next: Date | undefined) {
-    if (!next) return
-    commit(mergeTime(next, hourStr || '0', minuteStr || '0'))
+  function resolveWallClock(time: HourMinute): HourMinute {
+    const resolved = withLocalTime(latestDateRef.current ?? new Date(), time)
+    return { hour: resolved.getHours(), minute: resolved.getMinutes() }
   }
 
-  function commitTimeFields(nextHour: string, nextMinute: string) {
-    const base = date ?? new Date()
-    commit(mergeTime(base, nextHour || '0', nextMinute || '0'))
-  }
-
-  function handleHourChange(raw: string) {
-    const next = digitsOnly(raw, 2)
-    setHourStr(next)
-    if (next.length === 2) {
-      commitTimeFields(next, minuteStr || '0')
-      minuteRef.current?.focus()
-      minuteRef.current?.select()
-    }
-  }
-
-  function handleMinuteChange(raw: string) {
-    const next = digitsOnly(raw, 2)
-    setMinuteStr(next)
-    if (next.length === 2) {
-      commitTimeFields(hourStr || '0', next)
-    }
-  }
-
-  function handleHourBlur() {
-    const normalized = hourStr === '' ? '00' : pad2(Math.min(23, parseInt(hourStr, 10) || 0))
-    setHourStr(normalized)
-    commitTimeFields(normalized, minuteStr || '00')
-  }
-
-  function handleMinuteBlur() {
-    const normalized =
-      minuteStr === '' ? '00' : pad2(Math.min(59, parseInt(minuteStr, 10) || 0))
-    setMinuteStr(normalized)
-    commitTimeFields(hourStr || '00', normalized)
+  function handleSelectDate(day: Date | undefined) {
+    if (!day) return
+    const current = latestDateRef.current
+    emit(
+      withLocalTime(day, {
+        hour: current?.getHours() ?? 0,
+        minute: current?.getMinutes() ?? 0,
+      }),
+    )
   }
 
   function handleClear() {
@@ -183,6 +163,16 @@ export function DateTimePicker({
           disabled={disabled}
           autoFocus={autoFocus}
           onFocus={onFocus}
+          // Not event.detail: clicks forwarded from a <label> also report 0.
+          onKeyDown={(event) => {
+            keyboardActivationRef.current =
+              event.key === 'Enter' || event.key === ' '
+          }}
+          // Runs before Radix toggles.
+          onClick={() => {
+            setOpenedByKeyboard(keyboardActivationRef.current)
+            keyboardActivationRef.current = false
+          }}
           aria-label={ariaLabel ? t(ariaLabel) : undefined}
           className={cn(
             'w-full cursor-pointer justify-start gap-2 text-start font-normal',
@@ -204,7 +194,15 @@ export function DateTimePicker({
         align={align}
         sideOffset={4}
         className="w-auto overflow-hidden rounded-xl p-0 shadow-lg"
-        onOpenAutoFocus={(event) => event.preventDefault()}
+        onOpenAutoFocus={(event) => {
+          event.preventDefault()
+          // Not on mount: a surrounding Sheet's focus trap pauses only once this scope mounts.
+          if (openedByKeyboard) {
+            ;(event.currentTarget as HTMLElement)
+              .querySelector<HTMLInputElement>('[role="spinbutton"]')
+              ?.focus({ preventScroll: true })
+          }
+        }}
       >
         <div className="p-3">
           <Calendar
@@ -217,42 +215,21 @@ export function DateTimePicker({
         </div>
         <div className="flex items-center justify-between gap-2 border-t border-border bg-muted/30 p-3">
           <div className="flex items-center gap-2">
-            <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+            <span
+              id={timeLabelId}
+              className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground"
+            >
               {t('Time')}
             </span>
-            <div className="flex items-center gap-1">
-              <Input
-                ref={hourRef}
-                type="text"
-                inputMode="numeric"
-                autoComplete="off"
-                maxLength={2}
-                value={hourStr}
-                onChange={(event) => handleHourChange(event.target.value)}
-                onBlur={handleHourBlur}
-                onPointerDown={(event) => event.stopPropagation()}
-                disabled={disabled}
-                aria-label={t('Hours')}
-                placeholder="HH"
-                className="h-7 w-11 px-1 text-center text-[12px] tabular-nums"
-              />
-              <span className="text-[13px] text-muted-foreground">:</span>
-              <Input
-                ref={minuteRef}
-                type="text"
-                inputMode="numeric"
-                autoComplete="off"
-                maxLength={2}
-                value={minuteStr}
-                onChange={(event) => handleMinuteChange(event.target.value)}
-                onBlur={handleMinuteBlur}
-                onPointerDown={(event) => event.stopPropagation()}
-                disabled={disabled}
-                aria-label={t('Minutes')}
-                placeholder="mm"
-                className="h-7 w-11 px-1 text-center text-[12px] tabular-nums"
-              />
-            </div>
+            <DateTimePickerTimeFields
+              hour={date ? date.getHours() : null}
+              minute={date ? date.getMinutes() : null}
+              disabled={disabled}
+              onChange={handleTimeChange}
+              resolve={resolveWallClock}
+              onConfirm={() => setOpen(false)}
+              aria-labelledby={timeLabelId}
+            />
           </div>
           <div className="flex items-center gap-2">
             {clearable && date && (

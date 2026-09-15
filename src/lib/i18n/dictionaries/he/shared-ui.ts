@@ -1271,4 +1271,5 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Operator account': 'חשבון אופרטור',
   'After you confirm, the Console will open this page.':
     'אחרי שתאשרו, המסוף ייפתח בעמוד הזה.',
+  'Not set': 'לא הוגדר',
 }

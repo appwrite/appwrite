@@ -1230,4 +1230,5 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Operator account': 'オペレーターアカウント',
   'After you confirm, the Console will open this page.':
     '確認後、コンソールはこのページを開きます。',
+  'Not set': '未設定',
 }
