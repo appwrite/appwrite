@@ -6,12 +6,66 @@ namespace Tests\Unit\Deployment;
 
 use Appwrite\Deployment\Deployments;
 use Appwrite\Extend\Exception;
+use OpenRuntimes\Orchestrator\Jobs;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Psr\Http\Client\ClientInterface;
+use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ResponseInterface;
 use Utopia\Config\Config;
+use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Psr7\Response;
+use Utopia\Psr7\Stream;
+use Utopia\VCS\Adapter\Git\GitHub;
 
 final class DeploymentsTest extends TestCase
 {
+    public static function sources(): \Iterator
+    {
+        yield 'archive subdirectory' => [true, 'functions/api'];
+        yield 'archive root' => [true, ''];
+        yield 'clone subdirectory' => [false, 'functions/api'];
+        yield 'clone root' => [false, ''];
+    }
+
+    #[DataProvider('sources')]
+    public function testCreateVcsDeploymentPersistsSourceRoot(bool $archives, string $root): void
+    {
+        $previousKey = \getenv('_APP_OPENSSL_KEY_V1');
+        \putenv('_APP_OPENSSL_KEY_V1=unit-test-key');
+
+        try {
+            $database = new VcsDeploymentDatabase();
+            $client = new VcsBuildClient();
+            $deployments = new Deployments(new Jobs($client), $database, new Document(['$id' => 'project', 'region' => 'default']), ['apiHostname' => 'localhost']);
+
+            $deployment = $deployments->createFromVcs(
+                new Document([
+                    '$id' => 'function',
+                    '$collection' => 'functions',
+                    'runtime' => \array_key_first(Config::getParam('runtimes-v2')),
+                    'providerRootDirectory' => 'changed/function/setting',
+                ]),
+                new Document(['$id' => 'deployment', 'buildCommands' => 'npm ci']),
+                900,
+                new VcsRepository($archives),
+                'owner',
+                'repository',
+                'commit',
+                $root,
+            );
+
+            $this->assertSame('waiting', $deployment->getAttribute('status'));
+            $this->assertSame($root, $database->getDocument('deployments', 'deployment')->getAttribute('providerRootDirectory'));
+            $this->assertSame($root, $client->payload['environment']['APPWRITE_VCS_ROOT_DIRECTORY']);
+            $artifacts = \array_column($client->payload['artifacts'], null, 'id');
+            $this->assertSame($root, $artifacts[$archives ? 'extract' : 'source']['subdir'] ?? '');
+        } finally {
+            \putenv($previousKey === false ? '_APP_OPENSSL_KEY_V1' : '_APP_OPENSSL_KEY_V1=' . $previousKey);
+        }
+    }
+
     public function testSiteCommandIncludesFrameworkAndDeploymentCommands(): void
     {
         Config::setParam('frameworks', [
@@ -181,5 +235,68 @@ final readonly class ExposedDeployments extends Deployments
     public static function submitPayload(Document $project, Document $resource, Document $deployment, array $platform): array
     {
         return static::payload($project, $resource, $deployment, $platform, 137);
+    }
+}
+
+final class VcsDeploymentDatabase extends Database
+{
+    private Document $deployment;
+
+    public function __construct()
+    {
+    }
+
+    public function createDocument(string $collection, Document $document): Document
+    {
+        $this->deployment = clone $document;
+        $this->deployment->setAttribute('$sequence', '1');
+
+        return clone $this->deployment;
+    }
+
+    public function updateDocuments(string $collection, Document $updates, array $queries = [], int $batchSize = self::INSERT_BATCH_SIZE, ?callable $onNext = null, ?callable $onError = null): int
+    {
+        $this->deployment->setAttributes($updates->getArrayCopy());
+
+        return 1;
+    }
+
+    public function getDocument(string $collection, string $id, array $queries = [], bool $forUpdate = false): Document
+    {
+        return clone $this->deployment;
+    }
+}
+
+final class VcsBuildClient implements ClientInterface
+{
+    public array $payload = [];
+
+    public function sendRequest(RequestInterface $request): ResponseInterface
+    {
+        $this->payload = \json_decode((string) $request->getBody(), true, flags: JSON_THROW_ON_ERROR);
+
+        return new Response(202, body: new Stream('{"id":"build","status":"accepted"}'));
+    }
+}
+
+final class VcsRepository extends GitHub
+{
+    public function __construct(private bool $archives)
+    {
+    }
+
+    public function supportsRepositoryArchives(): bool
+    {
+        return $this->archives;
+    }
+
+    public function getRepositoryPresignedUrl(string $owner, string $repositoryName, string $ref = '', string $format = 'tarball'): string
+    {
+        return 'https://vcs.example/source.tar.gz';
+    }
+
+    public function getRepositoryCloneUrl(string $owner, string $repositoryName): string
+    {
+        return 'https://vcs.example/source.git';
     }
 }

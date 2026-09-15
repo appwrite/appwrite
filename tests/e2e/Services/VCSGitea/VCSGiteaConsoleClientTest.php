@@ -4,13 +4,20 @@ declare(strict_types=1);
 
 namespace Tests\E2E\Services\VCSGitea;
 
+use Appwrite\Database\Factory;
 use Appwrite\Tests\Async\Exceptions\Critical;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideConsole;
+use Utopia\Cache\Adapter\Pool as CachePool;
+use Utopia\Cache\Adapter\Sharding;
+use Utopia\Cache\Cache;
+use Utopia\Config\Config;
+use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
+use Utopia\Database\Validator\Authorization;
 use Utopia\System\System;
 
 final class VCSGiteaConsoleClientTest extends Scope
@@ -108,6 +115,146 @@ final class VCSGiteaConsoleClientTest extends Scope
         $webhookDeploymentId = $this->waitForNewDeploymentReadyHelper($functionId, $knownIds);
         $this->assertNotContains($webhookDeploymentId, $knownIds);
         $this->assertEventually(fn () => $this->assertExecutionOutputHelper($functionId, 'gitea-v2'), 30000, 1000);
+    }
+
+    public function testCreateDeploymentFromNestedRootDirectory(): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $projectId = $this->getProject()['$id'];
+        $headers = \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders());
+        $installationId = $this->createInstallationHelper()['$id'];
+
+        $repository = $this->giteaApiHelper(Client::METHOD_POST, '/api/v1/user/repos', [
+            'name' => 'function-' . \uniqid(),
+            'auto_init' => true,
+            'default_branch' => 'main',
+            'private' => false,
+        ]);
+        $this->assertEquals(201, $repository['headers']['status-code'], \json_encode($repository['body']));
+        $repositoryName = $repository['body']['name'];
+
+        $workdir = \sys_get_temp_dir() . '/vcs-gitea-' . \uniqid();
+        $endpoint = System::getEnv('_APP_VCS_GITEA_ENDPOINT', 'http://gitea:3000');
+        $remote = \str_replace('://', '://' . self::GITEA_USERNAME . ':' . self::GITEA_PASSWORD . '@', $endpoint)
+            . '/' . self::GITEA_USERNAME . '/' . $repositoryName . '.git';
+
+        $this->gitHelper("git clone {$remote} {$workdir}", \sys_get_temp_dir());
+        \mkdir($workdir . '/docs/nested', 0o777, true);
+        \file_put_contents($workdir . '/index.js', "module.exports = async (context) => context.res.send('gitea-root:' + process.env.APPWRITE_VCS_ROOT_DIRECTORY);\n");
+        \file_put_contents($workdir . '/docs/nested/index.js', "module.exports = async (context) => context.res.send('gitea-nested-v1:' + process.env.APPWRITE_VCS_ROOT_DIRECTORY);\n");
+        $this->gitHelper('git add index.js docs && git commit -m "Add nested function"', $workdir);
+        $this->gitHelper('git push origin main', $workdir);
+
+        $function = $this->client->call(Client::METHOD_POST, '/functions', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'functionId' => ID::unique(),
+            'name' => 'Gitea nested VCS',
+            'execute' => [Role::any()->toString()],
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'timeout' => 15,
+            'installationId' => $installationId,
+            'providerRepositoryId' => (string) $repository['body']['id'],
+            'providerBranch' => 'main',
+            'providerRootDirectory' => './docs/nested/',
+        ]);
+        $this->assertEquals(201, $function['headers']['status-code'], \json_encode($function['body']));
+        $functionId = $function['body']['$id'];
+
+        $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments/vcs', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'type' => 'branch',
+            'reference' => 'main',
+            'activate' => true,
+        ]);
+        $this->assertEquals(202, $deployment['headers']['status-code'], \json_encode($deployment['body']));
+
+        $this->waitForDeploymentReadyHelper($functionId, $deployment['body']['$id']);
+        $this->assertEventually(fn () => $this->assertExecutionOutputHelper($functionId, 'gitea-nested-v1:./docs/nested/'), 30000, 1000);
+
+        $knownIds = $this->listDeploymentIdsHelper($functionId);
+
+        \file_put_contents($workdir . '/docs/nested/index.js', "module.exports = async (context) => context.res.send('gitea-nested-v2:' + process.env.APPWRITE_VCS_ROOT_DIRECTORY);\n");
+        $this->gitHelper('git add docs && git commit -m "Update nested function"', $workdir);
+        $this->gitHelper('git push origin main', $workdir);
+
+        $webhookDeploymentId = $this->waitForNewDeploymentReadyHelper($functionId, $knownIds);
+        $this->assertEventually(fn () => $this->assertExecutionOutputHelper($functionId, 'gitea-nested-v2:./docs/nested/', $webhookDeploymentId), 30000, 1000);
+
+        // Upgrade fixture: deployments created before source roots were saved
+        // have NULL here. This metadata has no public update endpoint.
+        $seed = function (?string $root) use ($projectId, $webhookDeploymentId) {
+            global $register;
+            $pools = $register->get('pools');
+            $cache = new Cache(new Sharding(\array_map(
+                fn (string $name) => new CachePool($pools->get($name)),
+                Config::getParam('pools-cache', []),
+            )));
+            $authorization = new Authorization();
+            $factory = new Factory($pools, $cache, $authorization);
+
+            $authorization->skip(function () use ($factory, $projectId, $webhookDeploymentId, $root) {
+                $project = $factory->platform()->getDocument('projects', $projectId);
+                $database = $factory->project($project);
+                $database->updateDocument('deployments', $webhookDeploymentId, new Document([
+                    'providerRootDirectory' => $root,
+                ]));
+                $database->purgeCachedDocument('deployments', $webhookDeploymentId);
+                $this->assertSame($root, $database->getDocument('deployments', $webhookDeploymentId)->getAttribute('providerRootDirectory'));
+            });
+        };
+        if (\Swoole\Coroutine::getCid() >= 0) {
+            $seed(null);
+        } else {
+            \Swoole\Coroutine\run(fn () => $seed(null));
+        }
+
+        $duplicate = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments/duplicate', $headers, [
+            'deploymentId' => $webhookDeploymentId,
+        ]);
+        $this->assertEquals(202, $duplicate['headers']['status-code'], \json_encode($duplicate['body']));
+
+        $this->waitForDeploymentReadyHelper($functionId, $duplicate['body']['$id']);
+        $this->assertEventually(fn () => $this->assertExecutionOutputHelper($functionId, 'gitea-nested-v2:./docs/nested/', $duplicate['body']['$id']), 30000, 1000);
+
+        // The healed deployment must retain its source root after settings change.
+        $updated = $this->client->call(Client::METHOD_PUT, '/functions/' . $functionId, $headers, [
+            'name' => 'Gitea nested VCS',
+            'execute' => [Role::any()->toString()],
+            'providerRootDirectory' => 'missing',
+        ]);
+        $this->assertEquals(200, $updated['headers']['status-code'], \json_encode($updated['body']));
+        $this->assertSame('missing', $updated['body']['providerRootDirectory']);
+
+        $preserved = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments/duplicate', $headers, [
+            'deploymentId' => $duplicate['body']['$id'],
+        ]);
+        $this->assertEquals(202, $preserved['headers']['status-code'], \json_encode($preserved['body']));
+        $this->waitForDeploymentReadyHelper($functionId, $preserved['body']['$id']);
+        $this->assertEventually(fn () => $this->assertExecutionOutputHelper($functionId, 'gitea-nested-v2:./docs/nested/', $preserved['body']['$id']), 30000, 1000);
+
+        // An explicit empty snapshot names the repository root, even when the
+        // function now points elsewhere. It must not take the legacy fallback.
+        if (\Swoole\Coroutine::getCid() >= 0) {
+            $seed('');
+        } else {
+            \Swoole\Coroutine\run(fn () => $seed(''));
+        }
+        $root = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments/duplicate', $headers, [
+            'deploymentId' => $webhookDeploymentId,
+        ]);
+        $this->assertEquals(202, $root['headers']['status-code'], \json_encode($root['body']));
+        $this->waitForDeploymentReadyHelper($functionId, $root['body']['$id']);
+        $this->assertEventually(fn () => $this->assertExecutionOutputHelper($functionId, 'gitea-root:', $root['body']['$id']), 30000, 1000);
     }
 
     public function testClosePullRequestRemovesAuthorization(): void
@@ -438,7 +585,7 @@ final class VCSGiteaConsoleClientTest extends Scope
         return $response['body']['deployments'] ?? [];
     }
 
-    private function assertExecutionOutputHelper(string $functionId, string $output): void
+    private function assertExecutionOutputHelper(string $functionId, string $output, ?string $deploymentId = null): void
     {
         $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', \array_merge([
             'content-type' => 'application/json',
@@ -450,6 +597,9 @@ final class VCSGiteaConsoleClientTest extends Scope
         $this->assertEquals(201, $execution['headers']['status-code'], \json_encode($execution['body']));
         $this->assertEquals('completed', $execution['body']['status'] ?? '', \json_encode($execution['body']));
         $this->assertEquals($output, $execution['body']['responseBody'] ?? '');
+        if ($deploymentId !== null) {
+            $this->assertSame($deploymentId, $execution['body']['deploymentId']);
+        }
     }
 
     private function buildGiteaState(string $projectId, string $success, string $failure): string
