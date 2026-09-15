@@ -36,6 +36,7 @@ COPY ./app /usr/src/code/app
 COPY ./public /usr/src/code/public
 COPY ./bin /usr/local/bin
 COPY ./src /usr/src/code/src
+COPY ./packages /usr/src/code/packages
 COPY ./dev /usr/src/code/dev
 COPY ./docker/opcache.ini /usr/local/etc/php/conf.d/zz-opcache.ini
 COPY ./mongo-init.js /usr/src/code/mongo-init.js

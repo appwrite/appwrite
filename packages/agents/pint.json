@@ -1,9 +1,0 @@
-{
-    "rules": {
-        "php_unit_method_casing": false,
-        "new_with_parentheses": false
-    },
-    "notPath": [
-        "src/Agents/Adapters/OpenRouter/Models.php"
-    ]
-}

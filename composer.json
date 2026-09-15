@@ -26,14 +26,16 @@
         "psr-4": {
             "Appwrite\\": "src/Appwrite",
             "Executor\\": "src/Executor",
-            "Utopia\\Bus\\": "src/Utopia/Bus"
+            "Utopia\\Bus\\": "src/Utopia/Bus",
+            "Utopia\\Agents\\": "packages/agents/src"
         }
     },
     "autoload-dev": {
         "psr-4": {
             "Tests\\E2E\\": "tests/e2e",
             "Tests\\Unit\\": "tests/unit",
-            "Appwrite\\Tests\\": "tests/extensions"
+            "Appwrite\\Tests\\": "tests/extensions",
+            "Utopia\\Agents\\Tests\\": "packages/agents/tests"
         }
     },
     "minimum-stability": "dev",
@@ -69,7 +71,6 @@
         "appwrite/php-runtimes": "0.20.*",
         "appwrite/php-clamav": "2.0.*",
         "utopia-php/abuse": "2.0.*",
-        "utopia-php/agents": "2.*",
         "utopia-php/audit": "^4.0",
         "utopia-php/auth": "^0.12",
         "utopia-php/balancer": "0.4.*",

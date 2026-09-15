@@ -1,6 +1,6 @@
 # RFC: Absorbing the Utopia libraries into appwrite/appwrite
 
-Status: draft · Author: loks0n · Last updated: 2026-09-14 · First slice (`bus`, `abuse`, `agents`) on this branch
+Status: draft · Author: loks0n · Last updated: 2026-09-15 · First slice (tooling + `agents`) on this branch
 
 ## Summary
 
@@ -203,9 +203,9 @@ Package edits happen only where the package currently lives; this document carri
 
 Exit: RFC merged, `AGENTS.md` updated, freeze announced, ruleset in place.
 
-### First slice, landed on this branch ahead of phase 1
+### First slice, on this branch
 
-`bus`, `abuse` and `agents` are in `packages/` in the standard shape, autoloaded directly, with `utopia-php/abuse` and `utopia-php/agents` removed from `require` and the Appwrite PHP SDK hoisted (abuse's TablesDB adapter needs it). `abuse` and `agents` came in by `git subtree add` from their `main` branches, so Appwrite now runs abuse's unreleased TokenBucket and SlidingWindow adapters. What the slice does not yet have: `bin/monorepo`, the split workflows, and mirror plumbing, so edits to these three packages do not reach their mirrors until phase 1 lands. `abuse` carries a 35-entry PHPStan baseline (Redis cluster log typing under PHPStan 2). The Dockerfile change turned out smaller than planned: the composer stage's optimised autoloader falls back to PSR-4 for classes outside its class map, so `COPY ./packages` in the base stage is enough and no re-dump is needed.
+Phase 1 as written below, with `agents` as the proving package instead of `validators`: `bin/monorepo` and the split, split-dev and mirror-redirect workflows moved here; `agents` imported from its `main` branch with history, reshaped to the standard layout, and autoloaded directly, with `utopia-php/agents` gone from `require`. Two things learned while landing it, both now rules above: packages are analysed under their own `phpstan.neon` rather than the root config, and tests that reach a provider or a service live in `tests/e2e/` even when they would skip without a key (agents' conversation suites errored on DNS rather than skipping). The Dockerfile change is smaller than planned: the composer stage's optimised autoloader falls back to PSR-4 for classes outside its class map, so `COPY ./packages` in the base stage is enough.
 
 ### Phase 1. Tooling, proven with one package
 
@@ -266,7 +266,7 @@ Exit: `composer.lock` contains no `utopia-php/*` package.
 - Add `packages/*/src` to `phpstan-deadcode.neon` and run `composer dead-code`. Candidates visible today: database adapters `SQLite`, `Memory`, `Redis`; cache adapters `Hazelcast`, `Memcached`, `Json`, `Memory`, `RedisCluster`; SMS adapters `Plivo`, `Telnyx`, `Clickatell`, `Infobip`, `Seven`, `Sinch`. Each deletion is mirror-visible: confirm against Executor and Packagist dependents first; anything a mirror consumer needs stays.
 - Collapse `||` compatibility constraints in package manifests to single ranges once every sibling is on the current major.
 - Delete duplicated test helpers (`tests/extensions/Queue/InMemoryConnection.php` versus the queue package's own fakes) and every Appwrite-side workaround that existed only because a library fix was waiting on a release.
-- Burn down every `packages/*/phpstan-baseline.neon`, starting with abuse's Redis cluster log adapters.
+- Burn down every `packages/*/phpstan-baseline.neon` a package arrives with (abuse's Redis cluster log adapters need one under PHPStan 2).
 
 ## Risks
 

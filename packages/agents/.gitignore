@@ -1,9 +1,4 @@
 /vendor/
-/.vscode/
+composer.lock
+.phpunit.cache
 .phpunit.result.cache
-tests/chunk.php
-.idea/
-.env
-example.php
-example.md
-/blueprints/
