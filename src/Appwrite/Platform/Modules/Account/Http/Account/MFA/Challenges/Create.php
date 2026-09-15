@@ -199,7 +199,7 @@ class Create extends Action
                     message: new Document([
                         '$id' => $challenge->getId(),
                         'data' => [
-                            'content' => $code,
+                            'content' => $message,
                         ],
                     ]),
                     recipients: [$phone],
