@@ -15,8 +15,8 @@ importers:
   .:
     dependencies:
       '@appwrite.io/console':
-        specifier: https://pkg.vc/-/@appwrite/@appwrite.io/console@6405aee
-        version: https://pkg.vc/-/@appwrite/@appwrite.io/console@6405aee
+        specifier: https://pkg.vc/-/@appwrite/@appwrite.io/console@d108cea
+        version: https://pkg.vc/-/@appwrite/@appwrite.io/console@d108cea
       '@appwrite.io/specs':
         specifier: github:appwrite/specs#c4d6f8c88fe7c8c06e8202ce1173a21bf7cd6109
         version: https://codeload.github.com/appwrite/specs/tar.gz/c4d6f8c88fe7c8c06e8202ce1173a21bf7cd6109
@@ -337,7 +337,7 @@ importers:
         specifier: ^0.184.1
         version: 0.184.1
       '@vitejs/plugin-react':
-        specifier: ^5.1.4
+        specifier: 5.2.0
         version: 5.2.0(rolldown-vite@7.3.1(@emnapi/core@1.10.0)(@emnapi/runtime@1.11.1)(@types/node@22.20.0)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.22.4)(yaml@2.9.0))
       dotenv:
         specifier: ^16.4.5
@@ -380,8 +380,8 @@ packages:
   '@apm-js-collab/tracing-hooks@0.10.0':
     resolution: {integrity: sha512-2/Z3NTewJTruUkmsSnBC5bJlLNUd9keuD1OLlTEpim4FyLhm6m2Rnfv+wrFdUvFfhmH8CRdiDZBqBrn+wyaGuA==}
 
-  '@appwrite.io/console@https://pkg.vc/-/@appwrite/@appwrite.io/console@6405aee':
-    resolution: {integrity: sha512-dW+K4LVkjaPHwncPNkkyARV54QRrqrxzCH7xNO+NMScB+g2k5MHwJSMOLLZdnU6opX7LSaIp/T7r8JNHIHvxdg==, tarball: https://pkg.vc/-/@appwrite/@appwrite.io/console@6405aee}
+  '@appwrite.io/console@https://pkg.vc/-/@appwrite/@appwrite.io/console@d108cea':
+    resolution: {integrity: sha512-u5v8qEAbMM8IfzmkuSH7FF24jjynfs6x00MNogSxtkt6egsRq++LAtU894G26lqPLWtWKgG6gsKkIJEYU/dl3g==, tarball: https://pkg.vc/-/@appwrite/@appwrite.io/console@d108cea}
     version: 16.0.0
     engines: {node: '>=18.0.0'}
 
@@ -5071,7 +5071,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@appwrite.io/console@https://pkg.vc/-/@appwrite/@appwrite.io/console@6405aee':
+  '@appwrite.io/console@https://pkg.vc/-/@appwrite/@appwrite.io/console@d108cea':
     dependencies:
       json-bigint: 1.0.0
 

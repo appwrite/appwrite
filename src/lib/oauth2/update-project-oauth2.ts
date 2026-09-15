@@ -12,9 +12,6 @@ type OAuth2UpdateBody = Record<string, unknown>
 /** Form values for one provider: credential strings, the two switches, and the native audience list. */
 export type OAuth2UpdateValues = Record<string, string | boolean | string[]>
 
-/** Settings the pinned SDK's typed `updateOAuth2*` methods do not know about yet. */
-const NATIVE_SIGN_IN_KEYS = new Set(['nativeEnabled', 'nativeClientIds'])
-
 type OAuth2UpdateHandler = (
   project: Project,
   body: OAuth2UpdateBody,
@@ -112,34 +109,6 @@ export function pruneOAuth2Body(values: OAuth2UpdateValues): OAuth2UpdateBody {
 }
 
 /**
- * The pinned console SDK predates native ID token sign-in. Its typed
- * `updateOAuth2*` methods forward only the parameters they know about, so
- * `nativeEnabled` and `nativeClientIds` would be dropped before the request
- * leaves the browser. Those updates go through the SDK client directly; the
- * typed method takes over again once the SDK is regenerated from the new spec.
- */
-async function updateThroughClient(
-  projectSdk: ProjectSdk,
-  providerId: string,
-  body: OAuth2UpdateBody,
-): Promise<void> {
-  const { client } = projectSdk
-  const uri = new URL(
-    `${client.config.endpoint}/project/oauth2/${encodeURIComponent(providerId)}`,
-  )
-  await client.call(
-    'patch',
-    uri,
-    {
-      'X-Appwrite-Project': client.config.project,
-      'content-type': 'application/json',
-      accept: 'application/json',
-    },
-    body,
-  )
-}
-
-/**
  * Updates one OAuth2 provider using the typed project SDK method for that provider.
  */
 export async function updateProjectOAuth2Provider(
@@ -162,11 +131,5 @@ export async function updateProjectOAuth2Provider(
     throw new Error(`No OAuth2 update method for provider "${providerId}".`)
   }
 
-  const body = pruneOAuth2Body(values)
-  if (Object.keys(body).some((key) => NATIVE_SIGN_IN_KEYS.has(key))) {
-    await updateThroughClient(projectSdk, providerId, body)
-    return
-  }
-
-  await handler(projectSdk.project, body)
+  await handler(projectSdk.project, pruneOAuth2Body(values))
 }

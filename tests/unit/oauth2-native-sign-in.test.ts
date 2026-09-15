@@ -1,8 +1,7 @@
 /**
- * Native ID token sign-in is switched on separately from the browser flow and
- * carries values the pinned console SDK does not know about. These pin the
- * pieces the drawer relies on: what reaches the server, which transport takes
- * it there, and the rule that gates the switch.
+ * Native ID token sign-in is switched on separately from the browser flow.
+ * These pin the pieces the drawer relies on: what reaches the server and the
+ * rule that gates the switch.
  */
 
 import { describe, expect, test } from 'bun:test'
@@ -23,17 +22,11 @@ const CLIENT_ID = { $id: 'clientId', name: 'Client ID' }
 const NATIVE = { $id: NATIVE_CLIENT_IDS_PARAM_ID, name: 'Native client IDs' }
 
 function fakeProjectSdk() {
-  const calls: { typed: unknown[]; raw: unknown[] } = { typed: [], raw: [] }
+  const calls: unknown[] = []
   const sdk = {
-    client: {
-      config: { endpoint: 'https://api.test/v1', project: 'demo' },
-      call: async (...args: unknown[]) => {
-        calls.raw.push(args)
-      },
-    },
     project: {
       updateOAuth2Google: async (body: unknown) => {
-        calls.typed.push(body)
+        calls.push(body)
       },
     },
   }
@@ -63,39 +56,30 @@ describe('pruneOAuth2Body', () => {
 })
 
 describe('updateProjectOAuth2Provider', () => {
-  test('uses the typed SDK method when no native setting is involved', async () => {
+  test('sends the pruned body through the typed SDK method', async () => {
     const { sdk, calls } = fakeProjectSdk()
     await updateProjectOAuth2Provider(sdk, ProjectOAuthProviderId.Google, {
       enabled: true,
       clientId: 'abc',
+      clientSecret: '',
     })
-    expect(calls.typed).toEqual([{ enabled: true, clientId: 'abc' }])
-    expect(calls.raw).toHaveLength(0)
+    expect(calls).toEqual([{ enabled: true, clientId: 'abc' }])
   })
 
-  test('sends native settings through the SDK client, which the typed method would drop', async () => {
+  test('native settings travel with the rest of the body', async () => {
     const { sdk, calls } = fakeProjectSdk()
     await updateProjectOAuth2Provider(sdk, ProjectOAuthProviderId.Google, {
       enabled: false,
       nativeEnabled: true,
       nativeClientIds: ['ios.apps.googleusercontent.com'],
     })
-    expect(calls.typed).toHaveLength(0)
-    expect(calls.raw).toHaveLength(1)
-    const [method, url, headers, body] = calls.raw[0] as [
-      string,
-      URL,
-      Record<string, string>,
-      Record<string, unknown>,
-    ]
-    expect(method).toBe('patch')
-    expect(url.toString()).toBe('https://api.test/v1/project/oauth2/google')
-    expect(headers['X-Appwrite-Project']).toBe('demo')
-    expect(body).toEqual({
-      enabled: false,
-      nativeEnabled: true,
-      nativeClientIds: ['ios.apps.googleusercontent.com'],
-    })
+    expect(calls).toEqual([
+      {
+        enabled: false,
+        nativeEnabled: true,
+        nativeClientIds: ['ios.apps.googleusercontent.com'],
+      },
+    ])
   })
 })
 
