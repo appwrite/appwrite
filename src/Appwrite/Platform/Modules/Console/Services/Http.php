@@ -7,7 +7,6 @@ use Appwrite\Platform\Modules\Console\Http\Init\API;
 use Appwrite\Platform\Modules\Console\Http\Init\Web;
 use Appwrite\Platform\Modules\Console\Http\OAuth2Providers\XList as ListOAuth2Providers;
 use Appwrite\Platform\Modules\Console\Http\Redirects\Auth\Get as RedirectAuth;
-use Appwrite\Platform\Modules\Console\Http\Redirects\Card\Get as RedirectCard;
 use Appwrite\Platform\Modules\Console\Http\Redirects\Invite\Get as RedirectInvite;
 use Appwrite\Platform\Modules\Console\Http\Redirects\Login\Get as RedirectLogin;
 use Appwrite\Platform\Modules\Console\Http\Redirects\MFA\Get as RedirectMFA;
@@ -39,13 +38,12 @@ class Http extends Service
         $this->addAction(CreateAssistantQuery::getName(), new CreateAssistantQuery());
         $this->addAction(GetResourceAvailability::getName(), new GetResourceAvailability());
 
-        // web redirects to /console
+        // web redirects to the console
         $this->addAction(RedirectRoot::getName(), new RedirectRoot());
         $this->addAction(RedirectAuth::getName(), new RedirectAuth());
         $this->addAction(RedirectInvite::getName(), new RedirectInvite());
         $this->addAction(RedirectLogin::getName(), new RedirectLogin());
         $this->addAction(RedirectMFA::getName(), new RedirectMFA());
-        $this->addAction(RedirectCard::getName(), new RedirectCard());
         $this->addAction(RedirectRecover::getName(), new RedirectRecover());
         $this->addAction(RedirectRegister::getName(), new RedirectRegister());
     }
