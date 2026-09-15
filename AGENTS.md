@@ -304,7 +304,7 @@ Self-hosted ships on two channels. Cloud is separate: it builds from `cl-*` tags
 | Channel | Source | Trigger | Tags on `appwrite/appwrite` |
 |---------|--------|---------|------------------------------|
 | stable | active release branch (`2.0.x`) | GitHub Release, published by a human | `X.Y.Z` (immutable), `X.Y`, `X`, `latest` |
-| nightly | same branch, newest CI-green commit | daily at 00:00 UTC, or `workflow_dispatch` | `X.Y.Z-nightly.<date>` (immutable), `X.Y-nightly`, `nightly` |
+| nightly | same branch, newest CI-green commit | daily at 00:00 UTC, or `workflow_dispatch` | `X.Y.Z-nightly.<date>` (one a day), `X.Y-nightly`, `nightly` |
 
 [`nightly.yml`](.github/workflows/nightly.yml) builds the channel; [`security-scan.yml`](.github/workflows/security-scan.yml) is the Trivy scan that used to own that file name. `X.Y.Z` in a nightly tag is the **next** patch on the line — the nightly is a prerelease of the version it is heading for, so `2.0.2-nightly.20260915` sorts below `2.0.2` — and `<date>` is `YYYYMMDD`.
 

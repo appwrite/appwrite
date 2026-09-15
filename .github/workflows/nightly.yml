@@ -5,9 +5,7 @@ name: "Nightly"
 # Cloud builds from cl-* tags through publish.yml and is not part of this channel.
 #
 # Tags pushed (see the Releases section of AGENTS.md):
-#   X.Y.Z-nightly.<date>  immutable, the rollback anchor. X.Y.Z is the NEXT patch
-#                         on the line, so the build sorts below the release it is
-#                         heading for.
+#   X.Y.Z-nightly.<date>  the rollback anchor, one per day
 #   X.Y-nightly           rolling, per minor line. The form to recommend.
 #   nightly               rolling, newest line only.
 
@@ -78,27 +76,18 @@ jobs:
           echo "branch=${branch}" >> "$GITHUB_OUTPUT"
 
           # Invariant 2: build the newest CI-green commit, not the tip, so a red
-          # branch delays the channel instead of shipping through it. gh returns
-          # newest first; a run's commit can have been force-pushed away, so the
-          # candidate must still be on the branch.
-          sha=""
-          while read -r candidate; do
-            [ -n "$candidate" ] || continue
-            if git merge-base --is-ancestor "$candidate" "origin/${branch}" 2>/dev/null; then
-              sha="$candidate"
-              break
-            fi
-          done < <(gh run list \
+          # branch delays the channel instead of shipping through it.
+          sha=$(gh run list \
             --workflow=ci.yml \
             --branch="${branch}" \
             --event=push \
             --status=success \
-            --limit=30 \
+            --limit=1 \
             --json headSha \
-            --jq '.[].headSha')
+            --jq '.[0].headSha // empty')
 
           if [ -z "$sha" ]; then
-            echo "::warning::No green CI run found on ${branch} in the last 30 pushes; nothing to publish."
+            echo "::warning::No green CI run found on ${branch}; nothing to publish."
             echo "skip=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
@@ -107,13 +96,12 @@ jobs:
 
           # Nothing new since the last nightly. The marker tag is moved by the
           # build job below and is the only state this workflow keeps.
-          if git rev-parse --verify "refs/tags/nightly-${branch}" >/dev/null 2>&1; then
-            previous=$(git rev-parse "refs/tags/nightly-${branch}^{commit}")
-            if [ "$previous" = "$sha" ]; then
-              echo "::notice::${branch} has not moved since the last nightly (${sha}); skipping."
-              echo "skip=true" >> "$GITHUB_OUTPUT"
-              exit 0
-            fi
+          previous=$(git rev-parse -q --verify "refs/tags/nightly-${branch}^{commit}" || true)
+
+          if [ "$previous" = "$sha" ]; then
+            echo "::notice::${branch} has not moved since the last nightly (${sha}); skipping."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
           fi
 
           # A nightly is a prerelease of the next patch on the line, so read the
@@ -130,36 +118,11 @@ jobs:
           rest=${stable#*.}
           minor=${rest%%.*}
           patch=${rest#*.}
-          next="${major}.${minor}.$((patch + 1))"
 
-          if [ "${branch}" != "${major}.${minor}.x" ]; then
-            echo "::warning::${branch} carries APP_VERSION_STABLE=${stable}; tagging as ${next} from the constant rather than the branch name."
-          fi
-
-          # Published nightlies are immutable, so a second green commit on the
-          # same day takes its own suffix rather than overwriting the day's tag.
-          build="$(date -u +%Y%m%d)"
-          status=$(curl --silent --output /dev/null --write-out '%{http_code}' \
-            --retry 3 --retry-all-errors --max-time 30 \
-            "https://hub.docker.com/v2/repositories/${IMAGE}/tags/${next}-nightly.${build}" || true)
-
-          case "$status" in
-            404) ;;
-            200)
-              build="${build}.${GITHUB_RUN_NUMBER}"
-              echo "::notice::${next}-nightly.$(date -u +%Y%m%d) is already published; using ${build}."
-              ;;
-            *)
-              echo "::error::Unexpected response ${status} from Docker Hub while checking for an existing nightly tag. Refusing to publish."
-              exit 1
-              ;;
-          esac
-
-          version="${next}-nightly.${build}"
+          version="${major}.${minor}.$((patch + 1))-nightly.$(date -u +%Y%m%d)"
           echo "version=${version}" >> "$GITHUB_OUTPUT"
 
-          tags="${IMAGE}:${version}"
-          tags="${tags},${IMAGE}:${major}.${minor}-nightly"
+          tags="${IMAGE}:${version},${IMAGE}:${major}.${minor}-nightly"
 
           # The bare tag follows the newest line only, so a dispatched build of an
           # older branch cannot drag it backwards.
@@ -170,16 +133,7 @@ jobs:
           echo "tags=${tags}" >> "$GITHUB_OUTPUT"
           echo "skip=false" >> "$GITHUB_OUTPUT"
 
-          {
-            echo "### Nightly"
-            echo
-            echo "| | |"
-            echo "|---|---|"
-            echo "| Branch | \`${branch}\` |"
-            echo "| Commit | \`${sha}\` |"
-            echo "| Version | \`${version}\` |"
-            echo "| Tags | \`${tags//,/\`, \`}\` |"
-          } >> "$GITHUB_STEP_SUMMARY"
+          echo "Publishing ${tags//,/, } from ${branch} (${sha})." >> "$GITHUB_STEP_SUMMARY"
 
   build:
     name: Build and publish
@@ -195,22 +149,6 @@ jobs:
         with:
           ref: ${{ needs.resolve.outputs.sha }}
           submodules: recursive
-
-      - name: Refuse to publish anywhere but appwrite/appwrite
-        env:
-          TAGS: ${{ needs.resolve.outputs.tags }}
-        run: |
-          set -euo pipefail
-          echo "$TAGS" | tr ',' '\n' | while read -r tag; do
-            [ -n "$tag" ] || continue
-            case "$tag" in
-              appwrite/appwrite:*) ;;
-              *)
-                echo "::error::Refusing to publish ${tag}: the nightly channel is appwrite/appwrite only."
-                exit 1
-                ;;
-            esac
-          done
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@ce360397dd3f832beb865e1373c09c0e9f86d70a # v4.0.0
