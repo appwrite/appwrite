@@ -957,6 +957,13 @@ html:not([lang='en']):not([lang='he']) {
     overflow: visible !important;
   }
 
+  /* The sidebar/content row clips overflow-y for the console's left nav. In
+     document-scroll mode that clip would make the row the scrollport for
+     sticky in-page TOCs, so it has to flow with the document as well. */
+  html.marketing-document-scroll .console-layout-row {
+    overflow: visible !important;
+  }
+
   html.marketing-document-scroll #main-content {
     overflow: visible !important;
     max-height: none !important;
