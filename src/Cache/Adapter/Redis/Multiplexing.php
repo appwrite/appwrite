@@ -23,6 +23,12 @@ use Utopia\Telemetry\UpDownCounter;
  * order of registrations exactly matches the order of bytes on the wire. A
  * single reader coroutine parses inbound frames and dispatches each one to
  * the next pending Channel, exploiting Redis's guarantee of in-order replies.
+ *
+ * The reader exists only while replies are outstanding: the caller that makes
+ * the queue non-empty spawns it, and it returns after dequeuing the last slot.
+ * A coroutine parked in recv() is a reactor event, and a Swoole worker cannot
+ * exit while one remains, so a permanent reader would turn every max_request
+ * recycle and reload into a max_wait_time timeout and a forced termination.
  */
 class Multiplexing extends Leasable implements Adapter, Batchable, TelemetryFeature
 {
@@ -385,10 +391,14 @@ class Multiplexing extends Leasable implements Adapter, Batchable, TelemetryFeat
             $response = new Channel(1);
             $error = null;
 
+            $idle = $context->pending->isEmpty();
             $context->pending->enqueue($response);
             $this->getPendingDepth()->add(1);
             try {
                 $context->client->send(Client::encode($args));
+                if ($idle) {
+                    $this->startReader($context);
+                }
             } catch (ConnectionException $sendError) {
                 $error = $sendError;
             }
@@ -490,8 +500,13 @@ class Multiplexing extends Leasable implements Adapter, Batchable, TelemetryFeat
 
         /** @var SplQueue<Channel<mixed>> $pending */
         $pending = new SplQueue();
-        $context = new ConnectionContext($client, $pending);
-        $this->connection = $context;
+        $this->connection = new ConnectionContext($client, $pending);
+    }
+
+    private function startReader(ConnectionContext $context): void
+    {
+        // Time spent idle with nobody listening says nothing about liveness.
+        $context->recordProgress();
 
         Coroutine::create(function () use ($context): void {
             $this->readerLoop($context);
@@ -598,11 +613,17 @@ class Multiplexing extends Leasable implements Adapter, Batchable, TelemetryFeat
                 if ($waiting instanceof Channel) {
                     $this->getPendingDepth()->add(-1);
                     $context->recordProgress();
+                    // Decided before the push wakes the caller, so a command it
+                    // issues next sees an empty queue and spawns the next reader.
+                    $last = $readBuffer === '' && $context->pending->isEmpty();
                     // May be a reply whose caller already gave up on its own
                     // deadline. The slot is still dequeued in order so the frames
                     // behind it stay aligned, and the push cannot block on a
                     // capacity-1 Channel, so an abandoned reply is simply dropped.
                     $waiting->push($value);
+                    if ($last) {
+                        return;
+                    }
                 } else {
                     // Should never happen given the send-lock invariant. Log
                     // and tear down so the next caller reconnects on a clean
