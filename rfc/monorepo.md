@@ -78,7 +78,8 @@ Rules `validate` checks per package:
 4. No `composer.lock`; `.gitignore` lists it.
 5. None of: `psalm.xml`, `phpcs.xml`, `.travis.yml`, `.gitpod.yml`, `.coderabbit.yaml`, `pint.json`, Pint/PHPStan/Rector/PHPUnit in `require-dev`, nor any `Dockerfile*` except the ones `docker-compose.yml` builds an e2e service from.
 6. Sibling dependencies are Packagist constraints, never path repositories (the mirror must install standalone).
-7. The root autoload map (below) matches what the manifests declare.
+7. The root autoload map and `replace` entries (below) match what the manifests declare.
+8. `phpstan.neon` never includes or references a path outside the package: in the old monorepo `../../phpstan.neon` was a per-package floor, here it is Appwrite's own config.
 
 ### Root composer.json
 
@@ -108,7 +109,9 @@ Rules `validate` checks per package:
 }
 ```
 
-The bare `Utopia\` directory list exists only until the five packages that declare it are standardised (phases 2 and 6). Composer probes the list in order; `validate` fails on any class path that resolves in more than one of them.
+The bare `Utopia\` directory list exists only until the five packages that declare it are standardised (phases 2 and 6).
+
+The root also declares every absorbed package under `replace` (`"utopia-php/<name>": "*"`). Most leaves are transitive dependencies of packages still vendored (`queue` requires `lock`, ten packages require `validators`), and without `replace` Composer would keep installing the vendored copy next to `packages/<name>`; with it the solver treats the root as providing that package and skips the install. `bin/monorepo autoload` generates these entries with the autoload map. Composer probes the list in order; `validate` fails on any class path that resolves in more than one of them.
 
 ### Docker
 
