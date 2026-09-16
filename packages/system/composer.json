@@ -23,11 +23,16 @@
     ],
     "autoload": {
         "psr-4": {
-            "Utopia\\System\\": "src/System"
+            "Utopia\\System\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Utopia\\System\\Tests\\": "tests/"
         }
     },
     "scripts": {
-        "test": "phpunit"
+        "test": "phpunit --configuration phpunit.xml --testsuite unit"
     },
     "require": {
         "php": ">=8.0.0"

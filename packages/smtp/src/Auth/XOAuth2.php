@@ -14,7 +14,8 @@ final readonly class XOAuth2 implements Authenticator
         private string $username,
         #[\SensitiveParameter]
         private string $token,
-    ) {}
+    ) {
+    }
 
     public function mechanism(): string
     {

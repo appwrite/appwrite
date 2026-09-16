@@ -11,4 +11,6 @@ namespace Utopia\SMTP\Exception;
  * needs more. Raised before anything is sent, and never worth retrying
  * against the same server.
  */
-class CapabilityException extends SmtpException {}
+class CapabilityException extends SmtpException
+{
+}

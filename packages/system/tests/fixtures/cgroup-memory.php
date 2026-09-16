@@ -2,7 +2,7 @@
 
 namespace Utopia\System;
 
-use Utopia\Tests\CgroupMemoryTest;
+use Utopia\System\Tests\CgroupMemoryTest;
 
 function php_uname(string $mode): string
 {

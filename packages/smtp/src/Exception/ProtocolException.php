@@ -11,4 +11,6 @@ namespace Utopia\SMTP\Exception;
  * client drops the connection rather than reading the rest of a reply as the
  * next one.
  */
-class ProtocolException extends SmtpException {}
+class ProtocolException extends SmtpException
+{
+}

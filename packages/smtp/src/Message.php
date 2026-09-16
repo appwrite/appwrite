@@ -76,7 +76,7 @@ final readonly class Message implements \Stringable
      */
     public function isInternational(): bool
     {
-        return array_any([$this->from, ...$this->to, ...$this->cc, ...$this->bcc, ...$this->replyTo], fn(Address $address): bool => $address->isInternational());
+        return array_any([$this->from, ...$this->to, ...$this->cc, ...$this->bcc, ...$this->replyTo], fn (Address $address): bool => $address->isInternational());
     }
 
     /**
@@ -124,7 +124,7 @@ final readonly class Message implements \Stringable
      */
     private function list(array $addresses): string
     {
-        return implode(', ', array_map(static fn(Address $address): string => (string) $address, $addresses));
+        return implode(', ', array_map(static fn (Address $address): string => (string) $address, $addresses));
     }
 
     /**
@@ -148,8 +148,8 @@ final readonly class Message implements \Stringable
             default => Part::multipart('alternative', ...$parts),
         };
 
-        $inline = array_values(array_filter($attachments, static fn(Attachment $file): bool => $file->cid !== null));
-        $files = array_values(array_filter($attachments, static fn(Attachment $file): bool => $file->cid === null));
+        $inline = array_values(array_filter($attachments, static fn (Attachment $file): bool => $file->cid !== null));
+        $files = array_values(array_filter($attachments, static fn (Attachment $file): bool => $file->cid === null));
 
         if ($inline !== []) {
             $body = Part::multipart('related', $body, ...array_map(Part::attachment(...), $inline));

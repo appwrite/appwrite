@@ -21,7 +21,8 @@ final readonly class Result
         public string $messageId,
         public array $accepted,
         public array $rejected,
-    ) {}
+    ) {
+    }
 
     public function isComplete(): bool
     {

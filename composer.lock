@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "106113c054c398c281773833e4061885",
+    "content-hash": "04fd1ad3f34c9e3ddb6cf0c4da9ea3b7",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4281,52 +4281,6 @@
             "time": "2026-09-07T07:02:57+00:00"
         },
         {
-            "name": "utopia-php/psr7",
-            "version": "0.2.2",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/utopia-php/psr7.git",
-                "reference": "cf70bec9ae4cda33bba01c8f7f2194d32adf899d"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/psr7/zipball/cf70bec9ae4cda33bba01c8f7f2194d32adf899d",
-                "reference": "cf70bec9ae4cda33bba01c8f7f2194d32adf899d",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=8.4",
-                "psr/http-factory": "^1.0",
-                "psr/http-message": "^1.1 || ^2.0"
-            },
-            "suggest": {
-                "ext-simplexml": "Required to decode XML responses with Response::xml()."
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Utopia\\Psr7\\": "src/Psr7/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "description": "PSR-7 HTTP message implementations and PSR-17 factories for Utopia",
-            "keywords": [
-                "http",
-                "php",
-                "psr-17",
-                "psr-7",
-                "utopia"
-            ],
-            "support": {
-                "issues": "https://github.com/utopia-php/psr7/issues",
-                "source": "https://github.com/utopia-php/psr7/tree/0.2.2"
-            },
-            "time": "2026-09-02T15:57:19+00:00"
-        },
-        {
             "name": "utopia-php/query",
             "version": "0.6.0",
             "source": {
@@ -4602,51 +4556,6 @@
             "time": "2026-09-02T15:57:19+00:00"
         },
         {
-            "name": "utopia-php/smtp",
-            "version": "0.1.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/utopia-php/smtp.git",
-                "reference": "6b07b8038aad5ca35896e9456a305ac8fefe8a72"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/smtp/zipball/6b07b8038aad5ca35896e9456a305ac8fefe8a72",
-                "reference": "6b07b8038aad5ca35896e9456a305ac8fefe8a72",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=8.3"
-            },
-            "suggest": {
-                "ext-fileinfo": "Detects the media type of an attachment added by path",
-                "ext-openssl": "Required for TLS, whether implicit or through STARTTLS",
-                "ext-swoole": "Required for the coroutine-native Transport\\Swoole"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Utopia\\SMTP\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "description": "Lite & fast micro PHP SMTP library that is easy to learn",
-            "keywords": [
-                "email",
-                "mail",
-                "mime",
-                "smtp"
-            ],
-            "support": {
-                "issues": "https://github.com/utopia-php/smtp/issues",
-                "source": "https://github.com/utopia-php/smtp/tree/0.1.0"
-            },
-            "time": "2026-08-13T16:10:56+00:00"
-        },
-        {
             "name": "utopia-php/span",
             "version": "4.2.0",
             "source": {
@@ -4738,108 +4647,6 @@
                 "source": "https://github.com/utopia-php/storage/tree/4.1.0"
             },
             "time": "2026-09-07T07:52:07+00:00"
-        },
-        {
-            "name": "utopia-php/system",
-            "version": "0.10.6",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/utopia-php/system.git",
-                "reference": "bd8f35619c7b69360689467f25e1b608cc3ba6b5"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/system/zipball/bd8f35619c7b69360689467f25e1b608cc3ba6b5",
-                "reference": "bd8f35619c7b69360689467f25e1b608cc3ba6b5",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=8.0.0"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Utopia\\System\\": "src/System"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Eldad Fux",
-                    "email": "eldad@appwrite.io"
-                },
-                {
-                    "name": "Torsten Dittmann",
-                    "email": "torsten@appwrite.io"
-                }
-            ],
-            "description": "A simple library for obtaining information about the host's system.",
-            "keywords": [
-                "framework",
-                "php",
-                "system",
-                "upf",
-                "utopia"
-            ],
-            "support": {
-                "issues": "https://github.com/utopia-php/system/issues",
-                "source": "https://github.com/utopia-php/system/tree/0.10.6"
-            },
-            "time": "2026-09-02T15:57:19+00:00"
-        },
-        {
-            "name": "utopia-php/telemetry",
-            "version": "0.4.10",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/utopia-php/telemetry.git",
-                "reference": "29432a590bf96597ba8f0e767c966be16481651a"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/telemetry/zipball/29432a590bf96597ba8f0e767c966be16481651a",
-                "reference": "29432a590bf96597ba8f0e767c966be16481651a",
-                "shasum": ""
-            },
-            "require": {
-                "nyholm/psr7": "1.*",
-                "open-telemetry/exporter-otlp": "1.*",
-                "open-telemetry/sdk": "1.*",
-                "php": ">=8.0",
-                "symfony/http-client": "7.*"
-            },
-            "require-dev": {
-                "swoole/ide-helper": "6.*"
-            },
-            "suggest": {
-                "ext-protobuf": "For better performance, when dealing with the protobuf format",
-                "ext-sockets": "Required for the Swoole transport implementation",
-                "ext-swoole": "Required for the Swoole transport implementation"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Utopia\\Telemetry\\": "src/Telemetry"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "description": "A lite & fast telemetry library, with adapters for OpenTelemetry",
-            "keywords": [
-                "framework",
-                "php",
-                "upf"
-            ],
-            "support": {
-                "issues": "https://github.com/utopia-php/telemetry/issues",
-                "source": "https://github.com/utopia-php/telemetry/tree/0.4.10"
-            },
-            "time": "2026-09-11T06:27:08+00:00"
         },
         {
             "name": "utopia-php/usage",

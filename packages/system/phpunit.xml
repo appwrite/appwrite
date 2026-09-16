@@ -9,6 +9,10 @@
     <testsuites>
         <testsuite name="unit">
             <directory>tests</directory>
+            <exclude>tests/E2E</exclude>
+        </testsuite>
+        <testsuite name="e2e">
+            <directory>tests/E2E</directory>
         </testsuite>
     </testsuites>
     <source>
@@ -16,8 +20,4 @@
             <directory>src</directory>
         </include>
     </source>
-    <php>
-        <env name="TESTA" value="VALUEA"/>
-        <env name="TESTB" value="VALUEB"/>
-    </php>
 </phpunit>

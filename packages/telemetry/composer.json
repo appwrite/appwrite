@@ -11,16 +11,17 @@
     "minimum-stability": "stable",
     "autoload": {
         "psr-4": {
-            "Utopia\\Telemetry\\": "src/Telemetry"
+            "Utopia\\Telemetry\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Tests\\Telemetry\\": "tests/Telemetry"
+            "Utopia\\Telemetry\\Tests\\": "tests/"
         }
     },
     "scripts": {
-        "test": "phpunit --configuration phpunit.xml"
+        "test": "phpunit --configuration phpunit.xml --testsuite unit",
+        "test:e2e": "phpunit --configuration phpunit.xml --testsuite e2e"
     },
     "require": {
         "php": ">=8.0",

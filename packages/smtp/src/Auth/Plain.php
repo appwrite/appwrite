@@ -13,7 +13,8 @@ final readonly class Plain implements Authenticator
         private string $username,
         #[\SensitiveParameter]
         private string $password,
-    ) {}
+    ) {
+    }
 
     public function mechanism(): string
     {

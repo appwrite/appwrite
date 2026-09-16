@@ -16,7 +16,9 @@ final readonly class Capabilities
     /**
      * @param  array<string, list<string>>  $keywords
      */
-    private function __construct(private array $keywords) {}
+    private function __construct(private array $keywords)
+    {
+    }
 
     public static function none(): self
     {

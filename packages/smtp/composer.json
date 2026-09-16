@@ -28,8 +28,8 @@
         }
     },
     "scripts": {
-        "test": "phpunit --testsuite unit",
-        "test:e2e": "phpunit --testsuite e2e"
+        "test": "phpunit --configuration phpunit.xml --testsuite unit",
+        "test:e2e": "phpunit --configuration phpunit.xml --testsuite e2e"
     },
     "config": {
         "optimize-autoloader": true,

@@ -26,7 +26,8 @@ final readonly class Part
         private ?Attachment $attachment = null,
         private array $parts = [],
         private string $boundary = '',
-    ) {}
+    ) {
+    }
 
     public static function text(string $type, string $content): self
     {
