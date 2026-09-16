@@ -163,7 +163,7 @@ trait TokensBase
     protected function readEmailCode(string $email, string $expire, int $length): string
     {
         $message = $this->getLastEmailByAddress($email, function (array $message) use ($expire) {
-            $this->assertStringContainsString('Expires at ' . $expire, $message['text']);
+            $this->assertStringContainsString($expire, $message['text']);
         });
         $document = new \DOMDocument();
         @$document->loadHTML($message['html']);

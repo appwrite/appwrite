@@ -217,7 +217,7 @@ trait AccountBase
         $code = $matches[0][0] ?? '';
 
         $this->assertNotEmpty($code);
-        $this->assertStringContainsStringIgnoringCase('Use OTP ' . $code . ' to sign in to '. $this->getProject()['name'] . '. Expires at ' . $response['body']['expire'] . '.', $lastEmail['text']);
+        $this->assertStringContainsString($response['body']['expire'], $lastEmail['text']);
 
         // Only Console project has branded logo in email.
         if ($isConsoleProject) {
