@@ -49,6 +49,6 @@ final class ReplyTest extends TestCase
 
     public function testJoinsContinuationLines(): void
     {
-        $this->assertSame('one two', (new Reply(250, ['one', 'two']))->text());
+        $this->assertSame('one two', new Reply(250, ['one', 'two'])->text());
     }
 }

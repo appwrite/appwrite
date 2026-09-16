@@ -64,7 +64,7 @@ final class EnvelopeTest extends TestCase
 
     public function testDetectsAnInternationalPath(): void
     {
-        $this->assertTrue((new Envelope('jäne@example.test', ['john@example.test']))->isInternational());
-        $this->assertFalse((new Envelope('jane@example.test', ['john@example.test']))->isInternational());
+        $this->assertTrue(new Envelope('jäne@example.test', ['john@example.test'])->isInternational());
+        $this->assertFalse(new Envelope('jane@example.test', ['john@example.test'])->isInternational());
     }
 }

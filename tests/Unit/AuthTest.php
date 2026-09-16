@@ -13,7 +13,7 @@ final class AuthTest extends TestCase
 {
     public function testPlainSendsBothCredentialsAtOnce(): void
     {
-        $this->assertSame("\0jane\0secret", (new Plain('jane', 'secret'))->initial());
+        $this->assertSame("\0jane\0secret", new Plain('jane', 'secret')->initial());
     }
 
     public function testLoginWaitsToBeAsked(): void
@@ -44,7 +44,7 @@ final class AuthTest extends TestCase
     {
         $this->assertSame(
             "user=jane@example.test\1auth=Bearer token-value\1\1",
-            (new XOAuth2('jane@example.test', 'token-value'))->initial(),
+            new XOAuth2('jane@example.test', 'token-value')->initial(),
         );
     }
 
@@ -52,6 +52,6 @@ final class AuthTest extends TestCase
     {
         // A challenge here is the server explaining the refusal. Answering with
         // nothing closes the exchange so the failure surfaces as one.
-        $this->assertSame('', (new XOAuth2('jane@example.test', 'token'))->respond('{"status":"401"}', 0));
+        $this->assertSame('', new XOAuth2('jane@example.test', 'token')->respond('{"status":"401"}', 0));
     }
 }

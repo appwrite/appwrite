@@ -10,7 +10,7 @@
         "mime"
     ],
     "require": {
-        "php": ">=8.3"
+        "php": ">=8.4"
     },
     "suggest": {
         "ext-fileinfo": "Detects the media type of an attachment added by path",

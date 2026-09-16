@@ -578,4 +578,109 @@ final class ClientTest extends TestCase
         $this->assertTrue($capabilities->has('8BITMIME'));
         $this->assertSame(100, $capabilities->maxSize());
     }
+
+    public function testAClosingReplyDuringRecipientsSurfacesAsTransactionNotProtocol(): void
+    {
+        $transport = $this->transport(['250 Sender ok', '421 Service not available, closing transmission channel']);
+        $client = new Client($transport, encryption: Encryption::None);
+
+        try {
+            $client->sendRaw(
+                new Envelope('jane@example.test', ['john@example.test', 'ghost@example.test']),
+                'Body',
+            );
+            $this->fail('Expected the send to fail');
+        } catch (TransactionException $exception) {
+            $this->assertSame(421, $exception->reply->code);
+        }
+
+        // The channel is gone, so no second RCPT, no RSET and no DATA follow.
+        $commands = $transport->commands();
+        $this->assertCount(1, array_filter($commands, static fn(string $line): bool => str_starts_with($line, 'RCPT TO')));
+        $this->assertNotContains('DATA', $commands);
+        $this->assertNotContains('RSET', $commands);
+        $this->assertTrue($transport->closed);
+    }
+
+    public function testAClosingReplyDiscardsTheSessionSoTheNextSendReconnects(): void
+    {
+        $transport = new FakeTransport([
+            '220 mail.example.test',
+            '250 mail.example.test',
+            '421 Service not available, closing transmission channel',
+            '220 mail.example.test',
+            '250 mail.example.test',
+            ...$this->transaction(),
+        ]);
+        $client = new Client($transport, 'relay.example.test', encryption: Encryption::None);
+
+        try {
+            $client->sendRaw($this->envelope(), 'Body');
+            $this->fail('Expected the first send to fail');
+        } catch (TransactionException) {
+        }
+
+        $this->assertInfinite($client->idle());
+
+        $result = $client->sendRaw($this->envelope(), 'Body');
+
+        $this->assertSame(['john@example.test'], $result->accepted);
+        $this->assertCount(2, array_filter($transport->commands(), static fn(string $line): bool => str_starts_with($line, 'EHLO')));
+    }
+
+    public function testIdleIsInfiniteWithNoSessionAndSmallAfterAReply(): void
+    {
+        $transport = $this->transport($this->transaction());
+        $client = new Client($transport, encryption: Encryption::None);
+
+        $this->assertInfinite($client->idle());
+
+        $client->sendRaw($this->envelope(), 'Body');
+
+        $this->assertGreaterThanOrEqual(0.0, $client->idle());
+        $this->assertLessThan(1.0, $client->idle());
+    }
+
+    public function testPingKeepsALiveSession(): void
+    {
+        $transport = $this->transport($this->transaction());
+        $client = new Client($transport, encryption: Encryption::None);
+        $client->sendRaw($this->envelope(), 'Body');
+
+        $transport->reply('250 2.0.0 Ok');
+
+        $this->assertTrue($client->ping());
+        $this->assertFalse($transport->closed);
+        $this->assertContains('NOOP', $transport->commands());
+    }
+
+    public function testPingDropsADeadSession(): void
+    {
+        $transport = $this->transport($this->transaction());
+        $client = new Client($transport, encryption: Encryption::None);
+        $client->sendRaw($this->envelope(), 'Body');
+
+        $transport->reply('421 Service not available, closing transmission channel');
+
+        $this->assertFalse($client->ping());
+        $this->assertTrue($transport->closed);
+        $this->assertInfinite($client->idle());
+    }
+
+    public function testTransactionsCountAcceptedMessagesAndResetOnClose(): void
+    {
+        $transport = $this->transport([...$this->transaction(), ...$this->transaction()]);
+        $client = new Client($transport, encryption: Encryption::None);
+
+        $this->assertSame(0, $client->transactions);
+
+        $client->sendRaw($this->envelope(), 'Body');
+        $this->assertSame(1, $client->transactions);
+
+        $client->sendRaw($this->envelope(), 'Body');
+        $this->assertSame(2, $client->transactions);
+
+        $client->close();
+        $this->assertSame(0, $client->transactions);
+    }
 }

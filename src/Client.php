@@ -32,7 +32,14 @@ final class Client
     /** A mechanism that keeps challenging is failing, whatever it says. */
     private const int MAX_CHALLENGES = 10;
 
+    private const int CLOSING = 421;
+
     private bool $ready = false;
+
+    private int $lastReply = 0;
+
+    /** Messages accepted over this connection. */
+    public private(set) int $transactions = 0;
 
     private Capabilities $capabilities;
 
@@ -76,6 +83,12 @@ final class Client
                 $this->command("RCPT TO:<{$recipient}>", [250, 251, 252]);
                 $accepted[] = $recipient;
             } catch (TransactionException $exception) {
+                // A 421 closes the channel, so the transport is already gone.
+                // Stop rather than issue the next command on a dead stream.
+                if (! $this->ready) {
+                    throw $exception;
+                }
+
                 // Partial refusal is normal and the message still reaches the rest.
                 $rejected[$recipient] = $exception->reply;
                 $refusal ??= $exception->reply;
@@ -83,7 +96,9 @@ final class Client
         }
 
         if ($refusal instanceof \Utopia\SMTP\Reply && $accepted === []) {
-            $this->reset();
+            if ($this->ready) {
+                $this->reset();
+            }
 
             throw new TransactionException($refusal, 'Every recipient was refused');
         }
@@ -106,7 +121,11 @@ final class Client
         // A refusal here is clean -- the server read the dot and is back in
         // command state -- so only a transaction failure keeps the connection.
         // exchange() decides that; a dead or desynchronised stream does not.
-        return new Result($this->messageId($this->exchange([250])), $accepted, $rejected);
+        $result = new Result($this->messageId($this->exchange([250])), $accepted, $rejected);
+
+        ++$this->transactions;
+
+        return $result;
     }
 
     public function capabilities(): Capabilities
@@ -164,6 +183,38 @@ final class Client
         $this->command('NOOP', [250]);
     }
 
+    /**
+     * Seconds since the server last answered, or INF when there is no session.
+     */
+    public function idle(): float
+    {
+        if (! $this->ready) {
+            return INF;
+        }
+
+        return (hrtime(true) - $this->lastReply) / 1_000_000_000;
+    }
+
+    /**
+     * Whether the session still answers. One that does not is dropped.
+     */
+    public function ping(): bool
+    {
+        if (! $this->ready) {
+            return false;
+        }
+
+        try {
+            $this->noop();
+
+            return true;
+        } catch (SmtpException) {
+            $this->discard();
+
+            return false;
+        }
+    }
+
     public function reset(): void
     {
         $this->command('RSET', [250]);
@@ -192,6 +243,7 @@ final class Client
         $this->ready = false;
         $this->buffer = '';
         $this->capabilities = Capabilities::none();
+        $this->transactions = 0;
     }
 
     private function start(): void
@@ -390,9 +442,14 @@ final class Client
     private function expect(array $expect): Reply
     {
         $reply = $this->reply();
+        $this->lastReply = hrtime(true);
 
         if (\in_array($reply->code, $expect, true)) {
             return $reply;
+        }
+
+        if ($reply->code === self::CLOSING) {
+            $this->discard();
         }
 
         $wanted = implode(' or ', array_map(\strval(...), $expect));

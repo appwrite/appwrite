@@ -41,12 +41,12 @@ final class AddressTest extends TestCase
 
     public function testAnAsciiAddressIsNotInternational(): void
     {
-        $this->assertFalse((new Address('jane@example.test', 'Jäne'))->isInternational());
+        $this->assertFalse(new Address('jane@example.test', 'Jäne')->isInternational());
     }
 
     public function testANonAsciiLocalPartIsInternational(): void
     {
-        $this->assertTrue((new Address('jäne@example.test'))->isInternational());
+        $this->assertTrue(new Address('jäne@example.test')->isInternational());
     }
 
     public function testRejectsAnAddressWithNoDomain(): void

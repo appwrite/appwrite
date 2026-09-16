@@ -76,13 +76,7 @@ final readonly class Message implements \Stringable
      */
     public function isInternational(): bool
     {
-        foreach ([$this->from, ...$this->to, ...$this->cc, ...$this->bcc, ...$this->replyTo] as $address) {
-            if ($address->isInternational()) {
-                return true;
-            }
-        }
-
-        return false;
+        return array_any([$this->from, ...$this->to, ...$this->cc, ...$this->bcc, ...$this->replyTo], fn(Address $address): bool => $address->isInternational());
     }
 
     /**

@@ -199,7 +199,21 @@ Header fields are folded to the 78 octet line length of RFC 5322, and encoded wo
 
 One difference is worth knowing before choosing it. Swoole checks a certificate name with `X509_check_host()`, which reads the DNS entries and not the address ones, so dialling an IP literal cannot pass verification however the certificate is written. The stream transport checks both. Give `Tls` a `peerName` the certificate carries, or ask for `Verification::None`; the transport says as much rather than letting the handshake fail with nothing to go on.
 
-A `Client` is one connection. Pooling belongs to [`utopia-php/pools`](https://github.com/utopia-php/pools), so there is no keep-alive setting here.
+A `Client` is one connection. Pooling belongs to [`utopia-php/pools`](https://github.com/utopia-php/pools), so there is no keep-alive setting here. What the client does offer a holder is the means to reuse a connection safely: a session the server has closed with `421` is dropped on the spot, and the next `send()` dials again on its own. A server that closes an idle session without a word is only found out by the next command, which would be `MAIL FROM` and the message with it, so a holder asks first once the session has sat long enough:
+
+```php
+if ($client->idle() > 100 && ! $client->ping()) {
+    // The session was dead and has been dropped; send() will reconnect.
+}
+
+if ($client->transactions >= 100) {
+    $client->close(); // Rotate a long-lived session the way a relay expects.
+}
+```
+
+Do not ping on every message. A server may drop a session that sends too many commands that carry no mail.
+
+A `Client` belongs to one caller at a time. SMTP is a strict request and reply protocol over one socket, so two coroutines sharing an instance would read each other's replies. Hold one per coroutine, or check one out of a pool for the length of a send.
 
 ## Extensions
 

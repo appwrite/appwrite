@@ -157,7 +157,7 @@ final class NativeTest extends TestCase
         // loopback, connecting to a free port inside the ephemeral range can
         // pair with the source port the kernel just handed us and succeed
         // against itself.
-        (new Native('127.0.0.1', 1))->connect(2.0, false);
+        new Native('127.0.0.1', 1)->connect(2.0, false);
     }
 
     public function testAPlainConnectionDoesNotClaimToBeEncrypted(): void

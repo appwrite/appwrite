@@ -190,7 +190,7 @@ final class SwooleTest extends TestCase
         $this->coroutine(function (): void {
             $this->expectException(\LogicException::class);
 
-            (new Swoole('127.0.0.1', 1))->read(8192, 2.0);
+            new Swoole('127.0.0.1', 1)->read(8192, 2.0);
         });
     }
 
@@ -215,7 +215,7 @@ final class SwooleTest extends TestCase
             // Linux loopback, connecting to a free port inside the ephemeral
             // range can pair with the source port the kernel just handed us and
             // succeed against itself.
-            (new Swoole('127.0.0.1', 1))->connect(2.0, false);
+            new Swoole('127.0.0.1', 1)->connect(2.0, false);
         });
     }
 
@@ -228,7 +228,7 @@ final class SwooleTest extends TestCase
             $transport = $this->connect();
             $transport->write("NOOP\r\n", 7.5);
 
-            $client = (new \ReflectionProperty(Swoole::class, 'client'))->getValue($transport);
+            $client = new \ReflectionProperty(Swoole::class, 'client')->getValue($transport);
             $this->assertInstanceOf(\Swoole\Coroutine\Client::class, $client);
 
             $settings = $client->setting;

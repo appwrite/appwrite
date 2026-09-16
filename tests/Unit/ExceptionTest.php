@@ -84,7 +84,7 @@ final class ExceptionTest extends TestCase
     {
         $this->expectException(\LogicException::class);
 
-        (new Native('127.0.0.1', 1))->read(8192, 1.0);
+        new Native('127.0.0.1', 1)->read(8192, 1.0);
     }
 
     public function testATransactionFailureCarriesTheReply(): void
