@@ -1178,6 +1178,7 @@ Http::shutdown()
 Http::shutdown()
     ->groups(['api'])
     ->inject('route')
+    ->inject('request')
     ->inject('response')
     ->inject('project')
     ->inject('user')
@@ -1186,7 +1187,7 @@ Http::shutdown()
     ->inject('apiKey')
     ->inject('mode')
     ->inject('lock')
-    ->action(function (Route $route, Response $response, Document $project, User $user, Database $dbForPlatform, Authorization $authorization, ?Key $apiKey, string $mode, Lock $lock) {
+    ->action(function (Route $route, Request $request, Response $response, Document $project, User $user, Database $dbForPlatform, Authorization $authorization, ?Key $apiKey, string $mode, Lock $lock) {
         /**
          * Persist completed onboarding stage after usage shutdown so a schema/write failure here
          * cannot suppress RequestCompleted or usage metrics on the same request.
@@ -1196,22 +1197,18 @@ Http::shutdown()
             return;
         }
 
-        $sdkLabel = $route->getLabel('sdk', false);
-        if ($sdkLabel === false || $sdkLabel === null) {
-            return;
-        }
-
         /** @var array<string, true> $onboarding */
         $onboarding = Config::getParam('onboarding', []);
         if ($onboarding === []) {
             return;
         }
 
-        $method = null;
+        $methods = [];
+        $sdkLabel = $route->getLabel('sdk', false);
         if ($sdkLabel instanceof Method) {
             $key = $sdkLabel->getNamespace() . '.' . $sdkLabel->getMethodName();
             if (isset($onboarding[$key])) {
-                $method = $key;
+                $methods[$key] = true;
             }
         } elseif (\is_array($sdkLabel)) {
             foreach ($sdkLabel as $sdkMethod) {
@@ -1220,13 +1217,24 @@ Http::shutdown()
                 }
                 $key = $sdkMethod->getNamespace() . '.' . $sdkMethod->getMethodName();
                 if (isset($onboarding[$key])) {
-                    $method = $key;
+                    $methods[$key] = true;
                     break;
                 }
             }
         }
 
-        if ($method === null) {
+        $sdkName = \strtolower($request->getHeaderLine('x-sdk-name', ''));
+        $sdkLanguage = \strtolower($request->getHeaderLine('x-sdk-language', ''));
+        $installKey = match (true) {
+            $sdkName === 'mcp', $sdkLanguage === 'mcp' => 'mcp.install',
+            $sdkName === 'cli', $sdkName === 'command line', $sdkLanguage === 'cli' => 'cli.install',
+            default => null,
+        };
+        if ($installKey !== null && isset($onboarding[$installKey])) {
+            $methods[$installKey] = true;
+        }
+
+        if ($methods === []) {
             return;
         }
 
@@ -1244,13 +1252,21 @@ Http::shutdown()
         }
 
         $byMethod = $project->getAttribute('onboarding', []);
-        $status = \is_array($byMethod) ? ($byMethod[$method]['status'] ?? null) : null;
-        if ($status === ONBOARDING_STATUS_COMPLETED || $status === ONBOARDING_STATUS_SKIPPED) {
-            return;
-        }
-
         if (! \is_array($byMethod)) {
             $byMethod = [];
+        }
+
+        $pending = [];
+        foreach (\array_keys($methods) as $method) {
+            $row = $byMethod[$method] ?? null;
+            $status = \is_array($row) ? ($row['status'] ?? null) : null;
+            if ($status !== ONBOARDING_STATUS_COMPLETED && $status !== ONBOARDING_STATUS_SKIPPED) {
+                $pending[] = $method;
+            }
+        }
+
+        if ($pending === []) {
+            return;
         }
 
         $actorType = ($apiKey !== null && $apiKey->getRole() === User::ROLE_KEYS)
@@ -1263,11 +1279,15 @@ Http::shutdown()
         : (! $user->isEmpty()
             ? ($mode === APP_MODE_ADMIN ? ACTOR_TYPE_ADMIN : ACTOR_TYPE_USER)
             : ACTOR_TYPE_GUEST);
-        $byMethod[$method] = [
-            'status' => ONBOARDING_STATUS_COMPLETED,
-            'at' => DateTime::now(),
-            'actorType' => $actorType,
-        ];
+
+        $now = DateTime::now();
+        foreach ($pending as $method) {
+            $byMethod[$method] = [
+                'status' => ONBOARDING_STATUS_COMPLETED,
+                'at' => $now,
+                'actorType' => $actorType,
+            ];
+        }
 
         try {
             // last write overwriting the other's stage on multiple request
