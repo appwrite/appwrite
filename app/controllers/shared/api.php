@@ -1318,7 +1318,7 @@ Http::shutdown()
                     }
 
                     if ($write === []) {
-                        return null;
+                        return;
                     }
 
                     return $authorization->skip(fn () => $dbForPlatform->skipFilters(
