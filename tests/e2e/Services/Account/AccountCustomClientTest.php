@@ -4435,7 +4435,7 @@ final class AccountCustomClientTest extends Scope
         $lastEmail = $this->getLastEmailByAddress($email);
         $this->assertNotEmpty($lastEmail, 'Email not found for address: ' . $email);
         $this->assertEquals($this->getProject()['name'] . ' Login', $lastEmail['subject']);
-        $this->assertStringContainsString($response['body']['expire'], $lastEmail['text']);
+        $this->assertStringContainsString($response['body']['expire'], (string) $lastEmail['text']);
         $this->assertStringNotContainsStringIgnoringCase('security phrase', $lastEmail['text']);
 
         $token = substr($lastEmail['text'], strpos($lastEmail['text'], '&secret=', 0) + 8, 64);
