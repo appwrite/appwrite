@@ -32,6 +32,8 @@ class SMTP extends EmailAdapter
      * @param int $timeout SMTP timeout in seconds.
      * @param bool $keepAlive Whether to reuse the SMTP connection across process() calls.
      * @param int $timelimit SMTP command timelimit in seconds.
+     * @param int $pingThreshold Seconds a kept session may sit idle before it is probed ahead of the next message. Keep it under the server's idle timeout: a session the server closed inside the threshold fails its send without a retry. 0 probes before every reuse.
+     * @param int $restartThreshold Messages a kept session carries before it is replaced. 0 disables.
      */
     public function __construct(
         private readonly string $host,
@@ -44,6 +46,8 @@ class SMTP extends EmailAdapter
         private readonly int $timeout = 30,
         private readonly bool $keepAlive = false,
         private readonly int $timelimit = 30,
+        private readonly int $pingThreshold = 30,
+        private readonly int $restartThreshold = 100,
     ) {
         parent::__construct();
         if (!\in_array($this->smtpSecure, ['', 'ssl', 'tls'])) {
@@ -70,7 +74,7 @@ class SMTP extends EmailAdapter
         $recipients = $this->recipients($message);
 
         try {
-            $client = $this->client();
+            $client = $this->keepAlive ? $this->client() : $this->dial();
         } catch (SmtpException $exception) {
             foreach ($recipients as $email) {
                 $response->addResult($email, $exception->getMessage());
@@ -78,6 +82,8 @@ class SMTP extends EmailAdapter
 
             return $response->toArray();
         }
+
+        $keep = $this->keepAlive;
 
         try {
             $result = $client->send($this->build($message));
@@ -98,14 +104,18 @@ class SMTP extends EmailAdapter
             foreach ($recipients as $email) {
                 $response->addResult($email, (string) $exception->reply);
             }
+
+            // A 421 during RCPT ends the session with the transaction.
+            $keep = $keep && is_finite($client->idle());
         } catch (SmtpException $exception) {
             foreach ($recipients as $email) {
                 $response->addResult($email, $exception->getMessage());
             }
+
+            $keep = false;
         } finally {
-            if (!$this->keepAlive) {
-                $client->close();
-                $this->client = null;
+            if (!$keep) {
+                $this->drop($client);
             }
         }
 
@@ -113,7 +123,7 @@ class SMTP extends EmailAdapter
     }
 
     /**
-     * Close a connection held open between sends. Doing nothing is safe.
+     * Teardown only: closing under a send in flight desynchronises it.
      */
     public function disconnect(): void
     {
@@ -122,14 +132,34 @@ class SMTP extends EmailAdapter
     }
 
     /**
-     * The first host that answers, tried in the order they were given.
+     * The kept session, or a fresh one when it is spent or the server closed it.
      */
     private function client(): Client
     {
-        if ($this->client instanceof Client) {
+        if ($this->client instanceof Client && $this->reusable($this->client)) {
             return $this->client;
         }
 
+        $this->client?->close();
+        $this->client = null;
+
+        return $this->client = $this->dial();
+    }
+
+    private function drop(Client $client): void
+    {
+        if ($this->client === $client) {
+            $this->client = null;
+        }
+
+        $client->close();
+    }
+
+    /**
+     * The first host that answers, tried in the order they were given.
+     */
+    private function dial(): Client
+    {
         $timeouts = new Timeouts(
             connect: (float) $this->timeout,
             read: (float) $this->timelimit,
@@ -157,16 +187,25 @@ class SMTP extends EmailAdapter
                 continue;
             }
 
-            if ($this->keepAlive) {
-                $this->client = $client;
-            }
-
             return $client;
         }
 
         throw new \Utopia\SMTP\Exception\ConnectionException(
             'No SMTP host answered: ' . implode('; ', $failures),
         );
+    }
+
+    private function reusable(Client $client): bool
+    {
+        if ($this->restartThreshold > 0 && $client->transactions >= $this->restartThreshold) {
+            return false;
+        }
+
+        if ($client->idle() <= $this->pingThreshold) {
+            return true;
+        }
+
+        return $client->ping();
     }
 
     /**
