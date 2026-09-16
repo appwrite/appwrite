@@ -19,7 +19,8 @@ abstract class Message implements MessageInterface
         protected array $headers = [],
         protected array $headerNames = [],
         protected StreamInterface $body = new Stream(),
-    ) {}
+    ) {
+    }
 
     public function getProtocolVersion(): string
     {

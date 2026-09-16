@@ -15,7 +15,8 @@ final readonly class Factory implements ServerRequestFactoryInterface
 {
     public function __construct(
         private UriFactoryInterface $uriFactory = new Uri\Factory(),
-    ) {}
+    ) {
+    }
 
     /**
      * @param array<string, mixed> $serverParams

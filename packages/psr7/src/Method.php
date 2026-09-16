@@ -24,5 +24,7 @@ final class Method
 
     public const string TRACE = 'TRACE';
 
-    private function __construct() {}
+    private function __construct()
+    {
+    }
 }

@@ -21,7 +21,8 @@ final class UploadedFile implements UploadedFileInterface
         private readonly int $error,
         private readonly ?string $clientFilename = null,
         private readonly ?string $clientMediaType = null,
-    ) {}
+    ) {
+    }
 
     /**
      * @param array<array-key, mixed> $files

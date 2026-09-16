@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Utopia\Tests\Psr7\Response;
+namespace Utopia\Psr7\Tests\Response;
 
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;

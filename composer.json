@@ -28,7 +28,8 @@
             "Executor\\": "src/Executor",
             "Utopia\\Agents\\": "packages/agents/src",
             "Utopia\\Bus\\": "packages/bus/src",
-            "Utopia\\Lock\\": "packages/lock/src"
+            "Utopia\\Lock\\": "packages/lock/src",
+            "Utopia\\Psr7\\": "packages/psr7/src"
         }
     },
     "autoload-dev": {
@@ -38,7 +39,8 @@
             "Appwrite\\Tests\\": "tests/extensions",
             "Utopia\\Agents\\Tests\\": "packages/agents/tests",
             "Utopia\\Bus\\Tests\\": "packages/bus/tests",
-            "Utopia\\Lock\\Tests\\": "packages/lock/tests"
+            "Utopia\\Lock\\Tests\\": "packages/lock/tests",
+            "Utopia\\Psr7\\Tests\\": "packages/psr7/tests"
         }
     },
     "minimum-stability": "dev",
@@ -121,7 +123,9 @@
         "utopia-php/schedule": "^0.2.0",
         "utopia-php/usage": "^0.16.4",
         "utopia-php/query": "0.6.*",
-        "utopia-php/openapi": "^0.2.4"
+        "utopia-php/openapi": "^0.2.4",
+        "psr/http-factory": "^1.0",
+        "psr/http-message": "^1.1 || ^2.0"
     },
     "require-dev": {
         "ext-fileinfo": "*",
@@ -152,6 +156,7 @@
     "replace": {
         "utopia-php/agents": "*",
         "utopia-php/bus": "*",
-        "utopia-php/lock": "*"
+        "utopia-php/lock": "*",
+        "utopia-php/psr7": "*"
     }
 }

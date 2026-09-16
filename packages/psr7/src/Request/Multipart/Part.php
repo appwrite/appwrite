@@ -18,7 +18,8 @@ final readonly class Part
         private ?string $filename = null,
         private ?string $contentType = null,
         private array $headers = [],
-    ) {}
+    ) {
+    }
 
     /**
      * @param array<string, string> $headers

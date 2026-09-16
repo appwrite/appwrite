@@ -12,7 +12,8 @@ final readonly class Part
     public function __construct(
         private array $headers,
         private string $body,
-    ) {}
+    ) {
+    }
 
     /**
      * @return array<string, array<int, string>>

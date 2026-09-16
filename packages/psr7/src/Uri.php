@@ -17,7 +17,8 @@ final readonly class Uri implements UriInterface, \Stringable
         private string $path = '',
         private string $query = '',
         private string $fragment = '',
-    ) {}
+    ) {
+    }
 
     public static function parse(string $uri): self
     {
@@ -174,7 +175,7 @@ final readonly class Uri implements UriInterface, \Stringable
     {
         return preg_replace_callback(
             '/(?:[^A-Za-z0-9_\-\.~!\$&\'\(\)\*\+,;=:@\/%]++|%(?![A-Fa-f0-9]{2}))/',
-            static fn(array $matches): string => rawurlencode($matches[0]),
+            static fn (array $matches): string => rawurlencode($matches[0]),
             $path,
         ) ?? '';
     }
@@ -183,7 +184,7 @@ final readonly class Uri implements UriInterface, \Stringable
     {
         return preg_replace_callback(
             '/(?:[^A-Za-z0-9_\-\.~!\$&\'\(\)\*\+,;=:@\/\?%]++|%(?![A-Fa-f0-9]{2}))/',
-            static fn(array $matches): string => rawurlencode($matches[0]),
+            static fn (array $matches): string => rawurlencode($matches[0]),
             $value,
         ) ?? '';
     }

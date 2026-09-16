@@ -46,5 +46,7 @@ final class Header
 
     public const string USER_AGENT = 'User-Agent';
 
-    private function __construct() {}
+    private function __construct()
+    {
+    }
 }

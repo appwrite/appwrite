@@ -88,7 +88,9 @@ function rm(string $path): void
  */
 function packages(): array
 {
-    return array_map('basename', glob('packages/*', GLOB_ONLYDIR));
+    // A directory is a package only if it carries a manifest: ignored leftovers
+    // (a vendor/ from another branch's test run) must not count.
+    return array_map(fn (string $manifest) => basename(dirname($manifest)), glob('packages/*/composer.json'));
 }
 
 /**

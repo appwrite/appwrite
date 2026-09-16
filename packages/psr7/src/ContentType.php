@@ -24,5 +24,7 @@ final class ContentType
 
     public const string XML = 'application/xml';
 
-    private function __construct() {}
+    private function __construct()
+    {
+    }
 }

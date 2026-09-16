@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Utopia\Tests\Psr7\Request;
+namespace Utopia\Psr7\Tests\Request;
 
 use JsonException;
 use PHPUnit\Framework\TestCase;

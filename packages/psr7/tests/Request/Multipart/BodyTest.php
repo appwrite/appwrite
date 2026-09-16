@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Utopia\Tests\Psr7\Request\Multipart;
+namespace Utopia\Psr7\Tests\Request\Multipart;
 
 use PHPUnit\Framework\TestCase;
 use RuntimeException;

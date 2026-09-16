@@ -23,7 +23,8 @@ final readonly class Factory implements RequestFactoryInterface
     public function __construct(
         private UriFactoryInterface $uriFactory = new Uri\Factory(),
         private StreamFactoryInterface $streamFactory = new Stream\Factory(),
-    ) {}
+    ) {
+    }
 
     public function createRequest(string $method, $uri): RequestInterface
     {

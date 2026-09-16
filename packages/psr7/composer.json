@@ -12,16 +12,16 @@
     "license": "MIT",
     "autoload": {
         "psr-4": {
-            "Utopia\\Psr7\\": "src/Psr7/"
+            "Utopia\\Psr7\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Utopia\\Tests\\Psr7\\": "tests/Psr7/"
+            "Utopia\\Psr7\\Tests\\": "tests/"
         }
     },
     "scripts": {
-        "test": "phpunit --configuration phpunit.xml"
+        "test": "phpunit --configuration phpunit.xml --testsuite unit"
     },
     "require": {
         "php": ">=8.4",
