@@ -13,6 +13,18 @@ export const BELOW_APP_HEADER_STICKY_MAX_HEIGHT_CLASS =
   'max-h-[calc(100dvh_-_var(--app-header-height,0px))]'
 
 /**
+ * `ArticleStickyToolbar` is `h-14`. Blog TOC pins under that overlay so it
+ * does not share the header band, and so it starts sticking later on scroll.
+ */
+export const ARTICLE_STICKY_TOOLBAR_HEIGHT = '3.5rem'
+
+export const BELOW_ARTICLE_TOOLBAR_STICKY_TOP_CLASS =
+  'sticky top-[calc(var(--app-header-height,0px)+3.5rem)]'
+
+export const BELOW_ARTICLE_TOOLBAR_STICKY_MAX_HEIGHT_CLASS =
+  'max-h-[calc(100dvh_-_var(--app-header-height,0px)_-_3.5rem)]'
+
+/**
  * Pins a layout-row column under the app header for the length of the page.
  * Marketing and docs scroll the document (see `marketing-document-scroll` in
  * styles.css), so a plain `h-full` column grows to the article height and

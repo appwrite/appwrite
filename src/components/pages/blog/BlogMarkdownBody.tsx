@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { startTransition, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import {
   ImagePreviewGalleryDialog,
@@ -123,10 +123,10 @@ export function BlogMarkdownBody({ html, className }: BlogMarkdownBodyProps) {
             (entry) => entry.src === item.src && entry.alt === item.alt,
           )
           if (index >= 0) {
-            setActiveIndex(index)
+            startTransition(() => setActiveIndex(index))
             return current
           }
-          setActiveIndex(current.length)
+          startTransition(() => setActiveIndex(current.length))
           return [...current, item]
         })
         return
@@ -137,13 +137,15 @@ export function BlogMarkdownBody({ html, className }: BlogMarkdownBodyProps) {
         event.preventDefault()
         const embed = youtubeButton.getAttribute('data-blog-youtube')
         if (!embed) return
-        setYoutube({
-          embed,
-          title:
-            youtubeButton.getAttribute('data-blog-youtube-title') ??
-            'YouTube video',
+        startTransition(() => {
+          setYoutube({
+            embed,
+            title:
+              youtubeButton.getAttribute('data-blog-youtube-title') ??
+              'YouTube video',
+          })
+          setYoutubeOpen(true)
         })
-        setYoutubeOpen(true)
       }
     }
 
