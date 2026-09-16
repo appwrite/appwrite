@@ -27,7 +27,6 @@ export const ANALYTICS_ACTIONS = {
   'auth-sign-in': 'Sign In Clicked',
   'auth-sign-up': 'Sign Up Clicked',
   'header-console': 'Header Console Clicked',
-  'header-old-console': 'Header Old Console Clicked',
   'header-home': 'Header Home Clicked',
   'header-docs': 'Header Docs Clicked',
   'create-affiliate-link': 'Create Affiliate Link Clicked',
