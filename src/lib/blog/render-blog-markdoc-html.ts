@@ -248,10 +248,12 @@ function renderYoutube(tag: MarkdocTag): string {
     String(tag.attributes.thumbnail ?? '').trim() ||
     (id ? `https://i.ytimg.com/vi/${id}/hqdefault.jpg` : '')
 
-  return `<div class="not-prose my-8"><button type="button" class="group relative block w-full cursor-pointer overflow-hidden rounded-xl border border-border bg-muted/25 text-start" data-blog-youtube="${escapeHtml(embed)}" aria-label="${escapeHtml(`Play ${title}`)}">${
+  const playBadge = `<span class="pointer-events-none absolute start-1/2 top-1/2 flex size-11 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-white/10 shadow-sm backdrop-blur-md transition-transform duration-150 group-hover:scale-105 group-active:scale-95" aria-hidden="true"><svg viewBox="0 0 24 24" class="ms-0.5 size-4 fill-white/70 transition-colors duration-150 group-hover:fill-white"><path d="M8 5.14v13.72a1 1 0 0 0 1.52.85l11.14-6.86a1 1 0 0 0 0-1.7L9.52 4.29A1 1 0 0 0 8 5.14Z" /></svg></span>`
+
+  return `<div class="not-prose my-8"><button type="button" class="group relative block w-full cursor-pointer overflow-hidden rounded-xl border border-border bg-muted/25 text-start" data-blog-youtube="${escapeHtml(embed)}" data-blog-youtube-title="${escapeHtml(title)}" aria-label="${escapeHtml(`Play ${title}`)}">${
     thumbnail
-      ? `<span class="relative aspect-video block w-full"><img src="${escapeHtml(thumbnail)}" alt="" loading="lazy" class="size-full object-cover" /></span>`
-      : '<span class="aspect-video block w-full bg-muted"></span>'
+      ? `<span class="relative aspect-video block w-full"><img src="${escapeHtml(thumbnail)}" alt="" loading="lazy" class="size-full object-cover" />${playBadge}</span>`
+      : `<span class="relative aspect-video block w-full bg-muted">${playBadge}</span>`
   }</button></div>`
 }
 
