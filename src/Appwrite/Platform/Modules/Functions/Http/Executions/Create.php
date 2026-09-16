@@ -117,7 +117,7 @@ class Create extends Base
         string $functionId,
         string $body,
         mixed $async,
-        string $path,
+        ?string $path,
         string $method,
         mixed $headers,
         ?string $scheduledAt,
@@ -139,6 +139,7 @@ class Create extends Base
         int $executionsRetentionCount,
         Bus $bus,
     ) {
+        $path ??= '/';
         $async = \strval($async) === 'true' || \strval($async) === '1';
 
         if (!$async && !is_null($scheduledAt)) {
@@ -229,6 +230,9 @@ class Create extends Base
                     'userId' => $user->getId(),
                     'sessionId' => $current->getId(),
                 ]);
+            } else {
+                // A JWT cannot be used to create another JWT, so forward the caller's token as-is
+                $jwt = $request->getHeaderLine('x-appwrite-jwt');
             }
         }
 

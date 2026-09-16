@@ -265,8 +265,6 @@ class Response extends SwooleResponse
     public const MODEL_KEY = 'key';
     public const MODEL_KEY_LIST = 'keyList';
     public const MODEL_EPHEMERAL_KEY = 'ephemeralKey';
-    public const MODEL_DEV_KEY = 'devKey';
-    public const MODEL_DEV_KEY_LIST = 'devKeyList';
     public const MODEL_MOCK_NUMBER = 'mockNumber';
     public const MODEL_MOCK_NUMBER_LIST = 'mockNumberList';
     public const MODEL_POLICY_LIST = 'policyList';
@@ -281,6 +279,10 @@ class Response extends SwooleResponse
     public const MODEL_POLICY_USER_LIMIT = 'policyUserLimit';
     public const MODEL_POLICY_MEMBERSHIP_PRIVACY = 'policyMembershipPrivacy';
     public const MODEL_POLICY_MFA_FACTORS = 'policyMfaFactors';
+    public const MODEL_POLICY_DENY_ALIASED_EMAIL = 'policyDenyAliasedEmail';
+    public const MODEL_POLICY_DENY_DISPOSABLE_EMAIL = 'policyDenyDisposableEmail';
+    public const MODEL_POLICY_DENY_FREE_EMAIL = 'policyDenyFreeEmail';
+    public const MODEL_POLICY_DENY_CORPORATE_EMAIL = 'policyDenyCorporateEmail';
     public const MODEL_AUTH_PROVIDER = 'authProvider';
     public const MODEL_AUTH_PROVIDER_LIST = 'authProviderList';
     public const MODEL_PLATFORM_APPLE = 'platformApple';
