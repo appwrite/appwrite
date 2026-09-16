@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "8b624e294e478fa855a5913959e9212c",
+    "content-hash": "106113c054c398c281773833e4061885",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3972,54 +3972,6 @@
                 "source": "https://github.com/utopia-php/locale/tree/0.8.0"
             },
             "time": "2025-08-12T12:58:26+00:00"
-        },
-        {
-            "name": "utopia-php/lock",
-            "version": "0.3.1",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/utopia-php/lock.git",
-                "reference": "1f42343b1a336bf9ff719d0c2b5d43712ac43394"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/lock/zipball/1f42343b1a336bf9ff719d0c2b5d43712ac43394",
-                "reference": "1f42343b1a336bf9ff719d0c2b5d43712ac43394",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=8.3"
-            },
-            "require-dev": {
-                "swoole/ide-helper": "*"
-            },
-            "suggest": {
-                "ext-pcntl": "Required to run the File lock tests",
-                "ext-redis": "Required for the Distributed lock",
-                "ext-swoole": "Required for the Mutex and Semaphore locks (>=6.0)"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Utopia\\Lock\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Appwrite Team",
-                    "email": "team@appwrite.io"
-                }
-            ],
-            "description": "A simple lock library to coordinate access to shared resources across coroutines, processes and hosts",
-            "support": {
-                "issues": "https://github.com/utopia-php/lock/issues",
-                "source": "https://github.com/utopia-php/lock/tree/0.3.1"
-            },
-            "time": "2026-08-21T15:12:28+00:00"
         },
         {
             "name": "utopia-php/messaging",
