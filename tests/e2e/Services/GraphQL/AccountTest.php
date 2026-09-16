@@ -89,33 +89,30 @@ final class AccountTest extends Scope
         /**
          * Test for SUCCESS
          */
-        $baseline = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $headers, [
-            'email' => $email,
-            'password' => 'password',
-        ]);
+        $baseline = $this->client->call(Client::METHOD_POST, '/users/' . $userId . '/sessions', $headers);
         $this->assertEquals(201, $baseline['headers']['status-code']);
         $this->assertSame($userId, $baseline['body']['userId']);
         $this->assertNotEmpty($baseline['body']['secret']);
 
         $response = $this->client->call(Client::METHOD_POST, '/graphql', $headers, [
-            'query' => 'mutation CreateRecoveryAndSession($email: String!, $password: String!) {
+            'query' => 'mutation CreateRecoveryAndSession($email: String!, $userId: String!) {
                 recovery: accountCreateRecovery(email: $email, url: "http://localhost/recovery", length: 4) {
                     userId
                     secret
                 }
-                session: accountCreateEmailPasswordSession(email: $email, password: $password) {
+                session: usersCreateSession(userId: $userId) {
                     userId
                     secret
                 }
             }',
             'variables' => [
                 'email' => $email,
-                'password' => 'password',
+                'userId' => $userId,
             ],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertArrayNotHasKey('errors', $response['body']);
+        $this->assertArrayNotHasKey('errors', $response['body'], json_encode($response['body']['errors'] ?? [], JSON_THROW_ON_ERROR));
         $recovery = $response['body']['data']['recovery'];
         $session = $response['body']['data']['session'];
         $this->assertSame($userId, $recovery['userId']);
