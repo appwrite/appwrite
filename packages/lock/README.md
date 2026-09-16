@@ -182,17 +182,7 @@ try {
 
 ## Tests
 
-To run all unit tests, use the following Docker command:
-
-```bash
-docker compose exec tests vendor/bin/phpunit --configuration phpunit.xml tests
-```
-
-To run static code analysis, use the following PHPStan command:
-
-```bash
-docker compose exec tests vendor/bin/phpstan analyse --memory-limit=512M
-```
+This package is developed in [appwrite/appwrite](https://github.com/appwrite/appwrite); from that repository run `bin/monorepo test lock` (unit tier, then the Redis-backed tier against `docker-compose.yml`) and `bin/monorepo check lock`.
 
 ## Security
 

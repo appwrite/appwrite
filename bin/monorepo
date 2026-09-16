@@ -712,10 +712,9 @@ switch ($command) {
                 }
             }
             if (!is_file("packages/{$package}/phpstan.neon")) {
-            if (is_file("packages/{$package}/phpstan.neon") && str_contains(file_get_contents("packages/{$package}/phpstan.neon"), '../')) {
-                $problems[] = 'phpstan.neon must not include or reference paths outside the package (the root config is not a package floor)';
-            }
                 $problems[] = 'missing phpstan.neon (packages are analysed under their own level)';
+            } elseif (str_contains(file_get_contents("packages/{$package}/phpstan.neon"), '../')) {
+                $problems[] = 'phpstan.neon must not include or reference paths outside the package (the root config is not a package floor)';
             }
             if (!is_file("packages/{$package}/.github/workflows/mirror.yml")) {
                 $problems[] = 'missing .github/workflows/mirror.yml, run `bin/monorepo absorb ' . $package . ' --skip-ruleset`';
@@ -855,13 +854,13 @@ switch ($command) {
             if ($code === 0 && isset(manifest($package)['scripts']['test:e2e'])) {
                 $compose = is_file("{$directory}/docker-compose.yml");
                 if ($compose) {
-                    passthru("cd {$directory} && docker compose up -d --build --wait", $code);
+                    passthru("cd {$directory} && COMPOSE_FILE=docker-compose.yml docker compose up -d --build --wait", $code);
                 }
                 if ($code === 0) {
                     passthru("cd {$directory} && {$environment}composer test:e2e", $code);
                 }
                 if ($compose) {
-                    passthru("cd {$directory} && docker compose down -v --remove-orphans > /dev/null 2>&1");
+                    passthru("cd {$directory} && COMPOSE_FILE=docker-compose.yml docker compose down -v --remove-orphans > /dev/null 2>&1");
                 }
             }
 

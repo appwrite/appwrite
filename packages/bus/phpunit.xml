@@ -3,11 +3,11 @@
     <testsuites>
         <testsuite name="unit">
             <directory>tests</directory>
-            <exclude>tests/e2e</exclude>
+            <exclude>tests/E2E</exclude>
             <exclude>tests/bench</exclude>
         </testsuite>
         <testsuite name="e2e">
-            <directory>tests/e2e</directory>
+            <directory>tests/E2E</directory>
         </testsuite>
     </testsuites>
     <source>
