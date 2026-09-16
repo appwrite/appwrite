@@ -630,6 +630,7 @@ function renderValueControl(
             REQUEST_BUILDER_INPUT,
             'h-full min-h-[44px] justify-start rounded-none border-0 bg-transparent font-mono shadow-none hover:bg-transparent dark:bg-transparent dark:hover:bg-transparent',
           )}
+          timeZoneMode="preferred"
         />
       )
 

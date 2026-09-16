@@ -19,22 +19,17 @@ export type DatabaseSettingsNavItem = {
 }
 
 export type DatabaseSettingsVisibility = {
-  /** Dedicated compute (specification, replication) only exists on Cloud. */
-  isCloud: boolean
+  /** `databaseSpecifications` profile feature. */
+  showSpecification: boolean
   /** Replication needs a dedicated database that supports replicas. */
   showReplication: boolean
 }
-
-const CLOUD_ONLY_SECTIONS: ReadonlySet<string> = new Set([
-  'specification',
-  'replication',
-])
 
 export function isDatabaseSettingsSectionVisible(
   sectionId: string,
   visibility: DatabaseSettingsVisibility,
 ): boolean {
-  if (CLOUD_ONLY_SECTIONS.has(sectionId) && !visibility.isCloud) return false
+  if (sectionId === 'specification') return visibility.showSpecification
   if (sectionId === 'replication') return visibility.showReplication
   return true
 }

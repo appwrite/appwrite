@@ -74,6 +74,7 @@ export const COVER_TEMPLATE_IDS = [
   'showcase-icon',
   'title-icon',
   'screenshot',
+  'screenshot-two-line',
   'screenshot-side',
   'screenshot-angled',
   'cards-angled',

@@ -12,6 +12,7 @@ import {
   isConsoleBannerVisible,
   isInitRecapPromoPath,
   POSTGRES_PROMO_BANNER_ID,
+  PRODUCT_HUNT_BANNER_ID,
   shouldHideInitRecapForHeaderPromo,
   useDebugConsoleBannerPreviews,
 } from '@/lib/console-banners'
@@ -25,6 +26,7 @@ import {
 
 const INIT_RECAP_PROMO_BANNER = getConsoleBannerById(INIT_RECAP_PROMO_BANNER_ID)!
 const POSTGRES_PROMO_BANNER = getConsoleBannerById(POSTGRES_PROMO_BANNER_ID)!
+const PRODUCT_HUNT_BANNER = getConsoleBannerById(PRODUCT_HUNT_BANNER_ID)!
 
 export function InitRecapPromoBanner() {
   const t = useT()
@@ -52,6 +54,11 @@ export function InitRecapPromoBanner() {
     preview: isPreviewEnabled(POSTGRES_PROMO_BANNER_ID),
     dismissed: isConsoleBannerDismissed(prefs, POSTGRES_PROMO_BANNER_ID),
   })
+  const productHuntHeaderVisible = isConsoleBannerVisible(PRODUCT_HUNT_BANNER, {
+    preview: isPreviewEnabled(PRODUCT_HUNT_BANNER_ID),
+    dismissed: isConsoleBannerDismissed(prefs, PRODUCT_HUNT_BANNER_ID),
+  })
+  const headerPromoVisible = postgresHeaderVisible || productHuntHeaderVisible
 
   if (!visible) return null
   if (
@@ -63,7 +70,7 @@ export function InitRecapPromoBanner() {
   if (!preview) {
     if (!features.init || !isAuthenticated || !onPromoPath) return null
   }
-  if (shouldHideInitRecapForHeaderPromo(location.pathname, postgresHeaderVisible)) {
+  if (shouldHideInitRecapForHeaderPromo(location.pathname, headerPromoVisible)) {
     return null
   }
 

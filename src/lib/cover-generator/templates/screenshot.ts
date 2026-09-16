@@ -10,9 +10,9 @@ import {
   buildCoverScreenshotClipSvg,
   buildCoverScreenshotGlassFrameSvg,
   COVER_HERO_SCREENSHOT_FRAME,
-  COVER_SCREENSHOT_TITLE,
   getCoverScreenshotGlassColors,
   getCoverScreenshotSceneLayout,
+  type CoverFlatScreenshotRenderData,
 } from '@/lib/cover-generator/cover-screenshot-frame'
 import { COVER_WIDTH } from '@/lib/cover-generator/constants'
 import { coverSvgTextBaseline } from '@/lib/cover-generator/cover-svg-text'
@@ -23,12 +23,12 @@ import {
 import { getCoverFontFaceCss } from '@/lib/cover-generator/font-embed'
 import { getScreenshotCropRect } from '@/lib/cover-generator/screenshot-crop'
 import { escapeXml } from '@/lib/cover-generator/text-utils'
-import type { CoverRenderData, CoverScreenshotData } from '@/lib/cover-generator/types'
+import type { CoverScreenshotFields } from '@/lib/cover-generator/types'
 import type { CoverTheme } from '@/lib/cover-generator/constants'
 
 async function cropScreenshotToFrame(
   source: string,
-  data: CoverScreenshotData,
+  data: CoverScreenshotFields,
   outputWidth: number,
   outputHeight: number,
 ): Promise<Buffer | null> {
@@ -61,13 +61,14 @@ async function cropScreenshotToFrame(
 }
 
 function buildScreenshotOverlayContent(
-  data: Extract<CoverRenderData, { template: 'screenshot' }>,
+  data: CoverFlatScreenshotRenderData,
   theme: CoverTheme,
 ): string {
   const brand = getCoverBrandThemeForSvgExport(theme)
   const glass = getCoverScreenshotGlassColors(theme)
-  const { titleLines, layout, titleY, subtitleY } = getCoverScreenshotSceneLayout(data)
-  const { fontSize, lineHeight, subtitleFontSize } = COVER_SCREENSHOT_TITLE
+  const { title, titleLines, layout, titleY, subtitleY } =
+    getCoverScreenshotSceneLayout(data)
+  const { fontSize, lineHeight, subtitleFontSize } = title
 
   return `
     ${buildCoverScreenshotGlassFrameSvg(layout, glass)}
@@ -94,8 +95,9 @@ function buildScreenshotOverlayContent(
   `
 }
 
+/** Renders the flat `screenshot` and `screenshot-two-line` templates. */
 export async function renderScreenshotCoverPng(
-  data: Extract<CoverRenderData, { template: 'screenshot' }>,
+  data: CoverFlatScreenshotRenderData,
 ): Promise<Uint8Array> {
   const brand = getCoverBrandThemeForSvgExport(data.theme)
   const { layout } = getCoverScreenshotSceneLayout(data)

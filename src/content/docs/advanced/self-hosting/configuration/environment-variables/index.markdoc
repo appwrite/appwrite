@@ -91,7 +91,7 @@ If running in production, it might be easier to use a 3rd party SMTP server as i
 | Name                                        | Description                                                                                                                                                                                                                         |
 |---------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `_APP_SMS_PROVIDER`  | **version >= 0.15.0** Provider used for delivering SMS for Phone authentication. Use the following format: `sms://<USER>:<SECRET>@<PROVIDER>`. Ensure `<USER>` and `<SECRET>` are URL encoded if they contain any non-alphanumeric characters. Available providers are twilio, text-magic, telesign, msg91, and vonage. |
-| `_APP_SMS_FROM`  | **version >= 0.15.0** Phone number used for sending out messages. Must start with a leading '+' and maximum of 15 digits without spaces (+123456789).                                                                                                      |
+| `_APP_SMS_FROM`  | **version >= 0.15.0** Phone number, or an alphanumeric sender ID where the provider supports it, used for sending out messages. A phone number must start with a leading '+' and have a maximum of 15 digits without spaces (+123456789). If using Twilio, this may also be a Messaging Service SID, starting with MG. |
 
 # Storage {% #storage %}
 
@@ -176,8 +176,8 @@ If running in production, it might be easier to use a 3rd party SMTP server as i
 | `_APP_MAINTENANCE_RETENTION_EXECUTION`          | **version >= 0.7.0** - The maximum duration (in seconds) upto which to retain execution logs. The default value is `1209600` seconds (14 days).                                        |
 | `_APP_MAINTENANCE_RETENTION_AUDIT`              | **version >= 0.7.0** - The maximum duration (in seconds) upto which to retain audit logs. The default value is `1209600` seconds (14 days).                                           |
 | `_APP_MAINTENANCE_RETENTION_ABUSE`              | **version >= 0.7.0** - The maximum duration (in seconds) upto which to retain abuse logs. The default value is `86400` seconds (1 day).                                               |
-| `_APP_MAINTENANCE_RETENTION_USAGE_HOURLY`       | The maximum duration (in seconds) upto which to retain hourly usage metrics. The default value is `8640000` seconds (100 days).                                                      |
 | `_APP_MAINTENANCE_RETENTION_SCHEDULES`          | Schedules deletion interval (in seconds).                                                                                                                     |
+| `_APP_MAINTENANCE_RETENTION_USAGE_TTL`          | **version >= 2.2.0** Retention in days for raw and daily usage events stored in ClickHouse. Gauges have no TTL. The default value is `180`. Set to `0` to disable event TTLs. |
 
 # GraphQL {% #graphql %}
 

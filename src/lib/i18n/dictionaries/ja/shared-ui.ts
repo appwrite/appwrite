@@ -1231,4 +1231,9 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'After you confirm, the Console will open this page.':
     '確認後、コンソールはこのページを開きます。',
   'Not set': '未設定',
+  'Browser timezone': 'ブラウザのタイムゾーン',
+  'Stored in UTC': 'UTC での保存値',
+  'Appwrite 2.0 is launching on Product Hunt today':
+    'Appwrite 2.0 が本日 Product Hunt でローンチ',
+  'Share your take': 'フィードバックを送る',
 }
