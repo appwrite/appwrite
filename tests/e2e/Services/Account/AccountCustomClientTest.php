@@ -6201,6 +6201,19 @@ final class AccountCustomClientTest extends Scope
         ]);
 
         $this->assertEquals(401, $response['headers']['status-code']);
+
+        /**
+         * Test for FAILURE - account has no email
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/account/verifications/email/otp', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $this->createAnonymousSession(),
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('user_email_not_found', $response['body']['type']);
     }
 
     public function testUpdateEmailVerificationOTP(): void
@@ -6264,7 +6277,23 @@ final class AccountCustomClientTest extends Scope
             'cookie' => 'a_session_' . $projectId . '=' . $session,
         ]), [
             'userId' => $userId,
-            'secret' => '000000',
+            'secret' => $otp === '000000' ? '111111' : '000000',
+        ]);
+
+        $this->assertEquals(401, $response['headers']['status-code']);
+        $this->assertEquals('user_invalid_token', $response['body']['type']);
+
+        /**
+         * Test for FAILURE - OTP is rejected by the link based endpoint
+         */
+        $response = $this->client->call(Client::METHOD_PUT, '/account/verifications/email', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ]), [
+            'userId' => $userId,
+            'secret' => $otp,
         ]);
 
         $this->assertEquals(401, $response['headers']['status-code']);
