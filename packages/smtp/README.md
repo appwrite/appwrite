@@ -1,0 +1,245 @@
+# Utopia SMTP
+
+> [!IMPORTANT]
+> This repository is a read-only mirror of the [utopia-php monorepo](https://github.com/utopia-php/monorepo). Development happens in [`packages/smtp`](https://github.com/utopia-php/monorepo/tree/main/packages/smtp) — please open issues and pull requests there.
+
+Lite and fast micro PHP SMTP library that is easy to learn.
+
+Submits mail to a configured server: RFC 5321 on the wire, RFC 5322 and MIME for the message, with STARTTLS and authentication. It reports which recipients were accepted and whether a refusal is worth retrying.
+
+## Installation
+
+```bash
+composer require utopia-php/smtp
+```
+
+## Usage
+
+```php
+<?php
+
+use Utopia\SMTP\Address;
+use Utopia\SMTP\Auth\Plain;
+use Utopia\SMTP\Client;
+use Utopia\SMTP\Message;
+use Utopia\SMTP\Transport\Native;
+
+$client = new Client(
+    transport: new Native('smtp.example.com', 587),
+    domain: 'app.example.com',
+    authenticators: [new Plain('username', 'password')],
+);
+
+$result = $client->send(new Message(
+    from: new Address('jane@example.com', 'Jane Doe'),
+    to: [new Address('john@example.com')],
+    subject: 'Hello',
+    text: 'Plain text body',
+));
+
+$client->close();
+```
+
+The connection opens on the first send, so nothing in the constructor touches the network.
+
+## Envelope and content
+
+`MAIL FROM` and `RCPT TO` carry the addresses that decide where the message goes. The headers decide what the reader sees. They are allowed to disagree, and for a blind recipient they must: `Bcc` addresses go in the envelope and appear in no header.
+
+`send()` derives the envelope from the message. To send bytes built elsewhere, pass the envelope yourself:
+
+```php
+use Utopia\SMTP\Envelope;
+
+$client->sendRaw(
+    new Envelope('jane@example.com', ['john@example.com']),
+    "Subject: Hello\r\n\r\nBody\r\n",
+);
+```
+
+Content may be a string or an iterable of chunks. The client never parses it.
+
+## Results and failures
+
+A server may refuse some recipients and accept others, and the message still reaches the rest.
+
+```php
+$result = $client->send($message);
+
+$result->accepted;      // list of addresses the server took
+$result->rejected;      // address => Reply, for the ones it would not
+$result->messageId;     // the queue identifier, when the server offers one
+$result->isComplete();  // nothing was rejected
+```
+
+A `TransactionException` is thrown only when every recipient is refused. Its `Reply` says whether the same message could succeed later:
+
+```php
+use Utopia\SMTP\TransactionException;
+
+try {
+    $client->send($message);
+} catch (TransactionException $exception) {
+    if ($exception->isTransient()) {
+        // 4yz — put it back on the queue
+    }
+}
+```
+
+Every `Reply` carries an `Outcome`, which is the four reply classes of RFC 5321 section 4.2.1 rather than a set of booleans:
+
+| Case | Codes | Means |
+| --- | --- | --- |
+| `Success` | 2yz | The command worked. |
+| `Intermediate` | 3yz | Understood, and the server wants more — the `354` before message data. |
+| `Transient` | 4yz | Failed, but the same command may work later. |
+| `Permanent` | 5yz | Failed, and sending it again changes nothing. |
+
+## Failures
+
+Everything the library raises at runtime extends `Utopia\SMTP\Exception\SmtpException`, so one `catch` covers any way a send can go wrong:
+
+| Exception | Raised when |
+| --- | --- |
+| `ConnectionException` | The socket could not be opened, read, written or upgraded. |
+| `TimeoutException` | A deadline passed. Extends `ConnectionException`. |
+| `ProtocolException` | The server said something that is not a reply, or not one the command allows. |
+| `AuthenticationException` | No mechanism was shared, or the credentials were refused. |
+| `TransactionException` | The envelope or the data was refused. Carries the `Reply`. |
+| `CapabilityException` | The server cannot carry this message, such as a size above what it advertises. |
+| `MessageException` | The message could not be produced, such as an attachment that stopped being readable. |
+
+Mistakes in the calling code are deliberately outside that hierarchy. An address that is not an address, or a header the message owns, raises the SPL `InvalidArgumentException`; using a transport that was never connected raises `LogicException`. Catching `SmtpException` therefore never hides a bug in your own code.
+
+## Encryption
+
+```php
+use Utopia\SMTP\Encryption;
+
+new Client($transport, encryption: Encryption::StartTls);
+```
+
+| Case | Behaviour |
+| --- | --- |
+| `Opportunistic` | Upgrade when the server advertises `STARTTLS`. The default. |
+| `StartTls` | Upgrade, and fail when the server does not offer it. |
+| `Implicit` | TLS from the first byte, as RFC 8314 asks for on port 465. |
+| `None` | Plaintext, never upgraded. |
+
+After an upgrade the client reissues `EHLO` and discards everything the server said beforehand, per RFC 3207 section 4.2.
+
+Certificate checking lives on the transport. Who signed it and who presented it are separate questions, so refusing to ask the first is not a reason to skip the second:
+
+```php
+use Utopia\SMTP\Tls;
+use Utopia\SMTP\Verification;
+
+new Native('smtp.example.com', 587, new Tls(caFile: '/etc/ssl/certs/ca.pem'));
+
+// A private authority or a test rig: any issuer, but still the host we dialled.
+new Native('smtp.internal', 587, new Tls(verify: Verification::SelfSigned));
+```
+
+| Case | Issuer | Hostname |
+| --- | --- | --- |
+| `Full` | Trusted chain required. The default. | Checked. |
+| `SelfSigned` | Any. | Checked. |
+| `None` | Any. | Not checked. |
+
+## Authentication
+
+Authenticators are tried in the order given, against what the server advertises, so the order is the security policy. `Auth\Plain`, `Auth\Login` and `Auth\XOAuth2` ship with the library, and the `Authenticator` interface takes anything else.
+
+```php
+use Utopia\SMTP\Auth\XOAuth2;
+
+new Client($transport, authenticators: [new XOAuth2('jane@example.com', $token)]);
+```
+
+## Messages
+
+The MIME structure follows from what is set, rather than being chosen:
+
+| Content | Structure |
+| --- | --- |
+| Text alone | `text/plain` |
+| Markup alone | `text/html` |
+| Both | `multipart/alternative` |
+| An inline attachment | `multipart/related` around the above |
+| An ordinary attachment | `multipart/mixed` around the above |
+
+```php
+use Utopia\SMTP\Attachment;
+
+new Message(
+    from: new Address('jane@example.com'),
+    to: [new Address('john@example.com')],
+    subject: 'Report',
+    text: 'The figures are attached.',
+    html: '<p>The figures are attached. <img src="cid:logo"></p>',
+    cc: [new Address('ada@example.com')],
+    bcc: [new Address('archive@example.com')],
+    attachments: [
+        Attachment::fromPath('/srv/reports/q3.pdf'),
+        Attachment::fromString($png, 'logo.png', 'image/png')->inline('logo'),
+    ],
+    headers: ['X-Mailer' => 'Utopia'],
+);
+```
+
+Attachments added by path are read while the message is written, so a large file is never held in memory twice. Encoding is decided for you: quoted-printable for text, base64 for attachments, RFC 2047 encoded words for headers outside ASCII.
+
+Header fields are folded to the 78 octet line length of RFC 5322, and encoded words are split on character boundaries so none passes the 75 the specification allows it. A long recipient list or a subject full of accents therefore stays within the limits a server enforces.
+
+## Transports
+
+`Transport\Native` uses streams and is the default choice. Under Swoole's runtime hook it yields the scheduler like any other hooked stream.
+
+`Transport\Swoole` is coroutine-native and yields whether or not the hook is on, which matters where the hook for streams is switched off. It needs `ext-swoole`, and it must be built inside a coroutine.
+
+One difference is worth knowing before choosing it. Swoole checks a certificate name with `X509_check_host()`, which reads the DNS entries and not the address ones, so dialling an IP literal cannot pass verification however the certificate is written. The stream transport checks both. Give `Tls` a `peerName` the certificate carries, or ask for `Verification::None`; the transport says as much rather than letting the handshake fail with nothing to go on.
+
+A `Client` is one connection. Pooling belongs to [`utopia-php/pools`](https://github.com/utopia-php/pools), so there is no keep-alive setting here. What the client does offer a holder is the means to reuse a connection safely: a session the server has closed with `421` is dropped on the spot, and the next `send()` dials again on its own. A server that closes an idle session without a word is only found out by the next command, which would be `MAIL FROM` and the message with it, so a holder asks first once the session has sat long enough:
+
+```php
+if ($client->idle() > 100 && ! $client->ping()) {
+    // The session was dead and has been dropped; send() will reconnect.
+}
+
+if ($client->transactions >= 100) {
+    $client->close(); // Rotate a long-lived session the way a relay expects.
+}
+```
+
+Do not ping on every message. A server may drop a session that sends too many commands that carry no mail.
+
+A `Client` belongs to one caller at a time. SMTP is a strict request and reply protocol over one socket, so two coroutines sharing an instance would read each other's replies. Hold one per coroutine, or check one out of a pool for the length of a send.
+
+## Extensions
+
+`STARTTLS`, `AUTH`, `SIZE`, `8BITMIME`, `SMTPUTF8` and `ENHANCEDSTATUSCODES` are used when the server advertises them. A message with a non-ASCII local part is refused before sending when the server cannot carry it. `PIPELINING` is parsed but not yet used.
+
+## Timeouts
+
+Reaching a server and hearing back from it fail differently and deserve different patience:
+
+```php
+use Utopia\SMTP\Timeouts;
+
+new Client($transport, timeouts: new Timeouts(connect: 5.0, read: 60.0, write: 30.0));
+```
+
+The defaults are ten seconds to connect and thirty to read or write. Each applies per operation rather than per session, so a large message is bounded by its own size and not by a single deadline for the whole exchange. A handshake counts as connecting.
+
+A host that is down should be given up on quickly, while the reply after the final dot can take as long as the server needs to scan the message — RFC 5321 section 4.5.3.2 asks for ten minutes there. The specification wants six separate minimums; three knobs is the useful part of that, and the deviation is deliberate.
+
+## Testing
+
+```bash
+composer test       # unit, no network
+composer test:e2e   # against Mailpit in docker compose
+```
+
+## License
+
+MIT
