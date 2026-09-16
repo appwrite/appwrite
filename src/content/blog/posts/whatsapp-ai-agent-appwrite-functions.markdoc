@@ -2,7 +2,7 @@
 layout: post
 title: "Build a WhatsApp AI agent with Appwrite Functions and TablesDB"
 description: Turn a WhatsApp number into an AI support agent. Two Appwrite Functions receive messages and reply, TablesDB keeps the conversation history, and a compaction step keeps the context small.
-date: 2026-09-15
+date: 2026-09-16
 cover: /images/blog/whatsapp-ai-agent-appwrite-functions/cover.avif
 timeToRead: 12
 author: atharva
@@ -18,6 +18,8 @@ faqs:
     answer: "Compaction folds older messages into a short running summary once the prompt grows past a token threshold. The agent reads the input token count that the model reports on each reply, stores it on the conversation row, and on the next message asks the model to merge the older messages into the existing summary. It stores that summary on the conversation row and marks the folded messages as compacted. The prompt then contains the summary plus the most recent messages."
   - question: "How are duplicate WhatsApp deliveries handled?"
     answer: "Each WhatsApp message carries a unique ID. The messages table has a unique index on that ID, so a redelivered message fails to insert with a conflict error. The webhook catches the conflict, returns 200, and does not trigger the agent again."
+  - question: "What happens when a customer sends two messages at once?"
+    answer: "Each message queues its own agent execution, so two could otherwise reply at the same time with overlapping history. The conversation row carries a lock column, and the agent takes the lock with an atomic decrement that only one execution can win. The winner keeps replying until every customer message has an answer, and the loser exits without doing anything."
   - question: "Do I need Meta business verification to test this?"
     answer: "No. A Meta developer app with the WhatsApp use case gives you a test phone number and an access token immediately. You can message it from up to five allowlisted phone numbers. You only need business verification and a display name review to register your own number and message the public."
 ---
@@ -34,11 +36,11 @@ The complete project lives at [appwrite-community/whatsapp-chatbot](https://gith
 
 Three parts of the Appwrite stack do all the work.
 
-**A webhook function receives messages.** Meta's WhatsApp Cloud API delivers every incoming message as an HTTP POST to a URL you choose. Every Appwrite Function comes with its own HTTPS domain, so that URL is the function itself. The webhook function stores the message in TablesDB and returns a 200 right away, which is what Meta requires.
+**A webhook function receives messages.** Meta's WhatsApp Cloud API delivers every incoming message as an HTTP POST to a URL you choose. Every Appwrite Function comes with its own HTTPS domain, so that URL is the function itself. The webhook function checks Meta's signature on the request, stores the message in TablesDB, and returns a 200 right away, which is what Meta requires.
 
 **An agent function writes the reply.** The webhook does not call the model. It triggers a second function asynchronously and hands it the customer's phone number. The agent function loads the conversation history, calls the model with a tool for looking up orders, sends the reply over WhatsApp, and stores that reply too. Because it runs as a separate execution, it can take as long as it needs.
 
-**TablesDB holds the memory.** A `messages` table stores every message in both directions. A `conversations` table stores one row per phone number with the running summary. An `orders` table is the data the agent's tool reads. There is no queue, cache, or separate database server to run.
+**TablesDB holds the memory.** A `messages` table stores every message in both directions. A `conversations` table stores one row per phone number with the running summary and a lock, so only one execution replies to a customer at a time. An `orders` table is the data the agent's tool reads. There is no queue, cache, or separate database server to run.
 
 The flow for a single message is short. WhatsApp calls the webhook, which writes a row and triggers the agent. The agent then reads the rows, calls the model, sends the reply, and writes a row. Compaction happens inside the agent when the history gets long.
 
@@ -60,6 +62,8 @@ Open the app's dashboard, go to **Use cases**, select **Customize** next to the 
 - **Access token**, created with **Generate token**. It asks you to approve access to your WhatsApp accounts in a popup, then shows the token.
 
 The test number can only talk to phone numbers on its allowlist. Under **Send a message from your test number**, open the recipient dropdown, select **Manage phone number list**, and add your own number. WhatsApp sends a code to that phone to confirm it.
+
+One more value comes from the app itself rather than the WhatsApp page. Open **App settings** > **Basic** in the left sidebar and select **Show** next to **App secret**. Meta signs every webhook request with this secret, and the webhook function uses it to reject requests that did not come from Meta.
 
 The generated token expires after 24 hours, which is enough for this tutorial. For anything that runs longer, create a System User in Meta Business Suite and generate a permanent token with the WhatsApp messaging permission.
 
@@ -102,8 +106,9 @@ The `conversations` table is small. Its row ID is the phone number itself, so th
 | `phone` | varchar(32) | The customer's number |
 | `summary` | text | The running summary of compacted history, empty until the first compaction |
 | `promptTokens` | integer | How many input tokens the last reply's prompt used |
+| `lock` | integer, 0 or 1 | `1` while no execution is replying to this customer |
 
-The `orders` table is the data behind the agent's tool. It has `orderNumber` with a unique index, `items`, a `status` enum, and `expectedDelivery`. Add a few rows through the Console **Rows** tab so the agent has something to find.
+The `orders` table is the data behind the agent's tool. It has `orderNumber` with a unique index, the customer's `phone`, `items`, a `status` enum, and `expectedDelivery`. Add a few rows through the Console **Rows** tab so the agent has something to find, and put your own number in `phone` in the form WhatsApp reports it, digits only with the country code and no plus sign.
 
 # Write the webhook function
 
@@ -129,9 +134,30 @@ export default async ({ req, res, log, error }) => {
 };
 ```
 
-Every message afterwards arrives as a POST. The function picks the first text message out of Meta's nested payload, stores it, and triggers the agent. The Appwrite client here uses the dynamic API key that Appwrite injects into every execution as the `x-appwrite-key` header. There is no API key to create or store:
+Every message afterwards arrives as a POST. The function's URL is public, so before it trusts the body it checks that Meta sent it. Meta signs each request with the app secret and puts the HMAC in the `X-Hub-Signature-256` header. The function computes the same HMAC over the raw body and compares the two in constant time:
 
 ```javascript
+import { createHmac, timingSafeEqual } from 'node:crypto';
+
+function isSignedByMeta(req) {
+  const secret = process.env.META_APP_SECRET;
+  const header = req.headers['x-hub-signature-256'];
+  if (!secret || !header) return false;
+
+  const expected = `sha256=${createHmac('sha256', secret).update(req.bodyBinary).digest('hex')}`;
+  const a = Buffer.from(header);
+  const b = Buffer.from(expected);
+  return a.length === b.length && timingSafeEqual(a, b);
+}
+```
+
+A request that fails this check gets a 403 and nothing is stored. With the signature verified, the function picks the first text message out of Meta's nested payload, stores it, and triggers the agent. The Appwrite client here uses the dynamic API key that Appwrite injects into every execution as the `x-appwrite-key` header. There is no API key to create or store:
+
+```javascript
+if (!isSignedByMeta(req)) {
+  return res.text('Forbidden', 403);
+}
+
 const change = req.bodyJson?.entry?.[0]?.changes?.[0]?.value;
 const message = change?.messages?.[0];
 if (!message || message.type !== 'text') {
@@ -181,7 +207,30 @@ The `createExecution` call with `async: true` returns as soon as Appwrite has qu
 
 # Write the agent function
 
-The agent function does the interesting work. It runs in five steps, and each one is a short block of code in `functions/whatsapp-agent/src/main.js`.
+The agent function does the interesting work. It runs in six steps, and each one is a short block of code in `functions/whatsapp-agent/src/main.js`.
+
+**Take the lock for this conversation.** Every inbound message queues its own execution. If a customer sends two messages a second apart, two executions start, and without coordination both would load the same history and both would reply. The `lock` column on the conversation row prevents that. The agent decrements it with a minimum of `0`, which Appwrite applies atomically on the server. The first execution takes the value from `1` to `0` and continues. The second one would go below the minimum, so Appwrite rejects the update and that execution exits:
+
+```javascript
+async function acquireLock(tablesDB, phone) {
+  try {
+    await tablesDB.decrementRowColumn({
+      databaseId: process.env.DATABASE_ID,
+      tableId: 'conversations',
+      rowId: phone,
+      column: 'lock',
+      value: 1,
+      min: 0,
+    });
+    return true;
+  } catch (err) {
+    if (err.code === 400) return false;
+    throw err;
+  }
+}
+```
+
+The execution that holds the lock keeps replying until the newest message in the history is its own, so a message that arrived while it was busy gets an answer from it instead of from the execution that gave up. It releases the lock with the matching `incrementRowColumn` call in a `finally` block, then checks once more for an unanswered message, since one can land in the moment between its last look and the release.
 
 **Load the conversation and its history.** The agent fetches the conversation row by phone number and creates it on the first message. The history query asks for every row for this phone that has not been compacted, oldest first:
 
@@ -225,14 +274,14 @@ if (conversation.promptTokens > COMPACT_AFTER_TOKENS && history.length > KEEP_RE
 
 The summary prompt tells the model to keep names, order numbers, preferences, unresolved questions, and promises made, and to drop greetings. The agent deletes nothing. Compacted rows stay in the table with `compacted` set to `true`, so the full transcript is still there for a support dashboard or an audit. Only the prompt shrinks.
 
-**Give the model a tool.** The `lookup_order` tool is declared as a function with a JSON schema, and its implementation is a single `listRows` call filtered by order number. The model decides when to call it:
+**Give the model a tool.** The `lookup_order` tool is declared as a function with a JSON schema, and its implementation is a single `listRows` call filtered by order number and by the customer's phone. The phone comes from the webhook, not from the model, so a customer who types someone else's order number gets nothing back. The model decides when to call it:
 
 ```javascript
 const TOOLS = [
   {
     type: 'function',
     name: 'lookup_order',
-    description: 'Look up a Northwind Coffee order by its order number.',
+    description: 'Look up one of the current customer\'s Northwind Coffee orders by its order number.',
     strict: true,
     parameters: {
       type: 'object',
@@ -245,13 +294,17 @@ const TOOLS = [
   },
 ];
 
-async function runTool(tablesDB, name, args) {
+async function runTool(tablesDB, phone, name, args) {
   const result = await tablesDB.listRows({
     databaseId: process.env.DATABASE_ID,
     tableId: 'orders',
-    queries: [Query.equal('orderNumber', args.orderNumber.toUpperCase()), Query.limit(1)],
+    queries: [
+      Query.equal('orderNumber', args.orderNumber.toUpperCase()),
+      Query.equal('phone', phone),
+      Query.limit(1),
+    ],
   });
-  if (result.total === 0) return `No order found with number ${args.orderNumber}.`;
+  if (result.total === 0) return `No order with number ${args.orderNumber} was placed from this phone number.`;
   const order = result.rows[0];
   return JSON.stringify({
     orderNumber: order.orderNumber,
@@ -269,8 +322,10 @@ const instructions = conversation.summary
   ? `${SYSTEM_PROMPT}\n\nWhat you already know from earlier in this conversation:\n${conversation.summary}`
   : SYSTEM_PROMPT;
 
+const MODEL = process.env.OPENAI_MODEL ?? 'gpt-5.6-luna';
+
 const input = history.map((row) => ({ role: row.role, content: row.content }));
-let response = await openai.responses.create({ model: 'gpt-5.6-luna', instructions, input, tools: TOOLS });
+let response = await openai.responses.create({ model: MODEL, instructions, input, tools: TOOLS });
 let promptTokens = response.usage.input_tokens;
 
 for (let round = 0; round < 5; round++) {
@@ -279,10 +334,10 @@ for (let round = 0; round < 5; round++) {
 
   input.push(...response.output);
   for (const call of calls) {
-    const output = await runTool(tablesDB, call.name, JSON.parse(call.arguments));
+    const output = await runTool(tablesDB, phone, call.name, JSON.parse(call.arguments));
     input.push({ type: 'function_call_output', call_id: call.call_id, output });
   }
-  response = await openai.responses.create({ model: 'gpt-5.6-luna', instructions, input, tools: TOOLS });
+  response = await openai.responses.create({ model: MODEL, instructions, input, tools: TOOLS });
   promptTokens = Math.max(promptTokens, response.usage.input_tokens);
 }
 
@@ -330,6 +385,7 @@ Open each function in the Console, go to **Variables**, and add the values from 
 | both | `DATABASE_ID` | The database ID from the Console |
 | whatsapp-webhook | `AGENT_FUNCTION_ID` | `whatsapp-agent` |
 | whatsapp-webhook | `WHATSAPP_VERIFY_TOKEN` | Any random string. You will paste the same string into Meta |
+| whatsapp-webhook | `META_APP_SECRET` | The App secret from **App settings** > **Basic** |
 | whatsapp-agent | `WHATSAPP_PHONE_NUMBER_ID` | The Phone Number ID from the Try it out page |
 | whatsapp-agent | `WHATSAPP_TOKEN` | The access token from the Try it out page |
 | whatsapp-agent | `OPENAI_API_KEY` | Your OpenAI API key |
@@ -369,7 +425,7 @@ The function's **Executions** tab in the Console shows every run with its logs, 
 
 The shape here works for more than support. If you swap the `orders` table and the tool for a bookings table and a `create_booking` tool, the same two functions become a reservation agent. With a second tool that writes to a `tickets` table when the model cannot answer, they become a triage agent that hands off to a person. The history and compaction code do not change.
 
-Two things are worth adding before customers use it. Meta delivers status updates, images, and voice notes through the same webhook. The function currently skips anything that is not text, so decide what to do with them. The compaction step also updates rows one at a time. That is fine at a few dozen messages, but it is a place to batch once conversations get long.
+Two things are worth adding before customers use it. Meta delivers status updates, images, and voice notes through the same webhook. The function currently skips anything that is not text, so decide what to do with them. The lock also has no expiry, so if the agent is killed by its timeout mid-reply the conversation stays locked until you reset the column, and a timestamp next to it would let the next execution reclaim it. The compaction step also updates rows one at a time. That is fine at a few dozen messages, but it is a place to batch once conversations get long.
 
 # Resources
 
