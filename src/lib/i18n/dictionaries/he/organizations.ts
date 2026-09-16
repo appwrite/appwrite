@@ -45,6 +45,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Account settings': 'הגדרות חשבון',
   'Account-level ops, CLI auth, sessions. Per-user credentials.':
     'פעולות ברמת החשבון, אימות CLI, סשנים. פרטי גישה אישיים לכל משתמש.',
+  Abandoned: 'ננטש',
   'Action required': 'נדרשת פעולה',
   'Activating plan': 'מפעיל תוכנית',
   Active: 'פעיל',

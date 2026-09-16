@@ -21,6 +21,7 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'API keys': 'API キー',
   'Account keys': 'アカウントキー',
   'Account settings': 'アカウント設定',
+  Abandoned: '未完了',
   'Action required': '対応が必要です',
   'Activating plan': 'プランを有効化中',
   'Add Domain': 'ドメインを追加',
