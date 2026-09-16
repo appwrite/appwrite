@@ -270,21 +270,20 @@ class Notifications extends Action
             $body = $this->injectTrackingLogo($body, $messageId, $recipient['channel'], $recipientHash, $project, $trackingSecret);
         }
 
-        /** @var EmailAdapter $adapter */
-        $adapter = empty($smtp)
-            ? $register->get('smtp')
-            : new SMTP(
-                host: $smtp['host'],
-                port: (int) $smtp['port'],
-                username: $smtp['username'] ?? '',
-                password: $smtp['password'] ?? '',
-                smtpSecure: $smtp['secure'] ?? '',
-                smtpAutoTLS: false,
-                xMailer: 'Appwrite Mailer',
-                timeout: 10,
-                keepAlive: true,
-                timelimit: 30,
-            );
+        // A pooled adapter belongs to this send alone; a project's own SMTP is
+        // dialled for it and closed after.
+        $adapter = empty($smtp) ? null : new SMTP(
+            host: $smtp['host'],
+            port: (int) $smtp['port'],
+            username: $smtp['username'] ?? '',
+            password: $smtp['password'] ?? '',
+            smtpSecure: $smtp['secure'] ?? '',
+            smtpAutoTLS: false,
+            xMailer: 'Appwrite Mailer',
+            timeout: 10,
+            keepAlive: false,
+            timelimit: 30,
+        );
 
         $defaultFromEmail = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
         $defaultFromName = \urldecode(System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server'));
@@ -339,8 +338,14 @@ class Notifications extends Action
             html: true,
         );
 
+        $send = static fn (EmailAdapter $adapter): array => $adapter->send($emailMessage);
+
         try {
-            $adapter->send($emailMessage);
+            if ($adapter instanceof EmailAdapter) {
+                $send($adapter);
+            } else {
+                $register->get('smtp')->use($send);
+            }
         } catch (Throwable $error) {
             throw new Exception('Error sending notification: ' . $error->getMessage(), $type === 'smtp' ? 401 : 500);
         }
