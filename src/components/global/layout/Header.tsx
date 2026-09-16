@@ -1363,7 +1363,7 @@ export function ConsoleHeader({
                   type="button"
                   {...analyticsAttrs('command-center')}
                   onClick={openCommandCenter}
-                  className="hidden h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[361px]:flex @[900px]:hidden"
+                  className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[900px]:hidden"
                   aria-label={resolvedCenterSearchPlaceholder}
                 >
                   <Search className="h-4 w-4" />
@@ -1373,7 +1373,7 @@ export function ConsoleHeader({
                 asChild
                 variant="outline"
                 size="sm"
-                className="h-9 text-[13px]"
+                className="hidden h-9 text-[13px] @[361px]:inline-flex"
               >
                 <Link
                   to="/sign-in"
@@ -1426,7 +1426,7 @@ export function ConsoleHeader({
                       type="button"
                       {...analyticsAttrs('command-center')}
                       onClick={openCommandCenter}
-                      className="hidden h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[361px]:flex @[700px]:hidden"
+                      className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[700px]:hidden"
                       aria-label={headerCopy.search.compactPlaceholder}
                     >
                       <Search className="h-4 w-4" />
@@ -1472,7 +1472,7 @@ export function ConsoleHeader({
                   type="button"
                   {...analyticsAttrs('command-center')}
                   onClick={openCommandCenter}
-                  className="hidden h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[361px]:flex @[900px]:hidden"
+                  className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[900px]:hidden"
                   aria-label={resolvedCenterSearchPlaceholder}
                 >
                   <Search className="h-4 w-4" />
