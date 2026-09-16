@@ -58,6 +58,19 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
+    "slug": "build-support-chatbot-vectorsdb",
+    "href": "/blog/post/build-support-chatbot-vectorsdb",
+    "title": "Build a support chatbot with Appwrite Functions and VectorsDB",
+    "description": "Seed a help center, retrieve relevant articles with VectorsDB, and answer customer questions through an Appwrite Function. Deploy the chat interface on Appwrite Sites.",
+    "date": "2026-09-10",
+    "lastUpdated": "2026-09-10",
+    "timeToRead": 11,
+    "author": "atharva",
+    "category": "tutorials",
+    "cover": "/images/blog/build-support-chatbot-vectorsdb/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "introducing-autogravity",
     "href": "/blog/post/introducing-autogravity",
     "title": "Automatic image cropping in Appwrite with AutoGravity",
