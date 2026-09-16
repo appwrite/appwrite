@@ -24,7 +24,12 @@ export function DocsLeftNav({ mobileOpen, onMobileClose }: DocsLeftNavProps) {
   const isReferencesSection = isReferencesDocsSlug(slug)
 
   return (
-    <div className={cn('flex min-h-0 shrink-0', BELOW_APP_HEADER_STICKY_CLASS)}>
+    <div
+      className={cn(
+        'flex min-h-0 shrink-0 overflow-visible @[1024px]:z-20',
+        BELOW_APP_HEADER_STICKY_CLASS,
+      )}
+    >
       <DocsGlobalSidebar mobileOpen={mobileOpen} onMobileClose={onMobileClose} />
       {isReferencesSection ? (
         <ApiReferenceSectionSubnavPanel parent={parent} />
