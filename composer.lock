@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "5667bfb5aaae8ea98f2edd4d33aa5927",
+    "content-hash": "fc30bd50f5d5484b7d4e2e3a3340624a",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4743,57 +4743,6 @@
                 "source": "https://github.com/utopia-php/system/tree/0.10.6"
             },
             "time": "2026-09-02T15:57:19+00:00"
-        },
-        {
-            "name": "utopia-php/telemetry",
-            "version": "0.4.10",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/utopia-php/telemetry.git",
-                "reference": "29432a590bf96597ba8f0e767c966be16481651a"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/telemetry/zipball/29432a590bf96597ba8f0e767c966be16481651a",
-                "reference": "29432a590bf96597ba8f0e767c966be16481651a",
-                "shasum": ""
-            },
-            "require": {
-                "nyholm/psr7": "1.*",
-                "open-telemetry/exporter-otlp": "1.*",
-                "open-telemetry/sdk": "1.*",
-                "php": ">=8.0",
-                "symfony/http-client": "7.*"
-            },
-            "require-dev": {
-                "swoole/ide-helper": "6.*"
-            },
-            "suggest": {
-                "ext-protobuf": "For better performance, when dealing with the protobuf format",
-                "ext-sockets": "Required for the Swoole transport implementation",
-                "ext-swoole": "Required for the Swoole transport implementation"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Utopia\\Telemetry\\": "src/Telemetry"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "description": "A lite & fast telemetry library, with adapters for OpenTelemetry",
-            "keywords": [
-                "framework",
-                "php",
-                "upf"
-            ],
-            "support": {
-                "issues": "https://github.com/utopia-php/telemetry/issues",
-                "source": "https://github.com/utopia-php/telemetry/tree/0.4.10"
-            },
-            "time": "2026-09-11T06:27:08+00:00"
         },
         {
             "name": "utopia-php/usage",
