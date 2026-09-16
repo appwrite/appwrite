@@ -71,7 +71,6 @@ export const heFunctionsDictionary: Record<string, string> = {
   Change: 'שינוי',
   chars: 'תווים',
   'Check your permissions': 'בדקו את ההרשאות שלכם',
-  'Choose .tar.gz file': 'בחירת קובץ .tar.gz',
   'Choose the directory containing your function code':
     'בחרו את התיקייה שמכילה את קוד הפונקציה שלכם',
   'Choose who can execute this function': 'בחרו מי יכול להריץ את הפונקציה הזו',

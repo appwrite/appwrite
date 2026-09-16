@@ -17,6 +17,10 @@ done
 
 # Only content-hashed build assets are shared between environments.
 # copy retains old chunks for open tabs and rollback.
+# --no-traverse: the bucket keeps every chunk ever deployed, so building the
+# destination listing takes minutes and grows with each deploy; HEADing the
+# few thousand source paths instead is fast and stays constant.
 rclone copy "$merged" "r2:$R2_BUCKET" --checksum --immutable --metadata \
-  --transfers 16 --stats 30s --stats-one-line --stats-log-level NOTICE \
+  --no-traverse --checkers 32 \
+  --transfers 32 --stats 30s --stats-one-line --stats-log-level NOTICE \
   --metadata-set 'cache-control=public, max-age=31536000, immutable'

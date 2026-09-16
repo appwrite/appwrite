@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { isSameDay } from 'date-fns'
+import { isSameDay, isSameYear } from 'date-fns'
 import { Calendar as CalendarIcon, ChevronDown } from 'lucide-react'
 import { DateRange } from 'react-day-picker'
 
@@ -214,6 +214,13 @@ export function DateRangePicker({
     }
     if (isFullCalendarDayRange(range.from, range.to)) {
       return `${formatDate(range.from, 'MMM d')} - ${formatDate(range.to, 'MMM d, yyyy')}`
+    }
+    // Times don't fit the trigger on narrow screens; the calendar still shows
+    // the exact range. Keep the year unless the whole range is this year.
+    if (!isWideLayout) {
+      const withinCurrentYear =
+        isSameYear(range.from, new Date()) && isSameYear(range.from, range.to)
+      return `${formatDate(range.from, 'MMM d')} - ${formatDate(range.to, withinCurrentYear ? 'MMM d' : 'MMM d, yyyy')}`
     }
     return `${formatDate(range.from, 'MMM d, h:mm a')} - ${formatDate(range.to, 'MMM d, h:mm a')}`
   }

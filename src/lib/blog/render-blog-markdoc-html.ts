@@ -1,6 +1,7 @@
 import Markdoc, { type RenderableTreeNode } from '@markdoc/markdoc'
 import { resolveHeadingId } from '@/lib/docs/markdoc-heading'
 import { docsMarkdocConfig } from '@/lib/docs/markdoc-config'
+import { resolveFenceCodeLabel } from '@/lib/code-language'
 import { HEADING_LINK_TEXT_CLASS, INLINE_LINK_CLASS } from '@/lib/link-styles'
 import { MARKETING_SITE_ORIGIN, parseBlogPagePath } from '@/lib/marketing/urls'
 
@@ -121,17 +122,83 @@ export type BlogCodeHighlighter = (
 // walkers do not need an options parameter threaded through every call.
 let activeHighlighter: BlogCodeHighlighter | null = null
 
-function renderFence(tag: MarkdocTag): string {
+const CODE_CARD_CLASS =
+  'not-prose my-4 w-full overflow-hidden rounded-xl border border-border bg-card/50'
+const CODE_HEADER_CLASS =
+  'flex items-center justify-between gap-2 border-b border-border px-3 py-1.5'
+const CODE_LABEL_CLASS = 'text-[12px] font-medium text-muted-foreground'
+const CODE_COPY_BUTTON_CLASS =
+  'h-7 shrink-0 rounded-md px-2 text-[12px] text-muted-foreground hover:text-foreground'
+type FenceSnippet = {
+  /** Fence info string as written, e.g. `client-flutter` or `python`. */
+  language: string
+  content: string
+  /** URI-encoded content for the copy button. */
+  encoded: string
+}
+
+function fenceSnippet(tag: MarkdocTag): FenceSnippet {
   const content = String(tag.attributes.content ?? collectText(tag))
-  const language = String(tag.attributes.language ?? 'plaintext')
-  const encoded = encodeURIComponent(content)
+  return {
+    language: String(tag.attributes.language ?? 'plaintext'),
+    content,
+    encoded: encodeURIComponent(content),
+  }
+}
+
+function renderCodePre({ content, language }: FenceSnippet): string {
   const highlighted = activeHighlighter?.(content, language) ?? null
   const codeClass = highlighted
     ? ` class="language-${escapeHtml(highlighted.language)}"`
     : ''
   const body = highlighted ? highlighted.html : escapeHtml(content)
+  return `<pre class="blog-code overflow-x-auto p-4 font-mono text-[13px] leading-6 text-foreground/90"><code${codeClass}>${body}</code></pre>`
+}
 
-  return `<div class="not-prose my-4 w-full overflow-hidden rounded-xl border border-border bg-card/50"><div class="flex items-center justify-between gap-2 border-b border-border px-3 py-1.5"><span class="text-[12px] font-medium text-muted-foreground">${escapeHtml(language)}</span><button type="button" class="h-7 shrink-0 rounded-md px-2 text-[12px] text-muted-foreground hover:text-foreground" data-blog-copy="${encoded}">Copy</button></div><pre class="blog-code overflow-x-auto p-4 font-mono text-[13px] leading-6 text-foreground/90"><code${codeClass}>${body}</code></pre></div>`
+function renderCopyButton(encoded: string): string {
+  return `<button type="button" class="${CODE_COPY_BUTTON_CLASS}" data-blog-copy="${encoded}">Copy</button>`
+}
+
+function renderFence(tag: MarkdocTag): string {
+  const snippet = fenceSnippet(tag)
+  return `<div class="${CODE_CARD_CLASS}"><div class="${CODE_HEADER_CLASS}"><span class="${CODE_LABEL_CLASS}">${escapeHtml(resolveFenceCodeLabel(snippet.language))}</span>${renderCopyButton(snippet.encoded)}</div>${renderCodePre(snippet)}</div>`
+}
+
+/**
+ * One card for a `{% multicode %}` group: one pre-highlighted panel per
+ * fence, only the first visible, and a header placeholder that
+ * BlogMarkdownBody replaces with the shared Select. The placeholder carries
+ * the language list and shows the first label until React mounts.
+ */
+function renderMultiCode(tag: MarkdocTag): string {
+  const snippets: FenceSnippet[] = []
+  for (const child of tag.children) {
+    if (!isTag(child) || child.name !== 'Fence') continue
+    const snippet = fenceSnippet(child)
+    if (snippets.some((entry) => entry.language === snippet.language)) continue
+    snippets.push(snippet)
+  }
+  if (snippets.length === 0) return renderChildren(tag.children)
+  if (snippets.length === 1) {
+    return renderFence(
+      tag.children.find(
+        (child): child is MarkdocTag => isTag(child) && child.name === 'Fence',
+      )!,
+    )
+  }
+
+  const languages = snippets.map((snippet) => ({
+    id: snippet.language,
+    label: resolveFenceCodeLabel(snippet.language),
+  }))
+  const panels = snippets
+    .map(
+      (snippet, index) =>
+        `<div data-blog-multicode-panel="${escapeHtml(snippet.language)}" data-blog-code="${snippet.encoded}"${attr('hidden', index > 0)}>${renderCodePre(snippet)}</div>`,
+    )
+    .join('')
+
+  return `<div class="${CODE_CARD_CLASS}" data-blog-multicode><div class="${CODE_HEADER_CLASS}"><span class="${CODE_LABEL_CLASS}" data-blog-multicode-select="${escapeHtml(JSON.stringify(languages))}">${escapeHtml(languages[0].label)}</span>${renderCopyButton(snippets[0].encoded)}</div>${panels}</div>`
 }
 
 function renderImage(tag: MarkdocTag): string {
@@ -181,10 +248,12 @@ function renderYoutube(tag: MarkdocTag): string {
     String(tag.attributes.thumbnail ?? '').trim() ||
     (id ? `https://i.ytimg.com/vi/${id}/hqdefault.jpg` : '')
 
-  return `<div class="not-prose my-8"><button type="button" class="group relative block w-full cursor-pointer overflow-hidden rounded-xl border border-border bg-muted/25 text-start" data-blog-youtube="${escapeHtml(embed)}" aria-label="${escapeHtml(`Play ${title}`)}">${
+  const playBadge = `<span class="pointer-events-none absolute start-1/2 top-1/2 flex size-11 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-white/10 shadow-sm backdrop-blur-md transition-transform duration-150 group-hover:scale-105 group-active:scale-95" aria-hidden="true"><svg viewBox="0 0 24 24" class="ms-0.5 size-4 fill-white/70 transition-colors duration-150 group-hover:fill-white"><path d="M8 5.14v13.72a1 1 0 0 0 1.52.85l11.14-6.86a1 1 0 0 0 0-1.7L9.52 4.29A1 1 0 0 0 8 5.14Z" /></svg></span>`
+
+  return `<div class="not-prose my-8"><button type="button" class="group relative block w-full cursor-pointer overflow-hidden rounded-xl border border-border bg-muted/25 text-start" data-blog-youtube="${escapeHtml(embed)}" data-blog-youtube-title="${escapeHtml(title)}" aria-label="${escapeHtml(`Play ${title}`)}">${
     thumbnail
-      ? `<span class="relative aspect-video block w-full"><img src="${escapeHtml(thumbnail)}" alt="" loading="lazy" class="size-full object-cover" /></span>`
-      : '<span class="aspect-video block w-full bg-muted"></span>'
+      ? `<span class="relative aspect-video block w-full"><img src="${escapeHtml(thumbnail)}" alt="" loading="lazy" class="size-full object-cover" />${playBadge}</span>`
+      : `<span class="relative aspect-video block w-full bg-muted">${playBadge}</span>`
   }</button></div>`
 }
 
@@ -202,7 +271,7 @@ function renderTag(tag: MarkdocTag): string {
     case 'Fence':
       return renderFence(tag)
     case 'MultiCode':
-      return `<div class="space-y-4">${children}</div>`
+      return renderMultiCode(tag)
     case 'Info':
       return renderInfo(tag)
     case 'CallToAction':

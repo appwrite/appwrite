@@ -64,6 +64,7 @@ const ACCOUNT: CommandEntry[] = [
     description: 'OAuth applications authorized on your account',
     icon: Package,
     keywords: ['applications', 'oauth', 'authorized', 'consent', 'revoke'],
+    available: (ctx) => Boolean(ctx.features.accountApplications),
     to: () => '/account/applications',
   },
   {

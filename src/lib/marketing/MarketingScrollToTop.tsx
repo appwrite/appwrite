@@ -2,18 +2,11 @@
 
 import { useEffect, useRef } from 'react'
 import { useLocation } from '@tanstack/react-router'
-import { resetConsoleShellDocumentScroll } from '@/lib/utils'
+import { resetPageSurfaceScroll } from '@/lib/layout/marketing-document-scroll'
 
 export function scrollMarketingMainToTop(behavior: ScrollBehavior = 'auto') {
   if (typeof document === 'undefined') return
-
-  const main = document.getElementById('main-content')
-  if (main) {
-    main.scrollTo({ top: 0, behavior })
-    return
-  }
-
-  resetConsoleShellDocumentScroll()
+  resetPageSurfaceScroll(behavior)
 }
 
 export function MarketingScrollToTop() {

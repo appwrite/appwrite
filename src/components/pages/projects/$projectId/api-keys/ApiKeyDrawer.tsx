@@ -420,6 +420,8 @@ export function ApiKeyDrawer({
                           disabled={isLoading}
                           clearable
                           className={errors.expire ? 'border-destructive' : ''}
+                          timeZoneMode="preferred"
+                          showTimeZoneInTrigger
                         />
                         {errors.expire && (
                           <p className="text-[12px] text-destructive mt-1">

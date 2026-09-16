@@ -33,7 +33,8 @@ export const legacyConsolePathMiddleware = createMiddleware({
   }
 
   const url = new URL(request.url)
-  const location = rewriteLegacyConsolePath(url.pathname) + url.search
+  const location =
+    rewriteLegacyConsolePath(url.pathname, url.search) + url.search
   const current = url.pathname + url.search
   if (location === current) {
     return next()

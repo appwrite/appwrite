@@ -112,6 +112,7 @@ import { Route as PublicAgentIndexRouteImport } from './routes/_public/agent.ind
 import { Route as PublicAgentAgentIdRouteImport } from './routes/_public/agent.$agentId'
 import { Route as PublicAgentAutomationsRouteImport } from './routes/_public/agent.automations'
 import { Route as PublicAgentSettingsRouteImport } from './routes/_public/agent.settings'
+import { Route as PublicAuthPreviewRouteImport } from './routes/_public/auth.preview'
 import { Route as PublicDebugAuthorizeContributorPreviewRouteImport } from './routes/_public/debug.authorize-contributor-preview'
 import { Route as PublicDebugCodeEditorPreviewRouteImport } from './routes/_public/debug.code-editor-preview'
 import { Route as PublicDebugErrorPreviewRouteImport } from './routes/_public/debug.error-preview'
@@ -953,6 +954,11 @@ const PublicAgentSettingsRoute = PublicAgentSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
   getParentRoute: () => PublicAgentRoute,
+} as any)
+const PublicAuthPreviewRoute = PublicAuthPreviewRouteImport.update({
+  id: '/auth/preview',
+  path: '/auth/preview',
+  getParentRoute: () => PublicRoute,
 } as any)
 const PublicDebugAuthorizeContributorPreviewRoute =
   PublicDebugAuthorizeContributorPreviewRouteImport.update({
@@ -3177,6 +3183,7 @@ export interface FileRoutesByFullPath {
   '/agent/$agentId': typeof PublicAgentAgentIdRoute
   '/agent/automations': typeof PublicAgentAutomationsRouteWithChildren
   '/agent/settings': typeof PublicAgentSettingsRouteWithChildren
+  '/auth/preview': typeof PublicAuthPreviewRoute
   '/debug/authorize-contributor-preview': typeof PublicDebugAuthorizeContributorPreviewRoute
   '/debug/code-editor-preview': typeof PublicDebugCodeEditorPreviewRoute
   '/debug/error-preview': typeof PublicDebugErrorPreviewRoute
@@ -3591,6 +3598,7 @@ export interface FileRoutesByTo {
   '/account/security': typeof PublicAccountSecurityRoute
   '/account/sessions': typeof PublicAccountSessionsRoute
   '/agent/$agentId': typeof PublicAgentAgentIdRoute
+  '/auth/preview': typeof PublicAuthPreviewRoute
   '/debug/authorize-contributor-preview': typeof PublicDebugAuthorizeContributorPreviewRoute
   '/debug/code-editor-preview': typeof PublicDebugCodeEditorPreviewRoute
   '/debug/error-preview': typeof PublicDebugErrorPreviewRoute
@@ -3972,6 +3980,7 @@ export interface FileRoutesById {
   '/_public/agent/$agentId': typeof PublicAgentAgentIdRoute
   '/_public/agent/automations': typeof PublicAgentAutomationsRouteWithChildren
   '/_public/agent/settings': typeof PublicAgentSettingsRouteWithChildren
+  '/_public/auth/preview': typeof PublicAuthPreviewRoute
   '/_public/debug/authorize-contributor-preview': typeof PublicDebugAuthorizeContributorPreviewRoute
   '/_public/debug/code-editor-preview': typeof PublicDebugCodeEditorPreviewRoute
   '/_public/debug/error-preview': typeof PublicDebugErrorPreviewRoute
@@ -4394,6 +4403,7 @@ export interface FileRouteTypes {
     | '/agent/$agentId'
     | '/agent/automations'
     | '/agent/settings'
+    | '/auth/preview'
     | '/debug/authorize-contributor-preview'
     | '/debug/code-editor-preview'
     | '/debug/error-preview'
@@ -4808,6 +4818,7 @@ export interface FileRouteTypes {
     | '/account/security'
     | '/account/sessions'
     | '/agent/$agentId'
+    | '/auth/preview'
     | '/debug/authorize-contributor-preview'
     | '/debug/code-editor-preview'
     | '/debug/error-preview'
@@ -5188,6 +5199,7 @@ export interface FileRouteTypes {
     | '/_public/agent/$agentId'
     | '/_public/agent/automations'
     | '/_public/agent/settings'
+    | '/_public/auth/preview'
     | '/_public/debug/authorize-contributor-preview'
     | '/_public/debug/code-editor-preview'
     | '/_public/debug/error-preview'
@@ -6279,6 +6291,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/agent/settings'
       preLoaderRoute: typeof PublicAgentSettingsRouteImport
       parentRoute: typeof PublicAgentRoute
+    }
+    '/_public/auth/preview': {
+      id: '/_public/auth/preview'
+      path: '/auth/preview'
+      fullPath: '/auth/preview'
+      preLoaderRoute: typeof PublicAuthPreviewRouteImport
+      parentRoute: typeof PublicRoute
     }
     '/_public/debug/authorize-contributor-preview': {
       id: '/_public/debug/authorize-contributor-preview'
@@ -10244,6 +10263,7 @@ interface PublicRouteChildren {
   PublicSalesRoute: typeof PublicSalesRoute
   PublicUpgradeRoute: typeof PublicUpgradeRoute
   PublicIndexRoute: typeof PublicIndexRoute
+  PublicAuthPreviewRoute: typeof PublicAuthPreviewRoute
   PublicDebugAuthorizeContributorPreviewRoute: typeof PublicDebugAuthorizeContributorPreviewRoute
   PublicDebugCodeEditorPreviewRoute: typeof PublicDebugCodeEditorPreviewRoute
   PublicDebugErrorPreviewRoute: typeof PublicDebugErrorPreviewRoute
@@ -10271,6 +10291,7 @@ const PublicRouteChildren: PublicRouteChildren = {
   PublicSalesRoute: PublicSalesRoute,
   PublicUpgradeRoute: PublicUpgradeRoute,
   PublicIndexRoute: PublicIndexRoute,
+  PublicAuthPreviewRoute: PublicAuthPreviewRoute,
   PublicDebugAuthorizeContributorPreviewRoute:
     PublicDebugAuthorizeContributorPreviewRoute,
   PublicDebugCodeEditorPreviewRoute: PublicDebugCodeEditorPreviewRoute,

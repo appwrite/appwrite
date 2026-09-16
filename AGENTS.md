@@ -488,6 +488,12 @@ Checklist (in this order):
 - **Button icon spacing**: Use `mr-1.5` or `gap-1.5`, not `mr-2` or larger
 - **Date tooltips**: Always include when showing dates for timezone clarity
 
+### Date and time (Appwrite datetimes)
+
+- **`DateTimePicker timeZoneMode="preferred"`**: Appwrite datetime fields only. Postgres/MySQL columns (any datetime type), `FiltersPopoverContent` and role drawers keep the default browser mode.
+- **Display zone**: Per device in localStorage `console.datetime.timeZone`, read with `useDisplayTimeZone()` from `@/lib/timezones`. No stored value means the browser zone.
+- **Grid cells**: Format Appwrite datetime cells with `createInstantCellFormatter(timeZone)` from `@/lib/spreadsheet-cell-formatting` and put `<DisplayTimeZoneBadge />` in their headers; copy paths keep reading raw values.
+
 ### Viewport units (CRITICAL - fixes mobile/iPad layout bugs)
 
 **Never use `vh`** (or `h-screen`, `min-h-screen`, `max-h-screen`). On iOS Safari, iPadOS, Chrome on Android, and any browser with a dynamic toolbar, `100vh` refers to the _layout viewport_, which is taller than the actually visible viewport when browser chrome (URL bar, toolbar) is on screen. Anything sized via `vh` extends below the visible area, hiding sticky footers, CTAs, and dialog actions.
@@ -1156,12 +1162,12 @@ These flags do not grant backend permissions. Curl cannot call this browser API.
 
 **Init day unlocks** (always controlled; never calendar-driven):
 
-- Default is **after the event** (`getInitMockCurrentDayDefault()` in `src/lib/init/mock-current-day.ts` → `getInitMockDayAfter()`, recap mode with all days unlocked).
+- Default is **post-event, no banner** (`getInitMockCurrentDayDefault()` in `src/lib/init/mock-current-day.ts` → `getInitMockDayBannerExpired()`, recap mode with all days unlocked and the org promo banner hidden).
 - Advance the day from debug menu → Init → **Day** (slider: Before → Day 1–5 → After → Banner off).
 - When ready for a new default for everyone, change `getInitMockCurrentDayDefault()` to the day you want unlocked.
 **Debug mode:** When debug menu is open (type `pink`, case-insensitive), use Console profile submenu to override the env-selected profile. Override is stored in localStorage and takes precedence until "Use env var" is selected.
 
-**Feature flags:** Use `useConsoleProfile()` or `getActiveProfileFeatures()` for flags that still vary by profile or env (e.g. `features.billing`, `features.compliance`, `features.databaseBackups`, `features.nativeDbsMongo`, `features.agent`, `features.notifications`, `features.cookieBanner`). Cloud-only surfaces that shipped during Init (domains, marketplace, firewall, storage S3, OAuth2 server, OAuth apps, dedicated/product/native Postgres and MySQL databases) no longer have profile flags; gate them with `isCloudProfile()` from `@/lib/console-profiles` or helpers such as `isCloudDedicatedDatabasesEnabled()` from `@/lib/database-routes`.
+**Feature flags:** Use `useConsoleProfile()` or `getActiveProfileFeatures()` for flags that still vary by profile or env (e.g. `features.billing`, `features.compliance`, `features.databaseBackups`, `features.databaseSpecifications`, `features.nativeDbsMongo`, `features.accountApplications`, `features.agent`, `features.notifications`, `features.cookieBanner`). Prefer adding a flag over a bare profile check: every cloud/self-hosted difference should be a row in the debug Compare profiles table. Cloud-only surfaces that shipped during Init (domains, marketplace, firewall, storage S3, OAuth2 server, OAuth apps, dedicated/product/native Postgres and MySQL databases) no longer have profile flags; gate them with `isCloudProfile()` from `@/lib/console-profiles` or helpers such as `isCloudDedicatedDatabasesEnabled()` from `@/lib/database-routes`.
 
 **Feature-driven keys:** Each remaining flag must map to a single, specific feature. Do not use generic or grouped flags (e.g. `orgCloudSettings`, `databaseCloudFeatures`). Split into explicit flags per feature (e.g. `compliance`, `orgApiKeys` for org settings; `databaseBackups`, `databasePitrRestore`, `nativeDbsMongo` for database).
 

@@ -1,11 +1,12 @@
 import {
+  flushPendingPageView,
   getPlausibleInitScript,
   getPlausibleScriptSrc,
 } from '@/lib/analytics'
 import { deferAfterPaint } from '@/lib/defer-after-paint'
 import { initSentryClient } from '@/lib/sentry/init-client'
 
-let trackingScriptsLoaded = false
+let plausibleLoaded = false
 
 function appendScript(
   attributes: Record<string, string | boolean | undefined>,
@@ -26,23 +27,26 @@ function appendScript(
   document.head.appendChild(script)
 }
 
-/** Loads Plausible and Sentry after analytics consent. */
+/** Cookieless usage analytics. Safe to call before cookie consent. */
+export function loadPlausibleScript() {
+  if (typeof window === 'undefined') return
+  if (plausibleLoaded) return
+  plausibleLoaded = true
+
+  const plausibleScriptSrc = getPlausibleScriptSrc()
+  if (!plausibleScriptSrc) return
+
+  appendScript({}, getPlausibleInitScript())
+  appendScript({ src: plausibleScriptSrc, defer: 'true' })
+  flushPendingPageView()
+}
+
+/** Sentry (session cookies / diagnostics). Call only after analytics consent. */
 export function loadTrackingScriptsAfterConsent() {
   if (typeof window === 'undefined') return
 
   deferAfterPaint(() => {
-    if (!trackingScriptsLoaded) {
-      trackingScriptsLoaded = true
-
-      const plausibleScriptSrc = getPlausibleScriptSrc()
-      if (plausibleScriptSrc) {
-        appendScript({}, getPlausibleInitScript())
-        appendScript({ src: plausibleScriptSrc, defer: 'true' })
-      }
-    }
-
-    // Always attempt init (idempotent). Previously we skipped this once
-    // trackingScriptsLoaded was set, so a failed/early call never retried.
+    // Idempotent. A failed/early call must be allowed to retry.
     initSentryClient()
   })
 }

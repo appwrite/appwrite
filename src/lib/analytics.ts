@@ -2,7 +2,6 @@ import {
   getAnalyticsArea,
   getAnalyticsSurface,
 } from '@/lib/analytics-route'
-import { canTrackAnalytics } from '@/lib/cookie-consent/consent-state'
 import { getActiveLanguage, type SupportedLanguage } from '@/lib/i18n/active-language'
 import { getRuntimeConfig } from '@/lib/runtime-config'
 import {
@@ -35,7 +34,8 @@ export function getPlausibleEventUrl(scriptSrc = getPlausibleScriptSrc()) {
 export const ANALYTICS_ENABLED = Boolean(getPlausibleScriptSrc())
 
 function isAnalyticsAllowed() {
-  return Boolean(getPlausibleScriptSrc()) && canTrackAnalytics()
+  // Plausible is cookieless. Do not gate it on the cookie banner.
+  return Boolean(getPlausibleScriptSrc())
 }
 
 export function getPlausibleInitScript() {
@@ -209,11 +209,10 @@ function flushPendingAnalyticsEvents() {
 
 const MAX_PENDING_ANALYTICS_EVENTS = 20
 
-export function trackPageView(routePath: string) {
-  if (!isAnalyticsAllowed() || typeof window === 'undefined') return
-  // Plausible's init stub queues until the script loads; without it, skip so we
-  // do not mark the session as pageviewed and drop later real pageviews.
-  if (!window.plausible) return
+let pendingPageviewPath: string | null = null
+
+function sendPageView(routePath: string) {
+  if (!window.plausible) return false
 
   window.plausible('pageview', {
     url: getAnalyticsRouteUrl(routePath),
@@ -225,6 +224,29 @@ export function trackPageView(routePath: string) {
   })
   hasTrackedPageview = true
   flushPendingAnalyticsEvents()
+  return true
+}
+
+/** Flush a pageview queued before the Plausible stub was injected. */
+export function flushPendingPageView() {
+  if (!pendingPageviewPath) return
+  if (!isAnalyticsAllowed() || typeof window === 'undefined') return
+  const routePath = pendingPageviewPath
+  pendingPageviewPath = null
+  sendPageView(routePath)
+}
+
+export function trackPageView(routePath: string) {
+  if (!isAnalyticsAllowed() || typeof window === 'undefined') return
+  // Plausible's init stub queues until the remote script loads. If the stub is
+  // not in the page yet, keep the latest path and send it when the stub lands.
+  if (!window.plausible) {
+    pendingPageviewPath = routePath
+    return
+  }
+
+  pendingPageviewPath = null
+  sendPageView(routePath)
 }
 
 export function trackEvent(
