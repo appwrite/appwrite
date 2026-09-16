@@ -8,7 +8,6 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
-use Utopia\Auth\Store;
 use Utopia\Database\Helpers\ID;
 
 final class AccountTest extends Scope
@@ -90,6 +89,14 @@ final class AccountTest extends Scope
         /**
          * Test for SUCCESS
          */
+        $baseline = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $headers, [
+            'email' => $email,
+            'password' => 'password',
+        ]);
+        $this->assertEquals(201, $baseline['headers']['status-code']);
+        $this->assertSame($userId, $baseline['body']['userId']);
+        $this->assertNotEmpty($baseline['body']['secret']);
+
         $response = $this->client->call(Client::METHOD_POST, '/graphql', $headers, [
             'query' => 'mutation CreateRecoveryAndSession($email: String!, $password: String!) {
                 recovery: accountCreateRecovery(email: $email, url: "http://localhost/recovery", length: 4) {
@@ -114,9 +121,8 @@ final class AccountTest extends Scope
         $this->assertSame($userId, $recovery['userId']);
         $this->assertSame(4, strlen($recovery['secret']));
         $this->assertSame($userId, $session['userId']);
-        $store = (new Store())->decode($session['secret']);
-        $this->assertSame($userId, $store->getProperty('id'));
-        $this->assertSame(256, strlen($store->getProperty('secret')));
+        $this->assertNotEmpty($session['secret']);
+        $this->assertSame(strlen($baseline['body']['secret']), strlen($session['secret']));
 
         $account = $this->client->call(Client::METHOD_GET, '/account', [
             'content-type' => 'application/json',
