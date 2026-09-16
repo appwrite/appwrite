@@ -61,6 +61,10 @@ import {
   type OAuth2UpdateValues,
 } from '@/lib/oauth2/update-project-oauth2'
 import {
+  getOAuth2SignInStatus,
+  type OAuth2SignInStatus,
+} from '@/lib/oauth2/sign-in-status'
+import {
   getOAuth2ProviderDisplayName,
   getOAuth2ProviderIconPath,
   OAUTH2_POPULAR_PROVIDER_IDS,
@@ -1099,17 +1103,51 @@ export function OAuth2ProvidersSection({
     ? getOAuth2ProviderDisplayName(selectedProviderId)
     : ''
 
+  /**
+   * With a native card below it, this card is one of two switches, so it is
+   * named for its flow instead of claiming the whole provider is off.
+   */
+  const browserSignInLabel = providerSupportsNative
+    ? t('Browser sign-in')
+    : formEnabled
+      ? t('Enabled')
+      : t('Disabled')
+  const browserSignInHint = providerSupportsNative
+    ? formEnabled
+      ? t('Sessions can be created through the redirect flow')
+      : t('Browser sign-in is turned off for this project')
+    : formEnabled
+      ? t('This provider can be used for new sessions')
+      : t('This provider is turned off for this project')
+
+  /** Spelled out for hover and screen readers, where two chips read as a list. */
+  const describeSignInStatus = (status: OAuth2SignInStatus): string => {
+    switch (status) {
+      case 'browser-and-native':
+        return t('Browser and native sign-in enabled')
+      case 'browser':
+        return t('Browser sign-in enabled, native sign-in disabled')
+      case 'native':
+        return t('Native sign-in enabled, browser sign-in disabled')
+      default:
+        return t('Browser and native sign-in disabled')
+    }
+  }
+
   const renderProviderGrid = (rows: OAuth2ProviderRow[]) => (
     <div className={RESOURCE_CARD_GRID_CLASSNAME}>
       {rows.map((row) => {
         const model = findProjectProviderModel(resolvedProviderList, row.$id)
-        const enabled = Boolean(model?.enabled)
+        const browserEnabled = Boolean(model?.enabled)
         const nativeEnabled = readBooleanField(model, 'nativeEnabled')
+        const status = getOAuth2SignInStatus({ browserEnabled, nativeEnabled })
+        const hasNativeCard = supportsNativeSignIn(row.parameters)
         return (
           <button
             key={row.$id}
             type="button"
             onClick={() => openDrawerFor(row.$id)}
+            title={hasNativeCard ? describeSignInStatus(status) : undefined}
             className={cn(
               'flex w-full min-w-0 items-center justify-between gap-2 text-start',
               RESOURCE_CARD_PADDED_CLASSNAME,
@@ -1133,18 +1171,30 @@ export function OAuth2ProvidersSection({
                 {getOAuth2ProviderDisplayName(row.$id)}
               </span>
             </div>
+            {/*
+              One chip per flow that can create sessions, so a native-only
+              provider never reads as disabled. The muted chip stands alone,
+              and only when nothing is on.
+            */}
             <div className="flex shrink-0 items-center gap-1">
-              {nativeEnabled ? (
-                <Badge variant="info" className="shrink-0 text-[11px]">
-                  {t('native')}
+              {status === 'off' ? (
+                <Badge variant="inactive" className="shrink-0 text-[11px]">
+                  {t('disabled')}
                 </Badge>
-              ) : null}
-              <Badge
-                variant={enabled ? 'success' : 'secondary'}
-                className="shrink-0 text-[11px]"
-              >
-                {enabled ? t('enabled') : t('disabled')}
-              </Badge>
+              ) : (
+                <>
+                  {browserEnabled ? (
+                    <Badge variant="success" className="shrink-0 text-[11px]">
+                      {t('enabled')}
+                    </Badge>
+                  ) : null}
+                  {nativeEnabled ? (
+                    <Badge variant="success" className="shrink-0 text-[11px]">
+                      {t('native')}
+                    </Badge>
+                  ) : null}
+                </>
+              )}
             </div>
           </button>
         )
@@ -1265,12 +1315,10 @@ export function OAuth2ProvidersSection({
                         htmlFor="oauth2-provider-enabled"
                         className="text-[13px] font-semibold text-foreground"
                       >
-                        {formEnabled ? t('Enabled') : t('Disabled')}
+                        {browserSignInLabel}
                       </Label>
                       <p className="text-[12px] text-muted-foreground">
-                        {formEnabled
-                          ? t('This provider can be used for new sessions')
-                          : t('This provider is turned off for this project')}
+                        {browserSignInHint}
                       </p>
                     </div>
                     <Switch

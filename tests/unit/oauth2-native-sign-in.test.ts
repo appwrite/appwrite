@@ -17,6 +17,7 @@ import {
   pruneOAuth2Body,
   updateProjectOAuth2Provider,
 } from '@/lib/oauth2/update-project-oauth2'
+import { getOAuth2SignInStatus } from '@/lib/oauth2/sign-in-status'
 
 const CLIENT_ID = { $id: 'clientId', name: 'Client ID' }
 const NATIVE = { $id: NATIVE_CLIENT_IDS_PARAM_ID, name: 'Native client IDs' }
@@ -141,5 +142,17 @@ describe('native sign-in rules', () => {
         formFields: {},
       }),
     ).toBeUndefined()
+  })
+})
+
+describe('getOAuth2SignInStatus', () => {
+  test('names the flows that are on, so native-only never reads as disabled', () => {
+    const status = (browserEnabled: boolean, nativeEnabled: boolean) =>
+      getOAuth2SignInStatus({ browserEnabled, nativeEnabled })
+
+    expect(status(false, false)).toBe('off')
+    expect(status(true, false)).toBe('browser')
+    expect(status(false, true)).toBe('native')
+    expect(status(true, true)).toBe('browser-and-native')
   })
 })
