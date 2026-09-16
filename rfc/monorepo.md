@@ -4,7 +4,7 @@ Status: draft · Author: loks0n · Last updated: 2026-09-15 · First slice (tool
 
 ## Summary
 
-Every `utopia-php/*` library Appwrite depends on moves into this repository under `packages/<name>`. Appwrite loads them **directly** through its own PSR-4 autoload, the same way `src/Utopia/Bus` is loaded today: no Composer dependency, no `path` repository, no `utopia-php/*` entry in `composer.lock`. Each package keeps its own `composer.json`, is split back to its read-only mirror `github.com/utopia-php/<name>` on every push to `main`, and keeps publishing to Packagist for consumers that are not Appwrite. `utopia-php/monorepo`, which already holds 36 of these packages and all of the tooling this needs, is archived once its packages have moved here.
+Every `utopia-php/*` library Appwrite depends on moves into this repository under `packages/<name>`. Appwrite loads them **directly** through its own PSR-4 autoload, as it already does for `packages/agents` and `packages/bus`: no Composer dependency, no `path` repository, no `utopia-php/*` entry in `composer.lock`. Each package keeps its own `composer.json`, is split back to its read-only mirror `github.com/utopia-php/<name>` on every push to `main`, and keeps publishing to Packagist for consumers that are not Appwrite. `utopia-php/monorepo`, which already holds 36 of these packages and all of the tooling this needs, is archived once its packages have moved here.
 
 ## Goals
 
@@ -17,7 +17,7 @@ Every `utopia-php/*` library Appwrite depends on moves into this repository unde
 ## Non-goals
 
 - Rewriting library APIs. Absorption moves code; API changes are separate work with their own releases.
-- Folding libraries into `src/Appwrite/`. Generic code stays generic and lives in `packages/`. `src/Utopia/` goes away: `Bus`, its only occupant, becomes `packages/bus` and gets a mirror like every other package.
+- Folding libraries into `src/Appwrite/`. Generic code stays generic and lives in `packages/`. `src/Utopia/` is gone: `Bus`, its only occupant, became `packages/bus` with a mirror like every other package.
 - Moving the four monorepo packages Appwrite does not use. `fastly` is archived, `nats` and `replication` go to `appwrite/cloud`, `reputation` is undecided (Cloud or here).
 - Adopting `utopia-php/config` 2.x. See [Version gaps](#version-gaps).
 
@@ -89,7 +89,7 @@ Rules `validate` checks per package:
   "psr-4": {
     "Appwrite\\": "src/Appwrite",
     "Executor\\": "src/Executor",
-    "Utopia\\Bus\\": "src/Utopia/Bus",
+    "Utopia\\Bus\\": "packages/bus/src",
     "Utopia\\Abuse\\": "packages/abuse/src",
     "Utopia\\Agents\\": "packages/agents/src",
     "...": "one line per package, 45 in total",
@@ -196,7 +196,7 @@ Package edits happen only where the package currently lives; this document carri
 
 ### Phase 0. Decide and freeze
 
-- Land this RFC. Rewrite the Libraries section of `AGENTS.md`: generic code goes in `packages/<name>` (Utopia namespace, loaded directly, mirrored to Packagist); Appwrite-specific code stays in `src/Appwrite/`; `src/Utopia/` is for un-mirrored Utopia code only.
+- Land this RFC. Rewrite the Libraries section of `AGENTS.md`: generic code goes in `packages/<name>` (Utopia namespace, loaded directly, mirrored to Packagist); Appwrite-specific code stays in `src/Appwrite/`.
 - Announce the freeze on `utopia-php/monorepo` and the 13 standalone repositories: from the date each package is absorbed, its only writable home is here. `mirror-redirect` enforces it for new PRs; existing open PRs on each mirror are triaged in that package's absorb PR.
 - Decide `reputation` (Cloud or here) and whether `config` 2.x gets a `packages/` home.
 - Add the branch-ruleset allowance for merge commits on `absorb`-labelled PRs.
