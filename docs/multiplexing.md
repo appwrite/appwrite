@@ -51,6 +51,7 @@ new Multiplexing(
     auth:            null,   // string password, [user, password], or null
     dbIndex:         0,
     livenessTimeout: 5.0,    // reader silence before the connection is dead (s)
+    idleGrace:       1.0,    // how long the reader outlives the last reply (s)
 );
 ```
 
@@ -77,6 +78,14 @@ connection whose packets are dropped rather than refused, where no close ever
 arrives — the reader blocks in `recv()` with no deadline of its own, so without
 this check its callers would wait forever. Keep it well above `readTimeout`: a server that is merely busy looks
 exactly like one that is gone until enough time has passed.
+
+`idleGrace` defaults to **1 s** and bounds the reader coroutine's life on an
+idle connection. The first caller to find no reader spawns one; it keeps
+serving replies while any are outstanding and, once the queue is empty, parks
+in `recv()` for the grace before retiring. Steady traffic therefore runs on one
+long-lived reader rather than one coroutine per command, and a worker exit
+waits at most the grace for it: a coroutine parked in `recv()` is a reactor
+event, and Swoole cannot stop a worker while one remains.
 
 ## Errors
 

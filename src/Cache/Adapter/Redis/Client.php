@@ -93,6 +93,15 @@ class Client
     }
 
     /**
+     * Whether the last recv() returned false because its timeout elapsed, as
+     * opposed to the peer closing or the socket failing.
+     */
+    public function timedOut(): bool
+    {
+        return $this->client->errCode === SOCKET_ETIMEDOUT;
+    }
+
+    /**
      * Drain and return any bytes the kernel delivered past the last parsed
      * frame. The reader coroutine seeds itself with these so handshake
      * leftovers are not lost.

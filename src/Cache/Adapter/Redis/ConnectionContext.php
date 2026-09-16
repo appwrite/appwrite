@@ -21,6 +21,14 @@ class ConnectionContext
     public float $lastProgressAt;
 
     /**
+     * Whether a reader coroutine is alive for this connection. Set by the
+     * caller that spawns one and cleared by the reader as it retires, both
+     * under the send lock, so exactly one reader serves the queue and no
+     * command is ever sent with nobody to read its reply.
+     */
+    public bool $reading = false;
+
+    /**
      * @param  SplQueue<\Swoole\Coroutine\Channel<mixed>>  $pending
      */
     public function __construct(

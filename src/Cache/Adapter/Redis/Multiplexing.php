@@ -26,11 +26,14 @@ use Utopia\Telemetry\UpDownCounter;
  * single reader coroutine parses inbound frames and dispatches each one to
  * the next pending Channel, exploiting Redis's guarantee of in-order replies.
  *
- * The reader exists only while replies are outstanding: the caller that makes
- * the queue non-empty spawns it, and it returns after dequeuing the last slot.
- * A coroutine parked in recv() is a reactor event, and a Swoole worker cannot
- * exit while one remains, so a permanent reader would turn every max_request
- * recycle and reload into a max_wait_time timeout and a forced termination.
+ * The reader is spawned by the first caller that finds none running and
+ * retires once the connection has been idle for `idleGrace`. Both ends of that
+ * window matter. A coroutine parked in recv() is a reactor event, and a Swoole
+ * worker cannot exit while one remains, so a permanent reader turns every
+ * max_request recycle and reload into a max_wait_time timeout and a forced
+ * termination. A reader that retires the moment the queue drains is spawned
+ * again by the very next command, and at typical concurrency that is a
+ * coroutine per command: creating one costs more CPU than the command itself.
  */
 class Multiplexing extends Leasable implements Adapter, Batchable, TelemetryFeature
 {
@@ -64,6 +67,12 @@ class Multiplexing extends Leasable implements Adapter, Batchable, TelemetryFeat
      *                                 time has passed. Default 5s.
      * @param  string|array<string>|null  $auth password or [username, password]
      * @param  Codec  $codec how values are stored; Json is the wire format every release so far has written
+     * @param  float  $idleGrace how long the reader stays parked on an idle
+     *                           connection before retiring. Bounds both the
+     *                           coroutine spawn rate (at most one per grace
+     *                           per worker while traffic is steady) and how
+     *                           long a worker exit waits for the reader.
+     *                           Default 1s.
      */
     public function __construct(
         private readonly string $host,
@@ -74,6 +83,7 @@ class Multiplexing extends Leasable implements Adapter, Batchable, TelemetryFeat
         private readonly int $dbIndex = 0,
         private readonly float $livenessTimeout = 5.0,
         Codec $codec = new Json(),
+        private readonly float $idleGrace = 1.0,
     ) {
         parent::__construct($codec);
 
@@ -85,6 +95,9 @@ class Multiplexing extends Leasable implements Adapter, Batchable, TelemetryFeat
         }
         if ($this->livenessTimeout < $this->readTimeout) {
             throw new \InvalidArgumentException('livenessTimeout must be greater than or equal to readTimeout');
+        }
+        if ($this->idleGrace <= 0) {
+            throw new \InvalidArgumentException('idleGrace must be greater than 0');
         }
         $this->sendLock = new Lock();
         $this->setTelemetry(new NoTelemetry());
@@ -397,12 +410,20 @@ class Multiplexing extends Leasable implements Adapter, Batchable, TelemetryFeat
             $response = new Channel(1);
             $error = null;
 
-            $idle = $context->pending->isEmpty();
+            if ($context->pending->isEmpty()) {
+                // Time spent idle with nobody waiting says nothing about
+                // liveness; the clock starts when this caller begins to wait.
+                $context->recordProgress();
+            }
             $context->pending->enqueue($response);
             $this->getPendingDepth()->add(1);
+            // Claimed under the send lock, so a reader deciding to retire at
+            // the same moment sees this slot and stays instead.
+            $spawn = ! $context->reading;
+            $context->reading = true;
             try {
                 $context->client->send(Client::encode($args));
-                if ($idle) {
+                if ($spawn) {
                     $this->startReader($context);
                 }
             } catch (ConnectionException $sendError) {
@@ -511,12 +532,30 @@ class Multiplexing extends Leasable implements Adapter, Batchable, TelemetryFeat
 
     private function startReader(ConnectionContext $context): void
     {
-        // Time spent idle with nobody listening says nothing about liveness.
-        $context->recordProgress();
-
         Coroutine::create(function () use ($context): void {
             $this->readerLoop($context);
         });
+    }
+
+    /**
+     * Whether a reader parked on an idle connection may return. Decided under
+     * the send lock, because the alternative is a caller that enqueued after
+     * the reader checked and, seeing the reader flag still set, never spawns a
+     * replacement: its reply would then have nobody to read it.
+     */
+    private function retire(ConnectionContext $context): bool
+    {
+        $locked = $this->lockSend();
+        try {
+            if (! $context->pending->isEmpty()) {
+                return false;
+            }
+            $context->reading = false;
+
+            return true;
+        } finally {
+            $this->unlockSend($locked);
+        }
     }
 
     private function shutdown(): void
@@ -619,17 +658,11 @@ class Multiplexing extends Leasable implements Adapter, Batchable, TelemetryFeat
                 if ($waiting instanceof Channel) {
                     $this->getPendingDepth()->add(-1);
                     $context->recordProgress();
-                    // Decided before the push wakes the caller, so a command it
-                    // issues next sees an empty queue and spawns the next reader.
-                    $last = $readBuffer === '' && $context->pending->isEmpty();
                     // May be a reply whose caller already gave up on its own
                     // deadline. The slot is still dequeued in order so the frames
                     // behind it stay aligned, and the push cannot block on a
                     // capacity-1 Channel, so an abandoned reply is simply dropped.
                     $waiting->push($value);
-                    if ($last) {
-                        return;
-                    }
                 } else {
                     // Should never happen given the send-lock invariant. Log
                     // and tear down so the next caller reconnects on a clean
@@ -641,7 +674,19 @@ class Multiplexing extends Leasable implements Adapter, Batchable, TelemetryFeat
                 }
             }
 
-            $chunk = $context->client->recv(-1);
+            // With replies outstanding the reader has no deadline of its own;
+            // liveness is the callers' verdict (see awaitResponse). Idle, it
+            // waits out the grace so the next command finds it still here, and
+            // only then asks whether it may go.
+            $idle = $readBuffer === '' && $context->pending->isEmpty();
+            $chunk = $context->client->recv($idle ? $this->idleGrace : -1);
+            if ($chunk === false && $idle && $context->client->timedOut()) {
+                if ($this->retire($context)) {
+                    return;
+                }
+
+                continue;
+            }
             if (\is_string($chunk) && $chunk !== '') {
                 // Bytes arriving is progress even before they complete a frame,
                 // so a large reply streaming in slowly is not mistaken for a dead
