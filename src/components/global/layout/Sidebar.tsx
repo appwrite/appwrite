@@ -140,7 +140,7 @@ const getNavItems = (projectId: string, sidebarCopy: SidebarCopy) => {
     id: 'overview',
     label: sidebarCopy.items.overview,
     icon: LayoutDashboard,
-    path: `/projects/${projectId}`,
+    path: `/projects/${projectId}/overview`,
   }
 
   const navCategories: NavCategory[] = [

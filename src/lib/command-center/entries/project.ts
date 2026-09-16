@@ -57,7 +57,7 @@ const PROJECT_NAV: CommandEntry[] = [
     icon: LayoutDashboard,
     shortcut: 'G O',
     keywords: ['home', 'dashboard', 'main', 'project'],
-    to: (ctx) => `/projects/${ctx.projectId}`,
+    to: (ctx) => `/projects/${ctx.projectId}/overview`,
   },
   {
     id: 'project.nav.agents',

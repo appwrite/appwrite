@@ -70,7 +70,10 @@ export function KeyboardShortcutsProvider({
   const navigateToSection = useCallback(
     (section: string) => {
       if (section === 'overview') {
-        navigate({ to: '/projects/$projectId', params: { projectId } })
+        navigate({
+          to: '/projects/$projectId/overview',
+          params: { projectId },
+        })
         return
       }
       if (section === 'storage') {

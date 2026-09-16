@@ -1407,6 +1407,9 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Paste this prompt into any coding agent. It follows a public setup page to install Appwrite MCP for this project.':
     'הדביקו את הפרומפט בכל סוכן פיתוח. הוא יעקוב אחר דף ההתקנה הציבורי כדי להתקין Appwrite MCP לפרויקט הזה.',
   'Or install Appwrite MCP manually': 'או התקינו Appwrite MCP ידנית',
+  'Skip for this project': 'דילוג בפרויקט זה',
+  'Preferences are unavailable.': 'ההעדפות אינן זמינות.',
+  'Failed to update preferences': 'עדכון ההעדפות נכשל',
   'Install MCP': 'התקנת MCP',
   'Open MCP': 'פתיחת MCP',
   'Register where your app runs, add API credentials, and connect a coding agent with MCP.':

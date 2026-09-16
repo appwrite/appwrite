@@ -147,6 +147,7 @@ import {
   sanitizeAccountPrefsForWrite,
   mergeDismissedBannerPrefs,
   clearDismissedBannerPrefs,
+  mergeAgentsDismissedProjectIdsPrefs,
   USER_PREFS_KEY_FEATURE_NOTIFICATIONS,
   type UserPrefs,
 } from '@/lib/user-prefs-keys'
@@ -1608,6 +1609,39 @@ export function useClearConsoleBannerDismissal() {
       return await updateAccountPrefs(
         updatedPrefs,
         'clear-console-banner-dismissal',
+      )
+    },
+    onSuccess: (updatedAccount) => {
+      syncConsoleAccountAfterMutation(queryClient, {
+        apiResult: updatedAccount,
+      })
+    },
+  })
+}
+
+/**
+ * Persist dismissal of the project Agents landing in
+ * `console.agents.dismissedProjectIds`.
+ */
+export function useDismissProjectAgentsLanding() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (projectId: string) => {
+      const account = getConsoleAccountFromCache(queryClient)
+
+      if (!account) {
+        throw new Error('Account data not available')
+      }
+
+      const updatedPrefs = mergeAgentsDismissedProjectIdsPrefs(
+        account.prefs,
+        projectId,
+      )
+
+      return await updateAccountPrefs(
+        updatedPrefs,
+        'dismiss-project-agents-landing',
       )
     },
     onSuccess: (updatedAccount) => {

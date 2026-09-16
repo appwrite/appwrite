@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Link, useParams } from '@tanstack/react-router'
+import { Link, useNavigate, useParams } from '@tanstack/react-router'
 import {
   Check,
   Copy,
@@ -17,6 +17,11 @@ import { MCPSection } from '@/components/pages/projects/$projectId/shared/MCPSec
 import { useProjectConnectDialog } from '@/components/pages/projects/$projectId/shared/ProjectConnectDialogContext'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import {
   analyticsAttrs,
@@ -34,6 +39,7 @@ import {
 } from '@/lib/mcp-adoption'
 import {
   useAccountConnectedApps,
+  useDismissProjectAgentsLanding,
   useOrganizationScopes,
   useProject,
 } from '@/lib/react-query/hooks'
@@ -128,8 +134,9 @@ function ExploreAppwrite({ projectId }: { projectId: string }) {
 
 export function View() {
   const t = useT()
+  const navigate = useNavigate()
   const { projectId } = useParams({ strict: false })
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, account } = useAuth()
   const { features, isSelfHosted } = useConsoleProfile()
   const { project } = useProject(projectId)
   const { access } = useOrganizationScopes(project?.teamId)
@@ -138,6 +145,7 @@ export function View() {
   })
   const projectConnect = useProjectConnectDialog()
   const [copied, setCopied] = useState(false)
+  const dismissLanding = useDismissProjectAgentsLanding()
 
   const canShow =
     !!projectId &&
@@ -216,6 +224,24 @@ export function View() {
           >
             {t('Or install Appwrite MCP manually')}
           </button>
+          <AgentsLandingSkip
+            canSavePrefs={Boolean(account)}
+            isPending={dismissLanding.isPending}
+            onSkip={() => {
+              dismissLanding.mutate(projectId, {
+                onSuccess: () => {
+                  navigate({
+                    to: '/projects/$projectId/overview',
+                    params: { projectId },
+                    replace: true,
+                  })
+                },
+                onError: () => {
+                  toast.error(t('Failed to update preferences'))
+                },
+              })
+            }}
+          />
           <div className="mt-16 w-full">
             <MCPSection
               compact
@@ -229,6 +255,49 @@ export function View() {
           </div>
         </div>
       </div>
+    </div>
+  )
+}
+
+function AgentsLandingSkip({
+  canSavePrefs,
+  isPending,
+  onSkip,
+}: {
+  canSavePrefs: boolean
+  isPending: boolean
+  onSkip: () => void
+}) {
+  const t = useT()
+  const skipDisabled = !canSavePrefs || isPending
+  const skipControl = (
+    <button
+      type="button"
+      className="cursor-pointer text-[11px] text-muted-foreground/80 underline-offset-2 hover:text-muted-foreground hover:underline disabled:cursor-not-allowed disabled:opacity-50"
+      disabled={skipDisabled}
+      onClick={() => {
+        if (skipDisabled) return
+        onSkip()
+      }}
+    >
+      {t('Skip for this project')}
+    </button>
+  )
+
+  if (canSavePrefs) {
+    return <div className="mt-3">{skipControl}</div>
+  }
+
+  return (
+    <div className="mt-3">
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className="inline-flex">{skipControl}</span>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p className="text-[13px]">{t('Preferences are unavailable.')}</p>
+        </TooltipContent>
+      </Tooltip>
     </div>
   )
 }

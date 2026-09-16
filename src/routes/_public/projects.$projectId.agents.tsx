@@ -19,7 +19,7 @@ export const Route = createFileRoute('/_public/projects/$projectId/agents')({
     const canAccess = await canAccessProjectAgentConnect(queryClient, projectId)
     if (!canAccess) {
       throw redirect({
-        to: '/projects/$projectId',
+        to: '/projects/$projectId/overview',
         params: { projectId },
         replace: true,
       })

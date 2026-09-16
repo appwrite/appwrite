@@ -26,6 +26,7 @@ import {
   organizationScopesQueryOptions,
   organizationsQueryOptions,
   prefetchOrganizationInvoiceDataIfAllowed,
+  consoleAccountQueryOptions,
   useProject,
   useOrganizationBillingInvoicePresence,
   isOrganizationBillingReadonlyStatus,
@@ -370,6 +371,9 @@ export const Route = createFileRoute('/_public/projects/$projectId')({
         // Header ProjectSelector uses useOrganizations; prefetch so navigation does not flash skeleton
         queryClient
           .ensureQueryData(organizationsQueryOptions())
+          .catch(() => {}),
+        queryClient
+          .ensureQueryData(consoleAccountQueryOptions())
           .catch(() => {}),
       ])
 

@@ -27,7 +27,7 @@ export const Route = createFileRoute('/_public/projects/$projectId/activity')({
   beforeLoad: ({ params }) => {
     if (!getActiveProfileFeatures().activity) {
       throw redirect({
-        to: '/projects/$projectId',
+        to: '/projects/$projectId/overview',
         params: { projectId: params.projectId },
         replace: true,
       })
@@ -43,7 +43,7 @@ export const Route = createFileRoute('/_public/projects/$projectId/activity')({
     const canAccess = await canAccessProjectActivity(queryClient, projectId)
     if (!canAccess) {
       throw redirect({
-        to: '/projects/$projectId',
+        to: '/projects/$projectId/overview',
         params: { projectId },
         replace: true,
       })

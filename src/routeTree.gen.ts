@@ -175,6 +175,7 @@ import { Route as PublicProjectsProjectIdFunctionsRouteImport } from './routes/_
 import { Route as PublicProjectsProjectIdImagineRouteImport } from './routes/_public/projects.$projectId.imagine'
 import { Route as PublicProjectsProjectIdMessagingRouteImport } from './routes/_public/projects.$projectId.messaging'
 import { Route as PublicProjectsProjectIdOnboardingRouteImport } from './routes/_public/projects.$projectId.onboarding'
+import { Route as PublicProjectsProjectIdOverviewRouteImport } from './routes/_public/projects.$projectId.overview'
 import { Route as PublicProjectsProjectIdRealtimeRouteImport } from './routes/_public/projects.$projectId.realtime'
 import { Route as PublicProjectsProjectIdSettingsRouteImport } from './routes/_public/projects.$projectId.settings'
 import { Route as PublicProjectsProjectIdStorageRouteImport } from './routes/_public/projects.$projectId.storage'
@@ -1316,6 +1317,12 @@ const PublicProjectsProjectIdOnboardingRoute =
   PublicProjectsProjectIdOnboardingRouteImport.update({
     id: '/onboarding',
     path: '/onboarding',
+    getParentRoute: () => PublicProjectsProjectIdRoute,
+  } as any)
+const PublicProjectsProjectIdOverviewRoute =
+  PublicProjectsProjectIdOverviewRouteImport.update({
+    id: '/overview',
+    path: '/overview',
     getParentRoute: () => PublicProjectsProjectIdRoute,
   } as any)
 const PublicProjectsProjectIdRealtimeRoute =
@@ -3261,6 +3268,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/imagine': typeof PublicProjectsProjectIdImagineRoute
   '/projects/$projectId/messaging': typeof PublicProjectsProjectIdMessagingRouteWithChildren
   '/projects/$projectId/onboarding': typeof PublicProjectsProjectIdOnboardingRoute
+  '/projects/$projectId/overview': typeof PublicProjectsProjectIdOverviewRoute
   '/projects/$projectId/realtime': typeof PublicProjectsProjectIdRealtimeRouteWithChildren
   '/projects/$projectId/settings': typeof PublicProjectsProjectIdSettingsRouteWithChildren
   '/projects/$projectId/storage': typeof PublicProjectsProjectIdStorageRouteWithChildren
@@ -3667,6 +3675,7 @@ export interface FileRoutesByTo {
   '/projects/$projectId/explorer': typeof PublicProjectsProjectIdExplorerRoute
   '/projects/$projectId/imagine': typeof PublicProjectsProjectIdImagineRoute
   '/projects/$projectId/onboarding': typeof PublicProjectsProjectIdOnboardingRoute
+  '/projects/$projectId/overview': typeof PublicProjectsProjectIdOverviewRoute
   '/agent/automations': typeof PublicAgentAutomationsIndexRoute
   '/agent/settings': typeof PublicAgentSettingsIndexRoute
   '/organizations/$orgId': typeof PublicOrganizationsOrgIdIndexRoute
@@ -4062,6 +4071,7 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/imagine': typeof PublicProjectsProjectIdImagineRoute
   '/_public/projects/$projectId/messaging': typeof PublicProjectsProjectIdMessagingRouteWithChildren
   '/_public/projects/$projectId/onboarding': typeof PublicProjectsProjectIdOnboardingRoute
+  '/_public/projects/$projectId/overview': typeof PublicProjectsProjectIdOverviewRoute
   '/_public/projects/$projectId/realtime': typeof PublicProjectsProjectIdRealtimeRouteWithChildren
   '/_public/projects/$projectId/settings': typeof PublicProjectsProjectIdSettingsRouteWithChildren
   '/_public/projects/$projectId/storage': typeof PublicProjectsProjectIdStorageRouteWithChildren
@@ -4487,6 +4497,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/imagine'
     | '/projects/$projectId/messaging'
     | '/projects/$projectId/onboarding'
+    | '/projects/$projectId/overview'
     | '/projects/$projectId/realtime'
     | '/projects/$projectId/settings'
     | '/projects/$projectId/storage'
@@ -4893,6 +4904,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/explorer'
     | '/projects/$projectId/imagine'
     | '/projects/$projectId/onboarding'
+    | '/projects/$projectId/overview'
     | '/agent/automations'
     | '/agent/settings'
     | '/organizations/$orgId'
@@ -5287,6 +5299,7 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/imagine'
     | '/_public/projects/$projectId/messaging'
     | '/_public/projects/$projectId/onboarding'
+    | '/_public/projects/$projectId/overview'
     | '/_public/projects/$projectId/realtime'
     | '/_public/projects/$projectId/settings'
     | '/_public/projects/$projectId/storage'
@@ -6757,6 +6770,13 @@ declare module '@tanstack/react-router' {
       path: '/onboarding'
       fullPath: '/projects/$projectId/onboarding'
       preLoaderRoute: typeof PublicProjectsProjectIdOnboardingRouteImport
+      parentRoute: typeof PublicProjectsProjectIdRoute
+    }
+    '/_public/projects/$projectId/overview': {
+      id: '/_public/projects/$projectId/overview'
+      path: '/overview'
+      fullPath: '/projects/$projectId/overview'
+      preLoaderRoute: typeof PublicProjectsProjectIdOverviewRouteImport
       parentRoute: typeof PublicProjectsProjectIdRoute
     }
     '/_public/projects/$projectId/realtime': {
@@ -10233,6 +10253,7 @@ interface PublicProjectsProjectIdRouteChildren {
   PublicProjectsProjectIdImagineRoute: typeof PublicProjectsProjectIdImagineRoute
   PublicProjectsProjectIdMessagingRoute: typeof PublicProjectsProjectIdMessagingRouteWithChildren
   PublicProjectsProjectIdOnboardingRoute: typeof PublicProjectsProjectIdOnboardingRoute
+  PublicProjectsProjectIdOverviewRoute: typeof PublicProjectsProjectIdOverviewRoute
   PublicProjectsProjectIdRealtimeRoute: typeof PublicProjectsProjectIdRealtimeRouteWithChildren
   PublicProjectsProjectIdSettingsRoute: typeof PublicProjectsProjectIdSettingsRouteWithChildren
   PublicProjectsProjectIdStorageRoute: typeof PublicProjectsProjectIdStorageRouteWithChildren
@@ -10268,6 +10289,7 @@ const PublicProjectsProjectIdRouteChildren: PublicProjectsProjectIdRouteChildren
       PublicProjectsProjectIdMessagingRouteWithChildren,
     PublicProjectsProjectIdOnboardingRoute:
       PublicProjectsProjectIdOnboardingRoute,
+    PublicProjectsProjectIdOverviewRoute: PublicProjectsProjectIdOverviewRoute,
     PublicProjectsProjectIdRealtimeRoute:
       PublicProjectsProjectIdRealtimeRouteWithChildren,
     PublicProjectsProjectIdSettingsRoute:

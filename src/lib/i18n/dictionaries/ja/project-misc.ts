@@ -913,6 +913,9 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Paste this prompt into any coding agent. It follows a public setup page to install Appwrite MCP for this project.':
     'このプロンプトをコーディングエージェントに貼り付けてください。公開セットアップページに従って、このプロジェクト向けに Appwrite MCP をインストールします。',
   'Or install Appwrite MCP manually': 'または Appwrite MCP を手動インストール',
+  'Skip for this project': 'このプロジェクトではスキップ',
+  'Preferences are unavailable.': '設定を保存できません。',
+  'Failed to update preferences': '設定の更新に失敗しました',
   'Install MCP': 'MCP をインストール',
   'Open MCP': 'MCP を開く',
   'Register where your app runs, add API credentials, and connect a coding agent with MCP.':
