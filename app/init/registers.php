@@ -328,17 +328,26 @@ $register->set('db', function () {
 $register->set('smtp', function () {
     $username = System::getEnv('_APP_SMTP_USERNAME', '');
     $password = System::getEnv('_APP_SMTP_PASSWORD', '');
-    return new SMTP(
-        host: System::getEnv('_APP_SMTP_HOST', 'smtp'),
-        port: (int) System::getEnv('_APP_SMTP_PORT', 25),
-        username: $username,
-        password: $password,
-        smtpSecure: System::getEnv('_APP_SMTP_SECURE', ''),
-        smtpAutoTLS: false,
-        xMailer: 'Appwrite Mailer',
-        timeout: 10,
-        keepAlive: true,
-        timelimit: 30,
+
+    // Workers run several jobs at once on this one entry, and a kept-alive
+    // session belongs to one send at a time, so each send borrows its own.
+    return new Pool(
+        adapter: new SwoolePool(),
+        name: 'smtp',
+        size: max(1, (int) System::getEnv('_APP_WORKER_MAX_COROUTINES', 1)),
+        init: fn () => new SMTP(
+            host: System::getEnv('_APP_SMTP_HOST', 'smtp'),
+            port: (int) System::getEnv('_APP_SMTP_PORT', 25),
+            username: $username,
+            password: $password,
+            smtpSecure: System::getEnv('_APP_SMTP_SECURE', ''),
+            smtpAutoTLS: false,
+            xMailer: 'Appwrite Mailer',
+            timeout: 10,
+            keepAlive: true,
+            timelimit: 30,
+        ),
+        timeout: (float) System::getEnv('_APP_CONNECTIONS_TIMEOUT', 10),
     );
 });
 $register->set('passwordsDictionary', function () {
