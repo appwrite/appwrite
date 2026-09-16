@@ -2343,8 +2343,8 @@ Http::post('/v1/account/tokens/magic-url')
     ->param('email', '', new EmailValidator(), 'User email.')
     ->param('url', '', fn ($redirectValidator) => $redirectValidator, 'URL to redirect the user back to your app from the magic URL login. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['redirectValidator'])
     ->param('phrase', false, new Boolean(), 'Toggle for security phrase. If enabled, email will be send with a randomly generated phrase and the phrase will also be included in the response. Confirming phrases match increases the security of your authentication flow.', true)
-    ->param('length', TOKEN_LENGTH_MAGIC_URL, new Range(4, 128), 'Token length in characters. The default length is 64 characters.', true)
-    ->param('expire', TOKEN_EXPIRATION_CONFIRM, new Range(60, TOKEN_EXPIRATION_LOGIN_LONG), 'Token expiration period in seconds. The default expiration is 1 hour.', true)
+    ->param('length', TOKEN_LENGTH_MAGIC_URL, new Range(4, 128), 'Token length in characters. The default length is 64 characters. Shorter tokens require a server API key or a privileged console session.', true)
+    ->param('expire', TOKEN_EXPIRATION_CONFIRM, new Range(60, TOKEN_EXPIRATION_LOGIN_LONG), 'Token expiration period in seconds. The default expiration is 1 hour. Longer lifetimes require a server API key or a privileged console session.', true)
     ->inject('request')
     ->inject('response')
     ->inject('user')
@@ -2357,9 +2357,22 @@ Http::post('/v1/account/tokens/magic-url')
     ->inject('proofForPassword')
     ->inject('platform')
     ->inject('authorization')
-    ->action(function (string $userId, string $email, string $url, bool $phrase, ?int $length, ?int $expire, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, MailPublisher $publisherForMails, array $plan, ProofsPassword $proofForPassword, array $platform, Authorization $authorization) {
+    ->action(function (string $userId, string $email, string $url, bool $phrase, ?int $length, ?int $expire, Request $request, Response $response, User $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, MailPublisher $publisherForMails, array $plan, ProofsPassword $proofForPassword, array $platform, Authorization $authorization) {
         $length ??= TOKEN_LENGTH_MAGIC_URL;
         $expire ??= TOKEN_EXPIRATION_CONFIRM;
+
+        $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
+        $isAppUser = $user->isKey($authorization->getRoles());
+
+        if (!$isPrivilegedUser && !$isAppUser) {
+            if ($length < TOKEN_LENGTH_MAGIC_URL) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Token length must be at least ' . TOKEN_LENGTH_MAGIC_URL . ' characters for client requests.');
+            }
+
+            if ($expire > TOKEN_EXPIRATION_CONFIRM) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Token expiration must not exceed ' . TOKEN_EXPIRATION_CONFIRM . ' seconds for client requests.');
+            }
+        }
 
         if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
@@ -2673,8 +2686,8 @@ Http::post('/v1/account/tokens/email')
     ->param('userId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars. If the email address has never been used, a new account is created using the provided userId. Otherwise, if the email address is already attached to an account, the user ID is ignored.', false, ['dbForProject'])
     ->param('email', '', new EmailValidator(), 'User email.')
     ->param('phrase', false, new Boolean(), 'Toggle for security phrase. If enabled, email will be send with a randomly generated phrase and the phrase will also be included in the response. Confirming phrases match increases the security of your authentication flow.', true)
-    ->param('length', 6, new Range(4, 128), 'Token length in characters. The default length is 6 characters.', true)
-    ->param('expire', TOKEN_EXPIRATION_OTP, new Range(60, TOKEN_EXPIRATION_LOGIN_LONG), 'Token expiration period in seconds. The default expiration is 15 minutes.', true)
+    ->param('length', 6, new Range(4, 128), 'Token length in characters. The default length is 6 characters. Shorter tokens require a server API key or a privileged console session.', true)
+    ->param('expire', TOKEN_EXPIRATION_OTP, new Range(60, TOKEN_EXPIRATION_LOGIN_LONG), 'Token expiration period in seconds. The default expiration is 15 minutes. Longer lifetimes require a server API key or a privileged console session.', true)
     ->inject('request')
     ->inject('response')
     ->inject('user')
@@ -2691,6 +2704,19 @@ Http::post('/v1/account/tokens/email')
     ->action(function (string $userId, string $email, bool $phrase, ?int $length, ?int $expire, Request $request, Response $response, User $user, Document $project, array $platform, Database $dbForProject, Locale $locale, Event $queueForEvents, MailPublisher $publisherForMails, array $plan, ProofsPassword $proofForPassword, ProofsCode $proofForCode, Authorization $authorization) {
         $length ??= 6;
         $expire ??= TOKEN_EXPIRATION_OTP;
+
+        $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
+        $isAppUser = $user->isKey($authorization->getRoles());
+
+        if (!$isPrivilegedUser && !$isAppUser) {
+            if ($length < 6) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Token length must be at least 6 characters for client requests.');
+            }
+
+            if ($expire > TOKEN_EXPIRATION_OTP) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Token expiration must not exceed ' . TOKEN_EXPIRATION_OTP . ' seconds for client requests.');
+            }
+        }
 
         if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
@@ -3129,8 +3155,8 @@ Http::post('/v1/account/tokens/phone')
     ->label('abuse-key', ['url:{url},phone:{param-phone}', 'url:{url},ip:{ip}'])
     ->param('userId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars. If the phone number has never been used, a new account is created using the provided userId. Otherwise, if the phone number is already attached to an account, the user ID is ignored.', false, ['dbForProject'])
     ->param('phone', '', new Phone(), 'Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.')
-    ->param('length', 6, new Range(4, 128), 'Token length in characters. The default length is 6 characters.', true)
-    ->param('expire', TOKEN_EXPIRATION_OTP, new Range(60, TOKEN_EXPIRATION_LOGIN_LONG), 'Token expiration period in seconds. The default expiration is 15 minutes.', true)
+    ->param('length', 6, new Range(4, 128), 'Token length in characters. The default length is 6 characters. Shorter tokens require a server API key or a privileged console session.', true)
+    ->param('expire', TOKEN_EXPIRATION_OTP, new Range(60, TOKEN_EXPIRATION_LOGIN_LONG), 'Token expiration period in seconds. The default expiration is 15 minutes. Longer lifetimes require a server API key or a privileged console session.', true)
     ->inject('request')
     ->inject('response')
     ->inject('user')
@@ -3148,6 +3174,19 @@ Http::post('/v1/account/tokens/phone')
     ->action(function (string $userId, string $phone, ?int $length, ?int $expire, Request $request, Response $response, User $user, Document $project, array $platform, Database $dbForProject, Event $queueForEvents, MessagingPublisher $publisherForMessaging, Locale $locale, Context $usage, array $plan, Store $store, ProofsCode $proofForCode, Authorization $authorization) {
         $length ??= 6;
         $expire ??= TOKEN_EXPIRATION_OTP;
+
+        $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
+        $isAppUser = $user->isKey($authorization->getRoles());
+
+        if (!$isPrivilegedUser && !$isAppUser) {
+            if ($length < 6) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Token length must be at least 6 characters for client requests.');
+            }
+
+            if ($expire > TOKEN_EXPIRATION_OTP) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Token expiration must not exceed ' . TOKEN_EXPIRATION_OTP . ' seconds for client requests.');
+            }
+        }
 
         if (empty(System::getEnv('_APP_SMS_PROVIDER'))) {
             throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
@@ -3871,8 +3910,8 @@ Http::post('/v1/account/recovery')
     ->label('abuse-key', ['url:{url},email:{param-email}', 'url:{url},ip:{ip}'])
     ->param('email', '', new EmailValidator(), 'User email.')
     ->param('url', '', fn ($redirectValidator) => $redirectValidator, 'URL to redirect the user back to your app from the recovery email. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['redirectValidator'])
-    ->param('length', TOKEN_LENGTH_RECOVERY, new Range(4, 256), 'Token length in characters. The default length is 256 characters.', true)
-    ->param('expire', TOKEN_EXPIRATION_RECOVERY, new Range(60, TOKEN_EXPIRATION_LOGIN_LONG), 'Token expiration period in seconds. The default expiration is 1 hour.', true)
+    ->param('length', TOKEN_LENGTH_RECOVERY, new Range(4, 256), 'Token length in characters. The default length is 256 characters. Shorter tokens require a server API key or a privileged console session.', true)
+    ->param('expire', TOKEN_EXPIRATION_RECOVERY, new Range(60, TOKEN_EXPIRATION_LOGIN_LONG), 'Token expiration period in seconds. The default expiration is 1 hour. Longer lifetimes require a server API key or a privileged console session.', true)
     ->inject('request')
     ->inject('response')
     ->inject('user')
@@ -3887,6 +3926,19 @@ Http::post('/v1/account/recovery')
     ->action(function (string $email, string $url, ?int $length, ?int $expire, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, MailPublisher $publisherForMails, Event $queueForEvents, ProofsToken $proofForToken, Authorization $authorization) {
         $length ??= TOKEN_LENGTH_RECOVERY;
         $expire ??= TOKEN_EXPIRATION_RECOVERY;
+
+        $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
+        $isAppUser = $user->isKey($authorization->getRoles());
+
+        if (!$isPrivilegedUser && !$isAppUser) {
+            if ($length < TOKEN_LENGTH_RECOVERY) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Token length must be at least ' . TOKEN_LENGTH_RECOVERY . ' characters for client requests.');
+            }
+
+            if ($expire > TOKEN_EXPIRATION_RECOVERY) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Token expiration must not exceed ' . TOKEN_EXPIRATION_RECOVERY . ' seconds for client requests.');
+            }
+        }
 
         if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP Disabled');
@@ -4242,8 +4294,8 @@ Http::post('/v1/account/verifications/email')
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},userId:{userId}')
     ->param('url', '', fn ($redirectValidator) => $redirectValidator, 'URL to redirect the user back to your app from the verification email. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['redirectValidator']) // TODO add built-in confirm page
-    ->param('length', TOKEN_LENGTH_VERIFICATION, new Range(4, 256), 'Token length in characters. The default length is 256 characters.', true)
-    ->param('expire', TOKEN_EXPIRATION_CONFIRM, new Range(60, TOKEN_EXPIRATION_LOGIN_LONG), 'Token expiration period in seconds. The default expiration is 1 hour.', true)
+    ->param('length', TOKEN_LENGTH_VERIFICATION, new Range(4, 256), 'Token length in characters. The default length is 256 characters. Shorter tokens require privileged administrator permissions.', true)
+    ->param('expire', TOKEN_EXPIRATION_CONFIRM, new Range(60, TOKEN_EXPIRATION_LOGIN_LONG), 'Token expiration period in seconds. The default expiration is 1 hour. Longer lifetimes require privileged administrator permissions.', true)
     ->inject('request')
     ->inject('response')
     ->inject('project')
@@ -4258,6 +4310,19 @@ Http::post('/v1/account/verifications/email')
     ->action(function (string $url, ?int $length, ?int $expire, Request $request, Response $response, Document $project, array $platform, User $user, Database $dbForProject, Locale $locale, Event $queueForEvents, MailPublisher $publisherForMails, ProofsToken $proofForToken, Authorization $authorization) {
         $length ??= TOKEN_LENGTH_VERIFICATION;
         $expire ??= TOKEN_EXPIRATION_CONFIRM;
+
+        $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
+        $isAppUser = $user->isKey($authorization->getRoles());
+
+        if (!$isPrivilegedUser && !$isAppUser) {
+            if ($length < TOKEN_LENGTH_VERIFICATION) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Token length must be at least ' . TOKEN_LENGTH_VERIFICATION . ' characters for client requests.');
+            }
+
+            if ($expire > TOKEN_EXPIRATION_CONFIRM) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Token expiration must not exceed ' . TOKEN_EXPIRATION_CONFIRM . ' seconds for client requests.');
+            }
+        }
 
         if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP Disabled');
@@ -4563,8 +4628,8 @@ Http::post('/v1/account/verifications/phone')
     ))
     ->label('abuse-limit', 10)
     ->label('abuse-key', ['url:{url},userId:{userId}', 'url:{url},ip:{ip}'])
-    ->param('length', 6, new Range(4, 128), 'Token length in characters. The default length is 6 characters.', true)
-    ->param('expire', TOKEN_EXPIRATION_CONFIRM, new Range(60, TOKEN_EXPIRATION_LOGIN_LONG), 'Token expiration period in seconds. The default expiration is 1 hour.', true)
+    ->param('length', 6, new Range(4, 128), 'Token length in characters. The default length is 6 characters. Shorter tokens require privileged administrator permissions.', true)
+    ->param('expire', TOKEN_EXPIRATION_CONFIRM, new Range(60, TOKEN_EXPIRATION_LOGIN_LONG), 'Token expiration period in seconds. The default expiration is 1 hour. Longer lifetimes require privileged administrator permissions.', true)
     ->inject('request')
     ->inject('response')
     ->inject('user')
@@ -4576,10 +4641,23 @@ Http::post('/v1/account/verifications/phone')
     ->inject('usage')
     ->inject('plan')
     ->inject('proofForCode')
-                ->inject('authorization')
+    ->inject('authorization')
     ->action(function (?int $length, ?int $expire, Request $request, Response $response, User $user, Database $dbForProject, Event $queueForEvents, MessagingPublisher $publisherForMessaging, Document $project, Locale $locale, Context $usage, array $plan, ProofsCode $proofForCode, Authorization $authorization) {
         $length ??= 6;
         $expire ??= TOKEN_EXPIRATION_CONFIRM;
+
+        $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
+        $isAppUser = $user->isKey($authorization->getRoles());
+
+        if (!$isPrivilegedUser && !$isAppUser) {
+            if ($length < 6) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Token length must be at least 6 characters for client requests.');
+            }
+
+            if ($expire > TOKEN_EXPIRATION_CONFIRM) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Token expiration must not exceed ' . TOKEN_EXPIRATION_CONFIRM . ' seconds for client requests.');
+            }
+        }
 
         if (empty(System::getEnv('_APP_SMS_PROVIDER'))) {
             throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');

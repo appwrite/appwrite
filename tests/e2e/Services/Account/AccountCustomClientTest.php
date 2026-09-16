@@ -6453,14 +6453,16 @@ final class AccountCustomClientTest extends Scope
         /**
          * Test for SUCCESS
          */
-        foreach ([[], ['length' => null, 'expire' => null], ['length' => 4, 'expire' => 60], ['length' => 8, 'expire' => 300], ['length' => $maxLength, 'expire' => 31536000]] as $options) {
+        foreach ([[], ['length' => null, 'expire' => null], ['length' => $defaultLength, 'expire' => 60], ['length' => $maxLength, 'expire' => 300], ['length' => $maxLength, 'expire' => 3600]] as $options) {
             $user = $this->createFreshAccountWithSession();
             $headers = [
                 'origin' => 'http://localhost',
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
-                'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $user['session'],
             ];
+            if ($path !== '/account/recovery') {
+                $headers['cookie'] = 'a_session_' . $this->getProject()['$id'] . '=' . $user['session'];
+            }
             $phone = '+1202' . random_int(1000000, 9999999);
             $params = [];
             if ($path === '/account/verifications/phone') {
@@ -6508,6 +6510,7 @@ final class AccountCustomClientTest extends Scope
                 ], ['email' => $user['email'], 'password' => 'updated-password']);
                 $this->assertEquals(201, $session['headers']['status-code']);
                 $this->assertSame($user['id'], $session['body']['userId']);
+                $user['session'] = $session['cookies']['a_session_' . $this->getProject()['$id']];
             } else {
                 $account = $this->client->call(Client::METHOD_GET, '/account', $headers);
                 $this->assertEquals(200, $account['headers']['status-code']);
@@ -6518,7 +6521,17 @@ final class AccountCustomClientTest extends Scope
         /**
          * Test for FAILURE
          */
-        $this->assertInvalidTokenOptions($path, $headers, $params, $maxLength);
+        $this->assertInvalidTokenOptions($path, $headers, $params, $maxLength, $defaultLength, 3600);
+        if ($path === '/account/recovery') {
+            $headers['cookie'] = 'a_session_' . $this->getProject()['$id'] . '=' . $user['session'];
+            $this->assertInvalidTokenOptions($path, $headers, $params, $maxLength, $defaultLength, 3600);
+
+            $response = $this->client->call(Client::METHOD_POST, '/account/jwt', $headers);
+            $this->assertEquals(201, $response['headers']['status-code']);
+            unset($headers['cookie']);
+            $headers['x-appwrite-jwt'] = $response['body']['jwt'];
+            $this->assertInvalidTokenOptions($path, $headers, $params, $maxLength, $defaultLength, 3600);
+        }
     }
 
     public static function challengeFactors(): \Iterator
@@ -6533,7 +6546,7 @@ final class AccountCustomClientTest extends Scope
         /**
          * Test for SUCCESS
          */
-        foreach ([[], ['length' => null, 'expire' => null], ['length' => 4, 'expire' => 60], ['length' => 8, 'expire' => 300], ['length' => 128, 'expire' => 31536000]] as $options) {
+        foreach ([[], ['length' => null, 'expire' => null], ['length' => 6, 'expire' => 60], ['length' => 8, 'expire' => 300], ['length' => 128, 'expire' => 3600]] as $options) {
             $user = $this->createFreshAccountWithSession();
             $headers = [
                 'origin' => 'http://localhost',
@@ -6589,6 +6602,6 @@ final class AccountCustomClientTest extends Scope
         /**
          * Test for FAILURE
          */
-        $this->assertInvalidTokenOptions('/account/mfa/challenges', $headers, ['factor' => $factor], 128);
+        $this->assertInvalidTokenOptions('/account/mfa/challenges', $headers, ['factor' => $factor], 128, 6, 3600);
     }
 }

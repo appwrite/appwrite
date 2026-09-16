@@ -30,11 +30,13 @@ trait TokensBase
         if ($this->getSide() === 'server') {
             $headers = array_merge($headers, $this->getHeaders());
         }
+        $minLength = $this->getSide() === 'server' ? 4 : $defaultLength;
+        $maxExpire = $this->getSide() === 'server' ? 31536000 : $defaultExpire;
 
         /**
          * Test for SUCCESS
          */
-        foreach ([[], ['length' => null, 'expire' => null], ['length' => 4, 'expire' => 60], ['length' => 8, 'expire' => 300], ['length' => 128, 'expire' => 31536000]] as $options) {
+        foreach ([[], ['length' => null, 'expire' => null], ['length' => $minLength, 'expire' => 60], ['length' => max($minLength, 8), 'expire' => 300], ['length' => 128, 'expire' => $maxExpire]] as $options) {
             $email = ID::unique() . '@localhost.test';
             $phone = '+1202' . random_int(1000000, 9999999);
             $params = ['userId' => ID::unique()];
@@ -85,14 +87,15 @@ trait TokensBase
             $this->assertEquals(201, $session['headers']['status-code']);
             $this->assertSame($token['userId'], $session['body']['userId']);
 
-            $account = $this->client->call(Client::METHOD_GET, '/account', [
+            $sessionHeaders = [
                 'origin' => 'http://localhost',
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-session' => $this->getSide() === 'server'
                     ? $session['body']['secret']
                     : $session['cookies']['a_session_' . $this->getProject()['$id']],
-            ]);
+            ];
+            $account = $this->client->call(Client::METHOD_GET, '/account', $sessionHeaders);
 
             $this->assertEquals(200, $account['headers']['status-code']);
             $this->assertSame($token['userId'], $account['body']['$id']);
@@ -108,7 +111,15 @@ trait TokensBase
         /**
          * Test for FAILURE
          */
-        $this->assertInvalidTokenOptions('/account/tokens/' . $type, $headers, $params, 128);
+        $this->assertInvalidTokenOptions('/account/tokens/' . $type, $headers, $params, 128, $minLength, $maxExpire);
+        if ($this->getSide() === 'client') {
+            $this->assertInvalidTokenOptions('/account/tokens/' . $type, $sessionHeaders, $params, 128, $defaultLength, $defaultExpire);
+
+            $response = $this->client->call(Client::METHOD_POST, '/account/jwt', $sessionHeaders);
+            $this->assertEquals(201, $response['headers']['status-code']);
+            $headers['x-appwrite-jwt'] = $response['body']['jwt'];
+            $this->assertInvalidTokenOptions('/account/tokens/' . $type, $headers, $params, 128, $defaultLength, $defaultExpire);
+        }
     }
 
     protected function assertTokenExpire(array $token, int $seconds): void
@@ -123,9 +134,14 @@ trait TokensBase
         );
     }
 
-    protected function assertInvalidTokenOptions(string $path, array $headers, array $params, int $maxLength): void
+    protected function assertInvalidTokenOptions(string $path, array $headers, array $params, int $maxLength, int $minLength = 4, int $maxExpire = 31536000): void
     {
-        foreach ([['length' => 3], ['length' => $maxLength + 1], ['expire' => 59], ['expire' => 31536001]] as $options) {
+        $invalidOptions = [['length' => 3], ['length' => $maxLength + 1], ['expire' => 59], ['expire' => $maxExpire + 1]];
+        if ($minLength > 4) {
+            $invalidOptions[] = ['length' => 4];
+            $invalidOptions[] = ['length' => $minLength - 1];
+        }
+        foreach ($invalidOptions as $options) {
             $response = $this->client->call(Client::METHOD_POST, $path, $headers, array_merge($params, $options));
 
             $this->assertEquals(400, $response['headers']['status-code'], $path . ': ' . json_encode($options));

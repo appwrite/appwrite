@@ -18,6 +18,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Template\Template;
 use Appwrite\Usage\Context;
+use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Auth\Proofs\Code as ProofsCode;
@@ -27,6 +28,7 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Locale\Locale;
 use Utopia\Messaging\Adapter\SMS\GEOSMS\CallingCode;
 use Utopia\Platform\Enum;
@@ -96,8 +98,8 @@ class Create extends Action
             ->label('abuse-limit', 10)
             ->label('abuse-key', 'url:{url},userId:{userId}')
             ->param('factor', '', new WhiteList([Type::EMAIL, Type::PHONE, Type::TOTP, Type::RECOVERY_CODE, Type::CUSTOM]), 'Factor used for verification. Must be one of following: `' . Type::EMAIL . '`, `' . Type::PHONE . '`, `' . Type::TOTP . '`, `' . Type::RECOVERY_CODE . '`, `' . Type::CUSTOM . '`.', enum: new Enum(name: 'AuthenticationFactor'))
-            ->param('length', 6, new Range(4, 128), 'Length of the verification code in characters. The default length is 6 characters. Only applies to email and phone factors.', true)
-            ->param('expire', TOKEN_EXPIRATION_CONFIRM, new Range(60, TOKEN_EXPIRATION_LOGIN_LONG), 'Challenge expiration period in seconds. The default expiration is 1 hour.', true)
+            ->param('length', 6, new Range(4, 128), 'Length of the verification code in characters. The default length is 6 characters. Only applies to email and phone factors. Shorter codes require privileged administrator permissions.', true)
+            ->param('expire', TOKEN_EXPIRATION_CONFIRM, new Range(60, TOKEN_EXPIRATION_LOGIN_LONG), 'Challenge expiration period in seconds. The default expiration is 1 hour. Longer lifetimes require privileged administrator permissions.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('user')
@@ -112,6 +114,7 @@ class Create extends Action
             ->inject('plan')
             ->inject('proofForToken')
             ->inject('proofForCode')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
@@ -121,7 +124,7 @@ class Create extends Action
         ?int $expire,
         Response $response,
         Database $dbForProject,
-        Document $user,
+        User $user,
         Locale $locale,
         Document $project,
         array $platform,
@@ -132,10 +135,24 @@ class Create extends Action
         Context $usage,
         array $plan,
         ProofsToken $proofForToken,
-        ProofsCode $proofForCode
+        ProofsCode $proofForCode,
+        Authorization $authorization
     ): void {
         $length ??= 6;
         $expire ??= TOKEN_EXPIRATION_CONFIRM;
+
+        $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
+        $isAppUser = $user->isKey($authorization->getRoles());
+
+        if (!$isPrivilegedUser && !$isAppUser) {
+            if (($factor === Type::EMAIL || $factor === Type::PHONE) && $length < 6) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Verification code length must be at least 6 characters for client requests.');
+            }
+
+            if ($expire > TOKEN_EXPIRATION_CONFIRM) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Challenge expiration must not exceed ' . TOKEN_EXPIRATION_CONFIRM . ' seconds for client requests.');
+            }
+        }
 
         $mfaFactors = $project->getAttribute('auths', [])['mfaFactors'] ?? [];
         $factorEnabled = match ($factor) {
