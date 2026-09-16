@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Tasks;
 
+use Appwrite\Execution\Store;
 use Appwrite\Platform\Action;
 use Appwrite\Usage\Connection;
 use Utopia\Console;
@@ -16,15 +17,16 @@ class UsageSetup extends Action
     public function __construct()
     {
         $this
-            ->desc('Set up the usage ClickHouse schema')
+            ->desc('Set up ClickHouse schemas')
             ->inject('usageConnection')
+            ->inject('executionStore')
             ->callback($this->action(...));
     }
 
-    public function action(Connection $usageConnection): void
+    public function action(Connection $usageConnection, Store $executionStore): void
     {
-        if (!$usageConnection->isEnabled()) {
-            Console::info('Usage statistics are disabled; schema setup skipped');
+        if (!$usageConnection->isEnabled() && !$executionStore->isEnabled()) {
+            Console::info('ClickHouse persistence is disabled; schema setup skipped');
             return;
         }
 
@@ -38,18 +40,29 @@ class UsageSetup extends Action
             $attempt++;
 
             try {
-                $usageConnection->setup();
-                $health = $usageConnection->healthCheck();
-                if (($health['healthy'] ?? false) !== true) {
-                    throw new \RuntimeException('Usage schema health check failed');
+                if ($usageConnection->isEnabled()) {
+                    $usageConnection->setup();
+                    $health = $usageConnection->healthCheck();
+                    if (($health['healthy'] ?? false) !== true) {
+                        throw new \RuntimeException('Usage schema health check failed');
+                    }
                 }
-                Console::success('Usage schema is ready');
+
+                if ($executionStore->isEnabled()) {
+                    $executionStore->setup();
+                    $health = $executionStore->healthCheck();
+                    if (($health['schemaReady'] ?? false) !== true) {
+                        throw new \RuntimeException('Execution schema health check failed');
+                    }
+                }
+
+                Console::success('ClickHouse schemas are ready');
                 return;
             } catch (\Throwable $th) {
                 if ($attempt >= $max) {
                     throw $th;
                 }
-                Console::warning("Usage schema setup attempt {$attempt} failed: " . $th->getMessage());
+                Console::warning("ClickHouse schema setup attempt {$attempt} failed: " . $th->getMessage());
                 sleep($sleep);
             }
         }

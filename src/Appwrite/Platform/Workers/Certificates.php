@@ -32,8 +32,8 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization as ValidatorAuthorization;
 use Utopia\Domains\Domain;
 use Utopia\Locale\Locale;
-use Utopia\Logger\Log;
 use Utopia\Queue\Message;
+use Utopia\Span\Span;
 use Utopia\System\System;
 
 class Certificates extends Action
@@ -60,7 +60,6 @@ class Certificates extends Action
             ->inject('publisherForFunctions')
             ->inject('queueForRealtime')
             ->inject('publisherForCertificates')
-            ->inject('log')
             ->inject('certificates')
             ->inject('plan')
             ->inject('authorization')
@@ -77,7 +76,6 @@ class Certificates extends Action
      * @param FunctionPublisher $publisherForFunctions
      * @param Realtime $queueForRealtime
      * @param Certificate $publisherForCertificates
-     * @param Log $log
      * @param Provider $certificates
      * @param array $plan
      * @param ValidatorAuthorization $authorization
@@ -94,7 +92,6 @@ class Certificates extends Action
         FunctionPublisher $publisherForFunctions,
         Realtime $queueForRealtime,
         Certificate $publisherForCertificates,
-        Log $log,
         Provider $certificates,
         array $plan,
         ValidatorAuthorization $authorization,
@@ -114,15 +111,15 @@ class Certificates extends Action
         $validationDomain = $certificateMessage->validationDomain;
         $action = $certificateMessage->action;
 
-        $log->addTag('domain', $domain->get());
+        Span::add('domain', $domain->get());
 
         switch ($action) {
             case \Appwrite\Event\Certificate::ACTION_DOMAIN_VERIFICATION:
-                $this->handleDomainVerificationAction($domain, $dbForPlatform, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $queueForRealtime, $publisherForCertificates, $log, $authorization, $bus, $validationDomain);
+                $this->handleDomainVerificationAction($domain, $dbForPlatform, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $queueForRealtime, $publisherForCertificates, $authorization, $bus, $validationDomain);
                 break;
 
             case \Appwrite\Event\Certificate::ACTION_GENERATION:
-                $this->handleCertificateGenerationAction($domain, $domainType, $dbForPlatform, $publisherForMails, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $queueForRealtime, $log, $certificates, $authorization, $bus, $skipRenewCheck, $plan, $validationDomain);
+                $this->handleCertificateGenerationAction($domain, $domainType, $dbForPlatform, $publisherForMails, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $queueForRealtime, $certificates, $authorization, $bus, $skipRenewCheck, $plan, $validationDomain);
                 break;
 
             default:
@@ -138,7 +135,6 @@ class Certificates extends Action
      * @param FunctionPublisher $publisherForFunctions
      * @param Realtime $queueForRealtime
      * @param Certificate $publisherForCertificates
-     * @param Log $log
      * @param ValidatorAuthorization $authorization
      * @param string|null $validationDomain
      * @return void
@@ -154,7 +150,6 @@ class Certificates extends Action
         FunctionPublisher $publisherForFunctions,
         Realtime $queueForRealtime,
         Certificate $publisherForCertificates,
-        Log $log,
         ValidatorAuthorization $authorization,
         Bus $bus,
         ?string $validationDomain = null
@@ -177,7 +172,7 @@ class Certificates extends Action
 
         try {
             // Verify DNS records
-            $this->validateDomain($rule, $domain, $log, $validationDomain);
+            $this->validateDomain($rule, $domain, $validationDomain);
             // Reset logs and status for the rule
             $rule->setAttribute('logs', '');
             $rule->setAttribute('status', RULE_STATUS_CERTIFICATE_GENERATING);
@@ -221,7 +216,6 @@ class Certificates extends Action
      * @param Webhook $queueForWebhooks
      * @param FunctionPublisher $publisherForFunctions
      * @param Realtime $queueForRealtime
-     * @param Log $log
      * @param Provider $certificates
      * @param ValidatorAuthorization $authorization
      * @param bool $skipRenewCheck
@@ -245,7 +239,6 @@ class Certificates extends Action
         Webhook $queueForWebhooks,
         FunctionPublisher $publisherForFunctions,
         Realtime $queueForRealtime,
-        Log $log,
         Provider $certificates,
         ValidatorAuthorization $authorization,
         Bus $bus,
@@ -319,7 +312,7 @@ class Certificates extends Action
 
             // Validate domain and DNS records. Skip if job is forced
             if (!$skipRenewCheck) {
-                $this->validateDomain($rule, $domain, $log, $validationDomain);
+                $this->validateDomain($rule, $domain, $validationDomain);
 
                 // If certificate exists already, double-check expiry date. Skip if job is forced
                 if (!$certificates->isRenewRequired($domain->get(), $domainType)) {
@@ -493,13 +486,12 @@ class Certificates extends Action
      *
      * @param Document $rule Rule to validate
      * @param Domain $domain Domain to validate
-     * @param Log $log Logger for adding metrics
      * @param string|null $validationDomain Override for main domain check
      *
      * @return void
      * @throws Exception
      */
-    private function validateDomain(Document $rule, Domain $domain, Log $log, ?string $validationDomain = null): void
+    private function validateDomain(Document $rule, Domain $domain, ?string $validationDomain = null): void
     {
         $mainDomain = $validationDomain ?? $this->getMainDomain();
         $isMainDomain = !isset($mainDomain) || $domain->get() === $mainDomain;
@@ -515,7 +507,7 @@ class Certificates extends Action
         }
 
         try {
-            $this->verifyRule($rule, $log);
+            $this->verifyRule($rule);
         } catch (AppwriteException $err) {
             $msg = $err->getMessage() . "\n";
             $msg .= "Verify your DNS records are correctly configured and try again.\n";

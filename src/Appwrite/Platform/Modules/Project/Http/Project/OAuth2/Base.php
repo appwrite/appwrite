@@ -319,6 +319,8 @@ abstract class Base extends Action
             'oidc' => Oidc\Update::class,
             'okta' => Okta\Update::class,
             'kick' => Kick\Update::class,
+            'kakao' => Kakao\Update::class,
+            'tiktok' => TikTok\Update::class,
             'apple' => Apple\Update::class,
             'microsoft' => Microsoft\Update::class,
             'resend' => Resend\Update::class,

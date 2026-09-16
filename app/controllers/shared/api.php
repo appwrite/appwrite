@@ -466,14 +466,18 @@ Http::init()
             // installation deploys just the engine backing the platform, so neither is on
             // until an operator provisions that engine and says so. Closed to everyone --
             // keys and privileged roles included -- rather than answering and then failing
-            // on the first write with the reason only in the logs.
+            // against an absent service with the reason only in the logs. Embeddings ran
+            // on every installation before it had a switch, so it stays on unless an
+            // operator turns it off; the resource-heavy container is what sits behind a
+            // Compose profile.
             $products = [
-                'documentsdb' => '_APP_DOCUMENTSDB',
-                'vectorsdb' => '_APP_VECTORSDB',
+                'documentsdb' => ['_APP_DOCUMENTSDB', 'disabled'],
+                'vectorsdb' => ['_APP_VECTORSDB', 'disabled'],
+                'embeddings' => ['_APP_EMBEDDING', 'enabled'],
             ];
             if (
                 isset($products[$namespace])
-                && System::getEnv($products[$namespace], 'disabled') !== 'enabled'
+                && System::getEnv(...$products[$namespace]) !== 'enabled'
             ) {
                 throw new Exception(Exception::GENERAL_SERVICE_DISABLED);
             }
@@ -899,7 +903,8 @@ Http::shutdown()
         // Generate events for this operation
         $generatedEvents = Event::generateEvents(
             $queueForEvents->getEvent(),
-            $queueForEvents->getParams()
+            $queueForEvents->getParams(),
+            $queueForEvents->getContext('database')
         );
 
         $allowedOnConsole = !empty(\array_intersect($route->getGroups(), Realtime::CONSOLE_ALLOWLIST));
@@ -921,6 +926,7 @@ Http::shutdown()
                         userId: $queueForEvents->getUserId(),
                         payload: $queueForEvents->getPayload(),
                         platform: $queueForEvents->getPlatform(),
+                        database: $queueForEvents->getContext('database'),
                     ));
                     break;
                 }
@@ -1204,7 +1210,7 @@ Http::shutdown()
          * cannot suppress RequestCompleted or usage metrics on the same request.
          */
         $statusCode = $response->getStatusCode();
-        if ($statusCode < 200 || $statusCode >= 300 || $project->getId() === 'console') {
+        if ($statusCode < 200 || $statusCode >= 300) {
             return;
         }
 
@@ -1240,6 +1246,19 @@ Http::shutdown()
 
         if ($method === null) {
             return;
+        }
+
+        // Organization routes act on the project named in the path, not on the console project.
+        if ($project->getId() === 'console') {
+            $projectId = (string) ($route->getParamsValues()['projectId'] ?? '');
+            if ($projectId === '') {
+                return;
+            }
+
+            $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
+            if ($project->isEmpty()) {
+                return;
+            }
         }
 
         $byMethod = $project->getAttribute('onboarding', []);

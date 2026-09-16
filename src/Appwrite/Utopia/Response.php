@@ -29,15 +29,8 @@ class Response extends SwooleResponse
     public const MODEL_METRIC_LIST = 'metricList';
     public const MODEL_METRIC_BREAKDOWN = 'metricBreakdown';
     public const MODEL_ERROR_DEV = 'errorDev';
-    public const MODEL_USAGE_DOCUMENTSDBS = 'usageDocumentsDBs';
-    public const MODEL_USAGE_DOCUMENTSDB = 'usageDocumentsDB';
-    public const MODEL_USAGE_VECTORSDBS = 'usageVectorsDBs';
-    public const MODEL_USAGE_VECTORSDB = 'usageVectorsDB';
     public const MODEL_USAGE_USERS = 'usageUsers';
     public const MODEL_USAGE_PRESENCE = 'usagePresence';
-    public const MODEL_USAGE_FUNCTIONS = 'usageFunctions';
-    public const MODEL_USAGE_FUNCTION = 'usageFunction';
-    public const MODEL_USAGE_SITE = 'usageSite';
     public const MODEL_USAGE_PROJECT = 'usageProject';
     public const MODEL_USAGE_DATA_POINT = 'usageDataPoint';
     public const MODEL_USAGE_METRIC = 'usageMetric';
@@ -344,6 +337,8 @@ class Response extends SwooleResponse
     public const MODEL_OAUTH2_KICK = 'oAuth2Kick';
     public const MODEL_OAUTH2_MICROSOFT = 'oAuth2Microsoft';
     public const MODEL_OAUTH2_RESEND = 'oAuth2Resend';
+    public const MODEL_OAUTH2_TIKTOK = 'oAuth2TikTok';
+    public const MODEL_OAUTH2_KAKAO = 'oAuth2Kakao';
     public const MODEL_OAUTH2_PROVIDER_LIST = 'oAuth2ProviderList';
 
     // Health

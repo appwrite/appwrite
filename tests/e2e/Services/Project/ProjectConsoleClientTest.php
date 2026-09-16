@@ -141,12 +141,12 @@ final class ProjectConsoleClientTest extends Scope
 
     protected function createTeam(string $name): array
     {
-        $response = $this->client->call(Client::METHOD_POST, '/teams', $this->getConsoleSessionHeaders(), [
+        $response = $this->createTeamFixture($this->getConsoleSessionHeaders(), [
             'teamId' => ID::unique(),
             'name' => $name,
         ]);
 
-        $this->assertSame(201, $response['headers']['status-code']);
+        $this->assertSame(200, $response['headers']['status-code']);
         $this->assertSame($name, $response['body']['name']);
         $this->assertNotEmpty($response['body']['$id']);
 

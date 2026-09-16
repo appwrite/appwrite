@@ -7,6 +7,7 @@ namespace Tests\Unit\Utopia;
 use Appwrite\Models\Project as GeneratedProject;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model\Project as ProjectModel;
+use Appwrite\Utopia\Response\Model\Provider as ProviderModel;
 use Exception;
 use PHPUnit\Framework\TestCase;
 use ReflectionProperty;
@@ -115,6 +116,7 @@ final class ResponseTest extends TestCase
     public function testProjectResponseCanHydrateGeneratedSdkProjectWithoutOAuth2Fields(): void
     {
         $this->response->setModel(new ProjectModel());
+        $this->response->setModel(new ProviderModel());
 
         $project = $this->response->output(new Document([
             '$id' => 'project',
@@ -127,7 +129,28 @@ final class ResponseTest extends TestCase
 
         $project['wafEnabled'] = false;
 
-        $generated = GeneratedProject::from($project);
+        $provider = $this->response->output(new Document([
+            'credentials' => [],
+            'options' => [],
+        ]), Response::MODEL_PROVIDER);
+        $populatedProvider = $this->response->output(new Document([
+            'credentials' => ['key' => 'secret'],
+            'options' => ['from' => 'sender@example.com'],
+        ]), Response::MODEL_PROVIDER);
+
+        $this->assertInstanceOf(\stdClass::class, $project['onboarding']);
+        $this->assertInstanceOf(\stdClass::class, $provider['credentials']);
+        $this->assertInstanceOf(\stdClass::class, $provider['options']);
+        $this->assertSame('{}', \json_encode($project['onboarding']));
+        $this->assertSame('{}', \json_encode($provider['credentials']));
+        $this->assertSame('{}', \json_encode($provider['options']));
+        $this->assertSame(['key' => 'secret'], $populatedProvider['credentials']);
+        $this->assertSame(['from' => 'sender@example.com'], $populatedProvider['options']);
+
+        // Match the JSON round trip performed by SDK clients. Empty objects on
+        // the wire decode to associative arrays in the generated PHP SDK.
+        $decoded = \json_decode(\json_encode($project, JSON_THROW_ON_ERROR), true, flags: JSON_THROW_ON_ERROR);
+        $generated = GeneratedProject::from($decoded);
 
         foreach ([
             'oAuth2ServerEnabled',

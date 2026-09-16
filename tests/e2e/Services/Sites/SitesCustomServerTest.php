@@ -77,8 +77,10 @@ final class SitesCustomServerTest extends Scope
             $proxyClient = new Client();
             $proxyClient->setEndpoint('http://' . $this->getSiteDomain($siteId));
 
-            $response = $proxyClient->call(Client::METHOD_GET, '/logs-inline');
-            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertEventually(function () use ($proxyClient) {
+                $response = $proxyClient->call(Client::METHOD_GET, '/logs-inline');
+                $this->assertEquals(200, $response['headers']['status-code']);
+            });
 
             $log = $this->waitForSiteLog($siteId, '/logs-inline');
             $this->assertEquals($deploymentId, $log['deploymentId']);

@@ -476,6 +476,13 @@ body {
     min-height: var(--step-min-height, auto);
     flex: 1 1 auto;
     overflow: hidden;
+    transition: min-height var(--duration-medium) var(--ease-standard);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .installer-step {
+        transition: none;
+    }
 }
 
 .installer-page[data-upgrade='true'] .installer-step {
@@ -541,6 +548,11 @@ body {
 .step-panel.is-exiting {
     opacity: 0;
     pointer-events: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: auto;
+    overflow: hidden;
 }
 
 .step-panel.is-measure {

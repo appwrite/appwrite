@@ -348,8 +348,16 @@ class Update extends Action
             }
 
             foreach ($databaseOperations as $databaseInternalId => $count) {
+                $database = $authorization->skip(fn () => $dbForProject->skipFilters(
+                    fn () => $dbForProject->findOne('databases', [
+                        Query::equal('$sequence', [$databaseInternalId])
+                    ]),
+                    APP_DATABASES_SUBQUERIES
+                ));
+
                 $usage
                     ->setResource('database')
+                    ->setResourceId($database->getId())
                     ->setResourceInternalId((string) $databaseInternalId)
                     ->addMetric($this->getDatabasesOperationWriteMetric(), $count);
             }
@@ -369,21 +377,30 @@ class Update extends Action
 
                 // using a dbCache so only one time database is set with databaseInternalId
                 if (!isset($dbCache[$databaseInternalId])) {
-                    $databaseDoc = $authorization->skip(fn () => $dbForProject->findOne('databases', [
-                        Query::equal('$sequence', [$databaseInternalId])
-                    ]));
+                    $databaseDoc = $authorization->skip(fn () => $dbForProject->skipFilters(
+                        fn () => $dbForProject->findOne('databases', [
+                            Query::equal('$sequence', [$databaseInternalId])
+                        ]),
+                        APP_DATABASES_SUBQUERIES
+                    ));
                     $dbCache[$databaseInternalId] = $getDatabasesDB($databaseDoc);
                 }
 
                 $dbForDatabases = $dbCache[$databaseInternalId];
 
-                $database = $authorization->skip(fn () => $dbForProject->findOne('databases', [
-                    Query::equal('$sequence', [$databaseInternalId])
-                ]));
+                $database = $authorization->skip(fn () => $dbForProject->skipFilters(
+                    fn () => $dbForProject->findOne('databases', [
+                        Query::equal('$sequence', [$databaseInternalId])
+                    ]),
+                    APP_DATABASES_SUBQUERIES
+                ));
 
-                $collection = $authorization->skip(fn () => $dbForProject->findOne('database_' . $databaseInternalId, [
-                    Query::equal('$sequence', [$collectionInternalId])
-                ]));
+                $collection = $authorization->skip(fn () => $dbForProject->skipFilters(
+                    fn () => $dbForProject->findOne('database_' . $databaseInternalId, [
+                        Query::equal('$sequence', [$collectionInternalId])
+                    ]),
+                    APP_COLLECTIONS_SUBQUERIES
+                ));
 
                 $groupId = $this->getGroupId();
                 $resourceId = $this->getResourceId();
@@ -456,9 +473,12 @@ class Update extends Action
                 $webhooksEvents = $eventProcessor->getWebhooksEvents($project);
 
                 foreach ($documentsToTrigger as $doc) {
+                    // Match the key set processDocument() gives every other row and document
+                    // event: the synthetic $databaseId, plus whichever of $tableId or
+                    // $collectionId belongs to the surface that was called.
                     $payload = $doc->getArrayCopy();
-                    $payload['$tableId'] = $collection->getId();
-                    $payload['$collectionId'] = $collection->getId();
+                    $payload['$databaseId'] = $database->getId();
+                    $payload['$' . $groupId] = $collection->getId();
 
                     $queueForEvents
                         ->setParam('documentId', $doc->getId())
@@ -468,7 +488,8 @@ class Update extends Action
                     // Generate events for this document operation
                     $generatedEvents = Event::generateEvents(
                         $queueForEvents->getEvent(),
-                        $queueForEvents->getParams()
+                        $queueForEvents->getParams(),
+                        $queueForEvents->getContext('database')
                     );
 
                     $queueForRealtime->from($queueForEvents)->trigger();
@@ -485,6 +506,7 @@ class Update extends Action
                                     userId: $queueForEvents->getUserId(),
                                     payload: $queueForEvents->getPayload(),
                                     platform: $queueForEvents->getPlatform(),
+                                    database: $queueForEvents->getContext('database'),
                                 ));
                                 break;
                             }

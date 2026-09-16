@@ -121,7 +121,7 @@ class XList extends Action
         }
 
 
-        $memberships = array_filter($memberships, fn (Document $membership) => !empty($membership->getAttribute('userId')));
+        $memberships = \array_values(array_filter($memberships, fn (Document $membership) => !empty($membership->getAttribute('userId'))));
 
         // Default should be "false", but existing projects already rely on this being "true"
         $membershipsPrivacy =  [

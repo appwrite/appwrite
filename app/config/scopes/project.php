@@ -17,6 +17,8 @@ return [
         'description' => 'Access to read project usage metrics',
         'category' => 'Project',
     ],
+    // TODO: Remove keys.read and keys.write from project key scopes once the Console, CLI and SDKs
+    // manage project keys through the Organization API (organization.projects.keys.*)
     "keys.read" => [
         "description" =>
             "Access to read project\'s keys",
@@ -227,6 +229,14 @@ return [
         'description' => 'Access to create, update, and delete document database documents',
         'category' => 'Databases',
     ],
+    'documentsdb.indexes.read' => [
+        'description' => 'Access to read document database collection indexes',
+        'category' => 'Databases',
+    ],
+    'documentsdb.indexes.write' => [
+        'description' => 'Access to create, update, and delete document database collection indexes',
+        'category' => 'Databases',
+    ],
 
     // VectorsDB
     'vectorsdb.read' => [
@@ -251,6 +261,14 @@ return [
     ],
     'vectorsdb.documents.write' => [
         'description' => 'Access to create, update, and delete vector database documents',
+        'category' => 'Databases',
+    ],
+    'vectorsdb.indexes.read' => [
+        'description' => 'Access to read vector database collection indexes',
+        'category' => 'Databases',
+    ],
+    'vectorsdb.indexes.write' => [
+        'description' => 'Access to create, update, and delete vector database collection indexes',
         'category' => 'Databases',
     ],
 

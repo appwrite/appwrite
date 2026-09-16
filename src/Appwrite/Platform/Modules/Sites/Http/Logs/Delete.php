@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Sites\Http\Logs;
 
 use Appwrite\Event\Event;
+use Appwrite\Execution\Store;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
@@ -10,6 +11,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
@@ -54,12 +56,14 @@ class Delete extends Base
             ->param('siteId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Site ID.', false, ['dbForProject'])
             ->param('logId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Log ID.', false, ['dbForProject'])
             ->inject('response')
+            ->inject('project')
             ->inject('dbForProject')
+            ->inject('executionStore')
             ->inject('queueForEvents')
             ->callback($this->action(...));
     }
 
-    public function action(string $siteId, string $logId, Response $response, Database $dbForProject, Event $queueForEvents)
+    public function action(string $siteId, string $logId, Response $response, Document $project, Database $dbForProject, Store $executionStore, Event $queueForEvents)
     {
         $site = $dbForProject->getDocument('sites', $siteId);
 
@@ -76,6 +80,7 @@ class Delete extends Base
             throw new Exception(Exception::LOG_NOT_FOUND);
         }
 
+        $executionStore->delete($project->getId(), $log);
         if (!$dbForProject->deleteDocument('executions', $log->getId())) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove log from DB');
         }

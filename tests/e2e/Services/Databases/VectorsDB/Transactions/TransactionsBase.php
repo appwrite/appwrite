@@ -2,6 +2,7 @@
 
 namespace Tests\E2E\Services\Databases\VectorsDB\Transactions;
 
+use Appwrite\Extend\Exception;
 use Tests\E2E\Client;
 use Utopia\Database\Database;
 use Utopia\Database\Helpers\ID;
@@ -1489,6 +1490,27 @@ trait TransactionsBase
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('Created via normal route', $response['body']['metadata']['name']);
+
+        /**
+         * Test for FAILURE
+         */
+        $unknown = $this->client->call(Client::METHOD_POST, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'documentId' => 'doc_unknown_txn',
+            'data' => [
+                'embeddings' => $this->generateEmbeddings(3),
+                'metadata' => [
+                    'name' => 'Unknown transaction',
+                ]
+            ],
+            'transactionId' => ID::unique()
+        ]);
+
+        $this->assertEquals(404, $unknown['headers']['status-code']);
+        $this->assertEquals(Exception::TRANSACTION_NOT_FOUND, $unknown['body']['type']);
     }
 
     /**
@@ -1933,6 +1955,29 @@ trait TransactionsBase
             $this->assertEquals("Bulk created {$i}", $response['body']['metadata']['name']);
             $this->assertEquals('bulk_created', $response['body']['metadata']['category']);
         }
+
+        /**
+         * Test for FAILURE
+         */
+        $unknown = $this->client->call(Client::METHOD_POST, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'documents' => [
+                [
+                    '$id' => 'bulk_unknown_txn',
+                    'embeddings' => $this->generateEmbeddings(3),
+                    'metadata' => [
+                        'name' => 'Unknown transaction',
+                    ]
+                ]
+            ],
+            'transactionId' => ID::unique()
+        ]);
+
+        $this->assertEquals(404, $unknown['headers']['status-code']);
+        $this->assertEquals(Exception::TRANSACTION_NOT_FOUND, $unknown['body']['type']);
     }
 
     /**

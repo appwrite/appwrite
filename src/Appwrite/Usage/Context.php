@@ -122,6 +122,11 @@ class Context
         return $this;
     }
 
+    public function getCountry(): string
+    {
+        return $this->country;
+    }
+
     public function setRegion(string $region): static
     {
         $this->region = $region;
@@ -152,10 +157,20 @@ class Context
         return $this;
     }
 
+    public function getHostname(): string
+    {
+        return $this->hostname;
+    }
+
     public function setUserAgent(string $userAgent): static
     {
         $this->userAgent = $userAgent;
         return $this;
+    }
+
+    public function getUserAgent(): string
+    {
+        return $this->userAgent;
     }
 
     public function setIp(string $ip): static
@@ -175,10 +190,20 @@ class Context
         return $this;
     }
 
+    public function getSdk(): string
+    {
+        return $this->sdk;
+    }
+
     public function setSdkVersion(string $sdkVersion): static
     {
         $this->sdkVersion = $sdkVersion;
         return $this;
+    }
+
+    public function getSdkVersion(): string
+    {
+        return $this->sdkVersion;
     }
 
     /**

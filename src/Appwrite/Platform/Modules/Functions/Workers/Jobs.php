@@ -18,6 +18,11 @@ use Appwrite\Usage\Build as BuildUsage;
 use Appwrite\Usage\Context as UsageContext;
 use Appwrite\Utopia\Response\Model\Deployment;
 use Appwrite\Vcs\Factory as VcsFactory;
+use OpenRuntimes\Orchestrator\Callback\JobArtifact;
+use OpenRuntimes\Orchestrator\Callback\JobExit;
+use OpenRuntimes\Orchestrator\Callback\JobLog;
+use OpenRuntimes\Orchestrator\Enum\CallbackEvent;
+use OpenRuntimes\Orchestrator\Enum\ErrorCode;
 use Utopia\Bus\Bus;
 use Utopia\Cache\Cache;
 use Utopia\Database\Database;
@@ -27,6 +32,7 @@ use Utopia\Database\Query;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\Storage\Device;
+use Utopia\Storage\DeviceType;
 use Utopia\System\System;
 
 /**
@@ -133,11 +139,11 @@ class Jobs extends Action
 
             $statusBefore = $deployment->getAttribute('status');
 
-            $deployment = match ($event->event) {
-                'orchestrator.job.log' => $this->onLog($dbForProject, $dbForPlatform, $project, $deployment, $event->data, $vcsFactory, $platform),
-                'orchestrator.job.artifact' => $this->onArtifact($dbForProject, $dbForPlatform, $project, $deployment, $event->data, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
-                'orchestrator.job.exit' => $this->onExit($dbForProject, $dbForPlatform, $project, $deployment, (int) ($event->data['exitCode'] ?? 0), $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
-                'orchestrator.job.complete' => $this->onComplete($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
+            $deployment = match (CallbackEvent::tryFrom($event->event)) {
+                CallbackEvent::Log => $this->onLog($dbForProject, $dbForPlatform, $project, $deployment, JobLog::fromArray($event->data), $vcsFactory, $platform),
+                CallbackEvent::Artifact => $this->onArtifact($dbForProject, $dbForPlatform, $project, $deployment, JobArtifact::fromArray($event->data), $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
+                CallbackEvent::Exit => $this->onExit($dbForProject, $dbForPlatform, $project, $deployment, JobExit::fromArray($event->data), $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
+                CallbackEvent::Complete => $this->onComplete($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
                 default => $this->onCallback($event->event, $dbForProject, $dbForPlatform, $project, $deployment, $event->data, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
             };
 
@@ -162,10 +168,9 @@ class Jobs extends Action
         }, self::LOCK_TIMEOUT);
     }
 
-    protected function onLog(Database $dbForProject, Database $dbForPlatform, Document $project, Document $deployment, array $data, VcsFactory $vcsFactory, array $platform): Document
+    protected function onLog(Database $dbForProject, Database $dbForPlatform, Document $project, Document $deployment, JobLog $log, VcsFactory $vcsFactory, array $platform): Document
     {
-        $lines = $data['lines'] ?? [];
-        $chunk = \is_array($lines) ? \implode("\n", $lines) : (string) $lines;
+        $chunk = \implode("\n", $log->lines);
         if ($chunk === '') {
             return $deployment;
         }
@@ -258,14 +263,15 @@ class Jobs extends Action
     /**
      * Record a reported artifact: 'sourceSize' (remote-source builds) becomes
      * the deployment's sourceSize; 'manifest' (site builds) is the output file
-     * listing for adapter detection, saved as a marker that joins readiness.
+     * listing for adapter detection; and 'output' confirms remote delivery.
+     * Manifest and output callbacks save markers that join readiness.
      */
     protected function onArtifact(
         Database $dbForProject,
         Database $dbForPlatform,
         Document $project,
         Document $deployment,
-        array $data,
+        JobArtifact $artifact,
         UsageContext $usage,
         UsagePublisher $publisherForUsage,
         ScreenshotPublisher $publisherForScreenshots,
@@ -276,22 +282,50 @@ class Jobs extends Action
         array $plan,
         Bus $bus,
     ): Document {
-        if (($data['artifactId'] ?? '') === 'manifest') {
+        $failed = $artifact->status === 'failed';
+        if ($artifact->artifactId === 'manifest') {
             // A failed manifest degrades to an empty listing (detection
             // skipped), never a failed build.
-            $manifest = ($data['status'] ?? '') === 'success' ? ($data['content'] ?? null) : null;
+            $manifest = $artifact->status === 'success' ? $artifact->content : null;
             $files = \is_array($manifest) ? (array) ($manifest['files'] ?? []) : [];
             $cache->save('jobs-manifest-' . $deployment->getId(), ['files' => \array_values($files)]);
 
             return $this->ready($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus);
         }
 
-        if (($data['artifactId'] ?? '') !== 'sourceSize' || ($data['status'] ?? '') !== 'success') {
+        // On a remote builds device the sidecar delivers the artifact. Join its
+        // callback explicitly because complete is emitted after artifacts but
+        // the queue can deliver those callbacks out of order.
+        if ($artifact->artifactId === 'output') {
+            if ($failed) {
+                return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, 'Build output upload failed: ' . ($artifact->error->message ?? 'unknown error'), $usage, $publisherForUsage, $publisherForScreenshots, $vcsFactory, $platform, $bus);
+            }
+
+            if ($artifact->status !== 'success') {
+                return $deployment;
+            }
+
+            $cache->save('jobs-output-' . $deployment->getId(), true);
+
+            return $this->ready($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus);
+        }
+
+        // Any other artifact failing dooms the build — the orchestrator aborts
+        // the job on a pre-job failure, and a lost output has nothing to serve
+        // — so fail it now with the artifact's own message (which file, which
+        // status) rather than waiting for the bare exit code. The build cache
+        // upload is the one best-effort artifact: losing it costs the next
+        // build time, not this one.
+        if ($failed && $artifact->artifactId !== 'cache') {
+            return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, $artifact->error->message ?? 'Build failed.', $usage, $publisherForUsage, $publisherForScreenshots, $vcsFactory, $platform, $bus);
+        }
+
+        if ($artifact->artifactId !== 'sourceSize' || $artifact->status !== 'success') {
             return $deployment;
         }
 
         // A stat artifact reports the file's byte size as its 'content'.
-        $size = (int) ($data['content'] ?? 0);
+        $size = (int) $artifact->content;
         if ($size <= 0) {
             return $deployment;
         }
@@ -304,9 +338,9 @@ class Jobs extends Action
 
     /**
      * Failures short-circuit here — no output is needed to fail. A success
-     * needs every terminal callback: exit carries the code but fires before
-     * post-job artifacts, complete confirms delivery, and site builds also
-     * need the manifest. Each leaves a cache marker and re-attempts the join
+     * needs every terminal callback: exit carries the code, complete confirms
+     * artifact processing, remote builds need successful output delivery, and
+     * site builds also need the manifest. Each leaves a marker and retries the join
      * via ready(), so whichever lands last finalizes.
      */
     protected function onExit(
@@ -314,7 +348,7 @@ class Jobs extends Action
         Database $dbForPlatform,
         Document $project,
         Document $deployment,
-        int $exitCode,
+        JobExit $exit,
         UsageContext $usage,
         UsagePublisher $publisherForUsage,
         ScreenshotPublisher $publisherForScreenshots,
@@ -325,8 +359,14 @@ class Jobs extends Action
         array $plan,
         Bus $bus,
     ): Document {
-        if ($exitCode !== 0) {
-            return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, "Build failed with exit code {$exitCode}.", $usage, $publisherForUsage, $publisherForScreenshots, $vcsFactory, $platform, $bus);
+        if ($exit->error !== null) {
+            // The build command's own exit stays an exit code; anything else
+            // (out of memory, failed before it could start) is explained.
+            $message = $exit->error->code === ErrorCode::JobExitNonzero
+                ? "Build failed with exit code {$exit->exitCode}."
+                : $exit->error->message;
+
+            return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, $message, $usage, $publisherForUsage, $publisherForScreenshots, $vcsFactory, $platform, $bus);
         }
 
         $cache->save('jobs-exit-' . $deployment->getId(), true);
@@ -335,8 +375,9 @@ class Jobs extends Action
     }
 
     /**
-     * The delivery half of the success join — see onExit. Fires once post-job
-     * artifacts have run, so the output is already where Appwrite reads it.
+     * The artifact-processing half of the success join — see onExit. It is
+     * emitted after post-job artifacts run, but can be dequeued before their
+     * callbacks, so remote output delivery has its own marker.
      */
     protected function onComplete(
         Database $dbForProject,
@@ -385,6 +426,10 @@ class Jobs extends Action
         $isSite = $deployment->getAttribute('resourceType') === 'sites';
 
         if ($cache->load('jobs-exit-' . $deploymentId, self::DEDUPE_TTL) === false || $cache->load('jobs-complete-' . $deploymentId, self::DEDUPE_TTL) === false) {
+            return $deployment;
+        }
+
+        if ($deviceForBuilds->getType() !== DeviceType::Local && $cache->load('jobs-output-' . $deploymentId, self::DEDUPE_TTL) === false) {
             return $deployment;
         }
 
@@ -483,6 +528,15 @@ class Jobs extends Action
         Bus $bus,
         int $buildSize = 0,
     ): Document {
+        // A build finalizes once. A failed artifact fails it with the
+        // artifact's own message, and the exit that follows must not overwrite
+        // that with a bare exit code. Late logs and metadata still land: only
+        // the outcome is sealed. Sound under the per-deployment lock, which
+        // serializes callbacks and re-reads the document for each.
+        if (\in_array($deployment->getAttribute('status'), ['ready', 'failed'], true)) {
+            return $deployment;
+        }
+
         $collection = $deployment->getAttribute('resourceType', 'functions');
         $resource = $dbForProject->getDocument($collection, $deployment->getAttribute('resourceId'));
 
@@ -559,6 +613,13 @@ class Jobs extends Action
      * buildStartedAt (stamped by the first log callback) can be missing when a
      * terminal callback finalizes first — fall back to the deployment's
      * creation time rather than reporting 0.
+     *
+     * Clamped to _APP_COMPUTE_BUILD_TIMEOUT, the same ceiling Deployments hands
+     * the jobs-service as timeoutSeconds. Neither bound above is the
+     * orchestrator's: a build that waited for a runner without streaming a log
+     * line never got buildStartedAt, so the fallback measures its whole queue
+     * wait — and this value is what bills, at memory x duration x cpus. No job
+     * outlives the timeout, so nothing past it can have been build time.
      */
     private function duration(Document $deployment): int
     {
@@ -573,7 +634,14 @@ class Jobs extends Action
             return 0;
         }
 
-        return (int) \ceil(\max(0.0, \microtime(true) - $started));
+        $elapsed = (int) \ceil(\max(0.0, \microtime(true) - $started));
+
+        // Set by the operator on every deployed environment; guarded so a 0 or
+        // negative value leaves the measurement alone rather than zeroing every
+        // build's duration.
+        $timeout = (int) System::getEnv('_APP_COMPUTE_BUILD_TIMEOUT', 900);
+
+        return $timeout > 0 ? \min($timeout, $elapsed) : $elapsed;
     }
 
     /**
@@ -623,6 +691,9 @@ class Jobs extends Action
             'deploymentCreatedAt' => $deployment->getCreatedAt(),
         ]));
 
+        $branch = $deployment->getAttribute('providerBranch', '');
+        $branches = $branch === '' ? [''] : ['', $branch];
+
         $dbForPlatform->forEach('rules', function (Document $rule) use ($dbForPlatform, $deployment, $bus) {
             $rule = $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
                 'deploymentId' => $deployment->getId(),
@@ -635,7 +706,7 @@ class Jobs extends Action
             Query::equal('deploymentResourceInternalId', [$resource->getSequence()]),
             Query::equal('deploymentResourceType', [$resource->getCollection() === 'sites' ? 'site' : 'function']),
             Query::equal('trigger', ['manual']),
-            Query::equal('deploymentVcsProviderBranch', ['']),
+            Query::equal('deploymentVcsProviderBranch', $branches),
         ]);
     }
 

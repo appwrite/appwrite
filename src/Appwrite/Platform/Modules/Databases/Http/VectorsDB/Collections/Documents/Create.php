@@ -70,6 +70,7 @@ class Create extends DocumentCreate
                         new Parameter('documentId', optional: false),
                         new Parameter('data', optional: false),
                         new Parameter('permissions', optional: true),
+                        new Parameter('transactionId', optional: true),
                     ]
                 ),
                 new Method(
@@ -90,6 +91,7 @@ class Create extends DocumentCreate
                         new Parameter('databaseId', optional: false),
                         new Parameter('collectionId', optional: false),
                         new Parameter('documents', optional: false),
+                        new Parameter('transactionId', optional: true),
                     ]
                 )
             ])

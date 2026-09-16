@@ -517,11 +517,14 @@ abstract class Action extends DatabasesAction
             throw new Exception($this->getNotAvailableException());
         }
 
-        if ($attribute->getAttribute(('type') !== $type)) {
+        if ($attribute->getAttribute('type') !== $type) {
             throw new Exception($this->getTypeInvalidException());
         }
 
-        if ($attribute->getAttribute('type') === Database::VAR_STRING && $attribute->getAttribute(('filter') !== $filter)) {
+        // The discriminator for a formatted string is persisted as 'format', and is
+        // the empty string for a plain one, while the plain string endpoint passes
+        // no filter at all.
+        if ($attribute->getAttribute('type') === Database::VAR_STRING && $attribute->getAttribute('format', '') !== ($filter ?? '')) {
             throw new Exception($this->getTypeInvalidException());
         }
 

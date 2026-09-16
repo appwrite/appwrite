@@ -12,5 +12,6 @@ enum ContentType: string
     case MULTIPART = 'multipart/form-data';
     case HTML = 'text/html';
     case TEXT = 'text/plain';
+    case PDF = 'application/pdf';
     case ANY = '*/*';
 }

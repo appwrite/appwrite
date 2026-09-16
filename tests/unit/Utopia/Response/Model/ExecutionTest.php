@@ -15,10 +15,24 @@ final class ExecutionTest extends TestCase
         $execution = (new Execution())->filter(new Document([
             'resourceType' => 'sites',
             'resourceId' => 'site-id',
+            'requestHeaders' => [
+                ['name' => 'host', 'value' => ['example.com']],
+                ['name' => 'user-agent', 'value' => ['Agent/1.0', 'Agent/2.0']],
+                ['name' => 'content-type', 'value' => 'application/json'],
+            ],
+            'responseHeaders' => [
+                new Document(['name' => 'content-length', 'value' => ['42']]),
+            ],
         ]));
 
         $this->assertSame('site-id', $execution->getAttribute('resourceId'));
         $this->assertSame('sites', $execution->getAttribute('resourceType'));
+        $this->assertSame([
+            ['name' => 'host', 'value' => 'example.com'],
+            ['name' => 'user-agent', 'value' => 'Agent/1.0, Agent/2.0'],
+            ['name' => 'content-type', 'value' => 'application/json'],
+        ], $execution->getAttribute('requestHeaders'));
+        $this->assertSame('42', $execution->getAttribute('responseHeaders')[0]->getAttribute('value'));
     }
 
     public function testResourceIdentityIsRequired(): void

@@ -218,8 +218,9 @@ class Delete extends Action
 
         $usage
             ->setResource('database')
+            ->setResourceId($database->getId())
             ->setResourceInternalId((string) $database->getSequence())
-            ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, 1);
+            ->addMetric($this->getDatabasesOperationWriteMetric(), 1);
 
         $response->addHeader('X-Debug-Operations', 1);
 

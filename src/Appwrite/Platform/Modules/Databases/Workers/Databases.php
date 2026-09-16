@@ -14,7 +14,6 @@ use Utopia\Database\Exception\NotFound;
 use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Query;
-use Utopia\Logger\Log;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\Span\Span;
@@ -39,7 +38,6 @@ class Databases extends Action
             ->inject('dbForProject')
             ->inject('getDatabasesDB')
             ->inject('queueForRealtime')
-            ->inject('log')
             ->callback($this->action(...));
     }
 
@@ -49,11 +47,10 @@ class Databases extends Action
      * @param Database $dbForPlatform
      * @param Database $dbForProject
      * @param Realtime $queueForRealtime
-     * @param Log $log
      * @return void
      * @throws \Exception
      */
-    public function action(Message $message, Document $project, Database $dbForPlatform, Database $dbForProject, callable $getDatabasesDB, Realtime $queueForRealtime, Log $log): void
+    public function action(Message $message, Document $project, Database $dbForPlatform, Database $dbForProject, callable $getDatabasesDB, Realtime $queueForRealtime): void
     {
         $payload = $message->getPayload();
 
@@ -81,14 +78,14 @@ class Databases extends Action
          * @var Database $dbForDatabases
          */
         $dbForDatabases = $getDatabasesDB($database);
-        $log->addTag('projectId', $project->getId());
-        $log->addTag('type', $type);
+        Span::add('project.id', $project->getId());
+        Span::add('type', $type);
 
         if ($database->isEmpty()) {
             throw new Exception('Missing database');
         }
 
-        $log->addTag('databaseId', $database->getId());
+        Span::add('database.id', $database->getId());
 
         match (\strval($type)) {
             DATABASE_TYPE_DELETE_DATABASE => $this->deleteDatabase($database, $dbForProject, $dbForDatabases),

@@ -914,6 +914,7 @@ Http::patch('/v1/account/sessions/:sessionId')
                 ->setAttribute('providerAccessToken', $oauth2->getAccessToken(''))
                 ->setAttribute('providerRefreshToken', $oauth2->getRefreshToken(''))
                 ->setAttribute('providerAccessTokenExpiry', DateTime::formatTz(DateTime::addSeconds(new \DateTime(), (int) $oauth2->getAccessTokenExpiry(''))));
+
         }
 
         // Save changes
@@ -1693,13 +1694,20 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
             $sessionUpgrade = true;
         }
 
-        $current = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken);
+        // The session flow replaces the caller's current session with the one
+        // created below, so the browser stays signed in. The token flow creates
+        // no session here; the app exchanges the returned token through
+        // createSession later. Deleting the current session in that flow would
+        // sign the caller out until the exchange, so it is left in place.
+        if (empty($state['token'])) {
+            $current = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken);
 
-        if ($current) { // Delete current session of new one.
-            $currentDocument = $dbForProject->getDocument('sessions', $current);
-            if (!$currentDocument->isEmpty()) {
-                $dbForProject->deleteDocument('sessions', $currentDocument->getId());
-                $dbForProject->purgeCachedDocument('users', $user->getId());
+            if ($current) { // Replace the current session with the new one.
+                $currentDocument = $dbForProject->getDocument('sessions', $current);
+                if (!$currentDocument->isEmpty()) {
+                    $dbForProject->deleteDocument('sessions', $currentDocument->getId());
+                    $dbForProject->purgeCachedDocument('users', $user->getId());
+                }
             }
         }
 
@@ -3868,23 +3876,22 @@ Http::post('/v1/account/recovery')
             Query::equal('email', [$email]),
         ]);
 
-        if ($profile->isEmpty()) {
-            throw new Exception(Exception::USER_NOT_FOUND);
+
+        $deliverable = !$profile->isEmpty() && $profile->getAttribute('status') !== false;
+
+        if ($deliverable) {
+            $user->setAttributes($profile->getArrayCopy());
         }
 
-        $user->setAttributes($profile->getArrayCopy());
-
-        if (false === $profile->getAttribute('status')) { // Account is blocked
-            throw new Exception(Exception::USER_BLOCKED);
-        }
+        $userId = $deliverable ? $profile->getId() : ID::unique();
 
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), TOKEN_EXPIRATION_RECOVERY));
 
         $secret = $proofForToken->generate();
         $recovery = new Document([
             '$id' => ID::unique(),
-            'userId' => $profile->getId(),
-            'userInternalId' => $profile->getSequence(),
+            'userId' => $userId,
+            'userInternalId' => $deliverable ? $profile->getSequence() : ID::unique(),
             'type' => TOKEN_TYPE_RECOVERY,
             'secret' => $proofForToken->hash($secret), // One way hash encryption to protect DB leak
             'expire' => $expire,
@@ -3892,19 +3899,23 @@ Http::post('/v1/account/recovery')
             'ip' => $request->getIP(),
         ]);
 
-        $authorization->addRole(Role::user($profile->getId())->toString());
+        $authorization->addRole(Role::user($userId)->toString());
 
         $recovery = $dbForProject->createDocument('tokens', $recovery
             ->setAttribute('$permissions', [
-                Permission::read(Role::user($profile->getId())),
-                Permission::update(Role::user($profile->getId())),
-                Permission::delete(Role::user($profile->getId())),
+                Permission::read(Role::user($userId)),
+                Permission::update(Role::user($userId)),
+                Permission::delete(Role::user($userId)),
             ]));
 
-        $dbForProject->purgeCachedDocument('users', $profile->getId());
+        if ($deliverable) {
+            $dbForProject->purgeCachedDocument('users', $profile->getId());
+        } else {
+            $authorization->skip(fn () => $dbForProject->deleteDocument('tokens', $recovery->getId()));
+        }
 
         $url = Template::parseURL($url);
-        $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $profile->getId(), 'secret' => $secret, 'expire' => $expire]);
+        $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $userId, 'secret' => $secret, 'expire' => $expire]);
         $url = Template::unParseURL($url);
 
         $projectName = $project->isEmpty()
@@ -4001,7 +4012,7 @@ Http::post('/v1/account/recovery')
         $emailVariables = [
             'direction' => $locale->getText('settings.direction'),
             // {{user}}, {{redirect}} and {{project}} are required in default and custom templates
-            'user' => $profile->getAttribute('name'),
+            'user' => $deliverable ? $profile->getAttribute('name') : '',
             'redirect' => $url,
             'project' => $projectName,
             // TODO: remove unnecessary team variable from this email
@@ -4022,27 +4033,29 @@ Http::post('/v1/account/recovery')
             ];
         }
 
-        $publisherForMails->enqueue(new MailMessage(
-            project: $project,
-            recipient: $profile->getAttribute('email', ''),
-            name: $profile->getAttribute('name', ''),
-            subject: $subject,
-            template: MAIL_TEMPLATE_RECOVERY,
-            bodyTemplate: $bodyTemplate,
-            body: $body,
-            preview: $preview,
-            smtp: $smtpConfig,
-            variables: $emailVariables,
-            customMailOptions: $project->getId() === 'console' ? ['senderName' => $platform['emailSenderName']] : [],
-            platform: $platform,
-        ));
+        if ($deliverable) {
+            $publisherForMails->enqueue(new MailMessage(
+                project: $project,
+                recipient: $profile->getAttribute('email', ''),
+                name: $profile->getAttribute('name', ''),
+                subject: $subject,
+                template: MAIL_TEMPLATE_RECOVERY,
+                bodyTemplate: $bodyTemplate,
+                body: $body,
+                preview: $preview,
+                smtp: $smtpConfig,
+                variables: $emailVariables,
+                customMailOptions: $project->getId() === 'console' ? ['senderName' => $platform['emailSenderName']] : [],
+                platform: $platform,
+            ));
+        }
 
         $recovery->setAttribute('secret', $secret);
 
         $queueForEvents
-            ->setParam('userId', $profile->getId())
+            ->setParam('userId', $userId)
             ->setParam('tokenId', $recovery->getId())
-            ->setUser($profile)
+            ->setUser($deliverable ? $profile : new Document())
             ->setPayload($response->showSensitive(fn () => $response->output($recovery, Response::MODEL_TOKEN)), sensitive: ['secret']);
 
         $response

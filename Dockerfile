@@ -47,7 +47,7 @@ RUN apk add --no-cache \
     && make install \
     && rm -rf "/tmp/ffmpeg-${FFMPEG_VERSION}"
 
-FROM appwrite/base:2.0.0 AS base
+FROM appwrite/base:2.0.5 AS base
 
 LABEL maintainer="team@appwrite.io"
 
@@ -89,6 +89,7 @@ COPY ./public /usr/src/code/public
 COPY ./bin /usr/local/bin
 COPY ./src /usr/src/code/src
 COPY ./dev /usr/src/code/dev
+COPY ./docker/opcache.ini /usr/local/etc/php/conf.d/zz-opcache.ini
 COPY ./mongo-init.js /usr/src/code/mongo-init.js
 COPY ./mongo-entrypoint.sh /usr/src/code/mongo-entrypoint.sh
 
@@ -174,14 +175,17 @@ EXPOSE 80
 
 CMD [ "php", "app/http.php" ]
 
-FROM appwrite/base:2.0.0-xdebug AS xdebug
+FROM appwrite/base:2.0.5-xdebug AS xdebug
 
 FROM base AS development
+
+# Revalidate bind-mounted source files when development workers reload.
+RUN printf 'opcache.validate_timestamps=1\nopcache.revalidate_freq=0\n' > /usr/local/etc/php/conf.d/zzz-opcache-dev.ini
 
 COPY ./docs /usr/src/code/docs
 COPY ./dev /usr/src/code/dev
 
-# appwrite/base:2.0.0 ships without XDebug, so it cannot reach production or
+# appwrite/base:2.0.5 ships without XDebug, so it cannot reach production or
 # Cloud. The -xdebug tag is the same build with the extension; mounting it
 # rather than copying keeps xdebug.so out of every layer unless DEBUG asked
 # for it, and guarantees an ABI match because both tags are one base build.

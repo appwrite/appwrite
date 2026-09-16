@@ -1217,6 +1217,7 @@ trait Base
                         _id
                         _collectionId
                         _permissions
+                        data
                     }
                 }';
             case self::CREATE_DOCUMENTS:
@@ -1269,6 +1270,7 @@ trait Base
                         _id
                         _tableId
                         _permissions
+                        data
                     }
                 }';
             case self::CREATE_CUSTOM_ENTITY:
@@ -1505,8 +1507,12 @@ trait Base
                             status
                             email
                             emailVerification
+                            targets {
+                                providerType
+                                identifier
+                            }
                         }
-                    }   
+                    }
                 }';
             case self::CREATE_USER:
                 return 'mutation createUser($userId: String!, $email: String!, $password: String!, $name: String){
