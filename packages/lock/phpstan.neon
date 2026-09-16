@@ -1,0 +1,6 @@
+includes:
+    - ../../phpstan.neon
+
+parameters:
+    level: 9
+    treatPhpDocTypesAsCertain: false
