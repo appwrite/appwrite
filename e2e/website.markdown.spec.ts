@@ -136,6 +136,21 @@ test.describe('markdown exports (read-only)', () => {
     expect(skillsBody.skills.length).toBeGreaterThan(0)
   })
 
+  test('well-known change-password redirects to account security', async ({
+    request,
+  }) => {
+    const response = await request.get('/.well-known/change-password', {
+      maxRedirects: 0,
+    })
+    expect(response.status()).toBe(302)
+    expect(response.headers()['location']).toMatch(/\/account\/security/)
+
+    const reliability = await request.get(
+      '/.well-known/resource-that-should-not-exist-whose-status-code-should-not-be-200',
+    )
+    expect(reliability.status()).toBe(404)
+  })
+
   test('robots.txt serves plain text with a tracked route', async ({ request }) => {
     const response = await request.get('/robots.txt')
 

@@ -268,6 +268,7 @@ export function ComposeBlock({ projectId }: { projectId: string | null }) {
               clearable={false}
               size="sm"
               className="w-full"
+              timeZoneMode="preferred"
             />
           )}
         </div>

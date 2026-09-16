@@ -17,6 +17,7 @@ import { BuildNotificationsProvider } from '@/components/global/providers/BuildN
 import { RequireAuth } from '@/components/global/auth/RequireAuth'
 import { SessionMigrationsProvider } from '@/components/global/providers/SessionMigrationsContext'
 import { OrganizationFailedInvoiceHeaderBanner } from '@/components/global/shared/OrganizationFailedInvoiceHeaderBanner'
+import { OrganizationInvoiceAuthorizeHeaderBanner } from '@/components/global/shared/OrganizationInvoiceAuthorizeHeaderBanner'
 import {
   fetchProject,
   fetchOrganizationById,
@@ -26,7 +27,7 @@ import {
   organizationsQueryOptions,
   prefetchOrganizationInvoiceDataIfAllowed,
   useProject,
-  useOrganizationFailedInvoicePresence,
+  useOrganizationBillingInvoicePresence,
   isOrganizationBillingReadonlyStatus,
   isBudgetLimitReached,
   isPlanUsageLimitReached,
@@ -545,14 +546,19 @@ function ProjectLayout() {
       ? billingOrganization.billingLimits
       : project?.billingLimits
 
-  const { data: failedInvoicePresence } = useOrganizationFailedInvoicePresence(
-    budgetLimitReached || planUsageLimitReached ? undefined : teamIdForBilling,
+  const skipInvoiceBanners = budgetLimitReached || planUsageLimitReached
+  const { data: invoicePresence } = useOrganizationBillingInvoicePresence(
+    skipInvoiceBanners ? undefined : teamIdForBilling,
   )
   const showFailedInvoiceBanner =
-    !budgetLimitReached &&
-    !planUsageLimitReached &&
+    !skipInvoiceBanners &&
     features.billing &&
-    failedInvoicePresence?.hasFailedInvoice === true
+    invoicePresence?.hasFailedInvoice === true
+  const showInvoiceAuthorizeBanner =
+    !skipInvoiceBanners &&
+    !showFailedInvoiceBanner &&
+    features.billing &&
+    invoicePresence?.hasInvoiceRequiringAuthentication === true
 
   const { data: organizationsListData } = useQuery({
     ...organizationsQueryOptions(),
@@ -778,6 +784,10 @@ function ProjectLayout() {
                   organizationId={teamIdForBilling}
                   show={showFailedInvoiceBanner}
                   orgBillingReadonly={orgBillingReadonlyForFailedInvoice}
+                />
+                <OrganizationInvoiceAuthorizeHeaderBanner
+                  organizationId={teamIdForBilling}
+                  show={showInvoiceAuthorizeBanner}
                 />
               </>
             }

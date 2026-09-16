@@ -34,6 +34,8 @@ export const SITEMAP_EXCLUDED_EXACT_PATHS = [
   '/.well-known/mcp/server-card.json',
   '/.well-known/ai-catalog.json',
   '/.well-known/agent-skills/index.json',
+  '/.well-known/change-password',
+  '/.well-known/resource-that-should-not-exist-whose-status-code-should-not-be-200',
   '/upgrade',
 ] as const
 

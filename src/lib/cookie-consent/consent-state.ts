@@ -1,6 +1,7 @@
 /**
- * Synchronous consent gate for analytics modules outside React (analytics.ts, Sentry).
+ * Synchronous consent gate for cookie-based diagnostics (Sentry) outside React.
  * Updated by CookieConsentProvider when locale and stored prefs are resolved.
+ * Plausible is cookieless and is not gated here.
  */
 
 let consentResolved = false
@@ -38,7 +39,7 @@ export function setCookieConsentState(args: {
   notifyConsentListeners()
 }
 
-/** True when Plausible events and Sentry may run. */
+/** True when cookie-gated diagnostics (Sentry) may run. Not used for Plausible. */
 export function canTrackAnalytics(): boolean {
   if (!consentResolved) return false
   if (!bannerRequired) return true

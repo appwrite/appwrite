@@ -36,7 +36,7 @@ Before we begin, ensure you have the following:
 
 - [Node.js](https://nodejs.org/) and [npm](https://www.npmjs.com/) installed
 - A [GitHub account](https://github.com/)
-- An [Appwrite account](https://console.appwrite.io/)
+- An [Appwrite account](https://appwrite.io/sign-up)
 
  # **Step 1: Setting up the project**
 

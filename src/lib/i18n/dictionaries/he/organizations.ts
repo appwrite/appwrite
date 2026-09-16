@@ -800,6 +800,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Pay and register': 'תשלום ורישום',
   Payment: 'תשלום',
   'Payment authorized': 'התשלום אושר',
+  'Payment authorization required': 'נדרש אישור תשלום',
   'Payment confirmed': 'התשלום אושר',
   'Payment confirmed successfully': 'התשלום אושר בהצלחה',
   'Payment has been successfully processed': 'התשלום עובד בהצלחה',
@@ -1265,6 +1266,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Your feedback': 'המשוב שלכם',
   'Your last payment attempt failed. Please update your payment method and try again.':
     'ניסיון התשלום האחרון שלכם נכשל. עדכנו את אמצעי התשלום ונסו שוב.',
+  'Your card issuer needs you to confirm this payment. Use Authorize on the invoice in payment history.':
+    'מנפיק הכרטיס צריך שתאשרו את התשלום הזה. אשרו את החשבונית בהיסטוריית התשלומים.',
   "Your plan will change at the end of your current billing period. You'll keep access to your current plan features until then.":
     'התוכנית שלכם תשתנה בסוף תקופת החיוב הנוכחית. עד אז תשמרו על גישה לתכונות התוכנית הנוכחית.',
   'Your plan will change on': 'התוכנית שלכם תשתנה בתאריך',

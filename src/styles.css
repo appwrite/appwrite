@@ -921,6 +921,55 @@ html:not([lang='en']):not([lang='he']) {
     height: 100dvh;
   }
 
+  /*
+    Marketing/docs scroll the document so Plausible can measure scroll depth.
+    The console shell is otherwise position:fixed with overflow on #main-content,
+    which makes document height === viewport and reports 100% depth on every visit.
+    API reference explorer keeps the nested scroller (class is not applied).
+  */
+  html.marketing-document-scroll {
+    height: auto;
+    overscroll-behavior: auto;
+  }
+
+  html.marketing-document-scroll body {
+    height: auto;
+    overflow: auto;
+    overscroll-behavior: auto;
+  }
+
+  html.marketing-document-scroll .root-container {
+    position: relative;
+    inset: auto;
+    width: 100%;
+    height: auto;
+    min-height: 100dvh;
+    overflow: visible !important;
+  }
+
+  html.marketing-document-scroll .root-container > .flex,
+  html.marketing-document-scroll .root-scroll-container,
+  html.marketing-document-scroll .org-layout-container,
+  html.marketing-document-scroll .project-layout-container {
+    height: auto !important;
+    max-height: none !important;
+    min-height: 100dvh;
+    overflow: visible !important;
+  }
+
+  /* The sidebar/content row clips overflow-y for the console's left nav. In
+     document-scroll mode that clip would make the row the scrollport for
+     sticky in-page TOCs, so it has to flow with the document as well. */
+  html.marketing-document-scroll .console-layout-row {
+    overflow: visible !important;
+  }
+
+  html.marketing-document-scroll #main-content {
+    overflow: visible !important;
+    max-height: none !important;
+    flex: 1 0 auto;
+  }
+
   /* Mobile/tablet flex constraints. The root chain already sizes to 100dvh, so
      these rules only need to ensure inner flex containers stay bounded and
      scroll regions claim remaining space. */
@@ -1189,10 +1238,27 @@ html:is(.crazy, .stealth, .premium, .high-contrast, .barbie, .nineties) .upgrade
   border-radius: var(--radius-sm);
 }
 
+/*
+ * Monaco always prepends a file/folder color-swatch `.icon` and sizes it to the
+ * suggest line height (28px). SQL completions use `.suggest-icon` instead, and
+ * the hide rule lives under `.monaco-editor`, so the empty slot was still
+ * taking a full column when the widget is portaled to body.
+ */
+.monaco-editor .suggest-widget .monaco-list .monaco-list-row > .icon,
+.editor-widget.suggest-widget .monaco-list .monaco-list-row > .icon {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden;
+}
+
 .monaco-editor .suggest-widget .monaco-list .monaco-list-row > .contents,
 .editor-widget.suggest-widget .monaco-list .monaco-list-row > .contents {
   display: flex;
   align-items: center;
+  width: 100%;
   height: 100%;
   overflow: hidden;
   padding-left: 0 !important;
@@ -1202,6 +1268,7 @@ html:is(.crazy, .stealth, .premium, .high-contrast, .barbie, .nineties) .upgrade
 .editor-widget.suggest-widget .monaco-list .monaco-list-row > .contents > .main {
   display: flex;
   align-items: center !important;
+  justify-content: flex-start;
   width: 100%;
   min-width: 0;
   font-family:
@@ -1212,17 +1279,21 @@ html:is(.crazy, .stealth, .premium, .high-contrast, .barbie, .nineties) .upgrade
 }
 
 .monaco-editor .suggest-widget .monaco-list .monaco-list-row > .contents > .main > .left,
-.editor-widget.suggest-widget .monaco-list .monaco-list-row > .contents > .main > .left,
+.editor-widget.suggest-widget .monaco-list .monaco-list-row > .contents > .main > .left {
+  display: flex;
+  flex: 0 1 auto;
+  align-items: center;
+  min-width: 0;
+  gap: 0;
+}
+
 .monaco-editor .suggest-widget .monaco-list .monaco-list-row > .contents > .main > .right,
 .editor-widget.suggest-widget .monaco-list .monaco-list-row > .contents > .main > .right {
   display: flex;
+  flex: 1 1 auto;
   align-items: center;
   min-width: 0;
-}
-
-.monaco-editor .suggest-widget .monaco-list .monaco-list-row > .contents > .main > .left,
-.editor-widget.suggest-widget .monaco-list .monaco-list-row > .contents > .main > .left {
-  gap: 0;
+  overflow: hidden;
 }
 
 .monaco-editor .suggest-widget .monaco-list .monaco-list-row > .contents > .main > .left > .monaco-icon-label,
@@ -1254,7 +1325,7 @@ html:is(.crazy, .stealth, .premium, .high-contrast, .barbie, .nineties) .upgrade
 
 .monaco-editor .suggest-widget .monaco-list .monaco-list-row .suggest-icon,
 .editor-widget.suggest-widget .monaco-list .monaco-list-row .suggest-icon {
-  display: flex;
+  display: inline-flex;
   flex-shrink: 0;
   align-items: center;
   justify-content: center;
@@ -1262,7 +1333,7 @@ html:is(.crazy, .stealth, .premium, .high-contrast, .barbie, .nineties) .upgrade
   height: 16px;
   margin-right: 8px !important;
   font-size: 14px;
-  line-height: 16px;
+  line-height: 1;
   color: var(--muted-foreground) !important;
 }
 
@@ -1278,6 +1349,7 @@ html:is(.crazy, .stealth, .premium, .high-contrast, .barbie, .nineties) .upgrade
 .monaco-editor .suggest-widget .monaco-list .monaco-list-row > .contents > .main > .right > .details-label,
 .editor-widget.suggest-widget .monaco-list .monaco-list-row > .contents > .main > .right > .details-label {
   display: inline !important;
+  flex: 0 1 auto;
   margin-left: 8px !important;
   overflow: hidden;
   font-size: 12px !important;
@@ -1286,6 +1358,37 @@ html:is(.crazy, .stealth, .premium, .high-contrast, .barbie, .nineties) .upgrade
   text-overflow: ellipsis;
   white-space: nowrap;
   opacity: 1 !important;
+}
+
+/*
+ * Suggest is portaled to body, so Monaco's `.monaco-editor .suggest-widget`
+ * readMore rules never apply. Keep chevrons in-flow, 16px, right-aligned.
+ * Inline width/height is the suggest line height (28px); override that box.
+ */
+.monaco-editor .suggest-widget .monaco-list .monaco-list-row > .contents > .main > .right > .readMore,
+.editor-widget.suggest-widget .monaco-list .monaco-list-row > .contents > .main > .right > .readMore {
+  display: inline-flex;
+  position: static;
+  top: auto;
+  right: auto;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 16px !important;
+  height: 16px !important;
+  margin-left: auto;
+  font-size: 14px;
+  line-height: 1;
+  visibility: visible;
+}
+
+.monaco-editor .suggest-widget .monaco-list .monaco-list-row > .contents > .main > .right > .readMore::before,
+.editor-widget.suggest-widget .monaco-list .monaco-list-row > .contents > .main > .right > .readMore::before {
+  display: block;
+  width: 16px;
+  height: 16px;
+  line-height: 16px;
+  text-align: center;
 }
 
 .monaco-editor .suggest-widget .monaco-icon-description-container,
@@ -2360,6 +2463,53 @@ pre.prism-code .token-line > span {
   border: none !important;
   outline: none !important;
   box-shadow: none !important;
+}
+
+/* Blog code fences: Prism tokens rendered at build/server time. Same palette
+   as CodeBlock (prismSyntaxHighlightStyles) via the --code-* theme variables. */
+.blog-code .token.comment,
+.blog-code .token.prolog,
+.blog-code .token.doctype,
+.blog-code .token.cdata {
+  color: var(--code-comment);
+}
+.blog-code .token.namespace,
+.blog-code .token.class-name,
+.blog-code .language-markup .token.doctype {
+  color: var(--code-module-keyword);
+}
+.blog-code .token.keyword,
+.blog-code .token.builtin,
+.blog-code .token.changed,
+.blog-code .token.interpolation-punctuation,
+.blog-code .token.boolean,
+.blog-code .token.selector,
+.blog-code .language-markup .token.tag {
+  color: var(--code-keyword);
+}
+.blog-code .token.function {
+  color: var(--code-function);
+}
+.blog-code .token.attr-name,
+.blog-code .token.variable,
+.blog-code .token.property {
+  color: var(--code-property);
+}
+.blog-code .token.tag,
+.blog-code .token.deleted,
+.blog-code .token.string,
+.blog-code .token.attr-value,
+.blog-code .token.template-punctuation,
+.blog-code .token.char,
+.blog-code .token.regexp,
+.blog-code .token.number,
+.blog-code .token.inserted,
+.blog-code .token.constant {
+  color: var(--code-string);
+}
+.blog-code .token.punctuation,
+.blog-code .token.operator {
+  color: inherit;
 }
 
 /* Overlay scrollbar - hidden until hover/focus; thin rounded thumb on Windows/Linux */

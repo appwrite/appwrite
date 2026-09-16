@@ -4,6 +4,7 @@ import { ConsoleSidebar } from './Sidebar'
 import { ConsoleFooter } from './Footer'
 import { CloudStatusBanner } from './CloudStatusBanner'
 import { ConsoleImpersonationBanner } from '@/components/global/shared/ConsoleImpersonationBanner'
+import { ProductHuntPromoBanner } from '@/components/global/shared/ProductHuntPromoBanner'
 import { NetworkOfflineCurtain } from '@/components/global/shared/NetworkOfflineCurtain'
 import { SkipToContent } from './SkipToContent'
 import { NativeAppBar } from './NativeAppBar'
@@ -152,6 +153,7 @@ export function ConsoleLayout({
           {showNativeAppBar && <NativeAppBar />}
           <CloudStatusBanner />
           <ConsoleImpersonationBanner />
+          {!hideHeader ? <ProductHuntPromoBanner /> : null}
           {headerBanner}
           {showAppHeader ? (
             <ConsoleHeader
@@ -182,8 +184,9 @@ export function ConsoleLayout({
         />
       )}
 
-      {/* Sidebar + content below header */}
-      <div className="@container flex flex-1 min-h-0 overflow-x-visible overflow-y-hidden">
+      {/* Sidebar + content below header. `console-layout-row` lets the
+          marketing document-scroll mode lift the overflow clip (styles.css). */}
+      <div className="console-layout-row @container flex flex-1 min-h-0 overflow-x-visible overflow-y-hidden">
         {sidebar && (
           <ConsoleSidebar
             projectId={sidebar.projectId}
