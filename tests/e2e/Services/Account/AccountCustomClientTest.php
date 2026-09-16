@@ -6654,20 +6654,24 @@ final class AccountCustomClientTest extends Scope
 
     public static function verificationTokens(): \Iterator
     {
-        yield 'recovery' => ['/account/recovery', 256];
-        yield 'email verification' => ['/account/verifications/email', 256];
-        yield 'phone verification' => ['/account/verifications/phone', 6];
+        yield 'recovery' => ['/account/recovery', 256, 3600];
+        yield 'email verification' => ['/account/verifications/email', 256, 3600];
+        yield 'email OTP verification' => ['/account/verifications/email/otp', 6, 900];
+        yield 'phone verification' => ['/account/verifications/phone', 6, 3600];
     }
 
     #[DataProvider('verificationTokens')]
-    public function testCreateVerificationToken(string $path, int $defaultLength): void
+    public function testCreateVerificationToken(string $path, int $defaultLength, int $defaultExpire): void
     {
-        $maxLength = $path === '/account/verifications/phone' ? 128 : 256;
+        $maxLength = match ($path) {
+            '/account/verifications/phone', '/account/verifications/email/otp' => 128,
+            default => 256,
+        };
 
         /**
          * Test for SUCCESS
          */
-        foreach ([[], ['length' => null, 'expire' => null], ['length' => $defaultLength, 'expire' => 60], ['length' => $maxLength, 'expire' => 300], ['length' => $maxLength, 'expire' => 3600]] as $options) {
+        foreach ([[], ['length' => null, 'expire' => null], ['length' => $defaultLength, 'expire' => 60], ['length' => $maxLength, 'expire' => 300], ['length' => $maxLength, 'expire' => $defaultExpire]] as $options) {
             $user = $this->createFreshAccountWithSession();
             $headers = [
                 'origin' => 'http://localhost',
@@ -6686,7 +6690,7 @@ final class AccountCustomClientTest extends Scope
                     'x-appwrite-key' => $this->getProject()['apiKey'],
                 ], ['number' => $phone]);
                 $this->assertEquals(200, $response['headers']['status-code']);
-            } else {
+            } elseif ($path !== '/account/verifications/email/otp') {
                 $params['url'] = 'http://localhost' . ($path === '/account/recovery' ? '/recovery' : '/verification');
                 if ($path === '/account/recovery') {
                     $params['email'] = $user['email'];
@@ -6697,15 +6701,18 @@ final class AccountCustomClientTest extends Scope
 
             $this->assertEquals(201, $response['headers']['status-code']);
             $token = $response['body'];
-            $this->assertTokenExpire($token, $options['expire'] ?? 3600);
+            $this->assertTokenExpire($token, $options['expire'] ?? $defaultExpire);
             $this->assertSame($user['id'], $token['userId']);
             $this->assertSame('', $token['secret']);
 
-            $secret = $path === '/account/verifications/phone'
-                ? $this->readPhoneCode($phone)
-                : $this->readEmailLink($user['email'], $token);
-            $this->assertSame($options['length'] ?? $defaultLength, strlen($secret));
-            if ($path === '/account/verifications/phone') {
+            $length = $options['length'] ?? $defaultLength;
+            $secret = match ($path) {
+                '/account/verifications/phone' => $this->readPhoneCode($phone),
+                '/account/verifications/email/otp' => $this->readEmailCode($user['email'], $token['expire'], $length),
+                default => $this->readEmailLink($user['email'], $token),
+            };
+            $this->assertSame($length, strlen($secret));
+            if ($path === '/account/verifications/phone' || $path === '/account/verifications/email/otp') {
                 $this->assertTrue(ctype_digit($secret));
             }
 
@@ -6735,16 +6742,16 @@ final class AccountCustomClientTest extends Scope
         /**
          * Test for FAILURE
          */
-        $this->assertInvalidTokenOptions($path, $headers, $params, $maxLength, $defaultLength, 3600);
+        $this->assertInvalidTokenOptions($path, $headers, $params, $maxLength, $defaultLength, $defaultExpire);
         if ($path === '/account/recovery') {
             $headers['cookie'] = 'a_session_' . $this->getProject()['$id'] . '=' . $user['session'];
-            $this->assertInvalidTokenOptions($path, $headers, $params, $maxLength, $defaultLength, 3600);
+            $this->assertInvalidTokenOptions($path, $headers, $params, $maxLength, $defaultLength, $defaultExpire);
 
             $response = $this->client->call(Client::METHOD_POST, '/account/jwt', $headers);
             $this->assertEquals(201, $response['headers']['status-code']);
             unset($headers['cookie']);
             $headers['x-appwrite-jwt'] = $response['body']['jwt'];
-            $this->assertInvalidTokenOptions($path, $headers, $params, $maxLength, $defaultLength, 3600);
+            $this->assertInvalidTokenOptions($path, $headers, $params, $maxLength, $defaultLength, $defaultExpire);
         }
     }
 

@@ -5168,6 +5168,8 @@ Http::post('/v1/account/verifications/email/otp')
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},userId:{userId}')
     ->param('phrase', false, new Boolean(), 'Toggle for security phrase. If enabled, email will be sent with a randomly generated phrase and the phrase will also be included in the response. Confirming phrases match increases the security of your authentication flow.', true)
+    ->param('length', 6, new Range(4, 128), 'Token length in characters. The default length is 6 characters. Shorter tokens require privileged administrator permissions.', true)
+    ->param('expire', TOKEN_EXPIRATION_OTP, new Range(60, TOKEN_EXPIRATION_LOGIN_LONG), 'Token expiration period in seconds. The default expiration is 15 minutes. Longer lifetimes require privileged administrator permissions.', true)
     ->inject('request')
     ->inject('response')
     ->inject('project')
@@ -5177,9 +5179,24 @@ Http::post('/v1/account/verifications/email/otp')
     ->inject('locale')
     ->inject('queueForEvents')
     ->inject('publisherForMails')
-    ->inject('proofForCode')
     ->inject('authorization')
-    ->action(function (bool $phrase, Request $request, Response $response, Document $project, array $platform, User $user, Database $dbForProject, Locale $locale, Event $queueForEvents, MailPublisher $publisherForMails, ProofsCode $proofForCode, Authorization $authorization) {
+    ->action(function (bool $phrase, ?int $length, ?int $expire, Request $request, Response $response, Document $project, array $platform, User $user, Database $dbForProject, Locale $locale, Event $queueForEvents, MailPublisher $publisherForMails, Authorization $authorization) {
+        $length ??= 6;
+        $expire ??= TOKEN_EXPIRATION_OTP;
+
+        $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
+        $isAppUser = $user->isKey($authorization->getRoles());
+
+        if (!$isPrivilegedUser && !$isAppUser) {
+            if ($length < 6) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Token length must be at least 6 characters for client requests.');
+            }
+
+            if ($expire > TOKEN_EXPIRATION_OTP) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Token expiration must not exceed ' . TOKEN_EXPIRATION_OTP . ' seconds for client requests.');
+            }
+        }
+
         if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP Disabled');
         }
@@ -5196,8 +5213,10 @@ Http::post('/v1/account/verifications/email/otp')
             $phrase = (new Phrase())->generate();
         }
 
+        $proofForCode = new ProofsCode($length);
+        $proofForCode->setHash(new Sha());
         $secret = $proofForCode->generate();
-        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), TOKEN_EXPIRATION_OTP));
+        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $expire));
 
         $verification = new Document([
             '$id' => ID::unique(),
@@ -5320,6 +5339,7 @@ Http::post('/v1/account/verifications/email/otp')
         }
 
         $emailVariables = [
+            'expire' => $expire,
             'heading' => $heading,
             'direction' => $locale->getText('settings.direction'),
             'user' => $user->getAttribute('name'),
