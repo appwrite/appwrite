@@ -8,6 +8,7 @@ import {
   projectQueryOptions,
   DEFAULT_PAGE_SIZE,
 } from '@/lib/react-query/hooks'
+import { ensureQueryDataIfFound } from '@/lib/react-query/ensure-query-data-if-found'
 import { Query } from '@appwrite.io/console'
 import { listSearchSchema, parseListSearch } from '@/lib/table-filters'
 import { getRedeploySourceDeploymentId } from '@/lib/utils/deployment-status'
@@ -84,10 +85,12 @@ export const Route = createFileRoute(
       // Fetch critical data before rendering to prevent layout shifts
       const criticalPromises: Promise<unknown>[] = [deploymentsPromise]
 
-      // Fetch active deployment if site has a deploymentId - blocks navigation until ready
+      // Fetch active deployment if site has a deploymentId - blocks navigation until ready.
+      // The referenced deployment may have been deleted (404); the page still renders without it.
       if (site?.deploymentId) {
         criticalPromises.push(
-          queryClient.ensureQueryData(
+          ensureQueryDataIfFound(
+            queryClient,
             siteDeploymentQueryOptions(projectId, siteId, site.deploymentId),
           ),
           queryClient.ensureQueryData(
@@ -101,17 +104,11 @@ export const Route = createFileRoute(
       }
 
       const redeployDeploymentId = getRedeploySourceDeploymentId(site)
-      if (
-        redeployDeploymentId &&
-        redeployDeploymentId !== site?.deploymentId
-      ) {
+      if (redeployDeploymentId && redeployDeploymentId !== site?.deploymentId) {
         criticalPromises.push(
-          queryClient.ensureQueryData(
-            siteDeploymentQueryOptions(
-              projectId,
-              siteId,
-              redeployDeploymentId,
-            ),
+          ensureQueryDataIfFound(
+            queryClient,
+            siteDeploymentQueryOptions(projectId, siteId, redeployDeploymentId),
           ),
         )
       }
