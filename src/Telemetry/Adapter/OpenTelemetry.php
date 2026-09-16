@@ -16,6 +16,7 @@ use OpenTelemetry\SDK\Common\Attribute\Attributes;
 use OpenTelemetry\SDK\Common\Attribute\AttributesInterface;
 use OpenTelemetry\SDK\Common\Export\TransportInterface;
 use OpenTelemetry\SDK\Metrics\Data\Temporality;
+use OpenTelemetry\SDK\Metrics\Exemplar\ExemplarFilter\NoneExemplarFilter;
 use OpenTelemetry\SDK\Metrics\MeterProvider;
 use OpenTelemetry\SDK\Metrics\MetricExporterInterface;
 use OpenTelemetry\SDK\Metrics\MetricReader\ExportingReader;
@@ -88,8 +89,13 @@ class OpenTelemetry implements Adapter
     protected function initMeter(MetricExporterInterface $exporter, AttributesInterface $attributes): MeterInterface
     {
         $this->reader = new ExportingReader($exporter);
+        // Exemplars pair a data point with the sampled trace it was recorded under. Nothing here
+        // starts traces, so the SDK's default filter accepts nothing, yet every record still walks
+        // the reservoir to find that out. Declaring no exemplars drops the reservoir from each
+        // stream, and with it that work on every counter add and histogram record.
         $meterProvider = MeterProvider::builder()
             ->setResource(ResourceInfo::create($attributes, ResourceAttributes::SCHEMA_URL))
+            ->setExemplarFilter(new NoneExemplarFilter())
             ->addReader($this->reader)
             ->build();
 
