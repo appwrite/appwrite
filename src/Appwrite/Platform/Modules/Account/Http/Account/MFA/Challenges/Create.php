@@ -113,7 +113,6 @@ class Create extends Action
             ->inject('usage')
             ->inject('plan')
             ->inject('proofForToken')
-            ->inject('proofForCode')
             ->inject('authorization')
             ->callback($this->action(...));
     }
@@ -135,7 +134,6 @@ class Create extends Action
         Context $usage,
         array $plan,
         ProofsToken $proofForToken,
-        ProofsCode $proofForCode,
         Authorization $authorization
     ): void {
         $length ??= 6;
@@ -169,6 +167,7 @@ class Create extends Action
 
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $expire));
 
+        $proofForCode = new ProofsCode();
         if ($factor === Type::EMAIL || $factor === Type::PHONE) {
             $proofForCode->setLength($length);
         }

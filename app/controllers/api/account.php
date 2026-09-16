@@ -2699,9 +2699,8 @@ Http::post('/v1/account/tokens/email')
     ->inject('publisherForMails')
     ->inject('plan')
     ->inject('proofForPassword')
-    ->inject('proofForCode')
     ->inject('authorization')
-    ->action(function (string $userId, string $email, bool $phrase, ?int $length, ?int $expire, Request $request, Response $response, User $user, Document $project, array $platform, Database $dbForProject, Locale $locale, Event $queueForEvents, MailPublisher $publisherForMails, array $plan, ProofsPassword $proofForPassword, ProofsCode $proofForCode, Authorization $authorization) {
+    ->action(function (string $userId, string $email, bool $phrase, ?int $length, ?int $expire, Request $request, Response $response, User $user, Document $project, array $platform, Database $dbForProject, Locale $locale, Event $queueForEvents, MailPublisher $publisherForMails, array $plan, ProofsPassword $proofForPassword, Authorization $authorization) {
         $length ??= 6;
         $expire ??= TOKEN_EXPIRATION_OTP;
 
@@ -2845,7 +2844,8 @@ Http::post('/v1/account/tokens/email')
             $dbForProject->purgeCachedDocument('users', $user->getId());
         }
 
-        $proofForCode->setLength($length);
+        $proofForCode = new ProofsCode($length);
+        $proofForCode->setHash(new Sha());
         $tokenSecret = $proofForCode->generate();
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $expire));
 
@@ -3169,9 +3169,8 @@ Http::post('/v1/account/tokens/phone')
     ->inject('usage')
     ->inject('plan')
     ->inject('store')
-    ->inject('proofForCode')
     ->inject('authorization')
-    ->action(function (string $userId, string $phone, ?int $length, ?int $expire, Request $request, Response $response, User $user, Document $project, array $platform, Database $dbForProject, Event $queueForEvents, MessagingPublisher $publisherForMessaging, Locale $locale, Context $usage, array $plan, Store $store, ProofsCode $proofForCode, Authorization $authorization) {
+    ->action(function (string $userId, string $phone, ?int $length, ?int $expire, Request $request, Response $response, User $user, Document $project, array $platform, Database $dbForProject, Event $queueForEvents, MessagingPublisher $publisherForMessaging, Locale $locale, Context $usage, array $plan, Store $store, Authorization $authorization) {
         $length ??= 6;
         $expire ??= TOKEN_EXPIRATION_OTP;
 
@@ -3271,7 +3270,8 @@ Http::post('/v1/account/tokens/phone')
             }
         }
 
-        $proofForCode->setLength($length);
+        $proofForCode = new ProofsCode($length);
+        $proofForCode->setHash(new Sha());
         $secret ??= $proofForCode->generate();
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $expire));
 
@@ -3921,9 +3921,8 @@ Http::post('/v1/account/recovery')
     ->inject('locale')
     ->inject('publisherForMails')
     ->inject('queueForEvents')
-    ->inject('proofForToken')
     ->inject('authorization')
-    ->action(function (string $email, string $url, ?int $length, ?int $expire, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, MailPublisher $publisherForMails, Event $queueForEvents, ProofsToken $proofForToken, Authorization $authorization) {
+    ->action(function (string $email, string $url, ?int $length, ?int $expire, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, MailPublisher $publisherForMails, Event $queueForEvents, Authorization $authorization) {
         $length ??= TOKEN_LENGTH_RECOVERY;
         $expire ??= TOKEN_EXPIRATION_RECOVERY;
 
@@ -3961,7 +3960,8 @@ Http::post('/v1/account/recovery')
 
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $expire));
 
-        $proofForToken->setLength($length);
+        $proofForToken = new ProofsToken($length);
+        $proofForToken->setHash(new Sha());
         $secret = $proofForToken->generate();
         $recovery = new Document([
             '$id' => ID::unique(),
@@ -4305,9 +4305,8 @@ Http::post('/v1/account/verifications/email')
     ->inject('locale')
     ->inject('queueForEvents')
     ->inject('publisherForMails')
-    ->inject('proofForToken')
     ->inject('authorization')
-    ->action(function (string $url, ?int $length, ?int $expire, Request $request, Response $response, Document $project, array $platform, User $user, Database $dbForProject, Locale $locale, Event $queueForEvents, MailPublisher $publisherForMails, ProofsToken $proofForToken, Authorization $authorization) {
+    ->action(function (string $url, ?int $length, ?int $expire, Request $request, Response $response, Document $project, array $platform, User $user, Database $dbForProject, Locale $locale, Event $queueForEvents, MailPublisher $publisherForMails, Authorization $authorization) {
         $length ??= TOKEN_LENGTH_VERIFICATION;
         $expire ??= TOKEN_EXPIRATION_CONFIRM;
 
@@ -4336,7 +4335,8 @@ Http::post('/v1/account/verifications/email')
             throw new Exception(Exception::USER_EMAIL_ALREADY_VERIFIED);
         }
 
-        $proofForToken->setLength($length);
+        $proofForToken = new ProofsToken($length);
+        $proofForToken->setHash(new Sha());
         $verificationSecret = $proofForToken->generate();
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $expire));
 
@@ -4640,9 +4640,8 @@ Http::post('/v1/account/verifications/phone')
     ->inject('locale')
     ->inject('usage')
     ->inject('plan')
-    ->inject('proofForCode')
     ->inject('authorization')
-    ->action(function (?int $length, ?int $expire, Request $request, Response $response, User $user, Database $dbForProject, Event $queueForEvents, MessagingPublisher $publisherForMessaging, Document $project, Locale $locale, Context $usage, array $plan, ProofsCode $proofForCode, Authorization $authorization) {
+    ->action(function (?int $length, ?int $expire, Request $request, Response $response, User $user, Database $dbForProject, Event $queueForEvents, MessagingPublisher $publisherForMessaging, Document $project, Locale $locale, Context $usage, array $plan, Authorization $authorization) {
         $length ??= 6;
         $expire ??= TOKEN_EXPIRATION_CONFIRM;
 
@@ -4683,7 +4682,8 @@ Http::post('/v1/account/verifications/phone')
             }
         }
 
-        $proofForCode->setLength($length);
+        $proofForCode = new ProofsCode($length);
+        $proofForCode->setHash(new Sha());
         $secret ??= $proofForCode->generate();
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $expire));
 
