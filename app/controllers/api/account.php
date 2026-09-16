@@ -1495,7 +1495,6 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->inject('response')
     ->inject('project')
     ->inject('redirectValidator')
-    ->inject('devKey')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('geo')
@@ -1509,7 +1508,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->inject('cookieDomain')
     ->inject('authorization')
     ->inject('platform')
-    ->action(function (string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response, Document $project, Validator $redirectValidator, Document $devKey, User $user, Database $dbForProject, Geo $geo, Database $dbForPlatform, Event $queueForEvents, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken, array $plan, bool $domainVerification, ?string $cookieDomain, Authorization $authorization, array $platform) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
+    ->action(function (string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response, Document $project, Validator $redirectValidator, User $user, Database $dbForProject, Geo $geo, Database $dbForPlatform, Event $queueForEvents, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken, array $plan, bool $domainVerification, ?string $cookieDomain, Authorization $authorization, array $platform) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
         $port = $request->getPort();
         $callbackBase = $protocol . '://' . $request->getHostname();
@@ -1570,11 +1569,11 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
             }
         }
 
-        if ($devKey->isEmpty() && !$redirectValidator->isValid($state['success'])) {
+        if (!$redirectValidator->isValid($state['success'])) {
             throw new Exception(Exception::PROJECT_INVALID_SUCCESS_URL);
         }
 
-        if ($devKey->isEmpty() && !empty($state['failure']) && !$redirectValidator->isValid($state['failure'])) {
+        if (!empty($state['failure']) && !$redirectValidator->isValid($state['failure'])) {
             throw new Exception(Exception::PROJECT_INVALID_FAILURE_URL);
         }
         // The default relays live on the console host; the same path on any other allowed host is a customer page

@@ -540,17 +540,15 @@ Http::init()
     ->inject('project')
     ->inject('user')
     ->inject('timelimit')
-    ->inject('devKey')
     ->inject('authorization')
-    ->action(function (Route $route, Request $request, Response $response, Document $project, User $user, callable $timelimit, Document $devKey, Authorization $authorization) {
+    ->action(function (Route $route, Request $request, Response $response, Document $project, User $user, callable $timelimit, Authorization $authorization) {
         $response->setUser($user);
         $request->setUser($user);
 
         $roles = $authorization->getRoles();
         $shouldCheckAbuse = System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled'
             && ! $user->isKey($roles)
-            && ! $user->isPrivileged($roles)
-            && $devKey->isEmpty();
+            && ! $user->isPrivileged($roles);
 
         $abuseLimit = $route->getLabel('abuse-limit', 0);
         $increasedLimitProjects = \array_filter(\array_map('trim', \explode(',', System::getEnv('_APP_OPTIONS_ABUSE_INCREASED_LIMIT_PROJECTS', ''))));
