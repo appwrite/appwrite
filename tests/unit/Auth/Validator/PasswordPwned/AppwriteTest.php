@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Auth\Validator\PasswordPwned;
 
-use Ahc\Jwt\JWT;
 use Appwrite\Auth\Validator\PasswordPwned\Appwrite;
 use Appwrite\Extend\Exception;
 use PHPUnit\Framework\TestCase;
@@ -36,7 +35,7 @@ final class AppwriteTest extends TestCase
         $this->assertTrue($this->validator($fetch)->isValid(self::PASSWORD));
     }
 
-    public function testThePasswordTravelsInAJwtTheServiceCanOpen(): void
+    public function testThePasswordIsSentAsIsWithTheSharedSecretAsBearerToken(): void
     {
         $fetch = new DetectionFetch(body: '{"leaked":false}');
 
@@ -45,26 +44,12 @@ final class AppwriteTest extends TestCase
         $this->assertCount(1, $fetch->requests);
         $this->assertSame('POST', $fetch->requests[0]['method']);
 
-        $sent = \json_decode($fetch->requests[0]['body'], true);
-        $this->assertIsArray($sent);
-        $this->assertArrayHasKey('password', $sent);
+        // The service hashes the password itself, so it travels in the clear
+        $this->assertSame(['password' => self::PASSWORD], \json_decode($fetch->requests[0]['body'], true));
 
-        // The service decodes with the shared secret, so it must round-trip
-        $decoded = (new JWT(self::SECRET, 'HS256', 900, 10))->decode($sent['password']);
-        $this->assertSame(self::PASSWORD, $decoded['password']);
-    }
-
-    public function testATokenSignedWithAnotherSecretIsNotAccepted(): void
-    {
-        $fetch = new DetectionFetch(body: '{"leaked":false}');
-
-        $this->validator($fetch)->isValid(self::PASSWORD);
-
-        $sent = \json_decode($fetch->requests[0]['body'], true);
-
-        $this->expectException(\Throwable::class);
-
-        (new JWT('a-different-secret', 'HS256', 900, 10))->decode($sent['password']);
+        $headers = \array_change_key_case($fetch->requests[0]['headers'], CASE_LOWER);
+        $this->assertSame('Bearer ' . self::SECRET, $headers['authorization'] ?? null);
+        $this->assertSame('application/json', $headers['content-type'] ?? null);
     }
 
     public function testTheDsnDescribesWhereAndHowToConnect(): void
@@ -99,23 +84,28 @@ final class AppwriteTest extends TestCase
         }
     }
 
-    public function testRejectedTokenIsReported(): void
+    /**
+     * The service answers every failure with its own error object; none of them may pass as a clean password.
+     */
+    public function testServiceErrorsAreReported(): void
     {
-        // The service answers 400 when it cannot decode the token
-        $fetch = new DetectionFetch(statusCode: 400, body: '{"message":"Failed to verify JWT."}');
+        $errors = [
+            401 => '{"type":"general_unauthorized","message":"Missing or invalid Bearer token in the Authorization header.","code":401,"version":"0.2.0"}',
+            400 => '{"type":"general_argument_invalid","message":"Invalid `password` param: Value must be a valid string and at least 1 chars and no longer than 256 chars","code":400,"version":"0.2.0"}',
+            503 => '{"type":"dataset_unavailable","message":"The password dataset could not be read.","code":503,"version":"0.2.0"}',
+            500 => '',
+        ];
 
-        $this->expectException(Exception::class);
+        foreach ($errors as $statusCode => $body) {
+            $fetch = new DetectionFetch(statusCode: $statusCode, body: $body);
 
-        $this->validator($fetch)->isValid(self::PASSWORD);
-    }
-
-    public function testDetectorFailureIsReported(): void
-    {
-        $fetch = new DetectionFetch(statusCode: 500, body: '');
-
-        $this->expectException(Exception::class);
-
-        $this->validator($fetch)->isValid(self::PASSWORD);
+            try {
+                $this->validator($fetch)->isValid(self::PASSWORD);
+                $this->fail('Expected a ' . $statusCode . ' to surface');
+            } catch (Exception $e) {
+                $this->assertSame(Exception::GENERAL_PWNED_PASSWORDS_UNAVAILABLE, $e->getType(), (string) $statusCode);
+            }
+        }
     }
 
     /**
@@ -193,7 +183,7 @@ final class AppwriteTest extends TestCase
 
 final class DetectionFetch implements Adapter
 {
-    /** @var array<int, array{url: string, method: string, body: mixed}> */
+    /** @var array<int, array{url: string, method: string, body: mixed, headers: array<string, string>}> */
     public array $requests = [];
 
     public function __construct(
@@ -211,7 +201,7 @@ final class DetectionFetch implements Adapter
         RequestOptions $options,
         ?callable $chunkCallback = null
     ): Response {
-        $this->requests[] = ['url' => $url, 'method' => $method, 'body' => $body];
+        $this->requests[] = ['url' => $url, 'method' => $method, 'body' => $body, 'headers' => $headers];
 
         if ($this->failure !== null) {
             throw $this->failure;

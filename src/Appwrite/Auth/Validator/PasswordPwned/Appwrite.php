@@ -2,7 +2,6 @@
 
 namespace Appwrite\Auth\Validator\PasswordPwned;
 
-use Ahc\Jwt\JWT;
 use Appwrite\Auth\Validator\PasswordPwned;
 use Appwrite\Extend\Exception;
 use Utopia\Cache\Cache;
@@ -12,25 +11,21 @@ use Utopia\Fetch\Client;
 /**
  * Asks an Appwrite Pwned service, https://github.com/appwrite-labs/pwned.
  *
- * The service answers for a whole password rather than a hash prefix, so unlike
- * `HIBP` this sends the password itself. It travels inside a short-lived JWT
- * signed with a secret the service shares, which is only safe on a network you
- * control. In exchange the service caches answers and can front Have I Been
- * Pwned or another detector without this server knowing which.
+ * The service answers from its own copy of the Have I Been Pwned corpus, for a
+ * whole password rather than a hash prefix, so unlike `HIBP` this sends the
+ * password itself. The request carries a secret the service shares as a
+ * Bearer token, which is only safe on a network you control or behind TLS.
+ * In exchange nothing about the password ever leaves that network.
  *
  * DSN: `appwrite://SECRET@HOST[:PORT][/PATH][?tls=true]`. The secret must match
- * the service's `APPWRITE_PWNED_JWT_SECRET`, the path defaults to
- * `v1/detection`, and the connection is plain HTTP unless `tls=true`.
+ * the service's `APPWRITE_PWNED_SECRET`, the path defaults to `v1/detection`,
+ * and the connection is plain HTTP unless `tls=true`.
  */
 class Appwrite extends PasswordPwned
 {
     private const PATH = 'v1/detection';
     private const CONNECT_TIMEOUT = 3 * 1000; // milliseconds
     private const REQUEST_TIMEOUT = 5 * 1000; // milliseconds
-
-    // The service decodes with the same window
-    private const TOKEN_EXPIRY = 900; // seconds
-    private const TOKEN_LEEWAY = 10; // seconds
 
     protected string $endpoint;
     protected string $secret;
@@ -60,18 +55,19 @@ class Appwrite extends PasswordPwned
         $key = 'pwned-passwords:' . \md5($this->endpoint) . ':' . \hash_hmac('sha256', $password, $this->secret);
 
         $answer = $this->remember($key, function () use ($password) {
-            $jwt = new JWT($this->secret, 'HS256', self::TOKEN_EXPIRY, self::TOKEN_LEEWAY);
-
             try {
                 $response = $this->client
                     ->addHeader('content-type', Client::CONTENT_TYPE_APPLICATION_JSON)
+                    ->addHeader('authorization', 'Bearer ' . $this->secret)
                     ->fetch($this->endpoint, Client::METHOD_POST, [
-                        'password' => $jwt->encode(['password' => $password]),
+                        'password' => $password,
                     ]);
             } catch (\Throwable) {
                 throw new Exception(Exception::GENERAL_PWNED_PASSWORDS_UNAVAILABLE);
             }
 
+            // Anything else is the service's own error object: a rejected secret
+            // (401), a password it will not take (400) or a missing dataset (503)
             if ($response->getStatusCode() !== 200) {
                 throw new Exception(Exception::GENERAL_PWNED_PASSWORDS_UNAVAILABLE);
             }
