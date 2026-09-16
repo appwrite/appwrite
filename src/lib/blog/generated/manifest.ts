@@ -16,6 +16,19 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
+    "slug": "whatsapp-ai-agent-appwrite-functions",
+    "href": "/blog/post/whatsapp-ai-agent-appwrite-functions",
+    "title": "Build a WhatsApp AI agent with Appwrite Functions and TablesDB",
+    "description": "Turn a WhatsApp number into an AI support agent. Two Appwrite Functions receive messages and reply, TablesDB keeps the conversation history, and a compaction step keeps the context small.",
+    "date": "2026-09-16",
+    "lastUpdated": "2026-09-16",
+    "timeToRead": 12,
+    "author": "atharva",
+    "category": "tutorials",
+    "cover": "/images/blog/whatsapp-ai-agent-appwrite-functions/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "appwrite-init-2026-recap",
     "href": "/blog/post/appwrite-init-2026-recap",
     "title": "Appwrite Init 2026 recap: Everything we shipped",
