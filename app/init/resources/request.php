@@ -679,7 +679,8 @@ return function (Container $context): void {
     }, ['user', 'store', 'proofForToken']);
 
     $context->set('pwnedPasswords', function (Cache $cache) {
-        $dsn = new DSN(System::getEnv('_APP_PWNED_PASSWORDS_DSN', 'hibp://localhost'));
+        // Nothing is asked until an operator points this at a service
+        $dsn = new DSN(System::getEnv('_APP_PWNED_PASSWORDS_DSN', 'none://localhost'));
 
         return match ($dsn->getScheme()) {
             'hibp' => new PasswordPwnedHIBP($cache),
