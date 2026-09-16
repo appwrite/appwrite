@@ -24,7 +24,7 @@ faqs:
     answer: "No. A Meta developer app with the WhatsApp use case gives you a test phone number and an access token immediately. You can message it from up to five allowlisted phone numbers. You only need business verification and a display name review to register your own number and message the public."
 ---
 
-A WhatsApp number that answers customers on its own sounds like a large project. It needs a server that is always up, a database for every conversation, a queue so nothing is lost when the model takes a while, and a plan for long chats. On Appwrite it is two small functions and three tables.
+A WhatsApp number that answers customers on its own sounds like a large project. It needs a server that is always up, a database for every conversation, a queue so nothing is lost when the model takes a while, and a plan for long chats. On Appwrite it is two small serverless functions and three tables.
 
 This tutorial builds a support agent for a fictional coffee roaster. Customers message a WhatsApp number, the agent replies in a few seconds, and it remembers what was said earlier in the thread. It can also look up an order, which is what separates an agent from a chat wrapper. When a conversation grows past a token budget, the agent folds the older messages into a short summary and keeps going. A long thread never overflows the prompt.
 
@@ -425,7 +425,7 @@ The function's **Executions** tab in the Console shows every run with its logs, 
 
 The shape here works for more than support. If you swap the `orders` table and the tool for a bookings table and a `create_booking` tool, the same two functions become a reservation agent. With a second tool that writes to a `tickets` table when the model cannot answer, they become a triage agent that hands off to a person. The history and compaction code do not change.
 
-Two things are worth adding before customers use it. Meta delivers status updates, images, and voice notes through the same webhook. The function currently skips anything that is not text, so decide what to do with them. The lock also has no expiry, so if the agent is killed by its timeout mid-reply the conversation stays locked until you reset the column, and a timestamp next to it would let the next execution reclaim it. The compaction step also updates rows one at a time. That is fine at a few dozen messages, but it is a place to batch once conversations get long.
+The same pattern reaches beyond WhatsApp. Any channel that can call a URL, from Telegram and Slack to a plain contact form, can feed the webhook function, and the agent function does not care where the message came from. Add Appwrite Storage and the agent can accept receipts and photos, or a scheduled function can go through open conversations each morning and follow up on unanswered questions. Every piece of the agent, from the webhook to the memory to the tools, runs inside one Appwrite project with nothing else to host.
 
 # Resources
 
