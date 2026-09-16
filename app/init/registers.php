@@ -329,12 +329,17 @@ $register->set('smtp', function () {
     $username = System::getEnv('_APP_SMTP_USERNAME', '');
     $password = System::getEnv('_APP_SMTP_PASSWORD', '');
 
-    // Workers run several jobs at once on this one entry, and a kept-alive
-    // session belongs to one send at a time, so each send borrows its own.
+    $workers = Config::getParam('workers', []);
+    $size = max(
+        1,
+        (int) System::getEnv('_APP_WORKER_MAX_COROUTINES', 1),
+        ((int) ($workers['mails']['maxCoroutines'] ?? 1)) + ((int) ($workers['notifications']['maxCoroutines'] ?? 1)),
+    );
+
     return new Pool(
         adapter: new SwoolePool(),
         name: 'smtp',
-        size: max(1, (int) System::getEnv('_APP_WORKER_MAX_COROUTINES', 1)),
+        size: $size,
         init: fn () => new SMTP(
             host: System::getEnv('_APP_SMTP_HOST', 'smtp'),
             port: (int) System::getEnv('_APP_SMTP_PORT', 25),
