@@ -523,20 +523,20 @@ export function DocsGlobalSidebar({
     <TooltipProvider>
       <div
         className={cn(
-          'relative z-20 hidden h-full flex-shrink-0 @[1024px]:block',
+          'relative z-20 hidden h-full min-h-0 flex-shrink-0 @[1024px]:block',
           'transition-[width] duration-150 ease-out',
           collapsed ? 'w-[60px]' : 'w-[220px]',
         )}
       >
         <aside
           className={cn(
-            'flex h-full w-full flex-col overflow-hidden border-e border-border bg-background',
+            'flex h-full min-h-0 w-full flex-col overflow-hidden border-e border-border bg-background',
             '[transform:translateZ(0)] [backface-visibility:hidden]',
           )}
         >
           <nav
             className={cn(
-              'flex-1 overflow-y-auto px-3 py-4',
+              'min-h-0 flex-1 overflow-y-auto px-3 py-4',
               DOCS_NAV_TREE_GAP_CLASS,
               DOCS_NAV_SCROLL_CLASS,
             )}
@@ -603,7 +603,7 @@ export function DocsGlobalSidebar({
 
         <nav
           className={cn(
-            'flex-1 overflow-y-auto px-4 py-2',
+            'min-h-0 flex-1 overflow-y-auto px-4 py-2',
             DOCS_NAV_TREE_GAP_CLASS,
             DOCS_NAV_SCROLL_CLASS,
           )}
