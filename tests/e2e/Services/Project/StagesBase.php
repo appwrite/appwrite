@@ -156,6 +156,37 @@ trait StagesBase
         $this->assertSame(ONBOARDING_STATUS_COMPLETED, $stage['status']);
     }
 
+    public function testMcpInstallStageIsNotRewritten(): void
+    {
+        $projectId = $this->getProject()['$id'];
+
+        $first = $this->client->call(Client::METHOD_GET, '/ping', [
+            'x-appwrite-project' => $projectId,
+            'x-sdk-name' => 'mcp',
+        ]);
+        $this->assertSame(200, $first['headers']['status-code']);
+
+        $stage = $this->getStage($projectId, 'mcp.install');
+        $this->assertNotNull($stage);
+        $this->assertSame(ONBOARDING_STATUS_COMPLETED, $stage['status']);
+        $this->assertSame(ACTOR_TYPE_GUEST, $stage['actorType']);
+        $at = $stage['at'];
+        $this->assertNotEmpty($at);
+
+        $second = $this->client->call(Client::METHOD_GET, '/ping', [
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+            'x-sdk-name' => 'mcp',
+        ]);
+        $this->assertSame(200, $second['headers']['status-code']);
+
+        $again = $this->getStage($projectId, 'mcp.install');
+        $this->assertNotNull($again);
+        $this->assertSame(ONBOARDING_STATUS_COMPLETED, $again['status']);
+        $this->assertSame($at, $again['at']);
+        $this->assertSame(ACTOR_TYPE_GUEST, $again['actorType']);
+    }
+
     // =========================================================================
     // Helpers
     // =========================================================================
