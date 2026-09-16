@@ -117,8 +117,8 @@ class Create extends Action
 
     public function action(
         string $factor,
-        int $length,
-        int $expire,
+        ?int $length,
+        ?int $expire,
         Response $response,
         Database $dbForProject,
         Document $user,
@@ -134,6 +134,9 @@ class Create extends Action
         ProofsToken $proofForToken,
         ProofsCode $proofForCode
     ): void {
+        $length ??= 6;
+        $expire ??= TOKEN_EXPIRATION_CONFIRM;
+
         $mfaFactors = $project->getAttribute('auths', [])['mfaFactors'] ?? [];
         $factorEnabled = match ($factor) {
             Type::TOTP => $mfaFactors['totp'] ?? true,

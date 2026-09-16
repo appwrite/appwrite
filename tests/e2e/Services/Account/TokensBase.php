@@ -34,7 +34,7 @@ trait TokensBase
         /**
          * Test for SUCCESS
          */
-        foreach ([[], ['length' => 4, 'expire' => 60], ['length' => 8, 'expire' => 300], ['length' => 128, 'expire' => 31536000]] as $options) {
+        foreach ([[], ['length' => null, 'expire' => null], ['length' => 4, 'expire' => 60], ['length' => 8, 'expire' => 300], ['length' => 128, 'expire' => 31536000]] as $options) {
             $email = ID::unique() . '@localhost.test';
             $phone = '+1202' . random_int(1000000, 9999999);
             $params = ['userId' => ID::unique()];

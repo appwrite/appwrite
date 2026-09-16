@@ -14,6 +14,7 @@ use Utopia\Database\Validator\Datetime as DatetimeValidator;
 final class AccountCustomServerTest extends Scope
 {
     use AccountBase;
+    use TokensBase;
     use ProjectCustom;
     use SideServer;
 
