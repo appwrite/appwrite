@@ -10,6 +10,7 @@ export const jaAuthStorageDictionary: Record<string, string> = {
   'Add a client ID and press Enter': 'クライアント ID を入力して Enter を押してください',
   'Add at least one native client ID, or set the client ID, so tokens can be matched to your app.': 'トークンをアプリに照合できるよう、ネイティブクライアント ID を 1 つ以上追加するか、クライアント ID を設定してください。',
   'native': 'ネイティブ',
+  'Claims': 'クレーム',
   'ID token': 'ID トークン',
   'Provider ID token': 'プロバイダーの ID トークン',
   'Issuer': '発行者',

@@ -41,6 +41,7 @@ import { useT } from '@/lib/i18n/translate'
 import { ServiceHeader, type Tab } from '../../shared/ServiceHeader'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { CopyableId } from '@/components/global/shared/CopyableId'
+import { BaseDrawer } from '@/components/global/shared/BaseDrawer'
 import { decodeIdTokenClaims } from '@/lib/oauth2/id-token'
 import { DetailResourceHeaderTitle } from '@/components/global/shared/ResourceTitleSwitcher'
 import { InitialsAvatar } from '@/components/global/shared/Avatar'
@@ -2400,19 +2401,19 @@ function CreateUserMembershipDialog({
  * API returns it, so it is read by name rather than through the model.
  */
 function readIdentityIdToken(identity: unknown): string {
-  const value = (identity as Record<string, unknown>)?.providerIdToken;
-  return typeof value === "string" ? value : "";
+  const value = (identity as Record<string, unknown>)?.providerIdToken
+  return typeof value === 'string' ? value : ''
 }
 
 function IdTokenClaimRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="grid grid-cols-[110px_minmax(0,1fr)] gap-3 py-1.5">
+    <div className="grid grid-cols-[104px_minmax(0,1fr)] gap-3 py-2.5">
       <span className="text-[12px] text-muted-foreground">{label}</span>
       <span className="min-w-0 break-all font-mono text-[12px] text-foreground">
         {value}
       </span>
     </div>
-  );
+  )
 }
 
 /**
@@ -2421,113 +2422,129 @@ function IdTokenClaimRow({ label, value }: { label: string; value: string }) {
  * keeps it out of screenshots of the identities list.
  */
 function IdentityIdTokenCell({ token }: { token: string }) {
-  const t = useT();
-  const [open, setOpen] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const t = useT()
+  const [open, setOpen] = useState(false)
+  const [copied, setCopied] = useState(false)
 
   const claims = useMemo(
     () => (open ? decodeIdTokenClaims(token) : null),
     [open, token],
-  );
+  )
 
   if (!token) {
-    return <span className="text-[13px] text-muted-foreground">&mdash;</span>;
+    return <span className="text-[13px] text-muted-foreground">&mdash;</span>
   }
 
   const handleCopy = async () => {
-    await navigator.clipboard.writeText(token);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
+    await navigator.clipboard.writeText(token)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
 
   const formatClaimDate = (date: Date | null) =>
-    date ? date.toLocaleString() : t("Not set");
+    date ? date.toLocaleString() : t('Not set')
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="h-7 gap-1.5 px-2 text-[12px] font-normal"
-        >
-          <Key className="h-3 w-3" />
-          {t("View")}
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>{t("Provider ID token")}</DialogTitle>
-          <DialogDescription className="text-[13px]">
-            {t(
-              "The signed token the app obtained on device and sent to Appwrite to create this identity. Appwrite verified it at sign-in; it is decoded here for reference only.",
-            )}
-          </DialogDescription>
-        </DialogHeader>
+    <>
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        className="h-7 gap-1.5 px-2 text-[12px] font-normal"
+        onClick={() => setOpen(true)}
+      >
+        <Key className="h-3 w-3" />
+        {t('View')}
+      </Button>
 
-        {claims ? (
-          <div className="rounded-lg border border-border bg-muted/30 px-4 py-2">
-            <IdTokenClaimRow
-              label={t("Audience")}
-              value={
-                claims.audience.length > 0
-                  ? claims.audience.join(", ")
-                  : t("Not set")
-              }
-            />
-            <IdTokenClaimRow
-              label={t("Issuer")}
-              value={claims.issuer || t("Not set")}
-            />
-            <IdTokenClaimRow
-              label={t("Subject")}
-              value={claims.subject || t("Not set")}
-            />
-            <IdTokenClaimRow
-              label={t("Issued")}
-              value={formatClaimDate(claims.issuedAt)}
-            />
-            <IdTokenClaimRow
-              label={t("Expires")}
-              value={formatClaimDate(claims.expiresAt)}
-            />
-          </div>
-        ) : (
-          <p className="text-[13px] text-muted-foreground">
-            {t(
-              "This token could not be decoded, so only the raw value is shown.",
-            )}
-          </p>
-        )}
+      <BaseDrawer
+        open={open}
+        onOpenChange={setOpen}
+        title="Provider ID token"
+        description="The signed token this identity was created from, decoded for reference."
+        maxWidth="sm:max-w-lg"
+        disableAutoFocus
+      >
+        <div className="border-t border-border shrink-0" />
+        <div className="flex min-h-0 flex-1 flex-col">
+          <div className="flex-1 overflow-y-auto">
+            <div className="space-y-6 px-6 py-6">
+              <p className="text-[13px] text-muted-foreground">
+                {t(
+                  'The signed token the app obtained on device and sent to Appwrite to create this identity. Appwrite verified it at sign-in; it is decoded here for reference only.',
+                )}
+              </p>
 
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-[12px] font-medium text-foreground">
-              {t("Raw token")}
-            </span>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="h-7 gap-1.5 px-2 text-[12px]"
-              onClick={handleCopy}
-            >
-              {copied ? (
-                <Check className="h-3.5 w-3.5 text-emerald-500" />
+              {claims ? (
+                <div className="space-y-2">
+                  <h3 className="text-[12px] font-semibold text-foreground">
+                    {t('Claims')}
+                  </h3>
+                  <div className="divide-y divide-border rounded-lg border border-border bg-muted/30 px-4 py-1">
+                    <IdTokenClaimRow
+                      label={t('Audience')}
+                      value={
+                        claims.audience.length > 0
+                          ? claims.audience.join(', ')
+                          : t('Not set')
+                      }
+                    />
+                    <IdTokenClaimRow
+                      label={t('Issuer')}
+                      value={claims.issuer || t('Not set')}
+                    />
+                    <IdTokenClaimRow
+                      label={t('Subject')}
+                      value={claims.subject || t('Not set')}
+                    />
+                    <IdTokenClaimRow
+                      label={t('Issued')}
+                      value={formatClaimDate(claims.issuedAt)}
+                    />
+                    <IdTokenClaimRow
+                      label={t('Expires')}
+                      value={formatClaimDate(claims.expiresAt)}
+                    />
+                  </div>
+                </div>
               ) : (
-                <Copy className="h-3.5 w-3.5" />
+                <p className="text-[13px] text-muted-foreground">
+                  {t(
+                    'This token could not be decoded, so only the raw value is shown.',
+                  )}
+                </p>
               )}
-              {copied ? t("Copied") : t("Copy")}
-            </Button>
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-[12px] font-semibold text-foreground">
+                    {t('Raw token')}
+                  </h3>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 gap-1.5 px-2 text-[12px]"
+                    onClick={handleCopy}
+                  >
+                    {copied ? (
+                      <Check className="h-3.5 w-3.5 text-emerald-500" />
+                    ) : (
+                      <Copy className="h-3.5 w-3.5" />
+                    )}
+                    {copied ? t('Copied') : t('Copy')}
+                  </Button>
+                </div>
+                <code className="block rounded-md border border-border bg-muted/40 px-3 py-2 font-mono text-[11px] leading-relaxed break-all text-foreground">
+                  {token}
+                </code>
+              </div>
+            </div>
           </div>
-          <code className="block max-h-32 overflow-y-auto rounded-md border border-border bg-muted/40 px-3 py-2 font-mono text-[11px] leading-relaxed break-all text-foreground">
-            {token}
-          </code>
         </div>
-      </DialogContent>
-    </Dialog>
-  );
+      </BaseDrawer>
+    </>
+  )
 }
 
 function IdentitiesTab({
@@ -2681,7 +2698,9 @@ function IdentitiesTab({
                     {identity.providerEmail || '-'}
                   </TableCell>
                   <TableCell className="px-4 py-3">
-                    <IdentityIdTokenCell token={readIdentityIdToken(identity)} />
+                    <IdentityIdTokenCell
+                      token={readIdentityIdToken(identity)}
+                    />
                   </TableCell>
                   <TableCell className="px-4 py-3">
                     <DateTooltip

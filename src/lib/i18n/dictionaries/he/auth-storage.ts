@@ -10,6 +10,7 @@ export const heAuthStorageDictionary: Record<string, string> = {
   'Add a client ID and press Enter': 'הוסיפו client ID ולחצו Enter',
   'Add at least one native client ID, or set the client ID, so tokens can be matched to your app.': 'הוסיפו לפחות client ID נייטיב אחד, או הגדירו את ה-client ID, כדי שניתן יהיה להתאים טוקנים לאפליקציה שלכם.',
   'native': 'נייטיב',
+  'Claims': 'תביעות',
   'ID token': 'טוקן ID',
   'Provider ID token': 'טוקן ID של הספק',
   'Issuer': 'מנפיק',
