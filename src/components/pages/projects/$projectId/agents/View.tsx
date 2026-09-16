@@ -193,7 +193,7 @@ export function View() {
               {connected ? t('Connected') : t('Not connected')}
             </Badge>
           </div>
-          <h1 className="mt-6 text-center text-[28px] font-semibold tracking-tight text-foreground">
+          <h1 className="mt-6 text-center font-aeonik-pro text-[28px] font-normal tracking-tight text-foreground">
             {t('Connect Appwrite with your agents')}
           </h1>
           <p className="mt-4 max-w-2xl text-center text-[14px] leading-relaxed text-muted-foreground">
