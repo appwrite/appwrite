@@ -2381,8 +2381,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'בחרו יעדי משתמשים להודעה זו. לכל משתמש יכולים להיות מספר יעדים בכל ערוץ.',
   'Choose users using Add to target every matching channel target for each user.':
     "בחרו משתמשים באמצעות 'הוספה' כדי לשלוח לכל יעד ערוץ תואם של כל משתמש.",
-  'Choose when this message should be delivered. Time uses your local timezone.':
-    'בחרו מתי ההודעה תישלח. השעה לפי אזור הזמן המקומי שלכם.',
+  'Choose when this message should be delivered.': 'בחרו מתי ההודעה תישלח.',
   Color: 'צבע',
   Compose: 'כתיבה',
   'Confirm sending message': 'אישור שליחת הודעה',

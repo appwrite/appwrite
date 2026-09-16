@@ -1,10 +1,11 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, redirect } from '@tanstack/react-router'
 import { View } from '@/components/pages/projects/$projectId/databases/settings/Specification'
 import {
   databaseQueryOptions,
   databaseSpecificationsQueryOptions,
   dedicatedDatabaseSourceFromRouteKind,
 } from '@/lib/react-query/hooks'
+import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import {
   isDatabaseRouteKind,
   type DatabaseRouteKind,
@@ -24,6 +25,14 @@ export const Route = createFileRoute(
     const dbKind = (
       isDatabaseRouteKind(rawDbKind ?? '') ? rawDbKind : 'tablesdb'
     ) as DatabaseRouteKind
+
+    if (!getActiveProfileFeatures().databaseSpecifications) {
+      throw redirect({
+        to: '/projects/$projectId/databases/$dbKind/$databaseId/settings',
+        params: { projectId, dbKind, databaseId },
+        replace: true,
+      })
+    }
 
     await Promise.all([
       queryClient.ensureQueryData(

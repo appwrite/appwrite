@@ -39,14 +39,10 @@ export function getZonedParts(date: Date, timeZone: string): ZonedDateTimeParts 
 }
 
 function wallAsUtcMs(parts: ZonedDateTimeParts): number {
-  return Date.UTC(
-    parts.year,
-    parts.month - 1,
-    parts.day,
-    parts.hour,
-    parts.minute,
-    parts.second,
-  )
+  // setUTCFullYear: Date.UTC maps years 0-99 to 1900-1999.
+  const date = new Date(0)
+  date.setUTCFullYear(parts.year, parts.month - 1, parts.day)
+  return date.setUTCHours(parts.hour, parts.minute, parts.second, 0)
 }
 
 /** Convert a wall-clock time in `timeZone` to a UTC Date. */
@@ -63,10 +59,38 @@ export function zonedPartsToDate(
   return new Date(utcMs)
 }
 
+const DAY_MS = 86_400_000
+
+/**
+ * Wall clock in `timeZone` -> instant with Temporal "compatible" disambiguation
+ * (gap: shift forward using the pre-transition offset; overlap: earlier instant).
+ * Identical to `new Date(y, m - 1, d, h, min)` when `timeZone` is the runtime zone.
+ */
+export function zonedPartsToDateCompatible(
+  parts: ZonedDateTimeParts,
+  timeZone: string,
+): Date {
+  const wall = wallAsUtcMs(parts)
+  const offsetAt = (utcMs: number) =>
+    wallAsUtcMs(getZonedParts(new Date(utcMs), timeZone)) - utcMs
+  const before = offsetAt(wall - DAY_MS)
+  const after = offsetAt(wall + DAY_MS)
+  const matches = [before, after]
+    .map((offset) => wall - offset)
+    .filter(
+      (utcMs) => wallAsUtcMs(getZonedParts(new Date(utcMs), timeZone)) === wall,
+    )
+  if (matches.length > 0) return new Date(Math.min(...matches))
+  return new Date(wall - before)
+}
+
 /** Browser-local Date at midnight for the calendar day in `timeZone`. */
 export function zonedCalendarDate(date: Date, timeZone: string): Date {
   const parts = getZonedParts(date, timeZone)
-  return new Date(parts.year, parts.month - 1, parts.day)
+  const day = new Date(0)
+  day.setFullYear(parts.year, parts.month - 1, parts.day)
+  day.setHours(0, 0, 0, 0)
+  return day
 }
 
 export function isSameZonedDay(

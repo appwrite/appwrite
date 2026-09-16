@@ -13,6 +13,7 @@ import { formatCurrency, formatDate } from './utils'
 import { getInvoiceStatusBadgeVariant } from '@/lib/utils/status-badge'
 import {
   useOrganizationInvoices,
+  organizationBillingInvoicePresenceQueryOptions,
 } from '@/lib/react-query/hooks'
 import { useParams } from '@tanstack/react-router'
 import { useQueryClient } from '@tanstack/react-query'
@@ -121,6 +122,10 @@ export function PaymentHistory() {
         })
         await queryClient.invalidateQueries({
           queryKey: ['organization', orgId],
+        })
+        await queryClient.invalidateQueries({
+          queryKey:
+            organizationBillingInvoicePresenceQueryOptions(orgId).queryKey,
         })
       }
     } catch (error) {
@@ -237,7 +242,10 @@ export function PaymentHistory() {
 
   return (
     <>
-    <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+    <div
+      id="payment-history"
+      className="scroll-mt-24 rounded-xl border border-border bg-card/50 overflow-hidden"
+    >
       <div className="px-6 py-4 flex items-center justify-between">
         <h3 className="text-[15px] font-semibold text-foreground">
           {t('Payment history')}

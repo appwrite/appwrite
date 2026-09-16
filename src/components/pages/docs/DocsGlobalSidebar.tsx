@@ -68,7 +68,6 @@ import { isAgentDocsPathname } from '@/lib/docs/agent-docs-feature'
 import { isDatabaseTypeDocsPathnameHidden } from '@/lib/docs/database-docs-feature'
 import { isDomainsDocsPathname } from '@/lib/docs/domains-docs-feature'
 import { isFirewallDocsPathname } from '@/lib/docs/firewall-docs-feature'
-import { isStorageS3DocsPathname } from '@/lib/docs/storage-s3-docs-feature'
 import { isPartnersDocsPathname } from '@/lib/docs/partners-docs-feature'
 import { isDocsProductNavNew } from '@/lib/products/new-badge'
 import { ProductNewBadge } from '@/components/global/shared/ProductNewBadge'
@@ -78,7 +77,16 @@ import {
   isDocsNavGroup,
 } from '@/lib/docs/navigation'
 import type { DocsNavLink, DocsNavTree } from '@/lib/docs/types'
-import { getBlogPageUrl, getDocsPageUrl, getMarketingPageUrl, isBlogPageExternal, isDocsPageExternal, isMarketingPageExternal, parseBlogPagePath, parseDocsPagePath } from '@/lib/marketing/urls'
+import {
+  getBlogPageUrl,
+  getDocsPageUrl,
+  getMarketingPageUrl,
+  isBlogPageExternal,
+  isDocsPageExternal,
+  isMarketingPageExternal,
+  parseBlogPagePath,
+  parseDocsPagePath,
+} from '@/lib/marketing/urls'
 import { cn } from '@/lib/utils'
 import {
   SECONDARY_SIDEBAR_NAV_LINK_COLLAPSED_CLASS,
@@ -247,10 +255,8 @@ function DocsGlobalNavItem({
         ? isBlogPageExternal(marketingEnabled)
         : isChangelogPath
           ? isMarketingPageExternal(marketingEnabled)
-          : resolvedHref.startsWith('http')) ||
-    item.openInNewTab
-  const navAnalytics =
-    getDocsNavAnalyticsAction(item.href) ?? sectionAnalytics
+          : resolvedHref.startsWith('http')) || item.openInNewTab
+  const navAnalytics = getDocsNavAnalyticsAction(item.href) ?? sectionAnalytics
   const analytics = navAnalytics ? analyticsAttrs(navAnalytics) : undefined
 
   const showNewBadge = Boolean(item.new) || isDocsProductNavNew(item.href)
@@ -281,7 +287,9 @@ function DocsGlobalNavItem({
         />
       ) : null}
       {(!collapsed || isMobile) && (
-        <span className={SECONDARY_SIDEBAR_NAV_LINK_LABEL_CLASS}>{item.label}</span>
+        <span className={SECONDARY_SIDEBAR_NAV_LINK_LABEL_CLASS}>
+          {item.label}
+        </span>
       )}
       {(!collapsed || isMobile) && external ? (
         <ArrowUpRight
@@ -506,20 +514,10 @@ export function DocsGlobalSidebar({
       navigate({ to: '/docs', replace: true })
       return
     }
-    if (!isCloudProfile() && isStorageS3DocsPathname(pathname)) {
-      navigate({ to: '/docs', replace: true })
-      return
-    }
     if (isDatabaseTypeDocsPathnameHidden(pathname)) {
       navigate({ to: '/docs', replace: true })
     }
-  }, [
-    features.agent,
-    features.partnersDocs,
-    hasMounted,
-    navigate,
-    pathname,
-  ])
+  }, [features.agent, features.partnersDocs, hasMounted, navigate, pathname])
 
   return (
     <TooltipProvider>
@@ -537,7 +535,11 @@ export function DocsGlobalSidebar({
           )}
         >
           <nav
-            className={cn('flex-1 overflow-y-auto px-3 py-4', DOCS_NAV_TREE_GAP_CLASS, DOCS_NAV_SCROLL_CLASS)}
+            className={cn(
+              'flex-1 overflow-y-auto px-3 py-4',
+              DOCS_NAV_TREE_GAP_CLASS,
+              DOCS_NAV_SCROLL_CLASS,
+            )}
             role="navigation"
             aria-label="Docs navigation"
           >
@@ -559,7 +561,9 @@ export function DocsGlobalSidebar({
             'absolute end-0 top-1/2 z-10 flex h-6 w-6 shrink-0 -translate-y-1/2 cursor-pointer items-center justify-center rounded-md border border-border bg-card text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring',
             SIDEBAR_EDGE_TOGGLE_OVERFLOW,
           )}
-          aria-label={collapsed ? 'Expand docs navigation' : 'Collapse docs navigation'}
+          aria-label={
+            collapsed ? 'Expand docs navigation' : 'Collapse docs navigation'
+          }
         >
           <ChevronLeft
             className={cn(
@@ -584,7 +588,9 @@ export function DocsGlobalSidebar({
         inert={!mobileOpen ? true : undefined}
       >
         <div className="flex h-14 items-center justify-between px-4">
-          <p className="text-[14px] font-semibold text-foreground">Documentation</p>
+          <p className="text-[14px] font-semibold text-foreground">
+            Documentation
+          </p>
           <button
             type="button"
             onClick={onMobileClose}
@@ -596,7 +602,11 @@ export function DocsGlobalSidebar({
         </div>
 
         <nav
-          className={cn('flex-1 overflow-y-auto px-4 py-2', DOCS_NAV_TREE_GAP_CLASS, DOCS_NAV_SCROLL_CLASS)}
+          className={cn(
+            'flex-1 overflow-y-auto px-4 py-2',
+            DOCS_NAV_TREE_GAP_CLASS,
+            DOCS_NAV_SCROLL_CLASS,
+          )}
           role="navigation"
           aria-label="Mobile docs navigation"
         >

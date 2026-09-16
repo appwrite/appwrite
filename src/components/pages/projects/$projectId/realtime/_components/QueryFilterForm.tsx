@@ -140,6 +140,7 @@ export function QueryFilterForm({
             className={INPUT_CLASS}
             disabled={disabled}
             clearable
+            timeZoneMode="preferred"
           />
         </div>
       )

@@ -7,7 +7,6 @@ import {
   type ReactNode,
 } from 'react'
 import { useAuth } from '@/components/global/auth/RequireAuth'
-import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useConnectProjectTab } from '@/lib/react-query/hooks'
 import {
   ConnectProject,
@@ -34,27 +33,24 @@ export function ProjectConnectDialogProvider({
   children: ReactNode
 }) {
   const { account } = useAuth()
-  const { isCloud } = useConsoleProfile()
   const { tab: savedConnectTab, setTab: persistConnectTab } =
     useConnectProjectTab(account)
   const [open, setOpen] = useState(false)
-  const [initialConnectTab, setInitialConnectTab] =
-    useState<ConnectProjectTab>(DEFAULT_CONNECT_PROJECT_TAB)
+  const [initialConnectTab, setInitialConnectTab] = useState<ConnectProjectTab>(
+    DEFAULT_CONNECT_PROJECT_TAB,
+  )
 
   const openConnect = useCallback(
     (tab?: ConnectProjectTab) => {
-      let nextTab =
+      const nextTab =
         tab ??
         (savedConnectTab as ConnectProjectTab) ??
         DEFAULT_CONNECT_PROJECT_TAB
-      if (nextTab === 's3' && !isCloud) {
-        nextTab = DEFAULT_CONNECT_PROJECT_TAB
-      }
       setInitialConnectTab(nextTab)
       persistConnectTab(nextTab)
       setOpen(true)
     },
-    [isCloud, persistConnectTab, savedConnectTab],
+    [persistConnectTab, savedConnectTab],
   )
 
   const value = useMemo(

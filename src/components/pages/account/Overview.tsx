@@ -384,7 +384,9 @@ export function UpdatePasswordSection() {
               <Label htmlFor="old-password">{t('Old password')}</Label>
               <Input
                 id="old-password"
+                name="current-password"
                 type="password"
+                autoComplete="current-password"
                 placeholder={t('Enter password')}
                 value={oldPassword}
                 onChange={(e) => setOldPassword(e.target.value)}
@@ -397,7 +399,9 @@ export function UpdatePasswordSection() {
               <Label htmlFor="new-password">{t('New password')}</Label>
               <Input
                 id="new-password"
+                name="new-password"
                 type="password"
+                autoComplete="new-password"
                 placeholder={t('Enter password')}
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}

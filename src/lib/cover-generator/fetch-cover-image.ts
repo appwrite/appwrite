@@ -22,6 +22,7 @@ function getCoverImageFieldValues(data: CoverRenderData): (string | undefined)[]
     case 'title-icon':
       return [data.icon]
     case 'screenshot':
+    case 'screenshot-two-line':
     case 'screenshot-side':
     case 'screenshot-angled':
       return [data.screenshot]

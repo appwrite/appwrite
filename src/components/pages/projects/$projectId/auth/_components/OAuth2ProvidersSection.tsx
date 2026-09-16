@@ -56,8 +56,10 @@ import { canUpdateProjectOAuth2Provider } from '@/lib/oauth2/update-project-oaut
 import {
   getOAuth2ProviderDisplayName,
   getOAuth2ProviderIconPath,
+  isOAuth2ProviderNew,
   OAUTH2_POPULAR_PROVIDER_IDS,
 } from '@/lib/oauth2/provider-display'
+import { ProductNewBadge } from '@/components/global/shared/ProductNewBadge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Check,
@@ -938,6 +940,9 @@ export function OAuth2ProvidersSection({
               <span className="text-[13px] font-medium text-foreground truncate">
                 {getOAuth2ProviderDisplayName(row.$id)}
               </span>
+              {isOAuth2ProviderNew(row.$id) ? (
+                <ProductNewBadge label={t('New')} />
+              ) : null}
             </div>
             <Badge
               variant={enabled ? 'success' : 'secondary'}
