@@ -1274,4 +1274,7 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Not set': 'לא הוגדר',
   'Browser timezone': 'אזור הזמן של הדפדפן',
   'Stored in UTC': 'נשמר ב-UTC',
+  'Appwrite 2.0 is launching on Product Hunt today':
+    'Appwrite 2.0 מושק היום ב-Product Hunt',
+  'Share your take': 'שתפו את דעתכם',
 }

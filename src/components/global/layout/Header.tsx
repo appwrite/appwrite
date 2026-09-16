@@ -36,7 +36,6 @@ import {
   LayoutDashboard,
   BookOpen,
   Clock,
-  ExternalLink,
 } from 'lucide-react'
 import {
   useAuth,
@@ -625,7 +624,6 @@ export function ConsoleHeader({
   const accountMenuLinks = getAccountMenuLinks({
     pathname: location.pathname,
     showMarketingNav,
-    isCloud,
   })
   const showCenterSearch = centerSearch && !hideSearch && !preLaunch
   const showRightSearch = !hideSearch && !centerSearch && !preLaunch
@@ -1890,23 +1888,6 @@ export function ConsoleHeader({
                               <span>{headerCopy.accountMenu.changelog}</span>
                             </Link>
                           )}
-                        </DropdownMenuItem>
-                      )}
-
-                      {/* Temporary: remove once the old console is retired.
-                        Cloud only: self-hosted 2.0 ships no legacy console. */}
-                      {accountMenuLinks.includes('oldConsole') && (
-                        <DropdownMenuItem asChild>
-                          <a
-                            href="https://cloud.appwrite.io"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className={ACCOUNT_MENU_ITEM_CLASS}
-                            {...analyticsAttrs('header-old-console')}
-                          >
-                            <ExternalLink className="h-4 w-4" />
-                            <span>{headerCopy.accountMenu.oldConsole}</span>
-                          </a>
                         </DropdownMenuItem>
                       )}
                     </>

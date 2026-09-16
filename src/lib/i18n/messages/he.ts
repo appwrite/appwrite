@@ -76,8 +76,6 @@ export const heCatalog: EnCatalog = {
         enabled: 'מופעל',
         disabled: 'כבוי',
         console: 'קונסול',
-        // Temporary: remove once the old console is retired
-        oldConsole: 'קונסול ישן',
         home: 'בית',
         docs: 'דוקומנטציה',
         changelog: 'יומן שינויים',

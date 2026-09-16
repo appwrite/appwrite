@@ -2128,6 +2128,22 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 { category: 'Databases' },
               ),
               createProfileFeatureFlagItem(
+                'Database specifications',
+                'Specification settings tab, route, and sidebar compute card for product databases.',
+                'databaseSpecifications',
+                profileId,
+                features.databaseSpecifications,
+                { category: 'Databases' },
+              ),
+              createProfileFeatureFlagItem(
+                'Account applications',
+                'Account Applications page listing OAuth2 apps authorized on the console account.',
+                'accountApplications',
+                profileId,
+                features.accountApplications,
+                { category: 'Auth & security' },
+              ),
+              createProfileFeatureFlagItem(
                 'Console user verification',
                 'Require email verification after signup; redirect to verify-email page on cloud.',
                 'userVerification',

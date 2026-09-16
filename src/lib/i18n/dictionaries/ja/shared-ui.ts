@@ -1233,4 +1233,7 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Not set': '未設定',
   'Browser timezone': 'ブラウザのタイムゾーン',
   'Stored in UTC': 'UTC での保存値',
+  'Appwrite 2.0 is launching on Product Hunt today':
+    'Appwrite 2.0 が本日 Product Hunt でローンチ',
+  'Share your take': 'フィードバックを送る',
 }
