@@ -3,6 +3,19 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "well-known-change-password-url",
+    "href": "/blog/post/well-known-change-password-url",
+    "title": "Support the well-known change password URL with Appwrite Auth",
+    "description": "Password managers open /.well-known/change-password when they find a leaked or weak password. Add the redirect and a change password page backed by Appwrite Auth.",
+    "date": "2026-09-16",
+    "lastUpdated": "2026-09-16",
+    "timeToRead": 9,
+    "author": "atharva",
+    "category": "tutorials",
+    "cover": "/images/blog/well-known-change-password-url/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "appwrite-init-2026-recap",
     "href": "/blog/post/appwrite-init-2026-recap",
     "title": "Appwrite Init 2026 recap: Everything we shipped",
@@ -14,19 +27,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "category": "init",
     "featured": false,
     "cover": "/images/blog/appwrite-init-2026-recap/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "well-known-change-password-url",
-    "href": "/blog/post/well-known-change-password-url",
-    "title": "Support the well-known change password URL with Appwrite Auth",
-    "description": "Password managers open /.well-known/change-password when they find a leaked or weak password. Add the redirect and a change password page backed by Appwrite Auth.",
-    "date": "2026-09-15",
-    "lastUpdated": "2026-09-15",
-    "timeToRead": 9,
-    "author": "atharva",
-    "category": "tutorials",
-    "cover": "/images/blog/well-known-change-password-url/cover.avif",
     "hasCover": true
   },
   {
