@@ -233,7 +233,7 @@ const ORG_DELETION_STEP_IDS = new Set(['projects', 'members', 'domains'])
 /**
  * Compliance gate. Still fails closed on anything the run cannot account for,
  * but an addon it just disabled is not a real block: the server reads
- * `currentValue` and ignores the `nextValue = 0` that schedules the removal.
+ * `currentValue` and ignores the `nextValue = 0` that marks it for removal.
  *
  * `strict` is false once the deletions have run: they cannot be given back, so
  * only an explicit block may abort the plan update.
@@ -2030,10 +2030,7 @@ export function ChangePlanWizardFullscreen() {
 
           {selectedPlanIsFree && (
             <WarningAlert title={t('Downgrading to Free Plan')}>
-              {t('Your plan will change on')}{' '}
-              {organization?.billingPlanDowngrade ||
-                t('the end of your billing period')}
-              .{' '}
+              {t('Your plan changes immediately.')}{' '}
               {t(
                 'You will lose access to premium features and organization members beyond the free limit will be removed.',
               )}
@@ -2092,7 +2089,6 @@ export function ChangePlanWizardFullscreen() {
             ? getBillingPlanDisplayLabel(selectedPlan)
             : undefined
         }
-        planChangeDate={organization?.billingNextInvoiceDate}
         deletions={confirmDeletions}
         deletedOrganizationName={orgToDelete?.name}
         confirming={isSubmitting}
