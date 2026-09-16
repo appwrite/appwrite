@@ -5,10 +5,11 @@ parameters:
     ignoreErrors:
         # Utopia\Telemetry\Adapter\Test creates anonymous subclasses of
         # Counter/Gauge/Histogram/UpDownCounter that expose a public $values
-        # array. The declared base-class return types don't expose it, so
-        # phpstan can't see the runtime-added property from tests.
+        # array, and of ObservableGauge that exposes its $callbacks. The
+        # declared base-class return types don't expose them, so phpstan
+        # can't see the runtime-added properties from tests.
         -
-            message: '#Access to an undefined property Utopia\\Telemetry\\(Counter|Gauge|UpDownCounter|Histogram)::\$values\.#'
+            message: '#Access to an undefined property Utopia\\Telemetry\\(Counter|Gauge|UpDownCounter|Histogram|ObservableGauge)::\$(values|callbacks)\.#'
             path: tests/*
         # phpredis::getLastError() is guaranteed on the real Redis class; the
         # method_exists() guard stays for cases where a non-phpredis driver

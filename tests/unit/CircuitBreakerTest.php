@@ -9,7 +9,6 @@ use Utopia\CircuitBreaker\Adapter;
 use Utopia\CircuitBreaker\CircuitBreaker;
 use Utopia\CircuitBreaker\CircuitState;
 use Utopia\Telemetry\Adapter\Test as TestTelemetry;
-use Utopia\Telemetry\UpDownCounter;
 
 final class CircuitBreakerTest extends TestCase
 {
@@ -215,10 +214,12 @@ final class CircuitBreakerTest extends TestCase
         $this->assertSame([1], $telemetry->counters['breaker.callback_failures']->values);
         $this->assertSame([1], $telemetry->counters['breaker.fallbacks']->values);
         $this->assertSame([1], $telemetry->counters['breaker.transitions']->values);
-        $this->assertSame([1, -1], $telemetry->upDownCounters['breaker.active_calls']->values);
-        $this->assertSame([1], $telemetry->gauges['breaker.state']->values);
-        $this->assertSame([1], $telemetry->gauges['breaker.failures']->values);
-        $this->assertSame([0], $telemetry->gauges['breaker.successes']->values);
+        $this->assertSame([
+            'breaker.active_calls' => 0,
+            'breaker.state' => 1,
+            'breaker.failures' => 1,
+            'breaker.successes' => 0,
+        ], $this->observe($telemetry));
         $this->assertCount(1, $telemetry->gauges['breaker.event.timestamp']->values);
     }
 
@@ -240,10 +241,12 @@ final class CircuitBreakerTest extends TestCase
         $this->assertSame([1], $telemetry->counters['edge.breaker.callback_failures']->values);
         $this->assertSame([1], $telemetry->counters['edge.breaker.fallbacks']->values);
         $this->assertSame([1], $telemetry->counters['edge.breaker.transitions']->values);
-        $this->assertSame([1, -1], $telemetry->upDownCounters['edge.breaker.active_calls']->values);
-        $this->assertSame([1], $telemetry->gauges['edge.breaker.state']->values);
-        $this->assertSame([1], $telemetry->gauges['edge.breaker.failures']->values);
-        $this->assertSame([0], $telemetry->gauges['edge.breaker.successes']->values);
+        $this->assertSame([
+            'edge.breaker.active_calls' => 0,
+            'edge.breaker.state' => 1,
+            'edge.breaker.failures' => 1,
+            'edge.breaker.successes' => 0,
+        ], $this->observe($telemetry));
         $this->assertCount(1, $telemetry->gauges['edge.breaker.event.timestamp']->values);
         $this->assertArrayNotHasKey('breaker.calls', $telemetry->counters);
     }
@@ -256,9 +259,7 @@ final class CircuitBreakerTest extends TestCase
         $this->assertSame(CircuitState::CLOSED, $breaker->getState());
         $this->assertSame(0, $breaker->getFailureCount());
         $this->assertSame(0, $breaker->getSuccessCount());
-        $this->assertArrayNotHasKey('breaker.state', $telemetry->gauges);
-        $this->assertArrayNotHasKey('breaker.failures', $telemetry->gauges);
-        $this->assertArrayNotHasKey('breaker.successes', $telemetry->gauges);
+        $this->assertArrayNotHasKey('breaker.event.timestamp', $telemetry->gauges);
         $this->assertArrayNotHasKey('breaker.calls', $telemetry->counters);
         $this->assertArrayNotHasKey('breaker.callback_failures', $telemetry->counters);
         $this->assertArrayNotHasKey('breaker.fallbacks', $telemetry->counters);
@@ -301,10 +302,13 @@ final class CircuitBreakerTest extends TestCase
         $this->assertArrayNotHasKey('breaker.event.timestamp', $telemetry->gauges);
     }
 
-    public function testActiveCallTelemetryUsesPostUpdateState(): void
+    /**
+     * A breaker whose open timeout has elapsed moves to half-open on the next call; the state
+     * observed while that probe runs must be the post-update one, with the probe in flight.
+     */
+    public function testStateObservedDuringACallIsThePostUpdateState(): void
     {
-        $store = new ActiveCallAttributeStore();
-        $telemetry = new ActiveCallTelemetry($store);
+        $telemetry = new TestTelemetry();
         $cache = new class implements Adapter {
             /**
              * @var array<string, int|string>
@@ -353,16 +357,20 @@ final class CircuitBreakerTest extends TestCase
             minimumThroughput: 1,
         );
 
+        $observed = null;
         $result = $breaker->call(
             open: static fn(): string => 'fallback',
             close: static fn(): string => 'closed',
-            halfOpen: static fn(): string => 'probe',
+            halfOpen: function () use (&$observed, $telemetry): string {
+                $observed = $this->observe($telemetry);
+
+                return 'probe';
+            },
         );
 
         $this->assertSame('probe', $result);
-        $this->assertCount(2, $store->attributes);
-        $this->assertSame(CircuitState::HALF_OPEN->value, $store->attributes[0]['circuit_breaker.state']);
-        $this->assertSame(CircuitState::HALF_OPEN->value, $store->attributes[1]['circuit_breaker.state']);
+        $this->assertSame(2, $observed['breaker.state']);
+        $this->assertSame(1, $observed['breaker.active_calls']);
     }
 
     public function testRejectsEmptyCacheKeyWhenCacheIsConfigured(): void
@@ -430,7 +438,116 @@ final class CircuitBreakerTest extends TestCase
         $breaker->trip();
 
         $this->assertSame([1], $telemetry->counters['breaker.transitions']->values);
-        $this->assertSame([1], $telemetry->gauges['breaker.state']->values);
+        $this->assertSame(1, $this->observe($telemetry)['breaker.state']);
+    }
+
+    /**
+     * A breaker that receives no calls must still report its state on every collection,
+     * and a call in flight must be visible while it runs and gone once it returns.
+     */
+    public function testGaugesAreObservedAtCollectionTime(): void
+    {
+        $telemetry = new TestTelemetry();
+        $breaker = new CircuitBreaker(telemetry: $telemetry, minimumThroughput: 1);
+
+        $this->assertSame([
+            'breaker.active_calls' => 0,
+            'breaker.state' => 0,
+            'breaker.failures' => 0,
+            'breaker.successes' => 0,
+        ], $this->observe($telemetry));
+        $this->assertArrayNotHasKey('breaker.calls', $telemetry->counters);
+
+        $inFlight = null;
+        $breaker->call(
+            open: static fn(): string => 'fallback',
+            close: function () use (&$inFlight, $telemetry): string {
+                $inFlight = $this->observe($telemetry)['breaker.active_calls'];
+
+                return 'ok';
+            },
+        );
+
+        $this->assertSame(1, $inFlight);
+        $this->assertSame(0, $this->observe($telemetry)['breaker.active_calls']);
+        $this->assertSame([1], $telemetry->counters['breaker.calls']->values);
+    }
+
+    /**
+     * A discarded breaker must not be kept alive by its observation, and must
+     * stop reporting; a breaker bound twice to the same adapter, or moved to
+     * another one, must report exactly once, on the adapter it is bound to.
+     */
+    public function testObservationsFollowTheBreakerLifecycle(): void
+    {
+        $first = new TestTelemetry();
+        $second = new TestTelemetry();
+        $kept = new CircuitBreaker(key: 'kept', telemetry: $first);
+
+        $discarded = new CircuitBreaker(key: 'discarded', telemetry: $first);
+        $reference = \WeakReference::create($discarded);
+        unset($discarded);
+        gc_collect_cycles();
+
+        $this->assertNotInstanceOf(\Utopia\CircuitBreaker\CircuitBreaker::class, $reference->get());
+        $this->assertSame(['kept' => 0], $this->observeSeries($first)['breaker.state']);
+        $this->assertCount(1, $first->observableGauges['breaker.state']->callbacks);
+
+        $kept->setTelemetry($first);
+        $this->assertSame(['kept' => 0], $this->observeSeries($first)['breaker.state']);
+        $this->assertCount(1, $first->observableGauges['breaker.state']->callbacks);
+
+        $kept->setTelemetry($second);
+        $this->assertSame([], $this->observeSeries($first)['breaker.state']);
+        $this->assertSame(['kept' => 0], $this->observeSeries($second)['breaker.state']);
+    }
+
+    /**
+     * The verdict is shared through the cache adapter. A breaker that receives
+     * no calls must still report a circuit another process tripped, and must
+     * not move an open circuit to half-open merely because it was collected.
+     */
+    public function testIdleBreakerObservesTheSharedState(): void
+    {
+        $cache = $this->createArrayAdapter();
+        $telemetry = new TestTelemetry();
+        $idle = new CircuitBreaker(timeout: 30, cache: $cache, key: 'users-api', telemetry: $telemetry);
+        $active = new CircuitBreaker(timeout: 30, cache: $cache, key: 'users-api');
+
+        $this->assertSame(0, $this->observe($telemetry)['breaker.state']);
+
+        $active->trip();
+
+        $this->assertSame(1, $this->observe($telemetry)['breaker.state']);
+        $this->assertSame(1, $this->observe($telemetry)['breaker.state']);
+        $this->assertTrue($idle->isOpen());
+    }
+
+    /**
+     * @return array<string, float|int> gauge name => last observed value
+     */
+    private function observe(TestTelemetry $telemetry): array
+    {
+        return array_map(static fn(array $series): float|int => end($series), array_filter($this->observeSeries($telemetry)));
+    }
+
+    /**
+     * @return array<string, array<string, float|int>> gauge name => breaker name => observed value
+     */
+    private function observeSeries(TestTelemetry $telemetry): array
+    {
+        $observed = [];
+        foreach ($telemetry->observableGauges as $name => $gauge) {
+            $observed[$name] = [];
+            foreach ($gauge->callbacks as $callback) {
+                $callback(function (float|int $value, iterable $attributes = []) use (&$observed, $name): void {
+                    $attributes = iterator_to_array($attributes);
+                    $observed[$name][$attributes['circuit_breaker.name']] = $value;
+                });
+            }
+        }
+
+        return $observed;
     }
 
     private function createArrayAdapter(): Adapter
@@ -465,47 +582,5 @@ final class CircuitBreakerTest extends TestCase
                 unset($this->values[$key]);
             }
         };
-    }
-}
-
-final class ActiveCallAttributeStore
-{
-    /**
-     * @var list<array<non-empty-string, array<mixed>|bool|float|int|string|null>>
-     */
-    public array $attributes = [];
-}
-
-final class ActiveCallTelemetry extends TestTelemetry
-{
-    public function __construct(private readonly ActiveCallAttributeStore $store) {}
-
-    /**
-     * @param array<string, mixed> $advisory
-     */
-    public function createUpDownCounter(
-        string $name,
-        ?string $unit = null,
-        ?string $description = null,
-        array $advisory = [],
-    ): UpDownCounter {
-        if ($name !== 'breaker.active_calls') {
-            return parent::createUpDownCounter($name, $unit, $description, $advisory);
-        }
-
-        $counter = new class ($this->store) extends UpDownCounter {
-            public function __construct(private readonly ActiveCallAttributeStore $store) {}
-
-            /**
-             * @param iterable<non-empty-string, array<mixed>|bool|float|int|string|null> $attributes
-             */
-            public function add(float|int $amount, iterable $attributes = []): void
-            {
-                $this->store->attributes[] = iterator_to_array($attributes);
-            }
-        };
-        $this->upDownCounters[$name] = $counter;
-
-        return $counter;
     }
 }
