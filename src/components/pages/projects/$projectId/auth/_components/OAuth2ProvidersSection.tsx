@@ -1104,7 +1104,7 @@ export function OAuth2ProvidersSection({
     : ''
 
   /**
-   * With a native card below it, this card is one of two switches, so it is
+   * Paired with a native card, this card is one of two switches, so it is
    * named for its flow instead of claiming the whole provider is off.
    */
   const browserSignInLabel = providerSupportsNative
@@ -1308,6 +1308,22 @@ export function OAuth2ProvidersSection({
                         )}
                 </p>
 
+                {providerSupportsNative && selectedCatalog ? (
+                  <OAuth2NativeSignInCard
+                    param={
+                      selectedCatalog.parameters.find(
+                        (p) => p.$id === NATIVE_CLIENT_IDS_PARAM_ID,
+                      ) as CatalogParameter
+                    }
+                    enabled={formNativeEnabled}
+                    onEnabledChange={setFormNativeEnabled}
+                    clientIds={formNativeClientIds}
+                    onClientIdsChange={setFormNativeClientIds}
+                    error={validationTouched ? nativeSignInError : undefined}
+                    disabled={updateMutation.isPending}
+                  />
+                ) : null}
+
                 <div className="rounded-lg border border-border bg-muted/30 p-4">
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
@@ -1329,22 +1345,6 @@ export function OAuth2ProvidersSection({
                     />
                   </div>
                 </div>
-
-                {providerSupportsNative && selectedCatalog ? (
-                  <OAuth2NativeSignInCard
-                    param={
-                      selectedCatalog.parameters.find(
-                        (p) => p.$id === NATIVE_CLIENT_IDS_PARAM_ID,
-                      ) as CatalogParameter
-                    }
-                    enabled={formNativeEnabled}
-                    onEnabledChange={setFormNativeEnabled}
-                    clientIds={formNativeClientIds}
-                    onClientIdsChange={setFormNativeClientIds}
-                    error={validationTouched ? nativeSignInError : undefined}
-                    disabled={updateMutation.isPending}
-                  />
-                ) : null}
 
                 {formEnabled && selectedCatalog && selectedProviderId
                   ? selectedProviderId === 'oidc' ? (
