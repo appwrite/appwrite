@@ -6,9 +6,10 @@ use Exception;
 use Redis as Client;
 use Throwable;
 use Utopia\Cache\Adapter;
-use Utopia\Cache\Adapter\Redis\Envelope;
 use Utopia\Cache\Adapter\Redis\Leasable;
 use Utopia\Cache\Adapter\Redis\NoScript;
+use Utopia\Cache\Codec;
+use Utopia\Cache\Codec\Json;
 use Utopia\Cache\Feature\Batchable;
 use Utopia\Cache\Feature\Retryable;
 
@@ -46,10 +47,12 @@ class Redis extends Leasable implements Adapter, Batchable, Retryable
     private int $dbIndex = 0;
 
     /**
-     * Redis constructor.
+     * @param  Codec  $codec how values are stored; Json is the wire format every release so far has written
      */
-    public function __construct(Client $redis)
+    public function __construct(Client $redis, Codec $codec = new Json())
     {
+        parent::__construct($codec);
+
         $this->host = $redis->getHost();
         $this->port = $redis->getPort();
         $timeout = $redis->getTimeout();
@@ -110,7 +113,7 @@ class Redis extends Leasable implements Adapter, Batchable, Retryable
             return false;
         }
 
-        return Envelope::decode($redis_string, $ttl, time());
+        return $this->envelope->decode($redis_string, $ttl, time());
     }
 
     /**
@@ -144,7 +147,7 @@ class Redis extends Leasable implements Adapter, Batchable, Retryable
                 continue;
             }
 
-            $decoded = Envelope::decode($value, $ttl, $now);
+            $decoded = $this->envelope->decode($value, $ttl, $now);
             if ($decoded !== false) {
                 $result[(string) $field] = $decoded;
             }
@@ -174,7 +177,7 @@ class Redis extends Leasable implements Adapter, Batchable, Retryable
         }
 
         try {
-            $value = Envelope::encode($data, time());
+            $value = $this->envelope->encode($data, time());
             $this->execute(fn(): \Redis|int|false => $this->redis->hSet($key, $hash, $value));
 
             if ($ttl > 0) {
@@ -202,7 +205,7 @@ class Redis extends Leasable implements Adapter, Batchable, Retryable
             if ($this->isReserved($field)) {
                 continue;
             }
-            $map[$field] = Envelope::encode($value, time());
+            $map[$field] = $this->envelope->encode($value, time());
         }
 
         if ($map === []) {
@@ -241,7 +244,7 @@ class Redis extends Leasable implements Adapter, Batchable, Retryable
             return false;
         }
 
-        $value = Envelope::touch($redis_string, time());
+        $value = $this->envelope->touch($redis_string, time());
         if ($value === false) {
             return false;
         }

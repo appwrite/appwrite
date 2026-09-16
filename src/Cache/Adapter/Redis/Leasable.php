@@ -3,6 +3,9 @@
 namespace Utopia\Cache\Adapter\Redis;
 
 use Throwable;
+use Utopia\Cache\Codec;
+use Utopia\Cache\Codec\Json;
+use Utopia\Cache\Envelope;
 
 /**
  * Shared generation-lease + purge-tombstone behaviour for the Redis-protocol
@@ -117,6 +120,13 @@ abstract class Leasable implements \Utopia\Cache\Feature\Leasable
      */
     protected int $leaseGraceWindow = 0;
 
+    protected readonly Envelope $envelope;
+
+    public function __construct(Codec $codec = new Json())
+    {
+        $this->envelope = new Envelope($codec);
+    }
+
     /**
      * @param  int  $milliseconds grace window after a purge (0 disables the tombstone)
      */
@@ -154,7 +164,7 @@ abstract class Leasable implements \Utopia\Cache\Feature\Leasable
         }
 
         try {
-            $value = Envelope::encode($data, time());
+            $value = $this->envelope->encode($data, time());
             $stored = $this->leaseRun(self::LUA_SAVE_WITH_LEASE, $key, [
                 $hash, $value, $generation, (string) $this->leaseGraceWindow,
             ]);

@@ -58,6 +58,22 @@ echo $data;
 | `Pool` | Checks an adapter out of a `utopia-php/pools` pool per call. |
 | `CircuitBreaker` | Wraps an adapter so a failing cache stops being called. |
 
+## Codecs
+
+The Redis, Redis\Multiplexing, RedisCluster and Hazelcast adapters store each value through a `Utopia\Cache\Codec`. The default is `Codec\Json`, which writes the same JSON payloads as every earlier release, so existing caches keep working. Pass `Codec\Igbinary` for smaller, faster binary payloads that need the `igbinary` extension:
+
+```php
+<?php
+
+use Utopia\Cache\Adapter\Redis as RedisAdapter;
+use Utopia\Cache\Cache;
+use Utopia\Cache\Codec\Igbinary;
+
+$cache = new Cache(new RedisAdapter($redis, new Igbinary()));
+```
+
+Adapters treat a payload they cannot decode as a miss, so switching the codec on a live cache re-populates it instead of failing. The Memcached adapter serializes through the extension's own `OPT_SERIALIZER` option, and Filesystem and Memory store values as given, so none of them take a codec.
+
 ## System requirements
 
 The library requires PHP 8.4 or later. The Redis, Memcached and Hazelcast adapters need the matching extension — see the `suggest` block in `composer.json`.
@@ -81,3 +97,11 @@ docker compose down -v
 ## Copyright and license
 
 The MIT License (MIT) [http://www.opensource.org/licenses/mit-license.php](http://www.opensource.org/licenses/mit-license.php)
+
+## Benchmarks
+
+The codec benchmark times each codec alone and through the Redis adapter. It needs the `igbinary` extension and starts Redis from the package's compose file when nothing is listening on the offset port:
+
+```bash
+composer bench
+```

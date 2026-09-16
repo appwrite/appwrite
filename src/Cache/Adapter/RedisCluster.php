@@ -6,6 +6,9 @@ use Exception;
 use RedisCluster as Client;
 use Throwable;
 use Utopia\Cache\Adapter;
+use Utopia\Cache\Codec;
+use Utopia\Cache\Codec\Json;
+use Utopia\Cache\Envelope;
 use Utopia\Cache\Feature\Batchable;
 use Utopia\Cache\Feature\Retryable;
 
@@ -15,11 +18,17 @@ class RedisCluster implements Adapter, Batchable, Retryable
 
     private int $retryDelay = 1000;
 
+    private readonly Envelope $envelope;
+
     /**
      * @param  array<string>  $seeds
      * @param  string|array<string>|null  $auth  Password string or ['username', 'password'] array for ACL
+     * @param  Codec  $codec how values are stored; Json is the wire format every release so far has written
      */
-    public function __construct(protected Client $redis, protected array $seeds, protected ?string $name = null, private readonly float $timeout = 1.5, private readonly float $readTimeout = 1.5, private readonly bool $persistent = false, private readonly string|array|null $auth = null) {}
+    public function __construct(protected Client $redis, protected array $seeds, protected ?string $name = null, private readonly float $timeout = 1.5, private readonly float $readTimeout = 1.5, private readonly bool $persistent = false, private readonly string|array|null $auth = null, Codec $codec = new Json())
+    {
+        $this->envelope = new Envelope($codec);
+    }
 
     /**
      * @param  int  $maxRetries (0-10)
@@ -58,19 +67,9 @@ class RedisCluster implements Adapter, Batchable, Retryable
             return false;
         }
 
-        $cache = Json::decode($redis_string);
-
         // A purged key keeps its field until re-cached, holding a value that
-        // is not an envelope.
-        if (! \is_array($cache) || ! isset($cache['time'], $cache['data'])) {
-            return false;
-        }
-
-        if ($cache['time'] + $ttl > time()) { // Cache is valid
-            return $cache['data'];
-        }
-
-        return false;
+        // is not an envelope; decode() reports that as a miss.
+        return $this->envelope->decode($redis_string, $ttl, time());
     }
 
     /**
@@ -95,16 +94,9 @@ class RedisCluster implements Adapter, Batchable, Retryable
                 continue;
             }
 
-            $cache = Json::decode($value);
-            if (! \is_array($cache)) {
-                continue;
-            }
-            if (! isset($cache['time'], $cache['data'])) {
-                continue;
-            }
-
-            if ($cache['time'] + $ttl > $now) {
-                $result[(string) $field] = $cache['data'];
+            $decoded = $this->envelope->decode($value, $ttl, $now);
+            if ($decoded !== false) {
+                $result[(string) $field] = $decoded;
             }
         }
 
@@ -128,15 +120,7 @@ class RedisCluster implements Adapter, Batchable, Retryable
         }
 
         try {
-            $value = json_encode([
-                'time' => time(),
-                'data' => $data,
-            ], flags: JSON_THROW_ON_ERROR);
-        } catch (Throwable) {
-            return false;
-        }
-
-        try {
+            $value = $this->envelope->encode($data, time());
             $this->execute(fn(): int => $this->redis->hSet($key, $hash, $value));
 
             if ($ttl > 0) {
@@ -161,10 +145,7 @@ class RedisCluster implements Adapter, Batchable, Retryable
         $map = [];
         foreach ($data as $field => $value) {
             try {
-                $map[(string) $field] = json_encode([
-                    'time' => time(),
-                    'data' => $value,
-                ], flags: JSON_THROW_ON_ERROR);
+                $map[(string) $field] = $this->envelope->encode($value, time());
             } catch (Throwable) {
                 return false;
             }
@@ -203,12 +184,8 @@ class RedisCluster implements Adapter, Batchable, Retryable
             return false;
         }
 
-        try {
-            /** @var array{time: int, data: mixed} $cache */
-            $cache = Json::decode($redis_string, JSON_THROW_ON_ERROR);
-            $cache['time'] = time();
-            $value = json_encode($cache, flags: JSON_THROW_ON_ERROR);
-        } catch (Throwable) {
+        $value = $this->envelope->touch($redis_string, time());
+        if ($value === false) {
             return false;
         }
 

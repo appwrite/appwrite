@@ -3,7 +3,11 @@
 namespace Utopia\Cache\Adapter;
 
 use Memcached as Client;
+use Throwable;
 use Utopia\Cache\Adapter;
+use Utopia\Cache\Codec;
+use Utopia\Cache\Codec\Json;
+use Utopia\Cache\Envelope;
 use Utopia\Cache\Feature\Retryable;
 
 class Hazelcast implements Adapter, Retryable
@@ -12,7 +16,15 @@ class Hazelcast implements Adapter, Retryable
 
     private int $retryDelay = 1000; // milliseconds
 
-    public function __construct(protected Client $memcached) {}
+    private readonly Envelope $envelope;
+
+    /**
+     * @param  Codec  $codec how values are stored; Json is the wire format every release so far has written
+     */
+    public function __construct(protected Client $memcached, Codec $codec = new Json())
+    {
+        $this->envelope = new Envelope($codec);
+    }
 
     /**
      * @param  int  $maxRetries (0-10)
@@ -41,19 +53,11 @@ class Hazelcast implements Adapter, Retryable
     public function load(string $key, int $ttl, string $hash = ''): mixed
     {
         $cache = $this->execute(fn(): mixed => $this->memcached->get($key));
-        if (\is_string($cache)) {
-            $cache = Json::decode($cache);
-        }
-
-        if (! \is_array($cache)) {
+        if (! \is_string($cache)) {
             return false;
         }
 
-        if (($cache['time'] + $ttl > time())) { // Cache is valid
-            return $cache['data'];
-        }
-
-        return false;
+        return $this->envelope->decode($cache, $ttl, time());
     }
 
     /**
@@ -68,12 +72,13 @@ class Hazelcast implements Adapter, Retryable
             return false;
         }
 
-        $cache = [
-            'time' => time(),
-            'data' => $data,
-        ];
+        try {
+            $value = $this->envelope->encode($data, time());
+        } catch (Throwable) {
+            return false;
+        }
 
-        return ($this->execute(fn(): bool => $this->memcached->set($key, json_encode($cache)))) ? $data : false;
+        return $this->execute(fn(): bool => $this->memcached->set($key, $value)) ? $data : false;
     }
 
     /**
@@ -82,17 +87,16 @@ class Hazelcast implements Adapter, Retryable
     public function touch(string $key, string $hash = ''): bool
     {
         $cache = $this->execute(fn(): mixed => $this->memcached->get($key));
-        if (\is_string($cache)) {
-            $cache = Json::decode($cache);
-        }
-
-        if (! \is_array($cache)) {
+        if (! \is_string($cache)) {
             return false;
         }
 
-        $cache['time'] = time();
+        $value = $this->envelope->touch($cache, time());
+        if ($value === false) {
+            return false;
+        }
 
-        return (bool) $this->execute(fn(): bool => $this->memcached->set($key, json_encode($cache)));
+        return (bool) $this->execute(fn(): bool => $this->memcached->set($key, $value));
     }
 
     /**

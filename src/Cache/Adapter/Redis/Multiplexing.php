@@ -8,6 +8,8 @@ use Swoole\Coroutine\Channel;
 use Swoole\Coroutine\Lock;
 use Throwable;
 use Utopia\Cache\Adapter;
+use Utopia\Cache\Codec;
+use Utopia\Cache\Codec\Json;
 use Utopia\Cache\Feature\Batchable;
 use Utopia\Cache\Feature\Telemetry as TelemetryFeature;
 use Utopia\Telemetry\Adapter as Telemetry;
@@ -61,6 +63,7 @@ class Multiplexing extends Leasable implements Adapter, Batchable, TelemetryFeat
      *                                 server that is merely busy until enough
      *                                 time has passed. Default 5s.
      * @param  string|array<string>|null  $auth password or [username, password]
+     * @param  Codec  $codec how values are stored; Json is the wire format every release so far has written
      */
     public function __construct(
         private readonly string $host,
@@ -70,7 +73,10 @@ class Multiplexing extends Leasable implements Adapter, Batchable, TelemetryFeat
         private readonly string|array|null $auth = null,
         private readonly int $dbIndex = 0,
         private readonly float $livenessTimeout = 5.0,
+        Codec $codec = new Json(),
     ) {
+        parent::__construct($codec);
+
         if ($this->timeout <= 0) {
             throw new \InvalidArgumentException('timeout must be greater than 0');
         }
@@ -136,7 +142,7 @@ class Multiplexing extends Leasable implements Adapter, Batchable, TelemetryFeat
             return false;
         }
 
-        return Envelope::decode($value, $ttl, time());
+        return $this->envelope->decode($value, $ttl, time());
     }
 
     /**
@@ -182,7 +188,7 @@ class Multiplexing extends Leasable implements Adapter, Batchable, TelemetryFeat
                 continue;
             }
 
-            $decoded = Envelope::decode($value, $ttl, $now);
+            $decoded = $this->envelope->decode($value, $ttl, $now);
             if ($decoded !== false) {
                 $result[(string) $field] = $decoded;
             }
@@ -206,7 +212,7 @@ class Multiplexing extends Leasable implements Adapter, Batchable, TelemetryFeat
         }
 
         try {
-            $value = Envelope::encode($data, time());
+            $value = $this->envelope->encode($data, time());
             $this->command(['HSET', $key, $hash, $value]);
 
             if ($ttl > 0) {
@@ -235,7 +241,7 @@ class Multiplexing extends Leasable implements Adapter, Batchable, TelemetryFeat
                 continue;
             }
             $args[] = $field;
-            $args[] = Envelope::encode($value, time());
+            $args[] = $this->envelope->encode($value, time());
         }
 
         if (\count($args) <= 2) {
@@ -270,7 +276,7 @@ class Multiplexing extends Leasable implements Adapter, Batchable, TelemetryFeat
             return false;
         }
 
-        $payload = Envelope::touch($value, time());
+        $payload = $this->envelope->touch($value, time());
         if ($payload === false) {
             return false;
         }

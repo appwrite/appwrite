@@ -9,6 +9,7 @@ use Redis as Redis;
 use RedisException;
 use Utopia\Cache\Adapter\Redis as RedisAdapter;
 use Utopia\Cache\Cache;
+use Utopia\Cache\Codec\Igbinary;
 use Utopia\Tests\Base;
 use Utopia\Tests\Scope\EmptyObjectFidelity;
 use Utopia\Tests\Services;
@@ -31,6 +32,29 @@ final class RedisTest extends Base
         self::$cache->save('test:file34', 'file34', 'test:file34');
         self::$cache->save('test:file35', 'file35', 'test:file35');
         $this->assertSame(3, self::$cache->getSize());
+    }
+
+    public function testIgbinaryCodec(): void
+    {
+        $redis = new Redis();
+        $redis->connect(Services::HOST, Services::REDIS_PORT);
+        $cache = new Cache(new RedisAdapter($redis, new Igbinary()));
+
+        $key = 'test:igbinary:' . uniqid();
+        $data = ['nested' => ['x' => 1], 'empty' => new \stdClass()];
+        $this->assertSame($data, $cache->save($key, $data, $key));
+        $this->assertEquals($data, $cache->load($key, 60, $key));
+        $this->assertTrue($cache->touch($key, $key));
+        $this->assertEquals($data, $cache->load($key, 60, $key));
+
+        // The stored bytes are igbinary, not JSON, and a JSON-codec adapter
+        // sharing the connection treats them as a miss rather than an error.
+        $raw = $redis->hGet($key, $key);
+        $this->assertIsString($raw);
+        $this->assertNull(json_decode($raw));
+        $this->assertFalse(self::$cache->load($key, 60, $key));
+
+        $cache->purge($key);
     }
 
     public function testLoadFieldsBatch(): void

@@ -39,11 +39,13 @@
     "suggest": {
         "ext-redis": "Required for the Redis, RedisCluster and Sharding adapters.",
         "ext-memcached": "Required for the Memcached and Hazelcast adapters.",
-        "ext-swoole": "Required for the multiplexing Redis adapter (>=6.0)."
+        "ext-swoole": "Required for the multiplexing Redis adapter (>=6.0).",
+        "ext-igbinary": "Required for the Igbinary codec."
     },
     "scripts": {
         "test": "phpunit --testsuite unit",
-        "test:e2e": "phpunit --testsuite e2e"
+        "test:e2e": "phpunit --testsuite e2e",
+        "bench": "bash tests/bench/run.sh"
     },
     "minimum-stability": "stable",
     "prefer-stable": true,
