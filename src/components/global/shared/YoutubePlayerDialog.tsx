@@ -1,5 +1,3 @@
-'use client'
-
 import { useCallback, useState, type ReactNode } from 'react'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { cn } from '@/lib/utils'
