@@ -12,11 +12,13 @@
             <exclude>tests/Messaging/Adapter/Email/EmailTest.php</exclude>
             <exclude>tests/Messaging/Adapter/Email/SMTPTest.php</exclude>
             <exclude>tests/Messaging/Adapter/SMS/SMSTest.php</exclude>
+            <exclude>tests/Messaging/Adapter/SMS/WhatsAppTest.php</exclude>
         </testsuite>
         <testsuite name="e2e">
             <file>tests/Messaging/Adapter/Email/EmailTest.php</file>
             <file>tests/Messaging/Adapter/Email/SMTPTest.php</file>
             <file>tests/Messaging/Adapter/SMS/SMSTest.php</file>
+            <file>tests/Messaging/Adapter/SMS/WhatsAppTest.php</file>
         </testsuite>
     </testsuites>
     <source>
