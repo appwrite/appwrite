@@ -1,7 +1,7 @@
 # Utopia PSR-7
 
 > [!IMPORTANT]
-> This repository is a read-only mirror of the [utopia-php monorepo](https://github.com/utopia-php/monorepo). Development happens in [`packages/psr7`](https://github.com/utopia-php/monorepo/tree/main/packages/psr7) — please open issues and pull requests there.
+> This repository is a read-only mirror of [`packages/psr7`](https://github.com/appwrite/appwrite/tree/main/packages/psr7) in [appwrite/appwrite](https://github.com/appwrite/appwrite). Development happens there — please open issues and pull requests against appwrite/appwrite.
 
 PSR-7 HTTP message implementations and PSR-17 factories for PHP 8.4+.
 
