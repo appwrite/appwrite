@@ -11,78 +11,101 @@ class BusTest extends TestCase
 {
     public function testDispatchCallsEachSubscribedListenerWithItsOwnInjections(): void
     {
-        $event = new class () implements Event {
-        };
         $calls = [];
 
         $bus = (new Bus())
             ->setResolver(fn (string $name) => $name . ':resolved')
-            ->subscribe($this->listener('first', $event::class, 'clock', $calls))
-            ->subscribe($this->listener('second', $event::class, 'mailer', $calls));
+            ->subscribe(new ClockListener($calls))
+            ->subscribe(new MailerListener($calls));
 
-        $bus->dispatch($event);
+        $bus->dispatch(new Deployed());
 
-        $this->assertSame([
-            ['first', $event::class, 'clock:resolved'],
-            ['second', $event::class, 'mailer:resolved'],
+        $this->assertEqualsCanonicalizing([
+            ['clock', Deployed::class, 'clock:resolved'],
+            ['mailer', Deployed::class, 'mailer:resolved'],
         ], $calls);
     }
 
     public function testDispatchSkipsListenersOfOtherEvents(): void
     {
-        $dispatched = new class () implements Event {
-        };
-        $other = new class () implements Event {
-        };
         $calls = [];
 
         $bus = (new Bus())
             ->setResolver(fn (string $name) => $name)
-            ->subscribe($this->listener('interested', $dispatched::class, 'dep', $calls))
-            ->subscribe($this->listener('uninterested', $other::class, 'dep', $calls));
+            ->subscribe(new ClockListener($calls))
+            ->subscribe(new CancelledListener($calls));
 
-        $bus->dispatch($dispatched);
+        $bus->dispatch(new Deployed());
 
-        $this->assertSame([['interested', $dispatched::class, 'dep']], $calls);
+        $this->assertSame([['clock', Deployed::class, 'clock']], $calls);
     }
 
     public function testDispatchWithoutResolverIsRefused(): void
     {
         $this->expectException(\LogicException::class);
 
-        (new Bus())->dispatch(new class () implements Event {
-        });
+        (new Bus())->dispatch(new Deployed());
     }
+}
 
+final class Deployed implements Event
+{
+}
+
+final class Cancelled implements Event
+{
+}
+
+abstract class Recording extends Listener
+{
     /**
      * @param array<array{string, string, string}> $calls
      */
-    private function listener(string $name, string $event, string $injection, array &$calls): Listener
+    public function __construct(array &$calls)
     {
-        return new class ($name, $event, $injection, $calls) extends Listener {
-            private static string $name = '';
-            private static string $event = '';
+        $this
+            ->inject(static::getName())
+            ->callback(function (Event $event, string $dependency) use (&$calls) {
+                $calls[] = [static::getName(), $event::class, $dependency];
+            });
+    }
+}
 
-            public function __construct(string $name, string $event, string $injection, array &$calls)
-            {
-                self::$name = $name;
-                self::$event = $event;
-                $this
-                    ->inject($injection)
-                    ->callback(function (Event $received, string $dependency) use ($name, &$calls) {
-                        $calls[] = [$name, $received::class, $dependency];
-                    });
-            }
+final class ClockListener extends Recording
+{
+    public static function getName(): string
+    {
+        return 'clock';
+    }
 
-            public static function getName(): string
-            {
-                return self::$name;
-            }
+    public static function getEvents(): array
+    {
+        return [Deployed::class];
+    }
+}
 
-            public static function getEvents(): array
-            {
-                return [self::$event];
-            }
-        };
+final class MailerListener extends Recording
+{
+    public static function getName(): string
+    {
+        return 'mailer';
+    }
+
+    public static function getEvents(): array
+    {
+        return [Deployed::class];
+    }
+}
+
+final class CancelledListener extends Recording
+{
+    public static function getName(): string
+    {
+        return 'cancelled';
+    }
+
+    public static function getEvents(): array
+    {
+        return [Cancelled::class];
     }
 }
