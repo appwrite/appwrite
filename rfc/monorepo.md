@@ -134,7 +134,7 @@ RUN composer dump-autoload --optimize --no-dev --no-scripts --no-plugins
 
 ### Tests
 
-- **Library unit tier** runs from Appwrite's PHPUnit. `phpunit.xml` gains a `packages` suite over `./packages/*/tests` excluding `tests/e2e` and `tests/bench`; the `unit` CI job runs it alongside `tests/unit`. Tests that reach a provider or a service belong in `tests/E2E/` even when they skip without a key: on the first slice, agents' conversation tests errored on DNS rather than skipping.
+- **Library unit tier** runs from Appwrite's PHPUnit. `phpunit.xml` gains a `packages` suite over `./packages/*/tests` excluding `tests/E2E` and `tests/bench`; the `unit` CI job runs it alongside `tests/unit`. Tests that reach a provider or a service belong in `tests/E2E/` even when they skip without a key: on the first slice, agents' conversation tests errored on DNS rather than skipping.
 - **Library e2e tier** runs per package on the host against the package's own `docker-compose.yml` (offset host ports, never inside Appwrite's stack), through `bin/monorepo test <name>`.
 - **Changed-package matrix.** Port the monorepo's `changed` job into `ci.yml`: diff `packages/` against the base ref, expand through `bin/monorepo dependents`, run `check` and `test` for each. A change under `bin/monorepo`, `.github/`, root `composer.json` or `pint.json` runs every package.
 - **Registry-mode nightly.** A scheduled job runs `composer update` inside each `packages/<name>` against Packagist, proving the mirror's constraint combination still installs for external consumers.
