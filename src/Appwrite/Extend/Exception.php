@@ -343,9 +343,6 @@ class Exception extends \Exception
     public const string KEY_ALREADY_EXISTS = 'key_already_exists';
     public const string KEY_CREATION_DENIED = 'key_creation_denied';
 
-    /** Dev Keys */
-    public const string DEV_KEY_GONE = 'dev_key_gone';
-
     /** Variables */
     public const string VARIABLE_NOT_FOUND = 'variable_not_found';
     public const string VARIABLE_ALREADY_EXISTS = 'variable_already_exists';

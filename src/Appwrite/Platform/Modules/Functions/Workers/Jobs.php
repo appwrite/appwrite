@@ -138,6 +138,7 @@ class Jobs extends Action
             }
 
             $statusBefore = $deployment->getAttribute('status');
+            $durationBefore = $deployment->getAttribute('buildDuration');
 
             $deployment = match (CallbackEvent::tryFrom($event->event)) {
                 CallbackEvent::Log => $this->onLog($dbForProject, $dbForPlatform, $project, $deployment, JobLog::fromArray($event->data), $vcsFactory, $platform),
@@ -146,6 +147,17 @@ class Jobs extends Action
                 CallbackEvent::Complete => $this->onComplete($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
                 default => $this->onCallback($event->event, $dbForProject, $dbForPlatform, $project, $deployment, $event->data, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
             };
+
+            // Outcome and runtime arrive independently. Publish when the second
+            // becomes known, once under the per-deployment callback lock.
+            if (\in_array($deployment->getAttribute('status'), ['ready', 'failed'], true)
+                && $deployment->getAttribute('buildDuration') !== null
+                && (!\in_array($statusBefore, ['ready', 'failed'], true) || $durationBefore === null)) {
+                $resource = $dbForProject->getDocument($deployment->getAttribute('resourceType', 'functions'), $deployment->getAttribute('resourceId'));
+                if (!$resource->isEmpty()) {
+                    BuildUsage::publish($usage, $resource, $deployment, $project, $publisherForUsage);
+                }
+            }
 
             // Console realtime on every callback (log stream + status).
             $queueForRealtime
@@ -303,7 +315,7 @@ class Jobs extends Action
             if ($failed) {
                 // Fail immediately even if exit delivery is lost. Leave duration
                 // unknown until exit arrives, rather than billing callback wait.
-                return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, 'Build output upload failed: ' . ($artifact->error->message ?? 'unknown error'), $usage, $publisherForUsage, $publisherForScreenshots, $vcsFactory, $platform, $bus, awaitDuration: empty($deployment->getAttribute('buildEndedAt')) && $cache->load('jobs-exit-' . $deployment->getId(), self::DEDUPE_TTL) === false);
+                return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, 'Build output upload failed: ' . ($artifact->error->message ?? 'unknown error'), $publisherForScreenshots, $vcsFactory, $platform, $bus);
             }
 
             if ($artifact->status !== 'success') {
@@ -322,7 +334,7 @@ class Jobs extends Action
         // upload is the one best-effort artifact: losing it costs the next
         // build time, not this one.
         if ($failed && $artifact->artifactId !== 'cache') {
-            return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, $artifact->error->message ?? 'Build failed.', $usage, $publisherForUsage, $publisherForScreenshots, $vcsFactory, $platform, $bus);
+            return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, $artifact->error->message ?? 'Build failed.', $publisherForScreenshots, $vcsFactory, $platform, $bus);
         }
 
         if ($artifact->artifactId !== 'sourceSize' || $artifact->status !== 'success') {
@@ -364,46 +376,28 @@ class Jobs extends Action
         array $plan,
         Bus $bus,
     ): Document {
-        $duration = $exit->durationSeconds;
-        if (\in_array($deployment->getAttribute('status'), ['ready', 'failed'], true)) {
-            if ($deployment->getAttribute('status') !== 'failed' || $deployment->getAttribute('buildDuration') !== null) {
-                return $deployment;
-            }
-
-            // An output failure finalized before exit. Complete its accounting
-            // once, without repeating finalization or changing the failed state.
-            $applied = $dbForProject->updateDocuments('deployments', new Document([
-                'buildDuration' => $duration !== null && \is_finite($duration) && $duration >= 0 ? (int) \ceil($duration) : $this->duration($deployment),
-            ]), [
-                Query::equal('$id', [$deployment->getId()]),
-                Query::equal('status', ['failed']),
-                Query::isNull('buildDuration'),
-            ]);
-            $deployment = $dbForProject->getDocument('deployments', $deployment->getId());
-            $resource = $dbForProject->getDocument($deployment->getAttribute('resourceType', 'functions'), $deployment->getAttribute('resourceId'));
-            if ($applied > 0 && $deployment->getAttribute('status') === 'failed' && !$resource->isEmpty()) {
-                BuildUsage::publish($usage, $resource, $deployment, $project, $publisherForUsage);
-            }
-
+        if ($deployment->getAttribute('status') === 'ready'
+            || ($deployment->getAttribute('status') === 'failed' && $deployment->getAttribute('buildDuration') !== null)) {
             return $deployment;
         }
 
-        if ($duration !== null && \is_finite($duration) && $duration >= 0) {
-            // The worker's measured runtime excludes queue and callback waits.
-            // Persist it before joining artifact callbacks, which may arrive later.
-            $dbForProject->updateDocuments('deployments', new Document([
-                'buildDuration' => (int) \ceil($duration),
-                'buildEndedAt' => DateTime::now(),
-            ]), [
-                Query::equal('$id', [$deployment->getId()]),
-                Query::notEqual('status', 'canceled'),
-                Query::notEqual('status', 'ready'),
-                Query::notEqual('status', 'failed'),
-            ]);
-            $deployment = $dbForProject->getDocument('deployments', $deployment->getId());
-            if (\in_array($deployment->getAttribute('status'), ['canceled', 'ready', 'failed'], true)) {
-                return $deployment;
-            }
+        // Only an exit records runtime. Artifact failures can seal the outcome
+        // first; their later exit fills duration without repeating finalization.
+        $duration = $exit->durationSeconds;
+        $dbForProject->updateDocuments('deployments', new Document([
+            'buildDuration' => $duration !== null && \is_finite($duration) && $duration >= 0
+                ? (int) \ceil($duration)
+                : $this->duration($deployment),
+            'buildEndedAt' => $deployment->getAttribute('buildEndedAt') ?: DateTime::now(),
+        ]), [
+            Query::equal('$id', [$deployment->getId()]),
+            Query::isNull('buildDuration'),
+            Query::notEqual('status', 'canceled'),
+            Query::notEqual('status', 'ready'),
+        ]);
+        $deployment = $dbForProject->getDocument('deployments', $deployment->getId());
+        if (\in_array($deployment->getAttribute('status'), ['canceled', 'ready', 'failed'], true)) {
+            return $deployment;
         }
 
         if ($exit->error !== null) {
@@ -413,7 +407,7 @@ class Jobs extends Action
                 ? "Build failed with exit code {$exit->exitCode}."
                 : $exit->error->message;
 
-            return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, $message, $usage, $publisherForUsage, $publisherForScreenshots, $vcsFactory, $platform, $bus);
+            return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, $message, $publisherForScreenshots, $vcsFactory, $platform, $bus);
         }
 
         $cache->save('jobs-exit-' . $deployment->getId(), true);
@@ -488,13 +482,13 @@ class Jobs extends Action
         if ($isSite) {
             [$deployment, $mismatch] = $this->detect($dbForProject, $deployment, (array) ($manifest['files'] ?? []));
             if ($mismatch !== null) {
-                return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, $mismatch, $usage, $publisherForUsage, $publisherForScreenshots, $vcsFactory, $platform, $bus);
+                return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, $mismatch, $publisherForScreenshots, $vcsFactory, $platform, $bus);
             }
         }
 
         $path = (string) $deployment->getAttribute('buildPath', '');
         if ($path === '' || ! $deviceForBuilds->exists($path)) {
-            return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, 'Build produced no output artifact.', $usage, $publisherForUsage, $publisherForScreenshots, $vcsFactory, $platform, $bus);
+            return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, 'Build produced no output artifact.', $publisherForScreenshots, $vcsFactory, $platform, $bus);
         }
 
         $size = $deviceForBuilds->getFileSize($path);
@@ -505,7 +499,7 @@ class Jobs extends Action
         if ($limit !== 0 && $size > $limit) {
             $deviceForBuilds->delete($path);
 
-            return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, 'Build size should be less than ' . \number_format($limit / (1000 * 1000), 2) . ' MBs.', $usage, $publisherForUsage, $publisherForScreenshots, $vcsFactory, $platform, $bus);
+            return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, 'Build size should be less than ' . \number_format($limit / (1000 * 1000), 2) . ' MBs.', $publisherForScreenshots, $vcsFactory, $platform, $bus);
         }
 
         // Every check this worker makes has passed, so the deployment is publishable
@@ -518,7 +512,7 @@ class Jobs extends Action
             return $deployment;
         }
 
-        return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, true, '', $usage, $publisherForUsage, $publisherForScreenshots, $vcsFactory, $platform, $bus, $size);
+        return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, true, '', $publisherForScreenshots, $vcsFactory, $platform, $bus, $size);
     }
 
     /**
@@ -557,7 +551,7 @@ class Jobs extends Action
 
     /**
      * Apply a terminal outcome (ready or failed) to the deployment. Owns
-     * activation, usage and the latestDeployment pointer, mirroring the executor
+     * activation and the latestDeployment pointer, mirroring the executor
      * Builds worker.
      */
     protected function finalize(
@@ -567,14 +561,11 @@ class Jobs extends Action
         Document $deployment,
         bool $success,
         string $message,
-        UsageContext $usage,
-        UsagePublisher $publisherForUsage,
         ScreenshotPublisher $publisherForScreenshots,
         VcsFactory $vcsFactory,
         array $platform,
         Bus $bus,
         int $buildSize = 0,
-        bool $awaitDuration = false,
     ): Document {
         // A build finalizes once. A failed artifact fails it with the
         // artifact's own message, and the exit that follows must not overwrite
@@ -595,7 +586,6 @@ class Jobs extends Action
         $update = [
             'status' => $success ? 'ready' : 'failed',
             'buildEndedAt' => $deployment->getAttribute('buildEndedAt') ?: DateTime::now(),
-            'buildDuration' => $awaitDuration ? null : $this->duration($deployment),
             'buildLogs' => $this->truncate($logs . $trailer),
         ];
         if ($success) {
@@ -634,13 +624,6 @@ class Jobs extends Action
             ));
         }
 
-        // Count the build for usage/billing once it reached a terminal outcome
-        // (mirrors the executor Builds worker); never for a concurrently-canceled
-        // build (the guard above left it 'canceled').
-        if (\in_array($deployment->getAttribute('status'), ['ready', 'failed'], true) && $deployment->getAttribute('buildDuration') !== null && ! $resource->isEmpty()) {
-            BuildUsage::publish($usage, $resource, $deployment, $project, $publisherForUsage);
-        }
-
         // (Re)activate its schedule so the scheduler enqueues cron executions
         // (sites have no scheduleId, so schedule() no-ops for them).
         if (! $resource->isEmpty()) {
@@ -657,7 +640,7 @@ class Jobs extends Action
 
     /**
      * Use the worker's measured duration once its exit callback has arrived.
-     * Older callbacks and failures before worker exit fall back to elapsed time.
+     * Older exit callbacks without a measurement fall back to elapsed time.
      * Callbacks arrive out of order, so
      * buildStartedAt (stamped by the first log callback) can be missing when a
      * terminal callback finalizes first — fall back to the deployment's
@@ -855,10 +838,11 @@ class Jobs extends Action
     protected function truncate(string $logs): string
     {
         $limit = APP_LOG_LENGTH_LIMIT;
-        if (\strlen($logs) <= $limit) {
-            return $logs;
+        if (\strlen($logs) > $limit) {
+            $logs = \substr($logs, -$limit);
         }
 
-        return \substr($logs, -$limit);
+        // Build output can be binary, and the byte cut can split a multibyte character; MySQL rejects either.
+        return \mb_scrub($logs, 'UTF-8');
     }
 }

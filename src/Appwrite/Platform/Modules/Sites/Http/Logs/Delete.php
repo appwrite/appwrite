@@ -71,7 +71,7 @@ class Delete extends Base
             throw new Exception(Exception::SITE_NOT_FOUND);
         }
 
-        $log = $dbForProject->getDocument('executions', $logId);
+        $log = $executionStore->get($project->getId(), $logId);
         if ($log->isEmpty()) {
             throw new Exception(Exception::LOG_NOT_FOUND);
         }
@@ -81,9 +81,6 @@ class Delete extends Base
         }
 
         $executionStore->delete($project->getId(), $log);
-        if (!$dbForProject->deleteDocument('executions', $log->getId())) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove log from DB');
-        }
 
         $queueForEvents
             ->setParam('siteId', $site->getId())
