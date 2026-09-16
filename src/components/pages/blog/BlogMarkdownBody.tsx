@@ -6,6 +6,7 @@ import {
   ImagePreviewGalleryDialog,
   type ImagePreviewGalleryItem,
 } from '@/components/global/shared/ImagePreviewGallery'
+import { YoutubePlayerDialog } from '@/components/global/shared/YoutubePlayerDialog'
 import { copyToClipboard } from '@/lib/utils/context-menu'
 import { cn } from '@/lib/utils'
 import {
@@ -65,6 +66,10 @@ export function BlogMarkdownBody({ html, className }: BlogMarkdownBodyProps) {
   )
   const [activeIndex, setActiveIndex] = useState<number | null>(null)
   const [multiCode, setMultiCode] = useState<MultiCodeMount[]>([])
+  const [youtube, setYoutube] = useState<{ embed: string; title: string } | null>(
+    null,
+  )
+  const [youtubeOpen, setYoutubeOpen] = useState(false)
   // React rewrites innerHTML whenever this object changes identity, which
   // would detach the portal targets below on every state update.
   const innerHtml = useMemo(() => ({ __html: html }), [html])
@@ -127,11 +132,18 @@ export function BlogMarkdownBody({ html, className }: BlogMarkdownBodyProps) {
         return
       }
 
-      const youtube = target.closest<HTMLElement>('[data-blog-youtube]')
-      if (youtube) {
+      const youtubeButton = target.closest<HTMLElement>('[data-blog-youtube]')
+      if (youtubeButton) {
         event.preventDefault()
-        const embed = youtube.getAttribute('data-blog-youtube')
-        if (embed) window.open(embed, '_blank', 'noopener,noreferrer')
+        const embed = youtubeButton.getAttribute('data-blog-youtube')
+        if (!embed) return
+        setYoutube({
+          embed,
+          title:
+            youtubeButton.getAttribute('data-blog-youtube-title') ??
+            'YouTube video',
+        })
+        setYoutubeOpen(true)
       }
     }
 
@@ -163,6 +175,12 @@ export function BlogMarkdownBody({ html, className }: BlogMarkdownBodyProps) {
         items={galleryItems}
         activeIndex={activeIndex}
         onActiveIndexChange={setActiveIndex}
+      />
+      <YoutubePlayerDialog
+        open={youtubeOpen}
+        onOpenChange={setYoutubeOpen}
+        embed={youtube?.embed ?? null}
+        title={youtube?.title}
       />
     </>
   )
