@@ -83,7 +83,7 @@ Rules `validate` checks per package:
 
 ### Root composer.json
 
-`require` loses every `utopia-php/*` line and the three `vcs` repository entries. The libraries' own third-party requirements (`mongodb/mongodb`, `aws/aws-sdk-php`, `phpmailer/phpmailer`, `dragonmantank/cron-expression`, and so on) move into the root `require`, resolved once in one lock. `bin/monorepo validate` generates the autoload block from the package manifests and fails when the checked-in root is stale:
+`require` loses every `utopia-php/*` line and the three `vcs` repository entries. The libraries' own third-party requirements (`mongodb/mongodb`, `aws/aws-sdk-php`, `phpmailer/phpmailer`, `dragonmantank/cron-expression`, and so on) move into the root `require`, resolved once in one lock. `bin/monorepo validate` enforces it: `replace` hides a package's own `require` from the solver, so every third-party dependency a package declares must be in the root `require`. `bin/monorepo validate` generates the autoload block from the package manifests and fails when the checked-in root is stale:
 
 ```json
 "autoload": {
