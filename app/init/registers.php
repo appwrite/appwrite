@@ -6,6 +6,7 @@ use Appwrite\Hooks\Hooks;
 use Appwrite\PubSub\Adapter\Redis as PubSub;
 use Appwrite\URL\URL as AppwriteURL;
 use Utopia\Cache\Adapter\Redis as RedisCache;
+use Utopia\Cache\Codec\Igbinary;
 use Utopia\Config\Config;
 use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Adapter\Mongo;
@@ -267,7 +268,7 @@ $register->set('pools', function () {
                         };
                     case 'cache':
                         $adapter = match ($dsn->getScheme()) {
-                            'redis' => new RedisCache($resource()),
+                            'redis' => new RedisCache($resource(), new Igbinary()),
                             default => null
                         };
 

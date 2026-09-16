@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "5667bfb5aaae8ea98f2edd4d33aa5927",
+    "content-hash": "1c490bf3e48c238620409ca6ec2dc175",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2984,16 +2984,16 @@
         },
         {
             "name": "utopia-php/cache",
-            "version": "5.0.3",
+            "version": "5.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/cache.git",
-                "reference": "f808a39d018e1f325ac553b8de39798cae40c1f9"
+                "reference": "62d8ac01d725bfe07474cc4960775904b1a5101e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/cache/zipball/f808a39d018e1f325ac553b8de39798cae40c1f9",
-                "reference": "f808a39d018e1f325ac553b8de39798cae40c1f9",
+                "url": "https://api.github.com/repos/utopia-php/cache/zipball/62d8ac01d725bfe07474cc4960775904b1a5101e",
+                "reference": "62d8ac01d725bfe07474cc4960775904b1a5101e",
                 "shasum": ""
             },
             "require": {
@@ -3007,6 +3007,7 @@
                 "swoole/ide-helper": "^6.0"
             },
             "suggest": {
+                "ext-igbinary": "Required for the Igbinary codec.",
                 "ext-memcached": "Required for the Memcached and Hazelcast adapters.",
                 "ext-redis": "Required for the Redis, RedisCluster and Sharding adapters.",
                 "ext-swoole": "Required for the multiplexing Redis adapter (>=6.0)."
@@ -3037,9 +3038,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/cache/issues",
-                "source": "https://github.com/utopia-php/cache/tree/5.0.3"
+                "source": "https://github.com/utopia-php/cache/tree/5.1.0"
             },
-            "time": "2026-09-11T08:23:02+00:00"
+            "time": "2026-09-16T14:41:42+00:00"
         },
         {
             "name": "utopia-php/cdn",
@@ -8356,6 +8357,7 @@
         "ext-yaml": "*",
         "ext-dom": "*",
         "ext-redis": "*",
+        "ext-igbinary": "*",
         "ext-swoole": "6.*",
         "ext-pdo": "*",
         "ext-openssl": "*",
