@@ -727,20 +727,30 @@ export function ChangePlanWizardFullscreen() {
     }
   }, [couponFromUrl])
 
+  // Private plans (such as the Student Pack) are absent from the selectable
+  // catalog. Include the current plan's price and order when comparing plans.
+  const comparisonPlans = useMemo(
+    () =>
+      plan?.$id === currentPlanEnum
+        ? { ...billingPlans, [plan.$id]: plan }
+        : billingPlans,
+    [billingPlans, currentPlanEnum, plan],
+  )
+
   // Determine if upgrade or downgrade
   const isUpgrade = useMemo(() => {
     if (!selectedPlan) return false
     if (isCreateMode) return !selectedPlanIsFree
     if (!currentPlanEnum) return false
     return (
-      compareBillingPlanRefs(currentPlanEnum, selectedPlan, billingPlans) ===
+      compareBillingPlanRefs(currentPlanEnum, selectedPlan, comparisonPlans) ===
       'upgrade'
     )
   }, [
     selectedPlan,
     currentPlanEnum,
     isCreateMode,
-    billingPlans,
+    comparisonPlans,
     selectedPlanIsFree,
   ])
 
@@ -748,14 +758,14 @@ export function ChangePlanWizardFullscreen() {
     if (isCreateMode || !selectedPlan || !currentPlanEnum) return false
     if (selectedPlanIsFree && !currentPlanIsFree) return true
     return (
-      compareBillingPlanRefs(currentPlanEnum, selectedPlan, billingPlans) ===
+      compareBillingPlanRefs(currentPlanEnum, selectedPlan, comparisonPlans) ===
       'downgrade'
     )
   }, [
     selectedPlan,
     currentPlanEnum,
     isCreateMode,
-    billingPlans,
+    comparisonPlans,
     selectedPlanIsFree,
     currentPlanIsFree,
   ])
@@ -1125,6 +1135,10 @@ export function ChangePlanWizardFullscreen() {
 
     if (selectedPlan === currentPlanEnum) {
       return t('Select a different plan to continue.')
+    }
+
+    if (!isUpgrade && !isDowngrade) {
+      return t('This plan change is unavailable. Please contact support.')
     }
 
     // Issues the console cannot resolve on the user's behalf (unsupported
@@ -1661,6 +1675,7 @@ export function ChangePlanWizardFullscreen() {
 
   // Handle submit
   const handleSubmit = () => {
+    if (isButtonDisabled) return
     if (isCreateMode) {
       handleCreateOrganization()
       return

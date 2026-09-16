@@ -1442,6 +1442,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Finish deleting project resources that exceed the selected plan.':
     'סיימו למחוק משאבי פרויקט שחורגים מהתוכנית שנבחרה.',
   'Checking whether the plan can be changed...': 'בודקים אם אפשר לשנות את התוכנית...',
+  'This plan change is unavailable. Please contact support.':
+    'לא ניתן לבצע את שינוי התוכנית הזה. פנו לתמיכה.',
   'Could not change plan. Remaining usage still exceeds the selected plan.':
     'לא ניתן לשנות תוכנית. השימוש שנותר עדיין חורג מהתוכנית שנבחרה.',
   'Remaining extras that still exceed the selected plan. Nothing else is deleted.':

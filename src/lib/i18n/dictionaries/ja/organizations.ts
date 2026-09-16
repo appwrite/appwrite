@@ -1219,6 +1219,8 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Finish deleting project resources that exceed the selected plan.':
     '選択したプランを超えるプロジェクトリソースの削除を完了してください。',
   'Checking whether the plan can be changed...': 'プランを変更できるか確認しています...',
+  'This plan change is unavailable. Please contact support.':
+    'このプラン変更は利用できません。サポートにお問い合わせください。',
   'Could not change plan. Remaining usage still exceeds the selected plan.':
     'プランを変更できませんでした。残りの使用量がまだ選択したプランを超えています。',
   'Remaining extras that still exceed the selected plan. Nothing else is deleted.':
