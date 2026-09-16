@@ -16,6 +16,11 @@
         <testsuite name="unit">
             <directory>./tests/unit</directory>
         </testsuite>
+        <testsuite name="packages">
+            <directory>./packages/*/tests</directory>
+            <exclude>./packages/*/tests/e2e</exclude>
+            <exclude>./packages/*/tests/bench</exclude>
+        </testsuite>
         <testsuite name="e2e">
             <file>./tests/e2e/Client.php</file>
             <directory>./tests/e2e/General</directory>

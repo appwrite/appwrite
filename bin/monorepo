@@ -1,0 +1,870 @@
+#!/usr/bin/env php
+<?php
+
+/**
+ * Package tooling for the Utopia libraries in packages/<name>.
+ *
+ * Each package is loaded directly through the root composer.json autoload and
+ * distributed (read-only) to github.com/utopia-php/<name> as a synthesized
+ * split history. Releases are made by tagging this repository
+ * `<name>/<version>`, which pushes `<version>` to the mirror for Packagist to
+ * pick up. See rfc/monorepo.md.
+ */
+
+chdir(dirname(__DIR__));
+
+const ORG = 'utopia-php';
+const REPOSITORY = 'appwrite/appwrite';
+const SPLIT_APP_ID = 4016286; // GitHub App that pushes splits to the mirrors
+const HOISTED = ['laravel/pint', 'phpstan/phpstan', 'rector/rector', 'phpunit/phpunit'];
+const BANNED = ['pint.json', 'psalm.xml', 'phpcs.xml', '.travis.yml', '.gitpod.yml', '.coderabbit.yaml'];
+
+/**
+ * Dockerfiles a package's docker-compose.yml builds from. Those belong to the
+ * e2e tier and stay; every other Dockerfile is CI tooling the root replaces.
+ */
+function compose_dockerfiles(string $directory): array
+{
+    $compose = "{$directory}/docker-compose.yml";
+    if (!is_file($compose)) {
+        return [];
+    }
+    $files = [];
+    foreach (file($compose) as $line) {
+        $line = trim($line);
+        foreach (['dockerfile:', 'build:'] as $key) {
+            if (!str_starts_with($line, $key)) {
+                continue;
+            }
+            $value = trim(substr($line, strlen($key)), " \t\"'");
+            if ($value !== '' && $value !== '.' && !str_contains($value, '/')) {
+                $files[] = $value;
+            }
+        }
+    }
+    return $files;
+}
+
+function out(string $message): void
+{
+    fwrite(STDOUT, $message . PHP_EOL);
+}
+
+function fail(string $message): never
+{
+    fwrite(STDERR, 'error: ' . $message . PHP_EOL);
+    exit(1);
+}
+
+/**
+ * Run a command, return its stdout. Stderr streams through to the terminal.
+ */
+function sh(string $command): string
+{
+    exec($command, $output, $code);
+    if ($code !== 0) {
+        fail("command failed ({$code}): {$command}");
+    }
+
+    return trim(implode(PHP_EOL, $output));
+}
+
+function rm(string $path): void
+{
+    if (is_file($path) || is_link($path)) {
+        unlink($path);
+
+        return;
+    }
+
+    foreach (array_diff(scandir($path) ?: [], ['.', '..']) as $entry) {
+        rm("{$path}/{$entry}");
+    }
+    rmdir($path);
+}
+
+/**
+ * @return string[]
+ */
+function packages(): array
+{
+    return array_map('basename', glob('packages/*', GLOB_ONLYDIR));
+}
+
+/**
+ * Distribution remote for a package. CI overrides the base with an
+ * authenticated HTTPS URL via SPLIT_REMOTE_BASE.
+ */
+function remote(string $package): string
+{
+    $base = getenv('SPLIT_REMOTE_BASE') ?: 'git@github.com:' . ORG;
+
+    return $base . '/' . $package . '.git';
+}
+
+function import_package(string $package, ?string $url, ?string $branch): void
+{
+    $url ??= 'https://github.com/' . ORG . "/{$package}.git";
+    if (is_dir("packages/{$package}")) {
+        fail("packages/{$package} already exists");
+    }
+
+    if ($branch === null) {
+        preg_match('#refs/heads/(\S+)#', sh("git ls-remote --symref {$url} HEAD | head -n 1"), $match)
+            || fail("cannot detect default branch of {$url}");
+        $branch = $match[1];
+    }
+
+    out("importing {$package} from {$url} ({$branch})...");
+    sh("git subtree add --prefix=packages/{$package} {$url} {$branch}");
+    out("imported {$package}");
+}
+
+function mirror_workflow(string $package): string
+{
+    $yaml = <<<'YAML'
+    name: Mirror
+
+    on:
+      pull_request_target:
+        types: [opened]
+      issues:
+        types: [opened]
+
+    permissions:
+      issues: write
+      pull-requests: write
+
+    jobs:
+      redirect:
+        uses: {repository}/.github/workflows/mirror-redirect.yml@main
+        with:
+          package: {package}
+    YAML;
+
+    return str_replace(['{repository}', '{package}'], [REPOSITORY, $package], $yaml) . "\n";
+}
+
+/**
+ * Ensure the root toolchain (pint, phpstan, rector, phpunit) is installed and
+ * on PATH, so package scripts resolve `phpunit` to the root version.
+ */
+function toolchain(): void
+{
+    if (!is_file('vendor/bin/phpunit')) {
+        passthru('composer install --no-interaction --prefer-dist --no-progress --ignore-platform-reqs', $code);
+        $code === 0 || fail('failed to install the root toolchain');
+    }
+    putenv('PATH=' . getcwd() . '/vendor/bin:' . getenv('PATH'));
+}
+
+/**
+ * Release notes for a package version: every commit that touched the package
+ * since its previous release tag, plus a compare link.
+ */
+function release_notes(string $package, string $version, string $to): string
+{
+    $previous = null;
+    $tags = sh("git -c versionsort.suffix=- tag --list '{$package}/*' --sort=-v:refname");
+    foreach (explode("\n", $tags) as $tag) {
+        $candidate = substr($tag, strlen($package) + 1);
+        if ($candidate !== '' && version_compare($candidate, $version, '<')) {
+            $previous = $tag;
+            break;
+        }
+    }
+
+    $home = 'https://github.com/' . REPOSITORY;
+    if ($previous === null) {
+        return "First release cut from [`packages/{$package}`]({$home}/tree/main/packages/{$package}) in " . REPOSITORY . '.';
+    }
+
+    $log = sh("git log {$previous}..{$to} --pretty='- %s' -- packages/{$package}");
+
+    return ($log !== '' ? $log : '- No changes to this package since ' . $previous . '.')
+        . "\n\n**Changes**: {$home}/compare/{$previous}...{$package}/{$version}";
+}
+
+/**
+ * Compute a package's split head: starting from the latest subtree
+ * annotation (an import or rejoin merge), or from the repository root when
+ * there is none, re-synthesize one commit per mainline commit that changed
+ * the package, copying tree, author, committer and raw message. Deterministic,
+ * and byte-identical to `git subtree split` output — without its fatal cache
+ * collision when a package is re-imported.
+ */
+function split_package(string $package): string
+{
+    // With an annotation present, resume from it; without one — a hand-created
+    // package, or one whose import merge a squash-merge flattened — synthesize
+    // from the repository root, the first commit landing parentless.
+    $join = sh('git log --format=%H --grep=' . escapeshellarg("^git-subtree-dir: packages/{$package}\$") . ' -1 HEAD');
+    $tip = null;
+    $range = 'HEAD';
+    if ($join !== '') {
+        $body = sh("git log --format=%B -1 {$join}");
+        preg_match('/^git-subtree-mainline: (\w+)$/m', $body, $mainline) || fail("no git-subtree-mainline in {$join}");
+        preg_match('/^git-subtree-split: (\w+)$/m', $body, $split) || fail("no git-subtree-split in {$join}");
+        $tip = $split[1];
+        $range = "{$mainline[1]}..HEAD";
+    }
+
+    $commits = sh("git log --reverse --first-parent --format=%H {$range} -- packages/{$package}");
+    foreach (array_filter(explode("\n", $commits)) as $commit) {
+        unset($tree);
+        exec("git rev-parse -q --verify {$commit}:packages/{$package} 2>/dev/null", $tree, $missing);
+        if ($missing !== 0 || ($tip !== null && $tree[0] === sh("git rev-parse {$tip}^{tree}"))) {
+            continue;
+        }
+        $identity = explode("\x1f", sh("git log -1 --format=%an%x1f%ae%x1f%aD%x1f%cn%x1f%ce%x1f%cD {$commit}"));
+        $environment = '';
+        foreach (['GIT_AUTHOR_NAME', 'GIT_AUTHOR_EMAIL', 'GIT_AUTHOR_DATE', 'GIT_COMMITTER_NAME', 'GIT_COMMITTER_EMAIL', 'GIT_COMMITTER_DATE'] as $index => $variable) {
+            $environment .= $variable . '=' . escapeshellarg($identity[$index]) . ' ';
+        }
+        $parent = $tip === null ? '' : "-p {$tip}";
+        $tip = sh("git log -1 --pretty=format:%B {$commit} | {$environment}git commit-tree {$tree[0]} {$parent}");
+    }
+
+    $tip !== null || fail("packages/{$package} has no commits to split");
+
+    return $tip;
+}
+
+function manifest(string $package): ?array
+{
+    $path = 'packages/' . $package . '/composer.json';
+    if (!is_file($path)) {
+        return null;
+    }
+    $manifest = json_decode(file_get_contents($path), true);
+
+    return is_array($manifest) ? $manifest : null;
+}
+
+/**
+ * The namespace segment a package's manifest declares (`Utopia\<Ns>\` => src),
+ * or null when the main autoload does not have the standard shape.
+ */
+function namespace_of(?array $manifest): ?string
+{
+    $psr4 = $manifest['autoload']['psr-4'] ?? null;
+    if (!is_array($psr4) || count($psr4) !== 1) {
+        return null;
+    }
+    $prefix = array_key_first($psr4);
+    $segments = explode('\\', $prefix);
+    if (count($segments) !== 3 || $segments[0] !== 'Utopia' || $segments[1] === '' || $segments[2] !== '') {
+        return null;
+    }
+
+    return $segments[1];
+}
+
+/**
+ * The root composer.json with one autoload line per package, regenerated
+ * from the package manifests. Decoded as objects so an unchanged file
+ * round-trips byte for byte (`"platform": {}` stays an object).
+ */
+function root_manifest(): string
+{
+    $root = json_decode(file_get_contents('composer.json'));
+    foreach ([['autoload', 'src', ''], ['autoload-dev', 'tests', 'Tests\\']] as [$section, $directory, $suffix]) {
+        $map = $root->{$section}->{'psr-4'};
+        $entries = [];
+        foreach ($map as $prefix => $path) {
+            if (!is_string($path) || !str_starts_with($path, 'packages/')) {
+                $entries[$prefix] = $path;
+            }
+        }
+        foreach (packages() as $package) {
+            $namespace = namespace_of(manifest($package));
+            if ($namespace !== null) {
+                $entries["Utopia\\{$namespace}\\{$suffix}"] = "packages/{$package}/{$directory}";
+            }
+        }
+        // the shared bare prefix probes its directory list last
+        if (isset($entries['Utopia\\'])) {
+            $entries['Utopia\\'] = array_splice($entries, array_search('Utopia\\', array_keys($entries), true), 1)['Utopia\\'];
+        }
+        $root->{$section}->{'psr-4'} = (object) $entries;
+    }
+
+    return json_encode($root, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n";
+}
+
+/**
+ * Local siblings in a package's dependency graph, mapped to a version that
+ * satisfies the requiring constraint (e.g. "^0.20" → "0.20.999"), so a path
+ * repository can stand in for Packagist during linked test runs.
+ *
+ * @return array<string, string>
+ */
+function linked_versions(string $package): array
+{
+    $versions = [];
+    $pending = [$package];
+    $seen = [$package => true];
+    while ($pending !== []) {
+        $current = array_shift($pending);
+        $manifest = manifest($current);
+        // composer installs the root package's dev dependencies too, and the
+        // path repository shadows them on Packagist
+        $requirements = ($manifest['require'] ?? [])
+            + ($current === $package ? $manifest['require-dev'] ?? [] : []);
+        foreach ($requirements as $dependency => $constraint) {
+            if (!str_starts_with($dependency, ORG . '/')) {
+                continue;
+            }
+            $sibling = substr($dependency, strlen(ORG) + 1);
+            if (!is_dir("packages/{$sibling}")) {
+                continue;
+            }
+
+            // A cycle back to the package under test is satisfied by telling
+            // Composer which release line the root checkout represents.
+            if ($sibling === $package) {
+                $versions[$dependency] ??= linked_version($constraint);
+
+                continue;
+            }
+
+            if (isset($seen[$sibling])) {
+                continue;
+            }
+
+            $seen[$sibling] = true;
+            $versions[$dependency] = linked_version($constraint);
+            $pending[] = $sibling;
+        }
+    }
+
+    return $versions;
+}
+
+/**
+ * Pick the newest release line named by a constraint and reserve its .999
+ * patch for the linked checkout (e.g. "^0.1 || ^0.3" → "0.3.999").
+ */
+function linked_version(string $constraint): string
+{
+    preg_match_all('/\d+(?:\.\d+)*/', $constraint, $matches);
+    $candidates = $matches[0];
+    $candidates !== [] || fail("cannot infer a linked version from constraint: {$constraint}");
+    usort($candidates, 'version_compare');
+    $parts = explode('.', end($candidates));
+
+    return $parts[0] . '.' . ($parts[1] ?? '0') . '.999';
+}
+
+$arguments = array_slice($argv, 1);
+$command = array_shift($arguments) ?? 'help';
+$options = [];
+$arguments = array_values(array_filter($arguments, function (string $argument) use (&$options): bool {
+    if (!str_starts_with($argument, '--')) {
+        return true;
+    }
+    [$key, $value] = array_pad(explode('=', substr($argument, 2), 2), 2, true);
+    $options[$key] = $value;
+
+    return false;
+}));
+
+switch ($command) {
+    case 'list':
+        foreach (packages() as $package) {
+            $latest = sh("git tag --list '{$package}/*' --sort=-v:refname | head -n 1");
+            out(str_pad($package, 24) . ($latest !== '' ? $latest : '(unreleased)'));
+        }
+        break;
+
+    case 'absorb':
+        $package = $arguments[0] ?? fail('usage: monorepo absorb <name> [url] [branch] [--skip-ruleset]');
+        $directory = "packages/{$package}";
+
+        if (!is_dir($directory)) {
+            import_package($package, $arguments[1] ?? null, $arguments[2] ?? null);
+        }
+
+        // Strip QA tooling the root hoists (see `check` and `validate`).
+        $path = "{$directory}/composer.json";
+        $manifest = json_decode(file_get_contents($path), true);
+        $original = $manifest;
+        foreach ([...HOISTED, 'squizlabs/php_codesniffer'] as $dependency) {
+            unset($manifest['require-dev'][$dependency]);
+        }
+        foreach (['format', 'format:check', 'format:fix', 'lint', 'check', 'analyse', 'analyze', 'refactor', 'refactor:check'] as $script) {
+            unset($manifest['scripts'][$script]);
+        }
+        foreach ($manifest['scripts'] ?? [] as $name => $script) {
+            if (is_string($script)) {
+                // phpunit comes from the root toolchain, resolved via PATH
+                $manifest['scripts'][$name] = preg_replace('#(\./)?vendor/bin/phpunit#', 'phpunit', $script);
+            }
+        }
+        if (($manifest['scripts'] ?? null) === []) {
+            unset($manifest['scripts']);
+        }
+        if (($manifest['require-dev'] ?? null) === []) {
+            unset($manifest['require-dev']);
+        }
+        $keep = compose_dockerfiles($directory);
+        foreach ([...BANNED, ...array_diff(array_map('basename', glob("{$directory}/Dockerfile*")), $keep)] as $file) {
+            if (is_file("{$directory}/{$file}")) {
+                unlink("{$directory}/{$file}");
+                out("removed {$file} (root tooling is canonical)");
+            }
+        }
+        if ($manifest !== $original) {
+            file_put_contents($path, json_encode($manifest, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n");
+            out('stripped hoisted QA tooling from composer.json');
+        }
+
+        // Packages carry no composer.lock: a library's lock never reaches
+        // its consumers, and every test run resolves dependencies afresh
+        // (`bin/monorepo test` always runs `composer update`), so a committed
+        // lock is pure churn. Drop it and make sure the mirror ignores it.
+        if (is_file("{$directory}/composer.lock")) {
+            unlink("{$directory}/composer.lock");
+            out('removed composer.lock (packages are not locked)');
+        }
+        $ignore = "{$directory}/.gitignore";
+        $ignored = is_file($ignore) ? file_get_contents($ignore) : '';
+        if (preg_match('#^/?composer\.lock$#m', $ignored) !== 1) {
+            file_put_contents($ignore, rtrim($ignored) . ($ignored === '' ? '' : "\n") . "composer.lock\n");
+            out('added composer.lock to .gitignore');
+        }
+
+        // This repository owns CI and issue tracking, so the mirror needs no
+        // test, QA, or issue-template files - only the redirect workflow.
+        $workflows = "{$directory}/.github/workflows";
+        @mkdir($workflows, 0755, true);
+        array_map('unlink', glob("{$workflows}/*.{yml,yaml}", GLOB_BRACE) ?: []);
+        file_put_contents("{$workflows}/mirror.yml", mirror_workflow($package));
+        out('wrote .github/workflows/mirror.yml (closes mirror PRs and issues with a redirect)');
+        foreach (["{$directory}/.github/ISSUE_TEMPLATE", "{$directory}/ISSUE_TEMPLATE"] as $templates) {
+            if (is_dir($templates)) {
+                rm($templates);
+                out("removed " . str_replace("{$directory}/", '', $templates) . ' (issue tracking here is canonical)');
+            }
+        }
+
+        // Point readers here.
+        $readme = "{$directory}/README.md";
+        if (is_file($readme) && !str_contains($content = file_get_contents($readme), 'read-only mirror')) {
+            $home = 'https://github.com/' . REPOSITORY;
+            $banner = "> [!IMPORTANT]\n"
+                . "> This repository is a read-only mirror of [`packages/{$package}`]({$home}/tree/main/packages/{$package}) in [" . REPOSITORY . "]({$home}). "
+                . "Development happens there — please open issues and pull requests against " . REPOSITORY . ".\n";
+            $updated = preg_replace('/^(# .+\R)/', "\$1\n{$banner}", $content, 1, $count);
+            file_put_contents($readme, $count === 1 ? $updated : $banner . "\n" . $content);
+            out('added mirror banner to README.md');
+        }
+
+        // Lock the mirror down (PR-only, no force-push) and let the split app
+        // bypass it. Idempotent: normalise whatever branch ruleset already
+        // exists to the canonical config — a pre-existing, differently-named
+        // ruleset is what left auth's mirror without the bypass and blocked its
+        // split, so we update in place rather than skip on a name clash.
+        exec('gh --version 2>/dev/null', $_, $missing);
+        if (isset($options['skip-ruleset'])) {
+            out('skipped the mirror ruleset (--skip-ruleset)');
+        } elseif ($missing !== 0) {
+            out('gh not found — create the mirror ruleset manually (see rfc/monorepo.md)');
+        } else {
+            $payload = json_encode([
+                'name' => 'main',
+                'target' => 'branch',
+                'enforcement' => 'active',
+                'conditions' => ['ref_name' => ['include' => ['~DEFAULT_BRANCH'], 'exclude' => []]],
+                'rules' => [
+                    ['type' => 'deletion'],
+                    ['type' => 'non_fast_forward'],
+                    ['type' => 'pull_request', 'parameters' => [
+                        'required_approving_review_count' => 0,
+                        'dismiss_stale_reviews_on_push' => false,
+                        'require_code_owner_review' => false,
+                        'require_last_push_approval' => false,
+                        'required_review_thread_resolution' => false,
+                        'allowed_merge_methods' => ['merge', 'squash', 'rebase'],
+                    ]],
+                ],
+                'bypass_actors' => [['actor_id' => SPLIT_APP_ID, 'actor_type' => 'Integration', 'bypass_mode' => 'always']],
+            ]);
+            exec('gh api ' . escapeshellarg('repos/' . ORG . "/{$package}/rulesets") . ' 2>/dev/null', $listing, $listed);
+            $id = null;
+            foreach (($listed === 0 ? json_decode(implode('', $listing), true) : []) ?: [] as $rule) {
+                if (($rule['target'] ?? '') === 'branch') {
+                    $id = $rule['id'];
+                    break;
+                }
+            }
+            $endpoint = 'repos/' . ORG . "/{$package}/rulesets" . ($id === null ? '' : "/{$id}");
+            exec('printf %s ' . escapeshellarg($payload) . ' | gh api -X ' . ($id === null ? 'POST' : 'PUT')
+                . " {$endpoint} --input - 2>&1", $response, $code);
+            out($code === 0
+                ? ($id === null ? 'mirror ruleset created' : 'mirror ruleset updated (split app can bypass)')
+                : 'could not set mirror ruleset (configure manually, see rfc/monorepo.md): ' . implode("\n", $response));
+        }
+
+        out("absorbed {$package} — next: bin/monorepo autoload, bin/monorepo check {$package} --fix, bin/monorepo test {$package}, then commit");
+        break;
+
+    case 'split':
+        $targets = $arguments !== [] ? $arguments : packages();
+        $failed = [];
+        foreach ($targets as $package) {
+            is_dir("packages/{$package}") || fail("unknown package: {$package}");
+
+            out("splitting {$package}...");
+            $sha = split_package($package);
+
+            if (isset($options['dry-run'])) {
+                out("{$package} -> {$sha} (dry run)");
+                continue;
+            }
+
+            $remote = is_string($options['remote'] ?? null) ? $options['remote'] : remote($package);
+            $force = isset($options['force']) ? ' --force' : '';
+            $ref = is_string($options['tag'] ?? null)
+                ? 'refs/tags/' . $options['tag']
+                : 'refs/heads/' . (is_string($options['branch'] ?? null) ? $options['branch'] : 'main');
+
+            passthru("git push{$force} {$remote} {$sha}:{$ref}", $code);
+            if ($code !== 0) {
+                $failed[] = $package;
+                continue;
+            }
+            out("{$package} -> {$ref} ({$sha})");
+
+            // A pushed tag gets a GitHub release on the mirror, with notes
+            // derived from this repository's log.
+            if (is_string($options['tag'] ?? null)) {
+                $version = $options['tag'];
+                $tag = "{$package}/{$version}";
+                exec("git rev-parse -q --verify refs/tags/{$tag} > /dev/null 2>&1", $_, $missing);
+                $payload = json_encode([
+                    'tag_name' => $version,
+                    'name' => $version,
+                    'body' => release_notes($package, $version, $missing === 0 ? $tag : 'HEAD'),
+                    'prerelease' => str_contains($version, '-'),
+                ]);
+                // curl with an explicit token: gh's own auth resolution 401s
+                // intermittently (seen with both CI app tokens and the local
+                // keyring), while the same token works fine over plain HTTP.
+                $token = getenv('GH_TOKEN') ?: sh('gh auth token');
+                $authorization = escapeshellarg('Authorization: Bearer ' . $token);
+                foreach ([1, 2] as $attempt) {
+                    $response = [];
+                    exec('printf %s ' . escapeshellarg($payload)
+                        . ' | curl -sS --fail-with-body -X POST -H ' . $authorization
+                        . ' -H "Accept: application/vnd.github+json" --data-binary @- '
+                        . 'https://api.github.com/repos/' . ORG . "/{$package}/releases 2>&1", $response, $code);
+                    if ($code === 0 || $attempt === 2) {
+                        break;
+                    }
+                    sleep(2);
+                }
+                if ($code === 0) {
+                    out("{$package} -> release {$version} published");
+                } elseif (stripos($message = implode("\n", $response), 'already_exists') !== false) {
+                    out("release {$version} already exists");
+                } else {
+                    out("could not publish release: {$message}");
+                    $failed[] = "{$package} (release)";
+                }
+            }
+        }
+        if ($failed !== []) {
+            fail('failed to push: ' . implode(', ', $failed));
+        }
+        break;
+
+    case 'release':
+        $package = $arguments[0] ?? fail('usage: monorepo release <package> <version> [--dry-run]');
+        $version = $arguments[1] ?? fail('usage: monorepo release <package> <version> [--dry-run]');
+        is_dir("packages/{$package}") || fail("unknown package: {$package}");
+        preg_match('/^\d+\.\d+\.\d+(-[0-9A-Za-z.]+)?$/', $version)
+            || fail("version must be semver (e.g. 2.1.0 or 2.1.0-rc1), got \"{$version}\"");
+
+        $tag = "{$package}/{$version}";
+        if (sh('git tag --list ' . escapeshellarg($tag)) !== '') {
+            fail("tag {$tag} already exists");
+        }
+
+        out("release notes for {$tag}:\n");
+        out(release_notes($package, $version, 'HEAD') . "\n");
+
+        if (isset($options['dry-run'])) {
+            out('(dry run — nothing tagged)');
+            break;
+        }
+
+        if (sh('git status --porcelain') !== '') {
+            fail('working tree is dirty — commit or stash before releasing');
+        }
+        exec('git merge-base --is-ancestor HEAD origin/main', $_, $unmerged);
+        if ($unmerged !== 0) {
+            out('warning: HEAD is not on origin/main — you are releasing unmerged commits');
+        }
+
+        sh("git tag {$tag}");
+        sh("git push origin {$tag}");
+        out("pushed {$tag} — CI will mirror the tag, publish to Packagist, and create the GitHub release");
+        break;
+
+    case 'validate':
+        $failures = 0;
+        $root = json_decode(file_get_contents('composer.json'), true);
+        foreach (packages() as $package) {
+            $problems = [];
+            $manifest = manifest($package);
+
+            if ($manifest === null) {
+                $problems[] = 'missing or invalid composer.json';
+            } else {
+                $expected = ORG . "/{$package}";
+                if (($manifest['name'] ?? null) !== $expected) {
+                    $problems[] = "name must be \"{$expected}\", got \"" . ($manifest['name'] ?? '') . '"';
+                }
+                if (empty($manifest['license'])) {
+                    $problems[] = 'missing license';
+                }
+                if (isset($manifest['version'])) {
+                    $problems[] = 'must not declare "version" (versions come from tags)';
+                }
+
+                // One prefix per package, Utopia\<Ns>\ => src/, with <Ns>
+                // spelling the package name (CircuitBreaker <-> circuit-breaker).
+                $namespace = namespace_of($manifest);
+                if ($namespace === null || strtolower($namespace) !== str_replace('-', '', $package)) {
+                    $problems[] = 'autoload must declare exactly one PSR-4 prefix, Utopia\<Ns>\ with <Ns> spelling the package name';
+                } else {
+                    $prefix = "Utopia\\{$namespace}\\";
+                    if (rtrim($manifest['autoload']['psr-4'][$prefix], '/') !== 'src') {
+                        $problems[] = "autoload must map {$prefix} to src/";
+                    }
+                    $dev = $manifest['autoload-dev']['psr-4'] ?? [];
+                    if (array_keys($dev) !== ["{$prefix}Tests\\"] || rtrim($dev["{$prefix}Tests\\"], '/') !== 'tests') {
+                        $problems[] = "autoload-dev must declare exactly {$prefix}Tests\\ mapped to tests/";
+                    }
+                    if (($root['autoload']['psr-4'][$prefix] ?? null) !== "packages/{$package}/src"
+                        || ($root['autoload-dev']['psr-4']["{$prefix}Tests\\"] ?? null) !== "packages/{$package}/tests") {
+                        $problems[] = 'root composer.json autoload is stale, run `bin/monorepo autoload`';
+                    }
+                }
+
+                foreach (HOISTED as $dependency) {
+                    if (isset($manifest['require-dev'][$dependency])) {
+                        $problems[] = "{$dependency} must not be in require-dev (the root toolchain provides it)";
+                    }
+                }
+                foreach ($manifest['repositories'] ?? [] as $repository) {
+                    if (($repository['type'] ?? '') === 'path') {
+                        $problems[] = 'siblings must be Packagist constraints, not path repositories (the mirror installs standalone)';
+                    }
+                }
+                foreach (['require', 'require-dev'] as $section) {
+                    if (isset($root[$section][$expected])) {
+                        $problems[] = "root composer.json must not require {$expected} (the package is autoloaded directly)";
+                    }
+                }
+            }
+
+            // Locks are never committed for packages; check the index rather
+            // than the disk, since a local `composer update` legitimately
+            // writes one.
+            $tracked = explode("\n", sh('git ls-files ' . escapeshellarg("packages/{$package}")));
+            if (in_array("packages/{$package}/composer.lock", $tracked, true)) {
+                $problems[] = 'composer.lock must not be committed (packages are not locked)';
+            }
+            $ignored = is_file("packages/{$package}/.gitignore") ? file_get_contents("packages/{$package}/.gitignore") : '';
+            if (preg_match('#^/?composer\.lock$#m', $ignored) !== 1) {
+                $problems[] = '.gitignore must list composer.lock';
+            }
+            foreach ($tracked as $file) {
+                $name = basename($file);
+                if (in_array($name, BANNED, true) || (str_starts_with($name, 'Dockerfile') && !in_array($name, compose_dockerfiles("packages/{$package}"), true))) {
+                    $problems[] = substr($file, strlen("packages/{$package}/")) . ' must not exist (root tooling is canonical)';
+                }
+            }
+            if (!is_file("packages/{$package}/phpstan.neon")) {
+                $problems[] = 'missing phpstan.neon (packages are analysed under their own level)';
+            }
+            if (!is_file("packages/{$package}/.github/workflows/mirror.yml")) {
+                $problems[] = 'missing .github/workflows/mirror.yml, run `bin/monorepo absorb ' . $package . ' --skip-ruleset`';
+            }
+
+            foreach ($problems as $problem) {
+                out("packages/{$package}: {$problem}");
+                $failures++;
+            }
+        }
+        if (file_get_contents('composer.json') !== root_manifest()) {
+            out('composer.json: package autoload entries are stale, run `bin/monorepo autoload`');
+            $failures++;
+        }
+        out($failures === 0 ? 'all packages valid' : "{$failures} problem(s) found");
+        exit($failures === 0 ? 0 : 1);
+
+    case 'autoload':
+        file_put_contents('composer.json', root_manifest());
+        out('composer.json package autoload entries regenerated');
+        break;
+
+    case 'check':
+        $targets = $arguments !== [] ? $arguments : packages();
+        toolchain();
+        $failed = [];
+        foreach ($targets as $package) {
+            is_dir("packages/{$package}") || fail("unknown package: {$package}");
+
+            out("==> {$package}");
+            $directory = "packages/{$package}";
+            is_file("{$directory}/phpstan.neon") || fail("{$directory}/phpstan.neon is missing (see bin/monorepo validate)");
+
+            // Style comes from the root pint.json; analysis runs at the
+            // package's own level, against the root autoloader.
+            $fix = isset($options['fix']);
+            $checks = [];
+            if (is_file("{$directory}/rector.php")) {
+                // first, so --fix leaves rector's output formatted
+                $checks['rector'] = '../../vendor/bin/rector process' . ($fix ? '' : ' --dry-run');
+            }
+            $checks['pint'] = '../../vendor/bin/pint --config ../../pint.json' . ($fix ? '' : ' --test');
+            $checks['phpstan'] = '../../vendor/bin/phpstan analyse --memory-limit=1G';
+
+            foreach ($checks as $tool => $command) {
+                passthru("cd {$directory} && {$command}", $code);
+                if ($code !== 0) {
+                    $failed[] = "{$package} ({$tool})";
+                }
+            }
+        }
+        if ($failed !== []) {
+            fail('checks failed: ' . implode(', ', $failed));
+        }
+        out('all checks passed');
+        break;
+
+    case 'dependents':
+        $targets = $arguments !== [] ? $arguments : fail('usage: monorepo dependents <name...>');
+
+        $dependents = [];
+        foreach (packages() as $candidate) {
+            $manifest = manifest($candidate);
+            // require-dev counts: a dev-only sibling (e.g. queue's optional NATS
+            // broker) still makes the registry combination unbuildable while the
+            // sibling's change is unreleased, so its dependents must run linked.
+            foreach (array_merge($manifest['require'] ?? [], $manifest['require-dev'] ?? []) as $dependency => $constraint) {
+                if (str_starts_with($dependency, ORG . '/')) {
+                    $dependents[substr($dependency, strlen(ORG) + 1)][] = $candidate;
+                }
+            }
+        }
+
+        $found = [];
+        $pending = $targets;
+        while ($pending !== []) {
+            foreach ($dependents[array_shift($pending)] ?? [] as $dependent) {
+                if (!isset($found[$dependent])) {
+                    $found[$dependent] = true;
+                    $pending[] = $dependent;
+                }
+            }
+        }
+        foreach (array_keys($found) as $dependent) {
+            out($dependent);
+        }
+        break;
+
+    case 'test':
+        $targets = $arguments !== [] ? $arguments : packages();
+        toolchain();
+        $failed = [];
+        foreach ($targets as $package) {
+            is_dir("packages/{$package}") || fail("unknown package: {$package}");
+
+            out("==> {$package}");
+            $directory = "packages/{$package}";
+
+            // --linked: resolve siblings from the local checkout instead of
+            // Packagist, via a generated manifest (COMPOSER env) with a path
+            // repository claiming constraint-satisfying versions.
+            $environment = '';
+            if (isset($options['linked'])) {
+                $versions = linked_versions($package);
+                $rootVersion = $versions[ORG . "/{$package}"] ?? null;
+                unset($versions[ORG . "/{$package}"]);
+                if ($versions === []) {
+                    out('no local siblings to link; running registry-resolved');
+                } else {
+                    $manifest = manifest($package);
+                    $manifest['repositories'] = array_merge([[
+                        'type' => 'path',
+                        'url' => '../*',
+                        'only' => array_keys($versions),
+                        'options' => ['symlink' => false, 'versions' => $versions],
+                    ]], $manifest['repositories'] ?? []);
+                    file_put_contents("{$directory}/composer.linked.json", json_encode($manifest, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n");
+                    $environment = ($rootVersion === null ? '' : "COMPOSER_ROOT_VERSION={$rootVersion} ")
+                        . 'COMPOSER=composer.linked.json ';
+                    out('linked: ' . implode(', ', array_keys($versions)));
+                }
+            }
+
+            // --ignore-platform-reqs: CI installs each package's declared
+            // extensions, and exotic transitive ones (e.g. ext-opentelemetry)
+            // must not block resolution.
+            passthru("cd {$directory} && {$environment}composer update --no-interaction --prefer-dist --no-progress --ignore-platform-reqs", $code);
+
+            // The test contract: `composer test` is the unit tier and runs on
+            // a bare host; `composer test:e2e` runs on the host against the
+            // package's compose services.
+            if ($code === 0) {
+                $runner = isset(manifest($package)['scripts']['test']) ? 'composer test' : 'phpunit';
+                passthru("cd {$directory} && {$environment}{$runner}", $code);
+            }
+
+            if ($code === 0 && isset(manifest($package)['scripts']['test:e2e'])) {
+                $compose = is_file("{$directory}/docker-compose.yml");
+                if ($compose) {
+                    passthru("cd {$directory} && docker compose up -d --build --wait", $code);
+                }
+                if ($code === 0) {
+                    passthru("cd {$directory} && {$environment}composer test:e2e", $code);
+                }
+                if ($compose) {
+                    passthru("cd {$directory} && docker compose down -v --remove-orphans > /dev/null 2>&1");
+                }
+            }
+
+            if ($code !== 0) {
+                $failed[] = $package;
+            }
+        }
+        if ($failed !== []) {
+            fail('tests failed: ' . implode(', ', $failed));
+        }
+        out('all tests passed');
+        break;
+
+    default:
+        out(<<<'HELP'
+        usage: bin/monorepo <command>
+
+          list                                show packages and their latest release tag
+          absorb <name> [url] [branch] [--skip-ruleset]
+                                              import (preserving history) + strip hoisted QA + mirror PR redirect + lockdown
+          split [name...] [--tag=v] [--branch=main] [--remote=url] [--force] [--dry-run]
+                                              push package histories to their mirrors
+          release <name> <version> [--dry-run]
+                                              preview notes, tag <name>/<version> and push it (CI does the rest)
+          validate                            check the package shape and the root autoload wiring
+          autoload                            regenerate the root composer.json autoload entries for packages/
+          check [name...] [--fix]             run pint, phpstan and rector against packages
+          test [name...] [--linked]           install dependencies and run package test suites
+                                              (--linked resolves siblings from the local checkout)
+          dependents <name...>                list packages that depend on the given ones (transitively)
+        HELP);
+        break;
+}
