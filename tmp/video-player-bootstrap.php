@@ -6,12 +6,20 @@
  *   php /tmp/video-player-bootstrap.php
  */
 
-require '/usr/src/code/vendor/autoload.php';
+require '/usr/src/code/app/init.php';
 
+use Appwrite\Database\Factory;
 use Tests\E2E\Client;
+use Utopia\Cache\Adapter\Pool as CachePool;
+use Utopia\Cache\Adapter\Sharding;
+use Utopia\Cache\Cache;
+use Utopia\Config\Config;
+use Utopia\Database\DateTime;
+use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
+use Utopia\Database\Validator\Authorization;
 use Utopia\System\System;
 
 $client = new Client();
@@ -27,6 +35,71 @@ function call(Client $client, string $method, string $path, array $headers = [],
         exit(1);
     }
     return $response;
+}
+
+function joinExistingOrganization(string $userId): string
+{
+    $join = function () use ($userId): string {
+        global $register;
+        $pools = $register->get('pools');
+        $cache = new Cache(new Sharding(array_map(
+            fn (string $name) => new CachePool($pools->get($name)),
+            Config::getParam('pools-cache', []),
+        )));
+        $authorization = new Authorization();
+        $database = (new Factory($pools, $cache, $authorization))->platform();
+        $teamId = '';
+
+        $authorization->skip(function () use ($database, $userId, &$teamId) {
+            $team = $database->findOne('teams');
+            if ($team->isEmpty()) {
+                throw new RuntimeException('No existing organization to join');
+            }
+
+            $user = $database->getDocument('users', $userId);
+            if ($user->isEmpty()) {
+                throw new RuntimeException('Console user missing');
+            }
+
+            $teamId = $team->getId();
+            $membershipId = ID::unique();
+            $database->createDocument('memberships', new Document([
+                '$id' => $membershipId,
+                '$permissions' => [
+                    Permission::read(Role::user($user->getId())),
+                    Permission::read(Role::team($teamId)),
+                    Permission::update(Role::user($user->getId())),
+                    Permission::update(Role::team($teamId, 'owner')),
+                    Permission::delete(Role::user($user->getId())),
+                    Permission::delete(Role::team($teamId, 'owner')),
+                ],
+                'userId' => $user->getId(),
+                'userInternalId' => $user->getSequence(),
+                'teamId' => $teamId,
+                'teamInternalId' => $team->getSequence(),
+                'roles' => ['owner'],
+                'invited' => DateTime::now(),
+                'joined' => DateTime::now(),
+                'confirm' => true,
+                'secret' => '',
+                'search' => $membershipId . ' ' . $user->getId(),
+            ]));
+            $database->purgeCachedDocument('users', $userId);
+        });
+
+        return $teamId;
+    };
+
+    if (\Swoole\Coroutine::getCid() >= 0) {
+        return $join();
+    }
+
+    $teamId = '';
+    \Swoole\Coroutine\run(function () use ($join, &$teamId) {
+        $teamId = $join();
+    });
+
+    return $teamId;
 }
 
 function wait(callable $fn, int $timeout = 300, int $intervalMs = 1000): mixed
@@ -75,16 +148,28 @@ $consoleHeaders = [
     'x-appwrite-project' => 'console',
 ];
 
-$team = call($client, Client::METHOD_POST, '/teams', $consoleHeaders, [
+$account = call($client, Client::METHOD_GET, '/account', $consoleHeaders);
+$team = $client->call(Client::METHOD_POST, '/teams', $consoleHeaders, [
     'teamId' => ID::unique(),
     'name' => 'Video Demo Team',
 ]);
+$teamCode = $team['headers']['status-code'] ?? 0;
+if ($teamCode === 201) {
+    $teamId = $team['body']['$id'];
+} elseif ($teamCode === 403 && ($team['body']['type'] ?? '') === 'organization_creation_prohibited') {
+    echo "  joining existing self-hosted organization\n";
+    $teamId = joinExistingOrganization($account['body']['$id']);
+} else {
+    fwrite(STDERR, "FAIL POST /teams => {$teamCode}\n");
+    fwrite(STDERR, json_encode($team['body'] ?? [], JSON_PRETTY_PRINT) . "\n");
+    exit(1);
+}
 
 $project = call($client, Client::METHOD_POST, '/projects', $consoleHeaders, [
     'projectId' => ID::unique(),
     'region' => System::getEnv('_APP_REGION', 'default'),
     'name' => 'Video Player Demo',
-    'teamId' => $team['body']['$id'],
+    'teamId' => $teamId,
     'description' => 'Local HLS player demo',
     'url' => 'http://localhost',
 ]);
@@ -312,6 +397,7 @@ $out = [
     'projectId' => $projectId,
     'videoId' => $videoId,
     'renditionId' => $renditionId,
+    'bucketId' => $bucketId,
     'hlsUrl' => $hlsUrl,
     'jwt' => $jwt,
 ];

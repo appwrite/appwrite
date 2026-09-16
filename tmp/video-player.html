@@ -451,16 +451,23 @@
     let cues = [];
     let spriteReady = false;
     let lastStatus = null; // last poll payload, so we can re-render after manifest loads
+    let demoDefaults = null;
     const spriteBlobs = new Map();
     const spriteSizes = new Map();
     const THUMB_MAX_W = 160;
     const THUMB_MAX_H = 120;
 
-    // Prefill from URL ?endpoint=&projectId=&videoId=&playback= or localStorage.
+    // Prefill from URL ?endpoint=&projectId=&videoId=&bucketId=&playback= or localStorage.
+    // A URL projectId that does not match the saved one is a different project —
+    // do not keep the old bucket/video IDs or uploads 404 with storage_bucket_not_found.
     const params = new URLSearchParams(location.search);
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+    const urlProject = params.get('projectId');
+    const projectChanged = Boolean(urlProject && saved.projectId && urlProject !== saved.projectId);
     for (const key of ['endpoint', 'projectId', 'videoId', 'bucketId']) {
-      $(key).value = params.get(key) || saved[key] || $(key).value || '';
+      const fromUrl = params.get(key);
+      const skipSaved = projectChanged && (key === 'bucketId' || key === 'videoId');
+      $(key).value = fromUrl || (!skipSaved && saved[key]) || $(key).value || '';
     }
     playbackSelect.value = params.get('playback') || saved.playback || 'hls';
     if (saved.encode) {
@@ -468,6 +475,19 @@
       $('encodeDash').checked = !!saved.encode.dash;
       $('encodeCmaf').checked = !!saved.encode.cmaf;
     }
+
+    fetch('video-player-demo.json', { cache: 'no-store' })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        demoDefaults = data;
+        if (!data?.bucketId) return;
+        const cfg = config();
+        if (data.projectId && data.projectId !== cfg.projectId) return;
+        if (cfg.bucketId) return;
+        $('bucketId').value = data.bucketId;
+        persistConfig();
+      })
+      .catch(() => { /* sidecar is optional */ });
 
     function playbackMode() {
       return playbackSelect.value || 'hls';
@@ -717,19 +737,21 @@
     }
 
     async function attachSubtitle(videoId, file, code, name) {
-      const bucketId = $('bucketId').value.trim();
-      if (!bucketId) throw new Error('bucket ID required to upload a subtitle');
       if (!storage) throw new Error('authenticate first');
-      const stored = await storage.createFile(
-        bucketId,
-        ID.unique(),
-        file,
-        [
-          Permission.read(Role.any()),
-          Permission.update(Role.user(currentUserId)),
-          Permission.delete(Role.user(currentUserId)),
-        ]
-      );
+      let bucketId = await resolveUploadBucket($('bucketId').value.trim(), $('apiKey').value.trim());
+      const filePermissions = [
+        Permission.read(Role.any()),
+        Permission.update(Role.user(currentUserId)),
+        Permission.delete(Role.user(currentUserId)),
+      ];
+      let stored;
+      try {
+        stored = await storage.createFile(bucketId, ID.unique(), file, filePermissions);
+      } catch (err) {
+        if (!isBucketNotFound(err)) throw err;
+        bucketId = await recoverMissingBucket($('apiKey').value.trim());
+        stored = await storage.createFile(bucketId, ID.unique(), file, filePermissions);
+      }
       return apiPost(`/videos/${videoId}/subtitles`, {
         bucketId,
         fileId: stored.$id,
@@ -1045,6 +1067,48 @@
       }
     }
 
+    function isBucketNotFound(err) {
+      const type = err?.type || err?.code;
+      const msg = String(err?.message || err);
+      return type === 'storage_bucket_not_found'
+        || /Storage bucket with the requested ID could not be found/i.test(msg);
+    }
+
+    async function applyDemoBucketIfMissing() {
+      if (!demoDefaults?.bucketId) return '';
+      const cfg = config();
+      if (demoDefaults.projectId && demoDefaults.projectId !== cfg.projectId) return '';
+      $('bucketId').value = demoDefaults.bucketId;
+      persistConfig();
+      return demoDefaults.bucketId;
+    }
+
+    async function resolveUploadBucket(bucketId, apiKey) {
+      if (bucketId) return bucketId;
+      const fromDemo = await applyDemoBucketIfMissing();
+      if (fromDemo) return fromDemo;
+      if (apiKey) {
+        uploadInfo.textContent = 'creating public bucket…';
+        return createPublicBucket(apiKey);
+      }
+      throw new Error('bucket ID required (or paste an API key and we will create a public one)');
+    }
+
+    async function recoverMissingBucket(apiKey) {
+      const fromDemo = await applyDemoBucketIfMissing();
+      if (fromDemo) return fromDemo;
+      if (apiKey) {
+        uploadInfo.textContent = 'bucket missing in this project · creating a public one…';
+        return createPublicBucket(apiKey);
+      }
+      $('bucketId').value = '';
+      persistConfig();
+      throw new Error(
+        'bucket ID is not in this project (stale after a rebuild or a project switch). '
+        + 'Paste the bucket for this project, or an API key and click Create public bucket.'
+      );
+    }
+
     async function createPublicBucket(apiKey) {
       if (!apiKey) throw new Error('API key required to create a bucket (needs buckets.write)');
       // Bucket create is a key-scoped console/server action — send the key directly.
@@ -1120,36 +1184,46 @@
       uploadProgress.value = 0;
 
       try {
-        if (!bucketId) {
-          if (!apiKey) {
-            throw new Error('bucket ID required (or paste an API key and we will create a public one)');
-          }
-          uploadInfo.textContent = 'creating public bucket…';
-          bucketId = await createPublicBucket(apiKey);
-        }
+        bucketId = await resolveUploadBucket(bucketId, apiKey);
 
         uploadInfo.textContent = `uploading ${file.name}…`;
 
+        const filePermissions = [
+          Permission.read(Role.any()),
+          Permission.update(Role.user(currentUserId)),
+          Permission.delete(Role.user(currentUserId)),
+        ];
+        const onUploadProgress = (progress) => {
+          const percent = progress?.progress
+            ?? (progress?.sizeUploaded && progress?.chunksTotal
+              ? (progress.chunksUploaded / progress.chunksTotal) * 100
+              : 0);
+          uploadProgress.value = Math.max(0, Math.min(100, Number(percent) || 0));
+          uploadInfo.textContent = `uploading ${file.name} · ${Math.round(uploadProgress.value)}%`;
+        };
+
         // Public buckets (create("any")) accept the logged-in session. Private buckets
         // that only allow specific roles will fail here — create a public one first.
-        const storedFile = await storage.createFile(
-          bucketId,
-          ID.unique(),
-          file,
-          [
-            Permission.read(Role.any()),
-            Permission.update(Role.user(currentUserId)),
-            Permission.delete(Role.user(currentUserId)),
-          ],
-          (progress) => {
-            const percent = progress?.progress
-              ?? (progress?.sizeUploaded && progress?.chunksTotal
-                ? (progress.chunksUploaded / progress.chunksTotal) * 100
-                : 0);
-            uploadProgress.value = Math.max(0, Math.min(100, Number(percent) || 0));
-            uploadInfo.textContent = `uploading ${file.name} · ${Math.round(uploadProgress.value)}%`;
-          }
-        );
+        let storedFile;
+        try {
+          storedFile = await storage.createFile(
+            bucketId,
+            ID.unique(),
+            file,
+            filePermissions,
+            onUploadProgress
+          );
+        } catch (err) {
+          if (!isBucketNotFound(err)) throw err;
+          bucketId = await recoverMissingBucket(apiKey);
+          storedFile = await storage.createFile(
+            bucketId,
+            ID.unique(),
+            file,
+            filePermissions,
+            onUploadProgress
+          );
+        }
 
         uploadProgress.value = 100;
         uploadInfo.textContent = 'source uploaded · creating video…';
@@ -1238,7 +1312,9 @@
         const msg = String(err?.message || err);
         uploadInfo.textContent = /No permissions provided for action 'create'/i.test(msg)
           ? `upload failed: this bucket doesn't allow create for your user. Paste an API key → “Create public bucket”, then upload again.`
-          : `upload failed: ${msg}`;
+          : isBucketNotFound(err)
+            ? `upload failed: bucket is not in this project. Use the bucket for project ${config().projectId}, or paste an API key and create a public one.`
+            : `upload failed: ${msg}`;
         console.error(err);
       } finally {
         uploadBtn.disabled = false;

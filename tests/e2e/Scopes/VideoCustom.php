@@ -485,7 +485,7 @@ trait VideoCustom
     }
 
     /**
-     * Re-materialise the working copy when a prior timeline/rendition released it.
+     * Re-materialise the working copy when a prior rendition released it.
      */
     public function ensureSourceReady(string $videoId, array $headers = []): array
     {

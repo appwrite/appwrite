@@ -25,7 +25,6 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Logger\Log;
 use Utopia\Platform\Action;
 use Utopia\Psr7\Stream;
 use Utopia\Queue\Message;
@@ -96,7 +95,6 @@ class Videos extends Action
             ->inject('usage')
             ->inject('publisherForUsage')
             ->inject('publisherForVideos')
-            ->inject('log')
             ->callback($this->action(...));
     }
 
@@ -111,7 +109,6 @@ class Videos extends Action
         Context $usage,
         UsagePublisher $publisherForUsage,
         VideoPublisher $publisherForVideos,
-        Log $log
     ): void {
         $payload = $message->getPayload();
 
@@ -125,10 +122,6 @@ class Videos extends Action
         Span::add('project.id', $project->getId());
         Span::add('video.id', $videoMessage->video->getId());
         Span::add('video.action', $action->value);
-
-        $log->addTag('projectId', $project->getId());
-        $log->addTag('videoId', $videoMessage->video->getId());
-        $log->addTag('action', $action->value);
 
         match ($action) {
             VideoAction::Download => $this->downloadSource(
@@ -362,7 +355,9 @@ class Videos extends Action
             }
         } finally {
             $this->cleanup($workspace['basePath']);
-            $this->tryRelease($dbForProject, $queueForRealtime, $project, $projectId, $video->getId());
+            // Keep the tmp source after sprites so a follow-up rendition create
+            // cannot lose the race with tryRelease. Encode still releases.
+            // $this->tryRelease($dbForProject, $queueForRealtime, $project, $projectId, $video->getId());
         }
     }
 

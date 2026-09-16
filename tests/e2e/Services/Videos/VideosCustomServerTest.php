@@ -231,11 +231,12 @@ final class VideosCustomServerTest extends Scope
     }
 
     /**
-     * After sprites are up and no encode is in-flight, tryRelease must unlink
-     * the tmp source. The HTTP container shares appwrite-videos-tmp so we can
-     * stat the file.
+     * After sprites are up and no encode is in-flight, timeline must keep the
+     * tmp source so a follow-up rendition create cannot lose the race. Encode
+     * still releases via tryRelease. The HTTP container shares
+     * appwrite-videos-tmp so we can stat the file.
      */
-    public function testTmpSourceReleasedAfterIdle(): void
+    public function testTmpSourceKeptAfterTimeline(): void
     {
         $create = $this->client->call(Client::METHOD_POST, '/videos', $this->headers(), [
             'bucketId' => $this->getVideoBucket()['$id'],
@@ -256,11 +257,11 @@ final class VideosCustomServerTest extends Scope
         $timeline = $this->waitForTimeline($videoId);
         $this->assertEquals(200, $timeline['headers']['status-code']);
 
-        $this->waitUntilTmpSourceGone($videoId);
-        $this->assertFileDoesNotExist($this->tmpSourcePath($videoId));
+        $this->assertFileExists($this->tmpSourcePath($videoId));
 
-        $removed = $this->waitForVideoStatus($videoId, 'removed');
-        $this->assertEquals('removed', $removed['status']);
+        $video = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId, $this->headers());
+        $this->assertEquals(200, $video['headers']['status-code']);
+        $this->assertEquals('ready', $video['body']['status']);
     }
 
     #[Depends('testCreateVideo')]

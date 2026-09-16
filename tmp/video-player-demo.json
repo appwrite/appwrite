@@ -1,0 +1,8 @@
+{
+    "projectId": "6aa90b7470a2b2268150",
+    "videoId": "6aa90b75a45cac109ec9",
+    "renditionId": "6aa90b76b074e9ee5805",
+    "bucketId": "6aa90b74c8f206e830e2",
+    "hlsUrl": "http:\/\/localhost\/v1\/videos\/6aa90b75a45cac109ec9\/outputs\/hls\/master.m3u8?project=6aa90b7470a2b2268150",
+    "jwt": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOiI2YWE5MGI3ZGNjYmJlZTNjNGFlYiIsInNlc3Npb25JZCI6IjZhYTkwYjdlMDYwN2JkZjA5MDc2IiwiZXhwIjoxNzg5NDY0MzIyfQ.CJuZRpnu26Bez1_44j2At-HATTbvLPBOChqcfr34Ops"
+}
