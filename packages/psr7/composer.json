@@ -1,0 +1,43 @@
+{
+    "name": "utopia-php/psr7",
+    "description": "PSR-7 HTTP message implementations and PSR-17 factories for Utopia",
+    "type": "library",
+    "keywords": [
+        "php",
+        "http",
+        "psr-7",
+        "psr-17",
+        "utopia"
+    ],
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Utopia\\Psr7\\": "src/Psr7/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Utopia\\Tests\\Psr7\\": "tests/Psr7/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit --configuration phpunit.xml"
+    },
+    "require": {
+        "php": ">=8.4",
+        "psr/http-factory": "^1.0",
+        "psr/http-message": "^1.1 || ^2.0"
+    },
+    "suggest": {
+        "ext-simplexml": "Required to decode XML responses with Response::xml()."
+    },
+    "config": {
+        "platform": {
+            "php": "8.4"
+        },
+        "allow-plugins": {
+            "php-http/discovery": true,
+            "tbachert/spi": true
+        }
+    }
+}
