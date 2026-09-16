@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Tests\Telemetry\Adapter;
+namespace Utopia\Telemetry\Tests\Adapter;
 
 use OpenTelemetry\API\Trace\Span;
 use OpenTelemetry\API\Trace\SpanContext;
@@ -86,7 +86,9 @@ final class OpenTelemetryExemplarTest extends TestCase
         };
 
         return new class ($capture) implements TransportInterface {
-            public function __construct(private \Closure $capture) {}
+            public function __construct(private \Closure $capture)
+            {
+            }
 
             public function contentType(): string
             {

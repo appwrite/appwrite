@@ -123,9 +123,7 @@ class OpenTelemetry implements Adapter
      */
     private function createMeter(string $type, string $name, callable $creator): Counter|UpDownCounter|Histogram|Gauge|ObservableGauge
     {
-        if (! isset($this->meterStorage[$type][$name])) {
-            $this->meterStorage[$type][$name] = $creator();
-        }
+        $this->meterStorage[$type][$name] ??= $creator();
 
         /** @var T */
         return $this->meterStorage[$type][$name];
@@ -139,7 +137,7 @@ class OpenTelemetry implements Adapter
     public function createCounter(string $name, ?string $unit = null, ?string $description = null, array $advisory = []): Counter
     {
         return $this->createMeter(Counter::class, $name, function () use ($name, $unit, $description, $advisory): \Utopia\Telemetry\Counter {
-            $create = fn(): CounterInterface => $this->meter->createCounter($name, $unit, $description, $advisory);
+            $create = fn (): CounterInterface => $this->meter->createCounter($name, $unit, $description, $advisory);
 
             return new class ($create) extends Counter {
                 private ?CounterInterface $counter = null;
@@ -147,7 +145,9 @@ class OpenTelemetry implements Adapter
                 /**
                  * @param \Closure(): CounterInterface $create
                  */
-                public function __construct(private \Closure $create) {}
+                public function __construct(private \Closure $create)
+                {
+                }
 
                 /**
                  * @param iterable<non-empty-string, array<mixed>|bool|float|int|string|null> $attributes
@@ -169,7 +169,7 @@ class OpenTelemetry implements Adapter
     public function createHistogram(string $name, ?string $unit = null, ?string $description = null, array $advisory = []): Histogram
     {
         return $this->createMeter(Histogram::class, $name, function () use ($name, $unit, $description, $advisory): \Utopia\Telemetry\Histogram {
-            $create = fn(): HistogramInterface => $this->meter->createHistogram($name, $unit, $description, $advisory);
+            $create = fn (): HistogramInterface => $this->meter->createHistogram($name, $unit, $description, $advisory);
 
             return new class ($create) extends Histogram {
                 private ?HistogramInterface $histogram = null;
@@ -177,7 +177,9 @@ class OpenTelemetry implements Adapter
                 /**
                  * @param \Closure(): HistogramInterface $create
                  */
-                public function __construct(private \Closure $create) {}
+                public function __construct(private \Closure $create)
+                {
+                }
 
                 /**
                  * @param iterable<non-empty-string, array<mixed>|bool|float|int|string|null> $attributes
@@ -199,7 +201,7 @@ class OpenTelemetry implements Adapter
     public function createGauge(string $name, ?string $unit = null, ?string $description = null, array $advisory = []): Gauge
     {
         return $this->createMeter(Gauge::class, $name, function () use ($name, $unit, $description, $advisory): \Utopia\Telemetry\Gauge {
-            $create = fn(): GaugeInterface => $this->meter->createGauge($name, $unit, $description, $advisory);
+            $create = fn (): GaugeInterface => $this->meter->createGauge($name, $unit, $description, $advisory);
 
             return new class ($create) extends Gauge {
                 private ?GaugeInterface $gauge = null;
@@ -207,7 +209,9 @@ class OpenTelemetry implements Adapter
                 /**
                  * @param \Closure(): GaugeInterface $create
                  */
-                public function __construct(private \Closure $create) {}
+                public function __construct(private \Closure $create)
+                {
+                }
 
                 /**
                  * @param iterable<non-empty-string, array<mixed>|bool|float|int|string|null> $attributes
@@ -229,7 +233,7 @@ class OpenTelemetry implements Adapter
     public function createUpDownCounter(string $name, ?string $unit = null, ?string $description = null, array $advisory = []): UpDownCounter
     {
         return $this->createMeter(UpDownCounter::class, $name, function () use ($name, $unit, $description, $advisory): \Utopia\Telemetry\UpDownCounter {
-            $create = fn(): UpDownCounterInterface => $this->meter->createUpDownCounter($name, $unit, $description, $advisory);
+            $create = fn (): UpDownCounterInterface => $this->meter->createUpDownCounter($name, $unit, $description, $advisory);
 
             return new class ($create) extends UpDownCounter {
                 private ?UpDownCounterInterface $upDownCounter = null;
@@ -237,7 +241,9 @@ class OpenTelemetry implements Adapter
                 /**
                  * @param \Closure(): UpDownCounterInterface $create
                  */
-                public function __construct(private \Closure $create) {}
+                public function __construct(private \Closure $create)
+                {
+                }
 
                 /**
                  * @param iterable<non-empty-string, array<mixed>|bool|float|int|string|null> $attributes
@@ -259,7 +265,7 @@ class OpenTelemetry implements Adapter
     public function createObservableGauge(string $name, ?string $unit = null, ?string $description = null, array $advisory = []): ObservableGauge
     {
         return $this->createMeter(ObservableGauge::class, $name, function () use ($name, $unit, $description, $advisory): \Utopia\Telemetry\ObservableGauge {
-            $create = fn(): ObservableGaugeInterface => $this->meter->createObservableGauge($name, $unit, $description, $advisory);
+            $create = fn (): ObservableGaugeInterface => $this->meter->createObservableGauge($name, $unit, $description, $advisory);
 
             return new class ($create) extends ObservableGauge {
                 /** @var list<\Closure> */
@@ -270,7 +276,9 @@ class OpenTelemetry implements Adapter
                 /**
                  * @param \Closure(): ObservableGaugeInterface $create
                  */
-                public function __construct(private \Closure $create) {}
+                public function __construct(private \Closure $create)
+                {
+                }
 
                 public function observe(callable $callback): void
                 {

@@ -18,7 +18,9 @@ use OpenTelemetry\SDK\Metrics\PushMetricExporterInterface;
  */
 final class MetricExporter implements PushMetricExporterInterface, AggregationTemporalitySelectorInterface
 {
-    public function __construct(private readonly OtlpMetricExporter $exporter) {}
+    public function __construct(private readonly OtlpMetricExporter $exporter)
+    {
+    }
 
     public function export(iterable $batch): bool
     {

@@ -2,16 +2,15 @@
 
 declare(strict_types=1);
 
-namespace Tests\Telemetry\Adapter\OpenTelemetry\Swoole;
+namespace Utopia\Telemetry\Tests\Adapter\OpenTelemetry\Swoole;
 
 use OpenTelemetry\Contrib\Otlp\ContentTypes;
 use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use PHPUnit\Framework\TestCase;
-
-use function Swoole\Coroutine\run;
-
 use Utopia\Telemetry\Adapter\OpenTelemetry\Transport\Swoole;
 use Utopia\Telemetry\Exception;
+
+use function Swoole\Coroutine\run;
 
 /**
  * Unit tests for the Swoole Transport implementation.

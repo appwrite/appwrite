@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Tests\Telemetry;
+namespace Utopia\Telemetry\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Utopia\Telemetry\Adapter\Test;

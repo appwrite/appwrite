@@ -2,20 +2,19 @@
 
 declare(strict_types=1);
 
-namespace Tests\Telemetry\Adapter\OpenTelemetry\Swoole;
+namespace Utopia\Telemetry\Tests\E2E\Adapter\OpenTelemetry\Swoole;
 
 use OpenTelemetry\Contrib\Otlp\ContentTypes;
 use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use PHPUnit\Framework\TestCase;
 use Swoole\Coroutine;
-
-use function Swoole\Coroutine\go;
-use function Swoole\Coroutine\run;
-
 use Swoole\Coroutine\Server as TcpServer;
 use Swoole\Coroutine\Server\Connection;
 use Utopia\Telemetry\Adapter\OpenTelemetry\Transport\Swoole;
 use Utopia\Telemetry\Exception;
+
+use function Swoole\Coroutine\go;
+use function Swoole\Coroutine\run;
 
 /**
  * Integration tests for the Swoole Transport.
@@ -73,7 +72,7 @@ final class TransportIntegrationTest extends TestCase
                     }
                 }
             });
-            go(fn(): bool => $server->start());
+            go(fn (): bool => $server->start());
             Coroutine::sleep(0.05);
 
             $transport = new Swoole('http://127.0.0.1:19418/v1/metrics');
@@ -118,7 +117,7 @@ final class TransportIntegrationTest extends TestCase
                     }
                 }
             });
-            go(fn(): bool => $server->start());
+            go(fn (): bool => $server->start());
             Coroutine::sleep(0.05);
 
             $transport = new Swoole('http://127.0.0.1:19419/v1/metrics', timeout: 0.3);

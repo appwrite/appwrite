@@ -29,7 +29,8 @@
             "Utopia\\Agents\\": "packages/agents/src",
             "Utopia\\Bus\\": "packages/bus/src",
             "Utopia\\Lock\\": "packages/lock/src",
-            "Utopia\\Psr7\\": "packages/psr7/src"
+            "Utopia\\Psr7\\": "packages/psr7/src",
+            "Utopia\\Telemetry\\": "packages/telemetry/src"
         }
     },
     "autoload-dev": {
@@ -40,7 +41,8 @@
             "Utopia\\Agents\\Tests\\": "packages/agents/tests",
             "Utopia\\Bus\\Tests\\": "packages/bus/tests",
             "Utopia\\Lock\\Tests\\": "packages/lock/tests",
-            "Utopia\\Psr7\\Tests\\": "packages/psr7/tests"
+            "Utopia\\Psr7\\Tests\\": "packages/psr7/tests",
+            "Utopia\\Telemetry\\Tests\\": "packages/telemetry/tests"
         }
     },
     "minimum-stability": "dev",
@@ -106,7 +108,6 @@
         "utopia-php/registry": "0.5.*",
         "utopia-php/storage": "^4.0",
         "utopia-php/system": "^0.10 || ^0.11",
-        "utopia-php/telemetry": "^0.4",
         "utopia-php/user-agent": "0.1.*",
         "mustangostang/spyc": "0.6.*",
         "utopia-php/vcs": "5.4.*",
@@ -125,7 +126,11 @@
         "utopia-php/query": "0.6.*",
         "utopia-php/openapi": "^0.2.4",
         "psr/http-factory": "^1.0",
-        "psr/http-message": "^1.1 || ^2.0"
+        "psr/http-message": "^1.1 || ^2.0",
+        "nyholm/psr7": "1.*",
+        "open-telemetry/exporter-otlp": "1.*",
+        "open-telemetry/sdk": "1.*",
+        "symfony/http-client": "7.*"
     },
     "require-dev": {
         "ext-fileinfo": "*",
@@ -157,6 +162,7 @@
         "utopia-php/agents": "*",
         "utopia-php/bus": "*",
         "utopia-php/lock": "*",
-        "utopia-php/psr7": "*"
+        "utopia-php/psr7": "*",
+        "utopia-php/telemetry": "*"
     }
 }

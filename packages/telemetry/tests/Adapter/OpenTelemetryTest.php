@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Tests\Telemetry\Adapter;
+namespace Utopia\Telemetry\Tests\Adapter;
 
 use OpenTelemetry\Contrib\Otlp\ContentTypes;
 use Opentelemetry\Proto\Collector\Metrics\V1\ExportMetricsServiceRequest;
@@ -67,7 +67,8 @@ final class OpenTelemetryTest extends TestCase
             'instance',
             $this->transport($payloads),
         );
-        $telemetry->createObservableGauge('empty')->observe(static function (callable $observe): void {});
+        $telemetry->createObservableGauge('empty')->observe(static function (callable $observe): void {
+        });
 
         $this->assertTrue($telemetry->collect());
         $this->assertSame([], $payloads);
@@ -93,7 +94,7 @@ final class OpenTelemetryTest extends TestCase
         $telemetry->createHistogram('recorded.histogram', 'ms')->record(12.3);
         $telemetry->createGauge('recorded.gauge', 's')->record(4.5);
         $telemetry->createObservableGauge('recorded.observable_gauge', '%')
-            ->observe(fn(callable $observer) => $observer(72.4));
+            ->observe(fn (callable $observer) => $observer(72.4));
 
         $telemetry->createCounter('unused.counter', '{event}');
         $telemetry->createUpDownCounter('unused.up_down_counter', '{request}');
@@ -121,7 +122,9 @@ final class OpenTelemetryTest extends TestCase
         };
 
         return new class ($capture) implements TransportInterface {
-            public function __construct(private \Closure $capture) {}
+            public function __construct(private \Closure $capture)
+            {
+            }
 
             public function contentType(): string
             {

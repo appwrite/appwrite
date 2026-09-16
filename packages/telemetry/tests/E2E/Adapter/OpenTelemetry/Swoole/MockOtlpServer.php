@@ -1,19 +1,16 @@
 <?php
 
-namespace Tests\Telemetry\Adapter\OpenTelemetry\Swoole;
+namespace Utopia\Telemetry\Tests\E2E\Adapter\OpenTelemetry\Swoole;
 
 use Swoole\Coroutine;
-
-use function Swoole\Coroutine\go;
-
 use Swoole\Coroutine\Http\Client;
 use Swoole\Coroutine\Http\Server;
-
-use function Swoole\Coroutine\run;
-
 use Swoole\Http\Request;
 use Swoole\Http\Response;
 use Utopia\Telemetry\Exception;
+
+use function Swoole\Coroutine\go;
+use function Swoole\Coroutine\run;
 
 /**
  * Mock OTLP server for integration testing.
@@ -104,7 +101,7 @@ class MockOtlpServer
             $response->end($this->responseBody);
         });
 
-        go(fn(): mixed => $this->server->start());
+        go(fn (): mixed => $this->server->start());
 
         $this->waitUntilReady();
     }

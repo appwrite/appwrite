@@ -68,7 +68,9 @@ class Test implements Adapter
             /**
              * @param \Closure(Counter): void $register
              */
-            public function __construct(private \Closure $register) {}
+            public function __construct(private \Closure $register)
+            {
+            }
 
             /**
              * @param iterable<non-empty-string, array<mixed>|bool|float|int|string|null> $attributes
@@ -99,7 +101,9 @@ class Test implements Adapter
             /**
              * @param \Closure(Histogram): void $register
              */
-            public function __construct(private \Closure $register) {}
+            public function __construct(private \Closure $register)
+            {
+            }
 
             /**
              * @param iterable<non-empty-string, array<mixed>|bool|float|int|string|null> $attributes
@@ -130,7 +134,9 @@ class Test implements Adapter
             /**
              * @param \Closure(Gauge): void $register
              */
-            public function __construct(private \Closure $register) {}
+            public function __construct(private \Closure $register)
+            {
+            }
 
             /**
              * @param iterable<non-empty-string, array<mixed>|bool|float|int|string|null> $attributes
@@ -161,7 +167,9 @@ class Test implements Adapter
             /**
              * @param \Closure(UpDownCounter): void $register
              */
-            public function __construct(private \Closure $register) {}
+            public function __construct(private \Closure $register)
+            {
+            }
 
             /**
              * @param iterable<non-empty-string, array<mixed>|bool|float|int|string|null> $attributes
@@ -192,7 +200,9 @@ class Test implements Adapter
                 /**
                  * @param \Closure(ObservableGauge): void $register
                  */
-                public function __construct(private \Closure $register) {}
+                public function __construct(private \Closure $register)
+                {
+                }
 
                 public function observe(callable $callback): void
                 {
