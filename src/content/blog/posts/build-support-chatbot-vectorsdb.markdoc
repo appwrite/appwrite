@@ -27,7 +27,7 @@ This tutorial builds Harbor Help, a chatbot for a fictional project-management p
 Appwrite VectorsDB stores the articles as embeddings, an Appwrite Function retrieves them and generates answers through OpenRouter, and Appwrite Sites hosts the React interface. The article covers the Appwrite setup and SDK calls.
 
 {% info title="Companion project" %}
-The complete code is in [appwrite-community/support-chatbot](https://github.com/appwrite-community/support-chatbot), including the interface, the Function, the sample articles, and tests. You run the seed script and deploy from a local copy of it. The deployed app is live at [Harbor Help](https://harbor-help.appwrite.network).
+The complete code is in [appwrite-community/support-chatbot](https://github.com/appwrite-community/support-chatbot), including the interface, the Function, the sample articles, and tests. You run the seed script and deploy from a local copy of it.
 {% /info %}
 
 # How the chatbot works
