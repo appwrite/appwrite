@@ -26,14 +26,21 @@
         "psr-4": {
             "Appwrite\\": "src/Appwrite",
             "Executor\\": "src/Executor",
-            "Utopia\\Bus\\": "src/Utopia/Bus"
+            "Utopia\\Agents\\": "packages/agents/src",
+            "Utopia\\Bus\\": "packages/bus/src",
+            "Utopia\\Lock\\": "packages/lock/src",
+            "Utopia\\Psr7\\": "packages/psr7/src"
         }
     },
     "autoload-dev": {
         "psr-4": {
             "Tests\\E2E\\": "tests/e2e",
             "Tests\\Unit\\": "tests/unit",
-            "Appwrite\\Tests\\": "tests/extensions"
+            "Appwrite\\Tests\\": "tests/extensions",
+            "Utopia\\Agents\\Tests\\": "packages/agents/tests",
+            "Utopia\\Bus\\Tests\\": "packages/bus/tests",
+            "Utopia\\Lock\\Tests\\": "packages/lock/tests",
+            "Utopia\\Psr7\\Tests\\": "packages/psr7/tests"
         }
     },
     "minimum-stability": "dev",
@@ -69,7 +76,6 @@
         "appwrite/php-runtimes": "0.20.*",
         "appwrite/php-clamav": "2.0.*",
         "utopia-php/abuse": "2.0.*",
-        "utopia-php/agents": "2.*",
         "utopia-php/audit": "^4.0",
         "utopia-php/auth": "^0.12",
         "utopia-php/balancer": "0.4.*",
@@ -90,7 +96,6 @@
         "utopia-php/validators": "^1.0",
         "utopia-php/image": "0.8.*",
         "utopia-php/locale": "0.8.*",
-        "utopia-php/lock": "0.3.*",
         "utopia-php/messaging": "^2.1",
         "utopia-php/migration": "^2.0.0",
         "utopia-php/platform": "1.0.0-rc20",
@@ -118,7 +123,9 @@
         "utopia-php/schedule": "^0.2.0",
         "utopia-php/usage": "^0.16.4",
         "utopia-php/query": "0.6.*",
-        "utopia-php/openapi": "^0.2.4"
+        "utopia-php/openapi": "^0.2.4",
+        "psr/http-factory": "^1.0",
+        "psr/http-message": "^1.1 || ^2.0"
     },
     "require-dev": {
         "ext-fileinfo": "*",
@@ -145,5 +152,11 @@
             "php-http/discovery": true,
             "tbachert/spi": true
         }
+    },
+    "replace": {
+        "utopia-php/agents": "*",
+        "utopia-php/bus": "*",
+        "utopia-php/lock": "*",
+        "utopia-php/psr7": "*"
     }
 }

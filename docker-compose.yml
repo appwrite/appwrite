@@ -124,7 +124,7 @@ services:
       - _APP_NOTIFICATIONS_TRACKING_SECRET
       - _APP_DOMAIN
       - _APP_CONSOLE_DOMAIN
-      - _APP_CONSOLE_URL_SCHEME=root
+      - _APP_CONSOLE_URL
       - _APP_CONSOLE_TRUSTED_PROJECTS
       - _APP_DOMAIN_TARGET_CNAME
       - _APP_DOMAIN_TARGET_AAAA
@@ -266,7 +266,7 @@ services:
         max-file: "5"
         max-size: 10m
     container_name: appwrite-console
-    image: appwrite/new:1.1.96-self-hosted
+    image: appwrite/new:1.1.107-self-hosted
     restart: unless-stopped
     networks:
       - appwrite
@@ -428,8 +428,8 @@ services:
       - _APP_LOGGING_FORMAT
       - _APP_QUEUE_NAME
       - _APP_DATABASE_SHARED_TABLES
-      - _APP_CONSOLE_URL_SCHEME=root
       - _APP_CONSOLE_DOMAIN
+      - _APP_CONSOLE_URL
       - _APP_CONSOLE_TRUSTED_PROJECTS
       - _APP_DOMAIN
       - _APP_DOMAIN_TARGET_CNAME
@@ -635,7 +635,10 @@ services:
       - _APP_LOGGING_FORMAT
       - _APP_WEBHOOK_MAX_FAILED_ATTEMPTS
       - _APP_DATABASE_SHARED_TABLES
-      - _APP_CONSOLE_URL_SCHEME=root
+      - _APP_OPTIONS_FORCE_HTTPS
+      - _APP_DOMAIN
+      - _APP_CONSOLE_DOMAIN
+      - _APP_CONSOLE_URL
   appwrite-worker-deletes:
     profiles:
       - separate
@@ -848,7 +851,7 @@ services:
       - _APP_OPTIONS_ROUTER_FORCE_HTTPS
       - _APP_DOMAIN
       - _APP_CONSOLE_DOMAIN
-      - _APP_CONSOLE_URL_SCHEME=root
+      - _APP_CONSOLE_URL
       - _APP_CONSOLE_TRUSTED_PROJECTS
       - _APP_STORAGE_DEVICE
       - _APP_STORAGE_S3_ACCESS_KEY
@@ -943,6 +946,10 @@ services:
       - _APP_LOGGING_CONFIG
       - _APP_LOGGING_FORMAT
       - _APP_DATABASE_SHARED_TABLES
+      - _APP_OPTIONS_FORCE_HTTPS
+      - _APP_DOMAIN
+      - _APP_CONSOLE_DOMAIN
+      - _APP_CONSOLE_URL
     extra_hosts:
       - host.docker.internal:host-gateway
 
@@ -1685,7 +1692,7 @@ services:
     # One image carrying every orchestrator control plane. Appwrite drives the
     # jobs plane today; the per-plane images exist for Kubernetes, where each
     # scales, fails and gets RBAC on its own.
-    image: ghcr.io/open-runtimes/orchestrator/orchestrator:2.2.0
+    image: ghcr.io/open-runtimes/orchestrator/orchestrator:2.2.2
     restart: unless-stopped
     user: root
     networks:
