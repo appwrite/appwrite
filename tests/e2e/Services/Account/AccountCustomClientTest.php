@@ -6137,7 +6137,7 @@ final class AccountCustomClientTest extends Scope
 
     public function testCreateEmailVerificationOTP(): void
     {
-        $data = $this->setupAccountWithSession();
+        $data = $this->createFreshAccountWithSession();
         $session = $data['session'];
         $email = $data['email'];
 
