@@ -412,7 +412,12 @@ function RootAppShell({ children }: { children: React.ReactNode }) {
     <div className="root-container flex w-full min-w-0 flex-col overflow-hidden">
       <DevConstructionStripe />
       <div className="flex min-h-0 min-w-0 flex-1 overflow-hidden">
-        <div className="root-scroll-container h-full min-h-0 flex-1 overflow-hidden">
+        {/* min-w-0: marketing document-scroll mode forces `overflow: visible`
+            here (styles.css), which revives the flex `min-width: auto` floor.
+            Without it any over-wide descendant (promo banners, code blocks)
+            stretches the whole shell past the viewport and the page pans
+            sideways on mobile. */}
+        <div className="root-scroll-container h-full min-h-0 min-w-0 flex-1 overflow-hidden">
           <MarketingSiteLayoutGate>{children}</MarketingSiteLayoutGate>
         </div>
         <ConsoleRightPane />

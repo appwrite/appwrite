@@ -768,12 +768,12 @@ export function ConsoleHeader({
                   {headerTitleSuffix ? (
                     <>
                       <span
-                        className="shrink-0 text-[15px] text-muted-foreground/40"
+                        className="hidden shrink-0 text-[15px] text-muted-foreground/40 @[640px]:inline"
                         aria-hidden
                       >
                         |
                       </span>
-                      <span className="truncate text-[13px] font-medium text-muted-foreground">
+                      <span className="hidden truncate text-[13px] font-medium text-muted-foreground @[640px]:inline">
                         {headerTitleSuffix}
                       </span>
                     </>
@@ -1363,7 +1363,7 @@ export function ConsoleHeader({
                   type="button"
                   {...analyticsAttrs('command-center')}
                   onClick={openCommandCenter}
-                  className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[900px]:hidden"
+                  className="hidden h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[361px]:flex @[900px]:hidden"
                   aria-label={resolvedCenterSearchPlaceholder}
                 >
                   <Search className="h-4 w-4" />
@@ -1426,7 +1426,7 @@ export function ConsoleHeader({
                       type="button"
                       {...analyticsAttrs('command-center')}
                       onClick={openCommandCenter}
-                      className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[700px]:hidden"
+                      className="hidden h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[361px]:flex @[700px]:hidden"
                       aria-label={headerCopy.search.compactPlaceholder}
                     >
                       <Search className="h-4 w-4" />
@@ -1472,7 +1472,7 @@ export function ConsoleHeader({
                   type="button"
                   {...analyticsAttrs('command-center')}
                   onClick={openCommandCenter}
-                  className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[900px]:hidden"
+                  className="hidden h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[361px]:flex @[900px]:hidden"
                   aria-label={resolvedCenterSearchPlaceholder}
                 >
                   <Search className="h-4 w-4" />

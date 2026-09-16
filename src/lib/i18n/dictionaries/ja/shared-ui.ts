@@ -1235,5 +1235,6 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Stored in UTC': 'UTC での保存値',
   'Appwrite 2.0 is launching on Product Hunt today':
     'Appwrite 2.0 が本日 Product Hunt でローンチ',
+  'Appwrite 2.0 on Product Hunt': 'Product Hunt の Appwrite 2.0',
   'Share your take': 'フィードバックを送る',
 }
