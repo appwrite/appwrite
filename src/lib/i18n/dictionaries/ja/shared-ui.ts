@@ -387,6 +387,8 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'This feature is coming soon': 'この機能は近日公開予定です',
   'This organization has reached its budget limit and is now blocked. To continue using Appwrite services, update the budget limit.':
     'この組織は予算上限に達したためブロックされています。Appwrite サービスを引き続き利用するには、予算上限を更新してください。',
+  'This project is in readonly mode. Please contact the organization admin for details.':
+    'このプロジェクトは読み取り専用です。詳細は組織の管理者にお問い合わせください。',
   'This organization has reached its budget limit and is now blocked. Increase the budget cap below to restore access to billable services.':
     'この組織は予算上限に達したためブロックされています。請求対象サービスへのアクセスを復元するには、下の予算上限を引き上げてください。',
   'This organization has reached its plan limit for':
