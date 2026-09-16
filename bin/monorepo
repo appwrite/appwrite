@@ -289,6 +289,20 @@ function root_manifest(): string
         $root->{$section}->{'psr-4'} = (object) $entries;
     }
 
+    // Composer must not install a package this repository provides, even when
+    // another vendored package requires it: `replace` tells the solver the
+    // root satisfies that requirement and the vendored copy is skipped.
+    $replace = [];
+    foreach ((array) ($root->replace ?? []) as $name => $constraint) {
+        if (!str_starts_with($name, ORG . '/') || !in_array(substr($name, strlen(ORG) + 1), packages(), true)) {
+            $replace[$name] = $constraint;
+        }
+    }
+    foreach (packages() as $package) {
+        $replace[ORG . "/{$package}"] = '*';
+    }
+    $root->replace = (object) $replace;
+
     return json_encode($root, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n";
 }
 
@@ -450,14 +464,24 @@ switch ($command) {
 
         // Point readers here.
         $readme = "{$directory}/README.md";
-        if (is_file($readme) && !str_contains($content = file_get_contents($readme), 'read-only mirror')) {
+        if (is_file($readme)) {
+            $content = file_get_contents($readme);
             $home = 'https://github.com/' . REPOSITORY;
-            $banner = "> [!IMPORTANT]\n"
-                . "> This repository is a read-only mirror of [`packages/{$package}`]({$home}/tree/main/packages/{$package}) in [" . REPOSITORY . "]({$home}). "
-                . "Development happens there — please open issues and pull requests against " . REPOSITORY . ".\n";
-            $updated = preg_replace('/^(# .+\R)/', "\$1\n{$banner}", $content, 1, $count);
-            file_put_contents($readme, $count === 1 ? $updated : $banner . "\n" . $content);
-            out('added mirror banner to README.md');
+            $line = "> This repository is a read-only mirror of [`packages/{$package}`]({$home}/tree/main/packages/{$package}) in [" . REPOSITORY . "]({$home}). "
+                . "Development happens there — please open issues and pull requests against " . REPOSITORY . ".";
+            $lines = explode("\n", $content);
+            $existing = array_search(true, array_map(fn (string $l) => str_starts_with($l, '> This repository is a read-only mirror'), $lines), true);
+            if ($existing !== false && $lines[$existing] !== $line) {
+                // A banner from a previous home (the utopia-php monorepo): point it here.
+                $lines[$existing] = $line;
+                file_put_contents($readme, implode("\n", $lines));
+                out('updated mirror banner in README.md');
+            } elseif ($existing === false) {
+                $banner = "> [!IMPORTANT]\n{$line}\n";
+                $updated = preg_replace('/^(# .+\R)/', "\$1\n{$banner}", $content, 1, $count);
+                file_put_contents($readme, $count === 1 ? $updated : $banner . "\n" . $content);
+                out('added mirror banner to README.md');
+            }
         }
 
         // Lock the mirror down (PR-only, no force-push) and let the split app
@@ -689,6 +713,8 @@ switch ($command) {
             }
             if (!is_file("packages/{$package}/phpstan.neon")) {
                 $problems[] = 'missing phpstan.neon (packages are analysed under their own level)';
+            } elseif (str_contains(file_get_contents("packages/{$package}/phpstan.neon"), '../')) {
+                $problems[] = 'phpstan.neon must not include or reference paths outside the package (the root config is not a package floor)';
             }
             if (!is_file("packages/{$package}/.github/workflows/mirror.yml")) {
                 $problems[] = 'missing .github/workflows/mirror.yml, run `bin/monorepo absorb ' . $package . ' --skip-ruleset`';
@@ -828,13 +854,13 @@ switch ($command) {
             if ($code === 0 && isset(manifest($package)['scripts']['test:e2e'])) {
                 $compose = is_file("{$directory}/docker-compose.yml");
                 if ($compose) {
-                    passthru("cd {$directory} && docker compose up -d --build --wait", $code);
+                    passthru("cd {$directory} && COMPOSE_FILE=docker-compose.yml docker compose up -d --build --wait", $code);
                 }
                 if ($code === 0) {
                     passthru("cd {$directory} && {$environment}composer test:e2e", $code);
                 }
                 if ($compose) {
-                    passthru("cd {$directory} && docker compose down -v --remove-orphans > /dev/null 2>&1");
+                    passthru("cd {$directory} && COMPOSE_FILE=docker-compose.yml docker compose down -v --remove-orphans > /dev/null 2>&1");
                 }
             }
 

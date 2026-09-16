@@ -4,7 +4,7 @@ Status: draft · Author: loks0n · Last updated: 2026-09-15 · First slice (tool
 
 ## Summary
 
-Every `utopia-php/*` library Appwrite depends on moves into this repository under `packages/<name>`. Appwrite loads them **directly** through its own PSR-4 autoload, the same way `src/Utopia/Bus` is loaded today: no Composer dependency, no `path` repository, no `utopia-php/*` entry in `composer.lock`. Each package keeps its own `composer.json`, is split back to its read-only mirror `github.com/utopia-php/<name>` on every push to `main`, and keeps publishing to Packagist for consumers that are not Appwrite. `utopia-php/monorepo`, which already holds 36 of these packages and all of the tooling this needs, is archived once its packages have moved here.
+Every `utopia-php/*` library Appwrite depends on moves into this repository under `packages/<name>`. Appwrite loads them **directly** through its own PSR-4 autoload, as it already does for `packages/agents` and `packages/bus`: no Composer dependency, no `path` repository, no `utopia-php/*` entry in `composer.lock`. Each package keeps its own `composer.json`, is split back to its read-only mirror `github.com/utopia-php/<name>` on every push to `main`, and keeps publishing to Packagist for consumers that are not Appwrite. `utopia-php/monorepo`, which already holds 36 of these packages and all of the tooling this needs, is archived once its packages have moved here.
 
 ## Goals
 
@@ -17,7 +17,7 @@ Every `utopia-php/*` library Appwrite depends on moves into this repository unde
 ## Non-goals
 
 - Rewriting library APIs. Absorption moves code; API changes are separate work with their own releases.
-- Folding libraries into `src/Appwrite/`. Generic code stays generic and lives in `packages/`. `src/Utopia/` goes away: `Bus`, its only occupant, becomes `packages/bus` and gets a mirror like every other package.
+- Folding libraries into `src/Appwrite/`. Generic code stays generic and lives in `packages/`. `src/Utopia/` is gone: `Bus`, its only occupant, became `packages/bus` with a mirror like every other package.
 - Moving the four monorepo packages Appwrite does not use. `fastly` is archived, `nats` and `replication` go to `appwrite/cloud`, `reputation` is undecided (Cloud or here).
 - Adopting `utopia-php/config` 2.x. See [Version gaps](#version-gaps).
 
@@ -62,7 +62,7 @@ packages/<name>/
   composer.json        "Utopia\<Ns>\": "src/"    and    "Utopia\<Ns>\Tests\": "tests/"
   src/                 classes directly here; no src/<Ns>/ nesting
   tests/               unit tier at the top level: no network, no services, no API keys
-  tests/e2e/           services tier: anything that needs Redis, a database, an HTTP endpoint or a provider key
+  tests/E2E/           services tier: anything that needs Redis, a database, an HTTP endpoint or a provider key (capitalised: PSR-4 maps `Tests\E2E\` to the directory name exactly, and Linux is case-sensitive)
   tests/bench/         phpbench cases, excluded from both tiers
   phpunit.xml  rector.php  .gitignore  README.md  CHANGELOG.md  LICENSE
   docker-compose.yml   only when composer test:e2e exists
@@ -78,7 +78,8 @@ Rules `validate` checks per package:
 4. No `composer.lock`; `.gitignore` lists it.
 5. None of: `psalm.xml`, `phpcs.xml`, `.travis.yml`, `.gitpod.yml`, `.coderabbit.yaml`, `pint.json`, Pint/PHPStan/Rector/PHPUnit in `require-dev`, nor any `Dockerfile*` except the ones `docker-compose.yml` builds an e2e service from.
 6. Sibling dependencies are Packagist constraints, never path repositories (the mirror must install standalone).
-7. The root autoload map (below) matches what the manifests declare.
+7. The root autoload map and `replace` entries (below) match what the manifests declare.
+8. `phpstan.neon` never includes or references a path outside the package: in the old monorepo `../../phpstan.neon` was a per-package floor, here it is Appwrite's own config.
 
 ### Root composer.json
 
@@ -89,7 +90,7 @@ Rules `validate` checks per package:
   "psr-4": {
     "Appwrite\\": "src/Appwrite",
     "Executor\\": "src/Executor",
-    "Utopia\\Bus\\": "src/Utopia/Bus",
+    "Utopia\\Bus\\": "packages/bus/src",
     "Utopia\\Abuse\\": "packages/abuse/src",
     "Utopia\\Agents\\": "packages/agents/src",
     "...": "one line per package, 45 in total",
@@ -108,7 +109,9 @@ Rules `validate` checks per package:
 }
 ```
 
-The bare `Utopia\` directory list exists only until the five packages that declare it are standardised (phases 2 and 6). Composer probes the list in order; `validate` fails on any class path that resolves in more than one of them.
+The bare `Utopia\` directory list exists only until the five packages that declare it are standardised (phases 2 and 6).
+
+The root also declares every absorbed package under `replace` (`"utopia-php/<name>": "*"`). Most leaves are transitive dependencies of packages still vendored (`queue` requires `lock`, ten packages require `validators`), and without `replace` Composer would keep installing the vendored copy next to `packages/<name>`; with it the solver treats the root as providing that package and skips the install. `bin/monorepo autoload` generates these entries with the autoload map. Composer probes the list in order; `validate` fails on any class path that resolves in more than one of them.
 
 ### Docker
 
@@ -131,7 +134,7 @@ RUN composer dump-autoload --optimize --no-dev --no-scripts --no-plugins
 
 ### Tests
 
-- **Library unit tier** runs from Appwrite's PHPUnit. `phpunit.xml` gains a `packages` suite over `./packages/*/tests` excluding `tests/e2e` and `tests/bench`; the `unit` CI job runs it alongside `tests/unit`. Tests that reach a provider or a service belong in `tests/e2e/` even when they skip without a key: on the first slice, agents' conversation tests errored on DNS rather than skipping.
+- **Library unit tier** runs from Appwrite's PHPUnit. `phpunit.xml` gains a `packages` suite over `./packages/*/tests` excluding `tests/E2E` and `tests/bench`; the `unit` CI job runs it alongside `tests/unit`. Tests that reach a provider or a service belong in `tests/E2E/` even when they skip without a key: on the first slice, agents' conversation tests errored on DNS rather than skipping.
 - **Library e2e tier** runs per package on the host against the package's own `docker-compose.yml` (offset host ports, never inside Appwrite's stack), through `bin/monorepo test <name>`.
 - **Changed-package matrix.** Port the monorepo's `changed` job into `ci.yml`: diff `packages/` against the base ref, expand through `bin/monorepo dependents`, run `check` and `test` for each. A change under `bin/monorepo`, `.github/`, root `composer.json` or `pint.json` runs every package.
 - **Registry-mode nightly.** A scheduled job runs `composer update` inside each `packages/<name>` against Packagist, proving the mirror's constraint combination still installs for external consumers.
@@ -196,7 +199,7 @@ Package edits happen only where the package currently lives; this document carri
 
 ### Phase 0. Decide and freeze
 
-- Land this RFC. Rewrite the Libraries section of `AGENTS.md`: generic code goes in `packages/<name>` (Utopia namespace, loaded directly, mirrored to Packagist); Appwrite-specific code stays in `src/Appwrite/`; `src/Utopia/` is for un-mirrored Utopia code only.
+- Land this RFC. Rewrite the Libraries section of `AGENTS.md`: generic code goes in `packages/<name>` (Utopia namespace, loaded directly, mirrored to Packagist); Appwrite-specific code stays in `src/Appwrite/`.
 - Announce the freeze on `utopia-php/monorepo` and the 13 standalone repositories: from the date each package is absorbed, its only writable home is here. `mirror-redirect` enforces it for new PRs; existing open PRs on each mirror are triaged in that package's absorb PR.
 - Decide `reputation` (Cloud or here) and whether `config` 2.x gets a `packages/` home.
 - Add the branch-ruleset allowance for merge commits on `absorb`-labelled PRs.
@@ -205,7 +208,7 @@ Exit: RFC merged, `AGENTS.md` updated, freeze announced, ruleset in place.
 
 ### First slice, on this branch
 
-Phase 1 as written below, with `agents` as the proving package instead of `validators`: `bin/monorepo` and the split, split-dev and mirror-redirect workflows moved here; `agents` imported from its `main` branch with history, reshaped to the standard layout, and autoloaded directly, with `utopia-php/agents` gone from `require`. Two things learned while landing it, both now rules above: packages are analysed under their own `phpstan.neon` rather than the root config, and tests that reach a provider or a service live in `tests/e2e/` even when they would skip without a key (agents' conversation suites errored on DNS rather than skipping). The Dockerfile change is smaller than planned: the composer stage's optimised autoloader falls back to PSR-4 for classes outside its class map, so `COPY ./packages` in the base stage is enough.
+Phase 1 as written below, with `agents` as the proving package instead of `validators`: `bin/monorepo` and the split, split-dev and mirror-redirect workflows moved here; `agents` imported from its `main` branch with history, reshaped to the standard layout, and autoloaded directly, with `utopia-php/agents` gone from `require`. Two things learned while landing it, both now rules above: packages are analysed under their own `phpstan.neon` rather than the root config, and tests that reach a provider or a service live in `tests/E2E/` even when they would skip without a key (agents' conversation suites errored on DNS rather than skipping). The Dockerfile change is smaller than planned: the composer stage's optimised autoloader falls back to PSR-4 for classes outside its class map, so `COPY ./packages` in the base stage is enough.
 
 ### Phase 1. Tooling, proven with one package
 
