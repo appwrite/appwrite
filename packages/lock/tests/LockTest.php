@@ -31,7 +31,7 @@ final class LockTest extends TestCase
     public function testWithLockReturnsCallbackResult(): void
     {
         $mutex = new Mutex();
-        $result = $mutex->withLock(fn(): string => 'ok');
+        $result = $mutex->withLock(fn (): string => 'ok');
         $this->assertSame('ok', $result);
     }
 

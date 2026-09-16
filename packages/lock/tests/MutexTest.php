@@ -6,12 +6,11 @@ namespace Utopia\Lock\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Swoole\Coroutine;
-
-use function Swoole\Coroutine\run;
-
 use Swoole\Coroutine\System;
 use Utopia\Lock\Exception\Contention;
 use Utopia\Lock\Mutex;
+
+use function Swoole\Coroutine\run;
 
 final class MutexTest extends TestCase
 {
@@ -55,7 +54,7 @@ final class MutexTest extends TestCase
             Coroutine::create(function () use ($mutex, &$threw): void {
                 System::sleep(0.01);
                 try {
-                    $mutex->withLock(fn(): null => null, timeout: 0.05);
+                    $mutex->withLock(fn (): null => null, timeout: 0.05);
                 } catch (Contention) {
                     $threw = true;
                 }

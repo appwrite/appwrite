@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Utopia\Lock\Tests;
+namespace Utopia\Lock\Tests\E2E;
 
 use PHPUnit\Framework\TestCase;
 use Redis;
@@ -137,7 +137,7 @@ final class DistributedTest extends TestCase
 
         try {
             $this->expectException(Contention::class);
-            $waiter->withLock(fn(): null => null, timeout: 0.2);
+            $waiter->withLock(fn (): null => null, timeout: 0.2);
         } finally {
             $holder->release();
         }
@@ -146,7 +146,7 @@ final class DistributedTest extends TestCase
     public function testWithLockRunsCallbackAndReleases(): void
     {
         $lock = new Distributed($this->redis, $this->key, 30);
-        $result = $lock->withLock(fn(): string => 'done', timeout: 1.0);
+        $result = $lock->withLock(fn (): string => 'done', timeout: 1.0);
 
         $this->assertSame('done', $result);
         $this->assertLessThanOrEqual(0, $this->redis->exists($this->key));

@@ -6,4 +6,6 @@ namespace Utopia\Lock\Exception;
 
 use Utopia\Lock\Exception;
 
-class Contention extends Exception {}
+class Contention extends Exception
+{
+}

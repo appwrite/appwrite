@@ -40,7 +40,8 @@ final class Distributed implements Lock
         private readonly Redis $redis,
         private readonly string $key,
         private readonly int $ttl = 600,
-    ) {}
+    ) {
+    }
 
     /**
      * @param  Closure(string): void  $logger

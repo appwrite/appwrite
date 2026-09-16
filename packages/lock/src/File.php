@@ -17,7 +17,8 @@ final class File implements Lock
     public function __construct(
         private readonly string $path,
         private readonly int $mode = LOCK_EX,
-    ) {}
+    ) {
+    }
 
     #[\Override]
     public function acquire(float $timeout = 0.0): bool

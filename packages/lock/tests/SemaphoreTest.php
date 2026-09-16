@@ -7,11 +7,10 @@ namespace Utopia\Lock\Tests;
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 use Swoole\Coroutine;
-
-use function Swoole\Coroutine\run;
-
 use Swoole\Coroutine\System;
 use Utopia\Lock\Semaphore;
+
+use function Swoole\Coroutine\run;
 
 final class SemaphoreTest extends TestCase
 {
