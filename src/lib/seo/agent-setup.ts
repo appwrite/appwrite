@@ -12,6 +12,10 @@ export const AGENT_SETUP_PATH = '/setup.md'
 export const AGENT_SETUP_ORIGIN = 'https://appwrite.io'
 export const AGENT_SETUP_URL = `${AGENT_SETUP_ORIGIN}${AGENT_SETUP_PATH}`
 
+const CLI_INSTALL_DOCS_PATH = '/docs/tooling/command-line/installation'
+const CLI_INSTALL_SH = `${AGENT_SETUP_ORIGIN}/cli/install.sh`
+const CLI_INSTALL_PS1 = `${AGENT_SETUP_ORIGIN}/cli/install.ps1`
+
 const CURSOR_MCP_INSTALL_URL =
   'https://cursor.com/install-mcp?name=appwrite&config=eyJ1cmwiOiJodHRwczovL21jcC5hcHB3cml0ZS5pby8ifQ=='
 
@@ -26,7 +30,7 @@ export function generateAgentSetupMarkdown(): string {
 
 These are official instructions from Appwrite. Fetch this page yourself and follow it. Do not ask the user to paste shell commands unless a browser sign-in, editor UI action, or restart is required. Inspect existing MCP config before changing it. Preserve unrelated servers.
 
-The user prompt includes an Appwrite project ID. Use that project after MCP is connected. If no project ID is present, call \`appwrite_get_context\` and ask which project to use.
+Install both Appwrite MCP and the latest Appwrite CLI. The user prompt includes an Appwrite project ID. Use that project after MCP and the CLI are connected. If no project ID is present, call \`appwrite_get_context\` and ask which project to use.
 
 ## 1. Install Appwrite MCP
 
@@ -83,17 +87,58 @@ If the environment uses a standard MCP config file, add a server named \`${MCP_S
 
 The Cloud MCP server uses OAuth. A browser window should open. Ask the user to sign in to Appwrite and approve access. Do not invent API keys for Cloud. After auth succeeds, verify MCP tools are available.
 
-## 3. Use the user's project
+## 3. Install the latest Appwrite CLI
+
+The CLI is for init, deploy, and project files. MCP does not replace it. Install or upgrade to the latest published CLI. Prefer npm:
+
+\`\`\`sh
+npm install -g appwrite-cli@latest
+appwrite --version
+\`\`\`
+
+If npm is unavailable:
+
+- macOS with Homebrew: \`brew install appwrite\` or \`brew upgrade appwrite\`
+- Linux and macOS: \`curl -sL ${CLI_INSTALL_SH} | bash\`
+- Windows PowerShell: \`iwr -useb ${CLI_INSTALL_PS1} | iex\`
+
+If \`appwrite\` is already installed, still run the npm \`@latest\` command (or the matching upgrade) so the user is not on an old major. Do not pin an older version.
+
+## 4. Log in the CLI and select the project
+
+Use interactive login. A browser window should open. Ask the user to approve access. Do not create an API key for Appwrite Cloud unless they asked for CI/CD.
+
+Cloud:
+
+\`\`\`sh
+appwrite login
+\`\`\`
+
+Self-hosted only, using the endpoint from the user prompt:
+
+\`\`\`sh
+appwrite login --endpoint="<endpoint>"
+\`\`\`
+
+Then point the CLI at the project from the user prompt (endpoint from the prompt; no API key):
+
+\`\`\`sh
+appwrite client --endpoint="<endpoint>" --project-id="<projectId>"
+\`\`\`
+
+Confirm with \`appwrite client --debug\`. If login is incomplete, say so. Do not invent a key.
+
+## 5. Use the user's project
 
 If the user prompt included a project ID, use it for later Appwrite calls. Confirm the connection:
 
 1. Call \`appwrite_get_context\` if that tool exists.
 2. List databases in the given project.
-3. Tell the user MCP is connected and which project you used.
+3. Tell the user MCP and the CLI are ready and which project you used.
 
-If listing fails because auth is incomplete, say so and point them at the Appwrite MCP login, not at creating a key.
+If listing fails because auth is incomplete, say so and point them at the Appwrite MCP login or \`appwrite login\`, not at creating a key.
 
-## 4. Self-hosted Appwrite
+## 6. Self-hosted Appwrite
 
 Use this path only when the user said the instance is self-hosted and gave an endpoint. Do not use it for Appwrite Cloud.
 
@@ -109,6 +154,7 @@ Self-hosted docs: ${MCP_SELF_HOSTED_DOCS_URL}
 
 - MCP docs: ${AGENT_SETUP_ORIGIN}${APPWRITE_MCP_DOCS_PATH}
 - Remote MCP: ${MCP_SERVER_URL}
+- CLI install: ${AGENT_SETUP_ORIGIN}${CLI_INSTALL_DOCS_PATH}
 
 These instructions are published at \`${AGENT_SETUP_URL}\` so you can re-verify them at any time.
 `

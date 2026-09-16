@@ -45,7 +45,7 @@ export function buildConnectMcpPrompt(options: {
 }): string {
   const { projectId, projectName, isSelfHosted, endpoint } = options
   const lines: string[] = [
-    `Get Appwrite-ready by following ${AGENT_SETUP_URL}`,
+    `Install Appwrite MCP and the latest Appwrite CLI by following ${AGENT_SETUP_URL}`,
     '',
     `- Project ID: \`${projectId}\``,
     `- Name: ${projectName}`,
