@@ -1,7 +1,8 @@
 import { useMemo, useState, type MouseEvent } from 'react'
 import { useLocation } from '@tanstack/react-router'
-import { X } from 'lucide-react'
+import { ArrowUpRight, X } from 'lucide-react'
 import { useAuth } from '@/components/global/auth/RequireAuth'
+import { useScreenshotMode } from '@/components/global/providers/ScreenshotMode'
 import { Badge } from '@/components/ui/badge'
 import { analyticsAttrs } from '@/lib/analytics-actions'
 import {
@@ -46,6 +47,7 @@ export function ProductHuntPromoBanner() {
   const t = useT()
   const location = useLocation()
   const { account, isAuthenticated } = useAuth()
+  const { isScreenshotModeActive } = useScreenshotMode()
   const { isPreviewEnabled } = useDebugConsoleBannerPreviews()
   const dismissBanner = useDismissConsoleBanner()
   const [optimisticDismissed, setOptimisticDismissed] = useState(false)
@@ -64,7 +66,13 @@ export function ProductHuntPromoBanner() {
     dismissed: optimisticDismissed || dismissedFromPrefs,
   })
 
-  if (!visible || isFullscreenWizardPath(location.pathname)) {
+  // Screenshot mode is reactive: leaving it brings the banner back unless the
+  // user dismissed it in the meantime.
+  if (
+    !visible ||
+    isScreenshotModeActive ||
+    isFullscreenWizardPath(location.pathname)
+  ) {
     return null
   }
 
@@ -88,31 +96,35 @@ export function ProductHuntPromoBanner() {
         'bg-[linear-gradient(to_right,#0d0d10_0%,color-mix(in_srgb,#131316_97%,#FE9567)_34%,color-mix(in_srgb,#19191c_94%,#FE9567)_100%)]',
       )}
     >
+      {/* Padding lives on the link itself so the row is a single flex line
+          whose items can shrink; `pe-10` keeps it clear of the dismiss button. */}
       <a
         href={PRODUCT_HUNT_URL}
         target="_blank"
         rel="noopener noreferrer"
         {...analyticsAttrs(PRODUCT_HUNT_BANNER.event)}
         aria-label={`${t('Appwrite 2.0 is launching on Product Hunt today')}. ${t('Share your take')}`}
-        className="group relative z-0 flex min-h-14 w-full cursor-pointer items-center justify-center transition-colors hover:bg-white/[0.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+        className="group relative z-0 flex min-h-14 w-full cursor-pointer items-center justify-center gap-1.5 ps-3 pe-10 transition-colors hover:bg-white/[0.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset sm:gap-3 sm:ps-12 sm:pe-12"
       >
-        <div className="relative z-10 flex min-h-14 items-center justify-center gap-1.5 px-10 pe-10 sm:gap-3 sm:pe-12">
-          <Badge className="hidden shrink-0 bg-[#fd366e]/15 text-[10px] text-[#fd366e] sm:inline-flex">
-            {t('Now')}
-          </Badge>
-          <span
-            aria-hidden
-            className="hidden h-3.5 w-px shrink-0 bg-[#2d2d31] sm:inline"
-          />
-          <ProductHuntMark className="h-5 w-5 shrink-0" />
-          <p className="min-w-0 truncate text-[13px] font-medium text-[#fafafa] sm:text-[14px] md:text-[15px]">
+        <Badge className="hidden shrink-0 bg-[#fd366e]/15 text-[10px] text-[#fd366e] sm:inline-flex">
+          {t('Now')}
+        </Badge>
+        <span
+          aria-hidden
+          className="hidden h-3.5 w-px shrink-0 bg-[#2d2d31] sm:inline"
+        />
+        <ProductHuntMark className="h-5 w-5 shrink-0" />
+        <p className="min-w-0 truncate text-[13px] font-medium text-[#fafafa] sm:text-[14px] md:text-[15px]">
+          <span className="sm:hidden">{t('Appwrite 2.0 on Product Hunt')}</span>
+          <span className="hidden sm:inline">
             {t('Appwrite 2.0 is launching on Product Hunt today')}
-            <span className="text-[#fd366e]">_</span>
-          </p>
-          <span className="inline-flex h-7 shrink-0 items-center justify-center rounded-md bg-[#fd366e] px-3 text-[12px] font-medium text-white transition-colors group-hover:bg-[#fd366e]/90">
-            {t('Share your take')}
           </span>
-        </div>
+          <span className="text-[#fd366e]">_</span>
+        </p>
+        <span className="inline-flex h-7 shrink-0 items-center justify-center gap-1 rounded-md bg-[#fd366e] px-2 text-[12px] font-medium text-white transition-colors group-hover:bg-[#fd366e]/90 sm:px-3">
+          <span className="hidden sm:inline">{t('Share your take')}</span>
+          <ArrowUpRight className="h-4 w-4 sm:hidden" aria-hidden />
+        </span>
       </a>
 
       <button
@@ -121,7 +133,7 @@ export function ProductHuntPromoBanner() {
         onPointerDown={(event) => event.stopPropagation()}
         disabled={dismissBanner.isPending}
         aria-label={t('Dismiss banner')}
-        className="absolute end-2 top-1/2 z-20 flex h-8 w-8 -translate-y-1/2 cursor-pointer items-center justify-center rounded-md text-[#a8a8b3] transition-colors hover:bg-white/5 hover:text-[#fafafa] disabled:opacity-50 sm:end-3"
+        className="absolute end-1 top-1/2 z-20 flex h-8 w-8 -translate-y-1/2 cursor-pointer items-center justify-center rounded-md text-[#a8a8b3] transition-colors hover:bg-white/5 hover:text-[#fafafa] disabled:opacity-50 sm:end-3"
       >
         <X className="h-4 w-4" aria-hidden />
       </button>

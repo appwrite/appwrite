@@ -1276,5 +1276,6 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Stored in UTC': 'נשמר ב-UTC',
   'Appwrite 2.0 is launching on Product Hunt today':
     'Appwrite 2.0 מושק היום ב-Product Hunt',
+  'Appwrite 2.0 on Product Hunt': 'Appwrite 2.0 ב-Product Hunt',
   'Share your take': 'שתפו את דעתכם',
 }

@@ -2,6 +2,7 @@ import { useMemo, useState, type MouseEvent } from 'react'
 import { Link, useLocation, useParams } from '@tanstack/react-router'
 import { X } from 'lucide-react'
 import { useAuth } from '@/components/global/auth/RequireAuth'
+import { useScreenshotMode } from '@/components/global/providers/ScreenshotMode'
 import { Badge } from '@/components/ui/badge'
 import { analyticsAttrs } from '@/lib/analytics-actions'
 import {
@@ -39,6 +40,7 @@ export function PostgresPromoBanner() {
   const location = useLocation()
   const { projectId } = useParams({ strict: false })
   const { account } = useAuth()
+  const { isScreenshotModeActive } = useScreenshotMode()
   const { isPreviewEnabled } = useDebugConsoleBannerPreviews()
   const dismissBanner = useDismissConsoleBanner()
   const [optimisticDismissed, setOptimisticDismissed] = useState(false)
@@ -57,7 +59,12 @@ export function PostgresPromoBanner() {
     dismissed: optimisticDismissed || dismissedFromPrefs,
   })
 
-  if (!visible || !projectId || isFullscreenWizardPath(location.pathname)) {
+  if (
+    !visible ||
+    isScreenshotModeActive ||
+    !projectId ||
+    isFullscreenWizardPath(location.pathname)
+  ) {
     return null
   }
 
@@ -81,7 +88,7 @@ export function PostgresPromoBanner() {
         search={CREATE_DATABASE_WIZARD_POSTGRES_SEARCH}
         {...analyticsAttrs(POSTGRES_PROMO_BANNER.event)}
         aria-label={`${t('Appwrite now speaks PostgreSQL')}. ${t('Setup')}`}
-        className="group relative z-0 flex min-h-14 w-full cursor-pointer items-center justify-center transition-colors hover:bg-white/[0.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+        className="group relative z-0 flex min-h-14 w-full cursor-pointer items-center justify-center gap-1.5 ps-3 pe-10 transition-colors hover:bg-white/[0.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset sm:gap-3 sm:ps-12 sm:pe-12"
       >
         <div
           aria-hidden
@@ -95,22 +102,20 @@ export function PostgresPromoBanner() {
           />
         </div>
 
-        <div className="relative z-10 flex min-h-14 items-center justify-center gap-1.5 px-10 pe-10 sm:gap-3 sm:pe-12">
-          <Badge className="hidden shrink-0 bg-[#fd366e]/15 text-[10px] text-[#fd366e] sm:inline-flex">
-            {t('New')}
-          </Badge>
-          <span
-            aria-hidden
-            className="hidden h-3.5 w-px shrink-0 bg-[#2d2d31] sm:inline"
-          />
-          <p className="min-w-0 truncate text-[13px] font-medium text-[#fafafa] sm:text-[14px] md:text-[15px]">
-            {t('Appwrite now speaks PostgreSQL')}
-            <span className="text-[#fd366e]">_</span>
-          </p>
-          <span className="inline-flex h-7 shrink-0 items-center justify-center rounded-md bg-[#fd366e] px-3 text-[12px] font-medium text-white transition-colors group-hover:bg-[#fd366e]/90">
-            {t('Setup')}
-          </span>
-        </div>
+        <Badge className="relative z-10 hidden shrink-0 bg-[#fd366e]/15 text-[10px] text-[#fd366e] sm:inline-flex">
+          {t('New')}
+        </Badge>
+        <span
+          aria-hidden
+          className="relative z-10 hidden h-3.5 w-px shrink-0 bg-[#2d2d31] sm:inline"
+        />
+        <p className="relative z-10 min-w-0 truncate text-[13px] font-medium text-[#fafafa] sm:text-[14px] md:text-[15px]">
+          {t('Appwrite now speaks PostgreSQL')}
+          <span className="text-[#fd366e]">_</span>
+        </p>
+        <span className="relative z-10 inline-flex h-7 shrink-0 items-center justify-center rounded-md bg-[#fd366e] px-2 text-[12px] font-medium text-white transition-colors group-hover:bg-[#fd366e]/90 sm:px-3">
+          {t('Setup')}
+        </span>
       </Link>
 
       <button
@@ -119,7 +124,7 @@ export function PostgresPromoBanner() {
         onPointerDown={(event) => event.stopPropagation()}
         disabled={dismissBanner.isPending}
         aria-label={t('Dismiss banner')}
-        className="absolute end-2 top-1/2 z-20 flex h-8 w-8 -translate-y-1/2 cursor-pointer items-center justify-center rounded-md text-[#a8a8b3] transition-colors hover:bg-white/5 hover:text-[#fafafa] disabled:opacity-50 sm:end-3"
+        className="absolute end-1 top-1/2 z-20 flex h-8 w-8 -translate-y-1/2 cursor-pointer items-center justify-center rounded-md text-[#a8a8b3] transition-colors hover:bg-white/5 hover:text-[#fafafa] disabled:opacity-50 sm:end-3"
       >
         <X className="h-4 w-4" aria-hidden />
       </button>

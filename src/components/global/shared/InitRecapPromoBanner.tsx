@@ -2,6 +2,7 @@ import { useMemo, useState, type MouseEvent } from 'react'
 import { Link, useLocation } from '@tanstack/react-router'
 import { X } from 'lucide-react'
 import { useAuth } from '@/components/global/auth/RequireAuth'
+import { useScreenshotMode } from '@/components/global/providers/ScreenshotMode'
 import { InitWordmark } from '@/components/pages/init/_components/InitWordmark'
 import { Badge } from '@/components/ui/badge'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
@@ -33,6 +34,7 @@ export function InitRecapPromoBanner() {
   const location = useLocation()
   const { account, isAuthenticated } = useAuth()
   const { features } = useConsoleProfile()
+  const { isScreenshotModeActive } = useScreenshotMode()
   const { isPreviewEnabled } = useDebugConsoleBannerPreviews()
   const dismissBanner = useDismissConsoleBanner()
   const [optimisticDismissed, setOptimisticDismissed] = useState(false)
@@ -60,7 +62,7 @@ export function InitRecapPromoBanner() {
   })
   const headerPromoVisible = postgresHeaderVisible || productHuntHeaderVisible
 
-  if (!visible) return null
+  if (!visible || isScreenshotModeActive) return null
   if (
     location.pathname === '/init' ||
     location.pathname.startsWith('/init/')
