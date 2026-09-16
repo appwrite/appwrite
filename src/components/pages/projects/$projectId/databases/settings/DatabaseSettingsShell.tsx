@@ -25,6 +25,7 @@ import {
   isDatabaseRouteKind,
   type DatabaseRouteKind,
 } from '@/lib/database-routes'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 
 type DatabaseSettingsPath =
   | '/projects/$projectId/databases/$dbKind/$databaseId/settings'
@@ -111,20 +112,27 @@ export function DatabaseSettingsShell() {
     databaseId: databaseId!,
   }
 
-  const isCloud = isCloudDedicatedDatabasesEnabled()
+  const { features } = useConsoleProfile()
+  const showSpecification = features.databaseSpecifications
+  const showReplicationSection =
+    isCloudDedicatedDatabasesEnabled() && showReplication
 
   const visibleNav = useMemo(
-    () => visibleDatabaseSettingsNav({ isCloud, showReplication }),
-    [isCloud, showReplication],
+    () =>
+      visibleDatabaseSettingsNav({
+        showSpecification,
+        showReplication: showReplicationSection,
+      }),
+    [showSpecification, showReplicationSection],
   )
 
   const cardIndex = useMemo(
     () =>
       visibleDatabaseSettingsCards(DATABASE_SETTINGS_CARD_INDEX, {
-        isCloud,
-        showReplication,
+        showSpecification,
+        showReplication: showReplicationSection,
       }),
-    [isCloud, showReplication],
+    [showSpecification, showReplicationSection],
   )
 
   const layoutNavItems = useMemo(

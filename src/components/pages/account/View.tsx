@@ -48,7 +48,7 @@ export function View() {
   const location = useLocation()
   const navigate = useNavigate()
   const { account, signOut } = useAuth()
-  const { features, isCloud, isSelfHosted } = useConsoleProfile()
+  const { features, isSelfHosted } = useConsoleProfile()
   const { data: organizations, isSuccess } = useQuery({
     ...organizationsQueryOptions(),
     enabled: isSelfHosted && !!account,
@@ -123,7 +123,7 @@ export function View() {
         icon: Monitor,
         keywords: ['sessions', 'devices', 'logout', 'revoke'],
       },
-      ...(isCloud
+      ...(features.accountApplications
         ? [
             {
               id: 'applications',
@@ -187,7 +187,7 @@ export function View() {
     features.affiliates,
     features.billing,
     features.browserAlerts,
-    isCloud,
+    features.accountApplications,
     t,
   ])
 
@@ -200,7 +200,7 @@ export function View() {
         return features.affiliates
       }
       if (entry.sectionId === 'applications') {
-        return isCloud
+        return features.accountApplications
       }
       if (
         entry.sectionId === 'payment-methods' ||
@@ -222,7 +222,7 @@ export function View() {
     features.browserAlerts,
     features.accountIdentities,
     features.accountMfa,
-    isCloud,
+    features.accountApplications,
   ])
 
   useEffect(() => {
