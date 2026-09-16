@@ -1,8 +1,9 @@
 /**
  * Function Domain Card
  *
- * Cloud: choose between Edge (.appwrite.network) and Region
- * (.<region>.appwrite.run) endpoints per Appwrite Network docs.
+ * Cloud: choose between Edge (`_APP_DOMAIN_SITES`, e.g. .appwrite.network)
+ * and Region (`_APP_DOMAIN_FUNCTIONS`, e.g. .<region>.appwrite.run) endpoints
+ * per Appwrite Network docs.
  * Self-hosted: no network picker; suffix is `_APP_DOMAIN_FUNCTIONS`.
  */
 
@@ -42,8 +43,14 @@ export function FunctionDomainCard({
   const t = useT()
   const { features } = useConsoleProfile()
   const showNetworkPicker = features.edgeNetwork
-  const { endpointType, setEndpointType, baseDomain, region } =
-    useFunctionWizard()
+  const {
+    endpointType,
+    setEndpointType,
+    baseDomain,
+    edgeBaseDomain,
+    regionBaseDomain,
+    region,
+  } = useFunctionWizard()
 
   useEffect(() => {
     const sub = extractSubdomain(domain)
@@ -51,13 +58,10 @@ export function FunctionDomainCard({
   }, [baseDomain, setDomain])
 
   const sub = extractSubdomain(domain)
-  const edgeUrl = sub
-    ? `https://${sub}.appwrite.network`
-    : 'https://[name].appwrite.network'
-  const regionUrl =
-    sub && region
-      ? `https://${sub}.${region}.appwrite.run`
-      : `https://[name].${region || 'region'}.appwrite.run`
+  const edgeUrl = `https://${sub || '[name]'}.${edgeBaseDomain}`
+  const regionUrl = `https://${sub || '[name]'}.${
+    regionBaseDomain || `${region || 'region'}.appwrite.run`
+  }`
 
   return (
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden mb-6">
@@ -92,7 +96,8 @@ export function FunctionDomainCard({
               type="button"
               onClick={() => {
                 setEndpointType('region')
-                if (sub && region) setDomain(`${sub}.${region}.appwrite.run`)
+                if (sub && regionBaseDomain)
+                  setDomain(`${sub}.${regionBaseDomain}`)
               }}
               className={cn(
                 'text-start rounded-lg border p-4 transition-all cursor-pointer',
@@ -121,7 +126,7 @@ export function FunctionDomainCard({
               type="button"
               onClick={() => {
                 setEndpointType('edge')
-                if (sub) setDomain(`${sub}.appwrite.network`)
+                if (sub) setDomain(`${sub}.${edgeBaseDomain}`)
               }}
               className={cn(
                 'text-start rounded-lg border p-4 transition-all cursor-pointer',

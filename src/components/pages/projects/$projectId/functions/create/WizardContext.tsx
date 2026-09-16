@@ -59,6 +59,11 @@ interface FunctionWizardContextValue {
   setInstallations: (installations: Models.Installation[]) => void
   baseDomain: string
   setBaseDomain: (domain: string) => void
+  /** Base domain for edge endpoints (`_APP_DOMAIN_SITES` from console variables) */
+  edgeBaseDomain: string
+  setEdgeBaseDomain: (domain: string) => void
+  /** Base domain for region endpoints (`_APP_DOMAIN_FUNCTIONS` from console variables) */
+  regionBaseDomain: string
   generateDomain: (name: string) => string
   /** Endpoint type: edge (.appwrite.network) or region (.<region>.appwrite.run) */
   endpointType: FunctionEndpointType
@@ -89,6 +94,7 @@ export function FunctionWizardProvider({ children }: { children: ReactNode }) {
     useState<FunctionWizardFormData>(defaultFormData)
   const [installations, setInstallations] = useState<Models.Installation[]>([])
   const [configuredBaseDomain, setBaseDomain] = useState<string>('')
+  const [configuredEdgeDomain, setEdgeBaseDomain] = useState<string>('')
   const [endpointType, setEndpointType] =
     useState<FunctionEndpointType>('region')
   const [region, setRegion] = useState<string | undefined>(undefined)
@@ -104,14 +110,19 @@ export function FunctionWizardProvider({ children }: { children: ReactNode }) {
     setFormData(defaultFormData)
   }, [])
 
-  // Cloud: region (.<region>.appwrite.run) or edge (.appwrite.network).
-  // Self-hosted: `_APP_DOMAIN_FUNCTIONS` from console variables, never the
-  // Appwrite Network hosts.
+  // Cloud: region (`_APP_DOMAIN_FUNCTIONS`, already region-prefixed, e.g.
+  // fra.appwrite.run / fra.stage.appwrite.run) or edge (`_APP_DOMAIN_SITES`,
+  // e.g. appwrite.network / stage.appwrite.network). The production hosts are
+  // only a fallback while the console variables load. Self-hosted:
+  // `_APP_DOMAIN_FUNCTIONS`, never the Appwrite Network hosts.
+  const regionBaseDomain =
+    configuredBaseDomain || (region ? `${region}.appwrite.run` : '')
+  const edgeBaseDomain = configuredEdgeDomain || 'appwrite.network'
   const effectiveBaseDomain = !edgeNetworkEnabled
     ? configuredBaseDomain
-    : endpointType === 'region' && region
-      ? `${region}.appwrite.run`
-      : 'appwrite.network'
+    : endpointType === 'region' && regionBaseDomain
+      ? regionBaseDomain
+      : edgeBaseDomain
 
   const generateDomain = useCallback(
     (name: string) => {
@@ -136,6 +147,9 @@ export function FunctionWizardProvider({ children }: { children: ReactNode }) {
       setInstallations,
       baseDomain: effectiveBaseDomain,
       setBaseDomain,
+      edgeBaseDomain,
+      setEdgeBaseDomain,
+      regionBaseDomain,
       generateDomain,
       endpointType,
       setEndpointType,
@@ -148,6 +162,8 @@ export function FunctionWizardProvider({ children }: { children: ReactNode }) {
       resetFormData,
       installations,
       effectiveBaseDomain,
+      edgeBaseDomain,
+      regionBaseDomain,
       generateDomain,
       endpointType,
       region,
