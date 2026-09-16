@@ -9,44 +9,41 @@ use Utopia\Bus\Listener;
 
 class BusTest extends TestCase
 {
-    public function testDispatchCallsEverySubscribedListenerWithResolvedInjections(): void
+    public function testDispatchCallsEachSubscribedListenerWithItsOwnInjections(): void
     {
         $event = new class () implements Event {
         };
         $calls = [];
-        $listener = new class ($calls, $event::class) extends Listener {
-            public static string $event = '';
-
-            public function __construct(array &$calls, string $event)
-            {
-                self::$event = $event;
-                $this
-                    ->desc('records what it receives')
-                    ->inject('clock')
-                    ->callback(function (Event $event, string $clock) use (&$calls) {
-                        $calls[] = [$event::class, $clock];
-                    });
-            }
-
-            public static function getName(): string
-            {
-                return 'recorder';
-            }
-
-            public static function getEvents(): array
-            {
-                return [self::$event];
-            }
-        };
 
         $bus = (new Bus())
             ->setResolver(fn (string $name) => $name . ':resolved')
-            ->subscribe($listener)
-            ->subscribe($listener);
+            ->subscribe($this->listener('first', $event::class, 'clock', $calls))
+            ->subscribe($this->listener('second', $event::class, 'mailer', $calls));
 
         $bus->dispatch($event);
 
-        $this->assertSame([[$event::class, 'clock:resolved'], [$event::class, 'clock:resolved']], $calls);
+        $this->assertSame([
+            ['first', $event::class, 'clock:resolved'],
+            ['second', $event::class, 'mailer:resolved'],
+        ], $calls);
+    }
+
+    public function testDispatchSkipsListenersOfOtherEvents(): void
+    {
+        $dispatched = new class () implements Event {
+        };
+        $other = new class () implements Event {
+        };
+        $calls = [];
+
+        $bus = (new Bus())
+            ->setResolver(fn (string $name) => $name)
+            ->subscribe($this->listener('interested', $dispatched::class, 'dep', $calls))
+            ->subscribe($this->listener('uninterested', $other::class, 'dep', $calls));
+
+        $bus->dispatch($dispatched);
+
+        $this->assertSame([['interested', $dispatched::class, 'dep']], $calls);
     }
 
     public function testDispatchWithoutResolverIsRefused(): void
@@ -55,5 +52,37 @@ class BusTest extends TestCase
 
         (new Bus())->dispatch(new class () implements Event {
         });
+    }
+
+    /**
+     * @param array<array{string, string, string}> $calls
+     */
+    private function listener(string $name, string $event, string $injection, array &$calls): Listener
+    {
+        return new class ($name, $event, $injection, $calls) extends Listener {
+            private static string $name = '';
+            private static string $event = '';
+
+            public function __construct(string $name, string $event, string $injection, array &$calls)
+            {
+                self::$name = $name;
+                self::$event = $event;
+                $this
+                    ->inject($injection)
+                    ->callback(function (Event $received, string $dependency) use ($name, &$calls) {
+                        $calls[] = [$name, $received::class, $dependency];
+                    });
+            }
+
+            public static function getName(): string
+            {
+                return self::$name;
+            }
+
+            public static function getEvents(): array
+            {
+                return [self::$event];
+            }
+        };
     }
 }
