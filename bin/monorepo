@@ -698,9 +698,14 @@ switch ($command) {
                 // solver, so its third-party dependencies resolve only if the
                 // root declares them too.
                 foreach ($manifest['require'] ?? [] as $dependency => $constraint) {
-                    if ($dependency !== 'php' && !str_starts_with($dependency, 'ext-') && !str_starts_with($dependency, ORG . '/') && !isset($root['require'][$dependency])) {
-                        $problems[] = "{$dependency} is required by packages/{$package} but not by the root; hoist it, replace hides the package's requirements from Composer";
+                    if ($dependency === 'php' || str_starts_with($dependency, 'ext-') || isset($root['require'][$dependency])) {
+                        continue;
                     }
+                    // A sibling is satisfied by its own packages/ directory; anything else must be hoisted.
+                    if (str_starts_with($dependency, ORG . '/') && in_array(substr($dependency, strlen(ORG) + 1), packages(), true)) {
+                        continue;
+                    }
+                    $problems[] = "{$dependency} is required by packages/{$package} but not by the root; hoist it, replace hides the package's requirements from Composer";
                 }
             }
 
