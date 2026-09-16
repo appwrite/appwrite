@@ -6,6 +6,7 @@ use Appwrite\Auth\Key;
 use Appwrite\Auth\Validator\PasswordPwned\Appwrite as PasswordPwnedAppwrite;
 use Appwrite\Auth\Validator\PasswordPwned\HIBP as PasswordPwnedHIBP;
 use Appwrite\Auth\Validator\PasswordPwned\Mock as PasswordPwnedMock;
+use Appwrite\Auth\Validator\PasswordPwned\None as PasswordPwnedNone;
 use Appwrite\Database\Factory as DatabaseFactory;
 use Appwrite\Databases\TransactionState;
 use Appwrite\Deployment\Deployments;
@@ -683,6 +684,8 @@ return function (Container $context): void {
         return match ($dsn->getScheme()) {
             'hibp' => new PasswordPwnedHIBP($cache),
             'appwrite' => new PasswordPwnedAppwrite($dsn, $cache),
+            // Reports every password as safe by choice, for servers that cannot reach a breach service
+            'none' => new PasswordPwnedNone(),
             // Reports almost every password as safe, so it must never be reachable on a real server
             'mock' => Http::isProduction()
                 ? throw new Exception(Exception::GENERAL_SERVER_ERROR, 'The mock breach validator cannot be used in production.')
