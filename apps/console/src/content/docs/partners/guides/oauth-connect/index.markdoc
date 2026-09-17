@@ -119,10 +119,13 @@ https://fra.cloud.appwrite.io/v1/oauth2/console/authorize
   ?client_id=<CLIENT_ID>
   &redirect_uri=http://localhost:7700/oauth/callback
   &response_type=code
+  &state=<STATE>
   &scope=openid profile email project:project.read project:users.read project:users.write project:sessions.read project:sessions.write project:teams.read project:usage.read
 ```
 
 URL-encode the values.
+
+`state` is a random value your server generates before the redirect. Frontdesk keeps it in a cookie that expires in ten minutes. Appwrite returns the value unchanged, so if what comes back does not match what you stored, the callback did not come from the request your server started, and you drop it.
 
 {% only_dark %}
 ![The project access section of the consent screen with two projects selected](/images/docs/partners/guides/oauth-connect/dark/consent-projects.avif)
@@ -144,7 +147,7 @@ Projects left out of the selection stay out of the grant. A customer can start w
 ![The Frontdesk project picker showing the two projects the customer selected](/images/docs/partners/guides/oauth-connect/projects.avif)
 {% /only_light %}
 
-Appwrite returns the user to your callback with a single-use code that lasts five minutes. Exchange it from your server:
+Appwrite returns the user to your callback with the `state` you sent and a single-use code that lasts five minutes. Check the state first, then exchange the code from your server:
 
 ```bash
 curl -X POST https://fra.cloud.appwrite.io/v1/oauth2/console/token \
