@@ -2,6 +2,7 @@
 
 namespace Utopia\Mqtt\Packet;
 
+use Utopia\Mqtt\Packet;
 use Utopia\Mqtt\Properties;
 
 class Disconnect
@@ -17,7 +18,13 @@ class Disconnect
 
     public static function decode(string $body): self
     {
-        return new self($body === '' ? self::NORMAL : ord($body[0]));
+        if ($body === '') {
+            return new self(self::NORMAL);
+        }
+
+        [$reasonCode] = Packet::readByte($body, 0);
+
+        return new self($reasonCode);
     }
 
     public static function refuse(int $reasonCode = self::NOT_AUTHORIZED): self

@@ -25,10 +25,8 @@ class Connect
     public static function decode(string $body): self
     {
         [, $offset] = Packet::readString($body, 0);
-        $level = ord($body[$offset]);
-        $offset++;
-        $flags = ord($body[$offset]);
-        $offset++;
+        [$level, $offset] = Packet::readByte($body, $offset);
+        [$flags, $offset] = Packet::readByte($body, $offset);
         [$keepAlive, $offset] = Packet::readInt16($body, $offset);
 
         $properties = null;

@@ -14,8 +14,8 @@ class Puback
 
     public static function decode(string $body): self
     {
-        [$packetId] = Packet::readInt16($body, 0);
-        $reasonCode = isset($body[2]) ? ord($body[2]) : 0;
+        [$packetId, $offset] = Packet::readInt16($body, 0);
+        $reasonCode = isset($body[$offset]) ? Packet::readByte($body, $offset)[0] : 0;
 
         return new self($packetId, $reasonCode);
     }

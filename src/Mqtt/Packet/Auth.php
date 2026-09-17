@@ -2,6 +2,7 @@
 
 namespace Utopia\Mqtt\Packet;
 
+use Utopia\Mqtt\Packet;
 use Utopia\Mqtt\Properties;
 use Utopia\Mqtt\Property;
 
@@ -25,12 +26,13 @@ class Auth
             return new self(self::SUCCESS, '', '');
         }
 
-        [$properties] = Properties::parse($body, 1);
+        [$reasonCode, $offset] = Packet::readByte($body, 0);
+        [$properties] = Properties::parse($body, $offset);
         $method = $properties->get(Property::AUTHENTICATION_METHOD);
         $data = $properties->get(Property::AUTHENTICATION_DATA);
 
         return new self(
-            ord($body[0]),
+            $reasonCode,
             \is_string($method) ? $method : '',
             \is_string($data) ? $data : '',
             $properties,

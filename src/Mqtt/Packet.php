@@ -146,7 +146,21 @@ class Packet
         return [(ord($data[$offset]) << 8) + ord($data[$offset + 1]), $offset + 2];
     }
 
-    /** Decode a variable-length integer. @return array{0: int, 1: int} value and byte count */
+    /**
+     * Read a single byte (a reason code, protocol level, flags byte).
+     *
+     * @return array{0: int, 1: int} value and the new offset
+     */
+    public static function readByte(string $data, int $offset): array
+    {
+        return [ord($data[$offset]), $offset + 1];
+    }
+
+    /**
+     * Decode a variable-length integer.
+     *
+     * @return array{0: int, 1: int} value and byte count
+     */
     public static function decodeLength(string $data, int $offset): array
     {
         $value = 0;
