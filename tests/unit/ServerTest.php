@@ -7,6 +7,7 @@ namespace Utopia\Mqtt\Tests\Unit;
 use PHPUnit\Framework\TestCase;
 use Utopia\Mqtt\Adapter;
 use Utopia\Mqtt\Adapter\Swoole\Timer;
+use Utopia\Mqtt\Adapter\Swoole\Timers\NoTimer;
 use Utopia\Mqtt\Server;
 
 final class ServerTest extends TestCase
@@ -83,25 +84,7 @@ final class ServerTest extends TestCase
 
             public function timer(): Timer
             {
-                return new class () implements Timer {
-                    public function onTick(callable $callback): Timer
-                    {
-                        return $this;
-                    }
-
-                    public function onClear(callable $callback): Timer
-                    {
-                        return $this;
-                    }
-
-                    public function schedule(int $id, int $keepAlive): void
-                    {
-                    }
-
-                    public function clear(int $id): void
-                    {
-                    }
-                };
+                return new NoTimer();
             }
         };
     }
