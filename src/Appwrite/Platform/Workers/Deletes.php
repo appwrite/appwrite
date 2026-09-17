@@ -1616,30 +1616,19 @@ class Deletes extends Action
          * Repoint the resource's latest deployment
          */
         $collection = $document->getAttribute('resourceType');
-        $resourceId = $document->getAttribute('resourceId');
-        $updated = $dbForProject->withTransaction(function () use ($dbForProject, $document, $collection, $resourceId) {
-            $resource = $dbForProject->getDocument($collection, $resourceId, forUpdate: true);
-            if ($resource->getAttribute('latestDeploymentId') !== $document->getId()) {
-                return false;
-            }
-
+        $resource = $dbForProject->getDocument($collection, $document->getAttribute('resourceId'));
+        if ($resource->getAttribute('latestDeploymentId') === $deploymentId) {
             $latestDeployment = $dbForProject->findOne('deployments', [
                 Query::equal('resourceType', [$collection]),
                 Query::equal('resourceInternalId', [$resource->getSequence()]),
                 Query::orderDesc('$createdAt'),
-                Query::orderDesc('$sequence'),
             ]);
-            $dbForProject->updateDocument($collection, $resourceId, new Document([
+            $dbForProject->updateDocument($collection, $resource->getId(), new Document([
                 'latestDeploymentCreatedAt' => $latestDeployment->isEmpty() ? null : $latestDeployment->getCreatedAt(),
                 'latestDeploymentInternalId' => $latestDeployment->isEmpty() ? '' : $latestDeployment->getSequence(),
                 'latestDeploymentId' => $latestDeployment->isEmpty() ? '' : $latestDeployment->getId(),
                 'latestDeploymentStatus' => $latestDeployment->isEmpty() ? '' : $latestDeployment->getAttribute('status', ''),
             ]));
-            return true;
-        });
-
-        if ($updated) {
-            $dbForProject->purgeCachedDocument($collection, $resourceId);
         }
 
         /**

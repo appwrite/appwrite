@@ -219,22 +219,13 @@ class Screenshots extends Action
                 ->setPayload($deployment->getArrayCopy())
                 ->trigger();
 
-            // Captures may finish after this deployment is deactivated or deleted.
-            $updated = $dbForProject->withTransaction(function () use ($dbForProject, $siteId, $deployment) {
-                $site = $dbForProject->getDocument('sites', $siteId, forUpdate: true);
-                if ($site->getAttribute('deploymentId') !== $deployment->getId()) {
-                    return false;
-                }
-
+            // Preview builds are captured too, but only the active deployment represents the site.
+            $site = $dbForProject->getDocument('sites', $siteId);
+            if ($site->getAttribute('deploymentId') === $deployment->getId()) {
                 $dbForProject->updateDocument('sites', $site->getId(), new Document([
                     'deploymentScreenshotDark' => $deployment->getAttribute('screenshotDark', ''),
                     'deploymentScreenshotLight' => $deployment->getAttribute('screenshotLight', ''),
                 ]));
-                return true;
-            });
-
-            if ($updated) {
-                $dbForProject->purgeCachedDocument('sites', $siteId);
             }
         } catch (\Throwable $th) {
             $date = \date('H:i:s');
