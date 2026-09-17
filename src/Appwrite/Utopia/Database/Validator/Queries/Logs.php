@@ -2,7 +2,7 @@
 
 namespace Appwrite\Utopia\Database\Validator\Queries;
 
-class Logs extends Base
+class Logs extends Executions
 {
     public const ALLOWED_ATTRIBUTES = [
         'status',
@@ -19,6 +19,6 @@ class Logs extends Base
      */
     public function __construct()
     {
-        parent::__construct('executions', self::ALLOWED_ATTRIBUTES); //TODO: Update this later
+        parent::__construct(self::ALLOWED_ATTRIBUTES);
     }
 }
