@@ -117,35 +117,6 @@ class Server
         return $subscribers;
     }
 
-    public function send(Connection $connection, string $topic, string $payload, int $qos, bool $dup, ?int $sequence): void
-    {
-        $packetId = $qos > 0 ? $connection->nextPacketId() : 0;
-
-        $packet = $connection->protocol >= V5::PROTOCOL_LEVEL
-            ? V5::publish($topic, $payload, $qos, $packetId, null, $dup)
-            : V3::publish($topic, $payload, $qos, $packetId, $dup);
-
-        $this->adapter->send($connection->fd, $packet);
-
-        if ($qos === Packet::QOS_1 && $sequence !== null) {
-            $connection->track($packetId, $topic, $sequence);
-        }
-    }
-
-    public function puback(Connection $connection, int $packetId): void
-    {
-        $this->adapter->send($connection->fd, $this->encodePuback($packetId, $connection->protocol));
-    }
-
-    public function close(Connection $connection, int $reason): void
-    {
-        if ($reason !== Disconnect::NORMAL && $connection->protocol >= V5::PROTOCOL_LEVEL) {
-            $this->adapter->send($connection->fd, V5::disconnect($reason));
-        }
-
-        $this->adapter->close($connection->fd);
-    }
-
     private function receive(int $fd, string $data): void
     {
         $connection = $this->connections[$fd] ??= $this->open($fd);
@@ -232,10 +203,7 @@ class Server
 
     private function open(int $fd): Connection
     {
-        $connection = new Connection($fd);
-        $connection->bind($this);
-
-        return $connection;
+        return new Connection($fd, $this->adapter);
     }
 
     private function closed(int $fd): void
@@ -321,13 +289,6 @@ class Server
         }
 
         return V3::unsuback($id);
-    }
-
-    private function encodePuback(int $packetId, int $protocol): string
-    {
-        $id = \pack('n', $packetId);
-
-        return $protocol >= V5::PROTOCOL_LEVEL ? V5::puback($id) : V3::puback($id);
     }
 
     private function authProperties(Auth $auth): Properties

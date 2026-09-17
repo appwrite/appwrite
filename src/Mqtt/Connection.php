@@ -2,6 +2,9 @@
 
 namespace Utopia\Mqtt;
 
+use Utopia\Mqtt\Packet\Specs\V3;
+use Utopia\Mqtt\Packet\Specs\V5;
+
 /**
  * Per-connection state, keyed by the transport's file descriptor. A broker mutates it
  * across the packet lifecycle: CONNECT records the protocol level, client id and clean-start
@@ -43,8 +46,6 @@ class Connection
     /** The keep-alive wheel bucket (second) this connection currently sits in; 0 when not scheduled. */
     public int $wheelSlot = 0;
 
-    private ?Server $server = null;
-
     private int $packetId = 0;
 
     /**
@@ -66,28 +67,50 @@ class Connection
 
     public function __construct(
         public readonly int $fd,
+        private readonly ?Adapter $adapter = null,
     ) {
         $this->openedAt = microtime(true);
     }
 
-    public function bind(Server $server): void
-    {
-        $this->server = $server;
-    }
-
     public function publish(string $topic, string $payload, int $qos = 0, bool $dup = false, ?int $sequence = null): void
     {
-        $this->server?->send($this, $topic, $payload, $qos, $dup, $sequence);
+        if ($this->adapter === null) {
+            return;
+        }
+
+        $packetId = $qos > 0 ? $this->nextPacketId() : 0;
+        $packet = $this->protocol >= V5::PROTOCOL_LEVEL
+            ? V5::publish($topic, $payload, $qos, $packetId, null, $dup)
+            : V3::publish($topic, $payload, $qos, $packetId, $dup);
+
+        $this->adapter->send($this->fd, $packet);
+
+        if ($qos === Packet::QOS_1 && $sequence !== null) {
+            $this->track($packetId, $topic, $sequence);
+        }
     }
 
     public function puback(int $packetId): void
     {
-        $this->server?->puback($this, $packetId);
+        if ($this->adapter === null) {
+            return;
+        }
+
+        $id = \pack('n', $packetId);
+        $this->adapter->send($this->fd, $this->protocol >= V5::PROTOCOL_LEVEL ? V5::puback($id) : V3::puback($id));
     }
 
     public function disconnect(int $reason = 0): void
     {
-        $this->server?->close($this, $reason);
+        if ($this->adapter === null) {
+            return;
+        }
+
+        if ($reason !== 0 && $this->protocol >= V5::PROTOCOL_LEVEL) {
+            $this->adapter->send($this->fd, V5::disconnect($reason));
+        }
+
+        $this->adapter->close($this->fd);
     }
 
     /**
