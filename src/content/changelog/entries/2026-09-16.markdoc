@@ -1,6 +1,6 @@
 ---
 layout: changelog
-title: "Call your project from Appwrite Sites without storing an API key"
+title: "Appwrite Sites get dynamic API keys"
 date: 2026-09-16
 tags: sites, security, console
 ---
