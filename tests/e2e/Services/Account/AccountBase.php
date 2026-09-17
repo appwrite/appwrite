@@ -215,7 +215,7 @@ trait AccountBase
         $code = $matches[0][0] ?? '';
 
         $this->assertNotEmpty($code);
-        $this->assertStringContainsString(\gmdate('Y-m-d H:i', \strtotime($response['body']['expire'])) . ' UTC', (string) $lastEmail['text']);
+        $this->assertStringContainsString('in 15 minutes', (string) $lastEmail['text']);
 
         // Only Console project has branded logo in email.
         if ($isConsoleProject) {

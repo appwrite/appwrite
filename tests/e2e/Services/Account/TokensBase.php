@@ -48,7 +48,7 @@ trait TokensBase
 
             $secret = match ($type) {
                 'phone' => $this->readPhoneCode($params['phone']),
-                'email' => $this->readEmailCode($params['email'], $token['expire']),
+                'email' => $this->readEmailCode($params['email'], $options['expire'] ?? $defaultExpire),
                 default => $this->readEmailLink($params['email'], $token),
             };
 
@@ -105,10 +105,15 @@ trait TokensBase
         return $params['secret'];
     }
 
-    protected function readEmailCode(string $email, string $expire): string
+    protected function readEmailCode(string $email, int $expire): string
     {
-        $message = $this->getLastEmailByAddress($email, function (array $message) use ($expire) {
-            $this->assertStringContainsString(\gmdate('Y-m-d H:i', \strtotime($expire)) . ' UTC', (string) $message['text']);
+        $phrase = match ($expire) {
+            60 => 'in 1 minute',
+            900 => 'in 15 minutes',
+            3600 => 'in 1 hour',
+        };
+        $message = $this->getLastEmailByAddress($email, function (array $message) use ($phrase) {
+            $this->assertStringContainsString($phrase, (string) $message['text']);
         });
         \preg_match('/\b\d{6}\b/', (string) $message['text'], $matches);
         $this->assertNotEmpty($matches);
