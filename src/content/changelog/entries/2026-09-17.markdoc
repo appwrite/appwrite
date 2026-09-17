@@ -1,0 +1,21 @@
+---
+layout: changelog
+title: "Appwrite Terraform provider earns the HashiCorp Partner badge"
+date: 2026-09-17
+cover: /images/blog/announcing-terraform-partner-program/cover.avif
+tags: integrations, infrastructure
+---
+
+Appwrite is now a member of the **HashiCorp Technology Partner Program**, and the official [Appwrite Terraform provider](/docs/tooling/terraform) carries the **Partner** badge on the [Terraform Registry](https://registry.terraform.io/providers/appwrite/appwrite/latest). Partner providers are built and maintained by the company that owns the API and validated by HashiCorp, which sets them apart from Community providers that carry no such review.
+
+Nothing changes in your configuration. The provider source is still `appwrite/appwrite`, and every resource, data source, and argument is unchanged. The badge improves how the provider ranks in registry search and clears the bar for organizations that only allow Official and Partner providers.
+
+Alongside the badge, [version 2.1.0](https://github.com/appwrite/terraform-provider-appwrite/releases/tag/v2.1.0) of the provider adds ephemeral resources and write-only arguments, publishes a software bill of materials with every release artifact, and runs acceptance tests nightly against a self-hosted Appwrite instance.
+
+{% arrow_link href="/blog/post/announcing-terraform-partner-program" %}
+Read the announcement
+{% /arrow_link %}
+
+{% arrow_link href="/docs/tooling/terraform" %}
+Open the Terraform provider docs
+{% /arrow_link %}

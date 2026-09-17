@@ -3,6 +3,20 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "announcing-terraform-partner-program",
+    "href": "/blog/post/announcing-terraform-partner-program",
+    "title": "Appwrite Terraform provider is now a HashiCorp Partner",
+    "description": "The Appwrite Terraform provider is now a verified Partner provider on the HashiCorp Terraform Registry. Learn what the badge means and how to use the provider.",
+    "date": "2026-09-17",
+    "lastUpdated": "2026-09-17",
+    "timeToRead": 5,
+    "author": "aditya-oberai",
+    "category": "announcements",
+    "featured": false,
+    "cover": "/images/blog/announcing-terraform-partner-program/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "well-known-change-password-url",
     "href": "/blog/post/well-known-change-password-url",
     "title": "Support the well-known change password URL with Appwrite Auth",
@@ -43,6 +57,36 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
+    "slug": "what-is-a-document-database-an-expert-guide-for-developers",
+    "href": "/blog/post/what-is-a-document-database-an-expert-guide-for-developers",
+    "title": "What is a document database? An expert guide for developers",
+    "description": "Learn what a document database is, how it stores flexible JSON documents, how it differs from relational databases, and when to use one, in this guide.",
+    "date": "2026-09-15",
+    "lastUpdated": "2026-09-15",
+    "timeToRead": 5,
+    "author": "atharva",
+    "category": "architecture",
+    "featured": false,
+    "unlisted": true,
+    "cover": "/images/blog/what-is-a-document-database-an-expert-guide-for-developers/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "what-is-object-storage-a-beginners-guide",
+    "href": "/blog/post/what-is-object-storage-a-beginners-guide",
+    "title": "What is object storage? A beginner's guide",
+    "description": "Object storage keeps files in the cloud and scales with your app. Learn how it works, where it fits, and when to choose it over file or block storage.",
+    "date": "2026-09-15",
+    "lastUpdated": "2026-09-15",
+    "timeToRead": 5,
+    "author": "aditya-oberai",
+    "category": "architecture",
+    "featured": false,
+    "unlisted": true,
+    "cover": "/images/blog/what-is-object-storage-a-beginners-guide/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "appwrite-2-1-self-hosted",
     "href": "/blog/post/appwrite-2-1-self-hosted",
     "title": "Appwrite 2.1 is now available for self-hosting",
@@ -53,6 +97,51 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "author": "atharva",
     "category": "products, announcements",
     "cover": "/images/blog/appwrite-2-1-self-hosted/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "oauth-server-vs-oauth-client-what-is-the-difference",
+    "href": "/blog/post/oauth-server-vs-oauth-client-what-is-the-difference",
+    "title": "OAuth server vs. OAuth client: What is the difference?",
+    "description": "Learn the difference between an OAuth server and OAuth client, how each works, and the role they play in secure authorization flows.",
+    "date": "2026-09-14",
+    "lastUpdated": "2026-09-14",
+    "timeToRead": 5,
+    "author": "atharva",
+    "category": "comparisons",
+    "featured": false,
+    "unlisted": true,
+    "cover": "/images/blog/oauth-server-vs-oauth-client-what-is-the-difference/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "managed-postgres-vs-serverless-databases-which-one-should-developers-choose",
+    "href": "/blog/post/managed-postgres-vs-serverless-databases-which-one-should-developers-choose",
+    "title": "Dedicated Postgres vs. serverless databases: Which one should developers choose?",
+    "description": "Compare dedicated Postgres and serverless databases across scaling, pricing, performance, and when to choose each for your app.",
+    "date": "2026-09-13",
+    "lastUpdated": "2026-09-13",
+    "timeToRead": 5,
+    "author": "atharva",
+    "category": "comparisons",
+    "featured": false,
+    "unlisted": true,
+    "cover": "/images/blog/managed-postgres-vs-serverless-databases-which-one-should-developers-choose/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "file-vs-object-vs-block-storage-whats-the-difference",
+    "href": "/blog/post/file-vs-object-vs-block-storage-whats-the-difference",
+    "title": "File vs. object vs. block storage: What's the difference?",
+    "description": "Compare file, object, and block storage, including how each works, key differences, costs, performance, scalability, and the best use cases in cloud.",
+    "date": "2026-09-12",
+    "lastUpdated": "2026-09-12",
+    "timeToRead": 5,
+    "author": "aditya-oberai",
+    "category": "architecture",
+    "featured": false,
+    "unlisted": true,
+    "cover": "/images/blog/file-vs-object-vs-block-storage-whats-the-difference/cover.avif",
     "hasCover": true
   },
   {
@@ -115,6 +204,21 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
+    "slug": "what-is-oauth-a-beginners-guide",
+    "href": "/blog/post/what-is-oauth-a-beginners-guide",
+    "title": "What is OAuth? A beginner's guide",
+    "description": "OAuth is an open standard that lets apps access user data from another application without sharing passwords. Learn how OAuth 2.0 works, its flows, and how to add it to your app.",
+    "date": "2026-09-10",
+    "lastUpdated": "2026-09-10",
+    "timeToRead": 5,
+    "author": "aditya-oberai",
+    "category": "security",
+    "featured": false,
+    "unlisted": true,
+    "cover": "/images/blog/what-is-oauth-a-beginners-guide/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "customer-story-lorari",
     "href": "/blog/post/customer-story-lorari",
     "title": "How Lorari scaled to 130+ fitness studios solo with Appwrite",
@@ -126,6 +230,21 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "category": "customer-stories",
     "featured": false,
     "cover": "/images/blog/customer-story-lorari/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "sql-explained-how-developers-query-databases",
+    "href": "/blog/post/sql-explained-how-developers-query-databases",
+    "title": "SQL explained: How developers query databases",
+    "description": "Learn what SQL is, how queries work, and how developers use it to read, write, and manage data in relational databases.",
+    "date": "2026-09-09",
+    "lastUpdated": "2026-09-09",
+    "timeToRead": 5,
+    "author": "atharva",
+    "category": "best-practices",
+    "featured": false,
+    "unlisted": true,
+    "cover": "/images/blog/sql-explained-how-developers-query-databases/cover.avif",
     "hasCover": true
   },
   {
@@ -154,6 +273,21 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "category": "tutorials",
     "featured": false,
     "cover": "/images/blog/prisma-orm-appwrite-postgres/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "what-is-a-storage-bucket",
+    "href": "/blog/post/what-is-a-storage-bucket",
+    "title": "What is a storage bucket?",
+    "description": "A storage bucket is a container for files in cloud object storage. Learn how buckets work, what they're used for, and how to keep your stored data secure.",
+    "date": "2026-09-08",
+    "lastUpdated": "2026-09-08",
+    "timeToRead": 5,
+    "author": "aditya-oberai",
+    "category": "architecture",
+    "featured": false,
+    "unlisted": true,
+    "cover": "/images/blog/what-is-a-storage-bucket/cover.avif",
     "hasCover": true
   },
   {
@@ -194,6 +328,21 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "author": "atharva",
     "category": "products, announcements",
     "cover": "/images/blog/announcing-appwrite-2/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "what-is-a-vector-database-an-ai-developer-guide",
+    "href": "/blog/post/what-is-a-vector-database-an-ai-developer-guide",
+    "title": "What is a vector database? An AI developer guide",
+    "description": "Learn what a vector database is, how embeddings and similarity search work, its top AI use cases, key tradeoffs, and how to choose the right one.",
+    "date": "2026-09-07",
+    "lastUpdated": "2026-09-07",
+    "timeToRead": 5,
+    "author": "aditya-oberai",
+    "category": "ai",
+    "featured": false,
+    "unlisted": true,
+    "cover": "/images/blog/what-is-a-vector-database-an-ai-developer-guide/cover.avif",
     "hasCover": true
   },
   {
