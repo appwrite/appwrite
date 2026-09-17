@@ -1,5 +1,6 @@
 // Table spreadsheet UI (rows, columns, indexes, security, settings) for this database product.
 import { cn } from '@/lib/utils'
+import { resolveRowSaveTarget } from '@/lib/database-row-save'
 import {
   applyColumnResizeRailPosition,
   horizontalResizeDeltaPx,
@@ -1446,9 +1447,12 @@ function RowEditDrawer({
   }
 
   const handleSave = () => {
-    // For create mode, pass customRowId if set, otherwise pass null to use auto-generated
-    // For update mode, pass the existing row ID
-    const idToSave = isCreateMode ? customRowId || null : row?.$id || null
+    // A non-null rowId means "update"; create mode sends its custom ID separately.
+    const { rowId: idToSave, customId: customIdToSave } = resolveRowSaveTarget({
+      isCreateMode,
+      existingRowId: row?.$id,
+      customRowId,
+    })
     // Always pass permissions when updating (even if empty, to allow clearing permissions)
     // For create mode, only pass if permissions are set
     const permissionsToSave = isCreateMode
@@ -1591,7 +1595,7 @@ function RowEditDrawer({
     ) {
       payload['$updatedAt'] = now
     }
-    onSave(idToSave, payload, customRowId, permissionsToSave)
+    onSave(idToSave, payload, customIdToSave, permissionsToSave)
     // Don't close drawer here - wait for mutation to complete
   }
 
