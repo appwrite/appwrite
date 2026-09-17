@@ -5,8 +5,8 @@ import {
   databaseSpecificationsQueryOptions,
   dedicatedDatabaseSourceFromRouteKind,
 } from '@/lib/react-query/hooks'
+import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import {
-  isCloudDedicatedDatabasesEnabled,
   isDatabaseRouteKind,
   type DatabaseRouteKind,
 } from '@/lib/database-routes'
@@ -26,7 +26,7 @@ export const Route = createFileRoute(
       isDatabaseRouteKind(rawDbKind ?? '') ? rawDbKind : 'tablesdb'
     ) as DatabaseRouteKind
 
-    if (!isCloudDedicatedDatabasesEnabled()) {
+    if (!getActiveProfileFeatures().databaseSpecifications) {
       throw redirect({
         to: '/projects/$projectId/databases/$dbKind/$databaseId/settings',
         params: { projectId, dbKind, databaseId },

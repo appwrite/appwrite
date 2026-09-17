@@ -4,11 +4,7 @@
  */
 export type AccountMenuSection = 'home' | 'docs' | 'changelog'
 
-export type AccountMenuLink =
-  | AccountMenuSection
-  | 'console'
-  /** Temporary: remove once the old console is retired. */
-  | 'oldConsole'
+export type AccountMenuLink = AccountMenuSection | 'console'
 
 const ACCOUNT_MENU_SECTION_PATHS: readonly (readonly [
   AccountMenuSection,
@@ -37,7 +33,6 @@ type AccountMenuLinksOptions = {
   pathname: string
   /** True on the marketing/docs header, where the console is somewhere to go. */
   showMarketingNav: boolean
-  isCloud: boolean
 }
 
 /**
@@ -47,7 +42,6 @@ type AccountMenuLinksOptions = {
 export function getAccountMenuLinks({
   pathname,
   showMarketingNav,
-  isCloud,
 }: AccountMenuLinksOptions): AccountMenuLink[] {
   const active = getActiveAccountMenuSection(pathname)
   const links: AccountMenuLink[] = []
@@ -56,7 +50,6 @@ export function getAccountMenuLinks({
   if (showMarketingNav) links.push('console')
   if (active !== 'docs') links.push('docs')
   if (active !== 'changelog') links.push('changelog')
-  if (isCloud) links.push('oldConsole')
 
   return links
 }

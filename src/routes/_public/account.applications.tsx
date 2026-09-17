@@ -1,14 +1,13 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { pageTitle } from '@/lib/utils/page-title'
-import { isCloudProfile } from '@/lib/console-profiles'
+import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import { accountConnectedAppsQueryOptions } from '@/lib/react-query/hooks/account-applications'
 import { AccountApplications } from '@/components/pages/account/Applications'
 
 export const Route = createFileRoute('/_public/account/applications')({
   head: () => ({ meta: [{ title: pageTitle('Applications', 'Account') }] }),
   beforeLoad: () => {
-    // OAuth2 consents live on the Cloud OAuth2 server only.
-    if (!isCloudProfile()) {
+    if (!getActiveProfileFeatures().accountApplications) {
       throw redirect({ to: '/account', replace: true })
     }
   },

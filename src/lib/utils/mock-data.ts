@@ -129,6 +129,7 @@ export interface Invoice {
     | 'overdue'
     | 'failed'
     | 'cancelled'
+    | 'abandoned'
     | 'requires_authentication'
   amount: number
   currency: string

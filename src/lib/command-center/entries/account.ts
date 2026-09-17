@@ -12,7 +12,6 @@ import {
   Shield,
   User,
 } from 'lucide-react'
-import { isCloudProfile } from '@/lib/console-profiles'
 import { registerCommands } from '../registry'
 import type { CommandEntry } from '../types'
 
@@ -65,7 +64,7 @@ const ACCOUNT: CommandEntry[] = [
     description: 'OAuth applications authorized on your account',
     icon: Package,
     keywords: ['applications', 'oauth', 'authorized', 'consent', 'revoke'],
-    available: () => isCloudProfile(),
+    available: (ctx) => Boolean(ctx.features.accountApplications),
     to: () => '/account/applications',
   },
   {
