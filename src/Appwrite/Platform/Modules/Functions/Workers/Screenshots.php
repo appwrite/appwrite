@@ -219,10 +219,27 @@ class Screenshots extends Action
                 ->setPayload($deployment->getArrayCopy())
                 ->trigger();
 
-            $site = $dbForProject->updateDocument('sites', $site->getId(), new Document([
-                'deploymentScreenshotDark' => $deployment->getAttribute('screenshotDark', ''),
-                'deploymentScreenshotLight' => $deployment->getAttribute('screenshotLight', ''),
-            ]));
+            // Captures may finish after this deployment is deactivated or deleted.
+            $updated = $dbForProject->withTransaction(function () use ($dbForProject, $siteId, $deployment) {
+                $site = $dbForProject->getDocument('sites', $siteId, forUpdate: true);
+                if (
+                    $site->isEmpty()
+                    || $site->getSequence() !== $deployment->getAttribute('resourceInternalId')
+                    || $site->getAttribute('deploymentId') !== $deployment->getId()
+                ) {
+                    return false;
+                }
+
+                $dbForProject->updateDocument('sites', $site->getId(), new Document([
+                    'deploymentScreenshotDark' => $deployment->getAttribute('screenshotDark', ''),
+                    'deploymentScreenshotLight' => $deployment->getAttribute('screenshotLight', ''),
+                ]));
+                return true;
+            });
+
+            if ($updated) {
+                $dbForProject->purgeCachedDocument('sites', $siteId);
+            }
         } catch (\Throwable $th) {
             $date = \date('H:i:s');
             $this->appendToLogs($dbForProject, $deployment->getId(), $queueForRealtime, "[90m[$date] [90m[[0mappwrite[90m][33m Screenshot capturing failed. Deployment will continue. [0m\n");

@@ -149,6 +149,43 @@ final class SitesConsoleClientTest extends Scope
         $file = $this->client->call(Client::METHOD_GET, "/storage/buckets/screenshots/files/$screenshotId/preview?project=console");
         $this->assertEquals(404, $file['headers']['status-code']);
 
+        /**
+         * Test for SUCCESS
+         */
+        // A preview captured after deleting the active deployment cannot restore its screenshots.
+        $deleted = $this->deleteDeployment($siteId, $deploymentId);
+        $this->assertSame(204, $deleted['headers']['status-code']);
+
+        $previewId = $this->setupDeployment($siteId, [
+            'code' => $this->packageSite('static-themed'),
+            'activate' => '0',
+        ]);
+
+        $preview = null;
+        $this->assertEventually(function () use ($siteId, $previewId, &$preview) {
+            $preview = $this->getDeployment($siteId, $previewId);
+            $this->assertSame(200, $preview['headers']['status-code']);
+            $this->assertNotEmpty($preview['body']['screenshotLight']);
+            $this->assertNotEmpty($preview['body']['screenshotDark']);
+        }, 60000, 500);
+        $this->assertNotNull($preview);
+
+        foreach (['screenshotLight', 'screenshotDark'] as $attribute) {
+            $screenshotId = $preview['body'][$attribute];
+            $file = $this->client->call(Client::METHOD_GET, "/storage/buckets/screenshots/files/$screenshotId/view?project=console", array_merge($this->getHeaders(), [
+                'x-appwrite-mode' => 'default',
+            ]));
+            $this->assertSame(200, $file['headers']['status-code']);
+            $this->assertSame('image/png', $file['headers']['content-type']);
+        }
+
+        $site = $this->getSite($siteId);
+        $this->assertSame(200, $site['headers']['status-code']);
+        $this->assertSame($previewId, $site['body']['latestDeploymentId']);
+        foreach (['deploymentId', 'deploymentScreenshotLight', 'deploymentScreenshotDark'] as $attribute) {
+            $this->assertSame('', $site['body'][$attribute], $attribute);
+        }
+
         $this->cleanupSite($siteId);
     }
 
