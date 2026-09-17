@@ -53,6 +53,8 @@ class Generator
     private const array HOST_PATH_REWRITABLE_BINDS = [
         './mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro',
         './mongo-entrypoint.sh:/mongo-entrypoint.sh:ro',
+        './clickhouse-config.xml:/etc/clickhouse-server/config.d/clickhouse-config.xml:ro',
+        './clickhouse-init.sh:/docker-entrypoint-initdb.d/clickhouse-init.sh:ro',
     ];
 
     private const array PARAM_DEFAULTS = [

@@ -1602,13 +1602,10 @@ services:
       - CLICKHOUSE_PASSWORD=${_APP_USAGE_PASS:-appwrite}
       - CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT=1
       - CLICKHOUSE_ALWAYS_RUN_INITDB_SCRIPTS=1
-    configs:
-      - source: clickhouse-logs.xml
-        target: /etc/clickhouse-server/config.d/logs.xml
-      - source: clickhouse-logs.sh
-        target: /docker-entrypoint-initdb.d/logs.sh
     volumes:
       - appwrite-clickhouse:/var/lib/clickhouse:rw
+      - ./clickhouse-config.xml:/etc/clickhouse-server/config.d/clickhouse-config.xml:ro
+      - ./clickhouse-init.sh:/docker-entrypoint-initdb.d/clickhouse-init.sh:ro
     ulimits:
       nofile:
         soft: 262144
@@ -1859,50 +1856,6 @@ services:
       interval: 5s
       timeout: 5s
       retries: 12
-configs:
-  clickhouse-logs.xml:
-    content: |
-      <clickhouse>
-        <text_log><ttl>event_date + INTERVAL 3 DAY DELETE</ttl></text_log>
-        <trace_log><ttl>event_date + INTERVAL 3 DAY DELETE</ttl></trace_log>
-        <asynchronous_metric_log><ttl>event_date + INTERVAL 7 DAY DELETE</ttl></asynchronous_metric_log>
-        <metric_log><ttl>event_date + INTERVAL 7 DAY DELETE</ttl></metric_log>
-        <part_log><ttl>event_date + INTERVAL 7 DAY DELETE</ttl></part_log>
-        <processors_profile_log><ttl>event_date + INTERVAL 7 DAY DELETE</ttl></processors_profile_log>
-        <query_log><ttl>event_date + INTERVAL 7 DAY DELETE</ttl></query_log>
-        <histogram_metric_log><ttl>event_date + INTERVAL 7 DAY DELETE</ttl></histogram_metric_log>
-        <query_views_log><ttl>event_date + INTERVAL 7 DAY DELETE</ttl></query_views_log>
-        <query_metric_log><ttl>event_date + INTERVAL 7 DAY DELETE</ttl></query_metric_log>
-        <background_schedule_pool_log><ttl>event_date + INTERVAL 7 DAY DELETE</ttl></background_schedule_pool_log>
-        <asynchronous_insert_log><ttl>event_date + INTERVAL 3 DAY DELETE</ttl></asynchronous_insert_log>
-        <error_log><ttl>event_date + INTERVAL 14 DAY DELETE</ttl></error_log>
-      </clickhouse>
-  clickhouse-logs.sh:
-    content: |
-      #!/bin/bash
-      # The entrypoint sources this file, so a subshell keeps these options out of it.
-      (
-        set -euo pipefail
-
-        client() {
-          clickhouse-client --host 127.0.0.1 --user "$$CLICKHOUSE_USER" --password "$$CLICKHOUSE_PASSWORD" "$$@"
-        }
-
-        # Flushing replaces log tables whose definition changed, keeping each old table as <log>_<N>.
-        client --query 'SYSTEM FLUSH LOGS'
-
-        # Old tables never expire, so give each one the TTL of the log that replaced it.
-        client --format TSVRaw <<'SQL' | client --multiquery
-      SELECT concat('ALTER TABLE system.', retired.name, ' MODIFY TTL ', extract(active.engine_full, ' TTL (.+) SETTINGS '), ';')
-      FROM system.tables AS retired
-      INNER JOIN system.tables AS active ON active.name = replaceRegexpOne(retired.name, '_[0-9]+$$', '')
-      WHERE retired.database = 'system'
-          AND active.database = 'system'
-          AND match(retired.name, '_log_[0-9]+$$')
-          AND position(retired.engine_full, ' TTL ') = 0
-          AND position(active.engine_full, ' TTL ') > 0
-      SQL
-      )
 networks:
   gateway:
     name: gateway
