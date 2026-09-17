@@ -238,7 +238,7 @@ final class VCSGiteaConsoleClientTest extends Scope
         /** @var array<string, string> $cookies */
         $cookies = [];
         $this->giteaCookies = $cookies;
-        $consoleUrl = $this->gitInstallationsUrl($projectId);
+        $consoleUrl = $this->settingsUrl($projectId);
 
         $authorize = $this->client->call(Client::METHOD_GET, '/vcs/gitea/authorize', \array_merge([
             'x-appwrite-project' => $projectId,
@@ -490,7 +490,7 @@ final class VCSGiteaConsoleClientTest extends Scope
     public function testCreateInstallationWithTamperedState(): void
     {
         $projectId = $this->getProject()['$id'];
-        $consoleUrl = $this->gitInstallationsUrl($projectId);
+        $consoleUrl = $this->settingsUrl($projectId);
 
         $state = \json_decode($this->buildGiteaState($projectId, $consoleUrl, $consoleUrl), true);
         $state['projectId'] = 'victim-project';
@@ -506,7 +506,7 @@ final class VCSGiteaConsoleClientTest extends Scope
     public function testCreateInstallationWithoutCode(): void
     {
         $projectId = $this->getProject()['$id'];
-        $consoleUrl = $this->gitInstallationsUrl($projectId);
+        $consoleUrl = $this->settingsUrl($projectId);
 
         // Signed state, no code: the failure redirect carries the error as a query string
         $response = $this->callGiteaCallbackHelper([
@@ -529,7 +529,7 @@ final class VCSGiteaConsoleClientTest extends Scope
         ]);
 
         $this->assertEquals(301, $response['headers']['status-code']);
-        $this->assertStringStartsWith($this->gitInstallationsUrl($projectId) . '?error=', (string) $response['headers']['location']);
+        $this->assertStringStartsWith($this->settingsUrl($projectId) . '?error=', (string) $response['headers']['location']);
     }
 
     public function testCreateInstallationWithInvalidState(): void
@@ -541,7 +541,7 @@ final class VCSGiteaConsoleClientTest extends Scope
 
     public function testCreateInstallationWithUnknownProject(): void
     {
-        $consoleUrl = $this->gitInstallationsUrl('missing');
+        $consoleUrl = $this->settingsUrl('missing');
 
         $response = $this->callGiteaCallbackHelper([
             'code' => 'unused',
@@ -555,7 +555,7 @@ final class VCSGiteaConsoleClientTest extends Scope
     public function testCreateInstallationWithLongState(): void
     {
         $projectId = $this->getProject()['$id'];
-        $consoleUrl = $this->gitInstallationsUrl($projectId);
+        $consoleUrl = $this->settingsUrl($projectId);
 
         // Past the old 2048 cap: redirect URLs are not length-limited, so the
         // authorize endpoint can produce a state this size itself.
@@ -579,16 +579,9 @@ final class VCSGiteaConsoleClientTest extends Scope
         $this->assertNotEmpty($installation['$id']);
     }
 
-    /**
-     * The callback builds its fallback redirect from the project's region, so the
-     * expected URL follows the region the scope's project was created in: Cloud
-     * CI creates projects in a region other than default.
-     */
-    private function gitInstallationsUrl(string $projectId): string
+    private function settingsUrl(string $projectId): string
     {
-        $region = $this->getProject()['region'];
-
-        return "http://localhost/console/project-{$region}-{$projectId}/settings/git-installations";
+        return "http://localhost/projects/{$projectId}/settings";
     }
 
     /**
@@ -622,26 +615,16 @@ final class VCSGiteaConsoleClientTest extends Scope
         $this->assertEquals(201, $session['headers']['status-code']);
         $sessionCookie = $session['cookies']['a_session_console'];
 
-        // Sessions propagate slowly under parallel load, so retry 401s
-        $team = null;
-        for ($i = 0; $i < 5; $i++) {
-            $team = $this->client->call(Client::METHOD_POST, '/teams', [
-                'origin' => 'http://localhost',
-                'content-type' => 'application/json',
-                'cookie' => 'a_session_console=' . $sessionCookie,
-                'x-appwrite-project' => 'console',
-            ], [
-                'teamId' => ID::unique(),
-                'name' => 'VCS Tenant Team',
-            ]);
-
-            if ($team['headers']['status-code'] !== 401) {
-                break;
-            }
-
-            \usleep(500000);
-        }
-        $this->assertEquals(201, $team['headers']['status-code']);
+        $team = $this->createTeamFixture([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => 'a_session_console=' . $sessionCookie,
+            'x-appwrite-project' => 'console',
+        ], [
+            'teamId' => ID::unique(),
+            'name' => 'VCS Tenant Team',
+        ]);
+        $this->assertEquals(200, $team['headers']['status-code']);
 
         $project = null;
         for ($i = 0; $i < 5; $i++) {
@@ -844,7 +827,7 @@ final class VCSGiteaConsoleClientTest extends Scope
     public function testCreateInstallationWithUnsignedState(): void
     {
         $projectId = $this->getProject()['$id'];
-        $consoleUrl = 'http://localhost/console/project-default-' . $projectId . '/settings/git-installations';
+        $consoleUrl = 'http://localhost/projects/' . $projectId . '/settings';
 
         $state = \json_decode($this->buildGiteaState($projectId, $consoleUrl, $consoleUrl), true);
         unset($state['signature']);
@@ -857,7 +840,7 @@ final class VCSGiteaConsoleClientTest extends Scope
     public function testCreateInstallationWithTamperedRedirects(): void
     {
         $projectId = $this->getProject()['$id'];
-        $consoleUrl = 'http://localhost/console/project-default-' . $projectId . '/settings/git-installations';
+        $consoleUrl = 'http://localhost/projects/' . $projectId . '/settings';
 
         foreach (['success', 'failure'] as $field) {
             $state = \json_decode($this->buildGiteaState($projectId, $consoleUrl, $consoleUrl), true);
@@ -872,7 +855,7 @@ final class VCSGiteaConsoleClientTest extends Scope
     public function testCreateInstallationWithReplayedSignature(): void
     {
         $projectId = $this->getProject()['$id'];
-        $consoleUrl = 'http://localhost/console/project-default-' . $projectId . '/settings/git-installations';
+        $consoleUrl = 'http://localhost/projects/' . $projectId . '/settings';
 
         $state = \json_decode($this->buildGiteaState($projectId, $consoleUrl, $consoleUrl), true);
         $state['signature'] = \json_decode($this->buildGiteaState('victim-project', $consoleUrl, $consoleUrl), true)['signature'];
@@ -885,7 +868,7 @@ final class VCSGiteaConsoleClientTest extends Scope
     public function testCreateInstallationWithNonStringSignature(): void
     {
         $projectId = $this->getProject()['$id'];
-        $consoleUrl = 'http://localhost/console/project-default-' . $projectId . '/settings/git-installations';
+        $consoleUrl = 'http://localhost/projects/' . $projectId . '/settings';
 
         $state = \json_decode($this->buildGiteaState($projectId, $consoleUrl, $consoleUrl), true);
         $state['signature'] = 1234;
@@ -900,7 +883,7 @@ final class VCSGiteaConsoleClientTest extends Scope
     public function testCreateInstallationWithOversizedRedirects(): void
     {
         $projectId = $this->getProject()['$id'];
-        $consoleUrl = 'http://localhost/console/project-default-' . $projectId . '/settings/git-installations';
+        $consoleUrl = 'http://localhost/projects/' . $projectId . '/settings';
 
         // Authorize must refuse rather than mint a state its own callback would reject.
         $authorize = $this->client->call(Client::METHOD_GET, '/vcs/gitea/authorize', \array_merge([

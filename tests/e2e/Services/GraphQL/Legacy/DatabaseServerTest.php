@@ -155,6 +155,26 @@ final class DatabaseServerTest extends Scope
         $this->assertIsArray($collection2['body']['data']);
         $collection2 = $collection2['body']['data']['databasesCreateCollection'];
 
+        $query = $this->getQuery(self::CREATE_STRING_ATTRIBUTE);
+        $gqlPayload = [
+            'query' => $query,
+            'variables' => [
+                'databaseId' => $database['_id'],
+                'collectionId' => $collection['_id'],
+                'key' => 'tags',
+                'size' => 64,
+                'required' => false,
+                'array' => true,
+            ]
+        ];
+        $attribute = $this->client->call(Client::METHOD_POST, '/graphql', $headers, $gqlPayload);
+        $this->assertArrayNotHasKey('errors', $attribute['body']);
+
+        $this->assertEventually(function () use ($database, $collection, $headers) {
+            $attribute = $this->client->call(Client::METHOD_GET, '/databases/' . $database['_id'] . '/collections/' . $collection['_id'] . '/attributes/tags', $headers);
+            $this->assertEquals('available', $attribute['body']['status']);
+        }, 240000, 500);
+
         self::$collectionCache[$cacheKey] = [
             'database' => $database,
             'collection' => $collection,
@@ -613,6 +633,7 @@ final class DatabaseServerTest extends Scope
                 'documentId' => ID::unique(),
                 'data' => [
                     'name' => 'John Doe',
+                    'tags' => ['first', 'second'],
                     'email' => 'example@appwrite.io',
                     'age' => 30,
                     'alive' => true,
@@ -1739,6 +1760,7 @@ final class DatabaseServerTest extends Scope
                 'documentId' => ID::unique(),
                 'data' => [
                     'name' => 'John Doe',
+                    'tags' => ['first', 'second'],
                     'email' => 'example@appwrite.io',
                     'age' => 30,
                     'alive' => true,
@@ -1764,6 +1786,7 @@ final class DatabaseServerTest extends Scope
 
         $document = $document['body']['data']['databasesCreateDocument'];
         $this->assertIsArray($document);
+        $this->assertSame(['first', 'second'], json_decode($document['data'], false, flags: JSON_THROW_ON_ERROR)->tags);
 
         // Store for caching so setupDocument() doesn't try to recreate
         $cacheKey = $this->getProject()['$id'] ?? 'default';
@@ -2046,6 +2069,10 @@ final class DatabaseServerTest extends Scope
         $this->assertArrayNotHasKey('errors', $documents['body']);
         $this->assertIsArray($documents['body']['data']);
         $this->assertIsArray($documents['body']['data']['databasesListDocuments']);
+
+        $documents = array_column($documents['body']['data']['databasesListDocuments']['documents'], null, '_id');
+        $this->assertArrayHasKey($data['document']['_id'], $documents);
+        $this->assertSame(['first', 'second'], json_decode($documents[$data['document']['_id']]['data'], false, flags: JSON_THROW_ON_ERROR)->tags);
     }
 
     /**
@@ -2074,6 +2101,7 @@ final class DatabaseServerTest extends Scope
         $this->assertArrayNotHasKey('errors', $document['body']);
         $this->assertIsArray($document['body']['data']);
         $this->assertIsArray($document['body']['data']['databasesGetDocument']);
+        $this->assertSame(['first', 'second'], json_decode($document['body']['data']['databasesGetDocument']['data'], false, flags: JSON_THROW_ON_ERROR)->tags);
     }
 
     //    /**
@@ -2196,6 +2224,7 @@ final class DatabaseServerTest extends Scope
                 'documentId' => $data['document']['_id'],
                 'data' => [
                     'name' => 'New Document Name',
+                    'tags' => [],
                 ],
             ]
         ];
@@ -2210,6 +2239,7 @@ final class DatabaseServerTest extends Scope
         $document = $document['body']['data']['databasesUpdateDocument'];
         $this->assertIsArray($document);
         $this->assertStringContainsString('New Document Name', (string) $document['data']);
+        $this->assertSame([], json_decode($document['data'], false, flags: JSON_THROW_ON_ERROR)->tags);
     }
 
     //    /**

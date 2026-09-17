@@ -72,6 +72,18 @@ class V25 extends Migration
                         } catch (Throwable $th) {
                             Console::warning("Failed to create index \"_key_accessedAt\" from {$id}: {$th->getMessage()}");
                         }
+
+                        $attributes = \array_map(
+                            fn (Document $attribute) => $attribute->getId(),
+                            $this->dbForProject->getCollection($id)->getAttribute('attributes', [])
+                        );
+                        if (\in_array('devKeys', $attributes, true)) {
+                            $this->dbForProject->deleteAttribute($id, 'devKeys');
+                        }
+
+                        if (!$this->dbForProject->getCollection('devKeys')->isEmpty()) {
+                            $this->dbForProject->deleteCollection('devKeys');
+                        }
                     }
                     $this->dbForProject->purgeCachedCollection($id);
                     break;
@@ -96,6 +108,28 @@ class V25 extends Migration
                             } catch (Throwable $th) {
                                 Console::warning("Failed to create index \"{$index}\" from {$id}: {$th->getMessage()}");
                             }
+                        }
+                    }
+                    $this->dbForProject->purgeCachedCollection($id);
+                    break;
+
+                case 'notifications':
+                    if ($collectionType === 'console') {
+                        $attributes = ['teamId', 'teamInternalId'];
+                        foreach ($attributes as $attribute) {
+                            try {
+                                $this->createAttributeFromCollection($this->dbForProject, $id, $attribute);
+                            } catch (Throwable $th) {
+                                Console::warning("Failed to create attribute \"{$attribute}\" in collection {$id}: {$th->getMessage()}");
+                            }
+                        }
+
+                        $this->dbForProject->purgeCachedCollection($id);
+
+                        try {
+                            $this->createIndexFromCollection($this->dbForProject, $id, '_key_team');
+                        } catch (Throwable $th) {
+                            Console::warning("Failed to create index \"_key_team\" from {$id}: {$th->getMessage()}");
                         }
                     }
                     $this->dbForProject->purgeCachedCollection($id);
@@ -219,10 +253,12 @@ class V25 extends Migration
                     break;
 
                 case 'identities':
-                    try {
-                        $this->createAttributeFromCollection($this->dbForProject, $id, 'photo');
-                    } catch (Throwable $th) {
-                        Console::warning("Failed to create attribute \"photo\" in collection {$id}: {$th->getMessage()}");
+                    foreach (['photo', 'providerIdToken'] as $attribute) {
+                        try {
+                            $this->createAttributeFromCollection($this->dbForProject, $id, $attribute);
+                        } catch (Throwable $th) {
+                            Console::warning("Failed to create attribute \"{$attribute}\" in collection {$id}: {$th->getMessage()}");
+                        }
                     }
 
                     $this->dbForProject->purgeCachedCollection($id);
@@ -233,6 +269,15 @@ class V25 extends Migration
 
     protected function migrateDocument(Document $document): Document
     {
+        if (\in_array($document->getCollection(), ['keys', 'functions', 'sites'], true)) {
+            $scopes = $document->getAttribute('scopes', []);
+            if (\is_array($scopes) && \array_intersect($scopes, ['devKeys.read', 'devKeys.write']) !== []) {
+                $document->setAttribute('scopes', \array_values(\array_diff($scopes, ['devKeys.read', 'devKeys.write'])));
+            }
+
+            return $document;
+        }
+
         if ($document->getCollection() !== 'migrations') {
             return $document;
         }

@@ -32,6 +32,7 @@ class Upgrade extends Install
             ->param('no-start', false, new Boolean(true), 'Run an interactive session', true)
             ->param('database', '', new Text(length: 0, min: 0), 'Ignored: an upgrade always keeps the database the installation already uses', true)
             ->param('topology', 'combined', new WhiteList(['combined', 'separate']), 'Worker and scheduler topology (combined|separate)', true)
+            ->param('channel', Install::CHANNEL_STABLE, new WhiteList([Install::CHANNEL_STABLE, Install::CHANNEL_NIGHTLY]), 'Release channel to track (stable|nightly). Nightly is unsupported and moves daily.', true)
             ->param('migrate', false, new Boolean(true), 'Run database migration after upgrade', true)
             ->callback($this->action(...));
     }
@@ -45,6 +46,7 @@ class Upgrade extends Install
         bool $noStart,
         string $database,
         string $topology = 'combined',
+        string $channel = Install::CHANNEL_STABLE,
         bool $migrate = false,
     ): void {
         $this->isUpgrade = true;
@@ -101,7 +103,7 @@ class Upgrade extends Install
 
         $this->lockedDatabase = $database;
 
-        parent::action($httpPort, $httpsPort, $organization, $image, $interactive, $noStart, $database, $topology);
+        parent::action($httpPort, $httpsPort, $organization, $image, $interactive, $noStart, $database, $topology, $channel);
     }
 
     protected function startWebServer(
