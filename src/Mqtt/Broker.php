@@ -132,6 +132,11 @@ class Broker
         }
     }
 
+    public function puback(Connection $connection, int $packetId): void
+    {
+        $this->adapter->send($connection->fd, $this->encodePuback($packetId, $connection->protocol));
+    }
+
     public function close(Connection $connection, int $reason): void
     {
         if ($reason !== Disconnect::NORMAL && $connection->protocol >= V5::PROTOCOL_LEVEL) {
@@ -207,10 +212,6 @@ class Broker
             case Packet::PUBLISH:
                 $publish = Publish::decode($packet, $connection->protocol);
                 $this->handler->onPublish($publish, $connection, $this->subscribers($connection->prefix, $publish->topic));
-
-                if ($publish->qos === Packet::QOS_1) {
-                    $this->adapter->send($connection->fd, $this->encodePuback($publish->packetId, $connection->protocol));
-                }
                 break;
 
             case Packet::PUBACK:

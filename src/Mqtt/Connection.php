@@ -80,6 +80,11 @@ class Connection
         $this->broker?->send($this, $topic, $payload, $qos, $dup, $sequence);
     }
 
+    public function puback(int $packetId): void
+    {
+        $this->broker?->puback($this, $packetId);
+    }
+
     public function disconnect(int $reason = 0): void
     {
         $this->broker?->close($this, $reason);
