@@ -393,6 +393,10 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   const pinnedDragPreviewRef = useRef<HTMLDivElement | null>(null)
   const leavingOrganizationRef = useRef(false)
   const { features, isCloud, isSelfHosted } = useConsoleProfile()
+  const roleOptions = ROLE_OPTIONS.filter(
+    (role) =>
+      features.orgRoles || role.value === 'owner' || role.value === 'developer',
+  )
   const supportsMultiTenancy = features.multiTenancy
   const { access, isLoading: orgScopesLoading } = useOrganizationScopes(orgId)
   const { viewMode: projectsViewMode, setViewMode: setProjectsViewMode } =
@@ -3406,11 +3410,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                         <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
                                           {t('Member')}
                                         </TableHead>
-                                        {features.orgRoles && (
-                                          <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-center">
-                                            {t('Role')}
-                                          </TableHead>
-                                        )}
+                                        <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-center">
+                                          {t('Role')}
+                                        </TableHead>
                                         {supportsProjectRoles && (
                                           <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-center hidden md:table-cell">
                                             {t('Projects')}
@@ -3532,24 +3534,22 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                 </div>
                                               </div>
                                             </TableCell>
-                                            {features.orgRoles && (
-                                              <TableCell className="px-4 py-3">
-                                                <div className="flex flex-nowrap items-center justify-center gap-1 whitespace-nowrap">
-                                                  {isProjectScoped ? (
-                                                    // Roles are per project for
-                                                    // this member; the Projects
-                                                    // cell names them.
-                                                    <span className="text-[12px] text-muted-foreground">
-                                                      {t('Per project')}
-                                                    </span>
-                                                  ) : (
-                                                    <OrgRoleBadge
-                                                      role={member.role}
-                                                    />
-                                                  )}
-                                                </div>
-                                              </TableCell>
-                                            )}
+                                            <TableCell className="px-4 py-3">
+                                              <div className="flex flex-nowrap items-center justify-center gap-1 whitespace-nowrap">
+                                                {isProjectScoped ? (
+                                                  // Roles are per project for
+                                                  // this member; the Projects
+                                                  // cell names them.
+                                                  <span className="text-[12px] text-muted-foreground">
+                                                    {t('Per project')}
+                                                  </span>
+                                                ) : (
+                                                  <OrgRoleBadge
+                                                    role={member.role}
+                                                  />
+                                                )}
+                                              </div>
+                                            </TableCell>
                                             {supportsProjectRoles && (
                                               <TableCell className="px-4 py-3 hidden md:table-cell">
                                                 <div className="flex items-center justify-center">
@@ -4376,7 +4376,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                 ) => setSelectedRole(value)}
                 className="rounded-lg border border-border bg-card/50 overflow-hidden divide-y divide-border gap-0"
               >
-                {ROLE_OPTIONS.map((role) => {
+                {roleOptions.map((role) => {
                   const Icon = role.icon
                   const isSelected = selectedRole === role.value
                   return (
@@ -4447,6 +4447,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                 if (!selectedMember || updateRoleMutation.isPending) return true
                 if (supportsProjectRoles && editAccessType === 'specific') {
                   return !editProjectAccess.some((row) => row.projectId)
+                }
+                if (!roleOptions.some((role) => role.value === selectedRole)) {
+                  return true
                 }
                 // Moving a project-scoped member back to org-wide is a real
                 // change even when the org role itself looks unchanged.
