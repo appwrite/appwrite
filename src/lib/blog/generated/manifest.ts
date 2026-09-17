@@ -3,17 +3,17 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
-    "slug": "announcing-sites-dynamic-api-keys",
-    "href": "/blog/post/announcing-sites-dynamic-api-keys",
-    "title": "Announcing dynamic API keys for Appwrite Sites",
-    "description": "Appwrite Sites now mints a scoped, short-lived API key for every build and SSR request, so server-rendered sites call your project without storing a key.",
-    "date": "2026-09-18",
-    "lastUpdated": "2026-09-18",
+    "slug": "authenticated-site-previews",
+    "href": "/blog/post/authenticated-site-previews",
+    "title": "Site previews now require authentication",
+    "description": "Preview deployments on Appwrite Sites now require an Appwrite account that belongs to the project's organization, so a preview link no longer works for anyone who finds it.",
+    "date": "2026-09-17",
+    "lastUpdated": "2026-09-17",
     "timeToRead": 4,
-    "author": "aditya-oberai",
+    "author": "chirag-aggarwal",
     "category": "announcements",
     "featured": false,
-    "cover": "/images/blog/announcing-sites-dynamic-api-keys/cover.avif",
+    "cover": "/images/blog/authenticated-site-previews/cover.avif",
     "hasCover": true
   },
   {

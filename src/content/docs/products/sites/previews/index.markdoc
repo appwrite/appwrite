@@ -4,7 +4,9 @@ title: Previews
 description: Preview site deployments to test changes before promoting to production.
 ---
 
-If you create a new Pull Request on the GitHub repo for your site, Appwrite Sites will create a preview deployment that you can view and test before promoting to production.
+If you create a new Pull Request on the Git repo for your site, Appwrite Sites will create a preview deployment that you can view and test before promoting to production.
+
+Preview deployments are private. Opening one requires an Appwrite account that belongs to the organization the site belongs to, so a preview link only works for people you have invited to that organization.
 
 # Visit preview deployments
 
@@ -21,17 +23,34 @@ To access a preview deployment, follow these steps:
 ![Preview deployment](/images/docs/sites/preview-deployment.avif)
 {% /only_light %}
 
-Appwrite Sites will then verify whether you are authorized to access the Appwrite project in which the site is deployed and allow you to access this preview accordingly.
+# Authorize a preview deployment
+
+Deployments created by automatic Git deployments require you to authorize your account before the preview opens. There is nothing to configure on your site or project to enable this.
+
+The first time you open a preview deployment in a browser, Appwrite asks you to authorize **Appwrite Preview**. The screen shows the account you are signed in with and the single permission it needs, **View your identity**, which confirms who you are so Appwrite can check your organization membership.
+
+1. Confirm the account shown is the one that belongs to the site's organization. Use **Switch account** if it is not.
+2. Click **Authorize**.
+3. You are returned to the preview deployment.
+
+{% only_dark %}
+![Authorize Appwrite Preview](/images/docs/sites/dark/authorize-preview.avif)
+{% /only_dark %}
+{% only_light %}
+![Authorize Appwrite Preview](/images/docs/sites/authorize-preview.avif)
+{% /only_light %}
+
+If the account you authorize is not part of the organization, the preview reports that it is private instead of opening. Ask a member of the organization to add you, or authorize with an account that already has access.
 
 ## Deployments for GitHub
 
 Aside from the preview URL, Appwrite also generates a [URL for the branch and commit](/docs/products/sites/domains#branch-and-commit-urls) that your site has been deployed from. To access these URLs, you can head to the **Deployments** tab of your site, head to any active deployment created using the Git integration, and click on the **+2** next to the mentioned domain in the **Domains** section.
 
-You can also directly access the branch and commit that these deployments are created from, by clicking on **GitHub** under the **Source** section.
+You can also open the deployment itself to see the branch, repository, and commit it was built from. Click any deployment in the **Deployments** tab, and the panel on the right lists the **Branch**, **Repository**, and **Commit**.
 
 {% only_dark %}
-![GitHub as source](/images/docs/sites/dark/github-source.avif)
+![Branch, repository, and commit in the deployment panel](/images/docs/sites/dark/github-source.avif)
 {% /only_dark %}
 {% only_light %}
-![GitHub as source](/images/docs/sites/github-source.avif)
+![Branch, repository, and commit in the deployment panel](/images/docs/sites/github-source.avif)
 {% /only_light %}
