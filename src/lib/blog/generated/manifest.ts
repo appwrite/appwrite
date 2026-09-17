@@ -7,13 +7,14 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "href": "/blog/post/announcing-sites-dynamic-api-keys",
     "title": "Announcing dynamic API keys for Appwrite Sites",
     "description": "Appwrite Sites now mints a scoped, short-lived API key for every build and SSR request, so server-rendered sites call your project without storing a key.",
-    "date": "2026-09-16",
-    "lastUpdated": "2026-09-16",
+    "date": "2026-09-17",
+    "lastUpdated": "2026-09-17",
     "timeToRead": 4,
     "author": "aditya-oberai",
     "category": "announcements",
     "featured": false,
-    "hasCover": false
+    "cover": "/images/blog/announcing-sites-dynamic-api-keys/cover.avif",
+    "hasCover": true
   },
   {
     "slug": "appwrite-init-2026-recap",

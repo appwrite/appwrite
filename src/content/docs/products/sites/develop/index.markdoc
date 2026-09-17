@@ -74,6 +74,13 @@ A site starts with no scopes, so its dynamic API key can call nothing until you 
 2. Under the **Settings** tab, navigate to the **Build** section.
 3. In the **Scopes** card, select the scopes to grant the dynamic key and click **Update**.
 
+{% only_dark %}
+![Scopes card in a site's Build settings](/images/docs/sites/dark/site-scopes.avif)
+{% /only_dark %}
+{% only_light %}
+![Scopes card in a site's Build settings](/images/docs/sites/site-scopes.avif)
+{% /only_light %}
+
 Scopes are stored on the site itself, so you can also set them with the `scopes` parameter of the create site and update site endpoints through a [Server SDK](/docs/sdks#server), or with the repeatable `--scopes` flag of `appwrite sites create` and `appwrite sites update` in the [Appwrite CLI](/docs/tooling/command-line/sites). The update site endpoint replaces every setting you omit with its default. Only `scopes` and the Git connection are kept when omitted, so read the site first and pass every existing setting back along with the new scopes.
 
 {% multicode %}

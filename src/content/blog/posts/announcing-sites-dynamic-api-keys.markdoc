@@ -2,7 +2,8 @@
 layout: post
 title: "Announcing dynamic API keys for Appwrite Sites"
 description: Appwrite Sites now mints a scoped, short-lived API key for every build and SSR request, so server-rendered sites call your project without storing a key.
-date: 2026-09-16
+date: 2026-09-17
+cover: /images/blog/announcing-sites-dynamic-api-keys/cover.avif
 timeToRead: 4
 author: aditya-oberai
 category: announcements
@@ -39,11 +40,18 @@ A site starts with no scopes, so its dynamic key can call nothing until you gran
 2. Under the **Settings** tab, navigate to the **Build** section.
 3. In the **Scopes** card, select the scopes your server code needs and click **Update**.
 
+{% only_dark %}
+![Scopes card in a site's Build settings](/images/docs/sites/dark/site-scopes.avif)
+{% /only_dark %}
+{% only_light %}
+![Scopes card in a site's Build settings](/images/docs/sites/site-scopes.avif)
+{% /only_light %}
+
 Grant only what the code uses. A key with `users.write` but not `documents.write` fails loudly on the first write, which is far easier to notice than a key that can do everything. The `scopes` parameter on the create site and update site endpoints sets the same list from a Server SDK or the [Appwrite CLI](/docs/tooling/command-line/sites).
 
 # Read the key in your SSR code
 
-Read the header on the server and pass it to `setKey`. Create the client per request instead of sharing one, because each key belongs to the request that carried it. The endpoint and project ID are already available as `APPWRITE_SITE_API_ENDPOINT` and `APPWRITE_SITE_PROJECT_ID`, which Appwrite injects at run time, so nothing needs configuring.
+Read the `x-appwrite-key` header on the server and pass it to `setKey`. Create the client per request instead of sharing one, because each key belongs to the request that carried it. The endpoint and project ID are already available as `APPWRITE_SITE_API_ENDPOINT` and `APPWRITE_SITE_PROJECT_ID`, which Appwrite injects at run time, so nothing needs configuring.
 
 ```ts
 // src/lib/server/appwrite.ts (SvelteKit)
