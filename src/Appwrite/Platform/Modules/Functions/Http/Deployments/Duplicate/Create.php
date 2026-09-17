@@ -167,8 +167,7 @@ class Create extends Action
                 $owner,
                 $repository,
                 $ref,
-                // Older connected deployments did not snapshot their source root.
-                $deployment->getAttribute('providerRootDirectory') ?? $function->getAttribute('providerRootDirectory', ''),
+                $function->getAttribute('providerRootDirectory', ''),
             );
         } else {
             // Public template repo: providerBranch holds the resolved ref,
