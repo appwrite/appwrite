@@ -147,6 +147,8 @@ class Create extends Action
             throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'The requested factor is disabled by the MFA factors policy');
         }
 
+        // Whole hours read as hours, anything else as minutes rounded down
+        $plurals = ['expire' => $expire % 3600 === 0 ? ['emails.expire.hours', \intdiv($expire, 3600)] : ['emails.expire.minutes', \intdiv($expire, 60)]];
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $expire));
 
         $code = $proofForCode->generate();
@@ -229,7 +231,7 @@ class Create extends Action
                 }
 
                 $subject = $locale->getText("emails.mfaChallenge.subject");
-                $preview = $locale->getText("emails.mfaChallenge.preview");
+                $preview = $locale->getText("emails.mfaChallenge.preview", plurals: $plurals);
                 $heading = $locale->getText("emails.mfaChallenge.heading");
 
                 $customTemplate =
@@ -252,7 +254,7 @@ class Create extends Action
                 $message = Template::fromFile($templatesPath . '/email-mfa-challenge.tpl');
                 $message
                     ->setParam('{{hello}}', $locale->getText("emails.mfaChallenge.hello"))
-                    ->setParam('{{description}}', $locale->getText("emails.mfaChallenge.description"))
+                    ->setParam('{{description}}', $locale->getText("emails.mfaChallenge.description", plurals: $plurals))
                     ->setParam('{{clientInfo}}', $locale->getText("emails.mfaChallenge.clientInfo"))
                     ->setParam('{{thanks}}', $locale->getText("emails.mfaChallenge.thanks"))
                     ->setParam('{{signature}}', $locale->getText("emails.mfaChallenge.signature"));
@@ -323,7 +325,7 @@ class Create extends Action
                     'user' => $user->getAttribute('name'),
                     'project' => $projectName,
                     'otp' => $code,
-                    'expire' => \gmdate('Y-m-d H:i', \strtotime($expire)) . ' UTC',
+                    'expire' => $locale->getPlural(...$plurals['expire']),
                     'agentDevice' => $agentDevice['deviceBrand'] ?? 'UNKNOWN',
                     'agentClient' => $agentClient['clientName'] ?? 'UNKNOWN',
                     'agentOs' => $agentOs['osName'] ?? 'UNKNOWN',

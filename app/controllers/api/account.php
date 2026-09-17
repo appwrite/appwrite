@@ -2470,6 +2470,8 @@ Http::post('/v1/account/tokens/magic-url')
         $proofForToken->setHash(new Sha());
 
         $tokenSecret = $proofForToken->generate();
+        // Whole hours read as hours, anything else as minutes rounded down
+        $plurals = ['expire' => $expire % 3600 === 0 ? ['emails.expire.hours', \intdiv($expire, 3600)] : ['emails.expire.minutes', \intdiv($expire, 60)]];
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $expire));
 
         $token = new Document([
@@ -2510,7 +2512,7 @@ Http::post('/v1/account/tokens/magic-url')
         $url = Template::unParseURL($url);
 
         $subject = $locale->getText("emails.magicSession.subject");
-        $preview = $locale->getText("emails.magicSession.preview");
+        $preview = $locale->getText("emails.magicSession.preview", plurals: $plurals);
 
         $customTemplate =
             $project->getAttribute('templates', [])['email.magicSession-' . $locale->default] ??
@@ -2524,7 +2526,7 @@ Http::post('/v1/account/tokens/magic-url')
         $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-magic-url.tpl');
         $message
             ->setParam('{{hello}}', $locale->getText("emails.magicSession.hello"))
-            ->setParam('{{optionButton}}', $locale->getText("emails.magicSession.optionButton"))
+            ->setParam('{{optionButton}}', $locale->getText("emails.magicSession.optionButton", plurals: $plurals))
             ->setParam('{{buttonText}}', $locale->getText("emails.magicSession.buttonText"))
             ->setParam('{{optionUrl}}', $locale->getText("emails.magicSession.optionUrl"))
             ->setParam('{{clientInfo}}', $locale->getText("emails.magicSession.clientInfo"))
@@ -2608,7 +2610,7 @@ Http::post('/v1/account/tokens/magic-url')
             'user' => $user->getAttribute('name'),
             'project' => $projectName,
             'redirect' => $url,
-            'expire' => \gmdate('Y-m-d H:i', \strtotime($expire)) . ' UTC',
+            'expire' => $locale->getPlural(...$plurals['expire']),
             'agentDevice' => $agentDevice['deviceBrand'] ?? $agentDevice['deviceBrand'] ?? 'UNKNOWN',
             'agentClient' => $agentClient['clientName'] ?? 'UNKNOWN',
             'agentOs' => $agentOs['osName'] ?? 'UNKNOWN',
@@ -2816,6 +2818,8 @@ Http::post('/v1/account/tokens/email')
         }
 
         $tokenSecret = $proofForCode->generate();
+        // Whole hours read as hours, anything else as minutes rounded down
+        $plurals = ['expire' => $expire % 3600 === 0 ? ['emails.expire.hours', \intdiv($expire, 3600)] : ['emails.expire.minutes', \intdiv($expire, 60)]];
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $expire));
 
         $token = new Document([
@@ -2841,7 +2845,7 @@ Http::post('/v1/account/tokens/email')
         $dbForProject->purgeCachedDocument('users', $user->getId());
 
         $subject = $locale->getText("emails.otpSession.subject");
-        $preview = $locale->getText("emails.otpSession.preview");
+        $preview = $locale->getText("emails.otpSession.preview", plurals: $plurals);
         $heading = $locale->getText("emails.otpSession.heading");
 
         $customTemplate =
@@ -2864,7 +2868,7 @@ Http::post('/v1/account/tokens/email')
         $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-otp.tpl');
         $message
             ->setParam('{{hello}}', $locale->getText("emails.otpSession.hello"))
-            ->setParam('{{description}}', $locale->getText("emails.otpSession.description"))
+            ->setParam('{{description}}', $locale->getText("emails.otpSession.description", plurals: $plurals))
             ->setParam('{{clientInfo}}', $locale->getText("emails.otpSession.clientInfo"))
             ->setParam('{{thanks}}', $locale->getText("emails.otpSession.thanks"))
             ->setParam('{{signature}}', $locale->getText("emails.otpSession.signature"));
@@ -2947,7 +2951,7 @@ Http::post('/v1/account/tokens/email')
             'user' => $user->getAttribute('name'),
             'project' => $projectName,
             'otp' => $tokenSecret,
-            'expire' => \gmdate('Y-m-d H:i', \strtotime($expire)) . ' UTC',
+            'expire' => $locale->getPlural(...$plurals['expire']),
             'agentDevice' => $agentDevice['deviceBrand'] ?? $agentDevice['deviceBrand'] ?? 'UNKNOWN',
             'agentClient' => $agentClient['clientName'] ?? 'UNKNOWN',
             'agentOs' => $agentOs['osName'] ?? 'UNKNOWN',
@@ -5103,6 +5107,8 @@ Http::post('/v1/account/verifications/email/otp')
         }
 
         $secret = $proofForCode->generate();
+        // Whole hours read as hours, anything else as minutes rounded down
+        $plurals = ['expire' => $expire % 3600 === 0 ? ['emails.expire.hours', \intdiv($expire, 3600)] : ['emails.expire.minutes', \intdiv($expire, 60)]];
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $expire));
 
         $verification = new Document([
@@ -5128,7 +5134,7 @@ Http::post('/v1/account/verifications/email/otp')
         $dbForProject->purgeCachedDocument('users', $user->getId());
 
         $subject = $locale->getText('emails.otpVerification.subject');
-        $preview = $locale->getText('emails.otpVerification.preview');
+        $preview = $locale->getText('emails.otpVerification.preview', plurals: $plurals);
         $heading = $locale->getText('emails.otpVerification.heading');
 
         $customTemplate =
@@ -5151,7 +5157,7 @@ Http::post('/v1/account/verifications/email/otp')
         $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-otp.tpl');
         $message
             ->setParam('{{hello}}', $locale->getText('emails.otpVerification.hello'))
-            ->setParam('{{description}}', $locale->getText('emails.otpVerification.description'))
+            ->setParam('{{description}}', $locale->getText('emails.otpVerification.description', plurals: $plurals))
             ->setParam('{{clientInfo}}', $locale->getText('emails.otpVerification.clientInfo'))
             ->setParam('{{thanks}}', $locale->getText('emails.otpVerification.thanks'))
             ->setParam('{{signature}}', $locale->getText('emails.otpVerification.signature'));
@@ -5231,7 +5237,7 @@ Http::post('/v1/account/verifications/email/otp')
             'user' => $user->getAttribute('name'),
             'project' => $projectName,
             'otp' => $secret,
-            'expire' => \gmdate('Y-m-d H:i', \strtotime($expire)) . ' UTC',
+            'expire' => $locale->getPlural(...$plurals['expire']),
             'agentDevice' => $agentDevice['deviceBrand'] ?? 'UNKNOWN',
             'agentClient' => $agentClient['clientName'] ?? 'UNKNOWN',
             'agentOs' => $agentOs['osName'] ?? 'UNKNOWN',
