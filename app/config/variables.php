@@ -242,10 +242,10 @@ return [
                 'filter' => ''
             ],
             [
-                'name' => '_APP_CONSOLE_URL_SCHEME',
-                'description' => 'Console URL scheme used when the backend generates links to the console (OAuth callbacks, emails, error page CTAs, VCS comments). Set to \'root\' for the new console served at the root path (appwrite/new), or \'legacy\' for the older console served under the /console path prefix. The default value is \'legacy\'.',
-                'introduction' => '2.0.0',
-                'default' => 'legacy',
+                'name' => '_APP_CONSOLE_URL',
+                'description' => 'Origin of the Appwrite console web app, such as https://console.example.com, used when the backend generates links to the console (OAuth callbacks, emails, error page CTAs, VCS comments and commit statuses). Set it when the console is served on a different host than the API. When empty, links use _APP_CONSOLE_DOMAIN (or _APP_DOMAIN) over https, or over http when _APP_OPTIONS_FORCE_HTTPS is disabled.',
+                'introduction' => '2.2.1',
+                'default' => '',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
@@ -405,7 +405,7 @@ return [
             ],
             [
                 'name' => '_APP_LOGGING_CONFIG',
-                'description' => 'This variable allows you to report server errors to Sentry. This value is empty by default, set a DSN value `sentry://PROJECT_ID:SENTRY_API_KEY@SENTRY_HOST/` to enable it. Errors are exported as spans, so every attribute added with `Span::add()` during the request or job is attached to the Sentry event.',
+                'description' => 'This variable allows you to report server errors to Sentry. This value is empty by default, set a DSN value `sentry://PROJECT_ID:SENTRY_API_KEY@SENTRY_HOST/` to enable it. Sentry is the only supported provider; other DSN schemes are rejected at startup and disable reporting. The same DSN is used by the API, workers, CLI tasks and the realtime server. Errors are exported as spans, so every attribute added with `Span::add()` during the request or job is attached to the Sentry event.',
                 'introduction' => '0.12.0',
                 'default' => '',
                 'required' => false,
@@ -873,7 +873,7 @@ return [
             ],
             [
                 'name' => '_APP_SMS_FROM',
-                'description' => 'Phone number used for sending out messages. If using Twilio, this may be a Messaging Service SID, starting with MG. Otherwise, the number must start with a leading \'+\' and maximum of 15 digits without spaces (+123456789). ',
+                'description' => 'Phone number, or an alphanumeric sender ID where the provider supports it, used for sending out messages. A phone number must start with a leading \'+\' and have a maximum of 15 digits without spaces (+123456789). If using Twilio, this may also be a Messaging Service SID, starting with MG.',
                 'introduction' => '0.15.0',
                 'default' => '',
                 'required' => false,
@@ -906,8 +906,8 @@ return [
             ],
             [
                 'name' => '_APP_AUTOGRAVITY_HOST',
-                'description' => 'The host used by Appwrite to determine automatic image crop gravity.',
-                'introduction' => '2.0.0',
+                'description' => 'The host of the Autogravity service (for example `http://appwrite-autogravity:8080`) used to detect the focal point when a file preview requests `gravity=auto`. Leave empty to disable automatic gravity; the other gravity values keep working.',
+                'introduction' => '2.1.0',
                 'default' => '',
                 'required' => false,
                 'overwrite' => true,
@@ -1143,8 +1143,17 @@ return [
             ],
             [
                 'name' => '_APP_FUNCTIONS_BUILD_SIZE_LIMIT',
-                'description' => 'The maximum size of a built deployment in bytes. The default value is 2,000,000,000 (2GB), and the maximum value is 4,294,967,295 (4.2GB).',
+                'description' => 'Deprecated since 1.7.0, use _APP_COMPUTE_BUILD_SIZE_LIMIT instead. The maximum size of a built deployment in bytes. The default value is 2,000,000,000 (2GB), and the maximum value is 4,294,967,295 (4.2GB).',
                 'introduction' => '1.6.0',
+                'default' => '2000000000',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_COMPUTE_BUILD_SIZE_LIMIT',
+                'description' => 'The maximum size of a built function or site deployment in bytes. The default value is 2,000,000,000 (2GB), and the maximum value is 4,294,967,295 (4.2GB).',
+                'introduction' => '1.7.0',
                 'default' => '2000000000',
                 'required' => false,
                 'question' => '',
@@ -1760,15 +1769,6 @@ return [
                 'filter' => ''
             ],
             [
-                'name' => '_APP_MAINTENANCE_RETENTION_USAGE_HOURLY',
-                'description' => 'The maximum duration (in seconds) upto which to retain hourly usage metrics. The default value is 8640000 seconds (100 days).',
-                'introduction' => '',
-                'default' => '8640000',
-                'required' => false,
-                'question' => '',
-                'filter' => ''
-            ],
-            [
                 'name' => '_APP_MAINTENANCE_RETENTION_SCHEDULES',
                 'description' => 'Schedules deletion interval ( in seconds ) ',
                 'introduction' => 'TBD',
@@ -1820,15 +1820,6 @@ return [
                 'filter' => ''
             ],
             [
-                'name' => '_APP_EXECUTIONS_DUAL_WRITE',
-                'description' => 'Mirror function and site execution writes to ClickHouse while retaining the project database copy.',
-                'introduction' => '',
-                'default' => 'enabled',
-                'required' => false,
-                'question' => '',
-                'filter' => ''
-            ],
-            [
                 'name' => '_APP_CONNECTIONS_DB_EXECUTIONS',
                 'description' => 'ClickHouse HTTP DSN used for execution storage. Defaults to _APP_CONNECTIONS_DB_USAGE.',
                 'introduction' => '',
@@ -1875,7 +1866,7 @@ return [
             ],
             [
                 'name' => '_APP_STATS_RESOURCES_INTERVAL',
-                'description' => 'Interval in seconds between full resource-count snapshots.',
+                'description' => 'Interval in seconds between resource-count snapshots. Each active project is counted once per interval, at a slot spread across it.',
                 'introduction' => '',
                 'default' => '3600',
                 'required' => false,

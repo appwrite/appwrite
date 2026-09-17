@@ -6,6 +6,7 @@ use Appwrite\ID;
 use Appwrite\Tests\Async;
 use CURLFile;
 use Tests\E2E\Client;
+use Utopia\Command;
 use Utopia\Console;
 
 trait ProxyHelpers
@@ -266,12 +267,14 @@ trait ProxyHelpers
         // Parallel tests must not truncate an archive another upload is reading.
         $tarPath = \sys_get_temp_dir() . '/appwrite-site-' . $site . '-' . \getmypid() . '-' . \uniqid('', true) . '.tar.gz';
 
-        Console::execute(
-            'tar --exclude code.tar.gz --exclude node_modules -czf ' . \escapeshellarg($tarPath) . ' -C ' . \escapeshellarg($folderPath) . ' .',
-            '',
-            $stdout,
-            $stderr
-        );
+        $tar = (new Command('tar'))
+            ->option('--exclude', 'code.tar.gz')
+            ->option('--exclude', 'node_modules')
+            ->flag('-czf')
+            ->argument($tarPath)
+            ->option('-C', $folderPath)
+            ->argument('.');
+        Console::execute($tar, '', $stdout, $stderr);
 
         if (filesize($tarPath) > 1024 * 1024 * 5) {
             throw new \Exception('Code package is too large. Use the chunked upload method instead.');
@@ -295,12 +298,14 @@ trait ProxyHelpers
         // Parallel tests must not truncate an archive another upload is reading.
         $tarPath = \sys_get_temp_dir() . '/appwrite-function-' . $function . '-' . \getmypid() . '-' . \uniqid('', true) . '.tar.gz';
 
-        Console::execute(
-            'tar --exclude code.tar.gz --exclude node_modules -czf ' . \escapeshellarg($tarPath) . ' -C ' . \escapeshellarg($folderPath) . ' .',
-            '',
-            $stdout,
-            $stderr
-        );
+        $tar = (new Command('tar'))
+            ->option('--exclude', 'code.tar.gz')
+            ->option('--exclude', 'node_modules')
+            ->flag('-czf')
+            ->argument($tarPath)
+            ->option('-C', $folderPath)
+            ->argument('.');
+        Console::execute($tar, '', $stdout, $stderr);
 
         if (filesize($tarPath) > 1024 * 1024 * 5) {
             throw new \Exception('Code package is too large. Use the chunked upload method instead.');
