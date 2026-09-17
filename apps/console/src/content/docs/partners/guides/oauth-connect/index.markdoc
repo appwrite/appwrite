@@ -1,0 +1,335 @@
+---
+layout: article
+title: Manage a customer's Appwrite project
+description: Build a product that works inside your customers' Appwrite projects. Register an app, ask for consent, and act with access the customer can revoke at any time.
+---
+
+Some products need to reach into a customer's Appwrite project: a support console, a migration tool, a reporting dashboard. The customer keeps their own Appwrite account and their own bill, and your product does the work on top.
+
+With OAuth connect, the customer grants that access. They approve your app once, choose which of their projects it covers, and can end it whenever they want. This guide builds one such product, start to finish.
+
+# The product you are building {% #product %}
+
+{% only_dark %}
+![The Frontdesk landing page, with the permissions the app asks for and the ones it does not](/images/docs/partners/guides/oauth-connect/dark/product.avif)
+{% /only_dark %}
+{% only_light %}
+![The Frontdesk landing page, with the permissions the app asks for and the ones it does not](/images/docs/partners/guides/oauth-connect/product.avif)
+{% /only_light %}
+
+Frontdesk is a support desk for the people who use your customer's app. A support agent searches for an account, sees the devices it is signed in on, verifies an email address that never arrived, and signs a stolen session out.
+
+The buyer is a company running a product on Appwrite. Their support team already answers these questions, and today the only way to answer them is a Console seat for every agent. A Console seat can also delete a database, so most companies hand it to two people and route everything else through an engineer.
+
+Frontdesk gives them one screen with the actions support needs, priced per seat, and no Console access.
+
+The shortest path to that data is to ask the customer for an API key. Most refuse:
+
+- A key is a shared secret. Whoever holds it can act with it, and the customer has no record of who they gave it to.
+- Scopes are set when the key is created. A key that already exists usually carries more than your feature needs, and creating a narrower one is manual work.
+- Revoking access means rotating the key, which breaks every other integration that uses it.
+- The customer has to send you a credential over email or chat.
+
+OAuth connect answers each point. The customer approves a named list of permissions on a screen Appwrite renders, selects the projects the grant covers, and revokes it from their account page without touching anything else.
+
+{% info title="Source code" %}
+The finished app is at [appwrite-community/frontdesk-support](https://github.com/appwrite-community/frontdesk-support). Clone it to read the working code alongside these steps.
+{% /info %}
+
+# How the connection works {% #how-it-works %}
+
+Connecting one customer takes four steps:
+
+1. Your app sends the user to Appwrite with the permissions it wants.
+2. The user approves and picks the projects.
+3. Appwrite returns a short-lived code to your server, which trades it for tokens.
+4. Your server calls the customer's project with those tokens.
+
+You need an Appwrite account with an organization, which is where your app is registered. You also need a server to hold the client secret and run the token exchange. The sample app runs on Node.js 20 or later.
+
+# Register your app {% #register %}
+
+{% only_dark %}
+![The Create app dialog in the Marketplace tab, filled in with the Frontdesk name and tagline](/images/docs/partners/guides/oauth-connect/dark/register-app.avif)
+{% /only_dark %}
+{% only_light %}
+![The Create app dialog in the Marketplace tab, filled in with the Frontdesk name and tagline](/images/docs/partners/guides/oauth-connect/register-app.avif)
+{% /only_light %}
+
+In the Appwrite Console, open your organization and go to **Marketplace**, then **Create app**. Give it the name and tagline your customers will see on the approval screen, and pick a category.
+
+The name and tagline appear on the consent screen, above the permissions your app asks for.
+
+{% only_dark %}
+![The OAuth client page showing the client ID, the confidential client type, and one redirect URI](/images/docs/partners/guides/oauth-connect/dark/oauth-client.avif)
+{% /only_dark %}
+{% only_light %}
+![The OAuth client page showing the client ID, the confidential client type, and one redirect URI](/images/docs/partners/guides/oauth-connect/oauth-client.avif)
+{% /only_light %}
+
+Open the app's **OAuth client** page and set two things:
+
+- **Client type**: keep **Confidential**. Your product has a server, and the server holds the secret.
+- **Redirect URIs**: add the URL Appwrite should return the user to. The sample app uses `http://localhost:7700/oauth/callback`.
+
+Copy the **Client ID** from this page. Redirect URIs work as an allowlist. Appwrite only returns a user to a URL on that list, so a stolen client ID cannot send your users anywhere else.
+
+{% only_dark %}
+![The OAuth secrets page with one active secret and a warning to keep it server-side](/images/docs/partners/guides/oauth-connect/dark/oauth-secret.avif)
+{% /only_dark %}
+{% only_light %}
+![The OAuth secrets page with one active secret and a warning to keep it server-side](/images/docs/partners/guides/oauth-connect/oauth-secret.avif)
+{% /only_light %}
+
+Last, on **OAuth secrets**, select **Create secret**. The value appears once. Put it in your server environment before you close the dialog.
+
+```bash
+APPWRITE_ENDPOINT=https://fra.cloud.appwrite.io/v1
+APPWRITE_CLIENT_ID=<CLIENT_ID>
+APPWRITE_CLIENT_SECRET=<CLIENT_SECRET>
+APP_URL=http://localhost:7700
+```
+
+The secret proves a token request came from your server. Keep it in a secrets manager, out of your repository and out of any browser bundle.
+
+# Send the customer to Appwrite {% #authorize %}
+
+{% only_dark %}
+![The Appwrite consent screen listing the permissions Frontdesk requested](/images/docs/partners/guides/oauth-connect/dark/consent.avif)
+{% /only_dark %}
+{% only_light %}
+![The Appwrite consent screen listing the permissions Frontdesk requested](/images/docs/partners/guides/oauth-connect/consent.avif)
+{% /only_light %}
+
+Every permission you request appears as a line on this screen. Frontdesk asks for ten scopes:
+
+- `openid`, `profile`, `email` confirm who approved the grant.
+- `project:project.read` reads the project name, so the desk can label it.
+- `project:users.read` and `project:users.write` cover the support actions: look up an account, verify an email, block, label.
+- `project:sessions.read` and `project:sessions.write` list the devices an account is signed in on and sign them out.
+- `project:teams.read` shows which teams an account belongs to.
+- `project:usage.read` counts the accounts in the project, which is what the invoice is based on.
+
+Nothing in that list reaches tables, files, functions, or sites. `project:all` would also work, but it grants every scope in the project, including the ones this product never uses. The full catalog is in [Scopes](/docs/partners/apps/scopes).
+
+The **Connect Appwrite account** button sends the customer to the authorization endpoint with your client ID, your redirect URI, and those scopes:
+
+```text
+https://fra.cloud.appwrite.io/v1/oauth2/console/authorize
+  ?client_id=<CLIENT_ID>
+  &redirect_uri=http://localhost:7700/oauth/callback
+  &response_type=code
+  &scope=openid profile email project:users.read project:users.write
+```
+
+URL-encode the values.
+
+{% only_dark %}
+![The project access section of the consent screen with two projects selected](/images/docs/partners/guides/oauth-connect/dark/consent-projects.avif)
+{% /only_dark %}
+{% only_light %}
+![The project access section of the consent screen with two projects selected](/images/docs/partners/guides/oauth-connect/consent-projects.avif)
+{% /only_light %}
+
+Because the request carries project scopes, the customer also decides where those scopes apply. They can approve every project or name a few, and the choice is theirs, not yours.
+
+Projects left out of the selection stay out of the grant. A customer can start with one project and add the rest later.
+
+# Exchange the code for tokens {% #tokens %}
+
+{% only_dark %}
+![The Frontdesk project picker showing the two projects the customer selected](/images/docs/partners/guides/oauth-connect/dark/projects.avif)
+{% /only_dark %}
+{% only_light %}
+![The Frontdesk project picker showing the two projects the customer selected](/images/docs/partners/guides/oauth-connect/projects.avif)
+{% /only_light %}
+
+Appwrite returns the user to your callback with a single-use code that lasts five minutes. Exchange it from your server:
+
+```bash
+curl -X POST https://fra.cloud.appwrite.io/v1/oauth2/console/token \
+  -H "Content-Type: application/json" \
+  -d '{
+    "grant_type": "authorization_code",
+    "code": "<CODE>",
+    "redirect_uri": "http://localhost:7700/oauth/callback",
+    "client_id": "<CLIENT_ID>",
+    "client_secret": "<CLIENT_SECRET>"
+  }'
+```
+
+The response carries the tokens and the permissions the customer approved:
+
+```json
+{
+  "access_token": "eyJ0eXAiOiJhdCtqd3QiLCJhbGciOiJSUzI1NiJ9...",
+  "refresh_token": "eyJhbGciOiJIUzI1NiJ9...",
+  "expires_in": 28800,
+  "scope": "openid profile email project:project.read project:users.read project:users.write project:sessions.read project:sessions.write project:teams.read project:usage.read",
+  "authorization_details": [
+    { "type": "project", "identifiers": ["<PROJECT_ID>", "<PROJECT_ID>"] }
+  ]
+}
+```
+
+Read `scope` rather than assuming you got what you asked for, and read `identifiers` to learn which projects the customer selected. A customer who approved every project gets `["*"]` instead of a list. Store the refresh token in your secrets manager, keyed by the customer record.
+
+Then confirm who signed in:
+
+```bash
+curl https://fra.cloud.appwrite.io/v1/oauth2/console/userinfo \
+  -H "Authorization: Bearer <ACCESS_TOKEN>"
+```
+
+And list the projects the grant covers:
+
+```bash
+curl https://fra.cloud.appwrite.io/v1/oauth2/console/projects \
+  -H "Authorization: Bearer <ACCESS_TOKEN>"
+```
+
+Each project comes back with its ID, its region, and the endpoint to call it on. Save all three, and use that endpoint for every later call to the project.
+
+# Work inside the customer's project {% #work %}
+
+{% only_dark %}
+![The customer directory in Frontdesk, listing accounts with their status and labels](/images/docs/partners/guides/oauth-connect/dark/customers.avif)
+{% /only_dark %}
+{% only_light %}
+![The customer directory in Frontdesk, listing accounts with their status and labels](/images/docs/partners/guides/oauth-connect/customers.avif)
+{% /only_light %}
+
+Point a client at the project's endpoint, pass the access token as a bearer token, and call the APIs your scopes allow:
+
+```server-nodejs
+import { Client, Users } from 'node-appwrite';
+
+const client = new Client()
+    .setEndpoint('<PROJECT_ENDPOINT>') // From the project listing
+    .setProject('<PROJECT_ID>')
+    .setBearer(accessToken);
+
+const users = new Users(client);
+
+const result = await users.list();
+```
+
+That one call is the customer directory above.
+
+{% only_dark %}
+![A customer record in Frontdesk with support actions, signed-in devices, teams, and labels](/images/docs/partners/guides/oauth-connect/dark/customer.avif)
+{% /only_dark %}
+{% only_light %}
+![A customer record in Frontdesk with support actions, signed-in devices, teams, and labels](/images/docs/partners/guides/oauth-connect/customer.avif)
+{% /only_light %}
+
+Opening a record adds three more calls: the account, its sessions, and its team memberships. The buttons map one to one onto the write scopes you requested, so verifying an email is `users.updateEmailVerification` and signing every device out is `users.deleteSessions`.
+
+A call outside the grant fails with a `401` of type `general_unauthorized_scope`. Appwrite enforces the scope list, so your application code cannot exceed it by mistake.
+
+{% only_dark %}
+![The Frontdesk activity log, showing which agent took which action on which account](/images/docs/partners/guides/oauth-connect/dark/activity.avif)
+{% /only_dark %}
+{% only_light %}
+![The Frontdesk activity log, showing which agent took which action on which account](/images/docs/partners/guides/oauth-connect/activity.avif)
+{% /only_light %}
+
+Keep your own record of who did what. Appwrite sees one grant, approved by one person, and it cannot know that the agent who blocked an account was Rafael and not Mia, because your seats live in your product.
+
+Every support action in Frontdesk writes a row with the agent, the action, the account, and the time. Enterprise customers ask for this during procurement.
+
+# Charge for what you support {% #metering %}
+
+{% only_dark %}
+![The Frontdesk billing page, with account counts per project and this month's invoice](/images/docs/partners/guides/oauth-connect/dark/billing.avif)
+{% /only_dark %}
+{% only_light %}
+![The Frontdesk billing page, with account counts per project and this month's invoice](/images/docs/partners/guides/oauth-connect/billing.avif)
+{% /only_light %}
+
+The work a support desk does depends on how many accounts it covers, not only on how many agents use it. Frontdesk charges per seat and per supported account, so it needs a count of the accounts in each connected project.
+
+Appwrite already holds that count. The usage gauges return point-in-time values per project, so you read them instead of keeping a counter of your own:
+
+```server-nodejs
+import { Client, Usage } from 'node-appwrite';
+
+const client = new Client()
+    .setEndpoint('<PROJECT_ENDPOINT>') // From the project listing
+    .setProject('<PROJECT_ID>')
+    .setBearer(accessToken);
+
+const usage = new Usage(client);
+
+const result = await usage.listGauges({ metrics: ['users', 'users.mau'] });
+```
+
+Each metric comes back as its own series, newest point first:
+
+```json
+{
+  "interval": "",
+  "metrics": [
+    { "metric": "users", "points": [{ "time": "2026-09-16T10:25:31.736+00:00", "value": 12 }] },
+    { "metric": "users.mau", "points": [{ "time": "2026-09-16T10:25:31.736+00:00", "value": 11 }] }
+  ]
+}
+```
+
+`users` is every account in the project. `users.mau` is the accounts that were active in the last thirty days.
+
+The count comes from the customer's own project, so a disputed invoice can be checked against their Console. The call needs `project:usage.read`, which appears on the consent screen, so a customer who declines it declines being metered, and you learn that at connect time.
+
+Pass `interval` to get a series instead of a snapshot. Every other Appwrite metric works the same way, so billing on storage or function executions means a different metric name and no other change.
+
+# Refresh and revocation {% #refresh %}
+
+{% only_dark %}
+![The Frontdesk connection page, showing the account, the projects, the permissions, and the disconnect action](/images/docs/partners/guides/oauth-connect/dark/connection.avif)
+{% /only_dark %}
+{% only_light %}
+![The Frontdesk connection page, showing the account, the projects, the permissions, and the disconnect action](/images/docs/partners/guides/oauth-connect/connection.avif)
+{% /only_light %}
+
+Access tokens last eight hours. When one expires, trade the refresh token for a new pair instead of sending the customer through consent again:
+
+```bash
+curl -X POST https://fra.cloud.appwrite.io/v1/oauth2/console/token \
+  -H "Content-Type: application/json" \
+  -d '{
+    "grant_type": "refresh_token",
+    "refresh_token": "<REFRESH_TOKEN>",
+    "client_id": "<CLIENT_ID>",
+    "client_secret": "<CLIENT_SECRET>"
+  }'
+```
+
+Refresh tokens are single use. Each response carries a new one, and reusing a spent token invalidates the pair, so store the new token as soon as it arrives.
+
+{% only_dark %}
+![The Applications page of an Appwrite account, with a Revoke action next to the authorized app](/images/docs/partners/guides/oauth-connect/dark/revoke.avif)
+{% /only_dark %}
+{% only_light %}
+![The Applications page of an Appwrite account, with a Revoke action next to the authorized app](/images/docs/partners/guides/oauth-connect/revoke.avif)
+{% /only_light %}
+
+The user revokes access from their Appwrite account, under **Applications**, without contacting you.
+
+Your tokens stop working immediately and every call returns a `401`. Treat that as a state rather than an error: mark the connection as ended, delete the stored tokens, and tell the agent what happened. The customer's project is unaffected.
+
+# Next steps {% #next-steps %}
+
+{% cards %}
+{% cards_item href="/docs/partners/apps/scopes" title="Scopes" %}
+The full catalog of project and organization scopes, and how grants target projects.
+{% /cards_item %}
+{% cards_item href="/docs/partners/apps/tokens" title="Tokens" %}
+Lifetimes, refresh rotation, and revocation in detail.
+{% /cards_item %}
+{% cards_item href="/docs/partners/apps/installations" title="Installations" %}
+Act as your app instead of as a person, for work that runs with nobody signed in.
+{% /cards_item %}
+{% cards_item href="/docs/partners/org-api-keys" title="Partners keys" %}
+The other model: your platform owns the organization and provisions projects for customers.
+{% /cards_item %}
+{% /cards %}

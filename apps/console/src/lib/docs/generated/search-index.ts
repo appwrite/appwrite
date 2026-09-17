@@ -1079,6 +1079,16 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     ]
   },
   {
+    "slug": "partners/guides/oauth-connect",
+    "title": "Manage a customer's Appwrite project",
+    "description": "Build a product that works inside your customers' Appwrite projects. Register an app, ask for consent, and act with access the customer can revoke at any time.",
+    "excerpt": "Some products need to reach into a customer's Appwrite project: a support console, a migration tool, a reporting dashboard. The customer keeps their own Appwrite account and their own bill, and your product does the work on top. With OAuth connect, the customer grants that access. They approve your app once, choose which of their projects it covers, and can end it whenever they want. This guide builds one such product, start to finish. The product you are building Frontdesk…",
+    "breadcrumbs": [
+      "Guides",
+      "Manage a customer's project"
+    ]
+  },
+  {
     "slug": "partners/guides/provisioning",
     "title": "Provisioning",
     "description": "End-to-end guide for provisioning an Appwrite project per customer from a partner platform using organization API keys.",
