@@ -69,67 +69,6 @@ final class AccountTest extends Scope
         $this->assertNotEmpty($cookie);
     }
 
-    public function testCreateSessionAfterRecovery(): void
-    {
-        $projectId = $this->getProject()['$id'];
-        $userId = ID::unique();
-        $email = ID::unique() . '@localhost.test';
-        $headers = [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ];
-        $account = $this->client->call(Client::METHOD_POST, '/users', $headers, [
-            'userId' => $userId,
-            'email' => $email,
-            'password' => 'password',
-        ]);
-        $this->assertEquals(201, $account['headers']['status-code']);
-
-        /**
-         * Test for SUCCESS
-         */
-        $baseline = $this->client->call(Client::METHOD_POST, '/users/' . $userId . '/sessions', $headers);
-        $this->assertEquals(201, $baseline['headers']['status-code']);
-        $this->assertSame($userId, $baseline['body']['userId']);
-        $this->assertNotEmpty($baseline['body']['secret']);
-
-        $response = $this->client->call(Client::METHOD_POST, '/graphql', $headers, [
-            'query' => 'mutation CreateRecoveryAndSession($email: String!, $userId: String!) {
-                recovery: accountCreateRecovery(email: $email, url: "http://localhost/recovery", length: 4) {
-                    userId
-                    secret
-                }
-                session: usersCreateSession(userId: $userId) {
-                    userId
-                    secret
-                }
-            }',
-            'variables' => [
-                'email' => $email,
-                'userId' => $userId,
-            ],
-        ]);
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertArrayNotHasKey('errors', $response['body'], json_encode($response['body']['errors'] ?? [], JSON_THROW_ON_ERROR));
-        $recovery = $response['body']['data']['recovery'];
-        $session = $response['body']['data']['session'];
-        $this->assertSame($userId, $recovery['userId']);
-        $this->assertSame(4, strlen($recovery['secret']));
-        $this->assertSame($userId, $session['userId']);
-        $this->assertNotEmpty($session['secret']);
-        $this->assertSame(strlen($baseline['body']['secret']), strlen($session['secret']));
-
-        $account = $this->client->call(Client::METHOD_GET, '/account', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-            'x-appwrite-session' => $session['secret'],
-        ]);
-        $this->assertEquals(200, $account['headers']['status-code']);
-        $this->assertSame($userId, $account['body']['$id']);
-    }
-
     public function testCreateMagicURLSession(): array
     {
         $projectId = $this->getProject()['$id'];

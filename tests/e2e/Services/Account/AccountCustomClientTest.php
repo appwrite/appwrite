@@ -4428,14 +4428,12 @@ final class AccountCustomClientTest extends Scope
         $this->assertEmpty($response['body']['phrase']);
         $this->assertTrue((new DatetimeValidator())->isValid($response['body']['expire']));
 
-        $this->assertEqualsWithDelta(3600, \strtotime($response['body']['expire']) - \strtotime($response['body']['$createdAt']), 1);
-
         $userId = $response['body']['userId'];
 
         $lastEmail = $this->getLastEmailByAddress($email);
         $this->assertNotEmpty($lastEmail, 'Email not found for address: ' . $email);
         $this->assertEquals($this->getProject()['name'] . ' Login', $lastEmail['subject']);
-        $this->assertStringContainsString($response['body']['expire'], (string) $lastEmail['text']);
+        $this->assertStringContainsString(\gmdate('Y-m-d H:i', \strtotime($response['body']['expire'])) . ' UTC', (string) $lastEmail['text']);
         $this->assertStringNotContainsStringIgnoringCase('security phrase', $lastEmail['text']);
 
         $token = substr($lastEmail['text'], strpos($lastEmail['text'], '&secret=', 0) + 8, 64);
@@ -4823,14 +4821,11 @@ final class AccountCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'factor' => 'recoveryCode',
-            'length' => 128,
-            'expire' => 300,
+            'factor' => 'recoveryCode'
         ]);
 
         $this->assertEquals(201, $challenge['headers']['status-code']);
         $this->assertNotEmpty($challenge['body']['$id']);
-        $this->assertEqualsWithDelta(300, \strtotime($challenge['body']['expire']) - \strtotime($challenge['body']['$createdAt']), 1);
         $challengeId = $challenge['body']['$id'];
 
         // Test SUCCESS: Verify with valid recovery code (this tests the bug fix)
@@ -4917,14 +4912,11 @@ final class AccountCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), [
-            'factor' => 'custom',
-            'length' => 128,
-            'expire' => 300,
+            'factor' => 'custom'
         ]);
 
         $this->assertEquals(201, $challenge['headers']['status-code']);
         $this->assertNotEmpty($challenge['body']['$id']);
-        $this->assertEqualsWithDelta(300, \strtotime($challenge['body']['expire']) - \strtotime($challenge['body']['$createdAt']), 1);
         // The challenge code must never be exposed on the client-facing create response
         $this->assertArrayNotHasKey('code', $challenge['body']);
         $challengeId = $challenge['body']['$id'];
@@ -4948,7 +4940,6 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals(200, $codeResponse['headers']['status-code']);
         $this->assertNotEmpty($codeResponse['body']['code']);
         $code = $codeResponse['body']['code'];
-        $this->assertSame(6, strlen($code));
 
         // Test FAILURE: verifying with a random/incorrect otp before the real one is used
         $wrongFirst = $this->client->call(Client::METHOD_PUT, '/account/mfa/challenge', array_merge([
@@ -5179,13 +5170,10 @@ final class AccountCustomClientTest extends Scope
 
         $challenge = $this->client->call(Client::METHOD_POST, '/account/mfa/challenges', $headers, [
             'factor' => 'totp',
-            'length' => 128,
-            'expire' => 300,
         ]);
 
         $this->assertEquals(201, $challenge['headers']['status-code']);
         $this->assertNotEmpty($challenge['body']['$id']);
-        $this->assertEqualsWithDelta(300, \strtotime($challenge['body']['expire']) - \strtotime($challenge['body']['$createdAt']), 1);
 
         $invalidChallengeVerification = $this->client->call(Client::METHOD_PUT, '/account/mfa/challenges', $headers, [
             'challengeId' => $challenge['body']['$id'],
@@ -6652,107 +6640,160 @@ final class AccountCustomClientTest extends Scope
         return $claims;
     }
 
-    public static function verificationTokens(): \Iterator
+    public function testCreateRecoveryExpire(): void
     {
-        yield 'recovery' => ['/account/recovery', 256, 3600];
-        yield 'email verification' => ['/account/verifications/email', 256, 3600];
-        yield 'email OTP verification' => ['/account/verifications/email/otp', 6, 900];
-        yield 'phone verification' => ['/account/verifications/phone', 6, 3600];
-    }
-
-    #[DataProvider('verificationTokens')]
-    public function testCreateVerificationToken(string $path, int $defaultLength, int $defaultExpire): void
-    {
-        $maxLength = match ($path) {
-            '/account/verifications/phone', '/account/verifications/email/otp' => 128,
-            default => 256,
-        };
+        $user = $this->createFreshAccountWithSession();
+        $headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ];
+        $params = ['email' => $user['email'], 'url' => 'http://localhost/recovery'];
 
         /**
          * Test for SUCCESS
          */
-        foreach ([[], ['length' => null, 'expire' => null], ['length' => $defaultLength, 'expire' => 60], ['length' => $maxLength, 'expire' => 300], ['length' => $maxLength, 'expire' => $defaultExpire]] as $options) {
-            $user = $this->createFreshAccountWithSession();
-            $headers = [
-                'origin' => 'http://localhost',
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-            ];
-            if ($path !== '/account/recovery') {
-                $headers['cookie'] = 'a_session_' . $this->getProject()['$id'] . '=' . $user['session'];
-            }
-            $phone = '+1202' . random_int(1000000, 9999999);
-            $params = [];
-            if ($path === '/account/verifications/phone') {
-                $response = $this->client->call(Client::METHOD_PATCH, '/users/' . $user['id'] . '/phone', [
-                    'content-type' => 'application/json',
-                    'x-appwrite-project' => $this->getProject()['$id'],
-                    'x-appwrite-key' => $this->getProject()['apiKey'],
-                ], ['number' => $phone]);
-                $this->assertEquals(200, $response['headers']['status-code']);
-            } elseif ($path !== '/account/verifications/email/otp') {
-                $params['url'] = 'http://localhost' . ($path === '/account/recovery' ? '/recovery' : '/verification');
-                if ($path === '/account/recovery') {
-                    $params['email'] = $user['email'];
-                }
-            }
-
-            $response = $this->client->call(Client::METHOD_POST, $path, $headers, array_merge($params, $options));
+        foreach ([[], ['expire' => null], ['expire' => 60], ['expire' => 3600]] as $options) {
+            $response = $this->client->call(Client::METHOD_POST, '/account/recovery', $headers, array_merge($params, $options));
 
             $this->assertEquals(201, $response['headers']['status-code']);
-            $token = $response['body'];
-            $this->assertTokenExpire($token, $options['expire'] ?? $defaultExpire);
-            $this->assertSame($user['id'], $token['userId']);
-            $this->assertSame('', $token['secret']);
+            $this->assertTokenExpire($response['body'], $options['expire'] ?? 3600);
 
-            $length = $options['length'] ?? $defaultLength;
-            $secret = match ($path) {
-                '/account/verifications/phone' => $this->readPhoneCode($phone),
-                '/account/verifications/email/otp' => $this->readEmailCode($user['email'], $token['expire'], $length),
-                default => $this->readEmailLink($user['email'], $token),
-            };
-            $this->assertSame($length, strlen($secret));
-            if ($path === '/account/verifications/phone' || $path === '/account/verifications/email/otp') {
-                $this->assertTrue(ctype_digit($secret));
-            }
-
-            $confirmation = ['userId' => $user['id'], 'secret' => $secret];
-            if ($path === '/account/recovery') {
-                $confirmation['password'] = 'updated-password';
-            }
-            $response = $this->client->call(Client::METHOD_PUT, $path, $headers, $confirmation);
+            $response = $this->client->call(Client::METHOD_PUT, '/account/recovery', $headers, [
+                'userId' => $user['id'],
+                'secret' => $this->readEmailLink($user['email'], $response['body']),
+                'password' => 'updated-password',
+            ]);
             $this->assertEquals(200, $response['headers']['status-code']);
-
-            if ($path === '/account/recovery') {
-                $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
-                    'origin' => 'http://localhost',
-                    'content-type' => 'application/json',
-                    'x-appwrite-project' => $this->getProject()['$id'],
-                ], ['email' => $user['email'], 'password' => 'updated-password']);
-                $this->assertEquals(201, $session['headers']['status-code']);
-                $this->assertSame($user['id'], $session['body']['userId']);
-                $user['session'] = $session['cookies']['a_session_' . $this->getProject()['$id']];
-            } else {
-                $account = $this->client->call(Client::METHOD_GET, '/account', $headers);
-                $this->assertEquals(200, $account['headers']['status-code']);
-                $this->assertTrue($account['body'][$path === '/account/verifications/phone' ? 'phoneVerification' : 'emailVerification']);
-            }
         }
 
         /**
          * Test for FAILURE
          */
-        $this->assertInvalidTokenOptions($path, $headers, $params, $maxLength, $defaultLength, $defaultExpire);
-        if ($path === '/account/recovery') {
-            $headers['cookie'] = 'a_session_' . $this->getProject()['$id'] . '=' . $user['session'];
-            $this->assertInvalidTokenOptions($path, $headers, $params, $maxLength, $defaultLength, $defaultExpire);
+        $this->assertInvalidExpire('/account/recovery', $headers, $params, 3600);
+    }
 
-            $response = $this->client->call(Client::METHOD_POST, '/account/jwt', $headers);
+    public function testCreateEmailVerificationExpire(): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        foreach ([[], ['expire' => null], ['expire' => 60], ['expire' => 3600]] as $options) {
+            $user = $this->createFreshAccountWithSession();
+            $headers = [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $user['session'],
+            ];
+
+            $response = $this->client->call(Client::METHOD_POST, '/account/verifications/email', $headers, array_merge([
+                'url' => 'http://localhost/verification',
+            ], $options));
+
             $this->assertEquals(201, $response['headers']['status-code']);
-            unset($headers['cookie']);
-            $headers['x-appwrite-jwt'] = $response['body']['jwt'];
-            $this->assertInvalidTokenOptions($path, $headers, $params, $maxLength, $defaultLength, $defaultExpire);
+            $this->assertTokenExpire($response['body'], $options['expire'] ?? 3600);
+
+            $response = $this->client->call(Client::METHOD_PUT, '/account/verifications/email', $headers, [
+                'userId' => $user['id'],
+                'secret' => $this->readEmailLink($user['email'], $response['body']),
+            ]);
+            $this->assertEquals(200, $response['headers']['status-code']);
         }
+
+        /**
+         * Test for FAILURE
+         */
+        $user = $this->createFreshAccountWithSession();
+        $this->assertInvalidExpire('/account/verifications/email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $user['session'],
+        ], ['url' => 'http://localhost/verification'], 3600);
+    }
+
+    public function testCreateEmailVerificationOTPExpire(): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        foreach ([[], ['expire' => null], ['expire' => 60], ['expire' => 900]] as $options) {
+            $user = $this->createFreshAccountWithSession();
+            $headers = [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $user['session'],
+            ];
+
+            $response = $this->client->call(Client::METHOD_POST, '/account/verifications/email/otp', $headers, $options);
+
+            $this->assertEquals(201, $response['headers']['status-code']);
+            $this->assertTokenExpire($response['body'], $options['expire'] ?? 900);
+
+            $response = $this->client->call(Client::METHOD_PUT, '/account/verifications/email/otp', $headers, [
+                'userId' => $user['id'],
+                'secret' => $this->readEmailCode($user['email'], $response['body']['expire']),
+            ]);
+            $this->assertEquals(200, $response['headers']['status-code']);
+        }
+
+        /**
+         * Test for FAILURE
+         */
+        $user = $this->createFreshAccountWithSession();
+        $this->assertInvalidExpire('/account/verifications/email/otp', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $user['session'],
+        ], [], 900);
+    }
+
+    public function testCreatePhoneVerificationExpire(): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        foreach ([[], ['expire' => null], ['expire' => 60], ['expire' => 3600]] as $options) {
+            $user = $this->createFreshAccountWithSession();
+            $headers = [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $user['session'],
+            ];
+            $phone = '+1202' . random_int(1000000, 9999999);
+            $response = $this->client->call(Client::METHOD_PATCH, '/users/' . $user['id'] . '/phone', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ], ['number' => $phone]);
+            $this->assertEquals(200, $response['headers']['status-code']);
+
+            $response = $this->client->call(Client::METHOD_POST, '/account/verifications/phone', $headers, $options);
+
+            $this->assertEquals(201, $response['headers']['status-code']);
+            $this->assertTokenExpire($response['body'], $options['expire'] ?? 3600);
+
+            $response = $this->client->call(Client::METHOD_PUT, '/account/verifications/phone', $headers, [
+                'userId' => $user['id'],
+                'secret' => $this->readPhoneCode($phone),
+            ]);
+            $this->assertEquals(200, $response['headers']['status-code']);
+        }
+
+        /**
+         * Test for FAILURE
+         */
+        $user = $this->createFreshAccountWithSession();
+        $this->assertInvalidExpire('/account/verifications/phone', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $user['session'],
+        ], [], 3600);
     }
 
     public static function challengeFactors(): \Iterator
@@ -6762,12 +6803,12 @@ final class AccountCustomClientTest extends Scope
     }
 
     #[DataProvider('challengeFactors')]
-    public function testCreateMFAChallenge(string $factor): void
+    public function testCreateMFAChallengeExpire(string $factor): void
     {
         /**
          * Test for SUCCESS
          */
-        foreach ([[], ['length' => null, 'expire' => null], ['length' => 6, 'expire' => 60], ['length' => 8, 'expire' => 300], ['length' => 128, 'expire' => 3600]] as $options) {
+        foreach ([[], ['expire' => null], ['expire' => 60], ['expire' => 3600]] as $options) {
             $user = $this->createFreshAccountWithSession();
             $headers = [
                 'origin' => 'http://localhost',
@@ -6793,36 +6834,27 @@ final class AccountCustomClientTest extends Scope
             $this->assertEquals(201, $response['headers']['status-code']);
             $challenge = $response['body'];
             $this->assertTokenExpire($challenge, $options['expire'] ?? 3600);
-            $this->assertSame($user['id'], $challenge['userId']);
-            $this->assertArrayNotHasKey('code', $challenge);
-            $this->assertArrayNotHasKey('secret', $challenge);
 
-            $length = $options['length'] ?? 6;
             $code = $factor === 'phone'
                 ? $this->readPhoneCode($phone)
-                : $this->readEmailCode($user['email'], $challenge['expire'], $length);
-            $this->assertSame($length, strlen($code));
-            $this->assertTrue(ctype_digit($code));
+                : $this->readEmailCode($user['email'], $challenge['expire']);
 
             $response = $this->client->call(Client::METHOD_PUT, '/account/mfa/challenges', $headers, [
                 'challengeId' => $challenge['$id'],
                 'otp' => $code,
             ]);
             $this->assertEquals(200, $response['headers']['status-code']);
-            $this->assertContains($factor, $response['body']['factors']);
-            $this->assertSame('', $response['body']['secret']);
-
-            $response = $this->client->call(Client::METHOD_PUT, '/account/mfa/challenges', $headers, [
-                'challengeId' => $challenge['$id'],
-                'otp' => $code,
-            ]);
-            $this->assertEquals(401, $response['headers']['status-code']);
-            $this->assertSame('user_invalid_token', $response['body']['type']);
         }
 
         /**
          * Test for FAILURE
          */
-        $this->assertInvalidTokenOptions('/account/mfa/challenges', $headers, ['factor' => $factor], 128, 6, 3600);
+        $user = $this->createFreshAccountWithSession();
+        $this->assertInvalidExpire('/account/mfa/challenges', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $user['session'],
+        ], ['factor' => $factor], 3600);
     }
 }

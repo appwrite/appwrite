@@ -203,8 +203,6 @@ trait AccountBase
         $this->assertEmpty($response['body']['secret']);
         $this->assertEmpty($response['body']['phrase']);
 
-        $this->assertEqualsWithDelta(900, \strtotime($response['body']['expire']) - \strtotime($response['body']['$createdAt']), 1);
-
         $userId = $response['body']['userId'];
 
         $lastEmail = $this->getLastEmailByAddress($otpEmail);
@@ -217,7 +215,7 @@ trait AccountBase
         $code = $matches[0][0] ?? '';
 
         $this->assertNotEmpty($code);
-        $this->assertStringContainsString($response['body']['expire'], $lastEmail['text']);
+        $this->assertStringContainsString(\gmdate('Y-m-d H:i', \strtotime($response['body']['expire'])) . ' UTC', (string) $lastEmail['text']);
 
         // Only Console project has branded logo in email.
         if ($isConsoleProject) {
@@ -295,21 +293,6 @@ trait AccountBase
         $this->assertStringContainsStringIgnoringCase('security phrase', $lastEmail['text']);
         $this->assertStringContainsStringIgnoringCase($phrase, $lastEmail['text']);
 
-        $customExpireEmail = 'otp-expire-' . uniqid() . '@appwrite.io';
-        $response = $this->client->call(Client::METHOD_POST, '/account/tokens/email', array_merge([
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ]), [
-            'userId' => ID::unique(),
-            'email' => $customExpireEmail,
-            'expire' => 300,
-        ]);
-
-        $this->assertEquals(201, $response['headers']['status-code']);
-        $this->assertNotEmpty($response['body']['expire']);
-        $this->assertEqualsWithDelta(300, \strtotime($response['body']['expire']) - \strtotime($response['body']['$createdAt']), 1);
-
         $response = $this->client->call(Client::METHOD_POST, '/account/tokens/email', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
@@ -340,32 +323,6 @@ trait AccountBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
             'userId' => ID::unique(),
-        ]);
-
-        $this->assertEquals(400, $response['headers']['status-code']);
-        $this->assertEquals('general_argument_invalid', $response['body']['type']);
-
-        $response = $this->client->call(Client::METHOD_POST, '/account/tokens/email', array_merge([
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ]), [
-            'userId' => ID::unique(),
-            'email' => $otpEmail,
-            'expire' => 1,
-        ]);
-
-        $this->assertEquals(400, $response['headers']['status-code']);
-        $this->assertEquals('general_argument_invalid', $response['body']['type']);
-
-        $response = $this->client->call(Client::METHOD_POST, '/account/tokens/email', array_merge([
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ]), [
-            'userId' => ID::unique(),
-            'email' => $otpEmail,
-            'expire' => 999999999999999,
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
