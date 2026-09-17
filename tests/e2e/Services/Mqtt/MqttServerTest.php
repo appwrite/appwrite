@@ -147,9 +147,9 @@ final class MqttServerTest extends Scope
 
         try {
             // Test for FAILURE: a filter that maps to no project topic is refused in the
-            // SUBACK (reason 0x87), not silently granted.
+            // SUBACK (reason 0x80), not silently granted.
             $codes = $subscriber->subscribe(['does-not-exist-' . $userId]);
-            $this->assertSame([0x87], $codes);
+            $this->assertSame([0x80], $codes);
         } finally {
             $subscriber->disconnect();
         }
@@ -176,11 +176,11 @@ final class MqttServerTest extends Scope
         $this->assertEquals(201, $topic['headers']['status-code']);
         $topicId = $topic['body']['$id'];
 
-        // Test for FAILURE: a user outside the topic's subscribe roles is refused (0x87).
+        // Test for FAILURE: a user outside the topic's subscribe roles is refused (0x80).
         $other = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
         $this->assertSame(0, $other->connect($projectId, $otherJwt, 'e2e-acl-other-' . $otherId, cleanStart: true));
         try {
-            $this->assertSame([0x87], $other->subscribe([$topicId]));
+            $this->assertSame([0x80], $other->subscribe([$topicId]));
         } finally {
             $other->disconnect();
         }

@@ -10,6 +10,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Container;
 use Utopia\Mqtt\Connection;
 use Utopia\Mqtt\Handler as MqttHandler;
@@ -118,11 +119,6 @@ class Handler implements MqttHandler
         $identity = $connection->identity;
 
         $projectDB = $this->getProjectDB($connection->prefix);
-        $authorization = $projectDB->getAuthorization();
-
-        /** @var User $user */
-        $user = $authorization->skip(fn () => $projectDB->getDocument('users', $identity['userId'] ?? ''));
-        $roles = $user->getRoles($authorization);
 
         $allowed = [];
         foreach ($subscribe->filters() as $filter) {
@@ -130,6 +126,13 @@ class Handler implements MqttHandler
                 $allowed[$filter->topic] = true;
             }
         }
+
+        $authorization = new Authorization();
+        $projectDB->setAuthorization($authorization);
+
+        /** @var User $user */
+        $user = $authorization->skip(fn () => $projectDB->getDocument('users', $identity['userId'] ?? ''));
+        $roles = $user->getRoles($authorization);
 
         $topicsById = [];
         if ($allowed !== []) {
@@ -165,14 +168,6 @@ class Handler implements MqttHandler
             $suback->grant($grantedQos);
             $grantedTopics[$filter->topic] = [$document, $grantedQos];
         }
-
-        \Utopia\Console::error('MQTT_SUB_DBG prefix=' . $connection->prefix
-            . ' uid=' . ($identity['userId'] ?? '(none)')
-            . ' roles=' . \json_encode($roles)
-            . ' filters=' . \json_encode(\array_map(fn ($f) => [$f->topic, $f->qos], $subscribe->filters()))
-            . ' allowed=' . \json_encode(\array_keys($allowed))
-            . ' foundTopics=' . \json_encode(\array_keys($topicsById))
-            . ' codes=' . \json_encode($suback->codes()));
 
         if ($grantedTopics !== []) {
             $this->replayBacklog($connection, $projectDB, $grantedTopics);
@@ -344,7 +339,9 @@ class Handler implements MqttHandler
         $getProjectDB = $this->container->get('getProjectDB');
 
         $consoleDB = $getConsoleDB();
-        $project = $consoleDB->getAuthorization()->skip(fn () => $consoleDB->getDocument('projects', $projectId));
+        $authorization = new Authorization();
+        $consoleDB->setAuthorization($authorization);
+        $project = $authorization->skip(fn () => $consoleDB->getDocument('projects', $projectId));
 
         return $getProjectDB($project);
     }
