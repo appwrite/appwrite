@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "8e82aa5125ccfa17c4a8ac67d128e3f5",
+    "content-hash": "07bf87fed33b4f006f6c5604a963d12d",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2831,59 +2831,6 @@
             "time": "2026-08-13T11:44:26+00:00"
         },
         {
-            "name": "utopia-php/agents",
-            "version": "2.1.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/utopia-php/agents.git",
-                "reference": "c9785833948639c09c8ccc3e954178c66ed9a896"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/agents/zipball/c9785833948639c09c8ccc3e954178c66ed9a896",
-                "reference": "c9785833948639c09c8ccc3e954178c66ed9a896",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=8.3",
-                "utopia-php/fetch": "^1.1.0"
-            },
-            "require-dev": {
-                "laravel/pint": "^1.18",
-                "phpstan/phpstan": "^2.0",
-                "phpunit/phpunit": "^12.0"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Utopia\\Agents\\": "src/Agents"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Utopia PHP",
-                    "email": "team@appwrite.io"
-                }
-            ],
-            "description": "A simple PHP AI agents library",
-            "keywords": [
-                "agents",
-                "ai",
-                "automation",
-                "machine-learning",
-                "php"
-            ],
-            "support": {
-                "issues": "https://github.com/utopia-php/agents/issues",
-                "source": "https://github.com/utopia-php/agents/tree/2.1.0"
-            },
-            "time": "2026-05-29T10:44:54+00:00"
-        },
-        {
             "name": "utopia-php/audit",
             "version": "4.0.3",
             "source": {
@@ -3037,16 +2984,16 @@
         },
         {
             "name": "utopia-php/cache",
-            "version": "5.0.3",
+            "version": "5.1.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/cache.git",
-                "reference": "f808a39d018e1f325ac553b8de39798cae40c1f9"
+                "reference": "35fee421ef64d6079abcf97b149b2413d71276c3"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/cache/zipball/f808a39d018e1f325ac553b8de39798cae40c1f9",
-                "reference": "f808a39d018e1f325ac553b8de39798cae40c1f9",
+                "url": "https://api.github.com/repos/utopia-php/cache/zipball/35fee421ef64d6079abcf97b149b2413d71276c3",
+                "reference": "35fee421ef64d6079abcf97b149b2413d71276c3",
                 "shasum": ""
             },
             "require": {
@@ -3060,6 +3007,7 @@
                 "swoole/ide-helper": "^6.0"
             },
             "suggest": {
+                "ext-igbinary": "Required for the Igbinary codec.",
                 "ext-memcached": "Required for the Memcached and Hazelcast adapters.",
                 "ext-redis": "Required for the Redis, RedisCluster and Sharding adapters.",
                 "ext-swoole": "Required for the multiplexing Redis adapter (>=6.0)."
@@ -3090,9 +3038,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/cache/issues",
-                "source": "https://github.com/utopia-php/cache/tree/5.0.3"
+                "source": "https://github.com/utopia-php/cache/tree/5.1.1"
             },
-            "time": "2026-09-11T08:23:02+00:00"
+            "time": "2026-09-16T20:55:55+00:00"
         },
         {
             "name": "utopia-php/cdn",
@@ -4027,54 +3975,6 @@
             "time": "2025-08-12T12:58:26+00:00"
         },
         {
-            "name": "utopia-php/lock",
-            "version": "0.3.1",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/utopia-php/lock.git",
-                "reference": "1f42343b1a336bf9ff719d0c2b5d43712ac43394"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/lock/zipball/1f42343b1a336bf9ff719d0c2b5d43712ac43394",
-                "reference": "1f42343b1a336bf9ff719d0c2b5d43712ac43394",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=8.3"
-            },
-            "require-dev": {
-                "swoole/ide-helper": "*"
-            },
-            "suggest": {
-                "ext-pcntl": "Required to run the File lock tests",
-                "ext-redis": "Required for the Distributed lock",
-                "ext-swoole": "Required for the Mutex and Semaphore locks (>=6.0)"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Utopia\\Lock\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Appwrite Team",
-                    "email": "team@appwrite.io"
-                }
-            ],
-            "description": "A simple lock library to coordinate access to shared resources across coroutines, processes and hosts",
-            "support": {
-                "issues": "https://github.com/utopia-php/lock/issues",
-                "source": "https://github.com/utopia-php/lock/tree/0.3.1"
-            },
-            "time": "2026-08-21T15:12:28+00:00"
-        },
-        {
             "name": "utopia-php/messaging",
             "version": "2.1.3",
             "source": {
@@ -4446,52 +4346,6 @@
                 "source": "https://github.com/utopia-php/pools/tree/2.1.2"
             },
             "time": "2026-09-07T07:02:57+00:00"
-        },
-        {
-            "name": "utopia-php/psr7",
-            "version": "0.2.2",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/utopia-php/psr7.git",
-                "reference": "cf70bec9ae4cda33bba01c8f7f2194d32adf899d"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/psr7/zipball/cf70bec9ae4cda33bba01c8f7f2194d32adf899d",
-                "reference": "cf70bec9ae4cda33bba01c8f7f2194d32adf899d",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=8.4",
-                "psr/http-factory": "^1.0",
-                "psr/http-message": "^1.1 || ^2.0"
-            },
-            "suggest": {
-                "ext-simplexml": "Required to decode XML responses with Response::xml()."
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Utopia\\Psr7\\": "src/Psr7/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "description": "PSR-7 HTTP message implementations and PSR-17 factories for Utopia",
-            "keywords": [
-                "http",
-                "php",
-                "psr-17",
-                "psr-7",
-                "utopia"
-            ],
-            "support": {
-                "issues": "https://github.com/utopia-php/psr7/issues",
-                "source": "https://github.com/utopia-php/psr7/tree/0.2.2"
-            },
-            "time": "2026-09-02T15:57:19+00:00"
         },
         {
             "name": "utopia-php/query",
@@ -8570,6 +8424,7 @@
         "ext-yaml": "*",
         "ext-dom": "*",
         "ext-redis": "*",
+        "ext-igbinary": "*",
         "ext-swoole": "6.*",
         "ext-pdo": "*",
         "ext-openssl": "*",

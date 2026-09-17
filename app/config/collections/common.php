@@ -1320,6 +1320,20 @@ return [
                 'filters' => ['encrypt'],
             ],
             [
+                // Raw OIDC ID token from the last native sign-in. Kept so clients can
+                // read claims the identity does not model — Google's `locale`, for
+                // one — without a round trip to the provider.
+                '$id' => ID::custom('providerIdToken'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 16384,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => ['encrypt'],
+            ],
+            [
                 // Used to store data from provider that may or may not be sensitive
                 '$id' => ID::custom('secrets'),
                 'type' => Database::VAR_STRING,

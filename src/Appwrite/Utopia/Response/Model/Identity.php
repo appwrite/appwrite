@@ -70,6 +70,12 @@ class Identity extends Model
                 'default' => '',
                 'example' => 'MTQ0NjJkZmQ5OTM2NDE1ZTZjNGZmZjI3',
             ])
+            ->addRule('providerIdToken', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Identity Provider ID token (JWT) from the most recent native sign-in. Empty for identities created through the browser OAuth2 flow.',
+                'default' => '',
+                'example' => 'eyJhbGciOiJSUzI1NiIsImtpZCI6IjBhYzNmMWQwNWExYjhlN2YifQ.eyJzdWIiOiIxMTAxNjk0ODQ0NzQzODYyNzYzMzQifQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c',
+            ])
         ;
     }
 

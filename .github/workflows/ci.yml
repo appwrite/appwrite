@@ -147,6 +147,9 @@ jobs:
             if: ${{ !cancelled() && steps.install.outcome == 'success' }}
             run: composer lint
 
+          - name: Validate packages
+            run: bin/monorepo validate
+
           - name: Check Docker Compose formatting
             if: ${{ !cancelled() && steps.install.outcome == 'success' }}
             run: npm run lint:compose
@@ -260,6 +263,101 @@ jobs:
             core.setOutput('databases', JSON.stringify(['PostgreSQL']));
             core.setOutput('modes', JSON.stringify(['dedicated']));
 
+  packages:
+    name: Packages / Changed
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.changed.outputs.matrix }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+
+      - name: Compute changed packages
+        id: changed
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            CHANGED=$(ls packages)
+          else
+            if [ "${{ github.event_name }}" = "pull_request" ]; then
+              RANGE="origin/${{ github.base_ref }}...HEAD"
+            elif git rev-parse -q --verify "${{ github.event.before }}" > /dev/null; then
+              RANGE="${{ github.event.before }}..HEAD"
+            else
+              RANGE="HEAD~1..HEAD"
+            fi
+            CHANGED=$(git diff --name-only "$RANGE" -- packages/ | cut -d/ -f2)
+            # tooling changes affect every package
+            if git diff --name-only "$RANGE" | grep -qE '^(bin/monorepo|\.github/workflows/(ci|split.*|mirror-redirect)\.yml|composer\.json|pint\.json)$'; then
+              CHANGED=$(ls packages)
+            fi
+          fi
+          CHANGED=$(echo "$CHANGED" | tr ' ' '\n' | sort -u \
+            | while read -r package; do [ -d "packages/$package" ] && echo "$package"; done)
+
+          # docs-only change: no packages to test
+          if [ -z "$CHANGED" ]; then
+            echo "matrix=[]" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Dependents of changed packages run linked (siblings resolved from
+          # the local checkout); changed packages run registry-resolved —
+          # unless a sibling they depend on also changed, which makes the
+          # registry combination unbuildable until that sibling releases.
+          LINKED=$(bin/monorepo dependents $CHANGED)
+          MATRIX=$(
+            {
+              for package in $LINKED; do
+                printf '{"package":"%s","linked":true}\n' "$package"
+              done
+              for package in $CHANGED; do
+                case " $(echo $LINKED) " in
+                  *" $package "*) ;;
+                  *) printf '{"package":"%s","linked":false}\n' "$package" ;;
+                esac
+              done
+            } | jq --compact-output --slurp 'unique'
+          )
+          echo "matrix=$MATRIX" >> "$GITHUB_OUTPUT"
+
+  package:
+    name: Packages / ${{ matrix.package }}${{ matrix.linked && ' (linked)' || '' }}
+    needs: packages
+    if: needs.packages.outputs.matrix != '[]'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJson(needs.packages.outputs.matrix) }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Read package extensions
+        id: meta
+        run: |
+          EXTENSIONS=$(jq -r '[(.require, ."require-dev", .suggest | select(. != null)) | keys[] | select(startswith("ext-")) | ltrimstr("ext-")] | unique | join(", ")' packages/${{ matrix.package }}/composer.json)
+          echo "extensions=$EXTENSIONS" >> "$GITHUB_OUTPUT"
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@accd6127cb78bee3e8082180cb391013d204ef9f # 2.37.0
+        with:
+          php-version: '8.5'
+          extensions: ${{ steps.meta.outputs.extensions }}
+          tools: composer:v2
+          coverage: none
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress --ignore-platform-reqs
+
+      - name: Check package
+        run: bin/monorepo check ${{ matrix.package }}
+
+      - name: Test package
+        run: bin/monorepo test ${{ matrix.package }} ${{ matrix.linked && '--linked' || '' }}
+
   build:
     name: Build
     runs-on: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/volume=60g/spot=price-capacity-optimized/retry=when-interrupted/extras=otel+s3-cache+ecr-cache
@@ -351,6 +449,10 @@ jobs:
           docker compose exec
           -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}"
           appwrite test /usr/src/code/tests/unit
+
+      - name: Run Package Tests
+        timeout-minutes: 15
+        run: docker compose exec appwrite test --testsuite packages
 
   e2e_general:
     name: Tests / E2E / General

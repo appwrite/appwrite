@@ -1233,6 +1233,7 @@ class Deletes extends Action
             TOKEN_TYPE_OAUTH2,
             TOKEN_TYPE_GENERIC,
             TOKEN_TYPE_EMAIL,
+            TOKEN_TYPE_VERIFICATION_OTP,
         ];
 
         // Current index is on {`type`, `expire`}

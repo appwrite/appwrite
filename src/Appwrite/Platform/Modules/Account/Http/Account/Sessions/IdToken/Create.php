@@ -244,7 +244,7 @@ class Create extends Action
             ? DateTime::addSeconds(new \DateTime(), $accessTokenExpiry)
             : null;
 
-        $this->upsertIdentity($user, $provider, $sub, $providerEmail, $accessToken, $accessTokenExpiresAt, $photo, $dbForProject, $authorization, $newUser, $newTarget);
+        $this->upsertIdentity($user, $provider, $sub, $providerEmail, $idToken, $accessToken, $accessTokenExpiresAt, $photo, $dbForProject, $authorization, $newUser, $newTarget);
 
         if (empty($user->getAttribute('name'))) {
             $user->setAttribute('name', $name);
@@ -558,10 +558,10 @@ class Create extends Action
 
     /**
      * Create the (provider, sub) identity for the user, or refresh its stored
-     * access token and photo. Guards against attaching an email already bound
-     * to another user's identity.
+     * ID token, access token and photo. Guards against attaching an email
+     * already bound to another user's identity.
      */
-    private function upsertIdentity(User $user, string $provider, string $sub, string $providerEmail, string $accessToken, ?string $accessTokenExpiresAt, string $photo, Database $dbForProject, Authorization $authorization, ?Document $newUser, ?Document $newTarget): void
+    private function upsertIdentity(User $user, string $provider, string $sub, string $providerEmail, string $idToken, string $accessToken, ?string $accessTokenExpiresAt, string $photo, Database $dbForProject, Authorization $authorization, ?Document $newUser, ?Document $newTarget): void
     {
         $identity = $dbForProject->findOne('identities', [
             Query::equal('userInternalId', [$user->getSequence()]),
@@ -598,6 +598,7 @@ class Create extends Action
                     'providerAccessToken' => $accessToken,
                     'providerRefreshToken' => null,
                     'providerAccessTokenExpiry' => $accessTokenExpiresAt,
+                    'providerIdToken' => $idToken,
                     'photo' => $photo ?: null,
                 ]));
             } catch (Duplicate) {
@@ -616,7 +617,9 @@ class Create extends Action
             return;
         }
 
-        $changes = [];
+        // The token is verified and required, so it always supersedes the stored
+        // one: its claims would otherwise go stale, and it expires within the hour.
+        $changes = ['providerIdToken' => $idToken];
 
         // Native sign-in often carries no access token at all, so only overwrite
         // the stored credentials when the client actually supplied one.
@@ -630,9 +633,7 @@ class Create extends Action
             $changes['photo'] = $photo;
         }
 
-        if (!empty($changes)) {
-            $dbForProject->updateDocument('identities', $identity->getId(), new Document($changes));
-        }
+        $dbForProject->updateDocument('identities', $identity->getId(), new Document($changes));
     }
 
     /**
