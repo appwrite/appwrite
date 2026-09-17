@@ -48,8 +48,6 @@ use function Swoole\Coroutine\batch;
 
 class Messaging extends Action
 {
-    private Telemetry $telemetry;
-
     private Provider $provider;
 
     public static function getName(): string
@@ -97,7 +95,6 @@ class Messaging extends Action
         ?SMSAdapter $adapterForSMS,
         ?SMSAdapter $adapterForWhatsApp
     ): void {
-        $this->telemetry = $telemetry;
         $this->provider = new Provider($telemetry);
         $payload = $message->getPayload();
 
