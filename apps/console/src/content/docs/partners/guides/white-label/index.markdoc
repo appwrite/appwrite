@@ -190,6 +190,18 @@ await db.createTable({
 })
 ```
 
+Finally a bucket for everything a school uploads. Handouts are small, and a recorded session is not, so size the limit for the largest thing you accept rather than the typical one:
+
+```server-nodejs
+await new Storage(client).createBucket({
+  bucketId: 'materials',
+  name: 'Course materials',
+  permissions: [],
+  fileSecurity: false,
+  maximumFileSize: 512 * 1000 * 1000,
+})
+```
+
 # Ship your app into their project {% #ship %}
 
 {% only_dark %}
@@ -252,10 +264,10 @@ Building is the slow part of opening a school. The project, platform, database, 
 # The credential the classroom never stores {% #site-key %}
 
 {% only_dark %}
-![A course in the classroom, with lessons, handouts, and the assessment](/images/docs/partners/guides/white-label/dark/classroom-course.avif)
+![A course in the classroom, with a recorded session, lessons, handouts, and the assessment](/images/docs/partners/guides/white-label/dark/classroom-course.avif)
 {% /only_dark %}
 {% only_light %}
-![A course in the classroom, with lessons, handouts, and the assessment](/images/docs/partners/guides/white-label/classroom-course.avif)
+![A course in the classroom, with a recorded session, lessons, handouts, and the assessment](/images/docs/partners/guides/white-label/classroom-course.avif)
 {% /only_light %}
 
 The classroom app reads courses, marks quizzes, and serves files. Each of those needs a server credential. The classroom app stores none.
@@ -282,6 +294,29 @@ The app stores no credential, so there is nothing to rotate and nothing to leak 
 {% only_light %}
 ![A quiz in the classroom, showing prompts and options only](/images/docs/partners/guides/white-label/classroom-quiz.avif)
 {% /only_light %}
+
+The same request key serves files. Handouts download, and a recorded session plays in the page, which means the classroom has to answer a range request rather than send 30 MB every time a learner drags the scrubber:
+
+```server-nodejs
+const bytes = await new Storage(serverClient()).getFileDownload({ bucketId: 'materials', fileId })
+const range = request.headers.get('range')
+
+if (playable && range) {
+  const match = /bytes=(\d*)-(\d*)/.exec(range)
+  const start = match?.[1] ? Number(match[1]) : 0
+  const end = match?.[2] ? Number(match[2]) : bytes.length - 1
+  const chunk = bytes.subarray(start, end + 1)
+
+  return new Response(chunk, {
+    status: 206,
+    headers: {
+      'content-type': file.mimeType,
+      'content-range': `bytes ${start}-${end}/${bytes.length}`,
+      'accept-ranges': 'bytes',
+    },
+  })
+}
+```
 
 Marking runs on the server. The browser receives prompts and options, never the correct answer:
 
@@ -349,7 +384,7 @@ const learners = latest('users.mau')
 const storageBytes = latest('files.storage')
 ```
 
-`users.mau` is the number of learners with a session in the current month, and `files.storage` counts the files in the school's buckets. `deployments.storage` and `builds.storage` measure your own build output, so leave them out when you bill only for what the school stores.
+`users.mau` is the number of learners with a session in the current month, and `files.storage` counts the files in the school's buckets. Recordings are what move that number. Northgate's 35 MB is one 29 MB session and four PDFs. `deployments.storage` and `builds.storage` measure your own build output, so leave them out when you bill only for what the school stores.
 
 `files.storage` is a gauge. It reports the bytes held at the moment you read it rather than a total accumulated across the period, so read it when the billing period closes and bill that figure.
 
