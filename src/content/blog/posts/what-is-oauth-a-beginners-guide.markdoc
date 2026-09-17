@@ -8,7 +8,7 @@ timeToRead: 5
 author: aditya-oberai
 category: security
 featured: false
-unlisted: false
+unlisted: true
 faqs:
   - question: What does OAuth stand for?
     answer: OAuth stands for Open Authorization. It is commonly used to grant third-party applications limited access to user accounts and APIs.
