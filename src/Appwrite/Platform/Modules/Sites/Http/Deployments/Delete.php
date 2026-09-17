@@ -131,9 +131,9 @@ class Delete extends Action
             if ($site->getAttribute('deploymentId') === $deployment->getId()) {
                 $updates['deploymentId'] = '';
                 $updates['deploymentInternalId'] = '';
-                $updates['deploymentCreatedAt'] = null;
                 $updates['deploymentScreenshotDark'] = '';
                 $updates['deploymentScreenshotLight'] = '';
+                $updates['deploymentCreatedAt'] = null;
             }
 
             return empty($updates)

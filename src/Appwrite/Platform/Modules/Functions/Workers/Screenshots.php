@@ -222,11 +222,7 @@ class Screenshots extends Action
             // Captures may finish after this deployment is deactivated or deleted.
             $updated = $dbForProject->withTransaction(function () use ($dbForProject, $siteId, $deployment) {
                 $site = $dbForProject->getDocument('sites', $siteId, forUpdate: true);
-                if (
-                    $site->isEmpty()
-                    || $site->getSequence() !== $deployment->getAttribute('resourceInternalId')
-                    || $site->getAttribute('deploymentId') !== $deployment->getId()
-                ) {
+                if ($site->getAttribute('deploymentId') !== $deployment->getId()) {
                     return false;
                 }
 

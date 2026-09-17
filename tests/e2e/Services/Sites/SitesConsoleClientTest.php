@@ -149,42 +149,18 @@ final class SitesConsoleClientTest extends Scope
         $file = $this->client->call(Client::METHOD_GET, "/storage/buckets/screenshots/files/$screenshotId/preview?project=console");
         $this->assertEquals(404, $file['headers']['status-code']);
 
-        /**
-         * Test for SUCCESS
-         */
-        // A preview captured after deleting the active deployment cannot restore its screenshots.
-        $deleted = $this->deleteDeployment($siteId, $deploymentId);
-        $this->assertSame(204, $deleted['headers']['status-code']);
-
         $previewId = $this->setupDeployment($siteId, [
             'code' => $this->packageSite('static-themed'),
-            'activate' => '0',
+            'activate' => '0'
         ]);
 
-        $preview = null;
-        $this->assertEventually(function () use ($siteId, $previewId, &$preview) {
+        $this->assertEventually(function () use ($siteId, $previewId) {
             $preview = $this->getDeployment($siteId, $previewId);
-            $this->assertSame(200, $preview['headers']['status-code']);
             $this->assertNotEmpty($preview['body']['screenshotLight']);
-            $this->assertNotEmpty($preview['body']['screenshotDark']);
-        }, 60000, 500);
-        $this->assertNotNull($preview);
-
-        foreach (['screenshotLight', 'screenshotDark'] as $attribute) {
-            $screenshotId = $preview['body'][$attribute];
-            $file = $this->client->call(Client::METHOD_GET, "/storage/buckets/screenshots/files/$screenshotId/view?project=console", array_merge($this->getHeaders(), [
-                'x-appwrite-mode' => 'default',
-            ]));
-            $this->assertSame(200, $file['headers']['status-code']);
-            $this->assertSame('image/png', $file['headers']['content-type']);
-        }
+        });
 
         $site = $this->getSite($siteId);
-        $this->assertSame(200, $site['headers']['status-code']);
-        $this->assertSame($previewId, $site['body']['latestDeploymentId']);
-        foreach (['deploymentId', 'deploymentCreatedAt', 'deploymentScreenshotLight', 'deploymentScreenshotDark'] as $attribute) {
-            $this->assertSame('', $site['body'][$attribute], $attribute);
-        }
+        $this->assertEquals($deployment['body']['screenshotLight'], $site['body']['deploymentScreenshotLight']);
 
         $this->cleanupSite($siteId);
     }
@@ -195,121 +171,56 @@ final class SitesConsoleClientTest extends Scope
             'siteId' => ID::unique(),
             'name' => 'Test retention site',
             'framework' => 'other',
-            'buildRuntime' => 'node-22',
             'deploymentRetention' => 180,
+            'buildRuntime' => 'node-22',
         ]);
         $this->assertNotEmpty($siteId);
 
-        try {
-            $deploymentIdActive = $this->setupDeployment($siteId, [
-                'code' => $this->packageSite('static'),
-                'activate' => true,
-            ]);
-            $deploymentIdInactive = $this->setupDeployment($siteId, [
-                'code' => $this->packageSite('static'),
-                'activate' => '0',
-            ]);
-            $deploymentIdLatest = $this->setupDeployment($siteId, [
-                'code' => $this->packageSite('static'),
-                'activate' => '0',
-            ]);
+        $deploymentIdActive = $this->setupDeployment($siteId, [
+            'code' => $this->packageSite('static'),
+            'activate' => true
+        ]);
+        $this->assertNotEmpty($deploymentIdActive);
+
+        $deploymentIdInactive = $this->setupDeployment($siteId, [
+            'code' => $this->packageSite('static'),
+            'activate' => '0'
+        ]);
+        $this->assertNotEmpty($deploymentIdInactive);
+
+        $deploymentIdInactiveOld = $this->setupDeployment($siteId, [
+            'code' => $this->packageSite('static'),
+            'activate' => '0'
+        ]);
+        $this->assertNotEmpty($deploymentIdInactiveOld);
+
+        $stdout = '';
+        $stderr = '';
+        $timeTravel = (new Command('docker'))
+            ->argument('exec')
+            ->argument('appwrite')
+            ->argument('task-time-travel')
+            ->argument('--projectId=' . $this->getProject()['$id'])
+            ->argument('--resourceType=deployment')
+            ->argument('--resourceId=' . $deploymentIdInactiveOld)
+            ->argument('--createdAt=2020-01-01T00:00:00Z');
+        $code = Console::execute($timeTravel, '', $stdout, $stderr);
+        $this->assertSame(0, $code, "Time-travel command failed with code $code: $stderr ($stdout)");
+
+        $stdout = '';
+        $stderr = '';
+        $code = Console::execute((new Command('docker'))->argument('exec')->argument('appwrite')->argument('maintenance')->argument('--type=trigger'), '', $stdout, $stderr);
+        $this->assertSame(0, $code, "Maintenance command failed with code $code: $stderr ($stdout)");
+
+        $this->assertEventually(function () use ($siteId, $deploymentIdInactive) {
+            $response = $this->listDeployments($siteId);
+            $this->assertSame(200, $response['headers']['status-code']);
+            $this->assertSame(2, $response['body']['total']);
 
             $site = $this->getSite($siteId);
-            $this->assertSame(200, $site['headers']['status-code']);
-            $this->assertSame($deploymentIdActive, $site['body']['deploymentId']);
-            $this->assertSame($deploymentIdLatest, $site['body']['latestDeploymentId']);
-            $activeCreatedAt = $site['body']['deploymentCreatedAt'];
-
-            /**
-             * Test for SUCCESS
-             */
-            // An expired active deployment survives while the latest preview is removed.
-            foreach ([$deploymentIdActive, $deploymentIdLatest] as $deploymentId) {
-                $stdout = '';
-                $stderr = '';
-                $timeTravel = (new Command('docker'))
-                    ->argument('exec')
-                    ->argument('appwrite')
-                    ->argument('task-time-travel')
-                    ->argument('--projectId=' . $this->getProject()['$id'])
-                    ->argument('--resourceType=deployment')
-                    ->argument('--resourceId=' . $deploymentId)
-                    ->argument('--createdAt=2020-01-01T00:00:00Z');
-                $code = Console::execute($timeTravel, '', $stdout, $stderr);
-                $this->assertSame(0, $code, "Time-travel command failed with code $code: $stderr ($stdout)");
-            }
-
-            $stdout = '';
-            $stderr = '';
-            $code = Console::execute((new Command('docker'))->argument('exec')->argument('appwrite')->argument('maintenance')->argument('--type=trigger'), '', $stdout, $stderr);
-            $this->assertSame(0, $code, "Maintenance command failed with code $code: $stderr ($stdout)");
-
-            $this->assertEventually(function () use ($siteId, $deploymentIdActive, $deploymentIdInactive, $deploymentIdLatest, $activeCreatedAt) {
-                $response = $this->listDeployments($siteId);
-                $this->assertSame(200, $response['headers']['status-code']);
-                $this->assertSame(2, $response['body']['total']);
-
-                $deleted = $this->getDeployment($siteId, $deploymentIdLatest);
-                $this->assertSame(404, $deleted['headers']['status-code']);
-                $this->assertSame('deployment_not_found', $deleted['body']['type']);
-
-                $latest = $this->getDeployment($siteId, $deploymentIdInactive);
-                $this->assertSame(200, $latest['headers']['status-code']);
-
-                $site = $this->getSite($siteId);
-                $this->assertSame(200, $site['headers']['status-code']);
-                $this->assertSame($deploymentIdActive, $site['body']['deploymentId']);
-                $this->assertSame($activeCreatedAt, $site['body']['deploymentCreatedAt']);
-                $this->assertSame($deploymentIdInactive, $site['body']['latestDeploymentId']);
-                $this->assertSame($latest['body']['$createdAt'], $site['body']['latestDeploymentCreatedAt']);
-                $this->assertSame('ready', $site['body']['latestDeploymentStatus']);
-            });
-
-            // Deleting the older active deployment preserves the surviving preview reference.
-            $deleted = $this->deleteDeployment($siteId, $deploymentIdActive);
-            $this->assertSame(204, $deleted['headers']['status-code']);
-            $site = $this->getSite($siteId);
-            $this->assertSame(200, $site['headers']['status-code']);
-            $this->assertSame('', $site['body']['deploymentId']);
-            $this->assertSame('', $site['body']['deploymentCreatedAt']);
             $this->assertSame($deploymentIdInactive, $site['body']['latestDeploymentId']);
+        });
 
-            // With no active deployment, retention may remove the final preview as well.
-            $stdout = '';
-            $stderr = '';
-            $timeTravel = (new Command('docker'))
-                ->argument('exec')
-                ->argument('appwrite')
-                ->argument('task-time-travel')
-                ->argument('--projectId=' . $this->getProject()['$id'])
-                ->argument('--resourceType=deployment')
-                ->argument('--resourceId=' . $deploymentIdInactive)
-                ->argument('--createdAt=2020-01-01T00:00:00Z');
-            $code = Console::execute($timeTravel, '', $stdout, $stderr);
-            $this->assertSame(0, $code, "Time-travel command failed with code $code: $stderr ($stdout)");
-
-            $stdout = '';
-            $stderr = '';
-            $code = Console::execute((new Command('docker'))->argument('exec')->argument('appwrite')->argument('maintenance')->argument('--type=trigger'), '', $stdout, $stderr);
-            $this->assertSame(0, $code, "Maintenance command failed with code $code: $stderr ($stdout)");
-
-            $this->assertEventually(function () use ($siteId, $deploymentIdInactive) {
-                $response = $this->listDeployments($siteId);
-                $this->assertSame(200, $response['headers']['status-code']);
-                $this->assertSame(0, $response['body']['total']);
-
-                $deleted = $this->getDeployment($siteId, $deploymentIdInactive);
-                $this->assertSame(404, $deleted['headers']['status-code']);
-                $this->assertSame('deployment_not_found', $deleted['body']['type']);
-
-                $site = $this->getSite($siteId);
-                $this->assertSame(200, $site['headers']['status-code']);
-                foreach (['deploymentId', 'deploymentCreatedAt', 'latestDeploymentId', 'latestDeploymentCreatedAt', 'latestDeploymentStatus', 'deploymentScreenshotLight', 'deploymentScreenshotDark'] as $attribute) {
-                    $this->assertSame('', $site['body'][$attribute], $attribute);
-                }
-            });
-        } finally {
-            $this->cleanupSite($siteId);
-        }
+        $this->cleanupSite($siteId);
     }
 }

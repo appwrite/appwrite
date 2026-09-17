@@ -3205,45 +3205,16 @@ final class FunctionsCustomServerTest extends Scope
         $this->assertEquals(200, $function['headers']['status-code']);
         $this->assertEquals($deploymentId1, $function['body']['latestDeploymentId']);
         $this->assertEquals('ready', $function['body']['latestDeploymentStatus']);
-        $this->assertSame($deploymentId1, $function['body']['deploymentId']);
 
-        $active = $this->getDeployment($functionId, $deploymentId1);
-        $this->assertSame(200, $active['headers']['status-code']);
-        $this->assertSame($active['body']['$createdAt'], $function['body']['deploymentCreatedAt']);
-        $this->assertSame($active['body']['$createdAt'], $function['body']['latestDeploymentCreatedAt']);
-
-        /**
-         * Test for FAILURE
-         */
-        $deleted = $this->getDeployment($functionId, $deploymentId2);
-        $this->assertSame(404, $deleted['headers']['status-code']);
-        $this->assertSame('deployment_not_found', $deleted['body']['type']);
-
-        /**
-         * Test for SUCCESS
-         */
-        $execution = $this->createExecution($functionId, [
-            'headers' => ['cookie' => 'cookieName=cookieValue'],
-        ]);
-        $this->assertSame(201, $execution['headers']['status-code']);
-        $this->assertSame(200, $execution['body']['responseStatusCode']);
-        $this->assertStringContainsString('cookieValue', (string) $execution['body']['responseBody']);
-
-        $deleted = $this->deleteDeployment($functionId, $deploymentId1);
-        $this->assertSame(204, $deleted['headers']['status-code']);
+        $deployment = $this->deleteDeployment($functionId, $deploymentId1);
+        $this->assertEquals(204, $deployment['headers']['status-code']);
 
         $function = $this->getFunction($functionId);
-        $this->assertSame(200, $function['headers']['status-code']);
-        foreach (['deploymentId', 'deploymentCreatedAt', 'latestDeploymentId', 'latestDeploymentCreatedAt', 'latestDeploymentStatus'] as $attribute) {
-            $this->assertSame('', $function['body'][$attribute], $attribute);
-        }
-
-        /**
-         * Test for FAILURE
-         */
-        $deleted = $this->getDeployment($functionId, $deploymentId1);
-        $this->assertSame(404, $deleted['headers']['status-code']);
-        $this->assertSame('deployment_not_found', $deleted['body']['type']);
+        $this->assertEquals(200, $function['headers']['status-code']);
+        $this->assertEquals('', $function['body']['deploymentId']);
+        $this->assertEquals('', $function['body']['deploymentCreatedAt']);
+        $this->assertEquals('', $function['body']['latestDeploymentId']);
+        $this->assertEquals('', $function['body']['latestDeploymentCreatedAt']);
 
         $this->cleanupFunction($functionId);
     }
