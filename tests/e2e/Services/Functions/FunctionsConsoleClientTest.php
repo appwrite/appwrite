@@ -943,52 +943,120 @@ final class FunctionsConsoleClientTest extends Scope
             'name' => 'Test retention function',
             'runtime' => 'node-22',
             'entrypoint' => 'index.js',
-            'deploymentRetention' => 180
+            'deploymentRetention' => 180,
         ]);
         $this->assertNotEmpty($functionId);
 
-        $deploymentIdInactive = $this->setupDeployment($functionId, [
-            'code' => $this->packageFunction('node'),
-            'activate' => true
-        ]);
-        $this->assertNotEmpty($deploymentIdInactive);
+        try {
+            $deploymentIdActive = $this->setupDeployment($functionId, [
+                'code' => $this->packageFunction('node'),
+                'activate' => true,
+            ]);
+            $deploymentIdInactive = $this->setupDeployment($functionId, [
+                'code' => $this->packageFunction('node'),
+                'activate' => '0',
+            ]);
+            $deploymentIdLatest = $this->setupDeployment($functionId, [
+                'code' => $this->packageFunction('node'),
+                'activate' => '0',
+            ]);
 
-        $deploymentIdInactiveOld = $this->setupDeployment($functionId, [
-            'code' => $this->packageFunction('node'),
-            'activate' => true
-        ]);
-        $this->assertNotEmpty($deploymentIdInactiveOld);
+            $function = $this->getFunction($functionId);
+            $this->assertSame(200, $function['headers']['status-code']);
+            $this->assertSame($deploymentIdActive, $function['body']['deploymentId']);
+            $this->assertSame($deploymentIdLatest, $function['body']['latestDeploymentId']);
+            $activeCreatedAt = $function['body']['deploymentCreatedAt'];
 
-        $deploymentIdActive = $this->setupDeployment($functionId, [
-            'code' => $this->packageFunction('node'),
-            'activate' => true
-        ]);
-        $this->assertNotEmpty($deploymentIdActive);
+            /**
+             * Test for SUCCESS
+             */
+            // An expired active deployment survives while the latest preview is removed.
+            foreach ([$deploymentIdActive, $deploymentIdLatest] as $deploymentId) {
+                $stdout = '';
+                $stderr = '';
+                $timeTravel = (new Command('docker'))
+                    ->argument('exec')
+                    ->argument('appwrite')
+                    ->argument('task-time-travel')
+                    ->argument('--projectId=' . $this->getProject()['$id'])
+                    ->argument('--resourceType=deployment')
+                    ->argument('--resourceId=' . $deploymentId)
+                    ->argument('--createdAt=2020-01-01T00:00:00Z');
+                $code = Console::execute($timeTravel, '', $stdout, $stderr);
+                $this->assertSame(0, $code, "Time-travel command failed with code $code: $stderr ($stdout)");
+            }
 
-        $stdout = '';
-        $stderr = '';
-        $timeTravel = (new Command('docker'))
-            ->argument('exec')
-            ->argument('appwrite')
-            ->argument('task-time-travel')
-            ->argument('--projectId=' . $this->getProject()['$id'])
-            ->argument('--resourceType=deployment')
-            ->argument('--resourceId=' . $deploymentIdInactiveOld)
-            ->argument('--createdAt=2020-01-01T00:00:00Z');
-        $code = Console::execute($timeTravel, '', $stdout, $stderr);
-        $this->assertSame(0, $code, "Time-travel command failed with code $code: $stderr ($stdout)");
+            $stdout = '';
+            $stderr = '';
+            $code = Console::execute((new Command('docker'))->argument('exec')->argument('appwrite')->argument('maintenance')->argument('--type=trigger'), '', $stdout, $stderr);
+            $this->assertSame(0, $code, "Maintenance command failed with code $code: $stderr ($stdout)");
 
-        $stdout = '';
-        $stderr = '';
-        $code = Console::execute((new Command('docker'))->argument('exec')->argument('appwrite')->argument('maintenance')->argument('--type=trigger'), '', $stdout, $stderr);
-        $this->assertSame(0, $code, "Maintenance command failed with code $code: $stderr ($stdout)");
+            $this->assertEventually(function () use ($functionId, $deploymentIdActive, $deploymentIdInactive, $deploymentIdLatest, $activeCreatedAt) {
+                $response = $this->listDeployments($functionId);
+                $this->assertSame(200, $response['headers']['status-code']);
+                $this->assertSame(2, $response['body']['total']);
 
-        $this->assertEventually(function () use ($functionId) {
-            $response = $this->listDeployments($functionId);
-            $this->assertSame(200, $response['headers']['status-code']);
-            $this->assertSame(2, $response['body']['total']);
-        });
+                $deleted = $this->getDeployment($functionId, $deploymentIdLatest);
+                $this->assertSame(404, $deleted['headers']['status-code']);
+                $this->assertSame('deployment_not_found', $deleted['body']['type']);
 
-        $this->cleanupFunction($functionId);
+                $latest = $this->getDeployment($functionId, $deploymentIdInactive);
+                $this->assertSame(200, $latest['headers']['status-code']);
+
+                $function = $this->getFunction($functionId);
+                $this->assertSame(200, $function['headers']['status-code']);
+                $this->assertSame($deploymentIdActive, $function['body']['deploymentId']);
+                $this->assertSame($activeCreatedAt, $function['body']['deploymentCreatedAt']);
+                $this->assertSame($deploymentIdInactive, $function['body']['latestDeploymentId']);
+                $this->assertSame($latest['body']['$createdAt'], $function['body']['latestDeploymentCreatedAt']);
+                $this->assertSame('ready', $function['body']['latestDeploymentStatus']);
+            });
+
+            // Deleting the older active deployment preserves the surviving preview reference.
+            $deleted = $this->deleteDeployment($functionId, $deploymentIdActive);
+            $this->assertSame(204, $deleted['headers']['status-code']);
+            $function = $this->getFunction($functionId);
+            $this->assertSame(200, $function['headers']['status-code']);
+            $this->assertSame('', $function['body']['deploymentId']);
+            $this->assertSame('', $function['body']['deploymentCreatedAt']);
+            $this->assertSame($deploymentIdInactive, $function['body']['latestDeploymentId']);
+
+            // With no active deployment, retention may remove the final preview as well.
+            $stdout = '';
+            $stderr = '';
+            $timeTravel = (new Command('docker'))
+                ->argument('exec')
+                ->argument('appwrite')
+                ->argument('task-time-travel')
+                ->argument('--projectId=' . $this->getProject()['$id'])
+                ->argument('--resourceType=deployment')
+                ->argument('--resourceId=' . $deploymentIdInactive)
+                ->argument('--createdAt=2020-01-01T00:00:00Z');
+            $code = Console::execute($timeTravel, '', $stdout, $stderr);
+            $this->assertSame(0, $code, "Time-travel command failed with code $code: $stderr ($stdout)");
+
+            $stdout = '';
+            $stderr = '';
+            $code = Console::execute((new Command('docker'))->argument('exec')->argument('appwrite')->argument('maintenance')->argument('--type=trigger'), '', $stdout, $stderr);
+            $this->assertSame(0, $code, "Maintenance command failed with code $code: $stderr ($stdout)");
+
+            $this->assertEventually(function () use ($functionId, $deploymentIdInactive) {
+                $response = $this->listDeployments($functionId);
+                $this->assertSame(200, $response['headers']['status-code']);
+                $this->assertSame(0, $response['body']['total']);
+
+                $deleted = $this->getDeployment($functionId, $deploymentIdInactive);
+                $this->assertSame(404, $deleted['headers']['status-code']);
+                $this->assertSame('deployment_not_found', $deleted['body']['type']);
+
+                $function = $this->getFunction($functionId);
+                $this->assertSame(200, $function['headers']['status-code']);
+                foreach (['deploymentId', 'deploymentCreatedAt', 'latestDeploymentId', 'latestDeploymentCreatedAt', 'latestDeploymentStatus'] as $attribute) {
+                    $this->assertSame('', $function['body'][$attribute], $attribute);
+                }
+            });
+        } finally {
+            $this->cleanupFunction($functionId);
+        }
     }
 }

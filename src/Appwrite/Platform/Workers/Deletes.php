@@ -583,12 +583,18 @@ class Deletes extends Action
                 'deployments',
                 $queries,
                 $dbForProject,
-                function (Document $deployment) use ($publisherForDeletes, $project) {
+                function (Document $deployment) use ($dbForProject, $publisherForDeletes, $project) {
                     $publisherForDeletes->enqueue(new DeleteMessage(
                         project: $project,
                         type: DELETE_TYPE_DOCUMENT,
                         document: $deployment,
                     ));
+                    try {
+                        $this->resetDeployment($dbForProject, $deployment);
+                    } catch (Throwable $th) {
+                        // The queued deletion retries the repair without interrupting this batch.
+                        Console::warning("Failed to reset references for deployment {$deployment->getId()}: " . $th->getMessage());
+                    }
                 }
             );
         };
@@ -1612,6 +1618,8 @@ class Deletes extends Action
         $deploymentId = $document->getId();
         $deploymentInternalId = $document->getSequence();
 
+        $this->resetDeployment($dbForProject, $document);
+
         /**
          * Delete deployment files
          */
@@ -1645,10 +1653,66 @@ class Deletes extends Action
         });
 
         /**
-         * Request executor to delete all deployment containers
+         * Request executor to delete this deployment's container
          */
         Console::info("Requesting executor to delete deployment container for deployment " . $deploymentId);
-        $this->deleteRuntimes($getProjectDB, $document, $project, $executor);
+        try {
+            $executor->deleteRuntime($projectId, $deploymentId);
+        } catch (Throwable $th) {
+            Console::warning("Runtime for deployment {$deploymentId} skipped: " . $th->getMessage());
+        }
+    }
+
+    private function resetDeployment(Database $dbForProject, Document $deployment): void
+    {
+        $collection = $deployment->getAttribute('resourceType');
+        if (!in_array($collection, ['functions', 'sites'], true)) {
+            throw new Exception('Invalid resource type');
+        }
+
+        $updated = $dbForProject->withTransaction(function () use ($dbForProject, $deployment, $collection) {
+            $resource = $dbForProject->getDocument($collection, $deployment->getAttribute('resourceId'), forUpdate: true);
+            if ($resource->isEmpty() || $resource->getSequence() !== $deployment->getAttribute('resourceInternalId')) {
+                return false;
+            }
+
+            $updates = [];
+            if ($resource->getAttribute('latestDeploymentId') === $deployment->getId()) {
+                $latestDeployment = $dbForProject->findOne('deployments', [
+                    Query::equal('resourceType', [$collection]),
+                    Query::equal('resourceInternalId', [$resource->getSequence()]),
+                    Query::orderDesc('$createdAt'),
+                    Query::orderDesc('$sequence'),
+                ]);
+                $updates = [
+                    'latestDeploymentCreatedAt' => $latestDeployment->isEmpty() ? null : $latestDeployment->getCreatedAt(),
+                    'latestDeploymentInternalId' => $latestDeployment->isEmpty() ? '' : $latestDeployment->getSequence(),
+                    'latestDeploymentId' => $latestDeployment->isEmpty() ? '' : $latestDeployment->getId(),
+                    'latestDeploymentStatus' => $latestDeployment->isEmpty() ? '' : $latestDeployment->getAttribute('status', ''),
+                ];
+            }
+
+            if ($resource->getAttribute('deploymentId') === $deployment->getId()) {
+                $updates['deploymentId'] = '';
+                $updates['deploymentInternalId'] = '';
+                $updates['deploymentCreatedAt'] = null;
+                if ($collection === 'sites') {
+                    $updates['deploymentScreenshotDark'] = '';
+                    $updates['deploymentScreenshotLight'] = '';
+                }
+            }
+
+            if (empty($updates)) {
+                return false;
+            }
+
+            $dbForProject->updateDocument($collection, $resource->getId(), new Document($updates));
+            return true;
+        });
+
+        if ($updated) {
+            $dbForProject->purgeCachedDocument($collection, $deployment->getAttribute('resourceId'));
+        }
     }
 
     /**

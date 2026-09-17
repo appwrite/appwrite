@@ -3216,6 +3216,42 @@ final class SitesCustomServerTest extends Scope
         $this->assertEquals(200, $site['headers']['status-code']);
         $this->assertEquals($deploymentId1, $site['body']['latestDeploymentId']);
         $this->assertEquals('ready', $site['body']['latestDeploymentStatus']);
+        $this->assertSame($deploymentId1, $site['body']['deploymentId']);
+
+        $active = $this->getDeployment($siteId, $deploymentId1);
+        $this->assertSame(200, $active['headers']['status-code']);
+        $this->assertSame($active['body']['$createdAt'], $site['body']['deploymentCreatedAt']);
+        $this->assertSame($active['body']['$createdAt'], $site['body']['latestDeploymentCreatedAt']);
+
+        /**
+         * Test for FAILURE
+         */
+        $deleted = $this->getDeployment($siteId, $deploymentId2);
+        $this->assertSame(404, $deleted['headers']['status-code']);
+        $this->assertSame('deployment_not_found', $deleted['body']['type']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $response = $proxyClient->call(Client::METHOD_GET, '/');
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertStringContainsString('Hello Appwrite', (string) $response['body']);
+
+        $deleted = $this->deleteDeployment($siteId, $deploymentId1);
+        $this->assertSame(204, $deleted['headers']['status-code']);
+
+        $site = $this->getSite($siteId);
+        $this->assertSame(200, $site['headers']['status-code']);
+        foreach (['deploymentId', 'deploymentCreatedAt', 'latestDeploymentId', 'latestDeploymentCreatedAt', 'latestDeploymentStatus', 'deploymentScreenshotLight', 'deploymentScreenshotDark'] as $attribute) {
+            $this->assertSame('', $site['body'][$attribute], $attribute);
+        }
+
+        /**
+         * Test for FAILURE
+         */
+        $deleted = $this->getDeployment($siteId, $deploymentId1);
+        $this->assertSame(404, $deleted['headers']['status-code']);
+        $this->assertSame('deployment_not_found', $deleted['body']['type']);
 
         $this->cleanupSite($siteId);
     }

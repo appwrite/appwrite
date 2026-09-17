@@ -106,38 +106,46 @@ class Delete extends Action
             }
         }
 
+        $site = $dbForProject->withTransaction(function () use ($dbForProject, $siteId, $deployment) {
+            $site = $dbForProject->getDocument('sites', $siteId, forUpdate: true);
+            if ($site->isEmpty()) {
+                throw new Exception(Exception::SITE_NOT_FOUND);
+            }
+
+            $updates = [];
+            if ($site->getAttribute('latestDeploymentId') === $deployment->getId()) {
+                $latestDeployment = $dbForProject->findOne('deployments', [
+                    Query::equal('resourceType', ['sites']),
+                    Query::equal('resourceInternalId', [$site->getSequence()]),
+                    Query::orderDesc('$createdAt'),
+                    Query::orderDesc('$sequence'),
+                ]);
+                $updates = [
+                    'latestDeploymentCreatedAt' => $latestDeployment->isEmpty() ? null : $latestDeployment->getCreatedAt(),
+                    'latestDeploymentInternalId' => $latestDeployment->isEmpty() ? '' : $latestDeployment->getSequence(),
+                    'latestDeploymentId' => $latestDeployment->isEmpty() ? '' : $latestDeployment->getId(),
+                    'latestDeploymentStatus' => $latestDeployment->isEmpty() ? '' : $latestDeployment->getAttribute('status', ''),
+                ];
+            }
+
+            if ($site->getAttribute('deploymentId') === $deployment->getId()) {
+                $updates['deploymentId'] = '';
+                $updates['deploymentInternalId'] = '';
+                $updates['deploymentCreatedAt'] = null;
+                $updates['deploymentScreenshotDark'] = '';
+                $updates['deploymentScreenshotLight'] = '';
+            }
+
+            return empty($updates)
+                ? $site
+                : $dbForProject->updateDocument('sites', $site->getId(), new Document($updates));
+        });
+        $dbForProject->purgeCachedDocument('sites', $site->getId());
+
         if (!empty($deployment->getAttribute('sourcePath', ''))) {
             if (!($deviceForSites->delete($deployment->getAttribute('sourcePath', '')))) {
                 throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove deployment from storage');
             }
-        }
-
-        if ($site->getAttribute('latestDeploymentId') === $deployment->getId()) {
-            $latestDeployment = $dbForProject->findOne('deployments', [
-                Query::equal('resourceType', ['sites']),
-                Query::equal('resourceInternalId', [$site->getSequence()]),
-                Query::orderDesc('$createdAt'),
-            ]);
-            $site = $dbForProject->updateDocument(
-                'sites',
-                $site->getId(),
-                new Document([
-                    'latestDeploymentCreatedAt' => $latestDeployment->isEmpty() ? '' : $latestDeployment->getCreatedAt(),
-                    'latestDeploymentInternalId' => $latestDeployment->isEmpty() ? '' : $latestDeployment->getSequence(),
-                    'latestDeploymentId' => $latestDeployment->isEmpty() ? '' : $latestDeployment->getId(),
-                    'latestDeploymentStatus' => $latestDeployment->isEmpty() ? '' : $latestDeployment->getAttribute('status', ''),
-                ])
-            );
-        }
-
-        if ($site->getAttribute('deploymentId') === $deployment->getId()) { // Reset site deployment
-            $site = $dbForProject->updateDocument('sites', $site->getId(), new Document(array_merge($site->getArrayCopy(), [
-                'deploymentId' => '',
-                'deploymentInternalId' => '',
-                'deploymentScreenshotDark' => '',
-                'deploymentScreenshotLight' => '',
-                'deploymentCreatedAt' => '',
-            ])));
         }
 
         $queueForEvents
