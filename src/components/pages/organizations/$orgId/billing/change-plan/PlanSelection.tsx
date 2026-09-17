@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { BillingPlanTier } from '@/lib/constants/billing-plan'
+import { BillingPlanTier } from '@/lib/constants/billing-plan'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -101,10 +101,19 @@ export function PlanSelection({
 
   const isCurrentPlan = (planTier: string) => {
     if (isCreateMode) return false
+    if (planTier === currentPlan) return true
+
+    // Start shares Pro's canonical group, so two distinct catalogue entries compare by id and
+    // the group is only a fallback for a legacy alias that resolves to no entry of its own.
+    const plan = resolveBillingPlanRecord(planTier, planCatalog)
+    const current = resolveBillingPlanRecord(currentPlan as string, planCatalog)
+    if (plan?.$id && current?.$id) {
+      return plan.$id === current.$id
+    }
+
     return (
-      planTier === currentPlan ||
       getPlanCanonicalFromRecord(planTier, planCatalog) ===
-        getPlanCanonicalFromRecord(currentPlan as string, planCatalog)
+      getPlanCanonicalFromRecord(currentPlan as string, planCatalog)
     )
   }
 
@@ -290,8 +299,10 @@ export function PlanSelection({
               ? t(FREE_PLAN_CONFLICT_DESCRIPTION)
               : description
             const isSelected = selectedPlan === planTier
+            // Start canonicalises to 'pro' because its tier-1-1 id contains tier-1, so the
+            // badge is matched on the plan itself rather than the group.
             const isRecommendedPlan =
-              getPlanCanonicalFromRecord(planTier, planCatalog) === 'pro'
+              (planData?.$id ?? planTier) === BillingPlanTier.Tier1
 
             const handleSelect = () => {
               if (disabled) return
