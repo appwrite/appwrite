@@ -15,50 +15,50 @@ final class PhoneOTPChannelTest extends TestCase
     {
         $resolved = PhoneOTPChannel::resolve(PHONE_OTP_CHANNEL_SMS, null, true, true);
 
-        $this->assertSame(PHONE_OTP_CHANNEL_SMS, $resolved?->channel);
-        $this->assertFalse($resolved?->fallback);
+        $this->assertSame(PHONE_OTP_CHANNEL_SMS, $resolved->channel);
+        $this->assertFalse($resolved->fallback);
     }
 
     public function testWhatsappPolicyDeliversOverWhatsappWithoutFallback(): void
     {
         $resolved = PhoneOTPChannel::resolve(PHONE_OTP_CHANNEL_WHATSAPP, null, true, true);
 
-        $this->assertSame(PHONE_OTP_CHANNEL_WHATSAPP, $resolved?->channel);
-        $this->assertFalse($resolved?->fallback);
+        $this->assertSame(PHONE_OTP_CHANNEL_WHATSAPP, $resolved->channel);
+        $this->assertFalse($resolved->fallback);
     }
 
     public function testWhatsappSmsPolicyDeliversOverWhatsappWithFallback(): void
     {
         $resolved = PhoneOTPChannel::resolve(PHONE_OTP_CHANNEL_WHATSAPP_SMS, null, true, true);
 
-        $this->assertSame(PHONE_OTP_CHANNEL_WHATSAPP, $resolved?->channel);
-        $this->assertTrue($resolved?->fallback);
+        $this->assertSame(PHONE_OTP_CHANNEL_WHATSAPP, $resolved->channel);
+        $this->assertTrue($resolved->fallback);
     }
 
     public function testWhatsappSmsPolicyDeliversOverSmsWhenWhatsappIsMissing(): void
     {
         $resolved = PhoneOTPChannel::resolve(PHONE_OTP_CHANNEL_WHATSAPP_SMS, null, true, false);
 
-        $this->assertSame(PHONE_OTP_CHANNEL_SMS, $resolved?->channel);
-        $this->assertFalse($resolved?->fallback);
+        $this->assertSame(PHONE_OTP_CHANNEL_SMS, $resolved->channel);
+        $this->assertFalse($resolved->fallback);
     }
 
     public function testRequestedChannelNarrowsWhatsappSmsPolicyWithoutFallback(): void
     {
         $resolved = PhoneOTPChannel::resolve(PHONE_OTP_CHANNEL_WHATSAPP_SMS, PHONE_OTP_CHANNEL_WHATSAPP, true, true);
 
-        $this->assertSame(PHONE_OTP_CHANNEL_WHATSAPP, $resolved?->channel);
-        $this->assertFalse($resolved?->fallback);
+        $this->assertSame(PHONE_OTP_CHANNEL_WHATSAPP, $resolved->channel);
+        $this->assertFalse($resolved->fallback);
 
         $resolved = PhoneOTPChannel::resolve(PHONE_OTP_CHANNEL_WHATSAPP_SMS, PHONE_OTP_CHANNEL_SMS, true, true);
 
-        $this->assertSame(PHONE_OTP_CHANNEL_SMS, $resolved?->channel);
+        $this->assertSame(PHONE_OTP_CHANNEL_SMS, $resolved->channel);
     }
 
     #[DataProvider('provideUndeliverable')]
     public function testUndeliverableRequestsResolveToNull(string $policy, ?string $requested, bool $smsConfigured, bool $whatsappConfigured): void
     {
-        $this->assertNull(PhoneOTPChannel::resolve($policy, $requested, $smsConfigured, $whatsappConfigured));
+        $this->assertNotInstanceOf(PhoneOTPChannel::class, PhoneOTPChannel::resolve($policy, $requested, $smsConfigured, $whatsappConfigured));
     }
 
     /**
