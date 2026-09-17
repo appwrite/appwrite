@@ -4,17 +4,17 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Auth;
 
-use Appwrite\Auth\PhoneOtpChannel;
+use Appwrite\Auth\PhoneOTPChannel;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
-final class PhoneOtpChannelTest extends TestCase
+final class PhoneOTPChannelTest extends TestCase
 {
     #[DataProvider('provideSmsConfigurations')]
     public function testIsSmsConfigured(bool $providerConfigured, bool $senderConfigured, bool $expected): void
     {
-        $this->assertSame($expected, PhoneOtpChannel::isSmsConfigured($providerConfigured, $senderConfigured));
+        $this->assertSame($expected, PhoneOTPChannel::isSmsConfigured($providerConfigured, $senderConfigured));
     }
 
     /**
@@ -37,7 +37,7 @@ final class PhoneOtpChannelTest extends TestCase
         ?string $channel,
         bool $fallback,
     ): void {
-        $resolved = PhoneOtpChannel::resolve($policy, $requested, $smsConfigured, $whatsappConfigured);
+        $resolved = PhoneOTPChannel::resolve($policy, $requested, $smsConfigured, $whatsappConfigured);
 
         $expected = $channel === null ? null : [$channel, $fallback];
         $actual = $resolved === null ? null : [$resolved->channel, $resolved->fallback];

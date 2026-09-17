@@ -4,7 +4,7 @@ namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
 
-class PolicyPhoneOtpChannel extends PolicyBase
+class PolicyPhoneOTPChannel extends PolicyBase
 {
     public array $conditions = [
         '$id' => 'phone-otp-channel',

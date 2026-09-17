@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Project\Http\Project\Policies\PhoneOtpChannel;
+namespace Appwrite\Platform\Modules\Project\Http\Project\Policies\PhoneOTPChannel;
 
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
@@ -52,7 +52,7 @@ class Update extends Action
                     )
                 ],
             ))
-            ->param('channel', '', new WhiteList([PHONE_OTP_CHANNEL_SMS, PHONE_OTP_CHANNEL_WHATSAPP, PHONE_OTP_CHANNEL_WHATSAPP_SMS], true), 'Channel used to deliver phone OTP messages. Can be one of: ' . PHONE_OTP_CHANNEL_SMS . ', ' . PHONE_OTP_CHANNEL_WHATSAPP . ', ' . PHONE_OTP_CHANNEL_WHATSAPP_SMS . '.', enum: new Enum(name: 'ProjectPhoneOtpChannel'))
+            ->param('channel', '', new WhiteList([PHONE_OTP_CHANNEL_SMS, PHONE_OTP_CHANNEL_WHATSAPP, PHONE_OTP_CHANNEL_WHATSAPP_SMS], true), 'Channel used to deliver phone OTP messages. Can be one of: ' . PHONE_OTP_CHANNEL_SMS . ', ' . PHONE_OTP_CHANNEL_WHATSAPP . ', ' . PHONE_OTP_CHANNEL_WHATSAPP_SMS . '.', enum: new Enum(name: 'ProjectPhoneOTPChannel'))
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('project')
