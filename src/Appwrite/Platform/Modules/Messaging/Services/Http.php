@@ -39,6 +39,8 @@ use Appwrite\Platform\Modules\Messaging\Http\Providers\Twilio\Update as UpdateTw
 use Appwrite\Platform\Modules\Messaging\Http\Providers\Vonage\Create as CreateVonageProvider;
 use Appwrite\Platform\Modules\Messaging\Http\Providers\Vonage\Update as UpdateVonageProvider;
 use Appwrite\Platform\Modules\Messaging\Http\Providers\XList as ListProviders;
+use Appwrite\Platform\Modules\Messaging\Http\WhatsApp\Events\Create as CreateWhatsAppEvent;
+use Appwrite\Platform\Modules\Messaging\Http\WhatsApp\Events\Get as GetWhatsAppEvent;
 use Appwrite\Platform\Modules\Messaging\Http\Topics\Create as CreateTopic;
 use Appwrite\Platform\Modules\Messaging\Http\Topics\Delete as DeleteTopic;
 use Appwrite\Platform\Modules\Messaging\Http\Topics\Get as GetTopic;
@@ -57,6 +59,8 @@ class Http extends Service
         $this->type = Service::TYPE_HTTP;
 
         // Providers
+        $this->addAction(CreateWhatsAppEvent::getName(), new CreateWhatsAppEvent());
+        $this->addAction(GetWhatsAppEvent::getName(), new GetWhatsAppEvent());
         $this->addAction(CreateMailgunProvider::getName(), new CreateMailgunProvider());
         $this->addAction(UpdateMailgunProvider::getName(), new UpdateMailgunProvider());
         $this->addAction(CreateSendgridProvider::getName(), new CreateSendgridProvider());

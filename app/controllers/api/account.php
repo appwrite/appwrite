@@ -48,6 +48,7 @@ use Utopia\Auth\Proofs\Phrase;
 use Utopia\Auth\Proofs\Token as ProofsToken;
 use Utopia\Auth\Store;
 use Utopia\Bus\Bus;
+use Utopia\Cache\Cache;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -3162,14 +3163,20 @@ Http::post('/v1/account/tokens/phone')
     ->inject('store')
     ->inject('proofForCode')
     ->inject('authorization')
-    ->action(function (string $userId, string $phone, ?string $channel, Request $request, Response $response, User $user, Document $project, array $platform, Database $dbForProject, Event $queueForEvents, MessagingPublisher $publisherForMessaging, Locale $locale, Context $usage, array $plan, Store $store, ProofsCode $proofForCode, Authorization $authorization) {
+    ->inject('cache')
+    ->action(function (string $userId, string $phone, ?string $channel, Request $request, Response $response, User $user, Document $project, array $platform, Database $dbForProject, Event $queueForEvents, MessagingPublisher $publisherForMessaging, Locale $locale, Context $usage, array $plan, Store $store, ProofsCode $proofForCode, Authorization $authorization, Cache $cache) {
         $policy = $project->getAttribute('auths', [])['phoneOtpChannel'] ?? PHONE_OTP_CHANNEL_SMS;
         $smsConfigured = PhoneOTPChannel::isSmsConfigured(
             !empty(System::getEnv('_APP_SMS_PROVIDER')),
             !empty(System::getEnv('_APP_SMS_FROM')),
         );
         $whatsappConfigured = !empty(System::getEnv('_APP_WHATSAPP_PROVIDER'));
-        $resolved = PhoneOTPChannel::resolve($policy, $channel, $smsConfigured, $whatsappConfigured);
+        $whatsappDeliverable = PhoneOTPChannel::isDeliverableOverWhatsApp(
+            $phone,
+            System::getEnv('_APP_WHATSAPP_DENIED_CALLING_CODES', PHONE_OTP_WHATSAPP_DENIED_CALLING_CODES),
+            $cache,
+        );
+        $resolved = PhoneOTPChannel::resolve($policy, $channel, $smsConfigured, $whatsappConfigured, $whatsappDeliverable);
 
         if ($resolved === null) {
             if ($channel !== null && $policy !== PHONE_OTP_CHANNEL_WHATSAPP_SMS) {
@@ -4684,14 +4691,21 @@ Http::post('/v1/account/verifications/phone')
     ->inject('plan')
     ->inject('proofForCode')
                 ->inject('authorization')
-    ->action(function (Request $request, Response $response, User $user, Database $dbForProject, Event $queueForEvents, MessagingPublisher $publisherForMessaging, Document $project, Locale $locale, Context $usage, array $plan, ProofsCode $proofForCode, Authorization $authorization) {
+    ->inject('cache')
+    ->action(function (Request $request, Response $response, User $user, Database $dbForProject, Event $queueForEvents, MessagingPublisher $publisherForMessaging, Document $project, Locale $locale, Context $usage, array $plan, ProofsCode $proofForCode, Authorization $authorization, Cache $cache) {
         $policy = $project->getAttribute('auths', [])['phoneOtpChannel'] ?? PHONE_OTP_CHANNEL_SMS;
         $smsConfigured = PhoneOTPChannel::isSmsConfigured(
             !empty(System::getEnv('_APP_SMS_PROVIDER')),
             !empty(System::getEnv('_APP_SMS_FROM')),
         );
         $whatsappConfigured = !empty(System::getEnv('_APP_WHATSAPP_PROVIDER'));
-        $resolved = PhoneOTPChannel::resolve($policy, null, $smsConfigured, $whatsappConfigured);
+        $phone = $user->getAttribute('phone');
+        $whatsappDeliverable = PhoneOTPChannel::isDeliverableOverWhatsApp(
+            $phone,
+            System::getEnv('_APP_WHATSAPP_DENIED_CALLING_CODES', PHONE_OTP_WHATSAPP_DENIED_CALLING_CODES),
+            $cache,
+        );
+        $resolved = PhoneOTPChannel::resolve($policy, null, $smsConfigured, $whatsappConfigured, $whatsappDeliverable);
 
         if ($resolved === null) {
             // A provider is configured, just not for the channel the policy resolved to.

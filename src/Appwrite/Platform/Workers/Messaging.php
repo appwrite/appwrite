@@ -11,6 +11,7 @@ use Appwrite\Usage\Context as UsageContext;
 use Utopia\Compression\Algorithms\GZIP;
 use Utopia\Compression\Algorithms\Zstd;
 use Utopia\Compression\Compression;
+use Utopia\Cache\Cache;
 use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Database;
@@ -70,6 +71,7 @@ class Messaging extends Action
             ->inject('telemetry')
             ->inject('adapterForSMS')
             ->inject('adapterForWhatsApp')
+            ->inject('cache')
             ->callback($this->action(...));
     }
 
@@ -82,6 +84,7 @@ class Messaging extends Action
      * @param Telemetry $telemetry
      * @param SMSAdapter|null $adapterForSMS
      * @param SMSAdapter|null $adapterForWhatsApp
+     * @param Cache $cache
      * @return void
      * @throws \Exception
      */
@@ -93,7 +96,8 @@ class Messaging extends Action
         UsagePublisher $publisherForUsage,
         Telemetry $telemetry,
         ?SMSAdapter $adapterForSMS,
-        ?SMSAdapter $adapterForWhatsApp
+        ?SMSAdapter $adapterForWhatsApp,
+        Cache $cache
     ): void {
         $this->provider = new Provider($telemetry);
         $payload = $message->getPayload();
@@ -118,6 +122,7 @@ class Messaging extends Action
                     $publisherForUsage,
                     $adapterForSMS,
                     $adapterForWhatsApp,
+                    $cache,
                     $payload['channel'] ?? null,
                     (bool)($payload['fallback'] ?? false)
                 );
@@ -828,6 +833,7 @@ class Messaging extends Action
         UsagePublisher $publisherForUsage,
         ?SMSAdapter $adapterForSMS,
         ?SMSAdapter $adapterForWhatsApp,
+        Cache $cache,
         ?string $channel = null,
         bool $fallback = false
     ): void {
@@ -902,6 +908,20 @@ class Messaging extends Action
                 project: $project,
                 metrics: $usage->getMetrics(),
             ));
+
+            // Meta accepted the message, which is not the same as delivering it: an unreachable
+            // recipient is reported minutes later on the status webhook, long after this job is
+            // gone. Leave that handler the SMS to send, for as long as the code stays redeemable.
+            if ($fallback) {
+                $cache->save(
+                    PHONE_OTP_WHATSAPP_FALLBACK_KEY . ':' . $project->getId() . ':' . $message->getId(),
+                    [
+                        'message' => $message->getArrayCopy(),
+                        'recipients' => $recipients,
+                    ],
+                    ttl: TOKEN_EXPIRATION_OTP,
+                );
+            }
 
             return;
         }

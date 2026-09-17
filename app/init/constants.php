@@ -367,6 +367,19 @@ const CONSOLE_TAIL_CHANNEL_PREFIX = 'console.tail';
 const PHONE_OTP_CHANNEL_SMS = 'sms';
 const PHONE_OTP_CHANNEL_WHATSAPP = 'whatsapp';
 const PHONE_OTP_CHANNEL_WHATSAPP_SMS = 'whatsapp-sms';
+// WhatsApp refuses authentication templates to some countries outright, so those calling
+// codes never reach it. India is the default because Meta rejects every authentication
+// template addressed to +91.
+const PHONE_OTP_WHATSAPP_DENIED_CALLING_CODES = '91';
+// Keyed by project and token, this holds the SMS an undelivered WhatsApp OTP falls back to,
+// for as long as the code behind it can still be redeemed.
+const PHONE_OTP_WHATSAPP_FALLBACK_KEY = 'whatsapp-otp-fallback';
+// Meta reports an unreachable recipient as 131026, a bucket error it deliberately does not
+// break down. Whatever the cause, the number did not receive this code.
+const PHONE_OTP_WHATSAPP_UNDELIVERABLE_CODE = 131026;
+// How long a number stays known-unreachable, so a returning user skips the dead channel.
+const PHONE_OTP_WHATSAPP_UNREACHABLE_TTL = 60 * 60 * 24 * 30;
+const PHONE_OTP_WHATSAPP_UNREACHABLE_KEY = 'whatsapp-otp-unreachable';
 
 // Usage metrics
 const METRIC_TEAMS = 'teams';

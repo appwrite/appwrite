@@ -23,6 +23,7 @@ use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Auth\Proofs\Code as ProofsCode;
 use Utopia\Auth\Proofs\Token as ProofsToken;
+use Utopia\Cache\Cache;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -110,6 +111,7 @@ class Create extends Action
             ->inject('plan')
             ->inject('proofForToken')
             ->inject('proofForCode')
+            ->inject('cache')
             ->callback($this->action(...));
     }
 
@@ -128,7 +130,8 @@ class Create extends Action
         Context $usage,
         array $plan,
         ProofsToken $proofForToken,
-        ProofsCode $proofForCode
+        ProofsCode $proofForCode,
+        Cache $cache
     ): void {
         $mfaFactors = $project->getAttribute('auths', [])['mfaFactors'] ?? [];
         $factorEnabled = match ($factor) {
@@ -178,7 +181,13 @@ class Create extends Action
                     !empty(System::getEnv('_APP_SMS_FROM')),
                 );
                 $whatsappConfigured = !empty(System::getEnv('_APP_WHATSAPP_PROVIDER'));
-                $resolved = PhoneOTPChannel::resolve($policy, null, $smsConfigured, $whatsappConfigured);
+                $phone = $user->getAttribute('phone', '');
+                $whatsappDeliverable = $phone !== '' && PhoneOTPChannel::isDeliverableOverWhatsApp(
+                    $phone,
+                    System::getEnv('_APP_WHATSAPP_DENIED_CALLING_CODES', PHONE_OTP_WHATSAPP_DENIED_CALLING_CODES),
+                    $cache,
+                );
+                $resolved = PhoneOTPChannel::resolve($policy, null, $smsConfigured, $whatsappConfigured, $whatsappDeliverable);
 
                 if ($resolved === null) {
                     // A provider is configured, just not for the channel the policy resolved to.
