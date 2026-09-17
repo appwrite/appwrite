@@ -110,6 +110,75 @@ final class VCSGiteaConsoleClientTest extends Scope
         $this->assertEventually(fn () => $this->assertExecutionOutputHelper($functionId, 'gitea-v2'), 30000, 1000);
     }
 
+    public function testCreateDuplicateDeploymentWithRootDirectory(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $headers = \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders());
+        $installationId = $this->createInstallationHelper()['$id'];
+
+        $repository = $this->giteaApiHelper(Client::METHOD_POST, '/api/v1/user/repos', [
+            'name' => 'function-' . \uniqid(),
+            'auto_init' => true,
+            'default_branch' => 'main',
+            'private' => false,
+        ]);
+        $this->assertEquals(201, $repository['headers']['status-code'], \json_encode($repository['body']));
+
+        $workdir = \sys_get_temp_dir() . '/vcs-gitea-' . \uniqid();
+        $endpoint = System::getEnv('_APP_VCS_GITEA_ENDPOINT', 'http://gitea:3000');
+        $remote = \str_replace('://', '://' . self::GITEA_USERNAME . ':' . self::GITEA_PASSWORD . '@', $endpoint)
+            . '/' . self::GITEA_USERNAME . '/' . $repository['body']['name'] . '.git';
+
+        $this->gitHelper("git clone {$remote} {$workdir}", \sys_get_temp_dir());
+        foreach (['api', 'web'] as $directory) {
+            \mkdir($workdir . '/functions/' . $directory, 0o777, true);
+            \file_put_contents($workdir . '/functions/' . $directory . '/index.js', "module.exports = async (context) => context.res.send('{$directory}:' + process.env.APPWRITE_VCS_ROOT_DIRECTORY);\n");
+        }
+        $this->gitHelper('git add functions && git commit -m "Add functions"', $workdir);
+        $this->gitHelper('git push origin main', $workdir);
+
+        $function = $this->client->call(Client::METHOD_POST, '/functions', $headers, [
+            'functionId' => ID::unique(),
+            'name' => 'Gitea root directory',
+            'execute' => [Role::any()->toString()],
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'timeout' => 15,
+            'installationId' => $installationId,
+            'providerRepositoryId' => (string) $repository['body']['id'],
+            'providerBranch' => 'main',
+            'providerRootDirectory' => 'functions/api',
+        ]);
+        $this->assertEquals(201, $function['headers']['status-code'], \json_encode($function['body']));
+        $functionId = $function['body']['$id'];
+
+        $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments/vcs', $headers, [
+            'type' => 'branch',
+            'reference' => 'main',
+            'activate' => true,
+        ]);
+        $this->assertEquals(202, $deployment['headers']['status-code'], \json_encode($deployment['body']));
+        $this->waitForDeploymentReadyHelper($functionId, $deployment['body']['$id']);
+
+        $function = $this->client->call(Client::METHOD_PUT, '/functions/' . $functionId, $headers, [
+            'name' => 'Gitea root directory',
+            'execute' => [Role::any()->toString()],
+            'providerRootDirectory' => 'functions/web',
+        ]);
+        $this->assertEquals(200, $function['headers']['status-code'], \json_encode($function['body']));
+
+        $duplicate = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments/duplicate', $headers, [
+            'deploymentId' => $deployment['body']['$id'],
+        ]);
+        $this->assertEquals(202, $duplicate['headers']['status-code'], \json_encode($duplicate['body']));
+        $this->waitForDeploymentReadyHelper($functionId, $duplicate['body']['$id']);
+
+        $this->assertEventually(fn () => $this->assertExecutionOutputHelper($functionId, 'web:functions/web'), 30000, 1000);
+    }
+
     public function testClosePullRequestRemovesAuthorization(): void
     {
         /**
