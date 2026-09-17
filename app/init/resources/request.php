@@ -59,8 +59,6 @@ use Utopia\Storage\Device;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
 use Utopia\Usage\Tenant as UsageTenant;
-use Utopia\Validator\URL;
-use Utopia\Validator\WhiteList;
 
 /**
  * Register per-request resources on the given container.
@@ -146,7 +144,7 @@ return function (Container $context): void {
             return new Document();
         }
 
-        // Query params mirror the header fallback pattern used by ?project= and ?devKey=,
+        // Query params mirror the header fallback pattern used by ?project=,
         // allowing Console to embed impersonation in direct file/image URLs where headers cannot be set.
         $impersonateUserId = $request->getHeaderLine('x-appwrite-impersonate-user-id', (string)($request->getParam('impersonateuserid', '') ?: $request->getParam('impersonateUserId', '')));
         $impersonateEmail = $request->getHeaderLine('x-appwrite-impersonate-user-email', (string)($request->getParam('impersonateemail', '') ?: $request->getParam('impersonateEmail', '')));
@@ -248,7 +246,7 @@ return function (Container $context): void {
     /**
      * List of allowed request hostnames for the request.
      */
-    $context->set('allowedHostnames', function (array $platform, Document $project, Document $rule, Document $devKey, Request $request) {
+    $context->set('allowedHostnames', function (array $platform, Document $project, Document $rule, Request $request) {
         $allowed = [...($platform['hostnames'] ?? [])];
 
         /* Add the console host, the default OAuth2 redirects land on it even when _APP_CONSOLE_URL points elsewhere */
@@ -262,11 +260,6 @@ return function (Container $context): void {
             $platforms = $project->getAttribute('platforms', []);
             $hostnames = Platform::getHostnames($platforms);
             $allowed = [...$allowed, ...$hostnames];
-        }
-
-        /* Add the request hostname if a dev key is found */
-        if (! $devKey->isEmpty()) {
-            $allowed[] = $request->getHostname();
         }
 
         $originHostname = parse_url($request->getOrigin(), PHP_URL_HOST);
@@ -287,13 +280,8 @@ return function (Container $context): void {
             $allowed[] = $rule->getAttribute('domain', '');
         }
 
-        /* Allow the request origin if a dev key is found */
-        if (! $devKey->isEmpty() && ! empty($hostname)) {
-            $allowed[] = $hostname;
-        }
-
         return array_unique($allowed);
-    }, ['platform', 'project', 'rule', 'devKey', 'request']);
+    }, ['platform', 'project', 'rule', 'request']);
 
     /**
      * List of allowed request schemes for the request.
@@ -428,18 +416,14 @@ return function (Container $context): void {
 
     $context->set(
         'originValidator',
-        fn (Document $devKey, array $allowedHostnames, array $allowedSchemes) => $devKey->isEmpty()
-            ? new Origin($allowedHostnames, $allowedSchemes)
-            : new URL(),
-        ['devKey', 'allowedHostnames', 'allowedSchemes']
+        fn (array $allowedHostnames, array $allowedSchemes) => new Origin($allowedHostnames, $allowedSchemes),
+        ['allowedHostnames', 'allowedSchemes']
     );
 
     $context->set(
         'redirectValidator',
-        fn (Document $devKey, array $allowedHostnames, array $allowedSchemes) => $devKey->isEmpty()
-            ? new Redirect($allowedHostnames, $allowedSchemes)
-            : new URL(),
-        ['devKey', 'allowedHostnames', 'allowedSchemes']
+        fn (array $allowedHostnames, array $allowedSchemes) => new Redirect($allowedHostnames, $allowedSchemes),
+        ['allowedHostnames', 'allowedSchemes']
     );
 
     $context->set('user', function (string $mode, Document $project, Document $console, Request $request, Response $response, Database $dbForProject, Database $dbForPlatform, Store $store, Token $proofForToken, $authorization) {
@@ -949,55 +933,6 @@ return function (Container $context): void {
 
         return $requestTimestamp;
     }, ['request']);
-
-    $context->set('devKey', function (Request $request, Document $project, array $servers, Database $dbForPlatform, Authorization $authorization) {
-        $devKey = $request->getHeaderLine('x-appwrite-dev-key', $request->getParam('devKey', ''));
-
-        // Check if given key match project's development keys
-        $key = $project->find('secret', $devKey, 'devKeys');
-        if (! $key) {
-            return new Document([]);
-        }
-
-        // check expiration
-        $expire = $key->getAttribute('expire');
-        if (! empty($expire) && $expire < DatabaseDateTime::formatTz(DatabaseDateTime::now())) {
-            return new Document([]);
-        }
-
-        // update access time
-        $accessedAt = $key->getAttribute('accessedAt', 0);
-        if (empty($accessedAt) || DatabaseDateTime::formatTz(DatabaseDateTime::addSeconds(new \DateTime(), -APP_KEY_ACCESS)) > $accessedAt) {
-            $key->setAttribute('accessedAt', DatabaseDateTime::now());
-            $authorization->skip(fn () => $dbForPlatform->updateDocument('devKeys', $key->getId(), new Document([
-                'accessedAt' => $key->getAttribute('accessedAt')
-            ])));
-            $dbForPlatform->purgeCachedDocument('projects', $project->getId());
-        }
-
-        // add sdk to key
-        $sdkValidator = new WhiteList($servers, true);
-        $sdk = \strtolower($request->getHeaderLine('x-sdk-name', 'UNKNOWN'));
-
-        if ($sdk !== 'unknown' && $sdkValidator->isValid($sdk)) {
-            $sdks = $key->getAttribute('sdks', []);
-
-            if (! in_array($sdk, $sdks)) {
-                $sdks[] = $sdk;
-                $key->setAttribute('sdks', $sdks);
-
-                /** Update access time as well */
-                $key->setAttribute('accessedAt', DatabaseDateTime::now());
-                $key = $authorization->skip(fn () => $dbForPlatform->updateDocument('devKeys', $key->getId(), new Document([
-                    'sdks' => $key->getAttribute('sdks'),
-                    'accessedAt' => $key->getAttribute('accessedAt')
-                ])));
-                $dbForPlatform->purgeCachedDocument('projects', $project->getId());
-            }
-        }
-
-        return $key;
-    }, ['request', 'project', 'servers', 'dbForPlatform', 'authorization']);
 
     $context->set('team', function (Document $project, Database $dbForPlatform, Http $utopia, Request $request, Authorization $authorization, string $projectIdFromPath) {
         $teamInternalId = '';

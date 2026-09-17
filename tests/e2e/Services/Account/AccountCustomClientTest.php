@@ -6340,16 +6340,230 @@ final class AccountCustomClientTest extends Scope
         $this->assertTrue($account['body']['emailVerification']);
     }
 
-    /**
-     * A verbatim Google ID token payload — every claim Google actually mints,
-     * not just the handful the flow reads. The extras (`azp`, `hd`, `at_hash`,
-     * `given_name`, `family_name`, `locale`) must be carried without upsetting
-     * verification, while `name` and `picture` reach the account and identity.
-     *
-     * `iss`, `aud` and `picture` are necessarily the mock provider's: the token
-     * has to verify against the mock JWKS, and the avatar has to be fetchable
-     * from the test network. Every other claim is Google's own shape.
-     */
+    public function testCreateEmailVerificationOTP(): void
+    {
+        $data = $this->createFreshAccountWithSession();
+        $session = $data['session'];
+        $email = $data['email'];
+
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/account/verifications/email/otp', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ]));
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertNotEmpty($response['body']['userId']);
+        $this->assertEmpty($response['body']['secret']);
+        $this->assertEmpty($response['body']['phrase']);
+        $this->assertTrue((new DatetimeValidator())->isValid($response['body']['expire']));
+
+        $lastEmail = $this->getLastEmailByAddress($email);
+        $this->assertNotEmpty($lastEmail, 'Email not found for address: ' . $email);
+        $this->assertNotEmpty($lastEmail['subject']);
+        $this->assertNotEmpty($lastEmail['text']);
+
+        preg_match_all("/\b\d{6}\b/", $lastEmail['text'], $matches);
+        $otp = $matches[0][0] ?? '';
+        $this->assertNotEmpty($otp);
+
+        /**
+         * Test for SUCCESS with phrase
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/account/verifications/email/otp', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ]), [
+            'phrase' => true,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['phrase']);
+        $this->assertEmpty($response['body']['secret']);
+
+        $phrase = $response['body']['phrase'];
+
+        $lastEmail = $this->getLastEmailByAddress($email, function ($email) use ($phrase) {
+            $this->assertStringContainsStringIgnoringCase($phrase, $email['text']);
+        });
+        $this->assertNotEmpty($lastEmail);
+        $this->assertStringContainsStringIgnoringCase($phrase, $lastEmail['text']);
+
+        /**
+         * Test for FAILURE - no session
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/account/verifications/email/otp', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]);
+
+        $this->assertEquals(401, $response['headers']['status-code']);
+
+        /**
+         * Test for FAILURE - account has no email
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/account/verifications/email/otp', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $this->createAnonymousSession(),
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('user_email_not_found', $response['body']['type']);
+    }
+
+    public function testUpdateEmailVerificationOTP(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $email = uniqid('otp-verify-') . '@localhost.test';
+        $password = 'password';
+        $name = 'OTP Verify User';
+
+        $created = $this->client->call(Client::METHOD_POST, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ]), [
+            'userId' => ID::unique(),
+            'email' => $email,
+            'password' => $password,
+            'name' => $name,
+        ]);
+
+        $this->assertEquals(201, $created['headers']['status-code']);
+        $userId = $created['body']['$id'];
+
+        $sessionResponse = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ]), [
+            'email' => $email,
+            'password' => $password,
+        ]);
+
+        $this->assertEquals(201, $sessionResponse['headers']['status-code']);
+        $session = $sessionResponse['cookies']['a_session_' . $projectId];
+
+        $tokenResponse = $this->client->call(Client::METHOD_POST, '/account/verifications/email/otp', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ]));
+
+        $this->assertEquals(201, $tokenResponse['headers']['status-code']);
+
+        $lastEmail = $this->getLastEmailByAddress($email);
+        $this->assertNotEmpty($lastEmail);
+        $this->assertNotEmpty($lastEmail['subject']);
+        $this->assertNotEmpty($lastEmail['text']);
+
+        preg_match_all("/\b\d{6}\b/", $lastEmail['text'], $matches);
+        $otp = $matches[0][0] ?? '';
+        $this->assertNotEmpty($otp);
+
+        /**
+         * Test for FAILURE - wrong secret against active token
+         */
+        $response = $this->client->call(Client::METHOD_PUT, '/account/verifications/email/otp', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ]), [
+            'userId' => $userId,
+            'secret' => $otp === '000000' ? '111111' : '000000',
+        ]);
+
+        $this->assertEquals(401, $response['headers']['status-code']);
+        $this->assertEquals('user_invalid_token', $response['body']['type']);
+
+        /**
+         * Test for FAILURE - OTP is rejected by the link based endpoint
+         */
+        $response = $this->client->call(Client::METHOD_PUT, '/account/verifications/email', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ]), [
+            'userId' => $userId,
+            'secret' => $otp,
+        ]);
+
+        $this->assertEquals(401, $response['headers']['status-code']);
+        $this->assertEquals('user_invalid_token', $response['body']['type']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_PUT, '/account/verifications/email/otp', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ]), [
+            'userId' => $userId,
+            'secret' => $otp,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        /**
+         * Test for FAILURE - wrong userId
+         */
+        $response = $this->client->call(Client::METHOD_PUT, '/account/verifications/email/otp', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ]), [
+            'userId' => ID::custom('doesnotexist'),
+            'secret' => $otp,
+        ]);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+
+        /**
+         * Test for FAILURE - OTP is single use
+         */
+        $response = $this->client->call(Client::METHOD_PUT, '/account/verifications/email/otp', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ]), [
+            'userId' => $userId,
+            'secret' => $otp,
+        ]);
+
+        $this->assertEquals(401, $response['headers']['status-code']);
+        $this->assertEquals('user_invalid_token', $response['body']['type']);
+
+        /**
+         * Test for FAILURE - email already verified
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/account/verifications/email/otp', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ]));
+
+        $this->assertEquals(409, $response['headers']['status-code']);
+        $this->assertEquals('user_email_already_verified', $response['body']['type']);
+    }
+
     public function testCreateIdTokenSessionGoogleShapedClaims(): void
     {
         $this->updateMockProvider(true);
@@ -6499,5 +6713,133 @@ final class AccountCustomClientTest extends Scope
             ->getColor();
 
         return $color['r'] === 0 && $color['g'] === 255 && $color['b'] === 0;
+    }
+
+    /**
+     * The raw ID token is stored on the identity and handed back verbatim, so a
+     * client can decode claims Appwrite does not model. Google's `locale` is the
+     * motivating case: useful for picking a UI language, but not worth an
+     * attribute of its own.
+     */
+    public function testCreateIdTokenSessionStoresIdToken(): void
+    {
+        $this->updateMockProvider(true);
+
+        $projectId = $this->getProject()['$id'];
+        $sub = 'idtoken-stored-' . \uniqid('', true);
+        $email = 'idtoken.stored.' . \uniqid('', true) . '@localhost.test';
+
+        $idToken = $this->mintIdToken([
+            'sub' => $sub,
+            'email' => $email,
+            'email_verified' => true,
+            'name' => 'Jane Doe',
+            'given_name' => 'Jane',
+            'family_name' => 'Doe',
+            'picture' => 'http://localhost/v1/mock/tests/general/oauth2/photo',
+            'locale' => 'en',
+        ]);
+
+        $response = $this->createIdTokenSession([
+            'provider' => 'mock',
+            'idToken' => $idToken,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        $session = $response['cookies']['a_session_' . $projectId] ?? '';
+        $this->assertNotEmpty($session);
+
+        $identity = $this->findMockIdentity($session, $sub);
+
+        // Stored byte for byte, so the signature still verifies downstream
+        $this->assertEquals($idToken, $identity['providerIdToken']);
+
+        // ... and it is still a decodable JWT carrying the claims it was minted with
+        $claims = $this->decodeJwtPayload($identity['providerIdToken']);
+        $this->assertEquals($sub, $claims['sub']);
+        $this->assertEquals($email, $claims['email']);
+        $this->assertEquals('Jane Doe', $claims['name']);
+        // The claim Appwrite deliberately does not store as its own attribute
+        $this->assertEquals('en', $claims['locale']);
+
+        /**
+         * Signing in again replaces the stored token: the old one expires within
+         * the hour, and its claims — `locale` among them — may have changed.
+         */
+        $refreshed = $this->mintIdToken([
+            'sub' => $sub,
+            'email' => $email,
+            'email_verified' => true,
+            'name' => 'Jane Doe',
+            'locale' => 'cs',
+        ]);
+
+        $this->assertNotSame($idToken, $refreshed);
+
+        $response = $this->createIdTokenSession([
+            'provider' => 'mock',
+            'idToken' => $refreshed,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        $session = $response['cookies']['a_session_' . $projectId] ?? '';
+        $this->assertNotEmpty($session);
+
+        $identity = $this->findMockIdentity($session, $sub);
+        $this->assertEquals($refreshed, $identity['providerIdToken']);
+        $this->assertEquals('cs', $this->decodeJwtPayload($identity['providerIdToken'])['locale']);
+    }
+
+    /**
+     * The mock provider identity for a subject, from the signed-in account's
+     * own identity list.
+     */
+    private function findMockIdentity(string $session, string $sub): array
+    {
+        $projectId = $this->getProject()['$id'];
+
+        $identities = $this->client->call(Client::METHOD_GET, '/account/identities', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ]);
+
+        $this->assertEquals(200, $identities['headers']['status-code']);
+
+        foreach ($identities['body']['identities'] as $identity) {
+            if ($identity['provider'] === 'mock' && $identity['providerUid'] === $sub) {
+                return $identity;
+            }
+        }
+
+        $this->fail('No mock identity was stored for subject ' . $sub);
+    }
+
+    /**
+     * Decode a JWT payload the way a client would: base64url, no verification.
+     */
+    private function decodeJwtPayload(string $jwt): array
+    {
+        $parts = \explode('.', $jwt);
+        $this->assertCount(3, $parts, 'Stored ID token is not a three-part JWT.');
+
+        // Strict, so a payload that is not really base64url fails here rather
+        // than being silently scrubbed into something that decodes to nothing.
+        $payload = \base64_decode(\str_pad(
+            \strtr($parts[1], '-_', '+/'),
+            (int) (\ceil(\strlen($parts[1]) / 4) * 4),
+            '=',
+            STR_PAD_RIGHT
+        ), true);
+
+        $this->assertNotFalse($payload, 'Stored ID token payload is not valid base64url.');
+
+        $claims = \json_decode($payload, true);
+        $this->assertIsArray($claims, 'Stored ID token payload is not JSON.');
+
+        return $claims;
     }
 }

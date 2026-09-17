@@ -838,10 +838,11 @@ class Jobs extends Action
     protected function truncate(string $logs): string
     {
         $limit = APP_LOG_LENGTH_LIMIT;
-        if (\strlen($logs) <= $limit) {
-            return $logs;
+        if (\strlen($logs) > $limit) {
+            $logs = \substr($logs, -$limit);
         }
 
-        return \substr($logs, -$limit);
+        // Build output can be binary, and the byte cut can split a multibyte character; MySQL rejects either.
+        return \mb_scrub($logs, 'UTF-8');
     }
 }
