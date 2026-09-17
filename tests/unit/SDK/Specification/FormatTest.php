@@ -379,7 +379,7 @@ final class FormatTest extends TestCase
         $this->assertArrayNotHasKey('x-enum-name', $status);
     }
 
-    public function testOpenApiCustomIdBodyFieldIncludesIdGeneratorMetadata(): void
+    public function testOpenApiCustomIdBodyFieldOmitsVendorMetadata(): void
     {
         Method::$processed = [];
         Method::$errors = [];
@@ -400,7 +400,7 @@ final class FormatTest extends TestCase
 
         $userId = $spec['paths']['/tests']['post']['requestBody']['content']['application/json']['schema']['properties']['userId'];
 
-        $this->assertSame(['idGenerator' => 'ID.unique'], $userId['x-appwrite']);
+        $this->assertArrayNotHasKey('x-appwrite', $userId);
         $this->assertSame('<USER_ID>', $userId['example']);
         $this->assertArrayNotHasKey('x-example', $userId);
     }
