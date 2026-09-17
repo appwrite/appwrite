@@ -122,6 +122,15 @@ final class UserAgentTest extends TestCase
         $this->assertFalse($agent->isBot());
     }
 
+    public function testNativeAppIsMobileApp(): void
+    {
+        $agent = UserAgent::parse('com.example.myapp/1.0.0 iPhone17,1 iOS/18.1');
+
+        $this->assertSame('mobile app', $agent->client()->type);
+        $this->assertSame('com.example.myapp', $agent->client()->name);
+        $this->assertSame('1.0', $agent->client()->version);
+    }
+
     public function testUnknownAndMalformedValuesAreSafe(): void
     {
         foreach (['', 'UNKNOWN', "\0\xff invalid user agent"] as $value) {
