@@ -1524,6 +1524,7 @@ final class FormatTest extends TestCase
                     auth: [AuthType::KEY],
                     responses: [],
                     parameters: [new Parameter('presenceId', optional: false), new Parameter('userId', optional: false)],
+                    summary: 'Update presence for a user',
                 ),
             ])
             ->param('presenceId', '', new Text(256), 'Presence ID.')
@@ -1543,6 +1544,8 @@ final class FormatTest extends TestCase
         $this->assertSame(['server'], $canonical['x-appwrite']['methods'][1]['platforms']);
         $this->assertSame(['server' => ['Project' => [], 'Key' => []]], $canonical['x-appwrite']['methods'][1]['auth']);
         $this->assertSame(['presenceId', 'userId'], $canonical['x-appwrite']['methods'][1]['required']);
+        $this->assertSame('', $canonical['x-appwrite']['methods'][0]['summary']);
+        $this->assertSame('Update presence for a user', $canonical['x-appwrite']['methods'][1]['summary']);
 
         $this->assertCount(1, $client['x-appwrite']['methods']);
         $this->assertSame(['Project' => []], $client['x-appwrite']['methods'][0]['auth']);
