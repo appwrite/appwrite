@@ -3,7 +3,7 @@
 namespace Appwrite\Platform\Modules\Account\Http\Account\MFA\Challenges;
 
 use Appwrite\Auth\MFA\Type;
-use Appwrite\Auth\PhoneOtpChannel;
+use Appwrite\Auth\PhoneOTPChannel;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Mail as MailMessage;
@@ -173,16 +173,15 @@ class Create extends Action
         switch ($factor) {
             case Type::PHONE:
                 $policy = $project->getAttribute('auths', [])['phoneOtpChannel'] ?? PHONE_OTP_CHANNEL_SMS;
-                $smsConfigured = PhoneOtpChannel::isSmsConfigured(
+                $smsConfigured = PhoneOTPChannel::isSmsConfigured(
                     !empty(System::getEnv('_APP_SMS_PROVIDER')),
                     !empty(System::getEnv('_APP_SMS_FROM')),
                 );
                 $whatsappConfigured = !empty(System::getEnv('_APP_WHATSAPP_PROVIDER'));
-                $resolved = PhoneOtpChannel::resolve($policy, null, $smsConfigured, $whatsappConfigured);
+                $resolved = PhoneOTPChannel::resolve($policy, null, $smsConfigured, $whatsappConfigured);
 
                 if ($resolved === null) {
-                    // A provider is up, so the phone channel as a whole is not disabled: the policy
-                    // simply resolved to a channel this instance has no provider for.
+                    // A provider is configured, just not for the channel the policy resolved to.
                     if ($smsConfigured || $whatsappConfigured) {
                         throw new Exception(Exception::PROJECT_PHONE_OTP_CHANNEL_UNAVAILABLE, 'No provider is configured for the channel the phone OTP channel policy "' . $policy . '" resolved to');
                     }
@@ -224,12 +223,11 @@ class Create extends Action
                     fallback: $resolved->fallback,
                 ));
 
-                $whatsapp = $resolved->channel === PHONE_OTP_CHANNEL_WHATSAPP;
                 $countryCode = CallingCode::fromPhoneNumber($phone);
                 if (!empty($countryCode)) {
-                    $usage->addMetric(str_replace('{countryCode}', $countryCode, $whatsapp ? METRIC_AUTH_METHOD_WHATSAPP_COUNTRY_CODE : METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
+                    $usage->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
                 }
-                $usage->addMetric($whatsapp ? METRIC_AUTH_METHOD_WHATSAPP : METRIC_AUTH_METHOD_PHONE, 1);
+                $usage->addMetric(METRIC_AUTH_METHOD_PHONE, 1);
                 break;
             case Type::EMAIL:
                 if (empty(System::getEnv('_APP_SMTP_HOST'))) {

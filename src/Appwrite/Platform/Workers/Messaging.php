@@ -126,7 +126,6 @@ class Messaging extends Action
                     $message,
                     $project,
                     $recipients,
-                    $publisherForUsage,
                     $payload['channel'] ?? null,
                     (bool)($payload['fallback'] ?? false)
                 );
@@ -825,9 +824,7 @@ class Messaging extends Action
     }
 
     /**
-     * Deliver an internally generated message — a one-time passcode or an invite — over the channel the
-     * caller asked for. An unknown or absent channel is the SMS channel, so payloads enqueued before
-     * channels existed keep their behaviour.
+     * Deliver an internal message (OTP or invite) over the requested channel. A missing channel means SMS.
      *
      * @param array<string> $recipients
      * @throws \Exception
@@ -836,19 +833,12 @@ class Messaging extends Action
         Document $message,
         Document $project,
         array $recipients,
-        UsagePublisher $publisherForUsage,
         ?string $channel = null,
         bool $fallback = false
     ): void {
         $whatsapp = \in_array($channel, [PHONE_OTP_CHANNEL_WHATSAPP, PHONE_OTP_CHANNEL_WHATSAPP_SMS], true);
 
-        // Neither adapter is built unconditionally. Both constructors throw on a malformed DSN,
-        // so building the SMS one on the WhatsApp path would let a fat-fingered _APP_SMS_PROVIDER
-        // take down every WhatsApp OTP on an instance whose WhatsApp config is perfectly healthy.
-        // Each channel builds its own where a failure already has a handled path: here, where the
-        // SMS path throws exactly as it always has; inside the try below, where the WhatsApp
-        // adapter's rejection of a malformed template reaches the fallback; and inside the
-        // fallback, which absorbs its own failures.
+        // Each adapter is built only on its own path, so a broken SMS DSN cannot take down WhatsApp delivery.
         $smsAdapter = $whatsapp ? null : $this->getInternalSMSAdapter();
 
         if (!$whatsapp && $smsAdapter === null) {
@@ -878,8 +868,7 @@ class Messaging extends Action
             $sms = new SMS($recipients, $data['content'], $from);
             $sms->setOrigin(MESSAGE_SEND_TYPE_INTERNAL);
 
-            // Attach the project ID so the provider's delivery logs and webhooks can be
-            // attributed back to the originating project.
+            // Attach the project ID so the provider's delivery logs can be attributed back to the project.
             $sms->setMetadata([MetadataParameter::UUID->value => $project->getId()]);
 
             $smsAdapter->send($sms);
@@ -887,17 +876,11 @@ class Messaging extends Action
             return;
         }
 
-        // The passcode doubles as the needle every provider error is scrubbed with before it
-        // reaches a span or the log, so it is read here rather than inside the try below.
-        // WhatsApp authentication templates carry the bare code, never rendered copy. The coalesce
-        // keeps a payload enqueued in the older shape, and already in flight, deliverable.
+        // WhatsApp authentication templates carry the bare code, never rendered copy.
         $code = $data['code'] ?? $data['content'] ?? null;
         $code = \is_string($code) ? $code : null;
 
-        // Everything the WhatsApp adapter can refuse — a malformed template name, a code the
-        // authentication template will not carry, oversized callback data — surfaces as a
-        // throw rather than a failure result, so both shapes are funnelled into $errors and
-        // get the same chance at the SMS fallback.
+        // Adapter throws and failure results both end up in $errors so either can fall back.
         try {
             if ($this->whatsappAdapter === null) {
                 $this->whatsappAdapter = $this->createInternalWhatsAppAdapter();
@@ -910,8 +893,7 @@ class Messaging extends Action
             $sms = new SMS($recipients, $code, $from);
             $sms->setOrigin(MESSAGE_SEND_TYPE_INTERNAL);
 
-            // Meta drops every metadata key it does not know, so callback data is the only
-            // attribution it echoes back.
+            // Callback data is the only attribution Meta echoes back.
             $sms->setMetadata([WhatsAppMetadataParameter::CALLBACK_DATA->value => $project->getId() . ':' . $message->getId()]);
 
             $errors = $this->getSendErrors($this->whatsappAdapter->send($sms));
@@ -928,15 +910,12 @@ class Messaging extends Action
         Span::add('message.error', $reason);
 
         if (!$fallback) {
-            // Nothing else will carry this code, and re-throwing would re-send the WhatsApp
-            // message on the retry, so the log is the only signal this failure leaves behind.
+            // Re-throwing would re-send the WhatsApp message on retry, so only log.
             Console::error('WhatsApp OTP delivery failed for project ' . $project->getId() . ' with no SMS fallback configured: ' . $reason);
             return;
         }
 
-        // A throw here would put the whole job back on the queue and send the recipient a
-        // second WhatsApp message on the retry, so the fallback absorbs its own failures —
-        // the SMS adapter's construction included, which throws on a malformed DSN.
+        // The fallback absorbs its own failures for the same reason.
         try {
             $smsAdapter = $this->getInternalSMSAdapter();
 
@@ -960,37 +939,12 @@ class Messaging extends Action
 
             Span::add('message.fallback_error', $fallbackReason);
             Console::error('WhatsApp OTP delivery failed for project ' . $project->getId() . ' and the SMS fallback failed too: ' . $reason . ' | fallback: ' . $fallbackReason);
-            return;
         }
-
-        // The controller books METRIC_AUTH_METHOD_WHATSAPP for every OTP it routes at WhatsApp;
-        // this one books METRIC_AUTH_METHOD_PHONE for the SMS that actually carried the code.
-        // A fallback therefore increments both — deliberately, because "WhatsApp attempted" and
-        // "phone delivered" are two different facts. Only a delivered fallback earns this metric.
-        $usage = new UsageContext();
-        $usage->addMetric(METRIC_AUTH_METHOD_PHONE, 1);
-
-        if (!empty($countryCode)) {
-            $usage->addMetric(\str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
-        }
-
-        $publisherForUsage->enqueue(new Usage(
-            project: $project,
-            metrics: $usage->getMetrics(),
-        ));
     }
 
     /**
-     * Scrub the passcode out of a provider error before it reaches a span or the log.
-     *
-     * A rejection can quote the parameter it rejected — which for an authentication template is
-     * the passcode itself — and the provider has several error shapes, only one of which is the
-     * documented "Error <code>: <message>: <details>". Redacting by the secret rather than by the
-     * format is therefore the only control that holds for all of them, and it keeps every word of
-     * diagnostic text a format-based strip would have thrown away.
-     *
-     * A null or empty code carries no secret and gives \str_replace no needle to search for, so
-     * that payload's error is passed through untouched.
+     * Scrub the passcode out of a provider error before it reaches a span or the log,
+     * since a template rejection can quote the rejected parameter.
      */
     private function redactPasscode(string $error, ?string $code): string
     {
@@ -1382,11 +1336,7 @@ class Messaging extends Action
     }
 
     /**
-     * The instance-wide SMS adapter, built on first use and memoised for the life of the worker.
-     *
-     * Lazy on purpose: construction throws on a malformed _APP_SMS_PROVIDER DSN, and on a
-     * multi-DSN provider list with no `local=default` entry. Only the callers that actually send
-     * over SMS should wear that.
+     * The SMS adapter, built on first use because construction throws on a malformed DSN.
      */
     private function getInternalSMSAdapter(): ?SMSAdapter
     {
@@ -1460,10 +1410,7 @@ class Messaging extends Action
     }
 
     /**
-     * Build the adapter that carries internal one-time passcodes over WhatsApp.
-     *
-     * Unlike the SMS provider this takes a single DSN: there is no per-country routing to do, because
-     * WhatsApp reaches every country from the one business phone number.
+     * Build the adapter that carries internal OTPs over WhatsApp. A single DSN, since one business number reaches every country.
      */
     private function createInternalWhatsAppAdapter(): ?SMSAdapter
     {
@@ -1475,8 +1422,7 @@ class Messaging extends Action
 
         $dsn = new DSN($provider);
 
-        // The DSN's username differs from the SMS mock's so end-to-end tests can tell the
-        // two channels apart at the request catcher.
+        // The mock username lets e2e tests tell the two channels apart at the request catcher.
         $adapter = $dsn->getHost() === 'mock'
             ? (new Mock($dsn->getUser() ?? '', $dsn->getPassword() ?? ''))->setEndpoint('http://request-catcher-sms:5000/')
             : $this->getSmsAdapter($this->createProviderFromDSN($dsn));
