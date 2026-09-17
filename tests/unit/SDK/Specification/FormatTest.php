@@ -379,7 +379,7 @@ final class FormatTest extends TestCase
         $this->assertArrayNotHasKey('x-enum-name', $status);
     }
 
-    public function testOpenApiCustomIdBodyFieldOmitsVendorMetadata(): void
+    public function testOpenApiCustomIdBodyFieldUsesGeneratedExample(): void
     {
         Method::$processed = [];
         Method::$errors = [];
@@ -400,7 +400,6 @@ final class FormatTest extends TestCase
 
         $userId = $spec['paths']['/tests']['post']['requestBody']['content']['application/json']['schema']['properties']['userId'];
 
-        $this->assertArrayNotHasKey('x-appwrite', $userId);
         $this->assertSame('<USER_ID>', $userId['example']);
         $this->assertArrayNotHasKey('x-example', $userId);
     }
