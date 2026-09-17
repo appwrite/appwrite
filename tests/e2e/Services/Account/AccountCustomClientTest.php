@@ -4107,7 +4107,7 @@ final class AccountCustomClientTest extends Scope
 
             // The recipient gets the code they were always going to get, over the other channel.
             $this->assertNotEmpty($sms, 'No SMS fallback for phone number: ' . $number);
-            $this->assertStringContainsString($code, $sms['data']['message'] ?? '');
+            $this->assertStringContainsString($code, (string) ($sms['data']['message'] ?? ''));
         } finally {
             $this->updatePhoneOtpChannel(PHONE_OTP_CHANNEL_SMS);
         }

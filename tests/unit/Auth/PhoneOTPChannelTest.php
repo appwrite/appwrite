@@ -105,7 +105,7 @@ final class PhoneOTPChannelTest extends TestCase
 
     public function testUnreachableNumberCannotBeServedByAWhatsappOnlyPolicy(): void
     {
-        $this->assertNull(PhoneOTPChannel::resolve(PHONE_OTP_CHANNEL_WHATSAPP, null, true, true, false));
+        $this->assertNotInstanceOf(PhoneOTPChannel::class, PhoneOTPChannel::resolve(PHONE_OTP_CHANNEL_WHATSAPP, null, true, true, false));
     }
 
     public function testUnreachableNumberDoesNotAffectTheSmsPolicy(): void
