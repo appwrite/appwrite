@@ -166,7 +166,7 @@ class Handler implements MqttHandler
             $grantedTopics[$filter->topic] = [$document, $grantedQos];
         }
 
-        \Utopia\CLI\Console::error('MQTT_SUB_DBG prefix=' . $connection->prefix
+        \Utopia\Console::error('MQTT_SUB_DBG prefix=' . $connection->prefix
             . ' uid=' . ($identity['userId'] ?? '(none)')
             . ' roles=' . \json_encode($roles)
             . ' filters=' . \json_encode(\array_map(fn ($f) => [$f->topic, $f->qos], $subscribe->filters()))
