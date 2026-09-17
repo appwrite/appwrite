@@ -889,6 +889,42 @@ return [
                 'question' => '',
                 'filter' => ''
             ],
+            [
+                'name' => '_APP_WHATSAPP_APP_SECRET',
+                'description' => "App secret of the Meta app behind `_APP_WHATSAPP_PROVIDER`, used to verify the signature on delivery status webhooks.\n\nWithout it the webhook endpoint is disabled, and a WhatsApp OTP that Meta accepts but cannot deliver is never retried over SMS. Point the app's webhook at 'https://[YOUR_DOMAIN]/v1/messaging/whatsapp/events' and use `_APP_WHATSAPP_WEBHOOK_TOKEN` as the verify token.",
+                'introduction' => '2.2.1',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => 'password'
+            ],
+            [
+                'name' => '_APP_WHATSAPP_WEBHOOK_TOKEN',
+                'description' => "Verify token Meta echoes when it first subscribes to the webhook endpoint. Choose any secret string and enter the same value in the Meta app dashboard.",
+                'introduction' => '2.2.1',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => 'password'
+            ],
+            [
+                'name' => '_APP_WHATSAPP_DENIED_CALLING_CODES',
+                'description' => "Comma separated calling codes that never receive a WhatsApp OTP, because Meta refuses authentication templates addressed to them. Defaults to '91', which Meta rejects for every business.",
+                'introduction' => '2.2.1',
+                'default' => '91',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_WHATSAPP_PROVIDER',
+                'description' => "Provider used for delivering WhatsApp messages for Phone authentication. Use the following format: 'sms://[PHONE_NUMBER_ID]:[ACCESS_TOKEN]@whatsapp?template=[TEMPLATE_NAME]&language=[LANGUAGE]'.\n\nEnsure `[PHONE_NUMBER_ID]` and `[ACCESS_TOKEN]` are URL encoded if they contain any non-alphanumeric characters. `[TEMPLATE_NAME]` is an approved WhatsApp authentication template and `language` defaults to 'en_US'.",
+                'introduction' => '2.2.1',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
         ],
     ],
     [

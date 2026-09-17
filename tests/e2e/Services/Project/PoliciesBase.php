@@ -25,6 +25,7 @@ trait PoliciesBase
             'user-limit' => ['total'],
             'membership-privacy' => ['userId', 'userEmail', 'userPhone', 'userName', 'userMFA', 'userAccessedAt'],
             'mfa-factors' => ['totp', 'email', 'phone', 'custom'],
+            'phone-otp-channel' => ['channel'],
         ];
     }
 
@@ -1357,6 +1358,55 @@ trait PoliciesBase
     }
 
     // =========================================================================
+    // Phone OTP Channel Policy
+    // =========================================================================
+
+    public function testUpdatePhoneOtpChannelPolicy(): void
+    {
+        foreach ([PHONE_OTP_CHANNEL_WHATSAPP, PHONE_OTP_CHANNEL_WHATSAPP_SMS, PHONE_OTP_CHANNEL_SMS] as $channel) {
+            $response = $this->updatePhoneOtpChannelPolicy($channel);
+
+            $this->assertSame(200, $response['headers']['status-code']);
+            $this->assertNotEmpty($response['body']['$id']);
+
+            $policy = $this->getPolicy('phone-otp-channel');
+            $this->assertSame(200, $policy['headers']['status-code']);
+            $this->assertSame('phone-otp-channel', $policy['body']['$id']);
+            $this->assertSame($channel, $policy['body']['channel']);
+
+            $list = $this->listPolicies();
+            $this->assertSame(200, $list['headers']['status-code']);
+            $listed = array_values(array_filter($list['body']['policies'], fn (array $item) => $item['$id'] === 'phone-otp-channel'));
+            $this->assertCount(1, $listed);
+            $this->assertSame($policy['body'], $listed[0]);
+        }
+    }
+
+    public function testUpdatePhoneOtpChannelPolicyInvalidChannel(): void
+    {
+        $response = $this->updatePhoneOtpChannelPolicy('carrier-pigeon');
+
+        $this->assertSame(400, $response['headers']['status-code']);
+
+        $policy = $this->getPolicy('phone-otp-channel');
+        $this->assertSame(PHONE_OTP_CHANNEL_SMS, $policy['body']['channel']);
+    }
+
+    public function testUpdatePhoneOtpChannelPolicyMissingParam(): void
+    {
+        $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/phone-otp-channel', $this->buildHeaders(), []);
+
+        $this->assertSame(400, $response['headers']['status-code']);
+    }
+
+    public function testUpdatePhoneOtpChannelPolicyWithoutAuth(): void
+    {
+        $response = $this->updatePhoneOtpChannelPolicy(PHONE_OTP_CHANNEL_WHATSAPP, false);
+
+        $this->assertSame(401, $response['headers']['status-code']);
+    }
+
+    // =========================================================================
     // Helpers
     // =========================================================================
 
@@ -1504,5 +1554,12 @@ trait PoliciesBase
     protected function updateMembershipPrivacyPolicy(array $params, bool $authenticated = true): mixed
     {
         return $this->client->call(Client::METHOD_PATCH, '/project/policies/membership-privacy', $this->buildHeaders($authenticated), $params);
+    }
+
+    protected function updatePhoneOtpChannelPolicy(string $channel, bool $authenticated = true): mixed
+    {
+        return $this->client->call(Client::METHOD_PATCH, '/project/policies/phone-otp-channel', $this->buildHeaders($authenticated), [
+            'channel' => $channel,
+        ]);
     }
 }

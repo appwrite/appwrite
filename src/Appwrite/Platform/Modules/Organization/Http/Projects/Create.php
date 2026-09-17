@@ -102,6 +102,7 @@ class Create extends Action
             'corporateEmails' => false,
             'mockNumbers' => [],
             'sessionAlerts' => false,
+            'phoneOtpChannel' => PHONE_OTP_CHANNEL_SMS,
             'membershipsUserName' => false,
             'membershipsUserEmail' => false,
             'membershipsMfa' => false,

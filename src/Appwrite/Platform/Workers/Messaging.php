@@ -4,41 +4,32 @@ namespace Appwrite\Platform\Workers;
 
 use Appwrite\Event\Message\Usage;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
+use Appwrite\Messaging\Provider;
 use Appwrite\Messaging\Status as MessageStatus;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Usage\Context as UsageContext;
+use Utopia\Cache\Cache;
 use Utopia\Compression\Algorithms\GZIP;
 use Utopia\Compression\Algorithms\Zstd;
 use Utopia\Compression\Compression;
 use Utopia\Config\Config;
+use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
-use Utopia\DSN\DSN;
 use Utopia\Lock\Semaphore;
 use Utopia\Messaging\Adapter\Email as EmailAdapter;
 use Utopia\Messaging\Adapter\Email\Mailgun;
-use Utopia\Messaging\Adapter\Email\Resend;
 use Utopia\Messaging\Adapter\Email\Sendgrid;
-use Utopia\Messaging\Adapter\Email\SES;
 use Utopia\Messaging\Adapter\Email\SMTP;
-use Utopia\Messaging\Adapter\Push\APNS;
 use Utopia\Messaging\Adapter\Push as PushAdapter;
-use Utopia\Messaging\Adapter\Push\FCM;
 use Utopia\Messaging\Adapter\SMS as SMSAdapter;
-use Utopia\Messaging\Adapter\SMS\Fast2SMS;
-use Utopia\Messaging\Adapter\SMS\GEOSMS;
 use Utopia\Messaging\Adapter\SMS\GEOSMS\CallingCode;
-use Utopia\Messaging\Adapter\SMS\Inforu;
-use Utopia\Messaging\Adapter\SMS\Mock;
-use Utopia\Messaging\Adapter\SMS\Msg91;
 use Utopia\Messaging\Adapter\SMS\Msg91\MetadataParameter;
-use Utopia\Messaging\Adapter\SMS\Telesign;
-use Utopia\Messaging\Adapter\SMS\TextMagic;
-use Utopia\Messaging\Adapter\SMS\Twilio;
-use Utopia\Messaging\Adapter\SMS\Vonage;
+use Utopia\Messaging\Adapter\SMS\WhatsApp;
+use Utopia\Messaging\Adapter\SMS\WhatsApp\MetadataParameter as WhatsAppMetadataParameter;
 use Utopia\Messaging\Messages\Email;
 use Utopia\Messaging\Messages\Email\Attachment;
 use Utopia\Messaging\Messages\Push;
@@ -58,9 +49,7 @@ use function Swoole\Coroutine\batch;
 
 class Messaging extends Action
 {
-    private ?SMSAdapter $adapter = null;
-
-    private Telemetry $telemetry;
+    private Provider $provider;
 
     public static function getName(): string
     {
@@ -80,6 +69,9 @@ class Messaging extends Action
             ->inject('deviceForFiles')
             ->inject('publisherForUsage')
             ->inject('telemetry')
+            ->inject('adapterForSMS')
+            ->inject('adapterForWhatsApp')
+            ->inject('cache')
             ->callback($this->action(...));
     }
 
@@ -90,6 +82,9 @@ class Messaging extends Action
      * @param Device $deviceForFiles
      * @param UsagePublisher $publisherForUsage
      * @param Telemetry $telemetry
+     * @param SMSAdapter|null $adapterForSMS
+     * @param SMSAdapter|null $adapterForWhatsApp
+     * @param Cache $cache
      * @return void
      * @throws \Exception
      */
@@ -99,9 +94,12 @@ class Messaging extends Action
         Database $dbForProject,
         Device $deviceForFiles,
         UsagePublisher $publisherForUsage,
-        Telemetry $telemetry
+        Telemetry $telemetry,
+        ?SMSAdapter $adapterForSMS,
+        ?SMSAdapter $adapterForWhatsApp,
+        Cache $cache
     ): void {
-        $this->telemetry = $telemetry;
+        $this->provider = new Provider($telemetry);
         $payload = $message->getPayload();
 
         if (empty($payload)) {
@@ -117,7 +115,17 @@ class Messaging extends Action
                 $message = new Document($payload['message'] ?? []);
                 $recipients = $payload['recipients'] ?? [];
 
-                $this->sendInternalSMSMessage($message, $project, $recipients);
+                $this->sendInternalMessage(
+                    $message,
+                    $project,
+                    $recipients,
+                    $publisherForUsage,
+                    $adapterForSMS,
+                    $adapterForWhatsApp,
+                    $cache,
+                    $payload['channel'] ?? null,
+                    (bool)($payload['fallback'] ?? false)
+                );
                 break;
             case MESSAGE_SEND_TYPE_EXTERNAL:
                 $messageId = $payload['messageId'];
@@ -247,9 +255,9 @@ class Messaging extends Action
                 $resolvedProviderType = $provider->getAttribute('type');
 
                 $adapter = match ($resolvedProviderType) {
-                    MESSAGE_TYPE_SMS => $this->getSmsAdapter($provider),
-                    MESSAGE_TYPE_PUSH => $this->getPushAdapter($provider),
-                    MESSAGE_TYPE_EMAIL => $this->getEmailAdapter($provider),
+                    MESSAGE_TYPE_SMS => $this->provider->sms($provider),
+                    MESSAGE_TYPE_PUSH => $this->provider->push($provider),
+                    MESSAGE_TYPE_EMAIL => $this->provider->email($provider),
                     default => throw new \Exception('Provider with the requested ID is of the incorrect type')
                 };
 
@@ -812,13 +820,26 @@ class Messaging extends Action
         return $data;
     }
 
-    private function sendInternalSMSMessage(Document $message, Document $project, array $recipients): void
-    {
-        if ($this->adapter === null) {
-            $this->adapter = $this->createInternalSMSAdapter();
-        }
+    /**
+     * Deliver an internal message (OTP or invite) over the requested channel. A missing channel means SMS.
+     *
+     * @param array<string> $recipients
+     * @throws \Exception
+     */
+    private function sendInternalMessage(
+        Document $message,
+        Document $project,
+        array $recipients,
+        UsagePublisher $publisherForUsage,
+        ?SMSAdapter $adapterForSMS,
+        ?SMSAdapter $adapterForWhatsApp,
+        Cache $cache,
+        ?string $channel = null,
+        bool $fallback = false
+    ): void {
+        $whatsapp = \in_array($channel, [PHONE_OTP_CHANNEL_WHATSAPP, PHONE_OTP_CHANNEL_WHATSAPP_SMS], true);
 
-        if ($this->adapter === null) {
+        if (!$whatsapp && $adapterForSMS === null) {
             throw new \Exception('SMS adapter is not set.');
         }
 
@@ -836,136 +857,150 @@ class Messaging extends Action
         $from = System::getEnv('_APP_SMS_FROM', '');
         Span::add('message.from', $from);
 
-        Span::add('message.country_code', CallingCode::fromPhoneNumber($recipients[0] ?? '') ?? 'unknown');
+        $countryCode = CallingCode::fromPhoneNumber($recipients[0] ?? '');
+        Span::add('message.country_code', $countryCode ?? 'unknown');
 
-        $sms = new SMS(
-            $recipients,
-            $message->getAttribute('data')['content'],
-            $from
-        );
-        $sms->setOrigin(MESSAGE_SEND_TYPE_INTERNAL);
+        $data = $message->getAttribute('data');
 
-        // Attach the project ID so the SMS provider's delivery logs and
-        // webhooks can be attributed back to the originating project.
-        $sms->setMetadata([MetadataParameter::UUID->value => $project->getId()]);
+        if (!$whatsapp) {
+            $sms = new SMS($recipients, $data['content'], $from);
+            $sms->setOrigin(MESSAGE_SEND_TYPE_INTERNAL);
 
-        $this->adapter->send($sms);
-    }
+            // Attach the project ID so the provider's delivery logs can be attributed back to the project.
+            $sms->setMetadata([MetadataParameter::UUID->value => $project->getId()]);
 
+            $adapterForSMS->send($sms);
 
-    protected function getSmsAdapter(Document $provider): ?SMSAdapter
-    {
-        $credentials = $provider->getAttribute('credentials');
-
-        $adapter = match ($provider->getAttribute('provider')) {
-            'mock' => (new Mock('username', 'password'))->setEndpoint('http://request-catcher-sms:5000/'),
-            'twilio' => new Twilio(
-                $credentials['accountSid'] ?? '',
-                $credentials['authToken'] ?? '',
-                null,
-                $credentials['messagingServiceSid'] ?? null
-            ),
-            'textmagic' => new TextMagic(
-                $credentials['username'] ?? '',
-                $credentials['apiKey'] ?? ''
-            ),
-            'telesign' => new Telesign(
-                $credentials['customerId'] ?? '',
-                $credentials['apiKey'] ?? ''
-            ),
-            'msg91' => new Msg91(
-                $credentials['senderId'] ?? '',
-                $credentials['authKey'] ?? '',
-                $credentials['templateId'] ?? ''
-            ),
-            'vonage' => new Vonage(
-                $credentials['apiKey'] ?? '',
-                $credentials['apiSecret'] ??  ''
-            ),
-            'fast2sms' => new Fast2SMS(
-                $credentials['apiKey'] ?? '',
-                $credentials['senderId'] ?? '',
-                $credentials['messageId'] ?? '',
-                $credentials['useDLT'] ?? true
-            ),
-            'inforu' => new Inforu(
-                $credentials['senderId'] ?? '',
-                $credentials['apiKey'] ?? '',
-            ),
-            default => null
-        };
-
-        if ($adapter !== null) {
-            $adapter->setTelemetry($this->telemetry);
+            return;
         }
 
-        return $adapter;
-    }
+        // WhatsApp authentication templates carry the bare code, never rendered copy.
+        $code = $data['code'] ?? $data['content'] ?? null;
+        $code = \is_string($code) ? $code : null;
 
-    protected function getPushAdapter(Document $provider): ?PushAdapter
-    {
-        $credentials = $provider->getAttribute('credentials');
-        $options = $provider->getAttribute('options');
+        // Adapter throws and failure results both end up in $errors so either can fall back.
+        try {
+            if ($adapterForWhatsApp === null) {
+                throw new \Exception('WhatsApp adapter is not set.');
+            }
 
-        $adapter = match ($provider->getAttribute('provider')) {
-            'mock' => new Mock('username', 'password'),
-            'apns' => new APNS(
-                $credentials['authKey'] ?? '',
-                $credentials['authKeyId'] ?? '',
-                $credentials['teamId'] ?? '',
-                $credentials['bundleId'] ?? '',
-                $options['sandbox'] ?? false
-            ),
-            'fcm' => new FCM(\json_encode($credentials['serviceAccountJSON'])),
-            default => null
-        };
+            $sms = new SMS($recipients, $code, $from);
+            $sms->setOrigin(MESSAGE_SEND_TYPE_INTERNAL);
 
-        if ($adapter !== null) {
-            $adapter->setTelemetry($this->telemetry);
+            // Callback data is the only attribution Meta echoes back.
+            $sms->setMetadata([WhatsAppMetadataParameter::CALLBACK_DATA->value => $project->getId() . ':' . $message->getId()]);
+
+            $errors = $this->getSendErrors($adapterForWhatsApp->send($sms));
+        } catch (\Throwable $error) {
+            $errors = [$error->getMessage()];
         }
 
-        return $adapter;
-    }
+        if ($errors === []) {
+            // The controller books auth.method.phone for every OTP; this records which of them WhatsApp carried, so Cloud can price the channels apart.
+            $usage = new UsageContext();
+            $usage->addMetric(METRIC_AUTH_METHOD_PHONE_WHATSAPP, 1);
 
-    protected function getEmailAdapter(Document $provider): ?EmailAdapter
-    {
-        $credentials = $provider->getAttribute('credentials', []);
-        $options = $provider->getAttribute('options', []);
-        $apiKey = $credentials['apiKey'] ?? '';
+            if (!empty($countryCode)) {
+                $usage->addMetric(\str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_WHATSAPP_COUNTRY_CODE), 1);
+            }
 
-        $adapter = match ($provider->getAttribute('provider')) {
-            'mock' => new Mock('username', 'password'),
-            'smtp' => new SMTP(
-                $credentials['host'] ??  '',
-                $credentials['port'] ?? 25,
-                $credentials['username'] ?? '',
-                $credentials['password'] ?? '',
-                $options['encryption'] ?? '',
-                $options['autoTLS'] ??  false,
-                $options['mailer'] ??  '',
-            ),
-            'mailgun' => new Mailgun(
-                $apiKey,
-                $credentials['domain'] ?? '',
-                $credentials['isEuRegion'] ?? false
-            ),
-            'sendgrid' => new Sendgrid($apiKey),
-            'resend' => new Resend($apiKey),
-            'ses' => new SES(
-                $credentials['accessKey'] ?? '',
-                $credentials['secretKey'] ?? '',
-                $credentials['region'] ?? '',
-                $credentials['sessionToken'] ?? null,
-            ),
-            default => null
-        };
+            $publisherForUsage->enqueue(new Usage(
+                project: $project,
+                metrics: $usage->getMetrics(),
+            ));
 
-        if ($adapter !== null) {
-            $adapter->setTelemetry($this->telemetry);
+            // Meta accepted the message, which is not the same as delivering it: an unreachable
+            // recipient is reported minutes later on the status webhook, long after this job is
+            // gone. Leave that handler the SMS to send, for as long as the code stays redeemable.
+            if ($fallback) {
+                $cache->save(
+                    PHONE_OTP_WHATSAPP_FALLBACK_KEY . ':' . $project->getId() . ':' . $message->getId(),
+                    [
+                        'message' => $message->getArrayCopy(),
+                        'recipients' => $recipients,
+                    ],
+                    ttl: TOKEN_EXPIRATION_OTP,
+                );
+            }
+
+            return;
         }
 
-        return $adapter;
+        $reason = \implode(', ', \array_map(fn (string $error): string => $this->redactPasscode($error, $code), $errors));
+
+        Span::add('message.error', $reason);
+
+        if (!$fallback) {
+            // Re-throwing would re-send the WhatsApp message on retry, so only log.
+            Console::error('WhatsApp OTP delivery failed for project ' . $project->getId() . ' with no SMS fallback configured: ' . $reason);
+            return;
+        }
+
+        // The fallback absorbs its own failures for the same reason.
+        try {
+            if ($adapterForSMS === null) {
+                Span::add('message.fallback', 'sms_provider_not_configured');
+                Console::error('WhatsApp OTP delivery failed for project ' . $project->getId() . ' and no SMS provider is configured to fall back to: ' . $reason);
+                return;
+            }
+
+            $sms = new SMS($recipients, $data['content'], $from);
+            $sms->setOrigin(MESSAGE_SEND_TYPE_INTERNAL);
+            $sms->setMetadata([MetadataParameter::UUID->value => $project->getId()]);
+
+            $fallbackErrors = $this->getSendErrors($adapterForSMS->send($sms));
+        } catch (\Throwable $error) {
+            $fallbackErrors = [$error->getMessage()];
+        }
+
+        if ($fallbackErrors !== []) {
+            $fallbackReason = \implode(', ', \array_map(fn (string $error): string => $this->redactPasscode($error, $code), $fallbackErrors));
+
+            Span::add('message.fallback_error', $fallbackReason);
+            Console::error('WhatsApp OTP delivery failed for project ' . $project->getId() . ' and the SMS fallback failed too: ' . $reason . ' | fallback: ' . $fallbackReason);
+        }
     }
+
+    /**
+     * Scrub the passcode out of a provider error before it reaches a span or the log,
+     * since a template rejection can quote the rejected parameter.
+     */
+    private function redactPasscode(string $error, ?string $code): string
+    {
+        if ($code === null || $code === '') {
+            return $error;
+        }
+
+        return \str_replace($code, '[redacted]', $error);
+    }
+
+    /**
+     * Collect the error of every recipient the provider failed to deliver to.
+     *
+     * @param array<mixed> $response
+     * @return array<string>
+     */
+    private function getSendErrors(array $response): array
+    {
+        $errors = [];
+        $results = $response['results'] ?? [];
+
+        if (!\is_array($results)) {
+            return $errors;
+        }
+
+        foreach ($results as $result) {
+            if (!\is_array($result) || ($result['status'] ?? '') !== 'failure') {
+                continue;
+            }
+
+            $error = $result['error'] ?? '';
+            $errors[] = \is_string($error) && $error !== '' ? $error : 'Unknown error';
+        }
+
+        return $errors;
+    }
+
 
     /**
      * Materialise a message's attachments as files the adapters can read.
@@ -1199,128 +1234,5 @@ class Messaging extends Action
         return new Local(APP_STORAGE_UPLOADS . '/app-' . $project->getId());
     }
 
-    private function createInternalSMSAdapter(): ?SMSAdapter
-    {
-        if (empty(System::getEnv('_APP_SMS_PROVIDER')) || empty(System::getEnv('_APP_SMS_FROM'))) {
-            return null;
-        }
 
-        $providers = System::getEnv('_APP_SMS_PROVIDER', '');
-
-        $dsns = [];
-        if (!empty($providers)) {
-            $providers = explode(',', $providers);
-            foreach ($providers as $provider) {
-                $dsns[] = new DSN($provider);
-            }
-        }
-
-        if (count($dsns) === 1) {
-            $provider = $this->createProviderFromDSN($dsns[0]);
-            $adapter = $this->getSmsAdapter($provider);
-            return $adapter;
-        }
-
-        $defaultDSN = null;
-        $localDSNs = [];
-
-        /** @var DSN $dsn */
-        foreach ($dsns as $dsn) {
-            if ($dsn->getParam('local', '') === 'default') {
-                $defaultDSN = $dsn;
-            } else {
-                $localDSNs[] = $dsn;
-            }
-        }
-
-        if ($defaultDSN === null) {
-            throw new \Exception('No default SMS provider found');
-        }
-
-        $defaultProvider = $this->createProviderFromDSN($defaultDSN);
-        $adapter = $this->getSmsAdapter($defaultProvider);
-        $geosms = new GEOSMS($adapter);
-        $geosms->setTelemetry($this->telemetry);
-
-        /** @var DSN $localDSN */
-        foreach ($localDSNs as $localDSN) {
-            try {
-                $provider = $this->createProviderFromDSN($localDSN);
-                $adapter = $this->getSmsAdapter($provider);
-            } catch (\Exception) {
-                continue;
-            }
-
-            $callingCode = $localDSN->getParam('local', '');
-            if (empty($callingCode)) {
-                continue;
-            }
-
-            $geosms->setLocal($callingCode, $adapter);
-        }
-        return $geosms;
-    }
-
-    private function createProviderFromDSN(DSN $dsn): Document
-    {
-        $host = $dsn->getHost();
-        $password = $dsn->getPassword();
-        $user = $dsn->getUser();
-        $from = System::getEnv('_APP_SMS_FROM');
-
-        $provider = new Document([
-            '$id' => ID::unique(),
-            'provider' => $host,
-            'type' => MESSAGE_TYPE_SMS,
-            'name' => 'Internal SMS',
-            'enabled' => true,
-            'credentials' => match ($host) {
-                'twilio' => [
-                    'accountSid' => $user,
-                    'authToken' => $password,
-                    // Messaging Service SIDs are always 34 characters; alphanumeric sender IDs, at most 11, can also start with MG
-                    // https://www.twilio.com/docs/messaging/api/service-resource
-                    'messagingServiceSid' => \str_starts_with($from, 'MG') && \strlen($from) === 34 ? $from : null
-                ],
-                'textmagic' => [
-                    'username' => $user,
-                    'apiKey' => $password
-                ],
-                'telesign' => [
-                    'customerId' => $user,
-                    'apiKey' => $password
-                ],
-                'msg91' => [
-                    'senderId' => $user,
-                    'authKey' => $password,
-                    'templateId' => $dsn->getParam('templateId', $from),
-                ],
-                'vonage' => [
-                    'apiKey' => $user,
-                    'apiSecret' => $password
-                ],
-                'fast2sms' => [
-                    'senderId' => $user,
-                    'apiKey' => $password,
-                    'messageId' => $dsn->getParam('messageId'),
-                    'useDLT' => $dsn->getParam('useDLT'),
-                ],
-                'inforu' => [
-                    'senderId' => $user,
-                    'apiKey' => $password,
-                ],
-                default => null
-            },
-            'options' => match ($host) {
-                'twilio' => [
-                    'from' => \str_starts_with($from, 'MG') && \strlen($from) === 34 ? null : $from
-                ],
-                default => [
-                    'from' => $from
-                ]
-            }
-        ]);
-
-        return $provider;
-    }
 }

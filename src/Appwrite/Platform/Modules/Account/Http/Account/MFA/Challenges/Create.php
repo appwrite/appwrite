@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Account\Http\Account\MFA\Challenges;
 
 use Appwrite\Auth\MFA\Type;
+use Appwrite\Auth\PhoneOTPChannel;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Mail as MailMessage;
@@ -22,6 +23,7 @@ use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Auth\Proofs\Code as ProofsCode;
 use Utopia\Auth\Proofs\Token as ProofsToken;
+use Utopia\Cache\Cache;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -109,6 +111,7 @@ class Create extends Action
             ->inject('plan')
             ->inject('proofForToken')
             ->inject('proofForCode')
+            ->inject('cache')
             ->callback($this->action(...));
     }
 
@@ -127,7 +130,8 @@ class Create extends Action
         Context $usage,
         array $plan,
         ProofsToken $proofForToken,
-        ProofsCode $proofForCode
+        ProofsCode $proofForCode,
+        Cache $cache
     ): void {
         $mfaFactors = $project->getAttribute('auths', [])['mfaFactors'] ?? [];
         $factorEnabled = match ($factor) {
@@ -171,7 +175,26 @@ class Create extends Action
 
         switch ($factor) {
             case Type::PHONE:
-                if (empty(System::getEnv('_APP_SMS_PROVIDER'))) {
+                $policy = $project->getAttribute('auths', [])['phoneOtpChannel'] ?? PHONE_OTP_CHANNEL_SMS;
+                $smsConfigured = PhoneOTPChannel::isSmsConfigured(
+                    !empty(System::getEnv('_APP_SMS_PROVIDER')),
+                    !empty(System::getEnv('_APP_SMS_FROM')),
+                );
+                $whatsappConfigured = !empty(System::getEnv('_APP_WHATSAPP_PROVIDER'));
+                $phone = $user->getAttribute('phone', '');
+                $whatsappDeliverable = $phone !== '' && PhoneOTPChannel::isDeliverableOverWhatsApp(
+                    $phone,
+                    System::getEnv('_APP_WHATSAPP_DENIED_CALLING_CODES', PHONE_OTP_WHATSAPP_DENIED_CALLING_CODES),
+                    $cache,
+                );
+                $resolved = PhoneOTPChannel::resolve($policy, null, $smsConfigured, $whatsappConfigured, $whatsappDeliverable);
+
+                if ($resolved === null) {
+                    // A provider is configured, just not for the channel the policy resolved to.
+                    if ($smsConfigured || $whatsappConfigured) {
+                        throw new Exception(Exception::PROJECT_PHONE_OTP_CHANNEL_UNAVAILABLE, 'No provider is configured for the channel the phone OTP channel policy "' . $policy . '" resolved to');
+                    }
+
                     throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
                 }
                 if (empty($user->getAttribute('phone'))) {
@@ -199,11 +222,14 @@ class Create extends Action
                     message: new Document([
                         '$id' => $challenge->getId(),
                         'data' => [
-                            'content' => $code,
+                            'content' => $message,
+                            'code' => $code,
                         ],
                     ]),
                     recipients: [$phone],
                     providerType: MESSAGE_TYPE_SMS,
+                    channel: $resolved->channel,
+                    fallback: $resolved->fallback,
                 ));
 
                 $countryCode = CallingCode::fromPhoneNumber($phone);

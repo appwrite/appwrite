@@ -13,6 +13,7 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
+use Utopia\System\System;
 
 use function sleep;
 
@@ -412,6 +413,14 @@ final class AccountCustomClientTest extends Scope
     }
 
     /**
+     * Unique across parallel runs: microtime, PID and a random suffix.
+     */
+    private function uniquePhoneNumber(): string
+    {
+        return '+1' . \substr(\str_replace('.', '', (string) \microtime(true)) . \getmypid() . \random_int(100, 999), -9);
+    }
+
+    /**
      * Helper to set up phone account
      */
     protected function setupPhoneAccount(): array
@@ -426,9 +435,7 @@ final class AccountCustomClientTest extends Scope
         // Ensure phone auth is enabled (may have been disabled by testPhoneVerification in parallel)
         $this->ensurePhoneAuthEnabled();
 
-        // Use a truly unique phone number for parallel test safety
-        // Combine microtime, PID, and random digits to avoid collisions across parallel processes
-        $number = '+1' . substr(str_replace('.', '', (string) microtime(true)) . getmypid() . random_int(100, 999), -9);
+        $number = $this->uniquePhoneNumber();
 
         $response = $this->client->call(Client::METHOD_POST, '/account/tokens/phone', array_merge([
             'origin' => 'http://localhost',
@@ -3992,6 +3999,231 @@ final class AccountCustomClientTest extends Scope
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
+    }
+
+    public function testCreatePhoneTokenOverWhatsapp(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $number = $this->uniquePhoneNumber();
+
+        $this->ensurePhoneAuthEnabled();
+
+        /**
+         * Test for SUCCESS
+         */
+        try {
+            $response = $this->updatePhoneOtpChannel(PHONE_OTP_CHANNEL_WHATSAPP);
+
+            $this->assertSame(200, $response['headers']['status-code']);
+
+            $response = $this->client->call(Client::METHOD_POST, '/account/tokens/phone', [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+            ], [
+                'userId' => ID::unique(),
+                'phone' => $number,
+            ]);
+
+            $this->assertSame(201, $response['headers']['status-code']);
+            $this->assertNotEmpty($response['body']['$id']);
+            $this->assertEmpty($response['body']['secret']);
+
+            $whatsappRequest = $this->getLastRequestForProject(
+                $projectId,
+                Scope::REQUEST_TYPE_SMS,
+                [
+                    'header_X-Username' => 'whatsapp',
+                    'method' => 'POST',
+                ],
+                probe: function (array $request) use ($number): void {
+                    $this->assertSame($number, $request['data']['to'] ?? null);
+                }
+            );
+
+            $this->assertNotEmpty($whatsappRequest, 'WhatsApp request not found for phone number: ' . $number);
+
+            // WhatsApp authentication templates take the bare passcode, never the rendered SMS copy.
+            $sent = $whatsappRequest['data']['message'] ?? '';
+
+            $this->assertSame(6, \strlen($sent));
+            $this->assertTrue(\ctype_digit($sent));
+        } finally {
+            // Restore the default channel even when the assertions above fail,
+            // so a parallel suite sharing this project is not left on WhatsApp.
+            $this->updatePhoneOtpChannel(PHONE_OTP_CHANNEL_SMS);
+        }
+    }
+
+    public function testUndeliverableWhatsappOtpFallsBackToSms(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $number = $this->uniquePhoneNumber();
+
+        $this->ensurePhoneAuthEnabled();
+
+        try {
+            $this->assertSame(200, $this->updatePhoneOtpChannel(PHONE_OTP_CHANNEL_WHATSAPP_SMS)['headers']['status-code']);
+
+            $response = $this->client->call(Client::METHOD_POST, '/account/tokens/phone', [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+            ], [
+                'userId' => ID::unique(),
+                'phone' => $number,
+            ]);
+
+            $this->assertSame(201, $response['headers']['status-code']);
+
+            $tokenId = $response['body']['$id'];
+
+            $whatsapp = $this->getLastRequestForProject(
+                $projectId,
+                Scope::REQUEST_TYPE_SMS,
+                ['header_X-Username' => 'whatsapp', 'method' => 'POST'],
+                probe: function (array $request) use ($number): void {
+                    $this->assertSame($number, $request['data']['to'] ?? null);
+                }
+            );
+
+            $code = $whatsapp['data']['message'] ?? '';
+            $this->assertSame(6, \strlen($code));
+
+            // Meta accepted the message and only now reports that it never arrived. Everything
+            // the fallback needs is the callback data planted on the send.
+            $status = $this->whatsappStatus($projectId . ':' . $tokenId, $number, 'wamid.' . $tokenId);
+
+            $this->assertSame(204, $status['headers']['status-code']);
+
+            $sms = $this->getLastRequestForProject(
+                $projectId,
+                Scope::REQUEST_TYPE_SMS,
+                ['header_X-Username' => 'username', 'method' => 'POST'],
+                probe: function (array $request) use ($number): void {
+                    $this->assertSame($number, $request['data']['to'] ?? null);
+                }
+            );
+
+            // The recipient gets the code they were always going to get, over the other channel.
+            $this->assertNotEmpty($sms, 'No SMS fallback for phone number: ' . $number);
+            $this->assertStringContainsString($code, (string) ($sms['data']['message'] ?? ''));
+        } finally {
+            $this->updatePhoneOtpChannel(PHONE_OTP_CHANNEL_SMS);
+        }
+    }
+
+    public function testWhatsappStatusWithoutAValidSignatureIsRefused(): void
+    {
+        $response = $this->client->call(Client::METHOD_POST, '/messaging/whatsapp/events', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-hub-signature-256' => 'sha256=' . \str_repeat('0', 64),
+        ], ['object' => 'whatsapp_business_account'], false);
+
+        $this->assertSame(401, $response['headers']['status-code']);
+    }
+
+    public function testWhatsappWebhookEchoesMetaVerificationChallenge(): void
+    {
+        $token = System::getEnv('_APP_WHATSAPP_WEBHOOK_TOKEN', '');
+
+        if (empty($token)) {
+            $this->markTestSkipped('_APP_WHATSAPP_WEBHOOK_TOKEN is not configured');
+        }
+
+        $response = $this->client->call(Client::METHOD_GET, '/messaging/whatsapp/events', [
+            'origin' => 'http://localhost',
+        ], [
+            'hub.mode' => 'subscribe',
+            'hub.verify_token' => $token,
+            'hub.challenge' => '31415',
+        ], false);
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame('31415', \trim((string) $response['body']));
+
+        $response = $this->client->call(Client::METHOD_GET, '/messaging/whatsapp/events', [
+            'origin' => 'http://localhost',
+        ], [
+            'hub.mode' => 'subscribe',
+            'hub.verify_token' => 'not-the-token',
+            'hub.challenge' => '31415',
+        ], false);
+
+        $this->assertSame(401, $response['headers']['status-code']);
+    }
+
+    /**
+     * Post a failed delivery status shaped like Meta's, signed the way Meta signs it.
+     */
+    private function whatsappStatus(string $callbackData, string $recipient, string $messageId): array
+    {
+        $body = \json_encode([
+            'object' => 'whatsapp_business_account',
+            'entry' => [[
+                'id' => 'WABA',
+                'changes' => [[
+                    'field' => 'messages',
+                    'value' => [
+                        'messaging_product' => 'whatsapp',
+                        'statuses' => [[
+                            'id' => $messageId,
+                            'status' => 'failed',
+                            'recipient_id' => $recipient,
+                            'biz_opaque_callback_data' => $callbackData,
+                            'errors' => [['code' => PHONE_OTP_WHATSAPP_UNDELIVERABLE_CODE, 'title' => 'Message undeliverable.']],
+                        ]],
+                    ],
+                ]],
+            ]],
+        ]);
+
+        $signature = 'sha256=' . \hash_hmac('sha256', $body, System::getEnv('_APP_WHATSAPP_APP_SECRET', ''));
+
+        return $this->client->call(Client::METHOD_POST, '/messaging/whatsapp/events', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-hub-signature-256' => $signature,
+        ], \json_decode($body, true), false);
+    }
+
+    public function testCreatePhoneTokenRejectsChannelOutsidePolicy(): void
+    {
+        $projectId = $this->getProject()['$id'];
+
+        $this->ensurePhoneAuthEnabled();
+
+        $response = $this->updatePhoneOtpChannel(PHONE_OTP_CHANNEL_SMS);
+
+        $this->assertSame(200, $response['headers']['status-code']);
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/account/tokens/phone', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'userId' => ID::unique(),
+            'phone' => $this->uniquePhoneNumber(),
+            'channel' => PHONE_OTP_CHANNEL_WHATSAPP,
+        ]);
+
+        $this->assertSame(400, $response['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $response['body']['type']);
+    }
+
+    private function updatePhoneOtpChannel(string $channel): array
+    {
+        return $this->client->call(Client::METHOD_PATCH, '/project/policies/phone-otp-channel', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'channel' => $channel,
+        ]);
     }
 
     public function testCreateSessionWithPhone(): void

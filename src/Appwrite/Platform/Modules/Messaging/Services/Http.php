@@ -48,6 +48,8 @@ use Appwrite\Platform\Modules\Messaging\Http\Topics\Subscribers\Get as GetSubscr
 use Appwrite\Platform\Modules\Messaging\Http\Topics\Subscribers\XList as ListSubscribers;
 use Appwrite\Platform\Modules\Messaging\Http\Topics\Update as UpdateTopic;
 use Appwrite\Platform\Modules\Messaging\Http\Topics\XList as ListTopics;
+use Appwrite\Platform\Modules\Messaging\Http\WhatsApp\Events\Create as CreateWhatsAppEvent;
+use Appwrite\Platform\Modules\Messaging\Http\WhatsApp\Events\Get as GetWhatsAppEvent;
 use Utopia\Platform\Service;
 
 class Http extends Service
@@ -57,6 +59,8 @@ class Http extends Service
         $this->type = Service::TYPE_HTTP;
 
         // Providers
+        $this->addAction(CreateWhatsAppEvent::getName(), new CreateWhatsAppEvent());
+        $this->addAction(GetWhatsAppEvent::getName(), new GetWhatsAppEvent());
         $this->addAction(CreateMailgunProvider::getName(), new CreateMailgunProvider());
         $this->addAction(UpdateMailgunProvider::getName(), new UpdateMailgunProvider());
         $this->addAction(CreateSendgridProvider::getName(), new CreateSendgridProvider());
