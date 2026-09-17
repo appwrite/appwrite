@@ -1604,9 +1604,9 @@ services:
       - CLICKHOUSE_ALWAYS_RUN_INITDB_SCRIPTS=1
     configs:
       - source: clickhouse-logs.xml
-        target: /etc/clickhouse-server/config.d/appwrite-logs.xml
+        target: /etc/clickhouse-server/config.d/logs.xml
       - source: clickhouse-logs.sh
-        target: /docker-entrypoint-initdb.d/appwrite-logs.sh
+        target: /docker-entrypoint-initdb.d/logs.sh
     volumes:
       - appwrite-clickhouse:/var/lib/clickhouse:rw
     ulimits:
@@ -1874,42 +1874,33 @@ configs:
         <query_views_log><ttl>event_date + INTERVAL 7 DAY DELETE</ttl></query_views_log>
         <query_metric_log><ttl>event_date + INTERVAL 7 DAY DELETE</ttl></query_metric_log>
         <background_schedule_pool_log><ttl>event_date + INTERVAL 7 DAY DELETE</ttl></background_schedule_pool_log>
-        <asynchronous_insert_log><ttl>event_date + INTERVAL 7 DAY DELETE</ttl></asynchronous_insert_log>
         <error_log><ttl>event_date + INTERVAL 14 DAY DELETE</ttl></error_log>
       </clickhouse>
   clickhouse-logs.sh:
     content: |
       #!/bin/bash
-      # The entrypoint sources this file on fresh and existing volumes.
+      # The entrypoint sources this file, so a subshell keeps these options out of it.
       (
         set -euo pipefail
-        appwrite_log_query() {
-          clickhouse-client --host 127.0.0.1 --user "$$CLICKHOUSE_USER" --password "$$CLICKHOUSE_PASSWORD" --multiquery "$$@"
+
+        client() {
+          clickhouse-client --host 127.0.0.1 --user "$$CLICKHOUSE_USER" --password "$$CLICKHOUSE_PASSWORD" "$$@"
         }
 
-        # Materialize lazy logs and rotate tables whose schema changed first.
-        appwrite_log_query --query 'SYSTEM FLUSH LOGS'
-        appwrite_log_ttls="$$(appwrite_log_query <<'SQL'
-      SELECT concat(
-          'ALTER TABLE system.`', name, '` MODIFY TTL event_date + INTERVAL ',
-          toString(multiIf(
-              match(name, '^(text|trace)_log(_[0-9]+)?$$'), 3,
-              match(name, '^error_log(_[0-9]+)?$$'), 14,
-              7)),
-          ' DAY DELETE;')
-      FROM system.tables
-      WHERE database = 'system'
-          AND match(name, '^(text|trace|asynchronous_metric|metric|part|processors_profile|query|histogram_metric|query_views|query_metric|background_schedule_pool|asynchronous_insert|error)_log(_[0-9]+)?$$')
-          AND endsWith(engine, 'MergeTree')
-          AND position(create_table_query, ' TTL ') = 0
-          AND name IN (SELECT table FROM system.columns WHERE database = 'system' AND name = 'event_date' AND type = 'Date')
-      FORMAT TabSeparatedRaw
+        # Flushing replaces log tables whose definition changed, keeping each old table as <log>_<N>.
+        client --query 'SYSTEM FLUSH LOGS'
+
+        # Old tables never expire, so give each one the TTL of the log that replaced it.
+        client --format TSVRaw <<'SQL' | client --multiquery
+      SELECT concat('ALTER TABLE system.', retired.name, ' MODIFY TTL ', extract(active.engine_full, ' TTL (.+) SETTINGS '), ';')
+      FROM system.tables AS retired
+      INNER JOIN system.tables AS active ON active.name = replaceRegexpOne(retired.name, '_[0-9]+$$', '')
+      WHERE retired.database = 'system'
+          AND active.database = 'system'
+          AND match(retired.name, '_log_[0-9]+$$')
+          AND position(retired.engine_full, ' TTL ') = 0
+          AND position(active.engine_full, ' TTL ') > 0
       SQL
-        )"
-        # Retired *_N tables can lack TTL after an upgrade. Leave bounded logs alone.
-        if [ -n "$$appwrite_log_ttls" ]; then
-          printf '%s\n' "$$appwrite_log_ttls" | appwrite_log_query
-        fi
       )
 networks:
   gateway:
