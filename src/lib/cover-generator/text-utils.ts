@@ -83,6 +83,54 @@ export function wrapTextLines(
   return wrapped
 }
 
+/**
+ * Like {@link wrapTextLines}, but explicit line breaks (`\n`) in `text` start a
+ * new line. Each segment still wraps at `maxCharsPerLine`; the total never
+ * exceeds `maxLines` and the last line is ellipsized when text is cut.
+ */
+export function wrapTextLinesWithBreaks(
+  text: string,
+  maxCharsPerLine: number,
+  maxLines: number,
+): string[] {
+  if (maxLines <= 0) return []
+
+  const segments = text
+    .split(/\r?\n/u)
+    .map((segment) => segment.trim())
+    .filter(Boolean)
+  if (segments.length <= 1) {
+    return wrapTextLines(segments[0] ?? '', maxCharsPerLine, maxLines)
+  }
+
+  // `wrapTextLines` ellipsizes a segment it has to cut, so only whole segments
+  // that never fit need a trailing marker here.
+  const lines: string[] = []
+  let droppedSegment = false
+  for (const [index, segment] of segments.entries()) {
+    const remaining = maxLines - lines.length
+    if (remaining <= 0) {
+      droppedSegment = true
+      break
+    }
+    const isLastSegment = index === segments.length - 1
+    // Leave room for later segments so a long first line does not eat every slot.
+    const budget = isLastSegment
+      ? remaining
+      : Math.max(1, remaining - (segments.length - index - 1))
+    lines.push(...wrapTextLines(segment, maxCharsPerLine, budget))
+  }
+
+  if (droppedSegment && lines.length) {
+    const last = lines[lines.length - 1] ?? ''
+    if (!last.endsWith('...')) {
+      lines[lines.length - 1] = withLineEllipsis(last, maxCharsPerLine)
+    }
+  }
+
+  return lines
+}
+
 export function clampNumber(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value))
 }

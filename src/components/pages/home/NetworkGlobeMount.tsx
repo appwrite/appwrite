@@ -51,10 +51,10 @@ function NetworkGlobeLegend({ className }: { className?: string }) {
 }
 
 /**
- * Stable globe frame that never swaps placeholders. The WebGL canvas mounts once
- * the user scrolls past the hero fold, paints its first frame off-screen, then
- * appears over the matching backdrop when the network section is near. After
- * that it stays mounted and only pauses rendering when far off-screen.
+ * Stable globe frame that never swaps placeholders. The WebGL canvas mounts
+ * once the user scrolls past the hero fold, paints its first frame off-screen,
+ * then appears over the matching backdrop when the network section is near.
+ * After that it stays mounted and only pauses rendering when far off-screen.
  */
 export function NetworkGlobeMount({ className }: { className?: string }) {
   const containerRef = useRef<HTMLDivElement>(null)
@@ -71,22 +71,21 @@ export function NetworkGlobeMount({ className }: { className?: string }) {
   }, [])
 
   useEffect(() => {
-    if (!mounted || !passedHomeFold || shouldMountGlobe) return
+    if (!mounted) return
 
     let cancelled = false
     let idleId: number | undefined
     let timeoutId: number | undefined
 
-    const preloadGlobe = () => {
+    const prefetchGlobe = () => {
       if (cancelled) return
       void loadNetworkGlobe()
-      setShouldMountGlobe(true)
     }
 
     if ('requestIdleCallback' in window) {
-      idleId = window.requestIdleCallback(preloadGlobe, { timeout: 1500 })
+      idleId = window.requestIdleCallback(prefetchGlobe, { timeout: 2000 })
     } else {
-      timeoutId = window.setTimeout(preloadGlobe, 150)
+      timeoutId = window.setTimeout(prefetchGlobe, 400)
     }
 
     return () => {
@@ -94,7 +93,15 @@ export function NetworkGlobeMount({ className }: { className?: string }) {
       if (idleId !== undefined) window.cancelIdleCallback(idleId)
       if (timeoutId !== undefined) window.clearTimeout(timeoutId)
     }
-  }, [mounted, passedHomeFold, shouldMountGlobe])
+  }, [mounted])
+
+  useEffect(() => {
+    if (!mounted || shouldMountGlobe) return
+    if (!passedHomeFold && !isVisible) return
+
+    void loadNetworkGlobe()
+    setShouldMountGlobe(true)
+  }, [isVisible, mounted, passedHomeFold, shouldMountGlobe])
 
   // Paint the first frame even while off-screen; after that pause when far away.
   const globeActive = isVisible || !isReady

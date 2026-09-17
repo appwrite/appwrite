@@ -1,4 +1,8 @@
 import { useEffect, useState } from 'react'
+import {
+  BELOW_APP_HEADER_STICKY_MAX_HEIGHT_CLASS,
+  BELOW_APP_HEADER_STICKY_TOP_CLASS,
+} from '@/lib/layout/app-header-height'
 import { cn } from '@/lib/utils'
 import type { PolicySlug } from '@/lib/legal/policies'
 import { PolicyRelatedLinks } from './PolicyRelatedLinks'
@@ -55,7 +59,9 @@ export function PolicyToc({ items, currentPolicy, className }: PolicyTocProps) {
   return (
     <aside
       className={cn(
-        'sticky top-6 z-10 hidden max-h-[calc(100dvh-3rem)] self-start overflow-y-auto lg:block',
+        BELOW_APP_HEADER_STICKY_TOP_CLASS,
+        BELOW_APP_HEADER_STICKY_MAX_HEIGHT_CLASS,
+        'z-10 hidden self-start overflow-y-auto pt-6 lg:block',
         className,
       )}
     >

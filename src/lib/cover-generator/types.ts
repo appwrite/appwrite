@@ -61,6 +61,11 @@ export type CoverScreenshotData = CoverScreenshotFields & {
   template: 'screenshot'
 }
 
+/** Flat screenshot with a title that may span two lines (explicit `\n` breaks). */
+export type CoverScreenshotTwoLineData = CoverScreenshotFields & {
+  template: 'screenshot-two-line'
+}
+
 export type CoverScreenshotSideData = CoverScreenshotFields & {
   template: 'screenshot-side'
 }
@@ -386,6 +391,7 @@ export type CoverTemplateData =
   | CoverShowcaseIconData
   | CoverTitleIconData
   | CoverScreenshotData
+  | CoverScreenshotTwoLineData
   | CoverScreenshotSideData
   | CoverScreenshotAngledData
   | CoverCardsAngledData

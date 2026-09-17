@@ -922,7 +922,6 @@ export function ColumnDrawer({
                   value={enumElements}
                   onChange={setEnumElements}
                   placeholder={t('Add elements here')}
-                  splitOnComma
                   maxTagLength={255}
                   disabled={isLoading}
                 />
@@ -1425,6 +1424,8 @@ export function ColumnDrawer({
                     }}
                     disabled={isLoading}
                     clearable
+                    timeZoneMode="preferred"
+                    showTimeZoneInTrigger
                   />
                 ) : formData.type === 'enum' ? (
                   <Select

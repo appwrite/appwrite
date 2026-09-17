@@ -6,7 +6,10 @@ import {
 } from '@tanstack/react-query'
 import type { Models } from '@appwrite.io/console'
 import { sdk, type ProjectSdk } from '@/lib/appwrite/sdk'
-import { updateProjectOAuth2Provider } from '@/lib/oauth2/update-project-oauth2'
+import {
+  updateProjectOAuth2Provider,
+  type OAuth2UpdateValues,
+} from '@/lib/oauth2/update-project-oauth2'
 import { DEFAULT_STALE_TIME } from './constants'
 
 export async function fetchConsoleOAuth2Catalog(): Promise<Models.ConsoleOAuth2ProviderList> {
@@ -78,7 +81,7 @@ export function useUpdateProjectOAuth2Provider(projectId: string | null | undefi
   return useMutation({
     mutationFn: async (input: {
       providerId: string
-      values: Record<string, string | boolean>
+      values: OAuth2UpdateValues
     }) => {
       if (!projectId) throw new Error('Project ID is required')
       const projectSdk = sdk.forProject(projectId) as ProjectSdk

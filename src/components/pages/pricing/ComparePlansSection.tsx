@@ -30,6 +30,7 @@ import { PRICING_PLAN_COLUMNS } from '@/lib/pricing/constants'
 import { comparisonTables } from '@/lib/pricing/comparison-data'
 import { getComparisonTableAnchorId } from '@/lib/pricing/comparison-sections'
 import type { ComparisonTable, PlanId } from '@/lib/pricing/types'
+import { BELOW_APP_HEADER_STICKY_TOP_CLASS } from '@/lib/layout/app-header-height'
 import { cn } from '@/lib/utils'
 
 const PRICING_COMPARE_CTA_ACTIONS: Record<PlanId, AnalyticsActionId> = {
@@ -40,7 +41,7 @@ const PRICING_COMPARE_CTA_ACTIONS: Record<PlanId, AnalyticsActionId> = {
 
 const compareTableClassName = 'w-full table-fixed'
 const compareStickyHeadClassName =
-  'sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground shadow-[inset_0_-1px_0_var(--border)] sm:px-6'
+  `${BELOW_APP_HEADER_STICKY_TOP_CLASS} z-10 bg-background px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground shadow-[inset_0_-1px_0_var(--border)] sm:px-6`
 
 function MobilePlanTabs({
   activePlan,

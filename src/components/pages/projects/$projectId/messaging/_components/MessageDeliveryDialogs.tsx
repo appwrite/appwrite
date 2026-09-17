@@ -239,9 +239,7 @@ export function MessageScheduleDialog({
         <DialogHeader className="px-6 pt-6 pb-4 text-start">
           <DialogTitle>{t('Schedule message')}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            {t(
-              'Choose when this message should be delivered. Time uses your local timezone.',
-            )}
+            {t('Choose when this message should be delivered.')}
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />
@@ -256,6 +254,8 @@ export function MessageScheduleDialog({
               onChange={(value) => setLocalValue(value ?? '')}
               clearable={false}
               className="h-9"
+              timeZoneMode="preferred"
+              showTimeZoneInTrigger
             />
           </div>
         </div>

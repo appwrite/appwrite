@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   createFileRoute,
@@ -14,13 +14,7 @@ import { MarketingSiteLink } from '@/components/global/shared/MarketingSiteLink'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { toast } from 'sonner'
-import {
-  CheckCircle,
-  Loader2,
-  Lock,
-  UserRoundX,
-  XCircle,
-} from 'lucide-react'
+import { CheckCircle, Loader2, Lock, UserRoundX, XCircle } from 'lucide-react'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { useT } from '@/lib/i18n/translate'
 import { pageTitle } from '@/lib/utils/page-title'
@@ -48,61 +42,15 @@ export const Route = createFileRoute('/_auth/join')({
   component: AcceptInvitePage,
   validateSearch: searchSchema,
   head: () => ({ meta: [{ title: pageTitle('Accept invite') }] }),
-  loader: async () => {
-    // Authentication check is handled by RequireAuth component
-    return {}
-  },
 })
 
 function AcceptInvitePage() {
-  const { isAuthenticated, isLoading } = useAuth()
-  const navigate = useNavigate()
-
-  // Redirect to sign-in if not authenticated (but allow loading state)
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      // Get raw query string to preserve all parameters
-      // Always use '/join' as the pathname since we're on the join page
-      const rawSearch =
-        typeof window !== 'undefined' ? window.location.search : ''
-      const searchStr = rawSearch.startsWith('?')
-        ? rawSearch.slice(1)
-        : rawSearch
-      const redirectUrl = `/join${searchStr ? `?${searchStr}` : ''}`
-
-      // Only redirect if we have a valid relative URL
-      if (redirectUrl.startsWith('/') && !redirectUrl.includes('://')) {
-        navigate({ to: '/sign-in', search: { redirect: redirectUrl } })
-      } else {
-        navigate({ to: '/sign-in' })
-      }
-    }
-  }, [isLoading, isAuthenticated, navigate])
-
-  // Show loading state while checking auth
-  if (isLoading) {
-    return (
-      <div className="bg-background relative flex min-h-svh flex-col items-center justify-center p-6 md:p-10">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    )
-  }
-
-  // Don't render content if not authenticated (redirect is in progress)
-  if (!isAuthenticated) {
-    return null
-  }
-
-  return <AcceptInviteContent />
-}
-
-function AcceptInviteContent() {
   const t = useT()
   const search = useSearch({ from: '/_auth/join' })
   const navigate = useNavigate()
   const router = useRouter()
   const queryClient = useQueryClient()
-  const { account: accountUnknown } = useAuth()
+  const { account: accountUnknown, isLoading } = useAuth()
   const account = accountUnknown as Models.User | undefined
   const [accepted, setAccepted] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -119,13 +67,19 @@ function AcceptInviteContent() {
   const isWrongAccount =
     !!hasAllParams && !!account && account.$id !== search.userId
 
-  // Sign out and return to this invite link so the user can sign in with the
-  // account the invitation was sent to.
-  const handleSwitchAccount = () => {
+  // The invitation secret establishes the invitee's session after signing out.
+  const handleSwitchAccount = async () => {
+    if (isSwitchingAccount) return
     setIsSwitchingAccount(true)
-    void performConsoleSignOut(queryClient, {
-      redirect: getJoinRedirectUrl(),
-    })
+    try {
+      await performConsoleSignOut(queryClient, {
+        destination: getJoinRedirectUrl(),
+        requireServerRevocation: true,
+      })
+    } catch {
+      setIsSwitchingAccount(false)
+      toast.error(t('Could not sign out. Try switching accounts again.'))
+    }
   }
 
   const acceptMutation = useMutation({
@@ -143,9 +97,12 @@ function AcceptInviteContent() {
     onSuccess: async () => {
       setAccepted(true)
       toast.success(t('Successfully joined the organization!'))
-      await refreshConsoleAccountAfterAuth(queryClient)
-      // Invalidate router to refresh auth state
-      await router.invalidate()
+      try {
+        await refreshConsoleAccountAfterAuth(queryClient)
+        await router.invalidate()
+      } catch {
+        // The membership is confirmed; the destination can retry account loading.
+      }
       // Redirect to the organization page after a short delay
       setTimeout(() => {
         if (search.teamId) {
@@ -159,7 +116,9 @@ function AcceptInviteContent() {
       }, 2000)
     },
     onError: (err: unknown) => {
-      const errorMessage = err?.message || t('Failed to accept invitation')
+      const errorMessage =
+        (err instanceof Error && err.message) ||
+        t('Failed to accept invitation')
       setError(errorMessage)
       // Switching accounts only helps when the invite targets another account.
       setErrorIsAccountMismatch(
@@ -178,10 +137,22 @@ function AcceptInviteContent() {
   const accountLabel = account?.email || account?.name || undefined
   const isBusy = acceptMutation.isPending || isSwitchingAccount
 
+  // Resolve any existing account before accepting, but allow guests to use the
+  // invitation secret. Keep the success screen mounted during account refresh.
+  if (isLoading && !accepted) {
+    return (
+      <div className="bg-background relative flex min-h-svh flex-col items-center justify-center p-6 md:p-10">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    )
+  }
+
   const inviteDescription = teamName ? (
     <>
       {t("You've been invited to join")}{' '}
-      <span className="text-foreground font-medium break-words">{teamName}</span>
+      <span className="text-foreground font-medium break-words">
+        {teamName}
+      </span>
       {'. '}
       {t('Accept the invitation to get started.')}
     </>

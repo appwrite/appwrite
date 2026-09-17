@@ -303,20 +303,24 @@ export function useGlobalAnalyticsTracker() {
 
     document.querySelectorAll<HTMLElement>(DIALOG_SELECTOR).forEach(observeDialog)
 
+    let observeCancelled = false
     const domObserver = new MutationObserver((mutations) => {
-      mutations.forEach((mutation) => {
-        mutation.addedNodes.forEach((node) => {
-          if (!(node instanceof Element)) return
-          getDialogElements(node).forEach(observeDialog)
-        })
+      deferAfterPaint(() => {
+        if (observeCancelled) return
+        mutations.forEach((mutation) => {
+          mutation.addedNodes.forEach((node) => {
+            if (!(node instanceof Element)) return
+            getDialogElements(node).forEach(observeDialog)
+          })
 
-        mutation.removedNodes.forEach((node) => {
-          if (!(node instanceof Element)) return
-          getDialogElements(node).forEach((dialog) => {
-            unobserveDialog(dialog)
-            if (!activeDialogs.has(dialog)) return
-            activeDialogs.delete(dialog)
-            trackDeferred('Dialog Closed', getDialogProps(dialog))
+          mutation.removedNodes.forEach((node) => {
+            if (!(node instanceof Element)) return
+            getDialogElements(node).forEach((dialog) => {
+              unobserveDialog(dialog)
+              if (!activeDialogs.has(dialog)) return
+              activeDialogs.delete(dialog)
+              trackDeferred('Dialog Closed', getDialogProps(dialog))
+            })
           })
         })
       })
@@ -328,6 +332,7 @@ export function useGlobalAnalyticsTracker() {
     })
 
     return () => {
+      observeCancelled = true
       document.removeEventListener('click', handleClick)
       document.removeEventListener('change', handleChange)
       document.removeEventListener('submit', handleSubmit)

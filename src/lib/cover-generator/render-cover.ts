@@ -11,7 +11,7 @@ import { renderScreenshotSideCoverPng } from '@/lib/cover-generator/templates/sc
  * Other templates use Sharp/SVG (gradient text, logos, hero background).
  */
 export async function renderCoverImage(data: CoverRenderData): Promise<Uint8Array> {
-  if (data.template === 'screenshot') {
+  if (data.template === 'screenshot' || data.template === 'screenshot-two-line') {
     return renderScreenshotCoverPng(data)
   }
   if (data.template === 'screenshot-side') {

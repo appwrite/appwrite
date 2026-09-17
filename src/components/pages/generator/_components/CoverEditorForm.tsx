@@ -397,6 +397,9 @@ function CoverFieldInput({
         <Label htmlFor={field.key} className="text-[13px]">
           {field.label}
         </Label>
+        {field.description ? (
+          <p className="text-[12px] text-muted-foreground">{field.description}</p>
+        ) : null}
         <Textarea
           {...commonProps}
           value={String(value ?? '')}

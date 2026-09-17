@@ -1,8 +1,5 @@
 import type { DocsNavGroup, DocsNavTree } from '../types'
-import {
-  isAgentDocsEnabled,
-  isAgentDocsHref,
-} from '../agent-docs-feature'
+import { isAgentDocsEnabled, isAgentDocsHref } from '../agent-docs-feature'
 import {
   isDomainsDocsEnabled,
   isDomainsDocsHref,
@@ -11,22 +8,23 @@ import {
   isFirewallDocsEnabled,
   isFirewallDocsHref,
 } from '../firewall-docs-feature'
-import {
-  isStorageS3DocsEnabled,
-  isStorageS3DocsHref,
-} from '../storage-s3-docs-feature'
 import { DOCS_GLOBAL_NAV } from './global'
 import { DOCS_PARTNERS_GLOBAL_NAV } from './partners'
 
 export type DocsAudience = 'developers' | 'partners'
 
 export function getDocsAudienceFromSlug(slug: string): DocsAudience {
-  return slug === 'partners' || slug.startsWith('partners/') ? 'partners' : 'developers'
+  return slug === 'partners' || slug.startsWith('partners/')
+    ? 'partners'
+    : 'developers'
 }
 
 export function getDocsAudienceFromPathname(pathname: string): DocsAudience {
   const normalized = pathname.replace(/\/+$/, '') || '/'
-  if (normalized === '/docs/partners' || normalized.startsWith('/docs/partners/')) {
+  if (
+    normalized === '/docs/partners' ||
+    normalized.startsWith('/docs/partners/')
+  ) {
     return 'partners'
   }
   return 'developers'
@@ -63,9 +61,6 @@ export function getDocsGlobalNav(audience: DocsAudience): DocsNavTree {
   }
   if (!isAgentDocsEnabled()) {
     navigation = withoutHref(navigation, isAgentDocsHref)
-  }
-  if (!isStorageS3DocsEnabled()) {
-    navigation = withoutHref(navigation, isStorageS3DocsHref)
   }
   return navigation
 }

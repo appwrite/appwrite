@@ -14,8 +14,15 @@ import { getCoverTheme, type CoverThemeId } from '@/lib/cover-generator/themes'
 import {
   stripCoverTitleSuffix,
   wrapTextLines,
+  wrapTextLinesWithBreaks,
 } from '@/lib/cover-generator/text-utils'
 import type { CoverRenderData, CoverScreenshotData } from '@/lib/cover-generator/types'
+
+/** Render data for the flat screenshot templates that share this scene layout. */
+export type CoverFlatScreenshotRenderData = Extract<
+  CoverRenderData,
+  { template: 'screenshot' | 'screenshot-two-line' }
+>
 
 /** Title block metrics shared by export and preview. */
 export const COVER_SCREENSHOT_TITLE = {
@@ -29,6 +36,24 @@ export const COVER_SCREENSHOT_TITLE = {
   maxCharsPerLine: 42,
   maxLines: 1,
 } as const
+
+/** Two-line variant: same metrics, but the title may break onto a second line. */
+export const COVER_SCREENSHOT_TWO_LINE_TITLE = {
+  ...COVER_SCREENSHOT_TITLE,
+  maxLines: 2,
+} as const
+
+export type CoverScreenshotTitleConfig =
+  | typeof COVER_SCREENSHOT_TITLE
+  | typeof COVER_SCREENSHOT_TWO_LINE_TITLE
+
+export function getCoverScreenshotTitleConfig(
+  template: CoverFlatScreenshotRenderData['template'],
+): CoverScreenshotTitleConfig {
+  return template === 'screenshot-two-line'
+    ? COVER_SCREENSHOT_TWO_LINE_TITLE
+    : COVER_SCREENSHOT_TITLE
+}
 
 /** Matches homepage hero browser chrome (`src/routes/home.tsx`). */
 export const COVER_HERO_SCREENSHOT_FRAME = {
@@ -287,14 +312,15 @@ export function buildCoverScreenshotClipSvg(
 
 function getCoverScreenshotTitleLines(
   data: Pick<CoverScreenshotData, 'title'>,
+  title: CoverScreenshotTitleConfig,
 ): string[] {
-  return data.title
-    ? wrapTextLines(
-        stripCoverTitleSuffix(data.title),
-        COVER_SCREENSHOT_TITLE.maxCharsPerLine,
-        COVER_SCREENSHOT_TITLE.maxLines,
-      )
-    : []
+  if (!data.title) return []
+  const text = stripCoverTitleSuffix(data.title)
+  // Only the multi-line variant honors explicit breaks; the single-line one
+  // collapses them so an accidental newline does not truncate the title.
+  return title.maxLines > 1
+    ? wrapTextLinesWithBreaks(text, title.maxCharsPerLine, title.maxLines)
+    : wrapTextLines(text, title.maxCharsPerLine, title.maxLines)
 }
 
 type CoverScreenshotTitleLayout = {
@@ -308,16 +334,16 @@ type CoverScreenshotTitleLayout = {
 function getCoverScreenshotTitleLayout(
   data: Pick<CoverScreenshotData, 'title' | 'subtitle'>,
   canvas: CoverCanvasSize,
+  title: CoverScreenshotTitleConfig,
 ): CoverScreenshotTitleLayout {
-  const titleLines = getCoverScreenshotTitleLines(data)
+  const titleLines = getCoverScreenshotTitleLines(data, title)
   const layoutTransform = getCoverContentLayoutTransform(
     canvas.width,
     canvas.height,
     'bottom',
   )
   const { scale } = layoutTransform
-  const { y, lineHeight, subtitleGap, subtitleFontSize, frameGap } =
-    COVER_SCREENSHOT_TITLE
+  const { y, lineHeight, subtitleGap, subtitleFontSize, frameGap } = title
 
   const titleYExport = y * scale
   const lineHeightExport = lineHeight * scale
@@ -350,17 +376,16 @@ function getCoverScreenshotTitleLayout(
   }
 }
 
-export function getCoverScreenshotSceneLayout(
-  data: Extract<CoverRenderData, { template: 'screenshot' }>,
-) {
+export function getCoverScreenshotSceneLayout(data: CoverFlatScreenshotRenderData) {
   const canvas: CoverCanvasSize = { width: data.width, height: data.height }
+  const title = getCoverScreenshotTitleConfig(data.template)
   const {
     titleLines,
     titleYArtboard,
     subtitleYArtboard,
     titleBlockBottomExport,
     layoutTransform,
-  } = getCoverScreenshotTitleLayout(data, canvas)
+  } = getCoverScreenshotTitleLayout(data, canvas, title)
   const { scale } = layoutTransform
 
   const frameWidth = getCoverFrameWidthPx(data.frameWidthPercent, canvas)
@@ -388,6 +413,7 @@ export function getCoverScreenshotSceneLayout(
   )
 
   return {
+    title,
     titleLines,
     layout,
     titleY: titleYArtboard,

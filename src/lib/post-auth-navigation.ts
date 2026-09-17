@@ -25,8 +25,8 @@ export function requiresConsoleEmailVerification(
   )
 }
 
-// `/join` is intentionally absent: accepting a team invite requires auth, so it
-// is a valid post-auth destination (e.g. after "Switch account" on the invite page).
+// `/join` is intentionally absent: invitations work with or without a session,
+// so they remain valid destinations after signing in.
 const AUTH_PAGE_PATHS = [
   '/sign-in',
   '/sign-up',
@@ -115,10 +115,11 @@ export function toRedirectNavigateOptions(
   if (
     isValidRelativeRedirect(redirect) &&
     url.origin === 'http://localhost' &&
-    url.pathname === '/oauth2/consent'
+    (url.pathname === '/oauth2/consent' || url.pathname === '/auth/preview')
   ) {
     // Native raw requests must not pass through parsed search serialization:
-    // it collapses repeated resources and quotes JSON-like state/RAR strings.
+    // it collapses repeated resources and quotes JSON-like state/RAR strings
+    // and custom project IDs like `1e3`, which these pages read as sent.
     // href without to uses the installed router's direct document navigation.
     return { href: redirect, reloadDocument: true }
   }

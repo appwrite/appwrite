@@ -31,6 +31,8 @@ import {
   Monitor,
   UserRound,
   ExternalLink,
+  Copy,
+  Check,
 } from 'lucide-react'
 import type { Models } from '@appwrite.io/console'
 import { AuthenticatorType, MessagingProviderType } from '@appwrite.io/console'
@@ -39,6 +41,8 @@ import { useT } from '@/lib/i18n/translate'
 import { ServiceHeader, type Tab } from '../../shared/ServiceHeader'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { CopyableId } from '@/components/global/shared/CopyableId'
+import { BaseDrawer } from '@/components/global/shared/BaseDrawer'
+import { decodeIdTokenClaims } from '@/lib/oauth2/id-token'
 import { DetailResourceHeaderTitle } from '@/components/global/shared/ResourceTitleSwitcher'
 import { InitialsAvatar } from '@/components/global/shared/Avatar'
 import { EmptyState } from '@/components/global/shared/EmptyState'
@@ -2392,6 +2396,157 @@ function CreateUserMembershipDialog({
 // IDENTITIES TAB
 // ============================================================================
 
+/**
+ * The provider's ID token is not on the SDK's Identity type yet, though the
+ * API returns it, so it is read by name rather than through the model.
+ */
+function readIdentityIdToken(identity: unknown): string {
+  const value = (identity as Record<string, unknown>)?.providerIdToken
+  return typeof value === 'string' ? value : ''
+}
+
+function IdTokenClaimRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="grid grid-cols-[104px_minmax(0,1fr)] gap-3 py-2.5">
+      <span className="text-[12px] text-muted-foreground">{label}</span>
+      <span className="min-w-0 break-all font-mono text-[12px] text-foreground">
+        {value}
+      </span>
+    </div>
+  )
+}
+
+/**
+ * An ID token is a credential and about a kilobyte long, so the table shows
+ * only whether one exists. The value itself lives behind a click, which also
+ * keeps it out of screenshots of the identities list.
+ */
+function IdentityIdTokenCell({ token }: { token: string }) {
+  const t = useT()
+  const [open, setOpen] = useState(false)
+  const [copied, setCopied] = useState(false)
+
+  const claims = useMemo(
+    () => (open ? decodeIdTokenClaims(token) : null),
+    [open, token],
+  )
+
+  if (!token) {
+    return <span className="text-[13px] text-muted-foreground">&mdash;</span>
+  }
+
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(token)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  const formatClaimDate = (date: Date | null) =>
+    date ? date.toLocaleString() : t('Not set')
+
+  return (
+    <>
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        className="h-7 gap-1.5 px-2 text-[12px] font-normal"
+        onClick={() => setOpen(true)}
+      >
+        <Key className="h-3 w-3" />
+        {t('View')}
+      </Button>
+
+      <BaseDrawer
+        open={open}
+        onOpenChange={setOpen}
+        title="Provider ID token"
+        description="The signed token this identity was created from, decoded for reference."
+        maxWidth="sm:max-w-lg"
+        disableAutoFocus
+      >
+        <div className="border-t border-border shrink-0" />
+        <div className="flex min-h-0 flex-1 flex-col">
+          <div className="flex-1 overflow-y-auto">
+            <div className="space-y-6 px-6 py-6">
+              <p className="text-[13px] text-muted-foreground">
+                {t(
+                  'The signed token the app obtained on device and sent to Appwrite to create this identity. Appwrite verified it at sign-in; it is decoded here for reference only.',
+                )}
+              </p>
+
+              {claims ? (
+                <div className="space-y-2">
+                  <h3 className="text-[12px] font-semibold text-foreground">
+                    {t('Claims')}
+                  </h3>
+                  <div className="divide-y divide-border rounded-lg border border-border bg-muted/30 px-4 py-1">
+                    <IdTokenClaimRow
+                      label={t('Audience')}
+                      value={
+                        claims.audience.length > 0
+                          ? claims.audience.join(', ')
+                          : t('Not set')
+                      }
+                    />
+                    <IdTokenClaimRow
+                      label={t('Issuer')}
+                      value={claims.issuer || t('Not set')}
+                    />
+                    <IdTokenClaimRow
+                      label={t('Subject')}
+                      value={claims.subject || t('Not set')}
+                    />
+                    <IdTokenClaimRow
+                      label={t('Issued')}
+                      value={formatClaimDate(claims.issuedAt)}
+                    />
+                    <IdTokenClaimRow
+                      label={t('Expires')}
+                      value={formatClaimDate(claims.expiresAt)}
+                    />
+                  </div>
+                </div>
+              ) : (
+                <p className="text-[13px] text-muted-foreground">
+                  {t(
+                    'This token could not be decoded, so only the raw value is shown.',
+                  )}
+                </p>
+              )}
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-[12px] font-semibold text-foreground">
+                    {t('Raw token')}
+                  </h3>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 gap-1.5 px-2 text-[12px]"
+                    onClick={handleCopy}
+                  >
+                    {copied ? (
+                      <Check className="h-3.5 w-3.5 text-emerald-500" />
+                    ) : (
+                      <Copy className="h-3.5 w-3.5" />
+                    )}
+                    {copied ? t('Copied') : t('Copy')}
+                  </Button>
+                </div>
+                <code className="block rounded-md border border-border bg-muted/40 px-3 py-2 font-mono text-[11px] leading-relaxed break-all text-foreground">
+                  {token}
+                </code>
+              </div>
+            </div>
+          </div>
+        </div>
+      </BaseDrawer>
+    </>
+  )
+}
+
 function IdentitiesTab({
   projectId,
   userId,
@@ -2511,6 +2666,9 @@ function IdentitiesTab({
                   {t('Email')}
                 </TableHead>
                 <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                  {t('ID token')}
+                </TableHead>
+                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
                   {t('Created')}
                 </TableHead>
               </TableRow>
@@ -2538,6 +2696,11 @@ function IdentitiesTab({
                   </TableCell>
                   <TableCell className="px-4 py-3 text-[13px]">
                     {identity.providerEmail || '-'}
+                  </TableCell>
+                  <TableCell className="px-4 py-3">
+                    <IdentityIdTokenCell
+                      token={readIdentityIdToken(identity)}
+                    />
                   </TableCell>
                   <TableCell className="px-4 py-3">
                     <DateTooltip

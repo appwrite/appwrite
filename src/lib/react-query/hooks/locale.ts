@@ -156,6 +156,7 @@ export function localeQueryOptions() {
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     enabled: typeof window !== 'undefined',
+    meta: { skipInitialLoader: true },
   })
 }
 

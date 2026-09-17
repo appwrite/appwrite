@@ -2057,8 +2057,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'このメッセージのユーザーターゲットを選択してください。各ユーザーはチャンネルごとに複数のターゲットを持てます。',
   'Choose users using Add to target every matching channel target for each user.':
     '追加を使用してユーザーを選択し、各ユーザーの一致するすべてのチャンネルターゲットを対象にします。',
-  'Choose when this message should be delivered. Time uses your local timezone.':
-    'このメッセージの配信時刻を選択してください。時刻はローカルタイムゾーンを使用します。',
+  'Choose when this message should be delivered.':
+    'このメッセージの配信時刻を選択してください。',
   Color: '色',
   Compose: '作成',
   'Confirm sending message': 'メッセージ送信の確認',

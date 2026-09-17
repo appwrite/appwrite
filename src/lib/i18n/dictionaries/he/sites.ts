@@ -549,4 +549,18 @@ export const heSitesDictionary: Record<string, string> = {
   'Site URL is not available yet': 'כתובת האתר עדיין אינה זמינה',
   'Deployment successful!': 'הפריסה הצליחה!',
   'Your site is now live': 'האתר שלכם באוויר',
+
+  // Protected preview authorization
+  'Opening preview…': 'פותחים את התצוגה המקדימה…',
+  'Checking your access to this preview deployment.':
+    'בודקים את הרשאת הגישה שלכם לפריסת התצוגה המקדימה הזו.',
+  'Preview is private': 'התצוגה המקדימה פרטית',
+  "You don't have access to this preview. Ask a member of the project's organization to add you.":
+    'אין לכם גישה לתצוגה המקדימה הזו. בקשו מחבר בארגון של הפרויקט לצרף אתכם.',
+  'Invalid preview link': 'הקישור לתצוגה המקדימה אינו תקין',
+  'This link is missing or has a malformed preview address. Open the preview URL again to start over.':
+    'כתובת התצוגה המקדימה בקישור הזה חסרה או אינה תקינה. פתחו שוב את כתובת התצוגה המקדימה כדי להתחיל מחדש.',
+  "Couldn't open preview": 'לא ניתן היה לפתוח את התצוגה המקדימה',
+  'Something went wrong while checking your access to this preview. Try again in a moment.':
+    'משהו השתבש בבדיקת הגישה שלכם לתצוגה המקדימה הזו. נסו שוב בעוד רגע.',
 }

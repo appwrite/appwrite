@@ -36,7 +36,6 @@ import {
   LayoutDashboard,
   BookOpen,
   Clock,
-  ExternalLink,
 } from 'lucide-react'
 import {
   useAuth,
@@ -625,7 +624,6 @@ export function ConsoleHeader({
   const accountMenuLinks = getAccountMenuLinks({
     pathname: location.pathname,
     showMarketingNav,
-    isCloud,
   })
   const showCenterSearch = centerSearch && !hideSearch && !preLaunch
   const showRightSearch = !hideSearch && !centerSearch && !preLaunch
@@ -641,7 +639,7 @@ export function ConsoleHeader({
       <header
         className={cn(
           'h-14 min-h-14 items-center gap-1 overflow-visible border-b border-border bg-background @[640px]:gap-2',
-          'ps-3 pe-3 @[640px]:ps-4 @[640px]:pe-4 @[1000px]:pe-6',
+          'ps-2 pe-2 @[390px]:ps-3 @[390px]:pe-3 @[640px]:ps-4 @[640px]:pe-4 @[1000px]:pe-6',
           // Equal side columns keep the marketing nav centered whether the right
           // cluster is Sign in/up or search + account actions.
           showMarketingLinks
@@ -743,13 +741,13 @@ export function ConsoleHeader({
                 aria-label="Appwrite"
                 className={cn(
                   'group inline-flex shrink-0 items-center justify-center rounded-lg transition-transform duration-150 ease-out active:scale-[0.94] active:bg-muted/40 motion-reduce:active:scale-100 motion-reduce:active:bg-transparent focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background',
-                  showMarketingNav ? 'h-10 w-auto px-2' : 'size-10',
+                  showMarketingNav ? 'h-10 w-auto px-0 @[390px]:px-2' : 'size-10',
                   childClassName,
                 )}
               >
                 {showMarketingNav ? (
                   <AppwriteWordmark
-                    className="h-5 transition-transform duration-150 ease-out group-hover:scale-[1.02]"
+                    className="h-4 transition-transform duration-150 ease-out group-hover:scale-[1.02] @[390px]:h-5"
                     aria-label="Appwrite"
                   />
                 ) : (
@@ -770,12 +768,12 @@ export function ConsoleHeader({
                   {headerTitleSuffix ? (
                     <>
                       <span
-                        className="shrink-0 text-[15px] text-muted-foreground/40"
+                        className="hidden shrink-0 text-[15px] text-muted-foreground/40 @[640px]:inline"
                         aria-hidden
                       >
                         |
                       </span>
-                      <span className="truncate text-[13px] font-medium text-muted-foreground">
+                      <span className="hidden truncate text-[13px] font-medium text-muted-foreground @[640px]:inline">
                         {headerTitleSuffix}
                       </span>
                     </>
@@ -1389,7 +1387,7 @@ export function ConsoleHeader({
                 asChild
                 size="sm"
                 variant="brandCta"
-                className="h-9 text-[13px]"
+                className="h-9 px-2 text-[13px] @[390px]:px-3"
               >
                 <Link
                   to="/sign-up"
@@ -1890,23 +1888,6 @@ export function ConsoleHeader({
                               <span>{headerCopy.accountMenu.changelog}</span>
                             </Link>
                           )}
-                        </DropdownMenuItem>
-                      )}
-
-                      {/* Temporary: remove once the old console is retired.
-                        Cloud only: self-hosted 2.0 ships no legacy console. */}
-                      {accountMenuLinks.includes('oldConsole') && (
-                        <DropdownMenuItem asChild>
-                          <a
-                            href="https://cloud.appwrite.io"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className={ACCOUNT_MENU_ITEM_CLASS}
-                            {...analyticsAttrs('header-old-console')}
-                          >
-                            <ExternalLink className="h-4 w-4" />
-                            <span>{headerCopy.accountMenu.oldConsole}</span>
-                          </a>
                         </DropdownMenuItem>
                       )}
                     </>

@@ -15,6 +15,9 @@
 import Prism from 'prismjs'
 import 'prismjs/components/prism-markup'
 import 'prismjs/components/prism-markup-templating'
+import 'prismjs/components/prism-typescript'
+import 'prismjs/components/prism-jsx'
+import 'prismjs/components/prism-tsx'
 import 'prismjs/components/prism-bash'
 import 'prismjs/components/prism-json'
 import 'prismjs/components/prism-dart'
@@ -53,14 +56,24 @@ const RUNTIME_TO_PRISM: Record<string, string> = {
   bun: 'javascript',
   web: 'javascript',
   dotnet: 'csharp',
+  // The shared resolver folds these into javascript/typescript for labels;
+  // Prism has dedicated grammars that also tokenise the JSX.
+  jsx: 'jsx',
+  tsx: 'tsx',
 }
 
 function resolvePrismLanguage(fenceLanguage: string): string | null {
   const normalized = fenceLanguage.toLowerCase().trim()
-  // `server-nodejs`, `client-web`, `server-dart` and friends name a platform.
+  // Platform fences such as `client-flutter` or `server-nodejs` are aliased
+  // in full, so resolve the whole name before falling back to the bare
+  // runtime key (`nodejs`, `web`) for fences that omit the prefix.
+  const aliased = resolveFenceCodeLanguage(normalized)
   const platform = normalized.replace(/^(server|client)-/, '')
   const candidate =
-    RUNTIME_TO_PRISM[platform] ?? resolveFenceCodeLanguage(platform)
+    RUNTIME_TO_PRISM[normalized] ??
+    (aliased !== 'plaintext'
+      ? aliased
+      : (RUNTIME_TO_PRISM[platform] ?? resolveFenceCodeLanguage(platform)))
   const language = RUNTIME_TO_PRISM[candidate] ?? candidate
   if (language === 'plaintext' || language === 'env') return null
   return Prism.languages[language] ? language : null

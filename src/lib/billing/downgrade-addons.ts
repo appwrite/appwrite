@@ -90,7 +90,7 @@ export function getUnsupportedAddonRemovals(
     if (supported[key]) continue
     const label = getAddonLabel(key)
 
-    // `nextValue === 0` already schedules removal at cycle close, so there is
+    // `nextValue === 0` already marks the addon for removal, so there is
     // nothing left for this flow to do.
     const organizationAddon = findActiveOrPendingAddon(
       snapshot.organizationAddons,
@@ -160,7 +160,7 @@ export function downgradeAddonsQueryOptions(
 /**
  * Estimation-reported addon keys that are genuinely still active. The server's
  * check reads `currentValue` and ignores `nextValue`, so an addon this flow
- * just disabled is still reported until the cycle closes.
+ * just disabled is still reported as unsupported.
  */
 export async function getUnresolvedUnsupportedAddons(
   organizationId: string,

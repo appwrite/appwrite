@@ -778,7 +778,8 @@ async function initializeStaticRoutes(
 /** Redirect pre-2.0 `/console/...` and typed-resource deep links to vibes routes. */
 function redirectLegacyConsolePath(req: Request): Response {
   const url = new URL(req.url)
-  const location = rewriteLegacyConsolePath(url.pathname) + url.search
+  const location =
+    rewriteLegacyConsolePath(url.pathname, url.search) + url.search
   return new Response(null, {
     status: 302,
     headers: {
