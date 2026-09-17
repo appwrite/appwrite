@@ -412,9 +412,7 @@ final class AccountCustomClientTest extends Scope
     }
 
     /**
-     * Build a phone number that no other test run can be holding at the same
-     * time. Microtime keeps runs apart, the PID keeps parallel processes apart,
-     * and the random suffix keeps two calls inside one process apart.
+     * Unique across parallel runs: microtime, PID and a random suffix.
      */
     private function uniquePhoneNumber(): string
     {
@@ -4046,9 +4044,7 @@ final class AccountCustomClientTest extends Scope
 
             $this->assertNotEmpty($whatsappRequest, 'WhatsApp request not found for phone number: ' . $number);
 
-            // Meta's authentication template takes the bare passcode as its only parameter, never
-            // the rendered SMS copy, so assert the payload is the code and nothing else. Asserting
-            // only that it is non-empty would still pass if the SMS body were sent by mistake.
+            // WhatsApp authentication templates take the bare passcode, never the rendered SMS copy.
             $sent = $whatsappRequest['data']['message'] ?? '';
 
             $this->assertSame(6, \strlen($sent));
@@ -4087,9 +4083,6 @@ final class AccountCustomClientTest extends Scope
         $this->assertSame('general_argument_invalid', $response['body']['type']);
     }
 
-    /**
-     * Set the project's phone OTP channel policy with the project's API key.
-     */
     private function updatePhoneOtpChannel(string $channel): array
     {
         return $this->client->call(Client::METHOD_PATCH, '/project/policies/phone-otp-channel', [
