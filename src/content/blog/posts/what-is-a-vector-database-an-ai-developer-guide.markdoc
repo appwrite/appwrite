@@ -8,7 +8,7 @@ timeToRead: 5
 author: aditya-oberai
 category: ai
 featured: false
-unlisted: false
+unlisted: true
 faqs:
   - question: How does a vector database work?
     answer: An embedding model converts text, images, audio, or other data into vectors. The database indexes those vectors and uses similarity search to find the nearest matches to a query vector.
