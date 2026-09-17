@@ -1,6 +1,8 @@
 <?php
 
-namespace Utopia\Mqtt;
+namespace Utopia\Mqtt\Packet;
+
+use Utopia\Mqtt\Properties;
 
 class Connack
 {

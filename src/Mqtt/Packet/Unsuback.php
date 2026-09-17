@@ -1,6 +1,6 @@
 <?php
 
-namespace Utopia\Mqtt;
+namespace Utopia\Mqtt\Packet;
 
 class Unsuback
 {
