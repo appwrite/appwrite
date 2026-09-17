@@ -606,7 +606,9 @@ class Jobs extends Action
         // deploymentId then walks platform rules; under parallel Sites e2e that
         // scan is slow enough that clients waiting on deploymentId observe a
         // stale latestDeploymentId (still the previous deployment).
-        $latestId = $resource->isEmpty() ? '' : $this->updateLatestDeployment($dbForProject, $resource);
+        if (! $resource->isEmpty()) {
+            $this->updateLatestDeployment($dbForProject, $resource);
+        }
 
         if ($applied > 0 && $success && $deployment->getAttribute('activate') === true && ! $resource->isEmpty()) {
             $this->activate($dbForProject, $dbForPlatform, $project, $resource, $deployment, $bus);
@@ -620,10 +622,8 @@ class Jobs extends Action
             $deployment = $dbForProject->getDocument('deployments', $deployment->getId());
         }
 
-        if ($applied > 0 && $latestId === $deployment->getId()) {
-            $dbForProject->updateDocument($collection, $resource->getId(), new Document([
-                'latestDeploymentStatus' => $terminal,
-            ]));
+        if ($applied > 0 && ! $resource->isEmpty()) {
+            $this->updateLatestDeployment($dbForProject, $resource);
         }
 
         if ($applied > 0 && $success && $collection === 'sites' && ! $resource->isEmpty()) {
@@ -754,7 +754,7 @@ class Jobs extends Action
      * deployment. Mirrors the Builds worker so the console reflects the current
      * build status.
      */
-    protected function updateLatestDeployment(Database $dbForProject, Document $resource): string
+    protected function updateLatestDeployment(Database $dbForProject, Document $resource): void
     {
         $latest = $dbForProject->findOne('deployments', [
             Query::equal('resourceType', [$resource->getCollection()]),
@@ -764,7 +764,7 @@ class Jobs extends Action
         ]);
 
         if ($latest->isEmpty()) {
-            return '';
+            return;
         }
 
         $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), new Document([
@@ -773,8 +773,6 @@ class Jobs extends Action
             'latestDeploymentCreatedAt' => $latest->getCreatedAt(),
             'latestDeploymentStatus' => $latest->getAttribute('status', ''),
         ]));
-
-        return $latest->getId();
     }
 
     /**
