@@ -40,7 +40,6 @@ class Broker
         private readonly Adapter $adapter,
         private readonly Handler $handler,
         private readonly Store $store = new Store(),
-        private readonly Keepalive $keepalive = new Keepalive(),
     ) {
     }
 
@@ -72,11 +71,6 @@ class Broker
         return $this;
     }
 
-    public function tick(int $seconds, callable $callback): int
-    {
-        return $this->adapter->tick($seconds, $callback);
-    }
-
     public function start(): void
     {
         $this->adapter->onReceive($this->receive(...));
@@ -86,13 +80,9 @@ class Broker
             $this->adapter->onStart($this->onStart);
         }
 
-        $this->adapter->onWorkerStart(function (int $workerId): void {
-            $this->adapter->tick($this->keepalive->interval, $this->reap(...));
-
-            if ($this->onWorkerStart !== null) {
-                \call_user_func($this->onWorkerStart, $workerId);
-            }
-        });
+        if ($this->onWorkerStart !== null) {
+            $this->adapter->onWorkerStart($this->onWorkerStart);
+        }
 
         try {
             $this->adapter->start();
@@ -260,26 +250,14 @@ class Broker
 
     private function cleanup(int $fd): void
     {
-        $this->keepalive->remove($fd);
+        $this->adapter->timer()->clear($fd);
         $this->store->close($fd);
         unset($this->connections[$fd]);
     }
 
     private function refreshKeepAlive(Connection $connection): void
     {
-        if ($connection->keepAlive <= 0) {
-            return;
-        }
-
-        $connection->updateExpiresAt(\microtime(true), $this->keepalive->multiplier);
-        $connection->wheelSlot = $this->keepalive->schedule($connection->fd, $connection->expiresAt);
-    }
-
-    private function reap(): void
-    {
-        foreach ($this->keepalive->drain((int) \microtime(true)) as $fd) {
-            $this->adapter->close($fd);
-        }
+        $this->adapter->timer()->schedule($connection->fd, $connection->keepAlive);
     }
 
     private function record(Subscribe $subscribe, Suback $suback, Connection $connection): void

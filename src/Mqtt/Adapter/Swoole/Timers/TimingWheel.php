@@ -4,62 +4,108 @@ namespace Utopia\Mqtt\Adapter\Swoole\Timers;
 
 use Swoole\Timer as SwooleTimer;
 use Utopia\Mqtt\Adapter\Swoole\Timer;
-use Utopia\Mqtt\Keepalive;
 
 class TimingWheel implements Timer
 {
-    private int $sequence = 0;
+    /** @var array<int, array<int, true>> deadline second => set of ids */
+    private array $buckets = [];
+
+    private int $cursor;
+
+    /** @var array<int, int> id => the bucket it currently occupies */
+    private array $slots = [];
 
     private ?int $heartbeat = null;
 
-    /** @var array<int, array{callback: callable, interval: int, recurring: bool}> */
-    private array $timers = [];
+    /** @var callable|null */
+    private $onTick = null;
 
-    public function __construct(private readonly Keepalive $wheel = new Keepalive(interval: 1))
-    {
+    /** @var callable|null */
+    private $onClear = null;
+
+    public function __construct(
+        public readonly int $interval = 20,
+        public readonly float $multiplier = 1.5,
+        ?int $now = null,
+    ) {
+        $this->cursor = $now ?? \time();
     }
 
-    public function tick(int $seconds, callable $callback): int
+    public function onTick(callable $callback): self
     {
-        return $this->add($seconds, $callback, true);
+        $this->onTick = $callback;
+
+        return $this;
     }
 
-    public function after(int $seconds, callable $callback): int
+    public function onClear(callable $callback): self
     {
-        return $this->add($seconds, $callback, false);
+        $this->onClear = $callback;
+
+        return $this;
+    }
+
+    public function schedule(int $id, int $keepAlive): void
+    {
+        $this->drop($id);
+
+        if ($keepAlive <= 0) {
+            return;
+        }
+
+        $slot = \max((int) \ceil(\microtime(true) + $keepAlive * $this->multiplier), $this->cursor + 1);
+        $this->buckets[$slot][$id] = true;
+        $this->slots[$id] = $slot;
+
+        $this->heartbeat ??= SwooleTimer::tick($this->interval * 1000, function (): void {
+            $this->drain((int) \microtime(true));
+        });
     }
 
     public function clear(int $id): void
     {
-        $this->wheel->remove($id);
-        unset($this->timers[$id]);
+        if (!isset($this->slots[$id])) {
+            return;
+        }
+
+        $this->drop($id);
+
+        if ($this->onClear !== null) {
+            \call_user_func($this->onClear, $id);
+        }
     }
 
-    private function add(int $seconds, callable $callback, bool $recurring): int
+    public function drain(int $now): void
     {
-        $id = ++$this->sequence;
-        $this->timers[$id] = ['callback' => $callback, 'interval' => $seconds, 'recurring' => $recurring];
-        $this->wheel->schedule($id, \microtime(true) + $seconds);
-        $this->heartbeat ??= SwooleTimer::tick(1000, $this->drain(...));
-
-        return $id;
-    }
-
-    private function drain(): void
-    {
-        foreach ($this->wheel->drain((int) \microtime(true)) as $id) {
-            $timer = $this->timers[$id] ?? null;
-            if ($timer === null) {
+        for ($second = $this->cursor + 1; $second <= $now; $second++) {
+            if (!isset($this->buckets[$second])) {
                 continue;
             }
 
-            if ($timer['recurring']) {
-                $this->wheel->schedule($id, \microtime(true) + $timer['interval']);
-            } else {
-                unset($this->timers[$id]);
+            foreach (\array_keys($this->buckets[$second]) as $id) {
+                unset($this->slots[$id]);
+                if ($this->onTick !== null) {
+                    \call_user_func($this->onTick, $id);
+                }
             }
 
-            \call_user_func($timer['callback']);
+            unset($this->buckets[$second]);
+        }
+
+        $this->cursor = \max($this->cursor, $now);
+    }
+
+    private function drop(int $id): void
+    {
+        $slot = $this->slots[$id] ?? null;
+        if ($slot === null) {
+            return;
+        }
+
+        unset($this->buckets[$slot][$id], $this->slots[$id]);
+
+        if (($this->buckets[$slot] ?? null) === []) {
+            unset($this->buckets[$slot]);
         }
     }
 }

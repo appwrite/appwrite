@@ -37,6 +37,7 @@ class Swoole extends Adapter
         }
 
         $this->timer = $timer ?? new TimingWheel();
+        $this->timer->onTick(fn (int $fd) => $this->close($fd));
 
         $master = $transports[0];
         $this->server = new Server($master->host, $master->port, SWOOLE_BASE, $master->getSockType());
@@ -132,18 +133,8 @@ class Swoole extends Adapter
         return $this;
     }
 
-    public function tick(int $seconds, callable $callback): int
+    public function timer(): Timer
     {
-        return $this->timer->tick($seconds, $callback);
-    }
-
-    public function after(int $seconds, callable $callback): int
-    {
-        return $this->timer->after($seconds, $callback);
-    }
-
-    public function clear(int $id): void
-    {
-        $this->timer->clear($id);
+        return $this->timer;
     }
 }

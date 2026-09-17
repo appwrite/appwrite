@@ -4,9 +4,11 @@ namespace Utopia\Mqtt\Adapter\Swoole;
 
 interface Timer
 {
-    public function tick(int $seconds, callable $callback): int;
+    public function onTick(callable $callback): self;
 
-    public function after(int $seconds, callable $callback): int;
+    public function onClear(callable $callback): self;
+
+    public function schedule(int $id, int $keepAlive): void;
 
     public function clear(int $id): void;
 }

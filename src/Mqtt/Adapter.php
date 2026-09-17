@@ -2,6 +2,8 @@
 
 namespace Utopia\Mqtt;
 
+use Utopia\Mqtt\Adapter\Swoole\Timer;
+
 abstract class Adapter
 {
     abstract public function onStart(callable $callback): self;
@@ -16,11 +18,7 @@ abstract class Adapter
 
     abstract public function close(int $connection): void;
 
-    abstract public function tick(int $seconds, callable $callback): int;
-
-    abstract public function after(int $seconds, callable $callback): int;
-
-    abstract public function clear(int $id): void;
+    abstract public function timer(): Timer;
 
     abstract public function start(): void;
 
