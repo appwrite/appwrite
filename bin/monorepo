@@ -88,7 +88,9 @@ function rm(string $path): void
  */
 function packages(): array
 {
-    return array_map('basename', glob('packages/*', GLOB_ONLYDIR));
+    // A directory is a package only if it carries a manifest: ignored leftovers
+    // (a vendor/ from another branch's test run) must not count.
+    return array_map(fn (string $manifest) => basename(dirname($manifest)), glob('packages/*/composer.json'));
 }
 
 /**
@@ -691,6 +693,19 @@ switch ($command) {
                     if (isset($root[$section][$expected])) {
                         $problems[] = "root composer.json must not require {$expected} (the package is autoloaded directly)";
                     }
+                }
+                // `replace` hides the package's own require block from the
+                // solver, so its third-party dependencies resolve only if the
+                // root declares them too.
+                foreach ($manifest['require'] ?? [] as $dependency => $constraint) {
+                    if ($dependency === 'php' || str_starts_with($dependency, 'ext-') || isset($root['require'][$dependency])) {
+                        continue;
+                    }
+                    // A sibling is satisfied by its own packages/ directory; anything else must be hoisted.
+                    if (str_starts_with($dependency, ORG . '/') && in_array(substr($dependency, strlen(ORG) + 1), packages(), true)) {
+                        continue;
+                    }
+                    $problems[] = "{$dependency} is required by packages/{$package} but not by the root; hoist it, replace hides the package's requirements from Composer";
                 }
             }
 
