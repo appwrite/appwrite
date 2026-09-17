@@ -4,8 +4,9 @@ namespace Utopia\Mqtt\Adapter;
 
 use Swoole\Server;
 use Swoole\Server\Port;
-use Swoole\Timer;
 use Utopia\Mqtt\Adapter;
+use Utopia\Mqtt\Adapter\Swoole\Timer;
+use Utopia\Mqtt\Adapter\Swoole\Timers\TimingWheel;
 use Utopia\Mqtt\Adapter\Swoole\Transport;
 
 class Swoole extends Adapter
@@ -13,6 +14,8 @@ class Swoole extends Adapter
     private const MAX_CONNECTIONS = 100_000;
 
     protected Server $server;
+
+    private Timer $timer;
 
     /** @var callable|null */
     private $onStart = null;
@@ -27,11 +30,13 @@ class Swoole extends Adapter
     private $onClose = null;
 
     /** @param list<Transport> $transports */
-    public function __construct(array $transports, private int $workers = 1)
+    public function __construct(array $transports, private int $workers = 1, ?Timer $timer = null)
     {
         if ($transports === []) {
             throw new \InvalidArgumentException('At least one transport is required.');
         }
+
+        $this->timer = $timer ?? new TimingWheel();
 
         $master = $transports[0];
         $this->server = new Server($master->host, $master->port, SWOOLE_BASE, $master->getSockType());
@@ -129,16 +134,16 @@ class Swoole extends Adapter
 
     public function tick(int $seconds, callable $callback): int
     {
-        return Timer::tick($seconds * 1000, $callback);
+        return $this->timer->tick($seconds, $callback);
     }
 
     public function after(int $seconds, callable $callback): int
     {
-        return Timer::after($seconds * 1000, $callback);
+        return $this->timer->after($seconds, $callback);
     }
 
     public function clear(int $id): void
     {
-        Timer::clear($id);
+        $this->timer->clear($id);
     }
 }

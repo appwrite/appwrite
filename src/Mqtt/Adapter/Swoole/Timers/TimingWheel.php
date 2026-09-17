@@ -2,42 +2,64 @@
 
 namespace Utopia\Mqtt\Adapter\Swoole\Timers;
 
-use Utopia\Mqtt\Adapter;
+use Swoole\Timer as SwooleTimer;
 use Utopia\Mqtt\Adapter\Swoole\Timer;
 use Utopia\Mqtt\Keepalive;
 
 class TimingWheel implements Timer
 {
-    /** @var callable|null */
-    private $onExpire = null;
+    private int $sequence = 0;
 
-    public function __construct(private readonly Keepalive $wheel = new Keepalive())
+    private ?int $heartbeat = null;
+
+    /** @var array<int, array{callback: callable, interval: int, recurring: bool}> */
+    private array $timers = [];
+
+    public function __construct(private readonly Keepalive $wheel = new Keepalive(interval: 1))
     {
     }
 
-    public function schedule(int $id, float $expiresAt): void
+    public function tick(int $seconds, callable $callback): int
     {
-        $this->wheel->schedule($id, $expiresAt);
+        return $this->add($seconds, $callback, true);
     }
 
-    public function remove(int $id): void
+    public function after(int $seconds, callable $callback): int
+    {
+        return $this->add($seconds, $callback, false);
+    }
+
+    public function clear(int $id): void
     {
         $this->wheel->remove($id);
+        unset($this->timers[$id]);
     }
 
-    public function onExpire(callable $callback): void
+    private function add(int $seconds, callable $callback, bool $recurring): int
     {
-        $this->onExpire = $callback;
+        $id = ++$this->sequence;
+        $this->timers[$id] = ['callback' => $callback, 'interval' => $seconds, 'recurring' => $recurring];
+        $this->wheel->schedule($id, \microtime(true) + $seconds);
+        $this->heartbeat ??= SwooleTimer::tick(1000, $this->drain(...));
+
+        return $id;
     }
 
-    public function start(Adapter $adapter): void
+    private function drain(): void
     {
-        $adapter->tick($this->wheel->interval, function (): void {
-            foreach ($this->wheel->drain((int) \microtime(true)) as $id) {
-                if ($this->onExpire !== null) {
-                    \call_user_func($this->onExpire, $id);
-                }
+        foreach ($this->wheel->drain((int) \microtime(true)) as $id) {
+            $timer = $this->timers[$id] ?? null;
+            if ($timer === null) {
+                continue;
             }
-        });
+
+            if ($timer['recurring']) {
+                $this->wheel->schedule($id, \microtime(true) + $timer['interval']);
+            } else {
+                unset($this->timers[$id]);
+            }
+
+            \call_user_func($timer['callback']);
+        }
     }
 }

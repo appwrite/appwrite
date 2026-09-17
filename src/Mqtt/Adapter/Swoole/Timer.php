@@ -2,15 +2,11 @@
 
 namespace Utopia\Mqtt\Adapter\Swoole;
 
-use Utopia\Mqtt\Adapter;
-
 interface Timer
 {
-    public function schedule(int $id, float $expiresAt): void;
+    public function tick(int $seconds, callable $callback): int;
 
-    public function remove(int $id): void;
+    public function after(int $seconds, callable $callback): int;
 
-    public function onExpire(callable $callback): void;
-
-    public function start(Adapter $adapter): void;
+    public function clear(int $id): void;
 }
