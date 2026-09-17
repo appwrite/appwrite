@@ -4,8 +4,8 @@ require_once __DIR__ . '/../../../vendor/autoload.php';
 
 use Utopia\Mqtt\Adapter;
 use Utopia\Mqtt\Packet;
-use Utopia\Mqtt\Packet\V3;
-use Utopia\Mqtt\Packet\V5;
+use Utopia\Mqtt\Packet\Specs\V3;
+use Utopia\Mqtt\Packet\Specs\V5;
 use Utopia\Mqtt\Properties;
 use Utopia\Mqtt\Property;
 use Utopia\Mqtt\Server;

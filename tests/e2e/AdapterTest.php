@@ -7,8 +7,8 @@ namespace Utopia\Mqtt\Tests\E2E;
 use PHPUnit\Framework\TestCase;
 use Utopia\Mqtt\Client;
 use Utopia\Mqtt\Packet;
-use Utopia\Mqtt\Packet\V3;
-use Utopia\Mqtt\Packet\V5;
+use Utopia\Mqtt\Packet\Specs\V3;
+use Utopia\Mqtt\Packet\Specs\V5;
 use Utopia\Mqtt\Properties;
 use Utopia\Mqtt\Property;
 

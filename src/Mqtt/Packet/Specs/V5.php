@@ -1,6 +1,6 @@
 <?php
 
-namespace Utopia\Mqtt\Packet;
+namespace Utopia\Mqtt\Packet\Specs;
 
 use Utopia\Mqtt\Packet;
 use Utopia\Mqtt\Properties;

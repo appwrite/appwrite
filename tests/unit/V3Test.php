@@ -6,7 +6,7 @@ namespace Utopia\Mqtt\Tests\Unit;
 
 use PHPUnit\Framework\TestCase;
 use Utopia\Mqtt\Packet;
-use Utopia\Mqtt\Packet\V3;
+use Utopia\Mqtt\Packet\Specs\V3;
 
 final class V3Test extends TestCase
 {
