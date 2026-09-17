@@ -22,6 +22,7 @@ use Appwrite\Event\Publisher\StatsResources as StatsResourcesPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Execution\Store as ExecutionStore;
 use Appwrite\Geo\Client as GeoClient;
+use Appwrite\Messaging\Provider as MessagingProvider;
 use Appwrite\Platform\Modules\Storage\Config\StorageCacheControl;
 use Appwrite\Screenshots\Client as ScreenshotsClient;
 use Appwrite\Usage\Connection as UsageConnection;
@@ -45,6 +46,7 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Container;
 use Utopia\DSN\DSN;
 use Utopia\Lock\Distributed;
+use Utopia\Messaging\Adapter\SMS as SMSAdapter;
 use Utopia\Pools\Adapter\Swoole as SwoolePoolAdapter;
 use Utopia\Pools\Group;
 use Utopia\Pools\Pool as Connections;
@@ -116,6 +118,34 @@ $container->set('autogravity', function (Cache $cache) {
 }, ['cache']);
 
 $container->set('telemetry', fn () => new NoTelemetry(), []);
+
+/**
+ * The platform's own sending adapters, built from _APP_SMS_PROVIDER and
+ * _APP_WHATSAPP_PROVIDER for the one-time passcodes and invites Appwrite sends on a
+ * project's behalf. Null when the variable is unset, which is how an instance says it
+ * cannot deliver on that channel.
+ *
+ * A malformed DSN is reported and read as unset rather than thrown, because these are
+ * injected into every messaging job: letting one bad platform variable escape would
+ * stop a project's push and email messages, which it has nothing to do with.
+ */
+$container->set('adapterForSMS', function (Telemetry $telemetry): ?SMSAdapter {
+    try {
+        return (new MessagingProvider($telemetry))->internalSMS();
+    } catch (\Throwable $error) {
+        Console::error('Ignoring _APP_SMS_PROVIDER: ' . $error->getMessage());
+        return null;
+    }
+}, ['telemetry']);
+
+$container->set('adapterForWhatsApp', function (Telemetry $telemetry): ?SMSAdapter {
+    try {
+        return (new MessagingProvider($telemetry))->internalWhatsApp();
+    } catch (\Throwable $error) {
+        Console::error('Ignoring _APP_WHATSAPP_PROVIDER: ' . $error->getMessage());
+        return null;
+    }
+}, ['telemetry']);
 
 $container->set('authorization', fn () => new Authorization(), []);
 
