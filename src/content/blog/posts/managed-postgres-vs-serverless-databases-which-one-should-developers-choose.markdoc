@@ -10,7 +10,7 @@ category: comparisons
 featured: false
 unlisted: false
 faqs:
-- question: Is a serverless database cheaper than dedicated Postgres?
+  - question: Is a serverless database cheaper than dedicated Postgres?
     answer: A serverless database is usually cheaper for low-traffic, spiky, or unpredictable workloads because you pay based on usage. Dedicated Postgres can be cheaper for steady, high-volume workloads because the provisioned capacity is used consistently.
   - question: Do serverless databases have cold starts?
     answer: Some serverless databases can have cold starts when compute scales to zero and needs to resume. This can add latency to the first query after an idle period, so it matters for latency-sensitive applications.
