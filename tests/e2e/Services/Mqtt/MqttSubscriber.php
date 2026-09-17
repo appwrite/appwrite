@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Tests\E2E\Services\Mqtt;
 
 use Utopia\Mqtt\Packet;
-use Utopia\Mqtt\Packet\V5;
+use Utopia\Mqtt\Packet\Specs\V5;
 use Utopia\Mqtt\Properties;
 use Utopia\Mqtt\Property;
 
