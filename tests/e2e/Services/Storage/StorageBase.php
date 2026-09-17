@@ -1832,6 +1832,144 @@ trait StorageBase
         ]);
     }
 
+    /**
+     * Concurrent unauthenticated uploads run the abuse rate limiter from many
+     * coroutines in one HTTP worker. A shared Redis connection there kills the
+     * worker with a fatal Swoole error instead of answering the requests.
+     *
+     * Two assertions, both on observable behavior. Every request must be
+     * answered -- a dead worker cannot answer, so it surfaces as a transport
+     * error or a negative status code. And every answer must carry coherent
+     * rate limit headers, which a limiter reading a corrupted connection
+     * cannot produce. Those headers are only checked for internal coherence,
+     * never against a configured limit. The header check holds whatever the
+     * worker topology is;
+     * the fan-out only decides how likely the requests are to land on one
+     * worker together, so treat this as a regression guard rather than proof
+     * of safety at any given concurrency.
+     */
+    public function testCreateBucketFileParallelUploads(): void
+    {
+        $total = 24;
+
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'bucketId' => ID::unique(),
+            'name' => 'Test Bucket Parallel Upload',
+            'antivirus' => false,
+            'encryption' => false,
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+
+        $this->assertEquals(201, $bucket['headers']['status-code']);
+
+        $bucketId = $bucket['body']['$id'];
+        $tmpDirectory = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'appwrite-parallel-uploads-' . $bucketId;
+        mkdir($tmpDirectory);
+
+        try {
+            $source = $tmpDirectory . DIRECTORY_SEPARATOR . 'parallel-upload.bin';
+            file_put_contents($source, str_repeat('parallel upload probe ', 32));
+
+            $endpoint = parse_url($this->client->getEndpoint());
+            $scheme = $endpoint['scheme'] ?? 'http';
+            $host = $endpoint['host'] ?? 'appwrite';
+            $port = $endpoint['port'] ?? ($scheme === 'https' ? 443 : 80);
+            $basePath = rtrim($endpoint['path'] ?? '', '/');
+
+            $responses = [];
+
+            \Swoole\Coroutine\run(function () use ($basePath, $bucketId, $host, $port, $scheme, $source, $total, &$responses): void {
+                $wg = new \Swoole\Coroutine\WaitGroup();
+
+                for ($index = 0; $index < $total; $index++) {
+                    $wg->add();
+                    \Swoole\Coroutine::create(function () use ($basePath, $bucketId, $host, $index, $port, &$responses, $scheme, $source, $wg): void {
+                        try {
+                            $client = new \Swoole\Coroutine\Http\Client($host, (int) $port, $scheme === 'https');
+                            $client->set([
+                                'timeout' => 60,
+                                'ssl_verify_peer' => false,
+                                'ssl_verify_host' => false,
+                            ]);
+                            // No API key or session: the abuse limiter only runs for unprivileged callers.
+                            $client->setHeaders(['x-appwrite-project' => $this->getProject()['$id']]);
+                            $client->setMethod(Client::METHOD_POST);
+                            $client->setData(['fileId' => ID::unique()]);
+                            $client->addFile($source, 'file', 'application/octet-stream', 'parallel-upload.bin');
+                            $client->execute($basePath . '/storage/buckets/' . $bucketId . '/files');
+
+                            $responses[$index] = [
+                                'error' => $client->errMsg,
+                                'headers' => $client->headers ?? [],
+                                'statusCode' => $client->statusCode,
+                            ];
+
+                            $client->close();
+                        } finally {
+                            $wg->done();
+                        }
+                    });
+                }
+
+                $wg->wait();
+            });
+
+            $this->assertCount($total, $responses);
+
+            foreach ($responses as $index => $response) {
+                // A dead worker shows up as a transport error or a negative status code.
+                $this->assertSame('', $response['error'], 'Upload ' . $index . ' failed at the connection level');
+                $this->assertContains($response['statusCode'], [201, 429], 'Upload ' . $index . ' returned ' . $response['statusCode']);
+
+                // The limiter answered from a usable connection, so it can still count.
+                // Coherence only: whatever the route's configured limit is, the
+                // remaining count has to fall inside it.
+                $this->assertArrayHasKey('x-ratelimit-limit', $response['headers'], 'Upload ' . $index . ' carried no rate limit headers');
+                $this->assertArrayHasKey('x-ratelimit-remaining', $response['headers'], 'Upload ' . $index . ' carried no remaining count');
+
+                $limit = (int) $response['headers']['x-ratelimit-limit'];
+                $remaining = (int) $response['headers']['x-ratelimit-remaining'];
+
+                $this->assertGreaterThan(0, $limit, 'Upload ' . $index . ' reported a nonsensical rate limit');
+                $this->assertGreaterThanOrEqual(0, $remaining);
+                $this->assertLessThanOrEqual($limit, $remaining);
+            }
+
+            $this->assertContains(201, array_column($responses, 'statusCode'));
+
+            // The worker must still be serving after the burst.
+            $alive = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+
+            $this->assertEquals(200, $alive['headers']['status-code']);
+        } finally {
+            $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $bucketId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+
+            foreach (glob($tmpDirectory . DIRECTORY_SEPARATOR . '*') ?: [] as $file) {
+                unlink($file);
+            }
+
+            if (is_dir($tmpDirectory)) {
+                rmdir($tmpDirectory);
+            }
+        }
+    }
+
     public static function parallelChunksProvider(): array
     {
         return [
