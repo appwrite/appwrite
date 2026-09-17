@@ -43,6 +43,8 @@ class Connection
     /** The keep-alive wheel bucket (second) this connection currently sits in; 0 when not scheduled. */
     public int $wheelSlot = 0;
 
+    private ?Broker $broker = null;
+
     private int $packetId = 0;
 
     /**
@@ -66,6 +68,21 @@ class Connection
         public readonly int $fd,
     ) {
         $this->openedAt = microtime(true);
+    }
+
+    public function bind(Broker $broker): void
+    {
+        $this->broker = $broker;
+    }
+
+    public function publish(string $topic, string $payload, int $qos = 0, bool $dup = false, ?int $sequence = null): void
+    {
+        $this->broker?->deliver($this, $topic, $payload, $qos, $dup, $sequence);
+    }
+
+    public function disconnect(int $reason = 0): void
+    {
+        $this->broker?->drop($this, $reason);
     }
 
     /**
