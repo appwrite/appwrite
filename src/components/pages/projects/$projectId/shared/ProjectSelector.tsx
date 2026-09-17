@@ -27,6 +27,8 @@ import {
   consoleTeamQueryOptions,
   useOrganizationBillingInvoicePresence,
   isOrganizationBillingReadonlyStatus,
+  useOrganizationPlan,
+  useBillingPlans,
 } from '@/lib/react-query/hooks'
 import {
   isHttpPaymentRequiredError,
@@ -40,7 +42,8 @@ import {
   useQueryClient,
   keepPreviousData,
 } from '@tanstack/react-query'
-import { getPlanBadgeColor, getPlanDisplayName } from '@/lib/utils/plan-badge'
+import { getPlanBadgeColor, getPlanBadgeStyle, getPlanDisplayName } from '@/lib/utils/plan-badge'
+import { resolveOrganizationCanonicalPlan } from '@/lib/utils/plan-filter'
 import { truncateMiddle } from '@/lib/utils'
 import {
   formatProjectNameForDisplay,
@@ -539,6 +542,22 @@ export function ProjectSelector({
     )
   }, [currentProjectTeam, organizations])
 
+  const { plan: currentOrganizationPlan } = useOrganizationPlan(
+    isCloud ? currentProjectTeam?.orgId : null,
+  )
+  const { plans: billingPlans } = useBillingPlans()
+
+  const currentProjectOrgForBadge = useMemo(() => {
+    if (!currentProjectOrg) return null
+    const plan = resolveOrganizationCanonicalPlan({
+      billingPlan: currentProjectOrg.billingPlan,
+      billingPlanId: currentProjectOrg.billingPlanId,
+      plans: billingPlans,
+      organizationPlan: currentOrganizationPlan,
+    })
+    return { ...currentProjectOrg, plan }
+  }, [currentProjectOrg, billingPlans, currentOrganizationPlan])
+
   const orgDisplayName = currentProjectTeam?.name || resolvedTeam?.name || ''
 
   const lastFullProjectsCountRef = useRef(0)
@@ -890,7 +909,7 @@ export function ProjectSelector({
           </div>
           <ProjectSelectorPlanBadgeSlot
             isCloud={isCloud}
-            org={currentProjectOrg}
+            org={currentProjectOrgForBadge}
             billingStress={!!billingFailureTeamId}
           />
           <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
@@ -1013,7 +1032,7 @@ export function ProjectSelector({
               {!compact ? (
                 <ProjectSelectorPlanBadgeSlot
                   isCloud={isCloud}
-                  org={currentProjectOrg}
+                  org={currentProjectOrgForBadge}
                   billingStress={!!billingFailureTeamId}
                 />
               ) : null}
@@ -1211,6 +1230,11 @@ function ProjectSelectorContent({
                                 ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
                                 : getPlanBadgeColor(teamOrg.plan),
                             )}
+                            style={
+                              teamOrg.billingPlanDowngrade
+                                ? undefined
+                                : getPlanBadgeStyle(teamOrg.plan)
+                            }
                           >
                             {teamOrg.billingPlanDowngrade
                               ? t('Downgraded')
@@ -1554,6 +1578,11 @@ function MobileProjectSelectorContent({
                               ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
                               : getPlanBadgeColor(teamOrg.plan),
                           )}
+                          style={
+                            teamOrg.billingPlanDowngrade
+                              ? undefined
+                              : getPlanBadgeStyle(teamOrg.plan)
+                          }
                         >
                           {teamOrg.billingPlanDowngrade
                             ? t('Downgraded')

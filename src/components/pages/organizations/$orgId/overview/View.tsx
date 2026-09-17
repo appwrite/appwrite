@@ -57,6 +57,7 @@ import {
   DOMAINS_DEFAULT_SORT_BY,
   DOMAINS_DEFAULT_SORT_ORDER,
   useOrganizationPlan,
+  useBillingPlans,
   useOrganizationBillingInvoicePresence,
   isOrganizationBillingReadonlyStatus,
   isBudgetLimitReached,
@@ -161,9 +162,13 @@ import { isPaymentAuthentication } from '@/lib/billing/addons'
 import { registerCommandCenterOpener } from '@/lib/command-center/opener-bridge'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
 import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
-import { getPlanBadgeColor, getPlanDisplayName } from '@/lib/utils/plan-badge'
 import {
-  getPlanNameFromTier,
+  getPlanBadgeColor,
+  getPlanBadgeStyle,
+  getPlanDisplayName,
+} from '@/lib/utils/plan-badge'
+import {
+  resolveOrganizationCanonicalPlan,
   resolveOrganizationPlanDisplayLabel,
   type CanonicalPlanId} from '@/lib/utils/plan-filter'
 import { BillingTab } from '../billing/BillingTab'
@@ -923,6 +928,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     ...organizationQueryOptions(orgId),
     placeholderData: keepPreviousData,
   })
+  const { plans: billingPlans } = useBillingPlans()
 
   // Get organizations list and map to our Organization type
   // Note: The API returns "teams" but they are actually organizations
@@ -935,15 +941,18 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
         name: string
         total?: number
         billingPlan?: string
+        billingPlanId?: string
         billingPlanDowngrade?: unknown
         tier?: string
         prefs?: Record<string, unknown>
         status?: string
       }) => {
-        const planName = getPlanNameFromTier(
-          org.billingPlan ?? (org.prefs as { tier?: string })?.tier ?? 'free',
-        )
-        const plan = planName as CanonicalPlanId
+        const plan = resolveOrganizationCanonicalPlan({
+          billingPlan: org.billingPlan,
+          billingPlanId: org.billingPlanId,
+          tier: (org.prefs as { tier?: string })?.tier ?? org.tier,
+          plans: billingPlans,
+        })
 
         return {
           $id: org.$id,
@@ -953,10 +962,13 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
           plan,
           members: org.total || 0,
           status: org.status,
+          billingPlan: org.billingPlan,
+          billingPlanId: org.billingPlanId,
           billingPlanDowngrade: org.billingPlanDowngrade}
       },
+      },
     )
-  }, [organizationsData])
+  }, [organizationsData, billingPlans])
 
   // Get selected organization from URL param (orgId)
   const selectedOrg = useMemo(() => {
@@ -968,23 +980,28 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       if (fromList) return fromList
     }
     if (organizationDetail && organizationDetail.$id === orgId) {
-      const planName = getPlanNameFromTier(
-        organizationDetail.billingPlan ??
-          (organizationDetail.prefs as { tier?: string })?.tier ??
-          'free',
-      )
+      const plan = resolveOrganizationCanonicalPlan({
+        billingPlan: organizationDetail.billingPlan,
+        billingPlanId: (organizationDetail as { billingPlanId?: string })
+          .billingPlanId,
+        tier: (organizationDetail.prefs as { tier?: string })?.tier,
+        plans: billingPlans,
+      })
       return {
         $id: organizationDetail.$id,
         name: organizationDetail.name,
         slug: organizationDetail.name.toLowerCase().replace(/\s+/g, '-'),
         avatar: undefined,
-        plan: planName as CanonicalPlanId,
+        plan,
         members: organizationDetail.total || 0,
         status: organizationDetail.status,
+        billingPlan: organizationDetail.billingPlan,
+        billingPlanId: (organizationDetail as { billingPlanId?: string })
+          .billingPlanId,
         billingPlanDowngrade: organizationDetail.billingPlanDowngrade} satisfies Organization
     }
     return null
-  }, [orgId, organizations, organizationDetail])
+  }, [orgId, organizations, organizationDetail, billingPlans])
 
   const orgBillingReadonlyForFailedInvoice =
     showFailedInvoiceOrgAlert &&
@@ -2142,6 +2159,11 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                 ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
                                 : getPlanBadgeColor(selectedOrg.plan),
                             )}
+                            style={
+                              selectedOrg.billingPlanDowngrade
+                                ? undefined
+                                : getPlanBadgeStyle(selectedOrg.plan)
+                            }
                           >
                             {selectedOrg.billingPlanDowngrade
                               ? t('Downgraded')
@@ -2184,6 +2206,11 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                         ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
                                         : getPlanBadgeColor(org.plan),
                                     )}
+                                    style={
+                                      org.billingPlanDowngrade
+                                        ? undefined
+                                        : getPlanBadgeStyle(org.plan)
+                                    }
                                   >
                                     {org.billingPlanDowngrade
                                       ? t('Downgraded')
