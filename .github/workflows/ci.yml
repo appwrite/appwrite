@@ -214,7 +214,6 @@ jobs:
               { name: 'Sites',             runner: runner4, functional: true,  processes: null },
               { name: 'Proxy',             runner: runner4, functional: true,  processes: null },
               { name: 'Storage',           runner: runner4, functional: true,  processes: null },
-              { name: 'S3',                runner: runner4, functional: true,  processes: null },
               { name: 'Tokens',            runner: runner4, functional: true,  processes: null },
               { name: 'Teams',             runner: runner4, functional: true,  processes: null },
               { name: 'Usage',             runner: runner4, functional: true,  processes: null },

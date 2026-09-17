@@ -96,8 +96,13 @@ class SignatureV4
 
         $scope = \implode('/', \array_slice($credential, 1, 4));
         $secrets = $this->keySecrets($project);
+        // Fastly may rewrite HeadObject to GET while forwarding the HEAD signature.
+        $methods = [\strtoupper($request->getMethod())];
+        if ($methods[0] === 'GET') {
+            $methods[] = 'HEAD';
+        }
 
-        foreach ($this->canonicalMethods($request) as $method) {
+        foreach ($methods as $method) {
             $canonicalRequest = $this->canonicalRequest($request, $normalizedSignedHeaders, $presigned, $method);
             $stringToSign = "AWS4-HMAC-SHA256\n{$date}\n{$scope}\n" . \hash('sha256', $canonicalRequest);
 
@@ -273,26 +278,6 @@ class SignatureV4
         }
 
         return $parameters;
-    }
-
-    /**
-     * Proxies in front of Cloud (Fastly) may convert HeadObject to GET while
-     * forwarding the HEAD signature the client actually signed. Accept either
-     * verb so HeadObject is not rejected as AccessDenied.
-     *
-     * @return array<int, string>
-     */
-    private function canonicalMethods(Request $request): array
-    {
-        $method = \strtoupper($request->getMethod());
-        if ($method === 'GET') {
-            return ['GET', 'HEAD'];
-        }
-        if ($method === 'HEAD') {
-            return ['HEAD', 'GET'];
-        }
-
-        return [$method];
     }
 
     private function canonicalRequest(Request $request, array $signedHeaders, bool $presigned, string $method): string
