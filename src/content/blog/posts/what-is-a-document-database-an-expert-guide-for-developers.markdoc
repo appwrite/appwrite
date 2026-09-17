@@ -116,7 +116,7 @@ A few document databases dominate real-world usage:
 * [MongoDB](https://www.mongodb.com/docs/manual/) is the most widely used document database, known for its flexible querying and mature tooling.
 * [Amazon DynamoDB](https://docs.aws.amazon.com/dynamodb/) is a managed key-value and document store built for predictable low-latency access at scale.
 * [Apache CouchDB](https://docs.couchdb.org/) focuses on offline-first replication and sync.
-* * Appwrite DocumentsDB provides the document model with built-in permissions, queries, relationships, and realtime updates as part of the Appwrite backend platform.
+* Appwrite DocumentsDB provides the document model with built-in permissions, queries, relationships, and realtime updates as part of the Appwrite backend platform.
 
 MongoDB consistently ranks as the most popular document database in the [DB-Engines ranking](https://db-engines.com/en/ranking), which tracks database popularity across search, job listings, and community signals.
 
