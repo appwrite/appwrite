@@ -1,6 +1,6 @@
 <?php
 
-namespace Utopia\Mqtt\Adapter\Swoole\Timers;
+namespace Utopia\Mqtt\Adapter\Swoole;
 
 use Utopia\Mqtt\Adapter;
 

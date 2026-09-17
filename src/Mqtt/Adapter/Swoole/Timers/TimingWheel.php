@@ -3,6 +3,7 @@
 namespace Utopia\Mqtt\Adapter\Swoole\Timers;
 
 use Utopia\Mqtt\Adapter;
+use Utopia\Mqtt\Adapter\Swoole\Timer;
 use Utopia\Mqtt\Keepalive;
 
 class TimingWheel implements Timer
