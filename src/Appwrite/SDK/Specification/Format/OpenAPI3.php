@@ -356,7 +356,7 @@ class OpenAPI3 extends Format
                         'name' => $methodObj->getMethodName(),
                         'namespace' => $methodObj->getNamespace(),
                         'platforms' => $methodSdkPlatforms,
-                        'desc' => $methodObj->getDesc(),
+                        'summary' => $methodObj->getSummary(),
                         'auth' => $this->getExampleAuth($methodSecurities, [], $methodSdkPlatforms),
                         'parameters' => [],
                         'required' => [],
