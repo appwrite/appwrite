@@ -126,6 +126,7 @@ class Messaging extends Action
                     $message,
                     $project,
                     $recipients,
+                    $publisherForUsage,
                     $payload['channel'] ?? null,
                     (bool)($payload['fallback'] ?? false)
                 );
@@ -833,6 +834,7 @@ class Messaging extends Action
         Document $message,
         Document $project,
         array $recipients,
+        UsagePublisher $publisherForUsage,
         ?string $channel = null,
         bool $fallback = false
     ): void {
@@ -902,6 +904,19 @@ class Messaging extends Action
         }
 
         if ($errors === []) {
+            // The controller books auth.method.phone for every OTP; this records which of them WhatsApp carried, so Cloud can price the channels apart.
+            $usage = new UsageContext();
+            $usage->addMetric(METRIC_AUTH_METHOD_PHONE_WHATSAPP, 1);
+
+            if (!empty($countryCode)) {
+                $usage->addMetric(\str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_WHATSAPP_COUNTRY_CODE), 1);
+            }
+
+            $publisherForUsage->enqueue(new Usage(
+                project: $project,
+                metrics: $usage->getMetrics(),
+            ));
+
             return;
         }
 
