@@ -22,15 +22,9 @@ class V28 extends Filter
     /**
      * Make a `trigger` filter on `http` cover `domain` as well.
      *
-     * Domain-routed executions were stored as `http` until 2.3.0, so a client
-     * pinned below that format expects them back from `equal('trigger',
-     * ['http'])` and expects them gone from `notEqual('trigger', 'http')`. The
-     * response filter renames the value on the way out, but the query runs
-     * against stored values first, so without this the rows are already gone
-     * before there is anything to rename.
-     *
-     * `equal` takes the extra value directly. `notEqual` accepts exactly one
-     * value, so it gets a second query instead, which ands with the first.
+     * Domain-routed executions were stored as `http` until 2.3.0, and the
+     * query runs against stored values, so the response filter alone would
+     * rename rows the query had already excluded.
      */
     protected function parseTriggerQueries(array $content): array
     {
@@ -64,6 +58,7 @@ class V28 extends Filter
                     $rewritten = true;
                     break;
                 case Query::TYPE_NOT_EQUAL:
+                    // notEqual takes exactly one value, so it ands instead
                     $additional[] = Query::notEqual('trigger', 'domain');
                     $rewritten = true;
                     break;
