@@ -6,9 +6,11 @@ use Appwrite\Event\Message\Func as FunctionMessage;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Schedule\Source;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Platform\Action;
 use Utopia\Schedule\Occurrence;
 use Utopia\Schedule\Scheduler;
+use Utopia\Schedule\Source\Row;
 use Utopia\Span\Span;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
@@ -44,8 +46,15 @@ class ScheduleFunctions extends Action
         $scheduler = new Scheduler(
             source: $source,
             telemetry: $telemetry,
-            onError: function (\Throwable $error): void {
+            onError: function (\Throwable $error, ?Row $row = null): void {
                 Span::init('schedule.functions.reconcile');
+                // The row a failure belongs to, so an error names one schedule
+                // rather than the region it happened in.
+                if ($row?->data instanceof Document) {
+                    Span::add('project.id', (string) $row->data->getAttribute('projectId'));
+                    Span::add('resource.id', (string) $row->data->getAttribute('resourceId'));
+                    Span::add('schedule.id', $row->id);
+                }
                 Span::current()?->finish(error: $error);
             },
         );

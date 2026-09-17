@@ -10,6 +10,7 @@ use Utopia\Database\Document;
 use Utopia\Platform\Action;
 use Utopia\Schedule\Occurrence;
 use Utopia\Schedule\Scheduler;
+use Utopia\Schedule\Source\Row;
 use Utopia\Span\Span;
 use Utopia\Telemetry\Adapter as Telemetry;
 
@@ -42,8 +43,15 @@ class ScheduleExecutions extends Action
             source: $source,
             syncSeconds: self::UPDATE_TIMER,
             telemetry: $telemetry,
-            onError: function (\Throwable $error): void {
+            onError: function (\Throwable $error, ?Row $row = null): void {
                 Span::init('schedule.executions.reconcile');
+                // The row a failure belongs to, so an error names one schedule
+                // rather than the region it happened in.
+                if ($row?->data instanceof Document) {
+                    Span::add('project.id', (string) $row->data->getAttribute('projectId'));
+                    Span::add('resource.id', (string) $row->data->getAttribute('resourceId'));
+                    Span::add('schedule.id', $row->id);
+                }
                 Span::current()?->finish(error: $error);
             },
         );
