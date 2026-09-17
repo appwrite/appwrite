@@ -28,6 +28,10 @@ trait PoliciesBase
         ];
     }
 
+    // =========================================================================
+    // Get Policy
+    // =========================================================================
+
     public function testGetPolicy(): void
     {
         foreach ($this->getExpectedPolicies() as $policyId => $fields) {
@@ -140,6 +144,10 @@ trait PoliciesBase
 
         $this->assertSame(400, $response['headers']['status-code']);
     }
+
+    // =========================================================================
+    // List Policies
+    // =========================================================================
 
     public function testListPolicies(): void
     {
@@ -301,6 +309,10 @@ trait PoliciesBase
         $this->assertSame(401, $response['headers']['status-code']);
     }
 
+    // =========================================================================
+    // Password Dictionary Policy
+    // =========================================================================
+
     public function testUpdatePasswordDictionaryPolicyEnable(): void
     {
         $response = $this->updatePasswordDictionaryPolicy(true);
@@ -367,6 +379,10 @@ trait PoliciesBase
 
         $this->assertSame(400, $response['headers']['status-code']);
     }
+
+    // =========================================================================
+    // Password History Policy
+    // =========================================================================
 
     public function testUpdatePasswordHistoryPolicyEnable(): void
     {
@@ -456,6 +472,10 @@ trait PoliciesBase
 
         $this->assertSame(401, $response['headers']['status-code']);
     }
+
+    // =========================================================================
+    // Password Strength
+    // =========================================================================
 
     public function testUpdatePasswordStrengthPolicy(): void
     {
@@ -559,6 +579,10 @@ trait PoliciesBase
         $this->assertSame(401, $response['headers']['status-code']);
     }
 
+    // =========================================================================
+    // Password Personal Data Policy
+    // =========================================================================
+
     public function testUpdatePasswordPersonalDataPolicyEnable(): void
     {
         $response = $this->updatePasswordPersonalDataPolicy(true);
@@ -612,6 +636,10 @@ trait PoliciesBase
         $this->assertSame(401, $response['headers']['status-code']);
     }
 
+    // =========================================================================
+    // Session Alert Policy
+    // =========================================================================
+
     public function testUpdateSessionAlertPolicyEnable(): void
     {
         $response = $this->updateSessionAlertPolicy(true);
@@ -664,6 +692,10 @@ trait PoliciesBase
 
         $this->assertSame(401, $response['headers']['status-code']);
     }
+
+    // =========================================================================
+    // Session Duration Policy
+    // =========================================================================
 
     public function testUpdateSessionDurationPolicy(): void
     {
@@ -737,6 +769,10 @@ trait PoliciesBase
         $this->assertSame(401, $response['headers']['status-code']);
     }
 
+    // =========================================================================
+    // Session Invalidation Policy
+    // =========================================================================
+
     public function testUpdateSessionInvalidationPolicyEnable(): void
     {
         $response = $this->updateSessionInvalidationPolicy(true);
@@ -789,6 +825,10 @@ trait PoliciesBase
 
         $this->assertSame(401, $response['headers']['status-code']);
     }
+
+    // =========================================================================
+    // Session Limit Policy
+    // =========================================================================
 
     public function testUpdateSessionLimitPolicy(): void
     {
@@ -864,6 +904,10 @@ trait PoliciesBase
 
         $this->assertSame(401, $response['headers']['status-code']);
     }
+
+    // =========================================================================
+    // User Limit Policy
+    // =========================================================================
 
     public function testUpdateUserLimitPolicy(): void
     {
@@ -961,6 +1005,10 @@ trait PoliciesBase
 
         $this->assertSame(401, $response['headers']['status-code']);
     }
+
+    // =========================================================================
+    // Membership Privacy Policy
+    // =========================================================================
 
     public function testUpdateMembershipPrivacyPolicyAllEnabled(): void
     {
@@ -1191,6 +1239,10 @@ trait PoliciesBase
 
         $this->assertSame(401, $response['headers']['status-code']);
     }
+
+    // =========================================================================
+    // Helpers
+    // =========================================================================
 
     protected function buildHeaders(bool $authenticated = true): array
     {
