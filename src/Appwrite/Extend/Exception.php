@@ -48,6 +48,7 @@ class Exception extends \Exception
     public const string GENERAL_RESOURCE_LOCKED = 'general_resource_locked';
     public const string GENERAL_SMTP_DISABLED = 'general_smtp_disabled';
     public const string GENERAL_PHONE_DISABLED = 'general_phone_disabled';
+    public const string GENERAL_PWNED_PASSWORDS_UNAVAILABLE = 'general_pwned_passwords_unavailable';
     public const string GENERAL_ARGUMENT_INVALID = 'general_argument_invalid';
     public const string GENERAL_COLUMN_QUERY_LIMIT_EXCEEDED = 'general_column_query_limit_exceeded';
     public const string GENERAL_ATTRIBUTE_QUERY_LIMIT_EXCEEDED = 'general_attribute_query_limit_exceeded';
@@ -83,6 +84,7 @@ class Exception extends \Exception
     public const string USER_NOT_FOUND = 'user_not_found';
     public const string USER_PASSWORD_RECENTLY_USED = 'password_recently_used';
     public const string USER_PASSWORD_PERSONAL_DATA = 'password_personal_data';
+    public const string USER_PASSWORD_PWNED = 'password_pwned';
     public const string USER_EMAIL_ALREADY_EXISTS = 'user_email_already_exists';
     public const string USER_EMAIL_DISPOSABLE = 'user_email_disposable';
     public const string USER_EMAIL_FREE = 'user_email_free';

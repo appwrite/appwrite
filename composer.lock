@@ -4852,16 +4852,16 @@
         },
         {
             "name": "utopia-php/user-agent",
-            "version": "0.1.1",
+            "version": "0.1.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/user-agent.git",
-                "reference": "4f7bb7288cfe3ce8e257944c0827914901c873bc"
+                "reference": "0396bd6187fbc00b5a61f8876ff822f3428fe8c5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/user-agent/zipball/4f7bb7288cfe3ce8e257944c0827914901c873bc",
-                "reference": "4f7bb7288cfe3ce8e257944c0827914901c873bc",
+                "url": "https://api.github.com/repos/utopia-php/user-agent/zipball/0396bd6187fbc00b5a61f8876ff822f3428fe8c5",
+                "reference": "0396bd6187fbc00b5a61f8876ff822f3428fe8c5",
                 "shasum": ""
             },
             "require": {
@@ -4888,9 +4888,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/user-agent/issues",
-                "source": "https://github.com/utopia-php/user-agent/tree/0.1.1"
+                "source": "https://github.com/utopia-php/user-agent/tree/0.1.2"
             },
-            "time": "2026-07-20T09:05:28+00:00"
+            "time": "2026-09-17T08:48:33+00:00"
         },
         {
             "name": "utopia-php/validators",

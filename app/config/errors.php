@@ -69,6 +69,11 @@ return [
         'description' => 'Phone provider is not configured. Please check the _APP_SMS_PROVIDER environment variable of your Appwrite server.',
         'code' => 503,
     ],
+    Exception::GENERAL_PWNED_PASSWORDS_UNAVAILABLE => [
+        'name' => Exception::GENERAL_PWNED_PASSWORDS_UNAVAILABLE,
+        'description' => 'The breached password service could not be reached, so the password could not be verified. Please try again later.',
+        'code' => 503,
+    ],
     Exception::GENERAL_ARGUMENT_INVALID => [
         'name' => Exception::GENERAL_ARGUMENT_INVALID,
         'description' => 'The request contains one or more invalid arguments. Please refer to the endpoint documentation.',
@@ -269,6 +274,11 @@ return [
     Exception::USER_PASSWORD_PERSONAL_DATA => [
         'name' => Exception::USER_PASSWORD_PERSONAL_DATA,
         'description' => 'The password you are trying to use contains references to your name, email, phone or userID. For your security, please choose a different password and try again.',
+        'code' => 400,
+    ],
+    Exception::USER_PASSWORD_PWNED => [
+        'name' => Exception::USER_PASSWORD_PWNED,
+        'description' => 'The password you are trying to use has been exposed in a known data breach. For your security, please choose a different password and try again.',
         'code' => 400,
     ],
     Exception::USER_SESSION_NOT_FOUND => [
