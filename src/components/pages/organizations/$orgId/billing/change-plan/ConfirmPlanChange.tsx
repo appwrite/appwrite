@@ -7,7 +7,6 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import { formatDate } from '@/lib/date-utils'
 import { useT } from '@/lib/i18n/translate'
 import type {
   DowngradeDeletionItem,
@@ -59,7 +58,6 @@ export function ConfirmPlanChange({
   open,
   onOpenChange,
   planLabel,
-  planChangeDate,
   deletions,
   deletedOrganizationName,
   confirming,
@@ -68,8 +66,6 @@ export function ConfirmPlanChange({
   open: boolean
   onOpenChange: (open: boolean) => void
   planLabel?: string
-  /** When the plan actually changes. Deletions do not wait for it. */
-  planChangeDate?: string | null
   deletions?: PendingDowngradeDeletions | null
   deletedOrganizationName?: string
   confirming: boolean
@@ -155,16 +151,9 @@ export function ConfirmPlanChange({
         <div className={cn('space-y-2 px-6 pb-4', !showBody && 'pt-4')}>
           {planLabel ? (
             <p className="text-[13px] leading-normal text-muted-foreground">
-              {planChangeDate
-                ? t(
-                    'The deletions happen now. Your organization moves to the {plan} plan on {date}, when the current billing cycle ends.',
-                  )
-                    .replace('{plan}', planLabel)
-                    .replace('{date}', formatDate(planChangeDate))
-                : t('Your organization will move to the {plan} plan.').replace(
-                    '{plan}',
-                    planLabel,
-                  )}
+              {t(
+                'Your organization moves to the {plan} plan immediately.',
+              ).replace('{plan}', planLabel)}
             </p>
           ) : null}
           {/* The last line before the destructive button, so it carries the warning. */}

@@ -1271,7 +1271,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
     'מנפיק הכרטיס צריך שתאשרו את התשלום הזה. אשרו את החשבונית בהיסטוריית התשלומים.',
   "Your plan will change at the end of your current billing period. You'll keep access to your current plan features until then.":
     'התוכנית שלכם תשתנה בסוף תקופת החיוב הנוכחית. עד אז תשמרו על גישה לתכונות התוכנית הנוכחית.',
-  'Your plan will change on': 'התוכנית שלכם תשתנה בתאריך',
+  'Your plan changes immediately.': 'התוכנית שלכם תשתנה מיד.',
   'Your support ticket has been submitted': 'פניית התמיכה שלכם נשלחה',
   'Your transfer code': 'קוד ההעברה שלכם',
   'Zone File': 'קובץ Zone',
@@ -1348,7 +1348,6 @@ export const heOrganizationsDictionary: Record<string, string> = {
   resource: 'משאב',
   resources: 'משאבים',
   selected: 'נבחרו',
-  'the end of your billing period': 'סוף תקופת החיוב שלכם',
   'the selected organization': 'הארגון שנבחר',
   'this app': 'האפליקציה הזו',
   'this member': 'החבר הזה',
@@ -1480,8 +1479,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Confirm which organization to delete.': 'אשרו איזה ארגון למחוק.',
   'Confirm plan change': 'אישור שינוי התוכנית',
   'Confirm organization deletion': 'אישור מחיקת הארגון',
-  'Your organization will move to the {plan} plan.':
-    'הארגון שלכם יעבור לתוכנית {plan}.',
+  'Your organization moves to the {plan} plan immediately.':
+    'הארגון שלכם יעבור מיד לתוכנית {plan}.',
   'Delete and change plan': 'מחיקה ושינוי תוכנית',
   'Confirm which projects to delete first. The projects you keep are then checked against the selected plan.':
     'אשרו קודם אילו פרויקטים למחוק. הפרויקטים שתשאירו ייבדקו אז מול התוכנית שנבחרה.',
@@ -1492,20 +1491,17 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Addons not available on the selected plan': 'תוספים שאינם זמינים בתוכנית שנבחרה',
   'These addons will be disabled as part of this plan change. You do not need to turn them off first.':
     'התוספים האלה יבוטלו כחלק משינוי התוכנית. אין צורך לכבות אותם מראש.',
-  'They stay active until the end of your current billing cycle, then they are removed.':
-    'הם יישארו פעילים עד סוף מחזור החיוב הנוכחי, ואז יוסרו.',
+  'They are removed immediately.': 'הם יוסרו מיד.',
   'What changes in the projects you are keeping': 'מה משתנה בפרויקטים שאתם שומרים',
   'These changes happen on their own when your plan changes. There is nothing to select or clean up first.':
     'השינויים האלה מתרחשים מעצמם כשהתוכנית משתנה. אין מה לבחור או לנקות מראש.',
   'Backups stop running': 'הגיבויים מפסיקים לפעול',
-  'At the end of your current billing cycle these backup policies are turned off and stop creating backups. The policies are not deleted, but the selected plan has no Backups screen, so you will not be able to see or manage them.':
-    'בסוף מחזור החיוב הנוכחי מדיניות הגיבוי הזו תכובה ותפסיק ליצור גיבויים. המדיניות לא נמחקת, אבל בתוכנית שנבחרה אין מסך גיבויים, כך שלא תוכלו לראות או לנהל אותה.',
+  'These backup policies are turned off immediately and stop creating backups. The policies are not deleted, but the selected plan has no Backups screen, so you will not be able to see or manage them.':
+    'מדיניות הגיבוי הזו תכובה מיד ותפסיק ליצור גיבויים. המדיניות לא נמחקת, אבל בתוכנית שנבחרה אין מסך גיבויים, כך שלא תוכלו לראות או לנהל אותה.',
   'Dedicated databases are spun down': 'מסדי נתונים ייעודיים מושבתים',
   'The selected plan does not include dedicated databases, so these are spun down when your plan changes. Your data is preserved, but the database stops serving requests and cannot be started again, even if you move back to a plan that includes them.':
     'התוכנית שנבחרה אינה כוללת מסדי נתונים ייעודיים, ולכן הם מושבתים כשהתוכנית משתנה. הנתונים נשמרים, אבל מסד הנתונים מפסיק לשרת בקשות ולא ניתן להפעיל אותו מחדש, גם אם תחזרו לתוכנית שכוללת אותם.',
   'The following is deleted as soon as you confirm.': 'הפריטים הבאים יימחקו מיד עם האישור.',
-  'The deletions happen now. Your organization moves to the {plan} plan on {date}, when the current billing cycle ends.':
-    'המחיקות מתבצעות עכשיו. הארגון שלכם יעבור לתוכנית {plan} בתאריך {date}, בתום מחזור החיוב הנוכחי.',
   'Deleted data cannot be recovered.': 'לא ניתן לשחזר נתונים שנמחקו.',
   'Could not load which backup policies stop running when your plan changes.':
     'לא ניתן היה לטעון אילו מדיניות גיבוי יפסיקו לפעול כשהתוכנית תשתנה.',
