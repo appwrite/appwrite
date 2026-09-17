@@ -607,6 +607,8 @@ export const heSharedUiDictionary: Record<string, string> = {
   'This feature is coming soon': "הפיצ'ר הזה יגיע בקרוב",
   'This organization has reached its budget limit and is now blocked. To continue using Appwrite services, update the budget limit.':
     'הארגון הגיע למגבלת התקציב והוא חסום כעת. כדי להמשיך להשתמש בשירותי Appwrite, עדכנו את מגבלת התקציב.',
+  'This project is in readonly mode. Please contact the organization admin for details.':
+    'הפרויקט במצב קריאה בלבד. פנו למנהל הארגון לפרטים.',
   'This organization has reached its budget limit and is now blocked. Increase the budget cap below to restore access to billable services.':
     'הארגון הגיע למגבלת התקציב והוא חסום כעת. העלו את תקרת התקציב למטה כדי לשחזר גישה לשירותים החייבים בחיוב.',
   'This organization has reached its plan limit for':
@@ -1276,5 +1278,6 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Stored in UTC': 'נשמר ב-UTC',
   'Appwrite 2.0 is launching on Product Hunt today':
     'Appwrite 2.0 מושק היום ב-Product Hunt',
+  'Appwrite 2.0 on Product Hunt': 'Appwrite 2.0 ב-Product Hunt',
   'Share your take': 'שתפו את דעתכם',
 }

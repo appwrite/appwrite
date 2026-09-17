@@ -365,9 +365,16 @@ function showConsoleSignOutCover(): void {
   document.documentElement.appendChild(cover)
 }
 
-/** Hard navigation so protected routes (org overview) do not flash during SPA transitions. */
-export function redirectToSignInAfterConsoleSignOut(redirect?: string): void {
+/** Hard navigation to sign-in or a public destination after clearing the session. */
+export function redirectAfterConsoleSignOut(
+  redirect?: string,
+  destination?: string,
+): void {
   if (typeof window === 'undefined') return
+  if (destination && isValidRelativeRedirect(destination)) {
+    window.location.replace(destination)
+    return
+  }
   window.location.replace(
     redirect && isValidRelativeRedirect(redirect)
       ? `/sign-in?redirect=${encodeURIComponent(redirect)}`
@@ -376,7 +383,8 @@ export function redirectToSignInAfterConsoleSignOut(redirect?: string): void {
 }
 
 /**
- * Clear client auth state, best-effort server session delete, then open sign-in.
+ * Clear client auth state, best-effort server session delete, then open sign-in
+ * or an explicitly supplied public destination.
  *
  * Keep React Query account data until the hard redirect so the console does not
  * briefly render as logged-out (RequireAuth fallback, header guest state, SPA
@@ -389,7 +397,11 @@ export function redirectToSignInAfterConsoleSignOut(redirect?: string): void {
  */
 export async function performConsoleSignOut(
   queryClient: QueryClient,
-  options?: { redirect?: string; requireServerRevocation?: boolean },
+  options?: {
+    redirect?: string
+    destination?: string
+    requireServerRevocation?: boolean
+  },
 ): Promise<void> {
   if (consoleSigningOut) {
     if (options?.requireServerRevocation) {
@@ -408,20 +420,28 @@ export async function performConsoleSignOut(
     clearConsoleImpersonateUser()
     try {
       await sdk.forConsole.account.deleteSession({ sessionId: 'current' })
-    } catch {
-      if (impersonatedUserId) {
-        applyConsoleImpersonateUserId(impersonatedUserId)
+    } catch (error) {
+      // A missing or expired current session is already signed out. Do not
+      // treat other 401s (such as an MFA requirement) as successful revocation.
+      const sessionMissing =
+        error instanceof AppwriteException &&
+        ((error.code === 401 && error.type === 'general_unauthorized_scope') ||
+          (error.code === 404 && error.type === 'user_session_not_found'))
+      if (!sessionMissing) {
+        if (impersonatedUserId) {
+          applyConsoleImpersonateUserId(impersonatedUserId)
+        }
+        consoleSigningOut = false
+        if (typeof document !== 'undefined') {
+          document.getElementById(CONSOLE_SIGN_OUT_COVER_ID)?.remove()
+        }
+        // Do not propagate credential-bearing SDK errors into UI or telemetry.
+        throw new Error('Current console session could not be revoked')
       }
-      consoleSigningOut = false
-      if (typeof document !== 'undefined') {
-        document.getElementById(CONSOLE_SIGN_OUT_COVER_ID)?.remove()
-      }
-      // Do not propagate credential-bearing SDK errors into UI or telemetry.
-      throw new Error('Current console session could not be revoked')
     }
     clearConsoleSessionLocally()
     purgeConsoleAccountCaches(queryClient)
-    redirectToSignInAfterConsoleSignOut(options.redirect)
+    redirectAfterConsoleSignOut(options.redirect, options.destination)
     return
   }
 
@@ -458,7 +478,7 @@ export async function performConsoleSignOut(
   } finally {
     clearConsoleSessionLocally()
     purgeConsoleAccountCaches(queryClient)
-    redirectToSignInAfterConsoleSignOut(options?.redirect)
+    redirectAfterConsoleSignOut(options?.redirect, options?.destination)
   }
 }
 

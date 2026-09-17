@@ -588,7 +588,7 @@ test.describe('plan downgrade deletions (mocked API)', () => {
       await expect(dialog.getByText(named.id, { exact: true })).toBeVisible()
     }
     await expect(
-      dialog.getByText(/moves to the Free plan on |will move to the Free plan/),
+      dialog.getByText('Your organization moves to the Free plan immediately.'),
     ).toBeVisible()
     await expect(
       dialog.getByText(

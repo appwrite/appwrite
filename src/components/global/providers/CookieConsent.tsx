@@ -21,6 +21,7 @@ import {
   writeStoredCookieConsent,
 } from '@/lib/cookie-consent/storage'
 import type { CookieConsentPreferences } from '@/lib/cookie-consent/types'
+import { deferAfterPaint } from '@/lib/defer-after-paint'
 import { localeQueryOptions } from '@/lib/react-query/hooks/locale'
 
 type CookieConsentContextValue = {
@@ -35,23 +36,23 @@ const CookieConsentContext = createContext<CookieConsentContextValue | null>(
 )
 
 function applyAnalyticsConsent(analytics: boolean) {
-  if (analytics) {
-    loadTrackingScriptsAfterConsent()
-  }
   setCookieConsentState({
     resolved: true,
     bannerRequired: true,
     analyticsGranted: analytics,
   })
+  if (analytics) {
+    loadTrackingScriptsAfterConsent()
+  }
 }
 
 function applyNonRegulatedRegion() {
-  loadTrackingScriptsAfterConsent()
   setCookieConsentState({
     resolved: true,
     bannerRequired: false,
     analyticsGranted: true,
   })
+  loadTrackingScriptsAfterConsent()
 }
 
 export function CookieConsentProvider({ children }: { children: ReactNode }) {
@@ -127,7 +128,9 @@ export function CookieConsentProvider({ children }: { children: ReactNode }) {
       setPreferencesOpen(false)
       setIsReopening(false)
       setCustomizeOpen(false)
-      applyAnalyticsConsent(preferences.analytics)
+      deferAfterPaint(() => {
+        applyAnalyticsConsent(preferences.analytics)
+      })
     },
     [],
   )

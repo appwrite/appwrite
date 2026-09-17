@@ -93,13 +93,14 @@ function CreateFunctionLayout() {
 
 function CreateFunctionLayoutInner() {
   const { projectId } = useParams({ strict: false })
-  const { setInstallations, setBaseDomain, setRegion } = useFunctionWizard()
+  const { setInstallations, setBaseDomain, setEdgeBaseDomain, setRegion } =
+    useFunctionWizard()
 
   const { data: installationsData } = useQuery(
     vcsInstallationsQueryOptions(projectId, 0, 100),
   )
   const { data: project } = useQuery(projectQueryOptions(projectId as string))
-  const { functionsDomain } = useConsoleVariables(project?.region)
+  const { functionsDomain, sitesDomain } = useConsoleVariables(project?.region)
 
   useEffect(() => {
     if (installationsData?.installations) {
@@ -112,6 +113,12 @@ function CreateFunctionLayoutInner() {
       setBaseDomain(functionsDomain)
     }
   }, [functionsDomain, setBaseDomain])
+
+  useEffect(() => {
+    if (sitesDomain) {
+      setEdgeBaseDomain(sitesDomain)
+    }
+  }, [sitesDomain, setEdgeBaseDomain])
 
   useEffect(() => {
     if (project?.region) {

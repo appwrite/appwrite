@@ -1432,6 +1432,17 @@ html:is(.crazy, .stealth, .premium, .high-contrast, .barbie, .nineties) .upgrade
   background-color: rgba(255, 193, 7, 0.35);
 }
 
+/* Start plan badge: keep orange in CSS so it is not dropped by Tailwind scanning. */
+.plan-badge-start {
+  background-color: rgb(249 115 22 / 0.14) !important;
+  color: rgb(234 88 12) !important;
+}
+
+.dark .plan-badge-start {
+  background-color: rgb(249 115 22 / 0.18) !important;
+  color: rgb(251 146 60) !important;
+}
+
 /* Project selector plan pill - “strained” split when billing needs attention */
 @keyframes plan-badge-split-left {
   0%,

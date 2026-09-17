@@ -27,7 +27,7 @@ export type ConsoleProfileFeatures = {
   partnersDocs: boolean
   /** Multiple organizations and organization switching */
   multiTenancy: boolean
-  /** Organization role selection (developer, editor, analyst, billing). When false, all members are owners and role UI is hidden. */
+  /** Cloud role scopes and additional organization roles (editor, analyst, billing). Owner and developer are always available. */
   orgRoles: boolean
   /** Appwrite Cloud system status (status.appwrite.online) */ // pragma: allowlist secret
   systemStatus: boolean

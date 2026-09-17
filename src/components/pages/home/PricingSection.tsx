@@ -11,6 +11,14 @@ import {
 import { useT } from '@/lib/i18n/translate'
 import { SALES_FORM_ROUTE } from '@/lib/sales/contact-sales'
 import { cn } from '@/lib/utils'
+import { startPricingPlan } from '@/lib/pricing/start-plan'
+import { useStartPlanVisibility } from '@/hooks/use-start-plan-visibility'
+import {
+  getProPlanBadgeLabel,
+  getPricingPlanCardsContainerClassName,
+  pricingCompactCardsReserveClassName,
+  PricingPlanCardsShell,
+} from '@/components/pages/pricing/_components/PricingShared'
 
 type PricingTier = {
   id: string
@@ -28,6 +36,7 @@ type PricingTier = {
 
 const HOME_PRICING_CTA_ACTIONS: Record<string, AnalyticsActionId> = {
   free: 'home-pricing-start-free',
+  start: 'home-pricing-start-start',
   pro: 'home-pricing-start-pro',
   enterprise: 'home-pricing-contact-enterprise',
 }
@@ -48,7 +57,7 @@ const pricingTiers: PricingTier[] = [
     price: '$25',
     priceSuffix: '/month',
     description:
-      'For production applications that need powerful functionality and resources to scale.',
+      'For production applications that scale with included resources and pay as you go.',
     cta: 'Start project',
     ctaVariant: 'brandCta',
     href: '/sign-up',
@@ -107,16 +116,35 @@ function PricingTierCta({ tier }: { tier: PricingTier }) {
   )
 }
 
-function PricingTierCard({ tier }: { tier: PricingTier }) {
+function PricingTierCard({
+  tier,
+  columnCount,
+  fourPlanGrid,
+}: {
+  tier: PricingTier
+  columnCount: number
+  fourPlanGrid: boolean
+}) {
   const t = useT()
+  const badgeLabel =
+    tier.popular || tier.id === 'pro'
+      ? getProPlanBadgeLabel(fourPlanGrid)
+      : undefined
   return (
-    <article className="group flex min-h-[280px] flex-col border-b border-border p-6 transition-colors last:border-b-0 hover:bg-accent/15 sm:min-h-[300px] sm:border-e sm:border-b-0 sm:p-7 sm:[&:nth-child(3n)]:border-e-0">
+    <article
+      className={cn(
+        'group flex min-h-[280px] flex-col border-b border-border p-6 transition-colors last:border-b-0 hover:bg-accent/15 sm:min-h-[300px] sm:border-e sm:border-b-0 sm:p-7',
+        columnCount === 4
+          ? 'sm:[&:nth-child(2n)]:border-e-0 lg:[&:nth-child(2n)]:border-e lg:[&:nth-child(4n)]:border-e-0'
+          : 'sm:[&:nth-child(3n)]:border-e-0',
+      )}
+    >
       <div className="flex flex-1 flex-col gap-4">
         <div className="flex flex-wrap items-center gap-2">
           <h3 className="text-[14px] font-semibold text-foreground">{t(tier.name)}</h3>
-          {tier.popular ? (
+          {badgeLabel ? (
             <span className="rounded-full bg-[var(--brand-cta)]/10 px-2 py-0.5 text-[10px] font-medium text-[var(--brand-cta)]">
-              {t('Popular')}
+              {t(badgeLabel)}
             </span>
           ) : null}
         </div>
@@ -142,9 +170,29 @@ function PricingTierCard({ tier }: { tier: PricingTier }) {
 
 export function PricingSection() {
   const t = useT()
+  const { ready, showStartPlan } = useStartPlanVisibility()
+  const startHomeTier: PricingTier = {
+    id: startPricingPlan.id,
+    name: startPricingPlan.name,
+    price: startPricingPlan.price,
+    priceSuffix: startPricingPlan.priceSuffix,
+    description: startPricingPlan.description,
+    cta: startPricingPlan.cta,
+    ctaVariant: startPricingPlan.ctaVariant,
+    href: startPricingPlan.href,
+  }
+  const tiers = showStartPlan
+    ? [pricingTiers[0], startHomeTier, ...pricingTiers.slice(1)]
+    : pricingTiers
+
   return (
     <section className="border-t border-border bg-background py-16 sm:py-20">
-      <div className="mx-auto w-full max-w-7xl px-4 sm:px-6">
+      <div
+        className={getPricingPlanCardsContainerClassName(
+          ready,
+          showStartPlan,
+        )}
+      >
         <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between lg:gap-10">
           <h2 className="font-aeonik-pro max-w-xl text-balance text-[36px] font-normal leading-none tracking-tight text-foreground sm:text-[44px]">
             {t('Start building like a team of hundreds today')}
@@ -172,11 +220,27 @@ export function PricingSection() {
           </div>
         </div>
 
-        <div className="mt-10 grid overflow-hidden rounded-xl border border-border bg-card/45 sm:grid-cols-3">
-          {pricingTiers.map((tier) => (
-            <PricingTierCard key={tier.id} tier={tier} />
-          ))}
-        </div>
+        <PricingPlanCardsShell
+          ready={ready}
+          reserveClassName={pricingCompactCardsReserveClassName}
+          className="mt-10"
+        >
+          <div
+            className={cn(
+              'grid overflow-hidden rounded-xl border border-border bg-card/45',
+              showStartPlan ? 'sm:grid-cols-2 lg:grid-cols-4' : 'sm:grid-cols-3',
+            )}
+          >
+            {tiers.map((tier) => (
+              <PricingTierCard
+                key={tier.id}
+                tier={tier}
+                columnCount={tiers.length}
+                fourPlanGrid={showStartPlan}
+              />
+            ))}
+          </div>
+        </PricingPlanCardsShell>
       </div>
     </section>
   )

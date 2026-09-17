@@ -132,7 +132,7 @@ export function CookieConsentBanner({
             style={{
               transform: `translate3d(0, ${translateY}px, 0)`,
             }}
-            role="dialog"
+            role="region"
             aria-labelledby="cookie-consent-title"
             aria-describedby="cookie-consent-description"
           >

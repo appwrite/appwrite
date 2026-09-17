@@ -1,6 +1,8 @@
 import { useLocation } from '@tanstack/react-router'
 import { getDocsSlugFromPath } from '@/lib/docs/docs-slug'
 import { getDocsSectionNav } from '@/lib/docs/navigation'
+import { BELOW_APP_HEADER_STICKY_CLASS } from '@/lib/layout/app-header-height'
+import { cn } from '@/lib/utils'
 import { ApiReferenceSectionSubnavPanel } from '@/components/pages/docs/references/ApiReferenceSectionSubnav'
 import { DocsGlobalSidebar } from './DocsGlobalSidebar'
 import { DocsSectionSubnavPanel } from './DocsSectionSubnav'
@@ -22,7 +24,12 @@ export function DocsLeftNav({ mobileOpen, onMobileClose }: DocsLeftNavProps) {
   const isReferencesSection = isReferencesDocsSlug(slug)
 
   return (
-    <div className="flex h-full min-h-0 shrink-0">
+    <div
+      className={cn(
+        'flex min-h-0 shrink-0 overflow-visible @[1024px]:z-20',
+        BELOW_APP_HEADER_STICKY_CLASS,
+      )}
+    >
       <DocsGlobalSidebar mobileOpen={mobileOpen} onMobileClose={onMobileClose} />
       {isReferencesSection ? (
         <ApiReferenceSectionSubnavPanel parent={parent} />

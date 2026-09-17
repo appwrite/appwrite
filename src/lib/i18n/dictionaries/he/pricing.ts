@@ -15,8 +15,10 @@ export const hePricingDictionary: Record<string, string> = {
   '$0.10 per 100k writes': '$0.10 לכל 100 אלף כתיבות',
   '$0.10 per 1M tokens': '$0.10 לכל 1M טוקנים',
   '$10/mo': '$10/חודש',
+  '$10': '$10',
   '$10 of compute credits for database usage included every month.':
     'כל חודש כלולים $10 קרדיטים למחשוב לשימוש במסדי נתונים.',
+  '$5': '$5',
   '$110/mo': '$110/חודש',
   '$15': '$15',
   '$15 per 100GB / month': '$15 לכל 100GB / חודש',
@@ -53,6 +55,38 @@ export const hePricingDictionary: Record<string, string> = {
   '1000 / month': '1000 / חודש',
   '15 minutes': '15 דקות',
   '15-minute builds': 'בנייה של 15 דקות',
+  '15 per project': '15 לפרויקט',
+  '25 minutes': '25 דקות',
+  '25-minute builds': 'בנייה של 25 דקות',
+  '3': '3',
+  '80GB / month': '80GB / חודש',
+  '80GB bandwidth': '80GB רוחב פס',
+  '100K monthly active users': '100K משתמשים פעילים חודשיים',
+  '100K MAU': '100K MAU',
+  '10 databases, 10 buckets, and 10 functions per project':
+    '10 מסדי נתונים, 10 באקטים ו-10 פונקציות לפרויקט',
+  '1.5M executions': '1.5M הרצות',
+  '1.5M / month': '1.5M / חודש',
+  '1,000 per project': '1,000 לפרויקט',
+  '1000K / month': '1000K / חודש',
+  '30 minutes': '30 דקות',
+  '300': '300',
+  '300 GB-hour / month': '300 GB-hour / חודש',
+  '35 origin images / month': '35 תמונות מקור / חודש',
+  '350': '350',
+  '3.5M': '3.5M',
+  '40GB': '40GB',
+  '40GB storage': '40GB אחסון',
+  '500 / month': '500 / חודש',
+  '280 rows / request': '280 שורות / בקשה',
+  '1GB': '1GB',
+  '10 per project': '10 לפרויקט',
+  'For developers who need production-ready included resources at an accessible price.':
+    'למפתחים שצריכים משאבי פרודקשן כלולים במחיר נגיש.',
+  'For production applications that scale with included resources and pay as you go.':
+    'לאפליקציות פרודקשן שגדלות עם משאבים כלולים ו-Pay as you go.',
+  'Pay as you go when you exceed included limits':
+    'Pay as you go כשחורגים מהמכסות הכלולות',
   '150GB': '150GB',
   '150GB storage': '150GB אחסון',
   '16 GB': '16 GB',
@@ -103,6 +137,7 @@ export const hePricingDictionary: Record<string, string> = {
   '75K monthly active users': '75K משתמשים פעילים חודשיים',
   '8 GB': '8 GB',
   '8-core (dedicated)': '8 ליבות (ייעודי)',
+  'Add-on': 'תוסף',
   'Add-ons': 'תוספות',
   'Additional messages': 'הודעות נוספות',
   'Additional embedding tokens': 'טוקנים נוספים ל-embedding',
@@ -110,6 +145,7 @@ export const hePricingDictionary: Record<string, string> = {
   'Available across all Appwrite services, with 200+ global PoP locations for low-latency delivery across Backend API, Serverless Functions, Storage files, and hosted websites.': // pragma: allowlist secret
     'זמין בכל שירותי Appwrite, עם יותר מ-200 מיקומי PoP גלובליים להגשה בזמן תגובה נמוך דרך Backend API, פונקציות Serverless, קבצי אחסון ואתרים מאוחסנים.',
   'Basic': 'בסיסי',
+  'Best value': 'הכי משתלם',
   'Billed for disk storage and database operations.':
     'חיוב לפי אחסון דיסק ופעולות מסד נתונים.',
   'Bring your own Cloud': 'Bring your own Cloud',
@@ -137,6 +173,10 @@ export const hePricingDictionary: Record<string, string> = {
   'Free projects are paused after 1 week of inactivity. Limit of 2 projects.':
     'פרויקטים חינמיים מושהים לאחר שבוע של חוסר פעילות. מגבלה של 2 פרויקטים.',
   'From $0.05 per 1M tokens': 'החל מ-$0.05 לכל 1M טוקנים',
+  'From $0.05/1M': 'החל מ-$0.05/1M',
+  'From $10/mo': 'החל מ-$10/חודש',
+  '75K MAU': '75K MAU',
+  '200K MAU': '200K MAU',
   'From $10/mo per database': 'החל מ-$10/חודש לכל מסד נתונים',
   'Go to the Appwrite Console and select the organization you wish to view. Here, you will find a usage tab with an overview of all your project\'s usage stats.': // pragma: allowlist secret
     'עברו לקונסולת Appwrite ובחרו את הארגון שברצונכם לצפות בו. כאן תמצאו לשונית שימוש עם סקירה של נתוני השימוש בכל הפרויקטים שלכם.',
@@ -192,8 +232,8 @@ export const hePricingDictionary: Record<string, string> = {
   'Small': 'Small',
   'Start for free': 'התחילו בחינם',
   'Start on Pro': 'התחילו ב-Pro',
-  'Success manager and 24/7 support on Slack':
-    'מנהל הצלחה ותמיכה 24/7 ב-Slack',
+  '24/7 support on Slack': 'תמיכה 24/7 ב-Slack',
+  'Success manager': 'מנהל הצלחה',
   'Support for brotli, zstd, and gzip for text compression and webp for image compression':
     'תמיכה ב-brotli, zstd ו-gzip לדחיסת טקסט ו-webp לדחיסת תמונות',
   'TablesDB (default)': 'TablesDB (ברירת מחדל)',

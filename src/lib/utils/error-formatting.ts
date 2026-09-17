@@ -169,12 +169,75 @@ export function isHttpRequestTimeoutError(error: unknown): boolean {
   )
 }
 
+export type AppwriteErrorInfo = {
+  message: string | null
+  type: string | null
+  code: number | null
+}
+
+function readString(value: unknown): string | null {
+  if (typeof value !== 'string') return null
+  const trimmed = value.trim()
+  return trimmed.length > 0 ? trimmed : null
+}
+
+function readNumber(value: unknown): number | null {
+  return typeof value === 'number' && Number.isFinite(value) ? value : null
+}
+
+/**
+ * Message, type, and code from an AppwriteException or a similar API error object.
+ * Falls back to JSON in `response` when the SDK leaves `message` empty.
+ */
+export function getAppwriteErrorInfo(error: unknown): AppwriteErrorInfo {
+  if (!error || typeof error !== 'object') {
+    return { message: null, type: null, code: null }
+  }
+  const e = error as {
+    message?: unknown
+    type?: unknown
+    code?: unknown
+    status?: unknown
+    response?: unknown
+  }
+  let message = readString(e.message)
+  let type = readString(e.type)
+  let code = readNumber(e.code) ?? readNumber(e.status)
+
+  const response = e.response
+  let parsed: { message?: unknown; type?: unknown; code?: unknown } | null =
+    null
+  if (typeof response === 'string') {
+    try {
+      parsed = JSON.parse(response) as {
+        message?: unknown
+        type?: unknown
+        code?: unknown
+      }
+    } catch {
+      parsed = null
+    }
+  } else if (response && typeof response === 'object') {
+    parsed = response as { message?: unknown; type?: unknown; code?: unknown }
+  }
+  if (parsed) {
+    message = message ?? readString(parsed.message)
+    type = type ?? readString(parsed.type)
+    code = code ?? readNumber(parsed.code)
+  }
+
+  return { message, type, code }
+}
+
 /** True when the API responded with HTTP 402 (payment / budget limit required). */
 export function isHttpPaymentRequiredError(error: unknown): boolean {
   if (!error || typeof error !== 'object') return false
-  const e = error as { code?: number; status?: number; message?: string }
-  if (e.code === 402 || e.status === 402) return true
-  const message = typeof e.message === 'string' ? e.message.toLowerCase() : ''
+  const info = getAppwriteErrorInfo(error)
+  if (info.code === 402) return true
+  if (info.type === 'outstanding_invoice' || info.type === 'budget_limit') {
+    return true
+  }
+  const message = info.message?.toLowerCase() ?? ''
   return (
     message.includes('payment required') ||
     message.includes('budget limit') ||

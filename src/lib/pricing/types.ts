@@ -1,4 +1,4 @@
-export type PlanId = 'free' | 'pro' | 'enterprise'
+export type PlanId = 'free' | 'start' | 'pro' | 'enterprise'
 
 export type ComparisonLinkCell = {
   text: string
@@ -11,6 +11,7 @@ export type ComparisonRow = {
   title: string
   info?: string
   free: ComparisonCell
+  start?: ComparisonCell
   pro: ComparisonCell
   enterprise: ComparisonCell
 }

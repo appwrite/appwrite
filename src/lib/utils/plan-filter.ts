@@ -1,3 +1,5 @@
+import { isStartPlanRef } from '@/lib/pricing/start-plan'
+
 /** Education / sponsored tier id from billing */
 const AUTO_EDUCATION_PLAN = /^auto-1$/i
 
@@ -7,6 +9,7 @@ const AUTO_EDUCATION_PLAN = /^auto-1$/i
  */
 export type CanonicalPlanId =
   | 'free'
+  | 'start'
   | 'pro'
   | 'core'
   | 'custom'
@@ -15,6 +18,7 @@ export type CanonicalPlanId =
 /**
  * Maps tier values to canonical plan ids
  * - tier-0 → 'free'
+ * - tier-1-1 → 'start' (must be checked before the generic tier-1 prefix)
  * - tier-1 → 'pro'
  * - tier-2 → 'core' (legacy API name: Scale)
  * - auto-1 → 'education'
@@ -28,11 +32,17 @@ export function getPlanNameFromTier(
   }
 
   if (typeof tier === 'string') {
-    if (AUTO_EDUCATION_PLAN.test(tier.trim())) {
+    const trimmed = tier.trim()
+    if (!trimmed) return 'free'
+
+    if (AUTO_EDUCATION_PLAN.test(trimmed)) {
       return 'education'
     }
 
-    const tierMatch = tier.match(/tier-(\d+)/i)
+    const normalized = trimmed.toLowerCase()
+    if (normalized === 'tier-1-1' || normalized === 'start') return 'start'
+
+    const tierMatch = trimmed.match(/tier-(\d+)/i)
     if (tierMatch) {
       const tierNumber = parseInt(tierMatch[1], 10)
       if (tierNumber === 0) return 'free'
@@ -41,12 +51,15 @@ export function getPlanNameFromTier(
       return 'custom'
     }
 
-    if (tier === '0' || tier.toLowerCase() === 'tier-0') return 'free'
-    if (tier === '1' || tier.toLowerCase() === 'tier-1') return 'pro'
-    if (tier === '2' || tier.toLowerCase() === 'tier-2') return 'core'
+    if (trimmed === '0' || normalized === 'tier-0') return 'free'
+    if (trimmed === '1' || normalized === 'tier-1') return 'pro'
+    if (trimmed === '2' || normalized === 'tier-2') return 'core'
 
-    const normalized = tier.toLowerCase()
-    if (['free', 'pro', 'core', 'custom', 'education'].includes(normalized)) {
+    if (
+      ['free', 'start', 'pro', 'core', 'custom', 'education'].includes(
+        normalized,
+      )
+    ) {
       return normalized as CanonicalPlanId
     }
     // Legacy Scale plan id/name → Core
@@ -74,6 +87,8 @@ export function getCanonicalPlanDisplayLabel(plan: CanonicalPlanId): string {
   switch (plan) {
     case 'free':
       return 'Free'
+    case 'start':
+      return 'Start'
     case 'pro':
       return 'Pro'
     case 'core':
@@ -96,13 +111,58 @@ export function getBillingPlanDisplayLabel(
   return getCanonicalPlanDisplayLabel(getPlanNameFromTier(tier))
 }
 
+export type BillingPlanRecord = {
+  $id?: string
+  name?: string
+  order?: number
+  price?: number
+  eligibleCountries?: string[]
+}
+
 export type ResolveOrganizationPlanLabelInput = {
   /** Organization `billingPlan` from teams API (e.g. tier-0, auto-1) */
   billingPlan?: string | null
+  /** Specific catalogue plan id (e.g. tier-1-1 for Start). Prefer over billingPlan. */
+  billingPlanId?: string | null
   /** Plan record `name` from `organizations.getPlan` */
   planName?: string | null
   /** Plan record `$id` */
   planId?: string | null
+}
+
+export type ResolveOrganizationCanonicalPlanInput = {
+  billingPlan?: string | null
+  billingPlanId?: string | null
+  /** Legacy prefs.tier fallback. */
+  tier?: string | null
+  plans?: Record<string, BillingPlanRecord> | null
+  /** Plan record from `organizations.getPlan` when the list payload is coarse. */
+  organizationPlan?: BillingPlanRecord | null
+}
+
+/**
+ * Canonical plan id for an organization from teams API billing fields.
+ * Prefers `billingPlanId` (specific catalogue entry) over coarse `billingPlan`.
+ */
+export function resolveOrganizationCanonicalPlan(
+  input: ResolveOrganizationCanonicalPlanInput,
+): CanonicalPlanId {
+  const planRef =
+    input.billingPlanId?.trim() ||
+    input.organizationPlan?.$id?.trim() ||
+    input.billingPlan?.trim() ||
+    input.tier?.trim() ||
+    ''
+
+  if (isStartPlanRef(planRef, input.organizationPlan ?? null)) return 'start'
+
+  if (!planRef) return 'free'
+
+  if (input.plans && Object.keys(input.plans).length > 0) {
+    return getPlanCanonicalFromRecord(planRef, input.plans)
+  }
+
+  return getPlanNameFromTier(planRef)
 }
 
 function isAutoEducationPlanRef(
@@ -134,21 +194,17 @@ export function resolveOrganizationPlanDisplayLabel(
   if (name.length > 0) {
     return input.planName as string
   }
-  return getBillingPlanDisplayLabel(input.billingPlan)
-}
-
-export type BillingPlanRecord = {
-  $id?: string
-  name?: string
-  order?: number
-  price?: number
+  return getBillingPlanDisplayLabel(
+    input.planId || input.billingPlanId || input.billingPlan,
+  )
 }
 
 function canonicalRank(plan: CanonicalPlanId): number {
   if (plan === 'free') return 0
-  if (plan === 'pro' || plan === 'education') return 1
-  if (plan === 'core') return 2
-  return 3
+  if (plan === 'start') return 1
+  if (plan === 'pro' || plan === 'education') return 2
+  if (plan === 'core') return 3
+  return 4
 }
 
 /**
@@ -171,10 +227,15 @@ export function getPlanCanonicalFromRecord(
   planRef: string | null | undefined,
   plans: Record<string, BillingPlanRecord> | null | undefined,
 ): CanonicalPlanId {
-  const plan = resolveBillingPlanRecord(planRef, plans)
+  const trimmedRef = planRef?.trim()
+  const plan = resolveBillingPlanRecord(trimmedRef, plans)
+
+  if (isStartPlanRef(trimmedRef, plan)) return 'start'
+
   if (plan?.name) {
     const name = plan.name.toLowerCase()
     if (name.includes('free') || name === 'starter') return 'free'
+    if (name === 'start') return 'start'
     if (name.includes('pro')) return 'pro'
     // Core (current) and Scale (legacy tier-2 name)
     if (name.includes('core') || name.includes('scale')) return 'core'
@@ -185,11 +246,13 @@ export function getPlanCanonicalFromRecord(
 
   if (plan && typeof plan.order === 'number') {
     if (plan.order <= 0 && (plan.price ?? 0) === 0) return 'free'
-    if (plan.order === 1) return 'pro'
+    if (plan.order === 1) {
+      return isStartPlanRef(trimmedRef, plan) ? 'start' : 'pro'
+    }
     if (plan.order === 2) return 'core'
   }
 
-  return getPlanNameFromTier(plan?.$id ?? planRef)
+  return getPlanNameFromTier(plan?.$id ?? trimmedRef)
 }
 
 export function isFreePlanRef(

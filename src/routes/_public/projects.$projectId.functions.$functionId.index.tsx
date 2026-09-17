@@ -10,6 +10,7 @@ import {
   functionSpecificationsQueryOptions,
   DEFAULT_PAGE_SIZE,
 } from '@/lib/react-query/hooks'
+import { ensureQueryDataIfFound } from '@/lib/react-query/ensure-query-data-if-found'
 import { DOMAINS_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import { SpecificationType } from '@/lib/specifications'
 import { pageTitle } from '@/lib/utils/page-title'
@@ -85,10 +86,12 @@ export const Route = createFileRoute(
       ),
     ]
 
-    // Fetch active deployment if function has a deploymentId - blocks navigation until ready
+    // Fetch active deployment if function has a deploymentId - blocks navigation until ready.
+    // The referenced deployment may have been deleted (404); the page still renders without it.
     if (func?.deploymentId) {
       criticalPromises.push(
-        queryClient.ensureQueryData(
+        ensureQueryDataIfFound(
+          queryClient,
           functionDeploymentQueryOptions(
             projectId,
             functionId,
@@ -99,12 +102,10 @@ export const Route = createFileRoute(
     }
 
     const redeployDeploymentId = getRedeploySourceDeploymentId(func)
-    if (
-      redeployDeploymentId &&
-      redeployDeploymentId !== func?.deploymentId
-    ) {
+    if (redeployDeploymentId && redeployDeploymentId !== func?.deploymentId) {
       criticalPromises.push(
-        queryClient.ensureQueryData(
+        ensureQueryDataIfFound(
+          queryClient,
           functionDeploymentQueryOptions(
             projectId,
             functionId,

@@ -113,6 +113,10 @@ import {
   wellKnownChangePasswordResponse,
 } from './src/lib/seo/change-password-url.ts'
 import { trackServerPageview } from './src/lib/server-analytics.ts'
+import {
+  injectSsrVisitorCountryIntoHtml,
+  resolveVisitorCountryFromRequest,
+} from './src/lib/visitor-country-shared.ts'
 
 // Configuration
 const SERVER_PORT = Number(process.env.PORT ?? 3000)
@@ -127,6 +131,13 @@ const RUNTIME_CONFIG_JSON = serializeRuntimeConfig(RUNTIME_CONFIG)
 
 function injectRuntimeConfig(html: string): string {
   return injectRuntimeConfigIntoHtml(html, RUNTIME_CONFIG_JSON)
+}
+
+function injectDocumentHtml(req: Request, html: string): string {
+  return injectSsrVisitorCountryIntoHtml(
+    injectRuntimeConfig(html),
+    resolveVisitorCountryFromRequest(req),
+  )
 }
 
 function isIndexableRequest(req: Request): boolean {
@@ -194,7 +205,7 @@ function htmlResponse(
 
   return withSeoIndexingHeaders(
     req,
-    new Response(injectRuntimeConfig(html), {
+    new Response(injectDocumentHtml(req, html), {
       headers: responseHeaders,
       status,
       statusText,

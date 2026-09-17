@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { ContactSalesLink } from '@/components/global/shared/ContactSalesLink'
 import { Button } from '@/components/ui/button'
@@ -26,27 +26,35 @@ import {
   type AnalyticsActionId,
 } from '@/lib/analytics-actions'
 import { useT } from '@/lib/i18n/translate'
-import { PRICING_PLAN_COLUMNS } from '@/lib/pricing/constants'
 import { comparisonTables } from '@/lib/pricing/comparison-data'
 import { getComparisonTableAnchorId } from '@/lib/pricing/comparison-sections'
+import {
+  getPricingPlanColumns,
+  withStartComparisonValues,
+} from '@/lib/pricing/start-plan'
 import type { ComparisonTable, PlanId } from '@/lib/pricing/types'
+import { useStartPlanVisibility } from '@/hooks/use-start-plan-visibility'
+import { BELOW_APP_HEADER_STICKY_TOP_CLASS } from '@/lib/layout/app-header-height'
 import { cn } from '@/lib/utils'
 
 const PRICING_COMPARE_CTA_ACTIONS: Record<PlanId, AnalyticsActionId> = {
   free: 'pricing-compare-start-free',
+  start: 'pricing-compare-start-start',
   pro: 'pricing-compare-start-pro',
   enterprise: 'pricing-compare-contact-enterprise',
 }
 
 const compareTableClassName = 'w-full table-fixed'
 const compareStickyHeadClassName =
-  'sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground shadow-[inset_0_-1px_0_var(--border)] sm:px-6'
+  `${BELOW_APP_HEADER_STICKY_TOP_CLASS} z-10 bg-background px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground shadow-[inset_0_-1px_0_var(--border)] sm:px-6`
 
 function MobilePlanTabs({
   activePlan,
+  columns,
   onPlanChange,
 }: {
   activePlan: PlanId
+  columns: readonly { id: PlanId; label: string }[]
   onPlanChange: (plan: PlanId) => void
 }) {
   const t = useT()
@@ -56,8 +64,13 @@ function MobilePlanTabs({
       onValueChange={(value) => onPlanChange(value as PlanId)}
       className="lg:hidden"
     >
-      <TabsList className="grid h-10 w-full grid-cols-3">
-        {PRICING_PLAN_COLUMNS.map((column) => (
+      <TabsList
+        className={cn(
+          'grid h-10 w-full',
+          columns.length === 4 ? 'grid-cols-4' : 'grid-cols-3',
+        )}
+      >
+        {columns.map((column) => (
           <TabsTrigger
             key={column.id}
             value={column.id}
@@ -73,9 +86,11 @@ function MobilePlanTabs({
 
 function CompareCategoryTable({
   table,
+  columns,
   mobilePlan,
 }: {
   table: ComparisonTable
+  columns: readonly { id: PlanId; label: string }[]
   mobilePlan: PlanId
 }) {
   const t = useT()
@@ -93,16 +108,16 @@ function CompareCategoryTable({
       <Table withScrollContainer={false} className={cn('hidden lg:table', compareTableClassName)}>
         <colgroup>
           <col className="w-[32%]" />
-          <col />
-          <col />
-          <col />
+          {columns.map((column) => (
+            <col key={column.id} />
+          ))}
         </colgroup>
         <TableHeader>
           <TableRow className="hover:bg-transparent border-b border-border">
             <TableHead className={cn(compareStickyHeadClassName, 'text-start')}>
               {t('Feature')}
             </TableHead>
-            {PRICING_PLAN_COLUMNS.map((column) => (
+            {columns.map((column) => (
               <TableHead
                 key={column.id}
                 className={cn(compareStickyHeadClassName, 'text-center')}
@@ -115,15 +130,15 @@ function CompareCategoryTable({
         <TableBody>
           {table.rows.map((row) => (
             <TableRow key={row.title} className="hover:bg-transparent border-b border-border">
-              <TableCell className="px-4 py-3 align-middle sm:px-6">
+              <TableCell className="min-w-0 whitespace-normal px-3 py-3 align-middle sm:px-4">
                 <ComparisonRowLabel title={row.title} info={row.info} />
               </TableCell>
-              {PRICING_PLAN_COLUMNS.map((column) => (
+              {columns.map((column) => (
                 <TableCell
                   key={column.id}
-                  className="px-4 py-3 text-center align-middle sm:px-6"
+                  className="min-w-0 whitespace-normal px-2 py-3 text-center align-middle sm:px-3"
                 >
-                  <ComparisonCellValue value={row[column.id]} />
+                  <ComparisonCellValue value={row[column.id] ?? '-'} />
                 </TableCell>
               ))}
             </TableRow>
@@ -142,7 +157,7 @@ function CompareCategoryTable({
           >
             <ComparisonRowLabel title={row.title} info={row.info} />
             <div className="shrink-0 text-end">
-              <ComparisonCellValue value={row[mobilePlan]} />
+              <ComparisonCellValue value={row[mobilePlan] ?? '-'} />
             </div>
           </div>
         ))}
@@ -153,7 +168,16 @@ function CompareCategoryTable({
 
 export function ComparePlansSection() {
   const t = useT()
+  const { ready, showStartPlan } = useStartPlanVisibility()
   const [mobilePlan, setMobilePlan] = useState<PlanId>('pro')
+  const columns = getPricingPlanColumns(showStartPlan)
+  const tables = useMemo(
+    () =>
+      showStartPlan
+        ? withStartComparisonValues(comparisonTables)
+        : [...comparisonTables],
+    [showStartPlan],
+  )
 
   return (
     <section
@@ -170,69 +194,78 @@ export function ComparePlansSection() {
       </div>
 
       <div className="mx-auto w-full max-w-7xl overflow-visible px-4 sm:px-6">
+        {ready ? (
+          <div className="animate-in fade-in-0 duration-300 ease-out motion-reduce:animate-none">
         <div className="mt-8 lg:hidden">
-          <MobilePlanTabs activePlan={mobilePlan} onPlanChange={setMobilePlan} />
-        </div>
-
-        <div
-          className="mt-8 grid items-start gap-8 lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-10 xl:grid-cols-[240px_minmax(0,1fr)]"
-        >
-          <CompareToc />
-
-          <div className="min-w-0 space-y-6 overflow-visible sm:space-y-8">
-            {comparisonTables.map((table) => (
-              <CompareCategoryTable
-                key={table.title}
-                table={table}
-                mobilePlan={mobilePlan}
+              <MobilePlanTabs
+                activePlan={mobilePlan}
+                columns={columns}
+                onPlanChange={setMobilePlan}
               />
-            ))}
-          </div>
-        </div>
+            </div>
 
-        <div className="mt-8 flex flex-col items-stretch gap-3 sm:flex-row sm:justify-center lg:hidden">
-          {PRICING_PLAN_COLUMNS.map((column) => {
-            const label = getPlanCtaLabel(column.id)
-            const isEnterprise = column.id === 'enterprise'
+            <div
+              className="mt-8 grid items-start gap-8 lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-10 xl:grid-cols-[240px_minmax(0,1fr)]"
+            >
+              <CompareToc />
 
-            if (isEnterprise) {
-              return (
-                <Button
-                  key={column.id}
-                  variant="outline"
-                  className={cn('h-10 flex-1 text-[13px]', outlineTierButtonClassName)}
-                  asChild
-                >
-                  <ContactSalesLink
-                    {...analyticsAttrs(PRICING_COMPARE_CTA_ACTIONS[column.id])}
+              <div className="min-w-0 space-y-6 overflow-visible sm:space-y-8">
+                {tables.map((table) => (
+                  <CompareCategoryTable
+                    key={table.title}
+                    table={table}
+                    columns={columns}
+                    mobilePlan={mobilePlan}
+                  />
+                ))}
+              </div>
+            </div>
+
+            <div className="mt-8 flex flex-col items-stretch gap-3 sm:flex-row sm:justify-center lg:hidden">
+              {columns.map((column) => {
+                const label = getPlanCtaLabel(column.id)
+                const isEnterprise = column.id === 'enterprise'
+
+                if (isEnterprise) {
+                  return (
+                    <Button
+                      key={column.id}
+                      variant="outline"
+                      className={cn('h-10 flex-1 text-[13px]', outlineTierButtonClassName)}
+                      asChild
+                    >
+                      <ContactSalesLink
+                        {...analyticsAttrs(PRICING_COMPARE_CTA_ACTIONS[column.id])}
+                      >
+                        {t(label)}
+                      </ContactSalesLink>
+                    </Button>
+                  )
+                }
+
+                return (
+                  <Button
+                    key={column.id}
+                    variant={column.id === 'pro' ? 'brandCta' : 'outline'}
+                    className={cn(
+                      'h-10 flex-1 text-[13px]',
+                      column.id !== 'pro' && outlineTierButtonClassName,
+                    )}
+                    asChild
                   >
-                    {t(label)}
-                  </ContactSalesLink>
-                </Button>
-              )
-            }
-
-            return (
-              <Button
-                key={column.id}
-                variant={column.id === 'pro' ? 'brandCta' : 'outline'}
-                className={cn(
-                  'h-10 flex-1 text-[13px]',
-                  column.id !== 'pro' && outlineTierButtonClassName,
-                )}
-                asChild
-              >
-                <Link
-                  to="/sign-up"
-                  search={{ redirect: '/' }}
-                  {...analyticsAttrs(PRICING_COMPARE_CTA_ACTIONS[column.id])}
-                >
-                  {t(label)}
-                </Link>
-              </Button>
-            )
-          })}
-        </div>
+                    <Link
+                      to="/sign-up"
+                      search={{ redirect: '/' }}
+                      {...analyticsAttrs(PRICING_COMPARE_CTA_ACTIONS[column.id])}
+                    >
+                      {t(label)}
+                    </Link>
+                  </Button>
+                )
+              })}
+            </div>
+          </div>
+        ) : null}
       </div>
     </section>
   )

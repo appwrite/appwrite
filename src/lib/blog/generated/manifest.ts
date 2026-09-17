@@ -3,6 +3,32 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "well-known-change-password-url",
+    "href": "/blog/post/well-known-change-password-url",
+    "title": "Support the well-known change password URL with Appwrite Auth",
+    "description": "Password managers open /.well-known/change-password when they find a leaked or weak password. Add the redirect and a change password page backed by Appwrite Auth.",
+    "date": "2026-09-16",
+    "lastUpdated": "2026-09-16",
+    "timeToRead": 9,
+    "author": "atharva",
+    "category": "tutorials",
+    "cover": "/images/blog/well-known-change-password-url/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "whatsapp-ai-agent-appwrite-functions",
+    "href": "/blog/post/whatsapp-ai-agent-appwrite-functions",
+    "title": "Build a WhatsApp AI agent with Appwrite Functions and TablesDB",
+    "description": "Turn a WhatsApp number into an AI support agent. Two Appwrite Functions receive messages and reply, TablesDB keeps the conversation history, and a compaction step keeps the context small.",
+    "date": "2026-09-16",
+    "lastUpdated": "2026-09-16",
+    "timeToRead": 12,
+    "author": "atharva",
+    "category": "tutorials",
+    "cover": "/images/blog/whatsapp-ai-agent-appwrite-functions/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "appwrite-init-2026-recap",
     "href": "/blog/post/appwrite-init-2026-recap",
     "title": "Appwrite Init 2026 recap: Everything we shipped",
@@ -42,6 +68,19 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "featured": false,
     "unlisted": false,
     "cover": "/images/blog/introducing-the-affiliates-program/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "build-support-chatbot-vectorsdb",
+    "href": "/blog/post/build-support-chatbot-vectorsdb",
+    "title": "Build a support chatbot with Appwrite Functions and VectorsDB",
+    "description": "Seed a help center, retrieve relevant articles with VectorsDB, and answer customer questions through an Appwrite Function. Deploy the chat interface on Appwrite Sites.",
+    "date": "2026-09-10",
+    "lastUpdated": "2026-09-10",
+    "timeToRead": 11,
+    "author": "atharva",
+    "category": "tutorials",
+    "cover": "/images/blog/build-support-chatbot-vectorsdb/cover.avif",
     "hasCover": true
   },
   {
