@@ -108,6 +108,52 @@ class Packet
         return $clientId;
     }
 
+    /**
+     * Split a byte stream into whole MQTT packets, returning them and the trailing
+     * remainder that is not yet a complete packet. Used where the carrier's framing
+     * does not align with MQTT's (e.g. a WebSocket message may hold several or partial
+     * packets), so the remainder is buffered until the rest arrives.
+     *
+     * @return array{0: list<string>, 1: string} complete packets and the remainder
+     */
+    public static function frames(string $buffer): array
+    {
+        $packets = [];
+        $length = strlen($buffer);
+        $offset = 0;
+
+        while ($length - $offset >= 2) {
+            $multiplier = 1;
+            $remaining = 0;
+            $cursor = $offset + 1;
+            $complete = false;
+
+            do {
+                if ($cursor >= $length) {
+                    break;
+                }
+                $byte = ord($buffer[$cursor]);
+                $remaining += ($byte & 0x7F) * $multiplier;
+                $multiplier *= 128;
+                $cursor++;
+                if (($byte & 0x80) === 0) {
+                    $complete = true;
+                    break;
+                }
+            } while ($cursor - $offset <= 4);
+
+            $total = ($cursor - $offset) + $remaining;
+            if (!$complete || $length - $offset < $total) {
+                break;
+            }
+
+            $packets[] = substr($buffer, $offset, $total);
+            $offset += $total;
+        }
+
+        return [$packets, substr($buffer, $offset)];
+    }
+
     public static function pingreq(): string
     {
         return chr(self::PINGREQ << 4) . self::encodeLength(0);

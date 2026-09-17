@@ -4,10 +4,14 @@ namespace Utopia\Mqtt\Adapter;
 
 use Swoole\Server;
 use Swoole\Server\Port;
+use Swoole\WebSocket\Frame;
+use Swoole\WebSocket\Server as WebSocketServer;
 use Utopia\Mqtt\Adapter;
 use Utopia\Mqtt\Adapter\Swoole\Timer;
 use Utopia\Mqtt\Adapter\Swoole\Timers\TimingWheel;
 use Utopia\Mqtt\Adapter\Swoole\Transport;
+use Utopia\Mqtt\Adapter\Swoole\WebSocket;
+use Utopia\Mqtt\Packet;
 
 class Swoole extends Adapter
 {
@@ -16,6 +20,9 @@ class Swoole extends Adapter
     protected Server $server;
 
     private Timer $timer;
+
+    /** @var array<int, string> per-fd MQTT bytes decoded out of WebSocket messages, awaiting whole packets */
+    private array $stream = [];
 
     /** @var callable|null */
     private $onStart = null;
@@ -39,8 +46,14 @@ class Swoole extends Adapter
         $this->timer = $timer ?? new TimingWheel();
         $this->timer->onTick(fn (int $fd) => $this->close($fd));
 
+        // A WebSocket\Server dispatches its 'message' event only on its own primary port,
+        // so a WebSocket transport must be the master; raw MQTT is added as a TCP listener.
+        \usort($transports, fn (Transport $a, Transport $b): int => ($b instanceof WebSocket) <=> ($a instanceof WebSocket));
+
         $master = $transports[0];
-        $this->server = new Server($master->host, $master->port, SWOOLE_BASE, $master->getSockType());
+        $this->server = $master instanceof WebSocket
+            ? new WebSocketServer($master->host, $master->port, SWOOLE_BASE, $master->getSockType())
+            : new Server($master->host, $master->port, SWOOLE_BASE, $master->getSockType());
         $this->server->set($master->getSettings() + [
             'worker_num' => $this->workers,
             'max_connection' => self::MAX_CONNECTIONS,
@@ -68,10 +81,27 @@ class Swoole extends Adapter
         });
 
         $this->server->on('close', function (Server $server, int $fd): void {
+            unset($this->stream[$fd]);
             if ($this->onClose !== null) {
                 \call_user_func($this->onClose, $fd);
             }
         });
+
+        if ($this->server instanceof WebSocketServer) {
+            // A WebSocket message may hold several or partial MQTT packets, so its payload
+            // is buffered and split into whole packets before dispatch (Packet::frames),
+            // matching the one-packet-per-onReceive the raw-TCP path gets from framing.
+            $this->server->on('message', function (Server $server, Frame $frame): void {
+                $this->stream[$frame->fd] = ($this->stream[$frame->fd] ?? '') . $frame->data;
+                [$packets, $this->stream[$frame->fd]] = Packet::frames($this->stream[$frame->fd]);
+
+                foreach ($packets as $packet) {
+                    if ($this->onReceive !== null) {
+                        \call_user_func($this->onReceive, $frame->fd, $packet);
+                    }
+                }
+            });
+        }
 
         if ($this->onStart !== null) {
             $callback = $this->onStart;
@@ -97,6 +127,12 @@ class Swoole extends Adapter
 
     public function send(int $connection, string $message): void
     {
+        if ($this->server instanceof WebSocketServer && $this->server->isEstablished($connection)) {
+            $this->server->push($connection, $message, WEBSOCKET_OPCODE_BINARY);
+
+            return;
+        }
+
         $this->server->send($connection, $message);
     }
 

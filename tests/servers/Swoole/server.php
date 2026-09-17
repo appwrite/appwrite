@@ -44,7 +44,10 @@ $matches = function (string $filter, string $topic): bool {
     return count($f) === count($t);
 };
 
-$adapter = new Adapter\Swoole([new Adapter\Swoole\Tcp('0.0.0.0', 1883)], workers: 1);
+$adapter = new Adapter\Swoole([
+    new Adapter\Swoole\WebSocket('0.0.0.0', 9001),
+    new Adapter\Swoole\Tcp('0.0.0.0', 1883),
+], workers: 1);
 
 $adapter
     ->onStart(fn () => print("mqtt broker started\n"))
