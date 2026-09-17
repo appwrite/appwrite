@@ -62,6 +62,7 @@ import {
   isOrganizationBillingReadonlyStatus,
   isBudgetLimitReached,
   isPlanUsageLimitReached,
+  isProjectLockedByPlanUsage,
   useOrganizationScopes,
   useResendMembershipInvite,
   useUpdateMembershipRole,
@@ -1016,7 +1017,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     !showBudgetLimitAlert &&
     isPlanUsageLimitReached(organizationDetail)
   const showProjectsLockedAlert =
-    showBudgetLimitAlert || showPlanUsageLimitAlert
+    showBudgetLimitAlert ||
+    (features.billing && isProjectLockedByPlanUsage(organizationDetail))
 
   const [orgName, setOrgName] = useState('')
 

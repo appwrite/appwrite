@@ -93,7 +93,10 @@ export function isBudgetLimitReached(
  * True when plan usage limits are at or above 100% (e.g. free-plan GBHours).
  * See {@link isPlanUsageLimitReached} in `@/lib/billing/billing-limits`.
  */
-export { isPlanUsageLimitReached } from '@/lib/billing/billing-limits'
+export {
+  isPlanUsageLimitReached,
+  isProjectLockedByPlanUsage,
+} from '@/lib/billing/billing-limits'
 
 /**
  * @deprecated Prefer {@link isBudgetLimitReached}. Same check for organization documents.
