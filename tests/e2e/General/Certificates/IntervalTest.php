@@ -188,6 +188,26 @@ final class IntervalTest extends TestCase
         $this->assertSame(['unreachable.example.com'], $domains);
     }
 
+    public function testIssuanceBudgetBoundsOneTick(): void
+    {
+        /**
+         * Test for FAILURE
+         */
+        // iterate() pages past its limit, so only an explicit ceiling keeps a
+        // mass failure from spending the whole Let's Encrypt budget at once.
+        for ($i = 0; $i < 101; $i++) {
+            $this->seed('eligible' . \str_pad((string) $i, 3, '0', STR_PAD_LEFT), 2);
+        }
+
+        $this->runTask();
+
+        $this->assertCount(100, $this->publisher->getEvents('certificates') ?? []);
+
+        // The rules left over are still claimable on the next tick.
+        $this->runTask();
+        $this->assertCount(101, $this->publisher->getEvents('certificates') ?? []);
+    }
+
     private function seed(string $id, int $attempts, array $rule = [], array $certificate = []): void
     {
         $this->database->createDocument('certificates', new Document(array_merge([
@@ -214,7 +234,16 @@ final class IntervalTest extends TestCase
         };
         foreach ($interval->getTasks() as $task) {
             if ($task['name'] === 'certificateGeneration') {
-                $task['callback']($this->database, static fn () => null, new Certificate($publisher ?? $this->publisher, new Queue('certificates')));
+                // The fixture preserves dates so seeds can carry an old
+                // $updatedAt, but the scheduler's own database does not. Run
+                // the task under production's semantics, or a write that only
+                // works with dates preserved would pass here and fail in prod.
+                $this->database->setPreserveDates(false);
+                try {
+                    $task['callback']($this->database, static fn () => null, new Certificate($publisher ?? $this->publisher, new Queue('certificates')));
+                } finally {
+                    $this->database->setPreserveDates(true);
+                }
                 return;
             }
         }

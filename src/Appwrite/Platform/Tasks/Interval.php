@@ -240,6 +240,15 @@ class Interval extends Action
                 }
 
                 $processed++;
+
+                // iterate() pages until the scan is exhausted, so the limit
+                // above is a page size and not a ceiling. Renewals already
+                // spend 200 of Let's Encrypt's 300 orders per three hours, so
+                // retries here are held to the 100 that remain. Skipped rows
+                // must not consume that budget, hence $processed.
+                if ($processed === 100) {
+                    break;
+                }
             } catch (\Throwable $th) {
                 $failed++;
             }
@@ -271,9 +280,12 @@ class Interval extends Action
                     return;
                 }
 
-                $dbForPlatform->updateDocument('rules', $current->getId(), new Document([
+                // updateDocument stamps $updatedAt with now() unless dates are
+                // preserved, which would extend the claim instead of releasing
+                // it -- the opposite of what this method is for.
+                $dbForPlatform->withPreserveDates(fn () => $dbForPlatform->updateDocument('rules', $current->getId(), new Document([
                     '$updatedAt' => $updatedAt,
-                ]));
+                ])));
             });
         } catch (\Throwable) {
             // Best effort only; the lease expiry is still the backstop.
