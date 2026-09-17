@@ -668,9 +668,6 @@ class OpenAPI3 extends Format
                         break;
                     case \Appwrite\Utopia\Database\Validator\CustomId::class:
                         $node['schema']['type'] = $validator->getType();
-                        $node['schema']['x-appwrite'] = [
-                            'idGenerator' => 'ID.unique',
-                        ];
                         $node['schema']['example'] = ($param['example'] ?? '') !== '' ? $param['example'] : '<' . \strtoupper(Template::fromCamelCaseToSnake($node['name'])) . '>';
                         break;
                     case \Appwrite\Task\Validator\Cron::class:
