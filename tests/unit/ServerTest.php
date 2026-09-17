@@ -24,7 +24,6 @@ final class ServerTest extends TestCase
 
             public function __construct(private bool $throws)
             {
-                parent::__construct();
             }
 
             private function guard(string $action): void
@@ -81,19 +80,18 @@ final class ServerTest extends TestCase
                 return $this;
             }
 
-            public function setPackageMaxLength(int $bytes): Adapter
+            public function tick(int $seconds, callable $callback): int
             {
-                return $this;
+                return 0;
             }
 
-            public function setWorkerNumber(int $num): Adapter
+            public function after(int $seconds, callable $callback): int
             {
-                return $this;
+                return 0;
             }
 
-            public function getNative(): mixed
+            public function clear(int $id): void
             {
-                return null;
             }
         };
     }

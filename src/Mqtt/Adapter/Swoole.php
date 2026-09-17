@@ -3,11 +3,13 @@
 namespace Utopia\Mqtt\Adapter;
 
 use Swoole\Server;
+use Swoole\Server\Port;
+use Swoole\Timer;
 use Utopia\Mqtt\Adapter;
+use Utopia\Mqtt\Adapter\Swoole\Transport;
 
 class Swoole extends Adapter
 {
-    /** Swoole's max_connection cap. */
     private const MAX_CONNECTIONS = 100_000;
 
     protected Server $server;
@@ -24,50 +26,61 @@ class Swoole extends Adapter
     /** @var callable|null */
     private $onClose = null;
 
-    public function __construct(string $host = '0.0.0.0', int $port = 1883)
+    /** @param list<Transport> $transports */
+    public function __construct(array $transports, private int $workers = 1)
     {
-        parent::__construct($host, $port);
+        if ($transports === []) {
+            throw new \InvalidArgumentException('At least one transport is required.');
+        }
 
-        $this->server = new Server($this->host, $this->port, SWOOLE_BASE);
+        $master = $transports[0];
+        $this->server = new Server($master->host, $master->port, SWOOLE_BASE, $master->getSockType());
+        $this->server->set($master->getSettings() + [
+            'worker_num' => $this->workers,
+            'max_connection' => self::MAX_CONNECTIONS,
+        ]);
 
-        $this->config['open_mqtt_protocol'] = true;
-        $this->config['worker_num'] = 1;
-        $this->config['max_connection'] = self::MAX_CONNECTIONS;
+        foreach (\array_slice($transports, 1) as $transport) {
+            $port = $this->server->addListener($transport->host, $transport->port, $transport->getSockType());
+            if (!$port instanceof Port) {
+                throw new \RuntimeException(\sprintf('Could not listen on %s:%d.', $transport->host, $transport->port));
+            }
+
+            $settings = $transport->getSettings();
+            if ($settings !== []) {
+                $port->set($settings);
+            }
+        }
     }
 
     public function start(): void
     {
-        // The transport does not keep a connection registry: an application that needs
-        // one tracks connections itself (it learns of a client from the CONNECT packet
-        // via onReceive, and of a drop via onClose), keyed by whatever domain state it
-        // attaches to each fd.
-        $this->server->on('close', function (Server $server, int $fd) {
-            if ($this->onClose !== null) {
-                call_user_func($this->onClose, $fd);
+        $this->server->on('receive', function (Server $server, int $fd, int $reactorId, string $data): void {
+            if ($this->onReceive !== null) {
+                \call_user_func($this->onReceive, $fd, $data);
             }
         });
 
-        $this->server->on('receive', function (Server $server, int $fd, int $reactorId, string $data) {
-            if ($this->onReceive !== null) {
-                call_user_func($this->onReceive, $fd, $data);
+        $this->server->on('close', function (Server $server, int $fd): void {
+            if ($this->onClose !== null) {
+                \call_user_func($this->onClose, $fd);
             }
         });
 
         if ($this->onStart !== null) {
             $callback = $this->onStart;
-            $this->server->on('start', function () use ($callback) {
-                call_user_func($callback);
+            $this->server->on('start', function () use ($callback): void {
+                \call_user_func($callback);
             });
         }
 
         if ($this->onWorkerStart !== null) {
             $callback = $this->onWorkerStart;
-            $this->server->on('workerStart', function (Server $server, int $workerId) use ($callback) {
-                call_user_func($callback, $workerId);
+            $this->server->on('workerStart', function (Server $server, int $workerId) use ($callback): void {
+                \call_user_func($callback, $workerId);
             });
         }
 
-        $this->server->set($this->config);
         $this->server->start();
     }
 
@@ -86,50 +99,46 @@ class Swoole extends Adapter
         $this->server->close($connection);
     }
 
-    public function onStart(callable $callback): self
+    public function onStart(callable $callback): Adapter
     {
         $this->onStart = $callback;
 
         return $this;
     }
 
-    public function onWorkerStart(callable $callback): self
+    public function onWorkerStart(callable $callback): Adapter
     {
         $this->onWorkerStart = $callback;
 
         return $this;
     }
 
-    public function onReceive(callable $callback): self
+    public function onReceive(callable $callback): Adapter
     {
         $this->onReceive = $callback;
 
         return $this;
     }
 
-    public function onClose(callable $callback): self
+    public function onClose(callable $callback): Adapter
     {
         $this->onClose = $callback;
 
         return $this;
     }
 
-    public function setPackageMaxLength(int $bytes): self
+    public function tick(int $seconds, callable $callback): int
     {
-        $this->config['package_max_length'] = $bytes;
-
-        return $this;
+        return Timer::tick($seconds * 1000, $callback);
     }
 
-    public function setWorkerNumber(int $num): self
+    public function after(int $seconds, callable $callback): int
     {
-        $this->config['worker_num'] = $num;
-
-        return $this;
+        return Timer::after($seconds * 1000, $callback);
     }
 
-    public function getNative(): Server
+    public function clear(int $id): void
     {
-        return $this->server;
+        Timer::clear($id);
     }
 }
