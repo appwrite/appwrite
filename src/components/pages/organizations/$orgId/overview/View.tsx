@@ -964,8 +964,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
           status: org.status,
           billingPlan: org.billingPlan,
           billingPlanId: org.billingPlanId,
-          billingPlanDowngrade: org.billingPlanDowngrade}
-      },
+          billingPlanDowngrade: org.billingPlanDowngrade,
+        }
       },
     )
   }, [organizationsData, billingPlans])
@@ -998,7 +998,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
         billingPlan: organizationDetail.billingPlan,
         billingPlanId: (organizationDetail as { billingPlanId?: string })
           .billingPlanId,
-        billingPlanDowngrade: organizationDetail.billingPlanDowngrade} satisfies Organization
+        billingPlanDowngrade: organizationDetail.billingPlanDowngrade,
+      } satisfies Organization
     }
     return null
   }, [orgId, organizations, organizationDetail, billingPlans])
