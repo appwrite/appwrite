@@ -4149,16 +4149,17 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/mqtt.git",
-                "reference": "a4dafdebd5634ab64ebb08ad5930b603c5fc5d02"
+                "reference": "53ff974d0a179f07035241a8b8df0ca1b15a2ff5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/mqtt/zipball/a4dafdebd5634ab64ebb08ad5930b603c5fc5d02",
-                "reference": "a4dafdebd5634ab64ebb08ad5930b603c5fc5d02",
+                "url": "https://api.github.com/repos/utopia-php/mqtt/zipball/53ff974d0a179f07035241a8b8df0ca1b15a2ff5",
+                "reference": "53ff974d0a179f07035241a8b8df0ca1b15a2ff5",
                 "shasum": ""
             },
             "require": {
-                "php": ">=8.1"
+                "php": ">=8.1",
+                "utopia-php/telemetry": "^0.4"
             },
             "require-dev": {
                 "laravel/pint": "^1.15 <1.21",
@@ -4207,7 +4208,7 @@
                 "source": "https://github.com/utopia-php/mqtt/tree/dev",
                 "issues": "https://github.com/utopia-php/mqtt/issues"
             },
-            "time": "2026-09-15T07:09:28+00:00"
+            "time": "2026-09-17T15:41:04+00:00"
         },
         {
             "name": "utopia-php/openapi",

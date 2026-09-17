@@ -13,25 +13,27 @@ use Utopia\DI\Container;
 use Utopia\System\System;
 
 return function (Container $container): void {
-    $getProject = function (string $projectId, Authorization $authorization): Document {
+    $getProject = function (string $projectId, Authorization $authorization) use ($container): Document {
         if ($projectId === '' || $projectId === 'console') {
             return new Document(Config::getParam('console'));
         }
 
-        $dbForPlatform = getConsoleDB();
+        $getConsoleDB = $container->get('getConsoleDB');
+        $dbForPlatform = $getConsoleDB();
         $dbForPlatform->setAuthorization($authorization);
 
         return $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
     };
 
-    $getUser = function (Document $project, string $authMethod, string $credential, Authorization $authorization): User {
+    $getUser = function (Document $project, string $authMethod, string $credential, Authorization $authorization) use ($container): User {
         if ($project->isEmpty() || $credential === '') {
             return new User([]);
         }
 
         $authorization->setDefaultStatus(true);
 
-        $dbForProject = getProjectDB($project);
+        $getProjectDB = $container->get('getProjectDB');
+        $dbForProject = $getProjectDB($project);
         $dbForProject->setAuthorization($authorization);
 
         switch ($authMethod) {

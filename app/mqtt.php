@@ -1,20 +1,11 @@
 <?php
 
 use Appwrite\Messaging\Adapter\Mqtt;
-use Appwrite\Mqtt\Dispatcher;
-use Appwrite\Mqtt\Handlers\Auth as AuthHandler;
-use Appwrite\Mqtt\Handlers\Connect as ConnectHandler;
-use Appwrite\Mqtt\Handlers\Disconnect as DisconnectHandler;
-use Appwrite\Mqtt\Handlers\Ping as PingHandler;
-use Appwrite\Mqtt\Handlers\Puback as PubackHandler;
-use Appwrite\Mqtt\Handlers\Subscribe as SubscribeHandler;
-use Appwrite\Mqtt\Handlers\Unsubscribe as UnsubscribeHandler;
-use Appwrite\Mqtt\Response;
+use Appwrite\Mqtt\Handler;
 use Appwrite\PubSub\Adapter\Pool as PubSubPool;
 use Appwrite\Utopia\Database\Documents\User;
 use Swoole\Coroutine;
 use Swoole\Runtime;
-use Swoole\Timer;
 use Utopia\Cache\Adapter\Pool as CachePool;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
@@ -26,10 +17,6 @@ use Utopia\Database\Document;
 use Utopia\DI\Container;
 use Utopia\DSN\DSN;
 use Utopia\Mqtt\Adapter;
-use Utopia\Mqtt\Keepalive;
-use Utopia\Mqtt\Packet;
-use Utopia\Mqtt\Packet\V3;
-use Utopia\Mqtt\Packet\V5;
 use Utopia\Mqtt\Server;
 use Utopia\Pools\Group;
 use Utopia\Registry\Registry;
@@ -55,170 +42,129 @@ if (!$container->has('pools')) {
     }, ['register']);
 }
 
-if (!function_exists('getCache')) {
-    function getCache(): Cache
-    {
-        $ctx = Coroutine::getContext();
+$container->set('getCache', fn () => function () use ($register): Cache {
+    $ctx = Coroutine::getContext();
 
-        if (isset($ctx['cache'])) {
-            return $ctx['cache'];
-        }
-
-        global $register;
-
-        /** @var Group $pools */
-        $pools = $register->get('pools');
-
-        $adapters = [];
-        foreach (Config::getParam('pools-cache', []) as $value) {
-            $adapters[] = new CachePool($pools->get($value));
-        }
-
-        return $ctx['cache'] = new Cache(new Sharding($adapters));
+    if (isset($ctx['cache'])) {
+        return $ctx['cache'];
     }
-}
 
-if (!function_exists('getConsoleDB')) {
-    function getConsoleDB(): Database
-    {
-        $ctx = Coroutine::getContext();
+    /** @var Group $pools */
+    $pools = $register->get('pools');
 
-        if (isset($ctx['dbForPlatform'])) {
-            return $ctx['dbForPlatform'];
-        }
-
-        global $register;
-
-        /** @var Group $pools */
-        $pools = $register->get('pools');
-
-        $adapter = new DatabasePool($pools->get('console'));
-        $database = new Database($adapter, getCache());
-        $database
-            ->setDatabase(APP_DATABASE)
-            ->setNamespace('_console')
-            ->setMetadata('host', \gethostname())
-            ->setMetadata('project', '_console');
-        $database->setDocumentType('users', User::class);
-
-        return $ctx['dbForPlatform'] = $database;
+    $adapters = [];
+    foreach (Config::getParam('pools-cache', []) as $value) {
+        $adapters[] = new CachePool($pools->get($value));
     }
-}
 
-if (!function_exists('getProjectDB')) {
-    function getProjectDB(Document $project): Database
-    {
-        $ctx = Coroutine::getContext();
+    return $ctx['cache'] = new Cache(new Sharding($adapters));
+}, []);
 
-        if (!isset($ctx['dbForProject'])) {
-            $ctx['dbForProject'] = [];
-        }
+$container->set('getConsoleDB', fn () => function () use ($register, $container): Database {
+    $ctx = Coroutine::getContext();
 
-        if (isset($ctx['dbForProject'][$project->getSequence()])) {
-            return $ctx['dbForProject'][$project->getSequence()];
-        }
+    if (isset($ctx['dbForPlatform'])) {
+        return $ctx['dbForPlatform'];
+    }
 
-        if ($project->isEmpty() || $project->getId() === 'console') {
-            return getConsoleDB();
-        }
+    $getCache = $container->get('getCache');
 
-        global $register;
+    /** @var Group $pools */
+    $pools = $register->get('pools');
 
-        /** @var Group $pools */
-        $pools = $register->get('pools');
+    $adapter = new DatabasePool($pools->get('console'));
+    $database = new Database($adapter, $getCache());
+    $database
+        ->setDatabase(APP_DATABASE)
+        ->setNamespace('_console')
+        ->setMetadata('host', \gethostname())
+        ->setMetadata('project', '_console');
+    $database->setDocumentType('users', User::class);
 
-        try {
-            $dsn = new DSN($project->getAttribute('database'));
-        } catch (\InvalidArgumentException) {
-            $dsn = new DSN('mysql://' . $project->getAttribute('database'));
-        }
+    return $ctx['dbForPlatform'] = $database;
+}, []);
 
-        $adapter = new DatabasePool($pools->get($dsn->getHost()));
-        $database = new Database($adapter, getCache());
+$container->set('getProjectDB', fn () => function (Document $project) use ($register, $container): Database {
+    $ctx = Coroutine::getContext();
 
-        $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
+    if (!isset($ctx['dbForProject'])) {
+        $ctx['dbForProject'] = [];
+    }
 
-        if (\in_array($dsn->getHost(), $sharedTables)) {
-            $projectCollections = Config::getParam('collections', [])['projects'] ?? [];
-            $globalCollections = array_keys($projectCollections);
-            $globalCollections[] = 'audit';
+    if (isset($ctx['dbForProject'][$project->getSequence()])) {
+        return $ctx['dbForProject'][$project->getSequence()];
+    }
 
-            $database
-                ->setSharedTables(true)
-                ->setGlobalCollections($globalCollections)
-                ->setTenant($project->getSequence())
-                ->setNamespace($dsn->getParam('namespace'));
-        } else {
-            $database
-                ->setSharedTables(false)
-                ->setTenant(null)
-                ->setNamespace('_' . $project->getSequence());
-        }
+    if ($project->isEmpty() || $project->getId() === 'console') {
+        $getConsoleDB = $container->get('getConsoleDB');
+
+        return $getConsoleDB();
+    }
+
+    $getCache = $container->get('getCache');
+
+    /** @var Group $pools */
+    $pools = $register->get('pools');
+
+    try {
+        $dsn = new DSN($project->getAttribute('database'));
+    } catch (\InvalidArgumentException) {
+        $dsn = new DSN('mysql://' . $project->getAttribute('database'));
+    }
+
+    $adapter = new DatabasePool($pools->get($dsn->getHost()));
+    $database = new Database($adapter, $getCache());
+
+    $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
+
+    if (\in_array($dsn->getHost(), $sharedTables)) {
+        $projectCollections = Config::getParam('collections', [])['projects'] ?? [];
+        $globalCollections = array_keys($projectCollections);
+        $globalCollections[] = 'audit';
 
         $database
-            ->setDatabase(APP_DATABASE)
-            ->setMetadata('host', \gethostname())
-            ->setMetadata('project', $project->getId());
-        $database->setDocumentType('users', User::class);
-
-        return $ctx['dbForProject'][$project->getSequence()] = $database;
+            ->setSharedTables(true)
+            ->setGlobalCollections($globalCollections)
+            ->setTenant($project->getSequence())
+            ->setNamespace($dsn->getParam('namespace'));
+    } else {
+        $database
+            ->setSharedTables(false)
+            ->setTenant(null)
+            ->setNamespace('_' . $project->getSequence());
     }
-}
 
-if (!function_exists('getPlanForUser')) {
-    function getPlanForUser(Document $project, string $userId): int
-    {
-        return (int) System::getEnv('_APP_MQTT_REPLAY_DEPTH', '5');
+    $database
+        ->setDatabase(APP_DATABASE)
+        ->setMetadata('host', \gethostname())
+        ->setMetadata('project', $project->getId());
+    $database->setDocumentType('users', User::class);
+
+    return $ctx['dbForProject'][$project->getSequence()] = $database;
+}, []);
+
+$container->set('getPlanForUser', fn () => fn (Document $project, string $userId): int => (int) System::getEnv('_APP_MQTT_REPLAY_DEPTH', '5'), []);
+
+$container->set('getRedis', fn () => function (): \Redis {
+    $ctx = Coroutine::getContext();
+
+    if (isset($ctx['redis'])) {
+        return $ctx['redis'];
     }
-}
 
-if (!function_exists('getCache')) {
-    function getCache(): Cache
-    {
-        $ctx = Coroutine::getContext();
+    $host = System::getEnv('_APP_REDIS_HOST', 'localhost');
+    $port = System::getEnv('_APP_REDIS_PORT', 6379);
+    $pass = System::getEnv('_APP_REDIS_PASS', '');
 
-        if (isset($ctx['cache'])) {
-            return $ctx['cache'];
-        }
-
-        global $register;
-
-        $pools = $register->get('pools'); /** @var Group $pools */
-
-        $list = Config::getParam('pools-cache', []);
-        $adapters = [];
-
-        foreach ($list as $value) {
-            $adapters[] = new CachePool($pools->get($value));
-        }
-
-        return $ctx['cache'] = new Cache(new Sharding($adapters));
+    $redis = new \Redis();
+    @$redis->pconnect($host, (int)$port);
+    if ($pass) {
+        $redis->auth($pass);
     }
-}
+    $redis->setOption(\Redis::OPT_READ_TIMEOUT, -1);
 
-if (!function_exists('getRedis')) {
-    function getRedis(): \Redis
-    {
-        $ctx = Coroutine::getContext();
-
-        if (isset($ctx['redis'])) {
-            return $ctx['redis'];
-        }
-
-        $host = System::getEnv('_APP_REDIS_HOST', 'localhost');
-        $port = System::getEnv('_APP_REDIS_PORT', 6379);
-        $pass = System::getEnv('_APP_REDIS_PASS', '');
-
-        $redis = new \Redis();
-        @$redis->pconnect($host, (int)$port);
-        if ($pass) {
-            $redis->auth($pass);
-        }
-        $redis->setOption(\Redis::OPT_READ_TIMEOUT, -1);
-
-        return $ctx['redis'] = $redis;
-    }
-}
+    return $ctx['redis'] = $redis;
+}, []);
 
 // Register the CONNECT authenticator and per-SUBSCRIBE authorizer on the global container
 // (see app/init/mqtt/connection.php). The CONNECT/SUBSCRIBE handlers inject them by name,
@@ -228,49 +174,25 @@ $registerConnectionResources($container);
 /** @var \Utopia\Telemetry\Adapter $telemetry */
 $telemetry = $container->get('telemetry');
 
-$adapter = new Adapter\Swoole(host: '0.0.0.0', port: 1883);
-$adapter->setPackageMaxLength((int) System::getEnv('_APP_MQTT_MAX_PACKET_SIZE', '64000'));
-
-$server = new Server($adapter);
-$server->error(fn (\Throwable $error, string $action) => Console::error("MQTT {$action} error: " . $error->getMessage()));
+$adapter = new Adapter\Swoole([
+    new Adapter\Swoole\Tcp('0.0.0.0', 1883, (int) System::getEnv('_APP_MQTT_MAX_PACKET_SIZE', '64000')),
+], workers: 1);
 
 $mqtt = new Mqtt($telemetry, new PubSubPool($register->get('pools')->get('pubsub')));
 
-$dispatcher = new Dispatcher([
-    new ConnectHandler(),
-    new SubscribeHandler(),
-    new UnsubscribeHandler(),
-    new PubackHandler(),
-    new AuthHandler(),
-    new PingHandler(),
-    new DisconnectHandler(),
-]);
+// The broker owns framing, decoding, dispatch, per-version encoding, packet ids, the QoS
+// handshake, keep-alive reaping and subscription matching. Appwrite policy lives in the Handler.
+$handler = new Handler($container, $mqtt);
+$server = new Server($adapter, $handler);
+$server->setTelemetry($telemetry); // broker owns connection/packet/subscription metrics
 
 $server->onStart(fn () => print("MQTT broker started\n"));
+$server->error(fn (\Throwable $error, string $action) => Console::error("MQTT {$action} error: " . $error->getMessage()));
 
-$server->onWorkerStart(function (int $workerId) use ($server, $mqtt, $register): void {
-    // Keep-alive reaper: every INTERVAL seconds drain the wheel's due buckets and close any
-    // client silent past its deadline (keepAlive x MULTIPLIER). A survivor whose deadline was
-    // pushed forward by recent traffic is rescheduled instead. onClose balances the gauge and
-    // forgets the fd. Per worker, since connections and the wheel are per worker.
-    Timer::tick($mqtt->keepAlive->interval * 1000, function () use ($server, $mqtt): void {
-        $now = microtime(true);
-
-        foreach ($mqtt->keepAlive->drain((int) $now) as $fd) {
-            $connection = $mqtt->connections[$fd] ?? null;
-            if ($connection === null || $connection->keepAlive <= 0) {
-                continue;
-            }
-
-            if ($connection->expiresAt <= $now) {
-                $server->close($fd);
-            } else {
-                $connection->wheelSlot = $mqtt->keepAlive->schedule($fd, $connection->expiresAt);
-            }
-        }
-    });
-
-    go(function () use ($server, $mqtt, $register): void {
+// Server-initiated delivery: bridge the Redis 'mqtt' firehose to this worker's local subscribers.
+// Appwrite clients never PUBLISH; messages are produced by the Messaging worker onto the channel.
+$server->onWorkerStart(function (int $workerId) use ($server, $handler, $mqtt, $register): void {
+    go(function () use ($server, $handler, $mqtt, $register): void {
         $attempts = 0;
         while ($attempts < 300) {
             try {
@@ -280,7 +202,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $mqtt, $register):
                     $attempts = 0;
                 }
 
-                $pubsub->subscribe(['mqtt'], function (mixed $redis, string $channel, string $payload) use ($server, $mqtt): void {
+                $pubsub->subscribe(['mqtt'], function (mixed $redis, string $channel, string $payload) use ($server, $handler, $mqtt): void {
                     $event = json_decode($payload, true);
                     if (!\is_array($event)) {
                         return;
@@ -292,43 +214,17 @@ $server->onWorkerStart(function (int $workerId) use ($server, $mqtt, $register):
                     $sequence = (int) ($event['sequence'] ?? 0);
                     $message = base64_decode((string) ($event['payload'] ?? ''));
 
-                    // The broker is the sender on this hop (fan-out to subscribers), so the
-                    // span is marked is_broker to separate it from client-originated packets.
                     $span = Span::init('mqtt.deliver');
                     $span->set('project.id', $projectId);
                     $span->set('mqtt.topic', $topic);
                     $span->set('mqtt.qos', $qos);
                     $span->set('mqtt.is_broker', true);
 
-                    $subscribers = $mqtt->getSubscribers($projectId, $topic);
-                    $span->set('mqtt.subscribers', count($subscribers));
+                    $delivered = $handler->deliver($server, $projectId, $topic, $message, $qos, $sequence);
 
-                    if ($subscribers === []) {
-                        // No local subscriber on this worker; with multiple workers this
-                        // counts per-worker rather than as a global drop.
+                    $span->set('mqtt.subscribers', $delivered);
+                    if ($delivered === 0) {
                         $mqtt->messagesDropped->add(1, ['reason' => 'no_subscriber']);
-                        $span->finish();
-                        return;
-                    }
-
-                    foreach ($subscribers as $fd => $grantedQos) {
-                        $subscriber = $mqtt->connections[$fd] ?? null;
-                        if ($subscriber === null) {
-                            continue;
-                        }
-                        $effectiveQos = min($qos, $grantedQos);
-                        $packetId = $subscriber->nextPacketId();
-                        $publish = $subscriber->protocol >= 5
-                            ? V5::publish($topic, $message, $effectiveQos, $packetId)
-                            : V3::publish($topic, $message, $effectiveQos, $packetId);
-                        $server->send($fd, $publish);
-                        $mqtt->bytesSent->add(\strlen($publish));
-                        $mqtt->messagesDelivered->add(1, ['qos' => $effectiveQos]);
-
-                        // Hold QoS 1 deliveries until the subscriber's PUBACK matches them back.
-                        if ($effectiveQos === 1) {
-                            $subscriber->track($packetId, $topic, $sequence);
-                        }
                     }
 
                     $span->finish();
@@ -342,63 +238,6 @@ $server->onWorkerStart(function (int $workerId) use ($server, $mqtt, $register):
 
         Console::error('Failed to maintain MQTT pub/sub subscription');
     });
-});
-
-$server->onReceive(function (int $fd, string $data) use (
-    $server,
-    $mqtt,
-    $dispatcher,
-    $container
-): void {
-    // The whole packet lifecycle is wrapped: a malformed packet or a handler failure must
-    // drop only this connection, never bubble up and take down the worker (and every other
-    // connection it holds).
-    $span = null;
-    try {
-        $packet = Packet::parse($data);
-        $connection = $mqtt->open($fd);
-
-        $mqtt->bytesReceived->add(\strlen($data));
-
-        $span = Span::init('mqtt.' . $packet->name());
-        $span->set('mqtt.fd', $fd);
-        $span->set('mqtt.is_broker', false); // an inbound packet from a client
-        $span->set('mqtt.bytes', \strlen($data));
-
-        $response = new Response($server, $fd, $mqtt->bytesSent);
-
-        // authenticator/authorizer are inherited from the global container (registered above).
-        $packetContainer = new Container($container);
-        $packetContainer->set('mqtt', fn () => $mqtt);
-        $packetContainer->set('connection', fn () => $connection);
-        $packetContainer->set('packet', fn () => $packet);
-        $packetContainer->set('response', fn () => $response);
-
-        $dispatcher->dispatch($packetContainer, $packet->type);
-
-        // Every inbound packet is liveness: push the deadline forward (O(1), no wheel touch).
-        // The wheel is seeded once, when CONNECT establishes the interval; later packets only
-        // move the deadline and the reaper reschedules lazily when it visits the slot.
-        $connection->updateExpiresAt(microtime(true), $mqtt->keepAlive->multiplier);
-        if ($packet->type === Packet::CONNECT && $connection->active && $connection->keepAlive > 0) {
-            $connection->wheelSlot = $mqtt->keepAlive->schedule($fd, $connection->expiresAt);
-        }
-
-        // The identity, project and clean-start flag are populated by the CONNECT
-        // handler during dispatch, so record them afterwards rather than as defaults.
-        $span->set('project.id', $connection->prefix);
-        $span->set('user.id', $connection->identity['userId'] ?? '');
-        $span->set('mqtt.clean_start', $connection->cleanStart);
-        $span->finish();
-    } catch (\Throwable $error) {
-        Console::error('MQTT packet error on fd ' . $fd . ': ' . $error->getMessage());
-        $span?->finish(error: $error);
-        $server->close($fd);
-    }
-});
-
-$server->onClose(function (int $fd) use ($mqtt): void {
-    $mqtt->close($fd);
 });
 
 $server->start();

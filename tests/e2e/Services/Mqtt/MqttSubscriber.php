@@ -23,6 +23,9 @@ final class MqttSubscriber
 
     private int $packetId = 0;
 
+    /** @var Packet[] PUBLISH packets read before the SUBACK (replay), drained by consume(). */
+    private array $pending = [];
+
     public function __construct(
         private readonly string $host,
         private readonly int $port,
@@ -89,7 +92,9 @@ final class MqttSubscriber
 
                 return $codes;
             }
-            // Ignore any early PUBLISH replay queued before the SUBACK; consume() reads those.
+            if ($packet->type === Packet::PUBLISH) {
+                $this->pending[] = $packet; // replay delivered before the SUBACK; consume() drains it
+            }
         }
     }
 
@@ -107,9 +112,13 @@ final class MqttSubscriber
         $received = [];
 
         while (\count($received) < $limit) {
-            $packet = $this->readPacket($deadline);
-            if ($packet === null) {
-                break; // timeout or disconnect
+            if ($this->pending !== []) {
+                $packet = \array_shift($this->pending);
+            } else {
+                $packet = $this->readPacket($deadline);
+                if ($packet === null) {
+                    break; // timeout or disconnect
+                }
             }
             if ($packet->type !== Packet::PUBLISH) {
                 continue;
