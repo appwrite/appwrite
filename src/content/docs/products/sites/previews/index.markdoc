@@ -44,7 +44,7 @@ If the account you authorize is not part of the organization, the preview report
 
 ## Deployments for GitHub
 
-Aside from the preview URL, Appwrite also generates a [URL for the branch and commit](/docs/products/sites/domains#branch-and-commit-urls) that your site has been deployed from. To access these URLs, you can head to the **Deployments** tab of your site, head to any active deployment created using the Git integration, and click on the **+2** next to the mentioned domain in the **Domains** section.
+Aside from the preview URL, Appwrite also generates a [URL for the branch and commit](/docs/products/sites/domains#branch-and-commit-urls) that your site has been deployed from. To access these URLs, head to the **Deployments** tab of your site and click on any deployment created through the Git integration. The panel lists them under **URLs**.
 
 You can also open the deployment itself to see the branch, repository, and commit it was built from. Click any deployment in the **Deployments** tab, and the panel on the right lists the **Branch**, **Repository**, and **Commit**.
 
