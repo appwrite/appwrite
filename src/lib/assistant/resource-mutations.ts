@@ -1,4 +1,4 @@
-import type { Models } from '@appwrite.io/console'
+import type * as AgentModels from '@/lib/appwrite/agent/models'
 import {
   buildTurnView,
   type AssistantMessageLike,
@@ -186,7 +186,11 @@ export function classifyResourceMutation(
   toolName: string,
 ): ResourceMutationKind | null {
   const normalized = toolName.trim().toLowerCase()
-  if (!normalized || META_TOOLS.has(normalized) || isCallToolWrapper(normalized)) {
+  if (
+    !normalized ||
+    META_TOOLS.has(normalized) ||
+    isCallToolWrapper(normalized)
+  ) {
     return null
   }
 
@@ -292,7 +296,7 @@ export function countResourceMutations(
 }
 
 export function messageNeedsToolHydration(
-  message: Models.AgentMessage | AssistantMessageLike,
+  message: AgentModels.AgentMessage | AssistantMessageLike,
 ): boolean {
   if (message.role?.toLowerCase() === 'user') return false
 

@@ -36,6 +36,9 @@ jobs:
       - name: Check for native browser dialogs
         run: bun run lint:native-dialogs
 
+      - name: Check for preview SDK pins
+        run: bun run lint:sdk-pins
+
       - name: Build
         run: bun run build
         env:

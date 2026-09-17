@@ -1,9 +1,9 @@
 import type { QueryClient } from '@tanstack/react-query'
-import type { Models } from '@appwrite.io/console'
+import type * as AgentModels from '@/lib/appwrite/agent/models'
 import { isAssistantMessageInFlight, normalizeTimeline } from './turn-view'
 
 type MessagesCache = {
-  messages: Models.AgentMessage[]
+  messages: AgentModels.AgentMessage[]
   total: number
 }
 
@@ -13,7 +13,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function asAssistantMessage(
   payload: Record<string, unknown>,
-): Models.AgentMessage | null {
+): AgentModels.AgentMessage | null {
   if (typeof payload.$id !== 'string') return null
   if (typeof payload.conversationId !== 'string') return null
 
@@ -27,7 +27,7 @@ function asAssistantMessage(
           : undefined
 
   return {
-    ...(payload as unknown as Models.AgentMessage),
+    ...(payload as unknown as AgentModels.AgentMessage),
     $id: payload.$id,
     conversationId: payload.conversationId,
     ...(timeline !== undefined ? { timeline } : {}),
@@ -36,26 +36,26 @@ function asAssistantMessage(
 
 function asAssistantTool(
   payload: Record<string, unknown>,
-): Models.AgentTool | null {
+): AgentModels.AgentTool | null {
   if (typeof payload.$id !== 'string') return null
   if (typeof payload.messageId !== 'string') return null
-  return payload as unknown as Models.AgentTool
+  return payload as unknown as AgentModels.AgentTool
 }
 
 function asAssistantConversation(
   payload: Record<string, unknown>,
-): Models.AgentConversation | null {
+): AgentModels.AgentConversation | null {
   if (typeof payload.$id !== 'string') return null
-  return payload as unknown as Models.AgentConversation
+  return payload as unknown as AgentModels.AgentConversation
 }
 
 function mergeMessageFields(
-  previous: Models.AgentMessage | undefined,
-  next: Models.AgentMessage,
-): Models.AgentMessage {
+  previous: AgentModels.AgentMessage | undefined,
+  next: AgentModels.AgentMessage,
+): AgentModels.AgentMessage {
   if (!previous) return next
 
-  const merged: Models.AgentMessage = { ...previous, ...next }
+  const merged: AgentModels.AgentMessage = { ...previous, ...next }
 
   // Streaming message updates often omit hydrated tools; keep what we already have.
   if (!Array.isArray(next.tools)) {
@@ -68,37 +68,33 @@ function mergeMessageFields(
 }
 
 function upsertMessageInList(
-  messages: Models.AgentMessage[],
-  next: Models.AgentMessage,
-): Models.AgentMessage[] {
-  const existingIndex = messages.findIndex((message) => message.$id === next.$id)
+  messages: AgentModels.AgentMessage[],
+  next: AgentModels.AgentMessage,
+): AgentModels.AgentMessage[] {
+  const existingIndex = messages.findIndex(
+    (message) => message.$id === next.$id,
+  )
   let nextMessages =
     existingIndex >= 0
       ? messages.map((message, index) =>
-          index === existingIndex
-            ? mergeMessageFields(message, next)
-            : message,
+          index === existingIndex ? mergeMessageFields(message, next) : message,
         )
       : [...messages, next]
 
   // Drop superseded originals when a replacement arrives.
   const editedFrom =
-    typeof next.editedFromMessageId === 'string'
-      ? next.editedFromMessageId
-      : ''
+    typeof next.editedFromMessageId === 'string' ? next.editedFromMessageId : ''
   if (editedFrom) {
     nextMessages = nextMessages.filter((message) => message.$id !== editedFrom)
   }
 
-  return nextMessages.sort((a, b) =>
-    a.$createdAt.localeCompare(b.$createdAt),
-  )
+  return nextMessages.sort((a, b) => a.$createdAt.localeCompare(b.$createdAt))
 }
 
 function upsertToolOnMessage(
-  message: Models.AgentMessage,
-  tool: Models.AgentTool,
-): Models.AgentMessage {
+  message: AgentModels.AgentMessage,
+  tool: AgentModels.AgentTool,
+): AgentModels.AgentMessage {
   const tools = Array.isArray(message.tools) ? [...message.tools] : []
   const existingIndex = tools.findIndex(
     (entry) =>
@@ -114,16 +110,16 @@ function upsertToolOnMessage(
 }
 
 function sortConversationsByUpdatedAt(
-  conversations: Models.AgentConversation[],
-): Models.AgentConversation[] {
+  conversations: AgentModels.AgentConversation[],
+): AgentModels.AgentConversation[] {
   return [...conversations].sort((a, b) =>
     (b.$updatedAt ?? '').localeCompare(a.$updatedAt ?? ''),
   )
 }
 
 function conversationsEqualForList(
-  previous: Models.AgentConversation,
-  next: Models.AgentConversation,
+  previous: AgentModels.AgentConversation,
+  next: AgentModels.AgentConversation,
 ): boolean {
   return (
     previous.status === next.status &&
@@ -145,9 +141,9 @@ function isAutomationRunConversation(conversation: {
 
 export function mergeAssistantConversationIntoCache(
   queryClient: QueryClient,
-  conversation: Models.AgentConversation,
+  conversation: AgentModels.AgentConversation,
 ): void {
-  queryClient.setQueriesData<Models.AgentConversation[] | undefined>(
+  queryClient.setQueriesData<AgentModels.AgentConversation[] | undefined>(
     { queryKey: ['agent', 'conversations'], exact: false },
     (old) => {
       if (!old) return old
@@ -188,11 +184,7 @@ export function mergeAssistantConversationIntoCache(
     status === 'canceled'
   ) {
     void queryClient.invalidateQueries({
-      queryKey: [
-      'agent',
-        'conversation-resource-stats',
-        conversation.$id,
-      ],
+      queryKey: ['agent', 'conversation-resource-stats', conversation.$id],
       exact: false,
     })
   }
@@ -202,9 +194,9 @@ export function mergeAssistantConversationIntoCache(
 export function patchAssistantConversationInCache(
   queryClient: QueryClient,
   conversationId: string,
-  patch: Partial<Models.AgentConversation>,
+  patch: Partial<AgentModels.AgentConversation>,
 ): void {
-  queryClient.setQueriesData<Models.AgentConversation[] | undefined>(
+  queryClient.setQueriesData<AgentModels.AgentConversation[] | undefined>(
     { queryKey: ['agent', 'conversations'], exact: false },
     (old) => {
       if (!old) return old
@@ -229,7 +221,7 @@ export function patchAssistantConversationInCache(
 
 function syncConversationStatusFromMessage(
   queryClient: QueryClient,
-  message: Models.AgentMessage,
+  message: AgentModels.AgentMessage,
 ): void {
   if (message.role !== 'assistant') return
 
@@ -265,7 +257,7 @@ export function removeAssistantConversationFromCache(
   queryClient: QueryClient,
   conversationId: string,
 ): void {
-  queryClient.setQueriesData<Models.AgentConversation[] | undefined>(
+  queryClient.setQueriesData<AgentModels.AgentConversation[] | undefined>(
     { queryKey: ['agent', 'conversations'], exact: false },
     (old) => old?.filter((entry) => entry.$id !== conversationId),
   )
@@ -298,7 +290,7 @@ function applyMessagesCacheUpdate(
 
 export function mergeAssistantMessageIntoCache(
   queryClient: QueryClient,
-  message: Models.AgentMessage,
+  message: AgentModels.AgentMessage,
 ): void {
   applyMessagesCacheUpdate(queryClient, message.conversationId, (old) => {
     if (!old) {
@@ -316,7 +308,7 @@ export function mergeAssistantMessageIntoCache(
 
 export function mergeAssistantToolIntoCache(
   queryClient: QueryClient,
-  tool: Models.AgentTool,
+  tool: AgentModels.AgentTool,
 ): void {
   const conversationId = tool.conversationId
   if (!conversationId) {
