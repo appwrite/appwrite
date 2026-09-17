@@ -3466,159 +3466,160 @@ final class AccountCustomClientTest extends Scope
         $this->deleteUserByEmail($email);
         $this->deleteCreatedIdentitiesForEmail($provider, $email);
 
-        $response = $this->client->call(Client::METHOD_POST, '/account', [
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ], [
-            'userId' => ID::unique(),
-            'email' => $email,
-            'password' => 'password',
-        ]);
+        try {
+            $response = $this->client->call(Client::METHOD_POST, '/account', [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+            ], [
+                'userId' => ID::unique(),
+                'email' => $email,
+                'password' => 'password',
+            ]);
 
-        $this->assertEquals(201, $response['headers']['status-code']);
-        $existingUserId = $response['body']['$id'];
+            $this->assertEquals(201, $response['headers']['status-code']);
+            $existingUserId = $response['body']['$id'];
 
-        // Enable the mock-unverified provider
-        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/oauth2', array_merge([
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => 'console',
-            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
-        ]), [
-            'provider' => $provider,
-            'appId' => $appId,
-            'secret' => $secret,
-            'enabled' => true,
-        ]);
+            // Enable the mock-unverified provider
+            $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/oauth2', array_merge([
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => 'console',
+                'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            ]), [
+                'provider' => $provider,
+                'appId' => $appId,
+                'secret' => $secret,
+                'enabled' => true,
+            ]);
 
-        $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertEquals(200, $response['headers']['status-code']);
 
-        // With the policy off, linking the unverified email must be rejected
-        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/' . $provider, array_merge([
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ]), [
-            'success' => 'http://localhost/v1/mock/tests/general/oauth2/success',
-            'failure' => 'http://localhost/v1/mock/tests/general/oauth2/failure',
-        ]);
+            // With the policy off, linking the unverified email must be rejected
+            $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/' . $provider, array_merge([
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+            ]), [
+                'success' => 'http://localhost/v1/mock/tests/general/oauth2/success',
+                'failure' => 'http://localhost/v1/mock/tests/general/oauth2/failure',
+            ]);
 
-        $this->assertEquals(400, $response['headers']['status-code']);
-        $this->assertEquals('failure', $response['body']['result']);
+            $this->assertEquals(400, $response['headers']['status-code']);
+            $this->assertEquals('failure', $response['body']['result']);
 
-        // Trusting a provider that is not mock-unverified must keep the unverified email blocked
-        $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/oauth-trust-provider-email', [
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-            'x-appwrite-key' => $apiKey,
-        ], [
-            'providers' => ['mock'],
-        ]);
+            // Trusting a provider that is not mock-unverified must keep the unverified email blocked
+            $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/oauth-trust-provider-email', [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'x-appwrite-key' => $apiKey,
+            ], [
+                'providers' => ['mock'],
+            ]);
 
-        $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertEquals(200, $response['headers']['status-code']);
 
-        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/' . $provider, array_merge([
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ]), [
-            'success' => 'http://localhost/v1/mock/tests/general/oauth2/success',
-            'failure' => 'http://localhost/v1/mock/tests/general/oauth2/failure',
-        ]);
+            $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/' . $provider, array_merge([
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+            ]), [
+                'success' => 'http://localhost/v1/mock/tests/general/oauth2/success',
+                'failure' => 'http://localhost/v1/mock/tests/general/oauth2/failure',
+            ]);
 
-        $this->assertEquals(400, $response['headers']['status-code']);
-        $this->assertEquals('failure', $response['body']['result']);
+            $this->assertEquals(400, $response['headers']['status-code']);
+            $this->assertEquals('failure', $response['body']['result']);
 
-        // Trust the mock-unverified provider; linking the unverified email must now succeed
-        $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/oauth-trust-provider-email', [
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-            'x-appwrite-key' => $apiKey,
-        ], [
-            'providers' => [$provider],
-        ]);
+            // Trust the mock-unverified provider; linking the unverified email must now succeed
+            $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/oauth-trust-provider-email', [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'x-appwrite-key' => $apiKey,
+            ], [
+                'providers' => [$provider],
+            ]);
 
-        $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertEquals(200, $response['headers']['status-code']);
 
-        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/' . $provider, array_merge([
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ]), [
-            'success' => 'http://localhost/v1/mock/tests/general/oauth2/success',
-            'failure' => 'http://localhost/v1/mock/tests/general/oauth2/failure',
-        ]);
+            $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/' . $provider, array_merge([
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+            ]), [
+                'success' => 'http://localhost/v1/mock/tests/general/oauth2/success',
+                'failure' => 'http://localhost/v1/mock/tests/general/oauth2/failure',
+            ]);
 
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals('success', $response['body']['result']);
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertEquals('success', $response['body']['result']);
 
-        $session = $response['cookies'][$sessionCookieKey] ?? '';
-        $this->assertNotEmpty($session);
+            $session = $response['cookies'][$sessionCookieKey] ?? '';
+            $this->assertNotEmpty($session);
 
-        $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-            'cookie' => $sessionCookieKey . '=' . $session,
-        ]));
+            $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'cookie' => $sessionCookieKey . '=' . $session,
+            ]));
 
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals($existingUserId, $response['body']['$id']);
-        $this->assertEquals($email, $response['body']['email']);
-        // The policy only governs linking; it must not mark the email as verified in Appwrite
-        $this->assertFalse($response['body']['emailVerification']);
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertEquals($existingUserId, $response['body']['$id']);
+            $this->assertEquals($email, $response['body']['email']);
+            // The policy only governs linking; it must not mark the email as verified in Appwrite
+            $this->assertFalse($response['body']['emailVerification']);
 
-        // A follow-up sign-in must resolve the existing account through the linked identity
-        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/' . $provider, array_merge([
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ]), [
-            'success' => 'http://localhost/v1/mock/tests/general/oauth2/success',
-            'failure' => 'http://localhost/v1/mock/tests/general/oauth2/failure',
-        ]);
+            // A follow-up sign-in must resolve the existing account through the linked identity
+            $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/' . $provider, array_merge([
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+            ]), [
+                'success' => 'http://localhost/v1/mock/tests/general/oauth2/success',
+                'failure' => 'http://localhost/v1/mock/tests/general/oauth2/failure',
+            ]);
 
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals('success', $response['body']['result']);
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertEquals('success', $response['body']['result']);
 
-        $session = $response['cookies'][$sessionCookieKey] ?? '';
-        $this->assertNotEmpty($session);
+            $session = $response['cookies'][$sessionCookieKey] ?? '';
+            $this->assertNotEmpty($session);
 
-        $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-            'cookie' => $sessionCookieKey . '=' . $session,
-        ]));
+            $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'cookie' => $sessionCookieKey . '=' . $session,
+            ]));
 
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals($existingUserId, $response['body']['$id']);
-        $this->assertEquals($email, $response['body']['email']);
-        $this->assertFalse($response['body']['emailVerification']);
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertEquals($existingUserId, $response['body']['$id']);
+            $this->assertEquals($email, $response['body']['email']);
+            $this->assertFalse($response['body']['emailVerification']);
 
-        // Cleanup: restore the default policy, remove the identity, delete the user
-        $this->client->call(Client::METHOD_PATCH, '/project/policies/oauth-trust-provider-email', [
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-            'x-appwrite-key' => $apiKey,
-        ], [
-            'providers' => [],
-        ]);
+            $this->deleteCreatedIdentitiesForEmail($provider, $email);
 
-        $this->deleteCreatedIdentitiesForEmail($provider, $email);
+            $response = $this->client->call(Client::METHOD_DELETE, '/users/' . $existingUserId, [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'x-appwrite-key' => $apiKey,
+            ]);
 
-        $response = $this->client->call(Client::METHOD_DELETE, '/users/' . $existingUserId, [
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-            'x-appwrite-key' => $apiKey,
-        ]);
-
-        $this->assertEquals(204, $response['headers']['status-code']);
+            $this->assertEquals(204, $response['headers']['status-code']);
+        } finally {
+            $this->client->call(Client::METHOD_PATCH, '/project/policies/oauth-trust-provider-email', [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'x-appwrite-key' => $apiKey,
+            ], [
+                'providers' => [],
+            ]);
+        }
     }
 
     /**
