@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Project\Http\Project\Policies\PhoneOTPChannel;
 
+use Appwrite\Auth\PhoneOTPChannel;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
@@ -42,7 +43,7 @@ class Update extends Action
                 group: 'policies',
                 name: 'updatePhoneOtpChannelPolicy',
                 description: <<<EOT
-                Updating this policy allows you to control how phone OTP messages are delivered to your users. Choose `sms` to always send over SMS, `whatsapp` to always send over WhatsApp, or `whatsapp-sms` to send over WhatsApp and fall back to SMS. Any channel other than `sms` requires a configured WhatsApp provider. The `whatsapp-sms` fallback covers API-level rejections only: Meta accepts a message to a number with no WhatsApp account and reports the failure asynchronously, so that case does not currently fall back to SMS.
+                Updating this policy allows you to control how phone OTP messages are delivered to your users. Choose `sms` to always send over SMS, `whatsapp` to always send over WhatsApp, or `whatsapp-sms` to send over WhatsApp and fall back to SMS. Choosing `whatsapp` requires a configured WhatsApp provider, and `whatsapp-sms` requires both a WhatsApp and an SMS provider so the fallback can actually deliver. The `whatsapp-sms` fallback covers API-level rejections only: Meta accepts a message to a number with no WhatsApp account and reports the failure asynchronously, so that case does not currently fall back to SMS.
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
@@ -69,7 +70,13 @@ class Update extends Action
         Authorization $authorization,
         Event $queueForEvents,
     ): void {
-        if ($channel !== PHONE_OTP_CHANNEL_SMS && empty(System::getEnv('_APP_WHATSAPP_PROVIDER'))) {
+        $smsConfigured = PhoneOTPChannel::isSmsConfigured(
+            !empty(System::getEnv('_APP_SMS_PROVIDER')),
+            !empty(System::getEnv('_APP_SMS_FROM')),
+        );
+        $whatsappConfigured = !empty(System::getEnv('_APP_WHATSAPP_PROVIDER'));
+
+        if ($channel !== PHONE_OTP_CHANNEL_SMS && !PhoneOTPChannel::supports($channel, $smsConfigured, $whatsappConfigured)) {
             throw new Exception(Exception::PROJECT_PHONE_OTP_CHANNEL_UNAVAILABLE);
         }
 

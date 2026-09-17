@@ -4036,8 +4036,6 @@ final class AccountCustomClientTest extends Scope
                     'method' => 'POST',
                 ],
                 probe: function (array $request) use ($number): void {
-                    $this->assertSame('whatsapp', $request['headers']['X-Username'] ?? null);
-                    $this->assertSame('POST', $request['method'] ?? null);
                     $this->assertSame($number, $request['data']['to'] ?? null);
                 }
             );

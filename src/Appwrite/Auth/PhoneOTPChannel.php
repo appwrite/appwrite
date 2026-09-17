@@ -9,8 +9,8 @@ namespace Appwrite\Auth;
 final readonly class PhoneOTPChannel
 {
     private function __construct(
-        public readonly string $channel,
-        public readonly bool $fallback,
+        public string $channel,
+        public bool $fallback,
     ) {
     }
 
@@ -20,6 +20,20 @@ final readonly class PhoneOTPChannel
     public static function isSmsConfigured(bool $providerConfigured, bool $senderConfigured): bool
     {
         return $providerConfigured && $senderConfigured;
+    }
+
+    /**
+     * Whether the instance has every provider a policy relies on, so a project
+     * cannot opt into a channel, or a fallback, that could never deliver.
+     */
+    public static function supports(string $policy, bool $smsConfigured, bool $whatsappConfigured): bool
+    {
+        return match ($policy) {
+            PHONE_OTP_CHANNEL_SMS => $smsConfigured,
+            PHONE_OTP_CHANNEL_WHATSAPP => $whatsappConfigured,
+            PHONE_OTP_CHANNEL_WHATSAPP_SMS => $whatsappConfigured && $smsConfigured,
+            default => false,
+        };
     }
 
     /**

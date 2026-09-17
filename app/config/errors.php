@@ -1228,7 +1228,7 @@ return [
     ],
     Exception::PROJECT_PHONE_OTP_CHANNEL_UNAVAILABLE => [
         'name' => Exception::PROJECT_PHONE_OTP_CHANNEL_UNAVAILABLE,
-        'description' => 'The requested phone OTP channel is not configured. Please check the value of the _APP_WHATSAPP_PROVIDER environment variable.',
+        'description' => 'The requested phone OTP channel is not configured. Please check the values of the _APP_WHATSAPP_PROVIDER, _APP_SMS_PROVIDER and _APP_SMS_FROM environment variables.',
         'code' => 400,
     ],
     Exception::WEBHOOK_NOT_FOUND => [
