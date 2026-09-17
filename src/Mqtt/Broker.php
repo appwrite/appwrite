@@ -19,15 +19,10 @@ use Utopia\Mqtt\Subscription\Store;
 
 class Broker
 {
-    private const KEEP_ALIVE_MULTIPLIER = 1.5;
-
     private const MAX_QOS = 2;
 
     /** @var array<int, Connection> */
     private array $connections = [];
-
-    /** @var array<int, int> */
-    private array $keepaliveTimers = [];
 
     /** @var list<callable> */
     private array $errorCallbacks = [];
@@ -45,6 +40,7 @@ class Broker
         private readonly Adapter $adapter,
         private readonly Handler $handler,
         private readonly Store $store = new Store(),
+        private readonly Keepalive $keepalive = new Keepalive(),
     ) {
     }
 
@@ -90,9 +86,13 @@ class Broker
             $this->adapter->onStart($this->onStart);
         }
 
-        if ($this->onWorkerStart !== null) {
-            $this->adapter->onWorkerStart($this->onWorkerStart);
-        }
+        $this->adapter->onWorkerStart(function (int $workerId): void {
+            $this->adapter->tick($this->keepalive->interval, $this->reap(...));
+
+            if ($this->onWorkerStart !== null) {
+                \call_user_func($this->onWorkerStart, $workerId);
+            }
+        });
 
         try {
             $this->adapter->start();
@@ -260,28 +260,26 @@ class Broker
 
     private function cleanup(int $fd): void
     {
-        if (isset($this->keepaliveTimers[$fd])) {
-            $this->adapter->clear($this->keepaliveTimers[$fd]);
-        }
-
+        $this->keepalive->remove($fd);
         $this->store->close($fd);
-        unset($this->connections[$fd], $this->keepaliveTimers[$fd]);
+        unset($this->connections[$fd]);
     }
 
     private function refreshKeepAlive(Connection $connection): void
     {
-        if (isset($this->keepaliveTimers[$connection->fd])) {
-            $this->adapter->clear($this->keepaliveTimers[$connection->fd]);
-            unset($this->keepaliveTimers[$connection->fd]);
-        }
-
         if ($connection->keepAlive <= 0) {
             return;
         }
 
-        $fd = $connection->fd;
-        $deadline = (int) \ceil($connection->keepAlive * self::KEEP_ALIVE_MULTIPLIER);
-        $this->keepaliveTimers[$fd] = $this->adapter->after($deadline, fn () => $this->adapter->close($fd));
+        $connection->updateExpiresAt(\microtime(true), $this->keepalive->multiplier);
+        $connection->wheelSlot = $this->keepalive->schedule($connection->fd, $connection->expiresAt);
+    }
+
+    private function reap(): void
+    {
+        foreach ($this->keepalive->drain((int) \microtime(true)) as $fd) {
+            $this->adapter->close($fd);
+        }
     }
 
     private function record(Subscribe $subscribe, Suback $suback, Connection $connection): void
