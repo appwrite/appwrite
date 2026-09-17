@@ -1874,6 +1874,7 @@ configs:
         <query_views_log><ttl>event_date + INTERVAL 7 DAY DELETE</ttl></query_views_log>
         <query_metric_log><ttl>event_date + INTERVAL 7 DAY DELETE</ttl></query_metric_log>
         <background_schedule_pool_log><ttl>event_date + INTERVAL 7 DAY DELETE</ttl></background_schedule_pool_log>
+        <asynchronous_insert_log><ttl>event_date + INTERVAL 3 DAY DELETE</ttl></asynchronous_insert_log>
         <error_log><ttl>event_date + INTERVAL 14 DAY DELETE</ttl></error_log>
       </clickhouse>
   clickhouse-logs.sh:
