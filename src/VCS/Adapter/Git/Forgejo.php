@@ -8,6 +8,8 @@ class Forgejo extends Gitea
 {
     protected string $endpoint = 'http://forgejo:3000/api/v1';
 
+    protected string $giteaUrl = 'http://forgejo:3000';
+
     /**
      * Get Adapter Name
      */

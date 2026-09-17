@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Utopia\Tests\Unit;
 
 use Exception;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Utopia\VCS\Adapter\Git;
 
@@ -220,5 +221,32 @@ abstract class Base extends TestCase
         $result = $this->vcsAdapter->getEvents('unsupported_event', $payload);
 
         $this->assertEmpty($result);
+    }
+
+    #[DataProvider('rootDirectories')]
+    public function testGenerateCloneCommandSelectsTheRootDirectory(string $rootDirectory, string $pattern): void
+    {
+        $command = $this->vcsAdapter->generateCloneCommand('owner', 'repo', 'main', Git::CLONE_TYPE_BRANCH, '/tmp/clone', $rootDirectory);
+
+        $this->assertStringContainsString(escapeshellarg($pattern), $command);
+    }
+
+    /**
+     * Git matches a sparse-checkout pattern gitignore-style, so a './' prefix
+     * looks for a directory literally named '.' and checks out nothing.
+     */
+    public static function rootDirectories(): \Iterator
+    {
+        yield 'repository root' => ['', '*'];
+        yield 'dot' => ['.', '*'];
+        yield 'dot slash' => ['./', '*'];
+        yield 'slash' => ['/', '*'];
+        yield 'bare' => ['docs', 'docs'];
+        yield 'trailing slash' => ['docs/', 'docs'];
+        yield 'dot slash prefix' => ['./docs', 'docs'];
+        yield 'dot slash prefix and trailing slash' => ['./docs/', 'docs'];
+        yield 'nested' => ['./astro/starter', 'astro/starter'];
+        // A directory named '0' is a real path, not a root sentinel.
+        yield 'zero' => ['0', '0'];
     }
 }

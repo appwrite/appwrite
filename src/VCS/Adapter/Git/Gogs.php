@@ -9,6 +9,8 @@ class Gogs extends Gitea
 {
     protected string $endpoint = 'http://gogs:3000/api/v1';
 
+    protected string $giteaUrl = 'http://gogs:3000';
+
     /**
      * Get Adapter Name
      */
