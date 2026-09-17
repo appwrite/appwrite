@@ -16,6 +16,10 @@ use Utopia\Mqtt\Packet\Subscribe;
 use Utopia\Mqtt\Packet\Unsubscribe;
 use Utopia\Mqtt\Packet\Unsuback;
 use Utopia\Mqtt\Subscription\Store;
+use Utopia\Telemetry\Adapter as Telemetry;
+use Utopia\Telemetry\Adapter\None as NoTelemetry;
+use Utopia\Telemetry\Counter;
+use Utopia\Telemetry\UpDownCounter;
 
 class Server
 {
@@ -23,6 +27,14 @@ class Server
 
     /** @var array<int, Connection> */
     private array $connections = [];
+
+    private ?Counter $packetsReceived = null;
+
+    private ?Counter $connectionsOpened = null;
+
+    private ?UpDownCounter $connectionsActive = null;
+
+    private ?Counter $subscriptions = null;
 
     /** @var list<callable> */
     private array $errorCallbacks = [];
@@ -41,6 +53,17 @@ class Server
         private readonly Handler $handler,
         private readonly Store $store = new Store(),
     ) {
+        $this->setTelemetry(new NoTelemetry());
+    }
+
+    public function setTelemetry(Telemetry $telemetry): self
+    {
+        $this->packetsReceived = $telemetry->createCounter('mqtt.packets.received');
+        $this->connectionsOpened = $telemetry->createCounter('mqtt.connections.opened');
+        $this->connectionsActive = $telemetry->createUpDownCounter('mqtt.connections.active');
+        $this->subscriptions = $telemetry->createCounter('mqtt.subscriptions');
+
+        return $this;
     }
 
     public function onStart(callable $callback): self
@@ -137,6 +160,8 @@ class Server
 
     private function dispatch(Packet $packet, Connection $connection): void
     {
+        $this->packetsReceived?->add(1, ['type' => $packet->name()]);
+
         switch ($packet->type) {
             case Packet::CONNECT:
                 $connect = Connect::decode($packet->body);
@@ -150,7 +175,10 @@ class Server
 
                 if ($result instanceof Connack && $result->accepted()) {
                     $connection->active = true;
+                    $this->connectionsOpened?->add(1, ['result' => 'accepted']);
+                    $this->connectionsActive?->add(1);
                 } elseif ($result instanceof Connack) {
+                    $this->connectionsOpened?->add(1, ['result' => 'rejected']);
                     $this->adapter->close($connection->fd);
                 }
                 break;
@@ -219,6 +247,10 @@ class Server
 
     private function cleanup(int $fd): void
     {
+        if (($this->connections[$fd] ?? null)?->active === true) {
+            $this->connectionsActive?->add(-1);
+        }
+
         $this->adapter->timer()->clear($fd);
         $this->store->close($fd);
         unset($this->connections[$fd]);
@@ -236,6 +268,9 @@ class Server
             $code = $codes[$index] ?? Suback::DENIED;
             if ($code <= self::MAX_QOS) {
                 $this->store->subscribe($connection->prefix, $connection->getClientId(), $filter->topic, $connection->fd, $code);
+                $this->subscriptions?->add(1, ['result' => 'granted']);
+            } else {
+                $this->subscriptions?->add(1, ['result' => 'denied']);
             }
         }
     }

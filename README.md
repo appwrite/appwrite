@@ -2,7 +2,7 @@
 
 [![Discord](https://img.shields.io/discord/564160730845151244?label=discord)](https://appwrite.io/discord)
 
-Utopia MQTT is a PHP toolkit for building MQTT brokers (3.1.1 and 5.0). You implement one interface of typed control packets and the library owns the wire — framing, decoding, per-version encoding, packet ids, the QoS handshake, keep-alive reaping, and subscription matching. This library is maintained by the [Appwrite team](https://appwrite.io), and is framework-agnostic and dependency free.
+Utopia MQTT is a PHP toolkit for building MQTT brokers (3.1.1 and 5.0). You implement one interface of typed control packets and the library owns the wire — framing, decoding, per-version encoding, packet ids, the QoS handshake, keep-alive reaping, and subscription matching. This library is maintained by the [Appwrite team](https://appwrite.io) and is framework-agnostic.
 
 ## Installation
 
@@ -210,6 +210,16 @@ $adapter = new Adapter\Swoole([
 ```
 
 A WebSocket message may carry several or partial MQTT packets, so the adapter reassembles whole packets before dispatch and pushes binary frames on send. Keep-alive reaping is intrinsic to MQTT and runs inside the adapter: every inbound packet re-arms a connection's deadline, and a client silent past `keepAlive × 1.5` is closed, surfacing as `onDisconnect(null, ...)`.
+
+## Telemetry
+
+Pass a [utopia-php/telemetry](https://github.com/utopia-php/telemetry) adapter to record broker metrics — packets received by type, connections opened and active, and subscriptions granted or denied. It defaults to a no-op adapter.
+
+```php
+$server->setTelemetry($telemetry);
+```
+
+Application-specific metrics (authentication latency, delivery counts, and so on) stay in your handler.
 
 ## MQTT client
 

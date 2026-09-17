@@ -18,7 +18,8 @@
         "psr-4": {"Utopia\\Mqtt\\Tests\\": "tests"}
     },
     "require": {
-        "php": ">=8.1"
+        "php": ">=8.1",
+        "utopia-php/telemetry": "^0.4"
     },
     "require-dev": {
         "swoole/ide-helper": "5.1.2",
