@@ -119,7 +119,7 @@ https://fra.cloud.appwrite.io/v1/oauth2/console/authorize
   ?client_id=<CLIENT_ID>
   &redirect_uri=http://localhost:7700/oauth/callback
   &response_type=code
-  &scope=openid profile email project:users.read project:users.write
+  &scope=openid profile email project:project.read project:users.read project:users.write project:sessions.read project:sessions.write project:teams.read project:usage.read
 ```
 
 URL-encode the values.

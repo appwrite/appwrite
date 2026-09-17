@@ -158,7 +158,6 @@ export const DOCS_LOCAL_SECTION_NAVS: DocsSectionNavConfig[] = [
     },
     navigation: [
       {
-        label: 'Guides',
         items: [
           {
             label: "Manage a customer's project",
