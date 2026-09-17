@@ -12,7 +12,12 @@ import {
 } from '@tanstack/react-query'
 import { sdk } from '@/lib/appwrite/sdk'
 import { buildCountryLookups } from '@/lib/locale/country-lookups'
-import { persistVisitorCountryCode } from '@/lib/locale/visitor-country'
+import {
+  persistVisitorCountryCode,
+  readMockLocaleCountryCookie,
+  readSsrVisitorCountryFromWindow,
+  readVisitorCountryCookie,
+} from '@/lib/locale/visitor-country'
 import { normalizeCountryCode } from '@/lib/pricing/start-plan'
 import { getSsrVisitorCountry } from '@/lib/ssr-visitor-country'
 import { LONG_STALE_TIME } from './constants'
@@ -194,12 +199,26 @@ export function visitorCountryQueryOptions() {
   })
 }
 
+function readClientRequestVisitorCountry(): string | null {
+  return (
+    readMockLocaleCountryCookie() ??
+    readVisitorCountryCookie() ??
+    readSsrVisitorCountryFromWindow()
+  )
+}
+
 export async function prefetchVisitorCountry(queryClient: QueryClient) {
   if (typeof window === 'undefined') {
     const country = getSsrVisitorCountry()
     if (country) {
       queryClient.setQueryData(VISITOR_COUNTRY_QUERY_KEY, country)
     }
+    return
+  }
+
+  const requestCountry = readClientRequestVisitorCountry()
+  if (requestCountry) {
+    queryClient.setQueryData(VISITOR_COUNTRY_QUERY_KEY, requestCountry)
     return
   }
 

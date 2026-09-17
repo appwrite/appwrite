@@ -15,10 +15,13 @@ import {
   localeQueryOptions,
   visitorCountryQueryOptions,
 } from '@/lib/react-query/hooks/locale'
-import { normalizeCountryCode } from '@/lib/pricing/start-plan'
+import {
+  isVisitorCountryResolutionComplete,
+  mergeVisitorCountryCode,
+} from '@/lib/pricing/visitor-country-resolution'
 import { getSsrVisitorCountry } from '@/lib/ssr-visitor-country'
 
-function readRequestVisitorCountry(): string | null {
+export function readRequestVisitorCountry(): string | null {
   if (typeof window === 'undefined') {
     return getSsrVisitorCountry()
   }
@@ -30,9 +33,8 @@ function readRequestVisitorCountry(): string | null {
 }
 
 /**
- * Visitor country used for location-gated plans. First paint uses dehydratable
- * query data, SSR/CDN geo, and cookies (including the debug mock cookie).
- * localStorage/sessionStorage join after mount so SSR HTML can hydrate.
+ * Visitor country used for location-gated plans. SSR/CDN geo and cookies win over
+ * async locale.get() so prerendered pricing pages never paint the wrong plan count.
  */
 export function useVisitorCountryCode(): string | null {
   const [allowDomStorage, setAllowDomStorage] = useState(false)
@@ -56,24 +58,43 @@ export function useVisitorCountryCode(): string | null {
     ? (loadDebugOverrides().mockLocaleCountry ?? readMockLocaleCountryCookie())
     : readMockLocaleCountryCookie()
 
-  return (
-    mockCountry ??
-    normalizeCountryCode(
+  const requestCountry = readRequestVisitorCountry()
+
+  return mergeVisitorCountryCode({
+    mockCountry,
+    requestCountry,
+    visitorQueryCountry:
       typeof visitorCountry === 'string' ? visitorCountry : null,
-    ) ??
-    normalizeCountryCode(locale?.countryCode) ??
-    (allowDomStorage ? readStoredVisitorCountry() : null) ??
-    readRequestVisitorCountry()
+    localeCountry: locale?.countryCode,
+    storedCountry: allowDomStorage ? readStoredVisitorCountry() : null,
+  })
+}
+
+export function useVisitorCountryQueryState() {
+  const visitorQuery = useQuery(visitorCountryQueryOptions())
+  const localeQuery = useQuery(localeQueryOptions())
+
+  return {
+    visitorFetched: visitorQuery.isFetched,
+    visitorError: visitorQuery.isError,
+    localeFetched: localeQuery.isFetched,
+    localeError: localeQuery.isError,
+  }
+}
+
+export function useVisitorCountryResolutionComplete(): boolean {
+  const countryCode = useVisitorCountryCode()
+  const requestCountry = readRequestVisitorCountry()
+  const queries = useVisitorCountryQueryState()
+
+  return isVisitorCountryResolutionComplete(
+    countryCode,
+    requestCountry,
+    queries,
   )
 }
 
+/** @deprecated Prefer useVisitorCountryResolutionComplete (requires both queries). */
 export function useVisitorCountryQuerySettled(): boolean {
-  const visitorQuery = useQuery(visitorCountryQueryOptions())
-  const localeQuery = useQuery(localeQueryOptions())
-  return (
-    visitorQuery.isFetched ||
-    visitorQuery.isError ||
-    localeQuery.isFetched ||
-    localeQuery.isError
-  )
+  return useVisitorCountryResolutionComplete()
 }
