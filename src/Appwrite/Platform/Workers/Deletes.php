@@ -583,18 +583,12 @@ class Deletes extends Action
                 'deployments',
                 $queries,
                 $dbForProject,
-                function (Document $deployment) use ($dbForProject, $publisherForDeletes, $project) {
+                function (Document $deployment) use ($publisherForDeletes, $project) {
                     $publisherForDeletes->enqueue(new DeleteMessage(
                         project: $project,
                         type: DELETE_TYPE_DOCUMENT,
                         document: $deployment,
                     ));
-                    try {
-                        $this->resetDeployment($dbForProject, $deployment);
-                    } catch (Throwable $th) {
-                        // The queued deletion retries the repair without interrupting this batch.
-                        Console::warning("Failed to reset references for deployment {$deployment->getId()}: " . $th->getMessage());
-                    }
                 }
             );
         };
