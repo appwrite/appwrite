@@ -266,7 +266,7 @@ services:
         max-file: "5"
         max-size: 10m
     container_name: appwrite-console
-    image: appwrite/new:1.1.96-self-hosted
+    image: appwrite/new:1.1.114-self-hosted
     restart: unless-stopped
     networks:
       - appwrite
@@ -1694,7 +1694,7 @@ services:
     # One image carrying every orchestrator control plane. Appwrite drives the
     # jobs plane today; the per-plane images exist for Kubernetes, where each
     # scales, fails and gets RBAC on its own.
-    image: ghcr.io/open-runtimes/orchestrator/orchestrator:2.2.0
+    image: ghcr.io/open-runtimes/orchestrator/orchestrator:2.2.2
     restart: unless-stopped
     user: root
     networks:
