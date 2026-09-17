@@ -52,8 +52,6 @@ class ScheduleMessages extends Action
             telemetry: $telemetry,
             onError: function (\Throwable $error, ?Row $row = null): void {
                 Span::init('schedule.messages.reconcile');
-                // The row a failure belongs to, so an error names one schedule
-                // rather than the region it happened in.
                 if ($row?->data instanceof Document) {
                     Span::add('project.id', (string) $row->data->getAttribute('projectId'));
                     Span::add('resource.id', (string) $row->data->getAttribute('resourceId'));
