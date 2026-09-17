@@ -48,7 +48,7 @@ class ScheduleExecutions extends Action
                 if ($row?->data instanceof Document) {
                     Span::add('project.id', (string) $row->data->getAttribute('projectId'));
                     Span::add('resource.id', (string) $row->data->getAttribute('resourceId'));
-                    Span::add('schedule.id', $row->id);
+                    Span::add('schedule.id', $row->data->getId());
                 }
                 Span::current()?->finish(error: $error);
             },
