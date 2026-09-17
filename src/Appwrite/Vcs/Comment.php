@@ -162,9 +162,7 @@ class Comment
                     };
 
                     if ($site['action']['type'] === 'logs') {
-                        $logsUrl = System::getEnv('_APP_CONSOLE_URL_SCHEME', 'legacy') !== 'root'
-                            ? "{$protocol}://{$hostname}/console/project-{$site['region']}-{$projectId}/sites/site-{$siteId}/deployments/deployment-{$site['deploymentId']}"
-                            : "{$protocol}://{$hostname}/projects/{$projectId}/sites/{$siteId}/deployments/{$site['deploymentId']}";
+                        $logsUrl = ($this->platform['consoleUrl'] ?? '') . "/projects/{$projectId}/sites/{$siteId}/deployments/{$site['deploymentId']}";
                         $action = "[View Logs]({$logsUrl})";
                     } else {
                         $action = '[Authorize](' . $site['action']['url'] . ')';
@@ -173,10 +171,10 @@ class Comment
                     $qrImagePathLight = '/images/vcs/qr-light.svg';
                     $qrImagePathDark = '/images/vcs/qr-dark.svg';
 
-                    $consoleUrl = $protocol . '://' . $hostname . '/v1/avatars/qr?text=' . \urlencode($site['previewUrl']);
+                    $qrUrl = $protocol . '://' . $hostname . '/v1/avatars/qr?text=' . \urlencode($site['previewUrl']);
                     $qr = $this->withImages
-                        ? '[' . $this->generatImage($qrImagePathLight, $qrImagePathDark, 'QR Code', 28) . '](' . $consoleUrl . ')'
-                        : '[QR Code](' . $consoleUrl . ')';
+                        ? '[' . $this->generatImage($qrImagePathLight, $qrImagePathDark, 'QR Code', 28) . '](' . $qrUrl . ')'
+                        : '[QR Code](' . $qrUrl . ')';
 
                     $preview = '[Preview URL](' . $site['previewUrl'] . ')';
 
@@ -215,9 +213,7 @@ class Comment
                     };
 
                     if ($function['action']['type'] === 'logs') {
-                        $logsUrl = System::getEnv('_APP_CONSOLE_URL_SCHEME', 'legacy') !== 'root'
-                            ? "{$protocol}://{$hostname}/console/project-{$function['region']}-{$projectId}/functions/function-{$functionId}/deployment-{$function['deploymentId']}"
-                            : "{$protocol}://{$hostname}/projects/{$projectId}/functions/{$functionId}/deployments/{$function['deploymentId']}";
+                        $logsUrl = ($this->platform['consoleUrl'] ?? '') . "/projects/{$projectId}/functions/{$functionId}/deployments/{$function['deploymentId']}";
                         $action = "[View Logs]({$logsUrl})";
                     } else {
                         $action = '[Authorize](' . $function['action']['url'] . ')';

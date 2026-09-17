@@ -618,6 +618,53 @@ final class PresenceRealtimeClientTest extends Scope
         }
     }
 
+    public function testPresenceCloseWithNumericIdEmitsDeleteEvent(): void
+    {
+        [$project, $user, $headers] = $this->bootstrapIsolatedProject();
+
+        // A purely numeric id is a valid presence $id (UID allows digits), but when stored as
+        // an array key in the realtime worker's in-memory connection map it is coerced to an int
+        // by PHP. onClose must still delete it — regression for the coerced-key $id cleanup query.
+        $presenceId = (string) \random_int(10_000_000, 99_999_999);
+        $metadata = ['testRunId' => ID::unique(), 'source' => 'close-delete-numeric'];
+
+        $publisher = $this->connectRealtimeAndSubscribe($project, $headers, ['presences', 'presences.' . $presenceId], timeout: 1);
+        $listener = $this->connectRealtimeAndSubscribe($project, $headers, ['presences', 'presences.' . $presenceId], timeout: 1);
+
+        try {
+            $this->sendPresenceMessage(
+                $publisher,
+                $presenceId,
+                'online',
+                $metadata,
+                $this->getPresencePermissions(Role::any())
+            );
+            $this->collectPresenceOutcome($publisher, $presenceId, 'online', $metadata, $user['$id']);
+            $this->receivePresenceEvent($listener, $presenceId, 'upsert', 'online', $metadata, $user['$id']);
+
+            $publisher->close();
+
+            $this->receivePresenceEvent($listener, $presenceId, 'delete', 'online', $metadata, $user['$id'], timeoutMs: 3000);
+
+            // The row must actually be gone, not just the event fired.
+            $read = $this->client->call(
+                Client::METHOD_GET,
+                '/presences/' . $presenceId,
+                $this->getServerHeaders($project)
+            );
+            $this->assertSame(404, $read['headers']['status-code']);
+        } finally {
+            // Publisher is closed mid-body to trigger onClose; guard against a double close
+            // and still tear it down if an earlier assertion threw first.
+            try {
+                $publisher->close();
+            } catch (\Throwable) {
+                // Already closed.
+            }
+            $listener->close();
+        }
+    }
+
     public function testHttpDeleteThenCloseDoesNotDuplicateDeleteEvent(): void
     {
         [$project, $user, $headers] = $this->bootstrapIsolatedProject();

@@ -83,7 +83,9 @@ class Update extends Action
             ->setAttribute('enabled', $enabled)
             ->setAttribute('search', implode(' ', [$databaseId, $searchName])));
 
-        $queueForEvents->setParam('databaseId', $database->getId());
+        $queueForEvents
+            ->setParam('databaseId', $database->getId())
+            ->setContext('database', $database);
 
         $response->dynamic($database, UtopiaResponse::MODEL_DATABASE);
     }

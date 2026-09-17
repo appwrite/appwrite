@@ -86,6 +86,8 @@ class Get extends Action
                             Response::MODEL_OAUTH2_OKTA,
                             Response::MODEL_OAUTH2_KICK,
                             Response::MODEL_OAUTH2_MICROSOFT,
+                            Response::MODEL_OAUTH2_TIKTOK,
+                            Response::MODEL_OAUTH2_KAKAO,
                         ],
                     )
                 ]

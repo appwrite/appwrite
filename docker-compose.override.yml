@@ -14,6 +14,7 @@ services:
       - ./.env:/usr/src/code/.env
       - ./phpunit.xml:/usr/src/code/phpunit.xml
       - ./tests:/usr/src/code/tests
+      - ./packages:/usr/src/code/packages
       - ./app:/usr/src/code/app
       - ./docs:/usr/src/code/docs
       - ./public:/usr/src/code/public
@@ -563,7 +564,7 @@ services:
   minio:
     profiles:
       - s3
-    image: minio/minio:RELEASE.2025-09-07T16-13-09Z
+    image: quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z
     container_name: appwrite-minio
     restart: unless-stopped
     networks:
