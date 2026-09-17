@@ -2791,6 +2791,71 @@ final class FunctionsCustomServerTest extends Scope
         $this->cleanupFunction($functionId);
     }
 
+    public function testFunctionsDomainExecutionTrigger()
+    {
+        $functionId = $this->setupFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Test domain trigger',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'timeout' => 15,
+            'execute' => ['any']
+        ]);
+
+        $domain = $this->setupFunctionDomain($functionId);
+
+        $this->setupDeployment($functionId, [
+            'code' => $this->packageFunction('basic'),
+            'activate' => true
+        ]);
+
+        /**
+         * Test for SUCCESS
+         */
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://' . $domain);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['headers']['x-appwrite-execution-id']);
+
+        $domainExecution = $this->getExecution($functionId, $response['headers']['x-appwrite-execution-id']);
+
+        $this->assertEquals(200, $domainExecution['headers']['status-code']);
+        $this->assertEquals('domain', $domainExecution['body']['trigger']);
+
+        // The same function invoked through the executions API stays `http`
+        $apiExecution = $this->createExecution($functionId, [
+            'async' => 'false'
+        ]);
+
+        $this->assertEquals(201, $apiExecution['headers']['status-code']);
+        $this->assertEquals('http', $apiExecution['body']['trigger']);
+
+        // Both values are filterable
+        $domainExecutions = $this->listExecutions($functionId, [
+            'queries' => [Query::equal('trigger', ['domain'])->toString()],
+        ]);
+
+        $this->assertEquals(200, $domainExecutions['headers']['status-code']);
+        $this->assertEquals(1, $domainExecutions['body']['total']);
+        $this->assertEquals($response['headers']['x-appwrite-execution-id'], $domainExecutions['body']['executions'][0]['$id']);
+
+        $httpExecutions = $this->listExecutions($functionId, [
+            'queries' => [Query::equal('trigger', ['http'])->toString()],
+        ]);
+
+        $this->assertEquals(200, $httpExecutions['headers']['status-code']);
+        $this->assertEquals(1, $httpExecutions['body']['total']);
+        $this->assertEquals($apiExecution['body']['$id'], $httpExecutions['body']['executions'][0]['$id']);
+
+        $this->cleanupFunction($functionId);
+    }
+
     public function testFunctionsDomainBinaryResponse()
     {
         $functionId = $this->setupFunction([

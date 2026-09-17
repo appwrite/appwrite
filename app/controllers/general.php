@@ -435,11 +435,11 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
             'errors' => '',
             'logs' => '',
             'duration' => 0.0,
+            'trigger' => 'domain', // domain / http / schedule / event
         ]);
 
         if ($type === 'function') {
             $execution->setAttribute('resourceType', 'functions');
-            $execution->setAttribute('trigger', 'http'); // http / schedule / event
             $execution->setAttribute('status', 'processing'); // waiting / processing / completed / failed
 
             $queueForEvents

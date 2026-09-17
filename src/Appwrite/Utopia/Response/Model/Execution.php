@@ -59,10 +59,10 @@ class Execution extends Model
             ])
             ->addRule('trigger', [
                 'type' => self::TYPE_ENUM,
-                'description' => 'The trigger that caused the resource to execute. Possible values can be: `http`, `schedule`, or `event`.',
+                'description' => 'The trigger that caused the resource to execute. Possible values can be: `http`, `domain`, `schedule`, or `event`. `http` is an execution created through the executions API, `domain` one routed through a function or site domain.',
                 'default' => '',
                 'example' => 'http',
-                'enum' => ['http', 'schedule', 'event'],
+                'enum' => ['http', 'domain', 'schedule', 'event'],
             ])
             ->addRule('status', [
                 'type' => self::TYPE_ENUM,
