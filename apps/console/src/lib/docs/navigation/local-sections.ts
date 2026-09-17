@@ -163,6 +163,10 @@ export const DOCS_LOCAL_SECTION_NAVS: DocsSectionNavConfig[] = [
             label: "Manage a customer's project",
             href: '/docs/partners/guides/oauth-connect',
           },
+          {
+            label: 'Give every customer a backend',
+            href: '/docs/partners/guides/white-label',
+          },
         ],
       },
     ],

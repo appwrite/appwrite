@@ -43,6 +43,12 @@ export const DOCS_PARTNERS_GLOBAL_NAV: DocsNavTree = [
         icon: 'book-open',
         new: true,
       },
+      {
+        label: 'Give every customer a backend',
+        href: '/docs/partners/guides/white-label',
+        icon: 'book-open',
+        new: true,
+      },
     ],
   },
   {
