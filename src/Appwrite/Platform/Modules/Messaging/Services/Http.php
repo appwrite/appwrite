@@ -39,8 +39,6 @@ use Appwrite\Platform\Modules\Messaging\Http\Providers\Twilio\Update as UpdateTw
 use Appwrite\Platform\Modules\Messaging\Http\Providers\Vonage\Create as CreateVonageProvider;
 use Appwrite\Platform\Modules\Messaging\Http\Providers\Vonage\Update as UpdateVonageProvider;
 use Appwrite\Platform\Modules\Messaging\Http\Providers\XList as ListProviders;
-use Appwrite\Platform\Modules\Messaging\Http\WhatsApp\Events\Create as CreateWhatsAppEvent;
-use Appwrite\Platform\Modules\Messaging\Http\WhatsApp\Events\Get as GetWhatsAppEvent;
 use Appwrite\Platform\Modules\Messaging\Http\Topics\Create as CreateTopic;
 use Appwrite\Platform\Modules\Messaging\Http\Topics\Delete as DeleteTopic;
 use Appwrite\Platform\Modules\Messaging\Http\Topics\Get as GetTopic;
@@ -50,6 +48,8 @@ use Appwrite\Platform\Modules\Messaging\Http\Topics\Subscribers\Get as GetSubscr
 use Appwrite\Platform\Modules\Messaging\Http\Topics\Subscribers\XList as ListSubscribers;
 use Appwrite\Platform\Modules\Messaging\Http\Topics\Update as UpdateTopic;
 use Appwrite\Platform\Modules\Messaging\Http\Topics\XList as ListTopics;
+use Appwrite\Platform\Modules\Messaging\Http\WhatsApp\Events\Create as CreateWhatsAppEvent;
+use Appwrite\Platform\Modules\Messaging\Http\WhatsApp\Events\Get as GetWhatsAppEvent;
 use Utopia\Platform\Service;
 
 class Http extends Service
