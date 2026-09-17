@@ -23,7 +23,7 @@ interface Handler
 
     public function onUnsubscribe(Unsubscribe $unsubscribe, Connection $connection): Unsuback;
 
-    /** @param iterable<Connection> $subscribers */
+    /** @param iterable<array{0: Connection, 1: int}> $subscribers connection => granted QoS */
     public function onPublish(Publish $publish, Connection $connection, iterable $subscribers): void;
 
     public function onPuback(Puback $puback, Connection $connection): void;

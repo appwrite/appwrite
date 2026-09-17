@@ -127,13 +127,13 @@ class Server
         }
     }
 
-    /** @return array<int, Connection> */
+    /** @return array<int, array{0: Connection, 1: int}> fd => [connection, granted QoS] */
     public function subscribers(string $prefix, string $topic): array
     {
         $subscribers = [];
         foreach ($this->store->getSubscribers($prefix, $topic) as $fd => $qos) {
             if (isset($this->connections[$fd])) {
-                $subscribers[$fd] = $this->connections[$fd];
+                $subscribers[$fd] = [$this->connections[$fd], $qos];
             }
         }
 
