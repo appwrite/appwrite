@@ -139,6 +139,35 @@ export const ENROLMENT_SCOPES = ['users.read', 'users.write']
 export const USAGE_SCOPES = ['usage.read']
 ```
 
+Uploading a handout or a recorded session for a school is one of those jobs. The file goes into that school's bucket, and a row points the course at it:
+
+```server-nodejs
+const key = await borrowKey(tenant.projectId, MATERIAL_SCOPES, 300)
+const client = projectClient(tenant.projectId, key)
+
+const uploaded = await new Storage(client).createFile({
+  bucketId: 'materials',
+  fileId: ID.unique(),
+  file: InputFile.fromBuffer(Buffer.from(await file.arrayBuffer()), file.name),
+})
+
+await new TablesDB(client).createRow({
+  databaseId: 'classroom',
+  tableId: 'materials',
+  rowId: ID.unique(),
+  data: {
+    courseId,
+    title,
+    fileId: uploaded.$id,
+    filename: file.name,
+    mimeType: uploaded.mimeType,
+    sizeBytes: uploaded.sizeOriginal,
+  },
+})
+```
+
+The bytes land in the school's own project, which is what makes them the school's storage to be billed for later.
+
 # Set up their backend {% #setup %}
 
 With a borrowed key, provisioning is normal project work. Register the school's hostname as a web platform first. Without that platform, Appwrite rejects the requests the classroom sends from a learner's browser:
