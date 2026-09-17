@@ -8,7 +8,7 @@ timeToRead: 5
 author: aditya-oberai
 category: architecture
 featured: false
-unlisted: false
+unlisted: true
 faqs:
   - question: What is object storage in simple terms?
     answer: "Object storage keeps each file as a self-contained object with its data, descriptive metadata, and a unique ID, stored in a flat space you access over an API. It's built to hold huge amounts of files like images, video, and backups."
