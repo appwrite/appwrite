@@ -1124,7 +1124,10 @@ final class RealtimeConsoleClientTest extends Scope
                     $previousBuildLogs = (string) ($payload['buildLogs'] ?? '');
                 }
 
-                return $status === 'ready' && !empty($payload['buildDuration']) && !empty($payload['buildEndedAt']);
+                return $status === 'ready'
+                    && \is_int($payload['buildDuration'] ?? null)
+                    && $payload['buildDuration'] >= 0
+                    && !empty($payload['buildEndedAt']);
             },
             120000
         );

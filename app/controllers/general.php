@@ -51,6 +51,7 @@ use Appwrite\Utopia\Response\Filters\V24 as ResponseV24;
 use Appwrite\Utopia\Response\Filters\V25 as ResponseV25;
 use Appwrite\Utopia\Response\Filters\V26 as ResponseV26;
 use Appwrite\Utopia\Response\Filters\V27 as ResponseV27;
+use Appwrite\Utopia\Response\Filters\V28 as ResponseV28;
 use Appwrite\Utopia\View;
 use Executor\Exception\Timeout as ExecutorTimeout;
 use Executor\Executor;
@@ -98,8 +99,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
     }
 
     $errorView = __DIR__ . '/../views/general/error.phtml';
-    $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
-    $url = $protocol . '://' . $platform['consoleHostname'];
+    $url = $platform['consoleUrl'] ?? '';
     $platformHostnames = $platform['hostnames'] ?? [];
 
     if ($rule->isEmpty()) {
@@ -126,7 +126,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
             if (\str_ends_with($host, $denyDomain)) {
                 $exception = new AppwriteException(AppwriteException::RULE_NOT_FOUND, 'This domain is not connected to any Appwrite resources. Visit domains tab under function/site settings to configure it.', view: $errorView);
 
-                $exception->addCTA('Start with this domain', System::getEnv('_APP_CONSOLE_URL_SCHEME', 'legacy') !== 'root' ? "{$url}/console" : $url);
+                $exception->addCTA('Start with this domain', $url);
                 throw $exception;
             }
         }
@@ -205,11 +205,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
             $resourceId = $rule->getAttribute('deploymentResourceId', '');
             $type = ($resourceType === 'site') ? 'sites' : 'functions';
             $exception = new AppwriteException(AppwriteException::DEPLOYMENT_NOT_FOUND, view: $errorView);
-            $region = $project->getAttribute('region', 'default');
-            $ctaUrl = System::getEnv('_APP_CONSOLE_URL_SCHEME', 'legacy') !== 'root'
-                ? "/console/project-{$region}-{$projectId}/{$type}/{$resourceType}-{$resourceId}"
-                : "/projects/{$projectId}/{$type}/{$resourceId}";
-            $exception->addCTA('View deployments', $url . $ctaUrl);
+            $exception->addCTA('View deployments', $url . "/projects/{$projectId}/{$type}/{$resourceId}");
             throw $exception;
         }
 
@@ -294,11 +290,10 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
             }
 
             if (!$authorized) {
-                $url = $protocol . "://" . $platform['consoleHostname'];
                 $response
                     ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
                     ->addHeader('Pragma', 'no-cache')
-                    ->redirect($url . (System::getEnv('_APP_CONSOLE_URL_SCHEME', 'legacy') !== 'root' ? '/console/auth/preview?' : '/auth/preview?')
+                    ->redirect($url . '/auth/preview?'
                         . \http_build_query([
                             'projectId' => $projectId,
                             'origin' => $protocol . '://' . $host,
@@ -355,14 +350,11 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
         $allowAnyStatus = !\is_null($apiKey) && $apiKey->isDeploymentStatusIgnored();
         if (!$allowAnyStatus && $deployment->getAttribute('status') !== 'ready') {
             $status = $deployment->getAttribute('status');
-            $region = $project->getAttribute('region', 'default');
-            $legacyConsolePaths = System::getEnv('_APP_CONSOLE_URL_SCHEME', 'legacy') !== 'root';
-            $siteUrl = $legacyConsolePaths
-                ? "/console/project-{$region}-{$project->getId()}/sites/site-{$resource->getId()}"
-                : "/projects/{$project->getId()}/sites/{$resource->getId()}";
-            $deploymentUrl = $legacyConsolePaths
-                ? "{$siteUrl}/deployments/deployment-{$deployment->getId()}"
-                : "{$siteUrl}/deployments/{$deployment->getId()}";
+            $collection = $type === 'function' ? 'functions' : 'sites';
+            $resourceUrl = "/projects/{$project->getId()}/{$collection}/{$resource->getId()}";
+            // Function deployments are listed on the function page itself
+            $deploymentsUrl = $type === 'function' ? $resourceUrl : "{$resourceUrl}/deployments";
+            $deploymentUrl = "{$resourceUrl}/deployments/{$deployment->getId()}";
 
             switch ($status) {
                 case 'failed':
@@ -371,7 +363,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                     break;
                 case 'canceled':
                     $exception = new AppwriteException(AppwriteException::BUILD_CANCELED, view: $errorView);
-                    $exception->addCTA('View deployments', $url . $siteUrl . '/deployments');
+                    $exception->addCTA('View deployments', $url . $deploymentsUrl);
                     break;
                 default:
                     $exception = new AppwriteException(AppwriteException::BUILD_NOT_READY, view: $errorView);
@@ -386,11 +378,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
             $permissions = $resource->getAttribute('execute');
             if (!(\in_array('any', $permissions)) && !(\in_array('guests', $permissions))) {
                 $exception = new AppwriteException(AppwriteException::FUNCTION_EXECUTE_PERMISSION_MISSING, view: $errorView);
-                $region = $project->getAttribute('region', 'default');
-                $ctaUrl = System::getEnv('_APP_CONSOLE_URL_SCHEME', 'legacy') !== 'root'
-                    ? "/console/project-{$region}-{$project->getId()}/functions/function-{$resource->getId()}/settings"
-                    : "/projects/{$project->getId()}/functions/{$resource->getId()}/settings";
-                $exception->addCTA('View settings', $url . $ctaUrl);
+                $exception->addCTA('View settings', $url . "/projects/{$project->getId()}/functions/{$resource->getId()}/settings");
                 throw $exception;
             }
         }
@@ -897,7 +885,6 @@ Http::init()
     ->inject('platform')
     ->inject('getIsResourceBlocked')
     ->inject('previewHostname')
-    ->inject('devKey')
     ->inject('apiKey')
     ->inject('cors')
     ->inject('authorization')
@@ -905,7 +892,7 @@ Http::init()
     ->inject('executionsRetentionCount')
     ->inject('lock')
     ->inject('params')
-    ->action(function (Http $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Document $project, Database $dbForPlatform, callable $getProjectDB, Locale $locale, array $localeCodes, Geo $geo, Event $queueForEvents, Bus $bus, Executor $executor, array $platform, callable $getIsResourceBlocked, string $previewHostname, Document $devKey, ?Key $apiKey, Cors $cors, Authorization $authorization, DeletePublisher $publisherForDeletes, int $executionsRetentionCount, Lock $lock, array $params) {
+    ->action(function (Http $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Document $project, Database $dbForPlatform, callable $getProjectDB, Locale $locale, array $localeCodes, Geo $geo, Event $queueForEvents, Bus $bus, Executor $executor, array $platform, callable $getIsResourceBlocked, string $previewHostname, ?Key $apiKey, Cors $cors, Authorization $authorization, DeletePublisher $publisherForDeletes, int $executionsRetentionCount, Lock $lock, array $params) {
         /*
         * Appwrite Router
         */
@@ -993,6 +980,9 @@ Http::init()
          */
         $responseFormat = $request->getHeaderLine('x-appwrite-response-format', System::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
         if ($responseFormat) {
+            if (version_compare($responseFormat, '2.3.0', '<')) {
+                $response->addFilter(new ResponseV28());
+            }
             if (version_compare($responseFormat, '2.0.0', '<')) {
                 $response->addFilter(new ResponseV27());
             }
@@ -1061,9 +1051,8 @@ Http::init()
     ->inject('request')
     ->inject('response')
     ->inject('cors')
-    ->inject('devKey')
     ->inject('originValidator')
-    ->action(function (Request $request, Response $response, Cors $cors, Document $devKey, Validator $originValidator) {
+    ->action(function (Request $request, Response $response, Cors $cors, Validator $originValidator) {
         // CORS headers
         foreach ($cors->headers($request->getOrigin()) as $name => $value) {
             $response->addHeader($name, $value);
@@ -1081,7 +1070,7 @@ Http::init()
 
         // Application level CSRF protection
         $origin = $request->getOrigin();
-        if (empty($origin) || !$devKey->isEmpty() || !empty($request->getHeaderLine('x-appwrite-key'))) {
+        if (empty($origin) || !empty($request->getHeaderLine('x-appwrite-key'))) {
             return;
         }
         $route = $request->getRoute();
@@ -1217,14 +1206,13 @@ Http::options()
     ->inject('platform')
     ->inject('previewHostname')
     ->inject('project')
-    ->inject('devKey')
     ->inject('apiKey')
     ->inject('cors')
     ->inject('authorization')
     ->inject('publisherForDeletes')
     ->inject('executionsRetentionCount')
     ->inject('lock')
-    ->action(function (Http $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Database $dbForPlatform, callable $getProjectDB, Event $queueForEvents, Bus $bus, Executor $executor, Geo $geo, callable $getIsResourceBlocked, array $platform, string $previewHostname, Document $project, Document $devKey, ?Key $apiKey, Cors $cors, Authorization $authorization, DeletePublisher $publisherForDeletes, int $executionsRetentionCount, Lock $lock) {
+    ->action(function (Http $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Database $dbForPlatform, callable $getProjectDB, Event $queueForEvents, Bus $bus, Executor $executor, Geo $geo, callable $getIsResourceBlocked, array $platform, string $previewHostname, Document $project, ?Key $apiKey, Cors $cors, Authorization $authorization, DeletePublisher $publisherForDeletes, int $executionsRetentionCount, Lock $lock) {
         /*
         * Appwrite Router
         */
@@ -1261,9 +1249,8 @@ Http::error()
     ->inject('response')
     ->inject('project')
     ->inject('bus')
-    ->inject('devKey')
     ->inject('authorization')
-    ->action(function (Throwable $error, Http $utopia, Request $request, Response $response, Document $project, Bus $bus, Document $devKey, Authorization $authorization) {
+    ->action(function (Throwable $error, Http $utopia, Request $request, Response $response, Document $project, Bus $bus, Authorization $authorization) {
         $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
         $route = $utopia->match($request)?->route;
         $class = \get_class($error);
@@ -1416,7 +1403,12 @@ Http::error()
             ->addHeader('Pragma', 'no-cache')
             ->setStatusCode($code);
 
-        $template = $error->getView() ?? (($route) ? $route->getLabel('error', null) : null);
+        $template = $error->getView();
+
+        // SDKs send `accept: text/html` to these routes too, so only non-SDK requests get the error page
+        if ($template === null && $route && $request->getHeaderLine('x-sdk-name') === '') {
+            $template = $route->getLabel('error', null);
+        }
 
         // TODO: Ideally use group 'api' here, but all wildcard routes seem to have 'api' at the moment
         if (empty($route) || !\str_starts_with($route->getPath(), '/v1')) {
