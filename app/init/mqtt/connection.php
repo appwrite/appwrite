@@ -108,8 +108,8 @@ return function (Container $container): void {
         };
     }, []);
 
-    $container->set('authorizer', function () use ($getProject): callable {
-        return function (array $identity, string $topic) use ($getProject): bool {
+    $container->set('authorizer', function () use ($getProject, $container): callable {
+        return function (array $identity, string $topic) use ($getProject, $container): bool {
             $userId = $identity['userId'] ?? '';
             $projectId = $identity['projectId'] ?? '';
             if ($userId === '' || $projectId === '') {
@@ -123,7 +123,8 @@ return function (Container $container): void {
                 return false;
             }
 
-            $dbForProject = getProjectDB($project);
+            $getProjectDB = $container->get('getProjectDB');
+            $dbForProject = $getProjectDB($project);
             $dbForProject->setAuthorization($authorization);
             $user = $authorization->skip(fn () => $dbForProject->getDocument('users', $userId));
 
