@@ -57,7 +57,7 @@ class Create extends CreateDocumentAction
                     namespace: 'embeddings',
                     group: 'embeddings',
                     name: 'createTextEmbeddings',
-                    desc: 'Create Text Embedding',
+                    summary: 'Create Text Embedding',
                     description: '/docs/references/embeddings/create-text-embeddings.md',
                     auth: [AuthType::ADMIN, AuthType::KEY, AuthType::JWT],
                     responses: [

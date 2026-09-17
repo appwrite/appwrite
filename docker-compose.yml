@@ -256,6 +256,7 @@ services:
       - _APP_MIGRATION_HOST
       - _APP_GEO_SECRET
       - _APP_GEO_ENDPOINT
+      - _APP_PWNED_PASSWORDS_DSN
       - _APP_LIMIT_DATABASE_BATCH
       - _APP_DOCUMENTSDB
       - _APP_VECTORSDB
@@ -267,7 +268,7 @@ services:
         max-file: "5"
         max-size: 10m
     container_name: appwrite-console
-    image: appwrite/new:1.1.107-self-hosted
+    image: appwrite/new:1.1.114-self-hosted
     restart: unless-stopped
     networks:
       - appwrite
