@@ -25,7 +25,6 @@ const OAUTH2_PREVIEW_SCREENS = [
   'consent',
   'consent-mcp',
   'consent-resources',
-  'consent-appwrite-preview',
   'device-enter-code',
   'device-confirm-code',
   'device-consent',
@@ -54,14 +53,11 @@ export const Route = createFileRoute('/_public/debug/oauth2-preview')({
 })
 
 const ACCOUNT_LABEL = 'demo@appwrite.io'
-/** Placeholder account shown on the Sites preview consent screen. */
-const PREVIEW_ACCOUNT_LABEL = 'walter@appwrite.io'
 
 const SCREEN_OPTIONS: { value: OAuth2PreviewScreen; label: string }[] = [
   { value: 'consent', label: 'Consent' },
   { value: 'consent-mcp', label: 'Consent (MCP)' },
   { value: 'consent-resources', label: 'Consent (resources)' },
-  { value: 'consent-appwrite-preview', label: 'Consent (Appwrite Preview)' },
   { value: 'device-enter-code', label: 'Device code' },
   { value: 'device-confirm-code', label: 'Device confirm' },
   { value: 'device-consent', label: 'Device consent' },
@@ -127,31 +123,10 @@ function mockGrant(overrides?: Partial<Models.Oauth2Grant>): Models.Oauth2Grant 
   }
 }
 
-/** The server-owned console app Appwrite Sites signs previews in with. */
-function previewApp(): Models.App {
-  return mockApp({
-    $id: 'edge-preview-auth',
-    name: 'Appwrite Preview',
-    description: 'Sign in to protected Appwrite Site previews.',
-    clientUri: 'https://appwrite.io',
-    logoUri: '/icons/appwrite.svg',
-    privacyPolicyUrl: 'https://appwrite.io/privacy',
-    termsUrl: 'https://appwrite.io/terms',
-    redirectUris: ['https://preview.appwrite.io/previews/authorize'],
-    deviceFlow: false,
-  })
-}
-
 const IDENTITY_GRANT = mockGrant()
 
 const FULL_ACCESS_GRANT = mockGrant({
   scopes: ['openid', 'profile', 'email', 'all'],
-})
-
-/** Preview authorization asks for identity only, and returns the user to the preview host. */
-const PREVIEW_GRANT = mockGrant({
-  scopes: ['openid'],
-  redirectUri: 'https://branch-main.appwrite.network/',
 })
 
 const RESOURCES_GRANT = mockGrant({
@@ -307,11 +282,7 @@ function OAuth2PreviewPage() {
     setOutcome(null)
   }, [screen])
 
-  const isPreviewApp = screen === 'consent-appwrite-preview'
-  const app = useMemo(
-    () => (screen === 'consent-appwrite-preview' ? previewApp() : mockApp()),
-    [screen],
-  )
+  const app = useMemo(() => mockApp(), [])
   const mcp = useMemo(() => mcpGrant(), [])
 
   const screenIndex = SCREEN_OPTIONS.findIndex(
@@ -363,7 +334,6 @@ function OAuth2PreviewPage() {
   const activeGrant = useMemo(() => {
     if (screen === 'consent-mcp' || screen === 'device-consent') return mcp
     if (screen === 'consent-resources') return RESOURCES_GRANT
-    if (screen === 'consent-appwrite-preview') return PREVIEW_GRANT
     if (screen === 'consent') return FULL_ACCESS_GRANT
     return IDENTITY_GRANT
   }, [mcp, screen])
@@ -373,7 +343,6 @@ function OAuth2PreviewPage() {
     (screen === 'consent' ||
       screen === 'consent-mcp' ||
       screen === 'consent-resources' ||
-      screen === 'consent-appwrite-preview' ||
       screen === 'device-consent')
 
   return (
@@ -442,7 +411,7 @@ function OAuth2PreviewPage() {
               key={screen}
               grant={activeGrant}
               app={app}
-              accountLabel={isPreviewApp ? PREVIEW_ACCOUNT_LABEL : ACCOUNT_LABEL}
+              accountLabel={ACCOUNT_LABEL}
               flow={consentFlow}
               preview
               onSwitchAccount={
