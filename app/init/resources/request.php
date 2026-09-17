@@ -3,6 +3,10 @@
 use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
 use Appwrite\Auth\Key;
+use Appwrite\Auth\Validator\PasswordPwned\Appwrite as PasswordPwnedAppwrite;
+use Appwrite\Auth\Validator\PasswordPwned\HIBP as PasswordPwnedHIBP;
+use Appwrite\Auth\Validator\PasswordPwned\Mock as PasswordPwnedMock;
+use Appwrite\Auth\Validator\PasswordPwned\None as PasswordPwnedNone;
 use Appwrite\Database\Factory as DatabaseFactory;
 use Appwrite\Databases\TransactionState;
 use Appwrite\Deployment\Deployments;
@@ -49,6 +53,7 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Container;
 use Utopia\Domains\Domain;
+use Utopia\DSN\DSN;
 use Utopia\Http\Http;
 use Utopia\Locale\Locale;
 use Utopia\Lock\Distributed as DistributedLock;
@@ -662,6 +667,23 @@ return function (Container $context): void {
 
         return;
     }, ['user', 'store', 'proofForToken']);
+
+    $context->set('pwnedPasswords', function (Cache $cache) {
+        // Nothing is asked until an operator points this at a service
+        $dsn = new DSN(System::getEnv('_APP_PWNED_PASSWORDS_DSN', 'none://localhost'));
+
+        return match ($dsn->getScheme()) {
+            'hibp' => new PasswordPwnedHIBP($cache),
+            'appwrite' => new PasswordPwnedAppwrite($dsn, $cache),
+            // Reports every password as safe by choice, for servers that cannot reach a breach service
+            'none' => new PasswordPwnedNone(),
+            // Reports almost every password as safe, so it must never be reachable on a real server
+            'mock' => Http::isProduction()
+                ? throw new Exception(Exception::GENERAL_SERVER_ERROR, 'The mock breach validator cannot be used in production.')
+                : new PasswordPwnedMock(),
+            default => throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Unknown _APP_PWNED_PASSWORDS_DSN scheme: ' . $dsn->getScheme()),
+        };
+    }, ['cache']);
 
     $context->set('dbForProject', function (DatabaseFactory $databaseFactory, Database $dbForPlatform, Document $project, Response $response, Publisher $publisher, Event $queueForEvents, FunctionPublisher $publisherForFunctions, Webhook $queueForWebhooks, Realtime $queueForRealtime, UsageContext $usage, Request $request) {
         if ($project->isEmpty() || $project->getId() === 'console') {
