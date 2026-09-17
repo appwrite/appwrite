@@ -2853,6 +2853,38 @@ final class FunctionsCustomServerTest extends Scope
         $this->assertEquals(1, $httpExecutions['body']['total']);
         $this->assertEquals($apiExecution['body']['$id'], $httpExecutions['body']['executions'][0]['$id']);
 
+        // A client pinned below 2.3.0 still sees the pre-2.3.0 behaviour:
+        // the domain execution reads back as `http` and a `trigger=http`
+        // filter returns both executions.
+        $legacyHeaders = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '2.2.0',
+        ], $this->getHeaders());
+
+        $legacyExecution = $this->client->call(
+            Client::METHOD_GET,
+            '/functions/' . $functionId . '/executions/' . $response['headers']['x-appwrite-execution-id'],
+            $legacyHeaders
+        );
+
+        $this->assertEquals(200, $legacyExecution['headers']['status-code']);
+        $this->assertEquals('http', $legacyExecution['body']['trigger']);
+
+        $legacyExecutions = $this->client->call(
+            Client::METHOD_GET,
+            '/functions/' . $functionId . '/executions',
+            $legacyHeaders,
+            ['queries' => [Query::equal('trigger', ['http'])->toString()]]
+        );
+
+        $this->assertEquals(200, $legacyExecutions['headers']['status-code']);
+        $this->assertEquals(2, $legacyExecutions['body']['total']);
+
+        foreach ($legacyExecutions['body']['executions'] as $legacyItem) {
+            $this->assertEquals('http', $legacyItem['trigger']);
+        }
+
         $this->cleanupFunction($functionId);
     }
 
