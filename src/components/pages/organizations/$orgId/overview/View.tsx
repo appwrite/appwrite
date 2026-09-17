@@ -4,7 +4,8 @@ import {
   useNavigate,
   useLocation,
   useSearch,
-  useMatches} from '@tanstack/react-router'
+  useMatches,
+  useRouterState} from '@tanstack/react-router'
 import {
   Plus,
   Folder,
@@ -389,6 +390,15 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   const navigate = useNavigate()
   const search = useSearch({ strict: false })
   const matches = useMatches()
+  const routerStatus = useRouterState({ select: (s) => s.status })
+  // Pathname updates as soon as navigation starts. OrgOverview renders tab
+  // content itself (child routes return null), so the pending URL would mount
+  // BillingTab before its loader finishes. Keep the last idle path until then.
+  const committedPathnameRef = useRef(location.pathname)
+  if (routerStatus === 'idle') {
+    committedPathnameRef.current = location.pathname
+  }
+  const resolvedPathname = committedPathnameRef.current
   const [searchQuery, setSearchQuery] = useState('')
   const [pinnedDragOverIndex, setPinnedDragOverIndex] = useState<number | null>(
     null,
@@ -547,9 +557,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       return null
     }
 
-    // Extract tab from pathname
-    // Pattern: /organizations/:orgId or /organizations/:orgId/:tab
-    const pathParts = location.pathname.split('/').filter(Boolean)
+    // Extract tab from the committed pathname so content stays on the current
+    // tab until the destination route loader has finished.
+    const pathParts = resolvedPathname.split('/').filter(Boolean)
     const orgIndex = pathParts.findIndex((part) => part === 'organizations')
 
     if (orgIndex >= 0) {
@@ -569,11 +579,11 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
 
     // Default to projects for index route (/organizations/:orgId or /organizations/:orgId/)
     return 'projects'
-  }, [tabProp, location.pathname, isDomainDetailRoute, isAppDetailRoute])
+  }, [tabProp, resolvedPathname, isDomainDetailRoute, isAppDetailRoute])
 
   // Settings sub-tab (when on settings): 'overview' | 'members' | 'billing' | 'compliance' | 'oauth-apps' | 'partners'
   const settingsSubTab = useMemo(() => {
-    const pathParts = location.pathname.split('/').filter(Boolean)
+    const pathParts = resolvedPathname.split('/').filter(Boolean)
     const orgIndex = pathParts.findIndex((part) => part === 'organizations')
     if (orgIndex >= 0 && pathParts[orgIndex + 2] === 'settings') {
       const subTab = pathParts[orgIndex + 3]
@@ -585,7 +595,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       return 'overview'
     }
     return 'overview'
-  }, [location.pathname])
+  }, [resolvedPathname])
 
   const orgSettingsNavItems = useMemo(() => {
     const allNavItems = [
