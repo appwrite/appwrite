@@ -1488,8 +1488,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Addons not available on the selected plan': 'תוספים שאינם זמינים בתוכנית שנבחרה',
   'These addons will be disabled as part of this plan change. You do not need to turn them off first.':
     'התוספים האלה יבוטלו כחלק משינוי התוכנית. אין צורך לכבות אותם מראש.',
-  'They are removed immediately, not at the end of your billing cycle.':
-    'הם יוסרו מיד, ולא בסוף מחזור החיוב.',
+  'They are removed immediately.': 'הם יוסרו מיד.',
   'What changes in the projects you are keeping': 'מה משתנה בפרויקטים שאתם שומרים',
   'These changes happen on their own when your plan changes. There is nothing to select or clean up first.':
     'השינויים האלה מתרחשים מעצמם כשהתוכנית משתנה. אין מה לבחור או לנקות מראש.',

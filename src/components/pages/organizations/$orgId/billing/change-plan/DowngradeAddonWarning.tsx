@@ -61,9 +61,7 @@ export function DowngradeAddonWarning({
         </ul>
 
         <p className="text-[13px] text-muted-foreground">
-          {t(
-            'They are removed immediately, not at the end of your billing cycle.',
-          )}
+          {t('They are removed immediately.')}
         </p>
       </div>
     </div>

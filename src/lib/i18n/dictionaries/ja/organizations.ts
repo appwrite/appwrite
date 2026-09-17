@@ -1265,8 +1265,7 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Addons not available on the selected plan': '選択したプランで利用できないアドオン',
   'These addons will be disabled as part of this plan change. You do not need to turn them off first.':
     'これらのアドオンはプラン変更の一部として無効化されます。事前にオフにする必要はありません。',
-  'They are removed immediately, not at the end of your billing cycle.':
-    '請求サイクルの終了時ではなく、すぐに削除されます。',
+  'They are removed immediately.': 'すぐに削除されます。',
   'What changes in the projects you are keeping': '残すプロジェクトで変わること',
   'These changes happen on their own when your plan changes. There is nothing to select or clean up first.':
     'これらはプラン変更時に自動的に適用されます。事前に選択したり整理したりする必要はありません。',
