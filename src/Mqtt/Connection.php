@@ -43,7 +43,7 @@ class Connection
     /** The keep-alive wheel bucket (second) this connection currently sits in; 0 when not scheduled. */
     public int $wheelSlot = 0;
 
-    private ?Broker $broker = null;
+    private ?Server $server = null;
 
     private int $packetId = 0;
 
@@ -70,24 +70,24 @@ class Connection
         $this->openedAt = microtime(true);
     }
 
-    public function bind(Broker $broker): void
+    public function bind(Server $server): void
     {
-        $this->broker = $broker;
+        $this->server = $server;
     }
 
     public function publish(string $topic, string $payload, int $qos = 0, bool $dup = false, ?int $sequence = null): void
     {
-        $this->broker?->send($this, $topic, $payload, $qos, $dup, $sequence);
+        $this->server?->send($this, $topic, $payload, $qos, $dup, $sequence);
     }
 
     public function puback(int $packetId): void
     {
-        $this->broker?->puback($this, $packetId);
+        $this->server?->puback($this, $packetId);
     }
 
     public function disconnect(int $reason = 0): void
     {
-        $this->broker?->close($this, $reason);
+        $this->server?->close($this, $reason);
     }
 
     /**

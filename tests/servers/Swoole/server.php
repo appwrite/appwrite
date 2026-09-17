@@ -8,7 +8,6 @@ use Utopia\Mqtt\Packet\Specs\V3;
 use Utopia\Mqtt\Packet\Specs\V5;
 use Utopia\Mqtt\Properties;
 use Utopia\Mqtt\Property;
-use Utopia\Mqtt\Server;
 
 /**
  * A minimal but real MQTT broker built on the package, used by the e2e suite. It
@@ -47,11 +46,9 @@ $matches = function (string $filter, string $topic): bool {
 
 $adapter = new Adapter\Swoole([new Adapter\Swoole\Tcp('0.0.0.0', 1883)], workers: 1);
 
-$server = new Server($adapter);
-
-$server
+$adapter
     ->onStart(fn () => print("mqtt broker started\n"))
-    ->onReceive(function (int $fd, string $data) use ($server, $matches, &$protocol, &$subscriptions) {
+    ->onReceive(function (int $fd, string $data) use ($adapter, $matches, &$protocol, &$subscriptions) {
         $packet = Packet::parse($data);
 
         switch ($packet->type) {
@@ -69,15 +66,15 @@ $server
                     [$properties] = Properties::parse($body, $offset);
                     $credential = $properties->get(Property::AUTHENTICATION_DATA);
                     if ($credential === 'deny') {
-                        $server->send($fd, V5::connack(V5::REASON_NOT_AUTHORIZED));
-                        $server->close($fd);
+                        $adapter->send($fd, V5::connack(V5::REASON_NOT_AUTHORIZED));
+                        $adapter->close($fd);
                         break;
                     }
                     // Reflect the decoded auth method + metadata so the e2e can verify them.
                     $ack = (new Properties())
                         ->add(new Property(Property::AUTHENTICATION_METHOD, (string) $properties->get(Property::AUTHENTICATION_METHOD)))
                         ->add(new Property(Property::USER, $properties->user()));
-                    $server->send($fd, V5::connack(V5::REASON_SUCCESS, $ack));
+                    $adapter->send($fd, V5::connack(V5::REASON_SUCCESS, $ack));
                     break;
                 }
 
@@ -91,11 +88,11 @@ $server
                     [$password, $offset] = Packet::readString($body, $offset);
                 }
                 if ($password === 'deny') {
-                    $server->send($fd, V3::connack(V3::RETURN_NOT_AUTHORIZED));
-                    $server->close($fd);
+                    $adapter->send($fd, V3::connack(V3::RETURN_NOT_AUTHORIZED));
+                    $adapter->close($fd);
                     break;
                 }
-                $server->send($fd, V3::connack(V3::RETURN_ACCEPTED));
+                $adapter->send($fd, V3::connack(V3::RETURN_ACCEPTED));
                 break;
 
             case Packet::SUBSCRIBE:
@@ -112,7 +109,7 @@ $server
                     $subscriptions[$fd][] = $filter;
                     $codes .= chr(Packet::QOS_1); // grant QoS 1
                 }
-                $server->send($fd, ($protocol[$fd] >= 5)
+                $adapter->send($fd, ($protocol[$fd] >= 5)
                     ? V5::suback($packetId, $codes)
                     : V3::suback($packetId, $codes));
                 break;
@@ -133,7 +130,7 @@ $server
                     ));
                     $count++;
                 }
-                $server->send($fd, ($protocol[$fd] >= 5)
+                $adapter->send($fd, ($protocol[$fd] >= 5)
                     ? V5::unsuback($packetId, $count)
                     : V3::unsuback($packetId));
                 break;
@@ -155,7 +152,7 @@ $server
                 foreach ($subscriptions as $subscriberFd => $filters) {
                     foreach ($filters as $filter) {
                         if ($matches($filter, $topic)) {
-                            $server->send($subscriberFd, ($protocol[$subscriberFd] ?? 4) >= 5
+                            $adapter->send($subscriberFd, ($protocol[$subscriberFd] ?? 4) >= 5
                                 ? V5::publish($topic, $payload, 0, 0, $properties) // forward properties unchanged
                                 : V3::publish($topic, $payload, 0, 0));
                             break; // one delivery per subscriber
@@ -164,23 +161,23 @@ $server
                 }
 
                 if ($qos === 1) {
-                    $server->send($fd, ($protocol[$fd] >= 5)
+                    $adapter->send($fd, ($protocol[$fd] >= 5)
                         ? V5::puback($packetId)
                         : V3::puback($packetId));
                 }
                 break;
 
             case Packet::PINGREQ:
-                $server->send($fd, Packet::pingresp());
+                $adapter->send($fd, Packet::pingresp());
                 break;
 
             case Packet::AUTH:
                 // Re-authentication: acknowledge with an AUTH success.
-                $server->send($fd, V5::auth(V5::AUTH_SUCCESS));
+                $adapter->send($fd, V5::auth(V5::AUTH_SUCCESS));
                 break;
 
             case Packet::DISCONNECT:
-                $server->close($fd);
+                $adapter->close($fd);
                 break;
         }
     })
