@@ -249,6 +249,32 @@ final class ReconcileTest extends TestCase
         $this->assertSame(['a', 'b'], $ids, 'a failed listing must not look like a mass removal');
     }
 
+    public function testAHandlerIsToldWhichRowFailedToMake(): void
+    {
+        $clock = new TestClock(new \DateTimeImmutable('2026-08-18 03:00:30.000000'));
+        $seen = null;
+        $scheduler = new Scheduler(
+            source: new SnapshotSource(
+                snapshot: fn(): array => [new Row('bad', 'v1', 'the row payload')],
+                make: function (Row $row): Entry {
+                    throw new \InvalidArgumentException('poison row');
+                },
+            ),
+            store: new MemoryStore(),
+            clock: $clock,
+            telemetry: new TestTelemetry(),
+            onError: function (\Throwable $error, ?Row $row) use (&$seen): void {
+                $seen = $row;
+            },
+        );
+
+        $scheduler->reconcile();
+
+        $this->assertInstanceOf(Row::class, $seen);
+        $this->assertSame('bad', $seen->id);
+        $this->assertSame('the row payload', $seen->data);
+    }
+
     public function testARowThatFailsToMakeIsSkippedAndReported(): void
     {
         $clock = new TestClock(new \DateTimeImmutable('2026-08-18 03:00:30.000000'));

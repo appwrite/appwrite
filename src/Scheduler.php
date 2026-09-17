@@ -163,7 +163,10 @@ final class Scheduler
      *                             (saturation: seconds the window start trails "now")
      * @param \Closure|null $onError receives reconciliation failures (a sync that throws, a row
      *                               `make` rejects) so dispatch keeps running on the last good
-     *                               view; without it those failures rethrow
+     *                               view; without it those failures rethrow. Called as
+     *                               `($onError)(\Throwable $error, ?Row $row)`, the row being the
+     *                               one `make` rejected, or null for a failure no single row owns.
+     *                               A handler that declares one parameter still works
      *
      * @throws \InvalidArgumentException on a non-positive tick or sync cadence, a negative
      *                                   snapshot cadence, lead time or recovery ceiling, or a
@@ -279,7 +282,7 @@ final class Scheduler
             try {
                 $entry = $this->source->make($row);
             } catch (\Throwable $error) {
-                $this->report($error, 'make');
+                $this->report($error, 'make', $row);
                 continue;
             }
 
@@ -785,7 +788,13 @@ final class Scheduler
         $this->pendingCovered = [];
     }
 
-    private function report(\Throwable $error, string $stage): void
+    /**
+     * A failure a single row owns passes that row on, so a handler can say which
+     * schedule it was. Everything a caller needs is on the row: its id, and the
+     * source's own descriptor in {@see Row::$data}. Handlers that declare only
+     * the error keep working, since PHP ignores the extra argument.
+     */
+    private function report(\Throwable $error, string $stage, ?Row $row = null): void
     {
         $this->errorTotal->add(1, ['stage' => $stage]);
 
@@ -793,6 +802,6 @@ final class Scheduler
             throw $error;
         }
 
-        ($this->onError)($error);
+        ($this->onError)($error, $row);
     }
 }
