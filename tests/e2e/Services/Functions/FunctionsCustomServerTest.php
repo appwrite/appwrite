@@ -2836,22 +2836,28 @@ final class FunctionsCustomServerTest extends Scope
         $this->assertEquals(201, $apiExecution['headers']['status-code']);
         $this->assertEquals('http', $apiExecution['body']['trigger']);
 
-        // Both values are filterable
-        $domainExecutions = $this->listExecutions($functionId, [
-            'queries' => [Query::equal('trigger', ['domain'])->toString()],
-        ]);
+        $domainExecutionId = $response['headers']['x-appwrite-execution-id'];
+        $apiExecutionId = $apiExecution['body']['$id'];
 
-        $this->assertEquals(200, $domainExecutions['headers']['status-code']);
-        $this->assertEquals(1, $domainExecutions['body']['total']);
-        $this->assertEquals($response['headers']['x-appwrite-execution-id'], $domainExecutions['body']['executions'][0]['$id']);
+        // Both values are filterable. Executions reach the list store
+        // asynchronously, so give the one just created time to land.
+        $this->assertEventually(function () use ($functionId, $domainExecutionId, $apiExecutionId) {
+            $domainExecutions = $this->listExecutions($functionId, [
+                'queries' => [Query::equal('trigger', ['domain'])->toString()],
+            ]);
 
-        $httpExecutions = $this->listExecutions($functionId, [
-            'queries' => [Query::equal('trigger', ['http'])->toString()],
-        ]);
+            $this->assertEquals(200, $domainExecutions['headers']['status-code']);
+            $this->assertEquals(1, $domainExecutions['body']['total']);
+            $this->assertEquals($domainExecutionId, $domainExecutions['body']['executions'][0]['$id']);
 
-        $this->assertEquals(200, $httpExecutions['headers']['status-code']);
-        $this->assertEquals(1, $httpExecutions['body']['total']);
-        $this->assertEquals($apiExecution['body']['$id'], $httpExecutions['body']['executions'][0]['$id']);
+            $httpExecutions = $this->listExecutions($functionId, [
+                'queries' => [Query::equal('trigger', ['http'])->toString()],
+            ]);
+
+            $this->assertEquals(200, $httpExecutions['headers']['status-code']);
+            $this->assertEquals(1, $httpExecutions['body']['total']);
+            $this->assertEquals($apiExecutionId, $httpExecutions['body']['executions'][0]['$id']);
+        }, 60000, 500);
 
         // A client pinned below 2.3.0 still sees the pre-2.3.0 behaviour:
         // the domain execution reads back as `http` and a `trigger=http`
@@ -2864,7 +2870,7 @@ final class FunctionsCustomServerTest extends Scope
 
         $legacyExecution = $this->client->call(
             Client::METHOD_GET,
-            '/functions/' . $functionId . '/executions/' . $response['headers']['x-appwrite-execution-id'],
+            '/functions/' . $functionId . '/executions/' . $domainExecutionId,
             $legacyHeaders
         );
 
