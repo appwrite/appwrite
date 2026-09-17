@@ -228,6 +228,102 @@ final class SignatureV4Test extends TestCase
         );
     }
 
+    public function testVerifiesHeadObjectSignature(): void
+    {
+        $secret = 'test-api-key-secret';
+        $request = $this->signedRequest(
+            'HEAD',
+            '/v1/s3/bucket/object.txt',
+            '',
+            $secret,
+            'UNSIGNED-PAYLOAD',
+            'x-id=HeadObject',
+        );
+
+        $key = (new SignatureV4())->verify(
+            $request,
+            $this->project($secret, ['files.read']),
+            new Document(),
+            new User(),
+            ['files.read']
+        );
+
+        $this->assertSame('project-test', $key->getProjectId());
+    }
+
+    public function testVerifiesHeadObjectSignatureAfterProxyRewritesToGet(): void
+    {
+        $secret = 'test-api-key-secret';
+        $signed = $this->signedRequest(
+            'HEAD',
+            '/v1/s3/bucket/object.txt',
+            '',
+            $secret,
+            'UNSIGNED-PAYLOAD',
+            'x-id=HeadObject',
+        );
+        $request = new TestRequest('GET', $signed->uri, $signed->headerMap, $signed->body, $signed->query);
+
+        $key = (new SignatureV4())->verify(
+            $request,
+            $this->project($secret, ['files.read']),
+            new Document(),
+            new User(),
+            ['files.read']
+        );
+
+        $this->assertSame('project-test', $key->getProjectId());
+    }
+
+    public function testVerifiesHeadBucketSignatureAfterProxyRewritesToGet(): void
+    {
+        $secret = 'test-api-key-secret';
+        $signed = $this->signedRequest(
+            'HEAD',
+            '/v1/s3/bucket',
+            '',
+            $secret,
+            'UNSIGNED-PAYLOAD',
+            'x-id=HeadBucket',
+        );
+        $request = new TestRequest('GET', $signed->uri, $signed->headerMap, $signed->body, $signed->query);
+
+        $key = (new SignatureV4())->verify(
+            $request,
+            $this->project($secret, ['buckets.read']),
+            new Document(),
+            new User(),
+            ['buckets.read']
+        );
+
+        $this->assertSame('project-test', $key->getProjectId());
+        $this->assertContains('buckets.read', $key->getScopes());
+    }
+
+    public function testVerifiesHeadObjectSignatureWithChecksumMode(): void
+    {
+        $secret = 'test-api-key-secret';
+        $request = $this->signedRequest(
+            'HEAD',
+            '/v1/s3/bucket/object.txt',
+            '',
+            $secret,
+            'UNSIGNED-PAYLOAD',
+            'x-id=HeadObject',
+            additionalHeaders: ['x-amz-checksum-mode' => 'ENABLED'],
+        );
+
+        $key = (new SignatureV4())->verify(
+            $request,
+            $this->project($secret, ['files.read']),
+            new Document(),
+            new User(),
+            ['files.read']
+        );
+
+        $this->assertSame('project-test', $key->getProjectId());
+    }
+
     private function project(string $secret, array $scopes): Document
     {
         return new Document([

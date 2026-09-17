@@ -32,7 +32,13 @@ class Get extends Base
 
     protected function route(Request $request, Response $response, Database $dbForProject, Document $project, Document $team, User $user, Device $deviceForFiles, callable $locks, Cache $cache, Event $queueForEvents, DeletePublisher $publisherForDeletes, AuditPublisher $publisherForAudits, Event $queueForRealtime, FunctionPublisher $publisherForFunctions, Event $queueForWebhooks, EventProcessor $eventProcessor): void
     {
-        $isHead = $request->getMethod() === Action::HTTP_REQUEST_METHOD_HEAD;
+        $isHead = $this->isHead($request);
+        if ($isHead) {
+            // Native HEAD is already suppressed by Utopia. Proxies may rewrite
+            // HeadObject to GET while leaving `x-id` in place; keep the empty
+            // body and the object Content-Length so clients do not hang.
+            $response->disablePayload();
+        }
         [$bucketId, $key] = $this->parts($request);
 
         if ($bucketId === '') {
@@ -266,6 +272,20 @@ class Get extends Base
         }
 
         $response->send((string) $body);
+    }
+
+    /**
+     * HeadObject / HeadBucket: HTTP HEAD, or a GET that a proxy rewrote from
+     * HEAD while leaving the AWS SDK `x-id` operation name in place.
+     */
+    private function isHead(Request $request): bool
+    {
+        if (\strtoupper($request->getMethod()) === Action::HTTP_REQUEST_METHOD_HEAD) {
+            return true;
+        }
+
+        $operation = $this->query($request, 'x-id');
+        return $operation === 'HeadObject' || $operation === 'HeadBucket';
     }
 
     /**
