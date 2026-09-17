@@ -34,6 +34,8 @@ import {
   organizationPlanQueryOptions,
   billingPlansQueryOptions,
 } from '@/lib/react-query/hooks'
+import { filterBillingPlansByLocation } from '@/lib/pricing/start-plan'
+import { useVisitorCountryCode } from '@/hooks/use-visitor-country'
 import { prefetchOrganizationOverviewData } from '@/lib/organization-overview-prefetch'
 import { useSmartNavigation } from '@/lib/hooks/useSmartNavigation'
 import { useDebouncedValue } from '@/lib/hooks/useDebouncedValue'
@@ -476,6 +478,17 @@ export function ChangePlanWizardFullscreen() {
   const { plan } = useOrganizationPlan(orgId)
   const { organizations } = useOrganizations()
   const { plans: billingPlans, isLoading: plansLoading } = useBillingPlans()
+  const visitorCountryCode = useVisitorCountryCode()
+
+  const selectablePlans = useMemo(
+    () =>
+      filterBillingPlansByLocation(
+        billingPlans,
+        visitorCountryCode,
+        isCreateMode ? null : organization?.billingPlan,
+      ),
+    [billingPlans, visitorCountryCode, isCreateMode, organization?.billingPlan],
+  )
 
   // A free org, including one with a scheduled downgrade to Free, occupies
   // the account's single free-organization slot.
@@ -493,38 +506,36 @@ export function ChangePlanWizardFullscreen() {
     )
   }, [organizations, orgId])
 
-  // Default selection: Pro for new orgs; first paid plan when upgrading from Free;
+  // Default selection: first paid catalogue plan for new orgs (Start when
+  // eligible, otherwise Pro); first paid plan when upgrading from Free;
   // otherwise the org's current plan.
   const defaultPlan = useMemo(() => {
+    const firstPaidPlan = Object.keys(selectablePlans)
+      .filter(
+        (planId) =>
+          getPlanCanonicalFromRecord(planId, selectablePlans) !== 'free',
+      )
+      .sort((a, b) => {
+        const orderA = resolveBillingPlanRecord(a, selectablePlans)?.order ?? 999
+        const orderB = resolveBillingPlanRecord(b, selectablePlans)?.order ?? 999
+        return orderA - orderB
+      })[0]
+
     if (isCreateMode) {
-      return BillingPlanTier.Tier1
+      return (firstPaidPlan as BillingPlanTierType | undefined) ?? BillingPlanTier.Tier1
     }
 
     const current = organization?.billingPlan || BillingPlanTier.Tier0
 
     if (
-      getPlanCanonicalFromRecord(current, billingPlans) === 'free' &&
-      billingPlans &&
-      Object.keys(billingPlans).length > 0
+      getPlanCanonicalFromRecord(current, selectablePlans) === 'free' &&
+      firstPaidPlan
     ) {
-      const firstPaidPlan = Object.keys(billingPlans)
-        .filter(
-          (planId) =>
-            getPlanCanonicalFromRecord(planId, billingPlans) !== 'free',
-        )
-        .sort((a, b) => {
-          const orderA = resolveBillingPlanRecord(a, billingPlans)?.order ?? 999
-          const orderB = resolveBillingPlanRecord(b, billingPlans)?.order ?? 999
-          return orderA - orderB
-        })[0]
-
-      if (firstPaidPlan) {
-        return firstPaidPlan as BillingPlanTierType
-      }
+      return firstPaidPlan as BillingPlanTierType
     }
 
     return current as BillingPlanTierType
-  }, [isCreateMode, organization?.billingPlan, billingPlans])
+  }, [isCreateMode, organization?.billingPlan, selectablePlans])
 
   // Check if self-service is allowed (defaults to true)
   const selfService = isCreateMode ? true : plan?.selfService !== false
@@ -591,13 +602,13 @@ export function ChangePlanWizardFullscreen() {
   } = useOrganizationProjects(orgId)
 
   const selectedPlanIsFree = useMemo(
-    () => isFreePlanRef(selectedPlan, billingPlans),
-    [selectedPlan, billingPlans],
+    () => isFreePlanRef(selectedPlan, selectablePlans),
+    [selectedPlan, selectablePlans],
   )
 
   const selectedPlanIsPro = useMemo(
-    () => getPlanCanonicalFromRecord(selectedPlan, billingPlans) === 'pro',
-    [selectedPlan, billingPlans],
+    () => getPlanCanonicalFromRecord(selectedPlan, selectablePlans) === 'pro',
+    [selectedPlan, selectablePlans],
   )
 
   // Get current plan tier
@@ -616,8 +627,8 @@ export function ChangePlanWizardFullscreen() {
   }, [currentPlanTier, isCreateMode])
 
   const currentPlanIsFree = useMemo(
-    () => isFreePlanRef(currentPlanEnum, billingPlans),
-    [currentPlanEnum, billingPlans],
+    () => isFreePlanRef(currentPlanEnum, selectablePlans),
+    [currentPlanEnum, selectablePlans],
   )
 
   // Mutations (defined early for use in useEffect)
@@ -689,10 +700,10 @@ export function ChangePlanWizardFullscreen() {
   const [planInitialized, setPlanInitialized] = useState(false)
   useEffect(() => {
     if (planInitialized) return
-    if (!billingPlans || Object.keys(billingPlans).length === 0) return
+    if (!selectablePlans || Object.keys(selectablePlans).length === 0) return
     if (!isCreateMode && orgId && !organization) return
 
-    const isValidPlan = (plan: string) => plan in billingPlans
+    const isValidPlan = (plan: string) => plan in selectablePlans
 
     const planParam = search?.plan as string | undefined
     if (planParam && isValidPlan(planParam)) {
@@ -713,7 +724,7 @@ export function ChangePlanWizardFullscreen() {
     isCreateMode,
     orgId,
     organization,
-    billingPlans,
+    selectablePlans,
   ])
 
   // Apply coupon from URL with full details (including expiration)
@@ -732,9 +743,9 @@ export function ChangePlanWizardFullscreen() {
   const comparisonPlans = useMemo(
     () =>
       plan?.$id === currentPlanEnum
-        ? { ...billingPlans, [plan.$id]: plan }
-        : billingPlans,
-    [billingPlans, currentPlanEnum, plan],
+        ? { ...selectablePlans, [plan.$id]: plan }
+        : selectablePlans,
+    [selectablePlans, currentPlanEnum, plan],
   )
 
   // Determine if upgrade or downgrade
@@ -1781,7 +1792,7 @@ export function ChangePlanWizardFullscreen() {
             <PlanComparisonBox
               currentPlan={currentPlanEnum}
               selectedPlan={selectedPlan}
-              plans={billingPlans}
+              plans={selectablePlans}
             />
           )}
         </>
@@ -1882,11 +1893,9 @@ export function ChangePlanWizardFullscreen() {
                   </p>
                 </div>
               </div>
-            ) : billingPlans &&
-              typeof billingPlans === 'object' &&
-              Object.keys(billingPlans).length > 0 ? (
+            ) : Object.keys(selectablePlans).length > 0 ? (
               <PlanSelection
-                plans={billingPlans}
+                plans={selectablePlans}
                 currentPlan={currentPlanEnum}
                 selectedPlan={selectedPlan}
                 onPlanSelect={setSelectedPlan}

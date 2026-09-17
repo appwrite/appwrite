@@ -5,10 +5,19 @@
  */
 
 import { useMemo } from 'react'
-import { queryOptions, useQuery } from '@tanstack/react-query'
+import {
+  queryOptions,
+  useQuery,
+  type QueryClient,
+} from '@tanstack/react-query'
 import { sdk } from '@/lib/appwrite/sdk'
 import { buildCountryLookups } from '@/lib/locale/country-lookups'
+import { persistVisitorCountryCode } from '@/lib/locale/visitor-country'
+import { normalizeCountryCode } from '@/lib/pricing/start-plan'
+import { getSsrVisitorCountry } from '@/lib/ssr-visitor-country'
 import { LONG_STALE_TIME } from './constants'
+
+export const VISITOR_COUNTRY_QUERY_KEY = ['visitor-country'] as const
 
 // ============================================================================
 // QUERY FUNCTIONS
@@ -55,6 +64,7 @@ export async function fetchContinents() {
  */
 export async function fetchLocale() {
   const response = await sdk.forConsole.locale.get()
+  persistVisitorCountryCode(response.countryCode)
   return response
 }
 
@@ -158,6 +168,50 @@ export function localeQueryOptions() {
     enabled: typeof window !== 'undefined',
     meta: { skipInitialLoader: true },
   })
+}
+
+async function fetchVisitorCountryCode(): Promise<string | null> {
+  const locale = await fetchLocale()
+  return normalizeCountryCode(locale.countryCode)
+}
+
+/**
+ * Dehydratable visitor country for pricing first paint. Seeded from request
+ * geo/cookies on the server; confirmed with locale.get() on the client.
+ * Keep this key off `isClientOwnedQueryKey` so SSR can hydrate it.
+ */
+export function visitorCountryQueryOptions() {
+  return queryOptions({
+    queryKey: VISITOR_COUNTRY_QUERY_KEY,
+    queryFn: fetchVisitorCountryCode,
+    staleTime: LONG_STALE_TIME,
+    gcTime: LONG_STALE_TIME,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    enabled: typeof window !== 'undefined',
+    meta: { skipInitialLoader: true },
+  })
+}
+
+export async function prefetchVisitorCountry(queryClient: QueryClient) {
+  if (typeof window === 'undefined') {
+    const country = getSsrVisitorCountry()
+    if (country) {
+      queryClient.setQueryData(VISITOR_COUNTRY_QUERY_KEY, country)
+    }
+    return
+  }
+
+  try {
+    const locale = await queryClient.ensureQueryData(localeQueryOptions())
+    queryClient.setQueryData(
+      VISITOR_COUNTRY_QUERY_KEY,
+      normalizeCountryCode(locale.countryCode),
+    )
+  } catch {
+    await queryClient.ensureQueryData(visitorCountryQueryOptions()).catch(() => {})
+  }
 }
 
 /**

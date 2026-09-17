@@ -7,6 +7,7 @@ const AUTO_EDUCATION_PLAN = /^auto-1$/i
  */
 export type CanonicalPlanId =
   | 'free'
+  | 'start'
   | 'pro'
   | 'core'
   | 'custom'
@@ -15,6 +16,7 @@ export type CanonicalPlanId =
 /**
  * Maps tier values to canonical plan ids
  * - tier-0 → 'free'
+ * - tier-1-1 → 'start' (must be checked before the generic tier-1 prefix)
  * - tier-1 → 'pro'
  * - tier-2 → 'core' (legacy API name: Scale)
  * - auto-1 → 'education'
@@ -32,6 +34,9 @@ export function getPlanNameFromTier(
       return 'education'
     }
 
+    const normalized = tier.toLowerCase()
+    if (normalized === 'tier-1-1' || normalized === 'start') return 'start'
+
     const tierMatch = tier.match(/tier-(\d+)/i)
     if (tierMatch) {
       const tierNumber = parseInt(tierMatch[1], 10)
@@ -41,12 +46,15 @@ export function getPlanNameFromTier(
       return 'custom'
     }
 
-    if (tier === '0' || tier.toLowerCase() === 'tier-0') return 'free'
-    if (tier === '1' || tier.toLowerCase() === 'tier-1') return 'pro'
-    if (tier === '2' || tier.toLowerCase() === 'tier-2') return 'core'
+    if (tier === '0' || normalized === 'tier-0') return 'free'
+    if (tier === '1' || normalized === 'tier-1') return 'pro'
+    if (tier === '2' || normalized === 'tier-2') return 'core'
 
-    const normalized = tier.toLowerCase()
-    if (['free', 'pro', 'core', 'custom', 'education'].includes(normalized)) {
+    if (
+      ['free', 'start', 'pro', 'core', 'custom', 'education'].includes(
+        normalized,
+      )
+    ) {
       return normalized as CanonicalPlanId
     }
     // Legacy Scale plan id/name → Core
@@ -74,6 +82,8 @@ export function getCanonicalPlanDisplayLabel(plan: CanonicalPlanId): string {
   switch (plan) {
     case 'free':
       return 'Free'
+    case 'start':
+      return 'Start'
     case 'pro':
       return 'Pro'
     case 'core':
@@ -142,13 +152,15 @@ export type BillingPlanRecord = {
   name?: string
   order?: number
   price?: number
+  eligibleCountries?: string[]
 }
 
 function canonicalRank(plan: CanonicalPlanId): number {
   if (plan === 'free') return 0
-  if (plan === 'pro' || plan === 'education') return 1
-  if (plan === 'core') return 2
-  return 3
+  if (plan === 'start') return 1
+  if (plan === 'pro' || plan === 'education') return 2
+  if (plan === 'core') return 3
+  return 4
 }
 
 /**
@@ -175,6 +187,7 @@ export function getPlanCanonicalFromRecord(
   if (plan?.name) {
     const name = plan.name.toLowerCase()
     if (name.includes('free') || name === 'starter') return 'free'
+    if (name === 'start') return 'start'
     if (name.includes('pro')) return 'pro'
     // Core (current) and Scale (legacy tier-2 name)
     if (name.includes('core') || name.includes('scale')) return 'core'

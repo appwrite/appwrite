@@ -1,5 +1,6 @@
 import { Link } from '@tanstack/react-router'
 import { Check, Info } from 'lucide-react'
+import type { ReactNode } from 'react'
 import { Button } from '@/components/ui/button'
 import {
   Tooltip,
@@ -8,7 +9,8 @@ import {
 } from '@/components/ui/tooltip'
 import { useT } from '@/lib/i18n/translate'
 import { SALES_FORM_ROUTE } from '@/lib/sales/contact-sales'
-import { pricingPlans } from '@/lib/pricing/plans'
+import { useStartPlanVisibility } from '@/hooks/use-start-plan-visibility'
+import { getVisiblePricingPlans } from '@/lib/pricing/start-plan'
 import type { ComparisonCell, ComparisonLinkCell, PlanId, PricingPlan } from '@/lib/pricing/types'
 import { cn } from '@/lib/utils'
 import {
@@ -23,10 +25,102 @@ export const outlineTierButtonClassName =
 export const pricingGlassSurfaceClassName =
   'relative isolate overflow-hidden rounded-xl border border-muted-foreground/8 bg-muted-foreground/[0.035] shadow-sm backdrop-blur-sm dark:border-muted/30 dark:bg-muted/10 supports-[backdrop-filter]:bg-muted-foreground/[0.028] supports-[backdrop-filter]:dark:bg-muted/[0.08]'
 
+/** Wider page gutter when Start is shown so four plan cards are not squeezed. */
+export const pricingStartPlansContainerClassName =
+  'mx-auto w-full max-w-[96rem] px-4 sm:px-6 xl:px-8'
+
+export const pricingThreePlansContainerClassName =
+  'mx-auto w-full max-w-7xl px-4 sm:px-6'
+
+export const pricingHeroThreePlansContainerClassName =
+  'mx-auto w-full max-w-7xl px-6 sm:px-10 lg:px-14'
+
+/**
+ * Keep the cards row on the wider gutter until country is known so 4-plan
+ * never expands the container after first paint.
+ */
+export function getPricingPlanCardsContainerClassName(
+  ready: boolean,
+  showStartPlan: boolean,
+  threePlanClassName: string = pricingThreePlansContainerClassName,
+) {
+  return !ready || showStartPlan
+    ? pricingStartPlansContainerClassName
+    : threePlanClassName
+}
+
+/** Uniform gap; Pro column wider so the featured card reads larger than neighbors. */
+export function getPricingPlanCardsGridClassName(showStartPlan: boolean) {
+  return cn(
+    'grid gap-6 lg:gap-5 xl:gap-6',
+    showStartPlan
+      ? 'sm:grid-cols-2 lg:grid-cols-[1fr_1fr_1.12fr_1fr]'
+      : 'sm:grid-cols-2 lg:grid-cols-[1fr_1.12fr_1fr]',
+  )
+}
+
+/** Centers Pro scale in its grid cell without affecting sibling column widths. */
+export function PricingPlanCardWrapper({
+  featured = false,
+  children,
+}: {
+  featured?: boolean
+  children: ReactNode
+}) {
+  if (!featured) {
+    return children
+  }
+
+  return (
+    <div className="relative z-[1] flex h-full items-center justify-center lg:origin-center lg:scale-[1.06]">
+      {children}
+    </div>
+  )
+}
+
+/**
+ * Floor for the featured pricing cards row (not stacked mobile height).
+ * Covers the taller of 3-col and 4-col at lg: stretched card ~52.7rem and
+ * lg:py-6 on the grid (~3rem).
+ */
+export const pricingHeroCardsReserveClassName =
+  'min-h-[42rem] sm:min-h-[54rem] lg:min-h-[54rem]'
+
+/** Home / promo compact plan cards (one row, no feature lists). */
+export const pricingCompactCardsReserveClassName =
+  'min-h-[17.5rem] sm:min-h-[18.75rem]'
+
+const pricingPlanCardsFadeClassName =
+  'animate-in fade-in-0 duration-300 ease-out motion-reduce:animate-none'
+
+export function PricingPlanCardsShell({
+  ready,
+  reserveClassName,
+  className,
+  children,
+}: {
+  ready: boolean
+  reserveClassName: string
+  className?: string
+  children: ReactNode
+}) {
+  return (
+    <div className={cn(reserveClassName, className)} aria-busy={!ready || undefined}>
+      {ready ? (
+        <div className={pricingPlanCardsFadeClassName}>{children}</div>
+      ) : null}
+    </div>
+  )
+}
+
 const pricingPlanGlassClassName = pricingGlassSurfaceClassName
 
 function isProPlan(plan: PricingPlan) {
   return plan.id === 'pro'
+}
+
+export function getProPlanBadgeLabel(fourPlanGrid: boolean) {
+  return fourPlanGrid ? 'Best value' : 'Popular'
 }
 
 export function PricingPlanCta({
@@ -71,16 +165,25 @@ export function PricingPlanCta({
   )
 }
 
-export function PricingPlanCard({ plan }: { plan: PricingPlan }) {
+export function PricingPlanCard({
+  plan,
+  featured = false,
+  badgeLabel,
+}: {
+  plan: PricingPlan
+  featured?: boolean
+  badgeLabel?: string
+}) {
   const t = useT()
-  const isPro = isProPlan(plan)
+  const isFeatured = featured
+  const label = badgeLabel ?? (plan.popular ? 'Popular' : undefined)
 
   return (
     <article
       className={cn(
         pricingPlanGlassClassName,
-        'flex h-full flex-col p-6 sm:p-7',
-        isPro && 'sm:p-7 lg:p-9 lg:shadow-lg',
+        'flex h-full w-full min-w-0 flex-col',
+        isFeatured ? 'p-6 shadow-md sm:p-7 lg:p-9' : 'p-6 sm:p-7',
       )}
     >
       <header className="relative z-[1] flex flex-col gap-4">
@@ -88,14 +191,14 @@ export function PricingPlanCard({ plan }: { plan: PricingPlan }) {
           <h2
             className={cn(
               'font-semibold text-foreground',
-              isPro ? 'text-[16px]' : 'text-[14px]',
+              isFeatured ? 'text-[16px]' : 'text-[14px]',
             )}
           >
             {t(plan.name)}
           </h2>
-          {plan.popular ? (
+          {label ? (
             <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-600 dark:text-emerald-400">
-              {t('Popular')}
+              {t(label)}
             </span>
           ) : null}
         </div>
@@ -110,7 +213,7 @@ export function PricingPlanCard({ plan }: { plan: PricingPlan }) {
             <span
               className={cn(
                 'font-aeonik-pro font-normal leading-none tracking-tight text-foreground',
-                isPro
+                isFeatured
                   ? 'text-[48px] sm:text-[52px] lg:text-[56px]'
                   : 'text-[36px] sm:text-[40px]',
               )}
@@ -121,7 +224,7 @@ export function PricingPlanCard({ plan }: { plan: PricingPlan }) {
               <span
                 className={cn(
                   'text-muted-foreground',
-                  isPro ? 'text-[16px]' : 'text-[14px]',
+                  isFeatured ? 'text-[16px]' : 'text-[14px]',
                 )}
               >
                 {t(plan.priceSuffix)}
@@ -139,7 +242,7 @@ export function PricingPlanCard({ plan }: { plan: PricingPlan }) {
         <p
           className={cn(
             'leading-5 text-muted-foreground',
-            isPro ? 'min-h-[3.5rem] text-[14px]' : 'min-h-[3.75rem] text-[13px]',
+            isFeatured ? 'min-h-[3.5rem] text-[14px]' : 'min-h-[3.75rem] text-[13px]',
           )}
         >
           {t(plan.description)}
@@ -154,13 +257,13 @@ export function PricingPlanCard({ plan }: { plan: PricingPlan }) {
         ) : (
           <div className="min-h-[1.25rem]" aria-hidden />
         )}
-        <ul className={cn('min-h-0 flex-1 space-y-2.5', isPro && 'lg:space-y-3')}>
+        <ul className={cn('min-h-0 flex-1 space-y-2.5', isFeatured && 'lg:space-y-3')}>
           {plan.features.map((feature) => (
             <li
               key={feature}
               className={cn(
                 'flex items-start gap-2.5 text-muted-foreground',
-                isPro ? 'text-[14px]' : 'text-[13px]',
+                isFeatured ? 'text-[14px]' : 'text-[13px]',
               )}
             >
               <Check
@@ -182,21 +285,35 @@ export function PricingPlanCard({ plan }: { plan: PricingPlan }) {
 }
 
 export function PricingCardsGrid() {
+  const { ready, showStartPlan } = useStartPlanVisibility()
+  const plans = getVisiblePricingPlans(showStartPlan)
+  const proBadgeLabel = getProPlanBadgeLabel(showStartPlan)
+
   return (
-    <div className="grid gap-6 sm:gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.14fr)_minmax(0,1fr)] lg:items-stretch lg:gap-10">
-      {pricingPlans.map((plan) => (
-        <div
-          key={plan.id}
-          className={cn(
-            'flex h-full min-h-0',
-            isProPlan(plan) &&
-              'relative z-[1] origin-center scale-[1.02] self-center sm:scale-[1.04] lg:scale-[1.1]',
-          )}
-        >
-          <PricingPlanCard plan={plan} />
-        </div>
-      ))}
-    </div>
+    <PricingPlanCardsShell
+      ready={ready}
+      reserveClassName={pricingHeroCardsReserveClassName}
+    >
+      <div
+        className={cn(
+          getPricingPlanCardsGridClassName(showStartPlan),
+          'lg:items-stretch lg:py-6',
+        )}
+      >
+        {plans.map((plan) => {
+          const featured = isProPlan(plan)
+          return (
+            <PricingPlanCardWrapper key={plan.id} featured={featured}>
+              <PricingPlanCard
+                plan={plan}
+                featured={featured}
+                badgeLabel={featured ? proBadgeLabel : undefined}
+              />
+            </PricingPlanCardWrapper>
+          )
+        })}
+      </div>
+    </PricingPlanCardsShell>
   )
 }
 
@@ -228,7 +345,11 @@ export function ComparisonCellValue({ value }: { value: ComparisonCell }) {
     )
   }
 
-  return <span className="text-[13px] text-muted-foreground">{t(value)}</span>
+  return (
+    <span className="inline-block max-w-full whitespace-normal break-words text-[13px] leading-5 text-muted-foreground">
+      {t(value)}
+    </span>
+  )
 }
 
 export function ComparisonRowLabel({
