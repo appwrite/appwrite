@@ -77,12 +77,12 @@ class Connection
 
     public function publish(string $topic, string $payload, int $qos = 0, bool $dup = false, ?int $sequence = null): void
     {
-        $this->broker?->deliver($this, $topic, $payload, $qos, $dup, $sequence);
+        $this->broker?->send($this, $topic, $payload, $qos, $dup, $sequence);
     }
 
     public function disconnect(int $reason = 0): void
     {
-        $this->broker?->drop($this, $reason);
+        $this->broker?->close($this, $reason);
     }
 
     /**

@@ -117,7 +117,7 @@ class Broker
         return $subscribers;
     }
 
-    public function deliver(Connection $connection, string $topic, string $payload, int $qos, bool $dup, ?int $sequence): void
+    public function send(Connection $connection, string $topic, string $payload, int $qos, bool $dup, ?int $sequence): void
     {
         $packetId = $qos > 0 ? $connection->nextPacketId() : 0;
 
@@ -132,7 +132,7 @@ class Broker
         }
     }
 
-    public function drop(Connection $connection, int $reason): void
+    public function close(Connection $connection, int $reason): void
     {
         if ($reason !== Disconnect::NORMAL && $connection->protocol >= V5::PROTOCOL_LEVEL) {
             $this->adapter->send($connection->fd, V5::disconnect($reason));
