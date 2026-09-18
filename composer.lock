@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "fc14a8da1859be1d7e3635d413187ae9",
+    "content-hash": "067e4c5b691b20b06213bc3c9382a6c9",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3408,16 +3408,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "7.3.10",
+            "version": "7.3.11",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "9f601bfb56a425b70aa1ee919ae12fdb94c2e7bd"
+                "reference": "e45195ffb7019e70b88cf7d33814ecafd3fa2866"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/9f601bfb56a425b70aa1ee919ae12fdb94c2e7bd",
-                "reference": "9f601bfb56a425b70aa1ee919ae12fdb94c2e7bd",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/e45195ffb7019e70b88cf7d33814ecafd3fa2866",
+                "reference": "e45195ffb7019e70b88cf7d33814ecafd3fa2866",
                 "shasum": ""
             },
             "require": {
@@ -3462,9 +3462,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/7.3.10"
+                "source": "https://github.com/utopia-php/database/tree/7.3.11"
             },
-            "time": "2026-09-16T09:52:40+00:00"
+            "time": "2026-09-17T08:18:45+00:00"
         },
         {
             "name": "utopia-php/detector",
@@ -4451,16 +4451,16 @@
         },
         {
             "name": "utopia-php/schedule",
-            "version": "0.2.2",
+            "version": "0.3.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/schedule.git",
-                "reference": "3a7ca5134df98830c6b2dd825324c46378f45f56"
+                "reference": "fd28416654405e865649569e111fe1d3a3cf9868"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/schedule/zipball/3a7ca5134df98830c6b2dd825324c46378f45f56",
-                "reference": "3a7ca5134df98830c6b2dd825324c46378f45f56",
+                "url": "https://api.github.com/repos/utopia-php/schedule/zipball/fd28416654405e865649569e111fe1d3a3cf9868",
+                "reference": "fd28416654405e865649569e111fe1d3a3cf9868",
                 "shasum": ""
             },
             "require": {
@@ -4504,9 +4504,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/schedule/issues",
-                "source": "https://github.com/utopia-php/schedule/tree/0.2.2"
+                "source": "https://github.com/utopia-php/schedule/tree/0.3.0"
             },
-            "time": "2026-08-19T10:25:02+00:00"
+            "time": "2026-09-17T15:41:29+00:00"
         },
         {
             "name": "utopia-php/servers",
@@ -4852,16 +4852,16 @@
         },
         {
             "name": "utopia-php/user-agent",
-            "version": "0.1.1",
+            "version": "0.1.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/user-agent.git",
-                "reference": "4f7bb7288cfe3ce8e257944c0827914901c873bc"
+                "reference": "0396bd6187fbc00b5a61f8876ff822f3428fe8c5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/user-agent/zipball/4f7bb7288cfe3ce8e257944c0827914901c873bc",
-                "reference": "4f7bb7288cfe3ce8e257944c0827914901c873bc",
+                "url": "https://api.github.com/repos/utopia-php/user-agent/zipball/0396bd6187fbc00b5a61f8876ff822f3428fe8c5",
+                "reference": "0396bd6187fbc00b5a61f8876ff822f3428fe8c5",
                 "shasum": ""
             },
             "require": {
@@ -4888,9 +4888,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/user-agent/issues",
-                "source": "https://github.com/utopia-php/user-agent/tree/0.1.1"
+                "source": "https://github.com/utopia-php/user-agent/tree/0.1.2"
             },
-            "time": "2026-07-20T09:05:28+00:00"
+            "time": "2026-09-17T08:48:33+00:00"
         },
         {
             "name": "utopia-php/validators",
@@ -4934,16 +4934,16 @@
         },
         {
             "name": "utopia-php/vcs",
-            "version": "5.4.0",
+            "version": "5.5.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/vcs.git",
-                "reference": "1224f6eade2ad7be43c9bcb4459321d9ffec97dc"
+                "reference": "de3d3dafe019f8cffd97480a9f2bf15d7514678c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/1224f6eade2ad7be43c9bcb4459321d9ffec97dc",
-                "reference": "1224f6eade2ad7be43c9bcb4459321d9ffec97dc",
+                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/de3d3dafe019f8cffd97480a9f2bf15d7514678c",
+                "reference": "de3d3dafe019f8cffd97480a9f2bf15d7514678c",
                 "shasum": ""
             },
             "require": {
@@ -4986,10 +4986,10 @@
                 "vcs"
             ],
             "support": {
-                "source": "https://github.com/utopia-php/vcs/tree/5.4.0",
+                "source": "https://github.com/utopia-php/vcs/tree/5.5.0",
                 "issues": "https://github.com/utopia-php/vcs/issues"
             },
-            "time": "2026-09-15T08:06:27+00:00"
+            "time": "2026-09-17T08:01:03+00:00"
         },
         {
             "name": "utopia-php/websocket",
