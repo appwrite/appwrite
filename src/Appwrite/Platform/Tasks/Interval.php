@@ -191,23 +191,27 @@ class Interval extends Action
 
                     $certificate = $dbForPlatform->getDocument('certificates', $current->getAttribute('certificateId', ''));
                     $lease = $certificate->getAttribute('updated');
-                    // Each attempt already spent doubles how long the lease is
-                    // honoured, from the lease period up to the attempt cap.
-                    // An authority blocked on a DNS record its owner has not
-                    // added stays that way for hours, and checking every lease
-                    // period for all of them buys nothing but load and log
-                    // lines. Scaling the lease rather than the rule's
-                    // $updatedAt keeps this tied to issuance: an unrelated
-                    // write to the rule cannot restart the delay, and an
-                    // explicit retry clears the lease and so is served at once.
-                    $held = DatabaseDateTime::format(new DateTime(
+                    // Each attempt already spent doubles the wait before the
+                    // next one, up to the attempt cap. An authority blocked on
+                    // a DNS record its owner has not added stays that way for
+                    // hours, and looking again every lease period buys load
+                    // and a rewritten log line and nothing else.
+                    $due = DatabaseDateTime::format(new DateTime(
                         '-' . APP_CERTIFICATE_GENERATION_LEASE * (2 ** \min($certificate->getAttribute('attempts', 0), APP_LIMIT_CERTIFICATE_ATTEMPTS)) . ' seconds'
                     ));
+                    // Measure from the last issuance activity: the lease while
+                    // a worker waits on the authority, otherwise the attempt it
+                    // last reserved. The rule's own $updatedAt is deliberately
+                    // not used -- a requested retry whose DNS check fails bumps
+                    // it without spending an attempt, and the rule would then
+                    // serve out a delay it never earned. A retry that does pass
+                    // clears the lease and the budget, so it is claimed at once.
+                    $since = empty($lease) ? $certificate->getAttribute('issueDate') : $lease;
                     // An interrupted final attempt still needs reconciliation;
                     // the worker enforces the budget before issuing again.
                     if (($status === RULE_STATUS_CERTIFICATE_GENERATION_FAILED
                             && $certificate->getAttribute('attempts', 0) >= APP_LIMIT_CERTIFICATE_ATTEMPTS)
-                        || (!empty($lease) && new DateTime($lease) >= new DateTime($held))) {
+                        || (!empty($since) && new DateTime($since) >= new DateTime($due))) {
                         return null;
                     }
                     // Delayed issuance is reconciled by the status poller.

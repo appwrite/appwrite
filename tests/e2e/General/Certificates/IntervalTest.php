@@ -206,6 +206,24 @@ final class IntervalTest extends TestCase
         $this->assertSame(['due.example.com'], $domains);
     }
 
+    public function testAFailedIssuanceBacksOffFromItsLastAttempt(): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        // A failed rule carries no lease, so without a second clock it would
+        // keep the flat retry and never back off at all. The attempt it last
+        // reserved is that clock -- and unlike the rule's own timestamp, a
+        // retry that fails DNS cannot bump it.
+        $this->seed('recent', 2, [], ['issueDate' => DateTime::formatTz(DateTime::format(new \DateTime('-30 minutes')))]);
+        $this->seed('overdue', 2, [], ['issueDate' => DateTime::formatTz(DateTime::format(new \DateTime('-90 minutes')))]);
+
+        $this->runTask();
+
+        $domains = array_column(array_column($this->publisher->getEvents('certificates') ?? [], 'domain'), 'domain');
+        $this->assertSame(['overdue.example.com'], $domains);
+    }
+
     public function testAFreshFailureIsNotHeldBackByBackoff(): void
     {
         /**
