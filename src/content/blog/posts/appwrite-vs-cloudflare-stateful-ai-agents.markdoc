@@ -67,7 +67,7 @@ Appwrite takes a different angle. Instead of shipping a dedicated Agent runtime,
 - **Messaging** for email, SMS, and push, useful for human-in-the-loop approval and async notifications from long-running agents.
 - **Appwrite MCP servers**, both the API MCP for acting on Appwrite resources and the Docs MCP for Appwrite context, so coding agents can build and operate against Appwrite directly.
 - **Agent Skills** for the Appwrite CLI and every major SDK including TypeScript, Dart, .NET, Go, Kotlin, PHP, Python, Ruby, Rust, and Swift, so agents generate idiomatic Appwrite code without docs in the prompt.
-- **Editor plugins** for [Claude Code](/docs/tooling/ai/ai-dev-tools/claude-code) and [Cursor](/docs/tooling/ai/ai-dev-tools/cursor) that bundle the API MCP, Docs MCP, and skills into one install.
+- **Editor plugins** for [Claude Code](/docs/tooling/ai/agents/claude-code) and [Cursor](/docs/tooling/ai/ai-dev-tools/cursor) that bundle the API MCP, Docs MCP, and skills into one install.
 - **Self-hosting** under an open-source license, or **Appwrite Cloud** with the same API surface.
 
 The point is not that Appwrite replaces Durable Objects one-to-one. The point is that once you have identity, structured tables, rows, storage, functions, realtime, and MCP, you already have what a stateful AI agent needs: users, durable state, memory, tool hosting, live updates to clients, and a way for coding agents to act on your backend.
@@ -121,7 +121,7 @@ The useful question is not "does this platform sell an Agents SDK?" It is "does 
 
 Cloudflare answers that with an Agents SDK on top of Durable Objects and Workers, then leaves the rest of the backend to you. Appwrite answers it with a broader open-source backend where Auth, TablesDB, Storage, Functions, Realtime, Sites, and MCP line up with what stateful AI agents need, without making you adopt a per-instance edge runtime before your product shape is clear.
 
-If you want to explore Appwrite as the backend for your stateful AI agents, start with [Appwrite Cloud](https://cloud.appwrite.io), read the [AI tooling hub](/docs/tooling/ai), and check the [API MCP server](/docs/tooling/ai/mcp-servers), [Agent Skills](/docs/tooling/ai/skills), and the editor plugins for [Claude Code](/docs/tooling/ai/ai-dev-tools/claude-code) and [Cursor](/docs/tooling/ai/ai-dev-tools/cursor).
+If you want to explore Appwrite as the backend for your stateful AI agents, start with [Appwrite Cloud](https://cloud.appwrite.io), read the [AI tooling hub](/docs/tooling/ai), and check the [API MCP server](/docs/tooling/ai/mcp-servers), [Agent Skills](/docs/tooling/ai/skills), and the editor plugins for [Claude Code](/docs/tooling/ai/agents/claude-code) and [Cursor](/docs/tooling/ai/ai-dev-tools/cursor).
 
 - [Appwrite Databases](/docs/products/databases)
 - [Appwrite Functions](/docs/products/functions)

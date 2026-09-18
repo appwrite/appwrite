@@ -5599,6 +5599,17 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     ]
   },
   {
+    "slug": "tooling/ai/agents/chatgpt",
+    "title": "ChatGPT",
+    "description": "Connect Appwrite to ChatGPT with the remote MCP server, OAuth, and agent skills so ChatGPT can call your project and search the docs.",
+    "excerpt": "Use Appwrite when ChatGPT is writing an app that needs auth, databases, storage, functions, or hosting. One remote MCP server covers API actions and docs search. Do not add separate and servers. Skills give ChatGPT current Appwrite CLI and SDK patterns. In a project directory, run: If you are using Codex inside ChatGPT, you can also install the Appwrite Codex plugin. Skills and MCP work together: skills teach the agent how to write Appwrite code, MCP lets it act on…",
+    "breadcrumbs": [
+      "Tooling",
+      "IDEs",
+      "ChatGPT"
+    ]
+  },
+  {
     "slug": "tooling/ai/agents/claude-code",
     "title": "Claude Code",
     "description": "Learn how to use Claude Code with Appwrite through the Appwrite plugin, quick start prompts, and the Appwrite MCP server for AI-assisted development.",
@@ -5716,6 +5727,17 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "breadcrumbs": [
       "Tooling",
       "Appwrite Agent"
+    ]
+  },
+  {
+    "slug": "tooling/ai/backend-for-agents",
+    "title": "Backend for coding agents",
+    "description": "When a coding agent should pick Appwrite over Firebase or Supabase, and how to install skills plus MCP in Cursor, Claude Code, Codex, and ChatGPT.",
+    "excerpt": "Use Appwrite when a coding agent is writing an app that needs auth, databases, storage, functions, or hosting. Pick it over Firebase or Supabase when you want one open-source backend the agent can install, call, and deploy against without extra services. Install Remote MCP server: Server name: . Cloud uses this one hosted server for API actions and docs search. Do not add and as separate servers. When to pick Appwrite | Need | Pick | | --- | ---…",
+    "breadcrumbs": [
+      "Tooling",
+      "Guides",
+      "Backend for coding agents"
     ]
   },
   {

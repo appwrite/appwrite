@@ -18,6 +18,7 @@ import { Route as ChangelogDotmdRouteImport } from './routes/changelog[.]md'
 import { Route as DiscordRouteImport } from './routes/discord'
 import { Route as DocsRouteImport } from './routes/docs'
 import { Route as DocsDotmdRouteImport } from './routes/docs[.]md'
+import { Route as ForAgentsDotmdRouteImport } from './routes/for-agents[.]md'
 import { Route as GeneratorRouteImport } from './routes/generator'
 import { Route as IntegrationsDotmdRouteImport } from './routes/integrations[.]md'
 import { Route as LlmsFullDottxtRouteImport } from './routes/llms-full[.]txt'
@@ -41,6 +42,7 @@ import { Route as MarketingCookiesRouteImport } from './routes/_marketing/cookie
 import { Route as MarketingDomainsRouteImport } from './routes/_marketing/domains'
 import { Route as MarketingEducationRouteImport } from './routes/_marketing/education'
 import { Route as MarketingEnterpriseRouteImport } from './routes/_marketing/enterprise'
+import { Route as MarketingForAgentsRouteImport } from './routes/_marketing/for-agents'
 import { Route as MarketingHomeRouteImport } from './routes/_marketing/home'
 import { Route as MarketingPartnersRouteImport } from './routes/_marketing/partners'
 import { Route as MarketingPricingRouteImport } from './routes/_marketing/pricing'
@@ -474,6 +476,11 @@ const DocsDotmdRoute = DocsDotmdRouteImport.update({
   path: '/docs.md',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ForAgentsDotmdRoute = ForAgentsDotmdRouteImport.update({
+  id: '/for-agents.md',
+  path: '/for-agents.md',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const GeneratorRoute = GeneratorRouteImport.update({
   id: '/generator',
   path: '/generator',
@@ -587,6 +594,11 @@ const MarketingEducationRoute = MarketingEducationRouteImport.update({
 const MarketingEnterpriseRoute = MarketingEnterpriseRouteImport.update({
   id: '/enterprise',
   path: '/enterprise',
+  getParentRoute: () => MarketingRoute,
+} as any)
+const MarketingForAgentsRoute = MarketingForAgentsRouteImport.update({
+  id: '/for-agents',
+  path: '/for-agents',
   getParentRoute: () => MarketingRoute,
 } as any)
 const MarketingHomeRoute = MarketingHomeRouteImport.update({
@@ -3096,6 +3108,7 @@ export interface FileRoutesByFullPath {
   '/discord': typeof DiscordRoute
   '/docs': typeof DocsRouteWithChildren
   '/docs.md': typeof DocsDotmdRoute
+  '/for-agents.md': typeof ForAgentsDotmdRoute
   '/generator': typeof GeneratorRouteWithChildren
   '/integrations.md': typeof IntegrationsDotmdRoute
   '/llms-full.txt': typeof LlmsFullDottxtRoute
@@ -3119,6 +3132,7 @@ export interface FileRoutesByFullPath {
   '/domains': typeof MarketingDomainsRoute
   '/education': typeof MarketingEducationRoute
   '/enterprise': typeof MarketingEnterpriseRoute
+  '/for-agents': typeof MarketingForAgentsRoute
   '/home': typeof MarketingHomeRoute
   '/partners': typeof MarketingPartnersRoute
   '/pricing': typeof MarketingPricingRoute
@@ -3516,6 +3530,7 @@ export interface FileRoutesByTo {
   '/changelog.md': typeof ChangelogDotmdRoute
   '/discord': typeof DiscordRoute
   '/docs.md': typeof DocsDotmdRoute
+  '/for-agents.md': typeof ForAgentsDotmdRoute
   '/integrations.md': typeof IntegrationsDotmdRoute
   '/llms-full.txt': typeof LlmsFullDottxtRoute
   '/llms.txt': typeof LlmsDottxtRoute
@@ -3538,6 +3553,7 @@ export interface FileRoutesByTo {
   '/domains': typeof MarketingDomainsRoute
   '/education': typeof MarketingEducationRoute
   '/enterprise': typeof MarketingEnterpriseRoute
+  '/for-agents': typeof MarketingForAgentsRoute
   '/home': typeof MarketingHomeRoute
   '/partners': typeof MarketingPartnersRoute
   '/pricing': typeof MarketingPricingRoute
@@ -3892,6 +3908,7 @@ export interface FileRoutesById {
   '/discord': typeof DiscordRoute
   '/docs': typeof DocsRouteWithChildren
   '/docs.md': typeof DocsDotmdRoute
+  '/for-agents.md': typeof ForAgentsDotmdRoute
   '/generator': typeof GeneratorRouteWithChildren
   '/integrations.md': typeof IntegrationsDotmdRoute
   '/llms-full.txt': typeof LlmsFullDottxtRoute
@@ -3915,6 +3932,7 @@ export interface FileRoutesById {
   '/_marketing/domains': typeof MarketingDomainsRoute
   '/_marketing/education': typeof MarketingEducationRoute
   '/_marketing/enterprise': typeof MarketingEnterpriseRoute
+  '/_marketing/for-agents': typeof MarketingForAgentsRoute
   '/_marketing/home': typeof MarketingHomeRoute
   '/_marketing/partners': typeof MarketingPartnersRoute
   '/_marketing/pricing': typeof MarketingPricingRoute
@@ -4316,6 +4334,7 @@ export interface FileRouteTypes {
     | '/discord'
     | '/docs'
     | '/docs.md'
+    | '/for-agents.md'
     | '/generator'
     | '/integrations.md'
     | '/llms-full.txt'
@@ -4339,6 +4358,7 @@ export interface FileRouteTypes {
     | '/domains'
     | '/education'
     | '/enterprise'
+    | '/for-agents'
     | '/home'
     | '/partners'
     | '/pricing'
@@ -4736,6 +4756,7 @@ export interface FileRouteTypes {
     | '/changelog.md'
     | '/discord'
     | '/docs.md'
+    | '/for-agents.md'
     | '/integrations.md'
     | '/llms-full.txt'
     | '/llms.txt'
@@ -4758,6 +4779,7 @@ export interface FileRouteTypes {
     | '/domains'
     | '/education'
     | '/enterprise'
+    | '/for-agents'
     | '/home'
     | '/partners'
     | '/pricing'
@@ -5111,6 +5133,7 @@ export interface FileRouteTypes {
     | '/discord'
     | '/docs'
     | '/docs.md'
+    | '/for-agents.md'
     | '/generator'
     | '/integrations.md'
     | '/llms-full.txt'
@@ -5134,6 +5157,7 @@ export interface FileRouteTypes {
     | '/_marketing/domains'
     | '/_marketing/education'
     | '/_marketing/enterprise'
+    | '/_marketing/for-agents'
     | '/_marketing/home'
     | '/_marketing/partners'
     | '/_marketing/pricing'
@@ -5537,6 +5561,7 @@ export interface RootRouteChildren {
   DiscordRoute: typeof DiscordRoute
   DocsRoute: typeof DocsRouteWithChildren
   DocsDotmdRoute: typeof DocsDotmdRoute
+  ForAgentsDotmdRoute: typeof ForAgentsDotmdRoute
   GeneratorRoute: typeof GeneratorRouteWithChildren
   IntegrationsDotmdRoute: typeof IntegrationsDotmdRoute
   LlmsFullDottxtRoute: typeof LlmsFullDottxtRoute
@@ -5632,6 +5657,13 @@ declare module '@tanstack/react-router' {
       path: '/docs.md'
       fullPath: '/docs.md'
       preLoaderRoute: typeof DocsDotmdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/for-agents.md': {
+      id: '/for-agents.md'
+      path: '/for-agents.md'
+      fullPath: '/for-agents.md'
+      preLoaderRoute: typeof ForAgentsDotmdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/generator': {
@@ -5793,6 +5825,13 @@ declare module '@tanstack/react-router' {
       path: '/enterprise'
       fullPath: '/enterprise'
       preLoaderRoute: typeof MarketingEnterpriseRouteImport
+      parentRoute: typeof MarketingRoute
+    }
+    '/_marketing/for-agents': {
+      id: '/_marketing/for-agents'
+      path: '/for-agents'
+      fullPath: '/for-agents'
+      preLoaderRoute: typeof MarketingForAgentsRouteImport
       parentRoute: typeof MarketingRoute
     }
     '/_marketing/home': {
@@ -8583,6 +8622,7 @@ interface MarketingRouteChildren {
   MarketingDomainsRoute: typeof MarketingDomainsRoute
   MarketingEducationRoute: typeof MarketingEducationRoute
   MarketingEnterpriseRoute: typeof MarketingEnterpriseRoute
+  MarketingForAgentsRoute: typeof MarketingForAgentsRoute
   MarketingHomeRoute: typeof MarketingHomeRoute
   MarketingPartnersRoute: typeof MarketingPartnersRoute
   MarketingPricingRoute: typeof MarketingPricingRoute
@@ -8615,6 +8655,7 @@ const MarketingRouteChildren: MarketingRouteChildren = {
   MarketingDomainsRoute: MarketingDomainsRoute,
   MarketingEducationRoute: MarketingEducationRoute,
   MarketingEnterpriseRoute: MarketingEnterpriseRoute,
+  MarketingForAgentsRoute: MarketingForAgentsRoute,
   MarketingHomeRoute: MarketingHomeRoute,
   MarketingPartnersRoute: MarketingPartnersRoute,
   MarketingPricingRoute: MarketingPricingRoute,
@@ -10383,6 +10424,7 @@ const rootRouteChildren: RootRouteChildren = {
   DiscordRoute: DiscordRoute,
   DocsRoute: DocsRouteWithChildren,
   DocsDotmdRoute: DocsDotmdRoute,
+  ForAgentsDotmdRoute: ForAgentsDotmdRoute,
   GeneratorRoute: GeneratorRouteWithChildren,
   IntegrationsDotmdRoute: IntegrationsDotmdRoute,
   LlmsFullDottxtRoute: LlmsFullDottxtRoute,

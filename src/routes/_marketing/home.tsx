@@ -66,11 +66,11 @@ const frameworkTools = [
   { name: HOME_COPY.frameworkTools.android, icon: '/icons/android.svg', href: '/docs/quick-starts/android' },
   { name: HOME_COPY.frameworkTools.ios, icon: '/icons/apple.svg', href: '/docs/quick-starts/apple' },
   { name: HOME_COPY.frameworkTools.flutter, icon: '/icons/flutter.svg', href: '/docs/quick-starts/flutter' },
-  { name: HOME_COPY.frameworkTools.claude, icon: '/icons/claude.svg', href: '/docs/tooling/mcp/claude-code' },
-  { name: HOME_COPY.frameworkTools.chatgpt, icon: '/icons/chatgpt.svg', href: '/docs/tooling/ai/agents/codex' },
-  { name: HOME_COPY.frameworkTools.cursor, icon: '/icons/cursor-ai.svg', href: '/docs/tooling/mcp/cursor' },
+  { name: HOME_COPY.frameworkTools.claude, icon: '/icons/claude.svg', href: '/docs/tooling/ai/agents/claude-code' },
+  { name: HOME_COPY.frameworkTools.chatgpt, icon: '/icons/chatgpt.svg', href: '/docs/tooling/ai/agents/chatgpt' },
+  { name: HOME_COPY.frameworkTools.cursor, icon: '/icons/cursor-ai.svg', href: '/docs/tooling/ai/agents/cursor' },
   { name: HOME_COPY.frameworkTools.lovable, icon: '/icons/lovable.svg', href: '/docs/tooling/ai/vibe-coding/lovable' },
-  { name: HOME_COPY.frameworkTools.opencode, icon: '/icons/opencode.svg', href: '/docs/tooling/mcp/opencode' },
+  { name: HOME_COPY.frameworkTools.opencode, icon: '/icons/opencode.svg', href: '/docs/tooling/ai/agents/opencode' },
   { name: HOME_COPY.frameworkTools.bun, icon: '/icons/bun.svg', href: '/docs/products/functions/runtimes' },
 ] as const
 

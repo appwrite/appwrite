@@ -81,7 +81,7 @@ For teams that pair junior developers with vibe coding tools, the same checklist
 
 Vibe coding does not replace junior developers. It replaces a specific slice of what juniors used to do, and it raises the value of everything else. Teams that hire well, mentor well, and put juniors on backends shaped for agents end up with engineers who ramp faster than any previous cohort. Teams that try to skip the role end up with no pipeline.
 
-If you are building a team that ships with vibe coding tools, start by giving your juniors a backend they can reason about. [Sign up for Appwrite Cloud](https://cloud.appwrite.io), install the [Claude Code](/docs/tooling/ai/ai-dev-tools/claude-code) or [Cursor](/docs/tooling/ai/ai-dev-tools/cursor) plugin, and let the agent handle the syntax while your junior owns the judgment.
+If you are building a team that ships with vibe coding tools, start by giving your juniors a backend they can reason about. [Sign up for Appwrite Cloud](https://cloud.appwrite.io), install the [Claude Code](/docs/tooling/ai/agents/claude-code) or [Cursor](/docs/tooling/ai/ai-dev-tools/cursor) plugin, and let the agent handle the syntax while your junior owns the judgment.
 
 - [Appwrite AI tooling](/docs/tooling/ai)
 - [Appwrite API MCP server](/docs/tooling/ai/mcp-servers)

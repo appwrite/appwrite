@@ -90,6 +90,8 @@ export function isPreLaunchHeavyContentPath(
     '/docs.md',
     '/llms.txt',
     '/llms-full.txt',
+    '/for-agents',
+    '/for-agents.md',
     '/blog/rss.xml',
     '/changelog/rss.xml',
     '/robots.txt',

@@ -1,6 +1,6 @@
 import { buildOgImageUrl, OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from '@/lib/seo/og-image'
 import { getSeoSiteOrigin } from '@/lib/marketing/site-origin'
-import type { DocsPageMeta } from './types'
+import type { DocsFaq, DocsPageMeta } from './types'
 
 const SITE_ORIGIN = 'https://appwrite.io'
 
@@ -129,5 +129,20 @@ export function getDocsArticleSchema(
       name: 'Appwrite',
       url: SITE_ORIGIN,
     },
+  }
+}
+
+export function getDocsFaqSchema(faqs: DocsFaq[]) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqs.map((faq) => ({
+      '@type': 'Question',
+      name: faq.question,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: faq.answer,
+      },
+    })),
   }
 }

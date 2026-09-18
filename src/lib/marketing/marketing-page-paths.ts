@@ -9,6 +9,7 @@ export const MARKETING_PAGE_PATHS = [
   '/company',
   '/startups',
   '/education',
+  '/for-agents',
   '/partners',
   '/enterprise',
   '/affiliates',

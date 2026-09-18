@@ -85,7 +85,7 @@ You can read the company's full position in [Anthropic's official statement on t
 
 While Fable 5 is offline, developers can keep production workflows running on other available Claude models and make fallback behavior explicit in their applications.
 
-If you want your Claude Code agent to stand up that backend without manually wiring MCP infrastructure, the [Appwrite plugin for Claude Code](https://appwrite.io/blog/post/announcing-appwrite-claude-code-plugin) bundles the Appwrite API MCP server, the Appwrite Docs MCP server, and SDK-specific agent skills into a single install, so the agent can create users, databases, storage, and functions against your Appwrite project on its own. The [Claude Code integration guide](https://appwrite.io/docs/tooling/ai/ai-dev-tools/claude-code) and the [Appwrite MCP server docs](https://appwrite.io/docs/tooling/ai/mcp-servers) are the fastest way to get started.
+If you want your Claude Code agent to stand up that backend without manually wiring MCP infrastructure, the [Appwrite plugin for Claude Code](https://appwrite.io/blog/post/announcing-appwrite-claude-code-plugin) bundles the Appwrite API MCP server, the Appwrite Docs MCP server, and SDK-specific agent skills into a single install, so the agent can create users, databases, storage, and functions against your Appwrite project on its own. The [Claude Code integration guide](https://appwrite.io/docs/tooling/ai/agents/claude-code) and the [Appwrite MCP server docs](https://appwrite.io/docs/tooling/ai/mcp-servers) are the fastest way to get started.
 
 # Build agentic apps on Appwrite
 
