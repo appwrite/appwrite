@@ -195,15 +195,30 @@ final class IntervalTest extends TestCase
         /**
          * Test for SUCCESS
          */
-        // Two spent attempts put the next retry four lease periods out, so a
-        // rule younger than that is held back while an older one is claimed.
-        $this->seed('waiting', 2, ['$updatedAt' => DateTime::formatTz(DateTime::format(new \DateTime('-' . 2 * APP_CERTIFICATE_GENERATION_LEASE . ' seconds')))]);
-        $this->seed('due', 2, ['$updatedAt' => DateTime::formatTz(DateTime::format(new \DateTime('-' . 5 * APP_CERTIFICATE_GENERATION_LEASE . ' seconds')))]);
+        // The contract: after two spent attempts a waiting rule is left alone
+        // for an hour. Held at 30 minutes, retried at 90.
+        $this->seed('waiting', 2, ['status' => RULE_STATUS_CERTIFICATE_GENERATING], ['updated' => DateTime::formatTz(DateTime::format(new \DateTime('-30 minutes')))]);
+        $this->seed('due', 2, ['status' => RULE_STATUS_CERTIFICATE_GENERATING], ['updated' => DateTime::formatTz(DateTime::format(new \DateTime('-90 minutes')))]);
 
         $this->runTask();
 
         $domains = array_column(array_column($this->publisher->getEvents('certificates') ?? [], 'domain'), 'domain');
         $this->assertSame(['due.example.com'], $domains);
+    }
+
+    public function testAFreshFailureIsNotHeldBackByBackoff(): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        // A rule that has spent nothing must still be retried promptly, or the
+        // backoff would punish the common case it is not meant to touch.
+        $this->seed('first', 0, ['status' => RULE_STATUS_CERTIFICATE_GENERATING], ['updated' => DateTime::formatTz(DateTime::format(new \DateTime('-30 minutes')))]);
+
+        $this->runTask();
+
+        $domains = array_column(array_column($this->publisher->getEvents('certificates') ?? [], 'domain'), 'domain');
+        $this->assertSame(['first.example.com'], $domains);
     }
 
     public function testIssuanceBudgetBoundsOneTick(): void
