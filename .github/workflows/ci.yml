@@ -240,6 +240,7 @@ jobs:
               { name: 'Project',           runner: runner4, functional: true,  processes: null },
               { name: 'Organization',      runner: runner4, functional: true,  processes: null },
               { name: 'Presences',         runner: runner4, functional: true,  processes: null },
+              { name: 'Mqtt',              runner: runner4, functional: false, processes: 1 },
             ];
             core.setOutput('services', JSON.stringify(services));
 
