@@ -22,10 +22,12 @@ services:
       - --entrypoints.appwrite_web.address=:80
       - --entrypoints.appwrite_websecure.address=:443
       - --entrypoints.appwrite_mqtt.address=:8883
+      - --entrypoints.appwrite_mqtt_ws.address=:8084
     ports:
       - ${_APP_HTTP_PORT:-80}:80
       - ${_APP_HTTPS_PORT:-443}:443
       - ${_APP_MQTT_PORT:-8883}:8883
+      - ${_APP_MQTT_WSS_PORT:-8084}:8084
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - appwrite-config:/storage/config:ro
@@ -384,14 +386,15 @@ services:
       - traefik.tcp.routers.appwrite_mqtt.tls=true
       - traefik.tcp.routers.appwrite_mqtt.service=appwrite_mqtt
       - traefik.tcp.services.appwrite_mqtt.loadbalancer.server.port=1883
-      # MQTT-over-WebSocket for browser clients: wss://<host>/push is terminated at the
-      # websecure entrypoint and forwarded to the broker's WebSocket listener (:8083).
-      # TLS-only (no plaintext ws on :80), mirroring the mqtts TCP router, so the reusable
-      # JWT/session credential in the CONNECT frame never traverses the network in the clear.
-      - traefik.http.routers.appwrite_mqtt_ws_secure.entrypoints=appwrite_websecure
-      - traefik.http.routers.appwrite_mqtt_ws_secure.rule=PathPrefix(`/push`)
-      - traefik.http.routers.appwrite_mqtt_ws_secure.service=appwrite_mqtt_ws
-      - traefik.http.routers.appwrite_mqtt_ws_secure.tls=true
+      # MQTT-over-WebSocket for browser clients: wss://<host>:8084 on its own TLS entrypoint
+      # (a dedicated port, not a URL path), the WebSocket sibling of the mqtts TCP router. The
+      # port identifies the broker, so a single push host serves both mqtts:// (:8883) and
+      # wss:// (:8084). TLS-only, so the reusable CONNECT credential never crosses the wire in
+      # the clear; TLS is terminated here and forwarded to the broker's WebSocket listener (:8083).
+      - traefik.http.routers.appwrite_mqtt_ws.entrypoints=appwrite_mqtt_ws
+      - traefik.http.routers.appwrite_mqtt_ws.rule=PathPrefix(`/`)
+      - traefik.http.routers.appwrite_mqtt_ws.service=appwrite_mqtt_ws
+      - traefik.http.routers.appwrite_mqtt_ws.tls=true
       - traefik.http.services.appwrite_mqtt_ws.loadbalancer.server.port=8083
     networks:
       - appwrite
