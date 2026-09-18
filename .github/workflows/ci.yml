@@ -43,7 +43,11 @@ jobs:
   security:
     name: Checks / Image
     if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
+    runs-on: >-
+      ${{ (github.event_name != 'pull_request'
+      || github.event.pull_request.head.repo.full_name == github.repository)
+      && format('gcrunner={0}-security-{1}/family=n2d/cpu=4+8/ram=16+32/disk=80gb/image=gcrunner-ubuntu2404-x64-baf37b4-20260917131151', github.run_id, strategy.job-index)
+      || 'ubuntu-latest' }}
     permissions:
       contents: read
       security-events: write
@@ -97,7 +101,11 @@ jobs:
 
   checks:
     name: Checks
-    runs-on: ubuntu-latest
+    runs-on: >-
+      ${{ (github.event_name != 'pull_request'
+      || github.event.pull_request.head.repo.full_name == github.repository)
+      && format('gcrunner={0}-checks-{1}/family=n2d/cpu=4/ram=16/disk=80gb/image=gcrunner-ubuntu2404-x64-baf37b4-20260917131151', github.run_id, strategy.job-index)
+      || 'ubuntu-latest' }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -168,7 +176,11 @@ jobs:
 
   locale:
     name: Checks / Locale
-    runs-on: ubuntu-latest
+    runs-on: >-
+      ${{ (github.event_name != 'pull_request'
+      || github.event.pull_request.head.repo.full_name == github.repository)
+      && format('gcrunner={0}-locale-{1}/family=n2d/cpu=2/ram=8/disk=80gb/image=gcrunner-ubuntu2404-x64-baf37b4-20260917131151', github.run_id, strategy.job-index)
+      || 'ubuntu-latest' }}
     steps:
       - name: Check out the repo
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -265,7 +277,11 @@ jobs:
 
   packages:
     name: Packages / Changed
-    runs-on: ubuntu-latest
+    runs-on: >-
+      ${{ (github.event_name != 'pull_request'
+      || github.event.pull_request.head.repo.full_name == github.repository)
+      && format('gcrunner={0}-packages-{1}/family=n2d/cpu=2/ram=8/disk=80gb/image=gcrunner-ubuntu2404-x64-baf37b4-20260917131151', github.run_id, strategy.job-index)
+      || 'ubuntu-latest' }}
     outputs:
       matrix: ${{ steps.changed.outputs.matrix }}
     steps:
@@ -273,6 +289,13 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 0
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@accd6127cb78bee3e8082180cb391013d204ef9f # 2.37.0
+        with:
+          php-version: '8.5'
+          tools: composer:v2
+          coverage: none
 
       - name: Compute changed packages
         id: changed
@@ -326,7 +349,11 @@ jobs:
     name: Packages / ${{ matrix.package }}
     needs: packages
     if: needs.packages.outputs.matrix != '[]'
-    runs-on: ubuntu-latest
+    runs-on: >-
+      ${{ (github.event_name != 'pull_request'
+      || github.event.pull_request.head.repo.full_name == github.repository)
+      && format('gcrunner={0}-package-{1}/family=n2d/cpu=2+4/ram=8+16/disk=80gb/image=gcrunner-ubuntu2404-x64-baf37b4-20260917131151', github.run_id, strategy.job-index)
+      || 'ubuntu-latest' }}
     strategy:
       fail-fast: false
       matrix:
