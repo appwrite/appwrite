@@ -578,13 +578,13 @@ class Jobs extends Action
 
         $collection = $deployment->getAttribute('resourceType', 'functions');
         $resource = $dbForProject->getDocument($collection, $deployment->getAttribute('resourceId'));
+        $terminal = $success ? 'ready' : 'failed';
 
         $logs = $deployment->getAttribute('buildLogs', '');
         $trailer = $success
             ? "\033[90m[" . \date('H:i:s') . "] \033[90m[\033[0mappwrite\033[90m]\033[32m Deployment finished. \033[0m\n"
             : "\n" . ($message !== '' ? $message : 'Build failed.') . "\n";
         $update = [
-            'status' => $success ? 'ready' : 'failed',
             'buildEndedAt' => $deployment->getAttribute('buildEndedAt') ?: DateTime::now(),
             'buildLogs' => $this->truncate($logs . $trailer),
         ];
@@ -612,6 +612,18 @@ class Jobs extends Action
 
         if ($applied > 0 && $success && $deployment->getAttribute('activate') === true && ! $resource->isEmpty()) {
             $this->activate($dbForProject, $dbForPlatform, $project, $resource, $deployment, $bus);
+        }
+
+        if ($applied > 0) {
+            $applied = $dbForProject->updateDocuments('deployments', new Document(['status' => $terminal]), [
+                Query::equal('$id', [$deployment->getId()]),
+                Query::notEqual('status', 'canceled'),
+            ]);
+            $deployment = $dbForProject->getDocument('deployments', $deployment->getId());
+        }
+
+        if ($applied > 0 && ! $resource->isEmpty()) {
+            $this->updateLatestDeployment($dbForProject, $resource);
         }
 
         if ($applied > 0 && $success && $collection === 'sites' && ! $resource->isEmpty()) {
