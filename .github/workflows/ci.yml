@@ -323,7 +323,7 @@ jobs:
           echo "matrix=$MATRIX" >> "$GITHUB_OUTPUT"
 
   package:
-    name: Packages / ${{ matrix.package }}${{ matrix.linked && ' (linked)' || '' }}
+    name: Packages / ${{ matrix.package }}
     needs: packages
     if: needs.packages.outputs.matrix != '[]'
     runs-on: ubuntu-latest
@@ -355,7 +355,7 @@ jobs:
       - name: Check package
         run: bin/monorepo check ${{ matrix.package }}
 
-      - name: Test package
+      - name: Test package${{ matrix.linked && ' (linked)' || '' }}
         run: bin/monorepo test ${{ matrix.package }} ${{ matrix.linked && '--linked' || '' }}
 
   build:
