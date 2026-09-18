@@ -53,7 +53,7 @@
   },
   "dependencies": {
     "@appwrite.io/console": "16.1.0",
-    "@appwrite.io/specs": "github:appwrite/specs#c4d6f8c88fe7c8c06e8202ce1173a21bf7cd6109",
+    "@appwrite.io/specs": "github:appwrite/specs#7e01c1623a807ffcd86c5e7e8eab49d4c355fb96",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
