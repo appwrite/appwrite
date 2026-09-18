@@ -8,21 +8,41 @@ use Utopia\Console;
 use Utopia\Database\Document;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
+use Utopia\System\System;
 use Utopia\Usage\Accumulator;
 use Utopia\Usage\Usage;
 use Utopia\UserAgent\UserAgent;
 
 class StatsUsage extends Action
 {
+    /** Flush once this many unique entries are buffered. */
+    private const FLUSH_THRESHOLD = 10_000;
+
+    /** Development flushes every message, so local and E2E reads see usage at once. */
+    private const FLUSH_THRESHOLD_DEVELOPMENT = 1;
+
+    /** Flush once the buffer is this many seconds old. */
+    private const FLUSH_INTERVAL = 20;
+
     protected const SITE_NETWORK_METRICS = [
         METRIC_SITES_INBOUND => METRIC_NETWORK_INBOUND,
         METRIC_SITES_OUTBOUND => METRIC_NETWORK_OUTBOUND,
         METRIC_SITES_REQUESTS => METRIC_NETWORK_REQUESTS,
     ];
 
+    /** Buffers collected events across messages; flushed on threshold/interval. */
+    protected ?Accumulator $accumulator = null;
+
     public static function getName(): string
     {
         return 'stats-usage';
+    }
+
+    protected function flushThreshold(): int
+    {
+        return System::getEnv('_APP_ENV', 'development') === 'development'
+            ? self::FLUSH_THRESHOLD_DEVELOPMENT
+            : self::FLUSH_THRESHOLD;
     }
 
     public function __construct()
@@ -60,7 +80,10 @@ class StatsUsage extends Action
         }
 
         try {
-            $accumulator = new Accumulator($usageConnection->getUsage());
+            // One accumulator buffers across messages (and across projects —
+            // the tenant is carried per collect()), so many requests fold into
+            // one ClickHouse insert instead of one part per message.
+            $accumulator = $this->accumulator ??= new Accumulator($usageConnection->getUsage());
             $projectId = (string) ($payload['project']['$id'] ?? '');
             $timestamp = $this->timestamp($payload, $message);
 
@@ -123,8 +146,16 @@ class StatsUsage extends Action
                 );
             }
 
-            if ($accumulator->count() > 0 && !$accumulator->flush()) {
-                Console::error('Usage event flush returned false');
+            if ($accumulator->count() >= $this->flushThreshold() || $accumulator->elapsedSeconds() >= self::FLUSH_INTERVAL) {
+                // Detach before flushing: flush() yields on the insert, and the
+                // worker runs several coroutines — another message reaching this
+                // point mid-flush must not snapshot (and double-write) the same
+                // entries. Entries a failed flush retains are dropped with the
+                // detached buffer, consistent with the no-retry policy below.
+                $this->accumulator = null;
+                if (!$accumulator->flush()) {
+                    Console::error('Usage event flush returned false');
+                }
             }
         } catch (\Throwable $th) {
             // Usage analytics deliberately remains best-effort and inserts are
