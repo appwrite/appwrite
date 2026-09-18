@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\E2E\General\Certificates;
 
+use Appwrite\Certificates\Certificates as CertificateIssuer;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Certificate as CertificateMessage;
 use Appwrite\Event\Publisher\Certificate as CertificatePublisher;
@@ -80,7 +81,7 @@ final class WorkerTest extends TestCase
          */
         $this->provider->instant = true;
         $this->provider->renew = false;
-        $this->provider->status = Status::UNKNOWN; // Instant providers never report a status
+        $this->provider->status = Status::UNKNOWN; // Instant providers cannot be asked; UNKNOWN proves the ternary short-circuits
 
         $this->runWorker();
 
@@ -109,7 +110,21 @@ final class WorkerTest extends TestCase
     {
         yield 'pending' => [Status::PENDING];
         yield 'processing' => [Status::PROCESSING];
-        yield 'renewing' => [Status::RENEWING];
+    }
+
+    public function testRenewingCertificateKeepsTheRuleVerified(): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $this->database->updateDocument('rules', md5('example.com'), new Document(['status' => RULE_STATUS_VERIFIED]));
+        $this->provider->renew = false;
+        $this->provider->status = Status::RENEWING;
+
+        $this->runWorker();
+
+        $this->assertSame([], $this->provider->issued);
+        $this->assertSame(RULE_STATUS_VERIFIED, $this->rule()->getAttribute('status'));
     }
 
     #[DataProvider('missing')]
@@ -156,6 +171,7 @@ final class WorkerTest extends TestCase
             $realtime,
             new CertificatePublisher($this->publisher, new Queue('certificates')),
             $this->provider,
+            new CertificateIssuer(),
             [],
             new Authorization(),
             (new Bus())->setResolver(static fn () => null),
