@@ -123,6 +123,7 @@ final class LockingTest extends TestCase
         yield 'leftPopArray' => ['leftPopArray', ['queue', 5], ['popped' => 'left']];
         yield 'rightPush' => ['rightPush', ['queue', 'value'], true];
         yield 'rightPop' => ['rightPop', ['queue', 5], 'right-pop'];
+        yield 'rightPopMany' => ['rightPopMany', ['queue', 4, 5], ['right-pop', 'right-pop-2']];
         yield 'rightPopLeftPush' => ['rightPopLeftPush', ['queue', 'dest', 5], 'rpoplpush'];
         yield 'leftPush' => ['leftPush', ['queue', 'value'], true];
         yield 'leftPop' => ['leftPop', ['queue', 5], 'left-pop'];
@@ -134,6 +135,7 @@ final class LockingTest extends TestCase
         yield 'get' => ['get', ['key'], 'value'];
         yield 'setArray' => ['setArray', ['key', ['a' => 1], 60], true];
         yield 'increment' => ['increment', ['key'], 3];
+        yield 'incrementBy' => ['incrementBy', ['key', 5], 8];
         yield 'decrement' => ['decrement', ['key'], 2];
         yield 'ping' => ['ping', [], true];
         yield 'close' => ['close', [], null];
@@ -257,6 +259,13 @@ class RecordingConnection implements Connection
         return 'right-pop';
     }
 
+    public function rightPopMany(string $queue, int $count, int $timeout): array
+    {
+        $this->record('rightPopMany', [$queue, $count, $timeout]);
+
+        return ['right-pop', 'right-pop-2'];
+    }
+
     public function rightPopLeftPush(string $queue, string $destination, int $timeout): string|false
     {
         $this->record('rightPopLeftPush', [$queue, $destination, $timeout]);
@@ -334,6 +343,13 @@ class RecordingConnection implements Connection
         return 3;
     }
 
+    public function incrementBy(string $key, int $by): int
+    {
+        $this->record('incrementBy', [$key, $by]);
+
+        return 8;
+    }
+
     public function decrement(string $key): int
     {
         $this->record('decrement', [$key]);
@@ -359,6 +375,16 @@ class ThrowingConnection implements Connection
     public function rightPushArray(string $queue, array $payload): bool
     {
         return true;
+    }
+
+    public function rightPopMany(string $queue, int $count, int $timeout): array
+    {
+        return [];
+    }
+
+    public function incrementBy(string $key, int $by): int
+    {
+        return $by;
     }
 
     public function rightPopArray(string $queue, int $timeout): array|false

@@ -84,6 +84,11 @@ class Locking implements Connection
         return $this->synchronize(fn(): string|false => $this->connection->rightPop($queue, $timeout));
     }
 
+    public function rightPopMany(string $queue, int $count, int $timeout): array
+    {
+        return $this->synchronize(fn(): array => $this->connection->rightPopMany($queue, $count, $timeout));
+    }
+
     public function rightPopLeftPush(string $queue, string $destination, int $timeout): string|false
     {
         return $this->synchronize(fn(): string|false => $this->connection->rightPopLeftPush($queue, $destination, $timeout));
@@ -137,6 +142,11 @@ class Locking implements Connection
     public function increment(string $key): int
     {
         return $this->synchronize(fn(): int => $this->connection->increment($key));
+    }
+
+    public function incrementBy(string $key, int $by): int
+    {
+        return $this->synchronize(fn(): int => $this->connection->incrementBy($key, $by));
     }
 
     public function decrement(string $key): int

@@ -6,6 +6,7 @@ namespace Tests\Unit;
 
 use PHPUnit\Framework\TestCase;
 use Utopia\Queue\Broker\Redis as Broker;
+use Utopia\Queue\Codec\Json;
 use Utopia\Queue\Queue;
 
 final class BatchedEnqueueTest extends TestCase
@@ -89,10 +90,10 @@ final class BatchedEnqueueTest extends TestCase
 
         $broker->publish(new Queue('mail'), ['recipients' => [['to' => 'a'], ['to' => 'b']]]);
 
-        $this->assertSame([['leftPushArray', 'utopia-queue.queue.mail']], $connection->calls);
+        $this->assertSame([['leftPush', 'utopia-queue.queue.mail']], $connection->calls);
         $this->assertSame(
             ['recipients' => [['to' => 'a'], ['to' => 'b']]],
-            $connection->arrays[0]['payload'],
+            new Json()->decode($connection->pushed[0])['payload'],
             'a payload is passed through whole, never unwrapped into several messages',
         );
     }

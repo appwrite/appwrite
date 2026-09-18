@@ -11,6 +11,7 @@ use Utopia\NATS\JetStream\StorageType;
 use Utopia\Queue\Adapter\Swoole;
 use Utopia\Queue\Broker\Nats;
 use Utopia\Queue\Broker\Provisioning;
+use Utopia\Queue\Codec\Igbinary;
 use Utopia\Queue\Message;
 use Utopia\Queue\Queue;
 
@@ -111,6 +112,64 @@ final class NatsBrokerTest extends TestCase
         $this->assertInstanceOf(Message::class, $recovered);
         $this->assertSame('doomed', $recovered->getPayload()['task']);
         $this->broker->commit($this->queue, $recovered);
+    }
+
+    public function testATerminalMessageIsDeadLetteredOnTheFirstFailure(): void
+    {
+        $this->broker->publish($this->queue, ['task' => 'doomed']);
+
+        $message = $this->broker->receive($this->queue, 2);
+        $this->assertInstanceOf(Message::class, $message);
+
+        // maxDeliver is 3 here: without the verdict this reject schedules attempt
+        // two, and the message keeps its in-flight slot through every attempt.
+        $this->broker->reject($this->queue, $message->terminal());
+
+        $this->assertSame(1, $this->broker->getQueueSize($this->queue, true), 'message should be on the dead stream');
+        $this->assertSame(0, $this->broker->getQueueSize($this->queue), 'work queue should be empty');
+
+        // TERM, not NAK: nothing is redelivered on the ackWait deadline either.
+        sleep(3);
+        $this->assertNotInstanceOf(\Utopia\Queue\Message::class, $this->broker->receive($this->queue, 2));
+
+        // Still re-drivable: ending the attempt early must not lose the work.
+        $this->broker->retry($this->queue, 10);
+        $recovered = $this->broker->receive($this->queue, 2);
+        $this->assertInstanceOf(Message::class, $recovered);
+        $this->assertSame('doomed', $recovered->getPayload()['task']);
+        $this->broker->commit($this->queue, $recovered);
+    }
+
+    public function testATerminalMessageFreesItsInFlightSlotForTheNextOne(): void
+    {
+        // One slot, so the queue can only move if the rejected message gives it
+        // back. A NAK holds it until the backoff expires; a TERM returns it now.
+        $url = getenv('NATS_URL') ?: 'nats://127.0.0.1:14225';
+        $broker = new Nats(
+            Connection::connect($url),
+            ackWait: 30.0,
+            maxDeliver: 5,
+            backoff: [30.0, 60.0],
+            maxAckPending: 1,
+        );
+        $queue = new Queue('t_' . substr(md5(uniqid('', true)), 0, 8));
+
+        try {
+            $broker->publish($queue, ['task' => 'poison']);
+            $broker->publish($queue, ['task' => 'good']);
+
+            $poison = $broker->receive($queue, 2);
+            $this->assertInstanceOf(Message::class, $poison);
+            $this->assertSame('poison', $poison->getPayload()['task']);
+            $broker->reject($queue, $poison->terminal());
+
+            $good = $broker->receive($queue, 3);
+            $this->assertInstanceOf(Message::class, $good, 'the slot must come back before the backoff expires');
+            $this->assertSame('good', $good->getPayload()['task']);
+            $broker->commit($queue, $good);
+        } finally {
+            $broker->close();
+        }
     }
 
     public function testUncommittedMessageIsRedeliveredAfterAckWait(): void
@@ -217,6 +276,46 @@ final class NatsBrokerTest extends TestCase
         $this->assertSame('Q_' . strtoupper($name), $info->config->name);
         $this->assertContains('q.' . strtolower($name) . '.normal', $info->config->subjects);
         $this->assertContains('q.' . strtolower($name) . '.priority', $info->config->subjects);
+    }
+
+    /**
+     * A consumer switching formats reads the header, not the bytes: it says
+     * which codec wrote the payload without anyone having to sniff it, and it
+     * has to be on both publish paths, since enqueueMany() builds its own
+     * message array rather than going through publish().
+     */
+    public function testPublishedMessagesCarryTheCodecsContentType(): void
+    {
+        $url = getenv('NATS_URL') ?: 'nats://127.0.0.1:14225';
+        $js = Connection::connect($url)->jetStream();
+
+        $single = new Queue('t_' . substr(md5(uniqid('', true)), 0, 8));
+        $this->broker->publish($single, ['task' => 'a']);
+
+        $stored = $js->getLastMessage('Q_' . strtoupper($single->name), 'q.' . strtolower($single->name) . '.normal');
+        $this->assertSame('application/json', $stored->headers?->get('Content-Type'));
+        $this->assertSame('a', json_decode($stored->data, true)['payload']['task']);
+
+        $many = new Queue('t_' . substr(md5(uniqid('', true)), 0, 8));
+        $this->broker->enqueueMany($many, [['task' => 'b'], ['task' => 'c']]);
+
+        $stored = $js->getLastMessage('Q_' . strtoupper($many->name), 'q.' . strtolower($many->name) . '.normal');
+        $this->assertSame('application/json', $stored->headers?->get('Content-Type'));
+        // The batch writes one Headers per message; a shared one would carry the
+        // first message's Nats-Msg-Id onto every later message and collapse them.
+        $this->assertSame(2, $this->broker->getQueueSize($many));
+
+        if (!\function_exists('igbinary_serialize')) {
+            return;
+        }
+
+        $binary = new Queue('t_' . substr(md5(uniqid('', true)), 0, 8));
+        $broker = new Nats(Connection::connect($url), codec: new Igbinary());
+        $broker->publish($binary, ['task' => 'd']);
+
+        $stored = $js->getLastMessage('Q_' . strtoupper($binary->name), 'q.' . strtolower($binary->name) . '.normal');
+        $this->assertSame('application/vnd.php.igbinary', $stored->headers?->get('Content-Type'));
+        $broker->close();
     }
 
     public function testCollidingQueueNamesFailLoud(): void
@@ -432,6 +531,64 @@ final class NatsBrokerTest extends TestCase
      * second one — a duplicate nothing could detect, on a queue that may be
      * billing someone.
      */
+    public function testReceiveBatchClaimsSeveralMessagesInOneCall(): void
+    {
+        for ($i = 0; $i < 20; $i++) {
+            $this->broker->publish($this->queue, ['task' => "job-{$i}"]);
+        }
+
+        $batch = $this->broker->receiveBatch($this->queue, 2, 8);
+
+        $this->assertCount(8, $batch);
+        $this->assertSame(
+            array_map(static fn(int $i): string => "job-{$i}", range(0, 7)),
+            array_map(static fn(Message $message): string => $message->getPayload()['task'], $batch),
+        );
+
+        // Each one is a delivery of its own, owed its own acknowledgment.
+        foreach ($batch as $message) {
+            $this->broker->commit($this->queue, $message);
+        }
+
+        $this->assertCount(12, $this->broker->receiveBatch($this->queue, 2, 32));
+    }
+
+    /**
+     * The trap this whole path is shaped around.
+     *
+     * JetStream's fetch(N, timeout) does not answer as soon as it has
+     * something: it collects until the batch fills or the deadline passes. A
+     * receive that asked for its whole batch up front would therefore make
+     * every message on a queue that is not busy wait the full receive timeout —
+     * batching would have made a sparse queue slower, by a lot. Measured at
+     * 1.9s against this same assertion before the fix.
+     */
+    public function testALoneMessageDoesNotWaitForTheBatchToFill(): void
+    {
+        $this->broker->publish($this->queue, ['task' => 'only-one']);
+
+        $started = microtime(true);
+        $batch = $this->broker->receiveBatch($this->queue, 2, 16);
+        $elapsed = microtime(true) - $started;
+
+        $this->assertCount(1, $batch);
+        $this->assertLessThan(
+            0.5,
+            $elapsed,
+            'asking for 16 and getting 1 must not cost the receive timeout',
+        );
+    }
+
+    public function testAnEmptyQueueCostsTheTimeoutOnceRatherThanPerMessage(): void
+    {
+        $started = microtime(true);
+        $batch = $this->broker->receiveBatch($this->queue, 1, 16);
+        $elapsed = microtime(true) - $started;
+
+        $this->assertSame([], $batch);
+        $this->assertLessThan(2.0, $elapsed, 'one timeout for the call, not one per message asked for');
+    }
+
     public function testEnqueueManyStoresEveryPayloadInOrder(): void
     {
         $payloads = [];

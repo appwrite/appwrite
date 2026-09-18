@@ -53,6 +53,7 @@
         "ext-swoole": "Needed to support Swoole.",
         "workerman/workerman": "Needed to support Workerman.",
         "ext-pcntl": "Fallback for Adapter\\KubernetesJob graceful shutdown when Swoole is unavailable.",
+        "ext-igbinary": "Required for the Igbinary codec (Codec\\Igbinary).",
         "utopia-php/nats": "Needed to support the NATS JetStream broker (Broker\\Nats)."
     },
     "config": {

@@ -94,6 +94,24 @@ class RedisCluster implements Connection
         return $response[1];
     }
 
+    public function rightPopMany(string $queue, int $count, int $timeout): array
+    {
+        if ($count < 1) {
+            return [];
+        }
+
+        // BLMPOP over a single key, so the cluster routes it by that key like
+        // any other list command; the numkeys > 1 form is what would need every
+        // key in one slot, and this never uses it.
+        $response = $this->getRedis()->blmpop((float) $timeout, [$queue], 'RIGHT', $count);
+
+        if (!\is_array($response) || !\is_array($response[1] ?? null)) {
+            return [];
+        }
+
+        return array_values(array_filter($response[1], \is_string(...)));
+    }
+
     public function leftPopArray(string $queue, int $timeout): array|false
     {
         $response = $this->getRedis()->blPop([$queue], $timeout);
@@ -152,6 +170,11 @@ class RedisCluster implements Connection
     public function increment(string $key): int
     {
         return $this->getRedis()->incr($key);
+    }
+
+    public function incrementBy(string $key, int $by): int
+    {
+        return $this->getRedis()->incrBy($key, $by);
     }
 
     public function decrement(string $key): int

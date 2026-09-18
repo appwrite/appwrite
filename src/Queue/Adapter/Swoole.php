@@ -129,7 +129,7 @@ class Swoole extends Adapter
     }
 
     /**
-     * @param array<int, array{queue: Queue, maxCoroutines: int, consumer?: Consumer}> $queues
+     * @param array<int, array{queue: Queue, maxCoroutines: int, batch?: int, consumer?: Consumer}> $queues
      */
     #[\Override]
     public function consume(
@@ -160,7 +160,7 @@ class Swoole extends Adapter
                 }
 
                 try {
-                    $this->consumeBound($spec['maxCoroutines'], $messageCallback, $successCallback, $errorCallback);
+                    $this->consumeBound($spec['maxCoroutines'], $messageCallback, $successCallback, $errorCallback, $spec['batch'] ?? 1);
                 } finally {
                     $this->consumer = $previousConsumer;
                 }
@@ -183,6 +183,7 @@ class Swoole extends Adapter
                             $successCallback,
                             $errorCallback,
                             $spec['consumer'] ?? $this->consumer,
+                            $spec['batch'] ?? 1,
                         );
                     } finally {
                         $waitGroup->done();
@@ -227,6 +228,7 @@ class Swoole extends Adapter
         callable $messageCallback,
         callable $successCallback,
         callable $errorCallback,
+        int $batch = 1,
     ): void {
         $slots = new Channel($maxCoroutines);
         $waitGroup = new WaitGroup();
@@ -242,28 +244,62 @@ class Swoole extends Adapter
                 break;
             }
 
-            $message = $this->nextMessage($errorCallback);
+            $reserved = $this->reserve($slots, $batch);
+            $messages = $this->nextBatchFrom($errorCallback, $this->queue, $this->consumer, $reserved);
+            $this->releaseUnused($slots, $reserved - \count($messages));
 
-            if (!$message instanceof Message) {
-                $slots->pop();
-                continue;
+            foreach ($messages as $message) {
+                $waitGroup->add();
+
+                Coroutine::create(function () use ($message, $messageCallback, $successCallback, $errorCallback, $slots, $waitGroup): void {
+                    try {
+                        $this->process($message, $messageCallback, $successCallback, $errorCallback);
+                    } catch (\Throwable $error) {
+                        // process() is total; net for a stray throw so it isn't lost
+                        error_log('Uncaught error while processing queue message: ' . $error->getMessage());
+                    } finally {
+                        $this->releaseSlot($waitGroup, $slots);
+                    }
+                });
             }
-
-            $waitGroup->add();
-
-            Coroutine::create(function () use ($message, $messageCallback, $successCallback, $errorCallback, $slots, $waitGroup): void {
-                try {
-                    $this->process($message, $messageCallback, $successCallback, $errorCallback);
-                } catch (\Throwable $error) {
-                    // process() is total; net for a stray throw so it isn't lost
-                    error_log('Uncaught error while processing queue message: ' . $error->getMessage());
-                } finally {
-                    $this->releaseSlot($waitGroup, $slots);
-                }
-            });
         }
 
         $waitGroup->wait();
+    }
+
+    /**
+     * Hold a slot for every message the next receive is allowed to claim.
+     *
+     * One is already held by the caller. The rest can be taken without blocking
+     * because this loop is the only coroutine that ever pushes -- handlers only
+     * pop -- so free capacity read here can be stale low, never stale high, and
+     * a handler finishing mid-count only means the next pass asks for more.
+     *
+     * This is what keeps the batch honest about the invariant the single
+     * receive already held: a message is never taken out of the broker without
+     * somewhere to run it.
+     */
+    private function reserve(Channel $slots, int $batch): int
+    {
+        if ($batch <= 1) {
+            return 1;
+        }
+
+        $want = min($batch, 1 + max(0, $slots->capacity - $slots->length()));
+
+        for ($i = 1; $i < $want; $i++) {
+            $slots->push(true);
+        }
+
+        return $want;
+    }
+
+    /** Give back reservations the broker had no messages for. */
+    private function releaseUnused(Channel $slots, int $count): void
+    {
+        for ($i = 0; $i < $count; $i++) {
+            $slots->pop();
+        }
     }
 
     /**
@@ -284,6 +320,7 @@ class Swoole extends Adapter
         callable $successCallback,
         callable $errorCallback,
         Consumer $consumer,
+        int $batch = 1,
     ): void {
         if ($consumer !== $this->consumer) {
             $this->consumers[] = $consumer;
@@ -303,25 +340,24 @@ class Swoole extends Adapter
                 break;
             }
 
-            $message = $this->nextMessageFrom($errorCallback, $queue, $consumer);
+            $reserved = $this->reserve($slots, $batch);
+            $messages = $this->nextBatchFrom($errorCallback, $queue, $consumer, $reserved);
+            $this->releaseUnused($slots, $reserved - \count($messages));
 
-            if (!$message instanceof Message) {
-                $slots->pop();
-                continue;
+            foreach ($messages as $message) {
+                $waitGroup->add();
+
+                Coroutine::create(function () use ($message, $messageCallback, $successCallback, $errorCallback, $slots, $waitGroup, $queue, $consumer): void {
+                    try {
+                        $this->processFrom($message, $messageCallback, $successCallback, $errorCallback, $queue, $consumer);
+                    } catch (\Throwable $error) {
+                        // processFrom() is total; net for a stray throw so it isn't lost
+                        error_log('Uncaught error while processing queue message: ' . $error->getMessage());
+                    } finally {
+                        $this->releaseSlot($waitGroup, $slots);
+                    }
+                });
             }
-
-            $waitGroup->add();
-
-            Coroutine::create(function () use ($message, $messageCallback, $successCallback, $errorCallback, $slots, $waitGroup, $queue, $consumer): void {
-                try {
-                    $this->processFrom($message, $messageCallback, $successCallback, $errorCallback, $queue, $consumer);
-                } catch (\Throwable $error) {
-                    // processFrom() is total; net for a stray throw so it isn't lost
-                    error_log('Uncaught error while processing queue message: ' . $error->getMessage());
-                } finally {
-                    $this->releaseSlot($waitGroup, $slots);
-                }
-            });
         }
 
         $waitGroup->wait();

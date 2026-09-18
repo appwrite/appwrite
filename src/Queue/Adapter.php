@@ -3,6 +3,7 @@
 namespace Utopia\Queue;
 
 use Utopia\DI\Container;
+use Utopia\Queue\Consumer\Batched;
 
 abstract class Adapter
 {
@@ -123,7 +124,7 @@ abstract class Adapter
      * @param callable(Message): void $successCallback
      * @param callable(?Message, \Throwable): void $errorCallback Receives null when
      *        the failure was in obtaining a message rather than handling one.
-     * @param array<int, array{queue: Queue, maxCoroutines: int, consumer?: Consumer}> $queues
+     * @param array<int, array{queue: Queue, maxCoroutines: int, batch?: int, consumer?: Consumer}> $queues
      *        Queue identity and concurrency come from Server::job(); sequential
      *        adapters run specs one after another, Swoole runs independent loops.
      */
@@ -147,13 +148,14 @@ abstract class Adapter
                 $successCallback,
                 $errorCallback,
                 $spec['consumer'] ?? $this->consumer,
+                $spec['batch'] ?? 1,
             );
         }
     }
 
     /**
-     * One-queue loop. `$maxCoroutines` is accepted for adapter parity; the
-     * sequential fallback processes one message at a time (effective cap 1).
+     * One-queue loop. `$maxCoroutines` and `$batch` are accepted for adapter
+     * parity; the sequential fallback processes one message at a time.
      *
      * Binds `$this->queue` / `$this->consumer` for the duration so the hot
      * path matches pre-multi-queue (no per-message queue/consumer args).
@@ -169,8 +171,13 @@ abstract class Adapter
         callable $successCallback,
         callable $errorCallback,
         Consumer $consumer,
+        int $batch = 1,
     ): void {
-        unset($maxCoroutines);
+        // Both are accepted for adapter parity and neither applies here. A batch
+        // would be worse than useless on a loop that runs one handler at a time:
+        // the messages behind the first would sit claimed in this process,
+        // invisible to every idle sibling, for as long as the ones ahead take.
+        unset($maxCoroutines, $batch);
 
         $previousConsumer = $this->consumer;
         $this->queue = $queue;
@@ -300,6 +307,39 @@ abstract class Adapter
     }
 
     /**
+     * Claim up to $max messages at once, where the consumer can.
+     *
+     * A consumer that is not {@see Batched} degrades to a single receive rather
+     * than being refused: the capability is optional, and the loop above works
+     * either way.
+     *
+     * @param callable(?Message, \Throwable): void $errorCallback
+     * @return list<Message>
+     */
+    protected function nextBatchFrom(callable $errorCallback, Queue $queue, Consumer $consumer, int $max): array
+    {
+        try {
+            if ($max > 1 && $consumer instanceof Batched) {
+                return $consumer->receiveBatch($queue, static::RECEIVE_TIMEOUT, $max);
+            }
+
+            $message = $consumer->receive($queue, static::RECEIVE_TIMEOUT);
+
+            return $message instanceof Message ? [$message] : [];
+        } catch (\Throwable $error) {
+            try {
+                $errorCallback(null, $error);
+            } catch (\Throwable $reportFailure) {
+                $this->reportUnreported($error, $reportFailure);
+            }
+
+            sleep(static::RECEIVE_BACKOFF);
+
+            return [];
+        }
+    }
+
+    /**
      * Never throws: a failed handler is rejected and reported to $errorCallback;
      * a failing reject or callback is swallowed rather than left to escape (and
      * be lost on a coroutine).
@@ -329,7 +369,8 @@ abstract class Adapter
      * both of those the handler has already run to completion:
      *
      *  - handler threw       — the work did not happen; the message is rejected
-     *                          and will be retried.
+     *                          and will be retried, unless the handler threw
+     *                          {@see PermanentFailure} and it is dead-lettered.
      *  - commit threw        — the work happened; nothing is rejected, and the
      *                          broker may still redeliver on its own deadline.
      *  - success hook threw  — the work happened and is acked; nothing will
@@ -374,7 +415,17 @@ abstract class Adapter
                 $messageCallback($message);
             });
         } catch (\Throwable $error) {
-            // The work did not happen, so hand the message back to be retried.
+            // A handler that knows the work can never succeed says so by throwing
+            // PermanentFailure, and the verdict has to be on the message before it
+            // is rejected: reject() is where the broker decides between another
+            // attempt and the dead letter, and it runs here — ahead of the error
+            // report below, which is the only other place a host sees the failure.
+            if ($error instanceof PermanentFailure) {
+                $message->terminal();
+            }
+
+            // The work did not happen, so hand the message back to be retried
+            // (or, for a terminal verdict, to be dead-lettered now).
             try {
                 $consumer->reject($queue, $message);
             } catch (\Throwable) {

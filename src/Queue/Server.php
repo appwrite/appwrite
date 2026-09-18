@@ -5,6 +5,7 @@ namespace Utopia\Queue;
 use Exception;
 use Throwable;
 use Utopia\DI\Container;
+use Utopia\Queue\Consumer\Bounded;
 use Utopia\Queue\Consumer\Exclusive;
 use Utopia\Queue\Publisher\Synchronous;
 use Utopia\Servers\Hook;
@@ -111,6 +112,13 @@ class Server
      */
     protected array $workerStopHooks = [];
 
+    /**
+     * Messages one receive may claim at once, per queue.
+     *
+     * @var array<string, int>
+     */
+    protected array $batches = [];
+
     private Histogram $jobWaitTime;
     private Histogram $processDuration;
 
@@ -126,8 +134,16 @@ class Server
     /**
      * Register a job for a queue. Queue name and concurrency live only here —
      * the adapter is transport (processes, namespace, consumer).
+     *
+     * $batch is how many messages one receive may claim at once, where the
+     * consumer supports it. It is bounded by $maxCoroutines and refused above
+     * it at start(): a claimed message must have a handler slot waiting for it,
+     * or it sits in this process doing nothing while an idle replica could have
+     * taken it. Leave it at 1 for a queue whose handlers are expensive -- the
+     * round trip it saves is noise next to the work -- and raise it for one
+     * whose handlers are not, which is where the broker is the bottleneck.
      */
-    public function job(string $queue, int $maxCoroutines = 1): Job
+    public function job(string $queue, int $maxCoroutines = 1, int $batch = 1): Job
     {
         if ($queue === '') {
             throw new Exception('Queue name is required');
@@ -137,6 +153,7 @@ class Server
         $this->job = $job;
         $this->jobs[$queue] = $job;
         $this->coroutines[$queue] = max(1, $maxCoroutines);
+        $this->batches[$queue] = max(1, $batch);
 
         return $job;
     }
@@ -165,6 +182,11 @@ class Server
     public function coroutines(string $queue): int
     {
         return $this->coroutines[$queue] ?? 1;
+    }
+
+    public function batch(string $queue): int
+    {
+        return $this->batches[$queue] ?? 1;
     }
 
     protected function jobFor(Message $message): Job
@@ -435,6 +457,7 @@ class Server
                 $queues = [];
                 foreach (array_keys($this->jobs) as $queueName) {
                     $maxCoroutines = $this->coroutines[$queueName] ?? 1;
+                    $batch = $this->batches[$queueName] ?? 1;
                     $consumer = \is_callable($this->consumer)
                         ? ($this->consumer)($queueName)
                         : $this->adapter->createConsumer($queueName);
@@ -457,9 +480,48 @@ class Server
                         ));
                     }
 
+                    // A bounded consumer hands out at most N messages before it waits for
+                    // an acknowledgment, and a message parked in redelivery backoff is one
+                    // of those N -- asleep rather than being worked, holding a slot the
+                    // whole time. So a ceiling at or below the coroutine cap is filled by
+                    // as many failures as there are handlers, after which the queue is not
+                    // delivered into at all: the wedge looks like a backlog with idle
+                    // workers in front of it. Refuse it here, the way an exclusive
+                    // consumer's cap is refused, rather than let it be found in a graph.
+                    $ceiling = $consumer instanceof Bounded ? $consumer->inFlightCeiling() : null;
+                    if ($ceiling !== null && $ceiling <= $maxCoroutines) {
+                        throw new Exception(\sprintf(
+                            "Queue '%s' is registered with job('%s', %d), but its consumer %s holds at most %d message(s) in flight. Messages sleeping in backoff hold a slot each, so the handlers can take every slot the consumer has and the queue stops being delivered into. Raise the in-flight ceiling (Broker\\Nats: maxAckPending) above %d, or lower the coroutine cap.",
+                            $queueName,
+                            $queueName,
+                            $maxCoroutines,
+                            $consumer::class,
+                            $ceiling,
+                            $maxCoroutines,
+                        ));
+                    }
+
+                    // A batch above the coroutine count would claim messages this
+                    // worker has nowhere to run: they would wait here, out of the
+                    // broker and invisible to every idle replica, until a handler
+                    // ahead of them finished. It is also what keeps the in-flight
+                    // ceiling honest -- reserving a slot per message is why a batch
+                    // cannot push more messages unacknowledged than maxCoroutines.
+                    if ($batch > $maxCoroutines) {
+                        throw new Exception(\sprintf(
+                            "Queue '%s' is registered with job('%s', %d, %d): a batch cannot exceed the handler slots waiting for it. Raise the coroutine count, or lower the batch to %d.",
+                            $queueName,
+                            $queueName,
+                            $maxCoroutines,
+                            $batch,
+                            $maxCoroutines,
+                        ));
+                    }
+
                     $queues[] = [
                         'queue' => new Queue($queueName, $this->adapter->namespace),
                         'maxCoroutines' => $maxCoroutines,
+                        'batch' => $batch,
                         'consumer' => $consumer,
                     ];
                 }

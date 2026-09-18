@@ -6,6 +6,7 @@ namespace Tests\E2E\Adapter;
 
 use PHPUnit\Framework\TestCase;
 use Utopia\Queue\Broker\Redis;
+use Utopia\Queue\Codec\Json;
 use Utopia\Queue\Queue;
 
 /**
@@ -47,9 +48,10 @@ final class RedisBrokerRecoveryTest extends TestCase
     private function backdate(string $pid, int $seconds = 60): void
     {
         $key = 'tests.jobs.recovery.' . $pid;
-        $job = $this->connection->get($key);
+        $codec = new Json();
+        $job = $codec->decode((string) $this->connection->get($key));
         $job['timestamp'] -= $seconds;
-        $this->connection->setArray($key, $job);
+        $this->connection->set($key, $codec->encode($job));
     }
 
     public function testReapRequeuesAStrandedClaim(): void
@@ -143,7 +145,7 @@ final class RedisBrokerRecoveryTest extends TestCase
         $claimed = $this->broker->receive($this->queue, 0);
         $this->assertInstanceOf(\Utopia\Queue\Message::class, $claimed);
         $claimed->setAttempts(3);
-        $this->connection->setArray('tests.jobs.recovery.' . $claimed->getPid(), $claimed->asArray());
+        $this->connection->set('tests.jobs.recovery.' . $claimed->getPid(), new Json()->encode($claimed->asArray()));
         $this->broker->reject($this->queue, $claimed);
         $this->backdate($claimed->getPid());
 

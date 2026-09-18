@@ -93,6 +93,21 @@ class InMemoryConnection implements Connection
         return \is_string($value) ? $value : false;
     }
 
+    public function rightPopMany(string $queue, int $count, int $timeout): array
+    {
+        $popped = [];
+
+        while (\count($popped) < $count && !empty($this->lists[$queue])) {
+            $value = array_pop($this->lists[$queue]);
+            if (!\is_string($value)) {
+                break;
+            }
+            $popped[] = $value;
+        }
+
+        return $popped;
+    }
+
     public function rightPopLeftPush(string $queue, string $destination, int $timeout): string|false
     {
         $value = $this->rightPop($queue, $timeout);
@@ -174,6 +189,11 @@ class InMemoryConnection implements Connection
         return $this->counters[$key] = ($this->counters[$key] ?? 0) + 1;
     }
 
+    public function incrementBy(string $key, int $by): int
+    {
+        return $this->counters[$key] = ($this->counters[$key] ?? 0) + $by;
+    }
+
     public function decrement(string $key): int
     {
         return $this->counters[$key] = ($this->counters[$key] ?? 0) - 1;
@@ -190,7 +210,9 @@ class InMemoryConnection implements Connection
     private function pop(string $queue, bool $fromTail): mixed
     {
         if (empty($this->lists[$queue])) {
-            if (Coroutine::getCid() !== -1) {
+            // Guarded on the class as well as the coroutine id: the unit tier
+            // runs this fake on a bare host where Swoole is not loaded at all.
+            if (class_exists(Coroutine::class) && Coroutine::getCid() !== -1) {
                 Coroutine::sleep(0.005);
             }
 

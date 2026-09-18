@@ -94,6 +94,28 @@ class Redis implements Connection
         return $response[1];
     }
 
+    public function rightPopMany(string $queue, int $count, int $timeout): array
+    {
+        if ($count < 1) {
+            return [];
+        }
+
+        // BLMPOP (Redis 7.0), so the wait and the drain are one round trip
+        // rather than a BRPOP followed by an RPOP that asks what else arrived.
+        // Not idempotent, for the reason call() gives about pops: a replay
+        // after an ambiguous transport error would take a second helping off
+        // the list and drop the first.
+        $response = $this->call(fn(\Redis $redis): mixed => $redis->blmpop((float) $timeout, [$queue], 'RIGHT', $count));
+
+        // [key, [payload, ...]] when something was popped; false or null when
+        // the timeout passed with the list empty.
+        if (!\is_array($response) || !\is_array($response[1] ?? null)) {
+            return [];
+        }
+
+        return array_values(array_filter($response[1], \is_string(...)));
+    }
+
     public function leftPopArray(string $queue, int $timeout): array|false
     {
         $response = $this->call(fn(\Redis $redis): \Redis|array|false|null => $redis->blPop($queue, $timeout));
@@ -152,6 +174,11 @@ class Redis implements Connection
     public function increment(string $key): int
     {
         return $this->call(fn(\Redis $redis): int|\Redis|false => $redis->incr($key));
+    }
+
+    public function incrementBy(string $key, int $by): int
+    {
+        return $this->call(fn(\Redis $redis): int|\Redis|false => $redis->incrBy($key, $by));
     }
 
     public function decrement(string $key): int

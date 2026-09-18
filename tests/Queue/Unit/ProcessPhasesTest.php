@@ -8,6 +8,7 @@ use PHPUnit\Framework\TestCase;
 use Utopia\Queue\Adapter;
 use Utopia\Queue\Consumer;
 use Utopia\Queue\Message;
+use Utopia\Queue\PermanentFailure;
 use Utopia\Queue\Queue;
 
 /**
@@ -50,6 +51,71 @@ final class ProcessPhasesTest extends TestCase
         // The work did not happen, so the message must go back.
         $this->assertSame(['reject'], $consumer->calls);
         $this->assertSame(['handler blew up'], $errors);
+    }
+
+    public function testAPermanentFailureIsRejectedAsTerminal(): void
+    {
+        $consumer = new PhaseConsumer();
+        $adapter = new PhaseAdapter($consumer);
+        $message = $this->message();
+
+        $adapter->runOne(
+            $message,
+            static function (): never {
+                throw new PermanentFailure('the credential is not valid');
+            },
+            static function (): void {},
+            static function (): void {},
+        );
+
+        // The verdict has to be on the message by the time reject() reads it:
+        // that call is where the broker chooses between another attempt and the
+        // dead letter, and nothing downstream of it can change the choice.
+        $this->assertSame(['reject'], $consumer->calls);
+        $this->assertTrue($consumer->terminal, 'the rejected message must carry the terminal verdict');
+    }
+
+    public function testAnOrdinaryFailureIsNotTerminal(): void
+    {
+        $consumer = new PhaseConsumer();
+        $adapter = new PhaseAdapter($consumer);
+
+        $adapter->runOne(
+            $this->message(),
+            static function (): never {
+                throw new \RuntimeException('the database is down');
+            },
+            static function (): void {},
+            static function (): void {},
+        );
+
+        // An outage is what the redelivery budget is for. Marking it terminal
+        // would dead-letter work that the next attempt would have completed.
+        $this->assertSame(['reject'], $consumer->calls);
+        $this->assertFalse($consumer->terminal);
+    }
+
+    public function testAPermanentFailureIsStillReported(): void
+    {
+        $consumer = new PhaseConsumer();
+        $adapter = new PhaseAdapter($consumer);
+        $errors = [];
+
+        $adapter->runOne(
+            $this->message(),
+            static function (): never {
+                throw new PermanentFailure('the credential is not valid');
+            },
+            static function (): void {},
+            static function (?Message $m, \Throwable $e) use (&$errors): void {
+                $errors[] = $e->getMessage();
+            },
+        );
+
+        // Ending the message's life is not a reason to stop telling anyone. A
+        // dead letter nobody was told about is the failure mode this class of
+        // fault already has.
+        $this->assertSame(['the credential is not valid'], $errors);
     }
 
     public function testAFailedAckIsNeverRejected(): void
@@ -240,6 +306,9 @@ final class PhaseConsumer implements Consumer
     /** @var list<string> */
     public array $calls = [];
 
+    /** The verdict the message carried when it was rejected. */
+    public bool $terminal = false;
+
     public function __construct(private readonly bool $commitThrows = false) {}
 
     public function receive(Queue $queue, int $timeout): ?Message
@@ -259,6 +328,7 @@ final class PhaseConsumer implements Consumer
     public function reject(Queue $queue, Message $message): void
     {
         $this->calls[] = 'reject';
+        $this->terminal = $message->isTerminal();
     }
 
     public function getQueueSize(Queue $queue, bool $failedJobs = false): int

@@ -83,7 +83,7 @@ class FailingRedisConnection implements Connection
         return true;
     }
 
-    public function rightPopArray(string $queue, int $timeout): array|false
+    public function rightPop(string $queue, int $timeout): string|false
     {
         $this->popAttempts++;
 
@@ -120,9 +120,14 @@ class FailingRedisConnection implements Connection
         return true;
     }
 
-    public function rightPop(string $queue, int $timeout): string|false
+    public function rightPopArray(string $queue, int $timeout): array|false
     {
         return false;
+    }
+
+    public function rightPopMany(string $queue, int $count, int $timeout): array
+    {
+        return [];
     }
 
     public function rightPopLeftPush(string $queue, string $destination, int $timeout): string|false
@@ -180,6 +185,11 @@ class FailingRedisConnection implements Connection
         return 1;
     }
 
+    public function incrementBy(string $key, int $by): int
+    {
+        return $by;
+    }
+
     public function decrement(string $key): int
     {
         return 0;
@@ -196,7 +206,7 @@ class FailingRedisConnection implements Connection
 class RecoveringRedisConnection extends FailingRedisConnection
 {
     #[\Override]
-    public function rightPopArray(string $queue, int $timeout): array|false
+    public function rightPop(string $queue, int $timeout): string|false
     {
         $this->popAttempts++;
 
