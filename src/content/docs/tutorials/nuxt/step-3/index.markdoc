@@ -22,10 +22,10 @@ Then, under **Add a platform**, add a **Web app**.
 The **Hostname** should be `localhost`.
 
 {% only_dark %}
-![Add a platform](/images/docs/quick-starts/dark/add-platform.avif)
+![Add a platform](/images/docs/quick-starts/dark/add-platform-nuxt.avif)
 {% /only_dark %}
 {% only_light %}
-![Add a platform](/images/docs/quick-starts/add-platform.avif)
+![Add a platform](/images/docs/quick-starts/add-platform-nuxt.avif)
 {% /only_light %}
 
 You can skip the optional steps.
