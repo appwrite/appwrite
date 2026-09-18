@@ -141,4 +141,42 @@ final class FileTest extends TestCase
             @unlink($done);
         }
     }
+
+    public function testNegativeTimeoutWaitsUntilRelease(): void
+    {
+        if (! \function_exists('pcntl_fork')) {
+            $this->markTestSkipped('pcntl_fork required');
+        }
+
+        $ready = tempnam(sys_get_temp_dir(), 'utopia-lock-ready-');
+
+        $pid = pcntl_fork();
+        $this->assertNotSame(-1, $pid, 'Failed to fork');
+
+        if ($pid === 0) {
+            $child = new File($this->path);
+            $child->tryAcquire();
+            file_put_contents($ready, '1');
+            usleep(300_000);
+            $child->release();
+            exit(0);
+        }
+
+        try {
+            $deadline = microtime(true) + 5.0;
+            while (microtime(true) < $deadline && file_get_contents($ready) === '') {
+                usleep(10_000);
+            }
+
+            $parent = new File($this->path);
+            $start = microtime(true);
+            $this->assertTrue($parent->acquire(-1.0), 'Negative timeout must wait until the lock is released');
+            $elapsed = microtime(true) - $start;
+            $this->assertGreaterThanOrEqual(0.2, $elapsed, 'Acquire must have blocked until the holder released');
+            $parent->release();
+        } finally {
+            pcntl_waitpid($pid, $status);
+            @unlink($ready);
+        }
+    }
 }
