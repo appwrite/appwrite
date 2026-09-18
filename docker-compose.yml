@@ -1588,6 +1588,9 @@ services:
   appwrite-autogravity:
     container_name: appwrite-autogravity
     image: ghcr.io/appwrite/autogravity:0.0.11
+    environment:
+      # Autogravity 0.0.11 bundles FocalNet 2026-09-14-rc1 (`focalnet-human.onnx`).
+      - MODEL_BACKEND=focalnet
     restart: unless-stopped
     networks:
       - appwrite
