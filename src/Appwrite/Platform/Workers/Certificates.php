@@ -306,6 +306,7 @@ class Certificates extends Action
         $domainType = $rule->getAttribute('deploymentResourceType') ?: $rule->getAttribute('type');
         $error = null;
         $issuanceStarted = false;
+        $waiting = false;
         $exhausted = $certificate->getAttribute('attempts', 0) >= APP_LIMIT_CERTIFICATE_ATTEMPTS;
 
         try {
@@ -347,6 +348,13 @@ class Certificates extends Action
                                 return;
                             }
                         }
+                        // Hold the lease rather than clearing it. Issuance is
+                        // still in flight, just at the authority instead of in
+                        // this worker, and the lease is what tells the
+                        // scheduler when to look again -- and what makes a
+                        // poll that arrives sooner a no-op instead of another
+                        // identical line in the customer's log.
+                        $waiting = true;
                         $rule->setAttribute('status', RULE_STATUS_CERTIFICATE_GENERATING);
                         $logs .= "\033[90m[{$date}] \033[97mSSL certificate is being issued. We'll periodically check and update the status. \033[0m\n";
                         return;
@@ -417,7 +425,7 @@ class Certificates extends Action
             $error = $e;
             throw $e;
         } finally {
-            $saved = $dbForPlatform->withTransaction(function () use ($dbForPlatform, $rule, $certificate, $lease, $logs, $claimedStatus): ?Document {
+            $saved = $dbForPlatform->withTransaction(function () use ($dbForPlatform, $rule, $certificate, $lease, $logs, $claimedStatus, $waiting): ?Document {
                 $current = $dbForPlatform->getDocument('rules', $rule->getId(), forUpdate: true);
                 if ($current->isEmpty()
                     || $current->getSequence() !== $rule->getSequence()
@@ -432,7 +440,7 @@ class Certificates extends Action
                     return null;
                 }
                 $dbForPlatform->updateDocument('certificates', $certificate->getId(), new Document([
-                    'updated' => null,
+                    'updated' => $waiting ? $lease : null,
                     'attempts' => $certificate->getAttribute('attempts', 0),
                     'issueDate' => $certificate->getAttribute('issueDate'),
                     'renewDate' => $certificate->getAttribute('renewDate'),
