@@ -339,15 +339,6 @@ class Certificates extends Action
                         // A renewal is left alone: that domain already serves a
                         // valid certificate, and marking it unverified would break
                         // a live site over a renewal that is merely slow.
-                        if ($claimedStatus !== RULE_STATUS_VERIFIED) {
-                            $waits = $certificate->getAttribute('attempts', 0) + 1;
-                            $certificate->setAttribute('attempts', $waits);
-                            if ($waits >= APP_LIMIT_CERTIFICATE_ATTEMPTS) {
-                                $rule->setAttribute('status', RULE_STATUS_CERTIFICATE_GENERATION_FAILED);
-                                $logs .= "\033[90m[{$date}] \033[31mSSL certificate was not issued in time. The certificate authority is still waiting on domain validation, which usually means a DNS record it asked for is missing. Check your DNS records, then retry. \033[0m\n";
-                                return;
-                            }
-                        }
                         // Hold the lease rather than clearing it. Issuance is
                         // still in flight, just at the authority instead of in
                         // this worker, and the lease is what tells the
@@ -355,6 +346,24 @@ class Certificates extends Action
                         // poll that arrives sooner a no-op instead of another
                         // identical line in the customer's log.
                         $waiting = true;
+                        if ($claimedStatus === RULE_STATUS_VERIFIED) {
+                            // Leave a renewal verified rather than counting it
+                            // down. The domain still serves a valid certificate,
+                            // and moving it out of verified would both mislead
+                            // the console and, on the next poll, forfeit this
+                            // very exemption -- spending the budget until a live
+                            // site was marked unverified over a slow renewal.
+                            $logs .= "\033[90m[{$date}] \033[97mSSL certificate is being renewed. The current certificate stays in use until it completes. \033[0m\n";
+                            return;
+                        }
+                        $waits = $certificate->getAttribute('attempts', 0) + 1;
+                        $certificate->setAttribute('attempts', $waits);
+                        if ($waits >= APP_LIMIT_CERTIFICATE_ATTEMPTS) {
+                            $waiting = false;
+                            $rule->setAttribute('status', RULE_STATUS_CERTIFICATE_GENERATION_FAILED);
+                            $logs .= "\033[90m[{$date}] \033[31mSSL certificate was not issued in time. The certificate authority is still waiting on domain validation, which usually means a DNS record it asked for is missing. Check your DNS records, then retry. \033[0m\n";
+                            return;
+                        }
                         $rule->setAttribute('status', RULE_STATUS_CERTIFICATE_GENERATING);
                         $logs .= "\033[90m[{$date}] \033[97mSSL certificate is being issued. We'll periodically check and update the status. \033[0m\n";
                         return;

@@ -386,9 +386,31 @@ final class WorkerTest extends TestCase
 
         $this->runWorker();
 
-        $this->assertSame(RULE_STATUS_CERTIFICATE_GENERATING, $this->rule()->getAttribute('status'));
+        // Staying verified is the point: the domain still serves a valid
+        // certificate, and leaving it verified is also what keeps this
+        // exemption applying on every later poll rather than just the first.
+        $this->assertSame(RULE_STATUS_VERIFIED, $this->rule()->getAttribute('status'));
         $this->assertSame(4, $this->certificate()->getAttribute('attempts'));
         $this->assertSame([], $this->provider->issued);
+    }
+
+    public function testSlowRenewalNeverMarksALiveDomainUnverified(): void
+    {
+        /**
+         * Test for FAILURE
+         */
+        $this->provider->renew = false;
+        $this->provider->status = Status::RENEWING;
+        $this->setRule(['status' => RULE_STATUS_VERIFIED]);
+
+        // Far more polls than the attempt budget would allow.
+        for ($poll = 0; $poll < 12; $poll++) {
+            $this->database->updateDocument('certificates', 'certificate', new Document(['updated' => null]));
+            $this->runWorker();
+        }
+
+        $this->assertSame(RULE_STATUS_VERIFIED, $this->rule()->getAttribute('status'));
+        $this->assertSame(0, $this->certificate()->getAttribute('attempts'));
     }
 
     public function testPollArrivingInsideTheLeaseChangesNothing(): void
