@@ -9,6 +9,9 @@ const OAUTH2_PROVIDER_IDS_WITHOUT_UPDATE = new Set<string>([
 
 type OAuth2UpdateBody = Record<string, unknown>
 
+/** Form values for one provider: credential strings, the two switches, and the native audience list. */
+export type OAuth2UpdateValues = Record<string, string | boolean | string[]>
+
 type OAuth2UpdateHandler = (
   project: Project,
   body: OAuth2UpdateBody,
@@ -85,17 +88,19 @@ export function canUpdateProjectOAuth2Provider(providerId: string): boolean {
   return OAUTH2_UPDATE_BY_PROVIDER[providerId] != null
 }
 
-/** Drop empty strings so omitted credentials are left unchanged on the server. */
-function pruneOAuth2Body(
-  values: Record<string, string | boolean>,
-): OAuth2UpdateBody {
+/**
+ * Drop empty strings so omitted credentials are left unchanged on the server.
+ * Switches always travel, and so do lists: an empty list is how a stored list
+ * gets cleared.
+ */
+export function pruneOAuth2Body(values: OAuth2UpdateValues): OAuth2UpdateBody {
   const body: OAuth2UpdateBody = {}
-  if (typeof values.enabled === 'boolean') {
-    body.enabled = values.enabled
-  }
   for (const [key, value] of Object.entries(values)) {
-    if (key === 'enabled') continue
-    if (typeof value === 'string') {
+    if (typeof value === 'boolean') {
+      body[key] = value
+    } else if (Array.isArray(value)) {
+      body[key] = value.map((item) => item.trim()).filter((item) => item !== '')
+    } else {
       const trimmed = value.trim()
       if (trimmed !== '') body[key] = trimmed
     }
@@ -109,7 +114,7 @@ function pruneOAuth2Body(
 export async function updateProjectOAuth2Provider(
   projectSdk: ProjectSdk,
   providerId: string,
-  values: Record<string, string | boolean>,
+  values: OAuth2UpdateValues,
 ): Promise<void> {
   if (!isProjectOAuthProviderId(providerId)) {
     throw new Error(`Unknown OAuth2 provider "${providerId}".`)

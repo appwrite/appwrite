@@ -12,7 +12,20 @@ import { CouponExpirationNotice } from '../CouponExpirationNotice'
 import { AppwriteException, type Models } from '@appwrite.io/console'
 import { useT } from '@/lib/i18n/translate'
 
+// The card's issuing country decides which regional plans it can buy, so retrying is futile:
+// the caller has to pick a different payment method or a different plan.
+function isRegionNotEligible(error: unknown): boolean {
+  return (
+    error instanceof AppwriteException &&
+    error.type === 'billing_plan_region_not_eligible'
+  )
+}
+
 function getEstimationErrorMessage(error: unknown): string {
+  if (isRegionNotEligible(error) && error instanceof AppwriteException) {
+    return error.message
+  }
+
   if (error instanceof AppwriteException && error.code === 429) {
     return 'Too many estimation requests. Wait a moment, then try again.'
   }
@@ -247,6 +260,7 @@ export function EstimatedTotalBox({
   }
 
   if (!estimation) {
+    const regionNotEligible = isRegionNotEligible(error)
     const message = error
       ? t(getEstimationErrorMessage(error))
       : t('Unable to load estimation.')
@@ -259,10 +273,23 @@ export function EstimatedTotalBox({
           </h3>
         </div>
         <div className="border-t border-border px-6 py-4">
-          <WarningAlert title={t('Unable to load estimation')}>
+          <WarningAlert
+            title={
+              regionNotEligible
+                ? t('Payment method not eligible')
+                : t('Unable to load estimation')
+            }
+          >
             <div className="space-y-3">
               <p>{message}</p>
-              {error && onRetry ? (
+              {regionNotEligible ? (
+                <p>
+                  {t(
+                    'Select a different payment method, or choose another plan.',
+                  )}
+                </p>
+              ) : null}
+              {error && onRetry && !regionNotEligible ? (
                 <Button
                   variant="outline"
                   size="sm"

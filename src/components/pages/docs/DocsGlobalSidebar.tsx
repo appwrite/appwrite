@@ -96,7 +96,6 @@ import {
 } from '@/lib/layout/secondary-sidebar-nav'
 import {
   OFFCANVAS_START_CLOSED,
-  SIDEBAR_EDGE_TOGGLE_OVERFLOW,
 } from '@/lib/layout/offcanvas-classes'
 import { isCloudProfile } from '@/lib/console-profiles'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
@@ -523,20 +522,27 @@ export function DocsGlobalSidebar({
     <TooltipProvider>
       <div
         className={cn(
-          'relative z-20 hidden h-full flex-shrink-0 @[1024px]:block',
+          /* Extra 12px (half of the 24px toggle) so the edge button stays
+             inside this box. Sticky ancestors clip overflow, which used to
+             hide the half that sat over the next column. -me-3 keeps the
+             following column flush with the 60/220 aside. */
+          'relative z-20 hidden h-full min-h-0 flex-shrink-0 overflow-visible @[1024px]:block',
           'transition-[width] duration-150 ease-out',
-          collapsed ? 'w-[60px]' : 'w-[220px]',
+          collapsed
+            ? 'w-[calc(60px+0.75rem)] -me-3'
+            : 'w-[calc(220px+0.75rem)] -me-3',
         )}
       >
         <aside
           className={cn(
-            'flex h-full w-full flex-col overflow-hidden border-e border-border bg-background',
+            'flex h-full min-h-0 flex-col overflow-hidden border-e border-border bg-background',
             '[transform:translateZ(0)] [backface-visibility:hidden]',
+            collapsed ? 'w-[60px]' : 'w-[220px]',
           )}
         >
           <nav
             className={cn(
-              'flex-1 overflow-y-auto px-3 py-4',
+              'min-h-0 flex-1 overflow-y-auto px-3 py-4',
               DOCS_NAV_TREE_GAP_CLASS,
               DOCS_NAV_SCROLL_CLASS,
             )}
@@ -557,10 +563,7 @@ export function DocsGlobalSidebar({
           type="button"
           onClick={() => setCollapsed(!collapsed)}
           {...analyticsAttrs('docs-sidebar-collapse')}
-          className={cn(
-            'absolute end-0 top-1/2 z-10 flex h-6 w-6 shrink-0 -translate-y-1/2 cursor-pointer items-center justify-center rounded-md border border-border bg-card text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-            SIDEBAR_EDGE_TOGGLE_OVERFLOW,
-          )}
+          className="absolute end-0 top-1/2 z-30 flex h-6 w-6 shrink-0 -translate-y-1/2 cursor-pointer items-center justify-center rounded-md border border-border bg-card text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           aria-label={
             collapsed ? 'Expand docs navigation' : 'Collapse docs navigation'
           }
@@ -603,7 +606,7 @@ export function DocsGlobalSidebar({
 
         <nav
           className={cn(
-            'flex-1 overflow-y-auto px-4 py-2',
+            'min-h-0 flex-1 overflow-y-auto px-4 py-2',
             DOCS_NAV_TREE_GAP_CLASS,
             DOCS_NAV_SCROLL_CLASS,
           )}

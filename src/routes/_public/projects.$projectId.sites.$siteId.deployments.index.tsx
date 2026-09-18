@@ -6,6 +6,7 @@ import {
   siteDeploymentQueryOptions,
   projectQueryOptions,
 } from '@/lib/react-query/hooks'
+import { ensureQueryDataIfFound } from '@/lib/react-query/ensure-query-data-if-found'
 import { fetchVcsInstallations } from '@/lib/react-query/hooks/vcs'
 import { Query } from '@appwrite.io/console'
 import { DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
@@ -82,19 +83,18 @@ export const Route = createFileRoute(
     // Fetch critical data before rendering to prevent layout shifts
     await Promise.all([
       deploymentsPromise,
-      // Fetch active deployment if available
+      // Fetch active deployment if available. The referenced deployment may
+      // have been deleted (404); the page still renders without it.
       site.deploymentId
-        ? queryClient.ensureQueryData(
+        ? ensureQueryDataIfFound(
+            queryClient,
             siteDeploymentQueryOptions(projectId, siteId, site.deploymentId),
           )
         : Promise.resolve(),
       redeployDeploymentId && redeployDeploymentId !== site.deploymentId
-        ? queryClient.ensureQueryData(
-            siteDeploymentQueryOptions(
-              projectId,
-              siteId,
-              redeployDeploymentId,
-            ),
+        ? ensureQueryDataIfFound(
+            queryClient,
+            siteDeploymentQueryOptions(projectId, siteId, redeployDeploymentId),
           )
         : Promise.resolve(),
       // Fetch VCS installations (for deployment actions)

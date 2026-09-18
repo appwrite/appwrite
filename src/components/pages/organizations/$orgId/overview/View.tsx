@@ -4,7 +4,8 @@ import {
   useNavigate,
   useLocation,
   useSearch,
-  useMatches} from '@tanstack/react-router'
+  useMatches,
+  useRouterState} from '@tanstack/react-router'
 import {
   Plus,
   Folder,
@@ -57,10 +58,12 @@ import {
   DOMAINS_DEFAULT_SORT_BY,
   DOMAINS_DEFAULT_SORT_ORDER,
   useOrganizationPlan,
+  useBillingPlans,
   useOrganizationBillingInvoicePresence,
   isOrganizationBillingReadonlyStatus,
   isBudgetLimitReached,
   isPlanUsageLimitReached,
+  isProjectLockedByPlanUsage,
   useOrganizationScopes,
   useResendMembershipInvite,
   useUpdateMembershipRole,
@@ -161,9 +164,13 @@ import { isPaymentAuthentication } from '@/lib/billing/addons'
 import { registerCommandCenterOpener } from '@/lib/command-center/opener-bridge'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
 import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
-import { getPlanBadgeColor, getPlanDisplayName } from '@/lib/utils/plan-badge'
 import {
-  getPlanNameFromTier,
+  getPlanBadgeColor,
+  getPlanBadgeStyle,
+  getPlanDisplayName,
+} from '@/lib/utils/plan-badge'
+import {
+  resolveOrganizationCanonicalPlan,
   resolveOrganizationPlanDisplayLabel,
   type CanonicalPlanId} from '@/lib/utils/plan-filter'
 import { BillingTab } from '../billing/BillingTab'
@@ -383,6 +390,15 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   const navigate = useNavigate()
   const search = useSearch({ strict: false })
   const matches = useMatches()
+  const routerStatus = useRouterState({ select: (s) => s.status })
+  // Pathname updates as soon as navigation starts. OrgOverview renders tab
+  // content itself (child routes return null), so the pending URL would mount
+  // BillingTab before its loader finishes. Keep the last idle path until then.
+  const committedPathnameRef = useRef(location.pathname)
+  if (routerStatus === 'idle') {
+    committedPathnameRef.current = location.pathname
+  }
+  const resolvedPathname = committedPathnameRef.current
   const [searchQuery, setSearchQuery] = useState('')
   const [pinnedDragOverIndex, setPinnedDragOverIndex] = useState<number | null>(
     null,
@@ -393,6 +409,10 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   const pinnedDragPreviewRef = useRef<HTMLDivElement | null>(null)
   const leavingOrganizationRef = useRef(false)
   const { features, isCloud, isSelfHosted } = useConsoleProfile()
+  const roleOptions = ROLE_OPTIONS.filter(
+    (role) =>
+      features.orgRoles || role.value === 'owner' || role.value === 'developer',
+  )
   const supportsMultiTenancy = features.multiTenancy
   const { access, isLoading: orgScopesLoading } = useOrganizationScopes(orgId)
   const { viewMode: projectsViewMode, setViewMode: setProjectsViewMode } =
@@ -537,9 +557,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       return null
     }
 
-    // Extract tab from pathname
-    // Pattern: /organizations/:orgId or /organizations/:orgId/:tab
-    const pathParts = location.pathname.split('/').filter(Boolean)
+    // Extract tab from the committed pathname so content stays on the current
+    // tab until the destination route loader has finished.
+    const pathParts = resolvedPathname.split('/').filter(Boolean)
     const orgIndex = pathParts.findIndex((part) => part === 'organizations')
 
     if (orgIndex >= 0) {
@@ -559,11 +579,11 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
 
     // Default to projects for index route (/organizations/:orgId or /organizations/:orgId/)
     return 'projects'
-  }, [tabProp, location.pathname, isDomainDetailRoute, isAppDetailRoute])
+  }, [tabProp, resolvedPathname, isDomainDetailRoute, isAppDetailRoute])
 
   // Settings sub-tab (when on settings): 'overview' | 'members' | 'billing' | 'compliance' | 'oauth-apps' | 'partners'
   const settingsSubTab = useMemo(() => {
-    const pathParts = location.pathname.split('/').filter(Boolean)
+    const pathParts = resolvedPathname.split('/').filter(Boolean)
     const orgIndex = pathParts.findIndex((part) => part === 'organizations')
     if (orgIndex >= 0 && pathParts[orgIndex + 2] === 'settings') {
       const subTab = pathParts[orgIndex + 3]
@@ -575,7 +595,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       return 'overview'
     }
     return 'overview'
-  }, [location.pathname])
+  }, [resolvedPathname])
 
   const orgSettingsNavItems = useMemo(() => {
     const allNavItems = [
@@ -919,6 +939,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     ...organizationQueryOptions(orgId),
     placeholderData: keepPreviousData,
   })
+  const { plans: billingPlans } = useBillingPlans()
 
   // Get organizations list and map to our Organization type
   // Note: The API returns "teams" but they are actually organizations
@@ -931,15 +952,18 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
         name: string
         total?: number
         billingPlan?: string
+        billingPlanId?: string
         billingPlanDowngrade?: unknown
         tier?: string
         prefs?: Record<string, unknown>
         status?: string
       }) => {
-        const planName = getPlanNameFromTier(
-          org.billingPlan ?? (org.prefs as { tier?: string })?.tier ?? 'free',
-        )
-        const plan = planName as CanonicalPlanId
+        const plan = resolveOrganizationCanonicalPlan({
+          billingPlan: org.billingPlan,
+          billingPlanId: org.billingPlanId,
+          tier: (org.prefs as { tier?: string })?.tier ?? org.tier,
+          plans: billingPlans,
+        })
 
         return {
           $id: org.$id,
@@ -949,10 +973,13 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
           plan,
           members: org.total || 0,
           status: org.status,
-          billingPlanDowngrade: org.billingPlanDowngrade}
+          billingPlan: org.billingPlan,
+          billingPlanId: org.billingPlanId,
+          billingPlanDowngrade: org.billingPlanDowngrade,
+        }
       },
     )
-  }, [organizationsData])
+  }, [organizationsData, billingPlans])
 
   // Get selected organization from URL param (orgId)
   const selectedOrg = useMemo(() => {
@@ -964,23 +991,29 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       if (fromList) return fromList
     }
     if (organizationDetail && organizationDetail.$id === orgId) {
-      const planName = getPlanNameFromTier(
-        organizationDetail.billingPlan ??
-          (organizationDetail.prefs as { tier?: string })?.tier ??
-          'free',
-      )
+      const plan = resolveOrganizationCanonicalPlan({
+        billingPlan: organizationDetail.billingPlan,
+        billingPlanId: (organizationDetail as { billingPlanId?: string })
+          .billingPlanId,
+        tier: (organizationDetail.prefs as { tier?: string })?.tier,
+        plans: billingPlans,
+      })
       return {
         $id: organizationDetail.$id,
         name: organizationDetail.name,
         slug: organizationDetail.name.toLowerCase().replace(/\s+/g, '-'),
         avatar: undefined,
-        plan: planName as CanonicalPlanId,
+        plan,
         members: organizationDetail.total || 0,
         status: organizationDetail.status,
-        billingPlanDowngrade: organizationDetail.billingPlanDowngrade} satisfies Organization
+        billingPlan: organizationDetail.billingPlan,
+        billingPlanId: (organizationDetail as { billingPlanId?: string })
+          .billingPlanId,
+        billingPlanDowngrade: organizationDetail.billingPlanDowngrade,
+      } satisfies Organization
     }
     return null
-  }, [orgId, organizations, organizationDetail])
+  }, [orgId, organizations, organizationDetail, billingPlans])
 
   const orgBillingReadonlyForFailedInvoice =
     showFailedInvoiceOrgAlert &&
@@ -994,7 +1027,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     !showBudgetLimitAlert &&
     isPlanUsageLimitReached(organizationDetail)
   const showProjectsLockedAlert =
-    showBudgetLimitAlert || showPlanUsageLimitAlert
+    showBudgetLimitAlert ||
+    (features.billing && isProjectLockedByPlanUsage(organizationDetail))
 
   const [orgName, setOrgName] = useState('')
 
@@ -2138,6 +2172,11 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                 ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
                                 : getPlanBadgeColor(selectedOrg.plan),
                             )}
+                            style={
+                              selectedOrg.billingPlanDowngrade
+                                ? undefined
+                                : getPlanBadgeStyle(selectedOrg.plan)
+                            }
                           >
                             {selectedOrg.billingPlanDowngrade
                               ? t('Downgraded')
@@ -2180,6 +2219,11 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                         ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
                                         : getPlanBadgeColor(org.plan),
                                     )}
+                                    style={
+                                      org.billingPlanDowngrade
+                                        ? undefined
+                                        : getPlanBadgeStyle(org.plan)
+                                    }
                                   >
                                     {org.billingPlanDowngrade
                                       ? t('Downgraded')
@@ -3406,11 +3450,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                         <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
                                           {t('Member')}
                                         </TableHead>
-                                        {features.orgRoles && (
-                                          <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-center">
-                                            {t('Role')}
-                                          </TableHead>
-                                        )}
+                                        <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-center">
+                                          {t('Role')}
+                                        </TableHead>
                                         {supportsProjectRoles && (
                                           <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-center hidden md:table-cell">
                                             {t('Projects')}
@@ -3532,24 +3574,22 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                 </div>
                                               </div>
                                             </TableCell>
-                                            {features.orgRoles && (
-                                              <TableCell className="px-4 py-3">
-                                                <div className="flex flex-nowrap items-center justify-center gap-1 whitespace-nowrap">
-                                                  {isProjectScoped ? (
-                                                    // Roles are per project for
-                                                    // this member; the Projects
-                                                    // cell names them.
-                                                    <span className="text-[12px] text-muted-foreground">
-                                                      {t('Per project')}
-                                                    </span>
-                                                  ) : (
-                                                    <OrgRoleBadge
-                                                      role={member.role}
-                                                    />
-                                                  )}
-                                                </div>
-                                              </TableCell>
-                                            )}
+                                            <TableCell className="px-4 py-3">
+                                              <div className="flex flex-nowrap items-center justify-center gap-1 whitespace-nowrap">
+                                                {isProjectScoped ? (
+                                                  // Roles are per project for
+                                                  // this member; the Projects
+                                                  // cell names them.
+                                                  <span className="text-[12px] text-muted-foreground">
+                                                    {t('Per project')}
+                                                  </span>
+                                                ) : (
+                                                  <OrgRoleBadge
+                                                    role={member.role}
+                                                  />
+                                                )}
+                                              </div>
+                                            </TableCell>
                                             {supportsProjectRoles && (
                                               <TableCell className="px-4 py-3 hidden md:table-cell">
                                                 <div className="flex items-center justify-center">
@@ -4376,7 +4416,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                 ) => setSelectedRole(value)}
                 className="rounded-lg border border-border bg-card/50 overflow-hidden divide-y divide-border gap-0"
               >
-                {ROLE_OPTIONS.map((role) => {
+                {roleOptions.map((role) => {
                   const Icon = role.icon
                   const isSelected = selectedRole === role.value
                   return (
@@ -4447,6 +4487,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                 if (!selectedMember || updateRoleMutation.isPending) return true
                 if (supportsProjectRoles && editAccessType === 'specific') {
                   return !editProjectAccess.some((row) => row.projectId)
+                }
+                if (!roleOptions.some((role) => role.value === selectedRole)) {
+                  return true
                 }
                 // Moving a project-scoped member back to org-wide is a real
                 // change even when the org role itself looks unchanged.

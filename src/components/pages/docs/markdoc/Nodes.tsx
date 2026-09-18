@@ -21,6 +21,7 @@ import {
   type MarkdocProseVariant,
 } from '@/lib/blog/prose-typography'
 import { cn } from '@/lib/utils'
+import { BELOW_APP_HEADER_STICKY_TOP_CLASS } from '@/lib/layout/app-header-height'
 import { DocsHeadingLink } from './DocsHeadingLink'
 import { DocsMarkdocInTableProvider } from './DocsImage'
 import { DocsRouteLink } from '../DocsRouteLink'
@@ -253,8 +254,11 @@ export function MarkdocTableRoot({
   )
 
   return (
-    <div className="not-prose my-6 w-full overflow-hidden rounded-lg border border-border bg-card/50">
-      <Table withScrollContainer className={hasColumnWidths ? 'table-fixed' : undefined}>
+    <div className="not-prose my-6 w-full overflow-visible rounded-lg border border-border bg-card/50">
+      <Table
+        withScrollContainer={false}
+        className={hasColumnWidths ? 'table-fixed' : undefined}
+      >
         {hasColumnWidths ? (
           <colgroup>
             {colStyles.map((style, index) => (
@@ -270,7 +274,12 @@ export function MarkdocTableRoot({
 
 export function MarkdocTableHeader({ children }: { children?: ReactNode }) {
   return (
-    <TableHeader className="[&_tr]:border-b [&_tr]:border-border [&_tr]:hover:bg-transparent">
+    <TableHeader
+      className={cn(
+        BELOW_APP_HEADER_STICKY_TOP_CLASS,
+        'z-10 bg-card [&_tr]:border-b [&_tr]:border-border [&_tr]:hover:bg-transparent',
+      )}
+    >
       {children}
     </TableHeader>
   )
@@ -294,7 +303,11 @@ export function MarkdocTableHead({
   width?: number
 }) {
   return (
-    <TableHead className={cn(tableHeadClassName, 'whitespace-normal')}>{children}</TableHead>
+    <TableHead
+      className={cn(tableHeadClassName, 'whitespace-normal bg-card')}
+    >
+      {children}
+    </TableHead>
   )
 }
 MarkdocTableHead.displayName = 'MarkdocTableHead'

@@ -27,15 +27,15 @@ export async function deleteDowngradeDomains(
 }
 
 /**
- * On an active addon this only sets `nextValue = 0`; the addon stays on until
- * the current billing cycle closes.
+ * On an active addon this only sets `nextValue = 0`; the plan change is what
+ * actually removes it, and plan changes apply immediately.
  */
 export async function deleteDowngradeAddons(
   addons: DowngradeAddonRemoval[],
 ): Promise<void> {
-  // Best effort: the server removes addons the new plan does not support at
-  // cycle close anyway, so one refusing to disable must not abort a run whose
-  // deletions have already happened.
+  // Best effort: the plan change removes addons the new plan does not support
+  // anyway, so one refusing to disable must not abort a run whose deletions
+  // have already happened.
   await Promise.allSettled(
     addons.map((addon) =>
       addon.scope === 'organization'

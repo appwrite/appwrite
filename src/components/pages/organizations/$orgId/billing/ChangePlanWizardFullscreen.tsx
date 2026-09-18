@@ -34,6 +34,11 @@ import {
   organizationPlanQueryOptions,
   billingPlansQueryOptions,
 } from '@/lib/react-query/hooks'
+import { filterBillingPlansByLocation } from '@/lib/pricing/start-plan'
+import {
+  useVisitorCountryCode,
+  useVisitorCountryResolutionComplete,
+} from '@/hooks/use-visitor-country'
 import { prefetchOrganizationOverviewData } from '@/lib/organization-overview-prefetch'
 import { useSmartNavigation } from '@/lib/hooks/useSmartNavigation'
 import { useDebouncedValue } from '@/lib/hooks/useDebouncedValue'
@@ -233,7 +238,7 @@ const ORG_DELETION_STEP_IDS = new Set(['projects', 'members', 'domains'])
 /**
  * Compliance gate. Still fails closed on anything the run cannot account for,
  * but an addon it just disabled is not a real block: the server reads
- * `currentValue` and ignores the `nextValue = 0` that schedules the removal.
+ * `currentValue` and ignores the `nextValue = 0` that marks it for removal.
  *
  * `strict` is false once the deletions have run: they cannot be given back, so
  * only an explicit block may abort the plan update.
@@ -475,7 +480,21 @@ export function ChangePlanWizardFullscreen() {
   const { organization } = useOrganizationById(orgId)
   const { plan } = useOrganizationPlan(orgId)
   const { organizations } = useOrganizations()
-  const { plans: billingPlans, isLoading: plansLoading } = useBillingPlans()
+  const { plans: billingPlans, isLoading: billingPlansLoading } =
+    useBillingPlans()
+  const visitorCountryCode = useVisitorCountryCode()
+  const visitorCountryReady = useVisitorCountryResolutionComplete()
+  const plansLoading = billingPlansLoading || !visitorCountryReady
+
+  const selectablePlans = useMemo(
+    () =>
+      filterBillingPlansByLocation(
+        billingPlans,
+        visitorCountryCode,
+        isCreateMode ? null : organization?.billingPlan,
+      ),
+    [billingPlans, visitorCountryCode, isCreateMode, organization?.billingPlan],
+  )
 
   // A free org, including one with a scheduled downgrade to Free, occupies
   // the account's single free-organization slot.
@@ -493,38 +512,36 @@ export function ChangePlanWizardFullscreen() {
     )
   }, [organizations, orgId])
 
-  // Default selection: Pro for new orgs; first paid plan when upgrading from Free;
+  // Default selection: first paid catalogue plan for new orgs (Start when
+  // eligible, otherwise Pro); first paid plan when upgrading from Free;
   // otherwise the org's current plan.
   const defaultPlan = useMemo(() => {
+    const firstPaidPlan = Object.keys(selectablePlans)
+      .filter(
+        (planId) =>
+          getPlanCanonicalFromRecord(planId, selectablePlans) !== 'free',
+      )
+      .sort((a, b) => {
+        const orderA = resolveBillingPlanRecord(a, selectablePlans)?.order ?? 999
+        const orderB = resolveBillingPlanRecord(b, selectablePlans)?.order ?? 999
+        return orderA - orderB
+      })[0]
+
     if (isCreateMode) {
-      return BillingPlanTier.Tier1
+      return (firstPaidPlan as BillingPlanTierType | undefined) ?? BillingPlanTier.Tier1
     }
 
     const current = organization?.billingPlan || BillingPlanTier.Tier0
 
     if (
-      getPlanCanonicalFromRecord(current, billingPlans) === 'free' &&
-      billingPlans &&
-      Object.keys(billingPlans).length > 0
+      getPlanCanonicalFromRecord(current, selectablePlans) === 'free' &&
+      firstPaidPlan
     ) {
-      const firstPaidPlan = Object.keys(billingPlans)
-        .filter(
-          (planId) =>
-            getPlanCanonicalFromRecord(planId, billingPlans) !== 'free',
-        )
-        .sort((a, b) => {
-          const orderA = resolveBillingPlanRecord(a, billingPlans)?.order ?? 999
-          const orderB = resolveBillingPlanRecord(b, billingPlans)?.order ?? 999
-          return orderA - orderB
-        })[0]
-
-      if (firstPaidPlan) {
-        return firstPaidPlan as BillingPlanTierType
-      }
+      return firstPaidPlan as BillingPlanTierType
     }
 
     return current as BillingPlanTierType
-  }, [isCreateMode, organization?.billingPlan, billingPlans])
+  }, [isCreateMode, organization?.billingPlan, selectablePlans])
 
   // Check if self-service is allowed (defaults to true)
   const selfService = isCreateMode ? true : plan?.selfService !== false
@@ -591,13 +608,13 @@ export function ChangePlanWizardFullscreen() {
   } = useOrganizationProjects(orgId)
 
   const selectedPlanIsFree = useMemo(
-    () => isFreePlanRef(selectedPlan, billingPlans),
-    [selectedPlan, billingPlans],
+    () => isFreePlanRef(selectedPlan, selectablePlans),
+    [selectedPlan, selectablePlans],
   )
 
   const selectedPlanIsPro = useMemo(
-    () => getPlanCanonicalFromRecord(selectedPlan, billingPlans) === 'pro',
-    [selectedPlan, billingPlans],
+    () => getPlanCanonicalFromRecord(selectedPlan, selectablePlans) === 'pro',
+    [selectedPlan, selectablePlans],
   )
 
   // Get current plan tier
@@ -616,8 +633,8 @@ export function ChangePlanWizardFullscreen() {
   }, [currentPlanTier, isCreateMode])
 
   const currentPlanIsFree = useMemo(
-    () => isFreePlanRef(currentPlanEnum, billingPlans),
-    [currentPlanEnum, billingPlans],
+    () => isFreePlanRef(currentPlanEnum, selectablePlans),
+    [currentPlanEnum, selectablePlans],
   )
 
   // Mutations (defined early for use in useEffect)
@@ -689,10 +706,10 @@ export function ChangePlanWizardFullscreen() {
   const [planInitialized, setPlanInitialized] = useState(false)
   useEffect(() => {
     if (planInitialized) return
-    if (!billingPlans || Object.keys(billingPlans).length === 0) return
+    if (!selectablePlans || Object.keys(selectablePlans).length === 0) return
     if (!isCreateMode && orgId && !organization) return
 
-    const isValidPlan = (plan: string) => plan in billingPlans
+    const isValidPlan = (plan: string) => plan in selectablePlans
 
     const planParam = search?.plan as string | undefined
     if (planParam && isValidPlan(planParam)) {
@@ -713,7 +730,7 @@ export function ChangePlanWizardFullscreen() {
     isCreateMode,
     orgId,
     organization,
-    billingPlans,
+    selectablePlans,
   ])
 
   // Apply coupon from URL with full details (including expiration)
@@ -727,20 +744,30 @@ export function ChangePlanWizardFullscreen() {
     }
   }, [couponFromUrl])
 
+  // Private plans (such as the Student Pack) are absent from the selectable
+  // catalog. Include the current plan's price and order when comparing plans.
+  const comparisonPlans = useMemo(
+    () =>
+      plan?.$id === currentPlanEnum
+        ? { ...selectablePlans, [plan.$id]: plan }
+        : selectablePlans,
+    [selectablePlans, currentPlanEnum, plan],
+  )
+
   // Determine if upgrade or downgrade
   const isUpgrade = useMemo(() => {
     if (!selectedPlan) return false
     if (isCreateMode) return !selectedPlanIsFree
     if (!currentPlanEnum) return false
     return (
-      compareBillingPlanRefs(currentPlanEnum, selectedPlan, billingPlans) ===
+      compareBillingPlanRefs(currentPlanEnum, selectedPlan, comparisonPlans) ===
       'upgrade'
     )
   }, [
     selectedPlan,
     currentPlanEnum,
     isCreateMode,
-    billingPlans,
+    comparisonPlans,
     selectedPlanIsFree,
   ])
 
@@ -748,14 +775,14 @@ export function ChangePlanWizardFullscreen() {
     if (isCreateMode || !selectedPlan || !currentPlanEnum) return false
     if (selectedPlanIsFree && !currentPlanIsFree) return true
     return (
-      compareBillingPlanRefs(currentPlanEnum, selectedPlan, billingPlans) ===
+      compareBillingPlanRefs(currentPlanEnum, selectedPlan, comparisonPlans) ===
       'downgrade'
     )
   }, [
     selectedPlan,
     currentPlanEnum,
     isCreateMode,
-    billingPlans,
+    comparisonPlans,
     selectedPlanIsFree,
     currentPlanIsFree,
   ])
@@ -1125,6 +1152,10 @@ export function ChangePlanWizardFullscreen() {
 
     if (selectedPlan === currentPlanEnum) {
       return t('Select a different plan to continue.')
+    }
+
+    if (!isUpgrade && !isDowngrade) {
+      return t('This plan change is unavailable. Please contact support.')
     }
 
     // Issues the console cannot resolve on the user's behalf (unsupported
@@ -1661,6 +1692,7 @@ export function ChangePlanWizardFullscreen() {
 
   // Handle submit
   const handleSubmit = () => {
+    if (isButtonDisabled) return
     if (isCreateMode) {
       handleCreateOrganization()
       return
@@ -1766,7 +1798,7 @@ export function ChangePlanWizardFullscreen() {
             <PlanComparisonBox
               currentPlan={currentPlanEnum}
               selectedPlan={selectedPlan}
-              plans={billingPlans}
+              plans={selectablePlans}
             />
           )}
         </>
@@ -1867,11 +1899,9 @@ export function ChangePlanWizardFullscreen() {
                   </p>
                 </div>
               </div>
-            ) : billingPlans &&
-              typeof billingPlans === 'object' &&
-              Object.keys(billingPlans).length > 0 ? (
+            ) : Object.keys(selectablePlans).length > 0 ? (
               <PlanSelection
-                plans={billingPlans}
+                plans={selectablePlans}
                 currentPlan={currentPlanEnum}
                 selectedPlan={selectedPlan}
                 onPlanSelect={setSelectedPlan}
@@ -2030,10 +2060,7 @@ export function ChangePlanWizardFullscreen() {
 
           {selectedPlanIsFree && (
             <WarningAlert title={t('Downgrading to Free Plan')}>
-              {t('Your plan will change on')}{' '}
-              {organization?.billingPlanDowngrade ||
-                t('the end of your billing period')}
-              .{' '}
+              {t('Your plan changes immediately.')}{' '}
               {t(
                 'You will lose access to premium features and organization members beyond the free limit will be removed.',
               )}
@@ -2092,7 +2119,6 @@ export function ChangePlanWizardFullscreen() {
             ? getBillingPlanDisplayLabel(selectedPlan)
             : undefined
         }
-        planChangeDate={organization?.billingNextInvoiceDate}
         deletions={confirmDeletions}
         deletedOrganizationName={orgToDelete?.name}
         confirming={isSubmitting}

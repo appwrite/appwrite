@@ -207,7 +207,7 @@ export function DowngradePlanLossWarning({
           <LossSection
             title={t('Backups stop running')}
             note={t(
-              'At the end of your current billing cycle these backup policies are turned off and stop creating backups. The policies are not deleted, but the selected plan has no Backups screen, so you will not be able to see or manage them.',
+              'These backup policies are turned off immediately and stop creating backups. The policies are not deleted, but the selected plan has no Backups screen, so you will not be able to see or manage them.',
             )}
             rows={backupRows}
           />

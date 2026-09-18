@@ -21,6 +21,7 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'API keys': 'API キー',
   'Account keys': 'アカウントキー',
   'Account settings': 'アカウント設定',
+  Abandoned: '未完了',
   'Action required': '対応が必要です',
   'Activating plan': 'プランを有効化中',
   'Add Domain': 'ドメインを追加',
@@ -668,7 +669,7 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Your billing address has been updated': '請求先住所を更新しました',
   'Your current plan includes up to': '現在のプランには次まで含まれます',
   'Your feedback': 'フィードバック',
-  'Your plan will change on': 'プランは次の日に変更されます',
+  'Your plan changes immediately.': 'プランはすぐに変更されます。',
   'Your support ticket has been submitted': 'サポートチケットを送信しました',
   'Your transfer code': '移管コード',
   'Zone File': 'ゾーンファイル',
@@ -699,7 +700,6 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'record for': 'のレコード',
   'registered successfully': 'の登録に成功しました',
   'remaining.': '残り。',
-  'the end of your billing period': '請求期間の終了時',
   'the selected organization': '選択した組織',
   'this app': 'このアプリ',
   'this member': 'このメンバー',
@@ -1219,6 +1219,8 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Finish deleting project resources that exceed the selected plan.':
     '選択したプランを超えるプロジェクトリソースの削除を完了してください。',
   'Checking whether the plan can be changed...': 'プランを変更できるか確認しています...',
+  'This plan change is unavailable. Please contact support.':
+    'このプラン変更は利用できません。サポートにお問い合わせください。',
   'Could not change plan. Remaining usage still exceeds the selected plan.':
     'プランを変更できませんでした。残りの使用量がまだ選択したプランを超えています。',
   'Remaining extras that still exceed the selected plan. Nothing else is deleted.':
@@ -1254,8 +1256,8 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Confirm which organization to delete.': '削除する組織を確定してください。',
   'Confirm plan change': 'プラン変更の確認',
   'Confirm organization deletion': '組織削除の確認',
-  'Your organization will move to the {plan} plan.':
-    '組織は {plan} プランに移行します。',
+  'Your organization moves to the {plan} plan immediately.':
+    '組織はすぐに {plan} プランへ移行します。',
   'Delete and change plan': '削除してプランを変更',
   'Confirm which projects to delete first. The projects you keep are then checked against the selected plan.':
     'まず削除するプロジェクトを確定してください。残したプロジェクトは、その後で選択したプランと照合されます。',
@@ -1266,20 +1268,17 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Addons not available on the selected plan': '選択したプランで利用できないアドオン',
   'These addons will be disabled as part of this plan change. You do not need to turn them off first.':
     'これらのアドオンはプラン変更の一部として無効化されます。事前にオフにする必要はありません。',
-  'They stay active until the end of your current billing cycle, then they are removed.':
-    '現在の請求サイクルの終了までは有効なままで、その後に削除されます。',
+  'They are removed immediately.': 'すぐに削除されます。',
   'What changes in the projects you are keeping': '残すプロジェクトで変わること',
   'These changes happen on their own when your plan changes. There is nothing to select or clean up first.':
     'これらはプラン変更時に自動的に適用されます。事前に選択したり整理したりする必要はありません。',
   'Backups stop running': 'バックアップが停止します',
-  'At the end of your current billing cycle these backup policies are turned off and stop creating backups. The policies are not deleted, but the selected plan has no Backups screen, so you will not be able to see or manage them.':
-    '現在の請求サイクルの終了時に、これらのバックアップポリシーは無効化され、バックアップの作成を停止します。ポリシー自体は削除されませんが、選択したプランにはバックアップ画面がないため、確認も管理もできなくなります。',
+  'These backup policies are turned off immediately and stop creating backups. The policies are not deleted, but the selected plan has no Backups screen, so you will not be able to see or manage them.':
+    'これらのバックアップポリシーはすぐに無効化され、バックアップの作成を停止します。ポリシー自体は削除されませんが、選択したプランにはバックアップ画面がないため、確認も管理もできなくなります。',
   'Dedicated databases are spun down': '専用データベースが停止されます',
   'The selected plan does not include dedicated databases, so these are spun down when your plan changes. Your data is preserved, but the database stops serving requests and cannot be started again, even if you move back to a plan that includes them.':
     '選択したプランには専用データベースが含まれないため、プラン変更時に停止されます。データは保持されますが、データベースはリクエストの処理を停止し、専用データベースを含むプランに戻しても再開できません。',
   'The following is deleted as soon as you confirm.': '確定すると、以下がただちに削除されます。',
-  'The deletions happen now. Your organization moves to the {plan} plan on {date}, when the current billing cycle ends.':
-    '削除はただちに実行されます。組織は現在の請求サイクルが終了する {date} に {plan} プランへ移行します。',
   'Deleted data cannot be recovered.': '削除されたデータは復元できません。',
   'Could not load which backup policies stop running when your plan changes.':
     'プラン変更時にどのバックアップポリシーが停止するかを読み込めませんでした。',

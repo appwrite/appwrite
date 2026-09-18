@@ -12,6 +12,7 @@ import {
   organizationUsageQueryOptions,
   organizationProjectsQueryOptions,
 } from '@/lib/react-query/hooks'
+import { prefetchVisitorCountry } from '@/lib/react-query/hooks/locale'
 import { ChangePlanWizardFullscreen } from '@/components/pages/organizations/$orgId/billing/ChangePlanWizardFullscreen'
 import { GRID_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import { searchParamsFromRouterLocation } from '@/lib/table-filters'
@@ -44,6 +45,7 @@ export const Route = createFileRoute('/_public/upgrade')({
     const sharedPrefetches: Promise<unknown>[] = [
       queryClient.ensureQueryData(organizationsQueryOptions()),
       queryClient.ensureQueryData(billingPlansQueryOptions()),
+      prefetchVisitorCountry(queryClient),
     ]
 
     if (orgId) {

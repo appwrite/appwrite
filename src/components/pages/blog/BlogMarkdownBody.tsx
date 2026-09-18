@@ -1,11 +1,12 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { startTransition, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import {
   ImagePreviewGalleryDialog,
   type ImagePreviewGalleryItem,
 } from '@/components/global/shared/ImagePreviewGallery'
+import { YoutubePlayerDialog } from '@/components/global/shared/YoutubePlayerDialog'
 import { copyToClipboard } from '@/lib/utils/context-menu'
 import { cn } from '@/lib/utils'
 import {
@@ -65,6 +66,10 @@ export function BlogMarkdownBody({ html, className }: BlogMarkdownBodyProps) {
   )
   const [activeIndex, setActiveIndex] = useState<number | null>(null)
   const [multiCode, setMultiCode] = useState<MultiCodeMount[]>([])
+  const [youtube, setYoutube] = useState<{ embed: string; title: string } | null>(
+    null,
+  )
+  const [youtubeOpen, setYoutubeOpen] = useState(false)
   // React rewrites innerHTML whenever this object changes identity, which
   // would detach the portal targets below on every state update.
   const innerHtml = useMemo(() => ({ __html: html }), [html])
@@ -118,20 +123,29 @@ export function BlogMarkdownBody({ html, className }: BlogMarkdownBodyProps) {
             (entry) => entry.src === item.src && entry.alt === item.alt,
           )
           if (index >= 0) {
-            setActiveIndex(index)
+            startTransition(() => setActiveIndex(index))
             return current
           }
-          setActiveIndex(current.length)
+          startTransition(() => setActiveIndex(current.length))
           return [...current, item]
         })
         return
       }
 
-      const youtube = target.closest<HTMLElement>('[data-blog-youtube]')
-      if (youtube) {
+      const youtubeButton = target.closest<HTMLElement>('[data-blog-youtube]')
+      if (youtubeButton) {
         event.preventDefault()
-        const embed = youtube.getAttribute('data-blog-youtube')
-        if (embed) window.open(embed, '_blank', 'noopener,noreferrer')
+        const embed = youtubeButton.getAttribute('data-blog-youtube')
+        if (!embed) return
+        startTransition(() => {
+          setYoutube({
+            embed,
+            title:
+              youtubeButton.getAttribute('data-blog-youtube-title') ??
+              'YouTube video',
+          })
+          setYoutubeOpen(true)
+        })
       }
     }
 
@@ -163,6 +177,12 @@ export function BlogMarkdownBody({ html, className }: BlogMarkdownBodyProps) {
         items={galleryItems}
         activeIndex={activeIndex}
         onActiveIndexChange={setActiveIndex}
+      />
+      <YoutubePlayerDialog
+        open={youtubeOpen}
+        onOpenChange={setYoutubeOpen}
+        embed={youtube?.embed ?? null}
+        title={youtube?.title}
       />
     </>
   )

@@ -3,6 +3,7 @@ import './styles.css'
 import { createRouter } from '@tanstack/react-router'
 import * as TanstackQuery from './integrations/tanstack-query/root-provider'
 import { setupQueryClientRouterIntegration } from './integrations/tanstack-query/ssr-integration'
+import { seedLocaleQueryFromHtmlPrefetch } from '@/lib/locale/prefetch-locale'
 
 import { ErrorComponent } from './components/error/Component'
 import { NotFound } from './components/error/NotFound'
@@ -14,6 +15,10 @@ import {
   reportRouterCaughtError,
   reportUnhandledError,
 } from '@/lib/sentry/report-error'
+import {
+  getDefaultRouterPreload,
+  ROUTER_PRELOAD_DELAY_MS,
+} from '@/lib/router-preload'
 // No default pending component: the root FullscreenLoader (Appwrite logo) is the
 // single loader. Showing a router pending UI here caused a dual-loader flash on
 // static build (text "Loading data for you" then logo).
@@ -21,6 +26,7 @@ import {
 // Create a new router instance
 export async function getRouter() {
   const rqContext = TanstackQuery.getContext()
+  seedLocaleQueryFromHtmlPrefetch(rqContext.queryClient)
 
   // Dynamic import breaks routeTree.gen ↔ router circular dependency (Register
   // augmentation type-imports this module; static import can TDZ under SSR).
@@ -29,7 +35,9 @@ export async function getRouter() {
   const router = createRouter({
     routeTree,
     context: { ...rqContext },
-    defaultPreload: 'intent',
+    defaultPreload: getDefaultRouterPreload(),
+    // Touchstart used to start preload in ~50ms and steal the tap's next paint.
+    defaultPreloadDelay: ROUTER_PRELOAD_DELAY_MS,
     // Keep the previous page visible while loaders run. A finite pendingMs with
     // defaultPendingComponent: () => null blanks the outlet after 1s on slow
     // navigations (e.g. TablesDB table switches). Wizards that need a pending

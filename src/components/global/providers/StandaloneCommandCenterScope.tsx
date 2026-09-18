@@ -73,27 +73,6 @@ export function StandaloneCommandCenterScope({
   }, [])
 
   useEffect(() => {
-    if (typeof window === 'undefined') return
-
-    let idleId: number | undefined
-    let timeoutId: number | undefined
-    const prefetch = () => {
-      void loadCommandCenter()
-    }
-
-    if (typeof window.requestIdleCallback === 'function') {
-      idleId = window.requestIdleCallback(prefetch, { timeout: 4000 })
-    } else {
-      timeoutId = window.setTimeout(prefetch, 1500)
-    }
-
-    return () => {
-      if (idleId !== undefined) window.cancelIdleCallback(idleId)
-      if (timeoutId !== undefined) window.clearTimeout(timeoutId)
-    }
-  }, [])
-
-  useEffect(() => {
     if (!commandCenterMounted || CommandCenterImpl) return
     let cancelled = false
     void loadCommandCenter().then((component) => {

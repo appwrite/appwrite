@@ -27,7 +27,6 @@ export const ANALYTICS_ACTIONS = {
   'auth-sign-in': 'Sign In Clicked',
   'auth-sign-up': 'Sign Up Clicked',
   'header-console': 'Header Console Clicked',
-  'header-old-console': 'Header Old Console Clicked',
   'header-home': 'Header Home Clicked',
   'header-docs': 'Header Docs Clicked',
   'create-affiliate-link': 'Create Affiliate Link Clicked',
@@ -75,6 +74,7 @@ export const ANALYTICS_ACTIONS = {
   'home-view-pricing': 'Home View Pricing Clicked',
   'home-join-init': 'Home Join Init Clicked',
   'home-pricing-start-free': 'Home Pricing Start Free Clicked',
+  'home-pricing-start-start': 'Home Pricing Start Start Clicked',
   'home-pricing-start-pro': 'Home Pricing Start Pro Clicked',
   'home-pricing-contact-enterprise': 'Home Pricing Contact Enterprise Clicked',
   'product-start-building': 'Product Start Building Clicked',
@@ -94,12 +94,15 @@ export const ANALYTICS_ACTIONS = {
 
   // Pricing page CTAs
   'pricing-start-free': 'Pricing Start Free Clicked',
+  'pricing-start-start': 'Pricing Start Start Clicked',
   'pricing-start-pro': 'Pricing Start Pro Clicked',
   'pricing-contact-enterprise': 'Pricing Contact Enterprise Clicked',
   'pricing-promo-start-free': 'Pricing Promo Start Free Clicked',
+  'pricing-promo-start-start': 'Pricing Promo Start Start Clicked',
   'pricing-promo-start-pro': 'Pricing Promo Start Pro Clicked',
   'pricing-promo-contact-enterprise': 'Pricing Promo Contact Enterprise Clicked',
   'pricing-compare-start-free': 'Pricing Compare Start Free Clicked',
+  'pricing-compare-start-start': 'Pricing Compare Start Start Clicked',
   'pricing-compare-start-pro': 'Pricing Compare Start Pro Clicked',
   'pricing-compare-contact-enterprise': 'Pricing Compare Contact Enterprise Clicked',
 
@@ -112,6 +115,7 @@ export const ANALYTICS_ACTIONS = {
   // Upgrade / change-plan wizard
   'billing-change-plan': 'Billing Change Plan Clicked',
   'upgrade-select-free': 'Upgrade Select Free Clicked',
+  'upgrade-select-start': 'Upgrade Select Start Clicked',
   'upgrade-select-pro': 'Upgrade Select Pro Clicked',
   'upgrade-select-scale': 'Upgrade Select Scale Clicked',
   'upgrade-select-enterprise': 'Upgrade Select Enterprise Clicked',
@@ -206,6 +210,7 @@ export const ANALYTICS_ACTIONS = {
   'create-organization': 'Create Organization Clicked',
   'create-database': 'Create Database Clicked',
   'postgres-promo-banner-try-now': 'PostgreSQL Promo Banner Try Now Clicked',
+  'product-hunt-banner-upvote': 'Product Hunt Banner Upvote Clicked',
   'init-recap-promo-banner-view-recap': 'Init Recap Promo Banner View Recap Clicked',
   'create-table': 'Create Table Clicked',
   'create-row': 'Create Row Clicked',
@@ -295,6 +300,7 @@ const ORG_TAB_ACTIONS: Record<string, AnalyticsActionId> = {
 
 const PRICING_PLAN_CTA_ACTIONS: Record<string, AnalyticsActionId> = {
   free: 'pricing-start-free',
+  start: 'pricing-start-start',
   pro: 'pricing-start-pro',
   enterprise: 'pricing-contact-enterprise',
 }
@@ -302,6 +308,8 @@ const PRICING_PLAN_CTA_ACTIONS: Record<string, AnalyticsActionId> = {
 const UPGRADE_PLAN_SELECT_ACTIONS: Record<string, AnalyticsActionId> = {
   free: 'upgrade-select-free',
   'tier-0': 'upgrade-select-free',
+  start: 'upgrade-select-start',
+  'tier-1-1': 'upgrade-select-start',
   pro: 'upgrade-select-pro',
   'tier-1': 'upgrade-select-pro',
   scale: 'upgrade-select-scale',

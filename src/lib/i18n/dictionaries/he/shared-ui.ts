@@ -607,14 +607,20 @@ export const heSharedUiDictionary: Record<string, string> = {
   'This feature is coming soon': "הפיצ'ר הזה יגיע בקרוב",
   'This organization has reached its budget limit and is now blocked. To continue using Appwrite services, update the budget limit.':
     'הארגון הגיע למגבלת התקציב והוא חסום כעת. כדי להמשיך להשתמש בשירותי Appwrite, עדכנו את מגבלת התקציב.',
+  'This project is in readonly mode. Please contact the organization admin for details.':
+    'הפרויקט במצב קריאה בלבד. פנו למנהל הארגון לפרטים.',
   'This organization has reached its budget limit and is now blocked. Increase the budget cap below to restore access to billable services.':
     'הארגון הגיע למגבלת התקציב והוא חסום כעת. העלו את תקרת התקציב למטה כדי לשחזר גישה לשירותים החייבים בחיוב.',
   'This organization has reached its plan limit for':
     'הארגון הגיע למגבלת התוכנית עבור',
-  '. Upgrade your plan or wait until the end of the billing cycle to restore access.':
-    '. שדרגו את התוכנית או המתינו עד סוף מחזור החיוב כדי לשחזר גישה.',
-  'This organization has reached its plan usage limit and is now blocked. Upgrade your plan or wait until the end of the billing cycle to restore access.':
-    'הארגון הגיע למגבלת השימוש של התוכנית והוא חסום כעת. שדרגו את התוכנית או המתינו עד סוף מחזור החיוב כדי לשחזר גישה.',
+  '. API access to this project is suspended. Upgrade your plan or wait until the end of the billing cycle to restore service.':
+    '. גישת API לפרויקט זה מושהית. שדרגו את התוכנית או המתינו עד סוף מחזור החיוב כדי להחזיר את גישת ה-API.',
+  '. API access to this project is suspended. Delete files or other stored data to free capacity, or upgrade your plan.':
+    '. גישת API לפרויקט זה מושהית. מחקו קבצים או נתונים מאוחסנים אחרים כדי לפנות מקום, או שדרגו את התוכנית.',
+  '. API access to this project is suspended. Delete unused users to free capacity, or upgrade your plan.':
+    '. גישת API לפרויקט זה מושהית. מחקו משתמשים שאינם בשימוש כדי לפנות מקום, או שדרגו את התוכנית.',
+  'This organization has reached its plan usage limit. API access to this project is suspended. Upgrade your plan or wait until the end of the billing cycle to restore service.':
+    'הארגון הגיע למגבלת השימוש של התוכנית. גישת API לפרויקט זה מושהית. שדרגו את התוכנית או המתינו עד סוף מחזור החיוב כדי להחזיר את גישת ה-API.',
   'Plan limit reached': 'מגבלת התוכנית הושגה',
   'Phone auth': 'אימות טלפון',
   'View current cycle usage': 'צפייה בשימוש במחזור הנוכחי',
@@ -1274,4 +1280,8 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Not set': 'לא הוגדר',
   'Browser timezone': 'אזור הזמן של הדפדפן',
   'Stored in UTC': 'נשמר ב-UTC',
+  'Appwrite 2.0 is launching on Product Hunt today':
+    'Appwrite 2.0 מושק היום ב-Product Hunt',
+  'Appwrite 2.0 on Product Hunt': 'Appwrite 2.0 ב-Product Hunt',
+  'Share your take': 'שתפו את דעתכם',
 }

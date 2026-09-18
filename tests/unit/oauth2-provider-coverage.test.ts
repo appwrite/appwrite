@@ -22,9 +22,12 @@ const PROVIDERS_WITHOUT_UPDATE_ENDPOINT = new Set<string>([
   ProjectOAuthProviderId.Yammer,
 ])
 
+/** An account provider with no project counterpart is dropped by the grid, so it should fail here. */
+const CONFIGURABLE_PROVIDER_IDS = Object.values(OAuthProvider) as string[]
+
 describe('OAuth2 provider coverage', () => {
   test('OAuthProvider and ProjectOAuthProviderId enums agree', () => {
-    expect((Object.values(OAuthProvider) as string[]).sort()).toEqual(
+    expect([...CONFIGURABLE_PROVIDER_IDS].sort()).toEqual(
       (Object.values(ProjectOAuthProviderId) as string[]).sort(),
     )
   })
@@ -51,7 +54,7 @@ describe('OAuth2 provider coverage', () => {
   })
 
   test('every provider card resolves to an existing icon asset', () => {
-    for (const providerId of Object.values(OAuthProvider)) {
+    for (const providerId of CONFIGURABLE_PROVIDER_IDS) {
       const iconPath = getOAuth2ProviderIconPath(providerId)
       expect(iconPath.startsWith('/icons/')).toBe(true)
       expect(

@@ -41,33 +41,35 @@ describe('account menu section', () => {
 })
 
 describe('account menu links', () => {
-  const cloudMarketing = { showMarketingNav: true, isCloud: true }
+  const marketing = { showMarketingNav: true }
 
   test('the marketing home offers the console and docs, not itself', () => {
-    expect(
-      getAccountMenuLinks({ pathname: '/home', ...cloudMarketing }),
-    ).toEqual(['console', 'docs', 'changelog', 'oldConsole'])
+    expect(getAccountMenuLinks({ pathname: '/home', ...marketing })).toEqual([
+      'console',
+      'docs',
+      'changelog',
+    ])
   })
 
   test('docs offers home and the console, not itself', () => {
     expect(
       getAccountMenuLinks({
         pathname: '/docs/quick-starts/react',
-        ...cloudMarketing,
+        ...marketing,
       }),
-    ).toEqual(['home', 'console', 'changelog', 'oldConsole'])
+    ).toEqual(['home', 'console', 'changelog'])
   })
 
   test('the changelog offers home, the console and docs, not itself', () => {
     expect(
-      getAccountMenuLinks({ pathname: '/changelog', ...cloudMarketing }),
-    ).toEqual(['home', 'console', 'docs', 'oldConsole'])
+      getAccountMenuLinks({ pathname: '/changelog', ...marketing }),
+    ).toEqual(['home', 'console', 'docs'])
   })
 
   test('other marketing pages keep every destination', () => {
-    expect(
-      getAccountMenuLinks({ pathname: '/pricing', ...cloudMarketing }),
-    ).toEqual(['home', 'console', 'docs', 'changelog', 'oldConsole'])
+    expect(getAccountMenuLinks({ pathname: '/pricing', ...marketing })).toEqual(
+      ['home', 'console', 'docs', 'changelog'],
+    )
   })
 
   test('console pages drop the console entry, as before', () => {
@@ -75,17 +77,6 @@ describe('account menu links', () => {
       getAccountMenuLinks({
         pathname: '/organizations/abc',
         showMarketingNav: false,
-        isCloud: true,
-      }),
-    ).toEqual(['home', 'docs', 'changelog', 'oldConsole'])
-  })
-
-  test('self-hosted hides the legacy console link', () => {
-    expect(
-      getAccountMenuLinks({
-        pathname: '/organizations/abc',
-        showMarketingNav: false,
-        isCloud: false,
       }),
     ).toEqual(['home', 'docs', 'changelog'])
   })

@@ -5,7 +5,15 @@ import {
   measureStickyOverlayBounds,
   type StickyOverlayBounds,
 } from '@/lib/layout/sticky-overlay-bounds'
+import { APP_HEADER_HEIGHT_VAR } from '@/lib/layout/app-header-height'
 import { findScrollParent } from '@/lib/utils'
+
+function readAppHeaderHeightPx(from: HTMLElement): number {
+  const parsed = Number.parseFloat(
+    getComputedStyle(from).getPropertyValue(APP_HEADER_HEIGHT_VAR),
+  )
+  return Number.isFinite(parsed) ? parsed : 0
+}
 
 type UseArticleStickyOverlayOptions = {
   sentinelRef: RefObject<HTMLElement | null>
@@ -45,15 +53,17 @@ export function useArticleStickyOverlay({
         scrollRoot instanceof HTMLElement ? scrollRoot : document.getElementById('main-content')
 
       const shellTop = scrollContainer?.getBoundingClientRect().top ?? 0
+      const headerHeight = readAppHeaderHeightPx(currentSentinel)
+      const overlayTop = Math.max(headerHeight, shellTop)
       const sentinelTop = currentSentinel.getBoundingClientRect().top
-      const isPinned = sentinelTop <= shellTop + 1
+      const isPinned = sentinelTop <= overlayTop + 1
 
       setPinned(isPinned)
 
       if (isPinned && contentAnchor && scrollContainer) {
         const shellRect = scrollContainer.getBoundingClientRect()
         const contentRect = contentAnchor.getBoundingClientRect()
-        setBounds(measureStickyOverlayBounds(shellRect, contentRect, shellTop))
+        setBounds(measureStickyOverlayBounds(shellRect, contentRect, overlayTop))
       } else {
         setBounds(null)
       }

@@ -9,6 +9,7 @@ import {
   isPricingHashTarget,
   resetPricingPageScrollContainers,
 } from '@/lib/pricing/comparison-scroll'
+import { prefetchVisitorCountry } from '@/lib/react-query/hooks/locale'
 
 export const Route = createFileRoute('/_marketing/pricing')({
   ...marketingRouteLifetime,
@@ -29,7 +30,7 @@ export const Route = createFileRoute('/_marketing/pricing')({
         resetPricingPageScrollContainers(true)
       }
     }
-
+    await prefetchVisitorCountry(context.queryClient)
   },
   component: PricingPage,
 })

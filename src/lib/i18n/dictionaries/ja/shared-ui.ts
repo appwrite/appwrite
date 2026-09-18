@@ -387,14 +387,20 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'This feature is coming soon': 'この機能は近日公開予定です',
   'This organization has reached its budget limit and is now blocked. To continue using Appwrite services, update the budget limit.':
     'この組織は予算上限に達したためブロックされています。Appwrite サービスを引き続き利用するには、予算上限を更新してください。',
+  'This project is in readonly mode. Please contact the organization admin for details.':
+    'このプロジェクトは読み取り専用です。詳細は組織の管理者にお問い合わせください。',
   'This organization has reached its budget limit and is now blocked. Increase the budget cap below to restore access to billable services.':
     'この組織は予算上限に達したためブロックされています。請求対象サービスへのアクセスを復元するには、下の予算上限を引き上げてください。',
   'This organization has reached its plan limit for':
     'この組織はプラン上限に達しました:',
-  '. Upgrade your plan or wait until the end of the billing cycle to restore access.':
-    '。プランをアップグレードするか、請求サイクルの終了まで待ってアクセスを復元してください。',
-  'This organization has reached its plan usage limit and is now blocked. Upgrade your plan or wait until the end of the billing cycle to restore access.':
-    'この組織はプランの使用上限に達したためブロックされています。プランをアップグレードするか、請求サイクルの終了まで待ってアクセスを復元してください。',
+  '. API access to this project is suspended. Upgrade your plan or wait until the end of the billing cycle to restore service.':
+    '。このプロジェクトの API アクセスは停止されています。プランをアップグレードするか、請求サイクルの終了まで待って API アクセスを再開してください。',
+  '. API access to this project is suspended. Delete files or other stored data to free capacity, or upgrade your plan.':
+    '。このプロジェクトの API アクセスは停止されています。ファイルやその他の保存データを削除して容量を確保するか、プランをアップグレードしてください。',
+  '. API access to this project is suspended. Delete unused users to free capacity, or upgrade your plan.':
+    '。このプロジェクトの API アクセスは停止されています。未使用のユーザーを削除して枠を確保するか、プランをアップグレードしてください。',
+  'This organization has reached its plan usage limit. API access to this project is suspended. Upgrade your plan or wait until the end of the billing cycle to restore service.':
+    'この組織はプランの使用上限に達しました。このプロジェクトの API アクセスは停止されています。プランをアップグレードするか、請求サイクルの終了まで待って API アクセスを再開してください。',
   'Plan limit reached': 'プラン上限に達しました',
   'Phone auth': '電話認証',
   'View current cycle usage': '現在のサイクル使用量を表示',
@@ -1233,4 +1239,8 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Not set': '未設定',
   'Browser timezone': 'ブラウザのタイムゾーン',
   'Stored in UTC': 'UTC での保存値',
+  'Appwrite 2.0 is launching on Product Hunt today':
+    'Appwrite 2.0 が本日 Product Hunt でローンチ',
+  'Appwrite 2.0 on Product Hunt': 'Product Hunt の Appwrite 2.0',
+  'Share your take': 'フィードバックを送る',
 }

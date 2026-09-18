@@ -54,11 +54,27 @@ const CONTENT_REFERENCE_ROOTS = [
   join(VIBES_ROOT, 'src', 'content', 'integrations'),
 ]
 
-const resizeConfig: sharp.ResizeOptions = {
-  width: 1280,
-  height: 1280,
-  fit: sharp.fit.inside,
-  withoutEnlargement: true,
+/** Default cap for content rasters. */
+const MAX_IMAGE_EDGE = 1280
+
+/**
+ * Screenshots are captured at a 1460x822 viewport with a device scale factor of
+ * 2. Sources with exactly these pixel dimensions keep their full resolution;
+ * every other raster is capped at MAX_IMAGE_EDGE as before.
+ */
+const HIGH_DPI_SCREENSHOT = { width: 2920, height: 1644 }
+
+function resizeConfigFor(meta: sharp.Metadata): sharp.ResizeOptions {
+  const isHighDpiScreenshot =
+    meta.width === HIGH_DPI_SCREENSHOT.width &&
+    meta.height === HIGH_DPI_SCREENSHOT.height
+  const edge = isHighDpiScreenshot ? HIGH_DPI_SCREENSHOT.width : MAX_IMAGE_EDGE
+  return {
+    width: edge,
+    height: edge,
+    fit: sharp.fit.inside,
+    withoutEnlargement: true,
+  }
 }
 
 const avifOptions: sharp.AvifOptions = {
@@ -191,7 +207,7 @@ async function convertOne(oldAbs: string, newAbs: string): Promise<void> {
 
   let pipeline = sharp(oldAbs, inputOptions)
   if (meta.width && meta.height) {
-    pipeline = pipeline.resize(resizeConfig)
+    pipeline = pipeline.resize(resizeConfigFor(meta))
   }
 
   await pipeline.avif(avifOptions).toFile(newAbs)
