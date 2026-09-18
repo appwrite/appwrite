@@ -7,6 +7,7 @@ namespace Tests\Unit\Certificates;
 use Appwrite\Certificates\Certificates;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Utopia\Cdn\Certificates\Status;
 use Utopia\Database\Document;
 
 final class CertificatesTest extends TestCase
@@ -30,6 +31,27 @@ final class CertificatesTest extends TestCase
             'domain' => 'example.com',
             'owner' => 'Appwrite',
         ])));
+    }
+
+    #[DataProvider('statusProvider')]
+    public function testProviderStatus(string $status, bool $issued, bool $inFlight): void
+    {
+        $certificates = new Certificates();
+
+        $this->assertSame($issued, $certificates->isIssued($status));
+        $this->assertSame($inFlight, $certificates->isInFlight($status));
+    }
+
+    public static function statusProvider(): \Iterator
+    {
+        // A renewing certificate is still live, so it counts as issued, not in flight.
+        yield 'issued' => [Status::ISSUED, true, false];
+        yield 'renewing' => [Status::RENEWING, true, false];
+        yield 'pending' => [Status::PENDING, false, true];
+        yield 'processing' => [Status::PROCESSING, false, true];
+        // Neither: the provider holds nothing, so the worker issues.
+        yield 'unknown' => [Status::UNKNOWN, false, false];
+        yield 'failed' => [Status::FAILED, false, false];
     }
 
     public static function autoIssueProvider(): \Iterator

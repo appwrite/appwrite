@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Workers;
 
 use Appwrite\Bus\Events\RuleUpdated;
+use Appwrite\Certificates\Certificates as CertificateIssuer;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Func as FunctionMessage;
 use Appwrite\Event\Message\Mail as MailMessage;
@@ -62,6 +63,7 @@ class Certificates extends Action
             ->inject('queueForRealtime')
             ->inject('publisherForCertificates')
             ->inject('certificates')
+            ->inject('certificateIssuer')
             ->inject('plan')
             ->inject('authorization')
             ->inject('bus')
@@ -78,6 +80,7 @@ class Certificates extends Action
      * @param Realtime $queueForRealtime
      * @param Certificate $publisherForCertificates
      * @param Provider $certificates
+     * @param CertificateIssuer $certificateIssuer
      * @param array $plan
      * @param ValidatorAuthorization $authorization
      * @return void
@@ -94,6 +97,7 @@ class Certificates extends Action
         Realtime $queueForRealtime,
         Certificate $publisherForCertificates,
         Provider $certificates,
+        CertificateIssuer $certificateIssuer,
         array $plan,
         ValidatorAuthorization $authorization,
         Bus $bus,
@@ -120,7 +124,7 @@ class Certificates extends Action
                 break;
 
             case \Appwrite\Event\Certificate::ACTION_GENERATION:
-                $this->handleCertificateGenerationAction($domain, $domainType, $dbForPlatform, $publisherForMails, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $queueForRealtime, $certificates, $authorization, $bus, $skipRenewCheck, $plan, $validationDomain);
+                $this->handleCertificateGenerationAction($domain, $domainType, $dbForPlatform, $publisherForMails, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $queueForRealtime, $certificates, $certificateIssuer, $authorization, $bus, $skipRenewCheck, $plan, $validationDomain);
                 break;
 
             default:
@@ -241,6 +245,7 @@ class Certificates extends Action
         FunctionPublisher $publisherForFunctions,
         Realtime $queueForRealtime,
         Provider $certificates,
+        CertificateIssuer $certificateIssuer,
         ValidatorAuthorization $authorization,
         Bus $bus,
         bool $skipRenewCheck = false,
@@ -315,24 +320,38 @@ class Certificates extends Action
             if (!$skipRenewCheck) {
                 $this->validateDomain($rule, $domain, $validationDomain);
 
-                // If certificate exists already, double-check expiry date. Skip if job is forced
+                // A certificate may already exist. Reconcile against the provider before
+                // issuing, since "no renewal due" does not mean "a certificate exists".
                 if (!$certificates->isRenewRequired($domain->get(), $domainType)) {
                     $status = $certificates->isInstantGeneration($domain->get(), $domainType)
                         ? Status::ISSUED
                         : $certificates->getCertificateStatus($domain->get(), $domainType);
-                    if ($status === Status::ISSUED) {
-                        Console::info("Skipping, certificate is already issued");
+
+                    $date = \date('H:i:s');
+
+                    // RENEWING means a certificate is live and rolling over, not that one is missing.
+                    if ($certificateIssuer->isIssued($status)) {
+                        Console::info('Skipping, certificate is already issued');
                         $rule->setAttribute('status', RULE_STATUS_VERIFIED);
-                        $certificate->setAttribute('attempts', 0);
+                        $certificate->setAttributes([
+                            'attempts' => 0,
+                            // Keep the document eligible for the renewal scan. Maintenance
+                            // filters on a non-null renewDate, so leaving it unset would
+                            // retire this certificate from renewal for good.
+                            'renewDate' => $certificate->getAttribute('renewDate') ?? DateTime::now(),
+                        ]);
                         $logs .= "\033[90m[{$date}] \033[97mSSL certificate successfully issued. \033[0m\n";
                         return;
                     }
-                    if (\in_array($status, [Status::PENDING, Status::PROCESSING, Status::RENEWING], true)) {
-                        Console::info("Skipping, certificate is being issued");
+
+                    if ($certificateIssuer->isInFlight($status)) {
+                        Console::info('Skipping, certificate is being issued');
                         $rule->setAttribute('status', RULE_STATUS_CERTIFICATE_GENERATING);
-                        $logs .= "\033[90m[{$date}] \033[97mSSL certificate is being issued. We'll periodically check and update the status. \033[0m\n";
+                        $certificate->setAttribute('renewDate', $certificate->getAttribute('renewDate') ?? DateTime::now());
+                        $logs .= "\033[90m[{$date}] \033[97mSSL certificate is being issued. This usually takes a few minutes — no action needed on your end. We'll periodically check and update the status. \033[0m\n";
                         return;
                     }
+
                     // Nothing to renew and nothing issued: the provider holds no usable
                     // certificate for this domain. Issue one so a missing subscription is repaired.
                 }

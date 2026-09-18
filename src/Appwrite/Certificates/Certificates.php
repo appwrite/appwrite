@@ -2,6 +2,7 @@
 
 namespace Appwrite\Certificates;
 
+use Utopia\Cdn\Certificates\Status;
 use Utopia\Database\Document;
 use Utopia\Domains\Domain;
 
@@ -36,5 +37,22 @@ final class Certificates
         $domain = new Domain($rule->getAttribute('domain', ''));
 
         return $domain->isKnown() && !$domain->isTest();
+    }
+
+    /**
+     * Whether the provider already holds a usable certificate. A renewing certificate
+     * is still live and serving, so it counts as issued rather than as one in flight.
+     */
+    public function isIssued(string $status): bool
+    {
+        return \in_array($status, [Status::ISSUED, Status::RENEWING], true);
+    }
+
+    /**
+     * Whether the provider is still working on a first certificate for the domain.
+     */
+    public function isInFlight(string $status): bool
+    {
+        return \in_array($status, [Status::PENDING, Status::PROCESSING], true);
     }
 }
