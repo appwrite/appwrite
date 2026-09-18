@@ -10,7 +10,7 @@ Utopia MQTT is a PHP toolkit for building MQTT brokers (3.1.1 and 5.0). You impl
 composer require utopia-php/mqtt
 ```
 
-The library requires PHP 8.1+. The `Swoole` adapter additionally needs the Swoole extension.
+The library requires PHP 8.2+. The `Swoole` adapter additionally needs the Swoole extension.
 
 ## Quick start
 

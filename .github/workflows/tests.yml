@@ -9,7 +9,6 @@ jobs:
       fail-fast: false
       matrix:
         php-versions: [
-          '8.1',
           '8.2',
           '8.3'
         ]
