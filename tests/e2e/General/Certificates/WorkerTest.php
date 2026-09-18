@@ -413,6 +413,27 @@ final class WorkerTest extends TestCase
         $this->assertSame(0, $this->certificate()->getAttribute('attempts'));
     }
 
+    public function testSpendingAnAttemptMovesTheBackoffClock(): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        // The scheduler measures its backoff from issueDate. If a counted wait
+        // left it behind, the rule would earn a long delay and then be due
+        // immediately against a stale date -- no backoff at all.
+        $this->provider->renew = false;
+        $this->provider->status = Status::PENDING;
+        $this->setRule(['status' => RULE_STATUS_CERTIFICATE_GENERATING]);
+        $this->database->updateDocument('certificates', 'certificate', new Document([
+            'issueDate' => '2020-01-01T00:00:00.000+00:00',
+        ]));
+
+        $this->runWorker();
+
+        $this->assertSame(1, $this->certificate()->getAttribute('attempts'));
+        $this->assertNotSame('2020-01-01T00:00:00.000+00:00', $this->certificate()->getAttribute('issueDate'));
+    }
+
     public function testPollArrivingInsideTheLeaseChangesNothing(): void
     {
         /**

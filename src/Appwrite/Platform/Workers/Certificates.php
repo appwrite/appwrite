@@ -358,6 +358,11 @@ class Certificates extends Action
                         }
                         $waits = $certificate->getAttribute('attempts', 0) + 1;
                         $certificate->setAttribute('attempts', $waits);
+                        // The scheduler measures its backoff from this, so it
+                        // has to move whenever an attempt is spent. Leaving it
+                        // behind would compute a long delay from an old date
+                        // and make the rule due again immediately.
+                        $certificate->setAttribute('issueDate', DateTime::now());
                         if ($waits >= APP_LIMIT_CERTIFICATE_ATTEMPTS) {
                             $waiting = false;
                             $rule->setAttribute('status', RULE_STATUS_CERTIFICATE_GENERATION_FAILED);
@@ -427,6 +432,7 @@ class Certificates extends Action
             // an issuance failure must not count the reserved attempt twice.
             if (!$issuanceStarted && !$exhausted) {
                 $certificate->setAttribute('attempts', $certificate->getAttribute('attempts', 0) + 1);
+                $certificate->setAttribute('issueDate', DateTime::now());
             }
             $date = \date('H:i:s');
             $logs .= "\033[90m[{$date}] \033[31mSSL certificate issuance failed: \033[0m\n";
