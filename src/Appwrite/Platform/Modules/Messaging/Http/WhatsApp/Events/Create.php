@@ -156,15 +156,22 @@ class Create extends Action
         $stashed = $cache->load($key, TOKEN_EXPIRATION_OTP);
 
         // Nothing to send: the policy had no SMS fallback, the code has since expired, or a
-        // duplicate of this notification already claimed it.
+        // duplicate of this notification already sent it.
         if (empty($stashed['message'])) {
             return;
         }
 
-        // Meta retries and does not order its notifications, so the claim has to happen before
-        // the send. Purging first means a duplicate arriving mid-flight finds nothing.
-        $cache->purge($key);
+        // Meta retries a notification it could not deliver for 36 hours, far longer than the
+        // code stays redeemable, so texting someone a passcode that is already dead is a real
+        // outcome rather than a theoretical one.
+        $remaining = (int) ($stashed['expire'] ?? 0) - \time();
 
+        if ($remaining <= 0) {
+            return;
+        }
+
+        // Read before claiming. A database that is briefly unavailable must not consume the
+        // one record that says this code still needs sending.
         $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
 
         if ($project->isEmpty()) {
@@ -173,6 +180,34 @@ class Create extends Action
 
         $recipients = $stashed['recipients'] ?? [];
 
+        // Claiming before the send is what makes a duplicate harmless: it reads a record with
+        // nothing left to send and stops. The claim overwrites rather than deletes, so that
+        // handing it back below is the same operation in reverse.
+        $cache->save($key, ['claimed' => \time()], ttl: $remaining);
+
+        Span::add('messaging.whatsapp.event.fallback', $messageId);
+        Console::info('WhatsApp OTP for project ' . $projectId . ' was not delivered, falling back to SMS');
+
+        try {
+            $publisherForMessaging->enqueue(new MessagingMessage(
+                type: MESSAGE_SEND_TYPE_INTERNAL,
+                project: $project,
+                message: new Document($stashed['message']),
+                recipients: $recipients,
+                channel: PHONE_OTP_CHANNEL_SMS,
+                fallback: false,
+            ));
+        } catch (\Throwable $error) {
+            // Hand the claim back and fail the request, so Meta retries into a record that is
+            // there again. The original deadline rides along, so the retry cannot resurrect a
+            // code that expired in the meantime.
+            $cache->save($key, $stashed, ttl: $remaining);
+
+            throw $error;
+        }
+
+        // Only now, once the code is on its way, is it safe to let a bookkeeping failure
+        // surface: a repeat of this notification has nothing left to send twice.
         if ($failure['undeliverable']) {
             foreach ($recipients as $recipient) {
                 $cache->save(
@@ -182,17 +217,5 @@ class Create extends Action
                 );
             }
         }
-
-        Span::add('messaging.whatsapp.event.fallback', $messageId);
-        Console::info('WhatsApp OTP for project ' . $projectId . ' was not delivered, falling back to SMS');
-
-        $publisherForMessaging->enqueue(new MessagingMessage(
-            type: MESSAGE_SEND_TYPE_INTERNAL,
-            project: $project,
-            message: new Document($stashed['message']),
-            recipients: $recipients,
-            channel: PHONE_OTP_CHANNEL_SMS,
-            fallback: false,
-        ));
     }
 }

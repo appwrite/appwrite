@@ -4108,6 +4108,24 @@ final class AccountCustomClientTest extends Scope
             // The recipient gets the code they were always going to get, over the other channel.
             $this->assertNotEmpty($sms, 'No SMS fallback for phone number: ' . $number);
             $this->assertStringContainsString($code, (string) ($sms['data']['message'] ?? ''));
+
+            // Meta retries for 36 hours and does not order its notifications, so the same
+            // status arriving again must not text the recipient a second time.
+            $this->assertSame(204, $this->whatsappStatus($projectId . ':' . $tokenId, $number, 'wamid.' . $tokenId)['headers']['status-code']);
+
+            // Hunts for an SMS to this number that is not the one already seen, giving the
+            // queue several seconds to produce one. Finding none is the assertion.
+            $duplicate = $this->getLastRequestForProject(
+                $projectId,
+                Scope::REQUEST_TYPE_SMS,
+                ['header_X-Username' => 'username', 'method' => 'POST'],
+                probe: function (array $request) use ($number, $sms): void {
+                    $this->assertSame($number, $request['data']['to'] ?? null);
+                    $this->assertNotSame($sms['time'] ?? '', $request['time'] ?? '');
+                }
+            );
+
+            $this->assertEmpty($duplicate, 'The repeated notification sent a second SMS');
         } finally {
             $this->updatePhoneOtpChannel(PHONE_OTP_CHANNEL_SMS);
         }

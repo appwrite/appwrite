@@ -918,6 +918,9 @@ class Messaging extends Action
                     [
                         'message' => $message->getArrayCopy(),
                         'recipients' => $recipients,
+                        // Carried rather than inferred from the entry's own age, because the
+                        // handler may put the entry back and must not extend the code's life.
+                        'expire' => \time() + TOKEN_EXPIRATION_OTP,
                     ],
                     ttl: TOKEN_EXPIRATION_OTP,
                 );
