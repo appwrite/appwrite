@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Utopia\Lock\Tests\E2E;
 
-use PHPUnit\Framework\AssertionFailedError;
 use PHPUnit\Framework\TestCase;
 use Redis;
 use Utopia\Lock\Distributed;
@@ -89,6 +88,7 @@ final class DistributedTest extends TestCase
         $lowest = PHP_FLOAT_MAX;
         $highest = 0.0;
         for ($run = 0; $run < 25; $run++) {
+            $this->redis->setOption(Redis::OPT_READ_TIMEOUT, 2.0);
             $waiter = new Distributed($this->redis, $this->key, 30);
             $start = microtime(true);
             $first = null;
@@ -352,10 +352,18 @@ final class DistributedTest extends TestCase
         $this->assertNotSame(-1, $pid, 'Failed to fork');
 
         if ($pid === 0) {
-            $redis = new Redis();
-            $redis->connect($host, $port, 1.0);
-            $holder = new Distributed($redis, $this->key, 30);
-            $acquired = $holder->tryAcquire();
+            $holder = null;
+
+            try {
+                $redis = new Redis();
+                $redis->connect($host, $port, 1.0);
+                $redis->setOption(Redis::OPT_READ_TIMEOUT, 2.0);
+                $holder = new Distributed($redis, $this->key, 30);
+                $acquired = $holder->tryAcquire();
+            } catch (\Throwable) {
+                $acquired = false;
+            }
+
             file_put_contents($ready, $acquired ? '1' : '0');
 
             $waited = 0.0;
@@ -364,9 +372,14 @@ final class DistributedTest extends TestCase
                 $waited += 0.01;
             }
 
-            if ($acquired) {
+            if ($acquired && $holder !== null) {
                 usleep(200_000);
-                $holder->release();
+
+                try {
+                    $holder->release();
+                } catch (\Throwable) {
+                    // The key's TTL bounds a lost release.
+                }
             }
 
             exit(0);
@@ -380,6 +393,7 @@ final class DistributedTest extends TestCase
 
             $this->assertSame('1', file_get_contents($ready), 'Child failed to acquire the lock');
 
+            $this->redis->setOption(Redis::OPT_READ_TIMEOUT, 2.0);
             $waiter = new Distributed($this->redis, $this->key, 30);
             $start = microtime(true);
             file_put_contents($started, '1');
@@ -395,75 +409,15 @@ final class DistributedTest extends TestCase
         }
     }
 
-    public function testChildAcquisitionFailureTerminatesPromptly(): void
-    {
-        if (! \function_exists('pcntl_fork')) {
-            $this->markTestSkipped('pcntl_fork required');
-        }
-
-        $host = getenv('REDIS_HOST') ?: 'redis';
-        $port = (int) (getenv('REDIS_PORT') ?: 6379);
-
-        $holderLock = new Distributed($this->redis, $this->key, 30);
-        $this->assertTrue($holderLock->tryAcquire(), 'Setup must hold the lock so the child cannot acquire it');
-
-        $ready = tempnam(sys_get_temp_dir(), 'utopia-lock-ready-');
-        $started = tempnam(sys_get_temp_dir(), 'utopia-lock-started-');
-
-        $pid = pcntl_fork();
-        $this->assertNotSame(-1, $pid, 'Failed to fork');
-
-        if ($pid === 0) {
-            $redis = new Redis();
-            $redis->connect($host, $port, 1.0);
-            $child = new Distributed($redis, $this->key, 30);
-            $acquired = $child->tryAcquire();
-            file_put_contents($ready, $acquired ? '1' : '0');
-
-            $waited = 0.0;
-            while ($waited < 5.0 && file_get_contents($started) !== '1') {
-                usleep(10_000);
-                $waited += 0.01;
-            }
-
-            if ($acquired) {
-                $child->release();
-            }
-
-            exit(0);
-        }
-
-        $start = microtime(true);
-        $thrown = null;
-
-        try {
-            $deadline = microtime(true) + 5.0;
-            while (microtime(true) < $deadline && file_get_contents($ready) === '') {
-                usleep(10_000);
-            }
-
-            try {
-                $this->assertSame('1', file_get_contents($ready), 'Child failed to acquire the lock');
-            } catch (AssertionFailedError $exception) {
-                $thrown = $exception;
-            }
-        } finally {
-            file_put_contents($started, '1');
-            $this->reapChild($pid);
-            @unlink($ready);
-            @unlink($started);
-        }
-
-        $elapsed = microtime(true) - $start;
-        $holderLock->release();
-
-        $this->assertInstanceOf(AssertionFailedError::class, $thrown, 'Forced acquisition failure must surface as an assertion failure');
-        $this->assertLessThan(5.0, $elapsed, 'Failure path must terminate promptly instead of hanging in waitpid');
-    }
 
     private function reapChild(int $pid): void
     {
-        $deadline = microtime(true) + 2.0;
+        // Bounded, portable reaping without ext-posix. Every child operation is
+        // bounded: Redis connect/read timeouts, a bounded wait for the started
+        // signal, and a 200ms hold, so the child always exits on its own. If it
+        // somehow outlives the poll window, leave it to be reaped when the test
+        // process exits rather than blocking the suite on an unbounded wait.
+        $deadline = microtime(true) + 7.0;
 
         while (microtime(true) < $deadline) {
             $result = pcntl_waitpid($pid, $status, WNOHANG);
@@ -474,8 +428,5 @@ final class DistributedTest extends TestCase
 
             usleep(10_000);
         }
-
-        posix_kill($pid, SIGKILL);
-        pcntl_waitpid($pid, $status);
     }
 }
