@@ -84,7 +84,9 @@ final class IntervalTest extends TestCase
         /**
          * Test for SUCCESS
          */
-        $expired = DateTime::formatTz(DateTime::format(new \DateTime('-30 minutes')));
+        // Older than the backoff both seeds have earned, so the point under
+        // test is the daily sweep and not the retry interval.
+        $expired = DateTime::formatTz(DateTime::format(new \DateTime('-90 minutes')));
         $this->seed('failed', 1, ['$updatedAt' => $expired]);
         $this->seed('expired', 2, ['$updatedAt' => $expired, 'status' => RULE_STATUS_CERTIFICATE_GENERATING], ['updated' => $expired]);
         $this->runTask();
@@ -186,6 +188,22 @@ final class IntervalTest extends TestCase
         $this->runTask();
         $domains = array_column(array_column($this->publisher->getEvents('certificates') ?? [], 'domain'), 'domain');
         $this->assertSame(['unreachable.example.com'], $domains);
+    }
+
+    public function testRetriesBackOffAsAttemptsAccumulate(): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        // Two spent attempts put the next retry four lease periods out, so a
+        // rule younger than that is held back while an older one is claimed.
+        $this->seed('waiting', 2, ['$updatedAt' => DateTime::formatTz(DateTime::format(new \DateTime('-' . 2 * APP_CERTIFICATE_GENERATION_LEASE . ' seconds')))]);
+        $this->seed('due', 2, ['$updatedAt' => DateTime::formatTz(DateTime::format(new \DateTime('-' . 5 * APP_CERTIFICATE_GENERATION_LEASE . ' seconds')))]);
+
+        $this->runTask();
+
+        $domains = array_column(array_column($this->publisher->getEvents('certificates') ?? [], 'domain'), 'domain');
+        $this->assertSame(['due.example.com'], $domains);
     }
 
     public function testIssuanceBudgetBoundsOneTick(): void

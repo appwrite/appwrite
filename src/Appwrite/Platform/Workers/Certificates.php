@@ -348,7 +348,11 @@ class Certificates extends Action
                             }
                         }
                         $rule->setAttribute('status', RULE_STATUS_CERTIFICATE_GENERATING);
-                        $logs .= "\033[90m[{$date}] \033[97mSSL certificate is being issued. We'll periodically check and update the status. \033[0m\n";
+                        // Name the wait the scheduler will actually take, so the
+                        // line is worth reading rather than the same sentence
+                        // repeated until someone gives up on it.
+                        $retry = \intdiv(APP_CERTIFICATE_GENERATION_LEASE * (2 ** \min($certificate->getAttribute('attempts', 0), APP_LIMIT_CERTIFICATE_ATTEMPTS)), 60);
+                        $logs .= "\033[90m[{$date}] \033[97mSSL certificate is being issued. Checking again in {$retry} minutes. \033[0m\n";
                         return;
                     }
                     // UNKNOWN is not evidence of a usable certificate. Let the

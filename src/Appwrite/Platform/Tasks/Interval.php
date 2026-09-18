@@ -204,6 +204,17 @@ class Interval extends Action
                         return null;
                     }
 
+                    // Each retry waits twice as long as the one before it. A
+                    // certificate authority blocked on a DNS record its owner
+                    // has not added can stay that way for hours, and a fixed
+                    // retry writes a log line into the rule for every one of
+                    // them. The query above selects on the shortest wait, so
+                    // the longer ones are held back here instead.
+                    $backoff = APP_CERTIFICATE_GENERATION_LEASE * (2 ** \min($certificate->getAttribute('attempts', 0), APP_LIMIT_CERTIFICATE_ATTEMPTS));
+                    if (new DateTime($current->getUpdatedAt()) >= new DateTime(DatabaseDateTime::format(new DateTime('-' . $backoff . ' seconds')))) {
+                        return null;
+                    }
+
                     return $dbForPlatform->updateDocument('rules', $current->getId(), new Document([
                         '$updatedAt' => DatabaseDateTime::now(),
                     ]));
