@@ -380,6 +380,11 @@ const PHONE_OTP_WHATSAPP_UNDELIVERABLE_CODE = 131026;
 // How long a number stays known-unreachable, so a returning user skips the dead channel.
 const PHONE_OTP_WHATSAPP_UNREACHABLE_TTL = 60 * 60 * 24 * 30;
 const PHONE_OTP_WHATSAPP_UNREACHABLE_KEY = 'whatsapp-otp-unreachable';
+// Two of Meta's retries can arrive at once, so reading the record above and claiming it has
+// to be one step. Held only across a cache read, a project read and a cache write.
+const PHONE_OTP_WHATSAPP_CLAIM_KEY = 'whatsapp-otp-claim';
+const PHONE_OTP_WHATSAPP_CLAIM_LOCK_TTL = 15;
+const PHONE_OTP_WHATSAPP_CLAIM_LOCK_TIMEOUT = 5.0;
 
 // Usage metrics
 const METRIC_TEAMS = 'teams';

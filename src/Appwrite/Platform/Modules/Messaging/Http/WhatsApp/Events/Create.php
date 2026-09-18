@@ -14,6 +14,7 @@ use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Lock\Exception\Contention;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Span\Span;
 use Utopia\System\System;
@@ -52,6 +53,7 @@ class Create extends Action
             ->inject('dbForPlatform')
             ->inject('authorization')
             ->inject('publisherForMessaging')
+            ->inject('locks')
             ->callback($this->action(...));
     }
 
@@ -61,7 +63,8 @@ class Create extends Action
         Cache $cache,
         Database $dbForPlatform,
         Authorization $authorization,
-        MessagingPublisher $publisherForMessaging
+        MessagingPublisher $publisherForMessaging,
+        callable $locks
     ): void {
         $secret = System::getEnv('_APP_WHATSAPP_APP_SECRET', '');
 
@@ -77,7 +80,7 @@ class Create extends Action
         }
 
         foreach ($this->failures($payload) as $failure) {
-            $this->fallback($failure, $cache, $dbForPlatform, $authorization, $publisherForMessaging);
+            $this->fallback($failure, $cache, $dbForPlatform, $authorization, $publisherForMessaging, $locks);
         }
 
         // Anything other than a 200 puts Meta into a 36 hour retry, so a payload this instance
@@ -144,7 +147,8 @@ class Create extends Action
         Cache $cache,
         Database $dbForPlatform,
         Authorization $authorization,
-        MessagingPublisher $publisherForMessaging
+        MessagingPublisher $publisherForMessaging,
+        callable $locks
     ): void {
         [$projectId, $messageId] = \array_pad(\explode(':', $failure['callback'], 2), 2, '');
 
@@ -152,70 +156,83 @@ class Create extends Action
             return;
         }
 
-        $key = PHONE_OTP_WHATSAPP_FALLBACK_KEY . ':' . $projectId . ':' . $messageId;
-        $stashed = $cache->load($key, TOKEN_EXPIRATION_OTP);
-
-        // Nothing to send: the policy had no SMS fallback, the code has since expired, or a
-        // duplicate of this notification already sent it.
-        if (empty($stashed['message'])) {
-            return;
-        }
-
-        // Meta retries a notification it could not deliver for 36 hours, far longer than the
-        // code stays redeemable, so texting someone a passcode that is already dead is a real
-        // outcome rather than a theoretical one.
-        $remaining = (int) ($stashed['expire'] ?? 0) - \time();
-
-        if ($remaining <= 0) {
-            return;
-        }
-
-        // Read before claiming. A database that is briefly unavailable must not consume the
-        // one record that says this code still needs sending.
-        $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
-
-        if ($project->isEmpty()) {
-            return;
-        }
-
-        $recipients = $stashed['recipients'] ?? [];
-
-        // Claiming before the send is what makes a duplicate harmless: it reads a record with
-        // nothing left to send and stops. The claim overwrites rather than deletes, so that
-        // handing it back below is the same operation in reverse.
-        $cache->save($key, ['claimed' => \time()], ttl: $remaining);
-
-        Span::add('messaging.whatsapp.event.fallback', $messageId);
-        Console::info('WhatsApp OTP for project ' . $projectId . ' was not delivered, falling back to SMS');
-
+        // Meta can deliver the same status twice at once, so reading the record and claiming it
+        // must be one step. Losing the race means another request already has this code in hand.
         try {
-            $publisherForMessaging->enqueue(new MessagingMessage(
-                type: MESSAGE_SEND_TYPE_INTERNAL,
-                project: $project,
-                message: new Document($stashed['message']),
-                recipients: $recipients,
-                channel: PHONE_OTP_CHANNEL_SMS,
-                fallback: false,
-            ));
-        } catch (\Throwable $error) {
-            // Hand the claim back and fail the request, so Meta retries into a record that is
-            // there again. The original deadline rides along, so the retry cannot resurrect a
-            // code that expired in the meantime.
-            $cache->save($key, $stashed, ttl: $remaining);
+            $locks(
+                PHONE_OTP_WHATSAPP_CLAIM_KEY . ':' . $projectId . ':' . $messageId,
+                PHONE_OTP_WHATSAPP_CLAIM_LOCK_TTL,
+                function () use ($failure, $cache, $dbForPlatform, $authorization, $publisherForMessaging, $projectId, $messageId): void {
+                    $key = PHONE_OTP_WHATSAPP_FALLBACK_KEY . ':' . $projectId . ':' . $messageId;
+                    $stashed = $cache->load($key, TOKEN_EXPIRATION_OTP);
 
-            throw $error;
-        }
+                    // Nothing to send: the policy had no SMS fallback, the code has since expired, or a
+                    // duplicate of this notification already sent it.
+                    if (empty($stashed['message'])) {
+                        return;
+                    }
 
-        // Only now, once the code is on its way, is it safe to let a bookkeeping failure
-        // surface: a repeat of this notification has nothing left to send twice.
-        if ($failure['undeliverable']) {
-            foreach ($recipients as $recipient) {
-                $cache->save(
-                    PHONE_OTP_WHATSAPP_UNREACHABLE_KEY . ':' . PhoneOTPChannel::unreachableKey((string) $recipient),
-                    ['at' => \time()],
-                    ttl: PHONE_OTP_WHATSAPP_UNREACHABLE_TTL,
-                );
-            }
+                    // Meta retries a notification it could not deliver for 36 hours, far longer than the
+                    // code stays redeemable, so texting someone a passcode that is already dead is a real
+                    // outcome rather than a theoretical one.
+                    $remaining = (int) ($stashed['expire'] ?? 0) - \time();
+
+                    if ($remaining <= 0) {
+                        return;
+                    }
+
+                    // Read before claiming. A database that is briefly unavailable must not consume the
+                    // one record that says this code still needs sending.
+                    $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
+
+                    if ($project->isEmpty()) {
+                        return;
+                    }
+
+                    $recipients = $stashed['recipients'] ?? [];
+
+                    // Claiming before the send is what makes a duplicate harmless: it reads a record with
+                    // nothing left to send and stops. The claim overwrites rather than deletes, so that
+                    // handing it back below is the same operation in reverse.
+                    $cache->save($key, ['claimed' => \time()], ttl: $remaining);
+
+                    Span::add('messaging.whatsapp.event.fallback', $messageId);
+                    Console::info('WhatsApp OTP for project ' . $projectId . ' was not delivered, falling back to SMS');
+
+                    try {
+                        $publisherForMessaging->enqueue(new MessagingMessage(
+                            type: MESSAGE_SEND_TYPE_INTERNAL,
+                            project: $project,
+                            message: new Document($stashed['message']),
+                            recipients: $recipients,
+                            channel: PHONE_OTP_CHANNEL_SMS,
+                            fallback: false,
+                        ));
+                    } catch (\Throwable $error) {
+                        // Hand the claim back and fail the request, so Meta retries into a record that is
+                        // there again. The original deadline rides along, so the retry cannot resurrect a
+                        // code that expired in the meantime.
+                        $cache->save($key, $stashed, ttl: $remaining);
+
+                        throw $error;
+                    }
+
+                    // Only now, once the code is on its way, is it safe to let a bookkeeping failure
+                    // surface: a repeat of this notification has nothing left to send twice.
+                    if ($failure['undeliverable']) {
+                        foreach ($recipients as $recipient) {
+                            $cache->save(
+                                PHONE_OTP_WHATSAPP_UNREACHABLE_KEY . ':' . PhoneOTPChannel::unreachableKey((string) $recipient),
+                                ['at' => \time()],
+                                ttl: PHONE_OTP_WHATSAPP_UNREACHABLE_TTL,
+                            );
+                        }
+                    }
+                },
+                PHONE_OTP_WHATSAPP_CLAIM_LOCK_TIMEOUT,
+            );
+        } catch (Contention) {
+            Span::add('messaging.whatsapp.event.contended', $messageId);
         }
     }
 }
