@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "d5291bc3249cda0ec030a737d33c873b",
+    "content-hash": "8e2ee93c3fbe4ceb7cb01b316f7a783a",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3934,25 +3934,23 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/locale.git",
-                "reference": "87472f1af2e5d9a9b0b962a78729d408d1cb3294"
+                "reference": "d3714bd8edd4404f3b39d8aeb35369b999e23209"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/locale/zipball/87472f1af2e5d9a9b0b962a78729d408d1cb3294",
-                "reference": "87472f1af2e5d9a9b0b962a78729d408d1cb3294",
+                "url": "https://api.github.com/repos/utopia-php/locale/zipball/d3714bd8edd4404f3b39d8aeb35369b999e23209",
+                "reference": "d3714bd8edd4404f3b39d8aeb35369b999e23209",
                 "shasum": ""
             },
             "require": {
-                "php": ">=7.4"
+                "ext-intl": "*",
+                "php": ">=8.3"
             },
             "require-dev": {
                 "laravel/pint": "1.2.*",
                 "phpstan/phpstan": "1.*",
                 "phpunit/phpunit": "^9.3",
                 "vimeo/psalm": "4.0.1"
-            },
-            "suggest": {
-                "ext-intl": "Required to format plural translations"
             },
             "type": "library",
             "autoload": {
@@ -3976,7 +3974,7 @@
                 "issues": "https://github.com/utopia-php/locale/issues",
                 "source": "https://github.com/utopia-php/locale/tree/feat-plurals"
             },
-            "time": "2026-09-17T12:47:23+00:00"
+            "time": "2026-09-18T08:04:22+00:00"
         },
         {
             "name": "utopia-php/messaging",
@@ -8374,7 +8372,8 @@
         "ext-pdo": "*",
         "ext-openssl": "*",
         "ext-zlib": "*",
-        "ext-sockets": "*"
+        "ext-sockets": "*",
+        "ext-intl": "*"
     },
     "platform-dev": {
         "ext-fileinfo": "*"
