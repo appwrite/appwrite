@@ -290,6 +290,13 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Setup PHP
+        uses: shivammathur/setup-php@accd6127cb78bee3e8082180cb391013d204ef9f # 2.37.0
+        with:
+          php-version: '8.5'
+          tools: composer:v2
+          coverage: none
+
       - name: Compute changed packages
         id: changed
         run: |
