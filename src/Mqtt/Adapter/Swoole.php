@@ -2,6 +2,8 @@
 
 namespace Utopia\Mqtt\Adapter;
 
+use Swoole\Http\Request;
+use Swoole\Http\Response;
 use Swoole\Server;
 use Swoole\Server\Port;
 use Swoole\WebSocket\Frame;
@@ -88,6 +90,27 @@ class Swoole extends Adapter
         });
 
         if ($this->server instanceof WebSocketServer) {
+            // Swoole's default handshake does not echo the `mqtt` subprotocol, which MQTT-over-
+            // WebSocket clients (MQTT.js, Paho) send and require echoed back. Perform a compliant
+            // handshake that echoes it (RFC 6455 accept key + Sec-WebSocket-Protocol: mqtt).
+            $this->server->on('handshake', function (Request $request, Response $response): bool {
+                $key = \is_string($request->header['sec-websocket-key'] ?? null) ? $request->header['sec-websocket-key'] : '';
+                $accept = \base64_encode(\sha1($key . '258EAFA5-E914-47DA-95CA-C5AB0DC85B11', true));
+
+                $response->header('Upgrade', 'websocket');
+                $response->header('Connection', 'Upgrade');
+                $response->header('Sec-WebSocket-Accept', $accept);
+                $response->header('Sec-WebSocket-Version', '13');
+                if (isset($request->header['sec-websocket-protocol'])) {
+                    $response->header('Sec-WebSocket-Protocol', 'mqtt');
+                }
+
+                $response->status(101);
+                $response->end();
+
+                return true;
+            });
+
             // A WebSocket message may hold several or partial MQTT packets, so its payload
             // is buffered and split into whole packets before dispatch (Packet::frames),
             // matching the one-packet-per-onReceive the raw-TCP path gets from framing.
