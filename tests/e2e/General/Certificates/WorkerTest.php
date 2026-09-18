@@ -357,7 +357,7 @@ final class WorkerTest extends TestCase
         $this->provider->renew = false;
         $this->setRule(['status' => RULE_STATUS_CERTIFICATE_GENERATING]);
         $this->database->updateDocument('certificates', 'certificate', new Document([
-            'attempts' => APP_LIMIT_CERTIFICATE_ATTEMPTS,
+            'attempts' => 5,
             'updated' => '2020-01-01T00:00:00.000+00:00',
         ]));
 
@@ -381,14 +381,40 @@ final class WorkerTest extends TestCase
         $this->provider->status = Status::RENEWING;
         $this->setRule(['status' => RULE_STATUS_VERIFIED]);
         $this->database->updateDocument('certificates', 'certificate', new Document([
-            'attempts' => APP_LIMIT_CERTIFICATE_ATTEMPTS - 1,
+            'attempts' => 4,
         ]));
 
         $this->runWorker();
 
         $this->assertSame(RULE_STATUS_CERTIFICATE_GENERATING, $this->rule()->getAttribute('status'));
-        $this->assertSame(APP_LIMIT_CERTIFICATE_ATTEMPTS - 1, $this->certificate()->getAttribute('attempts'));
+        $this->assertSame(4, $this->certificate()->getAttribute('attempts'));
         $this->assertSame([], $this->provider->issued);
+    }
+
+    public function testPollArrivingInsideTheLeaseChangesNothing(): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        // Waiting holds the lease, so a status poll that arrives before it
+        // expires is a no-op: no counted wait, no rewritten log. This is what
+        // stops a poller that runs every few minutes from filling the log a
+        // customer has to read.
+        $this->provider->renew = false;
+        $this->provider->status = Status::PENDING;
+        $this->setRule(['status' => RULE_STATUS_CERTIFICATE_GENERATING]);
+
+        $this->runWorker();
+        $waited = $this->certificate()->getAttribute('attempts');
+        $logs = $this->rule()->getAttribute('logs');
+        $lease = $this->certificate()->getAttribute('updated');
+        $this->assertNotNull($lease, 'Waiting keeps the lease so the scheduler knows when to look again');
+
+        $this->runWorker();
+
+        $this->assertSame($waited, $this->certificate()->getAttribute('attempts'));
+        $this->assertSame($logs, $this->rule()->getAttribute('logs'));
+        $this->assertSame($lease, $this->certificate()->getAttribute('updated'));
     }
 
     public function testPendingDuplicateCountsTheWaitWithoutCallingIssuance(): void
