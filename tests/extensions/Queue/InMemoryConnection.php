@@ -88,6 +88,29 @@ final class InMemoryConnection implements Connection
         return \is_string($value) ? $value : false;
     }
 
+    /**
+     * Pop up to $count payloads from the tail, in pop order.
+     *
+     * Fewer than asked — including none — is the ordinary answer on a list that
+     * holds fewer, matching what LMPOP does for the real connection.
+     *
+     * @return list<string>
+     */
+    public function rightPopMany(string $queue, int $count, int $timeout): array
+    {
+        $batch = [];
+        for ($taken = 0; $taken < $count; $taken++) {
+            $value = $this->pop($queue, fromTail: true);
+            if (!\is_string($value)) {
+                break;
+            }
+
+            $batch[] = $value;
+        }
+
+        return $batch;
+    }
+
     public function rightPopLeftPush(string $queue, string $destination, int $timeout): string|false
     {
         $value = $this->rightPop($queue, $timeout);
@@ -183,6 +206,11 @@ final class InMemoryConnection implements Connection
     public function increment(string $key): int
     {
         return $this->counters[$key] = ($this->counters[$key] ?? 0) + 1;
+    }
+
+    public function incrementBy(string $key, int $by): int
+    {
+        return $this->counters[$key] = ($this->counters[$key] ?? 0) + $by;
     }
 
     public function decrement(string $key): int
