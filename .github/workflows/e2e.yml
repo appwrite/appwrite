@@ -12,10 +12,6 @@ jobs:
     name: ${{ matrix.project }}
     runs-on: ${{ matrix.runner }}
     timeout-minutes: ${{ matrix.timeout }}
-    concurrency:
-      group: e2e-${{ matrix.project }}-${{ matrix.project == 'console-live' && 'shared-account' || github.run_id }}
-      cancel-in-progress: false
-      queue: max
     strategy:
       fail-fast: false
       matrix:
@@ -61,9 +57,13 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-playwright-
 
+      # System libraries live outside the cached browser directory.
+      - name: Install Playwright system dependencies
+        run: bunx playwright install-deps chromium
+
       - name: Install Playwright Browsers
         if: steps.playwright-cache.outputs.cache-hit != 'true'
-        run: bunx playwright install --with-deps chromium
+        run: bunx playwright install chromium
 
       - name: E2E Tests
         env:
@@ -79,10 +79,3 @@ jobs:
           E2E_ORG_ID: ${{ secrets.E2E_ORG_ID }}
           E2E_PROJECT_ID: ${{ secrets.E2E_PROJECT_ID }}
         run: bun run e2e -- ${{ matrix.args }}
-
-      - uses: actions/upload-artifact@v4
-        if: ${{ failure() && !cancelled() }}
-        with:
-          name: playwright-report-${{ matrix.project }}
-          path: playwright-report/
-          retention-days: 7

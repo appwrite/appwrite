@@ -18,10 +18,10 @@ export const DATABASE_SUITE_FIXTURE_TIMEOUT_MS = 90 * 60_000
 
 /**
  * Leftovers older than this are assumed to be from crashed/cancelled runs.
- * Newer matching names are left alone so a parallel local e2e job is not
- * deleted mid-suite.
+ * Newer matching names are left alone so a concurrent e2e run is not deleted
+ * mid-suite. Must outlive the longest lane timeout in `.github/workflows/e2e.yml`.
  */
-export const E2E_STALE_PROJECT_MS = 2 * 60 * 60 * 1000
+export const E2E_STALE_PROJECT_MS = 4 * 60 * 60 * 1000
 
 const DELETE_CONCURRENCY = 12
 

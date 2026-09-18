@@ -1,9 +1,6 @@
 import { useEffect, useState } from 'react'
-import { persistVisitorCountryCode } from '@/lib/locale/visitor-country'
 import { RUNTIME_CONFIG_WINDOW_KEY } from '@/lib/runtime-config-shared'
 import { normalizeCountryCode } from '@/lib/pricing/start-plan'
-import { LONG_STALE_TIME } from '@/lib/react-query/hooks/constants'
-import type { QueryClient } from '@tanstack/react-query'
 import type { Models } from '@appwrite.io/console'
 
 const LOCALE_PREFETCH_WINDOW_KEY = '__LOCALE_PREFETCH__'
@@ -20,9 +17,7 @@ declare global {
 
 let resolvedPrefetch: Models.Locale | null | undefined
 
-export function isPrefetchedLocale(
-  value: unknown,
-): value is Models.Locale {
+export function isPrefetchedLocale(value: unknown): value is Models.Locale {
   return (
     !!value &&
     typeof value === 'object' &&
@@ -94,19 +89,6 @@ export function usePrefetchedLocale(): Models.Locale | null {
   }, [])
 
   return locale
-}
-
-export function seedLocaleQueryFromHtmlPrefetch(queryClient: QueryClient): void {
-  if (typeof window === 'undefined') return
-  void readPrefetchedLocale().then((locale) => {
-    if (!locale) return
-    persistVisitorCountryCode(locale.countryCode)
-    queryClient.setQueryDefaults(['locale', 'console'], {
-      staleTime: LONG_STALE_TIME,
-      gcTime: LONG_STALE_TIME,
-    })
-    queryClient.setQueryData(['locale', 'console'], locale)
-  })
 }
 
 export function prefetchedLocaleCountryCode(
