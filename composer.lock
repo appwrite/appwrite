@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "8a4455dd9986b24d5ab9788f1d97a2bf",
+    "content-hash": "b6de094fa4baf857915a252387762572",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4248,16 +4248,16 @@
         },
         {
             "name": "utopia-php/platform",
-            "version": "1.0.0-rc20",
+            "version": "1.0.0-rc21",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/platform.git",
-                "reference": "746d403d417bb8ae42e5f8d94e1bbe0e75e4c87d"
+                "reference": "b5bb2f661efa35ef06a6e86e97eeaea20ead66f8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/platform/zipball/746d403d417bb8ae42e5f8d94e1bbe0e75e4c87d",
-                "reference": "746d403d417bb8ae42e5f8d94e1bbe0e75e4c87d",
+                "url": "https://api.github.com/repos/utopia-php/platform/zipball/b5bb2f661efa35ef06a6e86e97eeaea20ead66f8",
+                "reference": "b5bb2f661efa35ef06a6e86e97eeaea20ead66f8",
                 "shasum": ""
             },
             "require": {
@@ -4266,7 +4266,7 @@
                 "php": ">=8.5",
                 "utopia-php/cli": "^0.24",
                 "utopia-php/http": "^2.0@RC",
-                "utopia-php/queue": "0.23.* || 0.24.* || ^1.0.0 || ^2.0.0",
+                "utopia-php/queue": "0.23.* || 0.24.* || ^1.0.0 || ^2.0.0 || ^3.0.0",
                 "utopia-php/servers": "^0.4"
             },
             "type": "library",
@@ -4289,9 +4289,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/platform/issues",
-                "source": "https://github.com/utopia-php/platform/tree/1.0.0-rc20"
+                "source": "https://github.com/utopia-php/platform/tree/1.0.0-rc21"
             },
-            "time": "2026-09-04T17:01:57+00:00"
+            "time": "2026-09-18T13:07:00+00:00"
         },
         {
             "name": "utopia-php/pools",
@@ -4400,16 +4400,16 @@
         },
         {
             "name": "utopia-php/queue",
-            "version": "2.2.4",
+            "version": "3.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/queue.git",
-                "reference": "c6994fe68c58d48f303693dad2762d1f80d5bf97"
+                "reference": "ee2c461a8244173bcfba7ad5e299d5e11c406b02"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/queue/zipball/c6994fe68c58d48f303693dad2762d1f80d5bf97",
-                "reference": "c6994fe68c58d48f303693dad2762d1f80d5bf97",
+                "url": "https://api.github.com/repos/utopia-php/queue/zipball/ee2c461a8244173bcfba7ad5e299d5e11c406b02",
+                "reference": "ee2c461a8244173bcfba7ad5e299d5e11c406b02",
                 "shasum": ""
             },
             "require": {
@@ -4428,6 +4428,7 @@
                 "workerman/workerman": "^4.0"
             },
             "suggest": {
+                "ext-igbinary": "Required for the Igbinary codec (Codec\\Igbinary).",
                 "ext-pcntl": "Fallback for Adapter\\KubernetesJob graceful shutdown when Swoole is unavailable.",
                 "ext-swoole": "Needed to support Swoole.",
                 "utopia-php/nats": "Needed to support the NATS JetStream broker (Broker\\Nats).",
@@ -4460,9 +4461,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/queue/issues",
-                "source": "https://github.com/utopia-php/queue/tree/2.2.4"
+                "source": "https://github.com/utopia-php/queue/tree/3.0.0"
             },
-            "time": "2026-09-11T17:50:20+00:00"
+            "time": "2026-09-18T11:36:46+00:00"
         },
         {
             "name": "utopia-php/registry",
