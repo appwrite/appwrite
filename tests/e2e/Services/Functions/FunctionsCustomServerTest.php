@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\E2E\Services\Functions;
 
 use Appwrite\Platform\Modules\Compute\Specification;
+use Appwrite\Tests\Async\Exceptions\Critical;
 use Appwrite\Tests\Retry;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
@@ -1072,6 +1073,11 @@ final class FunctionsCustomServerTest extends Scope
         $this->assertEventually(function () use ($functionId, $deploymentId) {
             $deployment = $this->getDeployment($functionId, $deploymentId);
             $this->assertEquals('ready', $deployment['body']['status'], $deployment['body']['buildLogs'] ?? '');
+
+            $function = $this->getFunction($functionId);
+            if (($function['body']['deploymentId'] ?? '') !== $deploymentId) {
+                throw new Critical('Deployment reported ready before the function was activated. deploymentId: ' . ($function['body']['deploymentId'] ?? ''));
+            }
         }, 100000, 500);
 
         /**
