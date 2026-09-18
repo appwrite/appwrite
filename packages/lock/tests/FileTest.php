@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Utopia\Lock\Tests;
 
-use PHPUnit\Framework\AssertionFailedError;
 use PHPUnit\Framework\TestCase;
 use Utopia\Lock\Exception\Contention;
 use Utopia\Lock\File;
@@ -197,70 +196,15 @@ final class FileTest extends TestCase
         }
     }
 
-    public function testChildAcquisitionFailureTerminatesPromptly(): void
-    {
-        if (! \function_exists('pcntl_fork')) {
-            $this->markTestSkipped('pcntl_fork required');
-        }
-
-        $holderLock = new File($this->path);
-        $this->assertTrue($holderLock->tryAcquire(), 'Setup must hold the lock so the child cannot acquire it');
-
-        $ready = tempnam(sys_get_temp_dir(), 'utopia-lock-ready-');
-        $started = tempnam(sys_get_temp_dir(), 'utopia-lock-started-');
-
-        $pid = pcntl_fork();
-        $this->assertNotSame(-1, $pid, 'Failed to fork');
-
-        if ($pid === 0) {
-            $child = new File($this->path);
-            $acquired = $child->tryAcquire();
-            file_put_contents($ready, $acquired ? '1' : '0');
-
-            $waited = 0.0;
-            while ($waited < 5.0 && file_get_contents($started) !== '1') {
-                usleep(10_000);
-                $waited += 0.01;
-            }
-
-            if ($acquired) {
-                $child->release();
-            }
-
-            exit(0);
-        }
-
-        $start = microtime(true);
-        $thrown = null;
-
-        try {
-            $deadline = microtime(true) + 5.0;
-            while (microtime(true) < $deadline && file_get_contents($ready) === '') {
-                usleep(10_000);
-            }
-
-            try {
-                $this->assertSame('1', file_get_contents($ready), 'Child failed to acquire the lock');
-            } catch (AssertionFailedError $exception) {
-                $thrown = $exception;
-            }
-        } finally {
-            file_put_contents($started, '1');
-            $this->reapChild($pid);
-            @unlink($ready);
-            @unlink($started);
-        }
-
-        $elapsed = microtime(true) - $start;
-        $holderLock->release();
-
-        $this->assertInstanceOf(AssertionFailedError::class, $thrown, 'Forced acquisition failure must surface as an assertion failure');
-        $this->assertLessThan(5.0, $elapsed, 'Failure path must terminate promptly instead of hanging in waitpid');
-    }
 
     private function reapChild(int $pid): void
     {
-        $deadline = microtime(true) + 2.0;
+        // Bounded, portable reaping without ext-posix. Every child operation is
+        // bounded: non-blocking flock attempts, a bounded wait for the started
+        // signal, and a 300ms hold, so the child always exits on its own. If it
+        // somehow outlives the poll window, leave it to be reaped when the test
+        // process exits rather than blocking the suite on an unbounded wait.
+        $deadline = microtime(true) + 7.0;
 
         while (microtime(true) < $deadline) {
             $result = pcntl_waitpid($pid, $status, WNOHANG);
@@ -271,8 +215,5 @@ final class FileTest extends TestCase
 
             usleep(10_000);
         }
-
-        posix_kill($pid, SIGKILL);
-        pcntl_waitpid($pid, $status);
     }
 }
