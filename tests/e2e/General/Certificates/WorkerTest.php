@@ -367,7 +367,7 @@ final class WorkerTest extends TestCase
         $this->assertNull($this->certificate()->getAttribute('updated'));
         $this->assertSame([], $this->provider->issued);
         // The whole point: the domain owner is told what to go and check.
-        $this->assertStringContainsString('DNS record', $this->rule()->getAttribute('logs'));
+        $this->assertStringContainsString('DNS record', (string) $this->rule()->getAttribute('logs'));
     }
 
     public function testRenewalIsNotFailedWhileTheProviderIsStillWorking(): void
