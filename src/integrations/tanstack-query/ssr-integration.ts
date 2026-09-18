@@ -27,6 +27,7 @@ export function isClientOwnedQueryKey(queryKey: unknown): boolean {
     return true
   }
   if (scope === 'locale' && name === 'console') return true
+  if (scope === 'visitor-country') return true
   return false
 }
 

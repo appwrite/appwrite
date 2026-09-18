@@ -3,6 +3,7 @@ import './styles.css'
 import { createRouter } from '@tanstack/react-router'
 import * as TanstackQuery from './integrations/tanstack-query/root-provider'
 import { setupQueryClientRouterIntegration } from './integrations/tanstack-query/ssr-integration'
+import { seedLocaleQueryFromHtmlPrefetch } from '@/lib/locale/prefetch-locale'
 
 import { ErrorComponent } from './components/error/Component'
 import { NotFound } from './components/error/NotFound'
@@ -25,6 +26,7 @@ import {
 // Create a new router instance
 export async function getRouter() {
   const rqContext = TanstackQuery.getContext()
+  seedLocaleQueryFromHtmlPrefetch(rqContext.queryClient)
 
   // Dynamic import breaks routeTree.gen ↔ router circular dependency (Register
   // augmentation type-imports this module; static import can TDZ under SSR).

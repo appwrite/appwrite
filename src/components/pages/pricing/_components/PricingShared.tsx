@@ -90,8 +90,8 @@ export const pricingHeroCardsReserveClassName =
 export const pricingCompactCardsReserveClassName =
   'min-h-[17.5rem] sm:min-h-[18.75rem]'
 
-const pricingPlanCardsFadeClassName =
-  'animate-in fade-in-0 duration-300 ease-out motion-reduce:animate-none'
+export const pricingPlanCardsFadeClassName =
+  'animate-in fade-in-0 slide-in-from-bottom-1 duration-500 ease-out motion-reduce:animate-none'
 
 export function PricingPlanCardsShell({
   ready,

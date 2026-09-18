@@ -12,14 +12,9 @@ import {
 } from '@tanstack/react-query'
 import { sdk } from '@/lib/appwrite/sdk'
 import { buildCountryLookups } from '@/lib/locale/country-lookups'
-import {
-  persistVisitorCountryCode,
-  readMockLocaleCountryCookie,
-  readSsrVisitorCountryFromWindow,
-  readVisitorCountryCookie,
-} from '@/lib/locale/visitor-country'
+import { persistVisitorCountryCode } from '@/lib/locale/visitor-country'
+import { readPrefetchedLocale } from '@/lib/locale/prefetch-locale'
 import { normalizeCountryCode } from '@/lib/pricing/start-plan'
-import { getSsrVisitorCountry } from '@/lib/ssr-visitor-country'
 import { LONG_STALE_TIME } from './constants'
 
 export const VISITOR_COUNTRY_QUERY_KEY = ['visitor-country'] as const
@@ -68,7 +63,8 @@ export async function fetchContinents() {
  * @returns Locale information from the API
  */
 export async function fetchLocale() {
-  const response = await sdk.forConsole.locale.get()
+  const prefetched = await readPrefetchedLocale()
+  const response = prefetched ?? (await sdk.forConsole.locale.get())
   persistVisitorCountryCode(response.countryCode)
   return response
 }
@@ -181,9 +177,8 @@ async function fetchVisitorCountryCode(): Promise<string | null> {
 }
 
 /**
- * Dehydratable visitor country for pricing first paint. Seeded from request
- * geo/cookies on the server; confirmed with locale.get() on the client.
- * Keep this key off `isClientOwnedQueryKey` so SSR can hydrate it.
+ * Client-only visitor country confirmed with locale.get(). CDN/cookie geo must
+ * not hydrate this key or pricing would paint the 3-plan grid first.
  */
 export function visitorCountryQueryOptions() {
   return queryOptions({
@@ -199,28 +194,10 @@ export function visitorCountryQueryOptions() {
   })
 }
 
-function readClientRequestVisitorCountry(): string | null {
-  return (
-    readMockLocaleCountryCookie() ??
-    readVisitorCountryCookie() ??
-    readSsrVisitorCountryFromWindow()
-  )
-}
-
 export async function prefetchVisitorCountry(queryClient: QueryClient) {
-  if (typeof window === 'undefined') {
-    const country = getSsrVisitorCountry()
-    if (country) {
-      queryClient.setQueryData(VISITOR_COUNTRY_QUERY_KEY, country)
-    }
-    return
-  }
-
-  const requestCountry = readClientRequestVisitorCountry()
-  if (requestCountry) {
-    queryClient.setQueryData(VISITOR_COUNTRY_QUERY_KEY, requestCountry)
-    return
-  }
+  // Do not seed from CDN/cookies on the server. That made pricing SSR "ready"
+  // with the 3-plan grid before locale.get() could correct Indian VPN geo.
+  if (typeof window === 'undefined') return
 
   try {
     const locale = await queryClient.ensureQueryData(localeQueryOptions())
@@ -229,7 +206,9 @@ export async function prefetchVisitorCountry(queryClient: QueryClient) {
       normalizeCountryCode(locale.countryCode),
     )
   } catch {
-    await queryClient.ensureQueryData(visitorCountryQueryOptions()).catch(() => {})
+    await queryClient
+      .ensureQueryData(visitorCountryQueryOptions())
+      .catch(() => {})
   }
 }
 
