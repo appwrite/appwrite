@@ -2097,7 +2097,6 @@ final class FunctionsCustomServerTest extends Scope
             $this->assertStringContainsString('Node.js', (string) $execution['body']['responseBody']);
             $this->assertStringContainsString('22', (string) $execution['body']['responseBody']);
             $this->assertStringContainsString('Global Variable Value', (string) $execution['body']['responseBody']);
-            // $this->assertStringContainsString('êä', $execution['body']['responseBody']); // tests unknown utf-8 chars
             $this->assertNotEmpty($execution['body']['errors']);
             $this->assertNotEmpty($execution['body']['logs']);
             $this->assertLessThan(10, $execution['body']['duration']);
@@ -2153,9 +2152,11 @@ final class FunctionsCustomServerTest extends Scope
         /**
          * Test for SUCCESS
          */
+        $started = \microtime(true);
         $execution = $this->createExecution($data['functionId'], [
             // Testing default value, should be 'async' => 'false'
         ]);
+        $elapsed = \microtime(true) - $started;
 
         $this->assertEquals(201, $execution['headers']['status-code']);
         $this->assertEquals('completed', $execution['body']['status']);
@@ -2164,8 +2165,11 @@ final class FunctionsCustomServerTest extends Scope
         $this->assertStringContainsString('http', (string) $execution['body']['responseBody']);
         $this->assertStringContainsString('Node.js', (string) $execution['body']['responseBody']);
         $this->assertStringContainsString('22', (string) $execution['body']['responseBody']);
-        // $this->assertStringContainsString('êä', $execution['body']['response']); // tests unknown utf-8 chars
-        $this->assertLessThan(1.500, $execution['body']['duration']);
+        // Duration is a sub-interval of the call the client just timed, so it can
+        // never exceed it, and it must be the same order of magnitude -- the old
+        // warm-runtime window was a small fraction of a cold-started request.
+        $this->assertLessThanOrEqual($elapsed, $execution['body']['duration']);
+        $this->assertGreaterThan($elapsed / 2, $execution['body']['duration']);
 
         $executionId = $execution['body']['$id'];
         $this->assertEventually(function () use ($data, $executionId) {
@@ -2708,12 +2712,29 @@ final class FunctionsCustomServerTest extends Scope
         $this->assertNotEmpty($execution['body']['responseBody']);
         $this->assertStringContainsString("total", (string) $execution['body']['responseBody']);
 
+        // That first execution ran on a fresh deployment, so it paid the cold start
+        $coldDuration = $execution['body']['duration'];
+
         $execution = $this->createExecution($functionId, [
             'async' => true,
         ]);
 
         $this->assertEquals(202, $execution['headers']['status-code']);
         $this->assertNotEmpty($execution['body']['$id']);
+
+        // The async worker measures the same window. This one reuses the warm
+        // runtime, so it must come in well under the cold-started execution --
+        // which only holds if the startup wait is part of the measurement.
+        $asyncExecutionId = $execution['body']['$id'];
+
+        $this->assertEventually(function () use ($functionId, $asyncExecutionId, $coldDuration) {
+            $execution = $this->getExecution($functionId, $asyncExecutionId);
+
+            $this->assertEquals(200, $execution['headers']['status-code']);
+            $this->assertEquals('completed', $execution['body']['status']);
+            $this->assertGreaterThan(0, $execution['body']['duration']);
+            $this->assertLessThan($coldDuration, $execution['body']['duration']);
+        }, 60000, 500);
 
         $this->cleanupFunction($functionId);
     }
@@ -2782,17 +2803,27 @@ final class FunctionsCustomServerTest extends Scope
         $proxyClient = new Client();
         $proxyClient->setEndpoint('http://' . $domain);
 
+        $started = \microtime(true);
         $response = $proxyClient->call(Client::METHOD_GET, '/', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'cookie' => $cookie
         ]));
+        $elapsed = \microtime(true) - $started;
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals($cookie, $response['body']);
 
         $this->assertArrayHasKey('x-appwrite-execution-id', $response['headers']);
         $this->assertNotEmpty($response['headers']['x-appwrite-execution-id']);
+
+        // Duration covers the whole request, cold start included, so it tracks
+        // what the caller waited rather than only the warm runtime window
+        $execution = $this->getExecution($functionId, $response['headers']['x-appwrite-execution-id']);
+
+        $this->assertEquals(200, $execution['headers']['status-code']);
+        $this->assertLessThanOrEqual($elapsed, $execution['body']['duration']);
+        $this->assertGreaterThan($elapsed / 2, $execution['body']['duration']);
 
         $this->cleanupFunction($functionId);
     }

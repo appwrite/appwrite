@@ -706,12 +706,10 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
             $execution->setAttribute('errors', $errors);
             $execution->setAttribute('responseStatusCode', $executionResponse['statusCode']);
             $execution->setAttribute('responseHeaders', $headersFiltered);
-            $execution->setAttribute('duration', $executionResponse['duration']);
+            $execution->setAttribute('duration', \microtime(true) - $durationStart);
         } catch (\Throwable $th) {
-            $durationEnd = \microtime(true);
-
             $execution
-                ->setAttribute('duration', $durationEnd - $durationStart)
+                ->setAttribute('duration', \microtime(true) - $durationStart)
                 ->setAttribute('responseStatusCode', 500);
 
             if ($type === 'function') {
