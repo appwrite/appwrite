@@ -104,7 +104,7 @@ final class MqttSubscriber
      * its PUBACK — used to simulate non-contiguous acknowledgement.
      *
      * @param  (callable(int): bool)|null  $shouldAck
-     * @return array<int, array{topic: string, payload: string, dup: bool}>
+     * @return array<int, array{topic: string, payload: string, dup: bool, qos: int}>
      */
     public function consume(int $limit, float $timeout, ?callable $shouldAck = null): array
     {
@@ -135,7 +135,7 @@ final class MqttSubscriber
             $offset = Properties::skip($body, $offset);
             $payload = substr($body, $offset);
 
-            $received[] = ['topic' => $topic, 'payload' => $payload, 'dup' => $packet->dup()];
+            $received[] = ['topic' => $topic, 'payload' => $payload, 'dup' => $packet->dup(), 'qos' => $packet->qos()];
 
             $ack = $shouldAck === null || $shouldAck(\count($received) - 1);
             if ($ack && $packet->qos() === 1 && $packetIdBytes !== '') {

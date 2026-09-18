@@ -379,6 +379,42 @@ final class MqttServerTest extends Scope
     }
 
     /**
+     * QoS 0 is fire-and-forget and must stay segregated from QoS 1: a subscription to a
+     * QoS-0 topic is delivered at QoS 0, so the PUBLISH carries no packet id and the client
+     * sends no PUBACK (the broker tracks nothing and advances no replay cursor). The client
+     * requests QoS 1 but the topic caps the grant to 0.
+     */
+    public function testQos0DeliveryHasNoPuback(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        ['userId' => $userId, 'jwt' => $jwt] = $this->createUser();
+
+        $server = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $topicId = $this->setupPushTopic($server, $userId, 'appwrite-mqtt-qos0', qos: 0);
+
+        $subscriber = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
+        $this->assertSame(0, $subscriber->connect($projectId, $jwt, 'e2e-qos0-' . $userId, cleanStart: true));
+        $this->assertSame([0], $subscriber->subscribe([$topicId], Packet::QOS_1), 'the QoS-0 topic must cap the grant to 0');
+
+        try {
+            $this->publishCampaign($server, $topicId, 'No ack', 'delivered at qos 0', ['k' => 'v']);
+            $received = $subscriber->consume(limit: 1, timeout: 20.0);
+        } finally {
+            $subscriber->disconnect();
+        }
+
+        // Test for SUCCESS: delivered once, at QoS 0 (no packet id, so the client never PUBACKs).
+        $this->assertCount(1, $received, 'qos 0 subscriber did not receive the campaign');
+        $this->assertSame($topicId, $received[0]['topic']);
+        $this->assertSame(0, $received[0]['qos'], 'delivery to a QoS-0 subscription must be QoS 0');
+        $this->assertFalse($received[0]['dup'], 'a QoS-0 delivery is never marked DUP');
+    }
+
+    /**
      * MQTT over WebSocket: browser clients reach the broker through its WebSocket listener
      * (appwrite-mqtt:8083, routed as ws(s)://<host>/push) instead of raw TCP. The same
      * enhanced-auth CONNECT and SUBSCRIBE exchange must work with each MQTT packet carried in
