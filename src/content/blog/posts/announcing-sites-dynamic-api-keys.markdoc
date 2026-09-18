@@ -2,7 +2,7 @@
 layout: post
 title: "Announcing dynamic API keys for Appwrite Sites"
 description: Appwrite Sites now mints a scoped, short-lived API key for every build and SSR request, so server-rendered sites call your project without storing a key.
-date: 2026-09-17
+date: 2026-09-18
 cover: /images/blog/announcing-sites-dynamic-api-keys/cover.avif
 timeToRead: 4
 author: aditya-oberai
