@@ -196,7 +196,7 @@ $server->error(fn (\Throwable $error, string $action) => Console::error("MQTT {$
 $server->onWorkerStart(function (int $workerId) use ($server, $handler, $mqtt, $register): void {
     go(function () use ($server, $handler, $mqtt, $register): void {
         $attempts = 0;
-        while ($attempts < 300) {
+        while ($attempts < 60) {
             try {
                 $pubsub = new PubSubPool($register->get('pools')->get('pubsub'));
 
