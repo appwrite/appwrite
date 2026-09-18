@@ -51,7 +51,7 @@ class Update extends PlatformAction
                     namespace: 'presences',
                     group: 'presences',
                     name: 'update',
-                    desc: 'Update presence',
+                    summary: 'Update presence',
                     description: '/docs/references/presences/update.md',
                     auth: [AuthType::SESSION, AuthType::ADMIN],
                     responses: [
@@ -74,7 +74,7 @@ class Update extends PlatformAction
                     namespace: 'presences',
                     group: 'presences',
                     name: 'update',
-                    desc: 'Update presence',
+                    summary: 'Update presence',
                     description: '/docs/references/presences/update.md',
                     auth: [AuthType::KEY, AuthType::JWT],
                     responses: [

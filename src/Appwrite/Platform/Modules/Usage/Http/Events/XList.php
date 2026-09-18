@@ -31,10 +31,17 @@ class XList extends Action
 
     protected const VALID_DIMENSIONS = [
         'path', 'method', 'status', 'service', 'resourceType',
-        'country', 'region', 'hostname', 'ip',
+        'country', 'continentCode', 'city', 'region', 'hostname', 'ip',
         'osName', 'clientType', 'clientName', 'deviceName',
         'sdk', 'sdkVersion',
         'resourceId',
+        // Request attributes recorded for firewall rule matching.
+        'protocol', 'accept', 'acceptLanguage', 'queryKeys',
+        // Extended geo columns (premium Geo DB).
+        'postalCode', 'latitude', 'longitude', 'timeZone', 'weatherCode',
+        // Network / ISP columns (premium Geo DB).
+        'isp', 'autonomousSystemNumber', 'autonomousSystemOrganization',
+        'connectionType', 'connectionUsageType', 'connectionOrganization',
     ];
 
     protected const VALID_ORDER_BY = ['time', 'value'];
@@ -51,9 +58,16 @@ class XList extends Action
      */
     protected const VALID_FILTER_ATTRIBUTES = [
         'path', 'method', 'status', 'service', 'resourceType', 'resourceId',
-        'country', 'region', 'hostname', 'ip',
+        'country', 'continentCode', 'city', 'region', 'hostname', 'ip',
         'osName', 'clientType', 'clientName', 'deviceName',
         'sdk', 'sdkVersion',
+        // Request attributes recorded for firewall rule matching.
+        'protocol', 'accept', 'acceptLanguage', 'queryKeys',
+        // Extended geo columns (premium Geo DB).
+        'postalCode', 'latitude', 'longitude', 'timeZone', 'weatherCode',
+        // Network / ISP columns (premium Geo DB).
+        'isp', 'autonomousSystemNumber', 'autonomousSystemOrganization',
+        'connectionType', 'connectionUsageType', 'connectionOrganization',
     ];
 
     /**
