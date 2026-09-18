@@ -28,17 +28,14 @@ use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
 
 /**
- * Builds the sending adapter a messaging provider needs.
+ * Builds the adapter a messaging provider sends through.
  *
- * A provider is either one a project configured and stored as a document, or the
- * platform's own, described by the _APP_SMS_PROVIDER environment variable and used
- * for the one-time passcodes and invites Appwrite sends on a project's behalf. Both
- * end up as the same adapter, so the DSN is turned into a provider document and
- * takes the same path.
+ * A provider is either one a project stored as a document or the platform's own, described
+ * by _APP_SMS_PROVIDER. Both reach the same adapter, so the DSN becomes a provider document
+ * and takes the same path.
  *
- * Push is missing on purpose. Its Appwrite provider is built from the message being
- * sent and the project database it belongs to, so it cannot be described by a
- * provider document alone and stays with the worker that has those to hand.
+ * Push is absent on purpose: its Appwrite provider needs the message and the project
+ * database, so a provider document alone does not describe it.
  */
 class Provider
 {

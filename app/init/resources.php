@@ -120,13 +120,8 @@ $container->set('autogravity', function (Cache $cache) {
 $container->set('telemetry', fn () => new NoTelemetry(), []);
 
 /**
- * The platform's own SMS adapter, built from _APP_SMS_PROVIDER for the one-time passcodes
- * and invites Appwrite sends on a project's behalf. Null when the variable is unset, which
- * is how an instance says it cannot deliver over SMS.
- *
- * A malformed DSN is reported and read as unset rather than thrown, because this is injected
- * into every messaging job: letting one bad platform variable escape would stop a project's
- * push and email messages, which it has nothing to do with.
+ * A malformed DSN is reported and read as unset rather than thrown: this resolves for every
+ * messaging job, so one bad platform variable must not stop a project's push and email.
  */
 $container->set('adapterForSMS', function (Telemetry $telemetry): ?SMSAdapter {
     try {
