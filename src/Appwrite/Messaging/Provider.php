@@ -2,7 +2,6 @@
 
 namespace Appwrite\Messaging;
 
-use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\DSN\DSN;
@@ -22,8 +21,6 @@ use Utopia\Messaging\Adapter\SMS\Telesign;
 use Utopia\Messaging\Adapter\SMS\TextMagic;
 use Utopia\Messaging\Adapter\SMS\Twilio;
 use Utopia\Messaging\Adapter\SMS\Vonage;
-use Utopia\Messaging\Messages\Push;
-use Utopia\Queue\Message;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
 
