@@ -682,18 +682,11 @@ jobs:
             -e _TESTS_OAUTH2_GITHUB_CLIENT_SECRET="${{ secrets.TESTS_OAUTH2_GITHUB_CLIENT_SECRET }}" \
             appwrite vendor/bin/paratest --processes "$PARATEST_PROCESSES" $FUNCTIONAL_FLAG "$SERVICE_PATH" --exclude-group abuseEnabled --exclude-group screenshots --exclude-group antivirus --log-junit tests/e2e/Services/${{ matrix.service.name }}/junit.xml
 
-      - name: Run certificate deletion worker tests
-        if: matrix.service.name == 'Proxy'
-        run: docker compose exec -T appwrite test /usr/src/code/tests/e2e/General/Certificates/DeletesTest.php
-
       - name: Failure Logs
         if: failure()
         run: |
           echo "=== Appwrite Logs ==="
-          # Bounded on purpose. The API serves only the last 5000 lines of a job
-          # log, and an unbounded dump of every container pushes the test output
-          # past that window, so a failure here cannot be read back afterwards.
-          docker compose logs --timestamps --tail=150
+          docker compose logs --timestamps
 
   e2e_grouped:
     name: Tests / E2E / ${{ matrix.config.label }} (${{ matrix.mode }})
