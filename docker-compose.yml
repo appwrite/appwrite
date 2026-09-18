@@ -384,11 +384,10 @@ services:
       - traefik.tcp.routers.appwrite_mqtt.tls=true
       - traefik.tcp.routers.appwrite_mqtt.service=appwrite_mqtt
       - traefik.tcp.services.appwrite_mqtt.loadbalancer.server.port=1883
-      # MQTT-over-WebSocket for browser clients: ws(s)://<host>/push is terminated at the
-      # web/websecure entrypoints and forwarded to the broker's WebSocket listener (:8083).
-      - traefik.http.routers.appwrite_mqtt_ws.entrypoints=appwrite_web
-      - traefik.http.routers.appwrite_mqtt_ws.rule=PathPrefix(`/push`)
-      - traefik.http.routers.appwrite_mqtt_ws.service=appwrite_mqtt_ws
+      # MQTT-over-WebSocket for browser clients: wss://<host>/push is terminated at the
+      # websecure entrypoint and forwarded to the broker's WebSocket listener (:8083).
+      # TLS-only (no plaintext ws on :80), mirroring the mqtts TCP router, so the reusable
+      # JWT/session credential in the CONNECT frame never traverses the network in the clear.
       - traefik.http.routers.appwrite_mqtt_ws_secure.entrypoints=appwrite_websecure
       - traefik.http.routers.appwrite_mqtt_ws_secure.rule=PathPrefix(`/push`)
       - traefik.http.routers.appwrite_mqtt_ws_secure.service=appwrite_mqtt_ws
