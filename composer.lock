@@ -4799,16 +4799,16 @@
         },
         {
             "name": "utopia-php/usage",
-            "version": "dev-feat-new-usage-stats",
+            "version": "0.16.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/usage.git",
-                "reference": "51a4f728b0e2040cec6610c52095a479c160f2ea"
+                "reference": "5e904606b45c894d0f6281f4c7480be47c48ee28"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/usage/zipball/51a4f728b0e2040cec6610c52095a479c160f2ea",
-                "reference": "51a4f728b0e2040cec6610c52095a479c160f2ea",
+                "url": "https://api.github.com/repos/utopia-php/usage/zipball/5e904606b45c894d0f6281f4c7480be47c48ee28",
+                "reference": "5e904606b45c894d0f6281f4c7480be47c48ee28",
                 "shasum": ""
             },
             "require": {
@@ -4846,9 +4846,9 @@
             "description": "Light and Fast Usage library",
             "support": {
                 "issues": "https://github.com/utopia-php/usage/issues",
-                "source": "https://github.com/utopia-php/usage/tree/feat-new-usage-stats"
+                "source": "https://github.com/utopia-php/usage/tree/0.16.5"
             },
-            "time": "2026-09-15T08:02:42+00:00"
+            "time": "2026-09-18T07:06:18+00:00"
         },
         {
             "name": "utopia-php/user-agent",
@@ -8342,18 +8342,10 @@
             "time": "2026-07-03T20:44:34+00:00"
         }
     ],
-    "aliases": [
-        {
-            "package": "utopia-php/usage",
-            "version": "dev-feat-new-usage-stats",
-            "alias": "0.16.88",
-            "alias_normalized": "0.16.88.0"
-        }
-    ],
+    "aliases": [],
     "minimum-stability": "dev",
     "stability-flags": {
-        "utopia-php/http": 5,
-        "utopia-php/usage": 20
+        "utopia-php/http": 5
     },
     "prefer-stable": true,
     "prefer-lowest": false,
