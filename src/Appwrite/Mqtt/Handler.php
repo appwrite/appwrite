@@ -36,6 +36,8 @@ class Handler implements MqttHandler
     public function __construct(
         private readonly Container $container,
         private readonly Mqtt $mqtt,
+        private readonly \Closure $getCache,
+        private readonly \Closure $planForUser,
     ) {
     }
 
@@ -227,8 +229,7 @@ class Handler implements MqttHandler
         $this->mqtt->messagesAcked->add(1);
         $this->mqtt->pubacksReceived->add(1);
 
-        $getCache = $this->container->get('getCache');
-        $cache = $getCache();
+        $cache = ($this->getCache)();
         $key = $this->cursorKey($connection);
         $topic = $delivery['topic'];
         $cursor = (int) $delivery['cursor'];
@@ -274,11 +275,9 @@ class Handler implements MqttHandler
      */
     private function replayBacklog(Connection $connection, Database $projectDB, array $grantedTopics): void
     {
-        $getCache = $this->container->get('getCache');
-        $getPlanForUser = $this->container->get('getPlanForUser');
-        $cache = $getCache();
+        $cache = ($this->getCache)();
         $key = $this->cursorKey($connection);
-        $maxDepth = max(1, $getPlanForUser(new Document(['$id' => $connection->prefix]), $connection->identity['userId'] ?? ''));
+        $maxDepth = max(1, ($this->planForUser)(new Document(['$id' => $connection->prefix]), $connection->identity['userId'] ?? ''));
 
         $expiry = 0;
         foreach ($grantedTopics as [$document]) {
