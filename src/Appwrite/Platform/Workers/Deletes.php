@@ -1750,10 +1750,14 @@ class Deletes extends Action
      */
     protected function deleteRule(Database $dbForPlatform, Document $document, Provider $certificates, Bus $bus): void
     {
-        $bus->dispatch(new RuleDeleted($document->getArrayCopy()));
-
         $domain = $document->getAttribute('domain');
-        $certificates->deleteCertificate($domain);
+
+        // A queued deletion can outlive its rule. Leave TLS and routing alone
+        // when the domain has since been recreated.
+        if ($dbForPlatform->findOne('rules', [Query::equal('domain', [$domain])])->isEmpty()) {
+            $bus->dispatch(new RuleDeleted($document->getArrayCopy()));
+            $certificates->deleteCertificate($domain, $document->getAttribute('deploymentResourceType', $document->getAttribute('type')));
+        }
 
         // Delete certificate document, so Appwrite is aware of change
         if (isset($document['certificateId'])) {
