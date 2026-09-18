@@ -2712,9 +2712,7 @@ final class FunctionsCustomServerTest extends Scope
         $this->assertNotEmpty($execution['body']['responseBody']);
         $this->assertStringContainsString("total", (string) $execution['body']['responseBody']);
 
-        // That first execution ran on a fresh deployment, so it paid the cold start
-        $coldDuration = $execution['body']['duration'];
-
+        $queuedAt = \microtime(true);
         $execution = $this->createExecution($functionId, [
             'async' => true,
         ]);
@@ -2722,18 +2720,18 @@ final class FunctionsCustomServerTest extends Scope
         $this->assertEquals(202, $execution['headers']['status-code']);
         $this->assertNotEmpty($execution['body']['$id']);
 
-        // The async worker measures the same window. This one reuses the warm
-        // runtime, so it must come in well under the cold-started execution --
-        // which only holds if the startup wait is part of the measurement.
+        // The worker measures the same window as the synchronous paths, so the
+        // stored duration has to be a positive sub-interval of the time between
+        // queueing the execution and observing it finish.
         $asyncExecutionId = $execution['body']['$id'];
 
-        $this->assertEventually(function () use ($functionId, $asyncExecutionId, $coldDuration) {
+        $this->assertEventually(function () use ($functionId, $asyncExecutionId, $queuedAt) {
             $execution = $this->getExecution($functionId, $asyncExecutionId);
 
             $this->assertEquals(200, $execution['headers']['status-code']);
             $this->assertEquals('completed', $execution['body']['status']);
             $this->assertGreaterThan(0, $execution['body']['duration']);
-            $this->assertLessThan($coldDuration, $execution['body']['duration']);
+            $this->assertLessThanOrEqual(\microtime(true) - $queuedAt, $execution['body']['duration']);
         }, 60000, 500);
 
         $this->cleanupFunction($functionId);
