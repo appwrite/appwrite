@@ -255,8 +255,6 @@ class Response extends SwooleResponse
     public const MODEL_KEY = 'key';
     public const MODEL_KEY_LIST = 'keyList';
     public const MODEL_EPHEMERAL_KEY = 'ephemeralKey';
-    public const MODEL_DEV_KEY = 'devKey';
-    public const MODEL_DEV_KEY_LIST = 'devKeyList';
     public const MODEL_MOCK_NUMBER = 'mockNumber';
     public const MODEL_MOCK_NUMBER_LIST = 'mockNumberList';
     public const MODEL_POLICY_LIST = 'policyList';
@@ -264,6 +262,7 @@ class Response extends SwooleResponse
     public const MODEL_POLICY_PASSWORD_HISTORY = 'policyPasswordHistory';
     public const MODEL_POLICY_PASSWORD_STRENGTH = 'policyPasswordStrength';
     public const MODEL_POLICY_PASSWORD_PERSONAL_DATA = 'policyPasswordPersonalData';
+    public const MODEL_POLICY_PASSWORD_PWNED = 'policyPasswordPwned';
     public const MODEL_POLICY_SESSION_ALERT = 'policySessionAlert';
     public const MODEL_POLICY_SESSION_DURATION = 'policySessionDuration';
     public const MODEL_POLICY_SESSION_INVALIDATION = 'policySessionInvalidation';

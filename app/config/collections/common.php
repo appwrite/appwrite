@@ -398,6 +398,17 @@ return [
                 'filters' => [],
             ],
             [
+                '$id' => ID::custom('passwordPwned'),
+                'type' => Database::VAR_BOOLEAN,
+                'format' => '',
+                'size' => 0,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
                 '$id' => ID::custom('emailIsCorporate'),
                 'type' => Database::VAR_BOOLEAN,
                 'format' => '',
@@ -485,6 +496,13 @@ return [
                 '$id' => ID::custom('_key_phoneVerification'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['phoneVerification'],
+                'lengths' => [],
+                'orders' => [Database::ORDER_ASC],
+            ],
+            [
+                '$id' => ID::custom('_key_passwordPwned'),
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['passwordPwned'],
                 'lengths' => [],
                 'orders' => [Database::ORDER_ASC],
             ],
@@ -1310,6 +1328,20 @@ return [
             ],
             [
                 '$id' => ID::custom('providerRefreshToken'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 16384,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => ['encrypt'],
+            ],
+            [
+                // Raw OIDC ID token from the last native sign-in. Kept so clients can
+                // read claims the identity does not model — Google's `locale`, for
+                // one — without a round trip to the provider.
+                '$id' => ID::custom('providerIdToken'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 16384,

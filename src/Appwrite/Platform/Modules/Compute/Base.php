@@ -94,7 +94,7 @@ class Base extends Action
         }
     }
 
-    public function redeployVcsFunction(Request $request, Document $function, Document $project, Document $installation, Database $dbForProject, BuildPublisher $publisherForBuilds, Document $template, Git $vcs, bool $activate, Deployments $deployments, array $platform = [], string $referenceType = 'branch', string $reference = ''): Document
+    public function redeployVcsFunction(Request $request, Document $function, Document $project, Document $installation, Database $dbForProject, BuildPublisher $publisherForBuilds, Document $template, Git $vcs, bool $activate, Deployments $deployments, int $buildTimeout, array $platform = [], string $referenceType = 'branch', string $reference = ''): Document
     {
         $deploymentId = ID::unique();
         $entrypoint = $function->getAttribute('entrypoint', '');
@@ -178,6 +178,7 @@ class Base extends Action
             $deployment = $deployments->createFromVcs(
                 $function,
                 $deployment,
+                $buildTimeout,
                 $vcs,
                 $owner,
                 $repositoryName,
@@ -208,7 +209,7 @@ class Base extends Action
         return $deployment;
     }
 
-    public function redeployVcsSite(Request $request, Document $site, Document $project, Document $installation, Database $dbForProject, Database $dbForPlatform, BuildPublisher $publisherForBuilds, Document $template, Git $vcs, bool $activate, Authorization $authorization, Deployments $deployments, Bus $bus, array $platform, string $referenceType = 'branch', string $reference = ''): Document
+    public function redeployVcsSite(Request $request, Document $site, Document $project, Document $installation, Database $dbForProject, Database $dbForPlatform, BuildPublisher $publisherForBuilds, Document $template, Git $vcs, bool $activate, Authorization $authorization, Deployments $deployments, int $buildTimeout, Bus $bus, array $platform, string $referenceType = 'branch', string $reference = ''): Document
     {
         $deploymentId = ID::unique();
         $providerInstallationId = $installation->getAttribute('providerInstallationId', '');
@@ -405,6 +406,7 @@ class Base extends Action
             $deployment = $deployments->createFromVcs(
                 $site,
                 $deployment,
+                $buildTimeout,
                 $vcs,
                 $owner,
                 $repositoryName,
