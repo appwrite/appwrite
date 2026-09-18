@@ -2,6 +2,7 @@
 
 namespace Tests\E2E\Services\Proxy;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\E2E\Client;
 use Utopia\Database\Query;
 use Utopia\System\System;
@@ -37,6 +38,280 @@ trait ProxyBase
             $this->assertSame(0, count($rules['body']['rules']));
             $this->assertEquals(0, $rules['body']['total']);
         }
+    }
+
+    public function testDeleteFunctionRules(): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $functionId = $this->setupFunction(deploy: false)['functionId'];
+        $domain = \uniqid() . '-deleted-function.custom.localhost';
+        $ruleId = $this->setupFunctionRule($domain, $functionId);
+
+        $this->cleanupFunction($functionId);
+
+        // No polling: deletion must release the domain before responding.
+        $rule = $this->getRule($ruleId);
+        $this->assertEquals(404, $rule['headers']['status-code']);
+        $this->assertSame('rule_not_found', $rule['body']['type']);
+        $rules = $this->listRules(['queries' => [Query::equal('domain', [$domain])->toString()]]);
+        $this->assertEquals(200, $rules['headers']['status-code']);
+        $this->assertSame(0, $rules['body']['total']);
+    }
+
+    public function testDeleteSiteRules(): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $siteId = $this->setupSite(deploy: false)['siteId'];
+        $domain = \uniqid() . '-deleted-site.custom.localhost';
+        $ruleId = $this->setupSiteRule($domain, $siteId);
+
+        $this->cleanupSite($siteId);
+
+        $rule = $this->getRule($ruleId);
+        $this->assertEquals(404, $rule['headers']['status-code']);
+        $this->assertSame('rule_not_found', $rule['body']['type']);
+        $rules = $this->listRules(['queries' => [Query::equal('domain', [$domain])->toString()]]);
+        $this->assertEquals(200, $rules['headers']['status-code']);
+        $this->assertSame(0, $rules['body']['total']);
+    }
+
+    public function testDeleteFunctionRecreateId(): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $functionId = $this->setupFunction(deploy: false)['functionId'];
+        $domain = \uniqid() . '-recreated-function.custom.localhost';
+        $this->setupFunctionRule($domain, $functionId);
+        $this->cleanupFunction($functionId);
+
+        $replacement = $this->setupFunction($functionId, deploy: false);
+        $this->assertSame($functionId, $replacement['functionId']);
+        $rules = $this->listRules(['queries' => [
+            Query::equal('deploymentResourceType', ['function'])->toString(),
+            Query::equal('deploymentResourceId', [$functionId])->toString(),
+            Query::equal('domain', [$domain])->toString(),
+        ]]);
+        $this->assertEquals(200, $rules['headers']['status-code']);
+        $this->assertSame(0, $rules['body']['total']);
+
+        $ruleId = $this->setupFunctionRule($domain, $functionId);
+        $rule = $this->getRule($ruleId);
+        $this->assertEquals(200, $rule['headers']['status-code']);
+        $this->assertSame($functionId, $rule['body']['deploymentResourceId']);
+        $this->cleanupFunction($functionId);
+    }
+
+    public function testDeleteSiteRecreateId(): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $siteId = $this->setupSite(deploy: false)['siteId'];
+        $domain = \uniqid() . '-recreated-site.custom.localhost';
+        $this->setupSiteRule($domain, $siteId);
+        $this->cleanupSite($siteId);
+
+        $replacement = $this->setupSite($siteId, deploy: false);
+        $this->assertSame($siteId, $replacement['siteId']);
+        $rules = $this->listRules(['queries' => [
+            Query::equal('deploymentResourceType', ['site'])->toString(),
+            Query::equal('deploymentResourceId', [$siteId])->toString(),
+            Query::equal('domain', [$domain])->toString(),
+        ]]);
+        $this->assertEquals(200, $rules['headers']['status-code']);
+        $this->assertSame(0, $rules['body']['total']);
+
+        $ruleId = $this->setupSiteRule($domain, $siteId);
+        $rule = $this->getRule($ruleId);
+        $this->assertEquals(200, $rule['headers']['status-code']);
+        $this->assertSame($siteId, $rule['body']['deploymentResourceId']);
+        $this->cleanupSite($siteId);
+    }
+
+    public function testDeleteFunctionReassignDomain(): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $original = $this->setupFunction(deploy: false)['functionId'];
+        $replacement = $this->setupFunction(deploy: false)['functionId'];
+        $domain = \uniqid() . '-reassigned-function.custom.localhost';
+        $this->setupFunctionRule($domain, $original);
+
+        /**
+         * Test for FAILURE
+         */
+        $duplicate = $this->createFunctionRule($domain, $replacement);
+        $this->assertEquals(409, $duplicate['headers']['status-code']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $this->cleanupFunction($original);
+        $ruleId = $this->setupFunctionRule($domain, $replacement);
+        $rule = $this->getRule($ruleId);
+        $this->assertEquals(200, $rule['headers']['status-code']);
+        $this->assertSame($replacement, $rule['body']['deploymentResourceId']);
+        $this->assertSame($domain, $rule['body']['domain']);
+        $this->cleanupFunction($replacement);
+    }
+
+    public function testDeleteSiteReassignDomain(): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $original = $this->setupSite(deploy: false)['siteId'];
+        $replacement = $this->setupSite(deploy: false)['siteId'];
+        $domain = \uniqid() . '-reassigned-site.custom.localhost';
+        $this->setupSiteRule($domain, $original);
+
+        /**
+         * Test for FAILURE
+         */
+        $duplicate = $this->createSiteRule($domain, $replacement);
+        $this->assertEquals(409, $duplicate['headers']['status-code']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $this->cleanupSite($original);
+        $ruleId = $this->setupSiteRule($domain, $replacement);
+        $rule = $this->getRule($ruleId);
+        $this->assertEquals(200, $rule['headers']['status-code']);
+        $this->assertSame($replacement, $rule['body']['deploymentResourceId']);
+        $this->assertSame($domain, $rule['body']['domain']);
+        $this->cleanupSite($replacement);
+    }
+
+    public function testDeleteFunctionPreservesSiteRules(): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $id = $this->setupFunction(deploy: false)['functionId'];
+        $this->setupSite($id, deploy: false);
+        $functionRule = $this->setupFunctionRule(\uniqid() . '-function.custom.localhost', $id);
+        $siteRule = $this->setupSiteRule(\uniqid() . '-site.custom.localhost', $id);
+
+        $this->cleanupFunction($id);
+
+        $this->assertEquals(404, $this->getRule($functionRule)['headers']['status-code']);
+        $rule = $this->getRule($siteRule);
+        $this->assertEquals(200, $rule['headers']['status-code']);
+        $this->assertSame('site', $rule['body']['deploymentResourceType']);
+        $this->assertSame($id, $rule['body']['deploymentResourceId']);
+        $this->cleanupSite($id);
+    }
+
+    public function testDeleteFunctionPreservesUnrelatedRules(): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $deleted = $this->setupFunction(deploy: false)['functionId'];
+        $retained = $this->setupFunction(deploy: false)['functionId'];
+        $deletedRule = $this->setupFunctionRule(\uniqid() . '-deleted.custom.localhost', $deleted);
+        $retainedRule = $this->setupFunctionRule(\uniqid() . '-retained.custom.localhost', $retained);
+        $apiRule = $this->setupAPIRule(\uniqid() . '-api.custom.localhost');
+
+        $this->cleanupFunction($deleted);
+
+        $this->assertEquals(404, $this->getRule($deletedRule)['headers']['status-code']);
+        $this->assertEquals(200, $this->getRule($retainedRule)['headers']['status-code']);
+        $this->assertEquals(200, $this->getRule($apiRule)['headers']['status-code']);
+        $this->cleanupFunction($retained);
+        $this->cleanupRule($apiRule);
+    }
+
+    #[DataProvider('resources')]
+    public function testDeleteRedirectRules(string $type): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $resourceId = $type === 'function'
+            ? $this->setupFunction(deploy: false)['functionId']
+            : $this->setupSite(deploy: false)['siteId'];
+        $domain = \uniqid() . '-deleted-redirect.custom.localhost';
+        $ruleId = $this->setupRedirectRule($domain, 'https://example.com/target', 307, $type, $resourceId);
+        $proxy = new Client();
+        $proxy->setEndpoint('http://appwrite.test');
+        $proxy->addHeader('x-appwrite-hostname', $domain);
+        $response = $proxy->call(Client::METHOD_GET, '/', followRedirects: false);
+        $this->assertEquals(307, $response['headers']['status-code']);
+        $this->assertSame('https://example.com/target', $response['headers']['location']);
+
+        if ($type === 'function') {
+            $this->cleanupFunction($resourceId);
+        } else {
+            $this->cleanupSite($resourceId);
+        }
+
+        $this->assertEquals(404, $this->getRule($ruleId)['headers']['status-code']);
+        $response = $proxy->call(Client::METHOD_GET, '/', followRedirects: false);
+        $this->assertEquals(401, $response['headers']['status-code']);
+    }
+
+    public static function resources(): \Iterator
+    {
+        yield 'function' => ['function'];
+        yield 'site' => ['site'];
+    }
+
+    #[DataProvider('resources')]
+    public function testDeleteDeploymentAndBranchRules(string $type): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $resourceId = $type === 'function'
+            ? $this->setupFunction()['functionId']
+            : $this->setupSite()['siteId'];
+        $manualDomain = \uniqid() . '-deleted-manual.custom.localhost';
+        $manualRuleId = $type === 'function'
+            ? $this->setupFunctionRule($manualDomain, $resourceId)
+            : $this->setupSiteRule($manualDomain, $resourceId);
+        $domain = \uniqid() . '-deleted-branch.custom.localhost';
+        $ruleId = $type === 'function'
+            ? $this->setupFunctionRule($domain, $resourceId, 'dev')
+            : $this->setupSiteRule($domain, $resourceId, 'dev');
+        $rule = $this->getRule($ruleId);
+        $this->assertEquals(200, $rule['headers']['status-code']);
+        $this->assertSame('dev', $rule['body']['deploymentVcsProviderBranch']);
+        $queries = [
+            Query::equal('deploymentResourceType', [$type])->toString(),
+            Query::equal('deploymentResourceId', [$resourceId])->toString(),
+        ];
+        $rules = $this->listRules(['queries' => $queries]);
+        $this->assertEquals(200, $rules['headers']['status-code']);
+        $this->assertGreaterThan(1, $rules['body']['total']);
+
+        if ($type === 'site') {
+            $previews = $this->listRules(['queries' => [
+                ...$queries,
+                Query::equal('trigger', ['deployment'])->toString(),
+            ]]);
+            $this->assertEquals(200, $previews['headers']['status-code']);
+            $this->assertGreaterThan(0, $previews['body']['total']);
+        }
+
+        if ($type === 'function') {
+            $this->cleanupFunction($resourceId);
+        } else {
+            $this->cleanupSite($resourceId);
+        }
+
+        $rules = $this->listRules(['queries' => $queries]);
+        $this->assertEquals(200, $rules['headers']['status-code']);
+        $this->assertSame(0, $rules['body']['total']);
+        $this->assertEquals(404, $this->getRule($ruleId)['headers']['status-code']);
+        $this->assertEquals(404, $this->getRule($manualRuleId)['headers']['status-code']);
     }
 
     public function testCreateRule(): void
