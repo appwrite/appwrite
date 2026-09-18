@@ -77,7 +77,7 @@ class Create extends Action
                     namespace: $this->getSDKNamespace(),
                     group: $this->getSDKGroup(),
                     name: self::getName(),
-                    desc: 'Create document',
+                    summary: 'Create document',
                     description: '/docs/references/databases/create-document.md',
                     auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                     responses: [
@@ -104,7 +104,7 @@ class Create extends Action
                     namespace: $this->getSDKNamespace(),
                     group: $this->getSDKGroup(),
                     name: $this->getBulkActionName(self::getName()),
-                    desc: 'Create documents',
+                    summary: 'Create documents',
                     description: '/docs/references/databases/create-documents.md',
                     auth: [AuthType::ADMIN, AuthType::KEY],
                     responses: [
