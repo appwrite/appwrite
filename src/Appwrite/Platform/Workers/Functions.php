@@ -740,12 +740,11 @@ class Functions extends Action
                 ->setAttribute('responseHeaders', $headersFiltered)
                 ->setAttribute('logs', $logs)
                 ->setAttribute('errors', $errors)
-                ->setAttribute('duration', $executionResponse['duration']);
+                ->setAttribute('duration', \microtime(true) - $durationStart);
 
         } catch (\Throwable $th) {
-            $durationEnd = \microtime(true);
             $execution
-                ->setAttribute('duration', $durationEnd - $durationStart)
+                ->setAttribute('duration', \microtime(true) - $durationStart)
                 ->setAttribute('status', 'failed')
                 ->setAttribute('responseStatusCode', 500)
                 ->setAttribute('errors', $th->getMessage() . '\nError Code: ' . $th->getCode());
