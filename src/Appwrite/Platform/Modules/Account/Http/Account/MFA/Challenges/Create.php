@@ -33,6 +33,7 @@ use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Storage\Validator\FileName;
 use Utopia\System\System;
+use Utopia\Validator\Range;
 use Utopia\Validator\WhiteList;
 
 class Create extends Action
@@ -95,6 +96,7 @@ class Create extends Action
             ->label('abuse-limit', 10)
             ->label('abuse-key', 'url:{url},userId:{userId}')
             ->param('factor', '', new WhiteList([Type::EMAIL, Type::PHONE, Type::TOTP, Type::RECOVERY_CODE, Type::CUSTOM]), 'Factor used for verification. Must be one of following: `' . Type::EMAIL . '`, `' . Type::PHONE . '`, `' . Type::TOTP . '`, `' . Type::RECOVERY_CODE . '`, `' . Type::CUSTOM . '`.', enum: new Enum(name: 'AuthenticationFactor'))
+            ->param('expire', TOKEN_EXPIRATION_CONFIRM, new Range(60, TOKEN_EXPIRATION_CONFIRM), 'Challenge expiration period in seconds. The default and maximum expiration is 1 hour.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('user')
@@ -114,6 +116,7 @@ class Create extends Action
 
     public function action(
         string $factor,
+        ?int $expire,
         Response $response,
         Database $dbForProject,
         Document $user,
@@ -129,6 +132,8 @@ class Create extends Action
         ProofsToken $proofForToken,
         ProofsCode $proofForCode
     ): void {
+        $expire ??= TOKEN_EXPIRATION_CONFIRM;
+
         $mfaFactors = $project->getAttribute('auths', [])['mfaFactors'] ?? [];
         $factorEnabled = match ($factor) {
             Type::TOTP => $mfaFactors['totp'] ?? true,
@@ -142,7 +147,9 @@ class Create extends Action
             throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'The requested factor is disabled by the MFA factors policy');
         }
 
-        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), TOKEN_EXPIRATION_CONFIRM));
+        // Whole hours read as hours, anything else as minutes rounded down
+        $plurals = ['expire' => $expire % 3600 === 0 ? ['emails.expire.hours', \intdiv($expire, 3600)] : ['emails.expire.minutes', \intdiv($expire, 60)]];
+        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $expire));
 
         $code = $proofForCode->generate();
         $challenge = new Document([
@@ -224,7 +231,7 @@ class Create extends Action
                 }
 
                 $subject = $locale->getText("emails.mfaChallenge.subject");
-                $preview = $locale->getText("emails.mfaChallenge.preview");
+                $preview = $locale->getText("emails.mfaChallenge.preview", plurals: $plurals);
                 $heading = $locale->getText("emails.mfaChallenge.heading");
 
                 $customTemplate =
@@ -247,7 +254,7 @@ class Create extends Action
                 $message = Template::fromFile($templatesPath . '/email-mfa-challenge.tpl');
                 $message
                     ->setParam('{{hello}}', $locale->getText("emails.mfaChallenge.hello"))
-                    ->setParam('{{description}}', $locale->getText("emails.mfaChallenge.description"))
+                    ->setParam('{{description}}', $locale->getText("emails.mfaChallenge.description", plurals: $plurals))
                     ->setParam('{{clientInfo}}', $locale->getText("emails.mfaChallenge.clientInfo"))
                     ->setParam('{{thanks}}', $locale->getText("emails.mfaChallenge.thanks"))
                     ->setParam('{{signature}}', $locale->getText("emails.mfaChallenge.signature"));
@@ -318,6 +325,7 @@ class Create extends Action
                     'user' => $user->getAttribute('name'),
                     'project' => $projectName,
                     'otp' => $code,
+                    'expire' => $locale->getPlural(...$plurals['expire']),
                     'agentDevice' => $agentDevice['deviceBrand'] ?? 'UNKNOWN',
                     'agentClient' => $agentClient['clientName'] ?? 'UNKNOWN',
                     'agentOs' => $agentOs['osName'] ?? 'UNKNOWN',

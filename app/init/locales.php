@@ -19,5 +19,5 @@ foreach ($locales as $locale) {
         }
     }
 
-    Locale::setLanguageFromJSON($code, $path);
+    Locale::setLanguageFromJSON($code, $path, \basename($path, '.json'));
 }

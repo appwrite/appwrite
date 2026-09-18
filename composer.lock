@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "067e4c5b691b20b06213bc3c9382a6c9",
+    "content-hash": "a5e9ac6ba8cfcd50e0337399b0efb4b4",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3930,20 +3930,21 @@
         },
         {
             "name": "utopia-php/locale",
-            "version": "0.8.0",
+            "version": "dev-feat-plurals",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/locale.git",
-                "reference": "10ffc869c904c45e32ab0c61f4b33ba774777eb6"
+                "reference": "d3714bd8edd4404f3b39d8aeb35369b999e23209"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/locale/zipball/10ffc869c904c45e32ab0c61f4b33ba774777eb6",
-                "reference": "10ffc869c904c45e32ab0c61f4b33ba774777eb6",
+                "url": "https://api.github.com/repos/utopia-php/locale/zipball/d3714bd8edd4404f3b39d8aeb35369b999e23209",
+                "reference": "d3714bd8edd4404f3b39d8aeb35369b999e23209",
                 "shasum": ""
             },
             "require": {
-                "php": ">=7.4"
+                "ext-intl": "*",
+                "php": ">=8.3"
             },
             "require-dev": {
                 "laravel/pint": "1.2.*",
@@ -3971,9 +3972,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/locale/issues",
-                "source": "https://github.com/utopia-php/locale/tree/0.8.0"
+                "source": "https://github.com/utopia-php/locale/tree/feat-plurals"
             },
-            "time": "2025-08-12T12:58:26+00:00"
+            "time": "2026-09-18T08:04:22+00:00"
         },
         {
             "name": "utopia-php/messaging",
@@ -8342,10 +8343,18 @@
             "time": "2026-07-03T20:44:34+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/locale",
+            "version": "dev-feat-plurals",
+            "alias": "0.9.0",
+            "alias_normalized": "0.9.0.0"
+        }
+    ],
     "minimum-stability": "dev",
     "stability-flags": {
-        "utopia-php/http": 5
+        "utopia-php/http": 5,
+        "utopia-php/locale": 20
     },
     "prefer-stable": true,
     "prefer-lowest": false,
@@ -8363,7 +8372,8 @@
         "ext-pdo": "*",
         "ext-openssl": "*",
         "ext-zlib": "*",
-        "ext-sockets": "*"
+        "ext-sockets": "*",
+        "ext-intl": "*"
     },
     "platform-dev": {
         "ext-fileinfo": "*"

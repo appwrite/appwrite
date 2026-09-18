@@ -14,6 +14,7 @@ use Utopia\Database\Validator\Datetime as DatetimeValidator;
 final class AccountCustomServerTest extends Scope
 {
     use AccountBase;
+    use TokensBase;
     use ProjectCustom;
     use SideServer;
 
@@ -418,5 +419,48 @@ final class AccountCustomServerTest extends Scope
 
         $this->assertEquals(200, $account['headers']['status-code']);
         $this->assertEquals($email, $account['body']['email']);
+    }
+
+    public function testCreateRecoveryExpire(): void
+    {
+        $headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ];
+        $serverHeaders = array_merge($headers, $this->getHeaders());
+        $email = ID::unique() . '@localhost.test';
+
+        $account = $this->client->call(Client::METHOD_POST, '/account', $serverHeaders, [
+            'userId' => ID::unique(),
+            'email' => $email,
+            'password' => 'password',
+            'name' => 'Recovery User',
+        ]);
+        $this->assertEquals(201, $account['headers']['status-code']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $params = ['email' => $email, 'url' => 'http://localhost/recovery'];
+        $response = $this->client->call(Client::METHOD_POST, '/account/recovery', $serverHeaders, array_merge($params, [
+            'expire' => 60,
+        ]));
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $token = $response['body'];
+        $this->assertTokenExpire($token, 60);
+
+        $response = $this->client->call(Client::METHOD_PUT, '/account/recovery', $headers, [
+            'userId' => $token['userId'],
+            'secret' => $this->readEmailLink($email, $token),
+            'password' => 'updated-password',
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        /**
+         * Test for FAILURE
+         */
+        $this->assertInvalidExpire('/account/recovery', $serverHeaders, $params, 3600);
     }
 }
