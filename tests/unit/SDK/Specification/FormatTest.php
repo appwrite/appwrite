@@ -61,6 +61,7 @@ use Utopia\Http\Route;
 use Utopia\OpenAPI\Model\CompositeSchema;
 use Utopia\OpenAPI\Model\Composition;
 use Utopia\OpenAPI\Model\Discriminator;
+use Utopia\OpenAPI\Model\ParameterLocation;
 use Utopia\OpenAPI\Parser;
 use Utopia\Platform\Enum;
 use Utopia\Validator\AnyOf;
@@ -1449,6 +1450,40 @@ final class FormatTest extends TestCase
         $this->assertSame(['server'], $canonical['components']['securitySchemes']['Key']['x-appwrite']['platforms']);
         $this->assertSame(['Project', 'Key', 'Session'], \array_keys($server['components']['securitySchemes']));
         $this->assertSame(['server'], $server['components']['securitySchemes']['Key']['x-appwrite']['platforms']);
+    }
+
+    public function testPathBoundProjectBecomesOperationConfig(): void
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+
+        $route = (new Route('POST', '/v1/oauth2/:project_id/approve'))
+            ->desc('Approve OAuth2')
+            ->label('scope', 'oauth2.write')
+            ->label('sdk', new Method(
+                namespace: 'oauth2',
+                group: null,
+                name: 'approve',
+                description: 'Approve.',
+                auth: [AuthType::SESSION],
+                responses: [],
+                locationAuth: ['ProjectPath'],
+            ))
+            ->param('project_id', '', new Text(256), 'Project ID.');
+
+        $keys = $this->platformKeys();
+        foreach ($keys as &$schemes) {
+            $schemes['ProjectPath'] = ['location' => ParameterLocation::PATH->value, 'param' => 'project_id', 'config' => 'project'];
+        }
+        unset($schemes);
+
+        $spec = (new OpenAPI3(new Container(), [], [$route], [], $keys, ['client' => 1, 'server' => 2, 'console' => 1], 'client'))->parse();
+        $operation = $spec['paths']['/oauth2/{project_id}/approve']['post'];
+
+        $this->assertSame(['project_id' => 'project'], $operation['x-appwrite']['config']);
+        $this->assertSame([['Session' => []]], $operation['security']);
+        $this->assertSame(['Project' => []], $operation['x-appwrite']['auth']);
+        $this->assertArrayNotHasKey('ProjectPath', $spec['components']['securitySchemes']);
     }
 
     public function testLocationAuthUsesSecurityAlternatives(): void
