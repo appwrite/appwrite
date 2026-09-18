@@ -384,6 +384,16 @@ services:
       - traefik.tcp.routers.appwrite_mqtt.tls=true
       - traefik.tcp.routers.appwrite_mqtt.service=appwrite_mqtt
       - traefik.tcp.services.appwrite_mqtt.loadbalancer.server.port=1883
+      # MQTT-over-WebSocket for browser clients: ws(s)://<host>/push is terminated at the
+      # web/websecure entrypoints and forwarded to the broker's WebSocket listener (:8083).
+      - traefik.http.routers.appwrite_mqtt_ws.entrypoints=appwrite_web
+      - traefik.http.routers.appwrite_mqtt_ws.rule=PathPrefix(`/push`)
+      - traefik.http.routers.appwrite_mqtt_ws.service=appwrite_mqtt_ws
+      - traefik.http.routers.appwrite_mqtt_ws_secure.entrypoints=appwrite_websecure
+      - traefik.http.routers.appwrite_mqtt_ws_secure.rule=PathPrefix(`/push`)
+      - traefik.http.routers.appwrite_mqtt_ws_secure.service=appwrite_mqtt_ws
+      - traefik.http.routers.appwrite_mqtt_ws_secure.tls=true
+      - traefik.http.services.appwrite_mqtt_ws.loadbalancer.server.port=8083
     networks:
       - appwrite
     environment:
@@ -414,6 +424,8 @@ services:
       - _APP_LOGGING_CONFIG_REALTIME
       - _APP_DATABASE_SHARED_TABLES
       - _APP_MQTT_REPLAY_DEPTH
+      - _APP_MQTT_WS_PORT
+      - _APP_MQTT_MAX_PACKET_SIZE
       - _APP_POOL_ADAPTER=swoole
 
   appwrite-worker:

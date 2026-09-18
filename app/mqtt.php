@@ -174,8 +174,10 @@ $registerConnectionResources($container);
 /** @var \Utopia\Telemetry\Adapter $telemetry */
 $telemetry = $container->get('telemetry');
 
+$maxPacketSize = (int) System::getEnv('_APP_MQTT_MAX_PACKET_SIZE', '64000');
 $adapter = new Adapter\Swoole([
-    new Adapter\Swoole\Tcp('0.0.0.0', 1883, (int) System::getEnv('_APP_MQTT_MAX_PACKET_SIZE', '64000')),
+    new Adapter\Swoole\Tcp('0.0.0.0', 1883, $maxPacketSize),
+    new Adapter\Swoole\WebSocket('0.0.0.0', (int) System::getEnv('_APP_MQTT_WS_PORT', '8083'), $maxPacketSize),
 ], workers: 1);
 
 $mqtt = new Mqtt($telemetry, new PubSubPool($register->get('pools')->get('pubsub')));

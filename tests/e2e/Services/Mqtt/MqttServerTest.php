@@ -6,11 +6,19 @@ namespace Tests\E2E\Services\Mqtt;
 
 use Appwrite\Messaging\Status as MessageStatus;
 use PHPUnit\Framework\Attributes\Group;
+use Swoole\Coroutine\Http\Client as WebSocketClient;
+use Swoole\WebSocket\Frame;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
 use Utopia\Database\Helpers\ID;
+use Utopia\Mqtt\Packet;
+use Utopia\Mqtt\Packet\Specs\V5;
+use Utopia\Mqtt\Properties;
+use Utopia\Mqtt\Property;
+
+use function Swoole\Coroutine\run;
 
 /**
  * End-to-end tests for the MQTT push broker (src/Appwrite/Mqtt). Publishing is a server
@@ -33,6 +41,7 @@ final class MqttServerTest extends Scope
 
     private const BROKER_HOST = 'appwrite-mqtt';
     private const BROKER_PORT = 1883;
+    private const BROKER_WS_PORT = 8083;
 
     /**
      * Create a user and mint a session-less JWT for it. The broker's JWT path skips
@@ -367,6 +376,76 @@ final class MqttServerTest extends Scope
         $this->assertEquals('Match update', $payload['notification']['title']);
         $this->assertEquals('India needs 12 off 6', $payload['notification']['body']);
         $this->assertEquals(['matchId' => '42'], $payload['data']);
+    }
+
+    /**
+     * MQTT over WebSocket: browser clients reach the broker through its WebSocket listener
+     * (appwrite-mqtt:8083, routed as ws(s)://<host>/push) instead of raw TCP. The same
+     * enhanced-auth CONNECT and SUBSCRIBE exchange must work with each MQTT packet carried in
+     * a WebSocket binary frame, exercising the broker's WebSocket transport, packet reassembly
+     * and framed send in both directions.
+     */
+    public function testWebSocketConnectAndSubscribe(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        ['userId' => $userId, 'jwt' => $jwt] = $this->createUser();
+
+        $server = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $topicId = $this->setupPushTopic($server, $userId, 'appwrite-mqtt-ws');
+
+        $connackReason = null;
+        $codes = [];
+
+        run(function () use ($projectId, $jwt, $userId, $topicId, &$connackReason, &$codes) {
+            $client = new WebSocketClient(self::BROKER_HOST, self::BROKER_WS_PORT);
+            $client->set(['timeout' => 10]);
+            $this->assertTrue($client->upgrade('/push'), 'websocket upgrade failed');
+
+            $properties = (new Properties())
+                ->add(new Property(Property::AUTHENTICATION_METHOD, 'appwrite-jwt'))
+                ->add(new Property(Property::AUTHENTICATION_DATA, $jwt))
+                ->add(new Property(Property::USER, ['projectId' => $projectId]));
+
+            $buffer = '';
+
+            $client->push(V5::connect('e2e-ws-' . $userId, 60, true, $properties), WEBSOCKET_OPCODE_BINARY);
+            $connack = $this->wsReceive($client, $buffer);
+            $connackReason = \ord($connack->body[1] ?? "\x80");
+
+            $client->push(V5::subscribe(1, [$topicId], 1), WEBSOCKET_OPCODE_BINARY);
+            $suback = $this->wsReceive($client, $buffer);
+            // SUBACK body: [packetId:2][properties][one reason code per filter].
+            $offset = Properties::skip($suback->body, 2);
+            for ($i = $offset; $i < \strlen($suback->body); $i++) {
+                $codes[] = \ord($suback->body[$i]);
+            }
+
+            $client->close();
+        });
+
+        // Test for SUCCESS: the WebSocket carrier authenticated the CONNECT and granted the
+        // subscription at the topic's QoS, proving browser clients can consume the broker.
+        $this->assertSame(0, $connackReason, 'CONNACK over WebSocket was not success');
+        $this->assertSame([1], $codes, 'SUBACK over WebSocket did not grant QoS 1');
+    }
+
+    /** Read WebSocket frames until one whole MQTT packet reassembles out of their payloads. */
+    private function wsReceive(WebSocketClient $client, string &$buffer): Packet
+    {
+        while (true) {
+            [$packets, $buffer] = Packet::frames($buffer);
+            if ($packets !== []) {
+                return Packet::parse($packets[0]);
+            }
+
+            $frame = $client->recv(10);
+            $this->assertInstanceOf(Frame::class, $frame, 'websocket receive failed');
+            $buffer .= (string) $frame->data;
+        }
     }
 
     /**
