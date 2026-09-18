@@ -11,6 +11,10 @@ export interface Organization {
   avatar?: string
   plan: CanonicalPlanId
   members: number
+  /** Raw billing tier from the organizations API (e.g. tier-1, tier-1-1). */
+  billingPlan?: string
+  /** Specific catalogue plan id when it differs from billingPlan. */
+  billingPlanId?: string
   /** Cloud billing: e.g. `readonly` when the org is restricted after failed payment */
   status?: string
   /** Cloud billing: scheduled downgrade date or marker. */

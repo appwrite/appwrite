@@ -3,12 +3,26 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "announcing-sites-dynamic-api-keys",
+    "href": "/blog/post/announcing-sites-dynamic-api-keys",
+    "title": "Announcing dynamic API keys for Appwrite Sites",
+    "description": "Appwrite Sites now mints a scoped, short-lived API key for every build and SSR request, so server-rendered sites call your project without storing a key.",
+    "date": "2026-09-18",
+    "lastUpdated": "2026-09-18",
+    "timeToRead": 4,
+    "author": "aditya-oberai",
+    "category": "announcements",
+    "featured": false,
+    "cover": "/images/blog/announcing-sites-dynamic-api-keys/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-terraform-partner-program",
     "href": "/blog/post/announcing-terraform-partner-program",
     "title": "Appwrite Terraform provider is now a HashiCorp Partner",
     "description": "The Appwrite Terraform provider is now a verified Partner provider on the HashiCorp Terraform Registry. Learn what the badge means and how to use the provider.",
-    "date": "2026-09-17",
-    "lastUpdated": "2026-09-17",
+    "date": "2026-09-18",
+    "lastUpdated": "2026-09-18",
     "timeToRead": 5,
     "author": "aditya-oberai",
     "category": "announcements",

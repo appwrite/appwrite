@@ -613,10 +613,14 @@ export const heSharedUiDictionary: Record<string, string> = {
     'הארגון הגיע למגבלת התקציב והוא חסום כעת. העלו את תקרת התקציב למטה כדי לשחזר גישה לשירותים החייבים בחיוב.',
   'This organization has reached its plan limit for':
     'הארגון הגיע למגבלת התוכנית עבור',
-  '. Upgrade your plan or wait until the end of the billing cycle to restore access.':
-    '. שדרגו את התוכנית או המתינו עד סוף מחזור החיוב כדי לשחזר גישה.',
-  'This organization has reached its plan usage limit and is now blocked. Upgrade your plan or wait until the end of the billing cycle to restore access.':
-    'הארגון הגיע למגבלת השימוש של התוכנית והוא חסום כעת. שדרגו את התוכנית או המתינו עד סוף מחזור החיוב כדי לשחזר גישה.',
+  '. API access to this project is suspended. Upgrade your plan or wait until the end of the billing cycle to restore service.':
+    '. גישת API לפרויקט זה מושהית. שדרגו את התוכנית או המתינו עד סוף מחזור החיוב כדי להחזיר את גישת ה-API.',
+  '. API access to this project is suspended. Delete files or other stored data to free capacity, or upgrade your plan.':
+    '. גישת API לפרויקט זה מושהית. מחקו קבצים או נתונים מאוחסנים אחרים כדי לפנות מקום, או שדרגו את התוכנית.',
+  '. API access to this project is suspended. Delete unused users to free capacity, or upgrade your plan.':
+    '. גישת API לפרויקט זה מושהית. מחקו משתמשים שאינם בשימוש כדי לפנות מקום, או שדרגו את התוכנית.',
+  'This organization has reached its plan usage limit. API access to this project is suspended. Upgrade your plan or wait until the end of the billing cycle to restore service.':
+    'הארגון הגיע למגבלת השימוש של התוכנית. גישת API לפרויקט זה מושהית. שדרגו את התוכנית או המתינו עד סוף מחזור החיוב כדי להחזיר את גישת ה-API.',
   'Plan limit reached': 'מגבלת התוכנית הושגה',
   'Phone auth': 'אימות טלפון',
   'View current cycle usage': 'צפייה בשימוש במחזור הנוכחי',

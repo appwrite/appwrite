@@ -81,9 +81,7 @@ export async function getRouter() {
       reportUnhandledError(event.reason, 'unhandledrejection')
     }
     const onWindowError = (event: ErrorEvent) => {
-      if (
-        tryReloadForStaleChunk(event.error ?? event.message, { event })
-      ) {
+      if (tryReloadForStaleChunk(event.error ?? event.message, { event })) {
         event.preventDefault()
         return
       }

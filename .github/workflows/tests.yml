@@ -9,7 +9,7 @@ on:
 jobs:
   build:
     name: Build
-    runs-on: runs-on=${{ github.run_id }}/runner=checks
+    runs-on: gcrunner=${{ github.run_id }}-build/family=n2d/cpu=4/ram=16/disk=80gb/image=gcrunner-ubuntu2404-x64-baf37b4-20260917131151
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
@@ -35,6 +35,9 @@ jobs:
 
       - name: Check for native browser dialogs
         run: bun run lint:native-dialogs
+
+      - name: Check for preview SDK pins
+        run: bun run lint:sdk-pins
 
       - name: Build
         run: bun run build

@@ -8,9 +8,8 @@ import {
 } from '@/hooks/use-visitor-country'
 
 /**
- * Whether to show the Start plan. The pricing grid stays in the reserved shell
- * until country is known (SSR geo, cookie, debug mock, or locale.get()) so we
- * never flash the default 3-plan grid and then expand to 4.
+ * Whether to show the Start plan. The pricing grid stays empty until locale is
+ * known on the client (after hydration) so we never paint 3 plans then swap to 4.
  */
 export function useStartPlanVisibility(): {
   ready: boolean

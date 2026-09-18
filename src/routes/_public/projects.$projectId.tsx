@@ -18,6 +18,7 @@ import { RequireAuth } from '@/components/global/auth/RequireAuth'
 import { SessionMigrationsProvider } from '@/components/global/providers/SessionMigrationsContext'
 import { OrganizationFailedInvoiceHeaderBanner } from '@/components/global/shared/OrganizationFailedInvoiceHeaderBanner'
 import { OrganizationInvoiceAuthorizeHeaderBanner } from '@/components/global/shared/OrganizationInvoiceAuthorizeHeaderBanner'
+import { OrganizationPlanLimitHeaderBanner } from '@/components/global/shared/OrganizationPlanLimitHeaderBanner'
 import {
   fetchProject,
   fetchOrganizationById,
@@ -31,6 +32,7 @@ import {
   isOrganizationBillingReadonlyStatus,
   isBudgetLimitReached,
   isPlanUsageLimitReached,
+  isProjectLockedByPlanUsage,
   resolveProjectTeamIdFromConsole,
   useOrganizationById,
 } from '@/lib/react-query/hooks'
@@ -296,10 +298,12 @@ export const Route = createFileRoute('/_public/projects/$projectId')({
 
       const budgetLimitReached =
         isBudgetLimitReached(projectData) || isBudgetLimitReached(organization)
+      // Curtain only for cycle-consumed metrics. Storage/users overage must
+      // leave the project open so customers can delete resources.
       const planUsageLimitReached =
         !budgetLimitReached &&
-        (isPlanUsageLimitReached(projectData) ||
-          isPlanUsageLimitReached(organization))
+        (isProjectLockedByPlanUsage(projectData) ||
+          isProjectLockedByPlanUsage(organization))
 
       if (budgetLimitReached || planUsageLimitReached) {
         redirectIfNested()
@@ -529,19 +533,26 @@ function ProjectLayout() {
 
   // Free/starter plan overage (e.g. GBHours). Prefer org limits; fall back to project
   // for usagePerProject plans. Budget curtain takes precedence when both apply.
+  // Storage/users overage is not a lock: keep the project open so they can delete.
   const planUsageLimitReached = Boolean(
     features.billing &&
       !budgetLimitReached &&
       (routeContext.planUsageLimitReached === true ||
         loaderData?.planUsageLimitReached === true ||
-        isPlanUsageLimitReached(billingOrganization) ||
-        isPlanUsageLimitReached(project)),
+        isProjectLockedByPlanUsage(billingOrganization) ||
+        isProjectLockedByPlanUsage(project)),
   )
   const planUsageBillingLimits =
     billingOrganization?.billingLimits &&
     isPlanUsageLimitReached(billingOrganization)
       ? billingOrganization.billingLimits
       : project?.billingLimits
+  const showPlanUsageLimitBanner =
+    !budgetLimitReached &&
+    !planUsageLimitReached &&
+    features.billing &&
+    (isPlanUsageLimitReached(billingOrganization) ||
+      isPlanUsageLimitReached(project))
 
   const skipInvoiceBanners = budgetLimitReached || planUsageLimitReached
   const { data: invoicePresence } = useOrganizationBillingInvoicePresence(
@@ -797,6 +808,11 @@ function ProjectLayout() {
                 <OrganizationInvoiceAuthorizeHeaderBanner
                   organizationId={teamIdForBilling}
                   show={showInvoiceAuthorizeBanner}
+                />
+                <OrganizationPlanLimitHeaderBanner
+                  organizationId={teamIdForBilling}
+                  show={showPlanUsageLimitBanner}
+                  billingLimits={planUsageBillingLimits}
                 />
               </>
             }

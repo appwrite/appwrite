@@ -74,6 +74,47 @@ export function isPlanUsageLimitReached(
 }
 
 /**
+ * Current-state plan resources. Usage can drop when the customer deletes
+ * data (files, users), so the console must stay reachable.
+ */
+export const REDUCIBLE_PLAN_USAGE_KEYS = new Set(['storage', 'users'])
+
+/**
+ * True when the project should be fully blocked (curtain). Cycle-consumed
+ * metrics (GB-hours, bandwidth, executions, …) cannot be undone until reset.
+ * Storage and users overage must not lock the project, or customers cannot
+ * delete resources to get back under the limit.
+ */
+export function isProjectLockedByPlanUsage(
+  resource:
+    | {
+        billingLimits?: BillingLimitsMap | null
+      }
+    | null
+    | undefined,
+): boolean {
+  return getReachedPlanUsageLimitKeys(resource?.billingLimits).some(
+    (key) => !REDUCIBLE_PLAN_USAGE_KEYS.has(key),
+  )
+}
+
+/**
+ * English recovery sentence after "reached its plan limit for {resource}".
+ */
+export function getPlanUsageLimitRecoveryCopy(
+  billingLimits: BillingLimitsMap | null | undefined,
+): string {
+  const keys = getReachedPlanUsageLimitKeys(billingLimits)
+  if (keys.length === 1 && keys[0] === 'storage') {
+    return '. API access to this project is suspended. Delete files or other stored data to free capacity, or upgrade your plan.'
+  }
+  if (keys.length === 1 && keys[0] === 'users') {
+    return '. API access to this project is suspended. Delete unused users to free capacity, or upgrade your plan.'
+  }
+  return '. API access to this project is suspended. Upgrade your plan or wait until the end of the billing cycle to restore service.'
+}
+
+/**
  * Display label for a Cloud billing-limit resource key, or null if unknown.
  */
 export function getBillingLimitResourceLabel(key: string): string | null {

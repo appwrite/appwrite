@@ -9,6 +9,7 @@ import {
 } from '@tanstack/react-query'
 import { ID, Query } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
+import type * as AgentModels from '@/lib/appwrite/agent/models'
 import { getProjectRegion, sdk } from '@/lib/appwrite/sdk'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import { messageNeedsToolHydration } from '@/lib/assistant/resource-mutations'
@@ -43,10 +44,7 @@ export async function fetchAssistantConversations(search?: string) {
   const response = await sdk.forConsole.agent.listConversations({
     queries: [
       // Agents list excludes automation runs (those appear under Automations).
-      Query.or([
-        Query.isNull('automationId'),
-        Query.equal('automationId', ''),
-      ]),
+      Query.or([Query.isNull('automationId'), Query.equal('automationId', '')]),
       Query.orderDesc('$updatedAt'),
     ],
     search: trimmedSearch,
@@ -91,7 +89,7 @@ export async function fetchAssistantMessagesWithTools(
     .filter(({ message }) => messageNeedsToolHydration(message))
     .slice(0, ASSISTANT_TOOL_HYDRATION_LIMIT)
 
-  const hydratedByIndex = new Map<number, Models.AgentMessage>()
+  const hydratedByIndex = new Map<number, AgentModels.AgentMessage>()
   await Promise.all(
     toHydrate.map(async ({ message, index }) => {
       try {
@@ -201,9 +199,7 @@ export function assistantMessagesQueryOptions(
   limit: number = ASSISTANT_MESSAGES_PAGE_SIZE,
 ) {
   const enabled =
-    !!conversationId &&
-    isClientQueryEnabled &&
-    getActiveProfileFeatures().agent
+    !!conversationId && isClientQueryEnabled && getActiveProfileFeatures().agent
   return queryOptions({
     queryKey: ['agent', 'messages', conversationId, limit],
     queryFn: () => fetchAssistantMessages(conversationId!, limit),
@@ -402,24 +398,27 @@ export function useScoreAssistantMessage() {
       })
 
       const previous = queryClient.getQueriesData<{
-        messages: Models.AgentMessage[]
+        messages: AgentModels.AgentMessage[]
         total: number
       }>({ queryKey: ['agent', 'messages', params.conversationId] })
 
       queryClient.setQueriesData<{
-        messages: Models.AgentMessage[]
+        messages: AgentModels.AgentMessage[]
         total: number
-      }>({ queryKey: ['agent', 'messages', params.conversationId] }, (current) => {
-        if (!current) return current
-        return {
-          ...current,
-          messages: current.messages.map((message) =>
-            message.$id === params.messageId
-              ? { ...message, score: params.score }
-              : message,
-          ),
-        }
-      })
+      }>(
+        { queryKey: ['agent', 'messages', params.conversationId] },
+        (current) => {
+          if (!current) return current
+          return {
+            ...current,
+            messages: current.messages.map((message) =>
+              message.$id === params.messageId
+                ? { ...message, score: params.score }
+                : message,
+            ),
+          }
+        },
+      )
 
       return { previous }
     },
@@ -434,19 +433,22 @@ export function useScoreAssistantMessage() {
       // strip hydrated tools/timeline/output, and spreading the response would
       // wipe console surfaces rendered from those fields.
       queryClient.setQueriesData<{
-        messages: Models.AgentMessage[]
+        messages: AgentModels.AgentMessage[]
         total: number
-      }>({ queryKey: ['agent', 'messages', message.conversationId] }, (current) => {
-        if (!current) return current
-        return {
-          ...current,
-          messages: current.messages.map((cached) =>
-            cached.$id === message.$id
-              ? { ...cached, score: message.score }
-              : cached,
-          ),
-        }
-      })
+      }>(
+        { queryKey: ['agent', 'messages', message.conversationId] },
+        (current) => {
+          if (!current) return current
+          return {
+            ...current,
+            messages: current.messages.map((cached) =>
+              cached.$id === message.$id
+                ? { ...cached, score: message.score }
+                : cached,
+            ),
+          }
+        },
+      )
     },
   })
 }
@@ -975,14 +977,7 @@ export function assistantAutomationRunsQueryOptions(
     isClientQueryEnabled &&
     getActiveProfileFeatures().agent
   return queryOptions({
-    queryKey: [
-      'agent',
-      'automations',
-      automationId ?? '',
-      'runs',
-      page,
-      limit,
-    ],
+    queryKey: ['agent', 'automations', automationId ?? '', 'runs', page, limit],
     queryFn: () => fetchAssistantAutomationRuns(automationId!, page, limit),
     staleTime: DEFAULT_STALE_TIME,
     enabled,
@@ -1123,15 +1118,15 @@ export function useDeleteAssistantAutomation() {
   })
 }
 
-export type AssistantConversation = Models.AgentConversation
-export type AssistantMessage = Models.AgentMessage
-export type AssistantMcpConnection = Models.AgentMcpConnection
-export type AssistantMemory = Models.AgentMemory
-export type AssistantModel = Models.AgentModel
-export type AssistantAutomation = Models.AgentAutomation
-export type AgentConversation = Models.AgentConversation
-export type AgentMessage = Models.AgentMessage
-export type AgentMcpConnection = Models.AgentMcpConnection
-export type AgentMemory = Models.AgentMemory
-export type AgentModel = Models.AgentModel
-export type AgentAutomation = Models.AgentAutomation
+export type AssistantConversation = AgentModels.AgentConversation
+export type AssistantMessage = AgentModels.AgentMessage
+export type AssistantMcpConnection = AgentModels.AgentMcpConnection
+export type AssistantMemory = AgentModels.AgentMemory
+export type AssistantModel = AgentModels.AgentModel
+export type AssistantAutomation = AgentModels.AgentAutomation
+export type AgentConversation = AgentModels.AgentConversation
+export type AgentMessage = AgentModels.AgentMessage
+export type AgentMcpConnection = AgentModels.AgentMcpConnection
+export type AgentMemory = AgentModels.AgentMemory
+export type AgentModel = AgentModels.AgentModel
+export type AgentAutomation = AgentModels.AgentAutomation

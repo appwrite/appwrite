@@ -204,32 +204,8 @@ async function generateAnnouncingBitbucketSupportCover(
   await writeAvifFromPng(outputDir, png)
 }
 
-async function generateAnnouncingTerraformPartnerProgramCover(
-  outputDir: string,
-): Promise<void> {
-  mkdirSync(outputDir, { recursive: true })
-
-  const { width, height } = resolveCoverSizePresetKey('blog')
-
-  const data: CoverRenderData = {
-    template: 'integration',
-    theme: 'dark',
-    format: 'png',
-    width,
-    height,
-    title: 'Appwrite is a HashiCorp Partner',
-    subtitle: 'The Appwrite Terraform provider now carries the Partner badge on the Terraform Registry',
-    logoLeft: '/icons/appwrite.svg',
-    logoRight: '/icons/terraform.svg',
-    connector: '×',
-  }
-
-  const png = await renderCoverImage(data)
-  await writeAvifFromPng(outputDir, png)
-}
-
 const IMAGE_GENERATORS: Record<string, (outputDir: string) => Promise<void>> = {
-  'announcing-terraform-partner-program': generateAnnouncingTerraformPartnerProgramCover,
+  'announcing-sites-dynamic-api-keys': convertCoverSourceToAvif,
   'announcing-console-terminal': convertCoverSourceToAvif,
   'announcing-appwrite-explorer': generateAnnouncingAppwriteExplorerCover,
   'announcing-appwrite-domains': convertCoverSourceToAvif,

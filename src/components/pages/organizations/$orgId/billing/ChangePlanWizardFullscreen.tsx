@@ -35,7 +35,10 @@ import {
   billingPlansQueryOptions,
 } from '@/lib/react-query/hooks'
 import { filterBillingPlansByLocation } from '@/lib/pricing/start-plan'
-import { useVisitorCountryCode } from '@/hooks/use-visitor-country'
+import {
+  useVisitorCountryCode,
+  useVisitorCountryResolutionComplete,
+} from '@/hooks/use-visitor-country'
 import { prefetchOrganizationOverviewData } from '@/lib/organization-overview-prefetch'
 import { useSmartNavigation } from '@/lib/hooks/useSmartNavigation'
 import { useDebouncedValue } from '@/lib/hooks/useDebouncedValue'
@@ -477,8 +480,11 @@ export function ChangePlanWizardFullscreen() {
   const { organization } = useOrganizationById(orgId)
   const { plan } = useOrganizationPlan(orgId)
   const { organizations } = useOrganizations()
-  const { plans: billingPlans, isLoading: plansLoading } = useBillingPlans()
+  const { plans: billingPlans, isLoading: billingPlansLoading } =
+    useBillingPlans()
   const visitorCountryCode = useVisitorCountryCode()
+  const visitorCountryReady = useVisitorCountryResolutionComplete()
+  const plansLoading = billingPlansLoading || !visitorCountryReady
 
   const selectablePlans = useMemo(
     () =>

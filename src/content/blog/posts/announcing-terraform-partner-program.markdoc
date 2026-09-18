@@ -2,7 +2,7 @@
 layout: post
 title: "Appwrite Terraform provider is now a HashiCorp Partner"
 description: The Appwrite Terraform provider is now a verified Partner provider on the HashiCorp Terraform Registry. Learn what the badge means and how to use the provider.
-date: 2026-09-17
+date: 2026-09-18
 cover: /images/blog/announcing-terraform-partner-program/cover.avif
 timeToRead: 5
 author: aditya-oberai
