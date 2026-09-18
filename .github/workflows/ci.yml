@@ -690,7 +690,10 @@ jobs:
         if: failure()
         run: |
           echo "=== Appwrite Logs ==="
-          docker compose logs --timestamps
+          # Bounded on purpose. The API serves only the last 5000 lines of a job
+          # log, and an unbounded dump of every container pushes the test output
+          # past that window, so a failure here cannot be read back afterwards.
+          docker compose logs --timestamps --tail=150
 
   e2e_grouped:
     name: Tests / E2E / ${{ matrix.config.label }} (${{ matrix.mode }})
