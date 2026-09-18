@@ -1,0 +1,32 @@
+services:
+  tests:
+    container_name: tests
+    image: mqtt-${PHP_VERSION:-8.3}-dev
+    build:
+      context: .
+      dockerfile: php-${PHP_VERSION:-8.3}.Dockerfile
+    volumes:
+      - ./src:/usr/src/code/src
+      - ./tests:/usr/src/code/tests
+      - ./phpunit.xml:/usr/src/code/phpunit.xml
+    depends_on:
+      - swoole
+    networks:
+      - mqtt
+
+  swoole:
+    container_name: swoole
+    image: mqtt-${PHP_VERSION:-8.3}-dev
+    command: php tests/servers/Swoole/server.php
+    volumes:
+      - ./src:/usr/src/code/src
+      - ./tests:/usr/src/code/tests
+      - ./phpunit.xml:/usr/src/code/phpunit.xml
+    networks:
+      - mqtt
+    ports:
+      - "1883:1883"
+
+networks:
+  mqtt:
+    driver: bridge

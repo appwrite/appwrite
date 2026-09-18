@@ -1,0 +1,20 @@
+name: "Linter"
+
+on: [pull_request]
+jobs:
+  lint:
+    name: Linter
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      with:
+        fetch-depth: 2
+
+    - run: git checkout HEAD^2
+
+    - name: Run Linter
+      run: |
+        docker run --rm -v $PWD:/app composer sh -c \
+        "composer install --profile --ignore-platform-reqs && composer lint"
