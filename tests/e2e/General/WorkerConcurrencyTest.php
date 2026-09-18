@@ -106,6 +106,38 @@ final class WorkerConcurrencyTest extends TestCase
     }
 
     /**
+     * The fake has to serve a batched receive, not just a single pop.
+     *
+     * queue 3.0 gave Broker\Redis a receiveBatch() that takes the message it
+     * waited for plus whatever is already behind it in one round trip, over
+     * Connection::rightPopMany(). A fake that answered that with an empty batch
+     * would leave every batched wiring untestable here, and would do it quietly:
+     * an empty receive is what an idle queue looks like.
+     */
+    public function testTheFakeServesABatchedReceive(): void
+    {
+        $connection = new InMemoryConnection();
+        $broker = new Redis($connection, $connection);
+        $queue = new Queue('v1-functions', self::NAMESPACE);
+
+        $broker->publish($queue, ['n' => 0]);
+        $broker->publish($queue, ['n' => 1]);
+        $broker->publish($queue, ['n' => 2]);
+
+        // Asking for more than the list holds: a short batch is the ordinary
+        // answer, not an error, because only the first message is waited for.
+        $claimed = $broker->receiveBatch($queue, 1, 5);
+
+        $this->assertCount(3, $claimed);
+        $this->assertSame(
+            [0, 1, 2],
+            \array_map(static fn ($message): int => $message->getPayload()['n'], $claimed),
+            'a batch keeps the order the messages were published in',
+        );
+        $this->assertSame(0, $broker->getQueueSize($queue), 'one receive claimed the whole backlog');
+    }
+
+    /**
      * @param list<array{name: string, messages: int, maxCoroutines: int}> $queues
      * @return array{0: array<string, int>, 1: array<string, int>} [processedByQueue, maxActiveByQueue]
      */

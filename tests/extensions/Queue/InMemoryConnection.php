@@ -92,15 +92,31 @@ final class InMemoryConnection implements Connection
      * Pop up to $count payloads from the tail, in pop order.
      *
      * Fewer than asked — including none — is the ordinary answer on a list that
-     * holds fewer, matching what LMPOP does for the real connection.
+     * holds fewer, matching what LMPOP does for the real connection: it waits
+     * only for the first message and then takes whatever company it finds.
+     *
+     * $timeout is unused, as it is in every other pop here. Nothing in this fake
+     * blocks; an empty pop yields instead, which is what keeps a busy receive
+     * loop from starving the handlers it shares a thread with.
      *
      * @return list<string>
      */
     public function rightPopMany(string $queue, int $count, int $timeout): array
     {
-        $batch = [];
-        for ($taken = 0; $taken < $count; $taken++) {
-            $value = $this->pop($queue, fromTail: true);
+        // The first one goes through pop(), so an empty queue costs exactly what
+        // it costs rightPop().
+        $first = $this->pop($queue, fromTail: true);
+        if (!\is_string($first)) {
+            return [];
+        }
+
+        $batch = [$first];
+
+        // The rest is only what is already on the list. Going back through pop()
+        // would yield once more on the message that is not there, turning a
+        // short batch into a sleep the real connection never takes.
+        while (\count($batch) < $count && !empty($this->lists[$queue])) {
+            $value = array_pop($this->lists[$queue]);
             if (!\is_string($value)) {
                 break;
             }
