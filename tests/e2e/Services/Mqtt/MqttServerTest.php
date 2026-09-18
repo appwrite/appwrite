@@ -416,7 +416,7 @@ final class MqttServerTest extends Scope
 
     /**
      * MQTT over WebSocket: browser clients reach the broker through its WebSocket listener
-     * (appwrite-mqtt:8083, routed as ws(s)://<host>/push) instead of raw TCP. The same
+     * (appwrite-mqtt:8083, exposed as wss://<host>:8084 on its own TLS port) instead of raw TCP. The same
      * enhanced-auth CONNECT and SUBSCRIBE exchange must work with each MQTT packet carried in
      * a WebSocket binary frame, exercising the broker's WebSocket transport, packet reassembly
      * and framed send in both directions.
@@ -439,7 +439,7 @@ final class MqttServerTest extends Scope
         run(function () use ($projectId, $jwt, $userId, $topicId, &$connackReason, &$codes) {
             $client = new WebSocketClient(self::BROKER_HOST, self::BROKER_WS_PORT);
             $client->set(['timeout' => 10]);
-            $this->assertTrue($client->upgrade('/push'), 'websocket upgrade failed');
+            $this->assertTrue($client->upgrade('/'), 'websocket upgrade failed');
 
             $properties = (new Properties())
                 ->add(new Property(Property::AUTHENTICATION_METHOD, 'appwrite-jwt'))
