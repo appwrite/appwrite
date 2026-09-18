@@ -15,15 +15,6 @@ use Utopia\UserAgent\UserAgent;
 
 class StatsUsage extends Action
 {
-    /** Flush once this many unique entries are buffered. */
-    private const FLUSH_THRESHOLD = 10_000;
-
-    /** Development flushes every message, so local and E2E reads see usage at once. */
-    private const FLUSH_THRESHOLD_DEVELOPMENT = 1;
-
-    /** Flush once the buffer is this many seconds old. */
-    private const FLUSH_INTERVAL = 20;
-
     protected const SITE_NETWORK_METRICS = [
         METRIC_SITES_INBOUND => METRIC_NETWORK_INBOUND,
         METRIC_SITES_OUTBOUND => METRIC_NETWORK_OUTBOUND,
@@ -38,11 +29,21 @@ class StatsUsage extends Action
         return 'stats-usage';
     }
 
+    /**
+     * Flush once this many unique entries are buffered. Development defaults
+     * to every message, so local and E2E reads see usage at once.
+     */
     protected function flushThreshold(): int
     {
-        return System::getEnv('_APP_ENV', 'development') === 'development'
-            ? self::FLUSH_THRESHOLD_DEVELOPMENT
-            : self::FLUSH_THRESHOLD;
+        $default = System::getEnv('_APP_ENV', 'development') === 'development' ? '1' : '10000';
+
+        return max(1, (int) System::getEnv('_APP_USAGE_FLUSH_THRESHOLD', $default));
+    }
+
+    /** Flush once the buffer is this many seconds old. */
+    protected function flushInterval(): int
+    {
+        return max(1, (int) System::getEnv('_APP_USAGE_FLUSH_INTERVAL', '20'));
     }
 
     public function __construct()
@@ -146,7 +147,7 @@ class StatsUsage extends Action
                 );
             }
 
-            if ($accumulator->count() >= $this->flushThreshold() || $accumulator->elapsedSeconds() >= self::FLUSH_INTERVAL) {
+            if ($accumulator->count() >= $this->flushThreshold() || $accumulator->elapsedSeconds() >= $this->flushInterval()) {
                 // Detach before flushing: flush() yields on the insert, and the
                 // worker runs several coroutines — another message reaching this
                 // point mid-flush must not snapshot (and double-write) the same
