@@ -96,9 +96,12 @@ class SignatureV4
 
         $scope = \implode('/', \array_slice($credential, 1, 4));
         $secrets = $this->keySecrets($project);
-        // Fastly may rewrite HeadObject to GET while forwarding the HEAD signature.
         $methods = [\strtoupper($request->getMethod())];
-        if ($methods[0] === 'GET') {
+        // Fastly may rewrite HeadObject/HeadBucket to GET while forwarding the
+        // HEAD signature. Only retry HEAD when the SDK named that operation, so
+        // a presigned HEAD URL cannot be replayed as GetObject.
+        $operation = $this->operation($request);
+        if ($methods[0] === 'GET' && ($operation === 'HeadObject' || $operation === 'HeadBucket')) {
             $methods[] = 'HEAD';
         }
 
@@ -278,6 +281,17 @@ class SignatureV4
         }
 
         return $parameters;
+    }
+
+    private function operation(Request $request): string
+    {
+        foreach ($this->queryPairs($request) as [$name, $value]) {
+            if ($name === 'x-id') {
+                return $value;
+            }
+        }
+
+        return '';
     }
 
     private function canonicalRequest(Request $request, array $signedHeaders, bool $presigned, string $method): string
