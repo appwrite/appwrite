@@ -117,7 +117,9 @@ final class WorkerTest extends TestCase
 
         $this->assertSame([], $this->provider->issued);
         $this->assertSame(RULE_STATUS_CERTIFICATE_GENERATING, $this->rule()->getAttribute('status'));
-        $this->assertSame(3, $this->certificate()->getAttribute('attempts'));
+        // The wait is counted, or a provider that never finishes would hold the
+        // rule in this state forever.
+        $this->assertSame(4, $this->certificate()->getAttribute('attempts'));
     }
 
     public static function inFlight(): \Iterator
@@ -347,10 +349,10 @@ final class WorkerTest extends TestCase
         yield 'forced message' => [true, Status::UNKNOWN, true];
     }
 
-    public function testFinalAttemptPreservesPendingIssuance(): void
+    public function testExhaustedPendingIssuanceFailsWithDnsGuidance(): void
     {
         /**
-         * Test for SUCCESS
+         * Test for FAILURE
          */
         $this->provider->renew = false;
         $this->setRule(['status' => RULE_STATUS_CERTIFICATE_GENERATING]);
@@ -361,13 +363,35 @@ final class WorkerTest extends TestCase
 
         $this->runWorker();
 
-        $this->assertSame(RULE_STATUS_CERTIFICATE_GENERATING, $this->rule()->getAttribute('status'));
-        $this->assertSame(APP_LIMIT_CERTIFICATE_ATTEMPTS, $this->certificate()->getAttribute('attempts'));
+        $this->assertSame(RULE_STATUS_CERTIFICATE_GENERATION_FAILED, $this->rule()->getAttribute('status'));
         $this->assertNull($this->certificate()->getAttribute('updated'));
+        $this->assertSame([], $this->provider->issued);
+        // The whole point: the domain owner is told what to go and check.
+        $this->assertStringContainsString('DNS record', $this->rule()->getAttribute('logs'));
+    }
+
+    public function testRenewalIsNotFailedWhileTheProviderIsStillWorking(): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        // A verified domain already serves a valid certificate. Bounding its
+        // renewal the same way would mark a live site unverified.
+        $this->provider->renew = false;
+        $this->provider->status = Status::RENEWING;
+        $this->setRule(['status' => RULE_STATUS_VERIFIED]);
+        $this->database->updateDocument('certificates', 'certificate', new Document([
+            'attempts' => APP_LIMIT_CERTIFICATE_ATTEMPTS - 1,
+        ]));
+
+        $this->runWorker();
+
+        $this->assertSame(RULE_STATUS_CERTIFICATE_GENERATING, $this->rule()->getAttribute('status'));
+        $this->assertSame(APP_LIMIT_CERTIFICATE_ATTEMPTS - 1, $this->certificate()->getAttribute('attempts'));
         $this->assertSame([], $this->provider->issued);
     }
 
-    public function testPendingDuplicatePreservesAttemptsWithoutCallingIssuance(): void
+    public function testPendingDuplicateCountsTheWaitWithoutCallingIssuance(): void
     {
         /**
          * Test for SUCCESS
@@ -377,7 +401,7 @@ final class WorkerTest extends TestCase
         $this->provider->status = Status::PENDING;
         $this->runWorker();
         $this->assertCount(1, $this->provider->issued);
-        $this->assertSame(1, $this->certificate()->getAttribute('attempts'));
+        $this->assertSame(2, $this->certificate()->getAttribute('attempts'));
         $this->assertSame(RULE_STATUS_CERTIFICATE_GENERATING, $this->rule()->getAttribute('status'));
     }
 

@@ -331,6 +331,22 @@ class Certificates extends Action
                         return;
                     }
                     if (\in_array($status, [Status::PENDING, Status::PROCESSING, Status::RENEWING], true)) {
+                        // A delayed provider reports the same status whether it is
+                        // working or waiting on a DNS record only the domain owner
+                        // can add, so count the wait. Without this the rule never
+                        // leaves the generating state and nobody is ever told why.
+                        // A renewal is left alone: that domain already serves a
+                        // valid certificate, and marking it unverified would break
+                        // a live site over a renewal that is merely slow.
+                        if ($claimedStatus !== RULE_STATUS_VERIFIED) {
+                            $waits = $certificate->getAttribute('attempts', 0) + 1;
+                            $certificate->setAttribute('attempts', $waits);
+                            if ($waits >= APP_LIMIT_CERTIFICATE_ATTEMPTS) {
+                                $rule->setAttribute('status', RULE_STATUS_CERTIFICATE_GENERATION_FAILED);
+                                $logs .= "\033[90m[{$date}] \033[31mSSL certificate was not issued in time. The certificate authority is still waiting on domain validation, which usually means a DNS record it asked for is missing. Check your DNS records, then retry. \033[0m\n";
+                                return;
+                            }
+                        }
                         $rule->setAttribute('status', RULE_STATUS_CERTIFICATE_GENERATING);
                         $logs .= "\033[90m[{$date}] \033[97mSSL certificate is being issued. We'll periodically check and update the status. \033[0m\n";
                         return;
