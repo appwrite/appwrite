@@ -1,7 +1,7 @@
 ---
 layout: post
-title: "Appwrite Terraform provider is now a HashiCorp Partner"
-description: The Appwrite Terraform provider is now a verified Partner provider on the HashiCorp Terraform Registry. Learn what the badge means and how to use the provider.
+title: "Appwrite Terraform provider is now a HashiCorp Partner Premier provider"
+description: The Appwrite Terraform provider now carries the Partner Premier badge on the HashiCorp Terraform Registry. Learn what the tier means and how to use the provider.
 date: 2026-09-18
 cover: /images/blog/announcing-terraform-partner-program/cover.avif
 timeToRead: 5
@@ -9,12 +9,12 @@ author: aditya-oberai
 category: announcements
 featured: false
 faqs:
-  - question: "What does the Partner badge on the Terraform Registry mean?"
-    answer: "The Terraform Registry sorts providers into tiers. Partner providers are written, maintained, validated, and published by the company that owns the API, and HashiCorp validates the integration through its Technology Partner Program before granting the badge. Community providers carry no such validation. The [Appwrite provider](https://registry.terraform.io/providers/appwrite/appwrite/latest) now shows the Partner badge."
-  - question: "Do I need to change my Terraform configuration now that Appwrite is a Partner provider?"
+  - question: "What does the Partner Premier badge on the Terraform Registry mean?"
+    answer: "The Terraform Registry sorts providers into tiers. Partner providers are written, maintained, validated, and published by the company that owns the API, and HashiCorp validates the integration through its Technology Partner Program before granting the badge. Partner Premier sits above that tier. To earn it, a provider must meet every Partner requirement, ship a software bill of materials with each release, and implement at least one of ephemeral resources, Terraform search, or Terraform actions. The [Appwrite provider](https://registry.terraform.io/providers/appwrite/appwrite/latest) now shows the Partner Premier badge."
+  - question: "Do I need to change my Terraform configuration now that Appwrite is a Partner Premier provider?"
     answer: "No. The provider source is still `appwrite/appwrite` and every resource, data source, and argument is unchanged. The badge is a registry designation, not a new release. Keep your `required_providers` block as it is and update the version constraint whenever you would normally pick up a new release."
-  - question: "What is the difference between Official, Partner, and Community providers on the Terraform Registry?"
-    answer: "Official providers are owned and maintained by HashiCorp itself. Partner providers are built and maintained by third-party companies against their own APIs and validated by HashiCorp. Community providers are published by individual maintainers or groups without a formal partnership. See HashiCorp's [provider tiers documentation](https://developer.hashicorp.com/terraform/registry/providers#provider-tiers-namespaces) for the full definitions."
+  - question: "What is the difference between Official, Partner Premier, Partner, and Community providers on the Terraform Registry?"
+    answer: "Official providers are owned and maintained by HashiCorp itself. Partner providers are built and maintained by third-party companies against their own APIs and validated by HashiCorp. Partner Premier providers meet every Partner requirement and also ship a software bill of materials and implement advanced Terraform features such as ephemeral resources. Community providers are published by individual maintainers or groups without a formal partnership. See HashiCorp's [provider tiers documentation](https://developer.hashicorp.com/terraform/registry/providers#provider-tiers-namespaces) for the full definitions."
   - question: "Which Appwrite resources can I manage with the Terraform provider?"
     answer: "TablesDB databases, tables, columns, indexes, and rows; dedicated PostgreSQL, MySQL, and MongoDB databases; DocumentsDB and VectorsDB; Storage buckets and files; Auth users and teams; Functions and Sites with their variables and deployments; Messaging providers, topics, and subscribers; webhooks; backup policies; and custom domains. The [Terraform provider docs](/docs/tooling/terraform) list every resource and data source."
   - question: "Does the Appwrite Terraform provider work with self-hosted Appwrite?"
@@ -27,17 +27,20 @@ When you search the Terraform Registry for a provider, the first thing you check
 
 Since April, the official Appwrite Terraform provider has let you manage Appwrite project resources as code. It shipped without a badge, because HashiCorp grants those only after reviewing the integration and the company behind it.
 
-Today, we are announcing that **Appwrite is a member of the HashiCorp Technology Partner Program**, and the `appwrite/appwrite` provider now carries the **Partner** badge on the Terraform Registry.
+Today, we are announcing that **Appwrite is a member of the HashiCorp Technology Partner Program**, and the `appwrite/appwrite` provider now carries the **Partner Premier** badge on the Terraform Registry.
 
-# What the Partner badge means
+![The Appwrite provider page on the Terraform Registry showing the Partner Premier badge next to the provider name](/images/blog/announcing-terraform-partner-program/registry-partner-premier.avif)
+
+# What the Partner Premier badge means
 
 The [Terraform Registry](https://developer.hashicorp.com/terraform/registry/providers#provider-tiers-namespaces) sorts providers into tiers:
 
 - **Official** providers are owned and maintained by HashiCorp. Think AWS, Google Cloud, and Azure.
+- **Partner Premier** providers meet every Partner requirement and go further. Each release ships with a software bill of materials, and the provider implements at least one of ephemeral resources, Terraform search, or Terraform actions.
 - **Partner** providers are written, maintained, validated, and published by third-party companies against their own APIs. The company participates in the HashiCorp Technology Partner Program, and HashiCorp validates the integration before granting the badge.
 - **Community** providers are published by individual maintainers, groups, or other members of the Terraform community, with no formal partnership or validation.
 
-The Appwrite provider was always built and maintained by Appwrite. What changed is that HashiCorp has now verified that, and the registry says so on the provider page. The badge tells anyone evaluating the provider that the company behind the API also stands behind the Terraform integration.
+HashiCorp [introduced the Partner Premier tier](https://www.hashicorp.com/en/blog/announcing-the-new-partner-premier-tier-for-the-terraform-registry) in April 2026 to mark providers that adopt its newer security and workflow features rather than only covering the create, read, update, and delete lifecycle. The Appwrite provider was always built and maintained by Appwrite. What changed is that HashiCorp has now verified that, reviewed the provider against the Premier criteria, and the registry says so on the provider page. The badge tells anyone evaluating the provider that the company behind the API also stands behind the Terraform integration, and that the integration keeps pace with how Terraform itself is evolving.
 
 # What changes for you
 
@@ -45,9 +48,10 @@ Nothing in your configuration. The provider source is still `appwrite/appwrite`,
 
 What does change is how the provider shows up when someone else looks at it:
 
-- **Discoverability.** The registry lets you filter providers by tier. Anyone who limits results to Official and Partner providers now sees the Appwrite provider, instead of only forks and experiments.
-- **Trust in review.** Some organizations only allow Official and Partner providers. The Appwrite provider now clears that bar, which removes one of the more tedious blockers to bringing Appwrite into infrastructure that is already managed as code.
+- **Discoverability.** The registry lets you filter providers by tier. Anyone who limits results to Official, Partner Premier, or Partner providers now sees the Appwrite provider, instead of only forks and experiments.
+- **Trust in review.** Some organizations only allow Official and Partner providers. The Appwrite provider now clears that bar with room to spare, which removes one of the more tedious blockers to bringing Appwrite into infrastructure that is already managed as code.
 - **A verified source.** HashiCorp has confirmed that the registry namespace and the [GitHub repository](https://github.com/appwrite/terraform-provider-appwrite) belong to Appwrite, so what you install is what Appwrite publishes.
+- **A supply chain you can inspect.** Every release now carries a software bill of materials, so the tooling you already use to audit dependencies can read exactly what went into the provider binary.
 
 # What the provider covers today
 
@@ -94,9 +98,9 @@ resource "appwrite_tablesdb_table" "users" {
 
 The [configuration guide](/docs/tooling/terraform/provider) covers environment variables for CI, request timeouts, scoping one configuration across multiple projects, and the API key scopes each resource area needs.
 
-# Where the provider is heading
+# The release behind the badge
 
-The badge lands alongside a new release. [Version 2.1.0](https://github.com/appwrite/terraform-provider-appwrite/releases/tag/v2.1.0) adds support for ephemeral resources and write-only arguments, which let Terraform handle values such as credentials at apply time without persisting them in state. Every release artifact now ships with a software bill of materials, and acceptance tests run nightly against a self-hosted Appwrite instance so regressions surface before they reach a tagged release.
+The Premier criteria are not paperwork. They describe features a provider has to ship, and [version 2.1.0](https://github.com/appwrite/terraform-provider-appwrite/releases/tag/v2.1.0) is where the Appwrite provider shipped them. It adds support for ephemeral resources and write-only arguments, which let Terraform handle values such as credentials at apply time without persisting them in state. Every release artifact now ships with a software bill of materials, and acceptance tests run nightly against a self-hosted Appwrite instance so regressions surface before they reach a tagged release.
 
 None of this would have happened without [Levi van Noort](/blog/author/levi-van-noort), who built the provider, carried it through the partner review, and maintains it. If you have hit a rough edge or want a resource the provider does not cover yet, the [GitHub repository](https://github.com/appwrite/terraform-provider-appwrite) is the place to open an issue.
 

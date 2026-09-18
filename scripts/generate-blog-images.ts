@@ -97,14 +97,18 @@ async function generateAnnouncingAppwriteExplorerCover(
 
 /**
  * Converts every `<name>-source.png` screenshot in the slug directory to
- * `<name>.avif` (resized to fit 1280px, matching imported blog images).
+ * `<name>.avif` (resized to fit `maxEdge`, 1280px by default to match
+ * imported blog images).
  */
-async function convertScreenshotSources(outputDir: string): Promise<void> {
+async function convertScreenshotSources(
+  outputDir: string,
+  maxEdge = 1280,
+): Promise<void> {
   const { readdirSync } = await import('node:fs')
   for (const name of readdirSync(outputDir)) {
     if (!name.endsWith('-source.png') || name === 'cover-source.png') continue
     const avif = await sharp(join(outputDir, name))
-      .resize({ width: 1280, height: 1280, fit: 'inside', withoutEnlargement: true })
+      .resize({ width: maxEdge, height: maxEdge, fit: 'inside', withoutEnlargement: true })
       .avif({ quality: 82, effort: 4, chromaSubsampling: '4:4:4' })
       .toBuffer()
     const outName = name.replace(/-source\.png$/, '.avif')
@@ -204,7 +208,34 @@ async function generateAnnouncingBitbucketSupportCover(
   await writeAvifFromPng(outputDir, png)
 }
 
+async function generateAnnouncingTerraformPartnerProgramImages(
+  outputDir: string,
+): Promise<void> {
+  mkdirSync(outputDir, { recursive: true })
+
+  const { width, height } = resolveCoverSizePresetKey('blog')
+
+  const data: CoverRenderData = {
+    template: 'integration',
+    theme: 'dark',
+    format: 'png',
+    width,
+    height,
+    title: 'Appwrite is a HashiCorp Partner Premier provider',
+    subtitle: 'The Appwrite Terraform provider now carries the Partner Premier badge on the Terraform Registry',
+    logoLeft: '/icons/appwrite.svg',
+    logoRight: '/icons/terraform.svg',
+    connector: '×',
+  }
+
+  const png = await renderCoverImage(data)
+  await writeAvifFromPng(outputDir, png)
+  // Registry screenshot is captured at a 1440x810 viewport and kept at that size.
+  await convertScreenshotSources(outputDir, 1440)
+}
+
 const IMAGE_GENERATORS: Record<string, (outputDir: string) => Promise<void>> = {
+  'announcing-terraform-partner-program': generateAnnouncingTerraformPartnerProgramImages,
   'announcing-sites-dynamic-api-keys': convertCoverSourceToAvif,
   'announcing-console-terminal': convertCoverSourceToAvif,
   'announcing-appwrite-explorer': generateAnnouncingAppwriteExplorerCover,

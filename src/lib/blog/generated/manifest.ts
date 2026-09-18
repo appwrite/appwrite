@@ -19,8 +19,8 @@ export const BLOG_POSTS: BlogPostMeta[] = [
   {
     "slug": "announcing-terraform-partner-program",
     "href": "/blog/post/announcing-terraform-partner-program",
-    "title": "Appwrite Terraform provider is now a HashiCorp Partner",
-    "description": "The Appwrite Terraform provider is now a verified Partner provider on the HashiCorp Terraform Registry. Learn what the badge means and how to use the provider.",
+    "title": "Appwrite Terraform provider is now a HashiCorp Partner Premier provider",
+    "description": "The Appwrite Terraform provider now carries the Partner Premier badge on the HashiCorp Terraform Registry. Learn what the tier means and how to use the provider.",
     "date": "2026-09-18",
     "lastUpdated": "2026-09-18",
     "timeToRead": 5,
