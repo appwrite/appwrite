@@ -1203,6 +1203,12 @@ export const heAccountGlobalDictionary: Record<string, string> = {
     'הפעלת הפרויקט מחדש נכשלה. נסו שוב.',
   'Failed to resume project.': 'הפעלת הפרויקט מחדש נכשלה.',
   'Project paused': 'הפרויקט מושהה',
+  'Project blocked': 'הפרויקט חסום',
+  'This project is temporarily unavailable. Access has been restricted, which may include a Terms of Service violation. For questions about this restriction or to request a review, contact support.':
+    'הפרויקט הזה אינו זמין זמנית. הגישה אליו הוגבלה, ייתכן בגלל הפרת תנאי שימוש. לשאלות על ההגבלה או לבקשת בדיקה מחדש, פנו לתמיכה.',
+  'This project is temporarily unavailable. Access has been restricted.':
+    'הפרויקט הזה אינו זמין זמנית. הגישה אליו הוגבלה.',
+  '(Blocked)': '(חסום)',
   'This project has been paused due to inactivity. Your data is safe and will remain intact.':
     'הפרויקט הזה הושהה עקב חוסר פעילות. הנתונים שלכם בטוחים ויישארו ללא פגע.',
   'Upgrade your plan to avoid pausing, or restore the project to continue using it now.':

@@ -757,6 +757,12 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
   'Project resumed successfully': 'プロジェクトを再開しました',
   'Failed to resume project.': 'プロジェクトの再開に失敗しました。',
   'Project paused': 'プロジェクトは一時停止中です',
+  'Project blocked': 'プロジェクトはブロックされています',
+  'This project is temporarily unavailable. Access has been restricted, which may include a Terms of Service violation. For questions about this restriction or to request a review, contact support.':
+    'このプロジェクトは一時的に利用できません。利用規約違反などにより、アクセスが制限されている可能性があります。この制限についてのご質問や再審査のご依頼は、サポートまでお問い合わせください。',
+  'This project is temporarily unavailable. Access has been restricted.':
+    'このプロジェクトは一時的に利用できません。アクセスが制限されています。',
+  '(Blocked)': '(ブロック済み)',
   'Resuming…': '再開中…',
   'Restore project': 'プロジェクトを復元',
   'Budget limit reached': '予算上限に達しました',

@@ -46,6 +46,7 @@ import {
   DEFAULT_PAGE_SIZE,
 } from './constants'
 import { truncateMiddle } from '@/lib/utils'
+import { hasActiveProjectBlock } from '@/lib/project-blocks'
 
 // ============================================================================
 // LIST SELECT - minimal fields for project list/cards (selector, org overview)
@@ -58,6 +59,7 @@ const PROJECT_LIST_SELECT = [
   'region',
   '$createdAt',
   'status',
+  'blocks',
 ] as const
 
 /** Appwrite project name max length (see organization.createProject). */
@@ -103,6 +105,7 @@ export type ProjectListItem = {
   icon: string
   archived?: boolean
   paused?: boolean
+  blocked?: boolean
 }
 
 /** Map console project list rows to org overview / selector card shape. */
@@ -116,6 +119,7 @@ export function mapProjectToListItem(project: Models.Project): ProjectListItem {
     icon: project.name.charAt(0).toUpperCase(),
     archived: project.status === 'archived',
     paused: project.status === 'paused',
+    blocked: hasActiveProjectBlock(project, project.$id),
   }
 }
 
@@ -1004,26 +1008,9 @@ export function useProjectsForTeamInfinite(
 
     const allProjects = data.pages.flatMap((page) => page.projects || [])
 
-    return allProjects.map((raw: unknown) => {
-      const p = raw as {
-        $id: string
-        name: string
-        teamId: string
-        region?: string
-        $createdAt?: string
-        status?: string
-      }
-      return {
-        $id: p.$id,
-        name: p.name,
-        teamId: p.teamId,
-        region: p.region || 'unknown',
-        createdAt: p.$createdAt || new Date().toISOString(),
-        icon: p.name.charAt(0).toUpperCase(),
-        archived: p.status === 'archived',
-        paused: p.status === 'paused',
-      }
-    }) as Project[]
+    return allProjects.map((raw) =>
+      mapProjectToListItem(raw as Models.Project),
+    ) as Project[]
   }, [data])
 
   const total = useMemo(() => {
