@@ -6111,7 +6111,8 @@ final class AccountCustomClientTest extends Scope
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
-        $this->assertEquals('project_provider_unsupported', $response['body']['type']);
+        $this->assertEquals('general_argument_invalid', $response['body']['type']);
+        $this->assertStringContainsString('provider', (string) $response['body']['message']);
     }
 
     /**
