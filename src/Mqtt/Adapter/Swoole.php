@@ -23,6 +23,9 @@ class Swoole extends Adapter
 
     private Timer $timer;
 
+    /** Cap for a WebSocket connection's reassembly buffer; a larger remainder can never complete. */
+    private int $maxPacketLength = 0;
+
     /** @var array<int, string> per-fd MQTT bytes decoded out of WebSocket messages, awaiting whole packets */
     private array $stream = [];
 
@@ -53,6 +56,11 @@ class Swoole extends Adapter
         \usort($transports, fn (Transport $a, Transport $b): int => ($b instanceof WebSocket) <=> ($a instanceof WebSocket));
 
         $master = $transports[0];
+        if ($master instanceof WebSocket) {
+            $length = $master->getSettings()['package_max_length'] ?? 0;
+            $this->maxPacketLength = \is_int($length) ? $length : 0;
+        }
+
         $this->server = $master instanceof WebSocket
             ? new WebSocketServer($master->host, $master->port, SWOOLE_BASE, $master->getSockType())
             : new Server($master->host, $master->port, SWOOLE_BASE, $master->getSockType());
@@ -115,14 +123,25 @@ class Swoole extends Adapter
             // is buffered and split into whole packets before dispatch (Packet::frames),
             // matching the one-packet-per-onReceive the raw-TCP path gets from framing.
             $this->server->on('message', function (Server $server, Frame $frame): void {
-                $this->stream[$frame->fd] = ($this->stream[$frame->fd] ?? '') . $frame->data;
-                [$packets, $this->stream[$frame->fd]] = Packet::frames($this->stream[$frame->fd]);
+                [$packets, $remainder] = Packet::frames(($this->stream[$frame->fd] ?? '') . $frame->data);
 
                 foreach ($packets as $packet) {
                     if ($this->onReceive !== null) {
                         \call_user_func($this->onReceive, $frame->fd, $packet);
                     }
                 }
+
+                // A peer streaming fragments that never complete a packet would otherwise grow
+                // this buffer without bound; a remainder past one max-size packet can never
+                // become a valid packet, so drop the connection instead of retaining it.
+                if ($this->maxPacketLength > 0 && \strlen($remainder) > $this->maxPacketLength) {
+                    unset($this->stream[$frame->fd]);
+                    $this->close($frame->fd);
+
+                    return;
+                }
+
+                $this->stream[$frame->fd] = $remainder;
             });
         }
 
