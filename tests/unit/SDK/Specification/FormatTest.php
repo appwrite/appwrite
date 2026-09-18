@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\SDK\Specification;
 
+use Appwrite\Platform\Tasks\Specs;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
@@ -61,7 +62,6 @@ use Utopia\Http\Route;
 use Utopia\OpenAPI\Model\CompositeSchema;
 use Utopia\OpenAPI\Model\Composition;
 use Utopia\OpenAPI\Model\Discriminator;
-use Utopia\OpenAPI\Model\ParameterLocation;
 use Utopia\OpenAPI\Parser;
 use Utopia\Platform\Enum;
 use Utopia\Validator\AnyOf;
@@ -1471,11 +1471,8 @@ final class FormatTest extends TestCase
             ))
             ->param('project_id', '', new Text(256), 'Project ID.');
 
-        $keys = $this->platformKeys();
-        foreach ($keys as &$schemes) {
-            $schemes['ProjectPath'] = ['location' => ParameterLocation::PATH->value, 'param' => 'project_id', 'config' => 'project'];
-        }
-        unset($schemes);
+        $getKeys = new \ReflectionMethod(Specs::class, 'getKeys');
+        $keys = $getKeys->invoke((new \ReflectionClass(Specs::class))->newInstanceWithoutConstructor());
 
         $spec = (new OpenAPI3(new Container(), [], [$route], [], $keys, ['client' => 1, 'server' => 2, 'console' => 1], 'client'))->parse();
         $operation = $spec['paths']['/oauth2/{project_id}/approve']['post'];
