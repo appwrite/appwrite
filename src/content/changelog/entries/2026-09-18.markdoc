@@ -1,0 +1,19 @@
+---
+layout: changelog
+title: "Appwrite Sites get dynamic API keys"
+date: 2026-09-18
+cover: /images/blog/announcing-sites-dynamic-api-keys/cover.avif
+tags: sites, security, console
+---
+
+[Appwrite Sites](/docs/products/sites) now generates a [dynamic API key](/docs/products/sites/develop#dynamic-api-key) for every site build and every server-side rendering (SSR) request. The key carries only the scopes granted to the site and expires shortly after the request's timeout, so server-rendered sites can send OTPs, provision resources, or accept anonymous submissions without an `APPWRITE_API_KEY` variable.
+
+Appwrite provides the key as the `APPWRITE_SITE_API_KEY` environment variable during the build and on the `x-appwrite-key` request header at run time. Grant scopes to a site from the **Scopes** card under **Settings** > **Build** in the Console, or with the `scopes` parameter on the create and update site endpoints.
+
+{% arrow_link href="/blog/post/announcing-sites-dynamic-api-keys" %}
+Read the announcement
+{% /arrow_link %}
+
+{% arrow_link href="/docs/products/sites/develop#dynamic-api-key" %}
+Use dynamic API keys in Sites
+{% /arrow_link %}
