@@ -122,7 +122,7 @@
         "enshrined/svg-sanitize": "0.22.*",
         "utopia-php/client": "^0.4.4",
         "open-runtimes/sdk-for-php": "^2.0",
-        "utopia-php/schedule": "^0.2.0",
+        "utopia-php/schedule": "^0.3.0",
         "utopia-php/usage": "^0.16.4",
         "utopia-php/query": "0.6.*",
         "utopia-php/openapi": "^0.2.4",
