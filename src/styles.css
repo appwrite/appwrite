@@ -929,13 +929,13 @@ html:not([lang='en']):not([lang='he']) {
   */
   html.marketing-document-scroll {
     height: auto;
-    overscroll-behavior: auto;
+    overscroll-behavior: none;
   }
 
   html.marketing-document-scroll body {
     height: auto;
     overflow: auto;
-    overscroll-behavior: auto;
+    overscroll-behavior: none;
   }
 
   html.marketing-document-scroll .root-container {
