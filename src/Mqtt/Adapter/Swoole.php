@@ -36,6 +36,9 @@ class Swoole extends Adapter
     private $onWorkerStart = null;
 
     /** @var callable|null */
+    private $onOpen = null;
+
+    /** @var callable|null */
     private $onReceive = null;
 
     /** @var callable|null */
@@ -97,6 +100,14 @@ class Swoole extends Adapter
             }
         });
 
+        // TCP connection opened. (WebSocket connections signal open from the handshake below,
+        // since a custom handshake suppresses Swoole's automatic 'open' event.)
+        $this->server->on('connect', function (Server $server, int $fd): void {
+            if ($this->onOpen !== null) {
+                \call_user_func($this->onOpen, $fd);
+            }
+        });
+
         if ($this->server instanceof WebSocketServer) {
             // Swoole's default handshake does not echo the `mqtt` subprotocol, which MQTT-over-
             // WebSocket clients (MQTT.js, Paho) send and require echoed back. Perform a compliant
@@ -115,6 +126,10 @@ class Swoole extends Adapter
 
                 $response->status(101);
                 $response->end();
+
+                if ($this->onOpen !== null) {
+                    \call_user_func($this->onOpen, $request->fd);
+                }
 
                 return true;
             });
@@ -193,6 +208,13 @@ class Swoole extends Adapter
     public function onWorkerStart(callable $callback): Adapter
     {
         $this->onWorkerStart = $callback;
+
+        return $this;
+    }
+
+    public function onOpen(callable $callback): Adapter
+    {
+        $this->onOpen = $callback;
 
         return $this;
     }

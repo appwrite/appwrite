@@ -10,6 +10,8 @@ abstract class Adapter
 
     abstract public function onWorkerStart(callable $callback): self;
 
+    abstract public function onOpen(callable $callback): self;
+
     abstract public function onReceive(callable $callback): self;
 
     abstract public function onClose(callable $callback): self;

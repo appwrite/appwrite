@@ -25,6 +25,9 @@ class Server
 {
     private const MAX_QOS = 2;
 
+    /** Seconds a freshly opened connection has to complete a CONNECT before it is reaped. */
+    private const CONNECT_GRACE = 30;
+
     /** @var array<int, Connection> */
     private array $connections = [];
 
@@ -96,6 +99,7 @@ class Server
 
     public function start(): void
     {
+        $this->adapter->onOpen($this->opened(...));
         $this->adapter->onReceive($this->receive(...));
         $this->adapter->onClose($this->closed(...));
 
@@ -227,6 +231,14 @@ class Server
                 $this->adapter->close($connection->fd);
                 break;
         }
+    }
+
+    private function opened(int $fd): void
+    {
+        $this->connections[$fd] ??= $this->open($fd);
+        // Give the peer a bounded window to CONNECT; a CONNECT re-arms this to keep-alive, so a
+        // connection that never authenticates is reaped instead of holding the slot indefinitely.
+        $this->adapter->timer()->schedule($fd, self::CONNECT_GRACE);
     }
 
     private function open(int $fd): Connection
