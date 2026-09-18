@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "6d18c8c29cbbb950556109e8bfc61779",
+    "content-hash": "8a4455dd9986b24d5ab9788f1d97a2bf",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4146,20 +4146,20 @@
         },
         {
             "name": "utopia-php/mqtt",
-            "version": "dev-dev",
+            "version": "0.0.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/mqtt.git",
-                "reference": "53ff974d0a179f07035241a8b8df0ca1b15a2ff5"
+                "reference": "d43d7e7f4b0c0854c5fd16c7ef085284d84b0d69"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/mqtt/zipball/53ff974d0a179f07035241a8b8df0ca1b15a2ff5",
-                "reference": "53ff974d0a179f07035241a8b8df0ca1b15a2ff5",
+                "url": "https://api.github.com/repos/utopia-php/mqtt/zipball/d43d7e7f4b0c0854c5fd16c7ef085284d84b0d69",
+                "reference": "d43d7e7f4b0c0854c5fd16c7ef085284d84b0d69",
                 "shasum": ""
             },
             "require": {
-                "php": ">=8.1",
+                "php": ">=8.2",
                 "utopia-php/telemetry": "^0.4"
             },
             "require-dev": {
@@ -4206,10 +4206,10 @@
                 "utopia"
             ],
             "support": {
-                "source": "https://github.com/utopia-php/mqtt/tree/dev",
+                "source": "https://github.com/utopia-php/mqtt/tree/0.0.1",
                 "issues": "https://github.com/utopia-php/mqtt/issues"
             },
-            "time": "2026-09-17T15:41:04+00:00"
+            "time": "2026-09-18T11:27:21+00:00"
         },
         {
             "name": "utopia-php/openapi",
@@ -8412,8 +8412,7 @@
     "aliases": [],
     "minimum-stability": "dev",
     "stability-flags": {
-        "utopia-php/http": 5,
-        "utopia-php/mqtt": 20
+        "utopia-php/http": 5
     },
     "prefer-stable": true,
     "prefer-lowest": false,
