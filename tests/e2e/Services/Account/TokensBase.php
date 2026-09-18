@@ -111,6 +111,7 @@ trait TokensBase
             60 => 'in 1 minute',
             900 => 'in 15 minutes',
             3600 => 'in 1 hour',
+            default => $this->fail('Unsupported expiry: ' . $expire),
         };
         $message = $this->getLastEmailByAddress($email, function (array $message) use ($phrase) {
             $this->assertStringContainsString($phrase, (string) $message['text']);
