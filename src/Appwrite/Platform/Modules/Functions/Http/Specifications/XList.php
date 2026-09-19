@@ -50,10 +50,11 @@ class XList extends Base
             ->param('type', 'runtimes', new WhiteList(['runtimes', 'builds']), 'Specification type to list. Can be one of: runtimes, builds. Defaults to runtimes.', true)
             ->inject('response')
             ->inject('plan')
+            ->inject('plans')
             ->callback($this->action(...));
     }
 
-    public function action(string $type, Response $response, array $plan)
+    public function action(string $type, Response $response, array $plan, array $plans = []): void
     {
         $allSpecs = Config::getParam('specifications', []);
         $planKey = $type === 'builds' ? 'buildSpecifications' : 'runtimeSpecifications';
@@ -61,10 +62,7 @@ class XList extends Base
         $specs = [];
         foreach ($allSpecs as $spec) {
             $spec['enabled'] = true;
-
-            if (array_key_exists($planKey, $plan) && !in_array($spec['slug'], $plan[$planKey], true)) {
-                continue;
-            }
+            $spec['reason'] = '';
 
             $maxCpus = System::getEnv('_APP_COMPUTE_CPUS', 0);
             $maxMemory = System::getEnv('_APP_COMPUTE_MEMORY', 0);
@@ -72,6 +70,25 @@ class XList extends Base
             // Only add specs that are within the limits set by environment variables
             // Treat 0 as no limit
             if ((empty($maxCpus) || $spec['cpus'] <= $maxCpus) && (empty($maxMemory) || $spec['memory'] <= $maxMemory)) {
+                if (array_key_exists($planKey, $plan) && !in_array($spec['slug'], $plan[$planKey], true)) {
+                    $spec['enabled'] = false;
+                    $spec['reason'] = 'plan';
+
+                    if (!empty($plans)) {
+                        $supportedInAnyPlan = false;
+                        foreach ($plans as $p) {
+                            if (array_key_exists($planKey, $p) && in_array($spec['slug'], $p[$planKey], true)) {
+                                $supportedInAnyPlan = true;
+                                break;
+                            }
+                        }
+
+                        if (!$supportedInAnyPlan) {
+                            $spec['reason'] = 'unsupported';
+                        }
+                    }
+                }
+
                 $specs[] = $spec;
             }
         }
