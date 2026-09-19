@@ -1912,11 +1912,13 @@ class Deletes extends Action
             return;
         }
 
-        $dbForProject->deleteDocuments('transactionLogs', [
-            Query::equal('transactionInternalId', $transactionInternalIds),
-        ], onError: function (Throwable $th) {
-            // Swallow errors to avoid breaking the cleanup process
-        });
+        foreach (\array_chunk($transactionInternalIds, $dbForProject->getMaxQueryValues()) as $batch) {
+            $dbForProject->deleteDocuments('transactionLogs', [
+                Query::equal('transactionInternalId', $batch),
+            ], onError: function (Throwable $th) {
+                // Swallow errors to avoid breaking the cleanup process
+            });
+        }
     }
 
     /**
