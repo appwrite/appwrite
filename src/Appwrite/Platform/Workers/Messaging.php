@@ -28,6 +28,7 @@ use Utopia\Messaging\Adapter\Email\SMTP;
 use Utopia\Messaging\Adapter\Push\APNS;
 use Utopia\Messaging\Adapter\Push as PushAdapter;
 use Utopia\Messaging\Adapter\Push\FCM;
+use Utopia\Messaging\Adapter\Push\OneSignal;
 use Utopia\Messaging\Adapter\SMS as SMSAdapter;
 use Utopia\Messaging\Adapter\SMS\GEOSMS\CallingCode;
 use Utopia\Messaging\Adapter\SMS\Mock;
@@ -869,6 +870,10 @@ class Messaging extends Action
                 $options['sandbox'] ?? false
             ),
             'fcm' => new FCM(\json_encode($credentials['serviceAccountJSON'])),
+            'onesignal' => new OneSignal(
+                $credentials['appId'] ?? '',
+                $credentials['restApiKey'] ?? ''
+            ),
             'appwrite' => new AppwritePush(
                 new Mqtt($this->telemetry, new PubSubPool($this->pools->get('pubsub'))),
                 $dbForProject,

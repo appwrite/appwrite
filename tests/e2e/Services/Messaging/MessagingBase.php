@@ -128,6 +128,12 @@ trait MessagingBase
                 'teamId' => 'my-teamid',
                 'bundleId' => 'my-bundleid',
             ],
+            'onesignal' => [
+                'providerId' => ID::unique(),
+                'name' => 'OneSignal1',
+                'appId' => 'my-appid',
+                'restApiKey' => 'my-restapikey',
+            ],
         ];
         $providers = [];
 
@@ -221,6 +227,11 @@ trait MessagingBase
                 'authKeyId' => 'my-authkeyid',
                 'teamId' => 'my-teamid',
                 'bundleId' => 'my-bundleid',
+            ],
+            'onesignal' => [
+                'name' => 'OneSignal2',
+                'appId' => 'my-appid',
+                'restApiKey' => 'my-restapikey',
             ],
         ];
 
@@ -841,6 +852,12 @@ trait MessagingBase
                 'teamId' => 'my-teamid',
                 'bundleId' => 'my-bundleid',
             ],
+            'onesignal' => [
+                'providerId' => ID::unique(),
+                'name' => 'OneSignal1',
+                'appId' => 'my-appid',
+                'restApiKey' => 'my-restapikey',
+            ],
         ];
 
         foreach ($providersParams as $key => $params) {
@@ -1137,6 +1154,11 @@ trait MessagingBase
                 'authKeyId' => 'my-authkeyid',
                 'teamId' => 'my-teamid',
                 'bundleId' => 'my-bundleid',
+            ],
+            'onesignal' => [
+                'name' => 'OneSignal2',
+                'appId' => 'my-appid',
+                'restApiKey' => 'my-restapikey',
             ],
         ];
 
