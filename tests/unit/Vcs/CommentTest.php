@@ -135,6 +135,39 @@ final class CommentTest extends TestCase
         $this->assertSame($firstTip, $secondTip);
     }
 
+    public function testSiteStatusImagesMatchExistingFiles(): void
+    {
+        $extensions = [
+            'waiting' => 'status-waiting-%s.png',
+            'processing' => 'status-building-%s.gif',
+            'building' => 'status-building-%s.gif',
+            'ready' => 'status-ready-%s.png',
+            'failed' => 'status-failed-%s.png',
+        ];
+
+        foreach ($extensions as $status => $file) {
+            $comment = new Comment(['consoleHostname' => 'localhost']);
+            $comment->addBuild(
+                new Document(['$id' => 'project1', 'name' => 'Test Project', 'region' => 'default']),
+                new Document(['$id' => 'site1', 'name' => 'Test Site']),
+                'site',
+                $status,
+                'dep1',
+                ['type' => 'logs'],
+                'https://example.appwrite.network'
+            );
+
+            $generated = $comment->generateComment();
+
+            foreach (['light', 'dark'] as $scheme) {
+                $path = \sprintf($file, $scheme);
+
+                $this->assertStringContainsString('/images/vcs/' . $path, $generated);
+                $this->assertFileExists(__DIR__ . '/../../../public/images/vcs/' . $path);
+            }
+        }
+    }
+
     private function extractTip(string $comment): ?string
     {
         if (\preg_match('/> \[!TIP\]\n> (.+)/', $comment, $matches)) {
