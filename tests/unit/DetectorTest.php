@@ -1022,6 +1022,28 @@ class DetectorTest extends TestCase
                 $pubspecFiles,
                 'flutter',
             ],
+            'flutter with a jaspr config but no jaspr dependency' => [
+                <<<'YAML'
+                name: my_app
+
+                dependencies:
+                  flutter:
+                    sdk: flutter
+
+                jaspr:
+                  mode: server
+                YAML,
+                $pubspecFiles,
+                'flutter',
+            ],
+            'flutter with an unparsable pubspec' => [
+                <<<'YAML'
+                name: my_app
+                dependencies: {flutter: {sdk: flutter}
+                YAML,
+                $pubspecFiles,
+                'flutter',
+            ],
             // Appwrite fetches package.json only, so a Dart repo supplies no manifest today
             'pubspec files with no manifest content' => [
                 '',
@@ -1095,6 +1117,7 @@ class DetectorTest extends TestCase
             'config without a mode' => ["jaspr:\n  flutter: embedded\n", ''],
             'unknown mode' => ["jaspr:\n  mode: hybrid\n", ''],
             'not a jaspr project' => ["name: my_app\ndependencies:\n  flutter:\n    sdk: flutter\n", ''],
+            'unparsable config' => ["jaspr: {mode: server\n", ''],
         ];
     }
 

@@ -5,7 +5,7 @@ namespace Utopia\Detector\Detector;
 use Utopia\Detector\Detection\Framework as FrameworkDetection;
 use Utopia\Detector\Detection\Framework\Astro;
 use Utopia\Detector\Detector;
-use Utopia\Detector\Yaml;
+use Utopia\Detector\Manifest;
 
 class Framework extends Detector
 {
@@ -47,7 +47,7 @@ class Framework extends Detector
         $files = array_map(fn ($input) => $input['content'], $files);
 
         $packages = array_filter($this->inputs, fn ($input) => $input['type'] === self::INPUT_PACKAGES);
-        $packages = array_map(fn ($input) => $input['content'], $packages);
+        $packages = array_map(fn ($input) => Manifest::dependencies($input['content']), $packages);
 
         // List of frameworks with count of matches
         $frameworkMatches = [];
@@ -64,9 +64,9 @@ class Framework extends Detector
 
         foreach ($this->options as $detector) {
             // Check package-based detection
-            foreach ($packages as $manifest) {
+            foreach ($packages as $dependencies) {
                 foreach ($detector->getPackages() as $packageNeeded) {
-                    if ($this->hasPackage($manifest, $packageNeeded)) {
+                    if (\in_array($packageNeeded, $dependencies, true)) {
                         $frameworkMatches[$detector->getName()] += 1;
                     }
                 }
@@ -125,19 +125,5 @@ class Framework extends Detector
         }
 
         return null;
-    }
-
-    /**
-     * Matches a dependency key in JSON manifests, where keys are always double
-     * quoted, and in YAML ones, where a key may be unquoted, quoted, or inside
-     * a flow mapping such as `dependencies: {jaspr: ^0.23.0}`.
-     */
-    protected function hasPackage(string $manifest, string $package): bool
-    {
-        if (\str_contains($manifest, '"'.$package.'"')) {
-            return true;
-        }
-
-        return Yaml::hasKey($manifest, $package);
     }
 }

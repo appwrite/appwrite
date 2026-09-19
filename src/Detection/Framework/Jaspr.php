@@ -2,7 +2,7 @@
 
 namespace Utopia\Detector\Detection\Framework;
 
-use Utopia\Detector\Yaml;
+use Utopia\Detector\Manifest;
 
 /**
  * Not a Flutter derivative, but detected from the same pubspec files. Extending
@@ -53,13 +53,13 @@ class Jaspr extends Flutter
      */
     public function getAdapter(string $configContent): string
     {
-        $stripped = Yaml::stripComments($configContent);
+        $config = Manifest::parse($configContent)['jaspr'] ?? null;
 
-        if (\preg_match('/^[\x27\x22]?jaspr[\x27\x22]?[ \t]*:(?<body>.*?)(?=^\S|\z)/ms', $stripped, $block) !== 1) {
+        if (! \is_array($config)) {
             return '';
         }
 
-        return match (Yaml::readKey($block['body'], 'mode')) {
+        return match ($config['mode'] ?? null) {
             'server' => 'ssr',
             'static', 'client' => 'static',
             default => '',
