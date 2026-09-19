@@ -325,6 +325,126 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Path:': 'パス:',
   'Country:': '国:',
   'Rate limit:': 'レート制限:',
+  'Rate limiting': 'レート制限',
+  'OTP abuse protection': 'OTP の不正利用対策',
+  'Regional compliance': '地域コンプライアンス',
+  'Scraping prevention': 'スクレイピング対策',
+  'Block API from countries': '国別に API をブロック',
+  'Deny all project API traffic from selected countries.':
+    '選択した国からのプロジェクト API トラフィックをすべて拒否します。',
+  'Allow API only from countries': '選択した国からのみ API を許可',
+  'Deny project API traffic outside selected countries.':
+    '選択した国以外からのプロジェクト API トラフィックを拒否します。',
+  'Rate limit project API': 'プロジェクト API のレート制限',
+  'Cap total REST API requests per IP to slow bulk scraping.':
+    'IP ごとの REST API リクエスト上限で大量スクレイピングを抑えます。',
+  'Rate limit database API': 'データベース API のレート制限',
+  'Cap TablesDB list and read traffic per IP to protect against data scraping.':
+    'IP ごとに TablesDB の list/read トラフィックを上限設定し、データスクレイピングから保護します。',
+  'Block hosting provider traffic': 'ホスティング事業者トラフィックをブロック',
+  'Deny API requests from hosting provider networks.':
+    'ホスティング事業者ネットワークからの API リクエストを拒否します。',
+  'Block datacenter connection traffic': 'データセンター接続トラフィックをブロック',
+  'Deny API requests from datacenter connection types.':
+    'データセンター接続タイプからの API リクエストを拒否します。',
+  'Add-on required': 'アドオンが必要',
+  'Premium Geo DB': 'Premium Geo DB',
+  'Set a per-IP request quota for matching API traffic. Review the impact preview before tightening limits.':
+    '一致する API トラフィックに IP ごとのリクエスト上限を設定します。制限を厳しくする前に影響プレビューを確認してください。',
+  'Created from a scraping prevention preset. Review traffic in the impact preview before tightening limits.':
+    'スクレイピング対策プリセットから作成されました。制限を厳しくする前に影響プレビューでトラフィックを確認してください。',
+  'Creates one deny rule. Denies traffic when the country is not in your allow list. Unresolved geo is allowed.':
+    '拒否ルールを 1 件作成します。許可リストにない国からのトラフィックを拒否します。未解決の geo は許可されます。',
+  'Creates one deny rule per country. Matching API requests receive a 403 response.':
+    '国ごとに拒否ルールを 1 件作成します。一致する API リクエストは 403 を返します。',
+  'Block API': 'API をブロック',
+  'Enable the Premium Geo DB addon for this project to use connection and ISP conditions in firewall rules.':
+    '接続および ISP 条件を Firewall ルールで使うには、このプロジェクトで Premium Geo DB アドオンを有効にしてください。',
+  'Created from a scraping prevention preset. Requires Premium Geo DB.':
+    'スクレイピング対策プリセットから作成されました。Premium Geo DB が必要です。',
+  'Block network traffic': 'ネットワークトラフィックをブロック',
+  'Last 24 hours of project API traffic that matches these conditions.':
+    'これらの条件に一致するプロジェクト API トラフィックの直近 24 時間です。',
+  'Last 24 hours. Combined estimate for every rule this preset will create.':
+    '直近 24 時間。このプリセットが作成するすべてのルールの合算見積もりです。',
+  'Select options above to preview matched traffic.':
+    '一致するトラフィックをプレビューするには、上でオプションを選択してください。',
+  'Preview is approximate when multiple rules will be created. Total impact may be higher.':
+    '複数ルールが作成される場合、プレビューは概算です。合計への影響はこれより大きい場合があります。',
+  'This preset uses conditions that cannot be estimated from usage logs.':
+    'このプリセットは使用ログから推定できない条件を使います。',
+  'Too many conditions to estimate from usage logs for this preview.':
+    'このプレビューでは使用ログから推定できる条件数を超えています。',
+  'Cap SMS OTP token requests per IP address.':
+    'IP アドレスごとに SMS OTP トークンリクエストを上限設定します。',
+  'Cap email OTP token requests per IP address.':
+    'IP アドレスごとに Email OTP トークンリクエストを上限設定します。',
+  'Slow brute-force attempts on phone OTP verification.':
+    'Phone OTP 検証への総当たり攻撃を遅らせます。',
+  'Slow brute-force attempts on email OTP verification.':
+    'Email OTP 検証への総当たり攻撃を遅らせます。',
+  'Deny OTP traffic from selected countries.':
+    '選択した国からの OTP トラフィックを拒否します。',
+  'Deny OTP traffic outside selected countries.':
+    '選択した国以外からの OTP トラフィックを拒否します。',
+  'Rate limit phone OTP send': 'Phone OTP 送信のレート制限',
+  'Rate limit email OTP send': 'Email OTP 送信のレート制限',
+  'Rate limit phone OTP verification': 'Phone OTP 検証のレート制限',
+  'Rate limit email OTP verification': 'Email OTP 検証のレート制限',
+  'Block OTP from countries': '国別に OTP をブロック',
+  'Allow OTP only from countries': '選択した国からのみ OTP を許可',
+  'Rate limit OTP': 'OTP のレート制限',
+  'Set a per-IP request quota for matching OTP traffic. Review traffic after creating the rule.':
+    '一致する OTP トラフィックに IP ごとのリクエスト上限を設定します。ルール作成後にトラフィックを確認してください。',
+  'Request limit and interval must be greater than zero.':
+    'リクエスト上限と間隔は 0 より大きくしてください。',
+  Interval: '間隔',
+  'Maximum window is 24 hours.': 'ウィンドウの最大は 24 時間です。',
+  'Interval must be between 1 second and 24 hours.':
+    '間隔は 1 秒から 24 時間の範囲で指定してください。',
+  'Created from an OTP protection preset. Adjust limits using the impact preview on future edits.':
+    'OTP 保護プリセットから作成されました。今後の編集では影響プレビューで上限を調整してください。',
+  'Rate limit OTP send': 'OTP 送信のレート制限',
+  'Rate limit OTP verification': 'OTP 検証のレート制限',
+  'Cap phone and email OTP token requests per IP address.':
+    'IP アドレスごとに Phone/Email OTP トークンリクエストを上限設定します。',
+  'Slow brute-force attempts on phone and email OTP verification.':
+    'Phone/Email OTP 検証への総当たり攻撃を遅らせます。',
+  'OTP send (phone and email)': 'OTP 送信 (Phone/Email)',
+  'OTP verification (phone and email)': 'OTP 検証 (Phone/Email)',
+  'Select at least one channel (phone or email).':
+    'Phone または Email のいずれか 1 つ以上を選択してください。',
+  'Select at least one OTP step (send or verification).':
+    'OTP の送信または検証のいずれか 1 つ以上を選択してください。',
+  'Cap phone and email OTP send and verification per IP address.':
+    'IP アドレスごとに Phone/Email の OTP 送信と検証を上限設定します。',
+  Steps: 'ステップ',
+  'OTP send': 'OTP 送信',
+  'OTP verification': 'OTP 検証',
+  'Select at least one channel and step (phone, email, send, or verification).':
+    'Phone、Email、送信、検証のいずれか 1 つ以上を選択してください。',
+  'Select at least one OTP flow.': 'OTP フローを 1 つ以上選択してください。',
+  'Select at least one country.': '国を 1 つ以上選択してください。',
+  'Apply to': '適用先',
+  'Phone OTP send': 'Phone OTP 送信',
+  'Email OTP send': 'Email OTP 送信',
+  'Phone OTP verification': 'Phone OTP 検証',
+  'Email OTP verification': 'Email OTP 検証',
+  Countries: '国',
+  'Add a country': '国を追加',
+  'Country OTP restriction': 'OTP の国別制限',
+  'Creates one deny rule per selected flow. Denies traffic when the country is not in your allow list. Unresolved geo is allowed.':
+    '選択したフローごとに拒否ルールを 1 つ作成します。許可リストにない国からのトラフィックを拒否します。未解決の geo は許可されます。',
+  'Last 24 hours of API traffic that would be denied because it is not from an allowed country.':
+    '許可国以外からの、拒否される API トラフィックの直近 24 時間です。',
+  'Last 24 hours of API traffic from selected countries that would be denied.':
+    '選択した国からの、拒否される API トラフィックの直近 24 時間です。',
+  'Requests that would be denied': '拒否されるリクエスト',
+  'Creates one deny rule per country and flow. Matching OTP requests receive a 403 response.':
+    '国とフローの組み合わせごとに拒否ルールを 1 つ作成します。一致する OTP リクエストは 403 を返します。',
+  'Allow only selected countries': '選択した国のみ許可',
+  'firewall rules created': 'ファイアウォールルールを作成しました',
+  'Create rules': 'ルールを作成',
   'Create firewall rule': 'ファイアウォールルールの作成',
   'Rule name': 'ルール名',
   'e.g., Block suspicious IPs': '例: 不審な IP をブロック',

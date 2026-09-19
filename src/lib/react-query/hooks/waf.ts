@@ -36,6 +36,7 @@ import {
   buildFirewallResourceUsageQueries,
   draftsFromUsageConditionSnapshots,
   firewallConditionBreakdownDimension,
+  mergeFirewallRuleImpactUnion,
   type FirewallRuleImpactData,
   type FirewallUsageConditionSnapshot,
 } from '@/lib/firewall/usage'
@@ -787,6 +788,50 @@ export function useFirewallRuleImpact(
     isFetching,
     error,
   }
+}
+
+export function useFirewallRuleImpactUnion(
+  projectId: string | null | undefined,
+  conditionSets: FirewallConditionDraft[][],
+  resourceType: FirewallResourceType,
+  resourceId: string | undefined,
+  dateRange: DateRange | undefined,
+  chartInterval: UsageChartInterval | undefined,
+  logRetentionHours: number | undefined,
+  action: FirewallCreatableAction | undefined,
+  enabled: boolean,
+) {
+  const queries = useQueries({
+    queries: conditionSets.map((conditions) => ({
+      ...firewallRuleImpactQueryOptions(
+        projectId,
+        conditions,
+        resourceType,
+        resourceId,
+        dateRange,
+        chartInterval,
+        logRetentionHours,
+        action,
+      ),
+      enabled: enabled && !!projectId,
+    })),
+  })
+
+  const isLoading = queries.some((query) => query.isLoading)
+  const isFetching = queries.some((query) => query.isFetching)
+  const impactDataKey = queries
+    .map((query) => query.dataUpdatedAt ?? 0)
+    .join(',')
+  const impact = useMemo(() => {
+    if (!enabled || conditionSets.length === 0) return undefined
+    const results = queries
+      .map((query) => query.data as FirewallRuleImpactData | undefined)
+      .filter((data): data is FirewallRuleImpactData => data != null)
+    if (results.length !== conditionSets.length) return undefined
+    return mergeFirewallRuleImpactUnion(results)
+  }, [enabled, conditionSets.length, impactDataKey, queries])
+
+  return { impact, isLoading, isFetching }
 }
 
 export type FirewallConditionBreakdownEntry = {
