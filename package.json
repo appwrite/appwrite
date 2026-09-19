@@ -29,7 +29,6 @@
     "lint:content": "bun run scripts/lint-hidden-chars.ts",
     "lint:native-dialogs": "bun run scripts/lint-native-dialogs.ts",
     "lint:sdk-pins": "bun run scripts/lint-sdk-pins.ts",
-    "lint:types": "bun run scripts/lint-types.ts",
     "serve": "vite preview",
     "start": "bun --preload ./src/lib/sentry/init-server.ts ./server.ts",
     "test": "playwright test",

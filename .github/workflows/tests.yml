@@ -11,6 +11,10 @@ jobs:
     name: Build
     runs-on: gcrunner=${{ github.run_id }}-build/family=n2d/cpu=4/ram=16/disk=80gb/image=gcrunner-ubuntu2404-x64-baf37b4-20260917131151
     timeout-minutes: 20
+    permissions:
+      contents: read
+      checks: write
+      pull-requests: write
     steps:
       - uses: actions/checkout@v4
 
@@ -35,6 +39,19 @@ jobs:
 
       - name: Check for native browser dialogs
         run: bun run lint:native-dialogs
+
+      # tsc --noEmit on the whole tree, reported through reviewdog. The tree
+      # carries ~1750 pre-existing errors, so filter_mode: added fails the job
+      # only on errors sitting on lines this PR touched.
+      - name: Check types
+        if: github.event_name == 'pull_request'
+        uses: EPMatt/reviewdog-action-tsc@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          reporter: github-pr-check
+          filter_mode: added
+          fail_level: error
+          tsc_flags: --noEmit
 
       - name: Check for preview SDK pins
         run: bun run lint:sdk-pins
