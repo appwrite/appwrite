@@ -86,7 +86,7 @@ class Create extends Action
 
         foreach ($parsedPayloads as $parsedPayload) {
             match ($event) {
-                GitHub::EVENT_INSTALLATION => $this->handleInstallationEvent($parsedPayload, $dbForPlatform, $authorization, $getProjectDB),
+                GitHub::EVENT_INSTALLATION => $this->handleInstallationEvent($parsedPayload, $payload, $dbForPlatform, $authorization, $getProjectDB),
                 GitHub::EVENT_PUSH => $this->handlePushEvent($parsedPayload, $vcsFactory, $dbForPlatform, $authorization, $bus, $getProjectDB, $platform, $deploymentsFactory),
                 GitHub::EVENT_PULL_REQUEST => $this->handlePullRequestEvent($parsedPayload, $vcsFactory, $dbForPlatform, $authorization, $bus, $getProjectDB, $platform, $deploymentsFactory),
                 default => null,
@@ -103,15 +103,73 @@ class Create extends Action
 
     protected function handleInstallationEvent(
         array $parsedPayload,
+        string $payload,
         Database $dbForPlatform,
         Authorization $authorization,
         callable $getProjectDB,
     ) {
+        if ($parsedPayload["action"] === "created") {
+            // The adapter drops the requester, which is only present when the
+            // installation started as a member's request; read it off the raw payload.
+            $requester = \json_decode($payload, true)['requester']['login'] ?? '';
+
+            if (empty($requester)) {
+                return;
+            }
+
+            // The webhook names the requester but not the request, so the
+            // collection allows a requester only one unconsumed request and the
+            // stamp runs under its lock.
+            $authorization->skip(fn () => $dbForPlatform->withTransaction(function () use ($dbForPlatform, $requester, $parsedPayload) {
+                $candidate = $dbForPlatform->findOne('installationRequests', [
+                    Query::equal('provider', ['github']),
+                    Query::equal('requester', [$requester]),
+                ]);
+
+                if ($candidate->isEmpty()) {
+                    return;
+                }
+
+                $request = $dbForPlatform->getDocument('installationRequests', $candidate->getId(), forUpdate: true);
+
+                if ($request->isEmpty() || $request->getAttribute('status') !== 'requested') {
+                    return;
+                }
+
+                $dbForPlatform->updateDocument('installationRequests', $request->getId(), new Document([
+                    'providerInstallationId' => $parsedPayload["installationId"],
+                    'organization' => $parsedPayload["userName"],
+                    'status' => 'ready',
+                ]));
+            }));
+
+            return;
+        }
+
         if ($parsedPayload["action"] !== "deleted") {
             return;
         }
 
         $providerInstallationId = $parsedPayload["installationId"];
+
+        $requestCursor = null;
+        do {
+            $requestQueries = [
+                Query::equal('providerInstallationId', [$providerInstallationId]),
+                Query::equal('provider', ['github']),
+                Query::limit(1000),
+            ];
+            if ($requestCursor !== null) {
+                $requestQueries[] = Query::cursorAfter($requestCursor);
+            }
+            $requests = $authorization->skip(fn () => $dbForPlatform->find('installationRequests', $requestQueries));
+
+            foreach ($requests as $request) {
+                $authorization->skip(fn () => $dbForPlatform->deleteDocument('installationRequests', $request->getId()));
+            }
+
+            $requestCursor = \count($requests) === 1000 ? $requests[\array_key_last($requests)] : null;
+        } while ($requestCursor !== null);
 
         $installationCursor = null;
         do {
