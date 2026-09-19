@@ -43,7 +43,7 @@ export function BlockCard({
   block,
   onDelete,
   deleting}: {
-  block: Models.Block
+  block: Models.ManagerBlock
   onDelete: () => void
   deleting?: boolean
 }) {
