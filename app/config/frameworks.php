@@ -332,7 +332,7 @@ return [
         'adapters' => [
             'ssr' => [
                 'key' => 'ssr',
-                'buildCommand' => 'dart run jaspr_cli:jaspr build',
+                'buildCommand' => 'jaspr build',
                 'installCommand' => 'dart pub get',
                 'outputDirectory' => './build/jaspr',
                 'startCommand' => 'bash helpers/jaspr/server.sh',
