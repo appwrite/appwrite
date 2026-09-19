@@ -174,6 +174,52 @@ jobs:
             if: ${{ !cancelled() && steps.install.outcome == 'success' }}
             run: _APP_STORAGE_LIMIT=5368709120 php app/cli.php specs --version=latest --git=no
 
+          # The release metadata has to agree across files, and a partial bump is
+          # how a published version ends up disagreeing with the repo. Checked
+          # here rather than in tests/unit because the READMEs are not in the
+          # image the unit suite runs inside.
+          - name: Check release metadata
+            if: ${{ !cancelled() }}
+            run: |
+              set -euo pipefail
+              version=$(sed -n "s/^const APP_VERSION_STABLE = '\([^']*\)';.*/\1/p" app/init/constants.php)
+              echo "APP_VERSION_STABLE is ${version}"
+
+              for readme in README.md README-CN.md; do
+                pinned=$(grep -oE 'appwrite/appwrite:[^ `"'"'"')]+' "$readme" | cut -d: -f2 | sort -u)
+
+                if [ -z "$pinned" ]; then
+                  echo "::error file=${readme}::No appwrite/appwrite install snippet found."
+                  exit 1
+                fi
+
+                if [ "$pinned" != "$version" ]; then
+                  echo "::error file=${readme}::Pins $(echo "$pinned" | tr '\n' ' ')but APP_VERSION_STABLE is ${version}."
+                  exit 1
+                fi
+
+                echo "  ok ${readme}"
+              done
+
+              # `release` maps every version it writes; a hand edit that forgets
+              # leaves migrate with nothing to run for the version being shipped.
+              if ! grep -qF "'${version}' =>" src/Appwrite/Migration/Migration.php; then
+                echo "::error file=src/Appwrite/Migration/Migration.php::APP_VERSION_STABLE is ${version}, which has no entry in \$versions."
+                exit 1
+              fi
+
+              echo "  ok Migration::\$versions maps ${version}"
+
+              # A floating console tag would make an install unreproducible.
+              console=$(grep -oE 'image: appwrite/new:\S+' docker-compose.yml | cut -d: -f3)
+
+              if ! echo "$console" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$'; then
+                echo "::error file=docker-compose.yml::The console is pinned to '${console}', which is not an exact version."
+                exit 1
+              fi
+
+              echo "  ok docker-compose.yml console pin (${console})"
+
   locale:
     name: Checks / Locale
     runs-on: >-
@@ -1068,3 +1114,204 @@ jobs:
       - name: Fail benchmark
         if: always() && steps.benchmark_after.outcome != 'success'
         run: exit 1
+
+  # The two release gates AGENTS.md requires. They run on release branches and on
+  # demand, not on every PR to main: a fresh install plus an upgrade from the
+  # previous stable is what a release is blocked on, and it is the work we used to
+  # pay a person to repeat by hand before every patch.
+  install:
+    name: Release / Fresh install
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'push' && github.ref != 'refs/heads/main') ||
+      (github.event_name == 'pull_request' && github.base_ref != 'main')
+    runs-on: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/volume=60g/spot=price-capacity-optimized/retry=when-interrupted/extras=otel+ecr-cache
+    timeout-minutes: 25
+    needs: build
+    permissions:
+      contents: read
+      packages: read
+    env:
+      COMPOSE_FILE: docker-compose.yml
+      COMPOSE_PROJECT_NAME: install-gate
+      COMPOSE_PROFILES: ''
+      _APP_IMAGE: appwrite-dev
+      _APP_VERSION: latest
+      _APP_HTTP_PORT: '8080'
+      _APP_HTTPS_PORT: '8443'
+      ENDPOINT: http://localhost:8080/v1
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Login to Docker Hub
+        if: ${{ env.DOCKERHUB_AUTH_AVAILABLE == 'true' }}
+        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Pull the candidate image
+        run: |
+          docker pull ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }}
+          docker tag ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }} appwrite-dev:latest
+
+      - name: Start from clean
+        timeout-minutes: 10
+        run: docker compose up -d --quiet-pull --wait
+
+      # A stack that boots can still be unusable, so drive the console and
+      # project APIs a self-hoster actually starts with. The script reports the
+      # version it reached before it seeds anything.
+      - name: Exercise the public API
+        timeout-minutes: 10
+        env:
+          MANIFEST: ${{ runner.temp }}/install-gate.json
+        run: .github/scripts/upgrade.sh seed
+
+      - name: Check for crash loops
+        if: always()
+        run: |
+          docker compose ps
+          # compose emits NDJSON on some versions and a JSON array on others;
+          # flatten handles both.
+          docker compose ps --format json \
+            | jq -e -s 'flatten | map(select(.State != "running")) | length == 0' \
+            || { echo "::error::Some containers are not running."; docker compose logs --tail=200; exit 1; }
+
+      - name: Stop
+        if: always()
+        run: docker compose down -v || true
+
+  upgrade:
+    name: Release / Upgrade from previous stable
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'push' && github.ref != 'refs/heads/main') ||
+      (github.event_name == 'pull_request' && github.base_ref != 'main')
+    runs-on: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/volume=60g/spot=price-capacity-optimized/retry=when-interrupted/extras=otel+ecr-cache
+    timeout-minutes: 45
+    needs: build
+    permissions:
+      contents: read
+      packages: read
+    # Defaults describe the candidate. The two steps that run the previous
+    # release override them; everything else is the version being tested.
+    env:
+      COMPOSE_FILE: docker-compose.yml
+      COMPOSE_PROJECT_NAME: upgrade-gate
+      COMPOSE_PROFILES: ''
+      _APP_IMAGE: appwrite-dev
+      _APP_VERSION: latest
+      _APP_HTTP_PORT: '8080'
+      _APP_HTTPS_PORT: '8443'
+      ENDPOINT: http://localhost:8080/v1
+      MANIFEST: ${{ github.workspace }}/upgrade-seed.json
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+
+      - name: Login to Docker Hub
+        if: ${{ env.DOCKERHUB_AUTH_AVAILABLE == 'true' }}
+        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # Baseline = highest published stable below this branch's version. Docker
+      # Hub rather than git tags, because an image nobody can pull is not an
+      # upgrade anyone can perform.
+      - name: Resolve the previous stable
+        id: previous
+        run: |
+          set -euo pipefail
+          target=$(sed -n "s/^const APP_VERSION_STABLE = '\([^']*\)';.*/\1/p" app/init/constants.php)
+
+          # Sort the released X.Y.Z tags together with the target, then take
+          # whatever lands immediately before it. Git rather than Docker Hub's
+          # tag listing: the nightly channel pushes a tag a day to the same
+          # repository, so the stables drop out of any recent-tags window.
+          previous=$(
+            git tag --list \
+              | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' \
+              | { cat; echo "${target}"; } \
+              | sort -u -V \
+              | grep -B1 -x -- "${target}" \
+              | head -1
+          )
+
+          if [ -z "$previous" ] || [ "$previous" = "$target" ]; then
+            echo "::error::No released stable below ${target}."
+            exit 1
+          fi
+
+          echo "Upgrading ${previous} -> ${target}"
+          echo "previous=${previous}" >> "$GITHUB_OUTPUT"
+
+      # An upgrade starts from the compose file and env the old version shipped,
+      # which is what the installation being upgraded was actually started from.
+      - name: Materialise the previous release's compose
+        env:
+          PREVIOUS: ${{ steps.previous.outputs.previous }}
+        run: |
+          set -euo pipefail
+          git show "${PREVIOUS}:docker-compose.yml" > docker-compose.previous.yml
+          git show "${PREVIOUS}:.env" > .env.previous
+
+      - name: Start the previous stable
+        timeout-minutes: 10
+        env:
+          COMPOSE_FILE: docker-compose.previous.yml
+          _APP_IMAGE: appwrite/appwrite
+          _APP_VERSION: ${{ steps.previous.outputs.previous }}
+        run: docker compose --env-file .env.previous up -d --quiet-pull --wait
+
+      - name: Seed through the public API
+        timeout-minutes: 10
+        run: .github/scripts/upgrade.sh seed
+
+      - name: Stop the previous stable, keeping volumes
+        env:
+          COMPOSE_FILE: docker-compose.previous.yml
+          _APP_IMAGE: appwrite/appwrite
+          _APP_VERSION: ${{ steps.previous.outputs.previous }}
+        run: docker compose --env-file .env.previous down
+
+      - name: Pull the candidate image
+        run: |
+          docker pull ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }}
+          docker tag ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }} appwrite-dev:latest
+
+      - name: Start the candidate on the same volumes
+        timeout-minutes: 10
+        run: docker compose up -d --quiet-pull --wait
+
+      - name: Migrate
+        timeout-minutes: 20
+        run: docker compose exec -T appwrite migrate
+
+      - name: Verify the seeded data survived
+        timeout-minutes: 10
+        run: .github/scripts/upgrade.sh verify
+
+      # A migration that is not idempotent breaks every retried or resumed
+      # upgrade.
+      - name: Migrate again
+        timeout-minutes: 20
+        run: docker compose exec -T appwrite migrate
+
+      - name: Verify again, and that writes still work
+        timeout-minutes: 10
+        run: .github/scripts/upgrade.sh verify --write
+
+      - name: Collect logs on failure
+        if: failure()
+        run: |
+          docker compose ps || true
+          docker compose logs --tail=400 appwrite || true
+
+      - name: Stop
+        if: always()
+        run: docker compose down -v || true

@@ -12,6 +12,9 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./docker-compose.yml:/usr/src/code/docker-compose.yml
       - ./.env:/usr/src/code/.env
+      # The release task rewrites the install snippets in both.
+      - ./README.md:/usr/src/code/README.md
+      - ./README-CN.md:/usr/src/code/README-CN.md
       - ./phpunit.xml:/usr/src/code/phpunit.xml
       - ./tests:/usr/src/code/tests
       - ./packages:/usr/src/code/packages

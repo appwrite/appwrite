@@ -8,6 +8,7 @@ use Appwrite\Platform\Tasks\Interval;
 use Appwrite\Platform\Tasks\Maintenance;
 use Appwrite\Platform\Tasks\Migrate;
 use Appwrite\Platform\Tasks\QueueRetry;
+use Appwrite\Platform\Tasks\Release;
 use Appwrite\Platform\Tasks\Schedule;
 use Appwrite\Platform\Tasks\ScheduleExecutions;
 use Appwrite\Platform\Tasks\ScheduleFunctions;
@@ -34,6 +35,7 @@ class Tasks extends Service
             ->addAction(Maintenance::getName(), new Maintenance())
             ->addAction(Migrate::getName(), new Migrate())
             ->addAction(QueueRetry::getName(), new QueueRetry())
+            ->addAction(Release::getName(), new Release())
             ->addAction(SDKs::getName(), new SDKs())
             ->addAction(SSL::getName(), new SSL())
             ->addAction(Screenshot::getName(), new Screenshot())
