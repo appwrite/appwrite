@@ -93,4 +93,41 @@ final class MutexTest extends TestCase
             $mutex->release();
         });
     }
+
+
+    public function testNegativeTimeoutWaitsForReleaseInCoroutine(): void
+    {
+        $mutex = new Mutex();
+        $acquired = false;
+        $waited = 0.0;
+
+        run(function () use ($mutex, &$acquired, &$waited): void {
+            Coroutine::create(function () use ($mutex): void {
+                $mutex->acquire();
+                System::sleep(0.3);
+                $mutex->release();
+            });
+
+            System::sleep(0.05);
+
+            $start = microtime(true);
+            $acquired = $mutex->acquire(-1.0);
+            $waited = microtime(true) - $start;
+            $mutex->release();
+        });
+
+        $this->assertTrue($acquired, 'Negative timeout must wait until the holder releases');
+        $this->assertGreaterThanOrEqual(0.2, $waited, 'Acquire must have blocked while the mutex was held');
+    }
+
+    public function testNegativeTimeoutAcquiresImmediatelyOutsideCoroutine(): void
+    {
+        $mutex = new Mutex();
+
+        $start = microtime(true);
+        $this->assertTrue($mutex->acquire(-1.0));
+        $this->assertLessThan(0.05, microtime(true) - $start, 'Uncontended acquire must not wait');
+
+        $mutex->release();
+    }
 }
