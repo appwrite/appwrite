@@ -27,6 +27,8 @@ trait StagesBase
         $this->assertContains('tablesDB.create', $ids);
         $this->assertContains('storage.createBucket', $ids);
         $this->assertContains('functions.create', $ids);
+        $this->assertContains('cli.install', $ids);
+        $this->assertContains('mcp.install', $ids);
 
         foreach ($response['body']['stages'] as $stage) {
             $this->assertSame($stage['id'], $stage['sdk']);
@@ -102,6 +104,90 @@ trait StagesBase
     }
 
     // =========================================================================
+    // CLI / MCP install stages (completed from x-sdk-name / x-sdk-language)
+    // =========================================================================
+
+    public function testPingWithMcpSdkCompletesInstallStage(): void
+    {
+        $projectId = $this->getProject()['$id'];
+
+        $response = $this->client->call(Client::METHOD_GET, '/ping', [
+            'x-appwrite-project' => $projectId,
+            'x-sdk-name' => 'mcp',
+        ]);
+        $this->assertSame(200, $response['headers']['status-code']);
+
+        $stage = $this->getStage($projectId, 'mcp.install');
+        $this->assertNotNull($stage);
+        $this->assertSame(ONBOARDING_STATUS_COMPLETED, $stage['status']);
+        $this->assertNotEmpty($stage['at']);
+        $this->assertSame(ACTOR_TYPE_GUEST, $stage['actorType']);
+    }
+
+    public function testPingWithCliSdkCompletesInstallStage(): void
+    {
+        $projectId = $this->getProject()['$id'];
+
+        $response = $this->client->call(Client::METHOD_GET, '/ping', [
+            'x-appwrite-project' => $projectId,
+            'x-sdk-name' => 'cli',
+        ]);
+        $this->assertSame(200, $response['headers']['status-code']);
+
+        $stage = $this->getStage($projectId, 'cli.install');
+        $this->assertNotNull($stage);
+        $this->assertSame(ONBOARDING_STATUS_COMPLETED, $stage['status']);
+        $this->assertNotEmpty($stage['at']);
+        $this->assertSame(ACTOR_TYPE_GUEST, $stage['actorType']);
+    }
+
+    public function testPingWithCliLanguageCompletesInstallStage(): void
+    {
+        $projectId = $this->getProject()['$id'];
+
+        $response = $this->client->call(Client::METHOD_GET, '/ping', [
+            'x-appwrite-project' => $projectId,
+            'x-sdk-language' => 'cli',
+        ]);
+        $this->assertSame(200, $response['headers']['status-code']);
+
+        $stage = $this->getStage($projectId, 'cli.install');
+        $this->assertNotNull($stage);
+        $this->assertSame(ONBOARDING_STATUS_COMPLETED, $stage['status']);
+    }
+
+    public function testMcpInstallStageIsNotRewritten(): void
+    {
+        $projectId = $this->getProject()['$id'];
+
+        $first = $this->client->call(Client::METHOD_GET, '/ping', [
+            'x-appwrite-project' => $projectId,
+            'x-sdk-name' => 'mcp',
+        ]);
+        $this->assertSame(200, $first['headers']['status-code']);
+
+        $stage = $this->getStage($projectId, 'mcp.install');
+        $this->assertNotNull($stage);
+        $this->assertSame(ONBOARDING_STATUS_COMPLETED, $stage['status']);
+        $this->assertSame(ACTOR_TYPE_GUEST, $stage['actorType']);
+        $at = $stage['at'];
+        $this->assertNotEmpty($at);
+
+        $second = $this->client->call(Client::METHOD_GET, '/ping', [
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+            'x-sdk-name' => 'mcp',
+        ]);
+        $this->assertSame(200, $second['headers']['status-code']);
+
+        $again = $this->getStage($projectId, 'mcp.install');
+        $this->assertNotNull($again);
+        $this->assertSame(ONBOARDING_STATUS_COMPLETED, $again['status']);
+        $this->assertSame($at, $again['at']);
+        $this->assertSame(ACTOR_TYPE_GUEST, $again['actorType']);
+    }
+
+    // =========================================================================
     // Helpers
     // =========================================================================
 
@@ -136,5 +222,22 @@ trait StagesBase
         return $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/stages/' . rawurlencode($stageId), $headers, [
             'skip' => $skip,
         ]);
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    protected function getStage(string $projectId, string $stageId): ?array
+    {
+        $list = $this->listStages($projectId);
+        $this->assertSame(200, $list['headers']['status-code']);
+
+        foreach ($list['body']['stages'] as $stage) {
+            if ($stage['id'] === $stageId) {
+                return $stage;
+            }
+        }
+
+        return null;
     }
 }
