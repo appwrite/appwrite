@@ -46,7 +46,11 @@ import {
   DEFAULT_PAGE_SIZE,
 } from './constants'
 import { truncateMiddle } from '@/lib/utils'
-import { hasActiveProjectBlock } from '@/lib/project-blocks'
+import {
+  applyProjectResumeToCache,
+  hasActiveProjectBlock,
+} from '@/lib/project-blocks'
+import { refetchProjectScopedQueries } from '@/lib/react-query/project-query-keys'
 
 // ============================================================================
 // LIST SELECT - minimal fields for project list/cards (selector, org overview)
@@ -842,33 +846,21 @@ export function useResumeProject(projectId: string | undefined) {
     },
     onSuccess: async () => {
       if (!projectId) return
-      // Refetch the current project immediately so paused-state UI updates without reload.
-      await queryClient.refetchQueries({
-        queryKey: ['project', projectId],
-        exact: true,
+
+      queryClient.setQueryData(
+        projectQueryOptions(projectId).queryKey,
+        (current: Models.Project | undefined) =>
+          current ? applyProjectResumeToCache(current, projectId) : current,
+      )
+
+      // Force a network read; refetchQueries alone can leave stale loader data
+      // when impersonating because the cached project stays fresh for 5 minutes.
+      await queryClient.fetchQuery({
+        ...projectQueryOptions(projectId),
+        staleTime: 0,
       })
 
-      // Refetch all project-scoped queries that include this project id.
-      await queryClient.refetchQueries({
-        predicate: (query) => {
-          const k = query.queryKey
-          return (
-            (k[0] === 'project' && k[1] === projectId) ||
-            (k[1] === 'project' && k[2] === projectId)
-          )
-        },
-      })
-
-      // Project lists/pickers can exclude paused projects; refresh them too.
-      await queryClient.refetchQueries({
-        predicate: (query) => {
-          const k = query.queryKey
-          return (
-            k[0] === 'projects' ||
-            (k[0] === 'organization' && k[1] === 'projects')
-          )
-        },
-      })
+      await refetchProjectScopedQueries(queryClient, projectId)
     },
   })
 }

@@ -650,12 +650,10 @@ function ProjectLayout() {
     return isOrganizationBillingReadonlyStatus(row?.status)
   }, [showFailedInvoiceBanner, organizationsListData, teamIdForBilling])
 
-  // Use loader data for first paint so paused curtain shows immediately (no layout shift)
-  const projectForPaused =
-    loaderData?.project ??
-    (project
-      ? { $id: project.$id, teamId: project.teamId, status: project.status }
-      : null)
+  // Prefer live project data after resume; loader data is only for first paint.
+  const projectForPaused = project
+    ? { $id: project.$id, teamId: project.teamId, status: project.status }
+    : (loaderData?.project ?? null)
   const isPausedFromProject = project?.status === 'paused'
   const isPausedFromLoader =
     !project && loaderData?.project?.status === 'paused'
