@@ -5,6 +5,7 @@ namespace Utopia\Detector\Detector;
 use Utopia\Detector\Detection\Framework as FrameworkDetection;
 use Utopia\Detector\Detection\Framework\Astro;
 use Utopia\Detector\Detector;
+use Utopia\Detector\Yaml;
 
 class Framework extends Detector
 {
@@ -129,8 +130,7 @@ class Framework extends Detector
     /**
      * Matches a dependency key in JSON manifests, where keys are always double
      * quoted, and in YAML ones, where a key may be unquoted, quoted, or inside
-     * a flow mapping such as `dependencies: {jaspr: ^0.23.0}`. Commented out
-     * dependencies are not matched.
+     * a flow mapping such as `dependencies: {jaspr: ^0.23.0}`.
      */
     protected function hasPackage(string $manifest, string $package): bool
     {
@@ -138,8 +138,6 @@ class Framework extends Detector
             return true;
         }
 
-        $manifest = \preg_replace('/(^|[ \t])#[^\n]*/m', '$1', $manifest) ?? $manifest;
-
-        return \preg_match('/(?:^[ \t]*|[{,][ \t]*)[\x27\x22]?'.\preg_quote($package, '/').'[\x27\x22]?[ \t]*:/m', $manifest) === 1;
+        return Yaml::hasKey($manifest, $package);
     }
 }

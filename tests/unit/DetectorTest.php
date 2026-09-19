@@ -969,6 +969,25 @@ class DetectorTest extends TestCase
                 $pubspecFiles,
                 'flutter',
             ],
+            'jaspr in a multiline flow mapping' => [
+                <<<'YAML'
+                name: my_site
+
+                dependencies: {shelf: ^1.4.0,
+                  jaspr: ^0.23.0}
+                YAML,
+                $pubspecFiles,
+                'jaspr',
+            ],
+            'jaspr beside a quoted hash' => [
+                <<<'YAML'
+                name: my_site
+
+                dependencies: {local_pkg: {path: 'packages # local'}, jaspr: ^0.23.0}
+                YAML,
+                $pubspecFiles,
+                'jaspr',
+            ],
             'flutter with a commented out jaspr dependency' => [
                 <<<'YAML'
                 name: my_app
@@ -1041,6 +1060,9 @@ class DetectorTest extends TestCase
             'commented out mode above the real one' => ["jaspr:\n  # mode: static\n  mode: server\n", 'ssr'],
             'commented out flow mapping' => ["jaspr: {mode: server} # {mode: static}\n", 'ssr'],
             'mode nested under another option' => ["jaspr:\n  dev:\n    mode: static\n  mode: server\n", 'ssr'],
+            'multiline flow mapping' => ["jaspr: {flutter: embedded,\n  mode: server}\n", 'ssr'],
+            'nested flow mapping' => ["jaspr: {dev: {port: 8080}, mode: server}\n", 'ssr'],
+            'quoted hash before the mode' => ["jaspr:\n  dev-command: 'serve # fast'\n  mode: server\n", 'ssr'],
             'surrounded by other keys' => ["name: my_site\n\njaspr:\n  mode: server\n\ndependencies:\n  jaspr: ^0.23.0\n", 'ssr'],
             'commented out config' => ["# jaspr:\n#   mode: server\n", ''],
             'jaspr dependency but no config' => ["name: my_site\ndependencies:\n  jaspr: ^0.23.0\n", ''],
