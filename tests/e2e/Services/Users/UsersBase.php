@@ -1149,32 +1149,38 @@ trait UsersBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::cursorAfter(new Document(['$id' => $data['userId']]))->toString()
+                Query::cursorAfter(new Document(['$id' => $data['userId']]))->toString(),
+                Query::limit(100)->toString(),
             ]
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['users']);
-        // CursorAfter should return results, count varies in parallel mode
-        $this->assertGreaterThanOrEqual(1, count($response['body']['users']));
-        // First result after cursor should be user1 (created right after setupUser)
-        $this->assertEquals($response['body']['users'][0]['$id'], 'user1');
+
+        // Every other method of this suite runs against the same project at the same
+        // time under --functional, so the only order this test can rely on is the one
+        // it establishes itself: setupUser() precedes setupUser1().
+        $after = array_column($response['body']['users'], '$id');
+        $this->assertNotContains($data['userId'], $after, 'cursorAfter returned the cursor itself');
+        $this->assertContains('user1', $after, 'cursorAfter dropped a user created after the cursor');
 
         $response = $this->client->call(Client::METHOD_GET, '/users', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::cursorBefore(new Document(['$id' => 'user1']))->toString()
+                Query::cursorBefore(new Document(['$id' => 'user1']))->toString(),
+                Query::limit(100)->toString(),
             ]
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertNotEmpty($response['body']['users']);
-        $this->assertCount(1, $response['body']['users']);
 
-        $this->assertEquals($response['body']['users'][0]['$id'], $data['userId']);
+        $before = array_column($response['body']['users'], '$id');
+        $this->assertNotContains('user1', $before, 'cursorBefore returned the cursor itself');
+        $this->assertContains($data['userId'], $before, 'cursorBefore dropped a user created before the cursor');
 
         /**
          * Test for SUCCESS searchUsers
