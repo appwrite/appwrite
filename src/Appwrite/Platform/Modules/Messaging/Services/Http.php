@@ -24,6 +24,8 @@ use Appwrite\Platform\Modules\Messaging\Http\Providers\Mailgun\Create as CreateM
 use Appwrite\Platform\Modules\Messaging\Http\Providers\Mailgun\Update as UpdateMailgunProvider;
 use Appwrite\Platform\Modules\Messaging\Http\Providers\Msg91\Create as CreateMsg91Provider;
 use Appwrite\Platform\Modules\Messaging\Http\Providers\Msg91\Update as UpdateMsg91Provider;
+use Appwrite\Platform\Modules\Messaging\Http\Providers\Onesignal\Create as CreateOnesignalProvider;
+use Appwrite\Platform\Modules\Messaging\Http\Providers\Onesignal\Update as UpdateOnesignalProvider;
 use Appwrite\Platform\Modules\Messaging\Http\Providers\Resend\Create as CreateResendProvider;
 use Appwrite\Platform\Modules\Messaging\Http\Providers\Resend\Update as UpdateResendProvider;
 use Appwrite\Platform\Modules\Messaging\Http\Providers\Sendgrid\Create as CreateSendgridProvider;
@@ -81,6 +83,8 @@ class Http extends Service
         $this->addAction(UpdateVonageProvider::getName(), new UpdateVonageProvider());
         $this->addAction(CreateFcmProvider::getName(), new CreateFcmProvider());
         $this->addAction(UpdateFcmProvider::getName(), new UpdateFcmProvider());
+        $this->addAction(CreateOnesignalProvider::getName(), new CreateOnesignalProvider());
+        $this->addAction(UpdateOnesignalProvider::getName(), new UpdateOnesignalProvider());
         $this->addAction(CreateApnsProvider::getName(), new CreateApnsProvider());
         $this->addAction(UpdateApnsProvider::getName(), new UpdateApnsProvider());
         $this->addAction(CreateAppwriteProvider::getName(), new CreateAppwriteProvider());
