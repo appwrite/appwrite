@@ -139,6 +139,88 @@ final class ClientTest extends AdapterContract
         $this->assertSame([], $requests);
     }
 
+    public function testABufferedRequestAfterAStreamedOneOnAReusedConnectionGetsItsBody(): void
+    {
+        Http::serve(function (int $port): void {
+            $client = $this->createAdapter()->withConnectionReuse();
+            $streamed = '';
+            $sinkCalls = 0;
+
+            $this->runAdapter(function () use ($client, $port, &$streamed, &$sinkCalls): void {
+                $response = $client->stream(
+                    new Request\Factory()->createRequest(Method::GET, 'http://127.0.0.1:' . $port . '/stream'),
+                    function (string $chunk) use (&$streamed, &$sinkCalls): void {
+                        $streamed .= $chunk;
+                        $sinkCalls++;
+                    },
+                );
+                $this->assertSame(200, $response->getStatusCode());
+                $this->assertSame("chunk0\nchunk1\nchunk2\nchunk3\nchunk4\n", $streamed);
+
+                $callsAfterStream = $sinkCalls;
+
+                // The write callback the stream installed must not swallow the next buffered body.
+                $response = $client->sendRequest(new Request\Factory()->createRequest(Method::GET, 'http://127.0.0.1:' . $port . '/buffered'));
+                $this->assertSame(202, $response->getStatusCode());
+                $this->assertSame('GET:/buffered::', (string) $response->getBody());
+                $this->assertSame($callsAfterStream, $sinkCalls, 'the stale sink received nothing');
+
+                // And a stream after that still reaches its own sink.
+                $again = '';
+                $client->stream(
+                    new Request\Factory()->createRequest(Method::GET, 'http://127.0.0.1:' . $port . '/stream'),
+                    function (string $chunk) use (&$again): void {
+                        $again .= $chunk;
+                    },
+                );
+                $this->assertSame($streamed, $again);
+            });
+        });
+    }
+
+    public function testABufferedRequestIgnoresAWriteCallbackPassedInSettings(): void
+    {
+        Http::serve(function (int $port): void {
+            $calls = 0;
+            $client = $this->createAdapter(['write_func' => function () use (&$calls): void {
+                $calls++;
+            }]);
+
+            $this->runAdapter(function () use ($client, $port, &$calls): void {
+                $response = $client->sendRequest(new Request\Factory()->createRequest(Method::GET, 'http://127.0.0.1:' . $port . '/buffered'));
+                $this->assertSame(202, $response->getStatusCode());
+                $this->assertSame('GET:/buffered::', (string) $response->getBody());
+                $this->assertSame(0, $calls, 'the supplied write callback received nothing');
+            });
+        });
+    }
+
+    public function testAReusedStreamConnectionReleasesItsSinkAfterTheStream(): void
+    {
+        Http::serve(function (int $port): void {
+            $client = $this->createAdapter()->withConnectionReuse();
+            $captured = null;
+
+            $this->runAdapter(function () use ($client, $port, &$captured): void {
+                $held = new \stdClass();
+                $captured = \WeakReference::create($held);
+
+                $response = $client->stream(
+                    new Request\Factory()->createRequest(Method::GET, 'http://127.0.0.1:' . $port . '/stream'),
+                    function (string $chunk) use ($held): void {
+                        $held->last = $chunk;
+                    },
+                );
+                $this->assertSame(200, $response->getStatusCode());
+            });
+
+            gc_collect_cycles();
+
+            $this->assertInstanceOf(\WeakReference::class, $captured);
+            $this->assertNotInstanceOf(\stdClass::class, $captured->get(), 'the sink outlived the stream on the kept-alive connection');
+        });
+    }
+
     public function testItRequiresCoroutineContext(): void
     {
         $client = $this->createAdapter();
