@@ -2,8 +2,6 @@
 
 namespace Utopia\Detector\Detection\Framework;
 
-use Utopia\Detector\Manifest;
-
 /**
  * Not a Flutter derivative, but detected from the same pubspec files. Extending
  * Flutter makes Jaspr the more specific match, so it wins once a jaspr package
@@ -53,7 +51,8 @@ class Jaspr extends Flutter
      */
     public function getAdapter(string $configContent): string
     {
-        $config = Manifest::parse($configContent)['jaspr'] ?? null;
+        $pubspec = @\yaml_parse($configContent);
+        $config = \is_array($pubspec) ? ($pubspec['jaspr'] ?? null) : null;
 
         if (! \is_array($config)) {
             return '';
