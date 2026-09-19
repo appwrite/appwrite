@@ -422,6 +422,11 @@ return [
         'description' => 'A JWT cannot be created from a request authorized with a JWT. Authenticate with a session cookie or session header instead.',
         'code' => 403,
     ],
+    Exception::USER_IMPERSONATION_READ_ONLY => [
+        'name' => Exception::USER_IMPERSONATION_READ_ONLY,
+        'description' => 'This account action is not allowed while impersonating a user.',
+        'code' => 403,
+    ],
     Exception::API_KEY_EXPIRED => [
         'name' => Exception::API_KEY_EXPIRED,
         'description' => 'The ephemeral API key has expired. Please don\'t use ephemeral API keys for more than duration of the execution.',
