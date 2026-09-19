@@ -5,6 +5,11 @@
 export const jaAccountGlobalDictionary: Record<string, string> = {
   // Account pages
   'Join an organization': '組織に参加する',
+  'No organizations for this account': 'このアカウントに組織がありません',
+  'This account is not a member of any organization. Ask an organization owner to invite you, or use Account in the menu to manage your profile.':
+    'このアカウントはどの組織のメンバーでもありません。組織のオーナーに招待を依頼するか、メニューの Account からプロフィールを管理してください。',
+  'This account is not a member of any organization. Exit impersonation to return to your operator session, or ask an organization owner to invite this user.':
+    'このアカウントはどの組織のメンバーでもありません。なりすましを終了してオペレーターセッションに戻るか、組織オーナーにこのユーザーを招待してもらってください。',
   'Your account is ready. Ask an organization owner to invite you, then accept the invitation in your email to access existing projects.':
     'アカウントの準備ができました。組織のオーナーに招待を依頼し、メールで届いた招待を承認すると、既存のプロジェクトにアクセスできます。',
   '123 Main St': '大手町 1-1-1',

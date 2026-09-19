@@ -25,6 +25,7 @@ import { sdk } from '@/lib/appwrite/sdk'
 import { confirmPayment } from '@/lib/utils/stripe'
 import { resolveStripeProviderMethodId } from '@/lib/billing/addons'
 import { fetchConsoleAccount } from '@/lib/console-account-get'
+import { getConsoleAccountQueryRevision } from '@/lib/console-impersonation'
 import {
   hasProjectSpecificRoles,
   projectIdsFromRoles,
@@ -1461,7 +1462,7 @@ export async function deleteBillingAddress(params: {
  */
 export function organizationsQueryOptions() {
   return queryOptions({
-    queryKey: ['organizations', 'console'],
+    queryKey: ['organizations', 'console', getConsoleAccountQueryRevision()],
     queryFn: fetchOrganizations,
     staleTime: LONG_STALE_TIME,
     // Default QueryClient gcTime is 0. Without this, loader prefetch is
