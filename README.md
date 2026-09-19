@@ -153,6 +153,12 @@ Choose from one of the providers below:
           <br /><sub><b>AWS Marketplace</b></sub></a>
       </a>
     </td>
+    <td align="center" width="100" height="100">
+      <a href="https://easypanel.io/templates/appwrite">
+        <img width="50" height="39" src="public/images/integrations/easypanel-logo.png" alt="Easypanel Logo" />
+          <br /><sub><b>Easypanel</b></sub>
+      </a>
+    </td>
   </tr>
 </table>
 
