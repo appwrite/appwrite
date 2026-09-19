@@ -37,7 +37,7 @@ class Backblaze extends S3
         string $secretKey,
         string $bucket,
         string $region = self::US_WEST_004,
-        Acl $acl = Acl::Private,
+        ?Acl $acl = Acl::Private,
         (ClientInterface&StreamingClientInterface)|null $client = null,
     ) {
         $host = $bucket . '.' . 's3' . '.' . $region . '.backblazeb2.com';

@@ -146,14 +146,14 @@ abstract class S3Base extends TestCase
 
     public function testWrite(): void
     {
-        $this->assertEquals(true, $this->object->write($this->object->getPath('text.txt'), new Stream('Hello World'), 'text/plain'));
+        $this->assertSame(md5('Hello World'), $this->object->write($this->object->getPath('text.txt'), new Stream('Hello World'), 'text/plain'));
 
         $this->object->delete($this->object->getPath('text.txt'));
     }
 
     public function testRead(): void
     {
-        $this->assertEquals(true, $this->object->write($this->object->getPath('text-for-read.txt'), new Stream('Hello World'), 'text/plain'));
+        $this->assertSame(md5('Hello World'), $this->object->write($this->object->getPath('text-for-read.txt'), new Stream('Hello World'), 'text/plain'));
         $this->assertSame('Hello World', (string) $this->object->read($this->object->getPath('text-for-read.txt')));
 
         $this->object->delete($this->object->getPath('text-for-read.txt'));
@@ -173,7 +173,7 @@ abstract class S3Base extends TestCase
 
     public function testMove(): void
     {
-        $this->assertEquals(true, $this->object->write($this->object->getPath('text-for-move.txt'), new Stream('Hello World'), 'text/plain'));
+        $this->assertSame(md5('Hello World'), $this->object->write($this->object->getPath('text-for-move.txt'), new Stream('Hello World'), 'text/plain'));
         $this->assertEquals(true, $this->object->exists($this->object->getPath('text-for-move.txt')));
         $this->assertEquals(true, $this->object->move($this->object->getPath('text-for-move.txt'), $this->object->getPath('text-for-move-new.txt')));
         $this->assertSame('Hello World', (string) $this->object->read($this->object->getPath('text-for-move-new.txt')));
@@ -202,7 +202,7 @@ abstract class S3Base extends TestCase
 
     public function testDelete(): void
     {
-        $this->assertEquals(true, $this->object->write($this->object->getPath('text-for-delete.txt'), new Stream('Hello World'), 'text/plain'));
+        $this->assertSame(md5('Hello World'), $this->object->write($this->object->getPath('text-for-delete.txt'), new Stream('Hello World'), 'text/plain'));
         $this->assertEquals(true, $this->object->exists($this->object->getPath('text-for-delete.txt')));
         $this->assertEquals(true, $this->object->delete($this->object->getPath('text-for-delete.txt')));
     }
@@ -228,7 +228,7 @@ abstract class S3Base extends TestCase
         // Test Single Object
         $path = $this->object->getPath('text-for-delete-path.txt');
         $path = str_ireplace($this->object->getRoot(), $this->object->getRoot() . DIRECTORY_SEPARATOR . 'bucket', $path);
-        $this->assertEquals(true, $this->object->write($path, new Stream('Hello World'), 'text/plain'));
+        $this->assertSame(md5('Hello World'), $this->object->write($path, new Stream('Hello World'), 'text/plain'));
         $this->assertEquals(true, $this->object->exists($path));
         $this->assertEquals(true, $this->object->deletePath('bucket'));
         $this->assertEquals(false, $this->object->exists($path));
@@ -236,12 +236,12 @@ abstract class S3Base extends TestCase
         // Test Multiple Objects
         $path = $this->object->getPath('text-for-delete-path1.txt');
         $path = str_ireplace($this->object->getRoot(), $this->object->getRoot() . DIRECTORY_SEPARATOR . 'bucket', $path);
-        $this->assertEquals(true, $this->object->write($path, new Stream('Hello World'), 'text/plain'));
+        $this->assertSame(md5('Hello World'), $this->object->write($path, new Stream('Hello World'), 'text/plain'));
         $this->assertEquals(true, $this->object->exists($path));
 
         $path2 = $this->object->getPath('text-for-delete-path2.txt');
         $path2 = str_ireplace($this->object->getRoot(), $this->object->getRoot() . DIRECTORY_SEPARATOR . 'bucket', $path2);
-        $this->assertEquals(true, $this->object->write($path2, new Stream('Hello World'), 'text/plain'));
+        $this->assertSame(md5('Hello World'), $this->object->write($path2, new Stream('Hello World'), 'text/plain'));
         $this->assertEquals(true, $this->object->exists($path2));
 
         $this->assertEquals(true, $this->object->deletePath('bucket'));

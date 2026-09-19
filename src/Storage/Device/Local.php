@@ -9,6 +9,7 @@ use Utopia\Psr7\Stream;
 use Utopia\Storage\Device;
 use Utopia\Storage\DeviceType;
 use Utopia\Storage\Exception\NotFoundException;
+use Utopia\Storage\Exception\PreconditionFailedException;
 use Utopia\Storage\Exception\StorageException;
 use Utopia\Storage\Exception\UploadException;
 use Utopia\Storage\FileInfo;
@@ -63,10 +64,11 @@ class Local extends Device
         $metadata['chunks'] ??= 0;
 
         if ($chunks === 1) {
-            $this->writeFile($path, $data);
+            $this->writeAtomic($path, $data);
 
             $metadata['parts'][$chunk] = true;
             $metadata['chunks'] = 1;
+            $metadata['whole'] = true;
 
             return 1;
         }
@@ -84,26 +86,39 @@ class Local extends Device
         $chunksReceived = $this->countChunks($tmp, $path);
         $metadata['parts'][$chunk] = true;
         $metadata['chunks'] = $chunksReceived;
+        $metadata['whole'] = false;
 
         return $chunksReceived;
     }
 
     public function finalize(string $path, int $chunks = 1, array &$metadata = []): bool
     {
-        if (file_exists($path)) {
-            return true;
-        }
-
-        if ($chunks === 1) {
-            return false;
-        }
-
         $tmp = \dirname($path) . DIRECTORY_SEPARATOR . 'tmp_' . basename($path);
+
+        // A single chunk was written as the whole file, unless the upload was
+        // prepared without knowing the count: then it is one part to join. The
+        // upload itself says which it was; without its metadata, a part left
+        // behind by an abandoned upload is indistinguishable from this one's.
+        $whole = $metadata['whole'] ?? ! file_exists($tmp . DIRECTORY_SEPARATOR . pathinfo($path, PATHINFO_FILENAME) . '.part.1');
+
+        if ($chunks === 1 && $whole) {
+            return file_exists($path);
+        }
+
         for ($i = 1; $i <= $chunks; ++$i) {
             $part = $tmp . DIRECTORY_SEPARATOR . pathinfo($path, PATHINFO_FILENAME) . '.part.' . $i;
-            if (! file_exists($part)) {
-                throw new UploadException('Missing chunk ' . $i);
+            if (file_exists($part)) {
+                continue;
             }
+
+            // The chunk directory goes once the parts are joined, so its absence
+            // next to a file in place is a finalized upload. While it is still
+            // there, the chunk is missing, whatever sits at the path.
+            if (! is_dir($tmp) && file_exists($path)) {
+                return true;
+            }
+
+            throw new UploadException('Missing chunk ' . $i);
         }
 
         $this->joinChunks($path, $chunks);
@@ -132,10 +147,6 @@ class Local extends Device
 
     private function joinChunks(string $path, int $chunks): void
     {
-        if (file_exists($path)) {
-            return;
-        }
-
         $tmp = \dirname($path) . DIRECTORY_SEPARATOR . 'tmp_' . basename($path);
         $tmpAssemble = tempnam(\dirname($path), 'tmp_assemble_' . basename($path) . '_');
 
@@ -151,6 +162,13 @@ class Local extends Device
             if ($src === false) {
                 fclose($dest);
                 unlink($tmpAssemble);
+
+                // The chunks go once joined: a file in place means another
+                // request assembled it meanwhile, and there is nothing left to do.
+                if (file_exists($path)) {
+                    return;
+                }
+
                 throw new StorageException('Failed to open chunk ' . $part);
             }
 
@@ -166,12 +184,12 @@ class Local extends Device
 
         fclose($dest);
 
-        if (! rename($tmpAssemble, $path)) {
-            if (file_exists($path)) {
-                unlink($tmpAssemble);
+        // tempnam() creates the file private to its owner; the assembled file
+        // takes the permissions a plain write would have given it.
+        @chmod($tmpAssemble, 0644 & ~umask());
 
-                return;
-            }
+        // rename() replaces a file in place, so the assembled file takes over from whatever was there.
+        if (! rename($tmpAssemble, $path)) {
             unlink($tmpAssemble);
             throw new StorageException('Failed to finalize assembled file ' . $path);
         }
@@ -214,11 +232,13 @@ class Local extends Device
      * Read file or part of file by given path, offset and length.
      *
      * A full read returns a stream over the file itself; a bounded window is
-     * copied into a temporary stream so consumers can read to its end.
+     * copied into a temporary stream so consumers can read to its end. The
+     * ETag of a local file is its MD5 hash, so a conditional read hashes the
+     * whole file first.
      *
      * @throws StorageException
      */
-    public function read(string $path, int $offset = 0, ?int $length = null): StreamInterface
+    public function read(string $path, int $offset = 0, ?int $length = null, ?string $etag = null): StreamInterface
     {
         if (! $this->exists($path)) {
             throw new NotFoundException('File not found');
@@ -227,6 +247,11 @@ class Local extends Device
         $handle = fopen($path, 'rb');
         if ($handle === false) {
             throw new StorageException('Failed to read file ' . $path);
+        }
+
+        if ($etag !== null && $this->hashHandle($handle, $path) !== $etag) {
+            fclose($handle);
+            throw new PreconditionFailedException('File ' . $path . ' no longer has ETag ' . $etag);
         }
 
         if ($offset > 0 && fseek($handle, $offset) !== 0) {
@@ -250,35 +275,152 @@ class Local extends Device
     }
 
     /**
-     * Write file by given path.
+     * Write file by given path. The ETag of a local file is its MD5 hash,
+     * taken from the bytes as they are written.
      */
-    public function write(string $path, StreamInterface $data, string $contentType = ''): bool
+    public function write(string $path, StreamInterface $data, string $contentType = ''): string
     {
         // Checks if directory path to file exists
         if (! file_exists(\dirname($path)) && ! @mkdir(\dirname($path), 0755, true)) {
             throw new StorageException('Can\'t create directory ' . \dirname($path));
         }
 
-        $this->writeFile($path, $data);
+        return $this->writeAtomic($path, $data);
+    }
 
-        return true;
+    /**
+     * Write a file where there is none yet. Opening the file exclusively makes
+     * the check and the creation one step.
+     */
+    public function create(string $path, StreamInterface $data, string $contentType = ''): string
+    {
+        if (! file_exists(\dirname($path)) && ! @mkdir(\dirname($path), 0755, true)) {
+            throw new StorageException('Can\'t create directory ' . \dirname($path));
+        }
+
+        $handle = @fopen($path, 'xb');
+        if ($handle === false) {
+            if (file_exists($path)) {
+                throw new PreconditionFailedException('File ' . $path . ' already exists');
+            }
+
+            throw new StorageException('Can\'t write file ' . $path);
+        }
+
+        // The path is claimed the moment the handle opens: a body that fails
+        // must give it back, or the path can never be created again.
+        try {
+            return $this->pipe($handle, $path, $data);
+        } catch (\Throwable $e) {
+            @unlink($path);
+
+            throw $e;
+        }
+    }
+
+    /**
+     * Write over the file with the given ETag. The check and the write are two
+     * steps, so a replacement landing between them goes unnoticed and the last
+     * writer wins; a local disk offers nothing better without a lock file. The
+     * write itself is atomic, so no reader ever sees the two mixed.
+     */
+    public function replace(string $path, StreamInterface $data, string $etag, string $contentType = ''): string
+    {
+        if (! $this->exists($path)) {
+            throw new PreconditionFailedException('File ' . $path . ' is gone');
+        }
+
+        if ($this->getFileHash($path) !== $etag) {
+            throw new PreconditionFailedException('File ' . $path . ' no longer has ETag ' . $etag);
+        }
+
+        return $this->writeAtomic($path, $data);
+    }
+
+    /**
+     * Pipe a stream into a sibling temporary file and rename it over the path.
+     *
+     * rename() is atomic, so a reader sees either the whole old file or the
+     * whole new one, and a write that fails part way leaves the old one alone.
+     *
+     * @return string MD5 hash of the bytes written
+     *
+     * @throws StorageException
+     */
+    private function writeAtomic(string $path, StreamInterface $data): string
+    {
+        $tmp = tempnam(\dirname($path), 'tmp_write_' . basename($path) . '_');
+        if ($tmp === false) {
+            throw new StorageException('Can\'t write file ' . $path);
+        }
+
+        try {
+            $hash = $this->writeFile($tmp, $data);
+            @chmod($tmp, 0644 & ~umask());
+
+            if (! rename($tmp, $path)) {
+                throw new StorageException('Can\'t write file ' . $path);
+            }
+        } catch (\Throwable $e) {
+            @unlink($tmp);
+
+            throw $e;
+        }
+
+        return $hash;
+    }
+
+    /**
+     * MD5 the open file and leave it positioned at the start again.
+     *
+     * @param  resource  $handle
+     *
+     * @throws StorageException
+     */
+    private function hashHandle($handle, string $path): string
+    {
+        $context = hash_init('md5');
+        hash_update_stream($context, $handle);
+
+        if (! rewind($handle)) {
+            throw new StorageException('Failed to read file ' . $path);
+        }
+
+        return hash_final($context);
     }
 
     /**
      * Pipe a stream into a file, chunk by chunk.
      *
+     * @return string MD5 hash of the bytes written
+     *
      * @throws StorageException
      */
-    private function writeFile(string $path, StreamInterface $data): void
+    private function writeFile(string $path, StreamInterface $data): string
+    {
+        $handle = fopen($path, 'wb');
+        if ($handle === false) {
+            throw new StorageException('Can\'t write file ' . $path);
+        }
+
+        return $this->pipe($handle, $path, $data);
+    }
+
+    /**
+     * Pipe a stream into an open file, chunk by chunk, and close it.
+     *
+     * @param  resource  $handle
+     * @return string MD5 hash of the bytes written, the file's ETag
+     *
+     * @throws StorageException
+     */
+    private function pipe($handle, string $path, StreamInterface $data): string
     {
         if ($data->isSeekable()) {
             $data->rewind();
         }
 
-        $handle = fopen($path, 'wb');
-        if ($handle === false) {
-            throw new StorageException('Can\'t write file ' . $path);
-        }
+        $hash = hash_init('md5');
 
         try {
             while (! $data->eof()) {
@@ -288,6 +430,7 @@ class Local extends Device
                 if ($length === 0) {
                     break;
                 }
+                hash_update($hash, $chunk);
                 while ($written < $length) {
                     $bytes = fwrite($handle, substr($chunk, $written));
                     if ($bytes === false || $bytes === 0) {
@@ -299,6 +442,8 @@ class Local extends Device
         } finally {
             fclose($handle);
         }
+
+        return hash_final($hash);
     }
 
     /**
@@ -385,6 +530,25 @@ class Local extends Device
     public function exists(string $path): bool
     {
         return file_exists($path);
+    }
+
+    /**
+     * Size, last modification and MD5 hash of a file. The hash reads the whole file.
+     */
+    public function getFileInfo(string $path): FileInfo
+    {
+        if (! $this->exists($path)) {
+            throw new NotFoundException('File not found: ' . $path);
+        }
+
+        $modified = filemtime($path);
+
+        return new FileInfo(
+            path: $path,
+            size: $this->getFileSize($path),
+            modifiedAt: $modified === false ? null : new \DateTimeImmutable('@' . $modified),
+            etag: $this->getFileHash($path),
+        );
     }
 
     /**

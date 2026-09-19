@@ -76,7 +76,7 @@ class AWS extends S3
         string $secretKey,
         string $bucket,
         string $region = self::US_EAST_1,
-        Acl $acl = Acl::Private,
+        ?Acl $acl = Acl::Private,
         (ClientInterface&StreamingClientInterface)|null $client = null,
     ) {
         $host = match ($region) {

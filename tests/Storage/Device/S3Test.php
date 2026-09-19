@@ -22,6 +22,7 @@ use Utopia\Storage\Device\S3;
 use Utopia\Storage\Device\S3\Response as S3Response;
 use Utopia\Storage\Device\S3\RetryStrategy;
 use Utopia\Storage\Exception\NotFoundException;
+use Utopia\Storage\Exception\PreconditionFailedException;
 use Utopia\Storage\Exception\RemoteException;
 use Utopia\Storage\Exception\StorageException;
 use Utopia\Storage\Exception\TransportException;
@@ -66,6 +67,7 @@ class TestableS3 extends S3
             $method === 'PUT' && isset($parameters['partNumber']) => 's3:uploadPart',
             $method === 'POST' && isset($parameters['uploadId']) => 's3:completeMultipartUpload',
             $method === 'DELETE' && isset($parameters['uploadId']) => 's3:abort',
+            $method === 'GET' && \array_key_exists('uploads', $parameters) => 's3:listUploads',
             $method === 'PUT' => 's3:write',
             default => 's3:' . strtolower($method),
         };
@@ -102,10 +104,20 @@ class TestableS3 extends S3
         }
 
         if ($operation === 's3:completeMultipartUpload') {
+            if ($this->completedBody !== '') {
+                throw new NotFoundException('The specified multipart upload does not exist.', 404);
+            }
+
             $this->completedBody = (string) $data;
             $this->objectExists = true;
 
             return new S3Response(code: 200, headers: [], body: '');
+        }
+
+        if ($operation === 's3:write') {
+            $this->objectExists = true;
+
+            return new S3Response(code: 200, headers: ['etag' => '"etag-write"'], body: '');
         }
 
         return new S3Response(code: 200, headers: [], body: '');
@@ -317,9 +329,9 @@ final class S3Test extends TestCase
 
     public function testWriteSendsSignedRequest(): void
     {
-        $client = new ScriptedClient([new Response(200)]);
+        $client = new ScriptedClient([new Response(200)->withHeader('etag', '"b10a8db164e0754105b7a99be72e3fe5"')]);
 
-        $this->assertTrue($this->device($client)->write('/root/file.txt', new Stream('Hello World'), 'text/plain'));
+        $this->assertSame('b10a8db164e0754105b7a99be72e3fe5', $this->device($client)->write('/root/file.txt', new Stream('Hello World'), 'text/plain'), 'the ETag comes back without its quotes');
         $this->assertCount(1, $client->requests);
 
         $request = $client->requests[0];
@@ -337,7 +349,7 @@ final class S3Test extends TestCase
 
     public function testEndpointPathIsExcludedFromHostHeader(): void
     {
-        $client = new ScriptedClient([new Response(200)]);
+        $client = new ScriptedClient([new Response(200)->withHeader('etag', '"abc"')]);
         $device = new S3(
             root: '/',
             accessKey: 'test-key',
@@ -347,7 +359,7 @@ final class S3Test extends TestCase
             client: $client,
         );
 
-        $this->assertTrue($device->write('archive/file.json', new Stream('{}'), 'application/json'));
+        $this->assertSame('abc', $device->write('archive/file.json', new Stream('{}'), 'application/json'));
 
         $request = $client->requests[0];
         $this->assertSame('minio', $request->getUri()->getHost());
@@ -358,9 +370,9 @@ final class S3Test extends TestCase
 
     public function testTransientErrorIsRetriedUntilSuccess(): void
     {
-        $client = new ScriptedClient([$this->slowDown(), $this->slowDown(), new Response(200)]);
+        $client = new ScriptedClient([$this->slowDown(), $this->slowDown(), new Response(200)->withHeader('etag', '"abc"')]);
 
-        $this->assertTrue($this->device($client)->write('/root/file.txt', new Stream('Hello World'), 'text/plain'));
+        $this->assertSame('abc', $this->device($client)->write('/root/file.txt', new Stream('Hello World'), 'text/plain'));
         $this->assertCount(3, $client->requests);
     }
 
@@ -580,5 +592,269 @@ final class S3Test extends TestCase
         $this->assertSame('root/a.txt', $list->files[0]->path);
         $this->assertSame(11, $list->files[0]->size);
         $this->assertNull($list->cursor);
+    }
+
+    public function testFinalizeCompletesOverAnExistingObject(): void
+    {
+        // The upload replaces whatever is at the path; an object already there is no reason to skip completion.
+        $this->s3->objectExists = true;
+        $metadata = [];
+        $this->s3->prepare('/root/file.txt', 'text/plain', 2, $metadata);
+        $this->s3->upload(new Stream('a'), '/root/file.txt', 'text/plain', 1, 0, $metadata);
+        $this->s3->upload(new Stream('b'), '/root/file.txt', 'text/plain', 2, 0, $metadata);
+
+        $this->assertTrue($this->s3->finalize('/root/file.txt', 2, $metadata));
+        $this->assertContains('s3:completeMultipartUpload', $this->s3->calls);
+    }
+
+    public function testFinalizeTwiceIsNotAnError(): void
+    {
+        $metadata = [];
+        $this->s3->prepare('/root/file.txt', 'text/plain', 2, $metadata);
+        $this->s3->upload(new Stream('a'), '/root/file.txt', 'text/plain', 1, 0, $metadata);
+        $this->s3->upload(new Stream('b'), '/root/file.txt', 'text/plain', 2, 0, $metadata);
+
+        $this->assertTrue($this->s3->finalize('/root/file.txt', 2, $metadata));
+        $this->assertTrue($this->s3->finalize('/root/file.txt', 2, $metadata), 'the upload is gone but the object is there');
+        $this->assertCount(2, array_keys($this->s3->calls, 's3:completeMultipartUpload', true));
+    }
+
+    public function testFinalizeOfAnAbortedUploadFails(): void
+    {
+        $metadata = [];
+        $this->s3->prepare('/root/file.txt', 'text/plain', 2, $metadata);
+        $this->s3->upload(new Stream('a'), '/root/file.txt', 'text/plain', 1, 0, $metadata);
+        $this->s3->upload(new Stream('b'), '/root/file.txt', 'text/plain', 2, 0, $metadata);
+        $this->s3->completedBody = 'aborted elsewhere'; // makes the next completion answer NoSuchUpload
+
+        $this->expectException(NotFoundException::class);
+        $this->s3->finalize('/root/file.txt', 2, $metadata);
+    }
+
+    public function testASingleChunkOfAnUploadWithUnknownCountIsCompleted(): void
+    {
+        $this->s3->objectExists = true; // the object being replaced
+        $metadata = [];
+        $this->s3->upload(new Stream('a'), '/root/file.txt', 'text/plain', 1, 0, $metadata);
+
+        $this->assertNotContains('s3:completeMultipartUpload', $this->s3->calls);
+        $this->assertTrue($this->s3->finalize('/root/file.txt', 1, $metadata));
+        $this->assertContains('s3:completeMultipartUpload', $this->s3->calls, 'one part is still a part, not a whole object written already');
+    }
+
+    public function testUnknownChunkCountNeverFinalizesOnItsOwn(): void
+    {
+        $metadata = [];
+        $this->s3->upload(new Stream('a'), '/root/file.txt', 'text/plain', 1, 0, $metadata);
+        $this->s3->upload(new Stream('b'), '/root/file.txt', 'text/plain', 2, 0, $metadata);
+        $this->s3->upload(new Stream('c'), '/root/file.txt', 'text/plain', 3, 0, $metadata);
+
+        $this->assertContains('s3:createMultipartUpload', $this->s3->calls);
+        $this->assertNotContains('s3:completeMultipartUpload', $this->s3->calls);
+        $this->assertTrue($this->s3->finalize('/root/file.txt', 3, $metadata));
+        $this->assertContains('s3:completeMultipartUpload', $this->s3->calls);
+    }
+
+    public function testFinalizeOfACompletedUploadWithoutItsIdIsNotAnError(): void
+    {
+        $this->s3->objectExists = true;
+        $metadata = ['parts' => [1 => 'etag-1', 2 => 'etag-2'], 'chunks' => 2];
+
+        $this->assertTrue($this->s3->finalize('/root/file.txt', 2, $metadata), 'the object is there, so the upload was completed');
+        $this->assertNotContains('s3:completeMultipartUpload', $this->s3->calls);
+    }
+
+    public function testFinalizeOfAnUploadThatNeverExistedFails(): void
+    {
+        $metadata = ['parts' => [1 => 'etag-1', 2 => 'etag-2'], 'chunks' => 2];
+
+        $this->assertFalse($this->s3->finalize('/root/file.txt', 2, $metadata));
+    }
+
+    public function testWritesCarryNoAclWhenNoneIsConfigured(): void
+    {
+        $client = new ScriptedClient([new Response(200)->withHeader('etag', '"abc"')]);
+        $device = new S3(
+            root: '/root',
+            accessKey: 'test-key',
+            secretKey: 'test-secret',
+            host: 'https://s3.example.com',
+            region: 'us-east-1',
+            acl: null,
+            client: $client,
+        );
+
+        $this->assertSame('abc', $device->write('/root/file.txt', new Stream('Hello World'), 'text/plain'));
+        $this->assertFalse($client->requests[0]->hasHeader('x-amz-acl'));
+    }
+
+    public function testMultipartUploadCarriesNoAclWhenNoneIsConfigured(): void
+    {
+        $s3 = new TestableS3(
+            root: '/root',
+            accessKey: 'test-key',
+            secretKey: 'test-secret',
+            host: 'https://s3.example.com',
+            region: 'us-east-1',
+            acl: null,
+        );
+        $metadata = [];
+        $s3->prepare('/root/file.txt', 'text/plain', 2, $metadata);
+
+        $this->assertSame([[]], $s3->amzHeadersByOperation['s3:createMultipartUpload']);
+    }
+
+    public function testCreateWritesOnlyWhereNothingIsAndReturnsTheEtag(): void
+    {
+        $client = new ScriptedClient([new Response(200)->withHeader('etag', '"abc123"')]);
+
+        $this->assertSame('abc123', $this->device($client)->create('/root/lock', new Stream('token'), 'text/plain'));
+
+        $request = $client->requests[0];
+        $this->assertSame('PUT', $request->getMethod());
+        $this->assertSame('*', $request->getHeaderLine('if-none-match'));
+        $this->assertFalse($request->hasHeader('if-match'));
+        $this->assertSame('token', (string) $request->getBody());
+        $this->assertStringContainsString('if-none-match', $request->getHeaderLine('authorization'), 'the condition is signed');
+    }
+
+    public function testCreateOverAnExistingObjectIsRefused(): void
+    {
+        $body = '<?xml version="1.0" encoding="UTF-8"?><Error><Code>PreconditionFailed</Code><Message>At least one of the pre-conditions you specified did not hold</Message></Error>';
+        $client = new ScriptedClient([new Response(412, body: new Stream($body))]);
+
+        try {
+            $this->device($client)->create('/root/lock', new Stream('token'), 'text/plain');
+            self::fail('Expected precondition failure');
+        } catch (PreconditionFailedException $e) {
+            $this->assertSame(412, $e->getCode());
+            $this->assertStringStartsWith('At least one of the pre-conditions', $e->getMessage());
+        }
+    }
+
+    public function testReplaceNamesTheEtagItWritesOver(): void
+    {
+        $client = new ScriptedClient([new Response(200)->withHeader('etag', '"new"')]);
+
+        $this->assertSame('new', $this->device($client)->replace('/root/lock', new Stream('token'), 'old', 'text/plain'));
+
+        $request = $client->requests[0];
+        $this->assertSame('"old"', $request->getHeaderLine('if-match'), 'the ETag goes out quoted, as S3 reports it');
+        $this->assertFalse($request->hasHeader('if-none-match'));
+    }
+
+    public function testReplaceOfAnotherVersionIsRefused(): void
+    {
+        $client = new ScriptedClient([new Response(412)]);
+
+        $this->expectException(PreconditionFailedException::class);
+        $this->device($client)->replace('/root/lock', new Stream('token'), 'old', 'text/plain');
+    }
+
+    public function testReadWithEtagSendsIfMatch(): void
+    {
+        $client = new ScriptedClient([new Response(206, body: new Stream('Hello'))->withHeader('etag', '"abc"')->withHeader('content-range', 'bytes 0-4/11')]);
+
+        $this->assertSame('Hello', (string) $this->device($client)->read('/root/file.txt', 0, 5, 'abc'));
+
+        $request = $client->requests[0];
+        $this->assertSame('bytes=0-4', $request->getHeaderLine('range'));
+        $this->assertSame('"abc"', $request->getHeaderLine('if-match'));
+    }
+
+    public function testReadOfAReplacedObjectIsRefused(): void
+    {
+        $body = '<?xml version="1.0" encoding="UTF-8"?><Error><Code>PreconditionFailed</Code><Message>At least one of the pre-conditions you specified did not hold</Message></Error>';
+        $client = new ScriptedClient([new Response(412, body: new Stream($body))]);
+
+        $this->expectException(PreconditionFailedException::class);
+        $this->device($client)->read('/root/file.txt', 0, 5, 'abc');
+    }
+
+    public function testGetFileInfoReadsTheHeaders(): void
+    {
+        $client = new ScriptedClient([new Response(200)
+            ->withHeader('etag', '"abc123"')
+            ->withHeader('content-length', '11')
+            ->withHeader('last-modified', 'Fri, 18 Sep 2026 08:41:25 GMT')]);
+
+        $info = $this->device($client)->getFileInfo('/root/file.txt');
+
+        $this->assertSame('HEAD', $client->requests[0]->getMethod());
+        $this->assertSame('/root/file.txt', $info->path);
+        $this->assertSame(11, $info->size);
+        $this->assertSame('abc123', $info->etag, 'without the quotes, like every other ETag the library hands out');
+        $this->assertSame('2026-09-18T08:41:25+00:00', $info->modifiedAt?->format(DATE_ATOM));
+    }
+
+    public function testGetFileInfoOfAMissingObjectThrowsNotFound(): void
+    {
+        $client = new ScriptedClient([new Response(404)]);
+
+        $this->expectException(NotFoundException::class);
+        $this->device($client)->getFileInfo('/root/missing.txt');
+    }
+
+    public function testAWriteWithoutAnEtagInTheResponseIsAnError(): void
+    {
+        $client = new ScriptedClient([new Response(200)]);
+
+        $this->expectException(RemoteException::class);
+        $this->expectExceptionMessage('Missing ETag');
+        $this->device($client)->write('/root/file.txt', new Stream('Hello World'), 'text/plain');
+    }
+
+    public function testUploadListingIsDecodedIntoTypedUploads(): void
+    {
+        $body = '<?xml version="1.0" encoding="UTF-8"?><ListMultipartUploadsResult><Bucket>my-bucket</Bucket><Prefix>root/</Prefix><IsTruncated>true</IsTruncated><NextKeyMarker>root/b.mp4</NextKeyMarker><NextUploadIdMarker>upload-2</NextUploadIdMarker>'
+            . '<Upload><Key>root/a.mp4</Key><UploadId>upload-1</UploadId><Initiated>2026-01-02T03:04:05.000Z</Initiated></Upload>'
+            . '<Upload><Key>root/b.mp4</Key><UploadId>upload-2</UploadId><Initiated>2026-01-02T03:04:06.000Z</Initiated></Upload>'
+            . '</ListMultipartUploadsResult>';
+        $client = new ScriptedClient([new Response(200, body: new Stream($body))->withHeader('content-type', 'application/xml')]);
+
+        $list = $this->device($client)->listUploads('/root/', 2);
+
+        $this->assertSame('/', $client->requests[0]->getUri()->getPath());
+        parse_str($client->requests[0]->getUri()->getQuery(), $query);
+        $this->assertSame(['uploads' => '', 'prefix' => 'root/', 'max-uploads' => '2'], $query);
+
+        $this->assertCount(2, $list->uploads);
+        $this->assertSame('root/a.mp4', $list->uploads[0]->path);
+        $this->assertSame('upload-1', $list->uploads[0]->uploadId);
+        $this->assertSame('2026-01-02', $list->uploads[0]->initiatedAt?->format('Y-m-d'));
+        $this->assertNotNull($list->cursor);
+
+        // The cursor carries both markers back.
+        $client = new ScriptedClient([new Response(200, body: new Stream('<ListMultipartUploadsResult><IsTruncated>false</IsTruncated></ListMultipartUploadsResult>'))->withHeader('content-type', 'application/xml')]);
+        $list = $this->device($client)->listUploads('/root/', 2, $list->cursor);
+        parse_str($client->requests[0]->getUri()->getQuery(), $query);
+        $this->assertSame('root/b.mp4', $query['key-marker'] ?? null);
+        $this->assertSame('upload-2', $query['upload-id-marker'] ?? null);
+        $this->assertSame([], $list->uploads);
+        $this->assertNull($list->cursor);
+    }
+
+    /** A lone element decodes as one associative entry rather than a list — the consumer must handle both. */
+    public function testUploadListingWithSingleUploadIsDecoded(): void
+    {
+        $body = '<?xml version="1.0" encoding="UTF-8"?><ListMultipartUploadsResult><IsTruncated>false</IsTruncated>'
+            . '<Upload><Key>root/a.mp4</Key><UploadId>upload-1</UploadId></Upload>'
+            . '</ListMultipartUploadsResult>';
+        $client = new ScriptedClient([new Response(200, body: new Stream($body))->withHeader('content-type', 'application/xml')]);
+
+        $list = $this->device($client)->listUploads('/root/');
+
+        $this->assertCount(1, $list->uploads);
+        $this->assertSame('upload-1', $list->uploads[0]->uploadId);
+        $this->assertNotInstanceOf(\DateTimeImmutable::class, $list->uploads[0]->initiatedAt);
+        $this->assertNull($list->cursor);
+    }
+
+    public function testUploadListingRejectsAForeignCursor(): void
+    {
+        $client = new ScriptedClient([]);
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->device($client)->listUploads('/root/', 10, 'next-token');
     }
 }

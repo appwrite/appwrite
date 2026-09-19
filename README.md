@@ -95,6 +95,7 @@ $device = new AWS(
 
 // Available ACL options
 // Acl::Private, Acl::PublicRead, Acl::PublicReadWrite, Acl::AuthenticatedRead
+// Pass null to write without an ACL, which buckets that have ACLs disabled require
 ```
 
 ### DigitalOcean Spaces
@@ -209,6 +210,9 @@ $mime = $device->getFileMimeType('remote/path/file.jpg');
 // Get file MD5 hash
 $hash = $device->getFileHash('remote/path/file.jpg');
 
+// Size, last modification and ETag in one request
+$info = $device->getFileInfo('remote/path/file.jpg');
+
 // Read file contents as a PSR-7 stream; casting to string buffers it
 $stream = $device->read('remote/path/file.jpg');
 
@@ -223,6 +227,11 @@ $device->upload(new Stream($firstChunk), 'remote/video.mp4', 'video/mp4', 1, 3, 
 $device->prepare('remote/video.mp4', 'video/mp4', 3, $metadata);
 $device->upload(new Stream($secondChunk), 'remote/video.mp4', 'video/mp4', 2, 3, $metadata);
 $device->finalize('remote/video.mp4', 3, $metadata);
+
+// Streaming uploads whose chunk count is unknown up front: pass 0 chunks, then finalize with the final count
+$device->upload(new Stream($firstChunk), 'remote/video.mp4', 'video/mp4', 1, 0, $metadata);
+$device->upload(new Stream($secondChunk), 'remote/video.mp4', 'video/mp4', 2, 0, $metadata);
+$device->finalize('remote/video.mp4', 2, $metadata); // replaces whatever was at the path
 
 // List files under a prefix, one page at a time
 $list = $device->listFiles('remote/directory', 100);
@@ -248,6 +257,38 @@ $sourceDevice->copy('source/path.jpg', 'target/path.jpg', $targetDevice, 1000000
 
 // Move is copy plus delete
 $device->move('source/path.jpg', 'target/path.jpg');
+```
+
+### Conditional operations
+
+Every file carries an ETag, reported by `getFileInfo()` and returned by every write, conditional or not. Naming it makes an operation apply to that version of the file and no other, which is what coordinating several processes through one file takes: a lock, a lease, or a dataset that must never be read half old and half new.
+
+```php
+use Utopia\Storage\Exception\PreconditionFailedException;
+
+// Write only where nothing is yet; exactly one of several racing callers succeeds
+try {
+    $etag = $device->create('locks/refresh', new Stream($token), 'text/plain');
+} catch (PreconditionFailedException) {
+    // Someone else holds it
+}
+
+// Write over one version only; a stale ETag is refused
+$etag = $device->replace('locks/refresh', new Stream($token), $etag, 'text/plain');
+
+// Read only while the file still is the version you know
+$chunk = $device->read('dataset.bin', $offset, $length, $etag);
+```
+
+On S3 the check and the operation are one request (`If-None-Match`, `If-Match`), so nothing can slip in between. On the local disk the ETag is the file's MD5 hash. `create()` opens the file exclusively and has no window at all; `replace()` checks the hash before writing, so a replacement landing between the two goes unnoticed and the last writer wins. Local writes land by renaming a finished temporary file over the path, so a reader never sees two versions mixed and a write that fails part way leaves the previous one in place. A conditional read on `Local` pins the file open and hashes it, one full pass before the first byte comes back.
+
+Multipart uploads left neither finalized nor aborted keep their parts, and S3 bills for them. `listUploads()` finds them, so a cleanup job can abort what a crashed process left behind. It is an `S3` method, forwarded by the `Telemetry` decorator; other devices have no multipart uploads and refuse the call. Amazon S3 takes any prefix; MinIO only honours a whole key.
+
+```php
+$list = $device->listUploads('remote/directory');
+foreach ($list->uploads as $upload) {
+    $device->abort($upload->path, $upload->uploadId);
+}
 ```
 
 ## Custom HTTP client
@@ -312,6 +353,12 @@ use Utopia\Storage\Device\Telemetry;
 
 $device = new Telemetry($telemetryAdapter, new Local('/path/to/storage'));
 ```
+
+## Upgrading from 4.1
+
+- `write()` returns the ETag of the file written, a string, instead of `true`. A `false` never happened: every adapter threw instead. Callers testing the result for truth keep working; callers comparing it with `true` do not.
+- `Device` has three new abstract methods, `getFileInfo()`, `create()` and `replace()`, and `read()` takes an optional ETag. Adapters outside this library must implement them.
+- `finalize()` completes a multipart upload over an existing file instead of skipping it. Finalizing twice is still not an error, on either adapter and whatever the chunk count. A chunk that never arrived is reported, whatever file happens to sit at the path.
 
 ## Upgrading from 3.x
 

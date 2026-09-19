@@ -36,7 +36,7 @@ class DOSpaces extends S3
         string $secretKey,
         string $bucket,
         string $region = self::NYC3,
-        Acl $acl = Acl::Private,
+        ?Acl $acl = Acl::Private,
         (ClientInterface&StreamingClientInterface)|null $client = null,
     ) {
         $host = $bucket . '.' . $region . '.digitaloceanspaces.com';

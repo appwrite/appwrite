@@ -67,7 +67,7 @@ final class ContentLengthTest extends TestCase
     /** A streamed body must send its exact byte length, never chunked. */
     public function testStreamedWriteSendsExactContentLength(): void
     {
-        [$device, $client] = $this->device(new Response(200));
+        [$device, $client] = $this->device(new Response(200)->withHeader('etag', '"abc"'));
 
         $payload = 'hello world'; // 11 bytes
         $device->write('file.txt', new Stream($payload), 'text/plain');

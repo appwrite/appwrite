@@ -19,12 +19,15 @@ use Utopia\Storage\Acl;
 use Utopia\Storage\Device;
 use Utopia\Storage\DeviceType;
 use Utopia\Storage\Exception\NotFoundException;
+use Utopia\Storage\Exception\PreconditionFailedException;
 use Utopia\Storage\Exception\RemoteException;
 use Utopia\Storage\Exception\StorageException;
 use Utopia\Storage\Exception\TransportException;
 use Utopia\Storage\Exception\UploadException;
 use Utopia\Storage\FileInfo;
 use Utopia\Storage\FileList;
+use Utopia\Storage\UploadInfo;
+use Utopia\Storage\UploadList;
 
 /**
  * @see \Utopia\Tests\Storage\Device\S3Test
@@ -52,6 +55,7 @@ class S3 extends Device
     /**
      * S3 Constructor
      *
+     * @param  Acl|null  $acl  Canned ACL applied to every object written, or null to write without one, which buckets that have ACLs disabled require
      * @param  (ClientInterface&StreamingClientInterface)|null  $client  PSR-18 client used for every request; defaults to `utopia-php/client` with the cURL adapter — no overall deadline (large transfers may take arbitrarily long), a stall watchdog that aborts once no bytes move for 60s, TCP keepalive, and transient-error retries via `S3\RetryStrategy`
      * @param  string|null  $bucket  Bucket name, required by the `x-amz-copy-source` header. When set, same-device `copy()` (and therefore `move()`) runs server side without moving bytes through PHP; when null it falls back to a streamed download and re-upload.
      */
@@ -62,7 +66,7 @@ class S3 extends Device
         private readonly string $secretKey,
         string $host,
         protected readonly string $region,
-        protected readonly Acl $acl = Acl::Private,
+        protected readonly ?Acl $acl = Acl::Private,
         (ClientInterface&StreamingClientInterface)|null $client = null,
         protected readonly ?string $bucket = null,
     ) {
@@ -125,16 +129,12 @@ class S3 extends Device
 
     public function finalize(string $path, int $chunks = 1, array &$metadata = []): bool
     {
-        if ($this->exists($path)) {
-            return true;
-        }
-
-        if ($chunks === 1) {
-            return false;
-        }
-
+        // No multipart upload to complete: either a single chunk went up as a
+        // whole object, or an earlier call completed the upload and the ID is
+        // gone with it. The object in place is the answer to both; without one
+        // there was never an upload here, and the caller is told so.
         if (empty($metadata['uploadId'])) {
-            throw new UploadException('Missing multipart upload ID');
+            return $this->exists($path);
         }
 
         $metadata['parts'] ??= [];
@@ -144,7 +144,17 @@ class S3 extends Device
             }
         }
 
-        $this->completeMultipartUpload($path, $metadata['uploadId'], $metadata['parts']);
+        try {
+            $this->completeMultipartUpload($path, $metadata['uploadId'], $metadata['parts']);
+        } catch (NotFoundException $e) {
+            // The upload is gone: completed by an earlier call, in which case
+            // the object is there, or aborted, in which case it is not.
+            if ($this->exists($path)) {
+                return true;
+            }
+
+            throw $e;
+        }
 
         return true;
     }
@@ -199,7 +209,7 @@ class S3 extends Device
             '',
             ['uploads' => ''],
             headers: ['content-type' => $contentType],
-            amzHeaders: ['x-amz-acl' => $this->acl->value],
+            amzHeaders: $this->aclHeaders(),
         );
 
         $uploadId = \is_array($response->body) ? ($response->body['UploadId'] ?? null) : null;
@@ -286,11 +296,14 @@ class S3 extends Device
      * Read file or part of file by given path, offset and length.
      *
      * The body streams into a temporary stream as it arrives, so memory stays
-     * bounded regardless of object size.
+     * bounded regardless of object size. With an ETag the request carries
+     * `If-Match`, which S3 checks against the object it serves in the same
+     * step, so a read can never mix the caller's idea of the object with the
+     * bytes of a replacement.
      *
      * @throws StorageException
      */
-    public function read(string $path, int $offset = 0, ?int $length = null): StreamInterface
+    public function read(string $path, int $offset = 0, ?int $length = null, ?string $etag = null): StreamInterface
     {
         $uri = ($path !== '') ? '/' . str_replace('%2F', '/', rawurlencode($path)) : '/';
 
@@ -304,6 +317,10 @@ class S3 extends Device
             $headers['range'] = "bytes=$offset-$end";
         } elseif ($offset > 0) {
             $headers['range'] = "bytes=$offset-";
+        }
+
+        if ($etag !== null) {
+            $headers['if-match'] = $this->quote($etag);
         }
 
         $handle = fopen('php://temp', 'r+b');
@@ -333,19 +350,49 @@ class S3 extends Device
      *
      * @throws StorageException
      */
-    public function write(string $path, StreamInterface $data, string $contentType = ''): bool
+    public function write(string $path, StreamInterface $data, string $contentType = ''): string
+    {
+        return $this->put($path, $data, $contentType);
+    }
+
+    /**
+     * Write an object where there is none yet, with `If-None-Match: *`, which
+     * S3 checks and honours in one step.
+     */
+    public function create(string $path, StreamInterface $data, string $contentType = ''): string
+    {
+        return $this->put($path, $data, $contentType, ['if-none-match' => '*']);
+    }
+
+    /**
+     * Write over the object with the given ETag, with `If-Match`, which S3
+     * checks and honours in one step.
+     */
+    public function replace(string $path, StreamInterface $data, string $etag, string $contentType = ''): string
+    {
+        return $this->put($path, $data, $contentType, ['if-match' => $this->quote($etag)]);
+    }
+
+    /**
+     * Send a PutObject request and return the ETag of the object written.
+     *
+     * @param  array<string, string>  $headers  Conditions on the write
+     *
+     * @throws StorageException
+     */
+    private function put(string $path, StreamInterface $data, string $contentType, array $headers = []): string
     {
         $uri = $path !== '' ? '/' . str_replace(['%2F', '%3F'], ['/', '?'], rawurlencode($path)) : '/';
 
-        $this->call(
+        $response = $this->call(
             Method::PUT,
             $uri,
             $data,
-            headers: ['content-type' => $contentType],
-            amzHeaders: ['x-amz-acl' => $this->acl->value],
+            headers: ['content-type' => $contentType] + $headers,
+            amzHeaders: $this->aclHeaders(),
         );
 
-        return true;
+        return $this->unquote($response->headers['etag'] ?? throw new RemoteException('Missing ETag in S3 response'));
     }
 
     /**
@@ -434,8 +481,7 @@ class S3 extends Device
             $response = $this->call(Method::PUT, $uri, amzHeaders: [
                 'x-amz-copy-source' => $copySource,
                 'x-amz-metadata-directive' => 'COPY',
-                'x-amz-acl' => $this->acl->value,
-            ]);
+            ] + $this->aclHeaders());
 
             // S3 reports CopyObject failures in a 200 body, so success is the ETag.
             if (! \is_array($response->body) || ! isset($response->body['ETag'])) {
@@ -541,6 +587,22 @@ class S3 extends Device
     }
 
     /**
+     * Size, last modification and ETag of an object, from one HEAD request.
+     */
+    public function getFileInfo(string $path): FileInfo
+    {
+        $headers = $this->getInfo($path);
+        $modified = isset($headers['last-modified']) ? strtotime($headers['last-modified']) : false;
+
+        return new FileInfo(
+            path: $path,
+            size: (int) ($headers['content-length'] ?? 0),
+            modifiedAt: $modified === false ? null : new \DateTimeImmutable('@' . $modified),
+            etag: isset($headers['etag']) ? $this->unquote($headers['etag']) : null,
+        );
+    }
+
+    /**
      * Returns given file path its size.
      *
      * @see http://php.net/manual/en/function.filesize.php
@@ -571,9 +633,7 @@ class S3 extends Device
      */
     public function getFileHash(string $path): string
     {
-        $etag = $this->getInfo($path)['etag'] ?? '';
-
-        return $etag === '' ? $etag : substr($etag, 1, -1);
+        return $this->unquote($this->getInfo($path)['etag'] ?? '');
     }
 
     /**
@@ -619,6 +679,79 @@ class S3 extends Device
     }
 
     /**
+     * List the multipart uploads in progress under the given prefix, one page
+     * at a time: those prepared but neither finalized nor aborted, whose parts
+     * are billed until one or the other happens.
+     *
+     * The cursor is the pair of markers S3 pages by. Amazon S3 takes any
+     * prefix; some compatible services, MinIO among them, only honour one that
+     * is a whole key, and answer any other with an empty page.
+     *
+     * @param  int<1, max>  $max
+     *
+     * @throws StorageException
+     */
+    public function listUploads(string $prefix = '', int $max = self::MAX_PAGE_SIZE, ?string $cursor = null): UploadList
+    {
+        if ($max > self::MAX_PAGE_SIZE) {
+            throw new \InvalidArgumentException('Cannot list more than ' . self::MAX_PAGE_SIZE . ' uploads');
+        }
+
+        $parameters = [
+            'uploads' => '',
+            'prefix' => ltrim($prefix, '/'),
+            'max-uploads' => $max,
+        ];
+
+        if ($cursor !== null && $cursor !== '') {
+            $markers = json_decode($cursor, true);
+            if (! \is_array($markers) || ! \is_string($markers['key'] ?? null) || ! \is_string($markers['upload'] ?? null)) {
+                throw new \InvalidArgumentException('Invalid cursor');
+            }
+            $parameters['key-marker'] = $markers['key'];
+            $parameters['upload-id-marker'] = $markers['upload'];
+        }
+
+        $response = $this->call(Method::GET, '/', '', $parameters, headers: ['content-type' => 'text/plain']);
+
+        if (! \is_array($response->body)) {
+            throw new RemoteException('Unexpected S3 upload listing response');
+        }
+
+        // A single upload is returned as one associative entry, multiple uploads as a list of them.
+        $contents = $response->body['Upload'] ?? [];
+        $entries = \is_array($contents) ? (isset($contents['Key']) ? [$contents] : $contents) : [];
+
+        $uploads = [];
+        foreach ($entries as $entry) {
+            if (! \is_array($entry)) {
+                continue;
+            }
+            if (! \is_string($entry['Key'] ?? null)) {
+                continue;
+            }
+            if (! \is_string($entry['UploadId'] ?? null)) {
+                continue;
+            }
+            $initiated = $entry['Initiated'] ?? null;
+            $uploads[] = new UploadInfo(
+                path: $entry['Key'],
+                uploadId: $entry['UploadId'],
+                initiatedAt: \is_string($initiated) ? new \DateTimeImmutable($initiated) : null,
+            );
+        }
+
+        $keyMarker = $response->body['NextKeyMarker'] ?? null;
+        $uploadMarker = $response->body['NextUploadIdMarker'] ?? null;
+        $truncated = ($response->body['IsTruncated'] ?? null) === 'true' && \is_string($keyMarker) && \is_string($uploadMarker);
+
+        return new UploadList(
+            uploads: $uploads,
+            cursor: $truncated ? (string) json_encode(['key' => $keyMarker, 'upload' => $uploadMarker]) : null,
+        );
+    }
+
+    /**
      * Get file info
      *
      * @return array<string, string>
@@ -631,6 +764,32 @@ class S3 extends Device
         $response = $this->call(Method::HEAD, $uri);
 
         return $response->headers;
+    }
+
+    /**
+     * The ACL header for a write, or none when the device was told not to send one.
+     *
+     * @return array<string, string>
+     */
+    private function aclHeaders(): array
+    {
+        return $this->acl instanceof Acl ? ['x-amz-acl' => $this->acl->value] : [];
+    }
+
+    /**
+     * An ETag as S3 reports it, in double quotes, from the bare form the library hands out.
+     */
+    private function quote(string $etag): string
+    {
+        return str_starts_with($etag, '"') ? $etag : '"' . $etag . '"';
+    }
+
+    /**
+     * The bare form of an ETag, without the double quotes S3 puts around it.
+     */
+    private function unquote(string $etag): string
+    {
+        return trim($etag, '"');
     }
 
     /**
@@ -898,6 +1057,7 @@ class S3 extends Device
      * @param  array<string, string>  $headers  The response headers, for the S3 request IDs provider support asks for
      *
      * @throws NotFoundException When the object does not exist (404, or a NoSuchKey error code)
+     * @throws PreconditionFailedException When a condition on the request did not hold (412)
      * @throws RemoteException For every other error response
      */
     private function parseAndThrowS3Error(string $errorBody, int $statusCode, array $headers = []): never
@@ -925,6 +1085,10 @@ class S3 extends Device
         // HEAD error responses carry no body, so the status code is the only signal.
         if ($statusCode === 404 || $errorCode === 'NoSuchKey') {
             throw new NotFoundException(($errorMessage ?? 'File not found') . $suffix, $statusCode);
+        }
+
+        if ($statusCode === 412 || $errorCode === 'PreconditionFailed') {
+            throw new PreconditionFailedException(($errorMessage ?? 'Precondition failed') . $suffix, $statusCode);
         }
 
         throw new RemoteException(($errorMessage ?? ($errorBody !== '' ? $errorBody : 'S3 request failed')) . $suffix, $statusCode, $errorCode);
