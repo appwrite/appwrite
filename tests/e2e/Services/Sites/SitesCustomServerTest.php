@@ -3217,6 +3217,16 @@ final class SitesCustomServerTest extends Scope
         $this->assertEquals($deploymentId1, $site['body']['latestDeploymentId']);
         $this->assertEquals('ready', $site['body']['latestDeploymentStatus']);
 
+        $deployment = $this->deleteDeployment($siteId, $deploymentId1);
+        $this->assertEquals(204, $deployment['headers']['status-code']);
+
+        $site = $this->getSite($siteId);
+        $this->assertEquals(200, $site['headers']['status-code']);
+        $this->assertEquals('', $site['body']['deploymentId']);
+        $this->assertEquals('', $site['body']['deploymentCreatedAt']);
+        $this->assertEquals('', $site['body']['latestDeploymentId']);
+        $this->assertEquals('', $site['body']['latestDeploymentCreatedAt']);
+
         $this->cleanupSite($siteId);
     }
 

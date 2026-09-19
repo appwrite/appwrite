@@ -3241,6 +3241,16 @@ final class FunctionsCustomServerTest extends Scope
         $this->assertEquals($deploymentId1, $function['body']['latestDeploymentId']);
         $this->assertEquals('ready', $function['body']['latestDeploymentStatus']);
 
+        $deployment = $this->deleteDeployment($functionId, $deploymentId1);
+        $this->assertEquals(204, $deployment['headers']['status-code']);
+
+        $function = $this->getFunction($functionId);
+        $this->assertEquals(200, $function['headers']['status-code']);
+        $this->assertEquals('', $function['body']['deploymentId']);
+        $this->assertEquals('', $function['body']['deploymentCreatedAt']);
+        $this->assertEquals('', $function['body']['latestDeploymentId']);
+        $this->assertEquals('', $function['body']['latestDeploymentCreatedAt']);
+
         $this->cleanupFunction($functionId);
     }
 

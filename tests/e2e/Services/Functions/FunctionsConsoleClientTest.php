@@ -947,23 +947,23 @@ final class FunctionsConsoleClientTest extends Scope
         ]);
         $this->assertNotEmpty($functionId);
 
-        $deploymentIdInactive = $this->setupDeployment($functionId, [
-            'code' => $this->packageFunction('node'),
-            'activate' => true
-        ]);
-        $this->assertNotEmpty($deploymentIdInactive);
-
-        $deploymentIdInactiveOld = $this->setupDeployment($functionId, [
-            'code' => $this->packageFunction('node'),
-            'activate' => true
-        ]);
-        $this->assertNotEmpty($deploymentIdInactiveOld);
-
         $deploymentIdActive = $this->setupDeployment($functionId, [
             'code' => $this->packageFunction('node'),
             'activate' => true
         ]);
         $this->assertNotEmpty($deploymentIdActive);
+
+        $deploymentIdInactive = $this->setupDeployment($functionId, [
+            'code' => $this->packageFunction('node'),
+            'activate' => '0'
+        ]);
+        $this->assertNotEmpty($deploymentIdInactive);
+
+        $deploymentIdInactiveOld = $this->setupDeployment($functionId, [
+            'code' => $this->packageFunction('node'),
+            'activate' => '0'
+        ]);
+        $this->assertNotEmpty($deploymentIdInactiveOld);
 
         $stdout = '';
         $stderr = '';
@@ -983,10 +983,13 @@ final class FunctionsConsoleClientTest extends Scope
         $code = Console::execute((new Command('docker'))->argument('exec')->argument('appwrite')->argument('maintenance')->argument('--type=trigger'), '', $stdout, $stderr);
         $this->assertSame(0, $code, "Maintenance command failed with code $code: $stderr ($stdout)");
 
-        $this->assertEventually(function () use ($functionId) {
+        $this->assertEventually(function () use ($functionId, $deploymentIdInactive) {
             $response = $this->listDeployments($functionId);
             $this->assertSame(200, $response['headers']['status-code']);
             $this->assertSame(2, $response['body']['total']);
+
+            $function = $this->getFunction($functionId);
+            $this->assertSame($deploymentIdInactive, $function['body']['latestDeploymentId']);
         });
 
         $this->cleanupFunction($functionId);

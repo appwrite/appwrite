@@ -16,6 +16,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Exception\Transaction as TransactionException;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\UID;
+use Utopia\Lock\Exception\Contention;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Storage\Device;
@@ -61,10 +62,12 @@ class Delete extends Action
             ->param('functionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Function ID.', false, ['dbForProject'])
             ->param('deploymentId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Deployment ID.', false, ['dbForProject'])
             ->inject('response')
+            ->inject('project')
             ->inject('dbForProject')
             ->inject('publisherForDeletes')
             ->inject('queueForEvents')
             ->inject('deviceForFunctions')
+            ->inject('locks')
             ->callback($this->action(...));
     }
 
@@ -72,10 +75,12 @@ class Delete extends Action
         string $functionId,
         string $deploymentId,
         Response $response,
+        Document $project,
         Database $dbForProject,
         DeletePublisher $publisherForDeletes,
         Event $queueForEvents,
-        Device $deviceForFunctions
+        Device $deviceForFunctions,
+        callable $locks
     ) {
         $function = $dbForProject->getDocument('functions', $functionId);
         if ($function->isEmpty()) {
@@ -96,48 +101,60 @@ class Delete extends Action
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
+        // The Console deletes deployments in parallel, so repointing must not pick one that another request is deleting.
         try {
-            if (!$dbForProject->deleteDocument('deployments', $deployment->getId())) {
-                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove deployment from DB');
-            }
-        } catch (TransactionException) {
-            $deploymentExists = !$dbForProject->getDocument('deployments', $deployment->getId())->isEmpty();
+            $function = $locks('functions:deployments:' . $project->getId() . ':' . $functionId, 30, function () use ($dbForProject, $functionId, $deployment) {
+                try {
+                    if (!$dbForProject->deleteDocument('deployments', $deployment->getId())) {
+                        throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove deployment from DB');
+                    }
+                } catch (TransactionException) {
+                    $deploymentExists = !$dbForProject->getDocument('deployments', $deployment->getId())->isEmpty();
 
-            if ($deploymentExists && !$dbForProject->deleteDocument('deployments', $deployment->getId())) {
-                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove deployment from DB');
-            }
+                    if ($deploymentExists && !$dbForProject->deleteDocument('deployments', $deployment->getId())) {
+                        throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove deployment from DB');
+                    }
+                }
+
+                $function = $dbForProject->getDocument('functions', $functionId);
+
+                if ($function->getAttribute('latestDeploymentId') === $deployment->getId()) {
+                    $latestDeployment = $dbForProject->findOne('deployments', [
+                        Query::equal('resourceType', ['functions']),
+                        Query::equal('resourceInternalId', [$function->getSequence()]),
+                        Query::orderDesc('$createdAt'),
+                    ]);
+                    $function = $dbForProject->updateDocument(
+                        'functions',
+                        $function->getId(),
+                        new Document([
+                            'latestDeploymentCreatedAt' => $latestDeployment->isEmpty() ? null : $latestDeployment->getCreatedAt(),
+                            'latestDeploymentInternalId' => $latestDeployment->isEmpty() ? '' : $latestDeployment->getSequence(),
+                            'latestDeploymentId' => $latestDeployment->isEmpty() ? '' : $latestDeployment->getId(),
+                            'latestDeploymentStatus' => $latestDeployment->isEmpty() ? '' : $latestDeployment->getAttribute('status', ''),
+                        ])
+                    );
+                }
+
+                if ($function->getAttribute('deploymentId') === $deployment->getId()) { // Reset function deployment
+                    $function = $dbForProject->updateDocument('functions', $function->getId(), new Document([
+                        'deploymentId' => '',
+                        'deploymentInternalId' => '',
+                        'deploymentCreatedAt' => null,
+                    ]));
+                }
+
+                return $function;
+            }, 10.0);
+        } catch (Contention) {
+            $response->addHeader('Retry-After', '5');
+            throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED, 'Deployment deletion is busy. Try again.');
         }
 
         if (!empty($deployment->getAttribute('sourcePath', ''))) {
             if (!($deviceForFunctions->delete($deployment->getAttribute('sourcePath', '')))) {
                 throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove deployment from storage');
             }
-        }
-
-        if ($function->getAttribute('latestDeploymentId') === $deployment->getId()) {
-            $latestDeployment = $dbForProject->findOne('deployments', [
-                Query::equal('resourceType', ['functions']),
-                Query::equal('resourceInternalId', [$function->getSequence()]),
-                Query::orderDesc('$createdAt'),
-            ]);
-            $function = $dbForProject->updateDocument(
-                'functions',
-                $function->getId(),
-                new Document([
-                    'latestDeploymentCreatedAt' => $latestDeployment->isEmpty() ? '' : $latestDeployment->getCreatedAt(),
-                    'latestDeploymentInternalId' => $latestDeployment->isEmpty() ? '' : $latestDeployment->getSequence(),
-                    'latestDeploymentId' => $latestDeployment->isEmpty() ? '' : $latestDeployment->getId(),
-                    'latestDeploymentStatus' => $latestDeployment->isEmpty() ? '' : $latestDeployment->getAttribute('status', ''),
-                ])
-            );
-        }
-
-        if ($function->getAttribute('deploymentId') === $deployment->getId()) { // Reset function deployment
-            $function = $dbForProject->updateDocument('functions', $function->getId(), new Document(array_merge($function->getArrayCopy(), [
-                'deploymentId' => '',
-                'deploymentInternalId' => '',
-                'deploymentCreatedAt' => '',
-            ])));
         }
 
         $queueForEvents
