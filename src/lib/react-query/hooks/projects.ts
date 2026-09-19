@@ -63,8 +63,18 @@ const PROJECT_LIST_SELECT = [
   'region',
   '$createdAt',
   'status',
-  'blocks',
 ] as const
+
+/**
+ * `blocks` is a Cloud-only project attribute. Self-hosted Appwrite rejects a
+ * select on it ("Attribute not found in schema: blocks"), so only request it
+ * when billing (Cloud) is enabled.
+ */
+function getProjectListSelect(): string[] {
+  return getActiveProfileFeatures().billing
+    ? [...PROJECT_LIST_SELECT, 'blocks']
+    : [...PROJECT_LIST_SELECT]
+}
 
 /** Appwrite project name max length (see organization.createProject). */
 export const PROJECT_NAME_MAX_LENGTH = 128
@@ -229,7 +239,7 @@ export async function fetchActiveProjects(
   const searchQueries = trimmedSearch ? [projectListSearchOrQuery(trimmedSearch)] : []
 
   const baseQueries = [
-    Query.select([...PROJECT_LIST_SELECT]),
+    Query.select(getProjectListSelect()),
     Query.equal('teamId', teamId),
     ...statusQueries,
     ...restrictQueries,
@@ -270,7 +280,7 @@ export async function fetchActiveProjects(
   const queries =
     excludeIds.length > 0
       ? [
-          Query.select([...PROJECT_LIST_SELECT]),
+          Query.select(getProjectListSelect()),
           Query.equal('teamId', teamId),
           ...statusQueries,
           ...restrictQueries,
@@ -321,7 +331,7 @@ export async function fetchProjectsByIds(
 
   const response = await listConsoleProjects({
     queries: [
-      Query.select([...PROJECT_LIST_SELECT]),
+      Query.select(getProjectListSelect()),
       Query.equal('teamId', teamId),
       ...getProjectStatusQueries(),
       idQuery,
