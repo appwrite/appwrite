@@ -63,9 +63,17 @@ class Framework extends Detector
 
         foreach ($this->options as $detector) {
             // Check package-based detection
-            foreach ($packages as $packageJson) {
+            foreach ($packages as $manifest) {
                 foreach ($detector->getPackages() as $packageNeeded) {
-                    if (str_contains($packageJson, '"'.$packageNeeded.'"')) {
+                    if (str_contains($manifest, '"'.$packageNeeded.'"')) {
+                        $frameworkMatches[$detector->getName()] += 1;
+
+                        continue;
+                    }
+
+                    // YAML manifests (pubspec.yaml) declare dependencies as unquoted keys,
+                    // so the JSON check above never matches them.
+                    if (preg_match('/^\s+'.preg_quote($packageNeeded, '/').'\s*:/m', $manifest) === 1) {
                         $frameworkMatches[$detector->getName()] += 1;
                     }
                 }

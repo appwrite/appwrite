@@ -125,6 +125,7 @@ Framework Adapters:
 |---------|---------|
 | Astro | ✅ |
 | Flutter | ✅ |
+| Jaspr | ✅ |
 | NextJs | ✅ |
 | Nuxt | ✅ |
 | Remix | ✅ |

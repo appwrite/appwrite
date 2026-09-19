@@ -7,6 +7,7 @@ use Utopia\Detector\Detection\Framework\Analog;
 use Utopia\Detector\Detection\Framework\Angular;
 use Utopia\Detector\Detection\Framework\Astro;
 use Utopia\Detector\Detection\Framework\Flutter;
+use Utopia\Detector\Detection\Framework\Jaspr;
 use Utopia\Detector\Detection\Framework\Lynx;
 use Utopia\Detector\Detection\Framework\NextJs;
 use Utopia\Detector\Detection\Framework\Nuxt;
@@ -849,5 +850,85 @@ class DetectorTest extends TestCase
         $this->assertSame('ssr', $fw->getAdapter('{"dependencies":{"@remix-run/node":"^2.0.0"}}'));
         $this->assertSame('ssr', $fw->getAdapter(''));
         $this->assertContains('package.json', $fw->getConfigFiles());
+    }
+
+    public function testJasprDetectionWithPubspec(): void
+    {
+        $detector = new Framework('npm');
+
+        $detector
+            ->addOption(new Flutter())
+            ->addOption(new Jaspr());
+
+        $pubspec = <<<'YAML'
+        name: my_site
+        environment:
+          sdk: ^3.10.0
+
+        dependencies:
+          jaspr: ^0.20.0
+          jaspr_router: ^0.10.0
+
+        jaspr:
+          mode: server
+        YAML;
+
+        $detector->addInput($pubspec, Framework::INPUT_PACKAGES);
+        $detector->addInput('pubspec.yaml', Framework::INPUT_FILE);
+        $detector->addInput('pubspec.lock', Framework::INPUT_FILE);
+
+        $detectedFramework = $detector->detect();
+
+        $this->assertNotNull($detectedFramework);
+        // Makes static code analyser smarter
+        if (is_null($detectedFramework)) {
+            throw new \Exception('Framework not detected');
+        }
+
+        $this->assertSame('jaspr', $detectedFramework->getName());
+        $this->assertSame('dart pub get', $detectedFramework->getInstallCommand());
+        $this->assertSame('dart run jaspr_cli:jaspr build', $detectedFramework->getBuildCommand());
+        $this->assertSame('./build/jaspr', $detectedFramework->getOutputDirectory());
+    }
+
+    public function testFlutterStillWinsWithoutJasprDependency(): void
+    {
+        $detector = new Framework('npm');
+
+        $detector
+            ->addOption(new Flutter())
+            ->addOption(new Jaspr());
+
+        $pubspec = <<<'YAML'
+        name: my_app
+        environment:
+          sdk: ^3.10.0
+
+        dependencies:
+          flutter:
+            sdk: flutter
+        YAML;
+
+        $detector->addInput($pubspec, Framework::INPUT_PACKAGES);
+        $detector->addInput('pubspec.yaml', Framework::INPUT_FILE);
+        $detector->addInput('pubspec.lock', Framework::INPUT_FILE);
+
+        $detectedFramework = $detector->detect();
+
+        $this->assertNotNull($detectedFramework);
+        $this->assertSame('flutter', $detectedFramework?->getName());
+    }
+
+    public function testJasprAdapterDetection(): void
+    {
+        $fw = new Jaspr();
+
+        $this->assertSame('ssr', $fw->getAdapter("jaspr:\n  mode: server\n"));
+        $this->assertSame('static', $fw->getAdapter("jaspr:\n  mode: static\n"));
+        $this->assertSame('static', $fw->getAdapter("jaspr:\n  uses-flutter: true\n"));
+        $this->assertSame('ssr', $fw->getAdapter("name: my_site\n\njaspr:\n  mode: server\n\ndependencies:\n  jaspr: ^0.20.0\n"));
+        $this->assertSame('', $fw->getAdapter("name: my_app\ndependencies:\n  flutter:\n    sdk: flutter\n"));
+        $this->assertSame('', $fw->getAdapter("# jaspr:\n#   mode: server\n"));
+        $this->assertContains('pubspec.yaml', $fw->getConfigFiles());
     }
 }
