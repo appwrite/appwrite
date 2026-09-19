@@ -170,7 +170,9 @@ class Update extends Base
             'wellKnownURL' => $decoded['wellKnownEndpoint'] ?? '',
             'authorizationURL' => $decoded['authorizationEndpoint'] ?? '',
             'tokenURL' => $decoded['tokenEndpoint'] ?? '',
+            'tokenUrl' => $decoded['tokenEndpoint'] ?? '',
             'userInfoURL' => $decoded['userInfoEndpoint'] ?? '',
+            'userInfoUrl' => $decoded['userInfoEndpoint'] ?? '',
             'prompt' => $decoded['prompt'] ?? [],
             'maxAge' => $decoded['maxAge'] ?? null,
         ]);

@@ -68,7 +68,20 @@ class OAuth2Oidc extends OAuth2Base
                 'default' => null,
                 'example' => 3600,
                 'required' => false,
-            ]);
+            ])
+            ->addRule('tokenUrl', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Alias of tokenURL, kept for client compatibility (the Appwrite console reads this casing).',
+                'default' => '',
+                'example' => 'https://myoauth.com/oauth2/token',
+            ])
+            ->addRule('userInfoUrl', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Alias of userInfoURL, kept for client compatibility (the Appwrite console reads this casing).',
+                'default' => '',
+                'example' => 'https://myoauth.com/oauth2/userinfo',
+            ])
+        ;
     }
 
     /**
