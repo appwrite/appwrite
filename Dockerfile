@@ -41,12 +41,16 @@ COPY ./dev /usr/src/code/dev
 COPY ./docker/opcache.ini /usr/local/etc/php/conf.d/zz-opcache.ini
 COPY ./mongo-init.js /usr/src/code/mongo-init.js
 COPY ./mongo-entrypoint.sh /usr/src/code/mongo-entrypoint.sh
+COPY ./clickhouse-config.xml /usr/src/code/clickhouse-config.xml
+COPY ./clickhouse-init.sh /usr/src/code/clickhouse-init.sh
 
 # Add Installer Templates
 COPY ./app/views/install /usr/local/share/appwrite/app/views/install
 COPY ./docker-compose.yml /usr/local/share/appwrite/docker-compose.yml
 COPY ./mongo-init.js /usr/local/share/appwrite/mongo-init.js
 COPY ./mongo-entrypoint.sh /usr/local/share/appwrite/mongo-entrypoint.sh
+COPY ./clickhouse-config.xml /usr/local/share/appwrite/clickhouse-config.xml
+COPY ./clickhouse-init.sh /usr/local/share/appwrite/clickhouse-init.sh
 
 # Set Volumes
 RUN mkdir -p /storage/uploads && \

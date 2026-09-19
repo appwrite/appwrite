@@ -1679,8 +1679,11 @@ services:
       - CLICKHOUSE_USER=appwrite
       - CLICKHOUSE_PASSWORD=${_APP_USAGE_PASS:-appwrite}
       - CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT=1
+      - CLICKHOUSE_ALWAYS_RUN_INITDB_SCRIPTS=1
     volumes:
       - appwrite-clickhouse:/var/lib/clickhouse:rw
+      - ./clickhouse-config.xml:/etc/clickhouse-server/config.d/clickhouse-config.xml:ro
+      - ./clickhouse-init.sh:/docker-entrypoint-initdb.d/clickhouse-init.sh:ro
     ulimits:
       nofile:
         soft: 262144
