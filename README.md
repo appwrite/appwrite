@@ -153,6 +153,12 @@ Choose from one of the providers below:
           <br /><sub><b>AWS Marketplace</b></sub></a>
       </a>
     </td>
+    <td align="center" width="100" height="100">
+      <a href="https://repocloud.io/details/Appwrite/">
+        <img width="50" height="39" src="https://d16t0pc4846x52.cloudfront.net/deploylobe.svg" alt="RepoCloud Logo" />
+          <br /><sub><b>RepoCloud</b></sub></a>
+      </a>
+    </td>
   </tr>
 </table>
 
