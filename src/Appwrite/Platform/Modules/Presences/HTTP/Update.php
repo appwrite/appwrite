@@ -195,6 +195,10 @@ class Update extends PlatformAction
             throw new Exception(Exception::DOCUMENT_UPDATE_CONFLICT, $e->getMessage(), previous: $e);
         }
 
+        if ($presence->isEmpty()) {
+            throw new Exception(Exception::PRESENCE_NOT_FOUND, params: [$presenceId]);
+        }
+
         if ($purge) {
             $presenceState->purgeListCache($dbForProject);
         }
