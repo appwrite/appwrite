@@ -1856,6 +1856,24 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_USAGE_FLUSH_THRESHOLD',
+                'description' => 'Number of buffered usage entries that triggers a ClickHouse write. Defaults to 10000, or 1 in development so reads see usage at once.',
+                'introduction' => '',
+                'default' => '10000',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_USAGE_FLUSH_INTERVAL',
+                'description' => 'Maximum age in seconds of buffered usage entries before they are written to ClickHouse.',
+                'introduction' => '',
+                'default' => '20',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_STATS_USAGE_QUEUE_NAME',
                 'description' => 'Queue name for usage event ingestion.',
                 'introduction' => '',
