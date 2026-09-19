@@ -969,6 +969,19 @@ class DetectorTest extends TestCase
                 $pubspecFiles,
                 'flutter',
             ],
+            'flutter with a commented out jaspr dependency' => [
+                <<<'YAML'
+                name: my_app
+
+                dependencies:
+                  flutter:
+                    sdk: flutter
+                  # jaspr: ^0.23.0
+                # dependencies: {jaspr: ^0.23.0}
+                YAML,
+                $pubspecFiles,
+                'flutter',
+            ],
             // Appwrite fetches package.json only, so a Dart repo supplies no manifest today
             'pubspec files with no manifest content' => [
                 '',
@@ -1024,6 +1037,10 @@ class DetectorTest extends TestCase
             'quoted jaspr key' => ["\"jaspr\":\n  mode: server\n", 'ssr'],
             'flow mapping' => ["jaspr: {mode: server}\n", 'ssr'],
             'trailing comment' => ["jaspr:\n  mode: server # keep in sync\n", 'ssr'],
+            'comment on the jaspr key line' => ["jaspr: # mode: static\n  mode: server\n", 'ssr'],
+            'commented out mode above the real one' => ["jaspr:\n  # mode: static\n  mode: server\n", 'ssr'],
+            'commented out flow mapping' => ["jaspr: {mode: server} # {mode: static}\n", 'ssr'],
+            'mode nested under another option' => ["jaspr:\n  dev:\n    mode: static\n  mode: server\n", 'ssr'],
             'surrounded by other keys' => ["name: my_site\n\njaspr:\n  mode: server\n\ndependencies:\n  jaspr: ^0.23.0\n", 'ssr'],
             'commented out config' => ["# jaspr:\n#   mode: server\n", ''],
             'jaspr dependency but no config' => ["name: my_site\ndependencies:\n  jaspr: ^0.23.0\n", ''],

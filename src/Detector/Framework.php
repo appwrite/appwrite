@@ -129,7 +129,8 @@ class Framework extends Detector
     /**
      * Matches a dependency key in JSON manifests, where keys are always double
      * quoted, and in YAML ones, where a key may be unquoted, quoted, or inside
-     * a flow mapping such as `dependencies: {jaspr: ^0.23.0}`.
+     * a flow mapping such as `dependencies: {jaspr: ^0.23.0}`. Commented out
+     * dependencies are not matched.
      */
     protected function hasPackage(string $manifest, string $package): bool
     {
@@ -137,6 +138,8 @@ class Framework extends Detector
             return true;
         }
 
-        return \preg_match('/(?:^|[\s{,])[\x27\x22]?'.\preg_quote($package, '/').'[\x27\x22]?[ \t]*:/m', $manifest) === 1;
+        $manifest = \preg_replace('/(^|[ \t])#[^\n]*/m', '$1', $manifest) ?? $manifest;
+
+        return \preg_match('/(?:^[ \t]*|[{,][ \t]*)[\x27\x22]?'.\preg_quote($package, '/').'[\x27\x22]?[ \t]*:/m', $manifest) === 1;
     }
 }
