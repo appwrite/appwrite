@@ -1,0 +1,57 @@
+diff --git a/lib/type-generation/languages/typescript.js b/lib/type-generation/languages/typescript.js
+index abc1234..def5678 100644
+--- a/lib/type-generation/languages/typescript.js
++++ b/lib/type-generation/languages/typescript.js
+@@ -54,11 +54,35 @@ class TypeScript {
+     }
+ 
+     _getAppwriteDependency() {
+-        if (fs.existsSync(path.resolve(process.cwd(), 'package.json'))) {
+-            const packageJsonRaw = fs.readFileSync(path.resolve(process.cwd(), 'package.json'));
+-            const packageJson = JSON.parse(packageJsonRaw.toString('utf-8'));
+-            return packageJson.dependencies['node-appwrite'] ? 'node-appwrite' : 'appwrite';
++        let currentDir = process.cwd();
++        const maxDepth = 10; // Prevent infinite loops
++        let depth = 0;
++        
++        while (currentDir && depth < maxDepth) {
++            const packageJsonPath = path.resolve(currentDir, 'package.json');
++            
++            if (fs.existsSync(packageJsonPath)) {
++                try {
++                    const packageJsonRaw = fs.readFileSync(packageJsonPath);
++                    const packageJson = JSON.parse(packageJsonRaw.toString('utf-8'));
++                    
++                    // Check both dependencies and devDependencies
++                    const hasNodeAppwrite = packageJson.dependencies?.['node-appwrite'] || 
++                                           packageJson.devDependencies?.['node-appwrite'];
++                    const hasAppwrite = packageJson.dependencies?.['appwrite'] || 
++                                       packageJson.devDependencies?.['appwrite'];
++                    
++                    if (hasNodeAppwrite) {
++                        return 'node-appwrite';
++                    } else if (hasAppwrite) {
++                        return 'appwrite';
++                    }
++                } catch (error) {
++                    console.warn(`Warning: Could not parse package.json at ${packageJsonPath}`);
++                }
++            }
++            
++            // Move up one directory
++            const parentDir = path.dirname(currentDir);
++            if (parentDir === currentDir) {
++                break; // Reached root
++            }
++            currentDir = parentDir;
++            depth++;
+         }
+-        return 'node-appwrite';
++        
++        throw new Error(
++            'Could not find node-appwrite or appwrite in package.json files.\n' +
++            ' Searched up to ' + maxDepth + ' directories from current location.\n' +
++            ' Make sure node-appwrite is installed in your project: npm install node-appwrite --save-dev\n' +
++            '👉 If using a monorepo, ensure the package is installed at the root level.'
++        );
+     }
