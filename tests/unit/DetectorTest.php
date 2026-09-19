@@ -988,6 +988,15 @@ class DetectorTest extends TestCase
                 $pubspecFiles,
                 'jaspr',
             ],
+            'jaspr beside an anchored quoted hash' => [
+                <<<'YAML'
+                name: my_site
+
+                dependencies: {local_pkg: {path: &local 'packages # local'}, jaspr: ^0.23.0}
+                YAML,
+                $pubspecFiles,
+                'jaspr',
+            ],
             'flutter with an apostrophe before a commented jaspr map' => [
                 <<<'YAML'
                 name: my_app
@@ -1077,6 +1086,8 @@ class DetectorTest extends TestCase
             'escaped quotes in a flow value' => ['jaspr: {dev-command: "echo \'\\"\'", mode: server}'."\n", 'ssr'],
             'apostrophe in a plain scalar' => ["jaspr:\n  mode: server\ndescription: Don't ship # mode: static\n", 'ssr'],
             'doubled quotes in a value' => ["jaspr: {port: 'it''s 8080', mode: server}\n", 'ssr'],
+            'anchor before a quoted value' => ['jaspr: {dev-command: &cmd "echo # hello", mode: server}'."\n", 'ssr'],
+            'tag before a quoted value' => ["jaspr:\n  port: !!str '8080 # default'\n  mode: server\n", 'ssr'],
             'quoted hash before the mode' => ["jaspr:\n  dev-command: 'serve # fast'\n  mode: server\n", 'ssr'],
             'surrounded by other keys' => ["name: my_site\n\njaspr:\n  mode: server\n\ndependencies:\n  jaspr: ^0.23.0\n", 'ssr'],
             'commented out config' => ["# jaspr:\n#   mode: server\n", ''],

@@ -9,10 +9,18 @@ namespace Utopia\Detector;
 final class Yaml
 {
     /**
-     * Characters a quoted scalar may open after. An apostrophe anywhere else
-     * belongs to a plain scalar, as in `description: Don't`.
+     * Characters a value may start after. An apostrophe anywhere else belongs
+     * to a plain scalar, as in `description: Don't`.
      */
     private const BOUNDARIES = ':,-[{?';
+
+    /**
+     * Anchors, aliases and tags sit between the boundary and the value itself,
+     * as in `path: &local 'packages'`, so they leave the boundary standing.
+     */
+    private const TRANSPARENT = '&*!';
+
+    private const DELIMITERS = " \t\n,{}[]";
 
     /**
      * Removes comments, leaving a `#` inside a quoted value alone. Quote state
@@ -23,7 +31,7 @@ final class Yaml
     {
         $stripped = '';
         $quote = '';
-        $previous = '';
+        $boundary = true;
         $length = \strlen($yaml);
 
         for ($position = 0; $position < $length; $position++) {
@@ -32,7 +40,7 @@ final class Yaml
             if ($character === "\n") {
                 $stripped .= $character;
                 $quote = '';
-                $previous = '';
+                $boundary = true;
 
                 continue;
             }
@@ -52,9 +60,17 @@ final class Yaml
                 continue;
             }
 
-            if (self::opensQuote($character, $previous)) {
+            if ($boundary && \str_contains(self::TRANSPARENT, $character)) {
+                $token = self::readToken($yaml, $position);
+                $stripped .= $token;
+                $position += \strlen($token) - 1;
+
+                continue;
+            }
+
+            if ($boundary && ($character === "'" || $character === '"')) {
                 $quote = $character;
-            } elseif ($character === '#' && ($previous === '' || $yaml[$position - 1] === ' ' || $yaml[$position - 1] === "\t")) {
+            } elseif ($character === '#' && ($position === 0 || $yaml[$position - 1] === ' ' || $yaml[$position - 1] === "\t" || $yaml[$position - 1] === "\n")) {
                 while ($position + 1 < $length && $yaml[$position + 1] !== "\n") {
                     $position++;
                 }
@@ -63,7 +79,7 @@ final class Yaml
             }
 
             if ($character !== ' ' && $character !== "\t") {
-                $previous = $character;
+                $boundary = \str_contains(self::BOUNDARIES, $character);
             }
 
             $stripped .= $character;
@@ -125,7 +141,7 @@ final class Yaml
         $entry = '';
         $depth = 0;
         $quote = '';
-        $previous = '';
+        $boundary = true;
         $length = \strlen($flow);
 
         for ($position = 0; $position < $length; $position++) {
@@ -146,7 +162,15 @@ final class Yaml
                 continue;
             }
 
-            if (self::opensQuote($character, $previous)) {
+            if ($boundary && \str_contains(self::TRANSPARENT, $character)) {
+                $token = self::readToken($flow, $position);
+                $entry .= $token;
+                $position += \strlen($token) - 1;
+
+                continue;
+            }
+
+            if ($boundary && ($character === "'" || $character === '"')) {
                 $quote = $character;
             } elseif ($character === '{' || $character === '[') {
                 $depth++;
@@ -159,13 +183,13 @@ final class Yaml
             } elseif ($character === ',' && $depth === 0) {
                 $entries[] = $entry;
                 $entry = '';
-                $previous = ',';
+                $boundary = true;
 
                 continue;
             }
 
             if (\trim($character) !== '') {
-                $previous = $character;
+                $boundary = \str_contains(self::BOUNDARIES, $character);
             }
 
             $entry .= $character;
@@ -176,13 +200,19 @@ final class Yaml
         return \array_map(fn ($value) => \trim($value), $entries);
     }
 
-    private static function opensQuote(string $character, string $previous): bool
+    /**
+     * Reads an anchor, alias or tag token, up to whatever delimits it.
+     */
+    private static function readToken(string $text, int $position): string
     {
-        if ($character !== "'" && $character !== '"') {
-            return false;
+        $end = $position;
+        $length = \strlen($text);
+
+        while ($end < $length && ! \str_contains(self::DELIMITERS, $text[$end])) {
+            $end++;
         }
 
-        return $previous === '' || \str_contains(self::BOUNDARIES, $previous);
+        return \substr($text, $position, \max($end - $position, 1));
     }
 
     /**
