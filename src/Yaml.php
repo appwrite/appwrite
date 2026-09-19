@@ -9,17 +9,67 @@ namespace Utopia\Detector;
 final class Yaml
 {
     /**
-     * Removes comments, leaving a `#` inside a quoted value alone.
+     * Characters a quoted scalar may open after. An apostrophe anywhere else
+     * belongs to a plain scalar, as in `description: Don't`.
+     */
+    private const BOUNDARIES = ':,-[{?';
+
+    /**
+     * Removes comments, leaving a `#` inside a quoted value alone. Quote state
+     * is tracked per line, so an unterminated quote cannot swallow the rest of
+     * the document: the worst it costs is text, never a key it invents.
      */
     public static function stripComments(string $yaml): string
     {
-        $pattern = '/(?<quoted>\x27[^\x27\n]*\x27|"[^"\n]*")|(?<before>^|[ \t])#[^\n]*/m';
+        $stripped = '';
+        $quote = '';
+        $previous = '';
+        $length = \strlen($yaml);
 
-        return \preg_replace_callback(
-            $pattern,
-            fn (array $match) => ($match['quoted'] ?? '') !== '' ? $match['quoted'] : ($match['before'] ?? ''),
-            $yaml
-        ) ?? $yaml;
+        for ($position = 0; $position < $length; $position++) {
+            $character = $yaml[$position];
+
+            if ($character === "\n") {
+                $stripped .= $character;
+                $quote = '';
+                $previous = '';
+
+                continue;
+            }
+
+            if ($quote !== '') {
+                $stripped .= $character;
+
+                if ($character === $quote) {
+                    if ($quote === "'" && ($yaml[$position + 1] ?? '') === "'") {
+                        $stripped .= "'";
+                        $position++;
+                    } elseif (! self::isEscaped($yaml, $position, $quote)) {
+                        $quote = '';
+                    }
+                }
+
+                continue;
+            }
+
+            if (self::opensQuote($character, $previous)) {
+                $quote = $character;
+            } elseif ($character === '#' && ($previous === '' || $yaml[$position - 1] === ' ' || $yaml[$position - 1] === "\t")) {
+                while ($position + 1 < $length && $yaml[$position + 1] !== "\n") {
+                    $position++;
+                }
+
+                continue;
+            }
+
+            if ($character !== ' ' && $character !== "\t") {
+                $previous = $character;
+            }
+
+            $stripped .= $character;
+        }
+
+        return $stripped;
     }
 
     /**
@@ -75,11 +125,28 @@ final class Yaml
         $entry = '';
         $depth = 0;
         $quote = '';
+        $previous = '';
+        $length = \strlen($flow);
 
-        foreach (\str_split($flow) as $character) {
+        for ($position = 0; $position < $length; $position++) {
+            $character = $flow[$position];
+
             if ($quote !== '') {
-                $quote = $character === $quote ? '' : $quote;
-            } elseif ($character === "'" || $character === '"') {
+                $entry .= $character;
+
+                if ($character === $quote) {
+                    if ($quote === "'" && ($flow[$position + 1] ?? '') === "'") {
+                        $entry .= "'";
+                        $position++;
+                    } elseif (! self::isEscaped($flow, $position, $quote)) {
+                        $quote = '';
+                    }
+                }
+
+                continue;
+            }
+
+            if (self::opensQuote($character, $previous)) {
                 $quote = $character;
             } elseif ($character === '{' || $character === '[') {
                 $depth++;
@@ -92,8 +159,13 @@ final class Yaml
             } elseif ($character === ',' && $depth === 0) {
                 $entries[] = $entry;
                 $entry = '';
+                $previous = ',';
 
                 continue;
+            }
+
+            if (\trim($character) !== '') {
+                $previous = $character;
             }
 
             $entry .= $character;
@@ -102,5 +174,33 @@ final class Yaml
         $entries[] = $entry;
 
         return \array_map(fn ($value) => \trim($value), $entries);
+    }
+
+    private static function opensQuote(string $character, string $previous): bool
+    {
+        if ($character !== "'" && $character !== '"') {
+            return false;
+        }
+
+        return $previous === '' || \str_contains(self::BOUNDARIES, $previous);
+    }
+
+    /**
+     * Only double quoted scalars use backslash escapes, and only an odd number
+     * of them escapes the quote that follows.
+     */
+    private static function isEscaped(string $text, int $position, string $quote): bool
+    {
+        if ($quote !== '"') {
+            return false;
+        }
+
+        $backslashes = 0;
+
+        for ($index = $position - 1; $index >= 0 && $text[$index] === '\\'; $index--) {
+            $backslashes++;
+        }
+
+        return $backslashes % 2 === 1;
     }
 }
