@@ -11,6 +11,15 @@ class Framework extends Detector
     public const INPUT_FILE = 'file';
     public const INPUT_PACKAGES = 'packages';
 
+    private const DEPENDENCY_SECTIONS = [
+        'dependencies',
+        'devDependencies',
+        'peerDependencies',
+        'optionalDependencies',
+        'dev_dependencies',
+        'dependency_overrides',
+    ];
+
     /**
      * @var array<FrameworkDetection>
      */
@@ -46,7 +55,7 @@ class Framework extends Detector
         $files = array_map(fn ($input) => $input['content'], $files);
 
         $packages = array_filter($this->inputs, fn ($input) => $input['type'] === self::INPUT_PACKAGES);
-        $packages = array_map(fn ($input) => $input['content'], $packages);
+        $packages = array_map(fn ($input) => $this->dependencies($input['content']), $packages);
 
         // List of frameworks with count of matches
         $frameworkMatches = [];
@@ -63,9 +72,9 @@ class Framework extends Detector
 
         foreach ($this->options as $detector) {
             // Check package-based detection
-            foreach ($packages as $packageJson) {
+            foreach ($packages as $dependencies) {
                 foreach ($detector->getPackages() as $packageNeeded) {
-                    if (str_contains($packageJson, '"'.$packageNeeded.'"')) {
+                    if (\in_array($packageNeeded, $dependencies, true)) {
                         $frameworkMatches[$detector->getName()] += 1;
                     }
                 }
@@ -124,5 +133,35 @@ class Framework extends Detector
         }
 
         return null;
+    }
+
+    /**
+     * Reads declared dependency names out of a `package.json` or a `pubspec.yaml`.
+     *
+     * @return array<string>
+     */
+    protected function dependencies(string $manifest): array
+    {
+        $parsed = \json_decode($manifest, true);
+
+        if (! \is_array($parsed)) {
+            $parsed = @\yaml_parse($manifest);
+        }
+
+        if (! \is_array($parsed)) {
+            return [];
+        }
+
+        $dependencies = [];
+
+        foreach (self::DEPENDENCY_SECTIONS as $section) {
+            $packages = $parsed[$section] ?? null;
+
+            if (\is_array($packages)) {
+                $dependencies = \array_merge($dependencies, \array_map('strval', \array_keys($packages)));
+            }
+        }
+
+        return $dependencies;
     }
 }

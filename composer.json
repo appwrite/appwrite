@@ -27,7 +27,9 @@
     }
   },
   "require": {
-    "php": ">=8.0"
+    "php": ">=8.0",
+    "ext-json": "*",
+    "ext-yaml": "*"
   },
   "require-dev": {
     "phpunit/phpunit": "^9.4",

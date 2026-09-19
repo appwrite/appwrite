@@ -7,6 +7,7 @@ use Utopia\Detector\Detection\Framework\Analog;
 use Utopia\Detector\Detection\Framework\Angular;
 use Utopia\Detector\Detection\Framework\Astro;
 use Utopia\Detector\Detection\Framework\Flutter;
+use Utopia\Detector\Detection\Framework\Jaspr;
 use Utopia\Detector\Detection\Framework\Lynx;
 use Utopia\Detector\Detection\Framework\NextJs;
 use Utopia\Detector\Detection\Framework\Nuxt;
@@ -370,6 +371,8 @@ class DetectorTest extends TestCase
             [['server/index.mjs'], 'tanstack-start', 'ssr', null],
             [['index.html', '_nuxt/something.js'], 'nuxt', 'static', 'index.html'],
             [['server/pages/index.js', 'prerendered/about.html', 'handler.js'], 'sveltekit', 'ssr', null],
+            [['app', 'index.html', 'main.dart.js'], 'jaspr', 'ssr', null],
+            [['index.html', 'main.dart.js', 'styles.css'], 'jaspr', 'static', 'index.html'],
             [['index.html', 'about.html'], 'sveltekit', 'static', null],
             [['index.html', 'style.css'], 'nextjs', 'static', 'index.html'],
             [['server/entry.mjs', 'server/renderers.mjs', 'server/pages/'], 'astro', 'ssr', null],
@@ -849,5 +852,277 @@ class DetectorTest extends TestCase
         $this->assertSame('ssr', $fw->getAdapter('{"dependencies":{"@remix-run/node":"^2.0.0"}}'));
         $this->assertSame('ssr', $fw->getAdapter(''));
         $this->assertContains('package.json', $fw->getConfigFiles());
+    }
+
+    /**
+     * @param array<string> $files
+     *
+     * @dataProvider dartFrameworkDataProvider
+     */
+    public function testDartFrameworkDetection(string $pubspec, array $files, string $framework): void
+    {
+        // Registration order must not decide between two frameworks sharing the pubspec files
+        foreach ([[new Flutter(), new Jaspr()], [new Jaspr(), new Flutter()]] as $options) {
+            $detector = new Framework('npm');
+
+            foreach ($options as $option) {
+                $detector->addOption($option);
+            }
+
+            $detector->addInput($pubspec, Framework::INPUT_PACKAGES);
+
+            foreach ($files as $file) {
+                $detector->addInput($file, Framework::INPUT_FILE);
+            }
+
+            $detectedFramework = $detector->detect();
+
+            $this->assertNotNull($detectedFramework);
+            $this->assertSame($framework, $detectedFramework?->getName());
+        }
+    }
+
+    /**
+     * @return array<string, array{string, array<string>, string}>
+     */
+    public function dartFrameworkDataProvider(): array
+    {
+        $pubspecFiles = ['pubspec.yaml', 'pubspec.lock'];
+
+        return [
+            'jaspr' => [
+                <<<'YAML'
+                name: my_site
+                environment:
+                  sdk: ^3.8.0
+
+                dependencies:
+                  jaspr: ^0.23.0
+
+                dev_dependencies:
+                  jaspr_builder: ^0.23.0
+
+                jaspr:
+                  mode: server
+                YAML,
+                $pubspecFiles,
+                'jaspr',
+            ],
+            'jaspr with quoted dependency key' => [
+                <<<'YAML'
+                name: my_site
+
+                dependencies:
+                  'jaspr': ^0.23.0
+                YAML,
+                $pubspecFiles,
+                'jaspr',
+            ],
+            'jaspr declared in a flow mapping' => [
+                <<<'YAML'
+                name: my_site
+
+                dependencies: {jaspr: ^0.23.0, shelf: ^1.4.0}
+                YAML,
+                $pubspecFiles,
+                'jaspr',
+            ],
+            'jaspr embedding flutter' => [
+                <<<'YAML'
+                name: my_site
+
+                dependencies:
+                  jaspr: ^0.23.0
+                  flutter:
+                    sdk: flutter
+
+                jaspr:
+                  mode: server
+                  flutter: embedded
+                YAML,
+                $pubspecFiles,
+                'jaspr',
+            ],
+            'jaspr without a lockfile' => [
+                <<<'YAML'
+                name: my_site
+
+                dependencies:
+                  jaspr: ^0.23.0
+                YAML,
+                ['pubspec.yaml'],
+                'jaspr',
+            ],
+            'flutter' => [
+                <<<'YAML'
+                name: my_app
+                environment:
+                  sdk: ^3.8.0
+
+                dependencies:
+                  flutter:
+                    sdk: flutter
+
+                flutter:
+                  uses-material-design: true
+                YAML,
+                $pubspecFiles,
+                'flutter',
+            ],
+            'jaspr in a multiline flow mapping' => [
+                <<<'YAML'
+                name: my_site
+
+                dependencies: {shelf: ^1.4.0,
+                  jaspr: ^0.23.0}
+                YAML,
+                $pubspecFiles,
+                'jaspr',
+            ],
+            'jaspr beside a quoted hash' => [
+                <<<'YAML'
+                name: my_site
+
+                dependencies: {local_pkg: {path: 'packages # local'}, jaspr: ^0.23.0}
+                YAML,
+                $pubspecFiles,
+                'jaspr',
+            ],
+            'jaspr beside an anchored quoted hash' => [
+                <<<'YAML'
+                name: my_site
+
+                dependencies: {local_pkg: {path: &local 'packages # local'}, jaspr: ^0.23.0}
+                YAML,
+                $pubspecFiles,
+                'jaspr',
+            ],
+            'flutter with an apostrophe before a commented jaspr map' => [
+                <<<'YAML'
+                name: my_app
+                description: Don't enable this # {jaspr: 'example'}
+
+                dependencies:
+                  flutter:
+                    sdk: flutter
+                YAML,
+                $pubspecFiles,
+                'flutter',
+            ],
+            'flutter with a commented out jaspr dependency' => [
+                <<<'YAML'
+                name: my_app
+
+                dependencies:
+                  flutter:
+                    sdk: flutter
+                  # jaspr: ^0.23.0
+                # dependencies: {jaspr: ^0.23.0}
+                YAML,
+                $pubspecFiles,
+                'flutter',
+            ],
+            'flutter with a jaspr config but no jaspr dependency' => [
+                <<<'YAML'
+                name: my_app
+
+                dependencies:
+                  flutter:
+                    sdk: flutter
+
+                jaspr:
+                  mode: server
+                YAML,
+                $pubspecFiles,
+                'flutter',
+            ],
+            'flutter with an unparsable pubspec' => [
+                <<<'YAML'
+                name: my_app
+                dependencies: {flutter: {sdk: flutter}
+                YAML,
+                $pubspecFiles,
+                'flutter',
+            ],
+            // Appwrite fetches package.json only, so a Dart repo supplies no manifest today
+            'pubspec files with no manifest content' => [
+                '',
+                $pubspecFiles,
+                'flutter',
+            ],
+        ];
+    }
+
+    public function testJasprBuildCommands(): void
+    {
+        $detector = new Framework('npm');
+
+        $detector
+            ->addOption(new Flutter())
+            ->addOption(new Jaspr());
+
+        $detector->addInput("name: my_site\n\ndependencies:\n  jaspr: ^0.23.0\n", Framework::INPUT_PACKAGES);
+        $detector->addInput('pubspec.yaml', Framework::INPUT_FILE);
+
+        $detectedFramework = $detector->detect();
+
+        $this->assertNotNull($detectedFramework);
+        // Makes static code analyser smarter
+        if (is_null($detectedFramework)) {
+            throw new \Exception('Framework not detected');
+        }
+
+        // Must stay in sync with the jaspr adapter in Appwrite's frameworks config
+        $this->assertSame('dart pub get', $detectedFramework->getInstallCommand());
+        $this->assertSame('jaspr build', $detectedFramework->getBuildCommand());
+        $this->assertSame('./build/jaspr', $detectedFramework->getOutputDirectory());
+    }
+
+    /**
+     * @dataProvider jasprAdapterDataProvider
+     */
+    public function testJasprAdapterDetection(string $pubspec, string $adapter): void
+    {
+        $this->assertSame($adapter, (new Jaspr())->getAdapter($pubspec));
+    }
+
+    /**
+     * @return array<string, array{string, string}>
+     */
+    public function jasprAdapterDataProvider(): array
+    {
+        return [
+            'server mode' => ["jaspr:\n  mode: server\n", 'ssr'],
+            'static mode' => ["jaspr:\n  mode: static\n", 'static'],
+            'client mode' => ["jaspr:\n  mode: client\n", 'static'],
+            'quoted mode value' => ["jaspr:\n  mode: 'server'\n", 'ssr'],
+            'quoted jaspr key' => ["\"jaspr\":\n  mode: server\n", 'ssr'],
+            'flow mapping' => ["jaspr: {mode: server}\n", 'ssr'],
+            'trailing comment' => ["jaspr:\n  mode: server # keep in sync\n", 'ssr'],
+            'comment on the jaspr key line' => ["jaspr: # mode: static\n  mode: server\n", 'ssr'],
+            'commented out mode above the real one' => ["jaspr:\n  # mode: static\n  mode: server\n", 'ssr'],
+            'commented out flow mapping' => ["jaspr: {mode: server} # {mode: static}\n", 'ssr'],
+            'mode nested under another option' => ["jaspr:\n  dev:\n    mode: static\n  mode: server\n", 'ssr'],
+            'multiline flow mapping' => ["jaspr: {flutter: embedded,\n  mode: server}\n", 'ssr'],
+            'nested flow mapping' => ["jaspr: {dev: {port: 8080}, mode: server}\n", 'ssr'],
+            'escaped quotes in a flow value' => ['jaspr: {dev-command: "echo \'\\"\'", mode: server}'."\n", 'ssr'],
+            'apostrophe in a plain scalar' => ["jaspr:\n  mode: server\ndescription: Don't ship # mode: static\n", 'ssr'],
+            'doubled quotes in a value' => ["jaspr: {port: 'it''s 8080', mode: server}\n", 'ssr'],
+            'anchor before a quoted value' => ['jaspr: {dev-command: &cmd "echo # hello", mode: server}'."\n", 'ssr'],
+            'tag before a quoted value' => ["jaspr:\n  port: !!str '8080 # default'\n  mode: server\n", 'ssr'],
+            'quoted hash before the mode' => ["jaspr:\n  dev-command: 'serve # fast'\n  mode: server\n", 'ssr'],
+            'surrounded by other keys' => ["name: my_site\n\njaspr:\n  mode: server\n\ndependencies:\n  jaspr: ^0.23.0\n", 'ssr'],
+            'commented out config' => ["# jaspr:\n#   mode: server\n", ''],
+            'jaspr dependency but no config' => ["name: my_site\ndependencies:\n  jaspr: ^0.23.0\n", ''],
+            'config without a mode' => ["jaspr:\n  flutter: embedded\n", ''],
+            'unknown mode' => ["jaspr:\n  mode: hybrid\n", ''],
+            'not a jaspr project' => ["name: my_app\ndependencies:\n  flutter:\n    sdk: flutter\n", ''],
+            'unparsable config' => ["jaspr: {mode: server\n", ''],
+        ];
+    }
+
+    public function testJasprConfigFiles(): void
+    {
+        $this->assertContains('pubspec.yaml', (new Jaspr())->getConfigFiles());
     }
 }

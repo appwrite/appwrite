@@ -19,6 +19,14 @@ class Flutter extends Framework
         return ['pubspec.yaml', 'pubspec.lock'];
     }
 
+    /**
+     * @return array<string>
+     */
+    public function getPackages(): array
+    {
+        return ['flutter'];
+    }
+
     public function getInstallCommand(): string
     {
         return '';
