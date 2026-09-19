@@ -65,15 +65,7 @@ class Framework extends Detector
             // Check package-based detection
             foreach ($packages as $manifest) {
                 foreach ($detector->getPackages() as $packageNeeded) {
-                    if (str_contains($manifest, '"'.$packageNeeded.'"')) {
-                        $frameworkMatches[$detector->getName()] += 1;
-
-                        continue;
-                    }
-
-                    // YAML manifests (pubspec.yaml) declare dependencies as unquoted keys,
-                    // so the JSON check above never matches them.
-                    if (preg_match('/^\s+'.preg_quote($packageNeeded, '/').'\s*:/m', $manifest) === 1) {
+                    if ($this->hasPackage($manifest, $packageNeeded)) {
                         $frameworkMatches[$detector->getName()] += 1;
                     }
                 }
@@ -132,5 +124,19 @@ class Framework extends Detector
         }
 
         return null;
+    }
+
+    /**
+     * Matches a dependency key in JSON manifests, where keys are always double
+     * quoted, and in YAML ones, where a key may be unquoted, quoted, or inside
+     * a flow mapping such as `dependencies: {jaspr: ^0.23.0}`.
+     */
+    protected function hasPackage(string $manifest, string $package): bool
+    {
+        if (\str_contains($manifest, '"'.$package.'"')) {
+            return true;
+        }
+
+        return \preg_match('/(?:^|[\s{,])[\x27\x22]?'.\preg_quote($package, '/').'[\x27\x22]?[ \t]*:/m', $manifest) === 1;
     }
 }

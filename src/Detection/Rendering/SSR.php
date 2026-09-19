@@ -16,6 +16,7 @@ class SSR extends Rendering
         'analog' => ['server/index.mjs'],
         'tanstack-start' => ['server/server.js', 'server/index.mjs'],
         'flutter' => [],
+        'jaspr' => ['app'],
         'lynx' => [],
     ];
 
