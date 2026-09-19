@@ -156,9 +156,10 @@ export namespace Models {
         phones: Phone[];
     }
     /**
-     * Document
+     * DocumentBase
+     * Contains the default attributes for all documents.
      */
-    export type Document = {
+    export type DocumentBase = {
         /**
          * Document ID.
          */
@@ -183,6 +184,11 @@ export namespace Models {
          * Document permissions. [Learn more about permissions](/docs/permissions).
          */
         $permissions: string[];
+    }
+    /**
+     * Document
+     */
+    export type Document = DocumentBase & {
         [key: string]: any;
     }
     /**
