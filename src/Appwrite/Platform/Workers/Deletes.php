@@ -1930,6 +1930,10 @@ class Deletes extends Action
         Console::info('Delete expired push ledger messages');
 
         $dbForProject = $getProjectDB($project);
+        if ($dbForProject->getCollection('appwritePushLedger')->isEmpty()) {
+            return;
+        }
+
         $expired = DateTime::addSeconds(new \DateTime(), -1 * 60 * 60 * 24 * 7);
 
         $dbForProject->deleteDocuments('appwritePushLedger', [
