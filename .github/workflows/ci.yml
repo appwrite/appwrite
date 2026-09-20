@@ -46,7 +46,7 @@ jobs:
     runs-on: >-
       ${{ (github.event_name != 'pull_request'
       || github.event.pull_request.head.repo.full_name == github.repository)
-      && format('gcrunner={0}-security-{1}/runner=standard', github.run_id, strategy.job-index)
+      && format('gcrunner={0}-security-{1}/family=c3d/cpu=4+8/ram=16+32/disk=80gb', github.run_id, strategy.job-index)
       || 'ubuntu-latest' }}
     permissions:
       contents: read
@@ -104,7 +104,7 @@ jobs:
     runs-on: >-
       ${{ (github.event_name != 'pull_request'
       || github.event.pull_request.head.repo.full_name == github.repository)
-      && format('gcrunner={0}-checks-{1}/runner=standard', github.run_id, strategy.job-index)
+      && format('gcrunner={0}-checks-{1}/family=c3d/cpu=4+8/ram=16+32/disk=80gb', github.run_id, strategy.job-index)
       || 'ubuntu-latest' }}
     steps:
       - name: Checkout repository
@@ -179,7 +179,7 @@ jobs:
     runs-on: >-
       ${{ (github.event_name != 'pull_request'
       || github.event.pull_request.head.repo.full_name == github.repository)
-      && format('gcrunner={0}-locale-{1}/runner=small', github.run_id, strategy.job-index)
+      && format('gcrunner={0}-locale-{1}/family=c3d/cpu=2+4/ram=8+16/disk=80gb', github.run_id, strategy.job-index)
       || 'ubuntu-latest' }}
     steps:
       - name: Check out the repo
@@ -278,7 +278,7 @@ jobs:
     runs-on: >-
       ${{ (github.event_name != 'pull_request'
       || github.event.pull_request.head.repo.full_name == github.repository)
-      && format('gcrunner={0}-packages-{1}/runner=small', github.run_id, strategy.job-index)
+      && format('gcrunner={0}-packages-{1}/family=c3d/cpu=2+4/ram=8+16/disk=80gb', github.run_id, strategy.job-index)
       || 'ubuntu-latest' }}
     outputs:
       matrix: ${{ steps.changed.outputs.matrix }}
@@ -350,7 +350,7 @@ jobs:
     runs-on: >-
       ${{ (github.event_name != 'pull_request'
       || github.event.pull_request.head.repo.full_name == github.repository)
-      && format('gcrunner={0}-package-{1}/runner=small', github.run_id, strategy.job-index)
+      && format('gcrunner={0}-package-{1}/family=c3d/cpu=2+4/ram=8+16/disk=80gb', github.run_id, strategy.job-index)
       || 'ubuntu-latest' }}
     strategy:
       fail-fast: false
@@ -385,7 +385,7 @@ jobs:
 
   build:
     name: Build
-    runs-on: gcrunner=${{ github.run_id }}/runner=build
+    runs-on: gcrunner=${{ github.run_id }}/family=c3d/cpu=8/ram=32/disk=100gb
     timeout-minutes: 30
     steps:
       - name: Checkout repository
@@ -424,7 +424,7 @@ jobs:
 
   unit:
     name: Tests / Unit
-    runs-on: gcrunner=${{ github.run_id }}/runner=e2e
+    runs-on: gcrunner=${{ github.run_id }}/family=c3d/cpu=4+8/ram=16+32/disk=80gb
     timeout-minutes: 15
     needs: build
     permissions:
@@ -486,7 +486,7 @@ jobs:
 
   e2e_general:
     name: Tests / E2E / General
-    runs-on: gcrunner=${{ github.run_id }}/runner=e2e
+    runs-on: gcrunner=${{ github.run_id }}/family=c3d/cpu=4+8/ram=16+32/disk=80gb
     timeout-minutes: 15
     needs: build
     permissions:
@@ -555,7 +555,7 @@ jobs:
 
   e2e_service:
     name: Tests / E2E / ${{ matrix.database }} (${{ matrix.mode }}) / ${{ matrix.service.name }}
-    runs-on: gcrunner=${{ github.run_id }}/runner=${{ matrix.service.runner }}
+    runs-on: gcrunner=${{ github.run_id }}/family=c3d/cpu=${{ matrix.service.runner == 'e2e-large' && '8+16' || '4+8' }}/ram=${{ matrix.service.runner == 'e2e-large' && '32+64' || '16+32' }}/disk=80gb
     timeout-minutes: 20
     needs: [build, matrix]
     permissions:
@@ -720,7 +720,7 @@ jobs:
 
   e2e_grouped:
     name: Tests / E2E / ${{ matrix.config.label }} (${{ matrix.mode }})
-    runs-on: gcrunner=${{ github.run_id }}/runner=e2e
+    runs-on: gcrunner=${{ github.run_id }}/family=c3d/cpu=4+8/ram=16+32/disk=80gb
     timeout-minutes: 35
     needs: [build, matrix]
     permissions:
@@ -879,7 +879,7 @@ jobs:
   benchmark:
     name: Benchmark
     if: github.event_name == 'pull_request' || github.event_name == 'push'
-    runs-on: gcrunner=${{ github.run_id }}/runner=e2e
+    runs-on: gcrunner=${{ github.run_id }}/family=c3d/cpu=4+8/ram=16+32/disk=80gb
     timeout-minutes: 20
     needs: build
     permissions:
