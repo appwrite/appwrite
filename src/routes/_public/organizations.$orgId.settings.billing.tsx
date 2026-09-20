@@ -54,6 +54,14 @@ export const Route = createFileRoute(
       // Don't block on optional data
     })
 
+    // Same: the summary renders without the estimate and fills it in when it lands, so
+    // awaiting it here would only delay navigation.
+    queryClient
+      .prefetchQuery(organizationEstimationQueryOptions(orgId))
+      .catch(() => {
+        // Don't block on optional data
+      })
+
     // Fetch critical data before rendering to prevent layout shifts
     const [orgData] = await Promise.all([
       queryClient.ensureQueryData(organizationQueryOptions(orgId)),
@@ -74,10 +82,6 @@ export const Route = createFileRoute(
       queryClient.ensureQueryData(
         organizationCreditsQueryOptions(orgId, 0, CREDITS_PER_PAGE),
       ),
-      // Plan summary blocks on this; a failure there degrades to the aggregation total.
-      queryClient
-        .ensureQueryData(organizationEstimationQueryOptions(orgId))
-        .catch(() => {}),
       queryClient.ensureQueryData(paymentMethodsQueryOptions()),
       queryClient.ensureQueryData(billingAddressesQueryOptions()),
       ...(orgData?.billingAggregationId

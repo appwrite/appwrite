@@ -10,6 +10,7 @@ import {
   ArrowLeftRight,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
 import { Progress } from '@/components/ui/progress'
 import {
   Tooltip,
@@ -204,6 +205,7 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
 
   // Payable total. Falls back to the aggregation amount so the summary still shows a
   // figure (pre-credits) when the estimation is unavailable.
+  const estimationPending = estimationLoading && !estimation
   const totalAmount = estimation?.grossAmount ?? baseAmount
 
   // Get billing cycle dates from organization
@@ -496,8 +498,7 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
   const isLoading =
     (orgLoading && !organization) ||
     (planLoading && !plan) ||
-    (aggLoading && !aggregation && !!organization?.billingAggregationId) ||
-    (estimationLoading && !estimation)
+    (aggLoading && !aggregation && !!organization?.billingAggregationId)
 
   if (isLoading) {
     return (
@@ -534,7 +535,7 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
                 {billingCycleLabel}
               </span>
             </div>
-            {totalAmount > 0 && nextPaymentDate && (
+            {!estimationPending && totalAmount > 0 && nextPaymentDate && (
               <p className="text-[12px] text-muted-foreground mt-1">
                 {t('Next payment of')}{' '}
                 <span className="font-medium text-foreground">
@@ -758,9 +759,13 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
             {/* Total */}
             <div className="flex items-center justify-between border-t border-border pt-3 text-[13px]">
               <span className="font-medium text-foreground">{t('Total')}</span>
-              <span className="font-semibold text-foreground">
-                {formatCurrency(totalAmount)}
-              </span>
+              {estimationPending ? (
+                <Skeleton className="h-4 w-16" />
+              ) : (
+                <span className="font-semibold text-foreground">
+                  {formatCurrency(totalAmount)}
+                </span>
+              )}
             </div>
           </div>
         </div>
