@@ -1,10 +1,3 @@
-# Runner shapes for gcrunner. A workflow selects one with runner=<name> and can
-# override any single setting alongside it.
-#
-# No preset names an image: the default resolves to the image family, and pinning
-# one build by name is what took CI down on 2026-09-19 when the image workflow
-# pruned it. Pin here, in one place, or not at all.
-
 runners:
   small:
     family: n2d
