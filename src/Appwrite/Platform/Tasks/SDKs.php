@@ -305,7 +305,7 @@ class SDKs extends Action
                 $examples = ($examples) ? \file_get_contents($examples) : '';
                 $changelog = $language['changelog'] ?? '';
                 $changelog = ($changelog) ? \file_get_contents($changelog) : '# Change Log';
-                $warning = '**This SDK targets Appwrite server version ' . $version . ' as shipped on Appwrite Cloud.** Self-hosted releases can lag behind Cloud — if you run an older self-hosted build, use a matching older SDK from [previous releases](' . $language['url'] . '/releases) when APIs differ.';
+                $warning = '**This SDK targets Appwrite server version ' . $this->getTargetVersion($spec, $version) . ' as shipped on Appwrite Cloud.** Self-hosted releases can lag behind Cloud — if you run an older self-hosted build, use a matching older SDK from [previous releases](' . $language['url'] . '/releases) when APIs differ.';
                 $license = 'BSD-3-Clause';
                 $licenseContent = 'Copyright (c) ' . date('Y') . ' Appwrite (https://appwrite.io) and individual contributors.
 All rights reserved.
@@ -731,6 +731,25 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                 $this->updateExistingPr($repoName, $gitBranch, $prTitle, $prBody, $platformName, $language['name'], $prUrls, $existingPrUrl);
             }
         }
+    }
+
+    /**
+     * The server version an SDK targets, as `major.minor.x`.
+     *
+     * The spec carries the version the server was built with (APP_VERSION_STABLE),
+     * while `--version` only selects the spec file and may lag behind or be `latest`.
+     * Reading it from the spec keeps the README sentence in step with the version badge.
+     */
+    private function getTargetVersion(?string $spec, string $version): string
+    {
+        $info = $spec === null ? null : (\json_decode($spec, true)['info']['version'] ?? null);
+        if (!\is_string($info) || $info === '') {
+            return $version;
+        }
+
+        $parts = \explode('.', $info);
+
+        return $parts[0] . '.' . ($parts[1] ?? '0') . '.x';
     }
 
     private function copyExamples(array $language, string $version, string $result, string $resultExamples): void
