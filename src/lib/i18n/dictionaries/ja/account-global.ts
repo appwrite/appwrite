@@ -312,6 +312,7 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
   'Sign up with GitLab': 'GitLab でサインアップ',
   'Sign up with Google': 'Google でサインアップ',
   'Signed in as': 'サインイン:',
+  "You're signed in as": 'サインイン中のアカウント',
   'Terms of Service': '利用規約',
   'This will allow': 'これにより',
   'to:': 'が次を実行できます:',
@@ -1147,6 +1148,7 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
   'Use system theme': 'システムテーマを使用',
 
   // GitHub Education program sign-up flow (/education/join)
+  'GitHub and Appwrite': 'GitHub と Appwrite',
   'Join the Appwrite Education Program': 'Appwrite Education Program に参加',
   'Enjoy Appwrite Cloud for free throughout your student journey as part of the GitHub Student Developer Pack.':
     'GitHub Student Developer Pack の特典として、学生の間は Appwrite Cloud を無料でご利用いただけます。',

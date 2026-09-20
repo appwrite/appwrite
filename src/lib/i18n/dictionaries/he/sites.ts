@@ -555,8 +555,8 @@ export const heSitesDictionary: Record<string, string> = {
   'Checking your access to this preview deployment.':
     'בודקים את הרשאת הגישה שלכם לפריסת התצוגה המקדימה הזו.',
   'Preview is private': 'התצוגה המקדימה פרטית',
-  "You don't have access to this preview. Ask a member of the project's organization to add you.":
-    'אין לכם גישה לתצוגה המקדימה הזו. בקשו מחבר בארגון של הפרויקט לצרף אתכם.',
+  "Your account isn't in the organization that owns this site. Ask an organization member to invite you.":
+    'החשבון שלכם אינו שייך לארגון שבבעלותו האתר. בקשו מחבר בארגון להזמין אתכם.',
   'Invalid preview link': 'הקישור לתצוגה המקדימה אינו תקין',
   'This link is missing or has a malformed preview address. Open the preview URL again to start over.':
     'כתובת התצוגה המקדימה בקישור הזה חסרה או אינה תקינה. פתחו שוב את כתובת התצוגה המקדימה כדי להתחיל מחדש.',

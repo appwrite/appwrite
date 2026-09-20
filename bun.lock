@@ -1,5 +1,6 @@
 {
   "lockfileVersion": 1,
+  "configVersion": 0,
   "workspaces": {
     "": {
       "name": "template-tanstack-start",
@@ -134,7 +135,7 @@
     "use-sync-external-store": "^1.6.0",
   },
   "packages": {
-    "@appwrite.io/console": ["@appwrite.io/console@https://pkg.vc/-/@appwrite/@appwrite.io/console@8141721", { "dependencies": { "json-bigint": "1.0.0" } }],
+    "@appwrite.io/console": ["@appwrite.io/console@https://pkg.vc/-/@appwrite/@appwrite.io/console@8141721", { "dependencies": { "json-bigint": "1.0.0" } }, "sha512-a3oqCR+dUznnqLOl8zDwJ+MmstXBvDAgqGWWh94ePhR73xyirDUyBukbm8qHt6ppiX7NZOKkoxlyECyZjvZg+g=="],
 
     "@appwrite.io/specs": ["@appwrite.io/specs@github:appwrite/specs#7e01c16", {}, "appwrite-specs-7e01c16"],
 

@@ -1,21 +1,20 @@
 import { useState } from 'react'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeftRight, Check, ChevronDown } from 'lucide-react'
+import { useMutation } from '@tanstack/react-query'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
+import { AuthFlowAccountSwitcher } from '@/components/global/auth/AuthFlowAccountSwitcher'
+import { AuthFlowAccountSwitcherStatic } from '@/components/global/auth/AuthFlowAccountSwitcherStatic'
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import { AppwriteLogo } from '@/components/global/auth/AppwriteLogo'
-import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
+  AuthFlowDescription,
+  AuthFlowNarrowCard,
+  AuthFlowTitle,
+} from '@/components/global/auth/AuthFlowCard'
+import { AuthFlowHeaderIcon } from '@/components/global/auth/AuthFlowHeaderIcon'
+import { AuthFlowShell } from '@/components/global/auth/AuthFlowShell'
+import { useAuthAccountSwitch } from '@/components/global/auth/useAuthAccountSwitch'
 import { analyticsAttrs } from '@/lib/analytics-actions'
 import { useAnalytics } from '@/hooks/use-analytics'
 import { useT } from '@/lib/i18n/translate'
-import { performConsoleSignOut } from '@/lib/react-query/hooks/auth'
 import {
   approveExternalDeployments,
   useInstallation,
@@ -23,6 +22,7 @@ import {
 } from '@/lib/react-query/hooks/vcs'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import {
+  GenericGitIcon,
   getProviderPullRequestUrl,
   getVcsProvider,
   VcsIcon,
@@ -51,10 +51,10 @@ export function View({
 }: ViewProps) {
   const t = useT()
   const { track } = useAnalytics()
-  const queryClient = useQueryClient()
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [approved, setApproved] = useState(false)
   const [isSwitchingAccount, setIsSwitchingAccount] = useState(false)
+  const defaultSwitchAccount = useAuthAccountSwitch({ preview })
   const { data: installation } = useInstallation(
     preview ? null : projectId,
     preview ? null : installationId,
@@ -117,9 +117,8 @@ export function View({
   const isApproving = !preview && approveMutation.isPending
   const isApproved = status === 'success'
   const accountLabel = preview
-    ? (accountLabelProp || 'demo@appwrite.io')
+    ? (accountLabelProp || 'dev@appwrite.io')
     : (accountLabelProp ?? '')
-  const accountInitial = (accountLabel.trim()[0] ?? '?').toUpperCase()
 
   const handleApprove = () => {
     if (preview || isApproving || isApproved || isSwitchingAccount) return
@@ -127,14 +126,14 @@ export function View({
     approveMutation.mutate()
   }
 
-  const handleSwitchAccount = () => {
+  const handleSwitchAccount = async () => {
     if (preview || isApproving || isSwitchingAccount) return
     setIsSwitchingAccount(true)
-    const redirect =
-      typeof window === 'undefined'
-        ? undefined
-        : `${window.location.pathname}${window.location.search}`
-    void performConsoleSignOut(queryClient, { redirect })
+    try {
+      await defaultSwitchAccount()
+    } finally {
+      setIsSwitchingAccount(false)
+    }
   }
 
   const statusBadge =
@@ -158,7 +157,7 @@ export function View({
     <>
       <VcsIcon
         type={providerMeta.id}
-        className="size-3.5 shrink-0 text-muted-foreground"
+        className="size-4 shrink-0 text-muted-foreground"
       />
       <span className="text-[12px] text-muted-foreground">{requestLabel}</span>
       <span dir="ltr" className="font-mono text-[12px] text-foreground">
@@ -168,32 +167,47 @@ export function View({
   )
   const chipAriaLabel = `${providerMeta.label} ${requestLabel} ${requestRef}`
 
+  const accountSwitcher = accountLabel ? (
+    preview ? (
+      <AuthFlowAccountSwitcherStatic
+        accountLabel={accountLabel}
+        preview
+        disabled={isApproving || isSwitchingAccount}
+      />
+    ) : (
+      <AuthFlowAccountSwitcher
+        accountLabel={accountLabel}
+        onSwitchAccount={handleSwitchAccount}
+        disabled={isApproving || isSwitchingAccount}
+      />
+    )
+  ) : null
+
   return (
-    <div className="bg-background relative flex h-[100dvh] max-h-[100dvh] flex-col items-center justify-center overflow-hidden p-6 md:p-10">
-      <div
-        className={
-          preview
-            ? 'w-full max-w-md pt-10'
-            : 'w-full max-w-md'
-        }
+    <main id="main-content" className="h-[100dvh] max-h-[100dvh]">
+      <AuthFlowShell
+        width="narrow"
+        showLegal={false}
+        accountSwitcher={accountSwitcher}
       >
-        <Card className="overflow-hidden p-6 md:p-8">
+        <AuthFlowNarrowCard>
           <div className="space-y-6">
             <div className="flex flex-col items-center gap-4 text-center">
+              <AuthFlowHeaderIcon icon={GenericGitIcon} />
               {statusBadge}
               <div className="space-y-1">
-                <h1 className="text-2xl font-semibold tracking-tight">
+                <AuthFlowTitle>
                   {isApproved
                     ? t('Git deployment authorized')
                     : t('Authorize Git deployment')}
-                </h1>
-                <p className="text-muted-foreground text-[13px] leading-relaxed">
+                </AuthFlowTitle>
+                <AuthFlowDescription>
                   {isApproved
                     ? t('The build will start shortly.')
                     : t(
                         'A contributor opened this pull request. Approve it to start the Git deployment.',
                       )}
-                </p>
+                </AuthFlowDescription>
               </div>
               {pullRequestUrl ? (
                 <a
@@ -211,19 +225,20 @@ export function View({
             </div>
 
             {status === 'error' && errorMessage ? (
-              <p className="text-muted-foreground text-center text-[13px] leading-relaxed">
+              <AuthFlowDescription className="text-center">
                 {errorMessage}
-              </p>
+              </AuthFlowDescription>
             ) : null}
 
             {preview && status === 'error' ? (
-              <p className="text-muted-foreground text-center text-[13px] leading-relaxed">
+              <AuthFlowDescription className="text-center">
                 {t('Failed to approve deployment')}
-              </p>
+              </AuthFlowDescription>
             ) : null}
 
             <Button
               type="button"
+              variant="brandCta"
               className="w-full"
               disabled={isApproving || isApproved || isSwitchingAccount}
               onClick={handleApprove}
@@ -232,64 +247,8 @@ export function View({
               {t('Approve deployment')}
             </Button>
           </div>
-        </Card>
-        {accountLabel ? (
-          <div className="mt-6 mb-16 flex justify-center md:mt-8 md:mb-20">
-            <DropdownMenu>
-              <DropdownMenuTrigger
-                asChild
-                disabled={isApproving || isSwitchingAccount}
-              >
-                <button
-                  type="button"
-                  className="cursor-pointer text-muted-foreground hover:text-foreground border-border hover:bg-muted/50 flex max-w-full items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[12px] transition disabled:opacity-60"
-                  aria-label={`${t('Signed in as')} ${accountLabel}`}
-                >
-                  <span className="bg-muted text-muted-foreground flex size-5 items-center justify-center rounded-md text-[10px] font-semibold">
-                    {accountInitial}
-                  </span>
-                  <span dir="ltr" className="truncate">
-                    {accountLabel}
-                  </span>
-                  <ChevronDown className="size-3.5 shrink-0" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="center" className="w-72">
-                <div className="flex items-center gap-2 px-2 py-1.5">
-                  <span className="bg-muted text-muted-foreground flex size-7 shrink-0 items-center justify-center rounded-md text-xs font-semibold">
-                    {accountInitial}
-                  </span>
-                  <span
-                    dir="ltr"
-                    className="min-w-0 flex-1 truncate text-start text-[13px]"
-                  >
-                    {accountLabel}
-                  </span>
-                  <Check className="text-muted-foreground size-4 shrink-0" />
-                </div>
-                <DropdownMenuItem
-                  disabled={isApproving || isSwitchingAccount}
-                  onSelect={handleSwitchAccount}
-                >
-                  <MenuItemContent icon={ArrowLeftRight}>
-                    {t('Use a different account')}
-                  </MenuItemContent>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        ) : null}
-        <div
-          className={
-            accountLabel
-              ? 'flex justify-center'
-              : 'mt-10 flex justify-center md:mt-16'
-          }
-        >
-          <AppwriteLogo className="h-6 w-auto" />
-        </div>
-      </div>
-    </div>
+        </AuthFlowNarrowCard>
+      </AuthFlowShell>
+    </main>
   )
 }
-

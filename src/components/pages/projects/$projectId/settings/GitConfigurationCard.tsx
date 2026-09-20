@@ -6,7 +6,6 @@ import {
   AlertTriangle,
   Settings,
   Unplug,
-  GitBranch,
 } from 'lucide-react'
 import { queryOptions, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Query } from '@appwrite.io/console'
@@ -22,6 +21,12 @@ import {
   openDialogAfterOverlayCloses,
 } from '@/lib/utils/overlay-lock'
 import {
+  GenericGitIcon,
+  vcsEmptyStateIconBoxClassName,
+  vcsEmptyStateIconClassName,
+  vcsInlineProviderIconBoxClassName,
+  vcsInlineProviderIconClassName,
+  vcsProviderButtonIconClassName,
   VcsIcon,
   getKnownVcsProvider,
   getProviderOwnerUrl,
@@ -264,8 +269,8 @@ export function GitConfigurationCard({
             )}
           </p>
           <div className="flex flex-col items-center justify-center py-8 text-center">
-            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted ring-1 ring-border">
-              <GitBranch className="h-6 w-6 text-muted-foreground" />
+            <div className={`mx-auto mb-4 ${vcsEmptyStateIconBoxClassName}`}>
+              <GenericGitIcon className={vcsEmptyStateIconClassName} />
             </div>
             <p className="mb-1 text-[14px] font-medium text-foreground">
               {t('No installation was added to the project yet')}
@@ -287,7 +292,10 @@ export function GitConfigurationCard({
                     target="_blank"
                     rel="noreferrer"
                   >
-                    <VcsIcon type={provider.id} className="me-1.5 h-4 w-4" />
+                    <VcsIcon
+                      type={provider.id}
+                      className={vcsProviderButtonIconClassName}
+                    />
                     {t(`Connect to ${provider.label}`)}
                   </a>
                 </Button>
@@ -407,10 +415,10 @@ export function GitConfigurationCard({
                             <TableRow>
                               <TableCell className="px-4 py-3">
                                 <div className="flex items-center gap-2">
-                                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted">
+                                  <div className={vcsInlineProviderIconBoxClassName}>
                                     <VcsIcon
                                       type={installation.provider}
-                                      className="h-4 w-4"
+                                      className={vcsInlineProviderIconClassName}
                                     />
                                   </div>
                                   {providerUrl ? (
@@ -510,7 +518,10 @@ export function GitConfigurationCard({
                   target="_blank"
                   rel="noreferrer"
                 >
-                  <VcsIcon type={provider.id} className="me-1.5 h-4 w-4" />
+                  <VcsIcon
+                    type={provider.id}
+                    className={vcsProviderButtonIconClassName}
+                  />
                   {t(`Connect with ${provider.label}`)}
                 </a>
               </Button>

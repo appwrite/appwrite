@@ -27,7 +27,7 @@ import { SimplePagination } from '@/components/global/shared/Pagination'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { FrameworkIcon } from '@/components/global/shared/FrameworkIcon'
 import { SiteTemplateGallery } from '@/components/pages/projects/$projectId/sites/_components/SiteTemplateGallery'
-import { Search, Lock, GitBranch } from 'lucide-react'
+import { Search, Lock } from 'lucide-react'
 import { VCSDetectionType } from '@appwrite.io/console'
 import {
   useRepositories,
@@ -45,11 +45,15 @@ import { useT } from '@/lib/i18n/translate'
 import { RefreshButton } from '@/components/global/shared/RefreshButton'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import {
+  GenericGitIcon,
   getKnownVcsProvider,
   buildVcsAuthUrl,
   VcsIcon,
   getVisibleVcsOAuthProviders,
   buildVcsOrgOptions,
+  vcsEmptyStateIconBoxClassName,
+  vcsEmptyStateIconClassName,
+  vcsProviderButtonIconClassName,
   type VcsProviderId,
 } from '@/lib/vcs/providers'
 
@@ -362,9 +366,9 @@ export function CreateSiteView() {
         <CreateWizardLeftColumn title={t('Import repository')}>
           {!hasInstallations ? (
             <div className="rounded-lg border border-border bg-card/50 p-6 text-center">
-              <div className="flex justify-center mb-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
-                  <GitBranch className="h-5 w-5 text-muted-foreground" />
+              <div className="mb-3 flex justify-center">
+                <div className={vcsEmptyStateIconBoxClassName}>
+                  <GenericGitIcon className={vcsEmptyStateIconClassName} />
                 </div>
               </div>
               <h3 className="text-[13px] font-medium text-foreground mb-1">
@@ -379,7 +383,7 @@ export function CreateSiteView() {
                     <a href={getVcsAuthUrl(provider.id)}>
                       <VcsIcon
                         type={provider.id}
-                        className="me-1.5 h-3.5 w-3.5"
+                        className={vcsProviderButtonIconClassName}
                       />
                       {t(`Connect ${provider.label}`)}
                     </a>

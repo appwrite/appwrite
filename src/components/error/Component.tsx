@@ -12,8 +12,10 @@ import {
   Home,
   Copy,
   Check,
+  TriangleAlert,
   WifiOff,
 } from 'lucide-react'
+import { AuthFlowHeaderIcon } from '@/components/global/auth/AuthFlowHeaderIcon'
 import { captureExceptionWithContext } from '@/components/global/providers/SentryContext'
 import { extractRouteContext } from '@/lib/sentry/report-error'
 import { formatError } from '@/lib/utils/error-formatting'
@@ -301,20 +303,15 @@ export function ErrorComponent({
   return (
     <div className="relative z-[10000] flex min-h-full w-full flex-col items-center justify-center gap-8 px-4 py-8">
       <div className="flex flex-col items-center max-w-md w-full gap-8">
-        <div
-          className={cn(
-            'rounded-full p-3',
-            isConnectivityError
-              ? 'bg-amber-500/15'
-              : 'bg-destructive/10',
-          )}
-        >
-          {isConnectivityError ? (
-            <WifiOff className="h-8 w-8 text-amber-600 dark:text-amber-400" />
-          ) : (
-            <AlertTriangle className="h-8 w-8 text-destructive" />
-          )}
-        </div>
+        {isConnectivityError ? (
+          <AuthFlowHeaderIcon
+            icon={WifiOff}
+            className="bg-amber-500/15 ring-0"
+            iconClassName="text-amber-600 dark:text-amber-400"
+          />
+        ) : (
+          <AuthFlowHeaderIcon icon={TriangleAlert} variant="destructive" />
+        )}
 
         <div className="space-y-3 text-center">
           <h1 className="text-2xl font-semibold">{t(formattedError.title)}</h1>

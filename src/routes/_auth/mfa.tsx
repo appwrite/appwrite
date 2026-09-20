@@ -1,5 +1,6 @@
 import { createFileRoute, redirect, isRedirect } from '@tanstack/react-router'
 import { z } from 'zod'
+import { AuthFlowShell } from '@/components/global/auth/AuthFlowShell'
 import { MFAChallenge } from '@/components/global/auth/MFAChallenge'
 import { sdk } from '@/lib/appwrite/sdk'
 import { AppwriteException } from '@appwrite.io/console'
@@ -118,12 +119,8 @@ function MFAPage() {
   }
 
   return (
-    <div className="bg-background relative h-full overflow-y-auto">
-      <div className="flex min-h-full flex-col items-center p-6 md:p-10">
-        <div className="my-auto w-full max-w-sm md:max-w-4xl">
-          <MFAChallenge factors={loaderData.factors} redirect={search.redirect} />
-        </div>
-      </div>
-    </div>
+    <AuthFlowShell width="illustration">
+      <MFAChallenge factors={loaderData.factors} redirect={search.redirect} />
+    </AuthFlowShell>
   )
 }

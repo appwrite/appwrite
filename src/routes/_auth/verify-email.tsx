@@ -2,8 +2,9 @@ import { useEffect } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute, redirect, useNavigate, useSearch } from '@tanstack/react-router'
 import { z } from 'zod'
+import { AuthFlowAccountSwitcher } from '@/components/global/auth/AuthFlowAccountSwitcher'
+import { AuthFlowShell } from '@/components/global/auth/AuthFlowShell'
 import { VerifyEmail } from '@/components/global/auth/VerifyEmail'
-import { AppwriteLogo } from '@/components/global/auth/AppwriteLogo'
 import { sdk } from '@/lib/appwrite/sdk'
 import { AppwriteException } from '@appwrite.io/console'
 import { toast } from 'sonner'
@@ -23,7 +24,6 @@ import {
   toRedirectNavigateOptions,
 } from '@/lib/post-auth-navigation'
 import { useRouter } from '@tanstack/react-router'
-import { MarketingSiteLink } from '@/components/global/shared/MarketingSiteLink'
 
 const searchSchema = z.object({
   redirect: z
@@ -219,55 +219,25 @@ function VerifyEmailPage() {
 
   if (isConfirming) {
     return (
-      <div className="bg-background relative h-full overflow-y-auto">
-        <div className="flex min-h-full flex-col items-center p-6 md:p-10">
-          <div className="my-auto w-full max-w-sm md:max-w-4xl">
-            <VerifyEmail status="confirming" />
-            <p className="mt-6 text-center text-xs text-muted-foreground">
-              {t('By continuing, you agree to our')}{' '}
-              <MarketingSiteLink className="link-neutral" href="/terms">
-                {t('Terms of Service')}
-              </MarketingSiteLink>{' '}
-              {t('and')}{' '}
-              <MarketingSiteLink className="link-neutral" href="/privacy">
-                {t('Privacy Policy')}
-              </MarketingSiteLink>
-              .
-            </p>
-            <div className="mt-10 md:mt-16 flex justify-center">
-              <AppwriteLogo className="h-6 w-auto" />
-            </div>
-          </div>
-        </div>
-      </div>
+      <AuthFlowShell
+        width="illustration"
+        accountSwitcher={<AuthFlowAccountSwitcher />}
+      >
+        <VerifyEmail status="confirming" />
+      </AuthFlowShell>
     )
   }
 
   return (
-    <div className="bg-background relative h-full overflow-y-auto">
-      <div className="flex min-h-full flex-col items-center p-6 md:p-10">
-        <div className="my-auto w-full max-w-sm md:max-w-4xl">
-          <VerifyEmail
-            onResend={() => resendMutation.mutate()}
-            isResendLoading={resendMutation.isPending}
-            redirect={search.redirect}
-          />
-          <p className="mt-6 text-center text-xs text-muted-foreground">
-            {t('By continuing, you agree to our')}{' '}
-            <MarketingSiteLink className="link-neutral" href="/terms">
-              {t('Terms of Service')}
-            </MarketingSiteLink>{' '}
-            {t('and')}{' '}
-            <MarketingSiteLink className="link-neutral" href="/privacy">
-              {t('Privacy Policy')}
-            </MarketingSiteLink>
-            .
-          </p>
-          <div className="mt-10 md:mt-16 flex justify-center">
-            <AppwriteLogo className="h-6 w-auto" />
-          </div>
-        </div>
-      </div>
-    </div>
+    <AuthFlowShell
+      width="illustration"
+      accountSwitcher={<AuthFlowAccountSwitcher />}
+    >
+      <VerifyEmail
+        onResend={() => resendMutation.mutate()}
+        isResendLoading={resendMutation.isPending}
+        redirect={search.redirect}
+      />
+    </AuthFlowShell>
   )
 }

@@ -2,17 +2,23 @@
 
 import { Check, Lock, X } from 'lucide-react'
 import type { Models } from '@appwrite.io/console'
-import { Card } from '@/components/ui/card'
+import {
+  AuthFlowDescription,
+  AuthFlowNarrowCard,
+  AuthFlowTitle,
+  authFlowMetaClassName,
+} from '@/components/global/auth/AuthFlowCard'
 import { Button } from '@/components/ui/button'
 import { useT } from '@/lib/i18n/translate'
+import { cn } from '@/lib/utils'
 import { OAuth2AppAvatar } from '@/components/global/auth/OAuth2AppAvatar'
+import { authFlowShellFooterRowClassName } from '@/components/global/auth/AuthFlowShell'
 import type { OAuth2Flow, OAuth2Outcome } from './OAuth2ConsentCard'
 
 interface OAuth2OutcomeCardProps {
   outcome: OAuth2Outcome
   flow: OAuth2Flow
   app?: Models.App | null
-  accountLabel?: string
   /**
    * Present when the client redirect is a native deep link (e.g. `cursor://`).
    * The browser already attempted it once; the button retries for users who
@@ -25,7 +31,6 @@ export function OAuth2OutcomeCard({
   outcome,
   flow,
   app = null,
-  accountLabel,
   redirectUrl,
 }: OAuth2OutcomeCardProps) {
   const t = useT()
@@ -51,8 +56,9 @@ export function OAuth2OutcomeCard({
   }
 
   return (
-    <Card className="overflow-hidden p-6 md:p-8">
-      <div className="space-y-6">
+    <>
+      <AuthFlowNarrowCard>
+        <div className="space-y-6">
         <div className="flex flex-col items-center gap-4 text-center">
           <div className="relative">
             <OAuth2AppAvatar app={app} />
@@ -67,18 +73,8 @@ export function OAuth2OutcomeCard({
             </span>
           </div>
           <div className="space-y-1">
-            <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
-            <p className="text-muted-foreground text-[13px] leading-relaxed">
-              {message}
-            </p>
-            {accountLabel ? (
-              <p className="text-muted-foreground text-[12px]">
-                {t('Signed in as')}{' '}
-                <span className="text-foreground font-medium">
-                  {accountLabel}
-                </span>
-              </p>
-            ) : null}
+            <AuthFlowTitle>{title}</AuthFlowTitle>
+            <AuthFlowDescription>{message}</AuthFlowDescription>
           </div>
         </div>
 
@@ -93,19 +89,40 @@ export function OAuth2OutcomeCard({
             >
               {t('Open')} {app?.name ?? t('application')}
             </Button>
-            <p className="text-muted-foreground text-center text-[12px]">
+            <p className={cn(authFlowMetaClassName, 'text-center')}>
               {t("It's safe to close this tab.")}
             </p>
           </div>
         ) : null}
-
-        <p className="text-muted-foreground flex items-center justify-center gap-1.5 text-center text-[12px]">
-          <Lock className="size-3.5" />
-          {approved
-            ? t('You can revoke access anytime in your account settings')
-            : `${appName} ${t('was not given access to your account')}`}
-        </p>
+        </div>
+      </AuthFlowNarrowCard>
+      <div className={authFlowShellFooterRowClassName}>
+        <OAuth2OutcomeShellFooter outcome={outcome} app={app} />
       </div>
-    </Card>
+    </>
+  )
+}
+
+/** Shell footer below the OAuth outcome card. */
+export function OAuth2OutcomeShellFooter({
+  outcome,
+  app = null,
+}: {
+  outcome: OAuth2Outcome
+  app?: Models.App | null
+}) {
+  const t = useT()
+  const approved = outcome === 'approved'
+  const appName = app?.name ?? t('the application')
+
+  return (
+    <>
+      <Lock className="size-3.5 shrink-0" />
+      <span>
+        {approved
+          ? t('You can revoke access anytime in your account settings')
+          : `${appName} ${t('was not given access to your account')}`}
+      </span>
+    </>
   )
 }

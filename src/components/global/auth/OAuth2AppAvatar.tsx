@@ -39,7 +39,7 @@ export function OAuth2AppAvatar({ app, className }: OAuth2AppAvatarProps) {
   )
 
   const frameClassName = cn(
-    'bg-muted text-muted-foreground flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-xl ring-1 ring-border/50',
+    'bg-muted text-muted-foreground flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-xl ring-1 ring-border/50',
     className,
   )
 
@@ -49,11 +49,11 @@ export function OAuth2AppAvatar({ app, className }: OAuth2AppAvatarProps) {
         src={app.logoUri}
         alt={app.name}
         className={cn(
-          'size-14 shrink-0 rounded-xl object-cover ring-1 ring-border/50',
+          'size-16 shrink-0 rounded-xl object-cover ring-1 ring-border/50',
           className,
         )}
-        height={56}
-        width={56}
+        height={64}
+        width={64}
         onError={() => setLogoFailed(true)}
       />
     )
@@ -66,8 +66,8 @@ export function OAuth2AppAvatar({ app, className }: OAuth2AppAvatarProps) {
           src={faviconSrc}
           alt={app?.name ?? ''}
           className="size-full object-contain p-2"
-          height={56}
-          width={56}
+          height={64}
+          width={64}
           onError={() => setFaviconFailed(true)}
         />
       </div>
@@ -76,7 +76,7 @@ export function OAuth2AppAvatar({ app, className }: OAuth2AppAvatarProps) {
 
   return (
     <div className={frameClassName} aria-hidden>
-      <Package className="size-6" />
+      <Package className="size-7" />
     </div>
   )
 }

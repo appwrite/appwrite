@@ -39,10 +39,15 @@ import { useVcsInstallationReconnect } from '@/lib/vcs/use-installation-reconnec
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
-import { GitBranch } from 'lucide-react'
 import {
   buildVcsOrgOptions,
+  GenericGitIcon,
   getVcsProvider,
+  vcsEmptyStateIconBoxClassName,
+  vcsEmptyStateIconClassName,
+  vcsInlineProviderIconBoxClassName,
+  vcsInlineProviderIconClassName,
+  vcsProviderButtonIconClassName,
   vcsProviderHasCapability,
   VcsIcon,
   getVisibleVcsOAuthProviders,
@@ -316,14 +321,17 @@ export function ConnectRepositorySection({
         </div>
         <div className="border-t border-border" />
         <div className="px-6 py-6 flex flex-col items-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-muted mb-4">
-            <GitBranch className="h-6 w-6 text-muted-foreground" />
+          <div className={`mb-4 ${vcsEmptyStateIconBoxClassName}`}>
+            <GenericGitIcon className={vcsEmptyStateIconClassName} />
           </div>
           <div className="flex flex-wrap items-center justify-center gap-2">
             {vcsOAuthProviders.map((provider) => (
               <Button key={provider.id} variant="secondary" asChild>
                 <a href={vcsAuthUrl(provider.id)}>
-                  <VcsIcon type={provider.id} className="me-1.5 h-4 w-4" />
+                  <VcsIcon
+                    type={provider.id}
+                    className={vcsProviderButtonIconClassName}
+                  />
                   {t(`Connect to ${provider.label}`)}
                 </a>
               </Button>
@@ -352,8 +360,12 @@ export function ConnectRepositorySection({
         <div className="px-6 py-4">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3 min-w-0">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
-                <ConnectedRepositoryIcon className="h-5 w-5" />
+              <div
+                className={`${vcsInlineProviderIconBoxClassName} rounded-xl`}
+              >
+                <ConnectedRepositoryIcon
+                  className={vcsInlineProviderIconClassName}
+                />
               </div>
               <div className="min-w-0">
                 <p className="text-[13px] font-medium text-foreground truncate">

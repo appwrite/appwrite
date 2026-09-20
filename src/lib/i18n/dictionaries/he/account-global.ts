@@ -439,6 +439,7 @@ export const heAccountGlobalDictionary: Record<string, string> = {
   'Sign up with GitLab': 'הרשמה עם GitLab',
   'Sign up with Google': 'הרשמה עם Google',
   'Signed in as': 'מחוברים בתור',
+  "You're signed in as": 'אתם מחוברים בתור',
   'Terms of Service': 'תנאי השימוש',
   'This will allow': 'פעולה זו תאפשר ל-',
   'to:': 'לבצע את הפעולות הבאות:',
@@ -1263,6 +1264,7 @@ export const heAccountGlobalDictionary: Record<string, string> = {
   'Use system theme': 'שימוש בערכת הנושא של המערכת',
 
   // GitHub Education program sign-up flow (/education/join)
+  'GitHub and Appwrite': 'GitHub ו-Appwrite',
   'Join the Appwrite Education Program': 'הצטרפות ל-Appwrite Education Program',
   'Enjoy Appwrite Cloud for free throughout your student journey as part of the GitHub Student Developer Pack.':
     'תיהנו מ-Appwrite Cloud בחינם לאורך כל תקופת הלימודים, כחלק מ-GitHub Student Developer Pack.',
