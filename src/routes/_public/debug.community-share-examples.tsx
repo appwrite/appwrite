@@ -14,8 +14,10 @@ function CommunityShareExamplesDebugPage() {
   const { profileId } = useConsoleProfile()
 
   return (
-    <div className="mx-auto min-h-svh w-full max-w-3xl px-4 py-8 sm:px-6">
-      <DebugMenuCommunityShareExamplesPanel activeProfileId={profileId} />
+    <div className="relative h-full overflow-y-auto bg-background">
+      <div className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6">
+        <DebugMenuCommunityShareExamplesPanel activeProfileId={profileId} />
+      </div>
     </div>
   )
 }

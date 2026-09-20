@@ -209,7 +209,7 @@ export function DebugDemoNavigatorOptions({
   if (pathname === '/debug/sites-auth-preview') {
     const status = params.get('status') ?? 'checking'
     return (
-      <OptionsSection label="Sites auth">
+      <OptionsSection label="Sites preview">
         <OptionButtonRow>
           {(['checking', 'denied', 'error', 'invalid'] as const).map((value) => (
             <OptionChip

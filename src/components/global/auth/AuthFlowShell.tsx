@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { Link } from '@tanstack/react-router'
 import { AppwriteLogo } from '@/components/global/auth/AppwriteLogo'
 import { MarketingSiteLink } from '@/components/global/shared/MarketingSiteLink'
 import { useT } from '@/lib/i18n/translate'
@@ -84,7 +85,13 @@ export function AuthFlowShell({
                 accountSwitcher ? 'mt-8 md:mt-10' : 'mt-10 md:mt-16',
               )}
             >
-              <AppwriteLogo className="h-6 w-auto" />
+              <Link
+                to="/"
+                aria-label="Appwrite"
+                className="inline-flex rounded-lg transition-transform duration-150 ease-out hover:opacity-90 active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background motion-reduce:active:scale-100"
+              >
+                <AppwriteLogo className="h-6 w-auto" />
+              </Link>
             </div>
           ) : null}
         </div>

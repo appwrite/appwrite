@@ -899,7 +899,7 @@ export function OAuth2ConsentCard({
   )
 }
 
-/** Shell footer below the consent card (redirect notice, app Privacy/Terms). */
+/** Shell footer below the consent card (redirect notice, app privacy/terms links). */
 export function OAuth2ConsentShellFooter({
   grant,
   app,
@@ -922,19 +922,6 @@ export function OAuth2ConsentShellFooter({
             ? t('After authorizing, return to your device')
             : t('You can revoke access anytime')}
       </span>
-      {app.privacyPolicyUrl ? (
-        <>
-          <span aria-hidden>·</span>
-          <a
-            href={app.privacyPolicyUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="link-neutral"
-          >
-            {t('Privacy')}
-          </a>
-        </>
-      ) : null}
       {app.termsUrl ? (
         <>
           <span aria-hidden>·</span>
@@ -944,7 +931,20 @@ export function OAuth2ConsentShellFooter({
             rel="noreferrer"
             className="link-neutral"
           >
-            {t('Terms')}
+            {t('Terms of Service')}
+          </a>
+        </>
+      ) : null}
+      {app.privacyPolicyUrl ? (
+        <>
+          <span aria-hidden>·</span>
+          <a
+            href={app.privacyPolicyUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="link-neutral"
+          >
+            {t('Privacy Policy')}
           </a>
         </>
       ) : null}

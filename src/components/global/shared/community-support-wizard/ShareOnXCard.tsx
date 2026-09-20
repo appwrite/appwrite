@@ -104,8 +104,10 @@ export function ShareOnXCard({
           event.currentTarget.select()
         }}
         className={cn(
-          'mt-3 min-h-[96px] resize-y text-[13px] animate-in fade-in-0 duration-200',
-          featured && 'min-h-[120px] flex-1',
+          'field-sizing-fixed mt-3 min-h-[96px] w-full overflow-y-auto resize-none text-[13px] animate-in fade-in-0 duration-200',
+          featured
+            ? 'min-h-[120px] max-h-[min(40dvh,280px)] flex-1 basis-0'
+            : 'max-h-[200px]',
         )}
         maxLength={280}
         aria-label={t('Share message')}

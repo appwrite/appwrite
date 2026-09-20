@@ -4,6 +4,7 @@ export const DEBUG_DEMO_CATEGORIES = [
   'Git',
   'GitHub Education',
   'OAuth2',
+  'Sites',
   'Product',
   'Tools',
 ] as const
@@ -97,13 +98,6 @@ function buildCatalog(): DebugDemoEntry[] {
       href: '/debug/join-invite-preview',
     },
     {
-      id: 'auth-sites-preview',
-      label: 'Sites auth preview',
-      category: 'Auth',
-      type: 'route',
-      href: '/debug/sites-auth-preview',
-    },
-    {
       id: 'auth-impersonate',
       label: 'Impersonate user (email lookup)',
       category: 'Auth',
@@ -153,6 +147,16 @@ function buildCatalog(): DebugDemoEntry[] {
       category: 'Git',
       type: 'route',
       href: '/debug/authorize-contributor-preview?status=awaiting',
+    },
+  ]
+
+  const sitesRoutes: DebugDemoEntry[] = [
+    {
+      id: 'sites-auth-preview',
+      label: 'Sites auth preview',
+      category: 'Sites',
+      type: 'route',
+      href: '/debug/sites-auth-preview',
     },
   ]
 
@@ -218,6 +222,7 @@ function buildCatalog(): DebugDemoEntry[] {
     ...gitRoutes,
     ...githubEducationRoutes,
     ...oauth2Routes,
+    ...sitesRoutes,
     ...productEntries,
     ...toolEntries,
   ]

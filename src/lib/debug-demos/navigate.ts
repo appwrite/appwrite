@@ -29,7 +29,7 @@ const PATHNAME_ONLY_DEMO_IDS: Record<string, string> = {
   '/debug/mfa-preview': 'auth-mfa',
   '/debug/reset-preview': 'auth-reset',
   '/debug/magic-url-preview': 'auth-magic-url',
-  '/debug/sites-auth-preview': 'auth-sites-preview',
+  '/debug/sites-auth-preview': 'sites-auth-preview',
   '/debug/org-setup-preview': 'console-org-setup',
 }
 
