@@ -677,9 +677,11 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                         }
                     }
 
-                    // A membership create only matches after the rebuild, so merge the new receivers in.
-                    foreach ($realtime->getSubscribers($event) as $connectionId => $matched) {
-                        $receivers[$connectionId] = ($receivers[$connectionId] ?? []) + $matched;
+                    // Deletes only revoke roles, so the rebuild can't add receivers for them. Re-scan the tree after it for the other events.
+                    if (!\str_ends_with($event['data']['events'][0] ?? '', '.delete')) {
+                        foreach ($realtime->getSubscribers($event) as $connectionId => $matched) {
+                            $receivers[$connectionId] = ($receivers[$connectionId] ?? []) + $matched;
+                        }
                     }
                 }
 
