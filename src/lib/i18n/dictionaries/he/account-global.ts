@@ -5,6 +5,11 @@
 export const heAccountGlobalDictionary: Record<string, string> = {
   // Account pages
   'Join an organization': 'הצטרפו לארגון',
+  'No organizations for this account': 'אין ארגונים לחשבון הזה',
+  'This account is not a member of any organization. Exit impersonation to return to your operator session, or ask an organization owner to invite this user.':
+    'החשבון הזה לא חבר באף ארגון. צאו ממצב התחזות כדי לחזור לסשן המפעיל, או בקשו מבעלי ארגון להזמין את המשתמש.',
+  'This account is not a member of any organization. Ask an organization owner to invite you, or use Account in the menu to manage your profile.':
+    'החשבון הזה לא חבר באף ארגון. בקשו מבעלי ארגון להזמין אתכם, או פתחו את Account בתפריט כדי לנהל את הפרופיל.',
   'Your account is ready. Ask an organization owner to invite you, then accept the invitation in your email to access existing projects.':
     'החשבון שלכם מוכן. בקשו מבעלי הארגון להזמין אתכם, ואז אשרו את ההזמנה באימייל כדי לקבל גישה לפרויקטים הקיימים.',
   '123 Main St': 'הרצל 1',
@@ -1203,6 +1208,12 @@ export const heAccountGlobalDictionary: Record<string, string> = {
     'הפעלת הפרויקט מחדש נכשלה. נסו שוב.',
   'Failed to resume project.': 'הפעלת הפרויקט מחדש נכשלה.',
   'Project paused': 'הפרויקט מושהה',
+  'Project blocked': 'הפרויקט חסום',
+  'This project is temporarily unavailable. Access has been restricted, which may include a Terms of Service violation. For questions about this restriction or to request a review, contact support.':
+    'הפרויקט הזה אינו זמין זמנית. הגישה אליו הוגבלה, ייתכן בגלל הפרת תנאי שימוש. לשאלות על ההגבלה או לבקשת בדיקה מחדש, פנו לתמיכה.',
+  'This project is temporarily unavailable. Access has been restricted.':
+    'הפרויקט הזה אינו זמין זמנית. הגישה אליו הוגבלה.',
+  '(Blocked)': '(חסום)',
   'This project has been paused due to inactivity. Your data is safe and will remain intact.':
     'הפרויקט הזה הושהה עקב חוסר פעילות. הנתונים שלכם בטוחים ויישארו ללא פגע.',
   'Upgrade your plan to avoid pausing, or restore the project to continue using it now.':

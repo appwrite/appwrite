@@ -5,6 +5,11 @@
 export const jaAccountGlobalDictionary: Record<string, string> = {
   // Account pages
   'Join an organization': '組織に参加する',
+  'No organizations for this account': 'このアカウントに組織がありません',
+  'This account is not a member of any organization. Ask an organization owner to invite you, or use Account in the menu to manage your profile.':
+    'このアカウントはどの組織のメンバーでもありません。組織のオーナーに招待を依頼するか、メニューの Account からプロフィールを管理してください。',
+  'This account is not a member of any organization. Exit impersonation to return to your operator session, or ask an organization owner to invite this user.':
+    'このアカウントはどの組織のメンバーでもありません。なりすましを終了してオペレーターセッションに戻るか、組織オーナーにこのユーザーを招待してもらってください。',
   'Your account is ready. Ask an organization owner to invite you, then accept the invitation in your email to access existing projects.':
     'アカウントの準備ができました。組織のオーナーに招待を依頼し、メールで届いた招待を承認すると、既存のプロジェクトにアクセスできます。',
   '123 Main St': '大手町 1-1-1',
@@ -757,6 +762,12 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
   'Project resumed successfully': 'プロジェクトを再開しました',
   'Failed to resume project.': 'プロジェクトの再開に失敗しました。',
   'Project paused': 'プロジェクトは一時停止中です',
+  'Project blocked': 'プロジェクトはブロックされています',
+  'This project is temporarily unavailable. Access has been restricted, which may include a Terms of Service violation. For questions about this restriction or to request a review, contact support.':
+    'このプロジェクトは一時的に利用できません。利用規約違反などにより、アクセスが制限されている可能性があります。この制限についてのご質問や再審査のご依頼は、サポートまでお問い合わせください。',
+  'This project is temporarily unavailable. Access has been restricted.':
+    'このプロジェクトは一時的に利用できません。アクセスが制限されています。',
+  '(Blocked)': '(ブロック済み)',
   'Resuming…': '再開中…',
   'Restore project': 'プロジェクトを復元',
   'Budget limit reached': '予算上限に達しました',

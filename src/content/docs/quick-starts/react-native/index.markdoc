@@ -46,11 +46,11 @@ Add your app **name** and **Bundle ID**. You can find your **Bundle Identifier**
 **Note**: If you've followed the commands above, you have created an Expo project. This means you need to define the Bundle Identifier in the `app.json` configuration. [More info](https://docs.expo.dev/versions/latest/config/app/#bundleidentifier)
 
 {% only_dark %}
-![Add a platform](/images/docs/quick-starts/dark/add-platform.avif)
+![Add a platform](/images/docs/quick-starts/dark/add-platform-react-native.avif)
 {% /only_dark %}
 
 {% only_light %}
-![Add a platform](/images/docs/quick-starts/add-platform.avif)
+![Add a platform](/images/docs/quick-starts/add-platform-react-native.avif)
 {% /only_light %}
 {% /tabsitem %}
 

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import type { Models } from '@appwrite.io/console'
 import { useProjectConnectDialog } from '@/components/pages/projects/$projectId/shared/ProjectConnectDialogContext'
 import { cn } from '@/lib/utils'
@@ -44,6 +44,7 @@ import {
 import { applyScreenshotModeAccount } from '@/lib/screenshot-mode'
 import { getConsoleAccountUnauthenticatedError } from '@/lib/console-account-cache'
 import { getConsoleAccountQueryRevision } from '@/lib/console-impersonation'
+import { organizationsQueryOptions } from '@/lib/react-query/hooks/organizations'
 import {
   getConsoleAccountFromCache,
   getConsoleAccountSync,
@@ -445,10 +446,30 @@ export function ConsoleHeader({
   // Fetch current project to get teamId when in project context
   const { project } = useProject(projectId)
   const orgIdFromRoute = params?.orgId as string | undefined
+  const preferredOrgId = headerAccount?.prefs?.organization as
+    | string
+    | undefined
   const orgId = projectId
     ? (project?.teamId ?? undefined)
-    : (orgIdFromRoute ??
-      (headerAccount?.prefs?.organization as string | undefined))
+    : (orgIdFromRoute ?? preferredOrgId)
+  const isAccountScope = location.pathname.startsWith('/account')
+  const isAgentScope = isAgentPagePath(location.pathname)
+  const shouldValidateBackOrganizationLink =
+    (isAccountScope || isAgentScope) && !!orgId && !!headerAccount
+  const { data: consoleOrganizations, isSuccess: consoleOrganizationsLoaded } =
+    useQuery({
+      ...organizationsQueryOptions(),
+      enabled: shouldValidateBackOrganizationLink,
+      staleTime: 0,
+      refetchOnMount: 'always',
+      refetchOnWindowFocus: true,
+    })
+  const backToOrganizationOrgId = shouldValidateBackOrganizationLink
+    ? consoleOrganizationsLoaded &&
+      consoleOrganizations?.teams?.some((team) => team.$id === orgId)
+      ? orgId
+      : undefined
+    : orgId
   const { features, isCloud } = useConsoleProfile()
   const { catalog } = useI18n()
   const headerCopy = catalog.app.header
@@ -544,10 +565,8 @@ export function ConsoleHeader({
     headerAccount?.twoFactorAuthenticatorEnabled === true
 
   const hasSidebar = !isOrgOverview
-  const isAccountScope = location.pathname.startsWith('/account')
-  const isAgentScope = isAgentPagePath(location.pathname)
   const showBackToOrganization =
-    (isAccountScope || isAgentScope) && Boolean(orgId)
+    (isAccountScope || isAgentScope) && Boolean(backToOrganizationOrgId)
   const isInitScope =
     (features.init || preLaunch) && location.pathname === '/init'
   const initHeaderNavCta = isInitScope
@@ -813,14 +832,17 @@ export function ConsoleHeader({
           })()}
 
           {/* Account / agent scope quick return */}
-          {showBackToOrganization && orgId ? (
+          {showBackToOrganization && backToOrganizationOrgId ? (
             <Button
               asChild
               variant="ghost"
               size="sm"
               className="hidden h-9 shrink-0 gap-1.5 px-2.5 text-[13px] @[850px]:inline-flex"
             >
-              <Link to="/organizations/$orgId" params={{ orgId }}>
+              <Link
+                to="/organizations/$orgId"
+                params={{ orgId: backToOrganizationOrgId }}
+              >
                 <ArrowLeft className="h-4 w-4" />
                 {headerCopy.actions.backToOrganization}
               </Link>

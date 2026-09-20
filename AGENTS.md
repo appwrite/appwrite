@@ -162,12 +162,22 @@ const { account, isAuthenticated } = useAuth()
 </DialogContent>
 ```
 
+**No-content modals** (confirmations, presets with description-only copy): skip the standalone header separator and the content section. Go from header straight to the footer; the footer’s top border is the only separator.
+
+```tsx
+<DialogHeader className="px-6 pt-6 pb-4 text-left">...</DialogHeader>
+<div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+  ...
+</div>
+```
+
 **Rules**:
 
 - **Title**: Use sentence case (only first letter capitalized)
 - **Header spacing**: Include `pb-4` for proper spacing before separator
 - **CTA buttons**: No icons in primary action buttons
-- **Exception**: No-content modals skip content section, go directly from header to footer
+- **No orphan separator**: Never render `<div className="border-t border-border" />` after the header unless a content section follows before the footer. A separator with empty space above the footer is not allowed.
+- **No-content modals**: Use the no-content pattern above (see `ConfirmActionDialog`).
 
 ### Settings Card Structure
 
@@ -545,7 +555,8 @@ Use the status-style badge variants so all badges share the same design (tinted 
 - `projects` - Project management, API keys, platforms, webhooks → `services/projects.ts`
 - `domains` - Domain management, DNS records, presets → `services/domains.ts`
 - `console` - Campaigns, coupons, plans, regions, resources → `services/console.ts`
-- `teams`, `vcs`, `backups`, `agent`, `assistant` (legacy chat), `avatars` → See service files
+- `teams`, `vcs`, `backups`, `assistant` (legacy chat), `avatars` → See service files
+- `agent` - Agent conversations, messages, MCPs, memories, models, automations → **not** from the SDK. The agent API has not merged into cloud `main`, so `sdk.forConsole.agent` is the hand-written client in `@/lib/appwrite/agent`. Keep it in step with `src/Appwrite/Cloud/Platform/Modules/Agent`, and delete it for the generated service once the API ships.
 
 **Project SDK** (`sdk.forProject(projectId)`):
 
@@ -1683,7 +1694,7 @@ Set `VITE_APPWRITE_ENDPOINT` in `.env` (default: `https://cloud.appwrite.io/v1`)
 
 ## Cursor Cloud specific instructions
 
-- **Runtime/package manager**: This project uses **Bun** (not npm/pnpm, even though a `pnpm-lock.yaml` exists). Use `bun run <script>` for all scripts in `package.json`. Bun is installed at `~/.bun/bin/bun`; the update script runs `bun install`.
+- **Runtime/package manager**: This project uses **Bun** (not npm/pnpm). `bun.lock` is the only lockfile, and `lint:sdk-pins` scans every lockfile it finds. Use `bun run <script>` for all scripts in `package.json`. Bun is installed at `~/.bun/bin/bun`; the update script runs `bun install`.
 - **No local backend**: There is no local backend server and no `docker-compose`. The console is a client-side app that talks to a **remote backend** whose endpoint is set via the `VITE_*` endpoint variable documented in the `## Environment` section above. Copy `.env` from `.env.example` (`.env` is gitignored). In Cloud Agent VMs, the endpoint, the console fingerprint key, and other `VITE_*` values are injected as secrets and take precedence over the placeholder values in `.env.example`.
 - **Standard commands** (see README "Scripts" and `package.json`): `bun run dev` (Vite dev server on port 3000), `bun run lint` (ESLint), `bun run check` (`tsc --noEmit`), `bun run test` / `bun run e2e` (Playwright; needs `bun run install-browsers` first plus a reachable backend and `E2E_TEST_EMAIL`/`E2E_TEST_PASSWORD` or `E2E_TEST_SESSION_SECRET`). Database write suites need `E2E_ORG_ID` (Frankfurt). Use `bun run e2e:mysql`, `bun run e2e:postgres`, `bun run e2e:tablesdb`, `bun run e2e:documentsdb`, `bun run e2e:vectorsdb`, or `bun run e2e:databases` to run only those projects.
 - **Pre-existing lint/type issues**: `bun run lint` and `bun run check` currently report many pre-existing errors in the repo (e.g. unused imports, and config-file type mismatches from the `rolldown-vite` alias in `vite.config.ts`). These are not caused by environment setup; do not treat them as setup failures.

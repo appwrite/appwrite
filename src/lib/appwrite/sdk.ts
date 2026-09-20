@@ -9,7 +9,6 @@ import {
   Account,
   Activities,
   Affiliates,
-  Agent,
   Analytics,
   Apps,
   Assistant,
@@ -51,6 +50,7 @@ import {
   Waf,
   type Models,
 } from '@appwrite.io/console'
+import { Agent } from '@/lib/appwrite/agent'
 import {
   getDebugEndpointBaseUrl,
   subscribeToDebugEndpointChange,

@@ -25,6 +25,7 @@ import { sdk } from '@/lib/appwrite/sdk'
 import { confirmPayment } from '@/lib/utils/stripe'
 import { resolveStripeProviderMethodId } from '@/lib/billing/addons'
 import { fetchConsoleAccount } from '@/lib/console-account-get'
+import { getConsoleAccountQueryRevision } from '@/lib/console-impersonation'
 import {
   hasProjectSpecificRoles,
   projectIdsFromRoles,
@@ -42,7 +43,7 @@ const ESTIMATION_STALE_TIME = 5 * 60 * 1000
 const EMPTY_ESTIMATION_INVITES: string[] = []
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import {
-  getPlanNameFromTier,
+  resolveOrganizationCanonicalPlan,
   type CanonicalPlanId,
 } from '@/lib/utils/plan-filter'
 import {
@@ -93,7 +94,10 @@ export function isBudgetLimitReached(
  * True when plan usage limits are at or above 100% (e.g. free-plan GBHours).
  * See {@link isPlanUsageLimitReached} in `@/lib/billing/billing-limits`.
  */
-export { isPlanUsageLimitReached } from '@/lib/billing/billing-limits'
+export {
+  isPlanUsageLimitReached,
+  isProjectLockedByPlanUsage,
+} from '@/lib/billing/billing-limits'
 
 /**
  * @deprecated Prefer {@link isBudgetLimitReached}. Same check for organization documents.
@@ -1458,7 +1462,7 @@ export async function deleteBillingAddress(params: {
  */
 export function organizationsQueryOptions() {
   return queryOptions({
-    queryKey: ['organizations', 'console'],
+    queryKey: ['organizations', 'console', getConsoleAccountQueryRevision()],
     queryFn: fetchOrganizations,
     staleTime: LONG_STALE_TIME,
     // Default QueryClient gcTime is 0. Without this, loader prefetch is
@@ -1747,6 +1751,7 @@ export function useOrganizations() {
     error,
     refetch,
   } = useQuery(organizationsQueryOptions())
+  const { plans: billingPlans } = useBillingPlans()
   const [screenshotModeEpoch, setScreenshotModeEpoch] = useState(0)
 
   useEffect(() => {
@@ -1765,12 +1770,16 @@ export function useOrganizations() {
         name: string
         total?: number
         billingPlan?: string
+        billingPlanId?: string
         billingPlanDowngrade?: unknown
         status?: string
       }
       const mocked = applyScreenshotModeOrganizationName(o)
-      // Map billingPlan to plan name using the filter
-      const plan = getPlanNameFromTier(o.billingPlan) as CanonicalPlanId
+      const plan = resolveOrganizationCanonicalPlan({
+        billingPlan: o.billingPlan,
+        billingPlanId: o.billingPlanId,
+        plans: billingPlans,
+      })
 
       return {
         $id: o.$id,
@@ -1780,10 +1789,12 @@ export function useOrganizations() {
         plan,
         members: o.total || 0,
         status: o.status,
+        billingPlan: o.billingPlan,
+        billingPlanId: o.billingPlanId,
         billingPlanDowngrade: o.billingPlanDowngrade,
       }
     }) as Organization[]
-  }, [organizationsData, screenshotModeEpoch])
+  }, [organizationsData, screenshotModeEpoch, billingPlans])
 
   return {
     organizations,
@@ -1825,6 +1836,7 @@ export function useOrganizationById(orgId: string | null | undefined) {
     error,
     refetch,
   } = useQuery(organizationQueryOptions(orgId))
+  const { plans: billingPlans } = useBillingPlans()
   const [screenshotModeEpoch, setScreenshotModeEpoch] = useState(0)
 
   useEffect(() => {
@@ -1837,8 +1849,12 @@ export function useOrganizationById(orgId: string | null | undefined) {
   const organization = useMemo(() => {
     if (!orgData) return null
 
-    const planName = getPlanNameFromTier(orgData.billingPlan)
-    const plan = planName as CanonicalPlanId
+    const plan = resolveOrganizationCanonicalPlan({
+      billingPlan: orgData.billingPlan,
+      billingPlanId: (orgData as { billingPlanId?: string }).billingPlanId,
+      plans: billingPlans,
+    })
+    const planName = plan
     const mocked = applyScreenshotModeOrganizationName(orgData)
 
     return {
@@ -1847,7 +1863,7 @@ export function useOrganizationById(orgId: string | null | undefined) {
       planName,
       billingPlan: orgData.billingPlan,
     }
-  }, [orgData, screenshotModeEpoch])
+  }, [orgData, screenshotModeEpoch, billingPlans])
 
   return {
     organization,

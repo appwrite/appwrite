@@ -420,7 +420,19 @@ export async function typeNativeSql(page: Page, sql: string): Promise<void> {
     await page.keyboard.press(`${modifier}+KeyA`)
     await page.keyboard.press('Backspace')
     await page.keyboard.insertText(sql)
+
+    // Monaco auto-closes the statement's `(`, leaving a stray `)` past the
+    // caret that the API rejects as a second statement. Delete to end of file.
+    await page.keyboard.press(
+      modifier === 'Meta' ? 'Meta+Shift+ArrowDown' : 'Control+Shift+End',
+    )
+    await page.keyboard.press('Delete')
     await page.keyboard.press('Escape')
+
+    // Monaco virtualises `.view-lines`; scroll line 1 back into view first.
+    await page.keyboard.press(
+      modifier === 'Meta' ? 'Meta+ArrowUp' : 'Control+Home',
+    )
 
     const firstLine = sql.trim().split('\n')[0]!.trim()
     const lines = page.locator('.monaco-editor .view-lines').first()

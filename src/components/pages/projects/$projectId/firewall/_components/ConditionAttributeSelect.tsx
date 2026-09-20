@@ -155,7 +155,19 @@ export function ConditionAttributeSelect({
             <CommandInput
               placeholder={t('Search types...')}
               className="h-9 text-[13px]"
-              onKeyDown={(event) => event.stopPropagation()}
+              onKeyDown={(event) => {
+                if (
+                  event.key === 'ArrowDown' ||
+                  event.key === 'ArrowUp' ||
+                  event.key === 'Home' ||
+                  event.key === 'End' ||
+                  event.key === 'Enter' ||
+                  event.key === 'Escape'
+                ) {
+                  return
+                }
+                event.stopPropagation()
+              }}
             />
             <CommandList className="min-h-[180px] max-h-[240px] overflow-y-auto overscroll-contain">
               <CommandEmpty className="py-4 text-center text-[13px] text-muted-foreground">

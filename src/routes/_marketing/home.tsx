@@ -53,6 +53,7 @@ import {
   getMarketingPageMetaTags,
 } from '@/lib/marketing/route-meta'
 import { getEnglishCatalog, useI18n } from '@/lib/i18n'
+import { prefetchVisitorCountry } from '@/lib/react-query/hooks/locale'
 
 const HOME_COPY = getEnglishCatalog().website.home
 
@@ -270,6 +271,7 @@ export const Route = createFileRoute('/_marketing/home')({
     ],
   }),
   loader: async ({ context }) => {
+    await prefetchVisitorCountry(context.queryClient)
   },
   component: HomePage,
 })

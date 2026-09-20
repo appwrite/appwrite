@@ -16,6 +16,8 @@ import {
   getRuntimeConfigScript,
 } from '@/lib/runtime-config'
 import { getSsrClientIpScript } from '@/lib/ssr-client-ip'
+import { getSsrVisitorCountryScript } from '@/lib/ssr-visitor-country'
+import { getLocalePrefetchScript } from '@/lib/locale/prefetch-locale'
 
 import type { QueryClient } from '@tanstack/react-query'
 import { useQueryClient } from '@tanstack/react-query'
@@ -550,6 +552,8 @@ function RootDocument({ children }: { children: React.ReactNode }) {
             Must precede <Scripts /> so module-level config reads see it. */}
         <ScriptOnce>{getRuntimeConfigScript()}</ScriptOnce>
         <ScriptOnce>{getSsrClientIpScript()}</ScriptOnce>
+        <ScriptOnce>{getSsrVisitorCountryScript()}</ScriptOnce>
+        <ScriptOnce>{getLocalePrefetchScript()}</ScriptOnce>
         <ScriptOnce>{THEME_SCRIPT}</ScriptOnce>
         <ScriptOnce>{PRE_LAUNCH_BOOT_SCRIPT}</ScriptOnce>
         {/* Must run before <Scripts /> so entry/main chunk 404s after deploy can

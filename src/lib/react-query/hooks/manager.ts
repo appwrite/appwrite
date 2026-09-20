@@ -33,8 +33,8 @@ import type {
 } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 
-export type BlocksListResponse = Models.BlockList
-export type Block = Models.Block
+export type BlocksListResponse = Models.ManagerBlockList
+export type ManagerBlock = Models.ManagerBlock
 
 const BLOCKS_QUERY_KEY = 'manager-blocks' as const
 
@@ -87,7 +87,7 @@ export type CreateBlockParams = {
 
 export function useCreateBlock(
   options?: Omit<
-    UseMutationOptions<Models.Block, unknown, CreateBlockParams>,
+    UseMutationOptions<Models.ManagerBlock, unknown, CreateBlockParams>,
     'mutationFn'
   >,
 ) {
@@ -119,7 +119,7 @@ export type DeleteBlockParams = {
 
 export function useDeleteBlock(
   options?: Omit<
-    UseMutationOptions<Models.BlockDelete, unknown, DeleteBlockParams>,
+    UseMutationOptions<Models.ManagerBlockDelete, unknown, DeleteBlockParams>,
     'mutationFn'
   >,
 ) {

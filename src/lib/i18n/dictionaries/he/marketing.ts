@@ -516,6 +516,10 @@ export const heMarketingDictionary: Record<string, string> = {
   'For innovative software companies striving to create solutions that integrate seamlessly with our platform. Partner with Appwrite to create a better developer experience.': // pragma: allowlist secret
     'לחברות תוכנה חדשניות ששואפות ליצור פתרונות שמשתלבים בצורה חלקה עם הפלטפורמה שלנו. שתפו פעולה עם Appwrite ליצירת חוויית מפתח טובה יותר.', // pragma: allowlist secret
   'For production applications that need powerful functionality and resources to scale.': 'לאפליקציות פרודקשן שזקוקות ליכולות עוצמתיות ולמשאבים כדי לגדול.',
+  'For production applications that scale with included resources and pay as you go.':
+    'לאפליקציות פרודקשן שגדלות עם משאבים כלולים ו-Pay as you go.',
+  'Pay as you go when you exceed included limits':
+    'Pay as you go כשחורגים מהמכסות הכלולות',
   'Forks': 'פורקים',
   'Founder': 'מייסד',
   'Founder & CEO': 'מייסד ומנכ"ל',

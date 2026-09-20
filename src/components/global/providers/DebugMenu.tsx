@@ -45,6 +45,7 @@ import {
   GitBranch,
   Camera,
   Info,
+  MapPin,
 } from 'lucide-react'
 import {
   Popover,
@@ -136,6 +137,7 @@ import { DebugMenuCommunityShareExamplesPanel } from '@/components/global/provid
 import { DebugMenuEnvPanel } from '@/components/global/providers/DebugMenuEnvPanel'
 import { DebugMenuFaviconPanel } from '@/components/global/providers/DebugMenuFaviconPanel'
 import { DebugMenuIpPanel } from '@/components/global/providers/DebugMenuIpPanel'
+import { DebugMenuLocalePanel } from '@/components/global/providers/DebugMenuLocalePanel'
 import {
   useInitLowPowerAnimationDecision,
   type InitLowPowerAnimationDecision,
@@ -247,6 +249,7 @@ interface MenuItem {
     | 'envStatus'
     | 'faviconStatus'
     | 'clientIp'
+    | 'localeStatus'
   /** Extra classes on submenu row buttons (e.g. separator above reset actions). */
   rowClassName?: string
   /** Feature flags submenu: group label for categorized lists. */
@@ -692,7 +695,8 @@ function isDebugPanelSubmenuVariant(
     variant === 'recentResources' ||
     variant === 'envStatus' ||
     variant === 'faviconStatus' ||
-    variant === 'clientIp'
+    variant === 'clientIp' ||
+    variant === 'localeStatus'
   )
 }
 
@@ -777,7 +781,8 @@ function menuItemHasSubmenu(item: MenuItem): boolean {
     item.submenuVariant === 'recentResources' ||
     item.submenuVariant === 'envStatus' ||
     item.submenuVariant === 'faviconStatus' ||
-    item.submenuVariant === 'clientIp'
+    item.submenuVariant === 'clientIp' ||
+    item.submenuVariant === 'localeStatus'
   )
 }
 
@@ -2079,6 +2084,12 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
             submenuVariant: 'clientIp',
           },
           {
+            label: 'Locale',
+            description: 'View live locale.get() and mock visitor country.',
+            icon: <MapPin className="h-3 w-3" />,
+            submenuVariant: 'localeStatus',
+          },
+          {
             label: 'Terminal',
             description: 'View and clear the browser CLI cache.',
             icon: <Terminal className="h-3 w-3" />,
@@ -2973,7 +2984,8 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
               currentSubmenu?.submenuVariant === 'recentResources' ||
               currentSubmenu?.submenuVariant === 'envStatus' ||
               currentSubmenu?.submenuVariant === 'faviconStatus' ||
-              currentSubmenu?.submenuVariant === 'clientIp'
+              currentSubmenu?.submenuVariant === 'clientIp' ||
+              currentSubmenu?.submenuVariant === 'localeStatus'
               ? 'w-[min(92vw,720px)]'
               : 'w-80',
           )}
@@ -3113,6 +3125,8 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 <DebugMenuFaviconPanel />
               ) : currentSubmenu.submenuVariant === 'clientIp' ? (
                 <DebugMenuIpPanel />
+              ) : currentSubmenu.submenuVariant === 'localeStatus' ? (
+                <DebugMenuLocalePanel />
               ) : (
                 <div className="space-y-0.5">
                   {currentSubmenu.note ? (

@@ -1,7 +1,11 @@
 import type { CSSProperties } from 'react'
 import type { Organization } from '@/lib/utils/mock-data'
 import { cn } from '@/lib/utils'
-import { getPlanBadgeColor, getPlanDisplayName } from '@/lib/utils/plan-badge'
+import {
+  getPlanBadgeColor,
+  getPlanBadgeStyle,
+  getPlanDisplayName,
+} from '@/lib/utils/plan-badge'
 import { useT } from '@/lib/i18n/translate'
 
 const SHARD_SPECS = [
@@ -89,6 +93,7 @@ export function ProjectSelectorPlanBadge({
   const colors = upcomingDowngrade
     ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
     : getPlanBadgeColor(plan)
+  const style = upcomingDowngrade ? undefined : getPlanBadgeStyle(plan)
 
   if (!billingStress || upcomingDowngrade) {
     return (
@@ -98,6 +103,7 @@ export function ProjectSelectorPlanBadge({
           colors,
           className,
         )}
+        style={style}
       >
         {label}
       </span>
@@ -116,6 +122,7 @@ export function ProjectSelectorPlanBadge({
           'plan-badge-stress-inner relative isolate inline-flex shrink-0 items-center justify-center overflow-visible rounded-md px-1.5 py-0.5 text-[10px] font-medium capitalize',
           colors,
         )}
+        style={style}
       >
         <span
           className="pointer-events-none absolute inset-0 z-[6] flex items-center justify-center overflow-visible"
