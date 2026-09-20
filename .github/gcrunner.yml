@@ -1,0 +1,45 @@
+# Runner shapes for gcrunner. A workflow selects one with runner=<name> and can
+# override any single setting alongside it.
+#
+# No preset names an image: the default resolves to the image family, and pinning
+# one build by name is what took CI down on 2026-09-19 when the image workflow
+# pruned it. Pin here, in one place, or not at all.
+
+runners:
+  small:
+    family: n2d
+    cpu: 2+4
+    ram: 8+16
+    disk: 80gb
+
+  standard:
+    family: n2d
+    cpu: 4+8
+    ram: 16+32
+    disk: 80gb
+
+  # The extra disk is the layer cache, not the workload.
+  build:
+    family: n2d
+    cpu: 8
+    ram: 32
+    disk: 100gb
+
+  publish:
+    family: n2d
+    cpu: 4
+    ram: 16
+    disk: 80gb
+
+  e2e:
+    family: n2d
+    cpu: 4+8
+    ram: 16+32
+    disk: 80gb
+
+  # Databases and TablesDB run three paratest processes against every adapter.
+  e2e-large:
+    family: n2d
+    cpu: 8+16
+    ram: 32+64
+    disk: 80gb
