@@ -30,7 +30,7 @@ on:
 jobs:
   generate:
     name: Generate Specs
-    runs-on: gcrunner=${{ github.run_id }}-generate-${{ strategy.job-index }}/family=c3d/cpu=4/ram=16/disk=80gb
+    runs-on: gcrunner=${{ github.run_id }}-generate-${{ strategy.job-index }}/family=c3d/cpu=4/ram=16/disk=80gb/zone=europe-west3-a
     steps:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
