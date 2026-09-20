@@ -19,11 +19,11 @@ jobs:
           - project: website
             args: --project=website
             timeout: 15
-            runner: runs-on=${{ github.run_id }}/runner=e2e
+            runner: gcrunner=${{ github.run_id }}-e2e-website/runner=e2e
           - project: console-mocked
             args: --project=console-mocked
             timeout: 15
-            runner: runs-on=${{ github.run_id }}/runner=e2e
+            runner: gcrunner=${{ github.run_id }}-e2e-console-mocked/runner=e2e
           # One invocation runs the shared setup dependency once, not once per
           # suite. Keep each database project's workers: 1 and retry policy.
           - project: console-live
@@ -36,7 +36,7 @@ jobs:
               --project=console-documentsdb
               --project=console-vectorsdb
             timeout: 150
-            runner: runs-on=${{ github.run_id }}/runner=e2e
+            runner: gcrunner=${{ github.run_id }}-e2e-console-live/runner=e2e-long
     steps:
       - uses: actions/checkout@v4
 

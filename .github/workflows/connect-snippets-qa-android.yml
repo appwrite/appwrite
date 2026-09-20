@@ -23,8 +23,8 @@ defaults:
 jobs:
   qa:
     name: ${{ matrix.id }}
-    # The emulator needs KVM, so this profile runs on nested-virt instances.
-    runs-on: runs-on=${{ github.run_id }}/runner=snippets-qa-android
+    # Still on RunsOn: the emulator needs KVM and gcrunner has no nested virt.
+    runs-on: runs-on=${{ github.run_id }}/family=c8i+m8i/cpu=8/nested-virt/image=ubuntu24-full-x64/volume=80gb
     timeout-minutes: 60
     strategy:
       fail-fast: false

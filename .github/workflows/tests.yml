@@ -9,7 +9,7 @@ on:
 jobs:
   build:
     name: Build
-    runs-on: runs-on=${{ github.run_id }}/runner=checks
+    runs-on: gcrunner=${{ github.run_id }}-build/runner=checks
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4

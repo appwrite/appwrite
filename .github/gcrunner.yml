@@ -1,0 +1,43 @@
+# Presets a workflow selects with runner=<name>. No preset pins an image: a
+# pinned build that the image workflow prunes leaves jobs queued forever.
+runners:
+  checks:
+    family: n2d
+    cpu: 4
+    ram: 16
+    disk: 80gb
+
+  e2e:
+    family: n2d
+    cpu: 4
+    ram: 16
+    disk: 80gb
+
+  # console-live runs up to 150 minutes; a preempted spot VM has no retry.
+  e2e-long:
+    family: n2d
+    cpu: 4
+    ram: 16
+    disk: 80gb
+    spot: false
+
+  # A preempted build leaves a half-pushed digest behind.
+  build:
+    family: n2d
+    cpu: 4
+    ram: 16
+    disk: 80gb
+    spot: false
+
+  deploy:
+    family: n2d
+    cpu: 2
+    ram: 8
+    disk: 80gb
+    spot: false
+
+  snippets-qa:
+    family: n2d
+    cpu: 4
+    ram: 16
+    disk: 80gb
