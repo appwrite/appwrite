@@ -1,6 +1,5 @@
 {
   "lockfileVersion": 1,
-  "configVersion": 0,
   "workspaces": {
     "": {
       "name": "template-tanstack-start",
@@ -135,9 +134,9 @@
     "use-sync-external-store": "^1.6.0",
   },
   "packages": {
-    "@appwrite.io/console": ["@appwrite.io/console@https://pkg.vc/-/@appwrite/@appwrite.io/console@96e721c", { "dependencies": { "json-bigint": "1.0.0" } }, "sha512-R0wQbdfaRSUMRMfQ+PKE5OM+YiZER/kkSio30zbEbbBk/I9QBIM38xqn7SY83fTLPOhe94KgCpGDgel2b40NLQ=="],
+    "@appwrite.io/console": ["@appwrite.io/console@https://pkg.vc/-/@appwrite/@appwrite.io/console@96e721c", { "dependencies": { "json-bigint": "1.0.0" } }],
 
-    "@appwrite.io/specs": ["@appwrite.io/specs@github:appwrite/specs#7e01c16", {}, "appwrite-specs-7e01c16", "sha512-HS4B7CbC2XLZxeG5Xyvwy7BsZZicAVsKerYP2R25TF84iSztQ6yDDUVllM50gUsPmi+GKWqTxEVNDpABL2w6sg=="],
+    "@appwrite.io/specs": ["@appwrite.io/specs@github:appwrite/specs#7e01c16", {}, "appwrite-specs-7e01c16"],
 
     "@babel/code-frame": ["@babel/code-frame@7.29.7", "", { "dependencies": { "@babel/helper-validator-identifier": "^7.29.7", "js-tokens": "^4.0.0", "picocolors": "^1.1.1" } }, "sha512-Aup7aUOfpbAUg2ROOJN6Iw5f9DMBlzu0mIkm/malLQFN/YQgO48wCj0Kxa3sEHJvPVFg7siR+qRInwXd2qhQKw=="],
 
