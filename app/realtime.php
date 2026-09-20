@@ -601,6 +601,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                         // Ignore invalid timestamp payloads.
                     }
                 }
+                $receivers = $realtime->getSubscribers($event);
 
                 if ($event['permissionsChanged'] && isset($event['userId'])) {
                     $projectId = $event['project'];
@@ -675,6 +676,11 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                             $eventTailRegistry->revalidateConnection($connection, $roles);
                         }
                     }
+
+                    // A membership create only matches after the rebuild, so merge the new receivers in.
+                    foreach ($realtime->getSubscribers($event) as $connectionId => $matched) {
+                        $receivers[$connectionId] = ($receivers[$connectionId] ?? []) + $matched;
+                    }
                 }
 
                 // Strip deleted presences from in-memory connection state so onClose doesn't
@@ -686,8 +692,6 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                         $deletedPresenceId,
                     );
                 }
-
-                $receivers = $realtime->getSubscribers($event);
 
                 if (System::getEnv('_APP_ENV', 'production') === 'development' && !empty($receivers)) {
                     Console::log("[Debug][Worker {$workerId}] Receivers: " . count($receivers));
