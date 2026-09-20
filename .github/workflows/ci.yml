@@ -46,7 +46,7 @@ jobs:
     runs-on: >-
       ${{ (github.event_name != 'pull_request'
       || github.event.pull_request.head.repo.full_name == github.repository)
-      && format('gcrunner={0}-security-{1}/family=n2d/cpu=4+8/ram=16+32/disk=80gb/image=gcrunner-ubuntu2404-x64-baf37b4-20260917131151', github.run_id, strategy.job-index)
+      && format('gcrunner={0}-security-{1}/family=n2d/cpu=4+8/ram=16+32/disk=80gb/image=ubuntu24-full-x64', github.run_id, strategy.job-index)
       || 'ubuntu-latest' }}
     permissions:
       contents: read
@@ -104,7 +104,7 @@ jobs:
     runs-on: >-
       ${{ (github.event_name != 'pull_request'
       || github.event.pull_request.head.repo.full_name == github.repository)
-      && format('gcrunner={0}-checks-{1}/family=n2d/cpu=4/ram=16/disk=80gb/image=gcrunner-ubuntu2404-x64-baf37b4-20260917131151', github.run_id, strategy.job-index)
+      && format('gcrunner={0}-checks-{1}/family=n2d/cpu=4/ram=16/disk=80gb/image=ubuntu24-full-x64', github.run_id, strategy.job-index)
       || 'ubuntu-latest' }}
     steps:
       - name: Checkout repository
@@ -179,7 +179,7 @@ jobs:
     runs-on: >-
       ${{ (github.event_name != 'pull_request'
       || github.event.pull_request.head.repo.full_name == github.repository)
-      && format('gcrunner={0}-locale-{1}/family=n2d/cpu=2/ram=8/disk=80gb/image=gcrunner-ubuntu2404-x64-baf37b4-20260917131151', github.run_id, strategy.job-index)
+      && format('gcrunner={0}-locale-{1}/family=n2d/cpu=2/ram=8/disk=80gb/image=ubuntu24-full-x64', github.run_id, strategy.job-index)
       || 'ubuntu-latest' }}
     steps:
       - name: Check out the repo
@@ -281,7 +281,7 @@ jobs:
     runs-on: >-
       ${{ (github.event_name != 'pull_request'
       || github.event.pull_request.head.repo.full_name == github.repository)
-      && format('gcrunner={0}-packages-{1}/family=n2d/cpu=2/ram=8/disk=80gb/image=gcrunner-ubuntu2404-x64-baf37b4-20260917131151', github.run_id, strategy.job-index)
+      && format('gcrunner={0}-packages-{1}/family=n2d/cpu=2/ram=8/disk=80gb/image=ubuntu24-full-x64', github.run_id, strategy.job-index)
       || 'ubuntu-latest' }}
     outputs:
       matrix: ${{ steps.changed.outputs.matrix }}
@@ -353,7 +353,7 @@ jobs:
     runs-on: >-
       ${{ (github.event_name != 'pull_request'
       || github.event.pull_request.head.repo.full_name == github.repository)
-      && format('gcrunner={0}-package-{1}/family=n2d/cpu=2+4/ram=8+16/disk=80gb/image=gcrunner-ubuntu2404-x64-baf37b4-20260917131151', github.run_id, strategy.job-index)
+      && format('gcrunner={0}-package-{1}/family=n2d/cpu=2+4/ram=8+16/disk=80gb/image=ubuntu24-full-x64', github.run_id, strategy.job-index)
       || 'ubuntu-latest' }}
     strategy:
       fail-fast: false
