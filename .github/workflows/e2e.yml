@@ -19,11 +19,11 @@ jobs:
           - project: website
             args: --project=website
             timeout: 15
-            runner: gcrunner=${{ github.run_id }}-e2e-website/family=n2d/cpu=4/ram=16/disk=80gb/image=gcrunner-ubuntu2404-x64-baf37b4-20260917131151
+            runner: runs-on=${{ github.run_id }}/runner=e2e
           - project: console-mocked
             args: --project=console-mocked
             timeout: 15
-            runner: gcrunner=${{ github.run_id }}-e2e-console-mocked/family=n2d/cpu=4/ram=16/disk=80gb/image=gcrunner-ubuntu2404-x64-baf37b4-20260917131151
+            runner: runs-on=${{ github.run_id }}/runner=e2e
           # One invocation runs the shared setup dependency once, not once per
           # suite. Keep each database project's workers: 1 and retry policy.
           - project: console-live
