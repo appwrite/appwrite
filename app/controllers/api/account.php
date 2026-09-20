@@ -646,6 +646,7 @@ Http::delete('/v1/account/sessions')
         contentType: ContentType::NONE
     ))
     ->label('abuse-limit', 100)
+    ->param('current', true, new Boolean(), 'Delete the current session too. Use false to sign out of every other session while staying signed in on this one. Default is true.', true)
     ->inject('request')
     ->inject('response')
     ->inject('user')
@@ -657,7 +658,7 @@ Http::delete('/v1/account/sessions')
     ->inject('proofForToken')
     ->inject('domainVerification')
     ->inject('cookieDomain')
-    ->action(function (Request $request, Response $response, User $user, Database $dbForProject, Locale $locale, Event $queueForEvents, DeletePublisher $publisherForDeletes, Store $store, ProofsToken $proofForToken, bool $domainVerification, ?string $cookieDomain) {
+    ->action(function (bool $current, Request $request, Response $response, User $user, Database $dbForProject, Locale $locale, Event $queueForEvents, DeletePublisher $publisherForDeletes, Store $store, ProofsToken $proofForToken, bool $domainVerification, ?string $cookieDomain) {
 
         $protocol = $request->getProtocol();
         $sessions = $user->getAttribute('sessions', []);
@@ -665,6 +666,14 @@ Http::delete('/v1/account/sessions')
 
         foreach ($sessions as $session) {
             /** @var Document $session */
+            $isCurrentSession = $proofForToken->verify($store->getProperty('secret', ''), $session->getAttribute('secret'));
+
+            if ($isCurrentSession && !$current) {
+                // Keep this session alive: skip deleting it, clearing its
+                // cookies, and enqueuing its session-targets cleanup.
+                continue;
+            }
+
             $dbForProject->deleteDocument('sessions', $session->getId());
 
             if (!$domainVerification) {
@@ -675,7 +684,7 @@ Http::delete('/v1/account/sessions')
                 ->setAttribute('current', false)
                 ->setAttribute('countryName', $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown')));
 
-            if ($proofForToken->verify($store->getProperty('secret', ''), $session->getAttribute('secret'))) {
+            if ($isCurrentSession) {
                 $session->setAttribute('current', true);
 
                 // If current session delete the cookies too

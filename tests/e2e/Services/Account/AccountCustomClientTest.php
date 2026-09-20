@@ -1810,6 +1810,97 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals(204, $response['headers']['status-code']);
     }
 
+    public function testDeleteAccountSessionsKeepCurrent(): void
+    {
+        $data = $this->setupAccountWithVerifiedEmail();
+
+        // testDeleteAccountSessions/testDeleteAccountSessionsWithJWT delete every
+        // session on the shared cached account, so sign in fresh here too rather
+        // than reusing $data['session']. Three sessions, not two, so the test
+        // actually proves "delete every OTHER session" rather than just
+        // "delete the one other session".
+        $sessions = [];
+        for ($i = 0; $i < 3; $i++) {
+            $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ]), [
+                'email' => $data['email'],
+                'password' => $data['password'],
+            ]);
+
+            $this->assertEquals(201, $response['headers']['status-code']);
+            $sessions[] = $response['cookies']['a_session_' . $this->getProject()['$id']];
+        }
+
+        [$sessionA, $sessionB, $sessionC] = $sessions;
+
+        /**
+         * Test for SUCCESS
+         * Deleting sessions with current=false, authenticated as session C,
+         * should remove sessions A and B but keep session C alive.
+         */
+        $response = $this->client->call(Client::METHOD_DELETE, '/account/sessions', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $sessionC,
+        ]), [
+            'current' => false,
+        ]);
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $sessionA,
+        ]));
+
+        $this->assertEquals(401, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $sessionB,
+        ]));
+
+        $this->assertEquals(401, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $sessionC,
+        ]));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $sessionC,
+        ]));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertCount(1, $response['body']['sessions']);
+        $this->assertTrue($response['body']['sessions'][0]['current']);
+
+        // Clean up: delete the remaining session so it doesn't leak into other tests.
+        $response = $this->client->call(Client::METHOD_DELETE, '/account/sessions', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $sessionC,
+        ]));
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+    }
+
     public function testCreateAccountRecovery(): void
     {
         $data = $this->setupAccountWithVerifiedEmail();
