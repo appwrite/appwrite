@@ -536,6 +536,13 @@ abstract class Action extends DatabasesAction
             throw new Exception($this->getDefaultUnsupportedException(), 'Cannot set default value for array ' . $this->getContext() . 's');
         }
 
+        if ($size !== null && $size < APP_DATABASE_ENCRYPT_SIZE_MIN && \in_array('encrypt', $attribute->getAttribute('filters', []), true)) {
+            throw new Exception(
+                Exception::GENERAL_BAD_REQUEST,
+                'Size too small. Encrypted strings require a minimum size of ' . APP_DATABASE_ENCRYPT_SIZE_MIN . ' characters.'
+            );
+        }
+
         $collectionId = 'database_' . $db->getSequence() . '_collection_' . $collection->getSequence();
 
         $attribute

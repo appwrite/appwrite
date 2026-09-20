@@ -6,6 +6,7 @@ use Appwrite\Hooks\Hooks;
 use Appwrite\PubSub\Adapter\Redis as PubSub;
 use Appwrite\URL\URL as AppwriteURL;
 use Utopia\Cache\Adapter\Redis as RedisCache;
+use Utopia\Cache\Codec\Igbinary;
 use Utopia\Config\Config;
 use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Adapter\Mongo;
@@ -267,7 +268,7 @@ $register->set('pools', function () {
                         };
                     case 'cache':
                         $adapter = match ($dsn->getScheme()) {
-                            'redis' => new RedisCache($resource()),
+                            'redis' => new RedisCache($resource(), new Igbinary()),
                             default => null
                         };
 
@@ -328,17 +329,31 @@ $register->set('db', function () {
 $register->set('smtp', function () {
     $username = System::getEnv('_APP_SMTP_USERNAME', '');
     $password = System::getEnv('_APP_SMTP_PASSWORD', '');
-    return new SMTP(
-        host: System::getEnv('_APP_SMTP_HOST', 'smtp'),
-        port: (int) System::getEnv('_APP_SMTP_PORT', 25),
-        username: $username,
-        password: $password,
-        smtpSecure: System::getEnv('_APP_SMTP_SECURE', ''),
-        smtpAutoTLS: false,
-        xMailer: 'Appwrite Mailer',
-        timeout: 10,
-        keepAlive: true,
-        timelimit: 30,
+
+    $workers = Config::getParam('workers', []);
+    $size = max(
+        1,
+        (int) System::getEnv('_APP_WORKER_MAX_COROUTINES', 1),
+        ((int) ($workers['mails']['maxCoroutines'] ?? 1)) + ((int) ($workers['notifications']['maxCoroutines'] ?? 1)),
+    );
+
+    return new Pool(
+        adapter: new SwoolePool(),
+        name: 'smtp',
+        size: $size,
+        init: fn () => new SMTP(
+            host: System::getEnv('_APP_SMTP_HOST', 'smtp'),
+            port: (int) System::getEnv('_APP_SMTP_PORT', 25),
+            username: $username,
+            password: $password,
+            smtpSecure: System::getEnv('_APP_SMTP_SECURE', ''),
+            smtpAutoTLS: false,
+            xMailer: 'Appwrite Mailer',
+            timeout: 10,
+            keepAlive: true,
+            timelimit: 30,
+        ),
+        timeout: (float) System::getEnv('_APP_CONNECTIONS_TIMEOUT', 10),
     );
 });
 $register->set('passwordsDictionary', function () {

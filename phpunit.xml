@@ -16,6 +16,11 @@
         <testsuite name="unit">
             <directory>./tests/unit</directory>
         </testsuite>
+        <testsuite name="packages">
+            <directory>./packages/*/tests</directory>
+            <exclude>./packages/*/tests/E2E</exclude>
+            <exclude>./packages/*/tests/bench</exclude>
+        </testsuite>
         <testsuite name="e2e">
             <file>./tests/e2e/Client.php</file>
             <directory>./tests/e2e/General</directory>
@@ -45,6 +50,9 @@
             <file>./tests/e2e/Services/Functions/FunctionsBase.php</file>
             <file>./tests/e2e/Services/Functions/FunctionsCustomServerTest.php</file>
             <file>./tests/e2e/Services/Functions/FunctionsCustomClientTest.php</file>
+        </testsuite>
+        <testsuite name="mqtt">
+            <directory>./tests/e2e/Services/Mqtt</directory>
         </testsuite>
     </testsuites>
 </phpunit>

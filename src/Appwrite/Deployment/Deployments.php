@@ -98,9 +98,9 @@ readonly class Deployments
      * queued is left canceled and never dispatched. Returns the persisted,
      * updated deployment.
      */
-    public function createFromUpload(Document $resource, Document $deployment): Document
+    public function createFromUpload(Document $resource, Document $deployment, int $timeout): Document
     {
-        return $this->submit($resource, $deployment, null);
+        return $this->submit($resource, $deployment, $timeout, null);
     }
 
     /**
@@ -113,6 +113,7 @@ readonly class Deployments
     public function createFromRef(
         Document $resource,
         Document $deployment,
+        int $timeout,
         string $owner,
         string $repository,
         string $type,
@@ -124,7 +125,7 @@ readonly class Deployments
         // tag; codeload only understands one ref per tarball, not a range.
         $url = "https://codeload.github.com/{$owner}/{$repository}/tar.gz/{$reference}";
 
-        return $this->submit($resource, $deployment, ['url' => $url, 'subdir' => $rootDirectory]);
+        return $this->submit($resource, $deployment, $timeout, ['url' => $url, 'subdir' => $rootDirectory]);
     }
 
     /**
@@ -138,11 +139,12 @@ readonly class Deployments
     public function createFromUrl(
         Document $resource,
         Document $deployment,
+        int $timeout,
         string $url,
         string $rootDirectory = '',
         array $headers = [],
     ): Document {
-        return $this->submit($resource, $deployment, ['url' => $url, 'subdir' => $rootDirectory, 'headers' => $headers]);
+        return $this->submit($resource, $deployment, $timeout, ['url' => $url, 'subdir' => $rootDirectory, 'headers' => $headers]);
     }
 
     /**
@@ -156,23 +158,27 @@ readonly class Deployments
     public function createFromVcs(
         Document $resource,
         Document $deployment,
+        int $timeout,
         Git $vcs,
         string $owner,
         string $repository,
         string $ref,
         string $rootDirectory = '',
     ): Document {
+        $deployment->setAttribute('providerRootDirectory', $rootDirectory);
+
         if ($vcs->supportsRepositoryArchives()) {
             return $this->createFromUrl(
                 $resource,
                 $deployment,
+                $timeout,
                 $vcs->getRepositoryPresignedUrl($owner, $repository, $ref),
                 $rootDirectory,
                 $vcs->getRepositoryPresignedUrlHeaders(),
             );
         }
 
-        return $this->submit($resource, $deployment, [
+        return $this->submit($resource, $deployment, $timeout, [
             'clone' => $vcs->getRepositoryCloneUrl($owner, $repository),
             'ref' => $ref,
             'subdir' => $rootDirectory,
@@ -180,7 +186,7 @@ readonly class Deployments
         ]);
     }
 
-    private function submit(Document $resource, Document $deployment, ?array $source): Document
+    private function submit(Document $resource, Document $deployment, int $timeout, ?array $source): Document
     {
         // The caller may have been holding this deployment for a while (the
         // Builds worker pushes a template commit first), so its status is stale
@@ -221,7 +227,7 @@ readonly class Deployments
         }
 
         try {
-            $this->jobs->create(...static::payload($this->project, $resource, $deployment, $this->platform, $source));
+            $this->jobs->create(...static::payload($this->project, $resource, $deployment, $this->platform, $timeout, $source));
         } catch (\Throwable $error) {
             // A refused variable key is the owner's to fix, so the build log
             // carries the actual reason; anything else stays a generic
@@ -347,12 +353,12 @@ readonly class Deployments
         Document $resource,
         Document $deployment,
         array $platform,
+        int $timeout,
         ?array $source = null,
     ): array {
         $projectId = $project->getId();
         $deploymentId = $deployment->getId();
         $isSite = $resource->getCollection() === 'sites';
-        $timeout = (int) System::getEnv('_APP_COMPUTE_BUILD_TIMEOUT', 900);
 
         $runtime = self::runtime($resource, self::version($resource));
         $spec = Config::getParam('specifications')[$resource->getAttribute('buildSpecification', APP_COMPUTE_SPECIFICATION_DEFAULT)];
