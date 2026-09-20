@@ -6,6 +6,10 @@ import { cn } from '@/lib/utils'
 export const authFlowCardContentClassName =
   'flex min-h-[480px] flex-col justify-center p-6 md:min-h-[520px] md:p-10'
 
+/** OAuth authorize / device / outcome cards: shorter cap, scroll when permissions are long. */
+export const authFlowOAuthNarrowCardContentClassName =
+  'min-h-0 max-h-[min(58dvh,380px)] justify-start overflow-y-auto overscroll-contain'
+
 /** Left column for sign-in / recovery style illustration cards. */
 export const authFlowIllustrationContentClassName =
   'flex min-h-[600px] flex-col justify-center p-6 md:p-10'

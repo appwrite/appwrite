@@ -16,7 +16,10 @@ import {
 } from '@/components/global/auth/OAuth2DeviceCodeInput'
 import { Button } from '@/components/ui/button'
 import { AuthFlowAccountSwitcherStatic } from '@/components/global/auth/AuthFlowAccountSwitcherStatic'
-import { AuthFlowNarrowCard } from '@/components/global/auth/AuthFlowCard'
+import {
+  AuthFlowNarrowCard,
+  authFlowOAuthNarrowCardContentClassName,
+} from '@/components/global/auth/AuthFlowCard'
 import { AuthFlowHeaderIcon } from '@/components/global/auth/AuthFlowHeaderIcon'
 import { AuthFlowShell } from '@/components/global/auth/AuthFlowShell'
 import { Label } from '@/components/ui/label'
@@ -171,7 +174,9 @@ function DeviceCodeCard({
   }, [initialCode])
 
   return (
-    <AuthFlowNarrowCard>
+    <AuthFlowNarrowCard
+      contentClassName={authFlowOAuthNarrowCardContentClassName}
+    >
       <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
         <div className="flex flex-col items-center gap-4 text-center">
           <AuthFlowHeaderIcon icon={MonitorSmartphone} />
@@ -219,7 +224,9 @@ function DeviceCodeCard({
 
 function AuthorizationFailedCard() {
   return (
-    <AuthFlowNarrowCard>
+    <AuthFlowNarrowCard
+      contentClassName={authFlowOAuthNarrowCardContentClassName}
+    >
       <div className="space-y-6">
         <div className="flex flex-col items-center gap-4 text-center">
           <AuthFlowHeaderIcon icon={TriangleAlert} variant="destructive" />
@@ -351,7 +358,9 @@ function OAuth2PreviewPage() {
           {!outcome && screen === 'error' ? <AuthorizationFailedCard /> : null}
 
           {!outcome && screen === 'loading' ? (
-            <AuthFlowNarrowCard>
+            <AuthFlowNarrowCard
+              contentClassName={authFlowOAuthNarrowCardContentClassName}
+            >
               <div className="flex flex-col items-center py-8 text-center">
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground motion-reduce:animate-none" />
               </div>

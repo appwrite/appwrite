@@ -6,6 +6,7 @@ import {
   AuthFlowNarrowCard,
   AuthFlowTitle,
   authFlowMetaClassName,
+  authFlowOAuthNarrowCardContentClassName,
 } from '@/components/global/auth/AuthFlowCard'
 import { AuthFlowHeaderIcon } from '@/components/global/auth/AuthFlowHeaderIcon'
 import { useT } from '@/lib/i18n/translate'
@@ -87,7 +88,9 @@ export function OAuth2RelayCard({
   }, [callbackLink, preview])
 
   const content = (
-    <AuthFlowNarrowCard>
+    <AuthFlowNarrowCard
+      contentClassName={authFlowOAuthNarrowCardContentClassName}
+    >
       {project ? (
         <div className="flex flex-col items-center gap-4 text-center">
           <AuthFlowHeaderIcon icon={Smartphone} />

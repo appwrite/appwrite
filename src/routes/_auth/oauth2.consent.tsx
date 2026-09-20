@@ -6,7 +6,10 @@ import { AppwriteException } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import { AuthFlowAccountSwitcher } from '@/components/global/auth/AuthFlowAccountSwitcher'
-import { AuthFlowNarrowCard } from '@/components/global/auth/AuthFlowCard'
+import {
+  AuthFlowNarrowCard,
+  authFlowOAuthNarrowCardContentClassName,
+} from '@/components/global/auth/AuthFlowCard'
 import { AuthFlowHeaderIcon } from '@/components/global/auth/AuthFlowHeaderIcon'
 import { AuthFlowShell } from '@/components/global/auth/AuthFlowShell'
 import { Button } from '@/components/ui/button'
@@ -418,7 +421,9 @@ function OAuth2ConsentPage() {
       accountSwitcher={accountSwitcher}
     >
       {phase === 'loading' && (
-        <AuthFlowNarrowCard>
+        <AuthFlowNarrowCard
+          contentClassName={authFlowOAuthNarrowCardContentClassName}
+        >
           <div className="flex flex-col items-center py-8 text-center">
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground motion-reduce:animate-none" />
           </div>
@@ -426,7 +431,9 @@ function OAuth2ConsentPage() {
       )}
 
       {phase === 'error' && (
-        <AuthFlowNarrowCard>
+        <AuthFlowNarrowCard
+          contentClassName={authFlowOAuthNarrowCardContentClassName}
+        >
           <div className="space-y-6">
             <div className="flex flex-col items-center gap-4 text-center">
               <AuthFlowHeaderIcon icon={TriangleAlert} variant="destructive" />

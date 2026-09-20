@@ -7,6 +7,7 @@ import {
   AuthFlowNarrowCard,
   AuthFlowTitle,
   authFlowMetaClassName,
+  authFlowOAuthNarrowCardContentClassName,
 } from '@/components/global/auth/AuthFlowCard'
 import { Button } from '@/components/ui/button'
 import { useT } from '@/lib/i18n/translate'
@@ -57,7 +58,9 @@ export function OAuth2OutcomeCard({
 
   return (
     <>
-      <AuthFlowNarrowCard>
+      <AuthFlowNarrowCard
+        contentClassName={authFlowOAuthNarrowCardContentClassName}
+      >
         <div className="space-y-6">
         <div className="flex flex-col items-center gap-4 text-center">
           <div className="relative">

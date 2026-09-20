@@ -23,6 +23,7 @@ import {
   AuthFlowDescription,
   AuthFlowNarrowCard,
   AuthFlowTitle,
+  authFlowOAuthNarrowCardContentClassName,
 } from '@/components/global/auth/AuthFlowCard'
 import { Card } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -584,7 +585,9 @@ export function OAuth2ConsentCard({
 
   return (
     <>
-      <AuthFlowNarrowCard>
+      <AuthFlowNarrowCard
+        contentClassName={authFlowOAuthNarrowCardContentClassName}
+      >
         <div className="space-y-6">
           <div className="flex flex-col items-center gap-4 text-center">
             <OAuth2AppAvatar app={app} />
