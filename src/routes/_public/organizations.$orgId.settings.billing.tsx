@@ -7,6 +7,7 @@ import {
   organizationQueryOptions,
   organizationPlanQueryOptions,
   organizationBillingAggregationQueryOptions,
+  organizationEstimationQueryOptions,
   organizationCreditsQueryOptions,
   paymentMethodsQueryOptions,
   billingAddressesQueryOptions,
@@ -70,10 +71,13 @@ export const Route = createFileRoute(
             ),
           ]
         : []),
-      queryClient.ensureQueryData(organizationCreditsQueryOptions(orgId, 0, 1)),
       queryClient.ensureQueryData(
         organizationCreditsQueryOptions(orgId, 0, CREDITS_PER_PAGE),
       ),
+      // Plan summary blocks on this; a failure there degrades to the aggregation total.
+      queryClient
+        .ensureQueryData(organizationEstimationQueryOptions(orgId))
+        .catch(() => {}),
       queryClient.ensureQueryData(paymentMethodsQueryOptions()),
       queryClient.ensureQueryData(billingAddressesQueryOptions()),
       ...(orgData?.billingAggregationId
