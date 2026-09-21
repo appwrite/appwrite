@@ -4964,11 +4964,15 @@ Http::put('/v1/account/targets/:targetId/push')
 
         $target->setAttribute('name', "{$device['deviceBrand']} {$device['deviceModel']}");
 
-        $target = $dbForProject->updateDocument('targets', $target->getId(), new Document([
-            'identifier' => $target->getAttribute('identifier'),
-            'expired' => $target->getAttribute('expired'),
-            'name' => $target->getAttribute('name'),
-        ]));
+        try {
+            $target = $dbForProject->updateDocument('targets', $target->getId(), new Document([
+                'identifier' => $target->getAttribute('identifier'),
+                'expired' => $target->getAttribute('expired'),
+                'name' => $target->getAttribute('name'),
+            ]));
+        } catch (Duplicate) {
+            throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
+        }
 
         $dbForProject->purgeCachedDocument('users', $user->getId());
 
