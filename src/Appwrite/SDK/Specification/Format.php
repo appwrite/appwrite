@@ -7,6 +7,7 @@ use Appwrite\Utopia\Response\Model;
 use Utopia\DI\Container;
 use Utopia\Http\Route;
 use Utopia\OpenAPI\Model\Composition;
+use Utopia\OpenAPI\Model\ParameterLocation;
 
 abstract class Format
 {
@@ -86,6 +87,9 @@ abstract class Format
             }
 
             foreach ($platformSchemes as $name => $scheme) {
+                if (($scheme['location'] ?? '') === ParameterLocation::PATH->value) {
+                    continue;
+                }
                 $schemes[$name] ??= $scheme;
                 $schemes[$name]['x-appwrite']['platforms'][] = $platform;
             }

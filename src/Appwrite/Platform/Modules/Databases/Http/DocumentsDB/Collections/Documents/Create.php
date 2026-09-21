@@ -60,7 +60,7 @@ class Create extends DocumentCreate
                     namespace: 'documentsDB',
                     group: $this->getSdkGroup(),
                     name: 'createDocument',
-                    desc: 'Create document',
+                    summary: 'Create document',
                     description: '/docs/references/documentsdb/create-document.md',
                     auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                     responses: [
@@ -83,7 +83,7 @@ class Create extends DocumentCreate
                     namespace: 'documentsDB',
                     group: $this->getSdkGroup(),
                     name: 'createDocuments',
-                    desc: 'Create documents',
+                    summary: 'Create documents',
                     description: '/docs/references/documentsdb/create-documents.md',
                     auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                     responses: [
