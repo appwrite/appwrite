@@ -52,7 +52,7 @@ export function BlogFaqSection({ faqs }: BlogFaqSectionProps) {
                       {faq.question}
                     </span>
                   </AccordionTrigger>
-                  <AccordionContent className="px-4 pb-4">
+                  <AccordionContent className="px-4 pt-3 pb-4">
                     <BlogMarkdown
                       html={faq.html}
                       className={BLOG_FAQ_ANSWER_CLASS}

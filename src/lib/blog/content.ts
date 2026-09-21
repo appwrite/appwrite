@@ -4,6 +4,7 @@ import { markdocToMarkdown } from '@/lib/seo/markdoc-to-markdown'
 import {
   BLOG_CATEGORY_SPOTLIGHT_POST_COUNT,
   BLOG_FEATURED_SLUG_ORDER,
+  BLOG_INDEX_SPOTLIGHT_EXCLUDED_SLUGS,
   BLOG_POSTS_PER_PAGE,
   BLOG_SECONDARY_FEATURED_COUNT,
   BLOG_SECONDARY_LATEST_COUNT,
@@ -372,10 +373,13 @@ function buildBlogIndexSpotlights(posts: BlogPostMeta[]): {
   categorySpotlights: BlogCategorySpotlight[]
   excludedSlugs: Set<string>
 } {
+  const spotlightPosts = posts.filter(
+    (post) => !BLOG_INDEX_SPOTLIGHT_EXCLUDED_SLUGS.has(post.slug),
+  )
   const featuredRank = new Map<string, number>(
     BLOG_FEATURED_SLUG_ORDER.map((slug, index) => [slug, index]),
   )
-  const featuredPosts = posts
+  const featuredPosts = spotlightPosts
     .filter((post) => post.featured)
     .sort((a, b) => {
       const aRank = featuredRank.get(a.slug) ?? Number.MAX_SAFE_INTEGER
@@ -396,7 +400,7 @@ function buildBlogIndexSpotlights(posts: BlogPostMeta[]): {
   }
 
   if (secondaryFeatured.length < BLOG_SECONDARY_FEATURED_COUNT) {
-    const fillers = posts
+    const fillers = spotlightPosts
       .filter((post) => !excludedSlugs.has(post.slug))
       .slice(0, BLOG_SECONDARY_FEATURED_COUNT - secondaryFeatured.length)
 
@@ -406,7 +410,7 @@ function buildBlogIndexSpotlights(posts: BlogPostMeta[]): {
     }
   }
 
-  const latestSecondary = posts
+  const latestSecondary = spotlightPosts
     .filter((post) => !excludedSlugs.has(post.slug))
     .slice(0, BLOG_SECONDARY_LATEST_COUNT)
 
@@ -423,6 +427,7 @@ function buildBlogIndexSpotlights(posts: BlogPostMeta[]): {
 
     const categoryPosts = getPostsForCategory(slug)
       .filter((post) => !excludedSlugs.has(post.slug))
+      .filter((post) => !BLOG_INDEX_SPOTLIGHT_EXCLUDED_SLUGS.has(post.slug))
       .slice(0, BLOG_CATEGORY_SPOTLIGHT_POST_COUNT)
 
     if (categoryPosts.length === 0) continue
