@@ -95,6 +95,23 @@ final class TeamsCustomClientTest extends Scope
 
         $projectId = $this->getProject()['$id'];
 
+        // The policy only governs other members, so the team needs one
+        $otherEmail = uniqid() . 'foe@localhost.test';
+        $otherName = 'Privacy Foe';
+
+        $invite = $this->client->call(Client::METHOD_POST, '/teams/' . $teamUid . '/memberships', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'email' => $otherEmail,
+            'name' => $otherName,
+            'roles' => ['developer'],
+            'url' => 'http://localhost:5000/join-us#title',
+        ]);
+
+        $this->assertEquals(201, $invite['headers']['status-code']);
+        $otherUid = $invite['body']['$id'];
+
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/auth/memberships-privacy', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => 'console',
@@ -120,9 +137,18 @@ final class TeamsCustomClientTest extends Scope
         $this->assertNotEmpty($response['body']['memberships'][0]['$id']);
 
         // Assert that sensitive fields are not present
-        $this->assertEmpty($response['body']['memberships'][0]['userName']);
-        $this->assertEmpty($response['body']['memberships'][0]['userEmail']);
-        $this->assertFalse($response['body']['memberships'][0]['mfa']);
+        $memberships = array_column($response['body']['memberships'], null, '$id');
+        $other = $memberships[$otherUid];
+        $this->assertEmpty($other['userName']);
+        $this->assertEmpty($other['userEmail']);
+        $this->assertFalse($other['mfa']);
+
+        // Assert that the member still sees their own details
+        unset($memberships[$otherUid]);
+        $own = reset($memberships);
+        $this->assertNotEmpty($own['userId']);
+        $this->assertNotEmpty($own['userName']);
+        $this->assertNotEmpty($own['userEmail']);
 
         /**
          * Update project settings to show sensitive fields
@@ -152,9 +178,10 @@ final class TeamsCustomClientTest extends Scope
         $this->assertNotEmpty($response['body']['memberships'][0]['$id']);
 
         // Assert that sensitive fields are present
-        $this->assertNotEmpty($response['body']['memberships'][0]['userName']);
-        $this->assertNotEmpty($response['body']['memberships'][0]['userEmail']);
-        $this->assertArrayHasKey('mfa', $response['body']['memberships'][0]);
+        $other = array_column($response['body']['memberships'], null, '$id')[$otherUid];
+        $this->assertNotEmpty($other['userName']);
+        $this->assertNotEmpty($other['userEmail']);
+        $this->assertArrayHasKey('mfa', $other);
 
         /**
          * Update project settings to show only MFA
@@ -184,9 +211,10 @@ final class TeamsCustomClientTest extends Scope
         $this->assertNotEmpty($response['body']['memberships'][0]['$id']);
 
         // Assert that sensitive fields are present
-        $this->assertEmpty($response['body']['memberships'][0]['userName']);
-        $this->assertEmpty($response['body']['memberships'][0]['userEmail']);
-        $this->assertArrayHasKey('mfa', $response['body']['memberships'][0]);
+        $other = array_column($response['body']['memberships'], null, '$id')[$otherUid];
+        $this->assertEmpty($other['userName']);
+        $this->assertEmpty($other['userEmail']);
+        $this->assertArrayHasKey('mfa', $other);
     }
 
     public function testTeamsInviteHTMLInjection(): void
