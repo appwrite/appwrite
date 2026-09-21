@@ -39,12 +39,11 @@ import { useVcsInstallationReconnect } from '@/lib/vcs/use-installation-reconnec
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { AuthFlowHeaderIcon } from '@/components/global/auth/AuthFlowHeaderIcon'
 import {
   buildVcsOrgOptions,
-  GenericGitIcon,
+  GitIcon,
   getVcsProvider,
-  vcsEmptyStateIconBoxClassName,
-  vcsEmptyStateIconClassName,
   vcsInlineProviderIconBoxClassName,
   vcsInlineProviderIconClassName,
   vcsProviderButtonIconClassName,
@@ -321,9 +320,7 @@ export function ConnectRepositorySection({
         </div>
         <div className="border-t border-border" />
         <div className="px-6 py-6 flex flex-col items-center">
-          <div className={`mb-4 ${vcsEmptyStateIconBoxClassName}`}>
-            <GenericGitIcon className={vcsEmptyStateIconClassName} />
-          </div>
+          <AuthFlowHeaderIcon icon={GitIcon} className="mb-4" />
           <div className="flex flex-wrap items-center justify-center gap-2">
             {vcsOAuthProviders.map((provider) => (
               <Button key={provider.id} variant="secondary" asChild>
@@ -360,9 +357,7 @@ export function ConnectRepositorySection({
         <div className="px-6 py-4">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3 min-w-0">
-              <div
-                className={`${vcsInlineProviderIconBoxClassName} rounded-xl`}
-              >
+              <div className={vcsInlineProviderIconBoxClassName}>
                 <ConnectedRepositoryIcon
                   className={vcsInlineProviderIconClassName}
                 />

@@ -57,15 +57,14 @@ import type { Models } from '@appwrite.io/console'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { useT } from '@/lib/i18n/translate'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { AuthFlowHeaderIcon } from '@/components/global/auth/AuthFlowHeaderIcon'
 import {
-  GenericGitIcon,
+  GitIcon,
   getKnownVcsProvider,
   buildVcsAuthUrl,
   VcsIcon,
   getVisibleVcsOAuthProviders,
   buildVcsOrgOptions,
-  vcsEmptyStateIconBoxClassName,
-  vcsEmptyStateIconClassName,
   vcsProviderButtonIconClassName,
   type VcsProviderId,
 } from '@/lib/vcs/providers'
@@ -619,9 +618,7 @@ export function CreateFunctionView() {
           {!hasInstallations ? (
             <div className="rounded-lg border border-border bg-card/50 p-6 text-center">
               <div className="mb-3 flex justify-center">
-                <div className={vcsEmptyStateIconBoxClassName}>
-                  <GenericGitIcon className={vcsEmptyStateIconClassName} />
-                </div>
+                <AuthFlowHeaderIcon icon={GitIcon} />
               </div>
               <h3 className="text-[13px] font-medium text-foreground mb-1">
                 {t('Connect Git provider')}
@@ -633,7 +630,12 @@ export function CreateFunctionView() {
               </p>
               <div className="flex flex-wrap items-center justify-center gap-2">
                 {vcsOAuthProviders.map((provider) => (
-                  <Button key={provider.id} size="sm" variant="secondary" asChild>
+                  <Button
+                    key={provider.id}
+                    size="sm"
+                    variant="secondary"
+                    asChild
+                  >
                     <a href={getVcsAuthUrl(provider.id)}>
                       <VcsIcon
                         type={provider.id}

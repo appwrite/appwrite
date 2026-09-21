@@ -65,42 +65,17 @@ export function BitbucketIcon({ className }: { className?: string }) {
   )
 }
 
-/** Hero icon tile on VCS connect cards (matches auth narrow-card header icons). */
-export const vcsEmptyStateIconBoxClassName =
-  'flex size-14 shrink-0 items-center justify-center rounded-xl bg-muted ring-1 ring-border/50'
-
-export const vcsEmptyStateIconClassName = 'size-6 shrink-0 text-muted-foreground'
-
-/** Provider mark in lists and summary rows on VCS cards. */
+/** Connected repository summary tile on VCS cards. */
 export const vcsInlineProviderIconBoxClassName =
-  'flex size-12 shrink-0 items-center justify-center rounded-full bg-muted'
+  'flex size-12 shrink-0 items-center justify-center rounded-xl bg-muted'
 
 export const vcsInlineProviderIconClassName = 'size-5 shrink-0'
 
 /** Provider connect buttons on VCS cards. */
-export const vcsProviderButtonIconClassName = 'me-1.5 size-5 shrink-0'
+export const vcsProviderButtonIconClassName = 'size-4'
 
 /** Provider-neutral Git mark for empty states and auth flows (not a host logo). */
-export function GenericGitIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-      aria-hidden
-    >
-      <line x1="6" x2="6" y1="3" y2="15" />
-      <circle cx="18" cy="6" r="3" />
-      <circle cx="6" cy="18" r="3" />
-      <path d="M18 9a9 9 0 0 1-9 9" />
-    </svg>
-  )
-}
+export { GitBranch as GitIcon } from 'lucide-react'
 
 export type VcsProviderId = 'github' | 'gitlab' | 'bitbucket' | 'origin'
 
@@ -163,7 +138,8 @@ export function getVisibleVcsOAuthProviders(
   extraVcsOAuth: boolean,
 ): VcsProviderMeta[] {
   return Object.values(VCS_PROVIDERS).filter(
-    (provider) => ALWAYS_ENABLED_VCS_PROVIDERS.has(provider.id) || extraVcsOAuth,
+    (provider) =>
+      ALWAYS_ENABLED_VCS_PROVIDERS.has(provider.id) || extraVcsOAuth,
   )
 }
 
@@ -217,11 +193,7 @@ export function getProviderOwnerUrl(
 }
 
 function encodeVcsPath(value: string): string {
-  return value
-    .split('/')
-    .filter(Boolean)
-    .map(encodeURIComponent)
-    .join('/')
+  return value.split('/').filter(Boolean).map(encodeURIComponent).join('/')
 }
 
 /**

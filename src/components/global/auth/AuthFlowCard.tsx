@@ -6,9 +6,9 @@ import { cn } from '@/lib/utils'
 export const authFlowCardContentClassName =
   'flex min-h-[480px] flex-col justify-center p-6 md:min-h-[520px] md:p-10'
 
-/** OAuth authorize / device / outcome cards: shorter cap, scroll when permissions are long. */
+/** OAuth authorize / device / outcome cards: size to content, scroll only when permissions overflow the viewport. */
 export const authFlowOAuthNarrowCardContentClassName =
-  'min-h-0 max-h-[min(58dvh,380px)] justify-start overflow-y-auto overscroll-contain'
+  'min-h-0 max-h-[min(80dvh,640px)] justify-start overflow-y-auto overscroll-contain md:min-h-0'
 
 /** Left column for sign-in / recovery style illustration cards. */
 export const authFlowIllustrationContentClassName =
@@ -78,10 +78,7 @@ export function AuthFlowIllustrationCard({
     <Card className={cn('overflow-hidden py-0', className)}>
       <div className="grid md:grid-cols-2">
         <div
-          className={cn(
-            authFlowIllustrationContentClassName,
-            contentClassName,
-          )}
+          className={cn(authFlowIllustrationContentClassName, contentClassName)}
         >
           {children}
         </div>

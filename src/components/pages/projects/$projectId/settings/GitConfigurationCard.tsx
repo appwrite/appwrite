@@ -1,12 +1,5 @@
 import { useState } from 'react'
-import {
-  ExternalLink,
-  XCircle,
-  Loader2,
-  AlertTriangle,
-  Settings,
-  Unplug,
-} from 'lucide-react'
+import { Loader2, AlertTriangle, Settings, Unplug } from 'lucide-react'
 import { queryOptions, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Query } from '@appwrite.io/console'
 import { toast } from 'sonner'
@@ -20,12 +13,9 @@ import {
   closeDialogBeforeOverlayUnmount,
   openDialogAfterOverlayCloses,
 } from '@/lib/utils/overlay-lock'
+import { AuthFlowHeaderIcon } from '@/components/global/auth/AuthFlowHeaderIcon'
 import {
-  GenericGitIcon,
-  vcsEmptyStateIconBoxClassName,
-  vcsEmptyStateIconClassName,
-  vcsInlineProviderIconBoxClassName,
-  vcsInlineProviderIconClassName,
+  GitIcon,
   vcsProviderButtonIconClassName,
   VcsIcon,
   getKnownVcsProvider,
@@ -91,10 +81,7 @@ async function fetchInstallationAffectedFunctions(
 ) {
   const projectSdk = sdk.forProject(projectId)
   const response = await projectSdk.functions.list({
-    queries: [
-      Query.limit(100),
-      Query.equal('installationId', installationId),
-    ],
+    queries: [Query.limit(100), Query.equal('installationId', installationId)],
   })
   return {
     functions: response.functions || [],
@@ -108,10 +95,7 @@ async function fetchInstallationAffectedSites(
 ) {
   const projectSdk = sdk.forProject(projectId)
   const response = await projectSdk.sites.list({
-    queries: [
-      Query.limit(100),
-      Query.equal('installationId', installationId),
-    ],
+    queries: [Query.limit(100), Query.equal('installationId', installationId)],
   })
   return {
     sites: response.sites || [],
@@ -269,9 +253,7 @@ export function GitConfigurationCard({
             )}
           </p>
           <div className="flex flex-col items-center justify-center py-8 text-center">
-            <div className={`mx-auto mb-4 ${vcsEmptyStateIconBoxClassName}`}>
-              <GenericGitIcon className={vcsEmptyStateIconClassName} />
-            </div>
+            <AuthFlowHeaderIcon icon={GitIcon} className="mx-auto mb-4" />
             <p className="mb-1 text-[14px] font-medium text-foreground">
               {t('No installation was added to the project yet')}
             </p>
@@ -415,10 +397,10 @@ export function GitConfigurationCard({
                             <TableRow>
                               <TableCell className="px-4 py-3">
                                 <div className="flex items-center gap-2">
-                                  <div className={vcsInlineProviderIconBoxClassName}>
+                                  <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted">
                                     <VcsIcon
                                       type={installation.provider}
-                                      className={vcsInlineProviderIconClassName}
+                                      className="size-4 shrink-0"
                                     />
                                   </div>
                                   {providerUrl ? (
@@ -555,28 +537,28 @@ export function GitConfigurationCard({
                       {t('Sites')}
                     </p>
                     <div className="space-y-2">
-                          {affectedSites.sites.map((site) => (
-                            <div
-                              key={site.$id}
-                              className="flex items-center gap-2 rounded-lg bg-muted/30 p-2"
-                            >
-                              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-                                <FrameworkIcon
-                                  framework={site.framework}
-                                  size="sm"
-                                />
-                              </div>
-                              <div className="min-w-0 flex-1">
-                                <p className="truncate text-[13px] font-medium text-foreground">
-                                  {site.name}
-                                </p>
-                                <p className="text-[12px] text-muted-foreground">
-                                  {t('Last deployed:')}{' '}
-                                  <DateTooltip date={site.$updatedAt} />
-                                </p>
-                              </div>
-                            </div>
-                          ))}
+                      {affectedSites.sites.map((site) => (
+                        <div
+                          key={site.$id}
+                          className="flex items-center gap-2 rounded-lg bg-muted/30 p-2"
+                        >
+                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                            <FrameworkIcon
+                              framework={site.framework}
+                              size="sm"
+                            />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-[13px] font-medium text-foreground">
+                              {site.name}
+                            </p>
+                            <p className="text-[12px] text-muted-foreground">
+                              {t('Last deployed:')}{' '}
+                              <DateTooltip date={site.$updatedAt} />
+                            </p>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 )}
@@ -587,28 +569,28 @@ export function GitConfigurationCard({
                       {t('Functions')}
                     </p>
                     <div className="space-y-2">
-                          {affectedFunctions.functions.map((func) => (
-                            <div
-                              key={func.$id}
-                              className="flex items-center gap-2 rounded-lg bg-muted/30 p-2"
-                            >
-                              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-                                <RuntimeIcon
-                                  runtime={func.runtime || ''}
-                                  size="sm"
-                                />
-                              </div>
-                              <div className="min-w-0 flex-1">
-                                <p className="truncate text-[13px] font-medium text-foreground">
-                                  {func.name}
-                                </p>
-                                <p className="text-[12px] text-muted-foreground">
-                                  {t('Last deployed:')}{' '}
-                                  <DateTooltip date={func.$updatedAt} />
-                                </p>
-                              </div>
-                            </div>
-                          ))}
+                      {affectedFunctions.functions.map((func) => (
+                        <div
+                          key={func.$id}
+                          className="flex items-center gap-2 rounded-lg bg-muted/30 p-2"
+                        >
+                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                            <RuntimeIcon
+                              runtime={func.runtime || ''}
+                              size="sm"
+                            />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-[13px] font-medium text-foreground">
+                              {func.name}
+                            </p>
+                            <p className="text-[12px] text-muted-foreground">
+                              {t('Last deployed:')}{' '}
+                              <DateTooltip date={func.$updatedAt} />
+                            </p>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 )}

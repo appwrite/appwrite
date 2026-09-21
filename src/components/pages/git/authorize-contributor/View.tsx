@@ -22,7 +22,7 @@ import {
 } from '@/lib/react-query/hooks/vcs'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import {
-  GenericGitIcon,
+  GitIcon,
   getProviderPullRequestUrl,
   getVcsProvider,
   VcsIcon,
@@ -99,9 +99,7 @@ export function View({
     },
     onError: (error) => {
       setApproved(false)
-      setErrorMessage(
-        getErrorMessage(error, t('Failed to approve deployment')),
-      )
+      setErrorMessage(getErrorMessage(error, t('Failed to approve deployment')))
       track('Resource Creation Failed', { resource: 'git-external-deployment' })
     },
   })
@@ -117,7 +115,7 @@ export function View({
   const isApproving = !preview && approveMutation.isPending
   const isApproved = status === 'success'
   const accountLabel = preview
-    ? (accountLabelProp || 'dev@appwrite.io')
+    ? accountLabelProp || 'dev@appwrite.io'
     : (accountLabelProp ?? '')
 
   const handleApprove = () => {
@@ -193,7 +191,7 @@ export function View({
         <AuthFlowNarrowCard>
           <div className="space-y-6">
             <div className="flex flex-col items-center gap-4 text-center">
-              <AuthFlowHeaderIcon icon={GenericGitIcon} />
+              <AuthFlowHeaderIcon icon={GitIcon} />
               {statusBadge}
               <div className="space-y-1">
                 <AuthFlowTitle>

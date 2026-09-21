@@ -28,14 +28,13 @@ import { RuntimeIcon } from '@/components/global/shared/RuntimeIcon'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { Search, Lock, Loader2 } from 'lucide-react'
+import { AuthFlowHeaderIcon } from '@/components/global/auth/AuthFlowHeaderIcon'
 import {
-  GenericGitIcon,
+  GitIcon,
   getKnownVcsProvider,
   VcsIcon,
   buildVcsOrgOptions,
   getVisibleVcsOAuthProviders,
-  vcsEmptyStateIconBoxClassName,
-  vcsEmptyStateIconClassName,
   vcsProviderButtonIconClassName,
   type VcsProviderId,
 } from '@/lib/vcs/providers'
@@ -265,9 +264,7 @@ export function RepositoryPicker({
           className,
         )}
       >
-        <div className={`mb-4 ${vcsEmptyStateIconBoxClassName}`}>
-          <GenericGitIcon className={vcsEmptyStateIconClassName} />
-        </div>
+        <AuthFlowHeaderIcon icon={GitIcon} className="mb-4" />
         <h3 className="text-[13px] font-medium text-foreground mb-1">
           {t('Connect Git provider')}
         </h3>
