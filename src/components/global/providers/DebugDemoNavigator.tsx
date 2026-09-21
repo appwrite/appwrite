@@ -14,6 +14,7 @@ import {
   clampDebugDemoBarSize,
   clearDebugDemoSession,
   notifyDebugDemoSessionChange,
+  pushDebugDemoSession,
   readDebugDemoBarPosition,
   readDebugDemoBarSize,
   readDebugDemoSession,
@@ -103,6 +104,13 @@ export function DebugDemoNavigator() {
     ) ??
     session.history[session.index] ??
     DEFAULT_DEBUG_DEMO_ID
+
+  useEffect(() => {
+    if (!session.active) return
+    if (session.history[session.index] === currentId) return
+    pushDebugDemoSession(currentId)
+    notifyDebugDemoSessionChange()
+  }, [currentId, session])
 
   const canGoBack = session.index > 0
   const canGoForward = session.index < session.history.length - 1

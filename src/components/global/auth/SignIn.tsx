@@ -312,8 +312,10 @@ export function SignIn({
         form.setValue('name', DEMO_USER_NAME, { shouldDirty: true, shouldValidate: true })
       }
       setShowPassword(true)
-      toast.message('Preview only', {
-        description: 'Demo credentials filled in. Submit does not sign in here.',
+      toast.message(t('Preview only'), {
+        description: t(
+          'Demo credentials filled in. Submit does not sign in here.',
+        ),
       })
       return
     }
@@ -328,8 +330,8 @@ export function SignIn({
     }
     setShowPassword(true)
 
-    toast.message('Creating demo user', {
-      description: `Email: ${DEMO_USER_EMAIL}. Password: ${DEMO_USER_PASSWORD}`,
+    toast.message(t('Creating demo user'), {
+      description: `${t('Email')}: ${DEMO_USER_EMAIL}. ${t('Password')}: ${DEMO_USER_PASSWORD}`,
     })
 
     setIsCreatingDemo(true)
@@ -343,7 +345,7 @@ export function SignIn({
         })
       } catch (error: unknown) {
         if (!isAccountAlreadyExistsError(error)) {
-          toast.error(getErrorMessage(error, 'Failed to create demo user'))
+          toast.error(getErrorMessage(error, t('Failed to create demo user')))
           return
         }
       }

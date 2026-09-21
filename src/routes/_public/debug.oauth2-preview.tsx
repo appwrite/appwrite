@@ -38,6 +38,8 @@ import { pageTitle } from '@/lib/utils/page-title'
 
 export type { OAuth2PreviewScreen }
 
+import { useT } from '@/lib/i18n/translate'
+
 const OAUTH2_DEVICE_CODE_STEPS = ['enter', 'confirm'] as const
 export type OAuth2DeviceCodePreviewStep =
   (typeof OAUTH2_DEVICE_CODE_STEPS)[number]
@@ -87,7 +89,9 @@ function mockApp(overrides?: Partial<Models.App>): Models.App {
   }
 }
 
-function mockGrant(overrides?: Partial<Models.Oauth2Grant>): Models.Oauth2Grant {
+function mockGrant(
+  overrides?: Partial<Models.Oauth2Grant>,
+): Models.Oauth2Grant {
   return {
     $id: 'demo-grant',
     $createdAt: '2026-01-01T00:00:00.000Z',
@@ -201,7 +205,9 @@ function DeviceCodeCard({
             autoFocus
             aria-invalid={Boolean(error)}
           />
-          {error ? <p className="text-destructive text-[13px]">{error}</p> : null}
+          {error ? (
+            <p className="text-destructive text-[13px]">{error}</p>
+          ) : null}
         </div>
 
         <div className="flex flex-col gap-2">
@@ -216,13 +222,13 @@ function DeviceCodeCard({
             Continue
           </Button>
         </div>
-
       </form>
     </AuthFlowNarrowCard>
   )
 }
 
 function AuthorizationFailedCard() {
+  const t = useT()
   return (
     <AuthFlowNarrowCard
       contentClassName={authFlowOAuthNarrowCardContentClassName}
@@ -232,15 +238,15 @@ function AuthorizationFailedCard() {
           <AuthFlowHeaderIcon icon={TriangleAlert} variant="destructive" />
           <div className="space-y-1">
             <h1 className="text-2xl font-semibold tracking-tight">
-              Authorization failed
+              {t('Authorization failed')}
             </h1>
             <p className="text-muted-foreground text-[13px] leading-relaxed">
-              This authorization request is invalid or has expired.
+              {t('This authorization request is invalid or has expired.')}
             </p>
           </div>
         </div>
         <Button variant="outline" type="button" className="w-full">
-          Go to console
+          {t('Go to console')}
         </Button>
       </div>
     </AuthFlowNarrowCard>
@@ -295,78 +301,69 @@ function OAuth2PreviewPage() {
         <AuthFlowAccountSwitcherStatic accountLabel={ACCOUNT_LABEL} preview />
       }
     >
-          {showConsent ? (
-            <OAuth2ConsentCard
-              key={screen}
-              grant={activeGrant}
-              app={app}
-              flow={consentFlow}
-              preview
-              onDone={(next) => setOutcome(next)}
-            />
-          ) : null}
+      {showConsent ? (
+        <OAuth2ConsentCard
+          key={screen}
+          grant={activeGrant}
+          app={app}
+          flow={consentFlow}
+          preview
+          onDone={(next) => setOutcome(next)}
+        />
+      ) : null}
 
-          {outcome ? (
-            <OAuth2OutcomeCard
-              outcome={outcome}
-              flow={consentFlow}
-              app={app}
-              redirectUrl={
-                outcome === 'approved' && consentFlow === 'authorization'
-                  ? 'cursor://oauth'
-                  : undefined
-              }
-            />
-          ) : null}
+      {outcome ? (
+        <OAuth2OutcomeCard
+          outcome={outcome}
+          flow={consentFlow}
+          app={app}
+          redirectUrl={
+            outcome === 'approved' && consentFlow === 'authorization'
+              ? 'cursor://oauth'
+              : undefined
+          }
+        />
+      ) : null}
 
-          {!outcome && screen === 'device-code' ? (
-            <DeviceCodeCard
-              code={deviceStep === 'confirm' ? 'MDF2TN' : ''}
-              hasPrefilledCode={deviceStep === 'confirm'}
-            />
-          ) : null}
+      {!outcome && screen === 'device-code' ? (
+        <DeviceCodeCard
+          code={deviceStep === 'confirm' ? 'MDF2TN' : ''}
+          hasPrefilledCode={deviceStep === 'confirm'}
+        />
+      ) : null}
 
-          {!outcome && screen === 'outcome-approved' ? (
-            <OAuth2OutcomeCard
-              outcome="approved"
-              flow="authorization"
-              app={app}
-            />
-          ) : null}
+      {!outcome && screen === 'outcome-approved' ? (
+        <OAuth2OutcomeCard outcome="approved" flow="authorization" app={app} />
+      ) : null}
 
-          {!outcome && screen === 'outcome-approved-device' ? (
-            <OAuth2OutcomeCard outcome="approved" flow="device" app={app} />
-          ) : null}
+      {!outcome && screen === 'outcome-approved-device' ? (
+        <OAuth2OutcomeCard outcome="approved" flow="device" app={app} />
+      ) : null}
 
-          {!outcome && screen === 'outcome-approved-deeplink' ? (
-            <OAuth2OutcomeCard
-              outcome="approved"
-              flow="authorization"
-              app={app}
-              redirectUrl="cursor://oauth"
-            />
-          ) : null}
+      {!outcome && screen === 'outcome-approved-deeplink' ? (
+        <OAuth2OutcomeCard
+          outcome="approved"
+          flow="authorization"
+          app={app}
+          redirectUrl="cursor://oauth"
+        />
+      ) : null}
 
-          {!outcome && screen === 'outcome-denied' ? (
-            <OAuth2OutcomeCard
-              outcome="denied"
-              flow="authorization"
-              app={app}
-            />
-          ) : null}
+      {!outcome && screen === 'outcome-denied' ? (
+        <OAuth2OutcomeCard outcome="denied" flow="authorization" app={app} />
+      ) : null}
 
-          {!outcome && screen === 'error' ? <AuthorizationFailedCard /> : null}
+      {!outcome && screen === 'error' ? <AuthorizationFailedCard /> : null}
 
-          {!outcome && screen === 'loading' ? (
-            <AuthFlowNarrowCard
-              contentClassName={authFlowOAuthNarrowCardContentClassName}
-            >
-              <div className="flex flex-col items-center py-8 text-center">
-                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground motion-reduce:animate-none" />
-              </div>
-            </AuthFlowNarrowCard>
-          ) : null}
-
+      {!outcome && screen === 'loading' ? (
+        <AuthFlowNarrowCard
+          contentClassName={authFlowOAuthNarrowCardContentClassName}
+        >
+          <div className="flex flex-col items-center py-8 text-center">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground motion-reduce:animate-none" />
+          </div>
+        </AuthFlowNarrowCard>
+      ) : null}
     </AuthFlowShell>
   )
 }

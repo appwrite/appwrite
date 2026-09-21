@@ -1190,4 +1190,11 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
     'OAuth ログインフローでエラーが発生しました。',
   'Error type:': 'エラーの種類:',
   'Missing redirect URL': 'リダイレクト URL がありません',
+  'Preview only': 'プレビューのみ',
+  'Demo credentials filled in. Submit does not sign in here.':
+    'デモ用の認証情報を入力しました。ここでは送信してもサインインされません。',
+  'Creating demo user': 'デモユーザーを作成しています',
+  'Failed to create demo user': 'デモユーザーを作成できませんでした',
+  'MFA verification is disabled on this preview route.':
+    'このプレビュールートでは MFA 認証は無効です。',
 }

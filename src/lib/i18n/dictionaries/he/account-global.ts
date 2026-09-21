@@ -1305,4 +1305,11 @@ export const heAccountGlobalDictionary: Record<string, string> = {
     'אירעה שגיאה במהלך תהליך ההתחברות דרך OAuth.',
   'Error type:': 'סוג השגיאה:',
   'Missing redirect URL': 'חסרה כתובת URL להפניה',
+  'Preview only': 'תצוגה מקדימה בלבד',
+  'Demo credentials filled in. Submit does not sign in here.':
+    'פרטי הדמו מולאו. שליחה לא מבצעת התחברות כאן.',
+  'Creating demo user': 'יוצרים משתמש דמו',
+  'Failed to create demo user': 'יצירת משתמש הדמו נכשלה',
+  'MFA verification is disabled on this preview route.':
+    'אימות MFA מושבת בנתיב התצוגה המקדימה הזה.',
 }

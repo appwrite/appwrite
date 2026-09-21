@@ -259,8 +259,8 @@ export function MFAChallenge({
       }
 
       if (preview) {
-        toast.message('Preview only', {
-          description: 'MFA verification is disabled on this preview route.',
+        toast.message(t('Preview only'), {
+          description: t('MFA verification is disabled on this preview route.'),
         })
         return
       }
