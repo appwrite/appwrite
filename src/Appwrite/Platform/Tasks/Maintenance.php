@@ -43,7 +43,6 @@ class Maintenance extends Action
         Console::success(APP_NAME . ' maintenance process v1 has started');
 
         $interval = (int) System::getEnv('_APP_MAINTENANCE_INTERVAL', '86400'); // 1 day
-        $usageStatsRetentionHourly = (int) System::getEnv('_APP_MAINTENANCE_RETENTION_USAGE_HOURLY', '8640000'); //100 days
         $cacheRetention = (int) System::getEnv('_APP_MAINTENANCE_RETENTION_CACHE', '2592000'); // 30 days
         $schedulesDeletionRetention = (int) System::getEnv('_APP_MAINTENANCE_RETENTION_SCHEDULES', '86400'); // 1 Day
         $jobInitTime = System::getEnv('_APP_MAINTENANCE_START_TIME', '00:00'); // (hour:minutes)
@@ -62,7 +61,7 @@ class Maintenance extends Action
             $delay = $next->getTimestamp() - $now->getTimestamp();
         }
 
-        $action = function () use ($interval, $cacheRetention, $schedulesDeletionRetention, $usageStatsRetentionHourly, $dbForPlatform, $console, $publisherForDeletes, $publisherForCertificates, $certificateIssuer) {
+        $action = function () use ($interval, $cacheRetention, $schedulesDeletionRetention, $dbForPlatform, $console, $publisherForDeletes, $publisherForCertificates, $certificateIssuer) {
             $time = DatabaseDateTime::now();
 
             Console::info("[{$time}] Notifying workers with maintenance tasks every {$interval} seconds");
@@ -74,11 +73,10 @@ class Maintenance extends Action
             $dbForPlatform->skipFilters(
                 fn () => $dbForPlatform->foreach(
                     'projects',
-                    function (Document $project) use ($publisherForDeletes, $usageStatsRetentionHourly) {
+                    function (Document $project) use ($publisherForDeletes) {
                         $publisherForDeletes->enqueue(new DeleteMessage(
                             project: $project,
                             type: DELETE_TYPE_MAINTENANCE,
-                            hourlyUsageRetentionDatetime: DatabaseDateTime::addSeconds(new \DateTime(), -1 * $usageStatsRetentionHourly),
                         ));
                     },
                     [
@@ -94,7 +92,6 @@ class Maintenance extends Action
             $publisherForDeletes->enqueue(new DeleteMessage(
                 project: $console,
                 type: DELETE_TYPE_MAINTENANCE,
-                hourlyUsageRetentionDatetime: DatabaseDateTime::addSeconds(new \DateTime(), -1 * $usageStatsRetentionHourly),
             ));
 
             $this->notifyDeleteConnections($publisherForDeletes);

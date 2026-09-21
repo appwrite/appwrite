@@ -935,12 +935,12 @@ trait UsersBase
 
     public function testListUsers(): void
     {
+        // Cursor assertions require users created in order, without earlier test data.
+        self::$project = $this->getProject(true);
         $data = $this->setupUser();
         $this->setupUser1();
         $this->setupHashedPasswordUsers();
-        // In --functional mode, this test runs independently with 9 users created above
-        // (setupUser: 1 + setupUser1: 1 + setupHashedPasswordUsers: 7)
-        // In sequential mode, there may be more users from other tests
+        // setupUser: 1 + setupUser1: 1 + setupHashedPasswordUsers: 7
         $minUsers = 9;
 
         /**
@@ -2961,7 +2961,7 @@ trait UsersBase
     }
 
     /**
-     * Test impersonation via URL query params — mirrors the ?project= and ?devKey= pattern.
+     * Test impersonation via URL query params — mirrors the ?project= pattern.
      * Allows Console to embed impersonation in direct file/image URLs where headers cannot be set.
      */
     public function testImpersonateByQueryParams(): void
