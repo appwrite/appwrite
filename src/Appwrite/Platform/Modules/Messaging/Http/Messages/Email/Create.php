@@ -72,7 +72,7 @@ class Create extends Action
             ->param('cc', [], fn (Database $dbForProject) => new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'Array of target IDs to be added as CC.', true, ['dbForProject'])
             ->param('bcc', [], fn (Database $dbForProject) => new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'Array of target IDs to be added as BCC.', true, ['dbForProject'])
             ->param('attachments', [], new ArrayList(new CompoundUID()), 'Array of compound ID strings of bucket IDs and file IDs to be attached to the email. They should be formatted as <BUCKET_ID>:<FILE_ID>.', true)
-            ->param('replyToEmail', '', new Email(), 'Email address to reply to. If not set, defaults to the sender email address.', true)
+            ->param('replyToEmail', '', new Email(allowEmpty: true), 'Email address to reply to. If not set, defaults to the sender email address.', true)
             ->param('replyToName', '', new Text(128), 'Name of the reply to recipient. If not set, defaults to the sender name.', true)
             ->param('draft', false, new Boolean(), 'Is message a draft', true)
             ->param('html', false, new Boolean(), 'Is content of type HTML', true)
