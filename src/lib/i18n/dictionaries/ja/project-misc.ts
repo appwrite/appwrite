@@ -519,6 +519,9 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Account API key': 'アカウント API キー',
   'Partners API key': 'パートナー API キー',
   'No activities yet': 'アクティビティがまだありません',
+  'Failed to load activity': 'アクティビティの読み込みに失敗しました',
+  "We couldn't retrieve activity logs. This might be a temporary issue. Please try again.":
+    'アクティビティログを取得できませんでした。一時的な問題の可能性があります。再試行してください。',
   'Activity log': 'アクティビティログ',
   'Details for activity': 'アクティビティの詳細',
   'Copy link to this activity': 'このアクティビティへのリンクをコピー',
@@ -1123,6 +1126,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   "Couldn't load executions": '実行を読み込めませんでした',
   "Couldn't load requests": 'リクエストを読み込めませんでした',
   "Couldn't load storage": 'ストレージを読み込めませんでした',
+  "Couldn't load firewall traffic": 'Firewall のトラフィックを読み込めませんでした',
+  "Couldn't load impact estimate": '影響の見積もりを読み込めませんでした',
   Deployments: 'デプロイ',
   Executions: '実行',
   'Executions over time': '経時的な実行',
