@@ -116,6 +116,13 @@ class XList extends Action
                 '$id' => 'password-personal-data',
                 'enabled' => $auths['personalDataCheck'] ?? false,
             ]),
+            new Document(\array_merge([
+                'enabled' => true,
+                'sessions' => false,
+                'users' => false,
+            ], $auths['passwordPwned'] ?? [], [
+                '$id' => 'password-pwned',
+            ])),
             new Document([
                 '$id' => 'session-alert',
                 'enabled' => $auths['sessionAlerts'] ?? false,
@@ -143,6 +150,31 @@ class XList extends Action
                 'userPhone' => $auths['membershipsUserPhone'] ?? false,
                 'userName' => $auths['membershipsUserName'] ?? false,
                 'userMFA' => $auths['membershipsMfa'] ?? false,
+                'userAccessedAt' => $auths['membershipsUserAccessedAt'] ?? false,
+            ]),
+            new Document(\array_merge([
+                'totp' => true,
+                'email' => true,
+                'phone' => true,
+                'custom' => false,
+            ], $auths['mfaFactors'] ?? [], [
+                '$id' => 'mfa-factors',
+            ])),
+            new Document([
+                '$id' => 'deny-aliased-email',
+                'enabled' => $auths['canonicalEmails'] ?? false,
+            ]),
+            new Document([
+                '$id' => 'deny-disposable-email',
+                'enabled' => $auths['disposableEmails'] ?? false,
+            ]),
+            new Document([
+                '$id' => 'deny-free-email',
+                'enabled' => $auths['freeEmails'] ?? false,
+            ]),
+            new Document([
+                '$id' => 'deny-corporate-email',
+                'enabled' => $auths['corporateEmails'] ?? false,
             ]),
         ];
     }

@@ -29,6 +29,7 @@ class Get extends Action
             ->desc('Get deployment')
             ->groups(['api', 'functions'])
             ->label('scope', 'functions.read')
+            ->label('usage.resource', 'function/{request.functionId}')
             ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
             ->label('sdk', new Method(
                 namespace: 'functions',
@@ -70,7 +71,12 @@ class Get extends Action
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
-        if ($deployment->getAttribute('resourceId') !== $function->getId()) {
+        $resourceType = $deployment->getAttribute('resourceType');
+        // Untyped deployments predate Sites and belong to Functions.
+        if (
+            $deployment->getAttribute('resourceId') !== $function->getId()
+            || ($resourceType !== 'functions' && !empty($resourceType))
+        ) {
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 

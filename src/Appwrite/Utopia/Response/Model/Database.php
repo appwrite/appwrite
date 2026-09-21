@@ -46,6 +46,15 @@ class Database extends Model
                 'default' => 'legacy',
                 'example' => 'legacy',
                 'enum' => ['legacy', 'tablesdb', 'documentsdb', 'vectorsdb'],
+            ])
+            ->addRule('status', [
+                'type' => self::TYPE_ENUM,
+                'description' => 'Database status. Possible values: `provisioning`, `ready` or `failed`',
+                'default' => 'ready',
+                'example' => 'ready',
+                'enum' => ['provisioning', 'ready', 'failed'],
+                'enumSDKName' => 'DatabaseStatus',
+                'required' => false
             ]);
     }
 

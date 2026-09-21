@@ -16,8 +16,6 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Container;
 use Utopia\System\System;
-use Utopia\Validator\URL;
-use Utopia\Validator\WhiteList;
 
 /**
  * Register the minimal per-connection resources required by realtime.
@@ -112,52 +110,6 @@ return function (Container $container): void {
         return $rule;
     };
 
-    $findDevKey = static function (Request $request, Document $project, array $servers, Authorization $authorization) use ($getDbForPlatform): Document {
-        $devKey = $request->getHeaderLine('x-appwrite-dev-key', $request->getParam('devKey', ''));
-        $key = $project->find('secret', $devKey, 'devKeys');
-
-        if (!$key) {
-            return new Document([]);
-        }
-
-        $expire = $key->getAttribute('expire');
-        if (!empty($expire) && $expire < DatabaseDateTime::formatTz(DatabaseDateTime::now())) {
-            return new Document([]);
-        }
-
-        $dbForPlatform = $getDbForPlatform($authorization);
-        $accessedAt = $key->getAttribute('accessedAt', 0);
-
-        if (empty($accessedAt) || DatabaseDateTime::formatTz(DatabaseDateTime::addSeconds(new \DateTime(), -APP_KEY_ACCESS)) > $accessedAt) {
-            $key->setAttribute('accessedAt', DatabaseDateTime::now());
-            $authorization->skip(fn () => $dbForPlatform->updateDocument('devKeys', $key->getId(), new Document([
-                'accessedAt' => $key->getAttribute('accessedAt'),
-            ])));
-            $dbForPlatform->purgeCachedDocument('projects', $project->getId());
-        }
-
-        $sdkValidator = new WhiteList($servers, true);
-        $sdk = \strtolower($request->getHeaderLine('x-sdk-name', 'UNKNOWN'));
-
-        if ($sdk !== 'unknown' && $sdkValidator->isValid($sdk)) {
-            $sdks = $key->getAttribute('sdks', []);
-
-            if (!\in_array($sdk, $sdks, true)) {
-                $sdks[] = $sdk;
-                $key->setAttribute('sdks', $sdks);
-                $key->setAttribute('accessedAt', DatabaseDateTime::now());
-
-                $key = $authorization->skip(fn () => $dbForPlatform->updateDocument('devKeys', $key->getId(), new Document([
-                    'sdks' => $key->getAttribute('sdks'),
-                    'accessedAt' => $key->getAttribute('accessedAt'),
-                ])));
-                $dbForPlatform->purgeCachedDocument('projects', $project->getId());
-            }
-        }
-
-        return $key;
-    };
-
     $container->set('authorization', function () {
         return new Authorization();
     }, []);
@@ -174,14 +126,12 @@ return function (Container $container): void {
         return $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
     }, ['request', 'console', 'authorization']);
 
-    $container->set('originValidator', function (array $platform, Request $request, Document $project, array $servers, Authorization $authorization) use ($findDevKey, $findRule) {
-        $devKey = $findDevKey($request, $project, $servers, $authorization);
-
-        if (!$devKey->isEmpty()) {
-            return new URL();
-        }
-
+    $container->set('originValidator', function (array $platform, Request $request, Document $project, Authorization $authorization) use ($findRule) {
         $allowedHostnames = [...($platform['hostnames'] ?? [])];
+
+        $consoleHostnames = \array_filter(\array_map('trim', \explode(',', System::getEnv('_APP_CONSOLE_HOSTNAMES', ''))));
+        $allowedHostnames = [...$allowedHostnames, ...$consoleHostnames];
+
         if (!$project->isEmpty() && $project->getId() !== 'console') {
             $allowedHostnames = [...$allowedHostnames, ...Platform::getHostnames($project->getAttribute('platforms', []))];
         }
@@ -207,7 +157,7 @@ return function (Container $container): void {
         }
 
         return new Origin(\array_unique($allowedHostnames), \array_unique($allowedSchemes));
-    }, ['platform', 'request', 'project', 'servers', 'authorization']);
+    }, ['platform', 'request', 'project', 'authorization']);
 
     $container->set('user', function (Request $request, Document $project, Document $console, Authorization $authorization) use ($getMode, $getDbForPlatform, $getDbForProject) {
         $mode = $getMode($request, $project);
@@ -271,7 +221,7 @@ return function (Container $container): void {
             $user = new User([]);
         }
 
-        $authJWT = $request->getHeaderLine('x-appwrite-jwt', '');
+        $authJWT = $request->getHeaderLine('x-appwrite-jwt', (string)($request->getParam('jwt', '')));
         if (!empty($authJWT) && !$project->isEmpty()) {
             if (!$user->isEmpty()) {
                 throw new Exception(Exception::USER_JWT_AND_COOKIE_SET);
@@ -288,14 +238,16 @@ return function (Container $container): void {
             $jwtUserId = $payload['userId'] ?? '';
             if (!empty($jwtUserId)) {
                 if ($mode === APP_MODE_ADMIN) {
+                    /** @var User $user */
                     $user = $dbForPlatform->getDocument('users', $jwtUserId);
                 } else {
+                    /** @var User $user */
                     $user = $dbForProject->getDocument('users', $jwtUserId);
                 }
             }
 
             $jwtSessionId = $payload['sessionId'] ?? '';
-            if (!empty($jwtSessionId) && empty($user->find('$id', $jwtSessionId, 'sessions'))) {
+            if (!empty($jwtSessionId) && !$user->sessionActive($jwtSessionId)) {
                 $user = new User([]);
             }
         }
@@ -327,42 +279,76 @@ return function (Container $container): void {
             }
         }
 
-        // Query params mirror the header fallback pattern used by ?project= and ?devKey=,
-        // allowing Console to embed impersonation in direct file/image URLs where headers cannot be set.
-        $impersonateUserId = $request->getHeaderLine('x-appwrite-impersonate-user-id', (string)($request->getParam('impersonateuserid', '') ?: $request->getParam('impersonateUserId', '')));
-        $impersonateEmail = $request->getHeaderLine('x-appwrite-impersonate-user-email', (string)($request->getParam('impersonateemail', '') ?: $request->getParam('impersonateEmail', '')));
-        $impersonatePhone = $request->getHeaderLine('x-appwrite-impersonate-user-phone', (string)($request->getParam('impersonatephone', '') ?: $request->getParam('impersonatePhone', '')));
-
-        if (!$user->isEmpty() && $user->getAttribute('impersonator', false)) {
-            $userDb = ($mode === APP_MODE_ADMIN || $project->getId() === 'console') ? $dbForPlatform : $dbForProject;
-            $targetUser = null;
-
-            if (!empty($impersonateUserId)) {
-                $targetUser = $authorization->skip(fn () => $userDb->getDocument('users', $impersonateUserId));
-            } elseif (!empty($impersonateEmail)) {
-                $targetUser = $authorization->skip(fn () => $userDb->findOne('users', [
-                    Query::equal('email', [\strtolower($impersonateEmail)]),
-                ]));
-            } elseif (!empty($impersonatePhone)) {
-                $targetUser = $authorization->skip(fn () => $userDb->findOne('users', [
-                    Query::equal('phone', [$impersonatePhone]),
-                ]));
-            }
-
-            if ($targetUser !== null && !$targetUser->isEmpty()) {
-                $impersonator = clone $user;
-                $user = clone $targetUser;
-                $user->setAttribute('impersonatorUserId', $impersonator->getId());
-                $user->setAttribute('impersonatorUserInternalId', $impersonator->getSequence());
-                $user->setAttribute('impersonatorUserName', $impersonator->getAttribute('name', ''));
-                $user->setAttribute('impersonatorUserEmail', $impersonator->getAttribute('email', ''));
-                $user->setAttribute('impersonatorAccessedAt', $impersonator->getAttribute('accessedAt', 0));
-            }
-        }
-
         $dbForPlatform->setMetadata('user', $user->getId());
         $dbForProject->setMetadata('user', $user->getId());
 
         return $user;
     }, ['request', 'project', 'console', 'authorization']);
+
+    $container->set('impersonatorUser', function (Request $request, Document $project, Document $user, Authorization $authorization) use ($getMode, $getDbForPlatform, $getDbForProject) {
+        if ($user->isEmpty() || !$user->getAttribute('impersonator', false)) {
+            return new Document();
+        }
+
+        // Query params mirror the header fallback pattern used by ?project=,
+        // allowing Console to embed impersonation in direct file/image URLs where headers cannot be set.
+        $impersonateUserId = $request->getHeaderLine('x-appwrite-impersonate-user-id', (string)($request->getParam('impersonateuserid', '') ?: $request->getParam('impersonateUserId', '')));
+        $impersonateEmail = $request->getHeaderLine('x-appwrite-impersonate-user-email', (string)($request->getParam('impersonateemail', '') ?: $request->getParam('impersonateEmail', '')));
+        $impersonatePhone = $request->getHeaderLine('x-appwrite-impersonate-user-phone', (string)($request->getParam('impersonatephone', '') ?: $request->getParam('impersonatePhone', '')));
+
+        if (empty($impersonateUserId) && empty($impersonateEmail) && empty($impersonatePhone)) {
+            return new Document();
+        }
+
+        $mode = $getMode($request, $project);
+        $dbForPlatform = $getDbForPlatform($authorization);
+        $dbForProject = $getDbForProject($project, $authorization);
+        $userDb = ($mode === APP_MODE_ADMIN || $project->getId() === 'console') ? $dbForPlatform : $dbForProject;
+
+        $targetUser = null;
+        if (!empty($impersonateUserId)) {
+            $targetUser = $authorization->skip(fn () => $userDb->getDocument('users', $impersonateUserId));
+        } elseif (!empty($impersonateEmail)) {
+            $targetUser = $authorization->skip(fn () => $userDb->findOne('users', [Query::equal('email', [\strtolower($impersonateEmail)])]));
+        } elseif (!empty($impersonatePhone)) {
+            $targetUser = $authorization->skip(fn () => $userDb->findOne('users', [Query::equal('phone', [$impersonatePhone])]));
+        }
+
+        if ($targetUser === null || $targetUser->isEmpty()) {
+            return new Document();
+        }
+
+        return new Document([
+            '$id' => $user->getId(),
+            '$sequence' => $user->getSequence(),
+            'name' => $user->getAttribute('name', ''),
+            'email' => $user->getAttribute('email', ''),
+            'type' => $user->getAttribute('type', $mode === APP_MODE_ADMIN ? ACTOR_TYPE_ADMIN : ACTOR_TYPE_USER),
+        ]);
+    }, ['request', 'project', 'user', 'authorization']);
+
+    $container->set('targetUser', function (Request $request, Document $project, Document $user, Document $impersonatorUser, Authorization $authorization) use ($getMode, $getDbForPlatform, $getDbForProject) {
+        if ($impersonatorUser->isEmpty()) {
+            return $user;
+        }
+
+        $impersonateUserId = $request->getHeaderLine('x-appwrite-impersonate-user-id', (string)($request->getParam('impersonateuserid', '') ?: $request->getParam('impersonateUserId', '')));
+        $impersonateEmail = $request->getHeaderLine('x-appwrite-impersonate-user-email', (string)($request->getParam('impersonateemail', '') ?: $request->getParam('impersonateEmail', '')));
+        $impersonatePhone = $request->getHeaderLine('x-appwrite-impersonate-user-phone', (string)($request->getParam('impersonatephone', '') ?: $request->getParam('impersonatePhone', '')));
+
+        $mode = $getMode($request, $project);
+        $dbForPlatform = $getDbForPlatform($authorization);
+        $dbForProject = $getDbForProject($project, $authorization);
+        $userDb = ($mode === APP_MODE_ADMIN || $project->getId() === 'console') ? $dbForPlatform : $dbForProject;
+
+        if (!empty($impersonateUserId)) {
+            return $authorization->skip(fn () => $userDb->getDocument('users', $impersonateUserId));
+        } elseif (!empty($impersonateEmail)) {
+            return $authorization->skip(fn () => $userDb->findOne('users', [Query::equal('email', [\strtolower($impersonateEmail)])]));
+        } elseif (!empty($impersonatePhone)) {
+            return $authorization->skip(fn () => $userDb->findOne('users', [Query::equal('phone', [$impersonatePhone])]));
+        }
+
+        return $user;
+    }, ['request', 'project', 'user', 'impersonatorUser', 'authorization']);
 };

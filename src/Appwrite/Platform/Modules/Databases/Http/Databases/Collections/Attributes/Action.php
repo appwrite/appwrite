@@ -6,6 +6,7 @@ use Appwrite\Event\Event;
 use Appwrite\Event\Message\Database as DatabaseMessage;
 use Appwrite\Event\Publisher\Database as DatabasePublisher;
 use Appwrite\Extend\Exception;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Action as DatabasesAction;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Throwable;
@@ -21,10 +22,9 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Structure;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
-use Utopia\Platform\Action as UtopiaAction;
 use Utopia\Validator\Range;
 
-abstract class Action extends UtopiaAction
+abstract class Action extends DatabasesAction
 {
     /**
      * @var string The current context (either 'column' or 'attribute')
@@ -36,12 +36,14 @@ abstract class Action extends UtopiaAction
      */
     abstract protected function getResponseModel(): string|array;
 
-    public function setHttpPath(string $path): UtopiaAction
+    public function setHttpPath(string $path): DatabasesAction
     {
         if (\str_contains($path, '/tablesdb')) {
             $this->context = COLUMNS;
         }
-        return parent::setHttpPath($path);
+        parent::setHttpPath($path);
+
+        return $this;
     }
 
     /**
@@ -333,7 +335,7 @@ abstract class Action extends UtopiaAction
 
         $db = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
-        if ($db->isEmpty()) {
+        if ($db->isEmpty() || $this->isDatabaseTypeMismatch($db)) {
             throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
         }
 
@@ -495,7 +497,7 @@ abstract class Action extends UtopiaAction
     {
         $db = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
-        if ($db->isEmpty()) {
+        if ($db->isEmpty() || $this->isDatabaseTypeMismatch($db)) {
             throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
         }
 
@@ -515,11 +517,14 @@ abstract class Action extends UtopiaAction
             throw new Exception($this->getNotAvailableException());
         }
 
-        if ($attribute->getAttribute(('type') !== $type)) {
+        if ($attribute->getAttribute('type') !== $type) {
             throw new Exception($this->getTypeInvalidException());
         }
 
-        if ($attribute->getAttribute('type') === Database::VAR_STRING && $attribute->getAttribute(('filter') !== $filter)) {
+        // The discriminator for a formatted string is persisted as 'format', and is
+        // the empty string for a plain one, while the plain string endpoint passes
+        // no filter at all.
+        if ($attribute->getAttribute('type') === Database::VAR_STRING && $attribute->getAttribute('format', '') !== ($filter ?? '')) {
             throw new Exception($this->getTypeInvalidException());
         }
 
@@ -529,6 +534,13 @@ abstract class Action extends UtopiaAction
 
         if ($attribute->getAttribute('array', false) && isset($default)) {
             throw new Exception($this->getDefaultUnsupportedException(), 'Cannot set default value for array ' . $this->getContext() . 's');
+        }
+
+        if ($size !== null && $size < APP_DATABASE_ENCRYPT_SIZE_MIN && \in_array('encrypt', $attribute->getAttribute('filters', []), true)) {
+            throw new Exception(
+                Exception::GENERAL_BAD_REQUEST,
+                'Size too small. Encrypted strings require a minimum size of ' . APP_DATABASE_ENCRYPT_SIZE_MIN . ' characters.'
+            );
         }
 
         $collectionId = 'database_' . $db->getSequence() . '_collection_' . $collection->getSequence();
@@ -635,7 +647,7 @@ abstract class Action extends UtopiaAction
             }
         } else {
             try {
-                $dbForProject->updateAttribute(
+                $definition = $dbForProject->updateAttribute(
                     collection: $collectionId,
                     id: $key,
                     size: $size,
@@ -644,6 +656,16 @@ abstract class Action extends UtopiaAction
                     formatOptions: $options,
                     newKey: $newKey ?? null
                 );
+
+                // updateAttribute() keeps the stored default when given null,
+                // but the API uses null to clear it.
+                if ($default === null && $definition->getAttribute('default') !== null) {
+                    $dbForProject->updateAttributeDefault(
+                        collection: $collectionId,
+                        id: $definition->getId(),
+                        default: null
+                    );
+                }
             } catch (DuplicateException) {
                 throw new Exception($this->getDuplicateException(), params: [$key]);
             } catch (IndexException $e) {

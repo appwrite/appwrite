@@ -28,11 +28,12 @@ class Update extends DatabaseUpdate
             ->setHttpPath('/v1/documentsdb/:databaseId')
             ->desc('Update database')
             ->groups(['api', 'database', 'schema'])
-            ->label('scope', 'databases.write')
+            ->label('scope', 'documentsdb.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('event', 'databases.[databaseId].update')
             ->label('audits.event', 'database.update')
             ->label('audits.resource', 'database/{response.$id}')
+            ->label('usage.resource', 'database/{response.$id}')
             ->label('sdk', new Method(
                 namespace: 'documentsDB',
                 group: 'documentsdb',

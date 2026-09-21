@@ -143,6 +143,13 @@ class User extends Model
                 'default' => null,
                 'example' => true,
             ])
+            ->addRule('passwordPwned', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether the password was found in a known data breach the last time it was checked. Null when the password has never been checked.',
+                'required' => false,
+                'default' => null,
+                'example' => false,
+            ])
             ->addRule('phoneVerification', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Phone verification status.',
@@ -185,7 +192,7 @@ class User extends Model
                 'type' => self::TYPE_STRING,
                 'description' => 'ID of the original actor performing the impersonation. Present only when the current request is impersonating another user. Internal audit logs attribute the action to this user, while the impersonated target is recorded only in internal audit payload data.',
                 'required' => false,
-                'default' => '',
+                'default' => null,
                 'example' => '5e5ea5c16897e',
             ])
         ;

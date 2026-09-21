@@ -2,6 +2,8 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Indexes;
 
+use Appwrite\Event\Event;
+use Appwrite\Event\Publisher\Database as DatabasePublisher;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Indexes\Create as IndexCreate;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -9,6 +11,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
@@ -42,6 +45,7 @@ class Create extends IndexCreate
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('audits.event', 'index.create')
             ->label('audits.resource', 'database/{request.databaseId}/table/{request.tableId}')
+            ->label('usage.resource', 'database/{request.databaseId}/table/{request.tableId}')
             ->label('sdk', new Method(
                 namespace: $this->getSDKNamespace(),
                 group: $this->getSDKGroup(),
@@ -72,4 +76,8 @@ class Create extends IndexCreate
             ->callback($this->action(...));
     }
 
+    public function action(string $databaseId, string $tableId, string $key, string $type, array $columns, array $orders, array $lengths, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, DatabasePublisher $publisherForDatabase, Event $queueForEvents, Authorization $authorization): void
+    {
+        parent::action($databaseId, $tableId, $key, $type, $columns, $orders, $lengths, $response, $dbForProject, $getDatabasesDB, $publisherForDatabase, $queueForEvents, $authorization);
+    }
 }

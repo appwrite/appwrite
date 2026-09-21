@@ -12,13 +12,15 @@ class Method
 
     public static array $errors = [];
 
+    /** @var list<string>|null Null derives membership from auth; an explicit empty list stays empty. */
+    protected ?array $platforms = null;
+
     /**
      * Initialise a new SDK method
      *
      * @param string $namespace
      * @param ?string $group
      * @param string $name
-     * @param string $desc
      * @param string $description
      * @param array<AuthType> $auth
      * @param array<SDKResponse> $responses
@@ -30,9 +32,9 @@ class Method
      * @param ContentType $requestType
      * @param array<Parameter> $parameters
      * @param array $additionalParameters
-     * @param string $desc
+     * @param string $summary
      * @param bool $public Whether this method should be rendered on the website/documentation
-     * @param array<string> $locationAuth Security scheme keys injected for location-type methods (includes project auth)
+     * @param array<string> $locationAuth Security scheme keys for location-type methods: first is the required project binding; additional keys supplement the base auth as an optional alternative
      */
     public function __construct(
         protected string $namespace,
@@ -49,13 +51,13 @@ class Method
         protected ContentType $requestType = ContentType::JSON,
         protected array $parameters = [],
         protected array $additionalParameters = [],
-        protected string $desc = '',
+        protected string $summary = '',
         protected bool $public = true,
         protected array $locationAuth = []
     ) {
         $this->validateMethod($name, $namespace);
         $this->validateAuthTypes($auth);
-        $this->validateDesc($description);
+        $this->validateDescription($description);
 
         foreach ($responses as $response) {
             $this->validateResponseModel($response->getModel());
@@ -86,18 +88,18 @@ class Method
         }
     }
 
-    protected function validateDesc(string $desc): void
+    protected function validateDescription(string $description): void
     {
-        if (empty($desc)) {
+        if (empty($description)) {
             self::$errors[] = "Error with {$this->getRouteName()} method: Description label is empty";
             return;
         }
 
-        if (\str_ends_with($desc, '.md')) {
-            $descPath = $this->getDescriptionFilePath() ?: $this->getDescription();
+        if (\str_ends_with($description, '.md')) {
+            $path = $this->getDescriptionFilePath() ?: $this->getDescription();
 
-            if (empty($descPath)) {
-                self::$errors[] = "Error with {$this->getRouteName()} method: Description file not found at {$desc}";
+            if (empty($path)) {
+                self::$errors[] = "Error with {$this->getRouteName()} method: Description file not found at {$description}";
                 return;
             }
         }
@@ -144,9 +146,9 @@ class Method
         return $this->name;
     }
 
-    public function getDesc(): string
+    public function getSummary(): string
     {
-        return $this->desc;
+        return $this->summary;
     }
 
     public function getDescription(): string
@@ -202,6 +204,33 @@ class Method
         return $this->hide;
     }
 
+    /**
+     * @param list<string> $platforms Auth membership resolved by the active specs producer.
+     */
+    public function setPlatforms(array $platforms): self
+    {
+        $this->platforms = $platforms;
+        return $this;
+    }
+
+    /**
+     * @return list<string> Eligible platforms, independent of the currently selected spec platform.
+     */
+    public function getPlatforms(): array
+    {
+        $hide = $this->isHidden();
+        if ($hide === true || empty($this->getNamespace())) {
+            return [];
+        }
+
+        $platforms = $this->platforms ?? \array_filter(\array_map(
+            fn ($auth) => $auth instanceof AuthType ? $auth->getPlatform() : null,
+            $this->getAuth()
+        ));
+
+        return \array_values(\array_unique(\array_diff($platforms, \is_array($hide) ? $hide : [])));
+    }
+
     public function isPackaging(): bool
     {
         return $this->packaging;
@@ -236,95 +265,15 @@ class Method
         return $this;
     }
 
-    public function setMethodName(string $name): self
-    {
-        $this->name = $name;
-        return $this;
-    }
-
-    public function setDesc(string $desc): self
-    {
-        $this->desc = $desc;
-        return $this;
-    }
-
-    public function setDescription(string $description): self
-    {
-        $this->description = $description;
-        return $this;
-    }
-
-    public function setAuth(array $auth): self
-    {
-        $this->validateAuthTypes($auth);
-        $this->auth = $auth;
-        return $this;
-    }
-
-    /**
-     * @param array<SDKResponse> $responses
-     */
-    public function setResponses(array $responses): self
-    {
-        foreach ($responses as $response) {
-            $this->validateResponseModel($response->getModel());
-            $this->validateNoContent($response);
-        }
-        $this->responses = $responses;
-        return $this;
-    }
-
-    public function setContentType(ContentType $contentType): self
-    {
-        $this->contentType = $contentType;
-        return $this;
-    }
-
     public function setType(?MethodType $type): self
     {
         $this->type = $type;
         return $this;
     }
 
-    public function setDeprecated(bool|Deprecated $deprecated): self
-    {
-        $this->deprecated = $deprecated;
-        return $this;
-    }
-
-    public function setHide(bool|Deprecated $hide): self
-    {
-        $this->hide = $hide;
-        return $this;
-    }
-
-    public function setPackaging(bool $packaging): self
-    {
-        $this->packaging = $packaging;
-        return $this;
-    }
-
-    public function setRequestType(ContentType $requestType): self
-    {
-        $this->requestType = $requestType;
-        return $this;
-    }
-
-    public function setParameters(array $parameters): self
-    {
-        $this->parameters = $parameters;
-        return $this;
-    }
-
     public function isPublic(): bool
     {
         return $this->public;
-    }
-
-    public function setPublic(bool $public): self
-    {
-        $this->public = $public;
-        return $this;
     }
 
     public static function getErrors(): array

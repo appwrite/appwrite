@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Projects\Http\Schedules;
 
 use Appwrite\Event\Event;
+use Appwrite\Execution\Store;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
@@ -94,6 +95,7 @@ class Create extends Action
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('getProjectDB')
+            ->inject('executionStore')
             ->inject('queueForEvents')
             ->callback($this->action(...));
     }
@@ -108,6 +110,7 @@ class Create extends Action
         Response $response,
         Database $dbForPlatform,
         callable $getProjectDB,
+        Store $executionStore,
         Event $queueForEvents,
     ): void {
         $project = $dbForPlatform->getDocument('projects', $projectId);
@@ -116,10 +119,9 @@ class Create extends Action
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
-        $dbForProject = $getProjectDB($project);
-
-        $collection = $this->getCollection($resourceType);
-        $resource = $dbForProject->getDocument($collection, $resourceId);
+        $resource = $resourceType === SCHEDULE_RESOURCE_TYPE_EXECUTION
+            ? $executionStore->get($project->getId(), $resourceId)
+            : $getProjectDB($project)->getDocument($this->getCollection($resourceType), $resourceId);
 
         if ($resource->isEmpty()) {
             throw new Exception($this->getNotFoundException($resourceType), 'Resource not found');
@@ -132,6 +134,7 @@ class Create extends Action
             'resourceInternalId' => $resource->getSequence(),
             'resourceUpdatedAt' => DateTime::now(),
             'projectId' => $project->getId(),
+            'projectInternalId' => $project->getSequence(),
             'schedule' => $schedule,
             'active' => $active,
         ];

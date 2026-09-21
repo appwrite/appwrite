@@ -2,10 +2,15 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Functions;
 
+use Appwrite\Bus\Events\RuleCreated;
+use Appwrite\Certificates\Certificates;
+use Appwrite\Deployment\Deployments;
+use Appwrite\Event\Certificate as CertificateEvent;
 use Appwrite\Event\Event;
-use Appwrite\Event\Message\Build as BuildMessage;
+use Appwrite\Event\Message\Certificate as CertificateMessage;
 use Appwrite\Event\Message\Func as FunctionMessage;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
+use Appwrite\Event\Publisher\Certificate;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\Validator\FunctionEvent;
@@ -20,15 +25,17 @@ use Appwrite\Task\Validator\Cron;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model\Rule;
+use Appwrite\Vcs\Factory as VcsFactory;
+use Appwrite\Vcs\RepositoryWebhooks;
 use Utopia\Abuse\Abuse;
+use Utopia\Abuse\Adapters\TimeLimit;
+use Utopia\Bus\Bus;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Roles;
 use Utopia\Http\Request;
@@ -41,7 +48,7 @@ use Utopia\Validator\Boolean;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
-use Utopia\VCS\Adapter\Git\GitHub;
+use Utopia\VCS\Adapter\Git;
 
 class Create extends Base
 {
@@ -64,6 +71,7 @@ class Create extends Base
             ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
             ->label('audits.event', 'function.create')
             ->label('audits.resource', 'function/{response.$id}')
+            ->label('usage.resource', 'function/{response.$id}')
             ->label('sdk', new Method(
                 namespace: 'functions',
                 group: 'functions',
@@ -90,7 +98,7 @@ class Create extends Base
             ->param('logging', true, new Boolean(), 'When disabled, executions will exclude logs and errors, and will be slightly faster.', true)
             ->param('entrypoint', '', new Text(1028, 0), 'Entrypoint File. This path is relative to the "providerRootDirectory".', true)
             ->param('commands', '', new Text(8192, 0), 'Build Commands.', true)
-            ->param('scopes', [], new ArrayList(new WhiteList(array_keys(Config::getParam('projectScopes')), true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'List of scopes allowed for API key auto-generated for every execution. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed.', true, enum: new Enum(name: 'ProjectKeyScopes'))
+            ->param('scopes', [], new ArrayList(new WhiteList(array_keys(Config::getParam('projectScopes')), true), APP_LIMIT_ARRAY_SCOPES_SIZE), 'List of scopes allowed for API key auto-generated for every execution. Maximum of ' . APP_LIMIT_ARRAY_SCOPES_SIZE . ' scopes are allowed.', true, enum: new Enum(name: 'ProjectKeyScopes'))
             ->param('installationId', '', new Text(128, 0), 'Appwrite Installation ID for VCS (Version Control System) deployment.', true)
             ->param('providerRepositoryId', '', new Text(128, 0), 'Repository ID of the repo linked to the function.', true)
             ->param('providerBranch', '', new Text(128, 0), 'Production branch for the repo linked to the function.', true)
@@ -98,18 +106,19 @@ class Create extends Base
             ->param('providerRootDirectory', '', new Text(128, 0), 'Path to function code in the linked repo.', true)
             ->param('providerBranches', [], new ArrayList(new Text(128), APP_LIMIT_ARRAY_PARAMS_SIZE), 'List of branch name patterns to trigger automatic deployments. Supports wildcards. Leave empty to deploy on all branches.', true)
             ->param('providerPaths', [], new ArrayList(new Text(128), APP_LIMIT_ARRAY_PARAMS_SIZE), 'List of file path patterns to trigger automatic deployments. Supports wildcards. Leave empty to deploy on all file changes.', true)
-            ->param('buildSpecification', fn (array $plan) => $this->getDefaultSpecification($plan), fn (array $plan) => new Specification(
+            ->param('buildSpecification', fn (array $plan) => $this->getDefaultSpecification($plan, 'buildSpecifications'), fn (array $plan) => new Specification(
                 $plan,
                 Config::getParam('specifications', []),
                 System::getEnv('_APP_COMPUTE_CPUS', 0),
-                System::getEnv('_APP_COMPUTE_MEMORY', 0)
-            ), 'Build specification for the function deployments.', true, ['plan'])
+                System::getEnv('_APP_COMPUTE_MEMORY', 0),
+                'buildSpecifications'
+            ), 'Build specification for the function deployments.', true, ['plan'], example: 's-1vcpu-512mb')
             ->param('runtimeSpecification', fn (array $plan) => $this->getDefaultSpecification($plan), fn (array $plan) => new Specification(
                 $plan,
                 Config::getParam('specifications', []),
                 System::getEnv('_APP_COMPUTE_CPUS', 0),
                 System::getEnv('_APP_COMPUTE_MEMORY', 0)
-            ), 'Runtime specification for the function executions.', true, ['plan'])
+            ), 'Runtime specification for the function executions.', true, ['plan'], example: 's-1vcpu-512mb')
             ->param('templateRepository', '', new Text(128, 0), 'Repository name of the template.', true, deprecated: true)
             ->param('templateOwner', '', new Text(128, 0), 'The name of the owner of the template.', true, deprecated: true)
             ->param('templateRootDirectory', '', new Text(128, 0), 'Path to function code in the template repo.', true, deprecated: true)
@@ -121,13 +130,19 @@ class Create extends Base
             ->inject('project')
             ->inject('queueForEvents')
             ->inject('publisherForBuilds')
+            ->inject('deployments')
+            ->inject('buildTimeout')
             ->inject('queueForRealtime')
             ->inject('queueForWebhooks')
             ->inject('publisherForFunctions')
             ->inject('dbForPlatform')
+            ->inject('publisherForCertificates')
+            ->inject('certificateIssuer')
             ->inject('request')
-            ->inject('gitHub')
+            ->inject('vcsFactory')
+            ->inject('repositoryWebhooks')
             ->inject('authorization')
+            ->inject('bus')
             ->inject('platform')
             ->callback($this->action(...));
     }
@@ -138,7 +153,7 @@ class Create extends Base
         string $runtime,
         array $execute,
         array $events,
-        string $schedule,
+        ?string $schedule,
         int $timeout,
         bool $enabled,
         bool $logging,
@@ -165,39 +180,50 @@ class Create extends Base
         Document $project,
         Event $queueForEvents,
         BuildPublisher $publisherForBuilds,
+        Deployments $deployments,
+        int $buildTimeout,
         Realtime $queueForRealtime,
         Webhook $queueForWebhooks,
         FunctionPublisher $publisherForFunctions,
         Database $dbForPlatform,
+        Certificate $publisherForCertificates,
+        Certificates $certificateIssuer,
         Request $request,
-        GitHub $github,
+        VcsFactory $vcsFactory,
+        RepositoryWebhooks $repositoryWebhooks,
         Authorization $authorization,
+        Bus $bus,
         array $platform
     ) {
+        $schedule ??= '';
 
         // Temporary abuse check
-        $abuseCheck = function () use ($project, $timelimit, $response) {
+        $abuseCheck = function () use ($project, $timelimit, $response): void {
             $abuseKey = "projectId:{projectId},url:{url}";
             $abuseLimit = System::getEnv('_APP_FUNCTIONS_CREATION_ABUSE_LIMIT', 50);
             $abuseTime = 86400; // 1 day
 
-            $timeLimit = $timelimit($abuseKey, $abuseLimit, $abuseTime);
-            $timeLimit
-                ->setParam('{projectId}', $project->getId())
-                ->setParam('{url}', '/v1/functions');
+            $isRateLimited = $timelimit($abuseKey, $abuseLimit, $abuseTime, function (TimeLimit $timeLimit) use ($project, $response, $abuseTime): bool {
+                $timeLimit
+                    ->setParam('{projectId}', $project->getId())
+                    ->setParam('{url}', '/v1/functions');
 
-            $abuse = new Abuse($timeLimit);
-            $remaining = $timeLimit->remaining();
-            $limit = $timeLimit->limit();
-            $time = $timeLimit->time() + $abuseTime;
+                $abuse = new Abuse($timeLimit);
+                $remaining = $timeLimit->remaining();
+                $limit = $timeLimit->limit();
+                $time = $timeLimit->time() + $abuseTime;
 
-            $response
-                ->addHeader('X-RateLimit-Limit', $limit)
-                ->addHeader('X-RateLimit-Remaining', $remaining)
-                ->addHeader('X-RateLimit-Reset', $time);
+                $response
+                    ->addHeader('X-RateLimit-Limit', $limit)
+                    ->addHeader('X-RateLimit-Remaining', $remaining)
+                    ->addHeader('X-RateLimit-Reset', $time);
 
-            $enabled = System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled';
-            if ($enabled && $abuse->check()) {
+                $enabled = System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled';
+
+                return $enabled && $abuse->check();
+            });
+
+            if ($isRateLimited) {
                 throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED);
             }
         };
@@ -274,6 +300,7 @@ class Create extends Base
                 'resourceInternalId' => $function->getSequence(),
                 'resourceUpdatedAt' => DateTime::now(),
                 'projectId' => $project->getId(),
+                'projectInternalId' => $project->getSequence(),
                 'schedule'  => $function->getAttribute('schedule'),
                 'active' => false,
             ]))
@@ -299,6 +326,18 @@ class Create extends Base
                 'resourceType' => 'function',
                 'providerPullRequestIds' => []
             ]));
+
+            try {
+                $providerAdapter = $vcsFactory->fromInstallation($installation);
+                if (!\in_array(Git::WEBHOOK_SCOPE_INSTALLATION, $providerAdapter->getSupportedWebhookScopes(), true)) {
+                    $owner = $providerAdapter->getOwnerName($installation->getAttribute('providerInstallationId', ''), (int)$providerRepositoryId);
+                    $repositoryName = $providerAdapter->getRepositoryName($providerRepositoryId);
+                    $repositoryWebhooks->ensure($providerAdapter, $installation, $dbForPlatform, $providerRepositoryId, $owner, $repositoryName);
+                }
+            } catch (\Throwable $error) {
+                $dbForPlatform->deleteDocument('repositories', $repository->getId());
+                throw $error;
+            }
 
             $function->setAttribute('repositoryId', $repository->getId());
             $function->setAttribute('repositoryInternalId', $repository->getSequence());
@@ -340,42 +379,45 @@ class Create extends Base
                     installation: $installation,
                     dbForProject: $dbForProject,
                     publisherForBuilds: $publisherForBuilds,
+                    deployments: $deployments,
                     template: $template,
-                    github: $github,
+                    vcs: $vcsFactory->fromInstallation($installation),
                     activate: true,
                     platform: $platform,
                     reference: $providerBranch,
-                    referenceType: 'branch'
+                    referenceType: 'branch',
+                    buildTimeout: $buildTimeout
                 );
 
             } elseif (!$template->isEmpty()) {
-                // Deploy non-VCS from template
-                $deploymentId = ID::unique();
-                $deployment = $dbForProject->createDocument('deployments', new Document([
-                    '$id' => $deploymentId,
-                    '$permissions' => [
-                        Permission::read(Role::any()),
-                        Permission::update(Role::any()),
-                        Permission::delete(Role::any()),
-                    ],
-                    'resourceId' => $function->getId(),
-                    'resourceInternalId' => $function->getSequence(),
-                    'resourceType' => 'functions',
-                    'entrypoint' => $function->getAttribute('entrypoint', ''),
-                    'buildCommands' => $function->getAttribute('commands', ''),
-                    'startCommand' => $function->getAttribute('startCommand', ''),
-                    'type' => 'manual',
-                    'activate' => true,
-                ]));
+                // Deploy non-VCS from the template's public GitHub repository.
+                $templateVersion = Base::resolveTemplateRef($vcsFactory, $templateOwner, $templateRepository, Git::CLONE_TYPE_TAG, $templateVersion);
 
-                $publisherForBuilds->enqueue(new BuildMessage(
-                    project: $project,
-                    resource: $function,
-                    deployment: $deployment,
-                    type: BUILD_TYPE_DEPLOYMENT,
-                    template: $template,
-                    platform: $platform,
-                ));
+                $deployment = $deployments->createFromRef(
+                    $function,
+                    new Document([
+                        '$id' => ID::unique(),
+                        'entrypoint' => $function->getAttribute('entrypoint', ''),
+                        'buildCommands' => $function->getAttribute('commands', ''),
+                        'startCommand' => $function->getAttribute('startCommand', ''),
+                        'providerRepositoryName' => $templateRepository,
+                        'providerRepositoryOwner' => $templateOwner,
+                        'providerRepositoryUrl' => "https://github.com/{$templateOwner}/{$templateRepository}",
+                        'providerBranchUrl' => "https://github.com/{$templateOwner}/{$templateRepository}/blob/{$templateVersion}",
+                        // The coordinates a redeploy needs: remote-source builds
+                        // never store a tarball.
+                        'providerBranch' => $templateVersion,
+                        'providerRootDirectory' => $templateRootDirectory,
+                        'type' => 'vcs',
+                        'activate' => true,
+                    ]),
+                    $buildTimeout,
+                    $templateOwner,
+                    $templateRepository,
+                    Git::CLONE_TYPE_TAG,
+                    $templateVersion,
+                    $templateRootDirectory,
+                );
             }
 
             $functionsDomain = $platform['functionsDomain'];
@@ -407,6 +449,7 @@ class Create extends Base
                         'region' => $project->getAttribute('region')
                     ]))
                 );
+                $bus->dispatch(new RuleCreated($rule->getArrayCopy()));
 
                 $ruleModel = new Rule();
                 $ruleCreate =
@@ -437,6 +480,20 @@ class Create extends Base
                     ->setSubscribers(['console', $project->getId()])
                     ->from($ruleCreate)
                     ->trigger();
+
+                if ($certificateIssuer->isAutoIssueEnabled(new Document([
+                    'domain' => $domain,
+                    'owner' => 'Appwrite',
+                ]))) {
+                    $publisherForCertificates->enqueue(new CertificateMessage(
+                        project: $project,
+                        domain: new Document([
+                            'domain' => $domain,
+                            'domainType' => 'function',
+                        ]),
+                        action: CertificateEvent::ACTION_GENERATION,
+                    ));
+                }
             }
         }
 

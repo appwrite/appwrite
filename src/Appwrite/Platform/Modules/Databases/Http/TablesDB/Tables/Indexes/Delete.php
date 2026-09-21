@@ -41,6 +41,7 @@ class Delete extends IndexDelete
             ->label('event', 'databases.[databaseId].tables.[tableId].indexes.[indexId].update')
             ->label('audits.event', 'index.delete')
             ->label('audits.resource', 'database/{request.databaseId}/table/{request.tableId}')
+            ->label('usage.resource', 'database/{request.databaseId}/table/{request.tableId}')
             ->label('sdk', new Method(
                 namespace: $this->getSDKNamespace(),
                 group: $this->getSDKGroup(),

@@ -53,7 +53,7 @@ class Update extends Action
                     )
                 ],
             ))
-            ->param('total', null, new Nullable(new Range(1, APP_LIMIT_COUNT)), 'Set the password history length per user. Value can be between 1 and ' . APP_LIMIT_COUNT . ', or null to disable the limit.')
+            ->param('total', null, new Nullable(new Range(1, APP_LIMIT_USER_PASSWORD_HISTORY)), 'Set the password history length per user. Value can be between 1 and ' . APP_LIMIT_USER_PASSWORD_HISTORY . ', or null to disable the limit.')
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('project')
@@ -83,6 +83,7 @@ class Update extends Action
         ]);
 
         $project = $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), $updates));
+        $authorization->skip(fn () => $dbForPlatform->purgeCachedDocument('projects', $project->getId()));
 
         $queueForEvents
             ->setParam('projectId', $project->getId())

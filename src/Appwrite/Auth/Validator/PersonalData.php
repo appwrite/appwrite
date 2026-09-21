@@ -43,35 +43,40 @@ class PersonalData extends Password
             return false;
         }
 
+        $userId = $this->userId ?? '';
+        $email = $this->email ?? '';
+        $name = $this->name ?? '';
+        $phone = $this->phone ?? '';
+
         if (!$this->strict) {
             $password = strtolower($password);
-            $this->userId = strtolower($this->userId ?? '');
-            $this->email = strtolower($this->email ?? '');
-            $this->name = strtolower($this->name ?? '');
-            $this->phone = strtolower($this->phone ?? '');
+            $userId = strtolower($userId);
+            $email = strtolower($email);
+            $name = strtolower($name);
+            $phone = strtolower($phone);
         }
 
-        if ($this->userId && strpos($password, $this->userId) !== false) {
+        if ($userId && strpos($password, $userId) !== false) {
             return false;
         }
 
-        if ($this->email && strpos($password, $this->email) !== false) {
+        if ($email && strpos($password, $email) !== false) {
             return false;
         }
 
-        if ($this->email && strpos($password, explode('@', $this->email)[0]) !== false) {
+        if ($email && strpos($password, explode('@', $email)[0]) !== false) {
             return false;
         }
 
-        if ($this->name && strpos($password, $this->name) !== false) {
+        if ($name && strpos($password, $name) !== false) {
             return false;
         }
 
-        if ($this->phone && strpos($password, str_replace('+', '', $this->phone)) !== false) {
+        if ($phone && strpos($password, str_replace('+', '', $phone)) !== false) {
             return false;
         }
 
-        if ($this->phone && strpos($password, $this->phone) !== false) {
+        if ($phone && strpos($password, $phone) !== false) {
             return false;
         }
 

@@ -3,10 +3,6 @@
 namespace Appwrite\Platform\Modules\Health\Http\Health\Cache;
 
 use Appwrite\Extend\Exception;
-use Appwrite\SDK\AuthType;
-use Appwrite\SDK\ContentType;
-use Appwrite\SDK\Method;
-use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Cache\Cache;
 use Utopia\Database\Document;
@@ -30,20 +26,6 @@ class Get extends Action
             ->desc('Get cache')
             ->groups(['api', 'health'])
             ->label('scope', 'health.read')
-            ->label('sdk', new Method(
-                namespace: 'health',
-                group: 'health',
-                name: 'getCache',
-                description: '/docs/references/health/get-cache.md',
-                auth: [AuthType::ADMIN, AuthType::KEY],
-                responses: [
-                    new SDKResponse(
-                        code: Response::STATUS_CODE_OK,
-                        model: Response::MODEL_HEALTH_STATUS_LIST,
-                    )
-                ],
-                contentType: ContentType::JSON
-            ))
             ->inject('response')
             ->inject('cache')
             ->callback($this->action(...));

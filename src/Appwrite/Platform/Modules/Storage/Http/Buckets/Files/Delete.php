@@ -42,6 +42,7 @@ class Delete extends Action
             ->label('event', 'buckets.[bucketId].files.[fileId].delete')
             ->label('audits.event', 'file.delete')
             ->label('audits.resource', 'file/{request.fileId}')
+            ->label('usage.resource', 'bucket/{request.bucketId}/file/{request.fileId}')
             ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
             ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT)
             ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
@@ -145,7 +146,11 @@ class Delete extends Action
             }
 
             if (!$deleted) {
-                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove file from DB');
+                $exists = $authorization->skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
+                if (!$exists->isEmpty()) {
+                    throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove file from DB');
+                }
+                throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
             }
         } else {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to delete file from device');

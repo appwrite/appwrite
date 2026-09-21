@@ -50,7 +50,7 @@ class Update extends Action
                     )
                 ],
             ))
-            ->param('duration', null, new Range(5, 31536000), 'Maximum session length in seconds. Minium allowed value is 5 second, and maximum is 1 year, which is 31536000 seconds.')
+            ->param('duration', null, new Range(60, 31536000), 'Maximum session length in seconds. Minium allowed value is 60 seconds, and maximum is 1 year, which is 31536000 seconds.')
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('project')
@@ -75,6 +75,7 @@ class Update extends Action
         ]);
 
         $project = $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), $updates));
+        $authorization->skip(fn () => $dbForPlatform->purgeCachedDocument('projects', $project->getId()));
 
         $queueForEvents
             ->setParam('projectId', $project->getId())

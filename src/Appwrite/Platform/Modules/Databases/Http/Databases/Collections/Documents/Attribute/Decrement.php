@@ -52,6 +52,7 @@ class Decrement extends Action
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('audits.event', 'documents.update')
             ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+            ->label('usage.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
             ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
             ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT * 2)
             ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
@@ -77,8 +78,8 @@ class Decrement extends Action
             ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Collection ID.', false, ['dbForProject'])
             ->param('documentId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Document ID.', false, ['dbForProject'])
             ->param('attribute', '', fn (Database $dbForProject) => new Key(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Attribute key.', false, ['dbForProject'])
-            ->param('value', 1, new Numeric(), 'Value to increment the attribute by. The value must be a number.', true)
-            ->param('min', null, new Nullable(new Numeric()), 'Minimum value for the attribute. If the current value is lesser than this value, an exception will be thrown.', true)
+            ->param('value', 1, new Numeric(), 'Value to increment the attribute by. The value must be a number.', true, example: '1')
+            ->param('min', null, new Nullable(new Numeric()), 'Minimum value for the attribute. If the current value is lesser than this value, an exception will be thrown.', true, example: '0')
             ->param('transactionId', null, fn (Database $dbForProject) => new Nullable(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'Transaction ID for staging the operation.', true, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
@@ -97,7 +98,7 @@ class Decrement extends Action
         $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
 
         $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
-        if ($database->isEmpty()) {
+        if ($database->isEmpty() || $this->isDatabaseTypeMismatch($database)) {
             throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
         }
 
@@ -204,8 +205,10 @@ class Decrement extends Action
         );
 
         $usage
-            ->addMetric($this->getDatabasesOperationWriteMetric(), 1)
-            ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), $this->getDatabasesIdOperationWriteMetric()), 1);
+            ->setResource('database')
+            ->setResourceId($database->getId())
+            ->setResourceInternalId((string) $database->getSequence())
+            ->addMetric($this->getDatabasesOperationWriteMetric(), 1);
 
         $response->dynamic($document, $this->getResponseModel());
 

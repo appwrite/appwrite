@@ -39,17 +39,38 @@ class Oidc extends OAuth2
     protected array $wellKnownConfiguration = [];
 
     /**
+     * Memoized decode of the JSON stored in appSecret. Building a single login
+     * URL reads the secret several times (prompt, max_age, each endpoint), so
+     * decode once and reuse.
+     *
+     * @var array|null
+     */
+    protected ?array $decodedAppSecret = null;
+
+    /**
      * @return string
      */
     public function getLoginURL(): string
     {
-        return $this->getAuthorizationEndpoint() . '?' . \http_build_query([
+        $params = [
             'client_id' => $this->appID,
             'redirect_uri' => $this->callback,
             'state' => \json_encode($this->state),
             'scope' => \implode(' ', $this->getScopes()),
             'response_type' => 'code',
-        ]);
+        ];
+
+        $prompt = $this->getPrompt();
+        if (!empty($prompt)) {
+            $params['prompt'] = $prompt;
+        }
+
+        $maxAge = $this->getMaxAge();
+        if ($maxAge !== null) {
+            $params['max_age'] = $maxAge;
+        }
+
+        return $this->getAuthorizationEndpoint() . '?' . \http_build_query($params);
     }
 
     /**
@@ -197,6 +218,40 @@ class Oidc extends OAuth2
     }
 
     /**
+     * Extracts the prompt values from the JSON stored in appSecret.
+     *
+     * @return string
+     */
+    protected function getPrompt(): string
+    {
+        $secret = $this->getAppSecret();
+        $prompt = $secret['prompt'] ?? [];
+
+        if (!\is_array($prompt)) {
+            $prompt = [$prompt];
+        }
+
+        return \implode(' ', $prompt);
+    }
+
+    /**
+     * Extracts the max_age value from the JSON stored in appSecret.
+     *
+     * @return int|null
+     */
+    protected function getMaxAge(): ?int
+    {
+        $secret = $this->getAppSecret();
+        $maxAge = $secret['maxAge'] ?? null;
+
+        if ($maxAge === null || $maxAge === '') {
+            return null;
+        }
+
+        return (int) $maxAge;
+    }
+
+    /**
     * Extracts the well known endpoint from the JSON stored in appSecret.
     *
     * @return string
@@ -257,7 +312,9 @@ class Oidc extends OAuth2
     protected function getUserinfoEndpoint(): string
     {
         $secret = $this->getAppSecret();
-        $endpoint = $secret['userinfoEndpoint'] ?? '';
+        // Read the legacy lowercase `userinfoEndpoint` key as a fallback so that
+        // OIDC configs stored via the old generic oauth2 PATCH endpoint keep working.
+        $endpoint = $secret['userInfoEndpoint'] ?? $secret['userinfoEndpoint'] ?? '';
         if (!empty($endpoint)) {
             return $endpoint;
         }
@@ -289,11 +346,16 @@ class Oidc extends OAuth2
      */
     protected function getAppSecret(): array
     {
+        if ($this->decodedAppSecret !== null) {
+            return $this->decodedAppSecret;
+        }
+
         try {
             $secret = \json_decode($this->appSecret, true, 512, JSON_THROW_ON_ERROR);
         } catch (\Throwable $th) {
             throw new \Exception('Invalid secret');
         }
-        return $secret;
+
+        return $this->decodedAppSecret = \is_array($secret) ? $secret : [];
     }
 }

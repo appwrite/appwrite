@@ -38,27 +38,33 @@ Http::patch('/v1/projects/:projectId/oauth2')
     ->inject('dbForPlatform')
     ->action(function (string $projectId, string $provider, ?string $appId, ?string $secret, ?bool $enabled, Response $response, Database $dbForPlatform) {
 
-        $project = $dbForPlatform->getDocument('projects', $projectId);
+        $project = $dbForPlatform->withTransaction(function () use ($dbForPlatform, $projectId, $provider, $appId, $secret, $enabled) {
+            $project = $dbForPlatform->getDocument('projects', $projectId, forUpdate: true);
 
-        if ($project->isEmpty()) {
-            throw new Exception(Exception::PROJECT_NOT_FOUND);
-        }
+            if ($project->isEmpty()) {
+                throw new Exception(Exception::PROJECT_NOT_FOUND);
+            }
 
-        $providers = $project->getAttribute('oAuthProviders', []);
+            $providers = $project->getAttribute('oAuthProviders', []);
 
-        if ($appId !== null) {
-            $providers[$provider . 'Appid'] = $appId;
-        }
+            if ($appId !== null) {
+                $providers[$provider . 'Appid'] = $appId;
+            }
 
-        if ($secret !== null) {
-            $providers[$provider . 'Secret'] = $secret;
-        }
+            if ($secret !== null) {
+                $providers[$provider . 'Secret'] = $secret;
+            }
 
-        if ($enabled !== null) {
-            $providers[$provider . 'Enabled'] = $enabled;
-        }
+            if ($enabled !== null) {
+                $providers[$provider . 'Enabled'] = $enabled;
+            }
 
-        $project = $dbForPlatform->updateDocument('projects', $project->getId(), $project->setAttribute('oAuthProviders', $providers));
+            return $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
+                'oAuthProviders' => $providers,
+            ]));
+        });
+
+        $dbForPlatform->purgeCachedDocument('projects', $project->getId());
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
