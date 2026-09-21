@@ -318,7 +318,7 @@ class Redis implements Synchronous, Consumer
         return $this->commands->leftPush($key, $envelope);
     }
 
-    public function enqueueMany(Queue $queue, array $payloads): bool
+    public function publishMany(Queue $queue, array $payloads): bool
     {
         if ($payloads === []) {
             return true;
@@ -349,12 +349,12 @@ class Redis implements Synchronous, Consumer
     }
 
     /**
-     * Take all jobs from the failed queue and re-enqueue them.
+     * Take all jobs from the failed queue and requeue them.
      *
      * @param int|null $limit The amount of jobs to retry
      * @param int|null $maxAttempts Jobs requeued this many times are parked on
      *        the dead queue instead of looping forever; null retries unbounded.
-     * @param int|null $newerThan Only jobs enqueued within this many seconds
+     * @param int|null $newerThan Only jobs published within this many seconds
      *        are requeued; older ones are parked on the dead queue. Payloads
      *        never expire by default, so without this bound a sweep would
      *        resurrect arbitrarily old work.
@@ -401,12 +401,12 @@ class Redis implements Synchronous, Consumer
      * protect running handlers; the publish-age gate protects workers without
      * heartbeats. Keep $olderThan above their longest possible runtime.
      *
-     * @param int $olderThan Seconds since enqueue before a heartbeat-less claim
+     * @param int $olderThan Seconds since publication before a heartbeat-less claim
      *        counts as stale
      * @param int|null $limit Maximum number of claims to requeue
      * @param int|null $maxAttempts Claims requeued this many times are parked
      *        on the dead queue; null reaps unbounded.
-     * @param int|null $newerThan Only claims enqueued within this many seconds
+     * @param int|null $newerThan Only claims published within this many seconds
      *        are requeued; older ones are parked on the dead queue.
      * @param int|null $scan Maximum claims examined; bounded sweeps share progress.
      * @return int The number of claims requeued
@@ -489,7 +489,7 @@ class Redis implements Synchronous, Consumer
     }
 
     /**
-     * Re-enqueue with a fresh pid and timestamp, carrying the attempt count
+     * Requeue with a fresh pid and timestamp, carrying the attempt count
      * forward so retry() and reap() can park messages that never succeed.
      */
     private function requeue(Queue $queue, Message $job): void

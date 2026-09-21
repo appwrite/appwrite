@@ -176,7 +176,7 @@ final class RedisReservationTest extends TestCase
 
     public function testGroupedSettlementPreservesHealthyResultsWhenOneClaimIsInvalid(): void
     {
-        $this->broker->enqueueMany($this->queue, array_fill(0, 3, ['n' => 1]));
+        $this->broker->publishMany($this->queue, array_fill(0, 3, ['n' => 1]));
         $messages = $this->broker->receive($this->queue, 0, 3);
         $claim = $this->key('owners') . '.' . $messages[1]->getPid();
         $this->redis->del($claim);
@@ -293,7 +293,7 @@ final class RedisReservationTest extends TestCase
         $pending = $results = [];
         try {
             foreach ($queues as $queue) {
-                $broker->enqueueMany($queue, array_fill(0, 3, ['ok' => true]));
+                $broker->publishMany($queue, array_fill(0, 3, ['ok' => true]));
                 foreach ($broker->receive($queue, 0, 3) as $message) {
                     $pending[] = [$queue, $message];
                 }

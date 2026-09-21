@@ -185,7 +185,7 @@ final class BackgroundTest extends TestCase
                 return true;
             }
 
-            public function enqueueMany(Queue $queue, array $payloads): bool
+            public function publishMany(Queue $queue, array $payloads): bool
             {
                 return true;
             }
@@ -262,7 +262,7 @@ final class BackgroundTest extends TestCase
                 return true;
             }
 
-            public function enqueueMany(Queue $queue, array $payloads): bool
+            public function publishMany(Queue $queue, array $payloads): bool
             {
                 return true;
             }
@@ -349,7 +349,7 @@ final class BackgroundTest extends TestCase
                 return true;
             }
 
-            public function enqueueMany(Queue $queue, array $payloads): bool
+            public function publishMany(Queue $queue, array $payloads): bool
             {
                 foreach ($payloads as $payload) {
                     $this->buffer[] = $payload;
@@ -380,10 +380,10 @@ final class BackgroundTest extends TestCase
 
             public function publish(Queue $queue, array $payload): bool
             {
-                return $this->enqueueMany($queue, [$payload]);
+                return $this->publishMany($queue, [$payload]);
             }
 
-            public function enqueueMany(Queue $queue, array $payloads): bool
+            public function publishMany(Queue $queue, array $payloads): bool
             {
                 $this->batches[] = [
                     'queue' => $queue->name,

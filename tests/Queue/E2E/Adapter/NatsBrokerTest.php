@@ -52,7 +52,7 @@ final class NatsBrokerTest extends TestCase
         $this->broker->close();
     }
 
-    public function testEnqueueReceiveCommit(): void
+    public function testPublishReceiveCommit(): void
     {
         $this->broker->publish($this->queue, ['task' => 'a']);
         $this->broker->publish($this->queue, ['task' => 'b']);
@@ -378,7 +378,7 @@ final class NatsBrokerTest extends TestCase
     /**
      * A consumer switching formats reads the header, not the bytes: it says
      * which codec wrote the payload without anyone having to sniff it, and it
-     * has to be on both publish paths, since enqueueMany() builds its own
+     * has to be on both publish paths, since publishMany() builds its own
      * message array rather than going through publish().
      */
     public function testPublishedMessagesCarryTheCodecsContentType(): void
@@ -394,7 +394,7 @@ final class NatsBrokerTest extends TestCase
         $this->assertSame('a', json_decode($stored->data, true)['payload']['task']);
 
         $many = new Queue('t_' . substr(md5(uniqid('', true)), 0, 8));
-        $this->broker->enqueueMany($many, [['task' => 'b'], ['task' => 'c']]);
+        $this->broker->publishMany($many, [['task' => 'b'], ['task' => 'c']]);
 
         $stored = $js->getLastMessage('Q_' . strtoupper($many->name), 'q.' . strtolower($many->name) . '.normal');
         $this->assertSame('application/json', $stored->headers?->get('Content-Type'));
@@ -686,14 +686,14 @@ final class NatsBrokerTest extends TestCase
         $this->assertLessThan(2.0, $elapsed, 'one timeout for the call, not one per message asked for');
     }
 
-    public function testEnqueueManyStoresEveryPayloadInOrder(): void
+    public function testPublishManyStoresEveryPayloadInOrder(): void
     {
         $payloads = [];
         for ($i = 0; $i < 40; $i++) {
             $payloads[] = ['task' => "job-{$i}"];
         }
 
-        $this->assertTrue($this->broker->enqueueMany($this->queue, $payloads));
+        $this->assertTrue($this->broker->publishMany($this->queue, $payloads));
         $this->assertSame(40, $this->broker->getQueueSize($this->queue));
 
         // The batch is written before any acknowledgment is read, so this also
@@ -708,7 +708,7 @@ final class NatsBrokerTest extends TestCase
         $this->assertSame(0, $this->broker->getQueueSize($this->queue));
     }
 
-    public function testEnqueueManyUnderStableIdsCollapsesTheRepublish(): void
+    public function testPublishManyUnderStableIdsCollapsesTheRepublish(): void
     {
         $broker = $this->brokerWithStableIds();
         $queue = new Queue('t_' . substr(md5(uniqid('', true)), 0, 8));
@@ -718,12 +718,12 @@ final class NatsBrokerTest extends TestCase
             ['id' => 'invoice-2', 'task' => 'charge'],
         ];
 
-        $broker->enqueueMany($queue, $payloads);
+        $broker->publishMany($queue, $payloads);
         $this->assertSame(2, $broker->getQueueSize($queue));
         $this->assertSame(0, $broker->duplicates());
 
         // The retry a caller makes after an ambiguous timeout on the batch.
-        $broker->enqueueMany($queue, $payloads);
+        $broker->publishMany($queue, $payloads);
         $this->assertSame(2, $broker->getQueueSize($queue), 'a retried batch must not become four messages');
         $this->assertSame(2, $broker->duplicates(), 'the collapsed publishes must be counted, not discarded');
 
@@ -732,13 +732,13 @@ final class NatsBrokerTest extends TestCase
 
 
 
-    public function testEnqueueManyStoresNothingForAnEmptyBatch(): void
+    public function testPublishManyStoresNothingForAnEmptyBatch(): void
     {
-        $this->assertTrue($this->broker->enqueueMany($this->queue, []));
+        $this->assertTrue($this->broker->publishMany($this->queue, []));
         $this->assertSame(0, $this->broker->getQueueSize($this->queue));
     }
 
-    public function testRetriedEnqueueUnderAStableIdStoresOneMessage(): void
+    public function testRetriedPublishUnderAStableIdStoresOneMessage(): void
     {
         $broker = $this->brokerWithStableIds();
         $queue = new Queue('t_' . substr(md5(uniqid('', true)), 0, 8));

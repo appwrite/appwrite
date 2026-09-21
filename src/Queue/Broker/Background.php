@@ -28,7 +28,7 @@ use Utopia\Telemetry\Adapter\None as NoTelemetry;
  * if no slot frees within it; -1 (the default) waits indefinitely.
  *
  * Set $maxBatchInterval and $maxBatchSize together to coalesce consecutive
- * messages for the same queue into enqueueMany() calls. A partial
+ * messages for the same queue into publishMany() calls. A partial
  * batch is flushed when its oldest message reaches the interval, and shutdown
  * always flushes accepted messages before the readers exit.
  *
@@ -172,9 +172,9 @@ class Background implements Synchronous, Asynchronous
         return $this->publisher->publish($queue, $payload);
     }
 
-    public function enqueueMany(Queue $queue, array $payloads): bool
+    public function publishMany(Queue $queue, array $payloads): bool
     {
-        return $this->publisher->enqueueMany($queue, $payloads);
+        return $this->publisher->publishMany($queue, $payloads);
     }
 
     /**
@@ -272,7 +272,7 @@ class Background implements Synchronous, Asynchronous
     {
         try {
             $published = $batched
-                ? $this->publisher->enqueueMany($queue, $payloads)
+                ? $this->publisher->publishMany($queue, $payloads)
                 : $this->publisher->publish($queue, $payloads[0]);
 
             if (!$published) {

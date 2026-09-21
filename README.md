@@ -194,6 +194,12 @@ if ($coroutines > 1 && $consumer instanceof Consumer\Exclusive) {
 
 Clamping on the marker rather than on a transport name or a version also means the cap starts applying by itself once the consumer stops carrying it.
 
+### Publishing
+
+Synchronous publishers use `publish($queue, $payload)` for one message and `publishMany($queue, $payloads)` for several. Both wait for broker acceptance. `Broker\Background::enqueue()` accepts a message for background delivery; it does not confirm broker acceptance. Its `publish()` and `publishMany()` methods bypass the buffer and remain synchronous.
+
+Queue 5 renames `enqueueMany()` to `publishMany()` on `Publisher\Synchronous` and all implementations. Update callers and custom publishers. No forwarding alias is retained.
+
 ### Batched receive
 
 `job('v1-stats-usage', coroutines: 1, prefetch: 100)` allows up to 100 unacknowledged messages while running one handler at a time. Prefetch counts waiting messages, running handlers, and messages awaiting confirmation. It defaults to the coroutine count; an explicit lower value is rejected. A batch is the number of messages in one broker operation, which can be smaller than prefetch. The Swoole adapter enforces the prefetch limit and renews all outstanding messages from one loop.

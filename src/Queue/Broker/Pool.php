@@ -21,7 +21,7 @@ readonly class Pool implements Synchronous, Consumer, Bounded
         return $this->delegate($this->publisher, __FUNCTION__, \func_get_args());
     }
 
-    public function enqueueMany(Queue $queue, array $payloads): bool
+    public function publishMany(Queue $queue, array $payloads): bool
     {
         return $this->delegate($this->publisher, __FUNCTION__, \func_get_args());
     }

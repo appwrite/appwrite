@@ -9,14 +9,14 @@ use Utopia\Queue\Broker\Redis as Broker;
 use Utopia\Queue\Codec\Json;
 use Utopia\Queue\Queue;
 
-final class BatchedEnqueueTest extends TestCase
+final class BatchedPublishTest extends TestCase
 {
     public function testManyPayloadsCostOneCommand(): void
     {
         $connection = new PushRecordingConnection();
         $broker = new Broker($connection, $connection);
 
-        $this->assertTrue($broker->enqueueMany(new Queue('mail'), [
+        $this->assertTrue($broker->publishMany(new Queue('mail'), [
             ['to' => 'a@example.com'],
             ['to' => 'b@example.com'],
             ['to' => 'c@example.com'],
@@ -35,7 +35,7 @@ final class BatchedEnqueueTest extends TestCase
         $connection = new PushRecordingConnection();
         $broker = new Broker($connection, $connection);
 
-        $broker->enqueueMany(new Queue('mail'), [['to' => 'a@example.com'], ['to' => 'b@example.com']]);
+        $broker->publishMany(new Queue('mail'), [['to' => 'a@example.com'], ['to' => 'b@example.com']]);
 
         $envelopes = array_map(
             static fn(string $encoded): array => json_decode($encoded, true),
@@ -64,7 +64,7 @@ final class BatchedEnqueueTest extends TestCase
         $connection = new PushRecordingConnection();
         $broker = new Broker($connection, $connection);
 
-        $this->assertTrue($broker->enqueueMany(new Queue('mail'), []));
+        $this->assertTrue($broker->publishMany(new Queue('mail'), []));
         $this->assertSame([], $connection->calls);
     }
 
@@ -74,7 +74,7 @@ final class BatchedEnqueueTest extends TestCase
      * Two methods rather than one that inspects its argument: a payload that
      * carries a list of its own is one message, and nothing has to guess.
      */
-    public function testEnqueuePublishesOneMessageEvenWhenThePayloadNestsAList(): void
+    public function testPublishKeepsNestedPayloadsAsOneMessage(): void
     {
         $connection = new PushRecordingConnection();
         $broker = new Broker($connection, $connection);

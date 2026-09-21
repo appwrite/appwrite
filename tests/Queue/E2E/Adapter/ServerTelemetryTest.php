@@ -352,7 +352,7 @@ final class ServerTelemetryPublisherConsumer extends ServerTelemetryConsumer imp
         return true;
     }
 
-    public function enqueueMany(Queue $queue, array $payloads): bool
+    public function publishMany(Queue $queue, array $payloads): bool
     {
         return true;
     }
@@ -376,7 +376,7 @@ final class ServerTelemetryFailingPublisherConsumer extends ServerTelemetryConsu
         return true;
     }
 
-    public function enqueueMany(Queue $queue, array $payloads): bool
+    public function publishMany(Queue $queue, array $payloads): bool
     {
         return true;
     }

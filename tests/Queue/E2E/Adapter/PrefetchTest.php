@@ -68,7 +68,7 @@ final class PrefetchTest extends TestCase
                 ? new Redis(new RedisConnection('127.0.0.1', 16379), new Locking(new RedisConnection('127.0.0.1', 16379)))
                 : new Nats(fn(): \Utopia\NATS\Connection => NatsConnection::connect(new ConnectionOptions(servers: 'nats://127.0.0.1:14225', transportFactory: fn(): \Utopia\NATS\Transport\SwooleTransport => new SwooleTransport())));
             $queue = new Queue('shutdown_' . bin2hex(random_bytes(6)));
-            $broker->enqueueMany($queue, array_fill(0, 100, ['n' => 1]));
+            $broker->publishMany($queue, array_fill(0, 100, ['n' => 1]));
             $adapter = new Swoole($broker, 1);
             $adapter->consume(
                 function () use ($adapter, &$handled): void {

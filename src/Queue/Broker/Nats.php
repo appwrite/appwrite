@@ -197,7 +197,7 @@ class Nats implements Synchronous, Consumer, Bounded
      * @param (\Closure(array<string, mixed>): string)|null $messageId Derives a
      *        message's deduplication id from its payload. Omitted, each publish
      *        gets a fresh random id, which collapses a republish of the same
-     *        envelope but not a caller retrying enqueue(). Supply this to make
+     *        envelope but not a caller retrying publish(). Supply this to make
      *        the caller's own retries idempotent — and make it a function of
      *        what identifies the work, never of the clock.
      * @param (\Closure(\Throwable): void)|null $onError Where the broker reports
@@ -433,7 +433,7 @@ class Nats implements Synchronous, Consumer, Bounded
         });
     }
 
-    public function enqueueMany(Queue $queue, array $payloads): bool
+    public function publishMany(Queue $queue, array $payloads): bool
     {
         if ($payloads === []) {
             return true;
@@ -462,7 +462,7 @@ class Nats implements Synchronous, Consumer, Bounded
             // One round trip per window rather than one per payload: the whole batch is
             // written before any acknowledgment is read. Each payload still carries its
             // own message id, so deduplication works exactly as it does on the single
-            // enqueue, and a payload the server rejects still throws.
+            // publish, and a payload the server rejects still throws.
             foreach ($this->js()->publishMany($messages) as $ack) {
                 // Not discarded, for the same reason publishEnvelope() counts it: a
                 // duplicate acknowledgment is the only signal that deduplication did
@@ -633,7 +633,7 @@ class Nats implements Synchronous, Consumer, Bounded
      * The message's identity: its pid, and its deduplication key on the wire.
      *
      * A random id per call dedupes a republish of the same envelope but not a
-     * caller that retries enqueue() itself, because that mints a fresh one. A
+     * caller that retries publish() itself, because that mints a fresh one. A
      * caller who can name its work — an event id, a billing period, a document
      * id — supplies $messageId and gets its own retries deduplicated too.
      *
