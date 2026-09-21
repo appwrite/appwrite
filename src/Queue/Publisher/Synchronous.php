@@ -19,7 +19,7 @@ interface Synchronous
      *
      * @param array<string, mixed> $payload
      */
-    public function publish(Queue $queue, array $payload, bool $priority = false): bool;
+    public function publish(Queue $queue, array $payload): bool;
 
     /**
      * Publishes several messages in one round trip.
@@ -31,7 +31,7 @@ interface Synchronous
      *
      * @param list<array<string, mixed>> $payloads
      */
-    public function enqueueMany(Queue $queue, array $payloads, bool $priority = false): bool;
+    public function enqueueMany(Queue $queue, array $payloads): bool;
 
     /**
      * Retries failed jobs.

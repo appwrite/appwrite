@@ -39,6 +39,11 @@ class Locking implements Connection
         return $this->lock->withLock($command, self::ACQUIRE_TIMEOUT);
     }
 
+    public function execute(string $script, array $keys, array $args): mixed
+    {
+        return $this->synchronize(fn(): mixed => $this->connection->execute($script, $keys, $args));
+    }
+
     public function rightPushArray(string $queue, array $payload): bool
     {
         return $this->synchronize(fn(): bool => $this->connection->rightPushArray($queue, $payload));

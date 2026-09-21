@@ -61,8 +61,8 @@ fi
 
 rows=""
 failed=0
-bench() { # workload processes coroutines sleep_ms cpu_iters [batch]
-    local name=$1 procs=$2 coros=$3 sleep=$4 iters=$5 batch=${6:-1}
+bench() { # workload processes coroutines sleep_ms cpu_iters [prefetch]
+    local name=$1 procs=$2 coros=$3 sleep=$4 iters=$5 prefetch=${6:-$3}
     local out status
     # Infrastructure availability was decided above, so a non-zero exit from here is a
     # benchmark that did not produce a usable sample. Recorded, not swallowed: a green
@@ -71,16 +71,16 @@ bench() { # workload processes coroutines sleep_ms cpu_iters [batch]
     out=$(php tests/bench/consume.php \
         --backend=both --processes="$procs" --coroutines="$coros" \
         --sleep-ms="$sleep" --cpu-iters="$iters" --stagger="$STAGGER" \
-        --batch="$batch" --messages="$MESSAGES" --repeat="$REPEAT" 2>&1)
+        --prefetch="$prefetch" --messages="$MESSAGES" --repeat="$REPEAT" 2>&1)
     status=$?
     set -e
 
     local redis nats
     redis=$(echo "$out" | awk '$1=="redis"{print $2}')
     nats=$(echo "$out" | awk '$1=="nats"{print $2}')
-    rows+="| $name | ${procs}p x ${coros}c x ${batch}b | ${redis:-n/a} | ${nats:-n/a} |
+    rows+="| $name | ${procs}p x ${coros}c x ${prefetch}f | ${redis:-n/a} | ${nats:-n/a} |
 "
-    echo "  $name ${procs}p x ${coros}c x ${batch}b -> redis ${redis:-n/a}, nats ${nats:-n/a}" >&2
+    echo "  $name ${procs}p x ${coros}c x ${prefetch}f -> redis ${redis:-n/a}, nats ${nats:-n/a}" >&2
     if [ "$status" -ne 0 ]; then
         failed=1
         echo "$out" >&2
@@ -107,10 +107,9 @@ done
 # costs. This is the shape of a queue whose job is a counter increment, where
 # the round trips are the work, and it is the only cell a batch can move.
 #
-# Swept at a fixed 16 coroutines because the batch is bounded by free handler
-# slots: at maxCoroutines=1 every batch is 1, and the 1b row is there to say so.
-for b in 1 4 16; do
-    bench "null" 1 16 0 0 "$b"
+# Hold handler concurrency fixed while increasing the unacknowledged limit.
+for prefetch in 16 64 100; do
+    bench "null" 1 16 0 0 "$prefetch"
 done
 
 table="| workload | shape | redis msg/s | nats msg/s |
@@ -121,10 +120,10 @@ section="### queue — workload shapes across both concurrency axes (${CORES} co
 
 ${table}
 
-_\`Np x Mc x Bb\` = N consumer processes x M handler coroutines x a receive claiming up to B
-messages. \`io\` yields and should follow coroutines; \`cpu\` does not and should follow
+_\`Np x Mc x Ff\` = N consumer processes x M handler coroutines x a prefetch limit of F
+unacknowledged messages. \`io\` yields and should follow coroutines; \`cpu\` does not and should follow
 processes; \`mixed\` is in between. \`null\` has no handler at all, so it measures the broker
-rather than the job -- the only row where the batch size can matter._"
+rather than the job -- the only row where prefetch can matter._"
 
 echo
 echo "$table"

@@ -142,7 +142,7 @@ final class BackgroundTest extends TestCase
         ));
     }
 
-    public function testBatchPreservesQueueAndPriorityBoundaries(): void
+    public function testBatchPreservesQueueBoundaries(): void
     {
         $batches = [];
         $background = new Background(
@@ -155,17 +155,15 @@ final class BackgroundTest extends TestCase
             $background->start();
             $background->enqueue(new Queue('emails'), ['id' => 1]);
             $background->enqueue(new Queue('sms'), ['id' => 2]);
-            $background->enqueue(new Queue('sms'), ['id' => 3], priority: true);
+            $background->enqueue(new Queue('sms'), ['id' => 3]);
             $background->shutdown();
         });
 
         $this->assertSame([
-            ['queue' => 'emails', 'priority' => false, 'ids' => [1]],
-            ['queue' => 'sms', 'priority' => false, 'ids' => [2]],
-            ['queue' => 'sms', 'priority' => true, 'ids' => [3]],
+            ['queue' => 'emails', 'ids' => [1]],
+            ['queue' => 'sms', 'ids' => [2, 3]],
         ], array_map(static fn(array $batch): array => [
             'queue' => $batch['queue'],
-            'priority' => $batch['priority'],
             'ids' => array_column($batch['payloads'], 'id'),
         ], $batches));
     }
@@ -179,7 +177,7 @@ final class BackgroundTest extends TestCase
 
             public function __construct(private readonly Channel $gate) {}
 
-            public function publish(Queue $queue, array $payload, bool $priority = false): bool
+            public function publish(Queue $queue, array $payload): bool
             {
                 $this->gate->pop();
                 $this->published[] = $payload;
@@ -187,7 +185,7 @@ final class BackgroundTest extends TestCase
                 return true;
             }
 
-            public function enqueueMany(Queue $queue, array $payloads, bool $priority = false): bool
+            public function enqueueMany(Queue $queue, array $payloads): bool
             {
                 return true;
             }
@@ -257,14 +255,14 @@ final class BackgroundTest extends TestCase
         $publisher = new readonly class ($gate) implements Synchronous {
             public function __construct(private Channel $gate) {}
 
-            public function publish(Queue $queue, array $payload, bool $priority = false): bool
+            public function publish(Queue $queue, array $payload): bool
             {
                 $this->gate->pop();
 
                 return true;
             }
 
-            public function enqueueMany(Queue $queue, array $payloads, bool $priority = false): bool
+            public function enqueueMany(Queue $queue, array $payloads): bool
             {
                 return true;
             }
@@ -344,14 +342,14 @@ final class BackgroundTest extends TestCase
              */
             public function __construct(private array &$buffer) {}
 
-            public function publish(Queue $queue, array $payload, bool $priority = false): bool
+            public function publish(Queue $queue, array $payload): bool
             {
                 $this->buffer[] = $payload;
 
                 return true;
             }
 
-            public function enqueueMany(Queue $queue, array $payloads, bool $priority = false): bool
+            public function enqueueMany(Queue $queue, array $payloads): bool
             {
                 foreach ($payloads as $payload) {
                     $this->buffer[] = $payload;
@@ -370,26 +368,25 @@ final class BackgroundTest extends TestCase
     }
 
     /**
-     * @param list<array{queue: string, priority: bool, payloads: list<array<string, mixed>>}> $batches
+     * @param list<array{queue: string, payloads: list<array<string, mixed>>}> $batches
      */
     private function batchRecordingPublisher(array &$batches): Synchronous
     {
         return new class ($batches) implements Synchronous {
             /**
-             * @param list<array{queue: string, priority: bool, payloads: list<array<string, mixed>>}> $batches
+             * @param list<array{queue: string, payloads: list<array<string, mixed>>}> $batches
              */
             public function __construct(private array &$batches) {}
 
-            public function publish(Queue $queue, array $payload, bool $priority = false): bool
+            public function publish(Queue $queue, array $payload): bool
             {
-                return $this->enqueueMany($queue, [$payload], $priority);
+                return $this->enqueueMany($queue, [$payload]);
             }
 
-            public function enqueueMany(Queue $queue, array $payloads, bool $priority = false): bool
+            public function enqueueMany(Queue $queue, array $payloads): bool
             {
                 $this->batches[] = [
                     'queue' => $queue->name,
-                    'priority' => $priority,
                     'payloads' => $payloads,
                 ];
 

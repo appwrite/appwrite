@@ -86,14 +86,7 @@ abstract class Base extends TestCase
         });
     }
 
-    public function testEnqueuePriority(): void
-    {
-        $publisher = $this->getPublisher();
 
-        $result = $publisher->publish($this->getQueue(), ['type' => 'test_string', 'value' => 'priority'], priority: true);
-
-        $this->assertTrue($result);
-    }
 
     public function testParamAliases(): void
     {

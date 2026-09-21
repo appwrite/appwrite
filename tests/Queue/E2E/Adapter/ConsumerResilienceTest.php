@@ -6,7 +6,6 @@ namespace Tests\E2E\Adapter;
 
 use PHPUnit\Framework\TestCase;
 use Utopia\Queue\Adapter\Swoole;
-use Utopia\Queue\Broker\Redis;
 use Utopia\Queue\Consumer;
 use Utopia\Queue\Message;
 use Utopia\Queue\Queue;
@@ -30,15 +29,14 @@ final class ConsumerResilienceTest extends TestCase
 
     public function testConsumeSurvivesBrokerFailuresAndResumes(): void
     {
-        $connection = new InMemoryConnection();
-        $broker = new Redis($connection, $connection);
+        $broker = new MemoryConsumer();
         $queue = new Queue(self::QUEUE, self::NAMESPACE);
 
         // Fails the first two receives, then delegates to the working broker.
         $flaky = new class ($broker) implements Consumer {
             public int $failures = 0;
 
-            public function __construct(private readonly Redis $inner) {}
+            public function __construct(private readonly Consumer $inner) {}
 
             public function receive(Queue $queue, int $timeout, int $n = 1): array
             {
@@ -73,7 +71,7 @@ final class ConsumerResilienceTest extends TestCase
         $reportedMessages = [];
 
         \Swoole\Coroutine\run(function () use ($broker, $flaky, $queue, &$processed, &$reported, &$reportedMessages): void {
-            $broker->publish($queue, ['n' => 1]);
+            $broker->add($queue, ['n' => 1]);
 
             $adapter = new class ($flaky, 1, self::NAMESPACE) extends Swoole {
                 // Keep the test quick; the production pause is RECEIVE_BACKOFF seconds.
@@ -91,13 +89,14 @@ final class ConsumerResilienceTest extends TestCase
                     $reportedMessages[] = $message;
                 },
                 [
-                    ['queue' => $queue, 'maxCoroutines' => 1],
+                    ['queue' => $queue, 'coroutines' => 1],
                 ],
             );
         });
 
         $this->assertSame(2, $flaky->failures, 'both failures were absorbed rather than escaping');
         $this->assertSame(1, $processed, 'the loop resumed and drained the queue');
+        $this->assertCount(1, $broker->committed);
         $this->assertSame(['broker unreachable', 'broker unreachable'], $reported, 'each failure was reported');
         $this->assertSame([null, null], $reportedMessages, 'reported without a message, since none was obtained');
     }
@@ -105,10 +104,9 @@ final class ConsumerResilienceTest extends TestCase
 
     public function testAFailedErrorReportStillLeavesATrace(): void
     {
-        $connection = new InMemoryConnection();
-        $broker = new Redis($connection, $connection);
+        $broker = new MemoryConsumer();
         $queue = new Queue(self::QUEUE, self::NAMESPACE);
-        $broker->publish($queue, ['n' => 1]);
+        $broker->add($queue, ['n' => 1]);
 
         $adapter = new class ($broker, 1, self::NAMESPACE) extends Swoole {
             /** @var resource */
@@ -144,6 +142,6 @@ final class ConsumerResilienceTest extends TestCase
 
         $this->assertStringContainsString('the database is gone', (string) $trace, 'the original failure must reach a sink that needs nothing working');
         $this->assertStringContainsString('reporting needs the database too', (string) $trace, 'the reporting failure is named too, so the gap is obvious');
-        $this->assertSame(1, $broker->getQueueSize($queue, failedJobs: true), 'the message is still rejected exactly once');
+        $this->assertCount(1, $broker->rejected, 'the message is still rejected exactly once');
     }
 }

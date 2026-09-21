@@ -16,12 +16,12 @@ readonly class Pool implements Synchronous, Consumer, Bounded
         private ?UtopiaPool $consumer = null,
     ) {}
 
-    public function publish(Queue $queue, array $payload, bool $priority = false): bool
+    public function publish(Queue $queue, array $payload): bool
     {
         return $this->delegate($this->publisher, __FUNCTION__, \func_get_args());
     }
 
-    public function enqueueMany(Queue $queue, array $payloads, bool $priority = false): bool
+    public function enqueueMany(Queue $queue, array $payloads): bool
     {
         return $this->delegate($this->publisher, __FUNCTION__, \func_get_args());
     }
@@ -82,13 +82,26 @@ readonly class Pool implements Synchronous, Consumer, Bounded
      * map has no entry for it; {@see \Utopia\Queue\Broker\Nats::extend()} is
      * silent in that case by design.
      */
-    public function extend(Queue $queue, Message $message): void
+    public function release(Queue $queue, Message ...$messages): void
     {
-        $this->consumer?->use(function (Synchronous|Consumer $adapter) use ($queue, $message): void {
-            $extend = [$adapter, 'extend'];
+        $this->consumer?->use(function (Synchronous|Consumer $adapter) use ($queue, $messages): void {
+            if (\is_callable([$adapter, 'release'])) {
+                $adapter->release($queue, ...$messages);
+            }
+        });
+    }
 
-            if (\is_callable($extend)) {
-                $extend($queue, $message);
+    public function extend(Queue $queue, Message ...$messages): void
+    {
+        $this->consumer?->use(function (Synchronous|Consumer $adapter) use ($queue, $messages): void {
+            if (\is_callable([$adapter, 'extend'])) {
+                if (new \ReflectionMethod($adapter, 'extend')->isVariadic()) {
+                    $adapter->extend($queue, ...$messages);
+                } else {
+                    foreach ($messages as $message) {
+                        $adapter->extend($queue, $message);
+                    }
+                }
             }
         });
     }

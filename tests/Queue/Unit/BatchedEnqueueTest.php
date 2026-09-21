@@ -68,16 +68,7 @@ final class BatchedEnqueueTest extends TestCase
         $this->assertSame([], $connection->calls);
     }
 
-    public function testPriorityPushesTheBatchOnTheOtherEnd(): void
-    {
-        $connection = new PushRecordingConnection();
-        $broker = new Broker($connection, $connection);
 
-        $broker->enqueueMany(new Queue('mail'), [['to' => 'a'], ['to' => 'b']], priority: true);
-
-        $this->assertSame([['rightPushMany', 'utopia-queue.queue.mail']], $connection->calls);
-        $this->assertCount(2, $connection->pushed);
-    }
 
     /**
      * Two methods rather than one that inspects its argument: a payload that

@@ -117,7 +117,7 @@ class Server
      *
      * @var array<string, int>
      */
-    protected array $batches = [];
+    protected array $prefetches = [];
 
     private Histogram $jobWaitTime;
     private Histogram $processDuration;
@@ -135,25 +135,27 @@ class Server
      * Register a job for a queue. Queue name and concurrency live only here —
      * the adapter is transport (processes, namespace, consumer).
      *
-     * $batch is how many messages one receive may claim at once, where the
-     * consumer supports it. It is bounded by $maxCoroutines and refused above
-     * it at start(): a claimed message must have a handler slot waiting for it,
-     * or it sits in this process doing nothing while an idle replica could have
-     * taken it. Leave it at 1 for a queue whose handlers are expensive -- the
-     * round trip it saves is noise next to the work -- and raise it for one
-     * whose handlers are not, which is where the broker is the bottleneck.
+     * $coroutines limits running handlers. $prefetch limits all unacknowledged
+     * messages: waiting, running, and awaiting confirmation. It defaults to
+     * $coroutines and must be at least that value.
      */
-    public function job(string $queue, int $maxCoroutines = 1, int $batch = 1): Job
+    public function job(string $queue, int $coroutines = 1, ?int $prefetch = null): Job
     {
         if ($queue === '') {
             throw new Exception('Queue name is required');
         }
 
+        $coroutines = max(1, $coroutines);
+        $prefetch ??= $coroutines;
+        if ($prefetch < $coroutines) {
+            throw new \InvalidArgumentException('Prefetch must be at least the number of coroutines');
+        }
+
         $job = new Job();
         $this->job = $job;
         $this->jobs[$queue] = $job;
-        $this->coroutines[$queue] = max(1, $maxCoroutines);
-        $this->batches[$queue] = max(1, $batch);
+        $this->coroutines[$queue] = $coroutines;
+        $this->prefetches[$queue] = $prefetch;
 
         return $job;
     }
@@ -184,9 +186,9 @@ class Server
         return $this->coroutines[$queue] ?? 1;
     }
 
-    public function batch(string $queue): int
+    public function prefetch(string $queue): int
     {
-        return $this->batches[$queue] ?? 1;
+        return $this->prefetches[$queue] ?? 1;
     }
 
     protected function jobFor(Message $message): Job
@@ -456,8 +458,8 @@ class Server
 
                 $queues = [];
                 foreach (array_keys($this->jobs) as $queueName) {
-                    $maxCoroutines = $this->coroutines[$queueName] ?? 1;
-                    $batch = $this->batches[$queueName] ?? 1;
+                    $coroutines = $this->coroutines[$queueName] ?? 1;
+                    $prefetch = $this->prefetches[$queueName] ?? 1;
                     $consumer = \is_callable($this->consumer)
                         ? ($this->consumer)($queueName)
                         : $this->adapter->createConsumer($queueName);
@@ -469,14 +471,13 @@ class Server
                     // first overlap. Refuse here so a concurrency that a serialising
                     // consumer -- Broker\Redis and Broker\Nats both are -- carries safely
                     // cannot reach production as a crash loop on one that is not.
-                    if ($maxCoroutines > 1 && $consumer instanceof Exclusive) {
+                    if ($prefetch > 1 && $consumer instanceof Exclusive) {
                         throw new Exception(\sprintf(
-                            "Queue '%s' is registered with job('%s', %d), but its consumer %s drives a single socket that only one coroutine may read at a time. Register it as job('%s', 1) and add replicas for throughput.",
+                            "Queue '%s' is registered with job('%s', %d), but its consumer %s drives a single socket that only one coroutine may read at a time. Use one coroutine with prefetch 1 and add replicas for throughput.",
                             $queueName,
                             $queueName,
-                            $maxCoroutines,
+                            $coroutines,
                             $consumer::class,
-                            $queueName,
                         ));
                     }
 
@@ -489,39 +490,22 @@ class Server
                     // workers in front of it. Refuse it here, the way an exclusive
                     // consumer's cap is refused, rather than let it be found in a graph.
                     $ceiling = $consumer instanceof Bounded ? $consumer->inFlightCeiling() : null;
-                    if ($ceiling !== null && $ceiling <= $maxCoroutines) {
+                    if ($ceiling !== null && $ceiling <= $prefetch) {
                         throw new Exception(\sprintf(
-                            "Queue '%s' is registered with job('%s', %d), but its consumer %s holds at most %d message(s) in flight. Messages sleeping in backoff hold a slot each, so the handlers can take every slot the consumer has and the queue stops being delivered into. Raise the in-flight ceiling (Broker\\Nats: maxAckPending) above %d, or lower the coroutine cap.",
+                            "Queue '%s' is registered with job('%s', %d), but its consumer %s holds at most %d message(s) in flight. Waiting retries also count toward this ceiling, so filling it with local deliveries can stop further delivery. Raise the in-flight ceiling (Broker\\Nats: maxAckPending) above %d, or lower the prefetch limit.",
                             $queueName,
                             $queueName,
-                            $maxCoroutines,
+                            $coroutines,
                             $consumer::class,
                             $ceiling,
-                            $maxCoroutines,
-                        ));
-                    }
-
-                    // A batch above the coroutine count would claim messages this
-                    // worker has nowhere to run: they would wait here, out of the
-                    // broker and invisible to every idle replica, until a handler
-                    // ahead of them finished. It is also what keeps the in-flight
-                    // ceiling honest -- reserving a slot per message is why a batch
-                    // cannot push more messages unacknowledged than maxCoroutines.
-                    if ($batch > $maxCoroutines) {
-                        throw new Exception(\sprintf(
-                            "Queue '%s' is registered with job('%s', %d, %d): a batch cannot exceed the handler slots waiting for it. Raise the coroutine count, or lower the batch to %d.",
-                            $queueName,
-                            $queueName,
-                            $maxCoroutines,
-                            $batch,
-                            $maxCoroutines,
+                            $prefetch,
                         ));
                     }
 
                     $queues[] = [
                         'queue' => new Queue($queueName, $this->adapter->namespace),
-                        'maxCoroutines' => $maxCoroutines,
-                        'batch' => $batch,
+                        'coroutines' => $coroutines,
+                        'prefetch' => $prefetch,
                         'consumer' => $consumer,
                     ];
                 }

@@ -28,7 +28,7 @@ use Utopia\Telemetry\Adapter\None as NoTelemetry;
  * if no slot frees within it; -1 (the default) waits indefinitely.
  *
  * Set $maxBatchInterval and $maxBatchSize together to coalesce consecutive
- * messages for the same queue and priority into enqueueMany() calls. A partial
+ * messages for the same queue into enqueueMany() calls. A partial
  * batch is flushed when its oldest message reaches the interval, and shutdown
  * always flushes accepted messages before the readers exit.
  *
@@ -167,14 +167,14 @@ class Background implements Synchronous, Asynchronous
     /**
      * Publish synchronously, blocking until the broker accepts the message.
      */
-    public function publish(Queue $queue, array $payload, bool $priority = false): bool
+    public function publish(Queue $queue, array $payload): bool
     {
-        return $this->publisher->publish($queue, $payload, $priority);
+        return $this->publisher->publish($queue, $payload);
     }
 
-    public function enqueueMany(Queue $queue, array $payloads, bool $priority = false): bool
+    public function enqueueMany(Queue $queue, array $payloads): bool
     {
-        return $this->publisher->enqueueMany($queue, $payloads, $priority);
+        return $this->publisher->enqueueMany($queue, $payloads);
     }
 
     /**
@@ -185,10 +185,10 @@ class Background implements Synchronous, Asynchronous
      *
      * @throws BufferFullException when the buffer stays full past the timeout.
      */
-    public function enqueue(Queue $queue, array $payload, bool $priority = false): void
+    public function enqueue(Queue $queue, array $payload): void
     {
         if (!$this->started || Coroutine::getCid() === -1) {
-            $this->publish($queue, $payload, $priority);
+            $this->publish($queue, $payload);
 
             return;
         }
@@ -199,7 +199,6 @@ class Background implements Synchronous, Asynchronous
             $accepted = $this->channel->push([
                 'queue' => $queue,
                 'payload' => $payload,
-                'priority' => $priority,
                 'enqueuedAt' => microtime(true),
             ], $this->timeout);
         } finally {
@@ -224,12 +223,11 @@ class Background implements Synchronous, Asynchronous
             }
 
             if ($this->maxBatchInterval === null || $this->maxBatchSize === null) {
-                $this->dispatch($task['queue'], [$task['payload']], $task['priority'], batched: false);
+                $this->dispatch($task['queue'], [$task['payload']], batched: false);
                 continue;
             }
 
             $queue = $task['queue'];
-            $priority = $task['priority'];
             $payloads = [$task['payload']];
             $deadline = $task['enqueuedAt'] + $this->maxBatchInterval;
             $stopping = false;
@@ -251,8 +249,7 @@ class Background implements Synchronous, Asynchronous
                 }
 
                 if ($next['queue']->name !== $queue->name
-                    || $next['queue']->namespace !== $queue->namespace
-                    || $next['priority'] !== $priority) {
+                    || $next['queue']->namespace !== $queue->namespace) {
                     $pending = $next;
                     break;
                 }
@@ -260,7 +257,7 @@ class Background implements Synchronous, Asynchronous
                 $payloads[] = $next['payload'];
             }
 
-            $this->dispatch($queue, $payloads, $priority, batched: true);
+            $this->dispatch($queue, $payloads, batched: true);
 
             if ($stopping) {
                 return;
@@ -271,12 +268,12 @@ class Background implements Synchronous, Asynchronous
     /**
      * @param list<array<string, mixed>> $payloads
      */
-    private function dispatch(Queue $queue, array $payloads, bool $priority, bool $batched): void
+    private function dispatch(Queue $queue, array $payloads, bool $batched): void
     {
         try {
             $published = $batched
-                ? $this->publisher->enqueueMany($queue, $payloads, $priority)
-                : $this->publisher->publish($queue, $payloads[0], $priority);
+                ? $this->publisher->enqueueMany($queue, $payloads)
+                : $this->publisher->publish($queue, $payloads[0]);
 
             if (!$published) {
                 error_log('Background queue publisher failed to publish a message.');

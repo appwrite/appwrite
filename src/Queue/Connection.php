@@ -6,6 +6,13 @@ namespace Utopia\Queue;
 
 interface Connection
 {
+    /**
+     * Execute an atomic Lua transition. All accessed keys must be declared.
+     * @param list<string> $keys
+     * @param list<string|int|float> $args
+     */
+    public function execute(string $script, array $keys, array $args): mixed;
+
     public function rightPushArray(string $queue, array $payload): bool;
 
     /**

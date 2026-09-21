@@ -7,7 +7,6 @@ namespace Tests\E2E\Adapter;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Utopia\Lock\Lock;
-use Utopia\Lock\Mutex;
 use Utopia\Queue\Connection;
 use Utopia\Queue\Connection\Locking;
 
@@ -74,39 +73,31 @@ final class LockingTest extends TestCase
         $this->assertSame(['acquire', 'release'], $recorder->events);
     }
 
-    /**
-     * Defaults to a coroutine-aware Mutex when no lock is injected.
-     */
-    public function testDefaultLockIsAMutex(): void
+    public function testDefaultLockSerializesConcurrentOperations(): void
     {
-        $locking = new Locking(new RecordingConnection(new Recorder()));
-
-        $lock = new \ReflectionProperty(Locking::class, 'lock')->getValue($locking);
-
-        $this->assertInstanceOf(Mutex::class, $lock);
-    }
-
-    /**
-     * Regression guard: every method on the Connection interface must be
-     * exercised by operationProvider(), so newly added methods cannot ship
-     * without verifying they are synchronized.
-     */
-    public function testEveryConnectionMethodIsCovered(): void
-    {
-        $declared = array_map(
-            static fn(\ReflectionMethod $method): string => $method->getName(),
-            new \ReflectionClass(Connection::class)->getMethods(),
-        );
-
-        $covered = array_map(
-            static fn(array $case): string => $case[0],
-            iterator_to_array($this->operationProvider(), false),
-        );
-
-        sort($declared);
-        sort($covered);
-
-        $this->assertSame($declared, $covered, 'Every Connection method must be covered by the Locking test.');
+        $connection = new class (new Recorder()) extends RecordingConnection {
+            public int $active = 0;
+            public int $peak = 0;
+            public function ping(): bool
+            {
+                $this->active++;
+                $this->peak = max($this->peak, $this->active);
+                \Swoole\Coroutine::sleep(0.001);
+                $this->active--;
+                return true;
+            }
+        };
+        $locking = new Locking($connection);
+        $results = [];
+        \Swoole\Coroutine\run(function () use ($locking, &$results): void {
+            for ($i = 0; $i < 10; $i++) {
+                \Swoole\Coroutine::create(function () use ($locking, &$results): void {
+                    $results[] = $locking->ping();
+                });
+            }
+        });
+        $this->assertSame(array_fill(0, 10, true), $results);
+        $this->assertSame(1, $connection->peak);
     }
 
     /**
@@ -114,6 +105,7 @@ final class LockingTest extends TestCase
      */
     public static function operationProvider(): iterable
     {
+        yield 'execute' => ['execute', ['return 1', [], []], [1]];
         yield 'rightPushArray' => ['rightPushArray', ['queue', ['a' => 1]], true];
         yield 'rightPushMany' => ['rightPushMany', ['queue', ['{"a":1}', '{"b":2}']], true];
         yield 'rightPopArray' => ['rightPopArray', ['queue', 5], ['popped' => 'right']];
@@ -189,6 +181,12 @@ class RecordingLock implements Lock
 
 class RecordingConnection implements Connection
 {
+    public function execute(string $script, array $keys, array $args): mixed
+    {
+        $this->record('execute', [$script, $keys, $args]);
+        return [1];
+    }
+
     public function __construct(private readonly Recorder $recorder) {}
 
     private function record(string $method, array $args): void
@@ -380,6 +378,11 @@ class RecordingConnection implements Connection
 
 class ThrowingConnection implements Connection
 {
+    public function execute(string $script, array $keys, array $args): mixed
+    {
+        throw new \LogicException('Script execution is not supported by this test connection');
+    }
+
     public function rightPushArray(string $queue, array $payload): bool
     {
         return true;

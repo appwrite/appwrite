@@ -26,6 +26,19 @@ class Message
         $this->sequence = $array['sequence'] ?? null;
     }
 
+    private ?string $receipt = null;
+
+    public function getReceipt(): ?string
+    {
+        return $this->receipt;
+    }
+
+    public function setReceipt(string $receipt): self
+    {
+        $this->receipt = $receipt;
+        return $this;
+    }
+
     public function setPid(string $pid): self
     {
         $this->pid = $pid;

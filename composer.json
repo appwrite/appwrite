@@ -46,7 +46,7 @@
     "require-dev": {
         "ext-redis": "*",
         "swoole/ide-helper": "4.8.8",
-        "utopia-php/nats": "^1.3",
+        "utopia-php/nats": "^1.4",
         "workerman/workerman": "^4.0"
     },
     "suggest": {
@@ -54,7 +54,7 @@
         "workerman/workerman": "Needed to support Workerman.",
         "ext-pcntl": "Fallback for Adapter\\KubernetesJob graceful shutdown when Swoole is unavailable.",
         "ext-igbinary": "Required for the Igbinary codec (Codec\\Igbinary).",
-        "utopia-php/nats": "Needed to support the NATS JetStream broker (Broker\\Nats)."
+        "utopia-php/nats": "Version ^1.4 is needed to support the NATS JetStream broker (Broker\\Nats)."
     },
     "config": {
         "allow-plugins": {

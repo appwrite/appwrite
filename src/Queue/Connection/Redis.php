@@ -13,6 +13,33 @@ class Redis implements Connection
 
     public function __construct(protected string $host, protected int $port = 6379, protected ?string $user = null, protected ?string $password = null, protected float $connectTimeout = -1, protected float $readTimeout = -1) {}
 
+    private array $scripts = [];
+
+    public function execute(string $script, array $keys, array $args): mixed
+    {
+        return $this->call(function (\Redis $redis) use ($script, $keys, $args): mixed {
+            $hash = sha1($script);
+            if (!isset($this->scripts[$hash])) {
+                $redis->script('load', $script);
+                $this->scripts[$hash] = true;
+            }
+            $redis->clearLastError();
+            $result = $redis->evalSha($hash, [...$keys, ...$args], \count($keys));
+            $error = $redis->getLastError();
+            if ($result === false && $error !== null && str_starts_with($error, 'NOSCRIPT')) {
+                // The server definitively did not execute this operation.
+                $redis->script('load', $script);
+                $redis->clearLastError();
+                $result = $redis->evalSha($hash, [...$keys, ...$args], \count($keys));
+                $error = $redis->getLastError();
+            }
+            if ($result === false && $error !== null) {
+                throw new \RedisException($error);
+            }
+            return $result;
+        });
+    }
+
     public function rightPopLeftPushArray(string $queue, string $destination, int $timeout): array|false
     {
         $response = $this->rightPopLeftPush($queue, $destination, $timeout);
@@ -224,6 +251,7 @@ class Redis implements Connection
         } catch (\Throwable) {
         } finally {
             $this->redis = null;
+            $this->scripts = [];
         }
     }
 

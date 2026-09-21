@@ -196,43 +196,23 @@ Clamping on the marker rather than on a transport name or a version also means t
 
 ### Batched receive
 
-A `receive()` costs at least one round trip, and on a queue whose handler is cheap that round trip *is* the work. `job('…', $coroutines, batch: N)` lets one receive claim up to N messages:
+`job('v1-stats-usage', coroutines: 1, prefetch: 100)` allows up to 100 unacknowledged messages while running one handler at a time. Prefetch counts waiting messages, running handlers, and messages awaiting confirmation. It defaults to the coroutine count; an explicit lower value is rejected. A batch is the number of messages in one broker operation, which can be smaller than prefetch. The Swoole adapter enforces the prefetch limit and renews all outstanding messages from one loop.
 
-```php
-$server
-    ->job('v1-stats-usage', 16, batch: 16)
-    ->action(function (array $payload) { /* … */ });
-```
+Consumers retain `receive(Queue $queue, int $timeout, int $n = 1): array`, `commit()`, and `reject()`. Sparse queues return available messages without waiting to fill a batch. Each message has an independent outcome. Completed requests already waiting on a connection are coalesced without a timer; handlers can continue while confirmations are pending, within the same delivery bound. Success hooks run after their own confirmation, so a later handler can start before an earlier success hook.
 
-Only the first message of a batch waits. On Redis the whole batch is one `BLMPOP`, which blocks for that first message exactly as `BRPOP` did and then takes whatever is already behind it, so a queue holding one message answers at once rather than waiting for company that is not coming. That command is Redis 7.0; a batch of one still uses `BRPOP`, so the floor applies to the queues that asked for a batch and not to every deployment.
+Redis keeps the existing opaque payload format. Lua atomically reserves available raw messages, PHP decodes them, and a second script finalizes claims and counters. An empty queue registers its reservation before a blocking move, so a crash immediately after that move cannot lose the message. Expired reservations are recovered by maintenance. Completions already waiting in the same namespace are settled together in a bounded script with an independent result per message; heartbeat renewal also uses a grouped script. Payloads and ownership survive heartbeat expiry until settlement or atomic recovery. Positive `jobTtl` applies to payloads retained after rejection or dead-lettering; it does not expire outstanding work. Wrap shared command connections in `Connection\Locking`. Lua operations are bounded, and batch receive returns at most 1,000 messages per call.
 
-The batch is bounded by free handler slots, and `Server::start()` refuses a batch larger than the coroutine cap. That bound is the whole safety argument: a claimed message is out of the broker and invisible to every idle replica, so claiming more than this worker can start would be taking work away from a worker that could have run it. At `job('…', 1)` every batch is one message, which is why raising the coroutine count comes first.
+NATS keeps explicit, server-confirmed acknowledgements. The NATS client's `requestBatch()` transport operation writes requests together, correlates individual replies, and reports confirmed results before unrelated requests time out. `AckAll` is not used. Receiving retains a blocking first message, and a no-wait top-up.
 
-Each message keeps its own acknowledgment — there is no batch commit — so one poison message in a batch of sixteen is rejected on its own and the other fifteen are unaffected.
+**Compatibility:** custom Redis `Connection` implementations must implement `execute()`. Redis Cluster requires a shared hash tag in the queue namespace, such as `{utopia-queue}`, before atomic multi-key operations can run. Changing an existing namespace requires a data migration; it must not be changed on a live queue without draining or migrating its keys. Pooled consumers retain their existing lease serialization; use dedicated broker connections for pipelined completion throughput.
 
-Consumers expose `receive(Queue $queue, int $timeout, int $n = 1): array`. The result is always a list of up to `$n` claimed messages, or an empty list on timeout. Each returned message needs its own `commit()` or `reject()`. Counts below one use one.
+**Rollback:** old consumers can read the unchanged ready payloads, but do not recover new reservation lists. Before retiring the last new consumer, stop its receives, drain its work, and recover expired reservations with its maintenance path. Check `<namespace>.reservations.<queue>` is empty before removing that recovery capability. Merely reducing prefetch to one does not remove reservation state.
 
-This folds `receiveBatch()` into `receive()` and removes `Consumer\Batched`. To migrate a single-message caller, use `$consumer->receive($queue, $timeout)[0] ?? null`; batch callers use `$consumer->receive($queue, $timeout, $n)`. Custom consumers must implement the same list-returning contract.
+**Queue 5 migration:** `Server::job()` keeps its positional argument order, but renames `maxCoroutines` to `coroutines` and `batch` to `prefetch`. Rename named arguments and Platform job metadata keys; replace `Server::batch()` with `Server::prefetch()`. Direct adapter queue specs also use `coroutines` and `prefetch`. Omitting prefetch now uses the coroutine count. To preserve the previous effective bound when passing both numbers, pass `prefetch: max($oldBatch, $coroutines)`. Platform's updated worker configuration requires queue 5.
 
-`Broker\Redis` shares processing-list and counter writes across the batch. Each message still gets its own payload and heartbeat keys. `Broker\Nats` fetches available messages without waiting for the batch to fill.
+Third-party consumers keep the existing `Consumer` contract. `commit()` acknowledges processed work; `reject()` applies the broker's retry/dead-letter policy. Optional `release()` returns work whose handler never started, without incrementing attempts. Existing single-message `extend()` implementations remain supported alongside variadic renewal; no new renewal interface is required. Receipt identity stays opaque on `Message` and is separate from its message ID.
 
-The following measurements predate claim heartbeats and are historical comparisons.
-
-Whether that becomes throughput depends entirely on whether those commands were the constraint. Ratio of batch-16 to batch-1, 16 coroutines, 10,000 messages, two passes in opposite order:
-
-| the handler | `Broker\Redis` | `Broker\Nats` |
-|---|---|---|
-| does nothing | 1.30-1.36x | 2.03-2.31x |
-| computes for 0.14ms | 1.18-1.23x | 1.45-1.51x |
-| computes for 1ms | 1.04-1.08x | 1.08-1.10x |
-| waits 1ms | 1.23-1.25x | 1.62-1.63x |
-| waits 2ms | **0.92-0.96x** | **0.80-0.82x** |
-
-Read the axis as "is the receive loop the bottleneck", not "is the handler fast". A handler that computes does not yield, so PHP runs one at a time and throughput is capped by the handler no matter what the broker does — 1ms of computation leaves nothing for a batch to win. A handler that waits yields, so sixteen of them overlap and the loop has to feed all sixteen; there the broker is the constraint and batching pays.
-
-And past the point where it pays, **it costs**: at 2ms of waiting the batch is a 4-20% loss, reproduced in both passes. Sixteen messages claimed together finish together, and their sixteen acknowledgments then queue behind one lock, so a smooth pipeline turns into convoys. The `io`, `cpu` and `mixed` rows in the table above are all in this region, which is why none of them move.
-
-So the default of 1 is not a conservative default, it is the right one for most queues. Raise it for a queue that is demonstrably broker-bound — cheap handlers, deep backlog — and measure the queue you are raising it for, because the same change makes a handler-bound queue slower.
+Keep prefetch at its default until representative measurements justify a change. With one coroutine, compare prefetch 1, 8, 32, and 100 using the same persistence and acknowledgement guarantees. Local no-op throughput does not establish a production setting. See [the implementation plan](docs/batching.md) and [prior art](docs/prior-art.md).
 
 ## Message encoding
 
@@ -282,11 +262,11 @@ Coroutine\run(function () use ($publisher, $queue, $payload): void {
 });
 ```
 
-When the configured timeout expires, `enqueue()` throws `Publisher\BufferFullException`. Set `maxBatchInterval` and `maxBatchSize` together to opt into batching; a batch flushes when either limit is reached, and messages with different queues or priorities are never mixed. More than one reader coroutine requires a concurrency-safe wrapped publisher, such as `Broker\Pool`; it also gives up FIFO dispatch order.
+When the configured timeout expires, `enqueue()` throws `Publisher\BufferFullException`. Set `maxBatchInterval` and `maxBatchSize` together to opt into batching; a batch flushes when either limit is reached, and messages with different queues are never mixed. More than one reader coroutine requires a concurrency-safe wrapped publisher, such as `Broker\Pool`; it also gives up FIFO dispatch order.
 
 ## Multiple queues in one process
 
-Call `job($queue, $maxCoroutines)` once per queue. The adapter stays the same — only the jobs change. Each job gets its own consume loop and concurrency cap, so `v1-functions` at 8 does not share a pool with `database_db_main` at 1.
+Call `job($queue, $coroutines)` once per queue. The adapter stays the same — only the jobs change. Each job gets its own consume loop and concurrency cap, so `v1-functions` at 8 does not share a pool with `database_db_main` at 1.
 
 ```php
 use Utopia\Queue;
@@ -328,7 +308,7 @@ $server->start();
 
 Publish synchronously to each queue by name (`$publisher->publish(new Queue('v1-functions'), $payload)`, etc.).
 
-With [`utopia-php/platform`](https://github.com/utopia-php/platform), pass `workers` and `jobs` (`queue` / `maxCoroutines` per action) into `Platform::init(Service::TYPE_WORKER, …)`.
+With [`utopia-php/platform`](https://github.com/utopia-php/platform), pass `workers` and `jobs` (`queue` / `coroutines` per action) into `Platform::init(Service::TYPE_WORKER, …)`.
 
 ## System requirements
 

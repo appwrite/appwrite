@@ -34,7 +34,7 @@ final class AdapterContextTest extends TestCase
             function (): void {},
             [[
                 'queue' => new Queue('jobs'),
-                'maxCoroutines' => 1,
+                'coroutines' => 1,
             ]],
         );
 
@@ -69,7 +69,7 @@ final class AdapterContextTest extends TestCase
             },
             [[
                 'queue' => new Queue('jobs'),
-                'maxCoroutines' => 1,
+                'coroutines' => 1,
             ]],
         );
 

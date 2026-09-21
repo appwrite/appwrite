@@ -16,7 +16,7 @@ class Redis implements Synchronous, Consumer
     private const int RECONNECT_BACKOFF_MS = 100;
     private const int RECONNECT_MAX_BACKOFF_MS = 5_000;
 
-    /** Claim lifetime; handlers refresh it every third of this interval. */
+    /** Heartbeat lifetime; handlers refresh it every third of this interval. */
     private const int CLAIM_TTL = 90;
 
     /** Lock expiry schedules the next fleet sweep; never release it early. */
@@ -26,6 +26,8 @@ class Redis implements Synchronous, Consumer
     private const int REAP_LIMIT = 1_000;
 
     private bool $closed = false;
+    /** @var array<string, \Utopia\Queue\Internal\Buffer> */
+    private array $settlements = [];
 
     /**
      * Queues attempted by this broker, keyed by namespace/name pairs.
@@ -85,18 +87,24 @@ class Redis implements Synchronous, Consumer
         $key = "{$queue->namespace}.queue.{$queue->name}";
 
         try {
-            // One command for the whole batch: LMPOP's blocking form waits for
-            // the first message exactly as BRPOP does, then takes whatever else
-            // is already on the list in the same round trip -- so a queue
-            // holding one message costs what it costs today and never waits for
-            // company that is not coming. A batch of one stays on BRPOP, which
-            // keeps LMPOP's Redis 7.0 floor on the consumers that asked for a
-            // batch rather than on every deployment.
-            if ($n > 1) {
-                $batch = $this->receive->rightPopMany($key, $n, $timeout);
-            } else {
-                $raw = $this->receive->rightPop($key, $timeout);
-                $batch = \is_string($raw) && $raw !== '' ? [$raw] : [];
+            $token = bin2hex(random_bytes(16));
+            $reservation = "{$queue->namespace}.reservations.{$queue->name}.{$token}";
+            $keys = [$key, "{$queue->namespace}.reservations.{$queue->name}", $reservation,
+                "{$queue->namespace}.processing.{$queue->name}",
+                "{$queue->namespace}.stats.{$queue->name}.total",
+                "{$queue->namespace}.stats.{$queue->name}.processing"];
+            $count = min(self::REAP_LIMIT, max(1, $n));
+            $batch = $this->script($this->receive, 'reserve', $keys, [$count, self::CLAIM_TTL, max(0, $timeout), 0]);
+            if ($batch === [] && $timeout > 0) {
+                // The script registered this reservation before blocking. A crash
+                // after the move is recoverable even before PHP sees the reply.
+                $raw = $this->receive->rightPopLeftPush($key, $reservation, $timeout);
+                if (\is_string($raw)) {
+                    $batch = [$raw];
+                    if ($count > 1) {
+                        $batch = [...$batch, ...$this->script($this->receive, 'reserve', $keys, [$count - 1, self::CLAIM_TTL, 0, 1])];
+                    }
+                }
             }
 
             if ($this->reconnectAttempt > 0) {
@@ -130,152 +138,112 @@ class Redis implements Synchronous, Consumer
             return [];
         }
 
-        return $this->claim($queue, $batch);
+        return $this->claim($queue, $batch, $token, $reservation);
     }
 
-    /**
-     * Take ownership of popped bytes: store each job, mark them processing, and
-     * bump the received counters.
-     *
-     * Between the pop and the write to the processing list these messages exist
-     * nowhere but in this process. Claiming them is therefore not optional and
-     * not partially skippable: a failure here puts the whole batch back on the
-     * queue rather than letting it evaporate, and the caller sees the error.
-     *
-     * The counters move once for the batch instead of once per message, so the
-     * claim costs 2N + 3 commands -- a job key and a claim heartbeat per
-     * message -- rather than 5N.
-     *
-     * @param list<string> $batch
-     * @return list<Message>
-     */
-    private function claim(Queue $queue, array $batch): array
+    /** Finalize recoverable raw reservations without teaching Lua application codecs. */
+    private function claim(Queue $queue, array $batch, string $token, string $reservation): array
     {
-        $messages = [];
-        $pids = [];
-        $unclaimed = [];
-
+        $keys = ["{$queue->namespace}.reservations.{$queue->name}", $reservation,
+            "{$queue->namespace}.processing.{$queue->name}",
+            "{$queue->namespace}.stats.{$queue->name}.total",
+            "{$queue->namespace}.stats.{$queue->name}.processing",
+            "{$queue->namespace}.poison.{$queue->name}"];
+        $messages = $args = $poison = [];
         foreach ($batch as $raw) {
             try {
                 $envelope = $this->codec->decode($raw);
+                if (!\is_array($envelope) || !isset($envelope['pid'], $envelope['queue'], $envelope['timestamp'])) {
+                    throw new \UnexpectedValueException('Invalid queue envelope');
+                }
+                $envelope['timestamp'] = (int) $envelope['timestamp'];
+                $message = new Message($envelope);
             } catch (\Throwable) {
-                $envelope = null;
-            }
-
-            if (!\is_array($envelope) || !isset($envelope['pid'], $envelope['queue'], $envelope['timestamp'])) {
-                $this->park($queue, $raw);
-
+                $poison[] = $raw;
                 continue;
             }
-
-            $envelope['timestamp'] = (int) $envelope['timestamp'];
-
-            $message = new Message($envelope);
+            $message->setReceipt($token);
             $messages[] = $message;
-            $pids[] = $message->getPid();
-            $unclaimed[$message->getPid()] = $raw;
+            $pid = $message->getPid();
+            $keys[] = "{$queue->namespace}.jobs.{$queue->name}.{$pid}";
+            $keys[] = "{$queue->namespace}.claims.{$queue->name}.{$pid}";
+            $keys[] = "{$queue->namespace}.owners.{$queue->name}.{$pid}";
+            $args[] = $raw;
+            $args[] = $pid;
         }
-
-        if ($messages === []) {
-            return [];
-        }
-
-        try {
-            // The bytes go back unchanged rather than re-encoded, which is the
-            // encode this path used to pay on every message.
-            foreach ($messages as $message) {
-                $pid = $message->getPid();
-                $this->receive->set("{$queue->namespace}.jobs.{$queue->name}.{$pid}", $unclaimed[$pid], $queue->jobTtl);
-
-                // Write the heartbeat before exposing the claim to the reaper.
-                // A failed claim leaves a key that expires on its own.
-                $this->receive->set("{$queue->namespace}.claims.{$queue->name}.{$pid}", (string) time(), self::CLAIM_TTL);
-            }
-
-            // The line that makes them claimed, and the only one that does: a
-            // message is recoverable once its pid is on the processing list and
-            // not before, so nothing may be dropped from $unclaimed until this
-            // returns. A job key written for a message that goes back on the
-            // queue is simply overwritten by the claim that eventually keeps it.
-            $this->receive->leftPushMany("{$queue->namespace}.processing.{$queue->name}", $pids);
-            $unclaimed = [];
-
-            // Past the point of no return: these are counters, and a failure
-            // here leaves the batch claimed and reap()-able rather than lost.
-            $this->receive->incrementBy("{$queue->namespace}.stats.{$queue->name}.total", \count($pids));
-            $this->receive->incrementBy("{$queue->namespace}.stats.{$queue->name}.processing", \count($pids));
-        } catch (\Throwable $error) {
-            $this->restore($queue, $unclaimed);
-
-            throw $error;
-        }
-
+        $this->script($this->receive, 'claim', $keys, [self::CLAIM_TTL, $token, \count($messages), ...$args, ...$poison]);
         return $messages;
-    }
-
-    /**
-     * Put back bytes that were popped but never claimed.
-     *
-     * Onto the pop end, so the batch is the next thing taken rather than going
-     * behind everything published since. Pushed in reverse, because the last
-     * one pushed there is the first one popped: the batch comes back in the
-     * order it left.
-     *
-     * @param array<string, string> $unclaimed
-     */
-    private function restore(Queue $queue, array $unclaimed): void
-    {
-        if ($unclaimed === []) {
-            return;
-        }
-
-        try {
-            $this->receive->rightPushMany("{$queue->namespace}.queue.{$queue->name}", array_reverse(array_values($unclaimed)));
-        } catch (\Throwable) {
-            // Nothing left to try: the connection that would carry them back is
-            // the one that just failed. The original error is what propagates.
-        }
     }
 
     public function commit(Queue $queue, Message $message): void
     {
-        $pid = $message->getPid();
-
-        $this->commands->remove("{$queue->namespace}.jobs.{$queue->name}.{$pid}");
-        $this->commands->increment("{$queue->namespace}.stats.{$queue->name}.success");
-        $this->commands->listRemove("{$queue->namespace}.processing.{$queue->name}", $pid);
-        $this->commands->decrement("{$queue->namespace}.stats.{$queue->name}.processing");
+        $this->settle($queue, $message, 'commit');
     }
 
-    /**
-     * Park a failed message for the retry() sweep -- or, where the handler
-     * declared the failure permanent, on the dead list the sweep never reads.
-     *
-     * The failed list is a retry queue in all but name: retry() pops it and
-     * re-enqueues, so a message that fails the same way on every attempt
-     * circulates until maxAttempts or newerThan finally parks it. A terminal
-     * message skips that circuit and goes where an exhausted one ends up
-     * anyway, on the first failure instead of after N of them.
-     */
     public function reject(Queue $queue, Message $message): void
     {
-        $pid = $message->getPid();
-
-        $list = $message->isTerminal() ? 'dead' : 'failed';
-
-        $this->commands->leftPush("{$queue->namespace}.{$list}.{$queue->name}", $pid);
-        $this->commands->increment("{$queue->namespace}.stats.{$queue->name}.failed");
-        $this->commands->listRemove("{$queue->namespace}.processing.{$queue->name}", $pid);
-        $this->commands->decrement("{$queue->namespace}.stats.{$queue->name}.processing");
+        $this->settle($queue, $message, 'reject');
     }
 
-    /**
-     * Refresh the claim while its handler runs. A late beat after commit is
-     * harmless: the pid is no longer on the processing list and the key expires.
-     */
-    public function extend(Queue $queue, Message $message): void
+    /** @param 'commit'|'reject'|'release' $operation */
+    private function settle(Queue $queue, Message $message, string $operation): void
     {
-        $this->commands->set("{$queue->namespace}.claims.{$queue->name}.{$message->getPid()}", (string) time(), self::CLAIM_TTL);
+        $pid = $message->getPid();
+        $outcome = $operation === 'commit' ? 'success' : 'failed';
+        $list = $operation === 'release' ? 'queue' : ($message->isTerminal() ? 'dead' : 'failed');
+        $this->settlements[$queue->namespace] ??= new \Utopia\Queue\Internal\Buffer(function (array $requests, callable $resolved): void {
+            $keys = $args = [];
+            foreach ($requests as [$requestKeys, $requestArgs]) {
+                array_push($keys, ...$requestKeys);
+                array_push($args, ...$requestArgs);
+            }
+            foreach ($this->script($this->commands, 'settle', $keys, $args) as $index => $result) {
+                $resolved($index, $result === false ? new \RedisException('Queue settlement failed') : $result);
+            }
+        });
+        $result = $this->settlements[$queue->namespace]->request([[
+            "{$queue->namespace}.claims.{$queue->name}.{$pid}",
+            "{$queue->namespace}.jobs.{$queue->name}.{$pid}",
+            "{$queue->namespace}.processing.{$queue->name}",
+            "{$queue->namespace}.stats.{$queue->name}.processing",
+            "{$queue->namespace}.stats.{$queue->name}.{$outcome}",
+            "{$queue->namespace}.{$list}.{$queue->name}",
+            "{$queue->namespace}.owners.{$queue->name}.{$pid}",
+        ], [$message->getReceipt() ?? '', $pid, $operation, $queue->jobTtl]]);
+        if ($result !== 1) {
+            throw new \RuntimeException('Queue delivery is no longer owned by this consumer');
+        }
+    }
+
+    /** Return prefetched work that never entered its handler, without counting a failure. */
+    public function release(Queue $queue, Message ...$messages): void
+    {
+        foreach (array_reverse($messages) as $message) {
+            $this->settle($queue, $message, 'release');
+        }
+    }
+
+    public function extend(Queue $queue, Message ...$messages): void
+    {
+        if ($messages === []) {
+            return;
+        }
+        $keys = $tokens = [];
+        foreach ($messages as $message) {
+            $keys[] = "{$queue->namespace}.claims.{$queue->name}.{$message->getPid()}";
+            $keys[] = "{$queue->namespace}.owners.{$queue->name}.{$message->getPid()}";
+            $tokens[] = $message->getReceipt() ?? '';
+        }
+        foreach (array_chunk($keys, self::REAP_LIMIT * 2) as $index => $chunk) {
+            $this->script($this->commands, 'extend', $chunk, [self::CLAIM_TTL, ...\array_slice($tokens, $index * self::REAP_LIMIT, self::REAP_LIMIT)]);
+        }
+    }
+
+    private function script(Connection $connection, string $name, array $keys, array $args): mixed
+    {
+        static $scripts = [];
+        $script = $scripts[$name] ??= file_get_contents(__DIR__ . '/Redis/' . $name . '.lua');
+        return $connection->execute($script, $keys, $args);
     }
 
     /** Refresh often enough to tolerate two missed beats. */
@@ -292,6 +260,11 @@ class Redis implements Synchronous, Consumer
                 continue;
             }
 
+            $registry = "{$queue->namespace}.reservations.{$queue->name}";
+            $expired = $this->script($this->commands, 'expired', [$registry], [self::REAP_LIMIT]);
+            if ($expired !== []) {
+                $this->script($this->commands, 'recover', [$registry, "{$queue->namespace}.queue.{$queue->name}", ...$expired], [self::REAP_LIMIT]);
+            }
             $this->reap($queue, $this->reapAfter, limit: self::REAP_LIMIT, scan: self::REAP_LIMIT * 2);
         }
     }
@@ -311,21 +284,6 @@ class Redis implements Synchronous, Consumer
     private function isClosed(): bool
     {
         return $this->closed;
-    }
-
-    /**
-     * Set aside bytes no codec on this worker can read.
-     *
-     * The pop already took them off the queue, so the choice is where they go,
-     * not whether they leave: dropping them loses the work silently, and
-     * putting them back wedges the queue behind a message every worker chokes
-     * on. The failed and dead lists hold pids, and a message nothing can decode
-     * has no pid to hold -- so the raw bytes go on a list of their own, for a
-     * human to read.
-     */
-    private function park(Queue $queue, string $raw): void
-    {
-        $this->receive->leftPush("{$queue->namespace}.poison.{$queue->name}", $raw);
     }
 
     private function triggerReconnectCallback(Queue $queue, \Throwable $error, int $attempt, int $sleepMs): void
@@ -352,17 +310,15 @@ class Redis implements Synchronous, Consumer
         }
     }
 
-    public function publish(Queue $queue, array $payload, bool $priority = false): bool
+    public function publish(Queue $queue, array $payload): bool
     {
         $key = "{$queue->namespace}.queue.{$queue->name}";
         $envelope = $this->codec->encode($this->envelope($queue, $payload));
 
-        return $priority
-            ? $this->commands->rightPush($key, $envelope)
-            : $this->commands->leftPush($key, $envelope);
+        return $this->commands->leftPush($key, $envelope);
     }
 
-    public function enqueueMany(Queue $queue, array $payloads, bool $priority = false): bool
+    public function enqueueMany(Queue $queue, array $payloads): bool
     {
         if ($payloads === []) {
             return true;
@@ -375,9 +331,7 @@ class Redis implements Synchronous, Consumer
 
         $key = "{$queue->namespace}.queue.{$queue->name}";
 
-        return $priority
-            ? $this->commands->rightPushMany($key, $encoded)
-            : $this->commands->leftPushMany($key, $encoded);
+        return $this->commands->leftPushMany($key, $encoded);
     }
 
     /**
@@ -494,9 +448,14 @@ class Redis implements Synchronous, Consumer
                 continue;
             }
 
-            // The payload expired: the claim is unrecoverable, drop it.
+            $ownerKey = "{$queue->namespace}.owners.{$queue->name}.{$pid}";
+            $owner = $this->commands->get($ownerKey);
+            // Only legacy payloads expire while processing.
             $job = $this->getJob($queue, $pid);
             if ($job === false) {
+                if (\is_string($owner)) {
+                    throw new \RuntimeException('Queue delivery payload is missing');
+                }
                 $this->commands->listRemove($processing, $pid);
                 continue;
             }
@@ -507,16 +466,19 @@ class Redis implements Synchronous, Consumer
                 continue;
             }
 
-            if (($maxAttempts !== null && $job->getAttempts() >= $maxAttempts)
-                || ($newerThan !== null && $job->getTimestamp() < $now - $newerThan)) {
-                $this->commands->listRemove($processing, $pid);
-                $this->commands->leftPush("{$queue->namespace}.dead.{$queue->name}", $pid);
-                continue;
+            $dead = ($maxAttempts !== null && $job->getAttempts() >= $maxAttempts)
+                || ($newerThan !== null && $job->getTimestamp() < $now - $newerThan);
+            $moved = $this->script($this->commands, 'reclaim', [
+                $ownerKey, "{$queue->namespace}.claims.{$queue->name}.{$pid}",
+                "{$queue->namespace}.jobs.{$queue->name}.{$pid}", $processing,
+                "{$queue->namespace}.stats.{$queue->name}.processing",
+                "{$queue->namespace}." . ($dead ? 'dead' : 'queue') . ".{$queue->name}",
+            ], [\is_string($owner) ? $owner : '', $pid, $dead ? '' : $this->retryPayload($queue, $job), $queue->jobTtl]);
+            if ($moved && !$dead) {
+                $requeued++;
+            } elseif (!$moved) {
+                $retained++;
             }
-
-            $this->requeue($queue, $job);
-            $this->commands->listRemove($processing, $pid);
-            $requeued++;
         }
 
         if ($scan !== null) {
@@ -532,6 +494,11 @@ class Redis implements Synchronous, Consumer
      */
     private function requeue(Queue $queue, Message $job): void
     {
+        $this->commands->leftPush("{$queue->namespace}.queue.{$queue->name}", $this->retryPayload($queue, $job));
+    }
+
+    private function retryPayload(Queue $queue, Message $job): string
+    {
         $payload = [
             'pid' => uniqid(more_entropy: true),
             'queue' => $queue->name,
@@ -539,7 +506,7 @@ class Redis implements Synchronous, Consumer
             'payload' => $job->getPayload(),
             'attempts' => $job->getAttempts() + 1,
         ];
-        $this->commands->leftPush("{$queue->namespace}.queue.{$queue->name}", $this->codec->encode($payload));
+        return $this->codec->encode($payload);
     }
 
     private function getJob(Queue $queue, string $pid): Message|false

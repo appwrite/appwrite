@@ -74,9 +74,8 @@ const DEFAULTS = [
     'repeat' => '3',
     'sleep-ms' => '0',
     'cpu-iters' => '0',
-    // Messages one receive may claim at once, bounded by --coroutines. This is
-    // the knob the batched consume path exists for; 1 is the old behaviour.
-    'batch' => '1',
+    // Messages to prefetch, independently of --coroutines.
+    'prefetch' => '',
     'label' => '',
     // Milliseconds between child starts, so provisioning does not storm. It costs the
     // measurement nothing: the clocks start together regardless. See the header.
@@ -148,10 +147,10 @@ final class Timed implements Consumer
         $this->inner->close();
     }
 
-    public function extend(Queue $queue, Message $message): void
+    public function extend(Queue $queue, Message ...$messages): void
     {
         if (is_callable([$this->inner, 'extend'])) {
-            $this->inner->extend($queue, $message);
+            $this->inner->extend($queue, ...$messages);
         }
     }
 
@@ -233,8 +232,8 @@ function consume(array $args): array
     $client = new Timed($inner);
     $queue = queueFor($args['backend']);
 
-    $slots = max(1, (int) $args['coroutines']);
-    $batch = max(1, min($slots, (int) $args['batch']));
+    $coroutines = max(1, (int) $args['coroutines']);
+    $prefetch = $args['prefetch'] === '' ? $coroutines : (int) $args['prefetch'];
     $share = (int) $args['share'];
     $sleep = ((float) $args['sleep-ms']) / 1000;
     $iters = (int) $args['cpu-iters'];
@@ -243,7 +242,7 @@ function consume(array $args): array
     $handled = 0;
     $error = null;
 
-    Coroutine\run(function () use ($client, $queue, $slots, $batch, $share, $sleep, $iters, $gate, &$handled, &$error): void {
+    Coroutine\run(function () use ($client, $queue, $coroutines, $prefetch, $share, $sleep, $iters, $gate, &$handled, &$error): void {
         // Provision on this process's own connections, before the gate opens, so the
         // measured window contains draining and nothing else.
         try {
@@ -299,7 +298,7 @@ function consume(array $args): array
                 $adapter->stop();
             },
             [
-                ['queue' => $queue, 'maxCoroutines' => $slots, 'batch' => $batch],
+                ['queue' => $queue, 'coroutines' => $coroutines, 'prefetch' => $prefetch],
             ],
         );
 
@@ -397,7 +396,7 @@ function measure(string $name, array $args): array
 
     for ($p = 0; $p < $processes; $p++) {
         $command = [PHP_BINARY, __FILE__, '--role=consume', '--backend=' . $name, '--share=' . $total, '--gate=' . $gate];
-        foreach (['coroutines', 'messages', 'payload', 'sleep-ms', 'cpu-iters', 'batch'] as $key) {
+        foreach (['coroutines', 'messages', 'payload', 'sleep-ms', 'cpu-iters', 'prefetch'] as $key) {
             $command[] = '--' . $key . '=' . $args[$key];
         }
 

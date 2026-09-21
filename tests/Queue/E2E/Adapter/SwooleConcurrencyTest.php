@@ -6,7 +6,6 @@ namespace Tests\E2E\Adapter;
 
 use PHPUnit\Framework\TestCase;
 use Utopia\Queue\Adapter\Swoole;
-use Utopia\Queue\Broker\Redis;
 use Utopia\Queue\Queue;
 
 final class SwooleConcurrencyTest extends TestCase
@@ -14,51 +13,42 @@ final class SwooleConcurrencyTest extends TestCase
     private const string QUEUE = 'concurrency';
     private const string NAMESPACE = 'tests';
 
-    public function testProcessesUpToMaxCoroutinesAtOnce(): void
+    public function testProcessesUpToConfiguredCoroutinesAtOnce(): void
     {
-        [$processed, $maxActive] = $this->runWorker(messages: 9, maxCoroutines: 3);
+        [$processed, $maxActive] = $this->runWorker(messages: 9, coroutines: 3);
 
         $this->assertSame(9, $processed);
-        $this->assertSame(3, $maxActive, 'concurrency is bounded by maxCoroutines');
+        $this->assertSame(3, $maxActive, 'concurrency is bounded by coroutines');
     }
 
     public function testOneCoroutineNeverOverlaps(): void
     {
-        [$processed, $maxActive] = $this->runWorker(messages: 5, maxCoroutines: 1);
+        [$processed, $maxActive] = $this->runWorker(messages: 5, coroutines: 1);
 
         $this->assertSame(5, $processed);
         $this->assertSame(1, $maxActive);
     }
 
-    /**
-     * A message the consumer has no free slot to run must stay in the broker,
-     * where an idle sibling consumer can take it. Receiving it first and then
-     * waiting for a slot held it captive in the consume loop for as long as the
-     * in-flight handler ran — unprocessed, invisible, and lost outright on a
-     * non-graceful stop. A dedicated-database update sat exactly there for the
-     * length of a 22-minute edge rebuild while a second worker process idled,
-     * leaving the database stuck `scaling` past every test deadline.
-     */
-    public function testMessageWithoutFreeSlotStaysInBroker(): void
+    /** Default prefetch leaves excess work available to other workers. */
+    public function testDefaultPrefetchLeavesExcessWorkInBroker(): void
     {
-        $connection = new InMemoryConnection();
-        $broker = new Redis($connection, $connection);
+        $broker = new MemoryConsumer();
         $queue = new Queue(self::QUEUE, self::NAMESPACE);
 
         $processed = 0;
         $pendingDuringFirstMessage = null;
 
         \Swoole\Coroutine\run(function () use ($broker, $queue, &$processed, &$pendingDuringFirstMessage): void {
-            $broker->publish($queue, ['n' => 0]);
-            $broker->publish($queue, ['n' => 1]);
+            $broker->add($queue, ['n' => 0]);
+            $broker->add($queue, ['n' => 1]);
 
             $adapter = new Swoole($broker, 1, self::NAMESPACE);
 
             $adapter->consume(
-                function () use ($adapter, $broker, $queue, &$processed, &$pendingDuringFirstMessage): void {
+                function () use ($adapter, $broker, &$processed, &$pendingDuringFirstMessage): void {
                     if ($processed === 0) {
                         \Swoole\Coroutine::sleep(0.1);
-                        $pendingDuringFirstMessage = $broker->getQueueSize($queue);
+                        $pendingDuringFirstMessage = \count($broker->pending);
                     }
 
                     if (++$processed === 2) {
@@ -68,7 +58,7 @@ final class SwooleConcurrencyTest extends TestCase
                 fn(): null => null,
                 fn(): null => null,
                 [
-                    ['queue' => $queue, 'maxCoroutines' => 1],
+                    ['queue' => $queue, 'coroutines' => 1],
                 ],
             );
         });
@@ -83,19 +73,18 @@ final class SwooleConcurrencyTest extends TestCase
      *
      * @return array{0: int, 1: int} [processed, maxActive]
      */
-    private function runWorker(int $messages, int $maxCoroutines): array
+    private function runWorker(int $messages, int $coroutines): array
     {
-        $connection = new InMemoryConnection();
-        $broker = new Redis($connection, $connection);
+        $broker = new MemoryConsumer();
         $queue = new Queue(self::QUEUE, self::NAMESPACE);
 
         $active = 0;
         $maxActive = 0;
         $processed = 0;
 
-        \Swoole\Coroutine\run(function () use ($broker, $queue, $messages, $maxCoroutines, &$active, &$maxActive, &$processed): void {
+        \Swoole\Coroutine\run(function () use ($broker, $queue, $messages, $coroutines, &$active, &$maxActive, &$processed): void {
             for ($i = 0; $i < $messages; $i++) {
-                $broker->publish($queue, ['n' => $i]);
+                $broker->add($queue, ['n' => $i]);
             }
 
             $adapter = new Swoole($broker, 1, self::NAMESPACE);
@@ -114,7 +103,7 @@ final class SwooleConcurrencyTest extends TestCase
                 fn(): null => null,
                 fn(): null => null,
                 [
-                    ['queue' => $queue, 'maxCoroutines' => $maxCoroutines],
+                    ['queue' => $queue, 'coroutines' => $coroutines],
                 ],
             );
         });

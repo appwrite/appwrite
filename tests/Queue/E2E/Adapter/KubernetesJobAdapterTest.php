@@ -8,7 +8,6 @@ use PHPUnit\Framework\TestCase;
 use Swoole\Coroutine;
 use Swoole\Coroutine\Channel;
 use Utopia\Queue\Adapter\KubernetesJob;
-use Utopia\Queue\Broker\Redis;
 use Utopia\Queue\Message;
 use Utopia\Queue\Queue;
 use Utopia\Queue\Server;
@@ -16,14 +15,14 @@ use Utopia\Queue\Server;
 /**
  * Unit coverage for the run-to-completion KubernetesJob adapter: it drains the
  * queue and returns (so a Kubernetes Job completes) rather than blocking like
- * the long-running adapters. Runs on a bare host against InMemoryConnection.
+ * the long-running adapters. Uses a Consumer fake without broker storage.
  */
 final class KubernetesJobAdapterTest extends TestCase
 {
     private const string QUEUE = 'keda-unit';
     private const string NAMESPACE = 'tests';
 
-    private function server(Redis $broker, callable $action): Server
+    private function server(MemoryConsumer $broker, callable $action): Server
     {
         $server = new Server(new KubernetesJob($broker, 1, self::NAMESPACE));
         $server->job(self::QUEUE)->inject('message')->action($action);
@@ -33,12 +32,11 @@ final class KubernetesJobAdapterTest extends TestCase
 
     public function testDrainsQueueThenReturns(): void
     {
-        $connection = new InMemoryConnection();
-        $broker = new Redis($connection, $connection);
+        $broker = new MemoryConsumer();
         $queue = new Queue(self::QUEUE, self::NAMESPACE);
 
         foreach (range(1, 5) as $n) {
-            $broker->publish($queue, ['n' => $n]);
+            $broker->add($queue, ['n' => $n]);
         }
 
         $processed = [];
@@ -47,13 +45,13 @@ final class KubernetesJobAdapterTest extends TestCase
         })->start();
 
         $this->assertSame([1, 2, 3, 4, 5], $processed, 'every queued message is processed once, in order');
-        $this->assertSame(0, $broker->getQueueSize($queue), 'the queue is drained');
+        $this->assertCount(5, $broker->committed);
+        $this->assertCount(0, $broker->pending, 'the queue is drained');
     }
 
     public function testReturnsImmediatelyWhenQueueEmpty(): void
     {
-        $connection = new InMemoryConnection();
-        $broker = new Redis($connection, $connection);
+        $broker = new MemoryConsumer();
 
         $processed = 0;
         $this->server($broker, function () use (&$processed): void {
@@ -65,12 +63,11 @@ final class KubernetesJobAdapterTest extends TestCase
 
     public function testFailedMessageIsRejectedAndDrainContinues(): void
     {
-        $connection = new InMemoryConnection();
-        $broker = new Redis($connection, $connection);
+        $broker = new MemoryConsumer();
         $queue = new Queue(self::QUEUE, self::NAMESPACE);
 
-        $broker->publish($queue, ['ok' => false]);
-        $broker->publish($queue, ['ok' => true]);
+        $broker->add($queue, ['ok' => false]);
+        $broker->add($queue, ['ok' => true]);
 
         $succeeded = 0;
         $this->server($broker, function (Message $message) use (&$succeeded): void {
@@ -81,18 +78,18 @@ final class KubernetesJobAdapterTest extends TestCase
         })->start();
 
         $this->assertSame(1, $succeeded, 'the drain continues past a failing message');
-        $this->assertSame(0, $broker->getQueueSize($queue), 'the main queue is drained');
-        $this->assertSame(1, $broker->getQueueSize($queue, failedJobs: true), 'the failed message lands on the failed queue');
+        $this->assertCount(1, $broker->committed);
+        $this->assertCount(0, $broker->pending, 'the main queue is drained');
+        $this->assertCount(1, $broker->rejected, 'the failed message lands on the failed queue');
     }
 
     public function testProcessesEachMessageInAFreshCoroutine(): void
     {
-        $connection = new InMemoryConnection();
-        $broker = new Redis($connection, $connection);
+        $broker = new MemoryConsumer();
         $queue = new Queue(self::QUEUE, self::NAMESPACE);
 
-        $broker->publish($queue, ['n' => 1]);
-        $broker->publish($queue, ['n' => 2]);
+        $broker->add($queue, ['n' => 1]);
+        $broker->add($queue, ['n' => 2]);
 
         $lifecycleCid = null;
         $handlerCids = [];
@@ -107,7 +104,7 @@ final class KubernetesJobAdapterTest extends TestCase
                 fn(): null => null,
                 fn(): null => null,
                 [
-                    ['queue' => $queue, 'maxCoroutines' => 1],
+                    ['queue' => $queue, 'coroutines' => 1],
                 ],
             );
         });
@@ -120,8 +117,7 @@ final class KubernetesJobAdapterTest extends TestCase
 
     public function testCancelsStragglerCoroutinesSoTheWorkerExits(): void
     {
-        $connection = new InMemoryConnection();
-        $broker = new Redis($connection, $connection);
+        $broker = new MemoryConsumer();
 
         $queue = new Queue(self::QUEUE, self::NAMESPACE);
         $adapter = new KubernetesJob($broker, 1, self::NAMESPACE);
@@ -134,7 +130,7 @@ final class KubernetesJobAdapterTest extends TestCase
                 fn(): null => null,
                 fn(): null => null,
                 [
-                    ['queue' => $queue, 'maxCoroutines' => 1],
+                    ['queue' => $queue, 'coroutines' => 1],
                 ],
             );
         });

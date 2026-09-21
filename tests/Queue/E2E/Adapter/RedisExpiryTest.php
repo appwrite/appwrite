@@ -27,7 +27,7 @@ final class RedisExpiryTest extends TestCase
         // Accelerate expiring writes, leaving non-expiring job payloads intact.
         // All reads, expiry, and recovery still use real Redis connections.
         $connection = $this->connection($cluster);
-        $namespace = 'expiry-' . uniqid();
+        $namespace = '{expiry-' . uniqid() . '}';
         $key = $namespace . '.value';
         $this->assertNull($connection->get($key));
         $connection->set($key, '');
@@ -66,6 +66,14 @@ final class RedisExpiryTest extends TestCase
 
 trait ShortExpiry
 {
+    public function execute(string $script, array $keys, array $args): mixed
+    {
+        if (str_starts_with($script, '-- KEYS: reservations, reservation,')) {
+            $args[0] = 1;
+        }
+        return parent::execute($script, $keys, $args);
+    }
+
     public function set(string $key, string $value, int $ttl = 0): bool
     {
         return parent::set($key, $value, $ttl > 0 ? 1 : 0);

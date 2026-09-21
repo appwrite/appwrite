@@ -13,6 +13,25 @@ class RedisCluster implements Connection
 
     public function __construct(protected array $seeds, protected float $connectTimeout = -1, protected float $readTimeout = -1, protected ?string $user = null, protected ?string $password = null) {}
 
+    public function execute(string $script, array $keys, array $args): mixed
+    {
+        $tag = null;
+        foreach ($keys as $key) {
+            if (!preg_match('/\{([^{}]+)\}/', (string) $key, $match) || ($tag !== null && $tag !== $match[1])) {
+                throw new \InvalidArgumentException('Atomic Redis queue operations require a shared hash tag in the queue namespace, for example {utopia-queue}. Migrate existing keys before changing the namespace.');
+            }
+            $tag = $match[1];
+        }
+        $redis = $this->getRedis();
+        $redis->clearLastError();
+        $result = $redis->eval($script, [...$keys, ...$args], \count($keys));
+        $error = $redis->getLastError();
+        if ($result === false && $error) {
+            throw new \RedisClusterException($error);
+        }
+        return $result;
+    }
+
     public function rightPopLeftPushArray(string $queue, string $destination, int $timeout): array|false
     {
         $response = $this->rightPopLeftPush($queue, $destination, $timeout);

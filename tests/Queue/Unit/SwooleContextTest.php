@@ -41,7 +41,7 @@ final class SwooleContextTest extends TestCase
                 function (): void {},
                 [[
                     'queue' => new Queue('jobs'),
-                    'maxCoroutines' => 1,
+                    'coroutines' => 1,
                 ]],
             );
         });
@@ -81,7 +81,7 @@ final class SwooleContextTest extends TestCase
                 },
                 [[
                     'queue' => new Queue('jobs'),
-                    'maxCoroutines' => 1,
+                    'coroutines' => 1,
                 ]],
             );
         });
@@ -124,12 +124,12 @@ final class SwooleContextTest extends TestCase
                 [
                     [
                         'queue' => new Queue('first'),
-                        'maxCoroutines' => 1,
+                        'coroutines' => 1,
                         'consumer' => $first,
                     ],
                     [
                         'queue' => new Queue('second'),
-                        'maxCoroutines' => 1,
+                        'coroutines' => 1,
                         'consumer' => $second,
                     ],
                 ],
@@ -174,7 +174,7 @@ final class SwooleContextTest extends TestCase
                 function (): void {},
                 [[
                     'queue' => new Queue('jobs'),
-                    'maxCoroutines' => 1,
+                    'coroutines' => 1,
                 ]],
             );
         });

@@ -23,5 +23,5 @@ interface Asynchronous
      * @throws BufferFullException when the buffer is full and the message
      *                               cannot be accepted.
      */
-    public function enqueue(Queue $queue, array $payload, bool $priority = false): void;
+    public function enqueue(Queue $queue, array $payload): void;
 }

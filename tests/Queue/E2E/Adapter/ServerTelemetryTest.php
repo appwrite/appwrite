@@ -347,12 +347,12 @@ final class ServerTelemetryPublisherConsumer extends ServerTelemetryConsumer imp
      */
     public function __construct(private array $queueSizes, private array $failedQueueSizes = []) {}
 
-    public function publish(Queue $queue, array $payload, bool $priority = false): bool
+    public function publish(Queue $queue, array $payload): bool
     {
         return true;
     }
 
-    public function enqueueMany(Queue $queue, array $payloads, bool $priority = false): bool
+    public function enqueueMany(Queue $queue, array $payloads): bool
     {
         return true;
     }
@@ -371,12 +371,12 @@ final class ServerTelemetryPublisherConsumer extends ServerTelemetryConsumer imp
 
 final class ServerTelemetryFailingPublisherConsumer extends ServerTelemetryConsumer implements Synchronous
 {
-    public function publish(Queue $queue, array $payload, bool $priority = false): bool
+    public function publish(Queue $queue, array $payload): bool
     {
         return true;
     }
 
-    public function enqueueMany(Queue $queue, array $payloads, bool $priority = false): bool
+    public function enqueueMany(Queue $queue, array $payloads): bool
     {
         return true;
     }

@@ -11,12 +11,17 @@
             <file>./tests/Queue/E2E/Adapter/KubernetesJobAdapterTest.php</file>
             <file>./tests/Queue/E2E/Adapter/BackgroundTest.php</file>
             <file>./tests/Queue/E2E/Adapter/LockingTest.php</file>
-            <file>./tests/Queue/E2E/Adapter/RedisBrokerRecoveryTest.php</file>
             <file>./tests/Queue/E2E/Adapter/RedisReconnectCallbackTest.php</file>
             <file>./tests/Queue/E2E/Adapter/ServerTelemetryTest.php</file>
             <file>./tests/Queue/E2E/Adapter/SwooleConcurrencyTest.php</file>
         </testsuite>
         <testsuite name="e2e">
+            <file>./tests/Queue/E2E/Adapter/RedisBrokerRecoveryTest.php</file>
+            <file>./tests/Queue/E2E/Adapter/BatchedReceiveTest.php</file>
+            <file>./tests/Queue/E2E/Adapter/RedisCodecTest.php</file>
+            <file>./tests/Queue/E2E/Adapter/RedisRejectTest.php</file>
+            <file>./tests/Queue/E2E/Adapter/RedisReservationTest.php</file>
+            <file>./tests/Queue/E2E/Adapter/PrefetchTest.php</file>
             <file>./tests/Queue/E2E/Adapter/RedisExpiryTest.php</file>
             <file>./tests/Queue/E2E/Adapter/NatsBrokerTest.php</file>
             <file>./tests/Queue/E2E/Adapter/NatsServerTest.php</file>

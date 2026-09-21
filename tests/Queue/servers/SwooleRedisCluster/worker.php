@@ -5,6 +5,7 @@ require_once __DIR__ . '/../tests.php';
 
 use Utopia\Queue\Adapter\Swoole;
 use Utopia\Queue\Broker\Redis;
+use Utopia\Queue\Connection\Locking;
 use Utopia\Queue\Connection\RedisCluster;
 use Utopia\Queue\Server;
 use Utopia\Validator\Text;
@@ -16,9 +17,9 @@ $nodes = [
 ];
 $consumer = new Redis(
     receive: new RedisCluster($nodes),
-    commands: new RedisCluster($nodes),
+    commands: new Locking(new RedisCluster($nodes)),
 );
-$adapter = new Swoole($consumer, 12);
+$adapter = new Swoole($consumer, 12, '{utopia-queue}');
 $server = new Server($adapter);
 
 $server->job('swoole-redis-cluster')

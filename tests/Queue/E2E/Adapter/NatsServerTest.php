@@ -12,7 +12,7 @@ use Utopia\Queue\Queue;
 /**
  * Drives the NATS broker through the full Server + Swoole adapter run-loop
  * (worker: tests/Queue/servers/Nats/worker.php). Exercises enqueue -> receive ->
- * handler -> commit/reject across every payload shape, plus priority and retry.
+ * handler -> commit/reject across every payload shape, plus retry.
  */
 final class NatsServerTest extends Base
 {

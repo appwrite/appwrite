@@ -10,7 +10,7 @@ interface Consumer
      * Block up to $timeout seconds for the first message, then claim up to $n
      * messages without waiting for the batch to fill. Values below one use one.
      * Every returned message needs its own commit() or reject(). A failed claim
-     * must restore messages already removed from the queue.
+     * must leave removed messages recoverable, including after process death.
      *
      * @return list<Message> Empty on timeout.
      */
