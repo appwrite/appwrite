@@ -85,7 +85,7 @@
         "utopia-php/auth": "^0.12",
         "utopia-php/balancer": "0.4.*",
         "utopia-php/cache": "^5.1.0",
-        "utopia-php/cdn": "^0.0.11",
+        "utopia-php/cdn": "^0.0.12",
         "utopia-php/cli": "^0.24",
         "utopia-php/compression": "0.1.*",
         "utopia-php/config": "1.*",
@@ -131,6 +131,7 @@
         "utopia-php/query": "0.6.*",
         "utopia-php/openapi": "^0.2.4",
         "psr/http-factory": "^1.0",
+        "psr/http-client": "^1.0",
         "psr/http-message": "^1.1 || ^2.0"
     },
     "require-dev": {
