@@ -281,7 +281,7 @@ trait TeamsBaseServer
         $conflicts = [];
 
         foreach ($responses as $response) {
-            if (($response['headers']['status-code'] ?? null) === 201) {
+            if ($response['headers']['status-code'] === 201) {
                 $created[] = $response;
             } else {
                 $conflicts[] = $response;

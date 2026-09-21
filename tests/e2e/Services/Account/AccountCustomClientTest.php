@@ -4003,7 +4003,7 @@ final class AccountCustomClientTest extends Scope
         $conflicts = [];
 
         foreach ($responses as $response) {
-            if (($response['status'] ?? null) === 201) {
+            if ($response['status'] === 201) {
                 $created[] = $response;
             } else {
                 $conflicts[] = $response;
