@@ -161,7 +161,7 @@ class Functions extends Action
         }
 
         if (!empty($events)) {
-            $error = null;
+            $failure = null;
             $limit = 100;
             $sum = 100;
             $offset = 0;
@@ -224,15 +224,15 @@ class Functions extends Action
                         );
                         Console::success('Triggered function: ' . $events[0]);
                     } catch (\Throwable $th) {
-                        $error ??= $th;
+                        $failure ??= $th;
                         Console::error('Failed to trigger function ' . $function->getId() . ': ' . $th->getMessage());
                     }
                 }
             }
 
             // Process every subscriber before preserving the failed job for retries.
-            if ($error !== null) {
-                throw $error;
+            if ($failure !== null) {
+                throw $failure;
             }
 
             return;
