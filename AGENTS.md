@@ -18,6 +18,12 @@ Self-hosted Backend-as-a-Service. Hybrid monolithic-microservice architecture on
 | `composer check` | Same as `analyze` |
 | `composer refactor:check` | Rector dry-run over `tests/` (CI "Refactor" check) |
 | `composer refactor` | Apply Rector fixes |
+| `bin/monorepo validate` | Check every `packages/<name>` against the standard shape and the root autoload wiring |
+| `bin/monorepo check <name> [--fix]` | Pint, PHPStan (package `phpstan.neon`) and Rector for one package |
+| `bin/monorepo test <name> [--linked]` | Package unit tier (`composer test`), plus `test:e2e` against its compose file when defined |
+| `bin/monorepo absorb <name> [url]` | Import a library with history, strip hoisted QA, write mirror plumbing |
+| `bin/monorepo split <name> --dry-run` | Synthesize the mirror history and print its head without pushing |
+| `bin/monorepo release <name> <version>` | Tag `<name>/<version>` and push it; CI mirrors the tag and publishes the release |
 
 `composer check` / `composer analyze` over the whole project is very slow. Prefer specific files during development.
 
@@ -47,7 +53,7 @@ Self-hosted Backend-as-a-Service. Hybrid monolithic-microservice architecture on
   - **Extend** -- shared exceptions
 - **src/Appwrite/Platform/** -- HTTP modules, workers, CLI tasks. Register modules in `src/Appwrite/Platform/Appwrite.php`. See [Modules](#modules).
 - **src/Executor/** -- Open Runtimes executor HTTP client (create/run/delete function and site runtimes)
-- **src/Utopia/** -- Composer PSR-4 overrides of Utopia packages (currently `Bus` only)
+- **packages/** -- Utopia libraries absorbed into this repository and autoloaded directly (`agents`, `bus`); each is an independent Composer package mirrored to `utopia-php/<name>`, managed with `bin/monorepo`. See [rfc/monorepo.md](rfc/monorepo.md)
 - **app/config/** -- static product config (collections, locales, SDKs, runtimes, scopes, errors, OAuth, storage)
 - **app/assets/** -- bundled data (fonts, common-password dictionary)
 - **app/views/** -- server-side templates (installer, errors, proxy)
@@ -62,7 +68,7 @@ Self-hosted Backend-as-a-Service. Hybrid monolithic-microservice architecture on
 
 `src/Appwrite/` is domain libraries, not a dumping ground. Each directory solves **one problem**. Do not grow a library into a second concern; add a new directory instead. See [Layout](#layout) for the current set.
 
-Keep Appwrite-specific domain here (product events, SDK specs, GraphQL, usage, migrations, platform modules). If a library is **generic enough to build any kind of app** — validators, storage, cache, queues, HTTP, databases, locks, DNS — it belongs in the `utopia-php` ecosystem as a Composer dependency, not under `src/Appwrite/`. Overrides of Utopia packages live in `src/Utopia/` (currently `Bus` only).
+Keep Appwrite-specific domain here (product events, SDK specs, GraphQL, usage, migrations, platform modules). If a library is **generic enough to build any kind of app** — validators, storage, cache, queues, HTTP, databases, locks, DNS — it is a Utopia package, not `src/Appwrite/` code. Packages already absorbed live under `packages/<name>` in the standard shape described in [rfc/monorepo.md](rfc/monorepo.md) and are loaded directly through the root autoload; the rest are still Composer dependencies until their absorb PR lands.
 
 ## Modules
 
@@ -299,6 +305,39 @@ Preview builds set the flag on **both** the `specs` and `sdks` steps in `.github
 
 ## Releases
 
+Self-hosted ships on two channels. Cloud is separate: it builds from `cl-*` tags to `appwrite/ce` via [`publish.yml`](.github/workflows/publish.yml) and nothing below applies to it.
+
+| Channel | Source | Trigger | Tags on `appwrite/appwrite` |
+|---------|--------|---------|------------------------------|
+| stable | active release branch (`2.0.x`) | GitHub Release, published by a human | `X.Y.Z` (immutable), `X.Y`, `X`, `latest` |
+| nightly | newest CI-green commit on that branch | daily at 00:00 UTC, or `workflow_dispatch` | `X.Y-nightly.<date>` (one a day), `X.Y-nightly`, `nightly` |
+
+[`nightly.yml`](.github/workflows/nightly.yml) builds the channel; [`security-scan.yml`](.github/workflows/security-scan.yml) is the Trivy scan that used to own that file name. `X.Y` comes from the branch name and `<date>` is `YYYYMMDD`, so `2.0.x` publishes `2.0-nightly.20260915`. The tag is a label, not a version the product reads: `migrate` keys off `APP_VERSION_STABLE` compiled into the image, and the `VERSION` build arg only sets `_APP_VERSION`. The branch is rebuilt daily whether or not it moved, so the channel carries base image security fixes. Only the newest release branch is built, so an `X.Y-nightly` tag stops moving once a newer line opens.
+
+Four rules keep the channel safe. They are requirements, not preferences:
+
+1. **A patch never adds a migration.** Map a new patch to the previous version's class in `Migration::$versions`. A fix that needs a schema change is a minor. This is what lets a nightly user roll back to yesterday's build, and `1.9.6` (which introduced V25) is the exception not to repeat.
+2. **Nightly publishes only a CI-green commit** rather than the tip, so a red branch delays the channel instead of breaking it.
+3. **The release branch stays releasable.** Backports land as complete cherry-picks, behind a flag when the fix is not finished.
+4. **Nightly publishes to `appwrite/appwrite` only.** It must never be able to push to `appwrite/ce`.
+
+Self-hosters opt in through `_APP_VERSION`, which every service in `docker-compose.yml` already resolves (`${_APP_IMAGE:-appwrite/appwrite}:${_APP_VERSION:-latest}`), or with `--channel` on [`install`](src/Appwrite/Platform/Tasks/Install.php) and [`upgrade`](src/Appwrite/Platform/Tasks/Upgrade.php):
+
+```
+_APP_VERSION=2.0-nightly     # then: docker compose pull && docker compose up -d && docker compose exec appwrite migrate
+```
+
+Nightly is unsupported, has no SLA, and only ever moves within one patch line. `X.Y-nightly` is the form to recommend; the bare `nightly` tag follows the newest line and will jump minors.
+
+### Patch train
+
+Patches leave on a schedule so that "is this worth a release?" stops being a per-fix decision:
+
+- **Weekly**, on the active release branch, if at least one user-visible fix landed since the last tag. Nothing landed, no release — silently.
+- **Security and data-loss fixes ship out of band**, same day.
+- **Backports are labelled, not remembered.** Fixes land on `main`; a `backport X.Y.x` label opens the cherry-pick PR.
+- **A console publish is a release trigger.** The console is pinned (`appwrite/new:X.Y.Z`) in `docker-compose.yml`, so a console-only fix reaches self-hosters only through an `appwrite/appwrite` patch. Bump the pin, let CI pass, and let it ride the next train.
+
 ### Patch version
 
 When bumping a patch (e.g. `1.9.0` → `1.9.1`):
@@ -320,6 +359,6 @@ A release is not ready until a **fresh install** and an **upgrade from the previ
 
 **Upgrade:** install the previous stable image, seed broad data (empty values, long strings, relationships, mixed permissions), keep volumes, switch to the target image, run migrate. Migration must complete, be idempotent, and preserve seeded data through public API reads/writes.
 
-**Metadata:** `APP_VERSION_STABLE`; Appwrite and console tags in `docker-compose.yml` and [`app/views/install/compose.phtml`](app/views/install/compose.phtml); README install snippets; `Migration.php` `$versions`; [changelog](https://appwrite.io/changelog). For public API breaks: request filters in `src/Appwrite/Utopia/Request/Filters/V*.php`, response filters in `src/Appwrite/Utopia/Response/Filters/V*.php`, registered in [`app/controllers/general.php`](app/controllers/general.php) for `x-appwrite-response-format`. Unit-test filters under `tests/unit/Utopia/{Request,Response}/Filters`; add e2e with that header when routing, auth, or persistence is involved.
+**Metadata:** `APP_VERSION_STABLE`; Appwrite and console tags in `docker-compose.yml`; README install snippets; `Migration.php` `$versions`; [changelog](https://appwrite.io/changelog). For public API breaks: request filters in `src/Appwrite/Utopia/Request/Filters/V*.php`, response filters in `src/Appwrite/Utopia/Response/Filters/V*.php`, registered in [`app/controllers/general.php`](app/controllers/general.php) for `x-appwrite-response-format`. Unit-test filters under `tests/unit/Utopia/{Request,Response}/Filters`; add e2e with that header when routing, auth, or persistence is involved.
 
 Do not approve an RC/final until both gates pass, metadata matches the target, and unintended public breaks have filters (or the owner documents the break on the changelog).

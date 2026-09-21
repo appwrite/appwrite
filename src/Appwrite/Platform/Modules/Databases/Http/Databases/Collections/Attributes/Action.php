@@ -536,6 +536,13 @@ abstract class Action extends DatabasesAction
             throw new Exception($this->getDefaultUnsupportedException(), 'Cannot set default value for array ' . $this->getContext() . 's');
         }
 
+        if ($size !== null && $size < APP_DATABASE_ENCRYPT_SIZE_MIN && \in_array('encrypt', $attribute->getAttribute('filters', []), true)) {
+            throw new Exception(
+                Exception::GENERAL_BAD_REQUEST,
+                'Size too small. Encrypted strings require a minimum size of ' . APP_DATABASE_ENCRYPT_SIZE_MIN . ' characters.'
+            );
+        }
+
         $collectionId = 'database_' . $db->getSequence() . '_collection_' . $collection->getSequence();
 
         $attribute
@@ -640,7 +647,7 @@ abstract class Action extends DatabasesAction
             }
         } else {
             try {
-                $dbForProject->updateAttribute(
+                $definition = $dbForProject->updateAttribute(
                     collection: $collectionId,
                     id: $key,
                     size: $size,
@@ -649,6 +656,16 @@ abstract class Action extends DatabasesAction
                     formatOptions: $options,
                     newKey: $newKey ?? null
                 );
+
+                // updateAttribute() keeps the stored default when given null,
+                // but the API uses null to clear it.
+                if ($default === null && $definition->getAttribute('default') !== null) {
+                    $dbForProject->updateAttributeDefault(
+                        collection: $collectionId,
+                        id: $definition->getId(),
+                        default: null
+                    );
+                }
             } catch (DuplicateException) {
                 throw new Exception($this->getDuplicateException(), params: [$key]);
             } catch (IndexException $e) {
