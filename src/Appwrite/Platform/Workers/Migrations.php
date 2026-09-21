@@ -429,6 +429,8 @@ class Migrations extends Action
             'platforms.write',
             'mocks.read',
             'mocks.write',
+            'policies.read',
+            'policies.write',
             'project.policies.read',
             'project.policies.write',
             'project.oauth2.read',
