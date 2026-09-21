@@ -3,6 +3,34 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "appwrite-codex-plugin-hosted-mcp",
+    "href": "/blog/post/appwrite-codex-plugin-hosted-mcp",
+    "title": "The Appwrite plugin for Codex now includes the hosted MCP server",
+    "description": "The Appwrite plugin for Codex now includes the hosted Appwrite MCP server and thirteen agent skills, and you can install it from the ChatGPT desktop app or the Codex CLI.",
+    "date": "2026-09-21",
+    "lastUpdated": "2026-09-21",
+    "timeToRead": 3,
+    "author": "atharva",
+    "category": "announcements",
+    "featured": false,
+    "cover": "/images/blog/appwrite-codex-plugin-hosted-mcp/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "appwrite-plugins-claude-code-codex",
+    "href": "/blog/post/appwrite-plugins-claude-code-codex",
+    "title": "Updated Appwrite plugins for Claude Code and Codex are live",
+    "description": "The Appwrite plugins for Claude Code and Codex now include the hosted Appwrite MCP server, so your agent can work with your Appwrite project after one OAuth sign-in.",
+    "date": "2026-09-21",
+    "lastUpdated": "2026-09-21",
+    "timeToRead": 4,
+    "author": "atharva",
+    "category": "announcements",
+    "featured": false,
+    "cover": "/images/blog/appwrite-plugins-claude-code-codex/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "authenticated-site-previews",
     "href": "/blog/post/authenticated-site-previews",
     "title": "Introducing authenticated preview deployments for Appwrite Sites",
