@@ -28,7 +28,7 @@ You do not configure this per site or per project. A deployment created by an au
 
 # Authorizing a preview
 
-The first time you open a preview deployment, Appwrite asks you to confirm your identity, showing the account you are signed in with and the one permission it needs, to view your identity. That is all Appwrite reads: your user ID, name, and email, so it can check your organization membership.
+The first time you open a preview deployment, Appwrite shows the account you are signed in with and asks for a single permission, to view your identity. That permission reads your user ID, name, and email, which Appwrite uses to check your organization membership.
 
 Press **Authorize** and you land on the preview. If the account shown is not the one with access, switch accounts before authorizing.
 

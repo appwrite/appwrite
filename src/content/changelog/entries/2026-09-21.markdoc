@@ -8,7 +8,7 @@ tags: sites, security
 
 Preview deployments created by automatic Git deployments now require an Appwrite account that belongs to the site's organization. Pushing a branch still builds a preview and posts its link, but the link only opens for people you have invited to the organization, so a preview URL no longer works for anyone who finds it.
 
-The first time you open a preview, Appwrite asks you to confirm your identity with the account you are signed in with. It reads the basic profile details of that account to check your organization membership, and nothing else. There is nothing to configure on your site or project.
+The first time you open a preview, Appwrite asks you to confirm your identity with the account you are signed in with. It reads the basic profile details of that account to check your organization membership. There is nothing to configure on your site or project.
 
 {% arrow_link href="/blog/post/authenticated-site-previews" %}
 Read the announcement
