@@ -33,6 +33,7 @@ class Json extends ScalarType
             return \json_decode($valueNode->value, flags: JSON_THROW_ON_ERROR);
         }
 
+        // self:: keeps recursion in this class: Assoc's json_decode override applies to the outermost node only.
         if ($valueNode instanceof ListValueNode) {
             $values = [];
             foreach ($valueNode->values as $node) {

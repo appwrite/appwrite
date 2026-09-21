@@ -581,7 +581,9 @@ final class AccountTest extends Scope
              */
             $payload['variables'] = [];
             $response = $this->client->call(Client::METHOD_POST, '/graphql', $headers, $payload);
+            $this->assertEquals(200, $response['headers']['status-code']);
             $this->assertArrayHasKey('errors', $response['body']);
+            $this->assertStringContainsString('$name', (string) $response['body']['errors'][0]['message']);
             $response = $this->client->call(Client::METHOD_GET, '/account/prefs', $headers);
             $this->assertSame($expected, $response['body']);
         } finally {
