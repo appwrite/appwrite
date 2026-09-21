@@ -61,12 +61,7 @@ class ScheduleMessages extends Action
             },
         );
 
-        $scheduler->run(fn (array $occurrences): null => $this->dispatch(
-            $occurrences,
-            $publisherForMessaging,
-            $dbForPlatform,
-            $getIsResourceBlocked,
-        ));
+        $scheduler->run(fn (array $occurrences): null => $this->dispatch($occurrences, $publisherForMessaging, $dbForPlatform));
 
         Span::init('schedule.messages.stopped');
         Span::current()?->finish(error: new \RuntimeException('Scheduler loop returned'));
@@ -105,51 +100,32 @@ class ScheduleMessages extends Action
 
     /**
      * @param list<Occurrence> $occurrences
-     * @param callable(Document, string, ?string): bool $getIsResourceBlocked
      */
-    private function dispatch(
-        array $occurrences,
-        MessagingPublisher $publisherForMessaging,
-        Database $dbForPlatform,
-        callable $getIsResourceBlocked,
-    ): null {
+    private function dispatch(array $occurrences, MessagingPublisher $publisherForMessaging, Database $dbForPlatform): null
+    {
         $batch = \count($occurrences);
-        /** @var array<string, Document> $projects */
-        $projects = [];
 
         foreach (\array_values($occurrences) as $index => $occurrence) {
             $schedule = $occurrence->payload;
-            $messageId = (string) ($schedule['resourceId'] ?? '');
 
             Span::init('schedule.messages.enqueue');
             $error = null;
 
             try {
-                $projectId = $schedule['project']->getId();
-                $project = $projects[$projectId] ??= $dbForPlatform->skipFilters(
-                    fn () => $dbForPlatform->getDocument('projects', $projectId),
-                    APP_PROJECTS_SUBQUERIES
-                );
-
-                Span::add('project.id', $projectId);
+                Span::add('project.id', $schedule['project']->getId());
                 Span::add('schedule.id', $schedule['$id'] ?? '');
-                Span::add('message.id', $messageId);
+                Span::add('message.id', (string) ($schedule['resourceId'] ?? ''));
                 Span::add('occurrence.due', $occurrence->due->format('c'));
                 Span::add('occurrence.late', \round(\microtime(true) - (float) $occurrence->due->format('U.u'), 3));
                 Span::add('occurrence.batch', $batch);
                 Span::add('occurrence.index', $index);
 
-                if ($project->isEmpty() || $getIsResourceBlocked($project, RESOURCE_TYPE_MESSAGES, $messageId)) {
-                    Span::add('schedule.skipped', 'blocked');
-                    continue;
-                }
-
-                $this->updateProjectAccess($project, $dbForPlatform);
+                $this->updateProjectAccess($schedule['project'], $dbForPlatform);
 
                 $publisherForMessaging->enqueue(new MessagingMessage(
                     type: MESSAGE_SEND_TYPE_EXTERNAL,
-                    project: $project,
-                    messageId: $messageId,
+                    project: $schedule['project'],
+                    messageId: $schedule['resourceId'],
                 ));
 
                 $dbForPlatform->deleteDocument('schedules', $schedule['$id']);

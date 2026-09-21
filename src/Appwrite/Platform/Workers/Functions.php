@@ -96,6 +96,11 @@ class Functions extends Action
         Span::add('queue.name', $message->getQueue());
         Span::add('message.timestamp', (string) $message->getTimestamp());
 
+        if (($project->getAttribute('status') ?? PROJECT_STATUS_ACTIVE) !== PROJECT_STATUS_ACTIVE) {
+            Console::log('Project ' . $project->getId() . ' is not active, skipping execution.');
+            return;
+        }
+
         // Recorded on consume, not on publish: the schedulers hand over a due
         // second one occurrence at a time, so a write there delays the rest.
         // Best-effort billing metadata, so a failure here must not fail the
