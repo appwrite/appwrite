@@ -11,6 +11,7 @@ import {
   CircleAlert,
   Copy,
   Folder,
+  Loader2,
   Lock,
   ShieldCheck,
   SlidersHorizontal,
@@ -100,6 +101,11 @@ export function OAuth2ConsentCard({
 }: OAuth2ConsentCardProps) {
   const t = useT()
   const [error, setError] = useState<string | null>(null)
+  // Which action handed the browser a web redirect, if any. The consent page
+  // stays on screen until the client's first byte arrives, which on a cold
+  // start can take a while: the buttons stay disabled for that whole stretch,
+  // and the progress belongs on the button that was pressed.
+  const [redirecting, setRedirecting] = useState<OAuth2Outcome | null>(null)
   const [showPermissions, setShowPermissions] = useState(true)
   const [permissionGroupOpen, setPermissionGroupOpen] = useState<
     Record<string, boolean>
@@ -367,7 +373,7 @@ export function OAuth2ConsentCard({
           redirectUrl:
             flow === 'device'
               ? undefined
-              : (grant.redirectUri || 'https://example.com/callback'),
+              : grant.redirectUri || 'https://example.com/callback',
         }
       }
       // For MCP grants the editor may downscope the requested catalog; `scope`
@@ -402,8 +408,10 @@ export function OAuth2ConsentCard({
         onDone?.('approved', result.redirectUrl)
         return
       }
+      const web = isWebRedirect(result.redirectUrl)
+      setRedirecting(web ? 'approved' : null)
       window.location.assign(result.redirectUrl)
-      if (!isWebRedirect(result.redirectUrl)) {
+      if (!web) {
         onDone?.('approved', result.redirectUrl)
       }
     },
@@ -424,7 +432,7 @@ export function OAuth2ConsentCard({
           redirectUrl:
             flow === 'device'
               ? undefined
-              : (grant.redirectUri || 'https://example.com/callback'),
+              : grant.redirectUri || 'https://example.com/callback',
         }
       }
       return sdk.forConsole.oauth2.reject({ grantId: grant.$id })
@@ -434,8 +442,10 @@ export function OAuth2ConsentCard({
         onDone?.('denied', result.redirectUrl)
         return
       }
+      const web = isWebRedirect(result.redirectUrl)
+      setRedirecting(web ? 'denied' : null)
       window.location.assign(result.redirectUrl)
-      if (!isWebRedirect(result.redirectUrl)) {
+      if (!web) {
         onDone?.('denied', result.redirectUrl)
       }
     },
@@ -446,8 +456,24 @@ export function OAuth2ConsentCard({
     },
   })
 
+  // A back navigation restores this page from the bfcache with `redirecting`
+  // still set; the user must be able to act again.
+  useEffect(() => {
+    const restore = (event: PageTransitionEvent) => {
+      if (event.persisted) setRedirecting(null)
+    }
+    window.addEventListener('pageshow', restore)
+    return () => window.removeEventListener('pageshow', restore)
+  }, [])
+
   const isBusy =
-    switchingAccount || approveMutation.isPending || rejectMutation.isPending
+    switchingAccount ||
+    approveMutation.isPending ||
+    rejectMutation.isPending ||
+    redirecting !== null
+  const approveInProgress =
+    approveMutation.isPending || redirecting === 'approved'
+  const rejectInProgress = rejectMutation.isPending || redirecting === 'denied'
 
   const editorGroup = (
     tierKey: 'project' | 'organization',
@@ -888,7 +914,12 @@ export function OAuth2ConsentCard({
               approveMutation.mutate()
             }}
           >
-            {t('Authorize')}
+            {approveInProgress && <Loader2 className="animate-spin" />}
+            {redirecting === 'approved'
+              ? t('Redirecting…')
+              : approveMutation.isPending
+                ? t('Authorizing…')
+                : t('Authorize')}
           </Button>
           <Button
             variant="outline"
@@ -899,7 +930,12 @@ export function OAuth2ConsentCard({
               rejectMutation.mutate()
             }}
           >
-            {t('Cancel')}
+            {rejectInProgress && <Loader2 className="animate-spin" />}
+            {redirecting === 'denied'
+              ? t('Redirecting…')
+              : rejectMutation.isPending
+                ? t('Cancelling…')
+                : t('Cancel')}
           </Button>
         </div>
 
