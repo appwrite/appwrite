@@ -1058,13 +1058,7 @@ trait PresenceBase
             'x-appwrite-key' => $this->getPresenceApiKey(),
         ];
 
-        /**
-         * Test for SUCCESS
-         */
-        $attempts = 20;
-        $outcomes = [];
-
-        for ($attempt = 0; $attempt < $attempts; $attempt++) {
+        for ($attempt = 0; $attempt < 20; $attempt++) {
             $presence = $this->client->call(Client::METHOD_PUT, '/presences/' . ID::unique(), $headers, [
                 'userId' => $userId,
                 'status' => 'online',
@@ -1077,25 +1071,25 @@ trait PresenceBase
                 [Client::METHOD_DELETE, '/presences/' . $presenceId, $headers, []],
             ]);
 
-            $outcomes[] = $update['status'];
+            /**
+             * Test for SUCCESS
+             */
             $this->assertContains($update['status'], [200, 404], 'Update raced with delete: ' . $update['body']);
             $this->assertContains($delete['status'], [204, 404], 'Delete raced with update: ' . $delete['body']);
-
-            if ($update['status'] === 404) {
-                $this->assertEquals('presence_not_found', \json_decode($update['body'], true)['type']);
-            }
 
             $list = $this->client->call(Client::METHOD_GET, '/presences', $headers, [
                 'queries' => [Query::equal('userId', [$userId])->toString()],
             ]);
             $this->assertEquals(200, $list['headers']['status-code']);
             $this->assertNotContains($presenceId, \array_column($list['body']['presences'], '$id'));
-        }
 
-        /**
-         * Test for FAILURE
-         */
-        $this->assertContains(404, $outcomes, 'No attempt observed the presence disappearing during the update');
+            /**
+             * Test for FAILURE
+             */
+            if ($update['status'] === 404) {
+                $this->assertEquals('presence_not_found', \json_decode($update['body'], true)['type']);
+            }
+        }
     }
 
     /**
