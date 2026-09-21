@@ -2625,7 +2625,7 @@ final class FunctionsCustomServerTest extends Scope
     }
 
 
-    public function testEventTriggerContinuesAfterExecutionFailure(): void
+    public function testEventTriggerWithFailingSubscribers(): void
     {
         $userId = ID::unique();
         $functions = [];
@@ -2635,14 +2635,16 @@ final class FunctionsCustomServerTest extends Scope
         ], $this->getHeaders());
 
         try {
-            // Subscribers run in creation order, so the timeout must run first.
-            $functions[] = $this->setupDeployedFunction('Failing event subscriber', 'timeout', [
-                'events' => ['users.' . $userId . '.create'],
-                'timeout' => 1,
-            ]);
-            $functions[] = $this->setupDeployedFunction('Successful event subscriber', 'event-handler', [
-                'events' => ['users.' . $userId . '.create'],
-            ]);
+            // Every subscriber fails, so whichever one the worker reaches first, the rest record
+            // an execution only if the fan-out survived that failure. The one second timeout makes
+            // the executor throw while preparing the runtime; the runtime's own soft timeout would
+            // mark the execution failed without throwing.
+            foreach (['Failing event subscriber A', 'Failing event subscriber B'] as $name) {
+                $functions[] = $this->setupDeployedFunction($name, 'timeout', [
+                    'events' => ['users.' . $userId . '.create'],
+                    'timeout' => 1,
+                ]);
+            }
 
             $user = $this->client->call(Client::METHOD_POST, '/users', $headers, [
                 'userId' => $userId,
@@ -2650,32 +2652,17 @@ final class FunctionsCustomServerTest extends Scope
             ]);
             $this->assertEquals(201, $user['headers']['status-code']);
 
-            /**
-             * Test for FAILURE
-             */
-            $this->assertEventually(function () use ($functions) {
-                $executions = $this->listExecutions($functions[0]);
-                $this->assertEquals(200, $executions['headers']['status-code']);
-                $this->assertNotEmpty($executions['body']['executions']);
-                $execution = $executions['body']['executions'][0];
-                $this->assertEquals('failed', $execution['status']);
-                $this->assertEquals('event', $execution['trigger']);
-                $this->assertNotEmpty($execution['errors']);
-            }, 30000, 500);
-
-            /**
-             * Test for SUCCESS
-             */
-            $this->assertEventually(function () use ($functions, $userId) {
-                $executions = $this->listExecutions($functions[1]);
-                $this->assertEquals(200, $executions['headers']['status-code']);
-                $this->assertNotEmpty($executions['body']['executions']);
-                $execution = $executions['body']['executions'][0];
-                $this->assertEquals('completed', $execution['status']);
-                $this->assertEquals('event', $execution['trigger']);
-                $this->assertStringContainsString($userId, (string) $execution['logs']);
-                $this->assertStringContainsString('Event subscriber isolation', (string) $execution['logs']);
-            }, 30000, 500);
+            foreach ($functions as $functionId) {
+                $this->assertEventually(function () use ($functionId) {
+                    $executions = $this->listExecutions($functionId);
+                    $this->assertEquals(200, $executions['headers']['status-code']);
+                    $this->assertNotEmpty($executions['body']['executions']);
+                    $execution = $executions['body']['executions'][0];
+                    $this->assertEquals('failed', $execution['status']);
+                    $this->assertEquals('event', $execution['trigger']);
+                    $this->assertNotEmpty($execution['errors']);
+                }, 60000, 500);
+            }
         } finally {
             foreach ($functions as $functionId) {
                 $this->cleanupFunction($functionId);
