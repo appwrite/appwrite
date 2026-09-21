@@ -21,9 +21,13 @@ services:
       - --providers.docker.constraints=Label(`traefik.constraint-label-stack`,`appwrite`)
       - --entrypoints.appwrite_web.address=:80
       - --entrypoints.appwrite_websecure.address=:443
+      - --entrypoints.appwrite_mqtt.address=:8883
+      - --entrypoints.appwrite_mqtt_ws.address=:8084
     ports:
       - ${_APP_HTTP_PORT:-80}:80
       - ${_APP_HTTPS_PORT:-443}:443
+      - ${_APP_MQTT_PORT:-8883}:8883
+      - ${_APP_MQTT_WSS_PORT:-8084}:8084
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - appwrite-config:/storage/config:ro
@@ -85,7 +89,6 @@ services:
       - _APP_USAGE_PASS
       - _APP_CONNECTIONS_DB_USAGE
       - _APP_POOL_SIZE_USAGE
-      - _APP_EXECUTIONS_DUAL_WRITE
       - _APP_CONNECTIONS_DB_EXECUTIONS
       - _APP_POOL_SIZE_EXECUTIONS
       - _APP_MAINTENANCE_RETENTION_USAGE_TTL
@@ -127,7 +130,7 @@ services:
       - _APP_NOTIFICATIONS_TRACKING_SECRET
       - _APP_DOMAIN
       - _APP_CONSOLE_DOMAIN
-      - _APP_CONSOLE_URL_SCHEME=root
+      - _APP_CONSOLE_URL
       - _APP_CONSOLE_TRUSTED_PROJECTS
       - _APP_DOMAIN_TARGET_CNAME
       - _APP_DOMAIN_TARGET_AAAA
@@ -193,6 +196,7 @@ services:
       - _APP_STORAGE_WASABI_REGION
       - _APP_STORAGE_WASABI_BUCKET
       - _APP_COMPUTE_SIZE_LIMIT
+      - _APP_COMPUTE_BUILD_SIZE_LIMIT
       - _APP_FUNCTIONS_TIMEOUT
       - _APP_SITES_TIMEOUT
       - _APP_COMPUTE_BUILD_TIMEOUT
@@ -216,7 +220,6 @@ services:
       - _APP_MAINTENANCE_RETENTION_ABUSE
       - _APP_MAINTENANCE_RETENTION_AUDIT
       - _APP_MAINTENANCE_RETENTION_AUDIT_CONSOLE
-      - _APP_MAINTENANCE_RETENTION_USAGE_HOURLY
       - _APP_MAINTENANCE_RETENTION_SCHEDULES
       - _APP_SMS_PROVIDER
       - _APP_SMS_FROM
@@ -258,6 +261,7 @@ services:
       - _APP_MIGRATION_HOST
       - _APP_GEO_SECRET
       - _APP_GEO_ENDPOINT
+      - _APP_PWNED_PASSWORDS_DSN
       - _APP_LIMIT_DATABASE_BATCH
       - _APP_DOCUMENTSDB
       - _APP_VECTORSDB
@@ -269,7 +273,7 @@ services:
         max-file: "5"
         max-size: 10m
     container_name: appwrite-console
-    image: appwrite/new:1.1.74
+    image: appwrite/new:1.1.114-self-hosted
     restart: unless-stopped
     networks:
       - appwrite
@@ -358,6 +362,77 @@ services:
       - _APP_VECTORSDB
       - _APP_EMBEDDING
 
+  appwrite-mqtt:
+    entrypoint: mqtt
+    logging:
+      driver: json-file
+      options:
+        max-file: "5"
+        max-size: 10m
+    container_name: appwrite-mqtt
+    image: ${_APP_IMAGE:-appwrite/appwrite}:${_APP_VERSION:-latest}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "php", "-r", "exit(@fsockopen('127.0.0.1', 1883) ? 0 : 1);"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+    labels:
+      - traefik.enable=true
+      - traefik.constraint-label-stack=appwrite
+      - traefik.docker.network=appwrite
+      # TLS is terminated here (mqtts, :8883) and forwarded as plaintext MQTT to :1883,
+      # mirroring how realtime's wss is terminated at the appwrite_websecure entrypoint.
+      - traefik.tcp.routers.appwrite_mqtt.entrypoints=appwrite_mqtt
+      - traefik.tcp.routers.appwrite_mqtt.rule=HostSNI(`*`)
+      - traefik.tcp.routers.appwrite_mqtt.tls=true
+      - traefik.tcp.routers.appwrite_mqtt.service=appwrite_mqtt
+      - traefik.tcp.services.appwrite_mqtt.loadbalancer.server.port=1883
+      # MQTT-over-WebSocket for browser clients: wss://<host>:8084 on its own TLS entrypoint
+      # (a dedicated port, not a URL path), the WebSocket sibling of the mqtts TCP router. The
+      # port identifies the broker, so a single push host serves both mqtts:// (:8883) and
+      # wss:// (:8084). TLS-only, so the reusable CONNECT credential never crosses the wire in
+      # the clear; TLS is terminated here and forwarded to the broker's WebSocket listener (:8083).
+      - traefik.http.routers.appwrite_mqtt_ws.entrypoints=appwrite_mqtt_ws
+      - traefik.http.routers.appwrite_mqtt_ws.rule=PathPrefix(`/`)
+      - traefik.http.routers.appwrite_mqtt_ws.service=appwrite_mqtt_ws
+      - traefik.http.routers.appwrite_mqtt_ws.tls=true
+      - traefik.http.services.appwrite_mqtt_ws.loadbalancer.server.port=8083
+    networks:
+      - appwrite
+    environment:
+      - _APP_ENV
+      - _APP_WORKER_PER_CORE
+      - _APP_OPTIONS_ABUSE
+      - _APP_OPTIONS_ROUTER_PROTECTION
+      - _APP_REALTIME_TAIL_RATE
+      - _APP_OPENSSL_KEY_V1
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
+      - _APP_DB_HOST
+      - _APP_DB_PORT
+      - _APP_DB_SCHEMA
+      - _APP_DB_USER
+      - _APP_DB_PASS
+      - _APP_DB_ADAPTER_VECTORSDB
+      - _APP_DB_HOST_VECTORSDB
+      - _APP_DB_PORT_VECTORSDB
+      - _APP_DB_SCHEMA_VECTORSDB
+      - _APP_DB_USER_VECTORSDB
+      - _APP_DB_PASS_VECTORSDB
+      - _APP_LOGGING_CONFIG
+      - _APP_LOGGING_FORMAT
+      - _APP_LOGGING_CONFIG_REALTIME
+      - _APP_DATABASE_SHARED_TABLES
+      - _APP_MQTT_REPLAY_DEPTH
+      - _APP_MQTT_WS_PORT
+      - _APP_MQTT_MAX_PACKET_SIZE
+      - _APP_POOL_ADAPTER=swoole
+
   appwrite-worker:
     entrypoint: worker
     restart: unless-stopped
@@ -390,7 +465,6 @@ services:
       - _APP_USAGE_PASS
       - _APP_CONNECTIONS_DB_USAGE
       - _APP_POOL_SIZE_USAGE
-      - _APP_EXECUTIONS_DUAL_WRITE
       - _APP_CONNECTIONS_DB_EXECUTIONS
       - _APP_POOL_SIZE_EXECUTIONS
       - _APP_MAINTENANCE_RETENTION_USAGE_TTL
@@ -432,8 +506,8 @@ services:
       - _APP_LOGGING_FORMAT
       - _APP_QUEUE_NAME
       - _APP_DATABASE_SHARED_TABLES
-      - _APP_CONSOLE_URL_SCHEME=root
       - _APP_CONSOLE_DOMAIN
+      - _APP_CONSOLE_URL
       - _APP_CONSOLE_TRUSTED_PROJECTS
       - _APP_DOMAIN
       - _APP_DOMAIN_TARGET_CNAME
@@ -479,6 +553,7 @@ services:
       - _APP_COMPUTE_MEMORY
       - _APP_OPEN_RUNTIMES_NFT
       - _APP_COMPUTE_SIZE_LIMIT
+      - _APP_COMPUTE_BUILD_SIZE_LIMIT
       - _APP_VCS_GITHUB_APP_NAME
       - _APP_VCS_GITHUB_PRIVATE_KEY
       - _APP_VCS_GITHUB_APP_ID
@@ -546,7 +621,6 @@ services:
       - _APP_USAGE_PASS
       - _APP_CONNECTIONS_DB_USAGE
       - _APP_POOL_SIZE_USAGE
-      - _APP_EXECUTIONS_DUAL_WRITE
       - _APP_CONNECTIONS_DB_EXECUTIONS
       - _APP_POOL_SIZE_EXECUTIONS
       - _APP_MAINTENANCE_RETENTION_USAGE_TTL
@@ -640,7 +714,10 @@ services:
       - _APP_LOGGING_FORMAT
       - _APP_WEBHOOK_MAX_FAILED_ATTEMPTS
       - _APP_DATABASE_SHARED_TABLES
-      - _APP_CONSOLE_URL_SCHEME=root
+      - _APP_OPTIONS_FORCE_HTTPS
+      - _APP_DOMAIN
+      - _APP_CONSOLE_DOMAIN
+      - _APP_CONSOLE_URL
   appwrite-worker-deletes:
     profiles:
       - separate
@@ -668,7 +745,6 @@ services:
       - _APP_ENV
       - _APP_USAGE_PASS
       - _APP_CONNECTIONS_DB_USAGE
-      - _APP_EXECUTIONS_DUAL_WRITE
       - _APP_CONNECTIONS_DB_EXECUTIONS
       - _APP_POOL_SIZE_EXECUTIONS
       - _APP_MAINTENANCE_RETENTION_EXECUTION
@@ -849,11 +925,12 @@ services:
       - _APP_COMPUTE_MEMORY
       - _APP_OPEN_RUNTIMES_NFT
       - _APP_COMPUTE_SIZE_LIMIT
+      - _APP_COMPUTE_BUILD_SIZE_LIMIT
       - _APP_OPTIONS_FORCE_HTTPS
       - _APP_OPTIONS_ROUTER_FORCE_HTTPS
       - _APP_DOMAIN
       - _APP_CONSOLE_DOMAIN
-      - _APP_CONSOLE_URL_SCHEME=root
+      - _APP_CONSOLE_URL
       - _APP_CONSOLE_TRUSTED_PROJECTS
       - _APP_STORAGE_DEVICE
       - _APP_STORAGE_S3_ACCESS_KEY
@@ -934,6 +1011,7 @@ services:
       - _APP_STORAGE_WASABI_BUCKET
       - _APP_JOBS_HOST
       - _APP_JOBS_SECRET
+      - _APP_COMPUTE_BUILD_SIZE_LIMIT
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -947,6 +1025,10 @@ services:
       - _APP_LOGGING_CONFIG
       - _APP_LOGGING_FORMAT
       - _APP_DATABASE_SHARED_TABLES
+      - _APP_OPTIONS_FORCE_HTTPS
+      - _APP_DOMAIN
+      - _APP_CONSOLE_DOMAIN
+      - _APP_CONSOLE_URL
     extra_hosts:
       - host.docker.internal:host-gateway
 
@@ -1083,7 +1165,6 @@ services:
       - _APP_ENV
       - _APP_USAGE_PASS
       - _APP_CONNECTIONS_DB_USAGE
-      - _APP_EXECUTIONS_DUAL_WRITE
       - _APP_CONNECTIONS_DB_EXECUTIONS
       - _APP_POOL_SIZE_EXECUTIONS
       - _APP_MAINTENANCE_RETENTION_EXECUTION
@@ -1411,7 +1492,6 @@ services:
       - _APP_MAINTENANCE_RETENTION_ABUSE
       - _APP_MAINTENANCE_RETENTION_AUDIT
       - _APP_MAINTENANCE_RETENTION_AUDIT_CONSOLE
-      - _APP_MAINTENANCE_RETENTION_USAGE_HOURLY
       - _APP_MAINTENANCE_RETENTION_SCHEDULES
       - _APP_MAINTENANCE_START_TIME
       - _APP_DATABASE_SHARED_TABLES
@@ -1586,7 +1666,9 @@ services:
 
   appwrite-autogravity:
     container_name: appwrite-autogravity
-    image: ghcr.io/appwrite/autogravity:0.0.8
+    image: ghcr.io/appwrite/autogravity:0.0.11
+    environment:
+      - MODEL_BACKEND=focalnet
     restart: unless-stopped
     networks:
       - appwrite
@@ -1691,7 +1773,7 @@ services:
     # One image carrying every orchestrator control plane. Appwrite drives the
     # jobs plane today; the per-plane images exist for Kubernetes, where each
     # scales, fails and gets RBAC on its own.
-    image: ghcr.io/open-runtimes/orchestrator/orchestrator:2.1.1
+    image: ghcr.io/open-runtimes/orchestrator/orchestrator:2.2.2
     restart: unless-stopped
     user: root
     networks:
@@ -1718,6 +1800,7 @@ services:
       options:
         max-file: "5"
         max-size: 10m
+    restart: unless-stopped
     networks:
       - appwrite
     volumes:
@@ -1733,13 +1816,12 @@ services:
       - --innodb-flush-method=fsync
     healthcheck:
       test:
-        - CMD
-        - healthcheck.sh
-        - --connect
-        - --innodb_initialized
+        - CMD-SHELL
+        - mariadb --protocol=tcp -h127.0.0.1 -uroot -p"$$MYSQL_ROOT_PASSWORD" --silent -e "SELECT 1"
       interval: 5s
       timeout: 5s
       retries: 12
+      start_period: 10s
   mongodb:
     image: mongo:8.2.5
     container_name: appwrite-mongodb

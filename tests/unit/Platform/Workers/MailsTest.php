@@ -9,6 +9,8 @@ use PHPUnit\Framework\TestCase;
 use Utopia\Database\Document;
 use Utopia\Messaging\Adapter\Email as EmailAdapter;
 use Utopia\Messaging\Messages\Email as EmailMessage;
+use Utopia\Pools\Adapter\Stack;
+use Utopia\Pools\Pool;
 use Utopia\Queue\Message;
 use Utopia\Registry\Registry;
 use Utopia\Telemetry\Adapter\None;
@@ -67,15 +69,17 @@ final class SpyMailAdapter extends EmailAdapter
 
 final class MailsTest extends TestCase
 {
-    public function testGlobalSmtpAdapterIsFreshForEachMessage(): void
+    public function testGlobalSmtpAdapterIsTakenFromThePoolPerMessage(): void
     {
         $adapters = [];
         $registry = new Registry();
-        $registry->set('smtp', static function () use (&$adapters): SpyMailAdapter {
-            $adapter = new SpyMailAdapter();
-            $adapters[] = $adapter;
+        $registry->set('smtp', static function () use (&$adapters): Pool {
+            return new Pool(new Stack(), 'smtp', 1, static function () use (&$adapters): SpyMailAdapter {
+                $adapter = new SpyMailAdapter();
+                $adapters[] = $adapter;
 
-            return $adapter;
+                return $adapter;
+            }, 1.0);
         });
 
         $previousSmtpHost = \getenv('_APP_SMTP_HOST');
@@ -114,16 +118,15 @@ final class MailsTest extends TestCase
             \putenv($previousSmtpHost === false ? '_APP_SMTP_HOST' : '_APP_SMTP_HOST=' . $previousSmtpHost);
         }
 
-        $this->assertCount(2, $adapters);
-        $this->assertSame(1, $adapters[0]->sendCount);
-        $this->assertSame(1, $adapters[1]->sendCount);
+        $this->assertCount(1, $adapters);
+        $this->assertSame(2, $adapters[0]->sendCount);
     }
 
     public function testLegacyMailPayloadIsSentByMailsWorker(): void
     {
         $adapter = new SpyMailAdapter();
         $registry = new Registry();
-        $registry->set('smtp', static fn () => $adapter);
+        $registry->set('smtp', static fn () => new Pool(new Stack(), 'smtp', 1, static fn () => $adapter, 1.0));
 
         $previousSmtpHost = \getenv('_APP_SMTP_HOST');
         \putenv('_APP_SMTP_HOST=spy.smtp.test');
@@ -194,7 +197,7 @@ final class MailsTest extends TestCase
     private function assertMailWorkerThrows(SpyMailAdapter $adapter, string $expectedMessage): void
     {
         $registry = new Registry();
-        $registry->set('smtp', static fn () => $adapter);
+        $registry->set('smtp', static fn () => new Pool(new Stack(), 'smtp', 1, static fn () => $adapter, 1.0));
 
         $previousSmtpHost = \getenv('_APP_SMTP_HOST');
         \putenv('_APP_SMTP_HOST=spy.smtp.test');

@@ -216,7 +216,7 @@ final class DeploymentsTest extends TestCase
             },
         );
 
-        $submitted = $deployments->createFromUpload($resource, $deployment);
+        $submitted = $deployments->createFromUpload($resource, $deployment, 900);
 
         $this->assertSame('waiting', $submitted->getAttribute('status'));
         $this->assertSame(1, $updates);
@@ -264,7 +264,7 @@ final class DeploymentsTest extends TestCase
         );
 
         try {
-            $deployments->createFromUpload($resource, $deployment);
+            $deployments->createFromUpload($resource, $deployment, 900);
             $this->fail('Expected the lost submission response to remain an error when no job exists.');
         } catch (OrchestratorClientException $error) {
             $this->assertInstanceOf(NetworkException::class, $error->getPrevious());
@@ -298,7 +298,7 @@ final class DeploymentsTest extends TestCase
         );
 
         try {
-            $deployments->createFromUpload($resource, $deployment);
+            $deployments->createFromUpload($resource, $deployment, 900);
             $this->fail('Expected an explicit jobs API error.');
         } catch (OrchestratorApiException $error) {
             $this->assertSame(401, $error->statusCode);
@@ -376,6 +376,6 @@ final readonly class ExposedDeployments extends Deployments
 {
     public static function submitPayload(Document $project, Document $resource, Document $deployment, array $platform): array
     {
-        return static::payload($project, $resource, $deployment, $platform);
+        return static::payload($project, $resource, $deployment, $platform, 137);
     }
 }

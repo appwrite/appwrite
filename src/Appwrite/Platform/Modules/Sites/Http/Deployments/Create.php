@@ -88,6 +88,7 @@ class Create extends Action
             ->inject('deviceForSites')
             ->inject('deviceForLocal')
             ->inject('deployments')
+            ->inject('buildTimeout')
             ->inject('plan')
             ->inject('authorization')
             ->inject('bus')
@@ -112,6 +113,7 @@ class Create extends Action
         Device $deviceForSites,
         Device $deviceForLocal,
         Deployments $deployments,
+        int $buildTimeout,
         array $plan,
         Authorization $authorization,
         Bus $bus,
@@ -310,7 +312,7 @@ class Create extends Action
             }
         };
 
-        $finalizeUpload = function (int $chunksUploaded) use ($activate, $authorization, $bus, $commands, &$chunks, $dbForPlatform, $dbForProject, $deploymentId, $deployments, $deviceForSites, $fileSize, &$metadata, $mergeUploadMetadata, $outputDirectory, $path, $platform, $project, $queueForEvents, $response, &$site, $type): void {
+        $finalizeUpload = function (int $chunksUploaded) use ($buildTimeout, $activate, $authorization, $bus, $commands, &$chunks, $dbForPlatform, $dbForProject, $deploymentId, $deployments, $deviceForSites, $fileSize, &$metadata, $mergeUploadMetadata, $outputDirectory, $path, $platform, $project, $queueForEvents, $response, &$site, $type): void {
             $deployment = $dbForProject->getDocument('deployments', $deploymentId);
             $uploaded = 0;
 
@@ -358,7 +360,7 @@ class Create extends Action
                     'activate' => $activate,
                     'sourceMetadata' => $metadata,
                     'type' => $type,
-                ]));
+                ]), $buildTimeout);
 
                 if ($isNewDeployment) {
                     $sitesDomain = $platform['sitesDomain'];

@@ -23,6 +23,7 @@ use Utopia\Database\Helpers\Role;
 use Utopia\Database\PermissionType;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Span\Span;
 
 class State
 {
@@ -277,9 +278,7 @@ class State
                 metrics: $usage->getMetrics(),
             ));
         } catch (Throwable $th) {
-            if (\function_exists('logError')) {
-                \logError($th, 'realtimeStats', tags: ['projectId' => $project->getId()]);
-            }
+            Span::current()?->setError($th)->set('project.id', $project->getId());
         }
     }
 
@@ -311,12 +310,9 @@ class State
                 ->from($queueForEvents)
                 ->trigger();
         } catch (Throwable $th) {
-            if (\function_exists('logError')) {
-                \logError($th, 'realtimePresenceEvent', tags: [
-                    'projectId' => $project->getId(),
-                    'event' => $eventName,
-                ]);
-            }
+            Span::current()?->setError($th)
+                ->set('project.id', $project->getId())
+                ->set('presence.event', $eventName);
         }
     }
 }

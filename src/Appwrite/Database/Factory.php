@@ -71,35 +71,6 @@ class Factory
         return $this->applyHooks($this->configureProject($database, $project, $dsn));
     }
 
-    public function logs(
-        ?Document $project = null,
-        int $timeout = 0,
-        int $maxQueryValues = 0,
-        array $metadata = [],
-    ): Database {
-        /** @var array $collections */
-        $collections = Config::getParam('collections', []);
-        $logsCollections = \array_keys($collections['logs'] ?? []);
-
-        $database = $this->newDatabase($this->adapter('logs'));
-
-        $database
-            ->setDatabase($this->database)
-            ->setAuthorization($this->authorization)
-            ->setDropUnknownAttributes(true)
-            ->setSharedTables(true)
-            ->setGlobalCollections($logsCollections)
-            ->setNamespace('logsV1');
-
-        if ($project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
-            $database->setTenant($project->getSequence());
-        }
-
-        $this->configureOptions($database, $timeout, $maxQueryValues, $metadata);
-
-        return $this->applyHooks($database);
-    }
-
     /**
      * Databases and tables the caller owns. Unknown attributes stay a rejected write here:
      * the schema is theirs, so dropping one would silently discard data they sent.

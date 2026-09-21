@@ -68,6 +68,7 @@ return [
             Attribute::string(key: 'emailCanonical', size: 320),
             Attribute::boolean(key: 'emailIsFree'),
             Attribute::boolean(key: 'emailIsDisposable'),
+            Attribute::boolean(key: 'passwordPwned'),
             Attribute::boolean(key: 'emailIsCorporate'),
             Attribute::boolean(key: 'emailIsCanonical'),
             Attribute::boolean(key: 'impersonator', default: false),
@@ -81,6 +82,7 @@ return [
             Index::key(key: '_key_registration', attributes: ['registration'], orders: [Order::Asc]),
             Index::key(key: '_key_emailVerification', attributes: ['emailVerification'], orders: [Order::Asc]),
             Index::key(key: '_key_phoneVerification', attributes: ['phoneVerification'], orders: [Order::Asc]),
+            Index::key(key: '_key_passwordPwned', attributes: ['passwordPwned'], orders: [Order::Asc]),
             Index::fullText(key: '_key_search', attributes: ['search']),
             Index::key(key: '_key_accessedAt', attributes: ['accessedAt']),
             Index::key(key: 'impersonator', attributes: [ID::custom('impersonator')]),
@@ -210,6 +212,10 @@ return [
             Attribute::string(key: 'providerAccessToken', size: 16384, filters: ['encrypt']),
             Attribute::datetime(key: 'providerAccessTokenExpiry', signed: false, filters: ['datetime']),
             Attribute::string(key: 'providerRefreshToken', size: 16384, filters: ['encrypt']),
+            // Raw OIDC ID token from the last native sign-in. Kept so clients can
+            // read claims the identity does not model — Google's `locale`, for
+            // one — without a round trip to the provider.
+            Attribute::string(key: 'providerIdToken', size: 16384, filters: ['encrypt']),
             // Used to store data from provider that may or may not be sensitive
             Attribute::string(key: 'secrets', size: 16384, default: [], filters: ['json', 'encrypt']),
             Attribute::string(key: 'scopes', array: true),
@@ -304,24 +310,6 @@ return [
         ]
     ],
 
-    'stats' => [
-        '$collection' => ID::custom(Database::METADATA),
-        '$id' => ID::custom('stats'),
-        'name' => 'Stats',
-        'attributes' => [
-            Attribute::string(key: 'metric', required: true),
-            Attribute::string(key: 'region', required: true),
-            Attribute::integer(key: 'value', size: 8, required: true),
-            Attribute::datetime(key: 'time', signed: false, filters: ['datetime']),
-            Attribute::string(key: 'period', size: 4, required: true),
-        ],
-        'indexes' => [
-            Index::key(key: '_key_time', attributes: ['time'], orders: [Order::Desc]),
-            Index::key(key: '_key_period_time', attributes: ['period', 'time'], orders: [Order::Asc]),
-            Index::unique(key: '_key_metric_period_time', attributes: ['metric', 'period', 'time'], orders: [Order::Desc]),
-        ],
-    ],
-
     'providers' => [
         '$collection' => ID::custom(DATABASE::METADATA),
         '$id' => ID::custom('providers'),
@@ -367,6 +355,26 @@ return [
         ],
     ],
 
+    'appwritePushLedger' => [
+        '$collection' => ID::custom(DATABASE::METADATA),
+        '$id' => ID::custom('appwritePushLedger'),
+        'name' => 'MQTT Messages',
+        'attributes' => [
+            Attribute::string(key: 'topic', required: true),
+            Attribute::string(key: 'data', size: 65535, required: true, filters: ['json']),
+            Attribute::string(key: 'messageId'),
+            Attribute::string(key: 'messageInternalId'),
+            // The per-topic sequence, copied from the topic counter at insert time. qos and
+            // expiry are topic settings now (see the topics collection), not per message.
+            Attribute::integer(key: 'sequence', required: true),
+        ],
+        'indexes' => [
+            Index::key(key: '_key_topic_sequence', attributes: ['topic', 'sequence'], orders: [Order::Asc, Order::Asc]),
+            Index::key(key: '_key_messageInternalId', attributes: ['messageInternalId'], orders: [Order::Asc]),
+            Index::unique(key: '_key_message_topic', attributes: ['messageId', 'topic'], orders: [Order::Asc, Order::Asc]),
+        ],
+    ],
+
     'topics' => [
         '$collection' => ID::custom(DATABASE::METADATA),
         '$id' => ID::custom('topics'),
@@ -379,6 +387,16 @@ return [
             Attribute::integer(key: 'pushTotal', default: 0),
             Attribute::string(key: 'targets', size: 16384, filters: ['subQueryTopicTargets']),
             Attribute::string(key: 'search', size: 16384, default: '', filters: ['topicSearch']),
+            // monotonic message counter for this topic. It is the tail sequence, so
+            // a client's backlog depth is this minus the client's cursor.
+            Attribute::integer(key: 'sequence', default: 0),
+            // MQTT quality of service for delivery on this topic: 0 is fire-and-forget
+            // (only clients connected at publish time), 1 persists each message and replays
+            // it when a client reconnects unacknowledged. null lets the subscriber choose.
+            Attribute::integer(key: 'qos'),
+            // message retention in seconds capped at 7 days. A ledger message expires
+            // this long after it is written.
+            Attribute::integer(key: 'expiry', signed: false),
         ],
 
         'indexes' => [

@@ -8,6 +8,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideConsole;
+use Utopia\Command;
 use Utopia\Console;
 use Utopia\Database\DateTime;
 use Utopia\Database\Helpers\ID;
@@ -178,7 +179,7 @@ final class PresenceConsoleClientTest extends Scope
         // (previously skipped for the console project).
         $stdout = '';
         $stderr = '';
-        $code = Console::execute('docker exec appwrite maintenance --type=trigger', '', $stdout, $stderr);
+        $code = Console::execute((new Command('docker'))->argument('exec')->argument('appwrite')->argument('maintenance')->argument('--type=trigger'), '', $stdout, $stderr);
         $this->assertSame(0, $code, "Maintenance command failed with code $code: $stderr ($stdout)");
     }
 

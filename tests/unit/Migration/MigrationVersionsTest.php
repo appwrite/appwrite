@@ -18,6 +18,7 @@ use Utopia\Database\Attribute;
 use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Query\Schema\ColumnType;
 use Utopia\Registry\Registry;
@@ -93,6 +94,7 @@ final class MigrationVersionsTest extends TestCase
             '_key_messageId',
             '_key_recipient',
             '_key_project',
+            '_key_team',
             '_key_project_resource',
             '_key_project_parent_resource',
         ], \array_keys($indexes));
@@ -139,6 +141,94 @@ final class MigrationVersionsTest extends TestCase
 
         $this->assertArrayHasKey('firstSeen', $attributes);
         $this->assertArrayHasKey('lastSeen', $attributes);
+    }
+
+    /**
+     * A legacy install has notifications without the team columns. The fixture
+     * below is a frozen snapshot of that shape, written out rather than derived
+     * from the current config, so it keeps describing the old install even as
+     * the config moves on.
+     *
+     * Drives migrateCollections, as the other migration tests here do:
+     * execute() also walks every document in every console collection, which
+     * needs a full install rather than a fixture. Then does the thing the
+     * columns exist for: store a notification against a team, read it back by
+     * team, and check another team does not see it.
+     */
+    public function testV25LetsALegacyInstallStoreAndQueryTeamScopedNotifications(): void
+    {
+        require_once __DIR__ . '/../../../app/init.php';
+
+        $authorization = new Authorization();
+        $database = new Database(new Memory(), new Cache(new NoCache()));
+        $database
+            ->setAuthorization($authorization)
+            ->setDatabase('migrationV25TeamNotifications')
+            ->setNamespace('migration_team_notifications_' . \uniqid());
+        $database->create();
+
+        $database->createCollection(new Collection(
+            id: 'notifications',
+            attributes: [
+                Attribute::string(key: 'messageId'),
+                Attribute::string(key: 'recipientHash', size: 64),
+                Attribute::string(key: 'type', size: 100),
+                Attribute::string(key: 'channel', size: 64),
+                Attribute::string(key: 'projectId'),
+                Attribute::string(key: 'projectInternalId'),
+                Attribute::string(key: 'resourceType', size: 64),
+                Attribute::string(key: 'resourceId'),
+                Attribute::string(key: 'resourceInternalId'),
+                Attribute::string(key: 'title', size: 256),
+                Attribute::boolean(key: 'read'),
+            ],
+        ));
+
+        $migration = new V25();
+        $migration->setProject(
+            new Document(['$id' => 'console', '$sequence' => 'console']),
+            $database,
+            $database,
+            $authorization,
+        );
+
+        $migrateCollections = new \ReflectionMethod($migration, 'migrateCollections');
+        \ob_start();
+        try {
+            $migrateCollections->invoke($migration);
+        } finally {
+            \ob_end_clean();
+        }
+
+        $authorization->skip(fn () => $database->createDocument('notifications', new Document([
+            '$id' => 'domain-expiry',
+            'messageId' => 'domain-expiry',
+            'recipientHash' => \md5('owner@example.com'),
+            'type' => 'warning',
+            'channel' => 'email',
+            'projectId' => 'console',
+            'projectInternalId' => 'console',
+            'teamId' => 'team-a',
+            'teamInternalId' => '1',
+            'resourceType' => 'domains',
+            'resourceId' => 'domain-a',
+            'resourceInternalId' => '1',
+            'title' => 'example.com expires in 30 days',
+            'read' => false,
+        ])));
+
+        $mine = $authorization->skip(fn () => $database->find('notifications', [
+            Query::equal('teamId', ['team-a']),
+        ]));
+
+        $this->assertCount(1, $mine);
+        $this->assertSame('domain-a', $mine[0]->getAttribute('resourceId'));
+
+        $theirs = $authorization->skip(fn () => $database->find('notifications', [
+            Query::equal('teamId', ['team-b']),
+        ]));
+
+        $this->assertCount(0, $theirs);
     }
 
     public function testCreateAttributesFromCollectionSkipsExistingAttributes(): void

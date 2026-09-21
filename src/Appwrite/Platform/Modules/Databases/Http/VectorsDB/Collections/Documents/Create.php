@@ -54,7 +54,7 @@ class Create extends DocumentCreate
                     namespace: 'vectorsDB',
                     group: $this->getSdkGroup(),
                     name: 'createDocument',
-                    desc: 'Create document',
+                    summary: 'Create document',
                     description: '/docs/references/vectorsdb/create-document.md',
                     auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                     responses: [
@@ -77,7 +77,7 @@ class Create extends DocumentCreate
                     namespace: 'vectorsDB',
                     group: $this->getSdkGroup(),
                     name: 'createDocuments',
-                    desc: 'Create documents',
+                    summary: 'Create documents',
                     description: '/docs/references/vectorsdb/create-documents.md',
                     auth: [AuthType::ADMIN, AuthType::KEY],
                     responses: [

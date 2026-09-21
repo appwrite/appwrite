@@ -813,20 +813,7 @@ final class ClaimTest extends TestCase
     public function testConcurrentRetryClaimHasSingleWinnerAfterLeaseExpires(): void
     {
         $terminal = $this->createFailedMigration();
-        $held = false;
-        $locks = static function (string $key, int $ttl, callable $callback, float $timeout) use (&$held): mixed {
-            if ($held) {
-                throw new Contention();
-            }
-
-            $held = true;
-            try {
-                return $callback();
-            } finally {
-                $held = false;
-            }
-        };
-        $claims = new Claim($this->database, $locks);
+        $claims = new Claim($this->database, $this->locks());
         $publisher = new class () implements Publisher {
             public ?\Closure $duringEnqueue = null;
             public int $published = 0;

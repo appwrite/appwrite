@@ -16,6 +16,7 @@ use Executor\Executor;
 use PDO;
 use PHPUnit\Framework\TestCase;
 use Tests\Unit\Event\MockPublisher;
+use Tests\Unit\Execution\CapturingClient;
 use Utopia\Bus\Bus;
 use Utopia\Cache\Adapter\None as NoCache;
 use Utopia\Cache\Cache;
@@ -127,7 +128,6 @@ final class DeletesTest extends TestCase
                 project: $project,
                 type: DELETE_TYPE_MAINTENANCE,
                 datetime: $now,
-                hourlyUsageRetentionDatetime: $now,
             ))->toArray(),
         ]);
         $worker = new class () extends Deletes {
@@ -161,7 +161,6 @@ final class DeletesTest extends TestCase
                 dbForPlatform: $database,
                 getProjectDB: static fn (Document $document): Database => $database,
                 getDatabasesDB: static fn (Document $document): Database => $database,
-                getLogsDB: static fn (Document $document): Database => $database,
                 deviceForFiles: $this->createStub(Device::class),
                 deviceForFunctions: $this->createStub(Device::class),
                 deviceForSites: $this->createStub(Device::class),
@@ -174,7 +173,7 @@ final class DeletesTest extends TestCase
                 publisherForDeletes: new DeletePublisher($publisher, $queue),
                 publisherForUsage: new UsagePublisher($publisher, $queue),
                 bus: $this->createStub(Bus::class),
-                executionStore: new Store(enabled: false, dsn: 'http://localhost:8123/test', client: null),
+                executionStore: new Store(dsn: 'http://appwrite:secret@clickhouse:8123/appwrite', client: new CapturingClient()),
             );
         };
 

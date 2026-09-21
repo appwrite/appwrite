@@ -56,7 +56,7 @@ class Create extends DocumentCreate
                     namespace: $this->getSDKNamespace(),
                     group: $this->getSDKGroup(),
                     name: self::getName(),
-                    desc: 'Create row',
+                    summary: 'Create row',
                     description: '/docs/references/tablesdb/create-row.md',
                     auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                     responses: [
@@ -79,7 +79,7 @@ class Create extends DocumentCreate
                     namespace: $this->getSDKNamespace(),
                     group: $this->getSDKGroup(),
                     name: $this->getBulkActionName(self::getName()),
-                    desc: 'Create rows',
+                    summary: 'Create rows',
                     description: '/docs/references/tablesdb/create-rows.md',
                     auth: [AuthType::ADMIN, AuthType::KEY],
                     responses: [

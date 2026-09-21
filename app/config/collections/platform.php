@@ -41,7 +41,6 @@ $platformCollections = [
             Attribute::string(key: 'platforms', size: 16384, filters: ['subQueryPlatforms']),
             Attribute::string(key: 'webhooks', size: 16384, filters: ['subQueryWebhooks']),
             Attribute::string(key: 'keys', size: 16384, filters: ['subQueryKeys']),
-            Attribute::string(key: 'devKeys', size: 16384, filters: ['subQueryDevKeys']),
             Attribute::string(key: 'search', size: 16384),
             Attribute::integer(key: 'pingCount', default: 0, signed: false),
             Attribute::datetime(key: 'pingedAt', signed: false, filters: ['datetime']),
@@ -132,26 +131,6 @@ $platformCollections = [
         ],
     ],
 
-    'devKeys' => [
-        '$collection' => ID::custom(Database::METADATA),
-        '$id' => ID::custom('devKeys'),
-        'name' => 'Dev keys',
-        'attributes' => [
-            Attribute::string(key: 'projectInternalId', required: true),
-            Attribute::string(key: 'projectId', required: true, default: 0),
-            Attribute::string(key: 'name', required: true),
-            // var_dump of \bin2hex(\random_bytes(128)) => string(256) doubling for encryption
-            Attribute::string(key: 'secret', size: 512, required: true, filters: ['encrypt']),
-            Attribute::datetime(key: 'expire', signed: false, filters: ['datetime']),
-            Attribute::datetime(key: 'accessedAt', signed: false, filters: ['datetime']),
-            Attribute::string(key: 'sdks', required: true, array: true),
-        ],
-        'indexes' => [
-            Index::key(key: '_key_project', attributes: ['projectInternalId'], lengths: [Database::LENGTH_KEY], orders: [Order::Asc]),
-            Index::key(key: '_key_accessedAt', attributes: ['accessedAt']),
-        ],
-    ],
-
     'webhooks' => [
         '$collection' => ID::custom(Database::METADATA),
         '$id' => ID::custom('webhooks'),
@@ -190,6 +169,8 @@ $platformCollections = [
             Attribute::string(key: 'resourceId', required: true),
             Attribute::string(key: 'projectId', required: true),
             Attribute::id(key: 'projectInternalId', required: true),
+            Attribute::string(key: 'teamId'),
+            Attribute::id(key: 'teamInternalId'),
             Attribute::id(key: 'resourceInternalId', required: true),
             Attribute::string(key: 'parentResourceType', size: 64, required: true),
             Attribute::string(key: 'parentResourceId', required: true),
@@ -204,6 +185,7 @@ $platformCollections = [
             Index::key(key: '_key_messageId', attributes: ['messageId'], lengths: [Database::LENGTH_KEY], orders: [Order::Asc]),
             Index::unique(key: '_key_recipient', attributes: ['messageId', 'channel', 'recipientHash'], lengths: [Database::LENGTH_KEY, 64, 64], orders: [Order::Asc, Order::Asc, Order::Asc]),
             Index::key(key: '_key_project', attributes: ['projectId', 'projectInternalId'], lengths: [Database::LENGTH_KEY, 0], orders: [Order::Asc, Order::Asc]),
+            Index::key(key: '_key_team', attributes: ['teamId', 'teamInternalId']),
             Index::key(key: '_key_project_resource', attributes: ['projectId', 'projectInternalId', 'resourceType', 'resourceId', 'resourceInternalId'], lengths: [Database::LENGTH_KEY, 0, 64, Database::LENGTH_KEY, 0], orders: [Order::Asc, Order::Asc, Order::Asc, Order::Asc, Order::Asc]),
             Index::key(key: '_key_project_parent_resource', attributes: ['projectId', 'projectInternalId', 'parentResourceType', 'parentResourceId', 'parentResourceInternalId'], lengths: [Database::LENGTH_KEY, 0, 64, Database::LENGTH_KEY, 0], orders: [Order::Asc, Order::Asc, Order::Asc, Order::Asc, Order::Asc]),
         ],

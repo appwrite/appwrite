@@ -1838,6 +1838,149 @@ trait DatabasesBase
         $this->assertStringContainsString('Index length is longer than the maximum:', $attribute['body']['message']);
     }
 
+    public function testUpdateEncryptedAttributeSize(): void
+    {
+        if (!$this->getSupportForAttributes()) {
+            $this->markTestSkipped('Attributes are not supported by this database adapter');
+        }
+
+        $databaseId = $this->setupDatabase()['databaseId'];
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => ID::unique(),
+            'name' => 'Encrypted sizes',
+            $this->getSecurityParam() => true,
+            'permissions' => [Permission::create(Role::user($this->getUser()['$id']))],
+        ]);
+        $this->assertEquals(201, $collection['headers']['status-code']);
+        $collectionId = $collection['body']['$id'];
+
+        foreach (['string', 'varchar'] as $type) {
+            $encrypted = $this->createAttribute($databaseId, $collectionId, $type, [
+                'key' => $type,
+                'required' => false,
+                'size' => 200,
+                'encrypt' => true,
+            ]);
+            $this->assertEquals(202, $encrypted['headers']['status-code']);
+            $this->waitForAttribute($databaseId, $collectionId, $type);
+
+            $plain = $this->createAttribute($databaseId, $collectionId, $type, [
+                'key' => $type . 'Plain',
+                'required' => false,
+                'size' => 200,
+            ]);
+            $this->assertEquals(202, $plain['headers']['status-code']);
+            $this->waitForAttribute($databaseId, $collectionId, $type . 'Plain');
+
+            /**
+             * Test for FAILURE
+             */
+            $encrypted = $this->client->call(Client::METHOD_PATCH, $this->getSchemaUrl($databaseId, $collectionId, $type, $type), $headers, [
+                'required' => false,
+                'default' => null,
+                'size' => 149,
+            ]);
+            $this->assertEquals(400, $encrypted['headers']['status-code']);
+            $this->assertStringContainsString('Encrypted strings require a minimum size', $encrypted['body']['message']);
+
+            /**
+             * Test for SUCCESS
+             */
+            $encrypted = $this->client->call(Client::METHOD_PATCH, $this->getSchemaUrl($databaseId, $collectionId, $type, $type), $headers, [
+                'required' => false,
+                'default' => null,
+                'size' => 150,
+            ]);
+            $this->assertEquals(200, $encrypted['headers']['status-code']);
+            $this->assertEquals(150, $encrypted['body']['size']);
+
+            $document = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), $headers, [
+                $this->getRecordIdParam() => ID::unique(),
+                'data' => [$type => 'a'],
+            ]);
+            $this->assertEquals(201, $document['headers']['status-code']);
+
+            $document = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $collectionId, $document['body']['$id']), $headers);
+            $this->assertEquals(200, $document['headers']['status-code']);
+            $this->assertSame('a', $document['body'][$type]);
+
+            $plain = $this->client->call(Client::METHOD_PATCH, $this->getSchemaUrl($databaseId, $collectionId, $type, $type . 'Plain'), $headers, [
+                'required' => false,
+                'default' => null,
+                'size' => 10,
+            ]);
+            $this->assertEquals(200, $plain['headers']['status-code']);
+            $this->assertEquals(10, $plain['body']['size']);
+        }
+    }
+
+    public function testUpdateAttributeClearsDefault(): void
+    {
+        if (!$this->getSupportForAttributes()) {
+            $this->markTestSkipped('Attributes are not supported by this database adapter');
+        }
+
+        $databaseId = $this->setupDatabase()['databaseId'];
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => ID::unique(),
+            'name' => 'Clear defaults',
+        ]);
+        $this->assertEquals(201, $collection['headers']['status-code']);
+        $collectionId = $collection['body']['$id'];
+
+        $defaults = [
+            'string' => ['default' => 'original', 'size' => 100],
+            'boolean' => ['default' => false],
+        ];
+
+        foreach ($defaults as $type => $options) {
+            $attribute = $this->createAttribute($databaseId, $collectionId, $type, [
+                'key' => $type,
+                'required' => false,
+                ...$options,
+            ]);
+            $this->assertEquals(202, $attribute['headers']['status-code']);
+            $this->waitForAttribute($databaseId, $collectionId, $type);
+        }
+
+        $document = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), $headers, [
+            $this->getRecordIdParam() => ID::unique(),
+            'data' => ['string' => null, 'boolean' => null],
+        ]);
+        $this->assertEquals(201, $document['headers']['status-code']);
+        $this->assertSame('original', $document['body']['string']);
+        $this->assertFalse($document['body']['boolean']);
+
+        // Clear the string default while renaming it, and the boolean one in place.
+        foreach ($defaults as $type => $options) {
+            $attribute = $this->client->call(Client::METHOD_PATCH, $this->getSchemaUrl($databaseId, $collectionId, $type, $type), $headers, [
+                ...$options,
+                'required' => false,
+                'default' => null,
+                'newKey' => $type === 'string' ? 'renamed' : null,
+            ]);
+            $this->assertEquals(200, $attribute['headers']['status-code']);
+        }
+
+        $document = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), $headers, [
+            $this->getRecordIdParam() => ID::unique(),
+            'data' => ['renamed' => null, 'boolean' => null],
+        ]);
+        $this->assertEquals(201, $document['headers']['status-code']);
+        $this->assertNull($document['body']['renamed']);
+        $this->assertNull($document['body']['boolean']);
+    }
+
     public function testUpdateAttributeEnum(): void
     {
         if (!$this->getSupportForAttributes()) {
@@ -9488,6 +9631,31 @@ trait DatabasesBase
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertEquals([0, 0], $response['body']['location']); // Should use default value
         $this->assertEquals([[0, 0], [1, 1]], $response['body']['route']); // Should use default value
+
+        // Test 6: Update point attribute without sending default - clears the stored default
+        $response = $this->client->call(Client::METHOD_PATCH, $this->getSchemaUrl($databaseId, $collectionId) . '/point/location', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'required' => false
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            $this->getRecordIdParam() => ID::unique(),
+            'data' => [
+                'name' => 'Test Location',
+                'location' => null
+            ]
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNull($response['body']['location']);
 
         // Cleanup
         $this->client->call(Client::METHOD_DELETE, $this->getContainerUrl($databaseId, $collectionId), array_merge([

@@ -124,9 +124,9 @@ class Execution extends Model
             ])
             ->addRule('duration', [
                 'type' => self::TYPE_FLOAT,
-                'description' => 'Resource(function/site) execution duration in seconds.',
+                'description' => 'Total time the resource(function/site) took to respond, in seconds.',
                 'default' => 0,
-                'example' => 0.400,
+                'example' => 1.230,
             ])
             ->addRule('scheduledAt', [
                 'type' => self::TYPE_DATETIME,
