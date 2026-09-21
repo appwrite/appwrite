@@ -13,7 +13,8 @@ runners:
     ram: 16
     disk: 80gb
 
-  # console-live runs up to 150 minutes; a preempted spot VM has no retry.
+  # Database lanes hold a dedicated database open; a preempted spot VM has no
+  # retry and leaks that database until the stale sweep.
   e2e-long:
     family: n2d
     cpu: 4
