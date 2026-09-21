@@ -100,6 +100,10 @@ export function OAuth2ConsentCard({
 }: OAuth2ConsentCardProps) {
   const t = useT()
   const [error, setError] = useState<string | null>(null)
+  // Set once the browser has been handed a web redirect. The consent page
+  // stays on screen until the client's first byte arrives, which on a cold
+  // start can take a while: the buttons stay disabled for that whole stretch.
+  const [redirecting, setRedirecting] = useState(false)
   const [showPermissions, setShowPermissions] = useState(true)
   const [permissionGroupOpen, setPermissionGroupOpen] = useState<
     Record<string, boolean>
@@ -400,8 +404,10 @@ export function OAuth2ConsentCard({
         onDone?.('approved', result.redirectUrl)
         return
       }
+      const web = isWebRedirect(result.redirectUrl)
+      setRedirecting(web)
       window.location.assign(result.redirectUrl)
-      if (!isWebRedirect(result.redirectUrl)) {
+      if (!web) {
         onDone?.('approved', result.redirectUrl)
       }
     },
@@ -432,8 +438,10 @@ export function OAuth2ConsentCard({
         onDone?.('denied', result.redirectUrl)
         return
       }
+      const web = isWebRedirect(result.redirectUrl)
+      setRedirecting(web)
       window.location.assign(result.redirectUrl)
-      if (!isWebRedirect(result.redirectUrl)) {
+      if (!web) {
         onDone?.('denied', result.redirectUrl)
       }
     },
@@ -444,8 +452,21 @@ export function OAuth2ConsentCard({
     },
   })
 
+  // A back navigation restores this page from the bfcache with `redirecting`
+  // still set; the user must be able to act again.
+  useEffect(() => {
+    const restore = (event: PageTransitionEvent) => {
+      if (event.persisted) setRedirecting(false)
+    }
+    window.addEventListener('pageshow', restore)
+    return () => window.removeEventListener('pageshow', restore)
+  }, [])
+
   const isBusy =
-    switchingAccount || approveMutation.isPending || rejectMutation.isPending
+    switchingAccount ||
+    approveMutation.isPending ||
+    rejectMutation.isPending ||
+    redirecting
 
   const editorGroup = (
     tierKey: 'project' | 'organization',

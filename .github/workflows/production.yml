@@ -22,21 +22,16 @@ env:
 
 jobs:
     build:
-        # One job per architecture, each on a runner of that architecture, so the
-        # arm64 image is built natively instead of under QEMU emulation.
+        # gcrunner has no arm64 runners; that leg cross-builds under QEMU.
         strategy:
             fail-fast: false
             matrix:
                 include:
                     - arch: amd64
                       platform: linux/amd64
-                      runner: 4cpu-linux-x64
-                      family: c7
                     - arch: arm64
                       platform: linux/arm64
-                      runner: 4cpu-linux-arm64
-                      family: c7g
-        runs-on: runs-on=${{ github.run_id }}/runner=${{ matrix.runner }}/family=${{ matrix.family }}/extras=otel
+        runs-on: gcrunner=${{ github.run_id }}-build-${{ strategy.job-index }}/runner=build
         timeout-minutes: 45
         env:
             DOCKER_BUILD_RECORD_UPLOAD: false
@@ -49,6 +44,10 @@ jobs:
         steps:
             - name: Checkout the repo
               uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+
+            - name: Set up QEMU
+              if: matrix.arch == 'arm64'
+              uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4.4.0
 
             - name: Set up Docker Buildx
               uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4
@@ -95,7 +94,7 @@ jobs:
 
     manifest:
         needs: build
-        runs-on: runs-on=${{ github.run_id }}/runner=2cpu-linux-x64/family=c7/extras=otel
+        runs-on: gcrunner=${{ github.run_id }}-manifest/runner=deploy
         timeout-minutes: 10
         steps:
             - name: Login to GitHub Container Registry
@@ -134,13 +133,9 @@ jobs:
                 include:
                     - arch: amd64
                       platform: linux/amd64
-                      runner: 4cpu-linux-x64
-                      family: c7
                     - arch: arm64
                       platform: linux/arm64
-                      runner: 4cpu-linux-arm64
-                      family: c7g
-        runs-on: runs-on=${{ github.run_id }}/runner=${{ matrix.runner }}/family=${{ matrix.family }}/extras=otel
+        runs-on: gcrunner=${{ github.run_id }}-build-self-hosted-${{ strategy.job-index }}/runner=build
         timeout-minutes: 45
         env:
             DOCKER_BUILD_RECORD_UPLOAD: false
@@ -150,6 +145,10 @@ jobs:
         steps:
             - name: Checkout the repo
               uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+
+            - name: Set up QEMU
+              if: matrix.arch == 'arm64'
+              uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4.4.0
 
             - name: Set up Docker Buildx
               uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4
@@ -189,7 +188,7 @@ jobs:
 
     manifest-self-hosted:
         needs: build-self-hosted
-        runs-on: runs-on=${{ github.run_id }}/runner=2cpu-linux-x64/family=c7/extras=otel
+        runs-on: gcrunner=${{ github.run_id }}-manifest-self-hosted/runner=deploy
         timeout-minutes: 10
         steps:
             - name: Set up Docker Buildx
@@ -228,7 +227,7 @@ jobs:
     publish-assets:
         environment: production
         needs: build
-        runs-on: runs-on=${{ github.run_id }}/runner=2cpu-linux-x64/family=c7/extras=otel
+        runs-on: gcrunner=${{ github.run_id }}-publish-assets/runner=deploy
         timeout-minutes: 25
         permissions:
             contents: read
@@ -268,7 +267,7 @@ jobs:
     deploy:
         # Never roll out HTML that references assets which failed to publish.
         needs: [manifest, publish-assets]
-        runs-on: runs-on=${{ github.run_id }}/runner=2cpu-linux-x64/family=c7/extras=otel
+        runs-on: gcrunner=${{ github.run_id }}-deploy/runner=deploy
         timeout-minutes: 10
         # Shared across the staging and production workflows so their deploy
         # jobs never push to application-configuration at the same time.

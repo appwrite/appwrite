@@ -475,6 +475,40 @@ export const comparisonTables: ComparisonTable[] = [
             ]
         },
         {
+            title: 'Domains',
+            rows: [
+                {
+                    title: 'Domains per organization',
+                    info: 'Limit for Appwrite-registered, transferred, and external domains with Appwrite DNS in an organization.',
+                    free: '1',
+                    pro: '50',
+                    enterprise: 'Custom'
+                },
+                {
+                    title: 'Domain registration',
+                    info: 'Register or transfer domains through Appwrite at registry pricing. Quotes appear before checkout.',
+                    free: {
+                        text: 'View pricing',
+                        href: '/docs/products/domains/pricing'
+                    },
+                    pro: {
+                        text: 'View pricing',
+                        href: '/docs/products/domains/pricing'
+                    },
+                    enterprise: {
+                        text: 'View pricing',
+                        href: '/docs/products/domains/pricing'
+                    }
+                },
+                {
+                    title: 'Appwrite DNS',
+                    free: true,
+                    pro: true,
+                    enterprise: true
+                }
+            ]
+        },
+        {
             title: 'Network',
             rows: [
                 {

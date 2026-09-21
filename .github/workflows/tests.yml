@@ -9,7 +9,7 @@ on:
 jobs:
   build:
     name: Build
-    runs-on: gcrunner=${{ github.run_id }}-build/family=n2d/cpu=4/ram=16/disk=80gb/image=gcrunner-ubuntu2404-x64-baf37b4-20260917131151
+    runs-on: gcrunner=${{ github.run_id }}-build/runner=checks
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
