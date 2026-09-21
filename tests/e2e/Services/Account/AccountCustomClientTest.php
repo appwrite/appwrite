@@ -4799,6 +4799,37 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('test-identifier-updated', $response['body']['identifier']);
         $this->assertEquals(false, $response['body']['expired']);
+
+        $targetId = $response['body']['$id'];
+
+        $other = $this->client->call(Client::METHOD_POST, '/account/targets/push', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'targetId' => ID::unique(),
+            'identifier' => 'test-identifier-taken',
+        ]);
+
+        $this->assertEquals(201, $other['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_PUT, '/account/targets/' . $targetId . '/push', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'identifier' => 'test-identifier-taken',
+        ]);
+
+        $this->assertEquals(409, $response['headers']['status-code']);
+        $this->assertEquals('user_target_already_exists', $response['body']['type']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/account', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $identifiers = \array_column(\array_filter($response['body']['targets'], fn ($target) => $target['$id'] === $targetId), 'identifier');
+        $this->assertSame(['test-identifier-updated'], $identifiers);
     }
 
     public function testMFARecoveryCodeChallenge(): void
