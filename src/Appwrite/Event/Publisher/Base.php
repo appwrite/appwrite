@@ -24,6 +24,25 @@ readonly class Base
     }
 
     /**
+     * Publish many messages to the queue in one round trip
+     *
+     * @param array<BaseMessage> $messages
+     */
+    public function publishMany(Queue $queue, array $messages): bool
+    {
+        if ($messages === []) {
+            return false;
+        }
+
+        $payloads = [];
+        foreach ($messages as $message) {
+            $payloads[] = $message->toArray();
+        }
+
+        return $this->publisher->enqueueMany($queue, $payloads);
+    }
+
+    /**
      * Get the size of a queue
      */
     public function getQueueSize(Queue $queue, bool $failed = false): int

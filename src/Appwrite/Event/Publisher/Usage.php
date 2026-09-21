@@ -35,6 +35,25 @@ readonly class Usage extends Base
     }
 
     /**
+     * Enqueue many usage messages in one round trip
+     *
+     * @param array<UsageMessage> $messages
+     */
+    public function enqueueMany(array $messages): bool
+    {
+        if (System::getEnv('_APP_USAGE_STATS', 'enabled') === 'disabled') {
+            return false;
+        }
+
+        try {
+            return $this->publishMany($this->queue, $messages);
+        } catch (\Throwable $th) {
+            Console::error('[Usage] Failed to publish usage messages: ' . $th->getMessage());
+            return false;
+        }
+    }
+
+    /**
      * Get the size of the usage queue
      */
     public function getSize(bool $failed = false): int
