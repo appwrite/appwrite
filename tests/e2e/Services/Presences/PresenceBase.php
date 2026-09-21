@@ -1074,7 +1074,7 @@ trait PresenceBase
             $this->assertEquals(200, $presence['headers']['status-code']);
             $presenceId = $presence['body']['$id'];
 
-            [$update, $delete] = $this->callConcurrently([
+            [$update, $delete] = $this->client->callConcurrently([
                 [Client::METHOD_PATCH, '/presences/' . $presenceId, $headers, $payload + ['status' => 'away', 'purge' => true]],
                 [Client::METHOD_DELETE, '/presences/' . $presenceId, $headers, []],
             ]);
@@ -1082,8 +1082,8 @@ trait PresenceBase
             /**
              * Test for SUCCESS
              */
-            $this->assertContains($update['status'], [200, 404], 'Update raced with delete: ' . $update['body']);
-            $this->assertContains($delete['status'], [204, 404], 'Delete raced with update: ' . $delete['body']);
+            $this->assertContains($update['headers']['status-code'], [200, 404], 'Update raced with delete: ' . \json_encode($update['body']));
+            $this->assertContains($delete['headers']['status-code'], [204, 404], 'Delete raced with update: ' . \json_encode($delete['body']));
 
             $list = $this->client->call(Client::METHOD_GET, '/presences', $headers, [
                 'queries' => [Query::equal('userId', [$userId])->toString()],
@@ -1094,42 +1094,10 @@ trait PresenceBase
             /**
              * Test for FAILURE
              */
-            if ($update['status'] === 404) {
-                $this->assertEquals('presence_not_found', \json_decode($update['body'], true)['type']);
+            if ($update['headers']['status-code'] === 404) {
+                $this->assertEquals('presence_not_found', $update['body']['type']);
             }
         }
-    }
-
-    /**
-     * Fire the requests at the same time so a delete can land while an update is in flight.
-     *
-     * @param array<int, array{0: string, 1: string, 2: array<string, string>, 3: array<string, mixed>}> $requests
-     * @return array<int, array{status: int, body: string}>
-     */
-    private function callConcurrently(array $requests): array
-    {
-        $results = [];
-        $hooks = \Swoole\Runtime::getHookFlags();
-
-        \Swoole\Coroutine\run(function () use ($requests, &$results): void {
-            $results = \Swoole\Coroutine\batch(\array_map(
-                fn (array $request): \Closure => function () use ($request): array {
-                    [$method, $path, $headers, $params] = $request;
-                    $response = $this->client->call($method, $path, $headers, $params, false);
-
-                    return [
-                        'status' => $response['headers']['status-code'],
-                        'body' => (string) $response['body'],
-                    ];
-                },
-                $requests,
-            ));
-        });
-
-        // `Coroutine\run` leaves the curl hook enabled, which breaks the plain client calls that follow.
-        \Swoole\Runtime::setHookFlags($hooks);
-
-        return $results;
     }
 
     public function testClientCannotPassUserId(): void

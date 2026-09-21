@@ -237,6 +237,30 @@ class Client
     }
 
     /**
+     * Send several requests at the same time and return each response in request order.
+     *
+     * @param array<int, array{0: string, 1: string, 2: array<string, string>, 3: mixed}> $requests `[method, path, headers, params]` per request
+     * @return array<int, array{headers: array, cookies: array, body: mixed}>
+     */
+    public function callConcurrently(array $requests, bool $decode = true): array
+    {
+        $responses = [];
+        $hooks = \Swoole\Runtime::getHookFlags();
+
+        \Swoole\Coroutine\run(function () use ($requests, $decode, &$responses): void {
+            $responses = \Swoole\Coroutine\batch(\array_map(
+                fn (array $request): \Closure => fn (): array => $this->call($request[0], $request[1], $request[2], $request[3], $decode),
+                $requests,
+            ));
+        });
+
+        // `Coroutine\run` leaves the curl hook enabled, which breaks the plain calls that follow.
+        \Swoole\Runtime::setHookFlags($hooks);
+
+        return $responses;
+    }
+
+    /**
      * Flatten params array to PHP multiple format
      *
      * @param array $data
