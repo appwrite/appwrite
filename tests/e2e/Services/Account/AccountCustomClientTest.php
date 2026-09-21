@@ -4874,41 +4874,35 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals(false, $response['body']['expired']);
 
         $targetId = $response['body']['$id'];
-        $targetUserId = $response['body']['userId'];
-        $expectedIdentifier = $response['body']['identifier'];
-        $expectedExpired = $response['body']['expired'];
 
-        $duplicateIdentifier = 'test-identifier-' . ID::unique();
-        $duplicate = $this->client->call(Client::METHOD_POST, '/account/targets/push', \array_merge([
+        $other = $this->client->call(Client::METHOD_POST, '/account/targets/push', \array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'targetId' => ID::unique(),
-            'identifier' => $duplicateIdentifier,
+            'identifier' => 'test-identifier-taken',
         ]);
 
-        $this->assertSame(201, $duplicate['headers']['status-code']);
+        $this->assertEquals(201, $other['headers']['status-code']);
 
-        $response = $this->client->call(Client::METHOD_PUT, '/account/targets/'. $response['body']['$id'] .'/push', \array_merge([
+        $response = $this->client->call(Client::METHOD_PUT, '/account/targets/' . $targetId . '/push', \array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'identifier' => $duplicateIdentifier,
+            'identifier' => 'test-identifier-taken',
         ]);
 
-        $this->assertSame(409, $response['headers']['status-code']);
-        $this->assertSame('user_target_already_exists', $response['body']['type']);
+        $this->assertEquals(409, $response['headers']['status-code']);
+        $this->assertEquals('user_target_already_exists', $response['body']['type']);
 
-        $target = $this->client->call(Client::METHOD_GET, '/users/' . $targetUserId . '/targets/' . $targetId, [
+        $response = $this->client->call(Client::METHOD_GET, '/account', \array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]);
+        ], $this->getHeaders()));
 
-        $this->assertSame(200, $target['headers']['status-code']);
-        $this->assertSame($targetId, $target['body']['$id']);
-        $this->assertSame($expectedIdentifier, $target['body']['identifier']);
-        $this->assertSame($expectedExpired, $target['body']['expired']);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $identifiers = \array_column(\array_filter($response['body']['targets'], fn ($target) => $target['$id'] === $targetId), 'identifier');
+        $this->assertSame(['test-identifier-updated'], $identifiers);
     }
 
     /**
