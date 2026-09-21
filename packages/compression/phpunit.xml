@@ -5,7 +5,7 @@
          stopOnFailure="false">
     <testsuites>
         <testsuite name="unit">
-            <directory>./tests/Compression</directory>
+            <directory>./tests</directory>
         </testsuite>
     </testsuites>
 </phpunit>

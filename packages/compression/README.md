@@ -1,7 +1,7 @@
 # Utopia Compression
 
 > [!IMPORTANT]
-> This repository is a read-only mirror of the [utopia-php monorepo](https://github.com/utopia-php/monorepo). Development happens in [`packages/compression`](https://github.com/utopia-php/monorepo/tree/main/packages/compression) — please open issues and pull requests there.
+> This repository is a read-only mirror of [`packages/compression`](https://github.com/appwrite/appwrite/tree/main/packages/compression) in [appwrite/appwrite](https://github.com/appwrite/appwrite). Development happens there — please open issues and pull requests against appwrite/appwrite.
 
 ![Total Downloads](https://img.shields.io/packagist/dt/utopia-php/compression.svg)
 [![Discord](https://img.shields.io/discord/564160730845151244?label=discord)](https://appwrite.io/discord)

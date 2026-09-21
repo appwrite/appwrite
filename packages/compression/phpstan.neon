@@ -1,9 +1,9 @@
 includes:
-    - ../../phpstan.neon
+    - phpstan-baseline.neon
 
 parameters:
-    excludePaths:
-        - tests/phpstan-stubs.php
-
+    level: max
+    paths:
+        - src
     scanFiles:
         - tests/phpstan-stubs.php

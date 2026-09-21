@@ -12,6 +12,6 @@ permissions:
 
 jobs:
   redirect:
-    uses: utopia-php/monorepo/.github/workflows/mirror-redirect.yml@main
+    uses: appwrite/appwrite/.github/workflows/mirror-redirect.yml@main
     with:
       package: compression

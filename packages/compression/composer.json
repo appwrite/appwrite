@@ -13,12 +13,12 @@
     "authors": [],
     "autoload": {
         "psr-4": {
-            "Utopia\\Compression\\": "src/Compression"
+            "Utopia\\Compression\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Utopia\\Tests\\Compression\\": "tests/Compression"
+            "Utopia\\Compression\\Tests\\": "tests/"
         }
     },
     "require": {

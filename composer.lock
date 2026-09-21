@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "0bd4553e6f5a6939cbe862ad4100235d",
+    "content-hash": "b0fd7078ec54dc2175dbcefe596d82f1",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3267,55 +3267,6 @@
                 "source": "https://github.com/utopia-php/client/tree/0.4.4"
             },
             "time": "2026-09-09T15:27:09+00:00"
-        },
-        {
-            "name": "utopia-php/compression",
-            "version": "0.1.8",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/utopia-php/compression.git",
-                "reference": "8a23fdec63623aa6ad64ed764d688e67cf2c110e"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/compression/zipball/8a23fdec63623aa6ad64ed764d688e67cf2c110e",
-                "reference": "8a23fdec63623aa6ad64ed764d688e67cf2c110e",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=8.1"
-            },
-            "suggest": {
-                "ext-brotli": "Required for the Brotli algorithm",
-                "ext-lz4": "Required for the LZ4 algorithm",
-                "ext-snappy": "Required for the Snappy algorithm",
-                "ext-xz": "Required for the XZ algorithm",
-                "ext-zlib": "Required for the GZIP and Deflate algorithms",
-                "ext-zstd": "Required for the Zstd algorithm"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Utopia\\Compression\\": "src/Compression"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "description": "A simple Compression library to handle file compression",
-            "keywords": [
-                "compression",
-                "framework",
-                "php",
-                "upf",
-                "utopia"
-            ],
-            "support": {
-                "issues": "https://github.com/utopia-php/compression/issues",
-                "source": "https://github.com/utopia-php/compression/tree/0.1.8"
-            },
-            "time": "2026-09-02T15:57:19+00:00"
         },
         {
             "name": "utopia-php/config",
