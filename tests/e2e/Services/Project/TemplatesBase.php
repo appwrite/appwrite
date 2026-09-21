@@ -44,6 +44,7 @@ trait TemplatesBase
             'sessionAlert',
             'otpSession',
             'otpVerification',
+            'otpRecovery',
         ];
 
         foreach ($types as $type) {
@@ -1284,6 +1285,7 @@ trait TemplatesBase
             'sessionAlert',
             'otpSession',
             'otpVerification',
+            'otpRecovery',
         ];
 
         foreach ($types as $type) {
