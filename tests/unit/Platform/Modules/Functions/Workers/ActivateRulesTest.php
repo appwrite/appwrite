@@ -72,6 +72,28 @@ final class ActivateRulesTest extends TestCase
         $this->assertSame(1, $dispatched);
     }
 
+    public function testActivateBranchRuleTargetsOnlyThatBranch(): void
+    {
+        $captured = [];
+        $dbForPlatform = $this->platformDatabaseCapturing($captured);
+
+        $this->activateBranch($dbForPlatform, deploymentBranch: 'feature');
+
+        $branchQuery = $this->queryFor($captured, 'deploymentVcsProviderBranch');
+        $this->assertInstanceOf(Query::class, $branchQuery);
+        $this->assertSame(['feature'], $branchQuery->getValues());
+    }
+
+    public function testActivateBranchRuleSkipsDeploymentWithoutInstallation(): void
+    {
+        $captured = [];
+        $dbForPlatform = $this->platformDatabaseCapturing($captured);
+
+        $this->activateBranch($dbForPlatform, deploymentBranch: 'v1.2.0', installationId: '');
+
+        $this->assertSame([], $captured, 'a template deployment reuses providerBranch for its resolved ref and must not repoint a branch rule');
+    }
+
     private function activate(Database $dbForPlatform, string $deploymentBranch, ?Bus $bus = null): void
     {
         $resource = new Document([
@@ -97,6 +119,22 @@ final class ActivateRulesTest extends TestCase
             $resource,
             $deployment,
             $bus ?? $this->createStub(Bus::class),
+        );
+    }
+
+    private function activateBranch(Database $dbForPlatform, string $deploymentBranch, string $installationId = 'inst-1'): void
+    {
+        (new ActivateRulesTestJobs())->exposeActivateBranchRule(
+            $dbForPlatform,
+            new Document(['$id' => 'project-1', '$sequence' => '7']),
+            new Document(['$id' => 'func-1', '$sequence' => '100', '$collection' => 'functions']),
+            new Document([
+                '$id' => 'dep-branch',
+                '$sequence' => '56',
+                'providerBranch' => $deploymentBranch,
+                'installationId' => $installationId,
+            ]),
+            $this->createStub(Bus::class),
         );
     }
 
@@ -141,5 +179,15 @@ final class ActivateRulesTestJobs extends Jobs
         Bus $bus,
     ): void {
         $this->activate($dbForProject, $dbForPlatform, $project, $resource, $deployment, $bus);
+    }
+
+    public function exposeActivateBranchRule(
+        Database $dbForPlatform,
+        Document $project,
+        Document $resource,
+        Document $deployment,
+        Bus $bus,
+    ): void {
+        $this->activateBranchRule($dbForPlatform, $project, $resource, $deployment, $bus);
     }
 }
