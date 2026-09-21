@@ -2490,7 +2490,11 @@ Http::post('/v1/account/tokens/magic-url')
             ]);
 
             $user->removeAttribute('$sequence');
-            $user = $authorization->skip(fn () => $dbForProject->createDocument('users', $user));
+            try {
+                $user = $authorization->skip(fn () => $dbForProject->createDocument('users', $user));
+            } catch (Duplicate) {
+                throw new Exception(Exception::USER_ALREADY_EXISTS);
+            }
         }
 
         $proofForToken = new ProofsToken(TOKEN_LENGTH_MAGIC_URL);
@@ -2812,7 +2816,11 @@ Http::post('/v1/account/tokens/email')
             ]);
 
             $user->removeAttribute('$sequence');
-            $user = $authorization->skip(fn () => $dbForProject->createDocument('users', $user));
+            try {
+                $user = $authorization->skip(fn () => $dbForProject->createDocument('users', $user));
+            } catch (Duplicate) {
+                throw new Exception(Exception::USER_ALREADY_EXISTS);
+            }
             try {
                 $target = $authorization->skip(fn () => $dbForProject->createDocument('targets', new Document([
                     '$permissions' => [
@@ -3210,7 +3218,11 @@ Http::post('/v1/account/tokens/phone')
             ]);
 
             $user->removeAttribute('$sequence');
-            $user = $authorization->skip(fn () => $dbForProject->createDocument('users', $user));
+            try {
+                $user = $authorization->skip(fn () => $dbForProject->createDocument('users', $user));
+            } catch (Duplicate) {
+                throw new Exception(Exception::USER_ALREADY_EXISTS);
+            }
             try {
                 $target = $authorization->skip(fn () => $dbForProject->createDocument('targets', new Document([
                     '$permissions' => [
