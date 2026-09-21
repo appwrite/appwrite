@@ -108,6 +108,7 @@ class Certificates extends Action
         $domain   = new Domain($document->getAttribute('domain', ''));
         $domainType = $document->getAttribute('domainType');
         $skipRenewCheck = $certificateMessage->skipRenewCheck;
+        $skipDomainValidation = $certificateMessage->skipDomainValidation;
         $validationDomain = $certificateMessage->validationDomain;
         $action = $certificateMessage->action;
 
@@ -119,7 +120,7 @@ class Certificates extends Action
                 break;
 
             case \Appwrite\Event\Certificate::ACTION_GENERATION:
-                $this->handleCertificateGenerationAction($domain, $domainType, $dbForPlatform, $publisherForMails, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $queueForRealtime, $certificates, $authorization, $bus, $skipRenewCheck, $plan, $validationDomain);
+                $this->handleCertificateGenerationAction($domain, $domainType, $dbForPlatform, $publisherForMails, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $queueForRealtime, $certificates, $authorization, $bus, $skipRenewCheck, $plan, $validationDomain, $skipDomainValidation);
                 break;
 
             default:
@@ -201,6 +202,7 @@ class Certificates extends Action
                     'domainType' => $rule->getAttribute('deploymentResourceType', $rule->getAttribute('type')),
                 ]),
                 action: \Appwrite\Event\Certificate::ACTION_GENERATION,
+                skipDomainValidation: true,
             ));
 
             Console::success('Certificate generation triggered successfully.');
@@ -221,6 +223,7 @@ class Certificates extends Action
      * @param bool $skipRenewCheck
      * @param array $plan
      * @param string|null $validationDomain
+     * @param bool $skipDomainValidation The enqueuer verified DNS itself moments ago
      * @return void
      * @throws Authorization
      * @throws Conflict
@@ -244,7 +247,8 @@ class Certificates extends Action
         Bus $bus,
         bool $skipRenewCheck = false,
         array $plan = [],
-        ?string $validationDomain = null
+        ?string $validationDomain = null,
+        bool $skipDomainValidation = false
     ): void {
         /**
          * 1. Read arguments and validate domain
@@ -310,9 +314,14 @@ class Certificates extends Action
             // Ensure certificate is associated with the rule
             $rule->setAttribute('certificateId', $certificate->getId());
 
-            // Validate domain and DNS records. Skip if job is forced
+            // Validate domain and DNS records. Skip if job is forced, or if the
+            // enqueuer verified DNS itself moments ago: a second run of the same
+            // check can only agree, or fail on a transient and contradict the
+            // status the enqueuer just wrote.
             if (!$skipRenewCheck) {
-                $this->validateDomain($rule, $domain, $validationDomain);
+                if (!$skipDomainValidation) {
+                    $this->validateDomain($rule, $domain, $validationDomain);
+                }
 
                 // If certificate exists already, double-check expiry date. Skip if job is forced
                 if (!$certificates->isRenewRequired($domain->get(), $domainType)) {
