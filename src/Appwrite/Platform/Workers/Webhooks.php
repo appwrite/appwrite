@@ -344,7 +344,9 @@ class Webhooks extends Action
             $template->setParam('{{webhook}}', $webhook->getAttribute('name'));
             $template->setParam('{{project}}', $project->getAttribute('name'));
             $template->setParam('{{url}}', $webhook->getAttribute('url'));
-            $template->setParam('{{error}}', 'The server returned ' . $statusCode . ' status code');
+            $template->setParam('{{error}}', $statusCode === 0
+                ? 'No HTTP response was received. Check the webhook logs for the delivery error.'
+                : 'The server returned ' . $statusCode . ' status code');
             $template->setParam('{{host}}', $platform['consoleUrl'] ?? '');
             $template->setParam('{{path}}', "/projects/{$projectId}/settings/webhooks");
             $template->setParam('{{attempts}}', $attempts);
