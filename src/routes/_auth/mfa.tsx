@@ -28,7 +28,9 @@ const searchSchema = z.object({
     }),
 })
 
-export type MfaFactorsWithRecovery = Models.MfaFactors & { recoveryCode: boolean }
+export type MfaFactorsWithRecovery = Models.MfaFactors & {
+  recoveryCode: boolean
+}
 
 export const Route = createFileRoute('/_auth/mfa')({
   validateSearch: searchSchema,
@@ -111,7 +113,7 @@ export const Route = createFileRoute('/_auth/mfa')({
 })
 
 function MFAPage() {
-  const search = Route.useSearch({ from: '/_auth/mfa' })
+  const search = Route.useSearch()
   const loaderData = Route.useLoaderData()
 
   if (!loaderData?.factors) {

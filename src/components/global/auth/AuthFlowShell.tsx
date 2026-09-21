@@ -64,7 +64,9 @@ export function AuthFlowShell({
   )
 
   return (
-    <div className={cn('bg-background relative h-full overflow-y-auto', className)}>
+    <div
+      className={cn('bg-background relative h-full overflow-y-auto', className)}
+    >
       <div className="flex min-h-full flex-col items-center p-6 md:p-10">
         <div className={cn('my-auto w-full min-w-0', WIDTH_CLASS[width])}>
           {children}
@@ -76,7 +78,9 @@ export function AuthFlowShell({
             defaultLegal
           ) : null}
           {accountSwitcher ? (
-            <div className="mt-8 flex justify-center md:mt-10">{accountSwitcher}</div>
+            <div className="mt-8 flex justify-center md:mt-10">
+              {accountSwitcher}
+            </div>
           ) : null}
           {showLogo ? (
             <div

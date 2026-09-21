@@ -27,7 +27,10 @@ import { useT } from '@/lib/i18n/translate'
 import { isOperatorAccount, type OperatorAccount } from '@/lib/operator-account'
 import { consoleImpersonationTargetQueryOptions } from '@/lib/react-query/hooks/console-user-search'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
-import { DEBUG_DEMO_MOCK_EMAIL } from '@/lib/debug-demos/constants'
+import {
+  DEBUG_DEMO_MOCK_EMAIL,
+  DEBUG_DEMO_MOCK_OPERATOR_EMAIL,
+} from '@/lib/debug-demos/constants'
 
 export type ImpersonateInitialData = {
   /** `null` when the loader could not resolve the user (unknown id, not an operator, signed out). */
@@ -63,7 +66,7 @@ export function View({
   redirect,
   initialData,
   preview = false,
-  previewOperatorLabel = 'operator@internal',
+  previewOperatorLabel = DEBUG_DEMO_MOCK_OPERATOR_EMAIL,
 }: ViewProps) {
   const t = useT()
   const navigate = useNavigate()
@@ -101,7 +104,9 @@ export function View({
     !target &&
     (!hasLookup || !!targetError || (targetFetched && !targetFromHook))
 
-  const operator = preview ? undefined : resolveConsoleImpersonationOperator(account)
+  const operator = preview
+    ? undefined
+    : resolveConsoleImpersonationOperator(account)
   const operatorLabel = preview
     ? previewOperatorLabel
     : operator?.name?.trim() || operator?.email?.trim() || operator?.$id || ''
@@ -118,14 +123,14 @@ export function View({
     : !operator
       ? t('Operator context was lost. Stop impersonating, then start again.')
       : alreadyActive && !continueExistingSession
-      ? t('That user is already the active Console session.')
-      : isOwnOperatorAccount
-        ? t('You cannot impersonate your own operator account.')
-        : targetMissing
-          ? targetError
-            ? getErrorMessage(targetError, t('Could not load this user.'))
-            : t('Could not load this user.')
-          : null
+        ? t('That user is already the active Console session.')
+        : isOwnOperatorAccount
+          ? t('You cannot impersonate your own operator account.')
+          : targetMissing
+            ? targetError
+              ? getErrorMessage(targetError, t('Could not load this user.'))
+              : t('Could not load this user.')
+            : null
 
   const handleConfirm = async () => {
     if (preview) return

@@ -9,11 +9,5 @@ export const Route = createFileRoute('/_public/debug/impersonate-preview')({
 })
 
 function ImpersonatePreviewPage() {
-  return (
-    <View
-      preview
-      email={DEBUG_DEMO_MOCK_EMAIL}
-      previewOperatorLabel="operator@internal"
-    />
-  )
+  return <View preview email={DEBUG_DEMO_MOCK_EMAIL} />
 }

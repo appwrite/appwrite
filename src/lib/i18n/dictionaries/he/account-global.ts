@@ -431,7 +431,6 @@ export const heAccountGlobalDictionary: Record<string, string> = {
   'Reset password': 'איפוס סיסמה',
   'Reset your password': 'איפוס הסיסמה שלכם',
   'Send recovery link': 'שליחת קישור שחזור',
-  'Sending…': 'שולח…',
   'Sign in': 'התחברות',
   'Sign up': 'הירשמו',
   'Sign up with Bitbucket': 'הרשמה עם Bitbucket',
@@ -1132,8 +1131,6 @@ export const heAccountGlobalDictionary: Record<string, string> = {
   'Accept the invitation to get started.': 'אשרו את ההזמנה כדי להתחיל.',
   'You\'ve been invited to join an organization. Accept the invitation to get started.':
     'הוזמנתם להצטרף לארגון. אשרו את ההזמנה כדי להתחיל.',
-  'By accepting this invitation, you agree to our':
-    'באישור הזמנה זו, אתם מקבלים את',
   'By clicking continue, you agree to our':
     'בלחיצה על המשך, אתם מקבלים את',
   'By continuing, you agree to our': 'בהמשך התהליך, אתם מקבלים את',
@@ -1289,4 +1286,23 @@ export const heAccountGlobalDictionary: Record<string, string> = {
   'We could not reach GitHub': 'לא הצלחנו להתחבר ל-GitHub',
   'Try again in a moment, or sign in and explore Appwrite.':
     'נסו שוב בעוד רגע, או התחברו והתנסו ב-Appwrite.',
+  'Signing you in': 'מחברים אתכם',
+  'Please wait while we confirm your magic URL.':
+    'המתינו בזמן שאנחנו מאמתים את ה-Magic URL שלכם.',
+  'Unable to sign you in': 'לא ניתן לחבר אתכם',
+  'Go to sign in': 'מעבר להתחברות',
+  'Access granted': 'הגישה אושרה',
+  'You can close this tab.': 'אפשר לסגור את הכרטיסייה הזו.',
+  "It's safe to close this tab.": 'אפשר לסגור את הכרטיסייה הזו בבטחה.',
+  'Return to your device - it will continue automatically.':
+    'חזרו למכשיר שלכם, הוא ימשיך באופן אוטומטי.',
+  'You can revoke access anytime in your account settings':
+    'ניתן לבטל את הגישה בכל עת בהגדרות החשבון',
+  'You will be automatically redirected back to your app shortly.':
+    'בקרוב תועברו אוטומטית חזרה לאפליקציה שלכם.',
+  'Login failed': 'ההתחברות נכשלה',
+  'An error occurred during the OAuth login flow.':
+    'אירעה שגיאה במהלך תהליך ההתחברות דרך OAuth.',
+  'Error type:': 'סוג השגיאה:',
+  'Missing redirect URL': 'חסרה כתובת URL להפניה',
 }

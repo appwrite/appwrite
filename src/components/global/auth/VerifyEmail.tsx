@@ -72,9 +72,7 @@ export function VerifyEmail({
                   onClick={onResend}
                   disabled={isResendLoading || isSigningOutToSignIn}
                 >
-                  {isResendLoading
-                    ? t('Sending…')
-                    : t('Resend verification email')}
+                  {t('Resend verification email')}
                 </Button>
               )}
               {preview ? (

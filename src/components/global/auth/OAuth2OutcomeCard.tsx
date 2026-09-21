@@ -120,7 +120,7 @@ export function OAuth2OutcomeShellFooter({
 
   return (
     <>
-      <Lock className="size-3.5 shrink-0" />
+      <Lock className="size-3.5 shrink-0" aria-hidden />
       <span>
         {approved
           ? t('You can revoke access anytime in your account settings')

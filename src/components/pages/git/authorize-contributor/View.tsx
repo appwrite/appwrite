@@ -14,6 +14,7 @@ import { AuthFlowShell } from '@/components/global/auth/AuthFlowShell'
 import { useAuthAccountSwitch } from '@/components/global/auth/useAuthAccountSwitch'
 import { analyticsAttrs } from '@/lib/analytics-actions'
 import { useAnalytics } from '@/hooks/use-analytics'
+import { DEBUG_DEMO_MOCK_EMAIL } from '@/lib/debug-demos/constants'
 import { useT } from '@/lib/i18n/translate'
 import {
   approveExternalDeployments,
@@ -115,7 +116,7 @@ export function View({
   const isApproving = !preview && approveMutation.isPending
   const isApproved = status === 'success'
   const accountLabel = preview
-    ? accountLabelProp || 'dev@appwrite.io'
+    ? accountLabelProp || DEBUG_DEMO_MOCK_EMAIL
     : (accountLabelProp ?? '')
 
   const handleApprove = () => {

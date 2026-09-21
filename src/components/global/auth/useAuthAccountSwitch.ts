@@ -16,7 +16,9 @@ type UseAuthAccountSwitchOptions = {
   returnUrl?: string
 }
 
-export function useAuthAccountSwitch(options: UseAuthAccountSwitchOptions = {}) {
+export function useAuthAccountSwitch(
+  options: UseAuthAccountSwitchOptions = {},
+) {
   const queryClient = useQueryClient()
   const navigate = useNavigate()
   const t = useT()
@@ -25,13 +27,24 @@ export function useAuthAccountSwitch(options: UseAuthAccountSwitchOptions = {}) 
     const returnUrl = options.returnUrl ?? getAuthFlowReturnUrl()
     const signInPath = resolveAuthSignInPath()
 
+    if (options.preview) {
+      navigate({
+        to: '/debug/sign-in-preview',
+        search:
+          returnUrl && returnUrl !== '/debug/sign-in-preview'
+            ? { redirect: returnUrl }
+            : undefined,
+      })
+      return
+    }
+
     try {
       await performConsoleSignOut(queryClient, {
         destination: returnUrl,
         requireServerRevocation: !options.preview,
       })
     } catch {
-      if (options.preview || signInPath === '/debug/sign-in-preview') {
+      if (signInPath === '/debug/sign-in-preview') {
         navigate({
           to: '/debug/sign-in-preview',
           search:

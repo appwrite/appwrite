@@ -91,7 +91,10 @@ export function AcceptInviteFlow({
   const t = useT()
 
   const accountSwitcher =
-    screen === 'loading' || (preview && !accountLabel) ? null : (
+    screen === 'loading' ||
+    screen === 'success' ||
+    screen === 'invalid' ||
+    (preview && !accountLabel) ? null : (
       <InviteAccountSwitcher
         accountLabel={accountLabel}
         preview={preview}
@@ -115,7 +118,9 @@ export function AcceptInviteFlow({
   const inviteDescription = teamName ? (
     <>
       {t("You've been invited to join")}{' '}
-      <span className="text-foreground font-medium break-words">{teamName}</span>
+      <span className="text-foreground font-medium break-words">
+        {teamName}
+      </span>
       {'. '}
       {t('Accept the invitation to get started.')}
     </>
@@ -133,7 +138,9 @@ export function AcceptInviteFlow({
             <div className="flex flex-col items-center gap-4 text-center">
               <AuthFlowHeaderIcon icon={Check} />
               <div className="space-y-1">
-                <AuthFlowTitle>{t('Welcome to the organization!')}</AuthFlowTitle>
+                <AuthFlowTitle>
+                  {t('Welcome to the organization!')}
+                </AuthFlowTitle>
                 <AuthFlowDescription>
                   {t("You've successfully joined. Redirecting you now...")}
                 </AuthFlowDescription>
@@ -177,9 +184,14 @@ export function AcceptInviteFlow({
           ) : screen === 'error' ? (
             <>
               <div className="flex flex-col items-center gap-4 text-center">
-                <AuthFlowHeaderIcon icon={TriangleAlert} variant="destructive" />
+                <AuthFlowHeaderIcon
+                  icon={TriangleAlert}
+                  variant="destructive"
+                />
                 <div className="space-y-1">
-                  <AuthFlowTitle>{t('Unable to accept invitation')}</AuthFlowTitle>
+                  <AuthFlowTitle>
+                    {t('Unable to accept invitation')}
+                  </AuthFlowTitle>
                   <AuthFlowDescription>
                     {errorMessage ?? t('Failed to accept invitation')}
                   </AuthFlowDescription>
@@ -209,7 +221,10 @@ export function AcceptInviteFlow({
           ) : screen === 'invalid' ? (
             <>
               <div className="flex flex-col items-center gap-4 text-center">
-                <AuthFlowHeaderIcon icon={TriangleAlert} variant="destructive" />
+                <AuthFlowHeaderIcon
+                  icon={TriangleAlert}
+                  variant="destructive"
+                />
                 <div className="space-y-1">
                   <AuthFlowTitle>{t('Invalid invitation link')}</AuthFlowTitle>
                   <AuthFlowDescription>

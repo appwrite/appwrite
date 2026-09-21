@@ -25,7 +25,6 @@ import {
   AuthFlowTitle,
   authFlowOAuthNarrowCardContentClassName,
 } from '@/components/global/auth/AuthFlowCard'
-import { Card } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import { cn } from '@/lib/utils'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
@@ -939,7 +938,7 @@ export function OAuth2ConsentShellFooter({
   return (
     <>
       <span className="inline-flex items-center gap-1">
-        <Lock className="size-3.5 shrink-0" />
+        <Lock className="size-3.5 shrink-0" aria-hidden />
         {flow === 'authorization' && redirectHost
           ? `${t("You'll be returned to")} ${redirectHost}`
           : flow === 'device'

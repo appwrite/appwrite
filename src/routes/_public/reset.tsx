@@ -128,7 +128,7 @@ function ResetPage() {
   // If missing required params, show error state
   if (!search.userId || !search.secret) {
     return (
-      <AuthFlowShell width="illustration">
+      <AuthFlowShell width="narrow" showLegal={false}>
         <div className="rounded-lg border bg-card p-6 text-center">
           <h1 className="mb-2 text-2xl font-semibold tracking-tight">
             {t('Invalid reset link')}
