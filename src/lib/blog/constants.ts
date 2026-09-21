@@ -10,6 +10,7 @@ export const BLOG_COVER_ASPECT_CLASS = 'aspect-[16/9]'
  */
 export const BLOG_FEATURED_SLUG_ORDER = [
   'announcing-appwrite-2',
+  'announcing-firewall-presets',
   'hyperloop-b',
   'appwrite-now-speaks-postgresql',
   'announcing-console-iv',

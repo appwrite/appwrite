@@ -3,6 +3,21 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "announcing-firewall-presets",
+    "href": "/blog/post/announcing-firewall-presets",
+    "title": "Announcing Firewall presets: ready-made traffic rules",
+    "description": "Appwrite Firewall presets turn OTP, geo, and scraping policies into ready-made rules. See the available presets, when to use each, and how to apply one.",
+    "date": "2026-09-21",
+    "lastUpdated": "2026-09-21",
+    "timeToRead": 6,
+    "author": "eldad-fux",
+    "category": "announcements",
+    "featured": true,
+    "unlisted": false,
+    "cover": "/images/blog/announcing-firewall-presets/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "authenticated-site-previews",
     "href": "/blog/post/authenticated-site-previews",
     "title": "Introducing authenticated preview deployments for Appwrite Sites",

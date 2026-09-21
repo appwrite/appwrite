@@ -452,17 +452,27 @@ export function getBlogPostsPage(options: {
   const categoryQuery = options.category ? normalizeCategory(options.category) : ''
 
   let posts = getPublicBlogPosts()
-  const showSpotlights = currentPage === 1 && !searchQuery && !categoryQuery
+  const isDefaultIndex = !searchQuery && !categoryQuery
+  const showSpotlights = currentPage === 1 && isDefaultIndex
 
   let featured: BlogPostMeta | null = null
   let secondaryFeatured: BlogPostMeta[] = []
   let categorySpotlights: BlogCategorySpotlight[] = []
+  let featuredListSlugs = new Set<string>()
 
-  if (showSpotlights) {
+  if (isDefaultIndex) {
     const spotlights = buildBlogIndexSpotlights(posts)
-    featured = spotlights.featured
-    secondaryFeatured = spotlights.secondaryFeatured
-    categorySpotlights = spotlights.categorySpotlights
+    if (spotlights.featured) {
+      featuredListSlugs.add(spotlights.featured.slug)
+    }
+    for (const post of spotlights.secondaryFeatured) {
+      featuredListSlugs.add(post.slug)
+    }
+    if (showSpotlights) {
+      featured = spotlights.featured
+      secondaryFeatured = spotlights.secondaryFeatured
+      categorySpotlights = spotlights.categorySpotlights
+    }
   }
 
   if (searchQuery || categoryQuery) {
@@ -475,9 +485,11 @@ export function getBlogPostsPage(options: {
     })
   }
 
-  // "All articles" is the full archive: posts already shown in the hero,
-  // secondary featured row, or a category spotlight still list here.
-  const listPosts = posts
+  // Keep hero and secondary featured posts out of "All articles" so they
+  // are not listed twice on the index. Search and category views stay complete.
+  const listPosts = isDefaultIndex
+    ? posts.filter((post) => !featuredListSlugs.has(post.slug))
+    : posts
 
   const totalPages = Math.max(1, Math.ceil(listPosts.length / BLOG_POSTS_PER_PAGE))
   const safePage = Math.min(currentPage, totalPages)
