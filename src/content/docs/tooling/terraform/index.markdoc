@@ -80,6 +80,10 @@ Source code, issues, and contribution guidelines:
 
 The provider works with **Appwrite Cloud** and **Community Edition** (self-hosted Appwrite). You point it at your API endpoint and authenticate with a project API key.
 
+{% info title="Partner Premier provider" %}
+Appwrite is a member of the [HashiCorp Technology Partner Program](https://www.hashicorp.com/en/partners/become-a-partner), and `appwrite/appwrite` carries the **Partner Premier** badge on the [Terraform Registry](https://registry.terraform.io/providers/appwrite/appwrite/latest). The provider source is `appwrite/appwrite`, the same as before, so existing configurations need no changes.
+{% /info %}
+
 # Next steps {% #next-steps %}
 
 {% cards %}
