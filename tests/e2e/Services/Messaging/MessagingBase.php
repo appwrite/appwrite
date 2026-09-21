@@ -2772,6 +2772,211 @@ trait MessagingBase
         $this->assertSame(0, \count($message['body']['deliveryErrors']));
     }
 
+    public function testEmailReplyTo(): void
+    {
+        // Create Topic
+        $topic = $this->client->call(Client::METHOD_POST, '/messaging/topics', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'topicId' => ID::unique(),
+            'name' => 'topic-reply-to',
+        ]);
+
+        $this->assertEquals(201, $topic['headers']['status-code']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $email = $this->client->call(Client::METHOD_POST, '/messaging/messages/email', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'messageId' => ID::unique(),
+            'draft' => true,
+            'topics' => [$topic['body']['$id']],
+            'subject' => 'Reply to test',
+            'content' => 'Reply to the sender',
+            'replyToEmail' => 'reply@example.com',
+            'replyToName' => 'Reply Person',
+        ]);
+
+        $this->assertEquals(201, $email['headers']['status-code']);
+        $this->assertEquals('reply@example.com', $email['body']['data']['replyToEmail']);
+        $this->assertEquals('Reply Person', $email['body']['data']['replyToName']);
+
+        $messageId = $email['body']['$id'];
+
+        // Update the reply to fields
+        $updated = $this->client->call(Client::METHOD_PATCH, '/messaging/messages/email/' . $messageId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'replyToEmail' => 'newreply@example.com',
+            'replyToName' => 'New Reply Person',
+        ]);
+
+        $this->assertEquals(200, $updated['headers']['status-code']);
+        $this->assertEquals('newreply@example.com', $updated['body']['data']['replyToEmail']);
+        $this->assertEquals('New Reply Person', $updated['body']['data']['replyToName']);
+
+        // Untouched reply to fields stay intact when other fields are updated
+        $updated = $this->client->call(Client::METHOD_PATCH, '/messaging/messages/email/' . $messageId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'subject' => 'Reply to test updated',
+        ]);
+
+        $this->assertEquals(200, $updated['headers']['status-code']);
+        $this->assertEquals('newreply@example.com', $updated['body']['data']['replyToEmail']);
+        $this->assertEquals('New Reply Person', $updated['body']['data']['replyToName']);
+
+        // An empty string clears the custom reply to, restoring the provider or sender default
+        $updated = $this->client->call(Client::METHOD_PATCH, '/messaging/messages/email/' . $messageId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'replyToEmail' => '',
+            'replyToName' => '',
+        ]);
+
+        $this->assertEquals(200, $updated['headers']['status-code']);
+        $this->assertEquals('', $updated['body']['data']['replyToEmail']);
+        $this->assertEquals('', $updated['body']['data']['replyToName']);
+
+        /**
+         * Test for FAILURE
+         */
+        $email = $this->client->call(Client::METHOD_POST, '/messaging/messages/email', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'messageId' => ID::unique(),
+            'draft' => true,
+            'topics' => [$topic['body']['$id']],
+            'subject' => 'Reply to test',
+            'content' => 'Reply to the sender',
+            'replyToEmail' => 'not-an-email',
+        ]);
+
+        $this->assertEquals(400, $email['headers']['status-code']);
+    }
+
+    public function testSendEmailWithReplyTo(): void
+    {
+        $provider = $this->client->call(Client::METHOD_POST, '/messaging/providers/smtp', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'providerId' => ID::unique(),
+            'name' => 'Maildev',
+            'host' => System::getEnv('_APP_SMTP_HOST', 'maildev'),
+            'port' => (int) System::getEnv('_APP_SMTP_PORT', '1025'),
+            'username' => System::getEnv('_APP_SMTP_USERNAME', 'user'),
+            'password' => System::getEnv('_APP_SMTP_PASSWORD', 'password'),
+            'fromName' => 'Appwrite',
+            'fromEmail' => 'sender@appwrite.io',
+            'enabled' => true,
+        ]);
+
+        $this->assertEquals(201, $provider['headers']['status-code']);
+
+        $topic = $this->client->call(Client::METHOD_POST, '/messaging/topics', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'topicId' => ID::unique(),
+            'name' => 'reply-to-send',
+        ]);
+
+        $this->assertEquals(201, $topic['headers']['status-code']);
+
+        $user = $this->client->call(Client::METHOD_POST, '/users', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'userId' => ID::unique(),
+            'email' => \uniqid() . '@appwrite.io',
+            'password' => 'password',
+            'name' => 'Reply To User',
+        ]);
+
+        $this->assertEquals(201, $user['headers']['status-code']);
+
+        $recipient = \uniqid() . '@appwrite.io';
+        $target = $this->client->call(Client::METHOD_POST, '/users/' . $user['body']['$id'] . '/targets', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'targetId' => ID::unique(),
+            'providerType' => 'email',
+            'providerId' => $provider['body']['$id'],
+            'identifier' => $recipient,
+        ]);
+
+        $this->assertEquals(201, $target['headers']['status-code']);
+
+        $subscriber = $this->client->call(Client::METHOD_POST, '/messaging/topics/' . $topic['body']['$id'] . '/subscribers', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'subscriberId' => ID::unique(),
+            'targetId' => $target['body']['$id'],
+        ]);
+
+        $this->assertEquals(201, $subscriber['headers']['status-code']);
+
+        $subject = 'Reply to send ' . \uniqid();
+
+        $email = $this->client->call(Client::METHOD_POST, '/messaging/messages/email', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'messageId' => ID::unique(),
+            'topics' => [$topic['body']['$id']],
+            'subject' => $subject,
+            'content' => 'Reply to the custom address',
+            'replyToEmail' => 'support@appwrite.io',
+            'replyToName' => 'Appwrite Support',
+        ]);
+
+        $this->assertEquals(201, $email['headers']['status-code']);
+
+        $messageId = $email['body']['$id'];
+        $this->assertEventually(function () use ($messageId) {
+            $response = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $messageId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+            $this->assertEquals(MessageStatus::SENT, $response['body']['status']);
+        }, 30000, 500);
+
+        // The custom reply-to overrides the provider default (which falls back to the sender).
+        $mail = $this->getLastEmail(1, fn (array $mail) => $this->assertSame($subject, $mail['subject']));
+
+        $this->assertSame('support@appwrite.io', $mail['replyTo'][0]['address']);
+        $this->assertSame('Appwrite Support', $mail['replyTo'][0]['name']);
+
+        $this->client->call(Client::METHOD_DELETE, '/messaging/providers/' . $provider['body']['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+    }
+
     public function testSendSMS(): void
     {
         if (empty(System::getEnv('_APP_MESSAGE_SMS_TEST_DSN'))) {
