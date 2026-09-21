@@ -1029,11 +1029,14 @@ class Messaging extends Action
         $content = $data['content'];
         $html = $data['html'] ?? false;
 
-        // For SMTP, move all recipients to BCC and use default recipient in TO field
-        if ($provider->getAttribute('provider') === 'smtp') {
+        // An SMTP batch is one message, so a visible To header is readable by every other address on
+        // it. Only a lone recipient with nobody else on the envelope keeps theirs; the rest move to
+        // BCC, which leaves the message with no To header at all.
+        if ($provider->getAttribute('provider') === 'smtp' && (\count($to) > 1 || !empty($cc) || !empty($bcc))) {
             foreach ($to as $recipient) {
                 $bcc[] = ['email' => $recipient];
             }
+
             $to = [];
         }
 
