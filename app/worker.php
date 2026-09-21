@@ -13,7 +13,9 @@ use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Service;
 use Utopia\Queue\Adapter\Swoole;
-use Utopia\Queue\Broker\Pool as BrokerPool;
+use Utopia\Queue\Broker\Redis;
+use Utopia\Queue\Connection\Locking;
+use Utopia\Queue\Connection\Redis as Connection;
 use Utopia\Queue\Server;
 use Utopia\Span\Span;
 use Utopia\System\System;
@@ -80,15 +82,18 @@ if ($requested === [] || \in_array('all', $requested, true)) {
 // For many, each queue keeps its own cap so databases stays at 1.
 $jobs = Jobs::resolve($workers, $workersConfig, System::getEnv(...));
 
-// Receive and commands borrow from the existing publisher pool so concurrent
-// workers do not serialize on one Locking Redis connection. Combined Compose
-// sets `_APP_WORKER_MAX_COROUTINES` to size that pool.
-$createConsumer = static function () use ($container): BrokerPool {
-    $publisher = $container->get('pools')->get('publisher');
+// Keep commands available for heartbeats and recovery while receive blocks.
+$createConsumer = static function (): Redis {
+    $connection = [
+        System::getEnv('_APP_REDIS_HOST', 'redis'),
+        (int) System::getEnv('_APP_REDIS_PORT', '6379'),
+        System::getEnv('_APP_REDIS_USER', ''),
+        System::getEnv('_APP_REDIS_PASS', ''),
+    ];
 
-    return new BrokerPool(
-        publisher: $publisher,
-        consumer: $publisher,
+    return new Redis(
+        receive: new Connection(...$connection),
+        commands: new Locking(new Connection(...$connection)),
     );
 };
 

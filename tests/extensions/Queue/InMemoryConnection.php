@@ -207,6 +207,11 @@ final class InMemoryConnection implements Connection
         return true;
     }
 
+    public function setNotExists(string $key, string $value, int $ttl = 0): bool
+    {
+        return $this->get($key) === null && $this->set($key, $value, $ttl);
+    }
+
     public function get(string $key): array|string|null
     {
         return $this->values[$key] ?? null;

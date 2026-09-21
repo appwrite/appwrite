@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "2fcc4d535c789ae0f58f1f78b4106e7a",
+    "content-hash": "720938cafaa300b7bf5e8f1e412f6a69",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4201,16 +4201,16 @@
         },
         {
             "name": "utopia-php/platform",
-            "version": "1.0.0-rc21",
+            "version": "1.0.0-rc22",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/platform.git",
-                "reference": "b5bb2f661efa35ef06a6e86e97eeaea20ead66f8"
+                "reference": "d44baba6aaad15ba34562fe71b0b30363c9e6cd5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/platform/zipball/b5bb2f661efa35ef06a6e86e97eeaea20ead66f8",
-                "reference": "b5bb2f661efa35ef06a6e86e97eeaea20ead66f8",
+                "url": "https://api.github.com/repos/utopia-php/platform/zipball/d44baba6aaad15ba34562fe71b0b30363c9e6cd5",
+                "reference": "d44baba6aaad15ba34562fe71b0b30363c9e6cd5",
                 "shasum": ""
             },
             "require": {
@@ -4219,7 +4219,7 @@
                 "php": ">=8.5",
                 "utopia-php/cli": "^0.24",
                 "utopia-php/http": "^2.0@RC",
-                "utopia-php/queue": "0.23.* || 0.24.* || ^1.0.0 || ^2.0.0 || ^3.0.0",
+                "utopia-php/queue": "0.23.* || 0.24.* || ^1.0.0 || ^2.0.0 || ^3.0.0 || ^4.0.0",
                 "utopia-php/servers": "^0.4"
             },
             "type": "library",
@@ -4242,9 +4242,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/platform/issues",
-                "source": "https://github.com/utopia-php/platform/tree/1.0.0-rc21"
+                "source": "https://github.com/utopia-php/platform/tree/1.0.0-rc22"
             },
-            "time": "2026-09-18T13:07:00+00:00"
+            "time": "2026-09-21T15:06:03+00:00"
         },
         {
             "name": "utopia-php/pools",
@@ -4353,16 +4353,16 @@
         },
         {
             "name": "utopia-php/queue",
-            "version": "3.0.0",
+            "version": "4.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/queue.git",
-                "reference": "ee2c461a8244173bcfba7ad5e299d5e11c406b02"
+                "reference": "1f400975c4b3b4765fdc30a27ebd173d59cfcca7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/queue/zipball/ee2c461a8244173bcfba7ad5e299d5e11c406b02",
-                "reference": "ee2c461a8244173bcfba7ad5e299d5e11c406b02",
+                "url": "https://api.github.com/repos/utopia-php/queue/zipball/1f400975c4b3b4765fdc30a27ebd173d59cfcca7",
+                "reference": "1f400975c4b3b4765fdc30a27ebd173d59cfcca7",
                 "shasum": ""
             },
             "require": {
@@ -4414,9 +4414,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/queue/issues",
-                "source": "https://github.com/utopia-php/queue/tree/3.0.0"
+                "source": "https://github.com/utopia-php/queue/tree/4.0.0"
             },
-            "time": "2026-09-18T11:36:46+00:00"
+            "time": "2026-09-21T14:44:08+00:00"
         },
         {
             "name": "utopia-php/registry",
