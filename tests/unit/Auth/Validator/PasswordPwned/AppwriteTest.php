@@ -35,7 +35,7 @@ final class AppwriteTest extends TestCase
         $this->assertTrue($this->validator($fetch)->isValid(self::PASSWORD));
     }
 
-    public function testThePasswordIsSentAsIsWithTheSharedSecretAsBearerToken(): void
+    public function testTheHashIsSentWithTheSharedSecretAsBearerToken(): void
     {
         $fetch = new DetectionFetch(body: '{"leaked":false}');
 
@@ -44,8 +44,9 @@ final class AppwriteTest extends TestCase
         $this->assertCount(1, $fetch->requests);
         $this->assertSame('POST', $fetch->requests[0]['method']);
 
-        // The service hashes the password itself, so it travels in the clear
-        $this->assertSame(['password' => self::PASSWORD], \json_decode($fetch->requests[0]['body'], true));
+        // The service takes the hash, so the password itself never travels
+        $this->assertSame(['hash' => \strtoupper(\sha1(self::PASSWORD))], \json_decode($fetch->requests[0]['body'], true));
+        $this->assertStringNotContainsString(self::PASSWORD, $fetch->requests[0]['body']);
 
         $headers = \array_change_key_case($fetch->requests[0]['headers'], CASE_LOWER);
         $this->assertSame('Bearer ' . self::SECRET, $headers['authorization'] ?? null);
@@ -90,9 +91,9 @@ final class AppwriteTest extends TestCase
     public function testServiceErrorsAreReported(): void
     {
         $errors = [
-            401 => '{"type":"general_unauthorized","message":"Missing or invalid Bearer token in the Authorization header.","code":401,"version":"0.2.0"}',
-            400 => '{"type":"general_argument_invalid","message":"Invalid `password` param: Value must be a valid string and at least 1 chars and no longer than 256 chars","code":400,"version":"0.2.0"}',
-            503 => '{"type":"dataset_unavailable","message":"The password dataset could not be read.","code":503,"version":"0.2.0"}',
+            401 => '{"type":"general_unauthorized","message":"Missing or invalid Bearer token in the Authorization header.","code":401,"version":"0.4.0"}',
+            400 => '{"type":"general_argument_invalid","message":"Invalid `hash` param: Value must be a 40-character hexadecimal SHA-1 hash","code":400,"version":"0.4.0"}',
+            503 => '{"type":"dataset_unavailable","message":"The password dataset could not be read.","code":503,"version":"0.4.0"}',
             500 => '',
         ];
 
