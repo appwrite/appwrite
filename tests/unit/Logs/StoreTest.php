@@ -33,7 +33,9 @@ final class StoreTest extends TestCase
         ]));
 
         $request = $client->requests[0];
-        $this->assertStringContainsString('INSERT+INTO+appwrite.runtime_logs', (string) $request->getUri());
+        $query = \urldecode((string) $request->getUri());
+        $this->assertStringContainsString('INSERT INTO', $query);
+        $this->assertStringContainsString('`appwrite`.`runtime_logs`', $query);
         $row = \json_decode((string) $request->getBody(), true, flags: JSON_THROW_ON_ERROR);
         $this->assertSame('project', $row['projectId']);
         $this->assertSame('log1', $row['id']);

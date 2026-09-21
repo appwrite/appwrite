@@ -268,7 +268,7 @@ class Store
     private function snapshot(string $projectId, Document $log): array
     {
         $id = $log->getId();
-        if ($id === null || $id === '') {
+        if ($id === '') {
             throw new \InvalidArgumentException('Runtime log id is required');
         }
 
