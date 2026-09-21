@@ -15,6 +15,7 @@ use Utopia\Bus\Bus;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
@@ -108,7 +109,18 @@ class Create extends Action
             throw new Exception(Exception::RULE_RESOURCE_NOT_FOUND);
         }
 
-        $deployment = $dbForProject->getDocument('deployments', $function->getAttribute('deploymentId', ''));
+        // A branch-pinned rule must start on that branch's newest build, not on
+        // whatever the resource currently serves.
+        $deployment = $branch === ''
+            ? $dbForProject->getDocument('deployments', $function->getAttribute('deploymentId', ''))
+            : $dbForProject->findOne('deployments', [
+                Query::equal('resourceType', ['functions']),
+                Query::equal('resourceInternalId', [$function->getSequence()]),
+                Query::equal('providerBranch', [$branch]),
+                Query::equal('status', ['ready']),
+                Query::orderDesc('$createdAt'),
+                Query::orderDesc('$sequence'),
+            ]);
 
         // TODO: (@Meldiron) Remove after 1.7.x migration
         $ruleId = System::getEnv('_APP_RULES_FORMAT') === 'md5' ? md5(\strtolower($domain)) : ID::unique();
