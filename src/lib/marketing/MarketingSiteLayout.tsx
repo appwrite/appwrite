@@ -11,6 +11,7 @@ import {
 import { MarketingScrollToTop } from '@/lib/marketing/MarketingScrollToTop'
 import { MarketingSiteLayoutProvider } from '@/lib/marketing/marketing-site-layout-context'
 import { resolveMarketingRouteShellOptions } from '@/lib/marketing/marketing-route-shell'
+import { saveReferrerAndUtmSource } from '@/lib/marketing/utm'
 import { isApiReferenceExplorerPath } from '@/lib/docs/references/is-api-reference-explorer-path'
 import { setMarketingDocumentScroll } from '@/lib/layout/marketing-document-scroll'
 
@@ -20,6 +21,14 @@ type MarketingSiteLayoutProps = {
 
 function isDocsPath(pathname: string): boolean {
   return pathname === '/docs' || pathname.startsWith('/docs/')
+}
+
+function MarketingAcquisitionSourceCapture() {
+  useEffect(() => {
+    saveReferrerAndUtmSource()
+  }, [])
+
+  return null
 }
 
 function MarketingConsoleShell({ children }: MarketingSiteLayoutProps) {
@@ -105,6 +114,7 @@ export function MarketingSiteLayout({ children }: MarketingSiteLayoutProps) {
   return (
     <MarketingSiteLayoutProvider>
       <DocsSearchProvider>
+        <MarketingAcquisitionSourceCapture />
         <MarketingConsoleShell>{children}</MarketingConsoleShell>
       </DocsSearchProvider>
     </MarketingSiteLayoutProvider>

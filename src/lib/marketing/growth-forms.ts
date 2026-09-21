@@ -1,4 +1,5 @@
 import { getRuntimeConfig } from '@/lib/runtime-config'
+import { getReferrerAndUtmSource } from '@/lib/marketing/utm'
 
 const GROWTH_ENDPOINT = getRuntimeConfig().growthEndpoint
 
@@ -6,17 +7,6 @@ function getGrowthBaseUrl(): string | null {
   const trimmed = GROWTH_ENDPOINT?.trim()
   if (!trimmed) return null
   return trimmed.replace(/\/$/, '')
-}
-
-function getReferrerAndUtmSource(): Record<string, string | undefined> {
-  if (typeof window === 'undefined') return {}
-  const params = new URLSearchParams(window.location.search)
-  return {
-    referrer: document.referrer || undefined,
-    utmSource: params.get('utm_source') ?? undefined,
-    utmMedium: params.get('utm_medium') ?? undefined,
-    utmCampaign: params.get('utm_campaign') ?? undefined,
-  }
 }
 
 async function postGrowthJson(path: string, body: Record<string, unknown>): Promise<boolean> {
