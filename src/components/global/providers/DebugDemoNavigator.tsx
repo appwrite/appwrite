@@ -18,6 +18,7 @@ import {
   readDebugDemoBarPosition,
   readDebugDemoBarSize,
   readDebugDemoSession,
+  setDebugDemoSessionIndex,
   subscribeDebugDemoSession,
   writeDebugDemoBarPosition,
   writeDebugDemoBarSize,
@@ -108,7 +109,13 @@ export function DebugDemoNavigator() {
   useEffect(() => {
     if (!session.active) return
     if (session.history[session.index] === currentId) return
-    pushDebugDemoSession(currentId)
+    if (session.history[session.index - 1] === currentId) {
+      setDebugDemoSessionIndex(session.index - 1)
+    } else if (session.history[session.index + 1] === currentId) {
+      setDebugDemoSessionIndex(session.index + 1)
+    } else {
+      pushDebugDemoSession(currentId)
+    }
     notifyDebugDemoSessionChange()
   }, [currentId, session])
 
