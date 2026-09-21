@@ -5,6 +5,7 @@ import { ConsoleFooter } from './Footer'
 import { CloudStatusBanner } from './CloudStatusBanner'
 import { ConsoleImpersonationBanner } from '@/components/global/shared/ConsoleImpersonationBanner'
 import { ProductHuntPromoBanner } from '@/components/global/shared/ProductHuntPromoBanner'
+import { StartPromoBanner } from '@/components/global/shared/StartPromoBanner'
 import { NetworkOfflineCurtain } from '@/components/global/shared/NetworkOfflineCurtain'
 import { SkipToContent } from './SkipToContent'
 import { NativeAppBar } from './NativeAppBar'
@@ -187,6 +188,7 @@ export function ConsoleLayout({
           <CloudStatusBanner />
           <ConsoleImpersonationBanner />
           {!hideHeader ? <ProductHuntPromoBanner /> : null}
+          {!hideHeader ? <StartPromoBanner /> : null}
           {headerBanner}
           {showAppHeader ? (
             <ConsoleHeader

@@ -46,6 +46,20 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
+    "slug": "introducing-appwrite-cloud-start-plan",
+    "href": "/blog/post/introducing-appwrite-cloud-start-plan",
+    "title": "Introducing Appwrite Start",
+    "description": "Appwrite Start is Appwrite Cloud production pricing for India, built so more developers can grow on Appwrite rather than maximize margin on this tier.",
+    "date": "2026-09-21",
+    "lastUpdated": "2026-09-21",
+    "timeToRead": 7,
+    "author": "eldad-fux",
+    "category": "announcements",
+    "featured": false,
+    "cover": "/images/blog/introducing-appwrite-cloud-start-plan/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-sites-dynamic-api-keys",
     "href": "/blog/post/announcing-sites-dynamic-api-keys",
     "title": "Announcing dynamic API keys for Appwrite Sites",

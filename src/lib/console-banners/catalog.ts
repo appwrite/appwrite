@@ -21,7 +21,20 @@ export type ConsoleBannerDefinition = {
 /** Stable id stored in `console.dismissedBanners` user prefs. */
 export const PRODUCT_HUNT_BANNER_ID = 'product-hunt-2026-09-16'
 export const POSTGRES_PROMO_BANNER_ID = 'postgres-promo-2026'
+export const START_PROMO_BANNER_ID = 'start-promo-india-2026-09'
 export const INIT_RECAP_PROMO_BANNER_ID = 'init-recap-promo-2026-09'
+
+/** Appwrite Start India promo: 14 days from launch (inclusive, UTC). */
+export const START_PROMO_BANNER_START_MS = Date.UTC(2026, 8, 21, 0, 0, 0, 0)
+export const START_PROMO_BANNER_END_MS = Date.UTC(
+  2026,
+  9,
+  4,
+  23,
+  59,
+  59,
+  999,
+)
 
 /**
  * Product Hunt launch day: 16 Sep 2026, start of day through end of day Pacific Time
@@ -91,6 +104,16 @@ export const CONSOLE_BANNERS: readonly ConsoleBannerDefinition[] = [
     endMs: POSTGRES_PROMO_BANNER_END_MS,
     cloudOnly: true,
     event: 'postgres-promo-banner-try-now',
+  },
+  {
+    id: START_PROMO_BANNER_ID,
+    title: 'Appwrite Start for India',
+    scope: 'console',
+    placement: 'header',
+    startMs: START_PROMO_BANNER_START_MS,
+    endMs: START_PROMO_BANNER_END_MS,
+    cloudOnly: true,
+    event: 'start-promo-banner-learn-more',
   },
 ] as const
 

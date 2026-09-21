@@ -212,6 +212,7 @@ export const ANALYTICS_ACTIONS = {
   'create-organization': 'Create Organization Clicked',
   'create-database': 'Create Database Clicked',
   'postgres-promo-banner-try-now': 'PostgreSQL Promo Banner Try Now Clicked',
+  'start-promo-banner-learn-more': 'Start Promo Banner Learn More Clicked',
   'product-hunt-banner-upvote': 'Product Hunt Banner Upvote Clicked',
   'init-recap-promo-banner-view-recap': 'Init Recap Promo Banner View Recap Clicked',
   'create-table': 'Create Table Clicked',
