@@ -15,6 +15,7 @@ use Utopia\NATS\JetStream\ConsumerConfig;
 use Utopia\NATS\JetStream\DiscardPolicy;
 use Utopia\NATS\JetStream\JetStream;
 use Utopia\NATS\JetStream\JetStreamMessage;
+use Utopia\NATS\JetStream\PubAck;
 use Utopia\NATS\JetStream\RetentionPolicy;
 use Utopia\NATS\JetStream\StorageType;
 use Utopia\NATS\JetStream\StreamConfig;
@@ -482,13 +483,28 @@ class Nats implements Synchronous, Consumer, Batched, Bounded
     {
         /** @var string $id */
         $id = $envelope['pid'];
+        $data = $this->codec->encode($envelope);
 
-        $ack = $this->js()->publish(
-            $subject,
-            $this->codec->encode($envelope),
-            headers: $this->contentTypeHeader(),
-            msgId: $id,
-        );
+        try {
+            $ack = $this->publishOnce($subject, $data, $id);
+        } catch (TimeoutException $timeout) {
+            // A publish waits for the stream's PubAck, so a socket the server has
+            // already closed does not fail -- it goes quiet, and the caller wears
+            // the full request timeout for a message that never reached a stream.
+            // The client only recycles a connection when the server tells it one
+            // died; a socket reaped while nothing was reading it says nothing, and
+            // the first thing to notice is this timeout.
+            //
+            // Retrying is safe because the envelope carries its own pid as msgId
+            // and the work stream keeps a duplicate window (refused at construction
+            // if not positive), so a first publish that did land collapses the
+            // second rather than delivering it twice.
+            if (!$this->reconnect()) {
+                throw $timeout;
+            }
+
+            $ack = $this->publishOnce($subject, $data, $id);
+        }
 
         // Not discarded: a duplicate ack means the stream already held this id,
         // so the retry collapsed instead of double-delivering. That is the
@@ -498,6 +514,17 @@ class Nats implements Synchronous, Consumer, Batched, Bounded
         if ($ack->duplicate) {
             ++$this->duplicates;
         }
+    }
+
+    /** One attempt at the stream, waiting for its PubAck. */
+    private function publishOnce(string $subject, string $data, string $id): PubAck
+    {
+        return $this->js()->publish(
+            $subject,
+            $data,
+            headers: $this->contentTypeHeader(),
+            msgId: $id,
+        );
     }
 
     /**
