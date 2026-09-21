@@ -52,10 +52,11 @@ class Notifications extends Action
             ->inject('project')
             ->inject('register')
             ->inject('dbForPlatform')
+            ->inject('platform')
             ->callback($this->action(...));
     }
 
-    public function action(Message $message, Document $project, Registry $register, Database $dbForPlatform): void
+    public function action(Message $message, Document $project, Registry $register, Database $dbForPlatform, array $platform): void
     {
         $payload = $message->getPayload();
 
@@ -90,7 +91,7 @@ class Notifications extends Action
             }
 
             try {
-                $alertId = $this->dispatch($recipient, $messageId, $payload, $project, $register, $dbForPlatform);
+                $alertId = $this->dispatch($recipient, $messageId, $payload, $project, $register, $dbForPlatform, $platform);
                 if ($messageId !== '' && $channel === NOTIFICATION_TYPE_WEBHOOK && $alertId === null) {
                     $this->persistAlert($dbForPlatform, $messageId, $recipient, $payload, $project);
                 }
@@ -173,11 +174,12 @@ class Notifications extends Action
         Document $project,
         Registry $register,
         Database $dbForPlatform,
+        array $platform,
     ): ?string {
         $channel = $recipient['channel'];
 
         return match ($channel) {
-            NOTIFICATION_TYPE_EMAIL => $this->dispatchEmail($recipient, $messageId, $payload, $project, $register, $dbForPlatform),
+            NOTIFICATION_TYPE_EMAIL => $this->dispatchEmail($recipient, $messageId, $payload, $project, $register, $dbForPlatform, $platform),
             NOTIFICATION_TYPE_CONSOLE => $this->dispatchConsole($recipient, $messageId, $payload, $project, $dbForPlatform),
             NOTIFICATION_TYPE_WEBHOOK => $this->dispatchWebhook($recipient, $payload),
             default => throw new Exception('Unsupported notification channel: ' . $channel),
@@ -194,6 +196,7 @@ class Notifications extends Action
         Document $project,
         Registry $register,
         Database $dbForPlatform,
+        array $platform,
     ): ?string {
         $address = $recipient['address'];
         $smtp = $this->resolveSmtpConfig($project, $payload);
@@ -206,13 +209,10 @@ class Notifications extends Action
         $type = empty($smtp) ? 'cloud' : 'smtp';
         Span::add('type', $type);
 
-        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled') === 'disabled' ? 'http' : 'https';
-        $consoleHostname = System::getEnv('_APP_CONSOLE_DOMAIN', System::getEnv('_APP_DOMAIN', 'localhost'));
-
         $subject = $payload['subject'] ?? '';
         $variables = $payload['variables'] ?? [];
         $variables = \array_merge($variables, $payload['templateParams'] ?? []);
-        $variables['host'] = $protocol . '://' . $consoleHostname;
+        $variables['host'] = $platform['consoleUrl'] ?? '';
         $name = $payload['name'] ?? '';
         $body = $payload['body'] ?? '';
         $preview = $payload['preview'] ?? '';
@@ -270,21 +270,20 @@ class Notifications extends Action
             $body = $this->injectTrackingLogo($body, $messageId, $recipient['channel'], $recipientHash, $project, $trackingSecret);
         }
 
-        /** @var EmailAdapter $adapter */
-        $adapter = empty($smtp)
-            ? $register->get('smtp')
-            : new SMTP(
-                host: $smtp['host'],
-                port: (int) $smtp['port'],
-                username: $smtp['username'] ?? '',
-                password: $smtp['password'] ?? '',
-                smtpSecure: $smtp['secure'] ?? '',
-                smtpAutoTLS: false,
-                xMailer: 'Appwrite Mailer',
-                timeout: 10,
-                keepAlive: true,
-                timelimit: 30,
-            );
+        // A pooled adapter belongs to this send alone; a project's own SMTP is
+        // dialled for it and closed after.
+        $adapter = empty($smtp) ? null : new SMTP(
+            host: $smtp['host'],
+            port: (int) $smtp['port'],
+            username: $smtp['username'] ?? '',
+            password: $smtp['password'] ?? '',
+            smtpSecure: $smtp['secure'] ?? '',
+            smtpAutoTLS: false,
+            xMailer: 'Appwrite Mailer',
+            timeout: 10,
+            keepAlive: false,
+            timelimit: 30,
+        );
 
         $defaultFromEmail = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
         $defaultFromName = \urldecode(System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server'));
@@ -339,8 +338,14 @@ class Notifications extends Action
             html: true,
         );
 
+        $send = static fn (EmailAdapter $adapter): array => $adapter->send($emailMessage);
+
         try {
-            $adapter->send($emailMessage);
+            if ($adapter instanceof EmailAdapter) {
+                $send($adapter);
+            } else {
+                $register->get('smtp')->use($send);
+            }
         } catch (Throwable $error) {
             throw new Exception('Error sending notification: ' . $error->getMessage(), $type === 'smtp' ? 401 : 500);
         }
