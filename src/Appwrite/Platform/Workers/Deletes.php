@@ -1912,7 +1912,7 @@ class Deletes extends Action
             return;
         }
 
-        foreach (\array_chunk($transactionInternalIds, $dbForProject->getMaxQueryValues()) as $batch) {
+        foreach (\array_chunk($transactionInternalIds, \max(1, $dbForProject->getMaxQueryValues())) as $batch) {
             $dbForProject->deleteDocuments('transactionLogs', [
                 Query::equal('transactionInternalId', $batch),
             ], onError: function (Throwable $th) {
