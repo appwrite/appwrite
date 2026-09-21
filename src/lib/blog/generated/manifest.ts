@@ -17,6 +17,20 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
+    "slug": "announcing-sites-dynamic-api-keys",
+    "href": "/blog/post/announcing-sites-dynamic-api-keys",
+    "title": "Announcing dynamic API keys for Appwrite Sites",
+    "description": "Appwrite Sites now mints a scoped, short-lived API key for every build and SSR request, so server-rendered sites call your project without storing a key.",
+    "date": "2026-09-18",
+    "lastUpdated": "2026-09-18",
+    "timeToRead": 4,
+    "author": "aditya-oberai",
+    "category": "announcements",
+    "featured": false,
+    "cover": "/images/blog/announcing-sites-dynamic-api-keys/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "well-known-change-password-url",
     "href": "/blog/post/well-known-change-password-url",
     "title": "Support the well-known change password URL with Appwrite Auth",
