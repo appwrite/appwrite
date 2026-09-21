@@ -108,6 +108,7 @@ abstract class Database implements Source, Changes
     private function rows(?\DateTimeImmutable $since): iterable
     {
         $region = System::getEnv('_APP_REGION', 'default');
+        $inactiveProjectIds = $this->inactiveProjectIds($region);
 
         $limit = 10_000;
         $sum = $limit;
@@ -135,18 +136,60 @@ abstract class Database implements Source, Changes
 
             foreach ($schedules as $schedule) {
                 $updatedAt = (string) $schedule->getAttribute('resourceUpdatedAt', '');
+                $projectId = (string) $schedule->getAttribute('projectId');
 
                 yield new Row(
                     id: (string) $schedule->getSequence(),
                     version: $updatedAt,
                     data: $schedule,
-                    active: (bool) $schedule->getAttribute('active', false),
+                    // Inactive projects are selected with a status query below;
+                    // their schedules stay in the collection but leave memory.
+                    active: (bool) $schedule->getAttribute('active', false)
+                        && !isset($inactiveProjectIds[$projectId]),
                     activeFrom: $this->moment($updatedAt),
                 );
             }
 
             $latest = \end($schedules) ?: null;
         }
+    }
+
+    /**
+     * @return array<string, true>
+     */
+    private function inactiveProjectIds(string $region): array
+    {
+        $ids = [];
+        $limit = 1000;
+        $sum = $limit;
+        $latest = null;
+
+        while ($sum === $limit) {
+            $queries = [
+                Query::limit($limit),
+                Query::equal('region', [$region]),
+                Query::equal('status', ['paused', 'blocked', 'inactive']),
+                Query::orderAsc('$sequence'),
+            ];
+
+            if ($latest !== null) {
+                $queries[] = Query::cursorAfter($latest);
+            }
+
+            $projects = $this->dbForPlatform->skipFilters(
+                fn () => $this->dbForPlatform->find('projects', $queries),
+                APP_PROJECTS_SUBQUERIES
+            );
+            $sum = \count($projects);
+
+            foreach ($projects as $project) {
+                $ids[$project->getId()] = true;
+            }
+
+            $latest = \end($projects) ?: null;
+        }
+
+        return $ids;
     }
 
     private function moment(string $stamp): ?\DateTimeImmutable

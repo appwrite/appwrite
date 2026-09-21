@@ -8,6 +8,7 @@ use Appwrite\Schedule\Source\Functions;
 use PHPUnit\Framework\TestCase;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Query;
 use Utopia\Schedule\Scheduler;
 
 final class DatabaseTest extends TestCase
@@ -15,7 +16,7 @@ final class DatabaseTest extends TestCase
     public function testRemovesMissingProjectScheduleOnce(): void
     {
         $database = new ScheduleDatabase();
-        $database->documents['projects']['live'] = new Document(['$id' => 'live']);
+        $database->documents['projects']['live'] = new Document(['$id' => 'live', 'region' => 'default', 'status' => PROJECT_STATUS_ACTIVE]);
         $database->documents['schedules']['live'] = new Document(array_merge(
             $database->documents['schedules']['schedule']->getArrayCopy(),
             ['$id' => 'live', '$sequence' => '2', 'projectId' => 'live'],
@@ -40,19 +41,26 @@ final class DatabaseTest extends TestCase
     public function testRetriesFailedProjectRead(): void
     {
         $database = new ScheduleDatabase();
+        $database->documents['projects']['project'] = new Document(['$id' => 'project', 'region' => 'default', 'status' => PROJECT_STATUS_ACTIVE]);
+        $row = new \Utopia\Schedule\Source\Row(
+            id: '1',
+            version: '2026-09-09 00:00:00.000',
+            data: $database->documents['schedules']['schedule'],
+            active: true,
+        );
+
         $database->readError = new \RuntimeException('Database unavailable');
         $source = $this->source($database);
-        $row = iterator_to_array($source->snapshot())[0];
 
         try {
             $source->make($row);
             $this->fail('The database failure must propagate.');
-        } catch (\RuntimeException) {
+        } catch (\RuntimeException $error) {
+            $this->assertSame('Database unavailable', $error->getMessage());
         }
         $this->assertFalse($database->getDocument('schedules', 'schedule')->isEmpty());
 
         $database->readError = null;
-        $database->documents['projects']['project'] = new Document(['$id' => 'project']);
         $entry = $source->make($row);
 
         $this->assertSame('project', $entry->payload['project']->getId());
@@ -62,9 +70,15 @@ final class DatabaseTest extends TestCase
     public function testRetriesFailedDeletion(): void
     {
         $database = new ScheduleDatabase();
-        $database->deleteError = new \RuntimeException('Delete unavailable');
         $source = $this->source($database);
-        $row = iterator_to_array($source->snapshot())[0];
+        $row = new \Utopia\Schedule\Source\Row(
+            id: '1',
+            version: '2026-09-09 00:00:00.000',
+            data: $database->documents['schedules']['schedule'],
+            active: true,
+        );
+
+        $database->deleteError = new \RuntimeException('Delete unavailable');
 
         try {
             $source->make($row);
@@ -86,7 +100,12 @@ final class DatabaseTest extends TestCase
     {
         $database = new ScheduleDatabase();
         $source = $this->source($database);
-        $row = iterator_to_array($source->snapshot())[0];
+        $row = new \Utopia\Schedule\Source\Row(
+            id: '1',
+            version: '2026-09-09 00:00:00.000',
+            data: $database->documents['schedules']['schedule'],
+            active: true,
+        );
 
         try {
             $source->make($row);
@@ -94,11 +113,29 @@ final class DatabaseTest extends TestCase
         } catch (\InvalidArgumentException) {
         }
 
-        $database->documents['projects']['project'] = new Document(['$id' => 'project']);
+        $database->documents['projects']['project'] = new Document(['$id' => 'project', 'region' => 'default', 'status' => PROJECT_STATUS_ACTIVE]);
         $database->documents['schedules']['schedule'] = $row->data;
         $entry = $source->make($row);
 
         $this->assertSame('project', $entry->payload['project']->getId());
+        $this->assertFalse($database->getDocument('schedules', 'schedule')->isEmpty());
+    }
+
+    public function testDropsSchedulesForInactiveProjects(): void
+    {
+        $database = new ScheduleDatabase();
+        $database->documents['projects']['project'] = new Document(['$id' => 'project', 'region' => 'default', 'status' => PROJECT_STATUS_ACTIVE]);
+        $source = $this->source($database);
+        $scheduler = new Scheduler(source: $source, onError: function (): void {
+        });
+
+        $scheduler->reconcile(true);
+        $this->assertSame(1, $scheduler->count());
+
+        $database->documents['projects']['project'] = new Document(['$id' => 'project', 'region' => 'default', 'status' => 'blocked']);
+        $scheduler->reconcile(true);
+
+        $this->assertSame(0, $scheduler->count());
         $this->assertFalse($database->getDocument('schedules', 'schedule')->isEmpty());
     }
 
@@ -125,6 +162,7 @@ final class ScheduleDatabase extends Database
             'schedules' => ['schedule' => new Document([
                 '$id' => 'schedule',
                 '$sequence' => '1',
+                'region' => 'default',
                 'projectId' => 'project',
                 'resourceId' => 'function',
                 'resourceType' => SCHEDULE_RESOURCE_TYPE_FUNCTION,
@@ -161,6 +199,21 @@ final class ScheduleDatabase extends Database
 
     public function find(string $collection, array $queries = [], string $forPermission = Database::PERMISSION_READ): array
     {
-        return array_values($this->documents[$collection] ?? []);
+        $documents = \array_values($this->documents[$collection] ?? []);
+
+        foreach ($queries as $query) {
+            if (!$query instanceof Query || $query->getMethod() !== Query::TYPE_EQUAL) {
+                continue;
+            }
+
+            $attribute = $query->getAttribute();
+            $values = $query->getValues();
+            $documents = \array_values(\array_filter(
+                $documents,
+                fn (Document $document): bool => \in_array($document->getAttribute($attribute), $values, true),
+            ));
+        }
+
+        return $documents;
     }
 }
