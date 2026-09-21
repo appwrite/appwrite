@@ -399,6 +399,96 @@ trait DatabasesBase
     }
 
     #[Depends('testDocumentsVectorQueries')]
+    public function testExplanationVectorQuery(array $data): void
+    {
+        if (!\method_exists(Database::class, 'withExplain')) {
+            $this->markTestSkipped('Requires utopia-php/database withExplain');
+        }
+
+        $databaseId = $data['databaseId'];
+        $collectionId = $data['collectionId'];
+
+        $vector = array_fill(0, 1536, 0.0);
+        $vector[0] = 1.0;
+
+        $response = $this->client->call(Client::METHOD_GET, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents/explanation", [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'queries' => [
+                Query::vectorCosine('embeddings', $vector)->toString(),
+                Query::limit(2)->toString(),
+            ],
+            'total' => false,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertArrayHasKey('queries', $response['body']);
+        $this->assertNotEmpty($response['body']['queries']);
+
+        $assertNoInternalIdentifiers = function (array $queries): void {
+            $rawPlan = json_encode($queries) ?: '';
+
+            $this->assertDoesNotMatchRegularExpression('/_[\w-]{16,}_[\w-]{16,}/', $rawPlan);
+            $this->assertDoesNotMatchRegularExpression('/[a-f0-9]{32}_[A-Za-z][\w-]*/', $rawPlan);
+            $this->assertDoesNotMatchRegularExpression('/"Relation Name":"[a-f0-9]{32}"/', $rawPlan);
+            $this->assertDoesNotMatchRegularExpression('/"Index Name":"[a-f0-9]{32}"/', $rawPlan);
+            $this->assertStringNotContainsString('$db', $rawPlan);
+            $this->assertStringNotContainsString('serverInfo', $rawPlan);
+            $this->assertStringNotContainsString('serverParameters', $rawPlan);
+            $this->assertStringNotContainsString('$clusterTime', $rawPlan);
+            $this->assertStringNotContainsString('operationTime', $rawPlan);
+            $this->assertStringNotContainsString('slotBasedPlan', $rawPlan);
+        };
+
+        $first = $response['body']['queries'][0];
+        $this->assertEquals('find', $first['purpose']);
+        $this->assertEquals($collectionId, $first['context']['collection']);
+
+        $this->assertArrayHasKey('metrics', $first['plan']);
+        $this->assertArrayHasKey('access', $first['plan']);
+        $this->assertArrayHasKey('estimatedRecordsScanned', $first['plan']['metrics']);
+        $this->assertArrayHasKey('recordsReturned', $first['plan']['metrics']);
+        $this->assertArrayHasKey('durationMs', $first['plan']['metrics']);
+        $this->assertArrayHasKey('estimatedCost', $first['plan']['metrics']);
+        $this->assertArrayHasKey('type', $first['plan']['access']);
+        $this->assertArrayHasKey('index', $first['plan']['access']);
+        $this->assertContains($first['plan']['access']['type'], ['index_scan', 'full_scan', 'unknown']);
+        $this->assertFalse(isset($first['plan']['tree']));
+
+        foreach ($response['body']['queries'] as $entry) {
+            $this->assertArrayNotHasKey('engine', $entry['plan']);
+            $this->assertFalse(isset($entry['plan']['tree']));
+        }
+
+        $assertNoInternalIdentifiers($response['body']['queries']);
+
+        $treeResponse = $this->client->call(Client::METHOD_GET, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents/explanation", [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'queries' => [
+                Query::vectorCosine('embeddings', $vector)->toString(),
+                Query::limit(2)->toString(),
+            ],
+            'total' => false,
+            'tree' => true,
+        ]);
+
+        $this->assertEquals(200, $treeResponse['headers']['status-code']);
+        $this->assertArrayHasKey('tree', $treeResponse['body']['queries'][0]['plan']);
+        $this->assertNotNull($treeResponse['body']['queries'][0]['plan']['tree']);
+
+        foreach ($treeResponse['body']['queries'] as $entry) {
+            $this->assertArrayNotHasKey('engine', $entry['plan']);
+        }
+
+        $assertNoInternalIdentifiers($treeResponse['body']['queries']);
+    }
+
+    #[Depends('testDocumentsVectorQueries')]
     public function testDeleteDocument(array $data): void
     {
         $databaseId = $data['databaseId'];

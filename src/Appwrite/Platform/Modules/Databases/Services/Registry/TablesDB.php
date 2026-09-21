@@ -58,6 +58,7 @@ use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Rows\Column\Decreme
 use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Rows\Column\Increment as IncrementRowColumn;
 use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Rows\Create as CreateRow;
 use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Rows\Delete as DeleteRow;
+use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Rows\Explanation\Get as GetRowsExplanation;
 use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Rows\Get as GetRow;
 use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Rows\Update as UpdateRow;
 use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Rows\Upsert as UpsertRow;
@@ -212,6 +213,7 @@ class TablesDB extends Base
         $service->addAction(DeleteRow::getName(), new DeleteRow());
         $service->addAction(DeleteRows::getName(), new DeleteRows());
         $service->addAction(ListRows::getName(), new ListRows());
+        $service->addAction(GetRowsExplanation::getName(), new GetRowsExplanation());
         $service->addAction(IncrementRowColumn::getName(), new IncrementRowColumn());
         $service->addAction(DecrementRowColumn::getName(), new DecrementRowColumn());
     }

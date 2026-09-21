@@ -8,10 +8,15 @@ use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Functions\EventProcessor;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Action as DatabasesAction;
+use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\NotFound as NotFoundException;
+use Utopia\Database\Exception\Query as QueryException;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\Query\Cursor;
 
 abstract class Action extends DatabasesAction
 {
@@ -538,5 +543,87 @@ abstract class Action extends DatabasesAction
         $queueForEvents->reset();
         $queueForRealtime->reset();
         $queueForWebhooks->reset();
+    }
+
+    /**
+     * Shared setup for any list-style read on the documents/rows API surface.
+     *
+     * Both list and explanation endpoints need the same auth checks, database
+     * and collection lookup, query parse, cursor resolution, and find-closure
+     * construction. Centralising it here keeps explanation byte-identical to
+     * the real read it describes.
+     *
+     * @param  array<string>  $queries
+     * @return array<string, mixed>
+     */
+    protected function prepareListContext(
+        string $databaseId,
+        string $collectionId,
+        array $queries,
+        Database $dbForProject,
+        User $user,
+        callable $getDatabasesDB,
+        Authorization $authorization,
+    ): array {
+        $isAPIKey = $user->isKey($authorization->getRoles());
+        $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
+
+        $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        if ($database->isEmpty() || $this->isDatabaseTypeMismatch($database) || (!$database->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
+            throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
+        }
+
+        $collection = $authorization->skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId));
+        if ($collection->isEmpty() || (!$collection->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
+            throw new Exception($this->getParentNotFoundException(), params: [$collectionId]);
+        }
+
+        try {
+            $queries = Query::parseQueries($queries);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
+
+        $dbForDatabases = $getDatabasesDB($database);
+        $cursor = Query::getCursorQueries($queries, false);
+        $cursor = \reset($cursor);
+
+        if ($cursor !== false) {
+            $validator = new Cursor();
+            if (!$validator->isValid($cursor)) {
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
+            }
+
+            $documentId = $cursor->getValue();
+
+            try {
+                $cursorDocument = $authorization->skip(fn () => $dbForDatabases->getDocument('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $documentId));
+            } catch (NotFoundException) {
+                throw new Exception($this->getParentNotFoundException(), params: [$collectionId]);
+            }
+
+            if ($cursorDocument->isEmpty()) {
+                $type = ucfirst($this->getContext());
+                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "$type '{$documentId}' for the 'cursor' value not found.");
+            }
+
+            $cursor->setValue($cursorDocument);
+        }
+
+        $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
+        $hasSelects = ! empty(Query::groupByType($queries)['selections']);
+        $find = $hasSelects
+            ? fn () => $dbForDatabases->find($collectionTableId, $queries)
+            : fn () => $dbForDatabases->skipRelationships(fn () => $dbForDatabases->find($collectionTableId, $queries));
+
+        return [
+            'database' => $database,
+            'collection' => $collection,
+            'dbForDatabases' => $dbForDatabases,
+            'queries' => $queries,
+            'collectionTableId' => $collectionTableId,
+            'hasSelects' => $hasSelects,
+            'find' => $find,
+        ];
     }
 }
