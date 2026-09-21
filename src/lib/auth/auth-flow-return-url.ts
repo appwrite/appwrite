@@ -8,7 +8,9 @@ export function isDebugAuthPreviewPath(pathname: string): boolean {
   return pathname.startsWith('/debug/')
 }
 
-export function resolveAuthSignInPath(pathname?: string): '/sign-in' | '/debug/sign-in-preview' {
+export function resolveAuthSignInPath(
+  pathname?: string,
+): '/sign-in' | '/debug/sign-in-preview' {
   const path =
     pathname ?? (typeof window !== 'undefined' ? window.location.pathname : '')
   return isDebugAuthPreviewPath(path) ? '/debug/sign-in-preview' : '/sign-in'

@@ -1,16 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import {
-  ChevronLeft,
-  ChevronRight,
-  GripHorizontal,
-  X,
-} from 'lucide-react'
-import { useNavigate } from '@tanstack/react-router'
+import { ChevronLeft, ChevronRight, GripHorizontal, X } from 'lucide-react'
+import { useLocation, useNavigate } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
 import { DebugDemoCatalogPanel } from '@/components/global/providers/DebugDemoCatalogPanel'
 import { DebugDemoNavigatorOptions } from '@/components/global/providers/DebugDemoNavigatorOptions'
 import { DEFAULT_DEBUG_DEMO_ID } from '@/lib/debug-demos/catalog'
-import { goToDemoSessionIndex, openDebugDemo } from '@/lib/debug-demos/navigate'
+import {
+  goToDemoSessionIndex,
+  openDebugDemo,
+  resolveDemoIdFromLocation,
+} from '@/lib/debug-demos/navigate'
 import {
   clampDebugDemoBarSize,
   clearDebugDemoSession,
@@ -52,6 +51,7 @@ type ResizeAxis = 'width' | 'height' | 'both'
 
 export function DebugDemoNavigator() {
   const navigate = useNavigate()
+  const location = useLocation()
   const [session, setSession] = useState(() => readDebugDemoSession())
   const barRef = useRef<HTMLDivElement>(null)
   const [barPosition, setBarPosition] = useState<DebugDemoBarPosition | null>(
@@ -75,9 +75,13 @@ export function DebugDemoNavigator() {
     startY: number
     originWidth: number
     originHeight: number
+    originX: number
   } | null>(null)
 
-  useEffect(() => subscribeDebugDemoSession(() => setSession(readDebugDemoSession())), [])
+  useEffect(
+    () => subscribeDebugDemoSession(() => setSession(readDebugDemoSession())),
+    [],
+  )
 
   useEffect(() => {
     const handleResize = () => {
@@ -92,7 +96,13 @@ export function DebugDemoNavigator() {
     return () => window.removeEventListener('resize', handleResize)
   }, [])
 
-  const currentId = session.history[session.index] ?? DEFAULT_DEBUG_DEMO_ID
+  const currentId =
+    resolveDemoIdFromLocation(
+      location.pathname,
+      new URLSearchParams(location.searchStr ?? ''),
+    ) ??
+    session.history[session.index] ??
+    DEFAULT_DEBUG_DEMO_ID
 
   const canGoBack = session.index > 0
   const canGoForward = session.index < session.history.length - 1
@@ -155,10 +165,7 @@ export function DebugDemoNavigator() {
 
     const deltaX = event.clientX - dragState.startX
     const deltaY = event.clientY - dragState.startY
-    if (
-      !dragState.moved &&
-      Math.hypot(deltaX, deltaY) >= DRAG_THRESHOLD_PX
-    ) {
+    if (!dragState.moved && Math.hypot(deltaX, deltaY) >= DRAG_THRESHOLD_PX) {
       dragState.moved = true
     }
     if (!dragState.moved) return
@@ -201,6 +208,8 @@ export function DebugDemoNavigator() {
       startY: event.clientY,
       originWidth: barSize.width,
       originHeight: barSize.height,
+      originX:
+        barPosition?.x ?? barRef.current?.getBoundingClientRect().left ?? 0,
     }
     event.currentTarget.setPointerCapture(event.pointerId)
   }
@@ -216,9 +225,11 @@ export function DebugDemoNavigator() {
 
     let nextWidth = resizeState.originWidth
     let nextHeight = resizeState.originHeight
+    let resizedFromLeft = false
 
     if (resizeState.axis === 'width' || resizeState.axis === 'both') {
       nextWidth = resizeState.originWidth - deltaX
+      resizedFromLeft = true
     }
     if (resizeState.axis === 'height' || resizeState.axis === 'both') {
       nextHeight = resizeState.originHeight + deltaY
@@ -231,13 +242,13 @@ export function DebugDemoNavigator() {
     setBarSize(clamped)
 
     if (barPosition && barRef.current) {
-      setBarPosition(
-        clampBarPosition(
-          barPosition,
-          clamped.width,
-          clamped.height,
-        ),
-      )
+      const anchored = resizedFromLeft
+        ? {
+            ...barPosition,
+            x: resizeState.originX + (resizeState.originWidth - clamped.width),
+          }
+        : barPosition
+      setBarPosition(clampBarPosition(anchored, clamped.width, clamped.height))
     }
   }
 
@@ -273,7 +284,7 @@ export function DebugDemoNavigator() {
           ? { left: barPosition.x, top: barPosition.y, transform: 'none' }
           : {}),
       }}
-      role="toolbar"
+      role="region"
       aria-label="Debug demo navigator"
     >
       <div
@@ -351,7 +362,10 @@ export function DebugDemoNavigator() {
           <ChevronRight className="h-3.5 w-3.5" />
         </Button>
         <span
-          className={cn('ms-auto text-[10px] tabular-nums', DEBUG_MENU_MUTED_TEXT)}
+          className={cn(
+            'ms-auto text-[10px] tabular-nums',
+            DEBUG_MENU_MUTED_TEXT,
+          )}
         >
           {session.history.length > 0
             ? `${session.index + 1} / ${session.history.length}`

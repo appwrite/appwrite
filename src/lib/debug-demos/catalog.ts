@@ -247,20 +247,8 @@ export function getDebugDemosGroupedByCategory(): Array<{
   }
   return DEBUG_DEMO_CATEGORIES.map((category) => ({
     category,
-    items: (map.get(category) ?? []).slice().sort((a, b) =>
-      a.label.localeCompare(b.label),
-    ),
+    items: map.get(category) ?? [],
   })).filter((group) => group.items.length > 0)
 }
 
 export const DEFAULT_DEBUG_DEMO_ID = DEBUG_DEMO_CATALOG[0]?.id ?? 'auth-sign-in'
-
-export type DebugDemoFlatEntry = DebugDemoEntry & {
-  category: DebugDemoCategory
-}
-
-export function getDebugDemosFlat(): DebugDemoFlatEntry[] {
-  return getDebugDemosGroupedByCategory().flatMap(({ category, items }) =>
-    items.map((item) => ({ ...item, category })),
-  )
-}

@@ -3,14 +3,19 @@ import { ExternalLink } from 'lucide-react'
 import { useNavigate } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
 import { DebugDemoCatalogPanel } from '@/components/global/providers/DebugDemoCatalogPanel'
-import { DEFAULT_DEBUG_DEMO_ID, getDebugDemoById } from '@/lib/debug-demos/catalog'
+import {
+  DEFAULT_DEBUG_DEMO_ID,
+  getDebugDemoById,
+} from '@/lib/debug-demos/catalog'
 import { openDebugDemo } from '@/lib/debug-demos/navigate'
 
 type DebugMenuDemosPanelProps = {
   onLaunchDemo?: () => void
 }
 
-export function DebugMenuDemosPanel({ onLaunchDemo }: DebugMenuDemosPanelProps) {
+export function DebugMenuDemosPanel({
+  onLaunchDemo,
+}: DebugMenuDemosPanelProps) {
   const navigate = useNavigate()
   const [selectedId, setSelectedId] = useState(DEFAULT_DEBUG_DEMO_ID)
   const selected = getDebugDemoById(selectedId)

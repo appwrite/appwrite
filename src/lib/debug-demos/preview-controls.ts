@@ -1,7 +1,6 @@
 export const DEBUG_DEMO_PREVIEW_CONTROL_EVENT = 'debugDemoPreviewControl'
 
-export type DebugDemoPreviewControl =
-  | { type: 'oauth2-reset-outcome' }
+export type DebugDemoPreviewControl = { type: 'oauth2-reset-outcome' }
 
 export function dispatchDebugDemoPreviewControl(
   control: DebugDemoPreviewControl,

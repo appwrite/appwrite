@@ -69,7 +69,9 @@ export function DebugDemoCatalogPanel({
   const scrollActiveIntoView = useCallback(() => {
     const list = listRef.current
     if (!list) return
-    const active = list.querySelector<HTMLElement>(`[data-demo-id="${currentId}"]`)
+    const active = list.querySelector<HTMLElement>(
+      `[data-demo-id="${currentId}"]`,
+    )
     active?.scrollIntoView({
       behavior: 'smooth',
       block: 'nearest',
@@ -200,9 +202,7 @@ export function DebugDemoCatalogPanel({
           'min-h-0 flex-1 overflow-y-auto overscroll-contain pb-2 [scrollbar-width:thin]',
           isPanel ? 'px-1.5' : 'px-1',
         )}
-        role="listbox"
         aria-label="Demo pages"
-        aria-activedescendant={`demo-panel-${currentId}`}
       >
         {visibleGroups.length === 0 ? (
           <p className="px-3 py-4 text-center text-[12px] text-muted-foreground">
@@ -291,10 +291,9 @@ function DemoPanelRow({
   return (
     <button
       type="button"
-      role="option"
       id={`demo-panel-${item.id}`}
       data-demo-id={item.id}
-      aria-selected={isActive}
+      aria-current={isActive ? 'true' : undefined}
       onClick={onSelect}
       className={cn(
         'w-full rounded-lg border text-left transition-colors',
@@ -308,7 +307,9 @@ function DemoPanelRow({
         className={cn(
           'block leading-snug',
           isPanel ? 'text-[13px]' : 'text-[12px]',
-          isActive ? 'font-semibold text-foreground' : 'font-medium text-foreground/90',
+          isActive
+            ? 'font-semibold text-foreground'
+            : 'font-medium text-foreground/90',
         )}
       >
         {item.label}

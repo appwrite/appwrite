@@ -22,9 +22,7 @@ function MagicUrlPreviewPage() {
     <MagicUrlLoginCard
       signInTo="/debug/sign-in-preview"
       errorMessage={
-        view === 'error'
-          ? t('The magic URL is invalid or has expired.')
-          : null
+        view === 'error' ? t('The magic URL is invalid or has expired.') : null
       }
     />
   )

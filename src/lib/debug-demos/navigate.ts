@@ -13,6 +13,7 @@ import {
   activateDebugDemoSession,
   notifyDebugDemoSessionChange,
   pushDebugDemoSession,
+  readDebugDemoSession,
   setDebugDemoSessionIndex,
   type DebugDemoSession,
 } from '@/lib/debug-demos/session'
@@ -34,6 +35,8 @@ const PATHNAME_ONLY_DEMO_IDS: Record<string, string> = {
 }
 
 function applyDemoSideEffects(demo: DebugDemoEntry) {
+  setDebugOverride('showFullscreenLoader', false)
+  setDebugOverride('previewCommunitySupportWizard', false)
   if (demo.type === 'fullscreen-loader') {
     setDebugOverride('showFullscreenLoader', demo.enabled)
     return
@@ -43,7 +46,7 @@ function applyDemoSideEffects(demo: DebugDemoEntry) {
   }
 }
 
-export function locationMatchesDemoHref(
+function locationMatchesDemoHref(
   pathname: string,
   searchParams: URLSearchParams,
   href: string,
@@ -74,7 +77,10 @@ export function resolveDemoIdFromLocation(
   }
 
   for (const entry of DEBUG_DEMO_CATALOG) {
-    if (entry.type === 'route' && locationMatchesDemoHref(pathname, searchParams, entry.href)) {
+    if (
+      entry.type === 'route' &&
+      locationMatchesDemoHref(pathname, searchParams, entry.href)
+    ) {
       return entry.id
     }
   }
@@ -115,15 +121,16 @@ export function openDebugDemo(
     updateSession?: boolean
   },
 ) {
-  const demo = getDebugDemoById(demoId) ?? getDebugDemoById(DEFAULT_DEBUG_DEMO_ID)
+  const demo =
+    getDebugDemoById(demoId) ?? getDebugDemoById(DEFAULT_DEBUG_DEMO_ID)
   if (!demo) return
 
   const updateSession = options?.updateSession !== false
   if (updateSession) {
     if (options?.freshSession) {
-      activateDebugDemoSession(demoId)
+      activateDebugDemoSession(demo.id)
     } else {
-      pushDebugDemoSession(demoId)
+      pushDebugDemoSession(demo.id)
     }
     notifyDebugDemoSessionChange()
   }
@@ -135,11 +142,16 @@ export function goToDemoSessionIndex(
   index: number,
   navigate: DemoNavigate,
 ): DebugDemoSession | null {
-  const session = setDebugDemoSessionIndex(index)
-  const demoId = session.history[session.index]
+  const current = readDebugDemoSession()
+  const clamped = Math.min(
+    Math.max(0, index),
+    Math.max(0, current.history.length - 1),
+  )
+  const demoId = current.history[clamped]
   const demo = demoId ? getDebugDemoById(demoId) : undefined
   if (!demo) return null
 
+  const session = setDebugDemoSessionIndex(clamped)
   notifyDebugDemoSessionChange()
   navigateToDemoTarget(demo, navigate, true)
   return session

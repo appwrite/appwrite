@@ -7,7 +7,9 @@ import {
 import { pageTitle } from '@/lib/utils/page-title'
 
 const educationJoinPreviewSearchSchema = z.object({
-  view: z.enum(['landing', 'oauth-failure', 'loading', 'ineligible']).optional(),
+  view: z
+    .enum(['landing', 'oauth-failure', 'loading', 'ineligible'])
+    .optional(),
 })
 
 export const Route = createFileRoute('/_public/debug/education-join-preview')({

@@ -18,13 +18,8 @@ export const DEBUG_MENU_HEADER_CLASS = [
 
 export const DEBUG_MENU_MUTED_TEXT = 'text-[var(--network-globe-edge)]/70'
 
-export const DEBUG_MENU_SUBTITLE_TEXT = 'text-[var(--network-globe-edge)]/80'
-
 export const DEBUG_MENU_ICON_BUTTON_CLASS =
   'flex items-center justify-center rounded-lg text-[var(--network-globe-edge)] transition-colors hover:bg-[color-mix(in_srgb,var(--network-globe-edge)_15%,transparent)] hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--network-globe-edge)]/40'
 
 export const DEBUG_MENU_ROW_HOVER =
   'hover:bg-[color-mix(in_srgb,var(--network-globe-edge)_12%,transparent)]'
-
-export const DEBUG_MENU_ROW_ACTIVE =
-  'bg-[color-mix(in_srgb,var(--network-globe-edge)_18%,var(--muted))] text-foreground'

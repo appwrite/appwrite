@@ -19,11 +19,7 @@ export function readDebugMenuUiState(): DebugMenuUiState {
     return {
       popoverOpen: Boolean(parsed.popoverOpen),
       activeSubmenu:
-        typeof parsed.activeSubmenu === 'string'
-          ? parsed.activeSubmenu
-          : parsed.activeSubmenu === null
-            ? null
-            : null,
+        typeof parsed.activeSubmenu === 'string' ? parsed.activeSubmenu : null,
     }
   } catch {
     return DEFAULT_STATE

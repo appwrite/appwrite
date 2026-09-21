@@ -3,12 +3,14 @@ import { DebugMenuCommunityShareExamplesPanel } from '@/components/global/provid
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { pageTitle } from '@/lib/utils/page-title'
 
-export const Route = createFileRoute('/_public/debug/community-share-examples')({
-  head: () => ({
-    meta: [{ title: pageTitle('Community share examples (debug)') }],
-  }),
-  component: CommunityShareExamplesDebugPage,
-})
+export const Route = createFileRoute('/_public/debug/community-share-examples')(
+  {
+    head: () => ({
+      meta: [{ title: pageTitle('Community share examples (debug)') }],
+    }),
+    component: CommunityShareExamplesDebugPage,
+  },
+)
 
 function CommunityShareExamplesDebugPage() {
   const { profileId } = useConsoleProfile()

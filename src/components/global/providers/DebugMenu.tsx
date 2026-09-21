@@ -16,7 +16,6 @@ import {
   Globe,
   FlaskConical,
   AlertTriangle,
-  Loader2,
   Check,
   Minus,
   Columns2,
@@ -107,7 +106,6 @@ import { useDebugMcpEndpoint } from '@/hooks/use-debug-mcp-endpoint'
 import { usePromptDialog } from '@/hooks/use-prompt-dialog'
 import { McpIcon } from '@/components/global/shared/McpIcon'
 import { useNavigate } from '@tanstack/react-router'
-import { useQueryClient } from '@tanstack/react-query'
 import { Branch as DismissableLayerBranch } from '@radix-ui/react-dismissable-layer'
 import { cn } from '@/lib/utils'
 import type {
@@ -150,7 +148,6 @@ import {
   COMMUNITY_SUPPORT_REMINDER_MS,
   COMMUNITY_SUPPORT_UNIQUE_DAYS_THRESHOLD,
 } from '@/lib/community/support-prompt'
-import { toast } from 'sonner'
 
 const COMMUNITY_SUPPORT_REMINDER_DAYS = Math.round(
   COMMUNITY_SUPPORT_REMINDER_MS / (24 * 60 * 60 * 1000),
@@ -1008,7 +1005,6 @@ function TableCell({ className, ...props }: ComponentProps<'td'>) {
 export function DebugMenu({ actions = [] }: DebugMenuProps) {
   const { isDebugModeOpen: isVisible, closeDebugMode } = useDebugMode()
   const { isScreenshotModeActive, setScreenshotModeActive } = useScreenshotMode()
-  const queryClient = useQueryClient()
   const [isOpen, setIsOpen] = useState(
     () => readDebugMenuUiState().popoverOpen,
   )
@@ -1614,7 +1610,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
           statusAlertMenuItem,
           {
             label: 'Theme',
-            badge: DEBUG_MENU_THEME_BADGES[theme],
+            badge: DEBUG_MENU_THEME_BADGES[theme ?? 'system'],
             icon: <Palette className="h-3 w-3" />,
             submenu: themeOptions,
           },

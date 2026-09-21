@@ -55,17 +55,22 @@ export function EducationJoinPreview({
             <div className="flex flex-col items-center gap-4 text-center">
               <AuthFlowHeaderIcon icon={TriangleAlert} variant="destructive" />
               <div className="space-y-2">
-              <AuthFlowTitle>
-                {t(
-                  "It looks like you're not currently eligible for the GitHub Student Developer Pack.",
-                )}
-              </AuthFlowTitle>
-              <AuthFlowDescription>
-                {t('You can still use Appwrite without an Education plan.')}
-              </AuthFlowDescription>
+                <AuthFlowTitle>
+                  {t(
+                    "It looks like you're not currently eligible for the GitHub Student Developer Pack.",
+                  )}
+                </AuthFlowTitle>
+                <AuthFlowDescription>
+                  {t('You can still use Appwrite without an Education plan.')}
+                </AuthFlowDescription>
               </div>
             </div>
-            <Button variant="brandCta" className="w-full" type="button" disabled>
+            <Button
+              variant="brandCta"
+              className="w-full"
+              type="button"
+              disabled
+            >
               <GitHubIcon className="size-4 shrink-0" />
               {t('Connect GitHub')}
             </Button>
@@ -78,17 +83,22 @@ export function EducationJoinPreview({
             <div className="flex flex-col items-center gap-4 text-center">
               <EducationJoinPartnerHeader />
               <div className="space-y-2">
-              <AuthFlowTitle>
-                {t('Join the Appwrite Education Program')}
-              </AuthFlowTitle>
-              <AuthFlowDescription>
-                {t(
-                  'Enjoy Appwrite Cloud for free throughout your student journey as part of the GitHub Student Developer Pack.',
-                )}
-              </AuthFlowDescription>
+                <AuthFlowTitle>
+                  {t('Join the Appwrite Education Program')}
+                </AuthFlowTitle>
+                <AuthFlowDescription>
+                  {t(
+                    'Enjoy Appwrite Cloud for free throughout your student journey as part of the GitHub Student Developer Pack.',
+                  )}
+                </AuthFlowDescription>
               </div>
             </div>
-            <Button variant="brandCta" className="w-full" type="button" disabled>
+            <Button
+              variant="brandCta"
+              className="w-full"
+              type="button"
+              disabled
+            >
               <GitHubIcon className="size-4 shrink-0" />
               {t('Connect GitHub')}
             </Button>

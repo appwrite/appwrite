@@ -23,7 +23,7 @@ import {
   setDebugOverride,
   subscribeToDebugOverrides,
 } from '@/lib/debug-overrides'
-import type { OrganizationSetupPhase } from '@/components/pages/organizations/$orgId/billing/change-plan/OrganizationSetupProgress'
+import type { OrgSetupPreviewPhase } from '@/routes/_public/debug.org-setup-preview'
 
 const VERIFY_EMAIL_STATUSES = ['pending', 'confirming'] as const
 const GIT_CONTRIBUTOR_STATUSES = ['awaiting', 'success', 'error'] as const
@@ -35,13 +35,12 @@ const JOIN_INVITE_VIEWS = [
   'success',
 ] as const
 
-const ORG_SETUP_PHASES: { value: OrganizationSetupPhase; label: string }[] =
-  [
-    { value: 'submitting', label: 'Creating org' },
-    { value: 'confirming-payment', label: 'Payment' },
-    { value: 'activating', label: 'Activating' },
-    { value: 'complete', label: 'Finishing' },
-  ]
+const ORG_SETUP_PHASES: { value: OrgSetupPreviewPhase; label: string }[] = [
+  { value: 'submitting', label: 'Creating org' },
+  { value: 'confirming-payment', label: 'Payment' },
+  { value: 'activating', label: 'Activating' },
+  { value: 'complete', label: 'Finishing' },
+]
 
 const OAUTH2_INTERACTIVE_CONSENT_SCREENS = new Set<OAuth2PreviewScreen>([
   'consent',
@@ -51,7 +50,9 @@ const OAUTH2_INTERACTIVE_CONSENT_SCREENS = new Set<OAuth2PreviewScreen>([
 ])
 
 function parseSearchParams(searchStr: string) {
-  return new URLSearchParams(searchStr.startsWith('?') ? searchStr.slice(1) : searchStr)
+  return new URLSearchParams(
+    searchStr.startsWith('?') ? searchStr.slice(1) : searchStr,
+  )
 }
 
 type DebugDemoNavigatorOptionsProps = {
@@ -211,27 +212,29 @@ export function DebugDemoNavigatorOptions({
     return (
       <OptionsSection label="Sites preview">
         <OptionButtonRow>
-          {(['checking', 'denied', 'error', 'invalid'] as const).map((value) => (
-            <OptionChip
-              key={value}
-              active={status === value}
-              onClick={() =>
-                navigate({
-                  to: '/debug/sites-auth-preview',
-                  search: { status: value },
-                  replace: true,
-                })
-              }
-            >
-              {value === 'checking'
-                ? 'Checking'
-                : value === 'denied'
-                  ? 'Private'
-                  : value === 'error'
-                    ? 'Error'
-                    : 'Invalid'}
-            </OptionChip>
-          ))}
+          {(['checking', 'denied', 'error', 'invalid'] as const).map(
+            (value) => (
+              <OptionChip
+                key={value}
+                active={status === value}
+                onClick={() =>
+                  navigate({
+                    to: '/debug/sites-auth-preview',
+                    search: { status: value },
+                    replace: true,
+                  })
+                }
+              >
+                {value === 'checking'
+                  ? 'Checking'
+                  : value === 'denied'
+                    ? 'Private'
+                    : value === 'error'
+                      ? 'Error'
+                      : 'Invalid'}
+              </OptionChip>
+            ),
+          )}
         </OptionButtonRow>
       </OptionsSection>
     )
@@ -242,21 +245,23 @@ export function DebugDemoNavigatorOptions({
     return (
       <OptionsSection label="OAuth2 relay">
         <OptionButtonRow>
-          {(['success', 'failure', 'missing', 'error'] as const).map((value) => (
-            <OptionChip
-              key={value}
-              active={variant === value}
-              onClick={() =>
-                navigate({
-                  to: '/debug/oauth2-relay-preview',
-                  search: { variant: value },
-                  replace: true,
-                })
-              }
-            >
-              {value.charAt(0).toUpperCase() + value.slice(1)}
-            </OptionChip>
-          ))}
+          {(['success', 'failure', 'missing', 'error'] as const).map(
+            (value) => (
+              <OptionChip
+                key={value}
+                active={variant === value}
+                onClick={() =>
+                  navigate({
+                    to: '/debug/oauth2-relay-preview',
+                    search: { variant: value },
+                    replace: true,
+                  })
+                }
+              >
+                {value.charAt(0).toUpperCase() + value.slice(1)}
+              </OptionChip>
+            ),
+          )}
         </OptionButtonRow>
       </OptionsSection>
     )
@@ -358,15 +363,19 @@ export function DebugDemoNavigatorOptions({
   }
 
   if (pathname === '/debug/org-setup-preview') {
-    const phase = (params.get('phase') ??
-      'activating') as OrganizationSetupPhase
+    const phaseParam = params.get('phase')
+    const phase: OrgSetupPreviewPhase = ORG_SETUP_PHASES.some(
+      (option) => option.value === phaseParam,
+    )
+      ? (phaseParam as OrgSetupPreviewPhase)
+      : 'activating'
     const mode = params.get('mode') === 'upgrade' ? 'upgrade' : 'create'
     const payment = params.get('payment') !== 'false'
     const activation = params.get('activation') !== 'false'
 
     const patchSearch = (
       patch: Partial<{
-        phase: OrganizationSetupPhase
+        phase: OrgSetupPreviewPhase
         mode: 'create' | 'upgrade'
         payment: boolean
         activation: boolean
@@ -412,7 +421,7 @@ export function DebugDemoNavigatorOptions({
             <SelectTrigger className="h-8 text-[12px]">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent className="z-[10070]">
+            <SelectContent className="z-[10070]" dir="ltr" lang="en">
               <SelectItem value="create">Create organization</SelectItem>
               <SelectItem value="upgrade">Change plan</SelectItem>
             </SelectContent>
@@ -528,7 +537,9 @@ export function DebugDemoNavigatorOptions({
               size="sm"
               className="h-8 w-full text-[12px]"
               onClick={() =>
-                dispatchDebugDemoPreviewControl({ type: 'oauth2-reset-outcome' })
+                dispatchDebugDemoPreviewControl({
+                  type: 'oauth2-reset-outcome',
+                })
               }
             >
               Reset consent outcome

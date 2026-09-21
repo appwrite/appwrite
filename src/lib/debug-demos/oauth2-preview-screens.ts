@@ -63,16 +63,16 @@ export const OAUTH2_OUTCOME_PREVIEW_SCREEN_OPTIONS: {
   { value: 'loading', label: 'Loading' },
 ]
 
-export function isOAuth2PreviewScreen(value: string): value is OAuth2PreviewScreen {
+export function isOAuth2PreviewScreen(
+  value: string,
+): value is OAuth2PreviewScreen {
   return (OAUTH2_PREVIEW_SCREENS as readonly string[]).includes(value)
 }
 
 export function oauth2PreviewDemoIdForScreen(
   screen: OAuth2PreviewScreen,
 ): 'oauth2-consent' | 'oauth2-device-flow' | 'oauth2-outcomes' {
-  if (
-    (OAUTH2_CONSENT_PREVIEW_SCREENS as readonly string[]).includes(screen)
-  ) {
+  if ((OAUTH2_CONSENT_PREVIEW_SCREENS as readonly string[]).includes(screen)) {
     return 'oauth2-consent'
   }
   if (

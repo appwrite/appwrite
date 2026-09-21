@@ -17,7 +17,7 @@ export const Route = createFileRoute('/_public/debug/recovery-preview')({
 })
 
 function RecoveryPreviewPage() {
-  const { email } = Route.useSearch({ from: '/_public/debug/recovery-preview' })
+  const { email } = Route.useSearch()
   const [isSuccess, setIsSuccess] = useState(false)
 
   return (

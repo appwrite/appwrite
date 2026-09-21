@@ -63,7 +63,10 @@ function parseSession(raw: string | null): DebugDemoSession | null {
 export function readDebugDemoSession(): DebugDemoSession {
   if (typeof window === 'undefined') return DEFAULT_SESSION
   try {
-    return parseSession(window.localStorage.getItem(DEMO_SESSION_KEY)) ?? DEFAULT_SESSION
+    return (
+      parseSession(window.localStorage.getItem(DEMO_SESSION_KEY)) ??
+      DEFAULT_SESSION
+    )
   } catch {
     return DEFAULT_SESSION
   }
@@ -74,7 +77,9 @@ export function writeDebugDemoSession(session: DebugDemoSession) {
   window.localStorage.setItem(DEMO_SESSION_KEY, JSON.stringify(session))
 }
 
-export function activateDebugDemoSession(initialDemoId: string): DebugDemoSession {
+export function activateDebugDemoSession(
+  initialDemoId: string,
+): DebugDemoSession {
   const session: DebugDemoSession = {
     active: true,
     history: [initialDemoId],
@@ -88,7 +93,9 @@ export function pushDebugDemoSession(demoId: string): DebugDemoSession {
   const current = readDebugDemoSession()
   const trimmed = current.history.slice(0, current.index + 1)
   if (trimmed[trimmed.length - 1] === demoId) {
-    return { ...current, active: true }
+    const unchanged = { ...current, active: true }
+    writeDebugDemoSession(unchanged)
+    return unchanged
   }
   const next: DebugDemoSession = {
     active: true,
@@ -143,14 +150,20 @@ function clampBarDimension(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), max)
 }
 
-export function clampDebugDemoBarSize(size: DebugDemoBarSize): DebugDemoBarSize {
+export function clampDebugDemoBarSize(
+  size: DebugDemoBarSize,
+): DebugDemoBarSize {
   const maxWidth = Math.min(
     DEBUG_DEMO_BAR_MAX_SIZE.width,
-    typeof window !== 'undefined' ? window.innerWidth * 0.92 : DEBUG_DEMO_BAR_MAX_SIZE.width,
+    typeof window !== 'undefined'
+      ? window.innerWidth * 0.92
+      : DEBUG_DEMO_BAR_MAX_SIZE.width,
   )
   const maxHeight = Math.min(
     DEBUG_DEMO_BAR_MAX_SIZE.height,
-    typeof window !== 'undefined' ? window.innerHeight * 0.88 : DEBUG_DEMO_BAR_MAX_SIZE.height,
+    typeof window !== 'undefined'
+      ? window.innerHeight * 0.88
+      : DEBUG_DEMO_BAR_MAX_SIZE.height,
   )
   return {
     width: clampBarDimension(

@@ -3,7 +3,6 @@ import { z } from 'zod'
 import { WizardLayout } from '@/components/global/shared/WizardLayout'
 import {
   OrganizationSetupProgress,
-  type OrganizationSetupPhase,
   type OrganizationSetupProgressState,
 } from '@/components/pages/organizations/$orgId/billing/change-plan/OrganizationSetupProgress'
 import { pageTitle } from '@/lib/utils/page-title'
@@ -17,6 +16,10 @@ const orgSetupPreviewSearchSchema = z.object({
   activation: z.boolean().optional(),
 })
 
+export type OrgSetupPreviewPhase = NonNullable<
+  z.infer<typeof orgSetupPreviewSearchSchema>['phase']
+>
+
 export const Route = createFileRoute('/_public/debug/org-setup-preview')({
   validateSearch: orgSetupPreviewSearchSchema,
   head: () => ({ meta: [{ title: pageTitle('Org setup preview') }] }),
@@ -28,7 +31,7 @@ function OrgSetupPreviewPage() {
 
   const progress: OrganizationSetupProgressState = {
     mode: search.mode ?? 'create',
-    phase: (search.phase ?? 'activating') as OrganizationSetupPhase,
+    phase: search.phase ?? 'activating',
     organizationName: 'Acme Inc.',
     planLabel: 'Pro',
     showPaymentStep: search.payment ?? true,
