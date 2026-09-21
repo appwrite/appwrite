@@ -27,7 +27,7 @@ $secretKeyValue = htmlspecialchars((string) $defaultSecretKey, ENT_QUOTES, 'UTF-
 
             <div class="input-row">
                 <div class="input-group stack-xs">
-                    <label for="secret-key" class="label-text typography-text-m-500 text-neutral-secondary">Secret key</label>
+                    <label for="secret-key" class="label-text typography-text-xs-500 text-neutral-secondary">Secret key</label>
                     <div class="input-action">
                         <input
                             type="text"
@@ -37,6 +37,11 @@ $secretKeyValue = htmlspecialchars((string) $defaultSecretKey, ENT_QUOTES, 'UTF-
                             value="<?php echo $secretKeyValue; ?>"
                             minlength="1"
                             maxlength="64"
+                            autocomplete="off"
+                            data-1p-ignore
+                            data-lpignore="true"
+                            data-bwignore
+                            data-form-type="other"
                         >
                         <div class="input-action-buttons">
                             <span class="tooltip-wrapper" data-tooltip-default="Copy" data-tooltip-success="Copied">

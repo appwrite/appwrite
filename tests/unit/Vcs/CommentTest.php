@@ -97,7 +97,6 @@ final class CommentTest extends TestCase
 
         $this->assertNotNull($newTip);
         $this->assertNotSame('Old tip that should be ignored', $newTip);
-        $this->assertContains($newTip, $this->getTips());
     }
 
     public function testParseOldStateFormatWithOnlyBuilds(): void
@@ -129,12 +128,44 @@ final class CommentTest extends TestCase
 
         $this->assertNotNull($firstTip);
         $this->assertNotEmpty($firstTip);
-        $this->assertContains($firstTip, $this->getTips());
 
         $second = $comment->generateComment();
         $secondTip = $this->extractTip($second);
 
         $this->assertSame($firstTip, $secondTip);
+    }
+
+    public function testSiteStatusImagesMatchExistingFiles(): void
+    {
+        $extensions = [
+            'waiting' => 'status-waiting-%s.png',
+            'processing' => 'status-building-%s.gif',
+            'building' => 'status-building-%s.gif',
+            'ready' => 'status-ready-%s.png',
+            'failed' => 'status-failed-%s.png',
+        ];
+
+        foreach ($extensions as $status => $file) {
+            $comment = new Comment(['consoleHostname' => 'localhost']);
+            $comment->addBuild(
+                new Document(['$id' => 'project1', 'name' => 'Test Project', 'region' => 'default']),
+                new Document(['$id' => 'site1', 'name' => 'Test Site']),
+                'site',
+                $status,
+                'dep1',
+                ['type' => 'logs'],
+                'https://example.appwrite.network'
+            );
+
+            $generated = $comment->generateComment();
+
+            foreach (['light', 'dark'] as $scheme) {
+                $path = \sprintf($file, $scheme);
+
+                $this->assertStringContainsString('/images/vcs/' . $path, $generated);
+                $this->assertFileExists(__DIR__ . '/../../../public/images/vcs/' . $path);
+            }
+        }
     }
 
     private function extractTip(string $comment): ?string
@@ -144,13 +175,5 @@ final class CommentTest extends TestCase
         }
 
         return null;
-    }
-
-    private function getTips(): array
-    {
-        $reflection = new \ReflectionClass(Comment::class);
-        $property = $reflection->getProperty('tips');
-
-        return $property->getValue(new Comment(['consoleHostname' => 'localhost']));
     }
 }

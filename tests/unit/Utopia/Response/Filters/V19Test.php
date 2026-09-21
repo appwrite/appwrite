@@ -209,37 +209,6 @@ final class V19Test extends TestCase
         $this->assertEquals($expected, $result);
     }
 
-    public static function projectProvider(): \Iterator
-    {
-        yield 'remove devKeys field' => [
-            [
-                'devKeys' => ['key1', 'key2'],
-                'name' => 'test-project',
-            ],
-            [
-                'name' => 'test-project',
-            ]
-        ];
-        yield 'handle content without devKeys' => [
-            [
-                'name' => 'test-project',
-            ],
-            [
-                'name' => 'test-project',
-            ]
-        ];
-    }
-
-    #[DataProvider('projectProvider')]
-    public function testProject(array $content, array $expected): void
-    {
-        $model = Response::MODEL_PROJECT;
-
-        $result = $this->filter->parse($content, $model);
-
-        $this->assertEquals($expected, $result);
-    }
-
     public static function providerRepositoryProvider(): \Iterator
     {
         yield 'remove runtime field' => [
@@ -296,75 +265,6 @@ final class V19Test extends TestCase
     public function testTemplateVariable(array $content, array $expected): void
     {
         $model = Response::MODEL_TEMPLATE_VARIABLE;
-
-        $result = $this->filter->parse($content, $model);
-
-        $this->assertEquals($expected, $result);
-    }
-
-    public static function usageFunctionProvider(): \Iterator
-    {
-        yield 'remove build-related fields' => [
-            [
-                'buildsSuccessTotal' => 10,
-                'buildsFailedTotal' => 2,
-                'buildsTimeAverage' => 30,
-                'buildsSuccess' => 5,
-                'buildsFailed' => 1,
-                'executions' => 100,
-            ],
-            [
-                'executions' => 100,
-            ]
-        ];
-        yield 'handle content without build fields' => [
-            [
-                'executions' => 100,
-            ],
-            [
-                'executions' => 100,
-            ]
-        ];
-    }
-
-    #[DataProvider('usageFunctionProvider')]
-    public function testUsageFunction(array $content, array $expected): void
-    {
-        $model = Response::MODEL_USAGE_FUNCTION;
-
-        $result = $this->filter->parse($content, $model);
-
-        $this->assertEquals($expected, $result);
-    }
-
-    public static function usageFunctionsProvider(): \Iterator
-    {
-        yield 'remove build-related fields' => [
-            [
-                'buildsSuccessTotal' => 20,
-                'buildsFailedTotal' => 4,
-                'buildsSuccess' => 10,
-                'buildsFailed' => 2,
-                'executions' => 200,
-            ],
-            [
-                'executions' => 200,
-            ]
-        ];
-        yield 'handle content without build fields' => [
-            [
-                'executions' => 200,
-            ],
-            [
-                'executions' => 200,
-            ]
-        ];
-    }
-
-    #[DataProvider('usageFunctionsProvider')]
-    public function testUsageFunctions(array $content, array $expected): void
-    {
-        $model = Response::MODEL_USAGE_FUNCTIONS;
 
         $result = $this->filter->parse($content, $model);
 

@@ -58,7 +58,7 @@ class Update extends LongtextUpdate
             ->param('tableId', '', new UID(), 'Table ID. You can create a new table using the Database service [server integration](https://appwrite.io/docs/references/cloud/server-dart/tablesDB#createTable).')
             ->param('key', '', new Key(), 'Column Key.')
             ->param('required', null, new Boolean(), 'Is column required?')
-            ->param('default', null, new Nullable(new Text(0, 0)), 'Default value for column when not provided. Cannot be set when column is required.')
+            ->param('default', null, new Nullable(new Text(0, 0)), 'Default value for column when not provided. Cannot be set when column is required.', example: 'Hello World')
             ->param('newKey', null, new Nullable(new Key()), 'New Column Key.', true)
             ->inject('response')
             ->inject('dbForProject')

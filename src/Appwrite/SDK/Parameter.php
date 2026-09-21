@@ -9,16 +9,18 @@ class Parameter
     /**
      * @param string $name
      * @param string $description
-     * @param mixed|null $default
+     * @param mixed $default Explicit null overrides a route default with null; leave unset for no override
      * @param Validator|callable|null $validator
-     * @param bool $optional
+     * @param bool|Undefined $optional Leave unset for no override
+     * @param bool $hide Omit this parameter from the generated specification while keeping it accepted at runtime
      */
     public function __construct(
         protected string $name,
         protected string $description = '',
-        protected mixed $default = null,
+        protected mixed $default = Undefined::Value,
         protected mixed $validator = null,
-        protected bool $optional = false,
+        protected bool|Undefined $optional = Undefined::Value,
+        protected bool $hide = false,
     ) {
     }
 
@@ -27,32 +29,19 @@ class Parameter
         return $this->name;
     }
 
-    public function setName(string $name): static
-    {
-        $this->name = $name;
-        return $this;
-    }
-
     public function getDescription(): string
     {
         return $this->description;
     }
 
-    public function setDescription(string $description): static
-    {
-        $this->description = $description;
-        return $this;
-    }
-
     public function getDefault(): mixed
     {
-        return $this->default;
+        return $this->default === Undefined::Value ? null : $this->default;
     }
 
-    public function setDefault(mixed $default): static
+    public function hasDefault(): bool
     {
-        $this->default = $default;
-        return $this;
+        return $this->default !== Undefined::Value;
     }
 
     public function getValidator(): mixed
@@ -60,20 +49,18 @@ class Parameter
         return $this->validator;
     }
 
-    public function setValidator(mixed $validator): static
-    {
-        $this->validator = $validator;
-        return $this;
-    }
-
     public function getOptional(): bool
     {
-        return $this->optional;
+        return $this->optional === Undefined::Value ? false : $this->optional;
     }
 
-    public function setOptional(bool $optional): static
+    public function hasOptional(): bool
     {
-        $this->optional = $optional;
-        return $this;
+        return $this->optional !== Undefined::Value;
+    }
+
+    public function getHide(): bool
+    {
+        return $this->hide;
     }
 }

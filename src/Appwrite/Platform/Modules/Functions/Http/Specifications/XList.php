@@ -47,7 +47,7 @@ class XList extends Base
                     )
                 ]
             ))
-            ->param('type', 'runtimes', new WhiteList(['runtimes', 'builds']), 'Specification type to list. Can be one of: runtimes, builds.', true)
+            ->param('type', 'runtimes', new WhiteList(['runtimes', 'builds']), 'Specification type to list. Can be one of: runtimes, builds. Defaults to runtimes.', true)
             ->inject('response')
             ->inject('plan')
             ->callback($this->action(...));
@@ -62,8 +62,8 @@ class XList extends Base
         foreach ($allSpecs as $spec) {
             $spec['enabled'] = true;
 
-            if (array_key_exists($planKey, $plan)) {
-                $spec['enabled'] = in_array($spec['slug'], $plan[$planKey]);
+            if (array_key_exists($planKey, $plan) && !in_array($spec['slug'], $plan[$planKey], true)) {
+                continue;
             }
 
             $maxCpus = System::getEnv('_APP_COMPUTE_CPUS', 0);

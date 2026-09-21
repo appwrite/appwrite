@@ -133,9 +133,23 @@ class Yammer extends OAuth2
      */
     public function isEmailVerified(string $accessToken): bool
     {
-        $email = $this->getUserEmail($accessToken);
+        // Provider exposes no email verification signal, so treat as unverified until one is confirmed
+        return false;
+    }
 
-        return !empty($email);
+    /**
+     * @param string $accessToken
+     *
+     * @return string
+     *
+     * @see https://learn.microsoft.com/en-us/connectors/yammer/ (Definitions → User → mugshot_url)
+     * @see https://pnp.github.io/cli-microsoft365/cmd/viva/engage/engage-user-get/
+     */
+    public function getUserPhoto(string $accessToken): string
+    {
+        $user = $this->getUser($accessToken);
+
+        return $user['mugshot_url'] ?? '';
     }
 
     /**

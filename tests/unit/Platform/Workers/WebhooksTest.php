@@ -6,7 +6,6 @@ namespace Tests\Unit\Platform\Workers;
 
 use Appwrite\Event\Publisher\Notification as NotificationPublisher;
 use Appwrite\Platform\Workers\Webhooks;
-use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Tests\Unit\Event\MockPublisher;
 use Utopia\Cache\Adapter\None as NoCache;
@@ -50,6 +49,7 @@ final class WebhooksTest extends TestCase
             ]),
             dbForPlatform: $database,
             publisherForNotifications: $publisherForNotifications,
+            platform: ['consoleUrl' => 'https://console.example.test'],
             plan: []
         );
 
@@ -69,7 +69,7 @@ final class WebhooksTest extends TestCase
         );
         $this->assertStringContainsString('Payments', (string) $payload['body']);
         $this->assertStringContainsString('Ada Lovelace', (string) $payload['body']);
-        $this->assertStringContainsString('/projects/project-1/settings/webhooks', (string) $payload['body']);
+        $this->assertStringContainsString('https://console.example.test/projects/project-1/settings/webhooks', (string) $payload['body']);
         $this->assertStringNotContainsString('{{', (string) $payload['body']);
         $this->assertSame(APP_NAME, $payload['variables']['platform']);
         $this->assertSame(APP_EMAIL_LOGO_URL, $payload['variables']['logoUrl']);
@@ -135,6 +135,7 @@ final class WebhooksTest extends TestCase
             ]),
             dbForPlatform: $database,
             publisherForNotifications: $publisherForNotifications,
+            platform: ['consoleUrl' => 'https://console.example.test'],
             plan: []
         );
 
@@ -187,6 +188,7 @@ final class WebhooksTest extends TestCase
                 project: $project,
                 dbForPlatform: $database,
                 publisherForNotifications: $publisherForNotifications,
+                platform: ['consoleUrl' => 'https://console.example.test'],
                 plan: []
             );
         }
@@ -196,31 +198,6 @@ final class WebhooksTest extends TestCase
         $this->assertCount(2, $events);
         $this->assertSame('webhook:webhook-1:paused:2026-01-01T00:00:00.000+00:00', $events[0]['deduplicationKey']);
         $this->assertSame('webhook:webhook-1:paused:2026-01-02T00:00:00.000+00:00', $events[1]['deduplicationKey']);
-    }
-
-    #[DataProvider('ownerRoleProvider')]
-    public function testOwnerRoleDetectionAcceptsArrayAndCommaStringRoles(mixed $roles, bool $expected): void
-    {
-        $method = new \ReflectionMethod(Webhooks::class, 'hasOwnerRole');
-        $membership = new Document([
-            '$id' => 'membership-1',
-            'roles' => $roles,
-        ]);
-
-        $this->assertSame($expected, $method->invoke(null, $membership));
-    }
-
-    public static function ownerRoleProvider(): \Iterator
-    {
-        yield 'array owner' => [['owner'], true];
-        yield 'array mixed case owner' => [['Owner'], true];
-        yield 'comma string owner' => ['developer, owner', true];
-        yield 'project-scoped owner string not recognized' => [['project-project-1-owner'], false];
-        yield 'mixed case project-scoped owner string not recognized' => [['Project-Project-1-Owner'], false];
-        yield 'comma string project-scoped owner not recognized' => ['developer, project-project-1-owner', false];
-        yield 'other project owner' => [['project-project-2-owner'], false];
-        yield 'non owner' => [['developer'], false];
-        yield 'invalid roles' => [null, false];
     }
 
     private function createPlatformDatabase(): Database

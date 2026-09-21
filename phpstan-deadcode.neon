@@ -1,0 +1,89 @@
+# Dead code detection: unused methods, constants and enum cases.
+#
+#   composer dead-code
+#
+# Anything listed under ignoreErrors is dead as far as this repository can see,
+# but must not be removed -- each group explains why. Appwrite is the base
+# server for appwrite/cloud, so a symbol unused here may still be consumed
+# there; check that repository before deleting anything this reports.
+includes:
+    - vendor/shipmonk/dead-code-detector/rules.neon
+
+parameters:
+    level: 0
+    tmpDir: .phpstan-cache-deadcode
+    bootstrapFiles:
+        - app/init/constants.php
+    scanDirectories:
+        - vendor/swoole/ide-helper
+    paths:
+        - src
+        - app
+        - bin
+        - tests
+    excludePaths:
+        - tests/resources
+    ignoreErrors:
+        # Referenced in appwrite/cloud.
+        # Test helpers: appwrite/cloud's e2e suites extend these traits.
+        - '#^Unused Tests\\E2E\\Services\\Functions\\FunctionsBase::getExecution$#'
+        - '#^Unused Tests\\E2E\\Services\\Functions\\FunctionsBase::listExecutions$#'
+        - '#^Unused Tests\\E2E\\Services\\Sites\\SitesBase::listLogs$#'
+        - '#^Unused Appwrite\\Auth\\MFA\\Challenge::challenge$#'
+        - '#^Unused Appwrite\\Auth\\MFA\\Challenge::verify$#'
+        - '#^Unused Appwrite\\Certificates\\Adapter::getCertificateStatus$#'
+        - '#^Unused Appwrite\\Certificates\\LetsEncrypt::getCertificateStatus$#'
+        - '#^Unused Appwrite\\Event\\Certificate::getAction$#'
+        - '#^Unused Appwrite\\Event\\Certificate::getDomain$#'
+        - '#^Unused Appwrite\\Event\\Database::getDatabase$#'
+        - '#^Unused Appwrite\\Event\\Database::setDatabase$#'
+        - '#^Unused Appwrite\\Event\\Database::setTable$#'
+        - '#^Unused Appwrite\\Event\\Event::setPaused$#'
+        - '#^Unused Appwrite\\Event\\Event::setPlatform$#'
+        - '#^Unused Appwrite\\Event\\Message\\Audit::fromArray$#'
+        - '#^Unused Appwrite\\Event\\Message\\Base::fromArray$#'
+        - '#^Unused Appwrite\\Event\\Message\\Build::fromArray$#'
+        - '#^Unused Appwrite\\Event\\Message\\Execution::fromArray$#'
+        - '#^Unused Appwrite\\Event\\Message\\Executions::fromArray$#'
+        - '#^Unused Appwrite\\Event\\Message\\Mail::fromArray$#'
+        - '#^Unused Appwrite\\Event\\Message\\Messaging::fromArray$#'
+        - '#^Unused Appwrite\\Event\\Message\\StatsResources::fromArray$#'
+        - '#^Unused Appwrite\\Event\\Message\\Usage::fromArray$#'
+        - '#^Unused Appwrite\\Event\\Publisher\\Execution::enqueue$#'
+        - '#^Unused Appwrite\\Event\\Publisher\\Execution::getSize$#'
+        - '#^Unused Appwrite\\Event\\Publisher\\StatsResources::enqueue$#'
+        - '#^Unused Appwrite\\Filter\\Filter::apply$#'
+        - '#^Unused Appwrite\\GraphQL\\Resolvers::document$#'
+        - '#^Unused Appwrite\\GraphQL\\Schema::collections$#'
+        - '#^Unused Appwrite\\Messaging\\Adapter::subscribe$#'
+        - '#^Unused Appwrite\\Platform\\Action::disableSubqueries$#'
+        - '#^Unused Appwrite\\Platform\\Action::dump$#'
+        - '#^Unused Appwrite\\Platform\\Action::foreachDocument$#'
+        - '#^Unused Appwrite\\Platform\\Modules\\Databases\\Http\\Databases\\Collections\\Documents\\Action::getResourceId$#'
+        - '#^Unused Appwrite\\Promises\\Promise::all$#'
+        - '#^Unused Appwrite\\SDK\\Specification\\Format::getServices$#'
+        - '#^Unused Appwrite\\Usage\\Context::getResourceId$#'
+        - '#^Unused Appwrite\\Usage\\Context::getResourcePath$#'
+        - '#^Unused Appwrite\\Usage\\Context::getService$#'
+        - '#^Unused Appwrite\\Usage\\Context::setResourceId$#'
+        - '#^Unused Appwrite\\Usage\\Context::setService$#'
+        - '#^Unused Appwrite\\Utopia\\Fetch\\BodyMultipart::getPart$#'
+        - '#^Unused Appwrite\\Utopia\\Messaging\\Messages\\Console::getTo$#'
+        - '#^Unused Appwrite\\Utopia\\Messaging\\Messages\\Webhook::getTo$#'
+        - '#^Unused Executor\\Executor::flatten$#'
+        - '#^Unused Executor\\Executor::parseCookie$#'
+
+        # Abstract or interface declaration whose implementations are live.
+        - '#^Unused Appwrite\\Messaging\\Adapter::unsubscribe$#'
+        - '#^Unused Appwrite\\Platform\\Modules\\Databases\\Http\\Databases\\Collections\\Action::getResponseModel$#'
+        - '#^Unused Appwrite\\Platform\\Modules\\Databases\\Http\\Databases\\Collections\\Attributes\\Action::getResponseModel$#'
+        - '#^Unused Appwrite\\Platform\\Modules\\Databases\\Http\\Databases\\Collections\\Documents\\Action::getResponseModel$#'
+        - '#^Unused Appwrite\\Platform\\Modules\\Databases\\Http\\Databases\\Collections\\Indexes\\Action::getResponseModel$#'
+        - '#^Unused Tests\\E2E\\Scopes\\Scope::getHeaders$#'
+
+        # Implements an abstract parent -- removing it would leave the class incomplete.
+        - '#^Unused Appwrite\\Platform\\Modules\\Databases\\Http\\Databases\\Collections\\Attributes\\Delete::getResponseModel$#'
+        - '#^Unused Appwrite\\Platform\\Modules\\Databases\\Http\\Embeddings\\Text\\Create::getResponseModel$#'
+
+        # Called from a .phtml view, which PHPStan does not analyse.
+        - '#^Unused Appwrite\\Extend\\Exception::getCTAs$#'

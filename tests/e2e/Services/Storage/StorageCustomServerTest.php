@@ -4,14 +4,20 @@ declare(strict_types=1);
 
 namespace Tests\E2E\Services\Storage;
 
+use Appwrite\Extend\Exception;
+use CURLFile;
+use PHPUnit\Framework\Attributes\Group;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
+use Utopia\Database\Helpers\Permission;
+use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
+use Utopia\System\System;
 
 final class StorageCustomServerTest extends Scope
 {
@@ -48,6 +54,85 @@ final class StorageCustomServerTest extends Scope
         self::$cachedBucket[$cacheKey] = ['bucketId' => $bucket['body']['$id']];
 
         return self::$cachedBucket[$cacheKey];
+    }
+
+    public function testGetFilePreviewWithAutomaticGravity(): void
+    {
+        $bucketId = $this->setupBucket()['bucketId'];
+        $source = \tempnam(\sys_get_temp_dir(), 'appwrite-autogravity-');
+        if ($source === false) {
+            $this->fail('Failed to create a temporary image');
+        }
+        $subject = new \Imagick(__DIR__ . '/../../../resources/disk-a/kitten-1.jpg');
+        $subject->resizeImage(900, 0, \Imagick::FILTER_LANCZOS, 1);
+        $canvas = new \Imagick();
+        $canvas->newImage(2400, 1920, 'white', 'png');
+        $canvas->compositeImage($subject, \Imagick::COMPOSITE_OVER, 1450, 0);
+        $canvas->writeImage($source);
+
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => ID::unique(),
+            'file' => new CURLFile($source, 'image/png', 'autogravity.png'),
+        ]);
+        \unlink($source);
+
+        $this->assertEquals(201, $file['headers']['status-code']);
+
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+        $params = [
+            'width' => 120,
+            'height' => 320,
+            'gravity' => 'auto',
+            'output' => 'png',
+        ];
+        $path = '/storage/buckets/' . $bucketId . '/files/' . $file['body']['$id'] . '/preview';
+
+        $preview = $this->client->call(Client::METHOD_GET, $path, $headers, $params);
+
+        if (System::getEnv('_APP_AUTOGRAVITY_HOST', '') === '') {
+            $this->assertEquals(400, $preview['headers']['status-code']);
+            $this->assertSame(Exception::GENERAL_ARGUMENT_INVALID, $preview['body']['type']);
+            $this->assertSame(
+                'Autogravity needs to be configured with _APP_AUTOGRAVITY_HOST to use automatic gravity',
+                $preview['body']['message']
+            );
+
+            return;
+        }
+
+        $this->assertEquals(200, $preview['headers']['status-code']);
+        $this->assertEquals('image/png', $preview['headers']['content-type']);
+        $this->assertEquals('miss', $preview['headers']['x-appwrite-cache']);
+        $this->assertNotEmpty($preview['body']);
+
+        $image = new \Imagick();
+        $image->readImageBlob($preview['body']);
+        $this->assertSame(120, $image->getImageWidth());
+        $this->assertSame(320, $image->getImageHeight());
+
+        $center = $this->client->call(Client::METHOD_GET, $path, $headers, [...$params, 'gravity' => 'center']);
+        $centerImage = new \Imagick();
+        $centerImage->readImageBlob($center['body']);
+        $this->assertNotSame($centerImage->getImageSignature(), $image->getImageSignature());
+
+        $cached = [];
+        $this->assertEventually(function () use (&$cached, $path, $headers, $params, $image): void {
+            $cached = $this->client->call(Client::METHOD_GET, $path, $headers, $params);
+
+            $this->assertSame('hit', $cached['headers']['x-appwrite-cache']);
+            $cachedImage = new \Imagick();
+            $cachedImage->readImageBlob($cached['body']);
+            $this->assertSame($image->getImageSignature(), $cachedImage->getImageSignature());
+        });
+
+        $this->assertEquals(200, $cached['headers']['status-code']);
+        $this->assertEquals('image/png', $cached['headers']['content-type']);
     }
 
     public function testCreateBucket(): void
@@ -364,5 +449,92 @@ final class StorageCustomServerTest extends Scope
             )
         );
         $this->assertEquals(404, $response['headers']['status-code']);
+    }
+
+    /**
+     * Regression for chunked uploads under the antivirus size limit.
+     *
+     * Requires ClamAV (compose profile `antivirus`) and
+     * `_APP_STORAGE_ANTIVIRUS=enabled`. File must be >5MB (chunked) and
+     * ≤20MB (`APP_LIMIT_ANTIVIRUS`) so the last chunk triggers a scan.
+     */
+    #[Group('antivirus')]
+    public function testCreateBucketFileChunkedUploadWithAntivirus(): void
+    {
+        if (System::getEnv('_APP_STORAGE_ANTIVIRUS', 'disabled') === 'disabled') {
+            $this->markTestSkipped('Antivirus is disabled.');
+        }
+
+        $health = $this->client->call(Client::METHOD_GET, '/health/anti-virus', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $health['headers']['status-code']);
+        $this->assertEquals('pass', $health['body']['status'], 'ClamAV must be reachable when antivirus is enabled.');
+
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'bucketId' => ID::unique(),
+            'name' => 'Antivirus Chunked Upload Bucket',
+            'fileSecurity' => true,
+            'antivirus' => true,
+            'permissions' => [
+                Permission::create(Role::any()),
+                Permission::read(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $bucket['headers']['status-code']);
+
+        $source = __DIR__ . '/../../../resources/functions/large/blue.mp4';
+        $totalSize = \filesize($source);
+        $this->assertGreaterThan(5 * 1024 * 1024, $totalSize, 'Fixture must be large enough to chunk.');
+        $this->assertLessThanOrEqual(20_000_000, $totalSize, 'Fixture must stay under APP_LIMIT_ANTIVIRUS.');
+
+        $chunkSize = 5 * 1024 * 1024;
+        $handle = \fopen($source, 'rb');
+        $this->assertNotFalse($handle);
+
+        $fileId = 'unique()';
+        $mimeType = \mime_content_type($source);
+        $counter = 0;
+        $id = '';
+        $file = null;
+        $headers = [
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ];
+
+        while (!\feof($handle)) {
+            $curlFile = new CURLFile(
+                'data://' . $mimeType . ';base64,' . \base64_encode(\fread($handle, $chunkSize)),
+                $mimeType,
+                'blue.mp4'
+            );
+            $headers['content-range'] = 'bytes ' . ($counter * $chunkSize) . '-' . \min(((($counter * $chunkSize) + $chunkSize) - 1), $totalSize - 1) . '/' . $totalSize;
+            if (!empty($id)) {
+                $headers['x-appwrite-id'] = $id;
+            }
+
+            $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucket['body']['$id'] . '/files', \array_merge($headers, $this->getHeaders()), [
+                'fileId' => $fileId,
+                'file' => $curlFile,
+                'permissions' => [
+                    Permission::read(Role::any()),
+                ],
+            ]);
+            $counter++;
+            $id = $file['body']['$id'] ?? $id;
+        }
+        \fclose($handle);
+
+        $this->assertEquals(201, $file['headers']['status-code']);
+        $this->assertNotEmpty($file['body']['$id']);
+        $this->assertEquals('blue.mp4', $file['body']['name']);
+        $this->assertEquals($totalSize, $file['body']['sizeOriginal']);
+        $this->assertEquals($file['body']['chunksTotal'], $file['body']['chunksUploaded']);
+        $this->assertNotEmpty($file['body']['mimeType']);
     }
 }

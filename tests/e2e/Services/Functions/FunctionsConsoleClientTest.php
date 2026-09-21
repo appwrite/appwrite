@@ -8,6 +8,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideConsole;
+use Utopia\Command;
 use Utopia\Console;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
@@ -244,6 +245,20 @@ final class FunctionsConsoleClientTest extends Scope
 
         $this->assertEquals(400, $variable['headers']['status-code']);
 
+        // Test for a key that is not a valid env var name
+        foreach (['9KEY', 'MY KEY', 'MY-KEY', "TRAILING_TAB\t", "A\x00C\x00M\x00E"] as $invalidKey) {
+            $variable = $this->createVariable(
+                $functionId,
+                [
+                    'variableId' => ID::unique(),
+                    'key' => $invalidKey,
+                    'value' => 'TESTINGVALUE'
+                ]
+            );
+
+            $this->assertEquals(400, $variable['headers']['status-code'], 'Key ' . json_encode($invalidKey) . ' should be refused');
+        }
+
         // Test for invalid value
         $variable = $this->createVariable(
             $functionId,
@@ -281,6 +296,17 @@ final class FunctionsConsoleClientTest extends Scope
         /**
          * Test for FAILURE
          */
+        $response = $this->client->call(Client::METHOD_GET, '/functions/' . $data['functionId'] . '/variables', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::search('key', 'APP_TEST')->toString(),
+            ],
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertSame('general_query_invalid', $response['body']['type']);
     }
 
     public function testListVariablesWithLimit(): void
@@ -899,7 +925,7 @@ final class FunctionsConsoleClientTest extends Scope
 
         $response = $this->getDeploymentDownload($functionId, $deploymentId, 'output');
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals('application/gzip', $response['headers']['content-type']);
+        $this->assertEquals('application/octet-stream', $response['headers']['content-type']);
         $this->assertGreaterThan(0, $response['headers']['content-length']);
         $this->assertGreaterThan(0, \strlen($response['body']));
 
@@ -941,12 +967,20 @@ final class FunctionsConsoleClientTest extends Scope
 
         $stdout = '';
         $stderr = '';
-        $code = Console::execute("docker exec appwrite task-time-travel --projectId={$this->getProject()['$id']} --resourceType=deployment --resourceId={$deploymentIdInactiveOld} --createdAt=2020-01-01T00:00:00Z", '', $stdout, $stderr);
+        $timeTravel = (new Command('docker'))
+            ->argument('exec')
+            ->argument('appwrite')
+            ->argument('task-time-travel')
+            ->argument('--projectId=' . $this->getProject()['$id'])
+            ->argument('--resourceType=deployment')
+            ->argument('--resourceId=' . $deploymentIdInactiveOld)
+            ->argument('--createdAt=2020-01-01T00:00:00Z');
+        $code = Console::execute($timeTravel, '', $stdout, $stderr);
         $this->assertSame(0, $code, "Time-travel command failed with code $code: $stderr ($stdout)");
 
         $stdout = '';
         $stderr = '';
-        $code = Console::execute("docker exec appwrite maintenance --type=trigger", '', $stdout, $stderr);
+        $code = Console::execute((new Command('docker'))->argument('exec')->argument('appwrite')->argument('maintenance')->argument('--type=trigger'), '', $stdout, $stderr);
         $this->assertSame(0, $code, "Maintenance command failed with code $code: $stderr ($stdout)");
 
         $this->assertEventually(function () use ($functionId) {

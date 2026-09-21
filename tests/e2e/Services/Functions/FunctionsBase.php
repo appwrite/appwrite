@@ -6,6 +6,7 @@ use Appwrite\Tests\Async;
 use Appwrite\Tests\Async\Exceptions\Critical;
 use CURLFile;
 use Tests\E2E\Client;
+use Utopia\Command;
 use Utopia\Console;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
@@ -119,6 +120,24 @@ trait FunctionsBase
                 }
 
                 $this->assertEquals($deploymentId, $function['body']['deploymentId'] ?? '', 'Deployment is not activated, deployment: ' . json_encode($function['body'], JSON_PRETTY_PRINT));
+
+                $rules = $this->client->call(Client::METHOD_GET, '/proxy/rules', [
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                    'x-appwrite-key' => $this->getProject()['apiKey'],
+                ], [
+                    'queries' => [
+                        Query::equal('deploymentResourceId', [$functionId])->toString(),
+                        Query::equal('trigger', ['manual'])->toString(),
+                        Query::equal('type', ['deployment'])->toString(),
+                        Query::equal('deploymentVcsProviderBranch', [''])->toString(),
+                    ],
+                ]);
+
+                $this->assertSame(200, $rules['headers']['status-code'], 'Failed to list function domains: ' . json_encode($rules['body'], JSON_PRETTY_PRINT));
+                foreach ($rules['body']['rules'] as $rule) {
+                    $this->assertSame($deploymentId, $rule['deploymentId'] ?? '', 'Function domain is not activated, rule: ' . json_encode($rule, JSON_PRETTY_PRINT));
+                }
             }, 120000, 500);
         }
 
@@ -177,46 +196,6 @@ trait FunctionsBase
         return $variable;
     }
 
-    protected function getVariable(string $functionId, string $variableId): mixed
-    {
-        $variable = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/variables/' . $variableId, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
-
-        return $variable;
-    }
-
-    protected function updateVariable(string $functionId, string $variableId, mixed $params): mixed
-    {
-        $variable = $this->client->call(Client::METHOD_PUT, '/functions/' . $functionId . '/variables/' . $variableId, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), $params);
-
-        return $variable;
-    }
-
-    protected function listVariables(string $functionId, mixed $params = []): mixed
-    {
-        $variables = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/variables', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), $params);
-
-        return $variables;
-    }
-
-    protected function deleteVariable(string $functionId, string $variableId): mixed
-    {
-        $variable = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId . '/variables/' . $variableId, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
-
-        return $variable;
-    }
-
     protected function getFunction(string $functionId): mixed
     {
         $function = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId, array_merge([
@@ -247,6 +226,16 @@ trait FunctionsBase
         return $execution;
     }
 
+    protected function listExecutions(string $functionId, mixed $params = []): mixed
+    {
+        $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), $params);
+
+        return $executions;
+    }
+
     protected function listFunctions(mixed $params = []): mixed
     {
         $functions = $this->client->call(Client::METHOD_GET, '/functions', array_merge([
@@ -267,28 +256,31 @@ trait FunctionsBase
         return $deployments;
     }
 
-    protected function listExecutions(string $functionId, mixed $params = []): mixed
-    {
-        $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), $params);
-
-        return $executions;
-    }
-
     protected function packageFunction(string $function): CURLFile
     {
         $folderPath = realpath(__DIR__ . '/../../../resources/functions') . "/$function";
-        $tarPath = "$folderPath/code.tar.gz";
+        $tarPath = \sys_get_temp_dir() . '/appwrite-function-' . $function . '-' . \getmypid() . '-' . \uniqid('', true) . '.tar.gz';
 
-        Console::execute("cd $folderPath && tar --exclude code.tar.gz --exclude node_modules -czf code.tar.gz .", '', $this->stdout, $this->stderr);
+        $tar = (new Command('tar'))
+            ->option('--exclude', 'code.tar.gz')
+            ->option('--exclude', 'node_modules')
+            ->flag('-czf')
+            ->argument($tarPath)
+            ->option('-C', $folderPath)
+            ->argument('.');
+        Console::execute($tar, '', $this->stdout, $this->stderr);
 
         if (filesize($tarPath) > 1024 * 1024 * 5) {
             throw new \Exception('Code package is too large. Use the chunked upload method instead.');
         }
 
-        return new CURLFile($tarPath, 'application/x-gzip', \basename($tarPath));
+        register_shutdown_function(static function () use ($tarPath) {
+            if (\is_file($tarPath)) {
+                @\unlink($tarPath);
+            }
+        });
+
+        return new CURLFile($tarPath, 'application/x-gzip', 'code.tar.gz');
     }
 
     protected function createDeployment(string $functionId, mixed $params = []): mixed
@@ -429,27 +421,6 @@ trait FunctionsBase
         return $response;
     }
 
-    protected function setupDuplicateDeployment(string $functionId, string $deploymentId): string
-    {
-        $deployment = $this->createDuplicateDeployment($functionId, $deploymentId);
-        $this->assertEquals(202, $deployment['headers']['status-code']);
-
-        $deploymentId = $deployment['body']['$id'];
-        $this->assertNotEmpty($deploymentId);
-
-        $this->assertEventually(function () use ($functionId, $deploymentId) {
-            $deployment = $this->getDeployment($functionId, $deploymentId);
-            $this->assertEquals('ready', $deployment['body']['status'], 'Deployment status is not ready, deployment: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
-        }, 100000, 500);
-
-        $this->assertEventually(function () use ($functionId, $deploymentId) {
-            $function = $this->getFunction($functionId);
-            $this->assertEquals($deploymentId, $function['body']['deploymentId'], 'Deployment is not activated, deployment: ' . json_encode($function['body'], JSON_PRETTY_PRINT));
-        }, 100000, 500);
-
-        return $deploymentId;
-    }
-
     protected function createDuplicateDeployment(string $functionId, string $deploymentId): mixed
     {
         $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments/duplicate', array_merge([
@@ -491,5 +462,14 @@ trait FunctionsBase
         ], $this->getHeaders()), $params);
 
         return $specifications;
+    }
+
+    protected function getEnabledSpecification(array $specifications): string
+    {
+        $specification = array_find($specifications, fn (array $specification) => $specification['enabled']);
+
+        $this->assertNotNull($specification, 'Expected at least one enabled specification.');
+
+        return $specification['slug'];
     }
 }

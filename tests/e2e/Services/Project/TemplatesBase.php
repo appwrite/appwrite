@@ -43,6 +43,7 @@ trait TemplatesBase
             'mfaChallenge',
             'sessionAlert',
             'otpSession',
+            'otpVerification',
         ];
 
         foreach ($types as $type) {
@@ -1088,7 +1089,6 @@ trait TemplatesBase
                 'origin' => 'http://localhost',
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-dev-key' => $this->getProject()['devKey'] ?? '',
             ], [
                 'userId' => ID::unique(),
                 'email' => $email,
@@ -1283,6 +1283,7 @@ trait TemplatesBase
             'mfaChallenge',
             'sessionAlert',
             'otpSession',
+            'otpVerification',
         ];
 
         foreach ($types as $type) {

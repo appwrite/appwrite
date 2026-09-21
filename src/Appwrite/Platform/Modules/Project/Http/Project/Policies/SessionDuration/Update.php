@@ -50,7 +50,7 @@ class Update extends Action
                     )
                 ],
             ))
-            ->param('duration', null, new Range(5, 31536000), 'Maximum session length in seconds. Minium allowed value is 5 second, and maximum is 1 year, which is 31536000 seconds.')
+            ->param('duration', null, new Range(60, 31536000), 'Maximum session length in seconds. Minium allowed value is 60 seconds, and maximum is 1 year, which is 31536000 seconds.')
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('project')

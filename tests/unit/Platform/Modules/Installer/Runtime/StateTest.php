@@ -536,8 +536,9 @@ final class StateTest extends TestCase
 
     public function testIsValidAppDomainInputWithEmptyPort(): void
     {
-        // "host:" splits to ['host', ''] - empty port with null check
-        $this->assertTrue($this->state->isValidAppDomainInput('localhost:'));
+        // Trailing colon with no digits is an explicit but empty port.
+        $this->assertFalse($this->state->isValidAppDomainInput('localhost:'));
+        $this->assertFalse($this->state->isValidAppDomainInput('example.com:'));
     }
 
     public function testIsValidAppDomainInputWithIpv4Address(): void

@@ -6,3 +6,7 @@ storage
 .cd .babelrc
 .DS_Store
 debug
+packages/*/tests
+packages/*/docs
+packages/*/docker-compose.yml
+packages/*/vendor

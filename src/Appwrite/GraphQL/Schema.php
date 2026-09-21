@@ -90,7 +90,7 @@ class Schema
         $queries = [];
         $mutations = [];
 
-        foreach ($utopia->getRoutes() as $routes) {
+        foreach ($utopia->getRoutes() as $httpMethod => $routes) {
             foreach ($routes as $route) {
                 /** @var Route $route */
 
@@ -109,8 +109,8 @@ class Schema
                     $methodName = $method->getMethodName();
                     $name = $namespace . \ucfirst($methodName);
 
-                    foreach (Mapper::route($utopia, $route, $method, $complexity) as $field) {
-                        switch ($route->getMethod()) {
+                    foreach (Mapper::route($utopia, $route, $method, $httpMethod, $complexity) as $field) {
+                        switch ($httpMethod) {
                             case 'GET':
                                 $queries[$name] = $field;
                                 break;
@@ -121,7 +121,7 @@ class Schema
                                 $mutations[$name] = $field;
                                 break;
                             default:
-                                throw new \Exception("Unsupported method: {$route->getMethod()}");
+                                throw new \Exception("Unsupported method: {$httpMethod}");
                         }
                     }
                 }

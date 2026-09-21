@@ -8,6 +8,9 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideConsole;
+use Utopia\Command;
+use Utopia\Console;
+use Utopia\Database\DateTime;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
@@ -31,7 +34,7 @@ final class PresenceConsoleClientTest extends Scope
 
     // `x-appwrite-mode: admin` is forbidden for the console project, so authenticate
     // as a console session user instead — `getUser()` signs them up against project=console.
-    public function getHeaders(bool $devKey = true): array
+    public function getHeaders(): array
     {
         return [
             'origin' => 'http://localhost',
@@ -114,6 +117,72 @@ final class PresenceConsoleClientTest extends Scope
         }
     }
 
+    public function testExpiredConsolePresenceDeletedByMaintenance(): void
+    {
+        $presenceId = ID::unique();
+
+        $upsert = $this->client->call(
+            Client::METHOD_PUT,
+            '/presences/' . $presenceId,
+            \array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => 'console',
+            ], $this->getHeaders()),
+            [
+                'status' => 'online',
+                'metadata' => ['case' => 'console-expiry'],
+                'permissions' => [
+                    Permission::read(Role::any()),
+                    Permission::update(Role::any()),
+                    Permission::delete(Role::any()),
+                ],
+            ]
+        );
+        $this->assertSame(200, $upsert['headers']['status-code']);
+
+        // Compute expiry immediately before PATCH. The API requires a future
+        // datetime; stamping it before upsert can already be in the past under load.
+        $expiresAt = DateTime::format((new \DateTime())->modify('+2 seconds'));
+        $expire = $this->client->call(
+            Client::METHOD_PATCH,
+            '/presences/' . $presenceId,
+            \array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => 'console',
+            ], $this->getHeaders()),
+            [
+                'expiresAt' => $expiresAt,
+            ]
+        );
+        $this->assertSame(200, $expire['headers']['status-code']);
+        $this->assertSame(
+            (new \DateTime($expiresAt))->getTimestamp(),
+            (new \DateTime($expire['body']['expiresAt']))->getTimestamp()
+        );
+
+        // The API hides expired presences (404) before maintenance runs, so poll for the
+        // expiry to elapse instead of sleeping on a fixed timer.
+        $this->assertEventually(function () use ($presenceId) {
+            $get = $this->client->call(
+                Client::METHOD_GET,
+                '/presences/' . $presenceId,
+                \array_merge([
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => 'console',
+                ], $this->getHeaders())
+            );
+
+            $this->assertSame(404, $get['headers']['status-code']);
+        }, 30000, 1000);
+
+        // Once expired, a single maintenance run must delete the stored console presence row
+        // (previously skipped for the console project).
+        $stdout = '';
+        $stderr = '';
+        $code = Console::execute((new Command('docker'))->argument('exec')->argument('appwrite')->argument('maintenance')->argument('--type=trigger'), '', $stdout, $stderr);
+        $this->assertSame(0, $code, "Maintenance command failed with code $code: $stderr ($stdout)");
+    }
+
     private function openConsolePresenceSocket(array $user, string $presenceId): WebSocketClient
     {
         $queryString = \http_build_query([
@@ -132,10 +201,36 @@ final class PresenceConsoleClientTest extends Scope
             ]
         );
 
-        $connected = \json_decode($client->receive(), true);
-        $this->assertSame('connected', $connected['type'] ?? null);
+        $this->receiveConnected($client);
 
         return $client;
+    }
+
+    private function receiveConnected(WebSocketClient $client, int $timeoutMs = 3000): void
+    {
+        $deadline = \microtime(true) + ($timeoutMs / 1000);
+
+        while (\microtime(true) < $deadline) {
+            try {
+                $raw = $client->receive();
+            } catch (TimeoutException) {
+                continue;
+            }
+
+            $frame = \json_decode($raw, true);
+            if (!\is_array($frame)) {
+                continue;
+            }
+
+            $this->assertSame(
+                'connected',
+                $frame['type'] ?? null,
+                'First realtime frame must be the handshake, got: ' . \json_encode($frame)
+            );
+            return;
+        }
+
+        $this->fail('Timed out waiting for connected websocket frame on console.');
     }
 
     private function receivePresenceFrame(
