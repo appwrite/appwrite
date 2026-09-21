@@ -4,6 +4,8 @@ namespace Utopia\Agents\Tests\Adapters;
 
 use Utopia\Agents\Adapter as AgentAdapter;
 use Utopia\Agents\Adapters\Anthropic;
+use Utopia\Agents\Agent;
+use Utopia\Agents\Message;
 
 class AnthropicTest extends Adapter
 {
@@ -43,5 +45,24 @@ class AnthropicTest extends Adapter
     protected function expectsEmbeddingSupport(): bool
     {
         return false;
+    }
+
+    public function testRequestCarriesApiKeyAndVersionHeaders(): void
+    {
+        $client = new Client()->queue(200, chunks: [
+            'data: '.json_encode(['type' => 'content_block_delta', 'delta' => ['type' => 'text_delta', 'text' => 'hi']])."\n",
+        ]);
+        $adapter = new Anthropic('secret');
+        $adapter->setClient($client);
+        new Agent($adapter);
+
+        $message = $adapter->send([new Message('hi')]);
+
+        $this->assertSame('hi', $message->getContent());
+        $request = $client->lastRequest();
+        $this->assertSame('https://api.anthropic.com/v1/messages', (string) $request->getUri());
+        $this->assertSame('secret', $request->getHeaderLine('x-api-key'));
+        $this->assertSame('2023-06-01', $request->getHeaderLine('anthropic-version'));
+        $this->assertSame('application/json', $request->getHeaderLine('content-type'));
     }
 }

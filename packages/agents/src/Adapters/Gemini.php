@@ -4,8 +4,6 @@ namespace Utopia\Agents\Adapters;
 
 use Utopia\Agents\Adapter;
 use Utopia\Agents\Message;
-use Utopia\Fetch\Chunk;
-use Utopia\Fetch\Client;
 
 class Gemini extends Adapter
 {
@@ -105,11 +103,6 @@ class Gemini extends Adapter
             throw new \Exception('Agent not set');
         }
 
-        $client = new Client();
-        $client
-            ->setTimeout($this->timeout)
-            ->addHeader('content-type', Client::CONTENT_TYPE_APPLICATION_JSON);
-
         $systemParts = [];
         $systemParts[] = [
             'text' => $this->getAgent()->getDescription(),
@@ -144,13 +137,10 @@ class Gemini extends Adapter
         $content = '';
         $this->beginStreamProcessing();
         try {
-            $response = $client->fetch(
+            $response = $this->post(
                 $this->endpoint,
-                Client::METHOD_POST,
                 $payload,
-                [],
-                function ($chunk) use (&$content, $listener) {
-                    /** @var Chunk $chunk */
+                sink: function (string $chunk) use (&$content, $listener): void {
                     $content .= $this->process($chunk, $listener);
                 }
             );
@@ -222,11 +212,11 @@ class Gemini extends Adapter
      *
      * @throws \Exception
      */
-    protected function process(Chunk $chunk, ?callable $listener): string
+    protected function process(string $chunk, ?callable $listener): string
     {
         [$data, $lines] = $this->prepareStreamLines($chunk);
 
-        $json = $this->decodeJsonObject(trim($chunk->getData())) ?? $this->decodeJsonObject($data);
+        $json = $this->decodeJsonObject(trim($chunk)) ?? $this->decodeJsonObject($data);
         if (is_array($json) && isset($json['error'])) {
             return $this->formatErrorMessage($json);
         }

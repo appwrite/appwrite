@@ -4,7 +4,6 @@ namespace Utopia\Agents\Adapters;
 
 use Utopia\Agents\Adapter;
 use Utopia\Agents\Message;
-use Utopia\Fetch\Client;
 
 class Ollama extends Adapter
 {
@@ -55,20 +54,12 @@ class Ollama extends Adapter
      */
     public function embed(string $text): array
     {
-        $client = new Client();
-        $client->setTimeout($this->timeout);
-        $client->addHeader('Content-Type', 'application/json');
         $payload = [
             'model' => $this->model,
             'input' => $text,
         ];
-        $response = $client->fetch(
-            $this->getEndpoint(),
-            Client::METHOD_POST,
-            $payload
-        );
-        $body = $response->getBody();
-        $json = is_string($body) ? json_decode($body, true) : null;
+        $response = $this->post($this->getEndpoint(), $payload);
+        $json = json_decode((string) $response->getBody(), true);
 
         if (! is_array($json)) {
             throw new \Exception('Invalid response format received from the API');

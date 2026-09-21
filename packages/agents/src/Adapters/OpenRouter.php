@@ -3,7 +3,6 @@
 namespace Utopia\Agents\Adapters;
 
 use Utopia\Agents\Adapters\OpenRouter\Models as OpenRouterModels;
-use Utopia\Fetch\Client;
 
 class OpenRouter extends OpenAI
 {
@@ -63,21 +62,21 @@ class OpenRouter extends OpenAI
     }
 
     /**
-     * Create a configured HTTP client for OpenRouter requests.
+     * @return array<string, string>
      */
-    protected function createClient(): Client
+    protected function headers(): array
     {
-        $client = parent::createClient();
+        $headers = parent::headers();
 
         if (! empty($this->httpReferer)) {
-            $client->addHeader('HTTP-Referer', $this->httpReferer);
+            $headers['HTTP-Referer'] = $this->httpReferer;
         }
 
         if (! empty($this->xTitle)) {
-            $client->addHeader('X-Title', $this->xTitle);
+            $headers['X-Title'] = $this->xTitle;
         }
 
-        return $client;
+        return $headers;
     }
 
     /**

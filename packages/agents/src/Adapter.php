@@ -2,7 +2,18 @@
 
 namespace Utopia\Agents;
 
-use Utopia\Fetch\Chunk;
+use Psr\Http\Client\ClientInterface;
+use Psr\Http\Message\ResponseInterface;
+use Swoole\Coroutine;
+use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
+use Utopia\Client\Adapter\SwooleCoroutine\Client as SwooleAdapter;
+use Utopia\Client as HttpClient;
+use Utopia\Client\Pool as HttpClientPool;
+use Utopia\Pools\Adapter\Swoole as SwoolePoolAdapter;
+use Utopia\Pools\Pool as Connections;
+use Utopia\Psr18\StreamingClientInterface;
+use Utopia\Psr7\Method;
+use Utopia\Psr7\Request\Factory;
 
 abstract class Adapter
 {
@@ -10,6 +21,16 @@ abstract class Adapter
      * Upper bound for retained incomplete SSE fragments.
      */
     protected const STREAM_BUFFER_MAX_BYTES = 1048576;
+
+    /**
+     * Connections the default pooled client keeps per adapter.
+     */
+    protected const int POOL_SIZE = 8;
+
+    /**
+     * Seconds a request waits for a pooled connection before failing.
+     */
+    protected const float POOL_TIMEOUT = 3.0;
 
     /**
      * The agent instance
@@ -45,6 +66,19 @@ abstract class Adapter
      * Carries incomplete SSE line fragments between chunks.
      */
     protected string $streamBuffer = '';
+
+    /**
+     * HTTP client every request goes through. Built once and reused, so
+     * connections are kept alive across requests instead of opened per call.
+     */
+    protected (ClientInterface&StreamingClientInterface)|null $client = null;
+
+    /**
+     * Whether $client was built here (and follows the timeout) or injected.
+     */
+    protected bool $ownsClient = false;
+
+    protected ?Factory $requests = null;
 
     /**
      * Get the adapter name
@@ -289,12 +323,89 @@ abstract class Adapter
 
     /**
      * Set timeout in milliseconds
+     *
+     * A client built by the adapter is rebuilt on next use so it carries the
+     * new timeout; an injected client keeps its own.
      */
     public function setTimeout(int $timeout): self
     {
         $this->timeout = $timeout;
 
+        if ($this->ownsClient) {
+            $this->client = null;
+            $this->ownsClient = false;
+        }
+
         return $this;
+    }
+
+    /**
+     * Use a caller-supplied HTTP client, e.g. a shared pool.
+     */
+    public function setClient(ClientInterface&StreamingClientInterface $client): static
+    {
+        $this->client = $client;
+        $this->ownsClient = false;
+
+        return $this;
+    }
+
+    /**
+     * The HTTP client, built on first use when none was injected.
+     */
+    public function getClient(): ClientInterface&StreamingClientInterface
+    {
+        if ($this->client === null) {
+            $this->client = $this->createClient();
+            $this->ownsClient = true;
+        }
+
+        return $this->client;
+    }
+
+    /**
+     * Inside a coroutine, a pool of keep-alive Swoole clients shared by every
+     * request this adapter makes; elsewhere a single keep-alive cURL client.
+     */
+    protected function createClient(): ClientInterface&StreamingClientInterface
+    {
+        $timeout = $this->timeout / 1000;
+
+        if (\extension_loaded('swoole') && Coroutine::getCid() > 0) {
+            return new HttpClientPool(new Connections(
+                new SwoolePoolAdapter(),
+                'agents.'.$this->getName(),
+                static::POOL_SIZE,
+                static fn () => new HttpClient((new SwooleAdapter())->withConnectionReuse()->withTimeout($timeout)),
+                timeout: static::POOL_TIMEOUT,
+            ));
+        }
+
+        return new HttpClient((new CurlAdapter())->withConnectionReuse()->withTimeout($timeout));
+    }
+
+    /**
+     * POST a JSON payload. With a sink the body is streamed to it chunk by
+     * chunk and the returned response carries only the status and headers.
+     *
+     * @param  array<string, string>  $headers
+     * @param  (callable(string): void)|null  $sink
+     *
+     * @throws \Psr\Http\Client\ClientExceptionInterface
+     */
+    protected function post(string $url, mixed $payload, array $headers = [], ?callable $sink = null): ResponseInterface
+    {
+        $request = $this->requests()->json(Method::POST, $url, $payload, $headers);
+        $client = $this->getClient();
+
+        return $sink === null
+            ? $client->sendRequest($request)
+            : $client->stream($request, $sink);
+    }
+
+    protected function requests(): Factory
+    {
+        return $this->requests ??= new Factory();
     }
 
     /**
@@ -347,9 +458,9 @@ abstract class Adapter
     /**
      * @return array{0: string, 1: array<int, string>}
      */
-    protected function prepareStreamLines(Chunk $chunk): array
+    protected function prepareStreamLines(string $chunk): array
     {
-        $combined = $this->streamBuffer.$chunk->getData();
+        $combined = $this->streamBuffer.$chunk;
         $lines = explode("\n", $combined);
 
         if ($combined !== '' && ! str_ends_with($combined, "\n")) {

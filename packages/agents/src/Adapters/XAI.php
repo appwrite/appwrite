@@ -2,8 +2,6 @@
 
 namespace Utopia\Agents\Adapters;
 
-use Utopia\Fetch\Chunk;
-
 class XAI extends OpenAI
 {
     /**
@@ -94,12 +92,12 @@ class XAI extends OpenAI
      *
      * @throws \Exception
      */
-    protected function process(Chunk $chunk, ?callable $listener): string
+    protected function process(string $chunk, ?callable $listener): string
     {
         $block = '';
         [$data, $lines] = $this->prepareStreamLines($chunk);
 
-        $json = $this->decodeJsonObject(trim($chunk->getData())) ?? $this->decodeJsonObject($data);
+        $json = $this->decodeJsonObject(trim($chunk)) ?? $this->decodeJsonObject($data);
         if (is_array($json) && isset($json['error'])) {
             return $this->formatErrorMessage($json);
         }

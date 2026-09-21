@@ -4,8 +4,6 @@ namespace Utopia\Agents\Adapters;
 
 use Utopia\Agents\Adapter;
 use Utopia\Agents\Message;
-use Utopia\Fetch\Chunk;
-use Utopia\Fetch\Client;
 
 class Anthropic extends Adapter
 {
@@ -59,6 +57,10 @@ class Anthropic extends Adapter
      * Claude 3 Haiku - Rapid model designed for speed and efficiency on straightforward tasks
      */
     public const MODEL_CLAUDE_3_HAIKU = 'claude-3-haiku-20240307';
+
+    protected const ENDPOINT = 'https://api.anthropic.com/v1/messages';
+
+    protected const API_VERSION = '2023-06-01';
 
     /**
      * Cache TTL for 3600 seconds
@@ -119,12 +121,10 @@ class Anthropic extends Adapter
             throw new \Exception('Agent not set');
         }
 
-        $client = new Client();
-        $client
-            ->setTimeout($this->timeout)
-            ->addHeader('x-api-key', $this->apiKey)
-            ->addHeader('anthropic-version', '2023-06-01')
-            ->addHeader('content-type', Client::CONTENT_TYPE_APPLICATION_JSON);
+        $headers = [
+            'x-api-key' => $this->apiKey,
+            'anthropic-version' => self::API_VERSION,
+        ];
 
         $systemMessages = [];
         if (! empty($this->getAgent()->getDescription())) {
@@ -197,13 +197,11 @@ class Anthropic extends Adapter
         if ($payload['stream']) {
             $this->beginStreamProcessing();
             try {
-                $response = $client->fetch(
-                    'https://api.anthropic.com/v1/messages',
-                    Client::METHOD_POST,
+                $response = $this->post(
+                    self::ENDPOINT,
                     $payload,
-                    [],
-                    function ($chunk) use (&$content, $listener) {
-                        /** @var Chunk $chunk */
+                    $headers,
+                    function (string $chunk) use (&$content, $listener): void {
                         $content .= $this->process($chunk, $listener);
                     }
                 );
@@ -212,17 +210,12 @@ class Anthropic extends Adapter
                 $this->endStreamProcessing();
             }
         } else {
-            $response = $client->fetch(
-                'https://api.anthropic.com/v1/messages',
-                Client::METHOD_POST,
-                $payload,
-            );
+            $response = $this->post(self::ENDPOINT, $payload, $headers);
         }
 
         if ($response->getStatusCode() >= 400) {
             if (! $payload['stream']) {
-                $responseBody = $response->getBody();
-                $json = is_string($responseBody) ? json_decode($responseBody, true) : null;
+                $json = json_decode((string) $response->getBody(), true);
                 $content = $this->formatErrorMessage($json);
             }
 
@@ -236,8 +229,8 @@ class Anthropic extends Adapter
             return new Message($content);
         }
 
-        $body = $response->getBody();
-        $json = is_string($body) ? json_decode($body, true) : null;
+        $body = (string) $response->getBody();
+        $json = json_decode($body, true);
 
         $text = '';
         if (is_array($json)) {
@@ -253,7 +246,7 @@ class Anthropic extends Adapter
         }
 
         if ($text === '') {
-            $text = is_string($body) ? $body : (is_array($json) ? (json_encode($json) ?: '') : '');
+            $text = $body;
         }
 
         return new Message($text);
@@ -318,7 +311,7 @@ class Anthropic extends Adapter
      *
      * @throws \Exception
      */
-    protected function process(Chunk $chunk, ?callable $listener): string
+    protected function process(string $chunk, ?callable $listener): string
     {
         [, $lines] = $this->prepareStreamLines($chunk);
 

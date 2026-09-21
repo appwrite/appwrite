@@ -2,8 +2,6 @@
 
 namespace Utopia\Agents\Adapters;
 
-use Utopia\Fetch\Chunk;
-
 class Perplexity extends OpenAI
 {
     /**
@@ -106,12 +104,12 @@ class Perplexity extends OpenAI
      *
      * @throws \Exception
      */
-    protected function process(Chunk $chunk, ?callable $listener): string
+    protected function process(string $chunk, ?callable $listener): string
     {
         $block = '';
         [$data, $lines] = $this->prepareStreamLines($chunk);
 
-        $rawData = $chunk->getData();
+        $rawData = $chunk;
         $json = $this->decodeJsonObject(trim($rawData)) ?? $this->decodeJsonObject($data);
         if (is_array($json) && isset($json['error'])) {
             return $this->formatErrorMessage($json);
