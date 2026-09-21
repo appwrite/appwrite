@@ -1029,18 +1029,15 @@ class Messaging extends Action
         $content = $data['content'];
         $html = $data['html'] ?? false;
 
-        if ($provider->getAttribute('provider') === 'smtp') {
-            // SMTP sends one message to the whole batch. Hide subscribers from each other.
-            if (\count($to) > 1) {
-                foreach ($to as $recipient) {
-                    $bcc[] = ['email' => $recipient];
-                }
-                $to = [];
-            } else {
-                // Failed BCC recipients re-enter through To on retry. Keep them hidden,
-                // while ordinary single recipients retain a visible To header.
-                $to = \array_values(\array_diff($to, \array_column($bcc, 'email')));
+        // An SMTP batch is one message, so a visible To header is readable by every other address on
+        // it. Only a lone recipient with nobody else on the envelope keeps theirs; the rest move to
+        // BCC, which leaves the message with no To header at all.
+        if ($provider->getAttribute('provider') === 'smtp' && (\count($to) > 1 || !empty($cc) || !empty($bcc))) {
+            foreach ($to as $recipient) {
+                $bcc[] = ['email' => $recipient];
             }
+
+            $to = [];
         }
 
         return new Email(
