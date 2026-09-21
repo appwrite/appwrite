@@ -10,6 +10,7 @@ use Appwrite\Network\Validator\PublicHostname;
 use Appwrite\Template\Template;
 use Appwrite\Usage\Context as UsageContext;
 use Exception;
+use InvalidArgumentException;
 use Utopia\Client;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Database\Database;
@@ -20,6 +21,7 @@ use Utopia\Psr7\ContentType;
 use Utopia\Psr7\Header;
 use Utopia\Psr7\Method;
 use Utopia\Psr7\Request\Factory as RequestFactory;
+use Utopia\Psr7\Uri;
 use Utopia\Queue\Message;
 use Utopia\Span\Span;
 use Utopia\System\System;
@@ -90,6 +92,38 @@ class Webhooks extends Action
         }
     }
 
+    private function isTrustedOrigin(Uri $uri): bool
+    {
+        // Operators can trust specific internal receivers. Empty by default;
+        // this does not relax URL validation or trust other ports or subdomains.
+        foreach (\explode(',', System::getEnv('_APP_WEBHOOK_TRUSTED_ORIGINS', '')) as $origin) {
+            try {
+                $trusted = Uri::parse(\trim($origin));
+            } catch (InvalidArgumentException) {
+                continue;
+            }
+
+            if (!\in_array($trusted->getScheme(), ['http', 'https'], true)
+                || $trusted->getHost() === ''
+                || $trusted->getUserInfo() !== ''
+                || !\in_array($trusted->getPath(), ['', '/'], true)
+                || $trusted->getQuery() !== ''
+                || $trusted->getFragment() !== ''
+            ) {
+                continue;
+            }
+
+            if ($uri->getScheme() === $trusted->getScheme()
+                && $uri->getHost() === $trusted->getHost()
+                && $uri->getPort() === $trusted->getPort()
+            ) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     /**
      * @param array $events
      * @param string $payload
@@ -112,9 +146,10 @@ class Webhooks extends Action
         $rawUrl = $webhook->getAttribute('url');
 
         if (System::getEnv('_APP_ENV', 'development') === 'production') {
-            $host = \parse_url($rawUrl, PHP_URL_HOST) ?? '';
+            $uri = Uri::parse($rawUrl);
+            $host = $uri->getHost();
             $hostnameValidator = new PublicHostname();
-            if (!$hostnameValidator->isValid($host)) {
+            if (!$this->isTrustedOrigin($uri) && !$hostnameValidator->isValid($host)) {
                 return 'Webhook target ' . $host . ' rejected: ' . $hostnameValidator->getDescription();
             }
         }
