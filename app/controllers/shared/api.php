@@ -342,16 +342,13 @@ Http::init()
         $scopes = \array_unique($scopes);
 
         // Intentional: impersonators get users.read so they can discover a target user
-        // before impersonation starts, and keep that access while impersonating. The grant
-        // skips routes labelled `impersonation: deny`, which return other users' credentials
-        // (MFA recovery codes, challenge secrets).
+        // before impersonation starts, and keep that access while impersonating.
         if (
             !$user->isEmpty()
             && (
                 $user->getAttribute('impersonator', false)
                 || !$impersonatorUser->isEmpty()
             )
-            && $route->getLabel('impersonation', null) !== 'deny'
         ) {
             $scopes[] = 'users.read';
             $scopes = \array_unique($scopes);
