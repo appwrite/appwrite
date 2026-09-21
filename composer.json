@@ -131,6 +131,7 @@
         "utopia-php/query": "0.6.*",
         "utopia-php/openapi": "^0.2.4",
         "psr/http-factory": "^1.0",
+        "psr/http-client": "^1.0",
         "psr/http-message": "^1.1 || ^2.0"
     },
     "require-dev": {
