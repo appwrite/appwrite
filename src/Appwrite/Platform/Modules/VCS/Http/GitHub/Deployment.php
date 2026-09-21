@@ -101,7 +101,6 @@ trait Deployment
                 if ($resource->isEmpty()) {
                     Span::add("{$logBase}.build.skipped.reason", 'resource not found');
                     Span::add("{$logBase}.build.skipped", 'true');
-                    Console::warning("Skipping repository '{$repositoryId}': {$resourceCollection} '{$resourceId}' no longer exists");
                     continue;
                 }
                 $resourceInternalId = $resource->getSequence();
