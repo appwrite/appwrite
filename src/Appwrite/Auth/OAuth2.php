@@ -210,8 +210,8 @@ abstract class OAuth2
         \curl_setopt($ch, CURLOPT_HEADER, 0);
         \curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         \curl_setopt($ch, CURLOPT_USERAGENT, 'Appwrite OAuth2');
-        // Token endpoints must not follow redirects: some IdPs (e.g. Cloudflare
-        // Access on error) answer with 302 + empty body instead of a JSON error.
+        // Provider token/userinfo calls must not follow redirects; error redirects
+        // with an empty body would otherwise look like a successful empty response.
         \curl_setopt($ch, CURLOPT_FOLLOWLOCATION, false);
 
         if (!empty($payload)) {

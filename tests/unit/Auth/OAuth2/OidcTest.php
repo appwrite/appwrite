@@ -37,7 +37,7 @@ final class OidcTest extends TestCase
             [
                 'method' => 'POST',
                 'url' => 'https://idp.example/token',
-                // Cloudflare Access error shape: HTTP 302, empty body, no JSON
+                // Empty body (e.g. OP answered with a redirect instead of JSON)
                 'response' => '',
             ],
         ]);
@@ -77,9 +77,10 @@ final class OidcTest extends TestCase
     public function testIdentityFromIdTokenWhenUserinfoAbsent(): void
     {
         $idToken = $this->mintIdToken([
-            'sub' => 'cf-user-1',
+            'sub' => 'user-1',
             'email' => 'user@example.com',
             'name' => 'Ada Lovelace',
+            'email_verified' => true,
         ]);
 
         $oidc = $this->createOidc([
@@ -105,11 +106,40 @@ final class OidcTest extends TestCase
 
         $accessToken = $oidc->getAccessToken('authorization-code');
         $this->assertSame('access-token', $accessToken);
-        $this->assertSame('cf-user-1', $oidc->getUserID($accessToken));
+        $this->assertSame('user-1', $oidc->getUserID($accessToken));
         $this->assertSame('user@example.com', $oidc->getUserEmail($accessToken));
         $this->assertSame('Ada Lovelace', $oidc->getUserName($accessToken));
-        // Missing email_verified + present email → verified for admin-configured OIDC
         $this->assertTrue($oidc->isEmailVerified($accessToken));
+    }
+
+    public function testMissingEmailVerifiedIsUnverified(): void
+    {
+        $idToken = $this->mintIdToken([
+            'sub' => 'user-1',
+            'email' => 'user@example.com',
+        ]);
+
+        $oidc = $this->createOidc([
+            [
+                'method' => 'POST',
+                'url' => 'https://idp.example/token',
+                'response' => \json_encode([
+                    'access_token' => 'access-token',
+                    'id_token' => $idToken,
+                ], JSON_THROW_ON_ERROR),
+            ],
+            [
+                'method' => 'GET',
+                'url' => 'https://idp.example/userinfo',
+                'response' => \json_encode([
+                    'sub' => 'user-1',
+                    'email' => 'user@example.com',
+                ], JSON_THROW_ON_ERROR),
+            ],
+        ]);
+
+        $accessToken = $oidc->getAccessToken('authorization-code');
+        $this->assertFalse($oidc->isEmailVerified($accessToken));
     }
 
     public function testEmailVerifiedStringTrue(): void
@@ -217,6 +247,7 @@ final class OidcTest extends TestCase
         $idToken = $this->mintIdToken([
             'sub' => 'id-only',
             'email' => 'only@example.com',
+            'email_verified' => true,
         ]);
 
         $oidc = $this->createOidc([

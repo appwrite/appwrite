@@ -6,7 +6,6 @@ use Appwrite\Auth\OAuth2;
 
 // Reference Material
 // https://openid.net/connect/faq/
-// https://developers.cloudflare.com/cloudflare-one/access-controls/applications/http-apps/saas-apps/generic-oidc-saas/
 
 class Oidc extends OAuth2
 {
@@ -129,10 +128,9 @@ class Oidc extends OAuth2
     }
 
     /**
-     * Parse a token-endpoint body. Cloudflare Access (and some other IdPs) return
-     * an HTTP redirect with an empty body on error instead of a JSON error object;
-     * curl does not follow that redirect, so we get "" and must not treat it as
-     * a successful empty token set.
+     * Parse a token-endpoint body. An empty body (for example when an OP answers
+     * errors with an HTTP redirect instead of a JSON error object) must not be
+     * treated as a successful empty token set.
      *
      * @return array<string, mixed>
      */
@@ -141,7 +139,7 @@ class Oidc extends OAuth2
         if ($response === '') {
             throw new Exception(\json_encode([
                 'error' => 'token_response_empty',
-                'error_description' => 'OIDC token endpoint returned an empty body. Providers that answer errors with an HTTP redirect (and no JSON) are not supported for the token exchange.',
+                'error_description' => 'OIDC token endpoint returned an empty body.',
             ]), 400);
         }
 
@@ -238,6 +236,10 @@ class Oidc extends OAuth2
     /**
      * Check if the User email is verified
      *
+     * Honours the standard `email_verified` claim from the ID token or userinfo.
+     * Some OPs send a boolean; others send the string "true"/"false". A missing
+     * claim means unverified — same rule as the native ID-token session path.
+     *
      * @param string $accessToken
      *
      * @return bool
@@ -246,17 +248,7 @@ class Oidc extends OAuth2
     {
         $user = $this->getUser($accessToken);
 
-        if (\array_key_exists('email_verified', $user)) {
-            // Apple (and some IdPs) attest the claim as the string "true"; Google as a boolean.
-            return \filter_var($user['email_verified'], FILTER_VALIDATE_BOOLEAN);
-        }
-
-        // The project admin trusts this OP. Enterprise IdPs — notably Cloudflare
-        // Access SaaS OIDC — often omit email_verified after authenticating the
-        // user while still asserting `email`. An explicit false above still blocks
-        // account linking. Without this, existing Appwrite users matching that
-        // email fail the OAuth callback with a generic general_bad_request.
-        return !empty($user['email']);
+        return \filter_var($user['email_verified'] ?? false, FILTER_VALIDATE_BOOLEAN);
     }
 
     /**
@@ -287,7 +279,7 @@ class Oidc extends OAuth2
         }
 
         // Start from ID token claims so identity still works when userinfo is
-        // slow, unavailable, or redundant (Cloudflare Access puts claims on the ID token).
+        // unavailable; userinfo overrides overlapping keys when present (OIDC Core).
         $claims = $this->getIdTokenClaims();
 
         if ($accessToken !== '') {
@@ -298,7 +290,6 @@ class Oidc extends OAuth2
                     $user = $this->request('GET', $endpoint, $headers);
                     $decoded = \json_decode($user, true);
                     if (\is_array($decoded)) {
-                        // Userinfo overrides the ID token for overlapping keys (OIDC Core).
                         $claims = \array_merge($claims, $decoded);
                     }
                 } catch (Exception $exception) {
