@@ -98,6 +98,14 @@ trait Deployment
                 $dbForProject = $getProjectDB($project);
                 $resourceCollection = $resourceType === "function" ? 'functions' : 'sites';
                 $resource = $authorization->skip(fn () => $dbForProject->getDocument($resourceCollection, $resourceId));
+                if ($resource->isEmpty()) {
+                    // The deletes worker removes the repository row after the resource; a push in
+                    // between must not fail the whole webhook.
+                    Span::add("{$logBase}.build.skipped.reason", 'resource not found');
+                    Span::add("{$logBase}.build.skipped", 'true');
+                    Console::warning("Skipping repository '{$repositoryId}': {$resourceCollection} '{$resourceId}' no longer exists");
+                    continue;
+                }
                 $resourceInternalId = $resource->getSequence();
 
                 $validator = new Contains(VCS_DEPLOYMENT_SKIP_PATTERNS);
