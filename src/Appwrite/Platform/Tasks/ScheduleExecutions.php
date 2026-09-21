@@ -54,7 +54,7 @@ class ScheduleExecutions extends Action
             },
         );
 
-        $scheduler->run(fn (array $occurrences): null => $this->dispatch($occurrences, $publisherForFunctions, $dbForPlatform));
+        $scheduler->run(fn (array $occurrences): null => $this->dispatch($occurrences, $publisherForFunctions));
 
         Span::init('schedule.executions.stopped');
         Span::current()?->finish(error: new \RuntimeException('Scheduler loop returned'));
@@ -63,7 +63,7 @@ class ScheduleExecutions extends Action
     /**
      * @param list<Occurrence> $occurrences
      */
-    private function dispatch(array $occurrences, FunctionPublisher $publisherForFunctions, Database $dbForPlatform): null
+    private function dispatch(array $occurrences, FunctionPublisher $publisherForFunctions): null
     {
         $batch = \count($occurrences);
 
@@ -74,11 +74,6 @@ class ScheduleExecutions extends Action
             $error = null;
 
             try {
-                $project = $dbForPlatform->skipFilters(
-                    fn () => $dbForPlatform->getDocument('projects', $schedule['project']->getId()),
-                    APP_PROJECTS_SUBQUERIES
-                );
-
                 Span::add('project.id', $schedule['project']->getId());
                 Span::add('schedule.id', $schedule['$id'] ?? '');
                 Span::add('execution.id', (string) ($schedule['resourceId'] ?? ''));
@@ -88,12 +83,12 @@ class ScheduleExecutions extends Action
                 Span::add('occurrence.batch', $batch);
                 Span::add('occurrence.index', $index);
 
-                if (($project->getAttribute('status') ?? PROJECT_STATUS_ACTIVE) !== PROJECT_STATUS_ACTIVE) {
+                if (($schedule['project']->getAttribute('status') ?? PROJECT_STATUS_ACTIVE) !== PROJECT_STATUS_ACTIVE) {
                     continue;
                 }
 
                 $publisherForFunctions->enqueue(new FunctionMessage(
-                    project: $project,
+                    project: $schedule['project'],
                     functionId: $schedule['resource']->getAttribute('resourceId', ''),
                     execution: new Document([
                         '$id' => $schedule['resourceId'],
