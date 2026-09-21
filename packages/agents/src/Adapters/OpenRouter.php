@@ -2,7 +2,9 @@
 
 namespace Utopia\Agents\Adapters;
 
+use Psr\Http\Client\ClientInterface;
 use Utopia\Agents\Adapters\OpenRouter\Models as OpenRouterModels;
+use Utopia\Psr18\StreamingClientInterface;
 
 class OpenRouter extends OpenAI
 {
@@ -28,7 +30,8 @@ class OpenRouter extends OpenAI
         ?string $endpoint = null,
         int $timeout = 90000,
         ?string $httpReferer = null,
-        ?string $xTitle = null
+        ?string $xTitle = null,
+        (ClientInterface&StreamingClientInterface)|null $client = null
     ) {
         $this->httpReferer = $httpReferer;
         $this->xTitle = $xTitle;
@@ -39,7 +42,8 @@ class OpenRouter extends OpenAI
             $maxTokens,
             $temperature,
             $endpoint ?? self::ENDPOINT,
-            $timeout
+            $timeout,
+            $client
         );
     }
 

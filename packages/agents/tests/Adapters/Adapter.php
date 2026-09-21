@@ -86,31 +86,6 @@ abstract class Adapter extends TestCase
         $this->assertSame(12345, $adapter->getTimeout());
     }
 
-    public function testInjectedClientReceivesRequestsAndSurvivesTimeoutChange(): void
-    {
-        $adapter = $this->createAdapter();
-        $client = new Client();
-
-        $this->assertSame($adapter, $adapter->setClient($client));
-        $this->assertSame($client, $adapter->getClient());
-
-        $adapter->setTimeout(2000);
-
-        $this->assertSame($client, $adapter->getClient());
-    }
-
-    public function testOwnedClientIsReusedUntilTimeoutChanges(): void
-    {
-        $adapter = $this->createAdapter();
-        $owned = $adapter->getClient();
-
-        $this->assertSame($owned, $adapter->getClient());
-
-        $adapter->setTimeout(2000);
-
-        $this->assertNotSame($owned, $adapter->getClient());
-    }
-
     public function testTokenCountersAccumulateAndTotalIsConsistent(): void
     {
         $adapter = $this->createAdapter();

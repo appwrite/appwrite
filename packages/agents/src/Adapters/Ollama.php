@@ -2,8 +2,10 @@
 
 namespace Utopia\Agents\Adapters;
 
+use Psr\Http\Client\ClientInterface;
 use Utopia\Agents\Adapter;
 use Utopia\Agents\Message;
+use Utopia\Psr18\StreamingClientInterface;
 
 class Ollama extends Adapter
 {
@@ -30,13 +32,15 @@ class Ollama extends Adapter
      */
     public function __construct(
         string $model = self::MODEL_EMBEDDING_GEMMA,
-        int $timeout = 90000
+        int $timeout = 90000,
+        (ClientInterface&StreamingClientInterface)|null $client = null
     ) {
         if (! in_array($model, self::MODELS, true)) {
             throw new \InvalidArgumentException("Invalid model: {$model}. Supported models: ".implode(', ', self::MODELS));
         }
 
         $this->model = $model;
+        $this->client = $client;
         $this->setTimeout($timeout);
     }
 

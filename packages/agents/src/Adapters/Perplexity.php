@@ -2,6 +2,9 @@
 
 namespace Utopia\Agents\Adapters;
 
+use Psr\Http\Client\ClientInterface;
+use Utopia\Psr18\StreamingClientInterface;
+
 class Perplexity extends OpenAI
 {
     /**
@@ -46,7 +49,8 @@ class Perplexity extends OpenAI
         int $maxTokens = 1024,
         float $temperature = 1.0,
         ?string $endpoint = null,
-        int $timeout = 90000
+        int $timeout = 90000,
+        (ClientInterface&StreamingClientInterface)|null $client = null
     ) {
         parent::__construct(
             $apiKey,
@@ -54,7 +58,8 @@ class Perplexity extends OpenAI
             $maxTokens,
             $temperature,
             $endpoint ?? self::ENDPOINT,
-            $timeout
+            $timeout,
+            $client
         );
     }
 

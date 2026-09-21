@@ -2,8 +2,10 @@
 
 namespace Utopia\Agents\Adapters;
 
+use Psr\Http\Client\ClientInterface;
 use Utopia\Agents\Adapter;
 use Utopia\Agents\Message;
+use Utopia\Psr18\StreamingClientInterface;
 
 class Gemini extends Adapter
 {
@@ -72,13 +74,15 @@ class Gemini extends Adapter
         int $maxTokens = 1024,
         float $temperature = 1.0,
         ?string $endpoint = null,
-        int $timeout = 90000
+        int $timeout = 90000,
+        (ClientInterface&StreamingClientInterface)|null $client = null
     ) {
         $this->apiKey = $apiKey;
         $this->maxTokens = $maxTokens;
         $this->temperature = $temperature;
         $this->endpoint = $endpoint ?? 'https://generativelanguage.googleapis.com/v1beta/models/'.$model.':streamGenerateContent?alt=sse&key='.$apiKey;
         $this->timeout = $timeout;
+        $this->client = $client;
         $this->setModel($model);
     }
 

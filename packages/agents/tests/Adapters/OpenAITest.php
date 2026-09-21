@@ -64,8 +64,7 @@ class OpenAITest extends Adapter
         $client = new Client()->queue(200, json_encode([
             'choices' => [['message' => ['role' => 'assistant', 'content' => '{"ok":true}']]],
         ]) ?: '');
-        $adapter = new OpenAI('secret', OpenAI::MODEL_GPT_4_1);
-        $adapter->setClient($client);
+        $adapter = new OpenAI('secret', OpenAI::MODEL_GPT_4_1, client: $client);
 
         $object = new SchemaObject();
         $object->addProperty('ok', ['type' => SchemaObject::TYPE_BOOLEAN, 'description' => 'ok']);
@@ -96,8 +95,7 @@ class OpenAITest extends Adapter
             substr($first, 0, 10),
             substr($first, 10).$delta('lo').'data: [DONE]',
         ]);
-        $adapter = new OpenAI('secret');
-        $adapter->setClient($client);
+        $adapter = new OpenAI('secret', client: $client);
         new Agent($adapter);
 
         $tokens = [];
@@ -110,27 +108,27 @@ class OpenAITest extends Adapter
         $this->assertTrue($client->lastPayload()['stream']);
     }
 
-    public function testEveryRequestGoesThroughTheSameClient(): void
+    public function testInjectedClientCarriesEveryRequestAcrossTimeoutChanges(): void
     {
         $client = new Client()
             ->queue(200, chunks: ['data: '.json_encode(['choices' => [['delta' => ['content' => 'a']]]])."\n"])
             ->queue(200, chunks: ['data: '.json_encode(['choices' => [['delta' => ['content' => 'b']]]])."\n"]);
-        $adapter = new OpenAI('secret');
-        $adapter->setClient($client);
+        $adapter = new OpenAI('secret', client: $client);
         new Agent($adapter);
 
-        $adapter->send([new Message('one')]);
-        $adapter->send([new Message('two')]);
+        $first = $adapter->send([new Message('one')]);
+        $adapter->setTimeout(2000);
+        $second = $adapter->send([new Message('two')]);
 
+        $this->assertSame('a', $first->getContent());
+        $this->assertSame('b', $second->getContent());
         $this->assertCount(2, $client->requests);
-        $this->assertSame($client, $adapter->getClient());
     }
 
     public function testErrorResponseThrowsWithStatusCode(): void
     {
         $client = new Client()->queue(401, json_encode(['error' => ['code' => 'invalid_api_key', 'message' => 'Bad key']]) ?: '');
-        $adapter = new OpenAI('secret');
-        $adapter->setClient($client);
+        $adapter = new OpenAI('secret', client: $client);
         $object = new SchemaObject();
         $object->addProperty('ok', ['type' => SchemaObject::TYPE_BOOLEAN, 'description' => 'ok']);
         $agent = new Agent($adapter);

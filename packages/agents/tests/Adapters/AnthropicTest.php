@@ -52,8 +52,7 @@ class AnthropicTest extends Adapter
         $client = new Client()->queue(200, chunks: [
             'data: '.json_encode(['type' => 'content_block_delta', 'delta' => ['type' => 'text_delta', 'text' => 'hi']])."\n",
         ]);
-        $adapter = new Anthropic('secret');
-        $adapter->setClient($client);
+        $adapter = new Anthropic('secret', client: $client);
         new Agent($adapter);
 
         $message = $adapter->send([new Message('hi')]);

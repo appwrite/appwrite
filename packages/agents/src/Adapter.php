@@ -63,8 +63,8 @@ abstract class Adapter
     protected string $streamBuffer = '';
 
     /**
-     * HTTP client every request goes through. Built once and reused, so
-     * connections are kept alive across requests instead of opened per call.
+     * HTTP client every request goes through: injected by the constructor or
+     * built once here and reused, so connections stay alive across requests.
      */
     protected (ClientInterface&StreamingClientInterface)|null $client = null;
 
@@ -319,8 +319,8 @@ abstract class Adapter
     /**
      * Set timeout in milliseconds
      *
-     * A client built by the adapter is rebuilt on next use so it carries the
-     * new timeout; an injected client keeps its own.
+     * A client the adapter built is rebuilt on next use so it carries the new
+     * timeout; a client handed to the constructor keeps its own.
      */
     public function setTimeout(int $timeout): self
     {
@@ -335,20 +335,10 @@ abstract class Adapter
     }
 
     /**
-     * Use a caller-supplied HTTP client, e.g. a shared pool.
+     * The HTTP client: the one handed to the constructor, or one built on
+     * first use.
      */
-    public function setClient(ClientInterface&StreamingClientInterface $client): static
-    {
-        $this->client = $client;
-        $this->ownsClient = false;
-
-        return $this;
-    }
-
-    /**
-     * The HTTP client, built on first use when none was injected.
-     */
-    public function getClient(): ClientInterface&StreamingClientInterface
+    protected function client(): ClientInterface&StreamingClientInterface
     {
         if ($this->client === null) {
             $this->client = $this->defaultClient();
@@ -393,7 +383,7 @@ abstract class Adapter
     protected function post(string $url, mixed $payload, array $headers = [], ?callable $sink = null): ResponseInterface
     {
         $request = $this->requests()->json(Method::POST, $url, $payload, $headers);
-        $client = $this->getClient();
+        $client = $this->client();
 
         return $sink === null
             ? $client->sendRequest($request)

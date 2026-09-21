@@ -2,8 +2,10 @@
 
 namespace Utopia\Agents\Adapters;
 
+use Psr\Http\Client\ClientInterface;
 use Utopia\Agents\Adapter;
 use Utopia\Agents\Message;
+use Utopia\Psr18\StreamingClientInterface;
 
 class Deepseek extends Adapter
 {
@@ -56,12 +58,14 @@ class Deepseek extends Adapter
         string $model = self::MODEL_DEEPSEEK_CHAT,
         int $maxTokens = 1024,
         float $temperature = 1.0,
-        int $timeout = 90000
+        int $timeout = 90000,
+        (ClientInterface&StreamingClientInterface)|null $client = null
     ) {
         $this->apiKey = $apiKey;
         $this->maxTokens = $maxTokens;
         $this->temperature = $temperature;
         $this->timeout = $timeout;
+        $this->client = $client;
         $this->setModel($model);
     }
 

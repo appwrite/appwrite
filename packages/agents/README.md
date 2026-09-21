@@ -186,7 +186,7 @@ $openrouter = new OpenRouter(
 
 Every adapter sends its requests through a [`utopia-php/client`](https://github.com/utopia-php/client) instance that it builds once and reuses, so connections stay alive across calls. Inside a Swoole coroutine that default is a pool of keep-alive coroutine clients; elsewhere it is a single keep-alive cURL client. The adapter's timeout (`setTimeout`, milliseconds) applies to the client it builds.
 
-Long-running processes that already own a pooled client can hand it to the adapter, in which case the adapter uses it as is and leaves its timeouts alone:
+Long-running processes that already own a pooled client can hand it to the adapter's constructor, in which case the adapter uses it as is and leaves its timeouts alone:
 
 ```php
 use Utopia\Agents\Adapters\OpenAI;
@@ -204,8 +204,7 @@ $client = new HttpClientPool(new Connections(
     timeout: 3.0,
 ));
 
-$adapter = new OpenAI('your-api-key');
-$adapter->setClient($client);
+$adapter = new OpenAI('your-api-key', client: $client);
 ```
 
 ### Managing Conversations

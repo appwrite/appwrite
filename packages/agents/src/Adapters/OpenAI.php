@@ -2,9 +2,11 @@
 
 namespace Utopia\Agents\Adapters;
 
+use Psr\Http\Client\ClientInterface;
 use Utopia\Agents\Adapter;
 use Utopia\Agents\Message;
 use Utopia\Agents\Schema;
+use Utopia\Psr18\StreamingClientInterface;
 
 class OpenAI extends Adapter
 {
@@ -90,13 +92,15 @@ class OpenAI extends Adapter
         int $maxTokens = 1024,
         float $temperature = 1.0,
         ?string $endpoint = null,
-        int $timeout = 90000
+        int $timeout = 90000,
+        (ClientInterface&StreamingClientInterface)|null $client = null
     ) {
         $this->apiKey = $apiKey;
         $this->maxTokens = $maxTokens;
         $this->temperature = $temperature;
         $this->endpoint = $endpoint ?? self::ENDPOINT;
         $this->timeout = $timeout;
+        $this->client = $client;
         $this->setModel($model);
     }
 
