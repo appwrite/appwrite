@@ -154,6 +154,7 @@ import {
 import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import { useAuth } from '@/components/global/auth/RequireAuth'
+import { ConsoleNoOrganizationsScreen } from '@/components/global/auth/ConsoleNoOrganizationsScreen'
 import { toast } from 'sonner'
 import { ConsoleLayout } from '@/components/global/layout/ConsoleLayout'
 import { CommandCenter } from '@/components/global/shared/CommandCenter'
@@ -926,7 +927,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   const { data: organizationsData, isLoading: organizationsLoading } = useQuery(
     {
       ...organizationsQueryOptions(),
-      placeholderData: keepPreviousData},
+      placeholderData: keepPreviousData,
+    },
   )
 
   const {
@@ -1014,6 +1016,21 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     }
     return null
   }, [orgId, organizations, organizationDetail, billingPlans])
+
+  const detailMatchesCurrentOrg = organizationDetail?.$id === orgId
+  const waitingForOrganizationDetail =
+    !!orgId &&
+    !detailMatchesCurrentOrg &&
+    (organizationDetailLoading ||
+      organizationDetailFetching ||
+      (!organizationDetailFetched && !organizationDetailError))
+
+  const showNoOrganizationsEmptyState =
+    !!orgId &&
+    !organizationsLoading &&
+    !waitingForOrganizationDetail &&
+    !selectedOrg &&
+    organizations.length === 0
 
   const orgBillingReadonlyForFailedInvoice =
     showFailedInvoiceOrgAlert &&
@@ -1143,16 +1160,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
 
     // If the selected org is not found
     if (!selectedOrg) {
-      // After create/upgrade navigation the list can lag behind the URL. Wait for
-      // the org detail query to settle before treating the org as missing, or we
-      // briefly bounce back to /upgrade (create form flash).
-      const detailMatchesCurrentOrg = organizationDetail?.$id === orgId
-      const waitingForDetail =
-        !detailMatchesCurrentOrg &&
-        (organizationDetailLoading ||
-          organizationDetailFetching ||
-          (!organizationDetailFetched && !organizationDetailError))
-      if (waitingForDetail) return
+      if (waitingForOrganizationDetail) return
 
       // If there are other organizations, redirect to the first one
       if (organizations.length > 0) {
@@ -1160,29 +1168,18 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
           to: '/organizations/$orgId',
           params: { orgId: organizations[0].$id },
           replace: true})
-      } else if (features.billing) {
-        navigate({ to: '/upgrade', replace: true })
-      } else if (features.multiTenancy && !createOrgDialogOpen) {
-        // No organizations at all, open creation dialog (only if not already open)
-        setCreateOrgDialogOpen(true)
       } else {
-        navigate({ to: '/', replace: true })
+        // No memberships: empty state is rendered below (avoids /, /upgrade, /account loops).
+        return
       }
     }
   }, [
     selectedOrg,
     organizations,
     organizationsLoading,
-    organizationDetail,
-    organizationDetailLoading,
-    organizationDetailFetching,
-    organizationDetailFetched,
-    organizationDetailError,
+    waitingForOrganizationDetail,
     orgId,
     navigate,
-    createOrgDialogOpen,
-    features.billing,
-    features.multiTenancy,
   ])
 
   // Mutation to update user prefs when switching organizations
@@ -2124,6 +2121,77 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       console.error('Failed to update organization preference:', error)
       // Continue anyway - the org switch still works
     }
+  }
+
+  if (showNoOrganizationsEmptyState) {
+    const showCreateOrganization = supportsMultiTenancy
+    return (
+      <>
+        <ConsoleLayout
+          header={{
+            onCommandCenterOpen: openOrgCommandCenter,
+            onCreateOrganization: showCreateOrganization
+              ? handleOpenCreateOrganization
+              : undefined,
+          }}
+          showFooter
+          containerClassName="org-layout-container"
+        >
+          <ConsoleNoOrganizationsScreen
+            actions={
+              showCreateOrganization ? (
+                <Button
+                  type="button"
+                  className="h-9 text-[13px]"
+                  onClick={handleOpenCreateOrganization}
+                  {...analyticsAttrs('create-organization')}
+                >
+                  {t('Create organization')}
+                </Button>
+              ) : undefined
+            }
+          />
+        </ConsoleLayout>
+        <CommandCenter
+          open={commandCenterOpen}
+          onOpenChange={(open) => {
+            setCommandCenterOpen(open)
+            if (!open) setCommandCenterInitialSubPage(null)
+          }}
+          context="org"
+          onOrgNavigate={handleOrgNavigate}
+          initialSubPage={commandCenterInitialSubPage}
+          onInitialSubPageConsumed={() => setCommandCenterInitialSubPage(null)}
+          orgId={orgId}
+        />
+        {showCreateOrganization && !features.billing && (
+          <CreateOrganizationDialog
+            open={createOrgDialogOpen}
+            onOpenChange={setCreateOrgDialogOpen}
+            onCreate={async (orgData) => {
+              try {
+                const newOrg = await createOrgMutation.mutateAsync(orgData)
+                if (isPaymentAuthentication(newOrg)) {
+                  throw new Error(t('Payment authentication is required'))
+                }
+                toast.success(t('Organization created successfully'))
+                setCreateOrgDialogOpen(false)
+                navigate({
+                  to: '/organizations/$orgId',
+                  params: { orgId: newOrg.$id },
+                  replace: true,
+                })
+              } catch (error: unknown) {
+                toast.error(
+                  getErrorMessage(error, t('Failed to create organization')),
+                )
+              }
+            }}
+            isLoading={createOrgMutation.isPending}
+          />
+        )}
+      </>
+    )
   }
 
   return (

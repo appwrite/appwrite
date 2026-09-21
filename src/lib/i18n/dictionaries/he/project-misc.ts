@@ -368,6 +368,126 @@ export const heProjectMiscDictionary: Record<string, string> = {
   Passed: 'עברו',
   'Rate limited': 'הוגבלו בקצב',
   Redirected: 'הופנו',
+  'Rate limiting': 'הגבלת קצב',
+  'OTP abuse protection': 'הגנה מפני שימוש לרעה ב-OTP',
+  'Regional compliance': 'תאימות אזורית',
+  'Scraping prevention': 'מניעת scraping',
+  'Block API from countries': 'חסימת API ממדינות',
+  'Deny all project API traffic from selected countries.':
+    'דחיית כל תנועת ה-API של הפרויקט ממדינות שנבחרו.',
+  'Allow API only from countries': 'API רק ממדינות נבחרות',
+  'Deny project API traffic outside selected countries.':
+    'דחיית תנועת API של הפרויקט מחוץ למדינות שנבחרו.',
+  'Rate limit project API': 'הגבלת קצב API של הפרויקט',
+  'Cap total REST API requests per IP to slow bulk scraping.':
+    'הגבלת סך בקשות REST API לפי IP כדי להאט scraping בכמות גדולה.',
+  'Rate limit database API': 'הגבלת קצב API של מסדי נתונים',
+  'Cap TablesDB list and read traffic per IP to protect against data scraping.':
+    'הגבלת תנועת list/read ב-TablesDB לפי IP להגנה מפני scraping של נתונים.',
+  'Block hosting provider traffic': 'חסימת תנועה מספקי hosting',
+  'Deny API requests from hosting provider networks.':
+    'דחיית בקשות API מרשתות ספקי hosting.',
+  'Block datacenter connection traffic': 'חסימת תנועה מחיבור datacenter',
+  'Deny API requests from datacenter connection types.':
+    'דחיית בקשות API מסוגי חיבור datacenter.',
+  'Add-on required': 'נדרש תוסף',
+  'Premium Geo DB': 'Premium Geo DB',
+  'Set a per-IP request quota for matching API traffic. Review the impact preview before tightening limits.':
+    'הגדירו מכסת בקשות לפי IP לתנועת API תואמת. בדקו את תצוגת ההשפעה לפני הידוק מגבלות.',
+  'Created from a scraping prevention preset. Review traffic in the impact preview before tightening limits.':
+    'נוצר מתבנית מניעת scraping. בדקו תנועה בתצוגת ההשפעה לפני הידוק מגבלות.',
+  'Creates one deny rule. Denies traffic when the country is not in your allow list. Unresolved geo is allowed.':
+    'יוצר כלל deny אחד. חוסם תנועה כשהמדינה לא ברשימת ההיתר. geo לא מזוהה מותר.',
+  'Creates one deny rule per country. Matching API requests receive a 403 response.':
+    'יוצר כלל deny אחד לכל מדינה. בקשות API תואמות מקבלות 403.',
+  'Block API': 'חסימת API',
+  'Enable the Premium Geo DB addon for this project to use connection and ISP conditions in firewall rules.':
+    'הפעילו את תוסף Premium Geo DB לפרויקט כדי להשתמש בתנאי connection ו-ISP בכללי Firewall.',
+  'Created from a scraping prevention preset. Requires Premium Geo DB.':
+    'נוצר מתבנית מניעת scraping. דורש Premium Geo DB.',
+  'Block network traffic': 'חסימת תנועת רשת',
+  'Last 24 hours of project API traffic that matches these conditions.':
+    'תנועת API של הפרויקט ב-24 השעות האחרונות שתואמת לתנאים האלה.',
+  'Last 24 hours. Combined estimate for every rule this preset will create.':
+    '24 השעות האחרונות. הערכה משולבת לכל כלל שתבנית זו תיצור.',
+  'Select options above to preview matched traffic.':
+    'בחרו אפשרויות למעלה כדי להציג תצוגה מקדימה של תנועה תואמת.',
+  'Preview is approximate when multiple rules will be created. Total impact may be higher.':
+    'התצוגה המקדימה משוערת כשנוצרים מספר כללים. ההשפעה הכוללת עשויה להיות גבוהה יותר.',
+  'This preset uses conditions that cannot be estimated from usage logs.':
+    'תבנית זו משתמשת בתנאים שלא ניתן להעריך מלוגי שימוש.',
+  'Too many conditions to estimate from usage logs for this preview.':
+    'יותר מדי תנאים להערכה מלוגי שימוש בתצוגה מקדימה זו.',
+  'Cap SMS OTP token requests per IP address.':
+    'הגבלת בקשות טוקן OTP ב-SMS לפי כתובת IP.',
+  'Cap email OTP token requests per IP address.':
+    'הגבלת בקשות טוקן OTP באימייל לפי כתובת IP.',
+  'Slow brute-force attempts on phone OTP verification.':
+    'האטת ניסיונות brute-force באימות OTP בטלפון.',
+  'Slow brute-force attempts on email OTP verification.':
+    'האטת ניסיונות brute-force באימות OTP באימייל.',
+  'Deny OTP traffic from selected countries.':
+    'דחיית תנועת OTP ממדינות שנבחרו.',
+  'Deny OTP traffic outside selected countries.':
+    'דחיית תנועת OTP מחוץ למדינות שנבחרו.',
+  'Rate limit phone OTP send': 'הגבלת קצב שליחת OTP בטלפון',
+  'Rate limit email OTP send': 'הגבלת קצב שליחת OTP באימייל',
+  'Rate limit phone OTP verification': 'הגבלת קצב אימות OTP בטלפון',
+  'Rate limit email OTP verification': 'הגבלת קצב אימות OTP באימייל',
+  'Block OTP from countries': 'חסימת OTP ממדינות',
+  'Allow OTP only from countries': 'OTP רק ממדינות נבחרות',
+  'Rate limit OTP': 'הגבלת קצב OTP',
+  'Set a per-IP request quota for matching OTP traffic. Review traffic after creating the rule.':
+    'הגדירו מכסת בקשות לפי IP לתנועת OTP תואמת. בדקו תנועה לאחר יצירת הכלל.',
+  'Request limit and interval must be greater than zero.':
+    'מגבלת הבקשות והמרווח חייבים להיות גדולים מאפס.',
+  Interval: 'מרווח',
+  'Maximum window is 24 hours.': 'חלון מקסימלי: 24 שעות.',
+  'Interval must be between 1 second and 24 hours.':
+    'המרווח חייב להיות בין שנייה אחת ל-24 שעות.',
+  'Created from an OTP protection preset. Adjust limits using the impact preview on future edits.':
+    'נוצר מתבנית הגנה על OTP. כוונו מגבלות בעזרת תצוגה מקדימה של ההשפעה בעריכות עתידיות.',
+  'Rate limit OTP send': 'הגבלת קצב שליחת OTP',
+  'Rate limit OTP verification': 'הגבלת קצב אימות OTP',
+  'Cap phone and email OTP token requests per IP address.':
+    'הגבלת בקשות טוקן OTP בטלפון ובאימייל לפי כתובת IP.',
+  'Slow brute-force attempts on phone and email OTP verification.':
+    'האטת ניסיונות brute-force באימות OTP בטלפון ובאימייל.',
+  'OTP send (phone and email)': 'שליחת OTP (טלפון ואימייל)',
+  'OTP verification (phone and email)': 'אימות OTP (טלפון ואימייל)',
+  'Select at least one channel (phone or email).':
+    'בחרו לפחות ערוץ אחד (טלפון או אימייל).',
+  'Select at least one OTP step (send or verification).':
+    'בחרו לפחות שלב OTP אחד (שליחה או אימות).',
+  'Cap phone and email OTP send and verification per IP address.':
+    'הגבלת שליחת OTP ואימות OTP בטלפון ובאימייל לפי כתובת IP.',
+  Steps: 'שלבים',
+  'OTP send': 'שליחת OTP',
+  'OTP verification': 'אימות OTP',
+  'Select at least one channel and step (phone, email, send, or verification).':
+    'בחרו לפחות ערוץ ושלב אחד (טלפון, אימייל, שליחה או אימות).',
+  'Select at least one OTP flow.': 'בחרו לפחות זרימת OTP אחת.',
+  'Select at least one country.': 'בחרו לפחות מדינה אחת.',
+  'Apply to': 'החלה על',
+  'Phone OTP send': 'שליחת OTP בטלפון',
+  'Email OTP send': 'שליחת OTP באימייל',
+  'Phone OTP verification': 'אימות OTP בטלפון',
+  'Email OTP verification': 'אימות OTP באימייל',
+  Countries: 'מדינות',
+  'Add a country': 'הוספת מדינה',
+  'Country OTP restriction': 'הגבלה גיאוגרפית של OTP',
+  'Creates one deny rule per selected flow. Denies traffic when the country is not in your allow list. Unresolved geo is allowed.':
+    'יוצר כלל deny אחד לכל זרימה שנבחרה. חוסם תנועה כשהמדינה לא ברשימת ההיתר. geo לא מזוהה מותר.',
+  'Last 24 hours of API traffic that would be denied because it is not from an allowed country.':
+    'תנועת API ב-24 השעות האחרונות שתיחסם כי היא לא ממדינה מותרת.',
+  'Last 24 hours of API traffic from selected countries that would be denied.':
+    'תנועת API ממדינות שנבחרו ב-24 השעות האחרונות שתיחסם.',
+  'Requests that would be denied': 'בקשות שייחסמו',
+  'Creates one deny rule per country and flow. Matching OTP requests receive a 403 response.':
+    'יוצר כלל דחייה אחד לכל מדינה וזרימה. בקשות OTP תואמות יקבלו תגובת 403.',
+  'Allow only selected countries': 'רק מדינות נבחרות',
+  'firewall rules created': 'כללי חומת אש נוצרו',
+  'Create rules': 'יצירת כללים',
   'Create firewall rule': 'יצירת כלל חומת אש',
   'Define a new rule to protect your project from malicious requests.':
     'הגדירו כלל חדש כדי להגן על הפרויקט שלכם מפני בקשות זדוניות.',
@@ -665,6 +785,9 @@ export const heProjectMiscDictionary: Record<string, string> = {
   project: 'פרויקט',
   activities: 'פעילויות',
   'No activities yet': 'אין עדיין פעילויות',
+  'Failed to load activity': 'טעינת הפעילות נכשלה',
+  "We couldn't retrieve activity logs. This might be a temporary issue. Please try again.":
+    'לא הצלחנו לאחזר את לוג הפעילות. ייתכן שזו תקלה זמנית. נסו שוב.',
   'Activity will appear here as you use your project':
     'פעילות תופיע כאן ככל שתשתמשו בפרויקט',
   'Activity log': 'יומן פעילות',
@@ -1510,6 +1633,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
   "Couldn't load executions": 'לא ניתן היה לטעון הרצות',
   "Couldn't load requests": 'לא ניתן היה לטעון בקשות',
   "Couldn't load storage": 'לא ניתן היה לטעון נתוני אחסון',
+  "Couldn't load firewall traffic": 'לא ניתן היה לטעון תעבורת Firewall',
+  "Couldn't load impact estimate": 'לא ניתן היה לטעון הערכת השפעה',
   Deployments: 'פריסות',
   Executions: 'הרצות',
   'Executions over time': 'הרצות לאורך זמן',

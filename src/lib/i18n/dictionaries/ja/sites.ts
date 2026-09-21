@@ -517,8 +517,8 @@ export const jaSitesDictionary: Record<string, string> = {
   'Checking your access to this preview deployment.':
     'このプレビューデプロイへのアクセス権を確認しています。',
   'Preview is private': 'このプレビューは非公開です',
-  "You don't have access to this preview. Ask a member of the project's organization to add you.":
-    'このプレビューへのアクセス権がありません。プロジェクトの組織のメンバーに追加を依頼してください。',
+  "Your account isn't in the organization that owns this site. Ask an organization member to invite you.":
+    'このサイトを所有する組織に所属していないアカウントです。組織のメンバーに招待を依頼してください。',
   'Invalid preview link': 'プレビューリンクが無効です',
   'This link is missing or has a malformed preview address. Open the preview URL again to start over.':
     'このリンクにはプレビューのアドレスがないか、アドレスが正しくありません。プレビューの URL をもう一度開いてやり直してください。',

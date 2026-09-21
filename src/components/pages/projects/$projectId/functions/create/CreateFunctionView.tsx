@@ -32,7 +32,6 @@ import {
   ArrowRight,
   ChevronRight,
   LayoutTemplate,
-  GitBranch,
 } from 'lucide-react'
 import { RefreshButton } from '@/components/global/shared/RefreshButton'
 import { VCSDetectionType } from '@appwrite.io/console'
@@ -58,12 +57,15 @@ import type { Models } from '@appwrite.io/console'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { useT } from '@/lib/i18n/translate'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { AuthFlowHeaderIcon } from '@/components/global/auth/AuthFlowHeaderIcon'
 import {
+  GitIcon,
   getKnownVcsProvider,
   buildVcsAuthUrl,
   VcsIcon,
   getVisibleVcsOAuthProviders,
   buildVcsOrgOptions,
+  vcsProviderButtonIconClassName,
   type VcsProviderId,
 } from '@/lib/vcs/providers'
 import {
@@ -615,10 +617,8 @@ export function CreateFunctionView() {
         <CreateWizardLeftColumn title={t('Connect Git repository')}>
           {!hasInstallations ? (
             <div className="rounded-lg border border-border bg-card/50 p-6 text-center">
-              <div className="flex justify-center mb-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
-                  <GitBranch className="h-5 w-5 text-muted-foreground" />
-                </div>
+              <div className="mb-3 flex justify-center">
+                <AuthFlowHeaderIcon icon={GitIcon} />
               </div>
               <h3 className="text-[13px] font-medium text-foreground mb-1">
                 {t('Connect Git provider')}
@@ -630,11 +630,16 @@ export function CreateFunctionView() {
               </p>
               <div className="flex flex-wrap items-center justify-center gap-2">
                 {vcsOAuthProviders.map((provider) => (
-                  <Button key={provider.id} size="sm" variant="secondary" asChild>
+                  <Button
+                    key={provider.id}
+                    size="sm"
+                    variant="secondary"
+                    asChild
+                  >
                     <a href={getVcsAuthUrl(provider.id)}>
                       <VcsIcon
                         type={provider.id}
-                        className="me-1.5 h-3.5 w-3.5"
+                        className={vcsProviderButtonIconClassName}
                       />
                       {t(`Connect ${provider.label}`)}
                     </a>

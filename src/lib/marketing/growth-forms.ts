@@ -1,4 +1,5 @@
 import { getRuntimeConfig } from '@/lib/runtime-config'
+import { getReferrerAndUtmSource } from '@/lib/marketing/utm'
 
 const GROWTH_ENDPOINT = getRuntimeConfig().growthEndpoint
 
@@ -6,17 +7,6 @@ function getGrowthBaseUrl(): string | null {
   const trimmed = GROWTH_ENDPOINT?.trim()
   if (!trimmed) return null
   return trimmed.replace(/\/$/, '')
-}
-
-function getReferrerAndUtmSource(): Record<string, string | undefined> {
-  if (typeof window === 'undefined') return {}
-  const params = new URLSearchParams(window.location.search)
-  return {
-    referrer: document.referrer || undefined,
-    utmSource: params.get('utm_source') ?? undefined,
-    utmMedium: params.get('utm_medium') ?? undefined,
-    utmCampaign: params.get('utm_campaign') ?? undefined,
-  }
 }
 
 async function postGrowthJson(path: string, body: Record<string, unknown>): Promise<boolean> {
@@ -30,10 +20,24 @@ async function postGrowthJson(path: string, body: Record<string, unknown>): Prom
   })
 
   if (response.status >= 400) {
+    let apiMessage: string | undefined
+    try {
+      const data = (await response.json()) as { message?: unknown }
+      if (typeof data.message === 'string' && data.message.trim()) {
+        apiMessage = data.message.trim()
+      }
+    } catch {
+      // Non-JSON error body
+    }
+
+    if (response.status === 429) {
+      throw new Error('Too many requests. Try again in a few minutes.')
+    }
+
     throw new Error(
       response.status >= 500
         ? 'Internal server error.'
-        : 'Error submitting form. Please contact support.',
+        : apiMessage ?? 'Error submitting form. Please contact support.',
     )
   }
 
@@ -83,12 +87,12 @@ export type EnterpriseApplicationPayload = {
   lastName: string
   email: string
   companyName: string
-  companySize?: string
+  companySize?: string | null
   companyWebsite: string
-  preferredDeployment?: string
-  timeline?: string
+  preferredDeployment?: string | null
+  timeline?: string | null
   useCase: string
-  cloudEmail?: string
+  cloudEmail?: string | null
 }
 
 export async function submitEnterpriseApplication(
@@ -104,11 +108,11 @@ export async function submitEnterpriseApplication(
     email: payload.email,
     message: payload.useCase,
     companyName: payload.companyName,
-    companySize: payload.companySize,
+    companySize: payload.companySize ?? null,
     companyWebsite,
-    preferredDeployment: payload.preferredDeployment,
-    timeline: payload.timeline,
-    cloudEmail: payload.cloudEmail,
+    preferredDeployment: payload.preferredDeployment ?? null,
+    timeline: payload.timeline ?? null,
+    cloudEmail: payload.cloudEmail ?? null,
     platform: 'appwrite',
   })
 }

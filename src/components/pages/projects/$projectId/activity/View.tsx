@@ -557,6 +557,7 @@ export function View({ projectId, initialData }: ViewProps) {
     isLoading,
     isFetching,
     isPending,
+    error: activitiesError,
     refetch,
   } = useProjectActivities({
     projectId,
@@ -582,7 +583,10 @@ export function View({ projectId, initialData }: ViewProps) {
   const hasMore =
     useLoaderList && initialData ? initialData.hasMore : hasMoreFromHook
   const showListLoading =
-    events.length === 0 && (isLoading || isFetching || isPending)
+    events.length === 0 &&
+    !activitiesError &&
+    (isLoading || isFetching || isPending)
+  const showListError = events.length === 0 && !!activitiesError
 
   const activityListFetchingCount = useIsFetching({
     queryKey: ['activities', 'project', projectId],
@@ -1070,6 +1074,27 @@ export function View({ projectId, initialData }: ViewProps) {
 
         {showListLoading ? (
           <ActivityLogsLoadingTable rowCount={pageSize} />
+        ) : showListError ? (
+          <EmptyState
+            icon={AlertCircle}
+            title={t('Failed to load activity')}
+            description={t(
+              "We couldn't retrieve activity logs. This might be a temporary issue. Please try again.",
+            )}
+            isEmpty={true}
+            variant="centered"
+            action={
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  void refetch()
+                }}
+              >
+                {t('Try again')}
+              </Button>
+            }
+          />
         ) : events.length > 0 ? (
           <>
             <div className="min-h-0 flex-1 overflow-auto">

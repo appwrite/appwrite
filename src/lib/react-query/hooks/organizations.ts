@@ -25,6 +25,7 @@ import { sdk } from '@/lib/appwrite/sdk'
 import { confirmPayment } from '@/lib/utils/stripe'
 import { resolveStripeProviderMethodId } from '@/lib/billing/addons'
 import { fetchConsoleAccount } from '@/lib/console-account-get'
+import { getConsoleAccountQueryRevision } from '@/lib/console-impersonation'
 import {
   hasProjectSpecificRoles,
   projectIdsFromRoles,
@@ -554,6 +555,19 @@ export async function fetchOrganizationBillingAggregation(
     }
     throw error
   }
+}
+
+/**
+ * Query function to fetch the current billing cycle estimation for an organization
+ *
+ * The response is already reconciled server-side: items sum to `amount`,
+ * discounts sum to `discount`, and `grossAmount` is the payable total.
+ *
+ * @param organizationId - The organization ID to estimate the current cycle for
+ * @returns Estimation for the current billing cycle
+ */
+export async function fetchOrganizationEstimation(organizationId: string) {
+  return await sdk.forConsole.organizations.getEstimation({ organizationId })
 }
 
 /**
@@ -1461,7 +1475,7 @@ export async function deleteBillingAddress(params: {
  */
 export function organizationsQueryOptions() {
   return queryOptions({
-    queryKey: ['organizations', 'console'],
+    queryKey: ['organizations', 'console', getConsoleAccountQueryRevision()],
     queryFn: fetchOrganizations,
     staleTime: LONG_STALE_TIME,
     // Default QueryClient gcTime is 0. Without this, loader prefetch is
@@ -2037,6 +2051,33 @@ export function organizationBillingAggregationQueryOptions(
     gcTime: organizationId && aggregationId ? 5 * 60 * 1000 : 0,
     meta: {
       // Slow usage aggregation must never keep the fullscreen initial loader up.
+      skipInitialLoader: true,
+    },
+  })
+}
+
+/**
+ * Query options for fetching the current billing cycle estimation for an organization
+ *
+ * This can be used in both route loaders and hooks to ensure consistent query configuration.
+ */
+export function organizationEstimationQueryOptions(
+  organizationId: string | null | undefined,
+) {
+  return queryOptions({
+    queryKey: ['billing-estimation', 'organization', organizationId],
+    queryFn: () => fetchOrganizationEstimation(organizationId!),
+    enabled: !!organizationId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false, // Don't retry on error
+    // Estimation moves with usage and addons, same as the aggregation it summarises.
+    refetchOnMount: true,
+    refetchOnWindowFocus: false, // Prevent refetch when switching tabs/windows
+    refetchOnReconnect: false, // Prevent refetch on network reconnect
+    // Don't keep disabled queries in cache
+    gcTime: organizationId ? 5 * 60 * 1000 : 0,
+    meta: {
+      // Slow billing estimation must never keep the fullscreen initial loader up.
       skipInitialLoader: true,
     },
   })

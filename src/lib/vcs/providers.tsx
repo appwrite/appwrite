@@ -65,6 +65,18 @@ export function BitbucketIcon({ className }: { className?: string }) {
   )
 }
 
+/** Connected repository summary tile on VCS cards. */
+export const vcsInlineProviderIconBoxClassName =
+  'flex size-12 shrink-0 items-center justify-center rounded-xl bg-muted'
+
+export const vcsInlineProviderIconClassName = 'size-5 shrink-0'
+
+/** Provider connect buttons on VCS cards. */
+export const vcsProviderButtonIconClassName = 'size-4'
+
+/** Provider-neutral Git mark for empty states and auth flows (not a host logo). */
+export { GitBranch as GitIcon } from 'lucide-react'
+
 export type VcsProviderId = 'github' | 'gitlab' | 'bitbucket' | 'origin'
 
 export interface VcsProviderMeta {
@@ -126,7 +138,8 @@ export function getVisibleVcsOAuthProviders(
   extraVcsOAuth: boolean,
 ): VcsProviderMeta[] {
   return Object.values(VCS_PROVIDERS).filter(
-    (provider) => ALWAYS_ENABLED_VCS_PROVIDERS.has(provider.id) || extraVcsOAuth,
+    (provider) =>
+      ALWAYS_ENABLED_VCS_PROVIDERS.has(provider.id) || extraVcsOAuth,
   )
 }
 
@@ -180,11 +193,7 @@ export function getProviderOwnerUrl(
 }
 
 function encodeVcsPath(value: string): string {
-  return value
-    .split('/')
-    .filter(Boolean)
-    .map(encodeURIComponent)
-    .join('/')
+  return value.split('/').filter(Boolean).map(encodeURIComponent).join('/')
 }
 
 /**

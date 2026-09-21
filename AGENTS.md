@@ -162,12 +162,22 @@ const { account, isAuthenticated } = useAuth()
 </DialogContent>
 ```
 
+**No-content modals** (confirmations, presets with description-only copy): skip the standalone header separator and the content section. Go from header straight to the footer; the footer’s top border is the only separator.
+
+```tsx
+<DialogHeader className="px-6 pt-6 pb-4 text-left">...</DialogHeader>
+<div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+  ...
+</div>
+```
+
 **Rules**:
 
 - **Title**: Use sentence case (only first letter capitalized)
 - **Header spacing**: Include `pb-4` for proper spacing before separator
 - **CTA buttons**: No icons in primary action buttons
-- **Exception**: No-content modals skip content section, go directly from header to footer
+- **No orphan separator**: Never render `<div className="border-t border-border" />` after the header unless a content section follows before the footer. A separator with empty space above the footer is not allowed.
+- **No-content modals**: Use the no-content pattern above (see `ConfirmActionDialog`).
 
 ### Settings Card Structure
 

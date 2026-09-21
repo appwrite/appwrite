@@ -88,6 +88,8 @@ export const ANALYTICS_ACTIONS = {
   'startups-apply-now': 'Startups Apply Now Clicked',
   'startups-form-submit': 'Startups Form Submit Clicked',
   'partners-form-submit': 'Partners Form Submit Clicked',
+  'feedback-github-issue': 'Feedback GitHub Issue Clicked',
+  'feedback-customer-story-submit': 'Feedback Customer Story Submit Clicked',
   'partners-become': 'Become Partner Clicked',
   'affiliates-join': 'Affiliates Join Clicked',
   'init-claim-ticket': 'Init Claim Ticket Clicked',

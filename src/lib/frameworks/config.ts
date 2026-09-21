@@ -152,6 +152,21 @@ export const FRAMEWORK_CONFIGS: FrameworkConfig[] = [
       },
     },
   },
+  {
+    key: 'jaspr',
+    adapters: {
+      ssr: {
+        desc: 'Set $ to $ in $.',
+        code: ['mode', 'server', 'pubspec.yaml'],
+        url: 'https://docs.jaspr.site/dev/modes',
+      },
+      static: {
+        desc: 'Set $ to $ in $.',
+        code: ['mode', 'static', 'pubspec.yaml'],
+        url: 'https://docs.jaspr.site/dev/modes',
+      },
+    },
+  },
 ]
 
 /** Normalize framework key for lookups (lowercase, trim). */

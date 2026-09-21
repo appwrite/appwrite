@@ -41,6 +41,7 @@ import {
   ConsoleRightPane,
   ConsoleRightPaneProvider,
 } from '@/components/global/providers/ConsoleRightPane'
+import { DebugDemoNavigatorMount } from '@/components/global/providers/DebugDemoNavigatorMount'
 import { DebugMenuMount } from '@/components/global/providers/DebugMenuMount'
 import { PromoBannerProvider } from '@/components/global/providers/PromoBanner'
 import { CookieConsentProvider } from '@/components/global/providers/CookieConsent'
@@ -518,6 +519,7 @@ function RootAppProviders({ children }: { children: React.ReactNode }) {
     <>
       <RootAppShell>{children}</RootAppShell>
       <ClientOnly>
+        <DebugDemoNavigatorMount />
         <DebugMenuMount />
       </ClientOnly>
     </>

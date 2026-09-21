@@ -1,4 +1,4 @@
-import { Link, useNavigate } from '@tanstack/react-router'
+import { Link, useNavigate, useRouter } from '@tanstack/react-router'
 import { PauseCircle, ArrowUpCircle, RotateCcw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useT } from '@/lib/i18n/translate'
@@ -23,11 +23,13 @@ export function PausedProjectCurtain({
 }: PausedProjectCurtainProps) {
   const t = useT()
   const navigate = useNavigate()
+  const router = useRouter()
   const resumeMutation = useResumeProject(projectId)
 
   async function handleRestore() {
     try {
       await resumeMutation.mutateAsync()
+      await router.invalidate()
       onRestoreSuccess?.()
       toast.success(t('Project resumed successfully'))
       // Mutation invalidates project and all project-scoped queries. Navigate to overview

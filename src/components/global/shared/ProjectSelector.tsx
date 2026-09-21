@@ -118,10 +118,15 @@ export function ProjectSelector({
     const mapped = projects.map((project) => {
       const name = formatProjectNameForDisplay(project.name)
       const paused = project.paused === true
+      const blocked = project.blocked === true
 
       return {
         value: project.$id,
-        label: paused ? `${name} ${t('(Paused)')}` : name,
+        label: blocked
+          ? `${name} ${t('(Blocked)')}`
+          : paused
+            ? `${name} ${t('(Paused)')}`
+            : name,
         // Includes the id so the value stays unique: names are not, and cmdk
         // keys rows by it, so duplicates would highlight and navigate as one.
         searchText: `${project.name} ${project.$id}`,
