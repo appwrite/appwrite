@@ -6,6 +6,7 @@ use Appwrite\Tests\Async;
 use Appwrite\Tests\Async\Exceptions\Critical;
 use CURLFile;
 use Tests\E2E\Client;
+use Utopia\Command;
 use Utopia\Console;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
@@ -260,12 +261,14 @@ trait FunctionsBase
         $folderPath = realpath(__DIR__ . '/../../../resources/functions') . "/$function";
         $tarPath = \sys_get_temp_dir() . '/appwrite-function-' . $function . '-' . \getmypid() . '-' . \uniqid('', true) . '.tar.gz';
 
-        Console::execute(
-            'tar --exclude code.tar.gz --exclude node_modules -czf ' . \escapeshellarg($tarPath) . ' -C ' . \escapeshellarg($folderPath) . ' .',
-            '',
-            $this->stdout,
-            $this->stderr
-        );
+        $tar = (new Command('tar'))
+            ->option('--exclude', 'code.tar.gz')
+            ->option('--exclude', 'node_modules')
+            ->flag('-czf')
+            ->argument($tarPath)
+            ->option('-C', $folderPath)
+            ->argument('.');
+        Console::execute($tar, '', $this->stdout, $this->stderr);
 
         if (filesize($tarPath) > 1024 * 1024 * 5) {
             throw new \Exception('Code package is too large. Use the chunked upload method instead.');

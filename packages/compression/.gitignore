@@ -1,0 +1,7 @@
+/vendor/
+/.vscode/
+.phpunit.result.cache
+tests/chunk.php
+.idea/
+.env
+composer.lock

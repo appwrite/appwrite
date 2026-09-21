@@ -374,6 +374,17 @@ abstract class Base extends Action
      * Providers that need to serialize multiple values into a single secret
      * (e.g. GitLab, which stores `{clientSecret, endpoint}` as JSON) should
      * encode those values into `$clientSecret` before calling this method.
+     *
+     * `$clientIds` are the additional client IDs accepted as ID token
+     * audiences by providers that support native ID token sign-in. Null
+     * leaves the stored list untouched; an empty array clears it.
+     *
+     * The two sign-in methods are switched on independently, because they need
+     * different things. The browser flow redeems an authorization code, so it
+     * cannot work without a client secret. Native ID token sign-in verifies a
+     * signature instead, so it needs no secret, only an audience to accept.
+     * Every credential param is optional; what a value is required for is
+     * decided by which method is being enabled.
      */
     protected function persistCredentials(
         Document $project,
@@ -381,7 +392,9 @@ abstract class Base extends Action
         Authorization $authorization,
         ?string $clientId,
         ?string $clientSecret,
-        ?bool $enabled
+        ?bool $enabled,
+        ?array $clientIds = null,
+        ?bool $nativeEnabled = null
     ): Document {
         $providerId = static::getProviderId();
         if (!(\in_array($providerId, \array_keys(Config::getParam('oAuthProviders'))))) {
@@ -393,6 +406,7 @@ abstract class Base extends Action
         $appIdKey = $providerId . 'Appid';
         $appSecretKey = $providerId . 'Secret';
         $enabledKey = $providerId . 'Enabled';
+        $nativeEnabledKey = $providerId . 'NativeEnabled';
 
         if (!\is_null($clientId)) {
             $oAuthProviders[$appIdKey] = $clientId;
@@ -402,11 +416,36 @@ abstract class Base extends Action
             $oAuthProviders[$appSecretKey] = $clientSecret;
         }
 
+        if (!\is_null($clientIds)) {
+            $oAuthProviders[$providerId . 'ClientIds'] = \array_values($clientIds);
+        }
+
         if (!\is_null($enabled)) {
             $oAuthProviders[$enabledKey] = $enabled;
         }
 
-        if ($enabled === true || \is_null($enabled)) {
+        if (!\is_null($nativeEnabled)) {
+            $oAuthProviders[$nativeEnabledKey] = $nativeEnabled;
+        }
+
+        // Only ever validated on an explicit switch-on, so callers that touch
+        // other fields cannot trip over it.
+        if ($nativeEnabled === true) {
+            $audiences = \array_filter(\array_merge(
+                [$oAuthProviders[$appIdKey] ?? ''],
+                $oAuthProviders[$providerId . 'ClientIds'] ?? [],
+            ));
+            if (empty($audiences)) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'A client ID or at least one native client ID is required when enabling native sign-in, so tokens can be matched to your app.');
+            }
+        }
+
+        // Browser sign-in is switched on implicitly when a request that says
+        // nothing about either method leaves complete credentials behind. A
+        // request that only touches native sign-in must leave it alone.
+        $implicitEnable = \is_null($enabled) && \is_null($nativeEnabled) && \is_null($clientIds);
+
+        if ($enabled === true || $implicitEnable) {
             try {
                 if (empty($oAuthProviders[$appIdKey]) || empty($oAuthProviders[$appSecretKey])) {
                     throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Client ID and Client Secret are required when enabling OAuth2 provider.');

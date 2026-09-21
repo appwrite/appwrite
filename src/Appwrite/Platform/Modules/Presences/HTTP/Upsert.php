@@ -52,7 +52,7 @@ class Upsert extends PlatformAction
                     namespace: 'presences',
                     group: 'presences',
                     name: 'upsert',
-                    desc: 'Upsert presence',
+                    summary: 'Upsert presence',
                     description: '/docs/references/presences/upsert.md',
                     auth: [AuthType::SESSION, AuthType::ADMIN],
                     responses: [
@@ -74,7 +74,7 @@ class Upsert extends PlatformAction
                     namespace: 'presences',
                     group: 'presences',
                     name: 'upsert',
-                    desc: 'Upsert presence',
+                    summary: 'Upsert presence',
                     description: '/docs/references/presences/upsert.md',
                     auth: [AuthType::KEY, AuthType::JWT],
                     responses: [

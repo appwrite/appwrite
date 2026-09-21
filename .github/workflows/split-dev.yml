@@ -1,0 +1,110 @@
+name: Split Dev
+
+# Publishes a feature branch's split of one or more packages to their mirrors,
+# so consumers can require `utopia-php/<name>: dev-<branch>` from Packagist
+# before anything is merged or released. Dispatch it on the feature branch;
+# re-dispatch after new pushes (the split is force-pushed), and dispatch with
+# action=delete when done. See rfc/monorepo.md.
+
+on:
+  workflow_dispatch:
+    inputs:
+      package:
+        description: Package name(s) to publish, space-separated (e.g. "http di")
+        required: true
+        type: string
+      action:
+        description: publish pushes the dev branch to the mirror(s); delete removes it
+        required: true
+        type: choice
+        options: [publish, delete]
+        default: publish
+
+concurrency:
+  group: split-dev-${{ github.ref }}-${{ inputs.package }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  split-dev:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Refuse main
+        if: github.ref_name == 'main'
+        run: |
+          echo "::error::main is published by the regular Split workflow — dispatch this on a feature branch"
+          exit 1
+
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+          # the persisted GITHUB_TOKEN header would override the app token on push
+          persist-credentials: false
+
+      - uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        id: app-token
+        with:
+          app-id: ${{ vars.SPLIT_APP_ID }}
+          private-key: ${{ secrets.SPLIT_APP_PRIVATE_KEY }}
+          owner: utopia-php
+
+      - name: Publish dev branch
+        if: inputs.action == 'publish'
+        env:
+          SPLIT_REMOTE_BASE: https://x-access-token:${{ steps.app-token.outputs.token }}@github.com/utopia-php
+          PACKAGES: ${{ inputs.package }}
+        # --force: rebasing the branch changes the synthesized split history,
+        # so pushes are not fast-forward across dispatches
+        run: bin/monorepo split $PACKAGES --branch="$GITHUB_REF_NAME" --force
+
+      - name: Delete dev branch
+        if: inputs.action == 'delete'
+        env:
+          TOKEN: ${{ steps.app-token.outputs.token }}
+          PACKAGES: ${{ inputs.package }}
+        run: |
+          # keep going on failure so one missing branch doesn't strand the rest
+          failed=0
+          for package in $PACKAGES; do
+            if git push "https://x-access-token:${TOKEN}@github.com/utopia-php/${package}.git" ":refs/heads/${GITHUB_REF_NAME}"; then
+              echo "deleted ${package} -> ${GITHUB_REF_NAME}"
+            else
+              echo "::warning::${package}: could not delete ${GITHUB_REF_NAME} on the mirror (never published, or already deleted?)"
+              failed=1
+            fi
+          done
+          exit $failed
+
+      - name: Consumer instructions
+        if: inputs.action == 'publish'
+        env:
+          PACKAGES: ${{ inputs.package }}
+        run: |
+          {
+            echo "## Dev branch published"
+            echo
+            echo "Packagist picks the branch up from the mirror within a minute or two. In the consumer:"
+            echo
+            for package in $PACKAGES; do
+              # anchor the alias to the newest stable release — a pre-release on a newer
+              # major (http/3.0.0-rc1) must not hoist the alias past the stable line;
+              # packages that only ever released pre-releases fall back to their newest tag
+              latest=$(git tag --list "${package}/*" --sort=-v:refname | grep -v -- - | head -n 1 || true)
+              [ -n "$latest" ] || latest=$(git tag --list "${package}/*" --sort=-v:refname | head -n 1)
+              version=${latest#*/}
+              echo '```sh'
+              if [ -n "$latest" ]; then
+                # alias into the latest released minor so sibling constraints keep resolving
+                echo "composer require \"utopia-php/${package}:dev-${GITHUB_REF_NAME} as ${version%.*}.999\""
+              else
+                echo "composer require \"utopia-php/${package}:dev-${GITHUB_REF_NAME}\""
+              fi
+              echo '```'
+            done
+            echo
+            echo "The inline alias lets other packages' \`utopia-php/*\` constraints resolve against the dev branch; without it, set \`minimum-stability: dev\` (with \`prefer-stable: true\`) in the consumer."
+            echo
+            echo "When the branch is merged or abandoned, re-dispatch this workflow with **action: delete** to remove the mirror branch."
+          } >> "$GITHUB_STEP_SUMMARY"

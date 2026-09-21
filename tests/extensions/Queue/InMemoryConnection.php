@@ -88,6 +88,45 @@ final class InMemoryConnection implements Connection
         return \is_string($value) ? $value : false;
     }
 
+    /**
+     * Pop up to $count payloads from the tail, in pop order.
+     *
+     * Fewer than asked — including none — is the ordinary answer on a list that
+     * holds fewer, matching what LMPOP does for the real connection: it waits
+     * only for the first message and then takes whatever company it finds.
+     *
+     * $timeout is unused, as it is in every other pop here. Nothing in this fake
+     * blocks; an empty pop yields instead, which is what keeps a busy receive
+     * loop from starving the handlers it shares a thread with.
+     *
+     * @return list<string>
+     */
+    public function rightPopMany(string $queue, int $count, int $timeout): array
+    {
+        // The first one goes through pop(), so an empty queue costs exactly what
+        // it costs rightPop().
+        $first = $this->pop($queue, fromTail: true);
+        if (!\is_string($first)) {
+            return [];
+        }
+
+        $batch = [$first];
+
+        // The rest is only what is already on the list. Going back through pop()
+        // would yield once more on the message that is not there, turning a
+        // short batch into a sleep the real connection never takes.
+        while (\count($batch) < $count && !empty($this->lists[$queue])) {
+            $value = array_pop($this->lists[$queue]);
+            if (!\is_string($value)) {
+                break;
+            }
+
+            $batch[] = $value;
+        }
+
+        return $batch;
+    }
+
     public function rightPopLeftPush(string $queue, string $destination, int $timeout): string|false
     {
         $value = $this->rightPop($queue, $timeout);
@@ -168,6 +207,11 @@ final class InMemoryConnection implements Connection
         return true;
     }
 
+    public function setNotExists(string $key, string $value, int $ttl = 0): bool
+    {
+        return $this->get($key) === null && $this->set($key, $value, $ttl);
+    }
+
     public function get(string $key): array|string|null
     {
         return $this->values[$key] ?? null;
@@ -183,6 +227,11 @@ final class InMemoryConnection implements Connection
     public function increment(string $key): int
     {
         return $this->counters[$key] = ($this->counters[$key] ?? 0) + 1;
+    }
+
+    public function incrementBy(string $key, int $by): int
+    {
+        return $this->counters[$key] = ($this->counters[$key] ?? 0) + $by;
     }
 
     public function decrement(string $key): int
