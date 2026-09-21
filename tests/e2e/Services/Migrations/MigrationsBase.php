@@ -288,73 +288,6 @@ trait MigrationsBase
         }
     }
 
-    protected function getProjectVariableByKey(array $headers, string $key): ?array
-    {
-        $cursorId = null;
-
-        do {
-            $queries = [
-                Query::limit(100)->toString(),
-            ];
-
-            if ($cursorId !== null) {
-                $queries[] = Query::cursorAfter(new Document(['$id' => $cursorId]))->toString();
-            }
-
-            $response = $this->client->call(Client::METHOD_GET, '/project/variables', $headers, [
-                'queries' => $queries,
-                'total' => false,
-            ]);
-            $this->assertSame(200, $response['headers']['status-code']);
-
-            $variables = $response['body']['variables'];
-            foreach ($variables as $variable) {
-                if ($variable['key'] === $key) {
-                    return $variable;
-                }
-            }
-
-            $cursorId = !empty($variables) ? $variables[array_key_last($variables)]['$id'] : null;
-        } while (\count($variables) === 100);
-
-        return null;
-    }
-
-    protected function functionUpdatePayload(string $name): array
-    {
-        return [
-            'name' => $name,
-            'runtime' => 'node-22',
-            'execute' => [],
-            'events' => [],
-            'schedule' => '',
-            'timeout' => 15,
-            'enabled' => true,
-            'logging' => true,
-            'entrypoint' => 'index.js',
-            'commands' => '',
-            'scopes' => [],
-        ];
-    }
-
-    protected function siteUpdatePayload(string $name): array
-    {
-        return [
-            'name' => $name,
-            'framework' => 'other',
-            'enabled' => true,
-            'logging' => true,
-            'timeout' => 30,
-            'installCommand' => '',
-            'buildCommand' => '',
-            'startCommand' => '',
-            'outputDirectory' => './',
-            'buildRuntime' => 'node-22',
-            'adapter' => 'static',
-            'fallbackFile' => '',
-        ];
-    }
-
     /**
      * Appwrite E2E Migration Tests
      */
@@ -437,8 +370,6 @@ trait MigrationsBase
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEquals($user['email'], $response['body']['email']);
         $this->assertEquals($user['password'], $response['body']['password']);
-
-        $this->assertMigrationDuplicateModesComplete([Resource::TYPE_USER]);
 
         // Cleanup
         $this->client->call(Client::METHOD_DELETE, '/users/' . $user['$id'], [
@@ -618,12 +549,6 @@ trait MigrationsBase
         $this->assertEquals($user['body']['$id'], $membership['userId']);
         $this->assertEquals($team['body']['$id'], $membership['teamId']);
         $this->assertEquals(['owner'], $membership['roles']);
-
-        $this->assertMigrationDuplicateModesComplete([
-            Resource::TYPE_USER,
-            Resource::TYPE_TEAM,
-            Resource::TYPE_MEMBERSHIP,
-        ]);
 
         // Cleanup
         $this->client->call(Client::METHOD_DELETE, '/teams/' . $team['body']['$id'], [
@@ -2351,60 +2276,6 @@ trait MigrationsBase
         $this->assertEquals($bucket['body']['encryption'], $response['body']['encryption']);
         $this->assertEquals($bucket['body']['antivirus'], $response['body']['antivirus']);
 
-        $sourceHeaders = [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ];
-        $destinationHeaders = [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getDestinationProject()['$id'],
-            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
-        ];
-        $bucketId = $bucket['body']['$id'];
-
-        $this->assertMigrationSkipAndOverwrite(
-            [Resource::TYPE_BUCKET],
-            function () use ($bucketId, $destinationHeaders, $bucket): void {
-                $response = $this->client->call(Client::METHOD_PUT, '/storage/buckets/' . $bucketId, $destinationHeaders, [
-                    'name' => 'Destination Bucket',
-                    'permissions' => $bucket['body']['$permissions'],
-                    'fileSecurity' => $bucket['body']['fileSecurity'],
-                    'maximumFileSize' => $bucket['body']['maximumFileSize'],
-                    'allowedFileExtensions' => $bucket['body']['allowedFileExtensions'],
-                    'compression' => $bucket['body']['compression'],
-                    'encryption' => $bucket['body']['encryption'],
-                    'antivirus' => $bucket['body']['antivirus'],
-                ]);
-                $this->assertEquals(200, $response['headers']['status-code']);
-            },
-            function (array $skip) use ($bucketId, $destinationHeaders): void {
-                $this->assertGreaterThanOrEqual(1, $skip['statusCounters'][Resource::TYPE_BUCKET]['skip']);
-                $bucket = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId, $destinationHeaders);
-                $this->assertEquals(200, $bucket['headers']['status-code']);
-                $this->assertSame('Destination Bucket', $bucket['body']['name']);
-            },
-            function () use ($bucketId, $sourceHeaders, $bucket): void {
-                $response = $this->client->call(Client::METHOD_PUT, '/storage/buckets/' . $bucketId, $sourceHeaders, [
-                    'name' => 'Source Bucket Overwrite',
-                    'permissions' => $bucket['body']['$permissions'],
-                    'fileSecurity' => $bucket['body']['fileSecurity'],
-                    'maximumFileSize' => $bucket['body']['maximumFileSize'],
-                    'allowedFileExtensions' => $bucket['body']['allowedFileExtensions'],
-                    'compression' => $bucket['body']['compression'],
-                    'encryption' => $bucket['body']['encryption'],
-                    'antivirus' => $bucket['body']['antivirus'],
-                ]);
-                $this->assertEquals(200, $response['headers']['status-code']);
-            },
-            function (array $overwrite) use ($bucketId, $destinationHeaders): void {
-                $this->assertGreaterThanOrEqual(1, $overwrite['statusCounters'][Resource::TYPE_BUCKET]['success']);
-                $bucket = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId, $destinationHeaders);
-                $this->assertEquals(200, $bucket['headers']['status-code']);
-                $this->assertSame('Source Bucket Overwrite', $bucket['body']['name']);
-            },
-        );
-
         // Cleanup
         $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $bucket['body']['$id'], [
             'content-type' => 'application/json',
@@ -2502,62 +2373,6 @@ trait MigrationsBase
 
         $this->assertEquals($fileId, $response['body']['$id']);
 
-        $sourceHeaders = [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ];
-        $destinationHeaders = [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getDestinationProject()['$id'],
-            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
-        ];
-
-        $updateDestination = $this->client->call(Client::METHOD_PUT, '/storage/buckets/' . $bucketId . '/files/' . $fileId, $destinationHeaders, [
-            'name' => 'destination-logo.png',
-            'permissions' => $file['body']['$permissions'],
-        ]);
-        $this->assertEquals(200, $updateDestination['headers']['status-code']);
-
-        $skip = $this->performMigrationSync([
-            'resources' => [Resource::TYPE_BUCKET, Resource::TYPE_FILE],
-            'endpoint' => $this->webEndpoint,
-            'projectId' => $this->getProject()['$id'],
-            'apiKey' => $this->getProject()['apiKey'],
-            'onDuplicate' => 'skip',
-        ]);
-        $this->assertSame('completed', $skip['status']);
-        $this->assertNoMigrationCounterErrors($skip);
-        $this->assertGreaterThanOrEqual(1, $skip['statusCounters'][Resource::TYPE_FILE]['skip']);
-
-        $fileAfterSkip = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId, $destinationHeaders);
-        $this->assertEquals(200, $fileAfterSkip['headers']['status-code']);
-        $this->assertSame('destination-logo.png', $fileAfterSkip['body']['name']);
-
-        // Even when a file cannot be updated in place, overwrite should replace
-        // only the matching destination file ID.
-        sleep(1);
-        $updateSource = $this->client->call(Client::METHOD_PUT, '/storage/buckets/' . $bucketId . '/files/' . $fileId, $sourceHeaders, [
-            'name' => 'source-logo.png',
-            'permissions' => $file['body']['$permissions'],
-        ]);
-        $this->assertEquals(200, $updateSource['headers']['status-code']);
-
-        $overwrite = $this->performMigrationSync([
-            'resources' => [Resource::TYPE_BUCKET, Resource::TYPE_FILE],
-            'endpoint' => $this->webEndpoint,
-            'projectId' => $this->getProject()['$id'],
-            'apiKey' => $this->getProject()['apiKey'],
-            'onDuplicate' => 'overwrite',
-        ]);
-        $this->assertSame('completed', $overwrite['status']);
-        $this->assertNoMigrationCounterErrors($overwrite);
-        $this->assertGreaterThanOrEqual(1, $overwrite['statusCounters'][Resource::TYPE_FILE]['success']);
-
-        $fileAfterOverwrite = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId, $destinationHeaders);
-        $this->assertEquals(200, $fileAfterOverwrite['headers']['status-code']);
-        $this->assertSame('source-logo.png', $fileAfterOverwrite['body']['name']);
-
         // Cleanup
         $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $bucketId . '/files/' . $fileId, [
             'content-type' => 'application/json',
@@ -2603,7 +2418,6 @@ trait MigrationsBase
             'secret' => false,
         ]);
         $this->assertEquals(201, $variable['headers']['status-code']);
-        $variableId = $variable['body']['$id'];
 
         $secretVariable = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/variables', $sourceHeaders, [
             'variableId' => ID::unique(),
@@ -2613,7 +2427,7 @@ trait MigrationsBase
         ]);
         $this->assertEquals(201, $secretVariable['headers']['status-code']);
 
-        $deploymentId = $this->setupDeployment($functionId, [
+        $this->setupDeployment($functionId, [
             'code' => $this->packageFunction('basic'),
             'activate' => true
         ]);
@@ -2783,105 +2597,6 @@ trait MigrationsBase
         $this->assertSame(200, $completedExecution['responseStatusCode'], 'Execution returned an unexpected status: ' . json_encode($completedExecution, JSON_PRETTY_PRINT));
         $this->assertStringContainsString('body-is-test', (string) $completedExecution['logs'], 'Execution completed without the logs it printed: ' . json_encode($completedExecution, JSON_PRETTY_PRINT));
 
-        $this->assertMigrationSkipAndOverwrite(
-            [Resource::TYPE_FUNCTION, Resource::TYPE_ENVIRONMENT_VARIABLE],
-            function () use ($functionId, $variableId, $destinationHeaders): void {
-                $this->client->call(Client::METHOD_PUT, '/functions/' . $functionId, $destinationHeaders, $this->functionUpdatePayload('Destination Function'));
-                $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId . '/variables/' . $variableId, $destinationHeaders);
-                $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/variables', $destinationHeaders, [
-                    'variableId' => $variableId,
-                    'key' => 'FUNCTION_DUPLICATE_MODE',
-                    'value' => 'destination-only',
-                    'secret' => false,
-                ]);
-            },
-            function (array $skip) use ($functionId, $variableId, $destinationHeaders): void {
-                $this->assertGreaterThanOrEqual(1, $skip['statusCounters'][Resource::TYPE_FUNCTION]['skip']);
-                $this->assertGreaterThanOrEqual(1, $skip['statusCounters'][Resource::TYPE_ENVIRONMENT_VARIABLE]['skip']);
-                $function = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId, $destinationHeaders);
-                $this->assertEquals(200, $function['headers']['status-code']);
-                $this->assertSame('Destination Function', $function['body']['name']);
-                $variable = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/variables/' . $variableId, $destinationHeaders);
-                $this->assertEquals(200, $variable['headers']['status-code']);
-                $this->assertSame('destination-only', $variable['body']['value']);
-            },
-            function () use ($functionId, $variableId, $sourceHeaders): void {
-                $this->client->call(Client::METHOD_PUT, '/functions/' . $functionId, $sourceHeaders, $this->functionUpdatePayload('Source Function Overwrite'));
-                $this->client->call(Client::METHOD_PUT, '/functions/' . $functionId . '/variables/' . $variableId, $sourceHeaders, [
-                    'key' => 'FUNCTION_DUPLICATE_MODE',
-                    'value' => 'source-overwrite',
-                ]);
-            },
-            function (array $overwrite) use ($functionId, $variableId, $destinationHeaders): void {
-                $this->assertGreaterThanOrEqual(1, $overwrite['statusCounters'][Resource::TYPE_FUNCTION]['success']);
-                $this->assertGreaterThanOrEqual(1, $overwrite['statusCounters'][Resource::TYPE_ENVIRONMENT_VARIABLE]['success']);
-                $function = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId, $destinationHeaders);
-                $this->assertEquals(200, $function['headers']['status-code']);
-                $this->assertSame('Source Function Overwrite', $function['body']['name']);
-                $variable = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/variables/' . $variableId, $destinationHeaders);
-                $this->assertEquals(200, $variable['headers']['status-code']);
-                $this->assertSame('source-overwrite', $variable['body']['value']);
-            },
-        );
-
-        $destinationOnlyDeployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', [
-            'content-type' => 'multipart/form-data',
-            'x-appwrite-project' => $this->getDestinationProject()['$id'],
-            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
-        ], [
-            'code' => $this->packageFunction('basic'),
-            'activate' => 'false',
-            'entrypoint' => 'index.js',
-        ]);
-        $this->assertEquals(202, $destinationOnlyDeployment['headers']['status-code']);
-        $destinationOnlyDeploymentId = $destinationOnlyDeployment['body']['$id'];
-
-        $seedDeploymentDuplicate = $this->performMigrationSync([
-            'resources' => [Resource::TYPE_FUNCTION, Resource::TYPE_DEPLOYMENT],
-            'endpoint' => $this->webEndpoint,
-            'projectId' => $this->getProject()['$id'],
-            'apiKey' => $this->getProject()['apiKey'],
-            'onDuplicate' => 'skip',
-        ]);
-        $this->assertSame('completed', $seedDeploymentDuplicate['status']);
-        $this->assertNoMigrationCounterErrors($seedDeploymentDuplicate);
-
-        $skipDeployment = $this->performMigrationSync([
-            'resources' => [Resource::TYPE_FUNCTION, Resource::TYPE_DEPLOYMENT],
-            'endpoint' => $this->webEndpoint,
-            'projectId' => $this->getProject()['$id'],
-            'apiKey' => $this->getProject()['apiKey'],
-            'onDuplicate' => 'skip',
-        ]);
-        $this->assertSame('completed', $skipDeployment['status']);
-        $this->assertNoMigrationCounterErrors($skipDeployment);
-        $this->assertGreaterThanOrEqual(1, $skipDeployment['statusCounters'][Resource::TYPE_DEPLOYMENT]['skip']);
-
-        $deploymentAfterSkip = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/deployments/' . $deploymentId, $destinationHeaders);
-        $this->assertEquals(200, $deploymentAfterSkip['headers']['status-code']);
-
-        // Ready deployments cannot be mutated through the public API. The
-        // destination duplicate is newer, so overwrite must preserve it.
-        $overwriteDeployment = $this->performMigrationSync([
-            'resources' => [Resource::TYPE_FUNCTION, Resource::TYPE_DEPLOYMENT],
-            'endpoint' => $this->webEndpoint,
-            'projectId' => $this->getProject()['$id'],
-            'apiKey' => $this->getProject()['apiKey'],
-            'onDuplicate' => 'overwrite',
-        ]);
-        $this->assertSame('completed', $overwriteDeployment['status']);
-        $this->assertNoMigrationCounterErrors($overwriteDeployment);
-        $this->assertGreaterThanOrEqual(1, $overwriteDeployment['statusCounters'][Resource::TYPE_DEPLOYMENT]['skip']);
-
-        $this->assertEventually(function () use ($functionId, $deploymentId, $destinationHeaders): void {
-            $deploymentAfterOverwrite = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/deployments/' . $deploymentId, $destinationHeaders);
-            $this->assertEquals(200, $deploymentAfterOverwrite['headers']['status-code']);
-            $this->assertSame('ready', $deploymentAfterOverwrite['body']['status']);
-        }, 120000, 500);
-
-        $destinationOnlyDeploymentAfterOverwrite = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/deployments/' . $destinationOnlyDeploymentId, $destinationHeaders);
-        $this->assertEquals(200, $destinationOnlyDeploymentAfterOverwrite['headers']['status-code']);
-
         // Cleanup
         $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, [
             'content-type' => 'application/json',
@@ -2901,17 +2616,6 @@ trait MigrationsBase
      */
     public function testAppwriteMigrationSite(): void
     {
-        $sourceHeaders = [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ];
-        $destinationHeaders = [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getDestinationProject()['$id'],
-            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
-        ];
-
         $site = $this->client->call(Client::METHOD_POST, '/sites', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -2970,7 +2674,6 @@ trait MigrationsBase
         ]);
 
         $this->assertEquals(201, $variable['headers']['status-code']);
-        $variableId = $variable['body']['$id'];
 
         $secretVariable = $this->client->call(Client::METHOD_POST, '/sites/' . $siteId . '/variables', [
             'content-type' => 'application/json',
@@ -3049,104 +2752,6 @@ trait MigrationsBase
         $this->assertEquals(2, $variables['body']['total']);
         $this->assertContains('TEST_VAR', \array_column($variables['body']['variables'], 'key'));
         $this->assertContains('SECRET_TEST_VAR', \array_column($variables['body']['variables'], 'key'));
-
-        $this->assertMigrationSkipAndOverwrite(
-            [Resource::TYPE_SITE, Resource::TYPE_SITE_VARIABLE],
-            function () use ($siteId, $variableId, $destinationHeaders): void {
-                $this->client->call(Client::METHOD_PUT, '/sites/' . $siteId, $destinationHeaders, $this->siteUpdatePayload('Destination Site'));
-                $this->client->call(Client::METHOD_DELETE, '/sites/' . $siteId . '/variables/' . $variableId, $destinationHeaders);
-                $this->client->call(Client::METHOD_POST, '/sites/' . $siteId . '/variables', $destinationHeaders, [
-                    'variableId' => $variableId,
-                    'key' => 'TEST_VAR',
-                    'value' => 'destination-only',
-                    'secret' => false,
-                ]);
-            },
-            function (array $skip) use ($siteId, $variableId, $destinationHeaders): void {
-                $this->assertGreaterThanOrEqual(1, $skip['statusCounters'][Resource::TYPE_SITE]['skip']);
-                $this->assertGreaterThanOrEqual(1, $skip['statusCounters'][Resource::TYPE_SITE_VARIABLE]['skip']);
-                $site = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId, $destinationHeaders);
-                $this->assertEquals(200, $site['headers']['status-code']);
-                $this->assertSame('Destination Site', $site['body']['name']);
-                $variable = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId . '/variables/' . $variableId, $destinationHeaders);
-                $this->assertEquals(200, $variable['headers']['status-code']);
-                $this->assertSame('destination-only', $variable['body']['value']);
-            },
-            function () use ($siteId, $variableId, $sourceHeaders): void {
-                $this->client->call(Client::METHOD_PUT, '/sites/' . $siteId, $sourceHeaders, $this->siteUpdatePayload('Source Site Overwrite'));
-                $this->client->call(Client::METHOD_PUT, '/sites/' . $siteId . '/variables/' . $variableId, $sourceHeaders, [
-                    'key' => 'TEST_VAR',
-                    'value' => 'source-overwrite',
-                ]);
-            },
-            function (array $overwrite) use ($siteId, $variableId, $destinationHeaders): void {
-                $this->assertGreaterThanOrEqual(1, $overwrite['statusCounters'][Resource::TYPE_SITE]['success']);
-                $this->assertGreaterThanOrEqual(1, $overwrite['statusCounters'][Resource::TYPE_SITE_VARIABLE]['success']);
-                $site = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId, $destinationHeaders);
-                $this->assertEquals(200, $site['headers']['status-code']);
-                $this->assertSame('Source Site Overwrite', $site['body']['name']);
-                $variable = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId . '/variables/' . $variableId, $destinationHeaders);
-                $this->assertEquals(200, $variable['headers']['status-code']);
-                $this->assertSame('source-overwrite', $variable['body']['value']);
-            },
-        );
-
-        $destinationOnlyDeployment = $this->client->call(Client::METHOD_POST, '/sites/' . $siteId . '/deployments', [
-            'content-type' => 'multipart/form-data',
-            'x-appwrite-project' => $this->getDestinationProject()['$id'],
-            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
-        ], [
-            'code' => $this->packageSite('static'),
-            'activate' => 'false',
-        ]);
-        $this->assertEquals(202, $destinationOnlyDeployment['headers']['status-code']);
-        $destinationOnlyDeploymentId = $destinationOnlyDeployment['body']['$id'];
-
-        $seedDeploymentDuplicate = $this->performMigrationSync([
-            'resources' => [Resource::TYPE_SITE, Resource::TYPE_SITE_DEPLOYMENT],
-            'endpoint' => $this->webEndpoint,
-            'projectId' => $this->getProject()['$id'],
-            'apiKey' => $this->getProject()['apiKey'],
-            'onDuplicate' => 'skip',
-        ]);
-        $this->assertSame('completed', $seedDeploymentDuplicate['status']);
-        $this->assertNoMigrationCounterErrors($seedDeploymentDuplicate);
-
-        $skipDeployment = $this->performMigrationSync([
-            'resources' => [Resource::TYPE_SITE, Resource::TYPE_SITE_DEPLOYMENT],
-            'endpoint' => $this->webEndpoint,
-            'projectId' => $this->getProject()['$id'],
-            'apiKey' => $this->getProject()['apiKey'],
-            'onDuplicate' => 'skip',
-        ]);
-        $this->assertSame('completed', $skipDeployment['status']);
-        $this->assertNoMigrationCounterErrors($skipDeployment);
-        $this->assertGreaterThanOrEqual(1, $skipDeployment['statusCounters'][Resource::TYPE_SITE_DEPLOYMENT]['skip']);
-
-        $deploymentAfterSkip = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId . '/deployments/' . $deploymentId, $destinationHeaders);
-        $this->assertEquals(200, $deploymentAfterSkip['headers']['status-code']);
-
-        // Ready deployments cannot be mutated through the public API. The
-        // destination duplicate is newer, so overwrite must preserve it.
-        $overwriteDeployment = $this->performMigrationSync([
-            'resources' => [Resource::TYPE_SITE, Resource::TYPE_SITE_DEPLOYMENT],
-            'endpoint' => $this->webEndpoint,
-            'projectId' => $this->getProject()['$id'],
-            'apiKey' => $this->getProject()['apiKey'],
-            'onDuplicate' => 'overwrite',
-        ]);
-        $this->assertSame('completed', $overwriteDeployment['status']);
-        $this->assertNoMigrationCounterErrors($overwriteDeployment);
-        $this->assertGreaterThanOrEqual(1, $overwriteDeployment['statusCounters'][Resource::TYPE_SITE_DEPLOYMENT]['skip']);
-
-        $this->assertEventually(function () use ($siteId, $deploymentId, $destinationHeaders): void {
-            $deploymentAfterOverwrite = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId . '/deployments/' . $deploymentId, $destinationHeaders);
-            $this->assertEquals(200, $deploymentAfterOverwrite['headers']['status-code']);
-            $this->assertSame('ready', $deploymentAfterOverwrite['body']['status']);
-        }, 120000, 500);
-
-        $destinationOnlyDeploymentAfterOverwrite = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId . '/deployments/' . $destinationOnlyDeploymentId, $destinationHeaders);
-        $this->assertEquals(200, $destinationOnlyDeploymentAfterOverwrite['headers']['status-code']);
 
         // Cleanup
         $this->client->call(Client::METHOD_DELETE, '/sites/' . $siteId, [
@@ -3252,37 +2857,6 @@ trait MigrationsBase
         $this->assertEquals('localhost', $foundPlatform['hostname']);
 
         $destinationPlatformId = $foundPlatform['$id'];
-        $this->assertMigrationSkipAndOverwrite(
-            [Resource::TYPE_PLATFORM],
-            function () use ($destinationHeaders, $destinationPlatformId): void {
-                $response = $this->client->call(Client::METHOD_PUT, '/project/platforms/web/' . $destinationPlatformId, $destinationHeaders, [
-                    'name' => 'Test Platform',
-                    'hostname' => 'destination.localhost',
-                ]);
-                $this->assertEquals(200, $response['headers']['status-code']);
-            },
-            function (array $migration) use ($destinationHeaders, $destinationPlatformId): void {
-                $this->assertGreaterThanOrEqual(1, $migration['statusCounters'][Resource::TYPE_PLATFORM]['skip']);
-
-                $response = $this->client->call(Client::METHOD_GET, '/project/platforms/' . $destinationPlatformId, $destinationHeaders);
-                $this->assertEquals(200, $response['headers']['status-code']);
-                $this->assertSame('destination.localhost', $response['body']['hostname']);
-            },
-            function () use ($sourceHeaders, $platform): void {
-                $response = $this->client->call(Client::METHOD_PUT, '/project/platforms/web/' . $platform['$id'], $sourceHeaders, [
-                    'name' => 'Test Platform',
-                    'hostname' => 'source.localhost',
-                ]);
-                $this->assertEquals(200, $response['headers']['status-code']);
-            },
-            function (array $migration) use ($destinationHeaders, $destinationPlatformId): void {
-                $this->assertGreaterThanOrEqual(1, $migration['statusCounters'][Resource::TYPE_PLATFORM]['success']);
-
-                $response = $this->client->call(Client::METHOD_GET, '/project/platforms/' . $destinationPlatformId, $destinationHeaders);
-                $this->assertEquals(200, $response['headers']['status-code']);
-                $this->assertSame('source.localhost', $response['body']['hostname']);
-            },
-        );
 
         // Cleanup on destination
         $this->client->call(Client::METHOD_DELETE, '/project/platforms/' . $destinationPlatformId, $destinationHeaders);
@@ -3364,39 +2938,6 @@ trait MigrationsBase
         $this->assertNotEquals($apiKey['secret'], $foundKey['secret']);
 
         $destinationKeyId = $foundKey['$id'];
-        $this->assertMigrationSkipAndOverwrite(
-            [Resource::TYPE_API_KEY],
-            function () use ($destinationHeaders, $destinationKeyId): void {
-                $response = $this->client->call(Client::METHOD_PUT, '/project/keys/' . $destinationKeyId, $destinationHeaders, [
-                    'name' => 'Test API Key',
-                    'scopes' => ['users.read'],
-                    'expire' => null,
-                ]);
-                $this->assertEquals(200, $response['headers']['status-code']);
-            },
-            function (array $migration) use ($destinationHeaders, $destinationKeyId): void {
-                $this->assertGreaterThanOrEqual(1, $migration['statusCounters'][Resource::TYPE_API_KEY]['skip']);
-
-                $response = $this->client->call(Client::METHOD_GET, '/project/keys/' . $destinationKeyId, $destinationHeaders);
-                $this->assertEquals(200, $response['headers']['status-code']);
-                $this->assertEqualsCanonicalizing(['users.read'], $response['body']['scopes']);
-            },
-            function () use ($sourceHeaders, $apiKey): void {
-                $response = $this->client->call(Client::METHOD_PUT, '/project/keys/' . $apiKey['$id'], $sourceHeaders, [
-                    'name' => 'Test API Key',
-                    'scopes' => ['users.read', 'users.write'],
-                    'expire' => null,
-                ]);
-                $this->assertEquals(200, $response['headers']['status-code']);
-            },
-            function (array $migration) use ($destinationHeaders, $destinationKeyId): void {
-                $this->assertGreaterThanOrEqual(1, $migration['statusCounters'][Resource::TYPE_API_KEY]['success']);
-
-                $response = $this->client->call(Client::METHOD_GET, '/project/keys/' . $destinationKeyId, $destinationHeaders);
-                $this->assertEquals(200, $response['headers']['status-code']);
-                $this->assertEqualsCanonicalizing(['users.read', 'users.write'], $response['body']['scopes']);
-            },
-        );
 
         // Cleanup migrated keys on destination — delete anything that isn't the destination's own auth key,
         // otherwise later tests inherit duplicated apiKeys and fail on conflict.
@@ -3487,50 +3028,6 @@ trait MigrationsBase
         }
 
         $destinationWebhookId = $foundWebhook['$id'];
-        $this->assertMigrationSkipAndOverwrite(
-            [Resource::TYPE_WEBHOOK],
-            function () use ($destinationHeaders, $destinationWebhookId, $webhookName): void {
-                $response = $this->client->call(Client::METHOD_PUT, '/webhooks/' . $destinationWebhookId, $destinationHeaders, [
-                    'name' => $webhookName,
-                    'events' => ['users.*.create'],
-                    'url' => 'https://appwrite.io/destination-hook',
-                    'enabled' => false,
-                    'tls' => true,
-                    'authUsername' => 'destination-user',
-                    'authPassword' => 'destination-pass',
-                ]);
-                $this->assertEquals(200, $response['headers']['status-code']);
-            },
-            function (array $migration) use ($destinationHeaders, $destinationWebhookId): void {
-                $this->assertGreaterThanOrEqual(1, $migration['statusCounters'][Resource::TYPE_WEBHOOK]['skip']);
-
-                $response = $this->client->call(Client::METHOD_GET, '/webhooks/' . $destinationWebhookId, $destinationHeaders);
-                $this->assertEquals(200, $response['headers']['status-code']);
-                $this->assertSame('https://appwrite.io/destination-hook', $response['body']['url']);
-                $this->assertFalse($response['body']['enabled']);
-            },
-            function () use ($sourceHeaders, $sourceWebhook, $webhookName): void {
-                $response = $this->client->call(Client::METHOD_PUT, '/webhooks/' . $sourceWebhook['$id'], $sourceHeaders, [
-                    'name' => $webhookName,
-                    'events' => ['users.*.create', 'users.*.update'],
-                    'url' => 'https://appwrite.io/source-hook',
-                    'enabled' => true,
-                    'tls' => true,
-                    'authUsername' => 'source-user',
-                    'authPassword' => 'source-pass',
-                ]);
-                $this->assertEquals(200, $response['headers']['status-code']);
-            },
-            function (array $migration) use ($destinationHeaders, $destinationWebhookId): void {
-                $this->assertGreaterThanOrEqual(1, $migration['statusCounters'][Resource::TYPE_WEBHOOK]['success']);
-
-                $response = $this->client->call(Client::METHOD_GET, '/webhooks/' . $destinationWebhookId, $destinationHeaders);
-                $this->assertEquals(200, $response['headers']['status-code']);
-                $this->assertSame('https://appwrite.io/source-hook', $response['body']['url']);
-                $this->assertEqualsCanonicalizing(['users.*.create', 'users.*.update'], $response['body']['events']);
-                $this->assertTrue($response['body']['enabled']);
-            },
-        );
 
         // Cleanup on destination
         $this->client->call(Client::METHOD_DELETE, '/webhooks/' . $destinationWebhookId, $destinationHeaders);
@@ -3649,32 +3146,6 @@ trait MigrationsBase
         // also stores empty. The original 'real-secret-value' must not have leaked.
         $this->assertEmpty($foundSecret['value']);
         $this->assertTrue($foundSecret['secret']);
-
-        $this->assertMigrationSkipAndOverwrite(
-            [Resource::TYPE_PROJECT_VARIABLE],
-            fn () => $this->client->call(Client::METHOD_PUT, '/project/variables/' . $foundPlain['$id'], $destinationHeaders, [
-                'key' => $plainKey,
-                'value' => 'destination-only',
-                'secret' => false,
-            ]),
-            function (array $skip) use ($destinationHeaders, $plainKey): void {
-                $this->assertGreaterThanOrEqual(1, $skip['statusCounters'][Resource::TYPE_PROJECT_VARIABLE]['skip']);
-                $variable = $this->getProjectVariableByKey($destinationHeaders, $plainKey);
-                $this->assertNotNull($variable);
-                $this->assertSame('destination-only', $variable['value']);
-            },
-            fn () => $this->client->call(Client::METHOD_PUT, '/project/variables/' . $plainVariable['$id'], $sourceHeaders, [
-                'key' => $plainKey,
-                'value' => 'source-overwrite',
-                'secret' => false,
-            ]),
-            function (array $overwrite) use ($destinationHeaders, $plainKey): void {
-                $this->assertGreaterThanOrEqual(1, $overwrite['statusCounters'][Resource::TYPE_PROJECT_VARIABLE]['success']);
-                $variable = $this->getProjectVariableByKey($destinationHeaders, $plainKey);
-                $this->assertNotNull($variable);
-                $this->assertSame('source-overwrite', $variable['value']);
-            },
-        );
 
         // Cleanup every destination variable this migration added, including any
         // unrelated source variables copied by the resource-level migration.
@@ -5567,42 +5038,6 @@ trait MigrationsBase
         $this->assertEquals('Migration Sendgrid', $response['body']['name']);
         $this->assertEquals('email', $response['body']['type']);
 
-        $this->assertMigrationSkipAndOverwrite(
-            [Resource::TYPE_PROVIDER],
-            function () use ($destinationHeaders, $providerId): void {
-                $response = $this->client->call(Client::METHOD_PATCH, '/messaging/providers/sendgrid/' . $providerId, $destinationHeaders, [
-                    'name' => 'Destination Sendgrid',
-                    'apiKey' => 'destination-apikey',
-                    'fromEmail' => 'destination-provider@test.com',
-                    'enabled' => false,
-                ]);
-                $this->assertEquals(200, $response['headers']['status-code']);
-            },
-            function (array $migration) use ($destinationHeaders, $providerId): void {
-                $this->assertGreaterThanOrEqual(1, $migration['statusCounters'][Resource::TYPE_PROVIDER]['skip']);
-
-                $response = $this->client->call(Client::METHOD_GET, '/messaging/providers/' . $providerId, $destinationHeaders);
-                $this->assertEquals(200, $response['headers']['status-code']);
-                $this->assertSame('Destination Sendgrid', $response['body']['name']);
-            },
-            function () use ($sourceHeaders, $providerId): void {
-                $response = $this->client->call(Client::METHOD_PATCH, '/messaging/providers/sendgrid/' . $providerId, $sourceHeaders, [
-                    'name' => 'Source Sendgrid Overwrite',
-                    'apiKey' => 'source-overwrite-apikey',
-                    'fromEmail' => 'source-overwrite-provider@test.com',
-                    'enabled' => false,
-                ]);
-                $this->assertEquals(200, $response['headers']['status-code']);
-            },
-            function (array $migration) use ($destinationHeaders, $providerId): void {
-                $this->assertGreaterThanOrEqual(1, $migration['statusCounters'][Resource::TYPE_PROVIDER]['success']);
-
-                $response = $this->client->call(Client::METHOD_GET, '/messaging/providers/' . $providerId, $destinationHeaders);
-                $this->assertEquals(200, $response['headers']['status-code']);
-                $this->assertSame('Source Sendgrid Overwrite', $response['body']['name']);
-            },
-        );
-
         // Cleanup
         $this->client->call(Client::METHOD_DELETE, '/messaging/providers/' . $providerId, [
             'content-type' => 'application/json',
@@ -5800,36 +5235,6 @@ trait MigrationsBase
         $this->assertEquals($topicId, $response['body']['$id']);
         $this->assertEquals('Migration Topic', $response['body']['name']);
 
-        $this->assertMigrationSkipAndOverwrite(
-            [Resource::TYPE_PROVIDER, Resource::TYPE_TOPIC],
-            function () use ($destinationHeaders, $topicId): void {
-                $response = $this->client->call(Client::METHOD_PATCH, '/messaging/topics/' . $topicId, $destinationHeaders, [
-                    'name' => 'Destination Topic',
-                ]);
-                $this->assertEquals(200, $response['headers']['status-code']);
-            },
-            function (array $migration) use ($destinationHeaders, $topicId): void {
-                $this->assertGreaterThanOrEqual(1, $migration['statusCounters'][Resource::TYPE_TOPIC]['skip']);
-
-                $response = $this->client->call(Client::METHOD_GET, '/messaging/topics/' . $topicId, $destinationHeaders);
-                $this->assertEquals(200, $response['headers']['status-code']);
-                $this->assertSame('Destination Topic', $response['body']['name']);
-            },
-            function () use ($sourceHeaders, $topicId): void {
-                $response = $this->client->call(Client::METHOD_PATCH, '/messaging/topics/' . $topicId, $sourceHeaders, [
-                    'name' => 'Source Topic Overwrite',
-                ]);
-                $this->assertEquals(200, $response['headers']['status-code']);
-            },
-            function (array $migration) use ($destinationHeaders, $topicId): void {
-                $this->assertGreaterThanOrEqual(1, $migration['statusCounters'][Resource::TYPE_TOPIC]['success']);
-
-                $response = $this->client->call(Client::METHOD_GET, '/messaging/topics/' . $topicId, $destinationHeaders);
-                $this->assertEquals(200, $response['headers']['status-code']);
-                $this->assertSame('Source Topic Overwrite', $response['body']['name']);
-            },
-        );
-
         // Cleanup
         $this->client->call(Client::METHOD_DELETE, '/messaging/topics/' . $topicId, [
             'content-type' => 'application/json',
@@ -5939,13 +5344,6 @@ trait MigrationsBase
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals($topicId, $response['body']['$id']);
         $this->assertGreaterThanOrEqual(1, $response['body']['emailTotal']);
-
-        $this->assertMigrationDuplicateModesComplete([
-            Resource::TYPE_USER,
-            Resource::TYPE_PROVIDER,
-            Resource::TYPE_TOPIC,
-            Resource::TYPE_SUBSCRIBER,
-        ]);
 
         // Cleanup
         $this->client->call(Client::METHOD_DELETE, '/messaging/topics/' . $topicId, [
@@ -6092,50 +5490,6 @@ trait MigrationsBase
         $this->assertEquals('Migration Test Email', $response['body']['data']['subject']);
         $this->assertEquals('This is a migration test email', $response['body']['data']['content']);
         $this->assertContains($topicId, $response['body']['topics']);
-
-        $this->assertMigrationSkipAndOverwrite(
-            [
-                Resource::TYPE_USER,
-                Resource::TYPE_PROVIDER,
-                Resource::TYPE_TOPIC,
-                Resource::TYPE_SUBSCRIBER,
-                Resource::TYPE_MESSAGE,
-            ],
-            function () use ($destinationHeaders, $messageId, $topicId): void {
-                $response = $this->client->call(Client::METHOD_PATCH, '/messaging/messages/email/' . $messageId, $destinationHeaders, [
-                    'topics' => [$topicId],
-                    'subject' => 'Destination Draft Email',
-                    'content' => 'Destination draft content',
-                    'draft' => true,
-                ]);
-                $this->assertEquals(200, $response['headers']['status-code']);
-            },
-            function (array $migration) use ($destinationHeaders, $messageId): void {
-                $this->assertGreaterThanOrEqual(1, $migration['statusCounters'][Resource::TYPE_MESSAGE]['skip']);
-
-                $response = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $messageId, $destinationHeaders);
-                $this->assertEquals(200, $response['headers']['status-code']);
-                $this->assertSame('Destination Draft Email', $response['body']['data']['subject']);
-                $this->assertSame('Destination draft content', $response['body']['data']['content']);
-            },
-            function () use ($sourceHeaders, $messageId, $topicId): void {
-                $response = $this->client->call(Client::METHOD_PATCH, '/messaging/messages/email/' . $messageId, $sourceHeaders, [
-                    'topics' => [$topicId],
-                    'subject' => 'Source Draft Email Overwrite',
-                    'content' => 'Source draft overwrite content',
-                    'draft' => true,
-                ]);
-                $this->assertEquals(200, $response['headers']['status-code']);
-            },
-            function (array $migration) use ($destinationHeaders, $messageId): void {
-                $this->assertGreaterThanOrEqual(1, $migration['statusCounters'][Resource::TYPE_MESSAGE]['success']);
-
-                $response = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $messageId, $destinationHeaders);
-                $this->assertEquals(200, $response['headers']['status-code']);
-                $this->assertSame('Source Draft Email Overwrite', $response['body']['data']['subject']);
-                $this->assertSame('Source draft overwrite content', $response['body']['data']['content']);
-            },
-        );
 
         // Cleanup
         $this->client->call(Client::METHOD_DELETE, '/messaging/messages/' . $messageId, [
