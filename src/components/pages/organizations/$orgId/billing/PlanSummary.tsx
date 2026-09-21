@@ -12,6 +12,8 @@ import {
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Progress } from '@/components/ui/progress'
+import { BillingStorageUsageProgress } from './_components/BillingStorageUsageProgress'
+import { getBillingStorageBreakdownFromResources } from '@/lib/billing/billing-storage-breakdown'
 import {
   Tooltip,
   TooltipContent,
@@ -408,7 +410,7 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
         // Always show the resource if it exists in aggregation or if plan has a limit
         // This matches the old UI which shows all resources
         if (shouldShow) {
-          resources.push({
+          const item: BillingProjectResourceItem = {
             resourceId,
             name,
             usage,
@@ -418,7 +420,16 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
             showLimit: requiresUpgrade ? false : showLimit,
             requiresUpgrade,
             category,
-          })
+          }
+          if (resourceId === 'storage') {
+            const storageBreakdown = getBillingStorageBreakdownFromResources(
+              projectResources,
+            )
+            if (storageBreakdown.length > 0) {
+              item.storageBreakdown = storageBreakdown
+            }
+          }
+          resources.push(item)
           projectTotal += cost
         }
       })
@@ -467,7 +478,7 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
   // Always show the full base resource list; disabled plan resources (-1) render
   // an Upgrade link instead of usage. Bump listVersion when the list shape changes
   // so Fast Refresh does not keep a stale memoized result.
-  const organizationUsageListVersion = 2
+  const organizationUsageListVersion = 3
   const organizationUsageCategories = useMemo(() => {
     if (usagePerProject) return []
     return buildOrganizationUsageCategoriesFromAggregation(
@@ -1010,7 +1021,17 @@ function BillingProjectResourceRow({
         </span>
 
         <div className="w-[120px] shrink-0">
-          {usagePercentage !== null ? (
+          {resource.resourceId === 'storage' &&
+          resource.storageBreakdown &&
+          resource.storageBreakdown.length > 0 &&
+          usagePercentage !== null ? (
+            <BillingStorageUsageProgress
+              totalUsageBytes={usage}
+              usagePercentage={usagePercentage}
+              segments={resource.storageBreakdown}
+              highlightWhenHigh
+            />
+          ) : usagePercentage !== null ? (
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
