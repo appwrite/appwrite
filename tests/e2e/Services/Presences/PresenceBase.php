@@ -1048,38 +1048,97 @@ trait PresenceBase
         $this->assertEquals(404, $response['headers']['status-code']);
     }
 
-    public function testUpdateDeletedPresenceWithPurge(): void
+    public function testUpdateWhilePresenceIsDeleted(): void
     {
         $projectId = $this->getProject()['$id'];
+        $userId = $this->getUser()['$id'];
         $headers = [
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getPresenceApiKey(),
         ];
 
-        $presence = $this->client->call(Client::METHOD_PUT, '/presences/' . ID::unique(), $headers, [
-            'userId' => $this->getUser()['$id'],
-            'status' => 'online',
-        ]);
-        $this->assertEquals(200, $presence['headers']['status-code']);
-        $presenceId = $presence['body']['$id'];
+        /**
+         * Test for SUCCESS
+         */
+        $attempts = 20;
+        $outcomes = [];
 
-        $delete = $this->client->call(Client::METHOD_DELETE, '/presences/' . $presenceId, $headers);
-        $this->assertEquals(204, $delete['headers']['status-code']);
+        for ($attempt = 0; $attempt < $attempts; $attempt++) {
+            $presence = $this->client->call(Client::METHOD_PUT, '/presences/' . ID::unique(), $headers, [
+                'userId' => $userId,
+                'status' => 'online',
+            ]);
+            $this->assertEquals(200, $presence['headers']['status-code']);
+            $presenceId = $presence['body']['$id'];
 
-        $update = $this->client->call(Client::METHOD_PATCH, '/presences/' . $presenceId, $headers, [
-            'userId' => $this->getUser()['$id'],
-            'status' => 'away',
-            'purge' => true,
-        ]);
-        $this->assertEquals(404, $update['headers']['status-code']);
-        $this->assertEquals('presence_not_found', $update['body']['type']);
+            [$update, $delete] = $this->callConcurrently([
+                [Client::METHOD_PATCH, '/presences/' . $presenceId, $headers, ['userId' => $userId, 'status' => 'away', 'purge' => true]],
+                [Client::METHOD_DELETE, '/presences/' . $presenceId, $headers, []],
+            ]);
 
-        $list = $this->client->call(Client::METHOD_GET, '/presences', $headers, [
-            'queries' => [Query::equal('userId', [$this->getUser()['$id']])->toString()],
-        ]);
-        $this->assertEquals(200, $list['headers']['status-code']);
-        $this->assertNotContains($presenceId, \array_column($list['body']['presences'], '$id'));
+            $outcomes[] = $update['status'];
+            $this->assertContains($update['status'], [200, 404], 'Update raced with delete: ' . $update['body']);
+            $this->assertContains($delete['status'], [204, 404], 'Delete raced with update: ' . $delete['body']);
+
+            if ($update['status'] === 404) {
+                $this->assertEquals('presence_not_found', \json_decode($update['body'], true)['type']);
+            }
+
+            $list = $this->client->call(Client::METHOD_GET, '/presences', $headers, [
+                'queries' => [Query::equal('userId', [$userId])->toString()],
+            ]);
+            $this->assertEquals(200, $list['headers']['status-code']);
+            $this->assertNotContains($presenceId, \array_column($list['body']['presences'], '$id'));
+        }
+
+        /**
+         * Test for FAILURE
+         */
+        $this->assertContains(404, $outcomes, 'No attempt observed the presence disappearing during the update');
+    }
+
+    /**
+     * @param array<int, array{0: string, 1: string, 2: array<string, string>, 3: array<string, mixed>}> $requests
+     * @return array<int, array{status: int, body: string}>
+     */
+    private function callConcurrently(array $requests): array
+    {
+        $multi = \curl_multi_init();
+        $handles = [];
+
+        foreach ($requests as $index => [$method, $path, $headers, $params]) {
+            $handle = \curl_init($this->client->getEndpoint() . $path);
+            \curl_setopt($handle, CURLOPT_CUSTOMREQUEST, $method);
+            \curl_setopt($handle, CURLOPT_RETURNTRANSFER, true);
+            \curl_setopt($handle, CURLOPT_POSTFIELDS, \json_encode($params));
+            \curl_setopt($handle, CURLOPT_HTTPHEADER, \array_map(
+                static fn (string $key, string $value): string => $key . ': ' . $value,
+                \array_keys($headers),
+                $headers,
+            ));
+            \curl_multi_add_handle($multi, $handle);
+            $handles[$index] = $handle;
+        }
+
+        do {
+            $status = \curl_multi_exec($multi, $running);
+            if ($running) {
+                \curl_multi_select($multi);
+            }
+        } while ($running && $status === CURLM_OK);
+
+        $results = [];
+        foreach ($handles as $index => $handle) {
+            $results[$index] = [
+                'status' => \curl_getinfo($handle, CURLINFO_RESPONSE_CODE),
+                'body' => (string) \curl_multi_getcontent($handle),
+            ];
+            \curl_multi_remove_handle($multi, $handle);
+        }
+        \curl_multi_close($multi);
+
+        return $results;
     }
 
     public function testClientCannotPassUserId(): void
