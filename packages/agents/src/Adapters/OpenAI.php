@@ -2,11 +2,11 @@
 
 namespace Utopia\Agents\Adapters;
 
+use Psr\Http\Client\ClientInterface;
 use Utopia\Agents\Adapter;
 use Utopia\Agents\Message;
 use Utopia\Agents\Schema;
-use Utopia\Fetch\Chunk;
-use Utopia\Fetch\Client;
+use Utopia\Psr18\StreamingClientInterface;
 
 class OpenAI extends Adapter
 {
@@ -92,13 +92,15 @@ class OpenAI extends Adapter
         int $maxTokens = 1024,
         float $temperature = 1.0,
         ?string $endpoint = null,
-        int $timeout = 90000
+        int $timeout = 90000,
+        (ClientInterface&StreamingClientInterface)|null $client = null
     ) {
         $this->apiKey = $apiKey;
         $this->maxTokens = $maxTokens;
         $this->temperature = $temperature;
         $this->endpoint = $endpoint ?? self::ENDPOINT;
         $this->timeout = $timeout;
+        $this->client = $client;
         $this->setModel($model);
     }
 
@@ -123,8 +125,6 @@ class OpenAI extends Adapter
         if ($agent === null) {
             throw new \Exception('Agent not set');
         }
-
-        $client = $this->createClient();
 
         $formattedMessages = [];
         foreach ($messages as $message) {
@@ -194,13 +194,11 @@ class OpenAI extends Adapter
         if ($payload['stream']) {
             $this->beginStreamProcessing();
             try {
-                $response = $client->fetch(
+                $response = $this->post(
                     $this->endpoint,
-                    Client::METHOD_POST,
                     $payload,
-                    [],
-                    function ($chunk) use (&$content, $listener) {
-                        /** @var Chunk $chunk */
+                    $this->headers(),
+                    function (string $chunk) use (&$content, $listener): void {
                         $content .= $this->process($chunk, $listener);
                     }
                 );
@@ -216,15 +214,11 @@ class OpenAI extends Adapter
                 $this->endStreamProcessing();
             }
         } else {
-            $response = $client->fetch(
-                $this->endpoint,
-                Client::METHOD_POST,
-                $payload,
-            );
-            $body = $response->getBody();
+            $response = $this->post($this->endpoint, $payload, $this->headers());
+            $body = (string) $response->getBody();
 
             if ($response->getStatusCode() >= 400) {
-                $json = is_string($body) ? json_decode($body, true) : null;
+                $json = json_decode($body, true);
                 $content = $this->formatErrorMessage($json);
                 throw new \Exception(
                     ucfirst($this->getName()).' API error: '.$content,
@@ -232,7 +226,7 @@ class OpenAI extends Adapter
                 );
             }
 
-            $json = is_string($body) ? json_decode($body, true) : null;
+            $json = json_decode($body, true);
             $choices = is_array($json) && isset($json['choices']) && is_array($json['choices']) ? $json['choices'] : [];
             $firstChoice = isset($choices[0]) && is_array($choices[0]) ? $choices[0] : [];
             $message = isset($firstChoice['message']) && is_array($firstChoice['message']) ? $firstChoice['message'] : [];
@@ -252,11 +246,11 @@ class OpenAI extends Adapter
      *
      * @throws \Exception
      */
-    protected function process(Chunk $chunk, ?callable $listener): string
+    protected function process(string $chunk, ?callable $listener): string
     {
         [$data, $lines] = $this->prepareStreamLines($chunk);
 
-        $json = $this->decodeJsonObject(trim($chunk->getData())) ?? $this->decodeJsonObject($data);
+        $json = $this->decodeJsonObject(trim($chunk)) ?? $this->decodeJsonObject($data);
         if (is_array($json) && isset($json['error'])) {
             return $this->formatErrorMessage($json);
         }
@@ -426,17 +420,15 @@ class OpenAI extends Adapter
     }
 
     /**
-     * Create a configured HTTP client for API requests.
+     * Headers every API request carries.
+     *
+     * @return array<string, string>
      */
-    protected function createClient(): Client
+    protected function headers(): array
     {
-        $client = new Client();
-        $client
-            ->setTimeout($this->timeout)
-            ->addHeader('authorization', 'Bearer '.$this->apiKey)
-            ->addHeader('content-type', Client::CONTENT_TYPE_APPLICATION_JSON);
-
-        return $client;
+        return [
+            'authorization' => 'Bearer '.$this->apiKey,
+        ];
     }
 
     /**
