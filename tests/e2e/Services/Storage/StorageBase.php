@@ -714,6 +714,91 @@ trait StorageBase
         $this->assertTrue(md5_file(realpath(__DIR__ . '/../../../resources/logo.png')) == $file['body']['signature']);
     }
 
+    public function testBucketFileCompressionAndEncryptionAreNeverNull(): void
+    {
+        // Neither compression nor encryption is configured, so the response
+        // values come from whatever the File model falls back to.
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'bucketId' => ID::unique(),
+            'name' => 'Test Bucket',
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $bucket['headers']['status-code']);
+
+        $bucketId = $bucket['body']['$id'];
+
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => ID::unique(),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
+        ]);
+        $this->assertEquals(201, $file['headers']['status-code']);
+        $this->assertSame('none', $file['body']['compression']);
+        $this->assertTrue($file['body']['encryption']);
+
+        $file = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $file['body']['$id'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+        $this->assertEquals(200, $file['headers']['status-code']);
+        $this->assertSame('none', $file['body']['compression']);
+        $this->assertTrue($file['body']['encryption']);
+
+        // A chunked upload creates the file document on the first chunk, before
+        // the algorithm is known, and returns it. Every chunk response is a File.
+        $source = __DIR__ . '/../../../resources/disk-a/large-file.mp4';
+        $size = \filesize($source);
+
+        // Both are skipped above the buffer, so every chunk reports none/false.
+        $this->assertGreaterThan(APP_STORAGE_READ_BUFFER, $size);
+        $chunkSize = 5 * 1024 * 1024;
+        $handle = @\fopen($source, 'rb');
+        $mimeType = \mime_content_type($source);
+        $counter = 0;
+        $id = '';
+        $chunked = null;
+        $headers = [
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ];
+        while (!\feof($handle)) {
+            $curlFile = new CURLFile('data://' . $mimeType . ';base64,' . \base64_encode(@\fread($handle, $chunkSize)), $mimeType, 'large-file.mp4');
+            $headers['content-range'] = 'bytes ' . ($counter * $chunkSize) . '-' . \min(((($counter * $chunkSize) + $chunkSize) - 1), $size - 1) . '/' . $size;
+            if (!empty($id)) {
+                $headers['x-appwrite-id'] = $id;
+            }
+            $chunked = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', \array_merge($headers, $this->getHeaders()), [
+                'fileId' => 'unique()',
+                'file' => $curlFile,
+            ]);
+            $this->assertNotEmpty($chunked['body']['$id']);
+            $this->assertSame('none', $chunked['body']['compression']);
+            $this->assertFalse($chunked['body']['encryption']);
+            $id = $chunked['body']['$id'];
+            $counter++;
+        }
+        \fclose($handle);
+        $this->assertEquals(201, $chunked['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $bucketId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+        $this->assertEquals(204, $response['headers']['status-code']);
+    }
+
     public function testCreateBucketFileNoCollidingId(): void
     {
         $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
@@ -1218,27 +1303,29 @@ trait StorageBase
         $this->assertEquals(201, $file['headers']['status-code']);
         $this->assertNotEmpty($file['body']['$id']);
 
-        //get image preview after
-        $file3 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/preview', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'width' => 300,
-            'height' => 100,
-            'borderRadius' => '50',
-            'opacity' => '0.5',
-            'output' => 'png',
-            'rotation' => '45',
-        ]);
+        // The delete worker invalidates previews asynchronously.
+        $this->assertEventually(function () use ($bucketId, $fileId, $imageBefore) {
+            $file3 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/preview', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'width' => 300,
+                'height' => 100,
+                'borderRadius' => '50',
+                'opacity' => '0.5',
+                'output' => 'png',
+                'rotation' => '45',
+            ]);
 
-        $this->assertEquals(200, $file3['headers']['status-code']);
-        $this->assertEquals('image/png', $file3['headers']['content-type']);
-        $this->assertNotEmpty($file3['body']);
+            $this->assertEquals(200, $file3['headers']['status-code']);
+            $this->assertEquals('image/png', $file3['headers']['content-type']);
+            $this->assertNotEmpty($file3['body']);
 
-        $imageAfter = new \Imagick();
-        $imageAfter->readImageBlob($file3['body']);
+            $imageAfter = new \Imagick();
+            $imageAfter->readImageBlob($file3['body']);
 
-        $this->assertNotSame($imageBefore->getImageBlob(), $imageAfter->getImageBlob());
+            $this->assertNotSame($imageBefore->getImageBlob(), $imageAfter->getImageBlob());
+        }, 10_000, 500);
     }
 
     public function testFilePreviewCacheControlOnCacheHit(): void
@@ -1828,6 +1915,144 @@ trait StorageBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]);
+    }
+
+    /**
+     * Concurrent unauthenticated uploads run the abuse rate limiter from many
+     * coroutines in one HTTP worker. A shared Redis connection there kills the
+     * worker with a fatal Swoole error instead of answering the requests.
+     *
+     * Two assertions, both on observable behavior. Every request must be
+     * answered -- a dead worker cannot answer, so it surfaces as a transport
+     * error or a negative status code. And every answer must carry coherent
+     * rate limit headers, which a limiter reading a corrupted connection
+     * cannot produce. Those headers are only checked for internal coherence,
+     * never against a configured limit. The header check holds whatever the
+     * worker topology is;
+     * the fan-out only decides how likely the requests are to land on one
+     * worker together, so treat this as a regression guard rather than proof
+     * of safety at any given concurrency.
+     */
+    public function testCreateBucketFileParallelUploads(): void
+    {
+        $total = 24;
+
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'bucketId' => ID::unique(),
+            'name' => 'Test Bucket Parallel Upload',
+            'antivirus' => false,
+            'encryption' => false,
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+
+        $this->assertEquals(201, $bucket['headers']['status-code']);
+
+        $bucketId = $bucket['body']['$id'];
+        $tmpDirectory = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'appwrite-parallel-uploads-' . $bucketId;
+        mkdir($tmpDirectory);
+
+        try {
+            $source = $tmpDirectory . DIRECTORY_SEPARATOR . 'parallel-upload.bin';
+            file_put_contents($source, str_repeat('parallel upload probe ', 32));
+
+            $endpoint = parse_url($this->client->getEndpoint());
+            $scheme = $endpoint['scheme'] ?? 'http';
+            $host = $endpoint['host'] ?? 'appwrite';
+            $port = $endpoint['port'] ?? ($scheme === 'https' ? 443 : 80);
+            $basePath = rtrim($endpoint['path'] ?? '', '/');
+
+            $responses = [];
+
+            \Swoole\Coroutine\run(function () use ($basePath, $bucketId, $host, $port, $scheme, $source, $total, &$responses): void {
+                $wg = new \Swoole\Coroutine\WaitGroup();
+
+                for ($index = 0; $index < $total; $index++) {
+                    $wg->add();
+                    \Swoole\Coroutine::create(function () use ($basePath, $bucketId, $host, $index, $port, &$responses, $scheme, $source, $wg): void {
+                        try {
+                            $client = new \Swoole\Coroutine\Http\Client($host, (int) $port, $scheme === 'https');
+                            $client->set([
+                                'timeout' => 60,
+                                'ssl_verify_peer' => false,
+                                'ssl_verify_host' => false,
+                            ]);
+                            // No API key or session: the abuse limiter only runs for unprivileged callers.
+                            $client->setHeaders(['x-appwrite-project' => $this->getProject()['$id']]);
+                            $client->setMethod(Client::METHOD_POST);
+                            $client->setData(['fileId' => ID::unique()]);
+                            $client->addFile($source, 'file', 'application/octet-stream', 'parallel-upload.bin');
+                            $client->execute($basePath . '/storage/buckets/' . $bucketId . '/files');
+
+                            $responses[$index] = [
+                                'error' => $client->errMsg,
+                                'headers' => $client->headers ?? [],
+                                'statusCode' => $client->statusCode,
+                            ];
+
+                            $client->close();
+                        } finally {
+                            $wg->done();
+                        }
+                    });
+                }
+
+                $wg->wait();
+            });
+
+            $this->assertCount($total, $responses);
+
+            foreach ($responses as $index => $response) {
+                // A dead worker shows up as a transport error or a negative status code.
+                $this->assertSame('', $response['error'], 'Upload ' . $index . ' failed at the connection level');
+                $this->assertContains($response['statusCode'], [201, 429], 'Upload ' . $index . ' returned ' . $response['statusCode']);
+
+                // The limiter answered from a usable connection, so it can still count.
+                // Coherence only: whatever the route's configured limit is, the
+                // remaining count has to fall inside it.
+                $this->assertArrayHasKey('x-ratelimit-limit', $response['headers'], 'Upload ' . $index . ' carried no rate limit headers');
+                $this->assertArrayHasKey('x-ratelimit-remaining', $response['headers'], 'Upload ' . $index . ' carried no remaining count');
+
+                $limit = (int) $response['headers']['x-ratelimit-limit'];
+                $remaining = (int) $response['headers']['x-ratelimit-remaining'];
+
+                $this->assertGreaterThan(0, $limit, 'Upload ' . $index . ' reported a nonsensical rate limit');
+                $this->assertGreaterThanOrEqual(0, $remaining);
+                $this->assertLessThanOrEqual($limit, $remaining);
+            }
+
+            $this->assertContains(201, array_column($responses, 'statusCode'));
+
+            // The worker must still be serving after the burst.
+            $alive = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+
+            $this->assertEquals(200, $alive['headers']['status-code']);
+        } finally {
+            $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $bucketId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+
+            foreach (glob($tmpDirectory . DIRECTORY_SEPARATOR . '*') ?: [] as $file) {
+                unlink($file);
+            }
+
+            if (is_dir($tmpDirectory)) {
+                rmdir($tmpDirectory);
+            }
+        }
     }
 
     public static function parallelChunksProvider(): array

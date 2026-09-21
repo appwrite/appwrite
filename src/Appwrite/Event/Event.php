@@ -386,7 +386,7 @@ class Event
             'userId' => $this->userId,
             'payload' => $this->payload,
             'context' => $this->context,
-            'events' => Event::generateEvents($this->getEvent(), $this->getParams())
+            'events' => Event::generateEvents($this->getEvent(), $this->getParams(), $this->getContext('database'))
         ];
     }
 
@@ -520,7 +520,9 @@ class Event
         }
 
         /**
-         * Create all possible patterns including placeholders.
+         * Create all possible patterns including placeholders, most specific first:
+         * consumers such as the functions worker take the first event as the name of
+         * the event that actually happened.
          */
         if ($action) {
             if ($subSubResource) {
@@ -536,10 +538,10 @@ class Event
                 $patterns[] = \implode('.', [$type, $resource, $subType, $subResource, $action]);
                 $patterns[] = \implode('.', [$type, $resource, $subType, $subResource]);
             } else {
+                if ($attribute) {
+                    $patterns[] = \implode('.', [$type, $resource, $action, $attribute]);
+                }
                 $patterns[] = \implode('.', [$type, $resource, $action]);
-            }
-            if ($attribute) {
-                $patterns[] = \implode('.', [$type, $resource, $action, $attribute]);
             }
         }
         if ($subSubResource) {

@@ -21,7 +21,6 @@ class Method
      * @param string $namespace
      * @param ?string $group
      * @param string $name
-     * @param string $desc
      * @param string $description
      * @param array<AuthType> $auth
      * @param array<SDKResponse> $responses
@@ -33,9 +32,9 @@ class Method
      * @param ContentType $requestType
      * @param array<Parameter> $parameters
      * @param array $additionalParameters
-     * @param string $desc
+     * @param string $summary
      * @param bool $public Whether this method should be rendered on the website/documentation
-     * @param array<string> $locationAuth Security scheme keys injected for location-type methods (includes project auth)
+     * @param array<string> $locationAuth Security scheme keys for location-type methods: first is the required project binding; additional keys supplement the base auth as an optional alternative
      */
     public function __construct(
         protected string $namespace,
@@ -52,13 +51,13 @@ class Method
         protected ContentType $requestType = ContentType::JSON,
         protected array $parameters = [],
         protected array $additionalParameters = [],
-        protected string $desc = '',
+        protected string $summary = '',
         protected bool $public = true,
         protected array $locationAuth = []
     ) {
         $this->validateMethod($name, $namespace);
         $this->validateAuthTypes($auth);
-        $this->validateDesc($description);
+        $this->validateDescription($description);
 
         foreach ($responses as $response) {
             $this->validateResponseModel($response->getModel());
@@ -89,18 +88,18 @@ class Method
         }
     }
 
-    protected function validateDesc(string $desc): void
+    protected function validateDescription(string $description): void
     {
-        if (empty($desc)) {
+        if (empty($description)) {
             self::$errors[] = "Error with {$this->getRouteName()} method: Description label is empty";
             return;
         }
 
-        if (\str_ends_with($desc, '.md')) {
-            $descPath = $this->getDescriptionFilePath() ?: $this->getDescription();
+        if (\str_ends_with($description, '.md')) {
+            $path = $this->getDescriptionFilePath() ?: $this->getDescription();
 
-            if (empty($descPath)) {
-                self::$errors[] = "Error with {$this->getRouteName()} method: Description file not found at {$desc}";
+            if (empty($path)) {
+                self::$errors[] = "Error with {$this->getRouteName()} method: Description file not found at {$description}";
                 return;
             }
         }
@@ -147,9 +146,9 @@ class Method
         return $this->name;
     }
 
-    public function getDesc(): string
+    public function getSummary(): string
     {
-        return $this->desc;
+        return $this->summary;
     }
 
     public function getDescription(): string

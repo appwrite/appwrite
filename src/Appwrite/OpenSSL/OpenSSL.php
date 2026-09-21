@@ -32,7 +32,7 @@ class OpenSSL
      * @param string $tag
      * @param string $aad
      *
-     * @return string
+     * @return string|false
      */
     public static function decrypt($data, $method, $password, $options = 1, $iv = '', $tag = '', $aad = '')
     {

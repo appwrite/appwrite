@@ -621,9 +621,8 @@ final class VCSGitHubConsoleClientTest extends Scope
         $this->assertEquals('main', $function['body']['providerBranch']);
     }
 
-    public function testGitHubPushCreatesFunctionDeploymentWithoutProjectHeader(): void
+    private function sendPushEvent(): array
     {
-        $data = $this->setupFunctionUsingVCS();
         $github = new GitHub(new Cache(new None()));
         $github->initializeVariables(
             $this->providerInstallationId,
@@ -681,6 +680,14 @@ final class VCSGitHubConsoleClientTest extends Scope
         // GitHub webhooks are public and intentionally have no x-appwrite-project header.
         $event = $this->client->call(Client::METHOD_POST, '/vcs/github/events', $headers, $payload);
 
+        return ['event' => $event, 'commit' => $commit];
+    }
+
+    public function testGitHubPushCreatesFunctionDeploymentWithoutProjectHeader(): void
+    {
+        $data = $this->setupFunctionUsingVCS();
+        ['event' => $event, 'commit' => $commit] = $this->sendPushEvent();
+
         $this->assertEquals(200, $event['headers']['status-code']);
 
         $deployments = $this->client->call(Client::METHOD_GET, '/functions/' . $data['functionId'] . '/deployments', array_merge([
@@ -695,6 +702,37 @@ final class VCSGitHubConsoleClientTest extends Scope
         $this->assertEquals(200, $deployments['headers']['status-code']);
         $this->assertGreaterThanOrEqual(1, $deployments['body']['total']);
         $this->assertSame($data['functionId'], $deployments['body']['deployments'][0]['resourceId']);
+    }
+
+    public function testGitHubPushForDeletedFunctionIsSkipped(): void
+    {
+        $installationId = $this->setupInstallation();
+
+        $function = $this->client->call(Client::METHOD_POST, '/functions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'functionId' => ID::unique(),
+            'name' => 'Deleted before push',
+            'runtime' => 'php-8.0',
+            'entrypoint' => 'index.php',
+            'installationId' => $installationId,
+            'providerRepositoryId' => $this->providerRepositoryId,
+            'providerBranch' => 'main',
+        ]);
+
+        $this->assertEquals(201, $function['headers']['status-code']);
+
+        $delete = $this->client->call(Client::METHOD_DELETE, '/functions/' . $function['body']['$id'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(204, $delete['headers']['status-code']);
+
+        ['event' => $event] = $this->sendPushEvent();
+
+        $this->assertEquals(200, $event['headers']['status-code']);
     }
 
     public function testUpdateFunctionUsingVCS(): void
@@ -801,11 +839,11 @@ final class VCSGitHubConsoleClientTest extends Scope
             'x-appwrite-project' => 'console',
         ];
 
-        $team = $this->client->call(Client::METHOD_POST, '/teams', $consoleHeaders, [
+        $team = $this->createTeamFixture($consoleHeaders, [
             'teamId' => ID::unique(),
             'name' => 'Cross Project Team',
         ]);
-        $this->assertEquals(201, $team['headers']['status-code']);
+        $this->assertEquals(200, $team['headers']['status-code']);
 
         $project2 = $this->client->call(Client::METHOD_POST, '/projects', $consoleHeaders, [
             'projectId' => ID::unique(),

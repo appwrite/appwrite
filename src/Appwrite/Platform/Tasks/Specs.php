@@ -23,6 +23,7 @@ use Utopia\DI\Container;
 use Utopia\Http\Http;
 use Utopia\Http\Request as UtopiaRequest;
 use Utopia\Http\Response as UtopiaResponse;
+use Utopia\OpenAPI\Model\ParameterLocation;
 use Utopia\Platform\Action;
 use Utopia\System\System;
 use Utopia\Validator\Nullable;
@@ -138,14 +139,9 @@ class Specs extends Action
                     'in' => 'header',
                 ],
                 'ProjectPath' => [
-                    'type' => 'apiKey',
-                    'name' => 'project',
-                    'description' => 'Your project ID',
-                    'in' => 'query',
-                    'x-appwrite' => [
-                        'location' => 'path',
-                        'param' => 'project_id',
-                    ],
+                    'location' => ParameterLocation::PATH->value,
+                    'param' => 'project_id',
+                    'config' => 'project',
                 ],
                 'JWT' => [
                     'type' => 'apiKey',
@@ -171,12 +167,6 @@ class Specs extends Action
                     'description' => 'The user session to authenticate with',
                     'in' => 'header',
                 ],
-                'DevKey' => [
-                    'type' => 'apiKey',
-                    'name' => 'X-Appwrite-Dev-Key',
-                    'description' => 'Your secret dev API key',
-                    'in' => 'header',
-                ],
                 'Cookie' => [
                     'type' => 'apiKey',
                     'name' => 'Cookie',
@@ -188,27 +178,18 @@ class Specs extends Action
                     'name' => 'X-Appwrite-Impersonate-User-Id',
                     'description' => 'Impersonate a user by ID',
                     'in' => 'header',
-                    'x-appwrite' => [
-                        'optional' => true,
-                    ],
                 ],
                 'ImpersonateUserEmail' => [
                     'type' => 'apiKey',
                     'name' => 'X-Appwrite-Impersonate-User-Email',
                     'description' => 'Impersonate a user by email',
                     'in' => 'header',
-                    'x-appwrite' => [
-                        'optional' => true,
-                    ],
                 ],
                 'ImpersonateUserPhone' => [
                     'type' => 'apiKey',
                     'name' => 'X-Appwrite-Impersonate-User-Phone',
                     'description' => 'Impersonate a user by phone',
                     'in' => 'header',
-                    'x-appwrite' => [
-                        'optional' => true,
-                    ],
                 ],
             ],
             APP_SDK_PLATFORM_SERVER => [
@@ -219,14 +200,9 @@ class Specs extends Action
                     'in' => 'header',
                 ],
                 'ProjectPath' => [
-                    'type' => 'apiKey',
-                    'name' => 'project',
-                    'description' => 'Your project ID',
-                    'in' => 'query',
-                    'x-appwrite' => [
-                        'location' => 'path',
-                        'param' => 'project_id',
-                    ],
+                    'location' => ParameterLocation::PATH->value,
+                    'param' => 'project_id',
+                    'config' => 'project',
                 ],
                 'Key' => [
                     'type' => 'apiKey',
@@ -270,12 +246,6 @@ class Specs extends Action
                     'description' => 'The user agent string of the client that made the request',
                     'in' => 'header',
                 ],
-                'DevKey' => [
-                    'type' => 'apiKey',
-                    'name' => 'X-Appwrite-Dev-Key',
-                    'description' => 'Your secret dev API key',
-                    'in' => 'header',
-                ],
                 'Cookie' => [
                     'type' => 'apiKey',
                     'name' => 'Cookie',
@@ -287,27 +257,18 @@ class Specs extends Action
                     'name' => 'X-Appwrite-Impersonate-User-Id',
                     'description' => 'Impersonate a user by ID',
                     'in' => 'header',
-                    'x-appwrite' => [
-                        'optional' => true,
-                    ],
                 ],
                 'ImpersonateUserEmail' => [
                     'type' => 'apiKey',
                     'name' => 'X-Appwrite-Impersonate-User-Email',
                     'description' => 'Impersonate a user by email',
                     'in' => 'header',
-                    'x-appwrite' => [
-                        'optional' => true,
-                    ],
                 ],
                 'ImpersonateUserPhone' => [
                     'type' => 'apiKey',
                     'name' => 'X-Appwrite-Impersonate-User-Phone',
                     'description' => 'Impersonate a user by phone',
                     'in' => 'header',
-                    'x-appwrite' => [
-                        'optional' => true,
-                    ],
                 ],
             ],
             APP_SDK_PLATFORM_CONSOLE => [
@@ -318,14 +279,9 @@ class Specs extends Action
                     'in' => 'header',
                 ],
                 'ProjectPath' => [
-                    'type' => 'apiKey',
-                    'name' => 'project',
-                    'description' => 'Your project ID',
-                    'in' => 'query',
-                    'x-appwrite' => [
-                        'location' => 'path',
-                        'param' => 'project_id',
-                    ],
+                    'location' => ParameterLocation::PATH->value,
+                    'param' => 'project_id',
+                    'config' => 'project',
                 ],
                 'Key' => [
                     'type' => 'apiKey',
@@ -375,38 +331,23 @@ class Specs extends Action
                     'description' => 'The user session to authenticate with',
                     'in' => 'header',
                 ],
-                'DevKey' => [
-                    'type' => 'apiKey',
-                    'name' => 'X-Appwrite-Dev-Key',
-                    'description' => 'Your secret dev API key',
-                    'in' => 'header',
-                ],
                 'ImpersonateUserId' => [
                     'type' => 'apiKey',
                     'name' => 'X-Appwrite-Impersonate-User-Id',
                     'description' => 'Impersonate a user by ID',
                     'in' => 'header',
-                    'x-appwrite' => [
-                        'optional' => true,
-                    ],
                 ],
                 'ImpersonateUserEmail' => [
                     'type' => 'apiKey',
                     'name' => 'X-Appwrite-Impersonate-User-Email',
                     'description' => 'Impersonate a user by email',
                     'in' => 'header',
-                    'x-appwrite' => [
-                        'optional' => true,
-                    ],
                 ],
                 'ImpersonateUserPhone' => [
                     'type' => 'apiKey',
                     'name' => 'X-Appwrite-Impersonate-User-Phone',
                     'description' => 'Impersonate a user by phone',
                     'in' => 'header',
-                    'x-appwrite' => [
-                        'optional' => true,
-                    ],
                 ],
             ],
         ];

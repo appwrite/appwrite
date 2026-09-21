@@ -36,6 +36,9 @@ class Install extends Action
     private const string PATTERN_DB_PASSWORD_VAR = '/^_APP_DB_.*_PASS$/';
     private const string PATTERN_SESSION_COOKIE = '/a_session_console=([^;]+)/';
 
+    public const string CHANNEL_STABLE = 'stable';
+    public const string CHANNEL_NIGHTLY = 'nightly';
+
     private const string APPWRITE_API_URL = 'http://appwrite';
     private const string GROWTH_API_URL = 'https://growth.appwrite.io/v1';
 
@@ -46,6 +49,7 @@ class Install extends Action
     protected ?array $installerConfig = null;
     protected string $path = '/usr/src/code/appwrite';
     protected string $topology = 'combined';
+    protected string $channel = self::CHANNEL_STABLE;
 
     public static function getName(): string
     {
@@ -64,6 +68,7 @@ class Install extends Action
             ->param('no-start', false, new Boolean(true), 'Run an interactive session', true)
             ->param('database', 'postgresql', new WhiteList(['postgresql', 'mariadb', 'mongodb']), 'Database to use (postgresql|mariadb|mongodb)', true)
             ->param('topology', 'combined', new WhiteList(['combined', 'separate']), 'Worker and scheduler topology (combined|separate)', true)
+            ->param('channel', self::CHANNEL_STABLE, new WhiteList([self::CHANNEL_STABLE, self::CHANNEL_NIGHTLY]), 'Release channel to track (stable|nightly). Nightly is unsupported and moves daily.', true)
             ->callback($this->action(...));
     }
 
@@ -75,8 +80,10 @@ class Install extends Action
         string $interactive,
         bool $noStart,
         string $database,
-        string $topology
+        string $topology,
+        string $channel = self::CHANNEL_STABLE
     ): void {
+        $this->channel = $channel;
         $isUpgrade = $this->isUpgrade;
         $defaultHttpPort = '80';
         $defaultHttpsPort = '443';
@@ -561,7 +568,25 @@ class Install extends Action
 
         $database = $input['_APP_DB_ADAPTER'] ?? 'postgresql';
 
-        $version = \getenv('_APP_VERSION') ?: (\defined('APP_VERSION_STABLE') ? APP_VERSION_STABLE : 'latest');
+        $stableVersion = \defined('APP_VERSION_STABLE') ? APP_VERSION_STABLE : 'latest';
+        $version = \getenv('_APP_VERSION') ?: $stableVersion;
+
+        // A nightly image reports the tag it was pulled under -- 2.0-nightly.<date> --
+        // which names a channel rather than a release, and so cannot be carried forward:
+        // there is no X.Y to re-derive a nightly tag from, and writing it back would keep
+        // an install asking for the stable channel on nightly. The release the image was
+        // built from is compiled in, and both channels take their tag from it.
+        if ($this->isNightlyTag($version)) {
+            $version = $stableVersion;
+        }
+
+        // The nightly channel tracks the minor line rather than one release, so the
+        // tag has to stay rolling -- pinning X.Y.Z would freeze the install on a
+        // single build. See the Releases section of AGENTS.md.
+        if ($this->channel === self::CHANNEL_NIGHTLY) {
+            $version = $this->nightlyTag($version);
+        }
+
         if ($isLocalInstall) {
             $version = 'local';
         }
@@ -821,6 +846,35 @@ class Install extends Action
             }
             throw $e;
         }
+    }
+
+    /**
+     * The tags nightly.yml publishes: `nightly`, `X.Y-nightly` and
+     * `X.Y-nightly.<date>`. A self-hoster's own tag that happens to mention the
+     * word is theirs, not this channel's, and is carried forward untouched.
+     */
+    private function isNightlyTag(string $version): bool
+    {
+        return $version === 'nightly'
+            || \str_ends_with($version, '-nightly')
+            || \str_contains($version, '-nightly.');
+    }
+
+    /**
+     * The rolling nightly tag for the minor line a stable version belongs to,
+     * e.g. 2.0.1 -> 2.0-nightly.
+     */
+    private function nightlyTag(string $version): string
+    {
+        [$major, $minor] = \array_pad(\explode('.', $version), 2, '');
+
+        if (!\ctype_digit($major) || !\ctype_digit($minor)) {
+            Console::warning("Cannot derive a nightly tag from '{$version}'; using the bare nightly tag.");
+
+            return 'nightly';
+        }
+
+        return "{$major}.{$minor}-nightly";
     }
 
     private function createInitialAdminAccount(array $account, ?callable $progress, string $apiUrl, string $domain): void

@@ -20,6 +20,7 @@ use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\Conflict as ConflictException;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Exception\Limit as LimitException;
@@ -345,6 +346,16 @@ class Update extends Action
                     'status' => 'failed',
                 ])));
                 throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+            } catch (AuthorizationException $e) {
+                $authorization->skip(fn () => $dbForProject->updateDocument('transactions', $transactionId, new Document([
+                    'status' => 'failed',
+                ])));
+                throw new Exception(Exception::USER_UNAUTHORIZED, previous: $e);
+            } catch (\Throwable $e) {
+                $authorization->skip(fn () => $dbForProject->updateDocument('transactions', $transactionId, new Document([
+                    'status' => 'failed',
+                ])));
+                throw $e;
             }
 
             foreach ($databaseOperations as $databaseInternalId => $count) {
@@ -473,9 +484,12 @@ class Update extends Action
                 $webhooksEvents = $eventProcessor->getWebhooksEvents($project);
 
                 foreach ($documentsToTrigger as $doc) {
+                    // Match the key set processDocument() gives every other row and document
+                    // event: the synthetic $databaseId, plus whichever of $tableId or
+                    // $collectionId belongs to the surface that was called.
                     $payload = $doc->getArrayCopy();
-                    $payload['$tableId'] = $collection->getId();
-                    $payload['$collectionId'] = $collection->getId();
+                    $payload['$databaseId'] = $database->getId();
+                    $payload['$' . $groupId] = $collection->getId();
 
                     $queueForEvents
                         ->setParam('documentId', $doc->getId())
@@ -485,7 +499,8 @@ class Update extends Action
                     // Generate events for this document operation
                     $generatedEvents = Event::generateEvents(
                         $queueForEvents->getEvent(),
-                        $queueForEvents->getParams()
+                        $queueForEvents->getParams(),
+                        $queueForEvents->getContext('database')
                     );
 
                     $queueForRealtime->from($queueForEvents)->trigger();
@@ -502,6 +517,7 @@ class Update extends Action
                                     userId: $queueForEvents->getUserId(),
                                     payload: $queueForEvents->getPayload(),
                                     platform: $queueForEvents->getPlatform(),
+                                    database: $queueForEvents->getContext('database'),
                                 ));
                                 break;
                             }

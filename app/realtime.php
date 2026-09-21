@@ -21,6 +21,7 @@ use Appwrite\Usage\Context as UsageContext;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
+use Appwrite\Utopia\WebSocket\Adapter\Swoole as SwooleAdapter;
 use Swoole\Coroutine;
 use Swoole\Http\Request as SwooleRequest;
 use Swoole\Http\Response as SwooleResponse;
@@ -28,7 +29,7 @@ use Swoole\Runtime;
 use Swoole\Table;
 use Swoole\Timer;
 use Utopia\Abuse\Abuse;
-use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
+use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\Cache\Adapter\Pool as CachePool;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
@@ -54,7 +55,6 @@ use Utopia\Registry\Registry;
 use Utopia\Span\Span;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter\None as NoTelemetry;
-use Utopia\WebSocket\Adapter;
 use Utopia\WebSocket\Server;
 
 require_once __DIR__ . '/init.php';
@@ -228,44 +228,6 @@ if (!function_exists('getCache')) {
     }
 }
 
-// Allows overriding
-if (!function_exists('getRedis')) {
-    function getRedis(): \Redis
-    {
-        $ctx = Coroutine::getContext();
-
-        if (isset($ctx['redis'])) {
-            return $ctx['redis'];
-        }
-
-        $host = System::getEnv('_APP_REDIS_HOST', 'localhost');
-        $port = System::getEnv('_APP_REDIS_PORT', 6379);
-        $pass = System::getEnv('_APP_REDIS_PASS', '');
-
-        $redis = new \Redis();
-        @$redis->pconnect($host, (int)$port);
-        if ($pass) {
-            $redis->auth($pass);
-        }
-        $redis->setOption(\Redis::OPT_READ_TIMEOUT, -1);
-
-        return $ctx['redis'] = $redis;
-    }
-}
-
-if (!function_exists('getTimelimit')) {
-    function getTimelimit(string $key = "", int $limit = 0, int $seconds = 1): TimeLimitRedis
-    {
-        $ctx = Coroutine::getContext();
-
-        if (isset($ctx['timelimit'])) {
-            return $ctx['timelimit'];
-        }
-
-        return $ctx['timelimit'] = new TimeLimitRedis($key, $limit, $seconds, getRedis());
-    }
-}
-
 if (!function_exists('getRealtime')) {
     function getRealtime(): Realtime
     {
@@ -400,43 +362,17 @@ $statsDocument = null;
 // deployment's job. `_APP_WORKERS_NUM` still overrides.
 $workerNumber = intval(System::getEnv('_APP_WORKERS_NUM', 0)) ?: 1;
 
-$adapter = new Adapter\Swoole(port: System::getEnv('PORT', 80));
+$adapter = new SwooleAdapter(port: System::getEnv('PORT', 80));
 $adapter
     ->setPackageMaxLength(64000) // Default maximum Package Size (64kb)
     ->setWorkerNumber($workerNumber);
 
 $server = new Server($adapter);
 
-// Allows overriding
-if (!function_exists('logError')) {
-    function logError(Throwable $error, string $action, array $tags = [], ?Document $project = null, ?Document $user = null, ?Authorization $authorization = null): void
-    {
-        // Server callbacks (pub/sub, stats) run outside a connection span; open one
-        // so the failure still reaches the exporters.
-        $span = Span::current();
-        $owned = $span === null;
-        $span ??= Span::init($action);
-
-        $span->setError($error);
-        $span->set('error.action', $action);
-        $span->set('project.id', $project?->getId() ?: 'n/a');
-        $span->set('user.id', $user?->getId() ?: 'n/a');
-        foreach ($tags as $key => $value) {
-            $span->set($key, \is_scalar($value) || $value === null ? $value : \json_encode($value));
-        }
-
-        if ($owned) {
-            $span->finish(error: $error);
-        }
-
-        Console::error('[Error] Type: ' . get_class($error));
-        Console::error('[Error] Message: ' . $error->getMessage());
-        Console::error('[Error] File: ' . $error->getFile());
-        Console::error('[Error] Line: ' . $error->getLine());
-    }
-}
-
-$server->error(logError(...));
+$server->error(function (Throwable $error): void {
+    $span = Span::current() ?? Span::init('realtime.error');
+    $span->finish(error: $error);
+});
 
 $server->onStart(function () use ($stats, $containerId, &$statsDocument) {
     sleep(5); // wait for the initial database schema to be ready
@@ -484,6 +420,7 @@ $server->onStart(function () use ($stats, $containerId, &$statsDocument) {
                 return;
             }
 
+            $span = Span::init('realtime.stats.persist');
             try {
                 $database = getConsoleDB();
 
@@ -496,7 +433,9 @@ $server->onStart(function () use ($stats, $containerId, &$statsDocument) {
                     'value' => $statsDocument->getAttribute('value')
                 ])));
             } catch (Throwable $th) {
-                logError($th, "updateWorkerDocument");
+                $span->setError($th);
+            } finally {
+                $span->finish();
             }
         });
     }
@@ -627,6 +566,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
     });
 
     while ($attempts < 300) {
+        $span = Span::init('realtime.pubsub');
         try {
             if ($attempts > 0) {
                 Console::error('Pub/sub connection lost (lasted ' . (time() - $start) . ' seconds, worker: ' . $workerId . ').
@@ -840,12 +780,14 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                 }
             });
         } catch (Throwable $th) {
-            logError($th, "pubSubConnection");
+            $span->setError($th);
 
             Console::error('Pub/sub error: ' . $th->getMessage());
             $attempts++;
             sleep(DATABASE_RECONNECT_SLEEP);
             continue;
+        } finally {
+            $span->finish();
         }
     }
 
@@ -859,6 +801,32 @@ $server->onWorkerStop(function (int $workerId) use ($register) {
         $register->get('telemetry.workerCounter')->add(-1);
     } catch (\Throwable $th) {
         Console::error('Realtime onWorkerStop telemetry error: ' . $th->getMessage());
+    }
+});
+
+// Swoole re-runs this until the worker's loop is empty, so the sweep happens
+// once and the later calls just let the closes it started drain.
+$exitSwept = false;
+
+$adapter->onWorkerExit(function (int $workerId) use ($server, $realtime, &$exitSwept) {
+    if ($exitSwept) {
+        return;
+    }
+
+    $exitSwept = true;
+
+    // Connections still open here outlive this worker, and no later worker knows
+    // them, so their closes never reach onClose and the concurrency level only
+    // ratchets up. Close them while the loop still runs; clients reconnect.
+    $connections = \array_keys($realtime->connections);
+    Console::warning('Worker ' . $workerId . ' exiting, closing ' . \count($connections) . ' open connections');
+
+    foreach ($connections as $connection) {
+        try {
+            $server->close($connection, SWOOLE_WEBSOCKET_CLOSE_GOING_AWAY);
+        } catch (\Throwable $th) {
+            Console::error('Realtime onWorkerExit close error: ' . $th->getMessage());
+        }
     }
 });
 
@@ -937,14 +905,17 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
          *
          * Abuse limits are connecting 128 times per minute and ip address.
          */
-        $timelimit = $timelimit('url:{url},ip:{ip}', 128, 60);
-        $timelimit
-            ->setParam('{ip}', $request->getIP())
-            ->setParam('{url}', $request->getURI());
+        $isRateLimited = $timelimit('url:{url},ip:{ip}', 128, 60, function (TimeLimit $timeLimit) use ($request): bool {
+            $timeLimit
+                ->setParam('{ip}', $request->getIP())
+                ->setParam('{url}', $request->getURI());
 
-        $abuse = new Abuse($timelimit);
+            $abuse = new Abuse($timeLimit);
 
-        if (System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled' && $abuse->check()) {
+            return System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled' && $abuse->check();
+        });
+
+        if ($isRateLimited) {
             throw new Exception(Exception::REALTIME_TOO_MANY_MESSAGES, 'Too many requests');
         }
 
@@ -1095,7 +1066,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
             $th = new AppwriteException(AppwriteException::DATABASE_TIMEOUT, previous: $th);
         }
 
-        logError($th, 'realtime', project: $project, user: $logUser, authorization: $authorization);
+        $error = $th;
 
         // Handle SQL error code is 'HY000'
         $code = $th->getCode();
@@ -1228,15 +1199,17 @@ $server->onMessage(function (int $connection, string $message) use ($container, 
          *
          * Abuse limits are sending 32 times per minute and connection.
          */
-        $timeLimit = getTimelimit('url:{url},connection:{connection}', 32, 60);
+        $isRateLimited = $container->get('timelimit')('url:{url},connection:{connection}', 32, 60, function (TimeLimit $timeLimit) use ($connection, $containerId): bool {
+            $timeLimit
+                ->setParam('{connection}', $connection)
+                ->setParam('{container}', $containerId);
 
-        $timeLimit
-            ->setParam('{connection}', $connection)
-            ->setParam('{container}', $containerId);
+            $abuse = new Abuse($timeLimit);
 
-        $abuse = new Abuse($timeLimit);
+            return $abuse->check() && System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled';
+        });
 
-        if ($abuse->check() && System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled') {
+        if ($isRateLimited) {
             throw new Exception(Exception::REALTIME_TOO_MANY_MESSAGES, 'Too many messages.');
         }
 
@@ -1313,7 +1286,7 @@ $server->onMessage(function (int $connection, string $message) use ($container, 
             $th = new AppwriteException(AppwriteException::DATABASE_TIMEOUT, previous: $th);
         }
 
-        logError($th, 'realtimeMessage', project: $project, authorization: $authorization);
+        $error = $th;
         $code = $th->getCode();
         if (!is_int($code)) {
             $code = 500;
@@ -1395,8 +1368,9 @@ $server->onClose(function (int $connection) use ($realtime, $stats, $register, $
                 go(function () use ($presencesById, $projectId, $userId, $container, $presenceState): void {
                     // Fresh span: the parent realtime.close span finishes before this coroutine
                     Span::init('realtime.close.presenceCleanup');
-                    Span::add('realtime.projectId', $projectId);
-                    Span::add('realtime.presenceCount', \count($presencesById));
+                    Span::add('project.id', $projectId);
+                    Span::add('realtime.presence_count', \count($presencesById));
+                    Span::add('user.id', $userId ?? null);
 
                     try {
                         $dbForPlatform = getConsoleDB();
@@ -1406,7 +1380,7 @@ $server->onClose(function (int $connection) use ($realtime, $stats, $register, $
                             return;
                         }
 
-                        $presenceIds = \array_keys($presencesById);
+                        $presenceIds = \array_map(strval(...), \array_keys($presencesById));
                         $dbForProject = getProjectDB($project);
 
                         $user = new User([]);
@@ -1443,10 +1417,8 @@ $server->onClose(function (int $connection) use ($realtime, $stats, $register, $
                             $presenceState->triggerUsage($publisherForUsage, $project, -$deletionCount);
                         } catch (Throwable $th) {
                             Span::current()?->setError($th);
-                            logError($th, 'realtimeOnClosePresenceDeletion', tags: [
-                                'projectId' => $projectId,
-                                'presences' => \count($presenceIds)
-                            ]);
+                            Span::add('presence.delete_count', \count($presenceIds));
+                            Span::add('presence.delete_ids', \implode(',', \array_slice($presenceIds, 0, 10)));
                         }
 
                         $queueForEvents = getQueueForEvents();
@@ -1472,9 +1444,6 @@ $server->onClose(function (int $connection) use ($realtime, $stats, $register, $
                         }
                     } catch (Throwable $th) {
                         Span::current()?->setError($th);
-                        logError($th, 'realtimeOnClosePresenceCleanup', tags: [
-                            'projectId' => $projectId,
-                        ]);
                     } finally {
                         Span::current()?->finish();
                     }

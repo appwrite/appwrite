@@ -18,6 +18,88 @@ final class TeamsCustomServerTest extends Scope
     use ProjectCustom;
     use SideServer;
 
+    public function testCreateMembershipWithNullOptionals(): void
+    {
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+        $teamId = ID::unique();
+        $team = $this->client->call(Client::METHOD_POST, '/teams', $headers, [
+            'teamId' => $teamId,
+            'name' => 'Nullable membership fields',
+        ]);
+        $this->assertEquals(201, $team['headers']['status-code']);
+
+        try {
+            // Test for SUCCESS: explicit nulls behave like omitted optional fields.
+            $email = ID::unique() . '@localhost.test';
+            $membership = $this->client->call(Client::METHOD_POST, '/teams/' . $teamId . '/memberships', $headers, [
+                'email' => $email,
+                'phone' => null,
+                'url' => null,
+                'name' => null,
+                'roles' => ['editor'],
+            ]);
+            $this->assertEquals(201, $membership['headers']['status-code']);
+            $userId = $membership['body']['userId'];
+
+            $this->assertEquals($email, $membership['body']['userEmail']);
+            $this->assertEquals($email, $membership['body']['userName']);
+            $this->assertTrue($membership['body']['confirm']);
+
+            $membershipId = $membership['body']['$id'];
+            $stored = $this->client->call(Client::METHOD_GET, '/teams/' . $teamId . '/memberships/' . $membershipId, $headers);
+            $this->assertEquals(200, $stored['headers']['status-code']);
+            $this->assertEquals($userId, $stored['body']['userId']);
+            $this->assertEquals(['editor'], $stored['body']['roles']);
+
+            $deleted = $this->client->call(Client::METHOD_DELETE, '/teams/' . $teamId . '/memberships/' . $membershipId, $headers);
+            $this->assertEquals(204, $deleted['headers']['status-code']);
+
+            $membership = $this->client->call(Client::METHOD_POST, '/teams/' . $teamId . '/memberships', $headers, [
+                'userId' => $userId,
+                'email' => null,
+                'phone' => null,
+                'url' => null,
+                'name' => null,
+                'roles' => ['reader'],
+            ]);
+            $this->assertEquals(201, $membership['headers']['status-code']);
+            $this->assertEquals($userId, $membership['body']['userId']);
+            $this->assertEquals($email, $membership['body']['userEmail']);
+
+            // Test for FAILURE: nulls do not bypass the required identity check.
+            $invalid = $this->client->call(Client::METHOD_POST, '/teams/' . $teamId . '/memberships', $headers, [
+                'userId' => null,
+                'email' => null,
+                'phone' => null,
+                'roles' => [],
+            ]);
+            $this->assertEquals(400, $invalid['headers']['status-code']);
+            $this->assertEquals('general_argument_invalid', $invalid['body']['type']);
+
+            $invalid = $this->client->call(Client::METHOD_POST, '/teams/' . $teamId . '/memberships', $headers, [
+                'email' => $email,
+                'phone' => 'not-a-phone-number',
+                'roles' => [],
+            ]);
+            $this->assertEquals(400, $invalid['headers']['status-code']);
+            $this->assertEquals('general_argument_invalid', $invalid['body']['type']);
+
+            $memberships = $this->client->call(Client::METHOD_GET, '/teams/' . $teamId . '/memberships', $headers);
+            $this->assertEquals(200, $memberships['headers']['status-code']);
+            $this->assertEquals(1, $memberships['body']['total']);
+            $this->assertEquals($userId, $memberships['body']['memberships'][0]['userId']);
+            $this->assertEquals(['reader'], $memberships['body']['memberships'][0]['roles']);
+        } finally {
+            $this->client->call(Client::METHOD_DELETE, '/teams/' . $teamId, $headers);
+            if (isset($userId)) {
+                $this->client->call(Client::METHOD_DELETE, '/users/' . $userId, $headers);
+            }
+        }
+    }
+
     public function testMembershipDeletedWhenTeamDeleted(): array
     {
         /* 1. Create Team */

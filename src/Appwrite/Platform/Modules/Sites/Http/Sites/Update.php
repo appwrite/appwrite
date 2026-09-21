@@ -119,6 +119,7 @@ class Update extends Base
             ->inject('executor')
             ->inject('authorization')
             ->inject('deployments')
+            ->inject('buildTimeout')
             ->inject('bus')
             ->inject('platform')
             ->callback($this->action(...));
@@ -161,6 +162,7 @@ class Update extends Base
         Executor $executor,
         Authorization $authorization,
         Deployments $deployments,
+        int $buildTimeout,
         Bus $bus,
         array $platform
     ) {
@@ -347,7 +349,7 @@ class Update extends Base
 
         // Redeploy logic
         if (!$isConnected && !empty($providerRepositoryId)) {
-            $this->redeployVcsSite($request, $site, $project, $installation, $dbForProject, $dbForPlatform, $publisherForBuilds, new Document(), $vcsFactory->fromInstallation($installation), true, $authorization, $deployments, $bus, $platform);
+            $this->redeployVcsSite($request, $site, $project, $installation, $dbForProject, $dbForPlatform, $publisherForBuilds, new Document(), $vcsFactory->fromInstallation($installation), true, $authorization, $deployments, $buildTimeout, $bus, $platform);
         }
 
         $queueForEvents->setParam('siteId', $site->getId());
