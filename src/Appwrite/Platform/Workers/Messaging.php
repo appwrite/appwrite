@@ -1076,9 +1076,9 @@ class Messaging extends Action
     ): Email {
         $fromName = $provider['options']['fromName'] ?? null;
         $fromEmail = $provider['options']['fromEmail'] ?? null;
-        $replyToEmail = $provider['options']['replyToEmail'] ?? null;
-        $replyToName = $provider['options']['replyToName'] ?? null;
         $data = $message['data'] ?? [];
+        $replyToEmail = !empty($data['replyToEmail']) ? $data['replyToEmail'] : ($provider['options']['replyToEmail'] ?? null);
+        $replyToName = !empty($data['replyToName']) ? $data['replyToName'] : ($provider['options']['replyToName'] ?? null);
         $ccTargets = $data['cc'] ?? [];
         $bccTargets = $data['bcc'] ?? [];
         $cc = [];
