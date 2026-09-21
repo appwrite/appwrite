@@ -311,7 +311,7 @@ class Create extends Action
                         'mimeType' => '',
                         'sizeOriginal' => $fileSize,
                         'sizeActual' => 0,
-                        'algorithm' => '',
+                        'algorithm' => Compression::NONE,
                         'comment' => '',
                         'chunksTotal' => $chunks,
                         'chunksUploaded' => 0,

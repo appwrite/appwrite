@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\E2E\General;
 
+use PHPUnit\Framework\Attributes\Group;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectNone;
 use Tests\E2E\Scopes\Scope;
@@ -120,13 +121,22 @@ final class HTTPTest extends Scope
 
     public function testDefaultOAuth2()
     {
-        $response = $this->client->call(Client::METHOD_GET, '/auth/oauth2/success', $this->getHeaders());
+        $this->client->setEndpoint('http://localhost');
 
-        $this->assertEquals(200, $response['headers']['status-code']);
+        // Requests on the console's own host are left to the proxy, so arrive on the API host
+        $response = $this->client->call(Client::METHOD_GET, '/auth/oauth2/success', \array_merge([
+            'host' => 'appwrite.test',
+        ], $this->getHeaders()), [], true, false);
 
-        $response = $this->client->call(Client::METHOD_GET, '/auth/oauth2/failure', $this->getHeaders());
+        $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertEquals('http://localhost/auth/oauth2/success', $response['headers']['location']);
 
-        $this->assertEquals(200, $response['headers']['status-code']);
+        $response = $this->client->call(Client::METHOD_GET, '/auth/oauth2/failure', \array_merge([
+            'host' => 'appwrite.test',
+        ], $this->getHeaders()), [], true, false);
+
+        $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertEquals('http://localhost/auth/oauth2/failure', $response['headers']['location']);
     }
 
     public function testCors()
@@ -245,6 +255,7 @@ final class HTTPTest extends Scope
         $this->assertEquals('http://localhost/join?membershipId=123&userId=asdf', $response['headers']['location']);
     }
 
+    #[Group('consoleProxy')]
     public function testConsoleServed()
     {
         /**

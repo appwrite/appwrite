@@ -160,6 +160,19 @@ Database::addFilter(
     }
 );
 
+// Dev keys were removed in 2.3.0, but installs that have not yet run the V25
+// migration still carry this filter on the projects collection. Without it
+// registered, every project document fails to decode.
+Database::addFilter(
+    'subQueryDevKeys',
+    function (mixed $value) {
+        return;
+    },
+    function (mixed $value) {
+        return [];
+    }
+);
+
 Database::addFilter(
     'subQueryWebhooks',
     function (mixed $value) {

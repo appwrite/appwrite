@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c8b4c3e68b001aaf058bfd9402c76bfa",
+    "content-hash": "fac64b60d4584d31e9de6dcaa0157c81",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3427,55 +3427,6 @@
             "time": "2026-09-09T15:27:09+00:00"
         },
         {
-            "name": "utopia-php/compression",
-            "version": "0.1.8",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/utopia-php/compression.git",
-                "reference": "8a23fdec63623aa6ad64ed764d688e67cf2c110e"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/compression/zipball/8a23fdec63623aa6ad64ed764d688e67cf2c110e",
-                "reference": "8a23fdec63623aa6ad64ed764d688e67cf2c110e",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=8.1"
-            },
-            "suggest": {
-                "ext-brotli": "Required for the Brotli algorithm",
-                "ext-lz4": "Required for the LZ4 algorithm",
-                "ext-snappy": "Required for the Snappy algorithm",
-                "ext-xz": "Required for the XZ algorithm",
-                "ext-zlib": "Required for the GZIP and Deflate algorithms",
-                "ext-zstd": "Required for the Zstd algorithm"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Utopia\\Compression\\": "src/Compression"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "description": "A simple Compression library to handle file compression",
-            "keywords": [
-                "compression",
-                "framework",
-                "php",
-                "upf",
-                "utopia"
-            ],
-            "support": {
-                "issues": "https://github.com/utopia-php/compression/issues",
-                "source": "https://github.com/utopia-php/compression/tree/0.1.8"
-            },
-            "time": "2026-09-02T15:57:19+00:00"
-        },
-        {
             "name": "utopia-php/config",
             "version": "1.0.0",
             "source": {
@@ -3570,12 +3521,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "3b50b690410dbe90d4215dddd8fcfed5c6be3a0d"
+                "reference": "469598f264d1b8e8aced3d3d4365ad49d4284dc4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/3b50b690410dbe90d4215dddd8fcfed5c6be3a0d",
-                "reference": "3b50b690410dbe90d4215dddd8fcfed5c6be3a0d",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/469598f264d1b8e8aced3d3d4365ad49d4284dc4",
+                "reference": "469598f264d1b8e8aced3d3d4365ad49d4284dc4",
                 "shasum": ""
             },
             "require": {
@@ -3663,7 +3614,7 @@
                 "source": "https://github.com/utopia-php/database/tree/feat-query-lib",
                 "issues": "https://github.com/utopia-php/database/issues"
             },
-            "time": "2026-09-21T11:22:29+00:00"
+            "time": "2026-09-21T12:47:08+00:00"
         },
         {
             "name": "utopia-php/detector",
