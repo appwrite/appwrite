@@ -41,12 +41,18 @@ abstract class Database implements Source, Changes
     #[\Override]
     public function snapshot(): iterable
     {
+        // Project status can change without touching schedules; never reuse a
+        // prior sync's project documents when deciding what is still runnable.
+        $this->projects = [];
+
         yield from $this->rows(null);
     }
 
     #[\Override]
     public function since(\DateTimeImmutable $moment): iterable
     {
+        $this->projects = [];
+
         yield from $this->rows($moment);
     }
 
@@ -78,8 +84,11 @@ abstract class Database implements Source, Changes
             throw new \InvalidArgumentException("Project not found: {$schedule['projectId']}");
         }
 
-        if (($this->isResourceBlocked)($project, $this->collection(), $schedule['resourceId'])) {
-            throw new \InvalidArgumentException("Resource blocked: {$schedule['resourceId']}");
+        $resourceId = $this->blockResourceId($schedule);
+        if (($this->isResourceBlocked)($project, $this->collection(), $resourceId)) {
+            // Throwing keeps a previous entry in memory; callers must also
+            // yield blocked rows as inactive so reconcile removes them.
+            throw new \InvalidArgumentException("Resource blocked: {$resourceId}");
         }
 
         $schedule['project'] = $project;
@@ -100,6 +109,21 @@ abstract class Database implements Source, Changes
     protected function resource(\Utopia\Database\Database $projectDB, array $schedule): Document
     {
         return $projectDB->getDocument($this->collection(), $schedule['resourceId']);
+    }
+
+    /**
+     * Id passed to {@see $isResourceBlocked}. Execution schedules are keyed by
+     * execution id but blocked against the function they run.
+     *
+     * @param array<string, mixed> $schedule
+     */
+    protected function blockResourceId(array $schedule): string
+    {
+        if ($this->type() === SCHEDULE_RESOURCE_TYPE_EXECUTION) {
+            return (string) ($schedule['data']['functionId'] ?? $schedule['resourceId']);
+        }
+
+        return (string) $schedule['resourceId'];
     }
 
     /**
@@ -135,18 +159,45 @@ abstract class Database implements Source, Changes
 
             foreach ($schedules as $schedule) {
                 $updatedAt = (string) $schedule->getAttribute('resourceUpdatedAt', '');
+                $active = (bool) $schedule->getAttribute('active', false);
+
+                // A blocked project does not bump resourceUpdatedAt, so the
+                // only way to drop its schedules is to report them inactive.
+                // utopia-php/schedule keeps the previous entry when make()
+                // throws; inactive rows remove it on both full and incremental
+                // syncs.
+                if ($active && $this->blocked($schedule)) {
+                    $active = false;
+                }
 
                 yield new Row(
                     id: (string) $schedule->getSequence(),
                     version: $updatedAt,
                     data: $schedule,
-                    active: (bool) $schedule->getAttribute('active', false),
+                    active: $active,
                     activeFrom: $this->moment($updatedAt),
                 );
             }
 
             $latest = \end($schedules) ?: null;
         }
+    }
+
+    private function blocked(Document $schedule): bool
+    {
+        $project = $this->project((string) $schedule->getAttribute('projectId'));
+        if ($project->isEmpty()) {
+            // Missing projects are cleaned up in make(); leave the row active
+            // so that path still runs.
+            return false;
+        }
+
+        $payload = [
+            'resourceId' => $schedule->getAttribute('resourceId'),
+            'data' => $schedule->getAttribute('data', []),
+        ];
+
+        return ($this->isResourceBlocked)($project, $this->collection(), $this->blockResourceId($payload));
     }
 
     private function moment(string $stamp): ?\DateTimeImmutable

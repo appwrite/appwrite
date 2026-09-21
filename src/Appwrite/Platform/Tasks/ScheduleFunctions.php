@@ -57,7 +57,12 @@ class ScheduleFunctions extends Action
             },
         );
 
-        $scheduler->run(fn (array $occurrences): null => $this->dispatch($occurrences, $publisherForFunctions));
+        $scheduler->run(fn (array $occurrences): null => $this->dispatch(
+            $occurrences,
+            $publisherForFunctions,
+            $getIsResourceBlocked,
+            $dbForPlatform,
+        ));
 
         Span::init('schedule.functions.stopped');
         Span::current()?->finish(error: new \RuntimeException('Scheduler loop returned'));
@@ -73,10 +78,17 @@ class ScheduleFunctions extends Action
 
     /**
      * @param list<Occurrence> $occurrences
+     * @param callable(Document, string, ?string): bool $getIsResourceBlocked
      */
-    private function dispatch(array $occurrences, FunctionPublisher $publisherForFunctions): null
-    {
+    private function dispatch(
+        array $occurrences,
+        FunctionPublisher $publisherForFunctions,
+        callable $getIsResourceBlocked,
+        Database $dbForPlatform,
+    ): null {
         $batch = \count($occurrences);
+        /** @var array<string, Document> $projects */
+        $projects = [];
 
         foreach (\array_values($occurrences) as $index => $occurrence) {
             $schedule = $occurrence->payload;
@@ -85,7 +97,13 @@ class ScheduleFunctions extends Action
             $error = null;
 
             try {
-                Span::add('project.id', $schedule['project']->getId());
+                $projectId = $schedule['project']->getId();
+                $project = $projects[$projectId] ??= $dbForPlatform->skipFilters(
+                    fn () => $dbForPlatform->getDocument('projects', $projectId),
+                    APP_PROJECTS_SUBQUERIES
+                );
+
+                Span::add('project.id', $projectId);
                 Span::add('function.id', $schedule['resource']->getId());
                 Span::add('schedule.id', $schedule['$id'] ?? '');
                 Span::add('schedule.cron', (string) ($schedule['schedule'] ?? ''));
@@ -94,8 +112,15 @@ class ScheduleFunctions extends Action
                 Span::add('occurrence.batch', $batch);
                 Span::add('occurrence.index', $index);
 
+                // Schedules stay in memory until the next full snapshot marks
+                // a blocked project inactive; skip enqueue in the meantime.
+                if ($project->isEmpty() || $getIsResourceBlocked($project, RESOURCE_TYPE_FUNCTIONS, $schedule['resource']->getId())) {
+                    Span::add('schedule.skipped', 'blocked');
+                    continue;
+                }
+
                 $publisherForFunctions->enqueue(new FunctionMessage(
-                    project: $schedule['project'],
+                    project: $project,
                     function: $schedule['resource'],
                     type: 'schedule',
                     method: 'POST',
