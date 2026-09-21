@@ -1048,6 +1048,40 @@ trait PresenceBase
         $this->assertEquals(404, $response['headers']['status-code']);
     }
 
+    public function testUpdateDeletedPresenceWithPurge(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getPresenceApiKey(),
+        ];
+
+        $presence = $this->client->call(Client::METHOD_PUT, '/presences/' . ID::unique(), $headers, [
+            'userId' => $this->getUser()['$id'],
+            'status' => 'online',
+        ]);
+        $this->assertEquals(200, $presence['headers']['status-code']);
+        $presenceId = $presence['body']['$id'];
+
+        $delete = $this->client->call(Client::METHOD_DELETE, '/presences/' . $presenceId, $headers);
+        $this->assertEquals(204, $delete['headers']['status-code']);
+
+        $update = $this->client->call(Client::METHOD_PATCH, '/presences/' . $presenceId, $headers, [
+            'userId' => $this->getUser()['$id'],
+            'status' => 'away',
+            'purge' => true,
+        ]);
+        $this->assertEquals(404, $update['headers']['status-code']);
+        $this->assertEquals('presence_not_found', $update['body']['type']);
+
+        $list = $this->client->call(Client::METHOD_GET, '/presences', $headers, [
+            'queries' => [Query::equal('userId', [$this->getUser()['$id']])->toString()],
+        ]);
+        $this->assertEquals(200, $list['headers']['status-code']);
+        $this->assertNotContains($presenceId, \array_column($list['body']['presences'], '$id'));
+    }
+
     public function testClientCannotPassUserId(): void
     {
         if ($this->getSide() === 'server') {

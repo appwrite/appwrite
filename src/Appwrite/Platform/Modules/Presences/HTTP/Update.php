@@ -195,14 +195,12 @@ class Update extends PlatformAction
             throw new Exception(Exception::DOCUMENT_UPDATE_CONFLICT, $e->getMessage(), previous: $e);
         }
 
-        // The presence can expire or be deleted between the read above and this write; the
-        // database then returns an empty document, which the presence model cannot serialize.
-        if ($presence->isEmpty()) {
-            throw new Exception(Exception::PRESENCE_NOT_FOUND, params: [$presenceId]);
-        }
-
         if ($purge) {
             $presenceState->purgeListCache($dbForProject);
+        }
+
+        if ($presence->isEmpty()) {
+            throw new Exception(Exception::PRESENCE_NOT_FOUND, params: [$presenceId]);
         }
 
         $queueForEvents->setParam('presenceId', $presence->getId());
