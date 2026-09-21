@@ -18,7 +18,7 @@ class MockPublisher implements Publisher
         return true;
     }
 
-    public function enqueueMany(Queue $queue, array $payloads): bool
+    public function publishMany(Queue $queue, array $payloads): bool
     {
         foreach ($payloads as $payload) {
             $this->publish($queue, $payload);
