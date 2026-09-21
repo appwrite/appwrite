@@ -25,6 +25,7 @@ use OpenRuntimes\Orchestrator\Enum\CallbackEvent;
 use OpenRuntimes\Orchestrator\Enum\ErrorCode;
 use Utopia\Bus\Bus;
 use Utopia\Cache\Cache;
+use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -529,7 +530,14 @@ class Jobs extends Action
             return [$deployment, null];
         }
 
-        $detection = Detection::rendering($site->getAttribute('framework', ''), $files);
+        $framework = $site->getAttribute('framework', '');
+
+        Console::info('[Detection] Framework: ' . $framework);
+        Console::info('[Detection] Files: ' . \implode(', ', $files));
+
+        $detection = Detection::rendering($framework, $files);
+
+        Console::info('[Detection] Result: ' . $detection->getName());
 
         $adapter = $site->getAttribute('adapter', '');
         if (empty($adapter)) {
