@@ -13,7 +13,7 @@ Throughout the life cycle of a deployment, it can have any of the following stat
 | Status | Description |
 | --- | --- |
 | `active` | The deployment is built and currently activated and ready to be accessed. A site can have one active deployment and the deployment must be active before being executed. |
-| `ready` | A deployment is built, but is not activated. Any `ready` deployment can be activated to replace the current active deployment. A ready deployment can also be [previewed](#preview-deployments) by authorized members of your Appwrite organization before activation. |
+| `ready` | A deployment is built, but is not activated. Any `ready` deployment can be activated to replace the current active deployment. A ready deployment can also be [previewed](/docs/products/sites/previews) by members of your Appwrite organization before activation. |
 | `building` | A deployment is being built. Check the [deployment logs](#deployment-logs) for more info. |
 | `processing` | The creation of a site deployment has begun and has not finished. |
 | `waiting` | The deployment is queued but has not been picked up for processing. |
