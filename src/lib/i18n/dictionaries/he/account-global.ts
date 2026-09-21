@@ -856,7 +856,6 @@ export const heAccountGlobalDictionary: Record<string, string> = {
   Reconnect: 'חיבור מחדש',
   'Enable MCP': 'הפעלת MCP',
   'OAuth required': 'נדרש OAuth',
-  'Redirecting…': 'מפנה…',
   'Refresh OAuth credentials': 'רענון פרטי גישה של OAuth',
   'Connect with Appwrite OAuth': 'חיבור עם Appwrite OAuth',
   'MCP connection failed': 'חיבור ה-MCP נכשל',

@@ -549,7 +549,6 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
   Reconnect: '再接続',
   'Enable MCP': 'MCP を有効化',
   'OAuth required': 'OAuth が必要です',
-  'Redirecting…': 'リダイレクト中…',
   'Refresh OAuth credentials': 'OAuth アクセス資格情報を更新',
   'Connect with Appwrite OAuth': 'Appwrite OAuth で接続',
   'MCP connection failed': 'MCP 接続に失敗しました',
