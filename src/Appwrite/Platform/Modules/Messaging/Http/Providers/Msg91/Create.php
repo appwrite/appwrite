@@ -88,6 +88,7 @@ class Create extends Action
             $enabled === true
             && \array_key_exists('senderId', $credentials)
             && \array_key_exists('authKey', $credentials)
+            && \array_key_exists('templateId', $credentials)
         ) {
             $enabled = true;
         } else {
