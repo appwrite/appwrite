@@ -109,12 +109,15 @@ class Update extends Base
             'deploymentCreatedAt' => $deployment->getCreatedAt(),
         ])));
 
+        $branch = $deployment->getAttribute('providerBranch', '');
+        $branches = $branch === '' ? [''] : ['', $branch];
+
         $queries = [
             Query::equal('trigger', ['manual']),
             Query::equal('type', ['deployment']),
             Query::equal('deploymentResourceType', ['site']),
             Query::equal('deploymentResourceInternalId', [$site->getSequence()]),
-            Query::equal('deploymentVcsProviderBranch', ['']),
+            Query::equal('deploymentVcsProviderBranch', $branches),
             Query::equal('projectInternalId', [$project->getSequence()])
         ];
 

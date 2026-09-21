@@ -123,12 +123,15 @@ class Update extends Base
             'active' => $schedule->getAttribute('active'),
         ])));
 
+        $branch = $deployment->getAttribute('providerBranch', '');
+        $branches = $branch === '' ? [''] : ['', $branch];
+
         $queries = [
             Query::equal('trigger', ['manual']),
             Query::equal('type', ['deployment']),
             Query::equal('deploymentResourceType', ['function']),
             Query::equal('deploymentResourceInternalId', [$function->getSequence()]),
-            Query::equal('deploymentVcsProviderBranch', ['']),
+            Query::equal('deploymentVcsProviderBranch', $branches),
             Query::equal('projectInternalId', [$project->getSequence()])
         ];
 
