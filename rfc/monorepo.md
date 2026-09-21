@@ -269,7 +269,7 @@ Exit: `composer.lock` contains no `utopia-php/*` package.
 - Add `packages/*/src` to `phpstan-deadcode.neon` and run `composer dead-code`. Candidates visible today: database adapters `SQLite`, `Memory`, `Redis`; cache adapters `Hazelcast`, `Memcached`, `Json`, `Memory`, `RedisCluster`; SMS adapters `Plivo`, `Telnyx`, `Clickatell`, `Infobip`, `Seven`, `Sinch`. Each deletion is mirror-visible: confirm against Executor and Packagist dependents first; anything a mirror consumer needs stays.
 - Collapse `||` compatibility constraints in package manifests to single ranges once every sibling is on the current major.
 - Delete duplicated test helpers (`tests/extensions/Queue/InMemoryConnection.php` versus the queue package's own fakes) and every Appwrite-side workaround that existed only because a library fix was waiting on a release.
-- Burn down every `packages/*/phpstan-baseline.neon` a package arrives with (abuse's Redis cluster log adapters need one under PHPStan 2). Compression arrives with 16 pre-existing findings covering extension return types and the untyped supported-encoding array; resolve these separately from its history-preserving import.
+- Burn down every `packages/*/phpstan-baseline.neon` a package arrives with (abuse's Redis cluster log adapters need one under PHPStan 2). Compression arrives with 16 pre-existing findings covering extension return types and the untyped supported-encoding array; resolve these separately from its history-preserving import. System arrives with 16 pre-existing findings from mixed CPU and disk statistics; track those separately from its import.
 
 ## Risks
 
