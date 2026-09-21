@@ -4919,7 +4919,6 @@ final class AccountCustomClientTest extends Scope
             'origin: http://localhost',
             'content-type: application/json',
             'x-appwrite-project: ' . $this->getProject()['$id'],
-            'x-sdk-version: appwrite:php:v1.0.7',
         ];
 
         foreach ($userIds as $userId) {
