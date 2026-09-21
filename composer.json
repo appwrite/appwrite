@@ -28,6 +28,7 @@
             "Executor\\": "src/Executor",
             "Utopia\\Agents\\": "packages/agents/src",
             "Utopia\\Bus\\": "packages/bus/src",
+            "Utopia\\Compression\\": "packages/compression/src",
             "Utopia\\Lock\\": "packages/lock/src",
             "Utopia\\Psr7\\": "packages/psr7/src"
         }
@@ -39,6 +40,7 @@
             "Appwrite\\Tests\\": "tests/extensions",
             "Utopia\\Agents\\Tests\\": "packages/agents/tests",
             "Utopia\\Bus\\Tests\\": "packages/bus/tests",
+            "Utopia\\Compression\\Tests\\": "packages/compression/tests",
             "Utopia\\Lock\\Tests\\": "packages/lock/tests",
             "Utopia\\Psr7\\Tests\\": "packages/psr7/tests"
         }
@@ -87,7 +89,6 @@
         "utopia-php/cache": "^5.1.0",
         "utopia-php/cdn": "^0.0.12",
         "utopia-php/cli": "^0.24",
-        "utopia-php/compression": "0.1.*",
         "utopia-php/config": "1.*",
         "utopia-php/console": "^0.2",
         "utopia-php/database": "^7.3.11",
@@ -163,6 +164,7 @@
     "replace": {
         "utopia-php/agents": "*",
         "utopia-php/bus": "*",
+        "utopia-php/compression": "*",
         "utopia-php/lock": "*",
         "utopia-php/psr7": "*"
     }
