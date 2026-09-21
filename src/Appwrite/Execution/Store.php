@@ -28,6 +28,13 @@ class Store
 
     private const int READY_TTL_SECONDS = 15;
 
+    /**
+     * Retention is owned by the table TTL on expiresAt, which only drops rows
+     * when a merge runs. Reads apply the same window so an execution stops
+     * being visible the moment it expires, with no purge query in between.
+     */
+    private const string VISIBLE = 'deleted = 0 AND expiresAt > now64(6)';
+
     private const int VERSION_SHIFT = 60;
 
     private const int VERSION_DELETE_RANK = 7;
@@ -257,11 +264,6 @@ class Store
         $this->deleteWhere($projectId, $resourceInternalId, $resourceType, $createdBefore);
     }
 
-    public function deleteBefore(string $projectId, string $createdBefore): void
-    {
-        $this->deleteWhere($projectId, createdBefore: $createdBefore);
-    }
-
     /**
      * @param list<string>|null $roles Null skips document authorization.
      */
@@ -276,7 +278,7 @@ class Store
         $builder = $this->builder()
             ->from('__latest__')
             ->select(['document'])
-            ->whereRaw("deleted = 0{$permission}")
+            ->whereRaw(self::VISIBLE . $permission)
             ->limit(1);
         $rows = $this->rows($this->select($builder->build(), $latest, $params));
 
@@ -475,12 +477,13 @@ class Store
             fn (string $column) => !\in_array($column, ['expiresAt', 'deleted', 'version'], true)
         ));
         $deleteVersionBase = $this->versionBase(self::VERSION_DELETE_RANK);
+        $visible = self::VISIBLE;
         $retention = \max(0, $this->retention);
         $this->query(<<<SQL
             INSERT INTO {$this->table()} ({$columns}, expiresAt, deleted, version)
             SELECT {$columns}, now64(6) + INTERVAL {$retention} SECOND, 1, toUInt64({$deleteVersionBase}) + toUInt64(toUnixTimestamp64Micro(now64(6)))
             FROM ({$latest})
-            WHERE deleted = 0
+            WHERE {$visible}
             SQL, $params);
     }
 
@@ -540,7 +543,7 @@ class Store
      */
     private function compileQueries(array $queries, array &$params): array
     {
-        $filters = ['deleted = 0'];
+        $filters = [self::VISIBLE];
         $order = [];
         $limit = 25;
         $offset = 0;
