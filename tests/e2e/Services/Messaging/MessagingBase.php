@@ -2836,6 +2836,20 @@ trait MessagingBase
         $this->assertEquals('newreply@example.com', $updated['body']['data']['replyToEmail']);
         $this->assertEquals('New Reply Person', $updated['body']['data']['replyToName']);
 
+        // An empty string clears the custom reply to, restoring the provider or sender default
+        $updated = $this->client->call(Client::METHOD_PATCH, '/messaging/messages/email/' . $messageId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'replyToEmail' => '',
+            'replyToName' => '',
+        ]);
+
+        $this->assertEquals(200, $updated['headers']['status-code']);
+        $this->assertEquals('', $updated['body']['data']['replyToEmail']);
+        $this->assertEquals('', $updated['body']['data']['replyToName']);
+
         /**
          * Test for FAILURE
          */
@@ -2953,9 +2967,8 @@ trait MessagingBase
         // The custom reply-to overrides the provider default (which falls back to the sender).
         $mail = $this->getLastEmail(1, fn (array $mail) => $this->assertSame($subject, $mail['subject']));
 
-        $replyTo = $mail['headers']['reply-to'] ?? '';
-        $this->assertStringContainsString('support@appwrite.io', $replyTo);
-        $this->assertStringNotContainsString('sender@appwrite.io', $replyTo);
+        $this->assertSame('support@appwrite.io', $mail['replyTo'][0]['address']);
+        $this->assertSame('Appwrite Support', $mail['replyTo'][0]['name']);
 
         $this->client->call(Client::METHOD_DELETE, '/messaging/providers/' . $provider['body']['$id'], [
             'content-type' => 'application/json',
