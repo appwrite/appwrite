@@ -720,6 +720,24 @@ class PostgreSQLTest extends TestCase
         $this->assertSame([], $result->bindings);
     }
 
+    public function testAlterColumnNullableDrops(): void
+    {
+        $schema = new Schema();
+        $result = $schema->alterColumnNullable('users', 'location', true);
+
+        $this->assertSame('ALTER TABLE "users" ALTER COLUMN "location" DROP NOT NULL', $result->query);
+        $this->assertSame([], $result->bindings);
+    }
+
+    public function testAlterColumnNullableSets(): void
+    {
+        $schema = new Schema();
+        $result = $schema->alterColumnNullable('users', 'location', false);
+
+        $this->assertSame('ALTER TABLE "users" ALTER COLUMN "location" SET NOT NULL', $result->query);
+        $this->assertSame([], $result->bindings);
+    }
+
     public function testAlterColumnTypeRejectsInjectionInType(): void
     {
         $this->expectException(ValidationException::class);

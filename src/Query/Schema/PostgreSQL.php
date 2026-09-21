@@ -513,6 +513,21 @@ class PostgreSQL extends SQL implements
     }
 
     /**
+     * Alter a column's nullability.
+     *
+     * Postgres carries NOT NULL through an ALTER COLUMN ... TYPE, so a column
+     * that changes between required and optional has to be altered separately.
+     */
+    public function alterColumnNullable(string $table, string $column, bool $nullable): Statement
+    {
+        $sql = 'ALTER TABLE ' . $this->quote($table)
+            . ' ALTER COLUMN ' . $this->quoteLiteral($column)
+            . ($nullable ? ' DROP NOT NULL' : ' SET NOT NULL');
+
+        return new Statement($sql, [], executor: $this->executor);
+    }
+
+    /**
      * Reject expressions that could chain additional statements or comments.
      *
      * Partition expressions and USING casts may legitimately contain parens,
