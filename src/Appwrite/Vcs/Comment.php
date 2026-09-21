@@ -147,7 +147,7 @@ class Comment
                 foreach ($project['site'] as $siteId => $site) {
                     $imageStatus = in_array($site['status'], ['processing', 'building']) ? 'building' : $site['status'];
 
-                    $extension = $site['status'] === 'building' ? 'gif' : 'png';
+                    $extension = $imageStatus === 'building' ? 'gif' : 'png';
 
                     $pathLight = '/images/vcs/status-' . $imageStatus . '-light.' . $extension;
                     $pathDark = '/images/vcs/status-' . $imageStatus . '-dark.' . $extension;

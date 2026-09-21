@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "634a1bbd7cf586b7abfd20829650aeb1",
+    "content-hash": "e2e42ef38149f52aba65ece8616f81b0",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3468,19 +3468,21 @@
         },
         {
             "name": "utopia-php/detector",
-            "version": "0.2.7",
+            "version": "0.2.8",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/detector.git",
-                "reference": "9f9a99946c70ebc3101ae30a40db6d4edd668c85"
+                "reference": "22171ed5e1cd056ed035d9734ce155530f933aae"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/detector/zipball/9f9a99946c70ebc3101ae30a40db6d4edd668c85",
-                "reference": "9f9a99946c70ebc3101ae30a40db6d4edd668c85",
+                "url": "https://api.github.com/repos/utopia-php/detector/zipball/22171ed5e1cd056ed035d9734ce155530f933aae",
+                "reference": "22171ed5e1cd056ed035d9734ce155530f933aae",
                 "shasum": ""
             },
             "require": {
+                "ext-json": "*",
+                "ext-yaml": "*",
                 "php": ">=8.0"
             },
             "require-dev": {
@@ -3507,9 +3509,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/detector/issues",
-                "source": "https://github.com/utopia-php/detector/tree/0.2.7"
+                "source": "https://github.com/utopia-php/detector/tree/0.2.8"
             },
-            "time": "2026-08-13T08:29:55+00:00"
+            "time": "2026-09-19T21:45:00+00:00"
         },
         {
             "name": "utopia-php/di",
@@ -4145,6 +4147,73 @@
             "time": "2026-09-09T05:42:37+00:00"
         },
         {
+            "name": "utopia-php/mqtt",
+            "version": "0.0.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/utopia-php/mqtt.git",
+                "reference": "d43d7e7f4b0c0854c5fd16c7ef085284d84b0d69"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/mqtt/zipball/d43d7e7f4b0c0854c5fd16c7ef085284d84b0d69",
+                "reference": "d43d7e7f4b0c0854c5fd16c7ef085284d84b0d69",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.2",
+                "utopia-php/telemetry": "^0.4"
+            },
+            "require-dev": {
+                "laravel/pint": "^1.15 <1.21",
+                "phpstan/phpstan": "^1.12",
+                "phpunit/phpunit": "^10.5",
+                "swoole/ide-helper": "5.1.2"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Utopia\\Mqtt\\": "src/Mqtt"
+                }
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Utopia\\Mqtt\\Tests\\": "tests"
+                }
+            },
+            "scripts": {
+                "test": [
+                    "./vendor/bin/phpunit"
+                ],
+                "lint": [
+                    "./vendor/bin/pint --test --preset=psr12 src tests"
+                ],
+                "format": [
+                    "./vendor/bin/pint --preset=psr12 src tests"
+                ],
+                "check": [
+                    "./vendor/bin/phpstan analyse --level max src tests"
+                ]
+            },
+            "license": [
+                "MIT"
+            ],
+            "description": "A simple abstraction for building MQTT 5.0 brokers.",
+            "keywords": [
+                "broker",
+                "framework",
+                "mqtt",
+                "php",
+                "upf",
+                "utopia"
+            ],
+            "support": {
+                "source": "https://github.com/utopia-php/mqtt/tree/0.0.1",
+                "issues": "https://github.com/utopia-php/mqtt/issues"
+            },
+            "time": "2026-09-18T11:27:21+00:00"
+        },
+        {
             "name": "utopia-php/openapi",
             "version": "0.2.4",
             "source": {
@@ -4181,16 +4250,16 @@
         },
         {
             "name": "utopia-php/platform",
-            "version": "1.0.0-rc20",
+            "version": "1.0.0-rc21",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/platform.git",
-                "reference": "746d403d417bb8ae42e5f8d94e1bbe0e75e4c87d"
+                "reference": "b5bb2f661efa35ef06a6e86e97eeaea20ead66f8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/platform/zipball/746d403d417bb8ae42e5f8d94e1bbe0e75e4c87d",
-                "reference": "746d403d417bb8ae42e5f8d94e1bbe0e75e4c87d",
+                "url": "https://api.github.com/repos/utopia-php/platform/zipball/b5bb2f661efa35ef06a6e86e97eeaea20ead66f8",
+                "reference": "b5bb2f661efa35ef06a6e86e97eeaea20ead66f8",
                 "shasum": ""
             },
             "require": {
@@ -4199,7 +4268,7 @@
                 "php": ">=8.5",
                 "utopia-php/cli": "^0.24",
                 "utopia-php/http": "^2.0@RC",
-                "utopia-php/queue": "0.23.* || 0.24.* || ^1.0.0 || ^2.0.0",
+                "utopia-php/queue": "0.23.* || 0.24.* || ^1.0.0 || ^2.0.0 || ^3.0.0",
                 "utopia-php/servers": "^0.4"
             },
             "type": "library",
@@ -4222,9 +4291,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/platform/issues",
-                "source": "https://github.com/utopia-php/platform/tree/1.0.0-rc20"
+                "source": "https://github.com/utopia-php/platform/tree/1.0.0-rc21"
             },
-            "time": "2026-09-04T17:01:57+00:00"
+            "time": "2026-09-18T13:07:00+00:00"
         },
         {
             "name": "utopia-php/pools",
@@ -4333,16 +4402,16 @@
         },
         {
             "name": "utopia-php/queue",
-            "version": "2.2.4",
+            "version": "3.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/queue.git",
-                "reference": "c6994fe68c58d48f303693dad2762d1f80d5bf97"
+                "reference": "ee2c461a8244173bcfba7ad5e299d5e11c406b02"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/queue/zipball/c6994fe68c58d48f303693dad2762d1f80d5bf97",
-                "reference": "c6994fe68c58d48f303693dad2762d1f80d5bf97",
+                "url": "https://api.github.com/repos/utopia-php/queue/zipball/ee2c461a8244173bcfba7ad5e299d5e11c406b02",
+                "reference": "ee2c461a8244173bcfba7ad5e299d5e11c406b02",
                 "shasum": ""
             },
             "require": {
@@ -4361,6 +4430,7 @@
                 "workerman/workerman": "^4.0"
             },
             "suggest": {
+                "ext-igbinary": "Required for the Igbinary codec (Codec\\Igbinary).",
                 "ext-pcntl": "Fallback for Adapter\\KubernetesJob graceful shutdown when Swoole is unavailable.",
                 "ext-swoole": "Needed to support Swoole.",
                 "utopia-php/nats": "Needed to support the NATS JetStream broker (Broker\\Nats).",
@@ -4393,9 +4463,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/queue/issues",
-                "source": "https://github.com/utopia-php/queue/tree/2.2.4"
+                "source": "https://github.com/utopia-php/queue/tree/3.0.0"
             },
-            "time": "2026-09-11T17:50:20+00:00"
+            "time": "2026-09-18T11:36:46+00:00"
         },
         {
             "name": "utopia-php/registry",
