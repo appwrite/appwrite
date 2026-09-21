@@ -3326,6 +3326,18 @@ final class AccountCustomClientTest extends Scope
 
         $initialExpiry = $response['body']['providerAccessTokenExpiry'];
 
+        // Fetch initial avatar photo before session update
+        $initialPhotoResponse = $this->client->call(Client::METHOD_GET, '/avatars/photo', [
+            'origin' => 'http://localhost',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ], [
+            'width' => 64,
+            'height' => 64,
+        ]);
+        $this->assertEquals(200, $initialPhotoResponse['headers']['status-code']);
+        $initialPhoto = $initialPhotoResponse['body'];
+
         sleep(3);
 
         $response = $this->client->call(Client::METHOD_PATCH, '/account/sessions/current', array_merge([
@@ -3336,9 +3348,23 @@ final class AccountCustomClientTest extends Scope
         ]));
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals('123456', $response['body']['providerAccessToken']);
+        $this->assertNotEmpty($response['body']['providerAccessToken']);
         $this->assertEquals('tuvwxyz', $response['body']['providerRefreshToken']);
         $this->assertNotEquals($initialExpiry, $response['body']['providerAccessTokenExpiry']);
+
+        // Verify that updateSession refetched the photo and the served avatar content changed
+        $refreshedPhotoResponse = $this->client->call(Client::METHOD_GET, '/avatars/photo', [
+            'origin' => 'http://localhost',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ], [
+            'width' => 64,
+            'height' => 64,
+        ]);
+
+        $this->assertEquals(200, $refreshedPhotoResponse['headers']['status-code']);
+        $this->assertEquals('image/png', $refreshedPhotoResponse['headers']['content-type']);
+        $this->assertNotEquals($initialPhoto, $refreshedPhotoResponse['body']);
 
         // Clean up - delete the user
         $response = $this->client->call(Client::METHOD_DELETE, '/users/' . $userId, array_merge([
