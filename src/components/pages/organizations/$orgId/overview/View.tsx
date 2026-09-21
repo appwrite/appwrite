@@ -80,7 +80,12 @@ import {
   reorderPinnedProjectIds,
   MAX_PINNED_PROJECTS} from '@/lib/team-prefs-keys'
 import { GRID_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
-import { resolveAndPrefetchDefaultOrganization, prefetchOrganizationOverviewData } from '@/lib/organization-overview-prefetch'
+import {
+  prefetchOrganizationOverviewData,
+  resolveAndPrefetchDefaultOrganization,
+  resolveFallbackOrganizationIdFromList,
+} from '@/lib/organization-overview-prefetch'
+import { USER_PREFS_KEY_ORGANIZATION } from '@/lib/user-prefs-keys'
 import {
   canSeeProjects,
   canShowProjectSettings,
@@ -937,6 +942,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     isFetching: organizationDetailFetching,
     isFetched: organizationDetailFetched,
     isError: organizationDetailError,
+    isPlaceholderData: organizationDetailIsPlaceholder,
   } = useQuery({
     ...organizationQueryOptions(orgId),
     placeholderData: keepPreviousData,
@@ -1021,7 +1027,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   const waitingForOrganizationDetail =
     !!orgId &&
     !detailMatchesCurrentOrg &&
-    (organizationDetailLoading ||
+    (organizationDetailIsPlaceholder ||
+      organizationDetailLoading ||
       organizationDetailFetching ||
       (!organizationDetailFetched && !organizationDetailError))
 
@@ -1162,11 +1169,14 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     if (!selectedOrg) {
       if (waitingForOrganizationDetail) return
 
-      // If there are other organizations, redirect to the first one
-      if (organizations.length > 0) {
+      const fallbackOrgId = resolveFallbackOrganizationIdFromList(
+        organizations,
+        account,
+      )
+      if (fallbackOrgId) {
         navigate({
           to: '/organizations/$orgId',
-          params: { orgId: organizations[0].$id },
+          params: { orgId: fallbackOrgId },
           replace: true})
       } else {
         // No memberships: empty state is rendered below (avoids /, /upgrade, /account loops).
@@ -1180,6 +1190,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     waitingForOrganizationDetail,
     orgId,
     navigate,
+    account,
   ])
 
   // Mutation to update user prefs when switching organizations
@@ -1188,10 +1199,14 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       const accountPrefs = (
         account as { prefs?: Record<string, unknown> } | null | undefined
       )?.prefs
-      return await updateAccountPrefs({
-        ...accountPrefs,
-        organization: orgId,
-      })
+      return await updateAccountPrefs(
+        {
+          ...accountPrefs,
+          [USER_PREFS_KEY_ORGANIZATION]: orgId,
+        },
+        'organization-switch',
+        { force: true },
+      )
     },
     onMutate: (orgId) => {
       queryClient.setQueriesData<{ prefs?: Record<string, unknown> }>(
@@ -1200,7 +1215,11 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
           current
             ? {
                 ...current,
-                prefs: { ...current.prefs, organization: orgId }}
+                prefs: {
+                  ...current.prefs,
+                  [USER_PREFS_KEY_ORGANIZATION]: orgId,
+                },
+              }
             : current,
       )
       syncConsoleAccountAfterMutation(queryClient)

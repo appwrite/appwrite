@@ -61,6 +61,24 @@ function preferredOrganizationIdFromAccount(
   return typeof value === 'string' && value.trim() ? value.trim() : undefined
 }
 
+/** When the URL org is missing, prefer account prefs over the first list item. */
+export function resolveFallbackOrganizationIdFromList(
+  organizations: Array<{ $id: string }>,
+  account: Pick<Models.User, 'prefs'> | null | undefined,
+): string | undefined {
+  if (organizations.length === 0) return undefined
+  const preferredId = preferredOrganizationIdFromAccount(
+    account ?? { prefs: {} },
+  )
+  if (
+    preferredId &&
+    organizations.some((organization) => organization.$id === preferredId)
+  ) {
+    return preferredId
+  }
+  return organizations[0].$id
+}
+
 /**
  * Prefetch data the org overview layout and projects tab need before first paint.
  * Route loaders and post-auth navigation should await this so the org header and
