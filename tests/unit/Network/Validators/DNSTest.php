@@ -6,73 +6,152 @@ namespace Tests\Unit\Network\Validators;
 
 use Appwrite\Network\Validator\DNS;
 use PHPUnit\Framework\TestCase;
+use Swoole\Process;
+use Utopia\DNS\Message;
 use Utopia\DNS\Message\Record;
-use Utopia\DNS\Validator\DNS as BaseDNS;
 
 /**
- * What one server holds for the value: its records, or null when the query fails.
+ * A DNS server on one loopback address answering from a fixed table. It runs in a child
+ * process so the validator's blocking UDP client is served the way a real server serves it.
  */
-final class ScriptedAnswer extends BaseDNS
+final class FakeNameserver
 {
+    private const int RCODE_NOERROR = 0;
+    private const int RCODE_NXDOMAIN = 3;
+
+    private ?Process $process = null;
+
+    private ?\Socket $socket = null;
+
     /**
-     * @param array<string>|null $rdata
-     */
-    public function __construct(string $target, int $type, string $server, private readonly ?array $rdata)
-    {
-        parent::__construct($target, $type, $server);
-    }
-
-    public function isValid(mixed $value): bool
-    {
-        $this->value = \strval($value);
-        $this->records = [];
-        $this->count = 0;
-        $this->reason = '';
-
-        if ($this->rdata === null) {
-            $this->reason = self::FAILURE_REASON_QUERY;
-            return false;
-        }
-
-        $this->records = $this->rdata;
-        $this->count = \count($this->rdata);
-
-        return \in_array($this->target, $this->rdata, true);
-    }
-}
-
-/**
- * A DNS validator whose nameservers and per-server answers are given up front.
- */
-final class ScriptedDNS extends DNS
-{
-    /**
-     * @param array<string> $resolvers
-     * @param array<string, string> $authoritative nameserver hostname => IP
-     * @param array<string, array<string>|null> $answers server IP => records it returns, null for a failed query
+     * @param array<string, array<int, array<string>>> $zone name => [record type => rdata list].
+     *  A name that is absent is NXDOMAIN. A name without the asked type is an empty answer,
+     *  unless it has a CNAME, which is returned instead, as a real server does.
+     * @param bool $authoritative Whether answers carry the AA flag, as a zone's own nameserver's do
      */
     public function __construct(
-        string $target,
-        array $resolvers,
-        private readonly array $authoritative,
-        private readonly array $answers,
+        private readonly string $ip,
+        private readonly array $zone,
+        private readonly bool $authoritative,
     ) {
-        parent::__construct($target, Record::TYPE_CNAME, $resolvers);
     }
 
-    protected function findAuthoritativeServers(string $value): array
+    public function start(): void
     {
-        return $this->authoritative;
+        $socket = \socket_create(AF_INET, SOCK_DGRAM, SOL_UDP);
+        if ($socket === false || !@\socket_bind($socket, $this->ip, 53)) {
+            throw new \RuntimeException("Cannot listen on {$this->ip}:53: " . \socket_strerror(\socket_last_error()));
+        }
+        $this->socket = $socket;
+
+        $this->process = new Process(function () use ($socket): void {
+            $packet = '';
+            $from = '';
+            $port = 0;
+            while (\socket_recvfrom($socket, $packet, 512, 0, $from, $port) !== false) {
+                try {
+                    $response = $this->answer(Message::decode($packet))->encode();
+                } catch (\Throwable) {
+                    continue;
+                }
+
+                \socket_sendto($socket, $response, \strlen($response), 0, $from, $port);
+            }
+        }, false, 0, false);
+        $this->process->start();
     }
 
-    protected function createValidator(string $server): BaseDNS
+    public function stop(): void
     {
-        return new ScriptedAnswer($this->target, $this->type, $server, $this->answers[$server] ?? null);
+        if ($this->process !== null) {
+            Process::kill($this->process->pid, 9);
+            Process::wait(true);
+            $this->process = null;
+        }
+
+        if ($this->socket !== null) {
+            \socket_close($this->socket);
+            $this->socket = null;
+        }
+    }
+
+    private function answer(Message $query): Message
+    {
+        $question = $query->questions[0];
+        $records = $this->zone[$question->name] ?? null;
+
+        if ($records === null) {
+            return Message::response(
+                $query->header,
+                self::RCODE_NXDOMAIN,
+                $query->questions,
+                authoritative: $this->authoritative,
+                recursionAvailable: !$this->authoritative,
+            );
+        }
+
+        $type = $question->type;
+        if (!isset($records[$type]) && isset($records[Record::TYPE_CNAME])) {
+            $type = Record::TYPE_CNAME;
+        }
+
+        $answers = [];
+        foreach ($records[$type] ?? [] as $rdata) {
+            $answers[] = new Record($question->name, $type, Record::CLASS_IN, 60, $rdata);
+        }
+
+        return Message::response(
+            $query->header,
+            self::RCODE_NOERROR,
+            $query->questions,
+            $answers,
+            authoritative: $this->authoritative,
+            recursionAvailable: !$this->authoritative,
+        );
     }
 }
 
 final class DNSTest extends TestCase
 {
+    /**
+     * Loopback addresses the fakes listen on. A recursive resolver, a second one, and two
+     * authoritative nameservers. The validator treats reserved space as trusted here because
+     * the resolver itself lives in it.
+     */
+    private const string RESOLVER = '127.0.0.1';
+    private const string OTHER_RESOLVER = '127.0.0.4';
+    private const string NS1 = '127.0.0.2';
+    private const string NS2 = '127.0.0.3';
+
+    /**
+     * @var array<FakeNameserver>
+     */
+    private array $fakes = [];
+
+    protected function tearDown(): void
+    {
+        foreach ($this->fakes as $fake) {
+            $fake->stop();
+        }
+        $this->fakes = [];
+    }
+
+    /**
+     * @param array<string, array<int, array<string>>> $zone
+     */
+    private function serve(string $ip, array $zone, bool $authoritative): void
+    {
+        $fake = new FakeNameserver($ip, $zone, $authoritative);
+
+        try {
+            $fake->start();
+        } catch (\RuntimeException $e) {
+            $this->markTestSkipped($e->getMessage() . ' (port 53 on loopback needs root, as in the CI container)');
+        }
+
+        $this->fakes[] = $fake;
+    }
+
     public function testSingleDNSServer(): void
     {
         $validator = new DNS('appwrite.io', Record::TYPE_CNAME, ['8.8.8.8']);
@@ -102,106 +181,185 @@ final class DNSTest extends TestCase
     }
 
     /**
-     * The production incident: the record exists in the zone, but the resolver still
-     * serves the "does not exist" it cached before the record was added.
+     * The production incident: the zone has the record, the resolver still serves the
+     * "does not exist" it cached before the record was added.
      */
-    public function testRecordOnNameserverVerifiesWhileResolverCachesItsAbsence(): void
+    public function testRecordOnZoneVerifiesWhileResolverCachesItsAbsence(): void
     {
-        $validator = new ScriptedDNS(
-            'appwrite.network',
-            ['8.8.8.8'],
-            ['ns1.hostcreators.sk' => '198.51.100.1'],
-            [
-                '8.8.8.8' => [],
-                '198.51.100.1' => ['appwrite.network'],
-            ],
-        );
+        $this->serve(self::RESOLVER, [
+            'example.com' => [Record::TYPE_NS => ['ns1.example.com']],
+            'ns1.example.com' => [Record::TYPE_A => [self::NS1]],
+        ], authoritative: false);
+        $this->serve(self::NS1, [
+            'app.example.com' => [Record::TYPE_CNAME => ['appwrite.network']],
+        ], authoritative: true);
 
-        $this->assertTrue($validator->isValid('matej-test.rdo1337.eu'));
+        $validator = new DNS('appwrite.network', Record::TYPE_CNAME, [self::RESOLVER]);
+
+        $this->assertTrue($validator->isValid('app.example.com'));
     }
 
-    public function testMissingEverywhereIsDescribedFromTheZone(): void
+    /**
+     * The reverse: the owner removed the record, the resolver still serves it. The zone decides.
+     */
+    public function testRecordRemovedFromZoneFailsWhileResolverStillServesIt(): void
     {
-        $validator = new ScriptedDNS(
-            'appwrite.network',
-            ['8.8.8.8'],
-            ['ns1.hostcreators.sk' => '198.51.100.1'],
-            [
-                '8.8.8.8' => [],
-                '198.51.100.1' => [],
-            ],
-        );
+        $this->serve(self::RESOLVER, [
+            'example.com' => [Record::TYPE_NS => ['ns1.example.com']],
+            'ns1.example.com' => [Record::TYPE_A => [self::NS1]],
+            'app.example.com' => [Record::TYPE_CNAME => ['appwrite.network']],
+        ], authoritative: false);
+        $this->serve(self::NS1, [
+            'example.com' => [Record::TYPE_NS => ['ns1.example.com']],
+        ], authoritative: true);
 
-        $this->assertFalse($validator->isValid('matej-test.rdo1337.eu'));
+        $validator = new DNS('appwrite.network', Record::TYPE_CNAME, [self::RESOLVER]);
+
+        $this->assertFalse($validator->isValid('app.example.com'));
         $this->assertSame(
-            'DNS verification failed with resolver ns1.hostcreators.sk (authoritative). Domain matej-test.rdo1337.eu is missing CNAME record.',
+            'DNS verification failed with resolver ns1.example.com (authoritative). Domain app.example.com is missing CNAME record.',
             $validator->getDescription()
         );
     }
 
     public function testWrongRecordIsDescribedFromTheZone(): void
     {
-        $validator = new ScriptedDNS(
-            'appwrite.network',
-            ['8.8.8.8'],
-            ['ns1.hostcreators.sk' => '198.51.100.1'],
-            [
-                '8.8.8.8' => [],
-                '198.51.100.1' => ['other.example.net'],
-            ],
-        );
+        $this->serve(self::RESOLVER, [
+            'example.com' => [Record::TYPE_NS => ['ns1.example.com']],
+            'ns1.example.com' => [Record::TYPE_A => [self::NS1]],
+            'app.example.com' => [Record::TYPE_CNAME => ['appwrite.network']],
+        ], authoritative: false);
+        $this->serve(self::NS1, [
+            'app.example.com' => [Record::TYPE_CNAME => ['other.example.net']],
+        ], authoritative: true);
 
-        $this->assertFalse($validator->isValid('matej-test.rdo1337.eu'));
+        $validator = new DNS('appwrite.network', Record::TYPE_CNAME, [self::RESOLVER]);
+
+        $this->assertFalse($validator->isValid('app.example.com'));
         $this->assertSame(
-            "DNS verification failed with resolver ns1.hostcreators.sk (authoritative). Domain matej-test.rdo1337.eu has incorrect CNAME value 'other.example.net'.",
+            "DNS verification failed with resolver ns1.example.com (authoritative). Domain app.example.com has incorrect CNAME value 'other.example.net'.",
             $validator->getDescription()
         );
     }
 
-    public function testUnreachableNameserverLeavesTheResolverToDescribe(): void
+    /**
+     * A server that does not answer authoritatively (a parent handing out a referral for a
+     * delegation the resolver had not seen yet) settles nothing; the resolver decides.
+     */
+    public function testNonAuthoritativeAnswerLeavesTheResolverToDecide(): void
     {
-        $validator = new ScriptedDNS(
-            'appwrite.network',
-            ['8.8.8.8'],
-            ['ns1.hostcreators.sk' => '198.51.100.1'],
-            [
-                '8.8.8.8' => ['other.example.net'],
-                '198.51.100.1' => null,
-            ],
-        );
+        $this->serve(self::RESOLVER, [
+            'example.com' => [Record::TYPE_NS => ['ns1.example.com']],
+            'ns1.example.com' => [Record::TYPE_A => [self::NS1]],
+            'app.example.com' => [Record::TYPE_CNAME => ['appwrite.network']],
+        ], authoritative: false);
+        $this->serve(self::NS1, [], authoritative: false);
 
-        $this->assertFalse($validator->isValid('matej-test.rdo1337.eu'));
+        $validator = new DNS('appwrite.network', Record::TYPE_CNAME, [self::RESOLVER]);
+
+        $this->assertTrue($validator->isValid('app.example.com'));
+
+        $this->assertFalse($validator->isValid('gone.example.com'));
         $this->assertSame(
-            "DNS verification failed with resolver 8.8.8.8. Domain matej-test.rdo1337.eu has incorrect CNAME value 'other.example.net'.",
+            'DNS verification failed with resolver 127.0.0.1. Domain gone.example.com is missing CNAME record.',
             $validator->getDescription()
         );
     }
 
-    public function testAnyOneResolverVerifies(): void
+    /**
+     * The name is an alias whose target lies outside the zone, so the nameserver cannot
+     * produce the A record itself; the resolver, which followed the chain, decides.
+     */
+    public function testAliasLeavingTheZoneIsFollowedThroughTheResolver(): void
     {
-        $validator = new ScriptedDNS(
-            'appwrite.network',
-            ['8.8.8.8', '1.1.1.1'],
-            [],
-            [
-                '8.8.8.8' => [],
-                '1.1.1.1' => ['appwrite.network'],
-            ],
-        );
+        $this->serve(self::RESOLVER, [
+            'example.com' => [Record::TYPE_NS => ['ns1.example.com']],
+            'ns1.example.com' => [Record::TYPE_A => [self::NS1]],
+            'app.example.com' => [Record::TYPE_A => ['203.0.0.1']],
+        ], authoritative: false);
+        $this->serve(self::NS1, [
+            'app.example.com' => [Record::TYPE_CNAME => ['alias.example.net']],
+        ], authoritative: true);
 
-        $this->assertTrue($validator->isValid('matej-test.rdo1337.eu'));
+        $validator = new DNS('203.0.0.1', Record::TYPE_A, [self::RESOLVER]);
+
+        $this->assertTrue($validator->isValid('app.example.com'));
+    }
+
+    /**
+     * A delegated subdomain is asked on its own nameserver, not on the apex's, which knows
+     * nothing about the record.
+     */
+    public function testDelegatedSubdomainIsAskedOnItsOwnNameserver(): void
+    {
+        $this->serve(self::RESOLVER, [
+            'example.com' => [Record::TYPE_NS => ['ns1.example.com']],
+            'sub.example.com' => [Record::TYPE_NS => ['ns2.example.com']],
+            'ns1.example.com' => [Record::TYPE_A => [self::NS1]],
+            'ns2.example.com' => [Record::TYPE_A => [self::NS2]],
+        ], authoritative: false);
+        $this->serve(self::NS1, [
+            'example.com' => [Record::TYPE_NS => ['ns1.example.com']],
+        ], authoritative: true);
+        $this->serve(self::NS2, [
+            'app.sub.example.com' => [Record::TYPE_CNAME => ['appwrite.network']],
+        ], authoritative: true);
+
+        $validator = new DNS('appwrite.network', Record::TYPE_CNAME, [self::RESOLVER]);
+
+        $this->assertTrue($validator->isValid('app.sub.example.com'));
+    }
+
+    /**
+     * The first resolver names the zone's nameserver but cannot say where it is; the second
+     * resolver can, and the zone still gets asked.
+     */
+    public function testDiscoveryMovesOnToTheNextResolver(): void
+    {
+        $this->serve(self::RESOLVER, [
+            'example.com' => [Record::TYPE_NS => ['ns1.example.com']],
+        ], authoritative: false);
+        $this->serve(self::OTHER_RESOLVER, [
+            'example.com' => [Record::TYPE_NS => ['ns1.example.com']],
+            'ns1.example.com' => [Record::TYPE_A => [self::NS1]],
+        ], authoritative: false);
+        $this->serve(self::NS1, [
+            'app.example.com' => [Record::TYPE_CNAME => ['appwrite.network']],
+        ], authoritative: true);
+
+        $validator = new DNS('appwrite.network', Record::TYPE_CNAME, [self::RESOLVER, self::OTHER_RESOLVER]);
+
+        $this->assertTrue($validator->isValid('app.example.com'));
+    }
+
+    /**
+     * With no nameservers to ask, one resolver finding the record is enough; a resolver that
+     * has never heard of the name no longer vetoes one that has.
+     */
+    public function testAnyOneResolverVerifiesWhenNoNameserverIsKnown(): void
+    {
+        $this->serve(self::RESOLVER, [], authoritative: false);
+        $this->serve(self::OTHER_RESOLVER, [
+            'app.example.com' => [Record::TYPE_CNAME => ['appwrite.network']],
+        ], authoritative: false);
+
+        $validator = new DNS('appwrite.network', Record::TYPE_CNAME, [self::RESOLVER, self::OTHER_RESOLVER]);
+
+        $this->assertTrue($validator->isValid('app.example.com'));
+
+        $this->assertFalse($validator->isValid('gone.example.com'));
+        $this->assertSame(
+            'DNS verification failed with resolver 127.0.0.1. Domain gone.example.com is missing CNAME record.',
+            $validator->getDescription()
+        );
     }
 
     public function testNoResolverConfiguredFallsBackToGoogle(): void
     {
-        $validator = new ScriptedDNS(
-            'appwrite.network',
-            [],
-            [],
-            ['8.8.8.8' => ['appwrite.network']],
-        );
+        $validator = new DNS('appwrite.network', Record::TYPE_CNAME, []);
 
-        $this->assertTrue($validator->isValid('matej-test.rdo1337.eu'));
+        $this->assertFalse($validator->isValid('nonexistent-domain-' . \uniqid() . '.com'));
+        $this->assertStringContainsString('8.8.8.8', $validator->getDescription());
     }
 
     /**
@@ -237,10 +395,9 @@ final class DNSTest extends TestCase
     }
 
     /**
-     * A resolver that has never heard of the name (8.8.8.8 for a name that only exists
-     * on the test resolver) no longer vetoes one that has.
+     * A public resolver that has never heard of the fixture name does not veto the zone's answer.
      */
-    public function testFixtureResolverVerifiesDespiteAnotherResolverFailing(): void
+    public function testFixtureVerifiesDespiteAnotherResolverFailing(): void
     {
         $validator = new DNS('cname.localhost', Record::TYPE_CNAME, ['172.16.238.100', '8.8.8.8']);
 
