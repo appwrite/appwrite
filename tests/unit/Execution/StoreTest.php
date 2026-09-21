@@ -11,8 +11,6 @@ use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
-use Utopia\Logger\Log;
-use Utopia\Logger\Logger;
 use Utopia\Psr7\Response;
 use Utopia\Psr7\Stream;
 
@@ -43,6 +41,7 @@ final class StoreTest extends TestCase
         $this->assertSame(['user:abc'], $row['readRoles']);
         $this->assertSame('waiting', $row['status']);
         $this->assertSame(0, $row['deleted']);
+        $this->assertSame(42, $row['sequence']);
         $this->assertGreaterThan(0, $row['version']);
         $this->assertSame('2026-09-08 10:00:00.000', $row['expiresAt']);
     }
@@ -124,7 +123,7 @@ final class StoreTest extends TestCase
         $find = (string) $client->requests[0]->getBody();
         $this->assertStringContainsString('resourceType IN', $find);
         $this->assertStringContainsString('status IN', $find);
-        $this->assertStringContainsString('ORDER BY createdAt DESC, sequence DESC', $find);
+        $this->assertStringContainsString('ORDER BY createdAt DESC, sequence DESC, id DESC', $find);
         $this->assertStringContainsString('LIMIT {param0:Int64}', $find);
         $this->assertStringContainsString('name="param_param0"', $find);
         $this->assertStringContainsString('least(count()', (string) $client->requests[1]->getBody());
@@ -189,11 +188,35 @@ final class StoreTest extends TestCase
         ]);
 
         $body = (string) $client->requests[0]->getBody();
-        $this->assertStringContainsString('ORDER BY status DESC, createdAt ASC, sequence DESC', $body);
+        $this->assertStringContainsString('ORDER BY status DESC, createdAt ASC, sequence DESC, id DESC', $body);
         $this->assertStringContainsString('status <', $body);
         $this->assertStringContainsString('status =', $body);
         $this->assertStringContainsString('createdAt >', $body);
         $this->assertStringContainsString('sequence <', $body);
+        $this->assertStringContainsString('id <', $body);
+    }
+
+    public function testOrdersByIdWhenSequenceIsAlreadyUnique(): void
+    {
+        $client = new CapturingClient([$this->jsonResponse([])]);
+
+        $this->store($client)->find('project', [Query::orderDesc('$sequence')]);
+
+        $this->assertStringContainsString(
+            'ORDER BY sequence DESC, id DESC',
+            (string) $client->requests[0]->getBody()
+        );
+    }
+
+    public function testDoesNotDuplicateExistingIdOrder(): void
+    {
+        $client = new CapturingClient([$this->jsonResponse([])]);
+
+        $this->store($client)->find('project', [Query::orderAsc('$id')]);
+
+        $body = (string) $client->requests[0]->getBody();
+        $this->assertStringContainsString('ORDER BY id ASC', $body);
+        $this->assertStringNotContainsString('id ASC, id ASC', $body);
     }
 
     public function testCompilesStringQueryOperators(): void
@@ -243,7 +266,114 @@ final class StoreTest extends TestCase
         $this->assertStringContainsString('resourceInternalId', (string) $client->requests[1]->getBody());
     }
 
-    public function testMirrorWriteFailuresAreBestEffort(): void
+    public function testAssignsSequenceFromCreatedAtWhenMissing(): void
+    {
+        $client = new CapturingClient();
+        $store = $this->store($client);
+        $createdAt = '2026-08-25T10:00:00.123456+00:00';
+
+        $store->create('project', new Document([
+            '$id' => 'execution-a',
+            '$createdAt' => $createdAt,
+            '$updatedAt' => $createdAt,
+            'status' => 'waiting',
+        ]));
+        $store->create('project', new Document([
+            '$id' => 'execution-b',
+            '$createdAt' => $createdAt,
+            '$updatedAt' => $createdAt,
+            'status' => 'waiting',
+        ]));
+        $store->create('project', new Document([
+            '$id' => 'execution-c',
+            '$createdAt' => '2026-08-25T10:00:01.000000+00:00',
+            '$updatedAt' => '2026-08-25T10:00:01.000000+00:00',
+            'status' => 'waiting',
+        ]));
+        $store->create('project', new Document([
+            '$id' => 'execution-d',
+            '$sequence' => 42,
+            '$createdAt' => $createdAt,
+            '$updatedAt' => $createdAt,
+            'status' => 'waiting',
+        ]));
+
+        $first = \json_decode((string) $client->requests[0]->getBody(), true, flags: JSON_THROW_ON_ERROR);
+        $sameCreatedAt = \json_decode((string) $client->requests[1]->getBody(), true, flags: JSON_THROW_ON_ERROR);
+        $later = \json_decode((string) $client->requests[2]->getBody(), true, flags: JSON_THROW_ON_ERROR);
+        $preserved = \json_decode((string) $client->requests[3]->getBody(), true, flags: JSON_THROW_ON_ERROR);
+        $document = \json_decode((string) $first['document'], true, flags: JSON_THROW_ON_ERROR);
+
+        $this->assertGreaterThan(0, $first['sequence']);
+        $this->assertSame($first['sequence'], $document['$sequence']);
+        $this->assertSame($first['sequence'], $sameCreatedAt['sequence']);
+        $this->assertNotSame($first['sequence'], $later['sequence']);
+        $this->assertSame(42, $preserved['sequence']);
+    }
+
+    public function testPersistsPublicIso8601Timestamps(): void
+    {
+        $client = new CapturingClient();
+        $store = $this->store($client);
+        $stored = '2026-09-14 21:27:33.884';
+
+        $store->create('project', new Document([
+            '$id' => 'execution',
+            '$createdAt' => $stored,
+            '$updatedAt' => $stored,
+            'scheduledAt' => $stored,
+            'resourceType' => 'functions',
+            'status' => 'completed',
+        ]));
+
+        $row = \json_decode((string) $client->requests[0]->getBody(), true, flags: JSON_THROW_ON_ERROR);
+        $document = \json_decode((string) $row['document'], true, flags: JSON_THROW_ON_ERROR);
+
+        $this->assertSame('2026-09-14T21:27:33.884+00:00', $document['$createdAt']);
+        $this->assertSame('2026-09-14T21:27:33.884+00:00', $document['$updatedAt']);
+        $this->assertSame('2026-09-14T21:27:33.884+00:00', $document['scheduledAt']);
+        $this->assertSame('2026-09-14 21:27:33.884', $row['createdAt']);
+        $this->assertSame('2026-09-14 21:27:33.884', $row['updatedAt']);
+    }
+
+    public function testFillsMissingTimestampsAsIso8601(): void
+    {
+        $client = new CapturingClient();
+        $this->store($client)->create('project', new Document([
+            '$id' => 'execution',
+            'resourceType' => 'functions',
+            'status' => 'completed',
+        ]));
+
+        $row = \json_decode((string) $client->requests[0]->getBody(), true, flags: JSON_THROW_ON_ERROR);
+        $document = \json_decode((string) $row['document'], true, flags: JSON_THROW_ON_ERROR);
+
+        $this->assertRfc3339($document['$createdAt']);
+        $this->assertRfc3339($document['$updatedAt']);
+    }
+
+    public function testReadsStoredDbTimestampsAsIso8601(): void
+    {
+        $stored = '2026-09-14 21:27:33.884';
+        $client = new CapturingClient([
+            $this->jsonResponse([['document' => \json_encode([
+                '$id' => 'execution',
+                '$createdAt' => $stored,
+                '$updatedAt' => $stored,
+                'scheduledAt' => $stored,
+                'resourceType' => 'functions',
+                'status' => 'completed',
+            ], JSON_THROW_ON_ERROR)]]),
+        ]);
+
+        $execution = $this->store($client)->get('project', 'execution');
+
+        $this->assertSame('2026-09-14T21:27:33.884+00:00', $execution->getCreatedAt());
+        $this->assertSame('2026-09-14T21:27:33.884+00:00', $execution->getUpdatedAt());
+        $this->assertSame('2026-09-14T21:27:33.884+00:00', $execution->getAttribute('scheduledAt'));
+    }
+
+    public function testWriteFailuresPropagate(): void
     {
         $store = $this->store(new FailingClient());
         $execution = new Document([
@@ -253,12 +383,18 @@ final class StoreTest extends TestCase
             'status' => 'completed',
         ]);
 
-        $store->create('project', $execution);
-        $store->update('project', $execution);
-        $store->delete('project', $execution);
-        $store->deleteProject('project');
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('ClickHouse execution insert failed');
 
-        $this->addToAssertionCount(1);
+        $store->create('project', $execution);
+    }
+
+    public function testDeleteFailuresPropagate(): void
+    {
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('ClickHouse execution query failed');
+
+        $this->store(new FailingClient())->deleteProject('project');
     }
 
     public function testSetupFailuresRemainVisible(): void
@@ -269,33 +405,19 @@ final class StoreTest extends TestCase
         $this->store(new FailingClient())->setup();
     }
 
-    public function testMirrorFailuresAreReportedToConfiguredLogger(): void
-    {
-        $logger = $this->createMock(Logger::class);
-        $logger->expects($this->once())
-            ->method('addLog')
-            ->with($this->callback(function (Log $log): bool {
-                $this->assertSame(Log::TYPE_ERROR, $log->getType());
-                $this->assertSame('executions.mirror.upsert', $log->getAction());
-                $this->assertStringContainsString('ClickHouse unavailable', $log->getMessage());
-                return true;
-            }));
-
-        $this->store(new FailingClient(), $logger)->create('project', new Document([
-            '$id' => 'execution',
-            '$createdAt' => '2026-08-25T10:00:00.000+00:00',
-            'status' => 'completed',
-        ]));
-    }
-
-    private function store(ClientInterface $client, ?Logger $logger = null): Store
+    private function store(ClientInterface $client): Store
     {
         return new Store(
-            enabled: true,
             dsn: 'http://appwrite:secret@clickhouse:8123/appwrite',
             client: $client,
-            logger: $logger,
         );
+    }
+
+    private function assertRfc3339(string $value): void
+    {
+        $parsed = \DateTimeImmutable::createFromFormat(\DateTimeInterface::RFC3339_EXTENDED, $value);
+        $this->assertInstanceOf(\DateTimeImmutable::class, $parsed, $value);
+        $this->assertSame($parsed->format(\DateTimeInterface::RFC3339_EXTENDED), $value);
     }
 
     /** @param list<array<string, mixed>> $rows */

@@ -15,7 +15,6 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Logger\Log;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
 use Utopia\Validator\Domain as ValidatorDomain;
@@ -69,7 +68,6 @@ class Create extends Action
             ->inject('queueForEvents')
             ->inject('dbForPlatform')
             ->inject('platform')
-            ->inject('log')
             ->inject('authorization')
             ->inject('bus')
             ->callback($this->action(...));
@@ -83,7 +81,6 @@ class Create extends Action
         Event $queueForEvents,
         Database $dbForPlatform,
         array $platform,
-        Log $log,
         Authorization $authorization,
         Bus $bus,
     ) {
@@ -120,7 +117,7 @@ class Create extends Action
 
         if ($rule->getAttribute('status', '') === RULE_STATUS_CREATED) {
             try {
-                $this->verifyRule($rule, $log);
+                $this->verifyRule($rule);
                 $rule->setAttribute('status', RULE_STATUS_CERTIFICATE_GENERATING);
             } catch (Exception $err) {
                 $rule->setAttribute('logs', $err->getMessage());
@@ -137,6 +134,8 @@ class Create extends Action
                     'domainType' => $rule->getAttribute('deploymentResourceType', $rule->getAttribute('type')),
                 ]),
                 action: \Appwrite\Event\Certificate::ACTION_GENERATION,
+                // verifyRule() above passed, which is what put the rule in this status.
+                skipDomainValidation: true,
             ));
         }
 

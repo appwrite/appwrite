@@ -29,15 +29,8 @@ class Response extends SwooleResponse
     public const MODEL_METRIC_LIST = 'metricList';
     public const MODEL_METRIC_BREAKDOWN = 'metricBreakdown';
     public const MODEL_ERROR_DEV = 'errorDev';
-    public const MODEL_USAGE_DOCUMENTSDBS = 'usageDocumentsDBs';
-    public const MODEL_USAGE_DOCUMENTSDB = 'usageDocumentsDB';
-    public const MODEL_USAGE_VECTORSDBS = 'usageVectorsDBs';
-    public const MODEL_USAGE_VECTORSDB = 'usageVectorsDB';
     public const MODEL_USAGE_USERS = 'usageUsers';
     public const MODEL_USAGE_PRESENCE = 'usagePresence';
-    public const MODEL_USAGE_FUNCTIONS = 'usageFunctions';
-    public const MODEL_USAGE_FUNCTION = 'usageFunction';
-    public const MODEL_USAGE_SITE = 'usageSite';
     public const MODEL_USAGE_PROJECT = 'usageProject';
     public const MODEL_USAGE_DATA_POINT = 'usageDataPoint';
     public const MODEL_USAGE_METRIC = 'usageMetric';
@@ -264,8 +257,6 @@ class Response extends SwooleResponse
     public const MODEL_KEY = 'key';
     public const MODEL_KEY_LIST = 'keyList';
     public const MODEL_EPHEMERAL_KEY = 'ephemeralKey';
-    public const MODEL_DEV_KEY = 'devKey';
-    public const MODEL_DEV_KEY_LIST = 'devKeyList';
     public const MODEL_MOCK_NUMBER = 'mockNumber';
     public const MODEL_MOCK_NUMBER_LIST = 'mockNumberList';
     public const MODEL_POLICY_LIST = 'policyList';
@@ -273,6 +264,7 @@ class Response extends SwooleResponse
     public const MODEL_POLICY_PASSWORD_HISTORY = 'policyPasswordHistory';
     public const MODEL_POLICY_PASSWORD_STRENGTH = 'policyPasswordStrength';
     public const MODEL_POLICY_PASSWORD_PERSONAL_DATA = 'policyPasswordPersonalData';
+    public const MODEL_POLICY_PASSWORD_PWNED = 'policyPasswordPwned';
     public const MODEL_POLICY_SESSION_ALERT = 'policySessionAlert';
     public const MODEL_POLICY_SESSION_DURATION = 'policySessionDuration';
     public const MODEL_POLICY_SESSION_INVALIDATION = 'policySessionInvalidation';
@@ -280,6 +272,10 @@ class Response extends SwooleResponse
     public const MODEL_POLICY_USER_LIMIT = 'policyUserLimit';
     public const MODEL_POLICY_MEMBERSHIP_PRIVACY = 'policyMembershipPrivacy';
     public const MODEL_POLICY_MFA_FACTORS = 'policyMfaFactors';
+    public const MODEL_POLICY_DENY_ALIASED_EMAIL = 'policyDenyAliasedEmail';
+    public const MODEL_POLICY_DENY_DISPOSABLE_EMAIL = 'policyDenyDisposableEmail';
+    public const MODEL_POLICY_DENY_FREE_EMAIL = 'policyDenyFreeEmail';
+    public const MODEL_POLICY_DENY_CORPORATE_EMAIL = 'policyDenyCorporateEmail';
     public const MODEL_AUTH_PROVIDER = 'authProvider';
     public const MODEL_AUTH_PROVIDER_LIST = 'authProviderList';
     public const MODEL_PLATFORM_APPLE = 'platformApple';
@@ -336,6 +332,8 @@ class Response extends SwooleResponse
     public const MODEL_OAUTH2_KICK = 'oAuth2Kick';
     public const MODEL_OAUTH2_MICROSOFT = 'oAuth2Microsoft';
     public const MODEL_OAUTH2_RESEND = 'oAuth2Resend';
+    public const MODEL_OAUTH2_TIKTOK = 'oAuth2TikTok';
+    public const MODEL_OAUTH2_KAKAO = 'oAuth2Kakao';
     public const MODEL_OAUTH2_PROVIDER_LIST = 'oAuth2ProviderList';
 
     // Health

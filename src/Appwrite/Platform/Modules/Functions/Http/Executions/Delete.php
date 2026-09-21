@@ -11,6 +11,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use Utopia\Bus\Bus;
 use Utopia\Database\Database;
@@ -69,6 +70,7 @@ class Delete extends Base
             ->inject('dbForPlatform')
             ->inject('queueForEvents')
             ->inject('authorization')
+            ->inject('user')
             ->inject('bus')
             ->callback($this->action(...));
     }
@@ -83,6 +85,7 @@ class Delete extends Base
         Database $dbForPlatform,
         Event $queueForEvents,
         Authorization $authorization,
+        User $user,
         Bus $bus,
     ) {
         $function = $dbForProject->getDocument('functions', $functionId);
@@ -91,7 +94,10 @@ class Delete extends Base
             throw new Exception(Exception::FUNCTION_NOT_FOUND);
         }
 
-        $execution = $dbForProject->getDocument('executions', $executionId);
+        $isAPIKey = $user->isKey($authorization->getRoles());
+        $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
+        $roles = ($isAPIKey || $isPrivilegedUser) ? null : $authorization->getRoles();
+        $execution = $executionStore->get($project->getId(), $executionId, $roles);
         if ($execution->isEmpty()) {
             // A scheduled execution can be cancelled before its document has
             // been persisted by the executions worker. Remove the schedule and
@@ -198,9 +204,6 @@ class Delete extends Base
             ));
         } else {
             $executionStore->delete($project->getId(), $execution);
-            if (!$dbForProject->deleteDocument('executions', $execution->getId())) {
-                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove execution from DB');
-            }
         }
 
         $queueForEvents

@@ -63,6 +63,32 @@ final class WorkerConcurrencyTest extends TestCase
         $this->assertSame(3, $maxActive['v1-functions'], 'sibling queues keep their own higher caps');
     }
 
+    /**
+     * A batched sibling must not cost the databases queue its serialisation.
+     *
+     * Batching changes how many messages one receive claims, not how many run at
+     * once -- the cap still decides that. The way it could go wrong is at the
+     * boundary between queues: a batch claimed for one queue must not occupy the
+     * slots another one is serialised by, and must not lose or duplicate the
+     * messages it claimed. So this is the combined-mode case with the parallel
+     * sibling batching, asserted on what came out rather than on how it was
+     * fetched.
+     */
+    public function testABatchedSiblingLeavesTheDatabasesQueueSerial(): void
+    {
+        [$processed, $maxActive] = $this->runQueues(
+            queues: [
+                ['name' => 'database_db_main', 'messages' => 6, 'maxCoroutines' => 1],
+                ['name' => 'v1-functions', 'messages' => 9, 'maxCoroutines' => 3, 'batch' => 3],
+            ],
+        );
+
+        $this->assertSame(6, $processed['database_db_main']);
+        $this->assertSame(9, $processed['v1-functions'], 'a batch must deliver every message it claimed, exactly once');
+        $this->assertSame(1, $maxActive['database_db_main'], 'databases stays serial beside a batching sibling');
+        $this->assertSame(3, $maxActive['v1-functions'], 'a batch is claimed three at a time, not run three-deep past the cap');
+    }
+
     public function testMessageWithoutFreeDatabasesSlotStaysInBroker(): void
     {
         $connection = new InMemoryConnection();
@@ -73,8 +99,8 @@ final class WorkerConcurrencyTest extends TestCase
         $pendingDuringFirstMessage = null;
 
         \Swoole\Coroutine\run(function () use ($broker, $queue, &$processed, &$pendingDuringFirstMessage): void {
-            $broker->enqueue($queue, ['n' => 0]);
-            $broker->enqueue($queue, ['n' => 1]);
+            $broker->publish($queue, ['n' => 0]);
+            $broker->publish($queue, ['n' => 1]);
 
             $adapter = new Swoole($broker, 1, self::NAMESPACE);
 
@@ -106,7 +132,7 @@ final class WorkerConcurrencyTest extends TestCase
     }
 
     /**
-     * @param list<array{name: string, messages: int, maxCoroutines: int}> $queues
+     * @param list<array{name: string, messages: int, maxCoroutines: int, batch?: int}> $queues
      * @return array{0: array<string, int>, 1: array<string, int>} [processedByQueue, maxActiveByQueue]
      */
     private function runQueues(array $queues): array
@@ -133,9 +159,13 @@ final class WorkerConcurrencyTest extends TestCase
             foreach ($queues as $spec) {
                 $queue = new Queue($spec['name'], self::NAMESPACE);
                 for ($i = 0; $i < $spec['messages']; $i++) {
-                    $broker->enqueue($queue, ['n' => $i]);
+                    $broker->publish($queue, ['n' => $i]);
                 }
-                $specs[] = ['queue' => $queue, 'maxCoroutines' => $spec['maxCoroutines']];
+                $specs[] = [
+                    'queue' => $queue,
+                    'maxCoroutines' => $spec['maxCoroutines'],
+                    'batch' => $spec['batch'] ?? 1,
+                ];
             }
 
             $adapter = new Swoole($broker, 1, self::NAMESPACE);

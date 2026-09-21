@@ -10,6 +10,7 @@ use Appwrite\Usage\Build as BuildUsage;
 use Appwrite\Usage\Context;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Exception;
+use Utopia\Command;
 use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Database;
@@ -20,7 +21,6 @@ use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Exception\Transaction as TransactionException;
 use Utopia\Database\Query;
-use Utopia\Logger\Log;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\Span\Span;
@@ -71,7 +71,6 @@ class Builds extends Action
             ->inject('vcsFactory')
             ->inject('dbForProject')
             ->inject('getIsResourceBlocked')
-            ->inject('log')
             ->inject('deployments')
             ->callback($this->action(...));
     }
@@ -89,7 +88,6 @@ class Builds extends Action
         VcsFactory $vcsFactory,
         Database $dbForProject,
         callable $getIsResourceBlocked,
-        Log $log,
         Deployments $deployments,
     ): void {
         $payload = $message->getPayload();
@@ -106,8 +104,8 @@ class Builds extends Action
         $template = new Document($payload['template'] ?? []);
         $platform = $payload['platform'] ?? Config::getParam('platform', []);
 
-        $log->addTag('projectId', $project->getId());
-        $log->addTag('type', $type);
+        Span::add('project.id', $project->getId());
+        Span::add('type', $type);
 
         switch ($type) {
             case BUILD_TYPE_DEPLOYMENT:
@@ -126,7 +124,6 @@ class Builds extends Action
                     $deployment,
                     $template,
                     $getIsResourceBlocked,
-                    $log,
                     $deployments,
                     $platform,
                     (int) ($payload['timeout'] ?? System::getEnv('_APP_COMPUTE_BUILD_TIMEOUT', 900))
@@ -155,7 +152,6 @@ class Builds extends Action
         Document $deployment,
         Document $template,
         callable $getIsResourceBlocked,
-        Log $log,
         Deployments $deployments,
         array $platform,
         int $timeout
@@ -176,7 +172,7 @@ class Builds extends Action
             default => throw new \Exception('Invalid resource type')
         };
 
-        $log->addTag($resourceKey, $resource->getId());
+        Span::add($resourceKey, $resource->getId());
 
         $resource = $dbForProject->getDocument($resource->getCollection(), $resource->getId());
         if ($resource->isEmpty()) {
@@ -187,7 +183,7 @@ class Builds extends Action
             throw new BuildException('Resource is blocked');
         }
 
-        $log->addTag('deploymentId', $deployment->getId());
+        Span::add('deployment.id', $deployment->getId());
 
         $deployment = $dbForProject->getDocument('deployments', $deployment->getId());
         if ($deployment->isEmpty()) {
@@ -305,7 +301,7 @@ class Builds extends Action
             $stdout = '';
             $stderr = '';
 
-            Console::execute('mkdir -p ' . \escapeshellarg('/tmp/builds/' . $deploymentId), '', $stdout, $stderr);
+            Console::execute((new Command('mkdir'))->flag('-p')->argument('/tmp/builds/' . $deploymentId), '', $stdout, $stderr);
 
             if ($dbForProject->getDocument('deployments', $deploymentId)->getAttribute('status') === 'canceled') {
                 $this->finalizeCanceledDeployment($deployment->getId(), $dbForProject, $queueForRealtime);
@@ -324,7 +320,7 @@ class Builds extends Action
                 $rootDirectoryWithoutSpaces = str_replace(' ', '', $rootDirectory);
                 $from = $tmpDirectory . '/' . $rootDirectory;
                 $to = $tmpDirectory . '/' . $rootDirectoryWithoutSpaces;
-                $exit = Console::execute('mv ' . \escapeshellarg($from) . ' ' . \escapeshellarg($to), '', $stdout, $stderr);
+                $exit = Console::execute((new Command('mv'))->argument($from)->argument($to), '', $stdout, $stderr);
 
                 if ($exit !== 0) {
                     throw new \Exception('Unable to move function with spaces' . $stderr);
@@ -355,21 +351,34 @@ class Builds extends Action
                 }
 
                 // Ensure directories
-                Console::execute('mkdir -p ' . \escapeshellarg($tmpTemplateDirectory . '/' . $templateRootDirectory), '', $stdout, $stderr);
-                Console::execute('mkdir -p ' . \escapeshellarg($tmpDirectory . '/' . $rootDirectory), '', $stdout, $stderr);
+                Console::execute((new Command('mkdir'))->flag('-p')->argument($tmpTemplateDirectory . '/' . $templateRootDirectory), '', $stdout, $stderr);
+                Console::execute((new Command('mkdir'))->flag('-p')->argument($tmpDirectory . '/' . $rootDirectory), '', $stdout, $stderr);
 
                 // Merge template into user repo
-                Console::execute('rsync -av --exclude \'.git\' ' . \escapeshellarg($tmpTemplateDirectory . '/' . $templateRootDirectory . '/') . ' ' . \escapeshellarg($tmpDirectory . '/' . $rootDirectory), '', $stdout, $stderr);
+                $rsync = (new Command('rsync'))
+                    ->flag('-av')
+                    ->option('--exclude', '.git')
+                    ->argument($tmpTemplateDirectory . '/' . $templateRootDirectory . '/')
+                    ->argument($tmpDirectory . '/' . $rootDirectory);
+                Console::execute($rsync, '', $stdout, $stderr);
 
                 // Commit and push
-                $commitMessage = \escapeshellarg('Create ' . $resource->getAttribute('name', '') . ' function');
-                $exit = Console::execute('git config --global user.email ' . \escapeshellarg(APP_VCS_GITHUB_EMAIL) . ' && git config --global user.name ' . \escapeshellarg(APP_VCS_GITHUB_USERNAME) . ' && cd ' . \escapeshellarg($tmpDirectory) . ' && git checkout -b ' . \escapeshellarg($branchName) . ' && git add . && git commit -m ' . $commitMessage . ' && git push origin ' . \escapeshellarg($branchName), '', $stdout, $stderr);
+                $commitMessage = 'Create ' . $resource->getAttribute('name', '') . ' function';
+                $push = Command::and(
+                    (new Command('git'))->argument('config')->flag('--global')->argument('user.email')->argument(APP_VCS_GITHUB_EMAIL),
+                    (new Command('git'))->argument('config')->flag('--global')->argument('user.name')->argument(APP_VCS_GITHUB_USERNAME),
+                    (new Command('git'))->option('-C', $tmpDirectory)->argument('checkout')->flag('-b')->argument($branchName),
+                    (new Command('git'))->option('-C', $tmpDirectory)->argument('add')->argument('.'),
+                    (new Command('git'))->option('-C', $tmpDirectory)->argument('commit')->option('-m', $commitMessage),
+                    (new Command('git'))->option('-C', $tmpDirectory)->argument('push')->argument('origin')->argument($branchName),
+                );
+                $exit = Console::execute($push, '', $stdout, $stderr);
 
                 if ($exit !== 0) {
                     throw new \Exception('Unable to push code repository: ' . $stderr);
                 }
 
-                $exit = Console::execute('cd ' . \escapeshellarg($tmpDirectory) . ' && git rev-parse HEAD', '', $stdout, $stderr);
+                $exit = Console::execute((new Command('git'))->option('-C', $tmpDirectory)->argument('rev-parse')->argument('HEAD'), '', $stdout, $stderr);
 
                 if ($exit !== 0) {
                     throw new \Exception('Unable to get vcs commit SHA: ' . $stderr);
@@ -404,6 +413,7 @@ class Builds extends Action
             $deployments->createFromVcs(
                 $resource,
                 $deployment,
+                $timeout,
                 $providerAdapter,
                 $cloneOwner,
                 $cloneRepository,
@@ -411,7 +421,7 @@ class Builds extends Action
                 $resource->getAttribute('providerRootDirectory', ''),
             );
 
-            Console::execute('rm -rf ' . \escapeshellarg('/tmp/builds/' . $deploymentId), '', $stdout, $stderr);
+            Console::execute((new Command('rm'))->flag('-rf')->argument('/tmp/builds/' . $deploymentId), '', $stdout, $stderr);
         } catch (\Throwable $th) {
             if ($dbForProject->getDocument('deployments', $deploymentId)->getAttribute('status') === 'canceled') {
                 $this->finalizeCanceledDeployment($deployment->getId(), $dbForProject, $queueForRealtime);

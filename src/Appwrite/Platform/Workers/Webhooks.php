@@ -15,13 +15,13 @@ use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
-use Utopia\Logger\Log;
 use Utopia\Platform\Action;
 use Utopia\Psr7\ContentType;
 use Utopia\Psr7\Header;
 use Utopia\Psr7\Method;
 use Utopia\Psr7\Request\Factory as RequestFactory;
 use Utopia\Queue\Message;
+use Utopia\Span\Span;
 use Utopia\System\System;
 
 class Webhooks extends Action
@@ -45,7 +45,7 @@ class Webhooks extends Action
             ->inject('dbForPlatform')
             ->inject('publisherForNotifications')
             ->inject('publisherForUsage')
-            ->inject('log')
+            ->inject('platform')
             ->inject('plan')
             ->callback($this->action(...));
     }
@@ -56,12 +56,12 @@ class Webhooks extends Action
      * @param Database $dbForPlatform
      * @param NotificationPublisher $publisherForNotifications
      * @param UsagePublisher $publisherForUsage
-     * @param Log $log
+     * @param array $platform
      * @param array $plan
      * @return void
      * @throws Exception
      */
-    public function action(Message $message, Document $project, Database $dbForPlatform, NotificationPublisher $publisherForNotifications, UsagePublisher $publisherForUsage, Log $log, array $plan): void
+    public function action(Message $message, Document $project, Database $dbForPlatform, NotificationPublisher $publisherForNotifications, UsagePublisher $publisherForUsage, array $platform, array $plan): void
     {
         $payload = $message->getPayload();
 
@@ -73,12 +73,12 @@ class Webhooks extends Action
         $webhookPayload = json_encode($payload['payload']);
         $user = new Document($payload['user'] ?? []);
 
-        $log->addTag('projectId', $project->getId());
+        Span::add('project.id', $project->getId());
 
         $errors = [];
         foreach ($project->getAttribute('webhooks', []) as $webhook) {
             if (array_intersect($webhook->getAttribute('events', []), $events)) {
-                $error = $this->execute($events, $webhookPayload, $webhook, $user, $project, $dbForPlatform, $publisherForNotifications, $publisherForUsage, $plan);
+                $error = $this->execute($events, $webhookPayload, $webhook, $user, $project, $dbForPlatform, $publisherForNotifications, $publisherForUsage, $platform, $plan);
                 if ($error !== null) {
                     $errors[] = $error;
                 }
@@ -99,10 +99,11 @@ class Webhooks extends Action
      * @param Database $dbForPlatform
      * @param NotificationPublisher $publisherForNotifications
      * @param UsagePublisher $publisherForUsage
+     * @param array $platform
      * @param array $plan
      * @return string|null The error log if the delivery failed, otherwise null
      */
-    private function execute(array $events, string $payload, Document $webhook, Document $user, Document $project, Database $dbForPlatform, NotificationPublisher $publisherForNotifications, UsagePublisher $publisherForUsage, array $plan): ?string
+    private function execute(array $events, string $payload, Document $webhook, Document $user, Document $project, Database $dbForPlatform, NotificationPublisher $publisherForNotifications, UsagePublisher $publisherForUsage, array $platform, array $plan): ?string
     {
         if ($webhook->getAttribute('enabled') !== true) {
             return null;
@@ -198,7 +199,7 @@ class Webhooks extends Action
             if ($attempts >= \intval(System::getEnv('_APP_WEBHOOK_MAX_FAILED_ATTEMPTS', '10'))) {
                 $webhook->setAttribute('enabled', false);
                 $updatePayload['enabled'] = false;
-                $this->sendAlert($attempts, $statusCode, $webhook, $project, $dbForPlatform, $publisherForNotifications, $plan);
+                $this->sendAlert($attempts, $statusCode, $webhook, $project, $dbForPlatform, $publisherForNotifications, $platform, $plan);
             }
 
             $dbForPlatform->updateDocument('webhooks', $webhook->getId(), new Document($updatePayload));
@@ -239,10 +240,11 @@ class Webhooks extends Action
      * @param Document $project
      * @param Database $dbForPlatform
      * @param NotificationPublisher $publisherForNotifications
+     * @param array $platform
      * @param array $plan
      * @return void
      */
-    public function sendAlert(int $attempts, mixed $statusCode, Document $webhook, Document $project, Database $dbForPlatform, NotificationPublisher $publisherForNotifications, array $plan): void
+    public function sendAlert(int $attempts, mixed $statusCode, Document $webhook, Document $project, Database $dbForPlatform, NotificationPublisher $publisherForNotifications, array $platform, array $plan): void
     {
         $memberships = $dbForPlatform->find('memberships', [
             Query::equal('teamInternalId', [$project->getAttribute('teamInternalId')]),
@@ -278,11 +280,6 @@ class Webhooks extends Action
 
         $projectId = $project->getId();
         $projectInternalId = $project->getSequence();
-        $region = $project->getAttribute('region', 'default');
-        $webhookId = $webhook->getId();
-
-        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled') === 'disabled' ? 'http' : 'https';
-        $consoleHostname = System::getEnv('_APP_CONSOLE_DOMAIN', System::getEnv('_APP_DOMAIN', 'localhost'));
 
         $subject = 'Webhook deliveries have been paused';
         $preview = 'Webhook "' . $webhook->getAttribute('name') . '" has been paused after ' . $attempts . ' failed delivery attempts.';
@@ -322,10 +319,8 @@ class Webhooks extends Action
             $template->setParam('{{project}}', $project->getAttribute('name'));
             $template->setParam('{{url}}', $webhook->getAttribute('url'));
             $template->setParam('{{error}}', 'The server returned ' . $statusCode . ' status code');
-            $template->setParam('{{host}}', $protocol . '://' . $consoleHostname);
-            $template->setParam('{{path}}', System::getEnv('_APP_CONSOLE_URL_SCHEME', 'legacy') !== 'root'
-                ? "/console/project-{$region}-{$projectId}/settings/webhooks/{$webhookId}"
-                : "/projects/{$projectId}/settings/webhooks");
+            $template->setParam('{{host}}', $platform['consoleUrl'] ?? '');
+            $template->setParam('{{path}}', "/projects/{$projectId}/settings/webhooks");
             $template->setParam('{{attempts}}', $attempts);
 
             $publisherForNotifications->enqueue(new NotificationMessage(

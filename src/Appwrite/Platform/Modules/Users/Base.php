@@ -21,7 +21,7 @@ use Utopia\Emails\Email;
 
 class Base extends Action
 {
-    protected function createUser(Hash $hash, string $userId, ?string $email, ?string $password, ?string $phone, ?string $name, Document $project, Database $dbForProject, Hooks $hooks, array $plan): Document
+    protected function createUser(Hash $hash, string $userId, ?string $email, ?string $password, ?string $phone, ?string $name, Document $project, Database $dbForProject, Hooks $hooks, array $plan, ?bool $passwordPwned = null): Document
     {
         $name = $name ?? '';
         $plaintextPassword = $password;
@@ -79,19 +79,19 @@ class Base extends Action
             } catch (\Throwable) {
             }
 
-            if ((($project->getId() === 'console') || ($plan['supportsDisposableEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['disposableEmails'] ?? false) && ($emailMetadata['emailIsDisposable'] ?? false)) {
+            if ((($project->getId() === 'console') || empty($plan) || ($plan['supportsDisposableEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['disposableEmails'] ?? false) && ($emailMetadata['emailIsDisposable'] ?? false)) {
                 throw new Exception(Exception::USER_EMAIL_DISPOSABLE);
             }
 
-            if ((($project->getId() === 'console') || ($plan['supportsCanonicalEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false) && ($emailMetadata['emailIsCanonical'] ?? true) === false) {
+            if ((($project->getId() === 'console') || empty($plan) || ($plan['supportsCanonicalEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false) && ($emailMetadata['emailIsCanonical'] ?? true) === false) {
                 throw new Exception(Exception::USER_EMAIL_NOT_CANONICAL);
             }
 
-            if ((($project->getId() === 'console') || ($plan['supportsFreeEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['freeEmails'] ?? false) && ($emailMetadata['emailIsFree'] ?? false)) {
+            if ((($project->getId() === 'console') || empty($plan) || ($plan['supportsFreeEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['freeEmails'] ?? false) && ($emailMetadata['emailIsFree'] ?? false)) {
                 throw new Exception(Exception::USER_EMAIL_FREE);
             }
 
-            if ((($project->getId() === 'console') || ($plan['supportsCorporateEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['corporateEmails'] ?? false) && !($emailMetadata['emailIsCorporate'] ?? true)) {
+            if ((($project->getId() === 'console') || empty($plan) || ($plan['supportsCorporateEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['corporateEmails'] ?? false) && !($emailMetadata['emailIsCorporate'] ?? true)) {
                 throw new Exception(Exception::USER_EMAIL_NOT_CORPORATE);
             }
 
@@ -144,6 +144,7 @@ class Base extends Action
                 'emailIsCorporate' => $emailMetadata['emailIsCorporate'],
                 'emailIsDisposable' => $emailMetadata['emailIsDisposable'],
                 'emailIsFree' => $emailMetadata['emailIsFree'],
+                'passwordPwned' => $passwordPwned,
             ]);
 
             if (!$isHashed && !empty($password)) {

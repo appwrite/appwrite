@@ -34,7 +34,8 @@ class Dailymotion extends OAuth2
         'email',
         'id',
         'fullname',
-        'verified'
+        'verified',
+        'avatar_720_url',
     ];
 
     /**
@@ -175,6 +176,18 @@ class Dailymotion extends OAuth2
         $user = $this->getUser($accessToken);
 
         return $user['verified'] ?? false;
+    }
+
+    /**
+     * @param string $accessToken
+     *
+     * @return string
+     */
+    public function getUserPhoto(string $accessToken): string
+    {
+        $user = $this->getUser($accessToken);
+
+        return $user['avatar_720_url'] ?? '';
     }
 
     /**

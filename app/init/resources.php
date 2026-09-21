@@ -1,5 +1,7 @@
 <?php
 
+use Appwrite\Autogravity\Client as AutogravityClient;
+use Appwrite\Autogravity\Detector as AutogravityDetector;
 use Appwrite\Certificates\Certificates;
 use Appwrite\Database\Factory as DatabaseFactory;
 use Appwrite\Event\Event;
@@ -20,6 +22,7 @@ use Appwrite\Event\Publisher\StatsResources as StatsResourcesPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Execution\Store as ExecutionStore;
 use Appwrite\Geo\Client as GeoClient;
+use Appwrite\Messaging\Provider as MessagingProvider;
 use Appwrite\Platform\Modules\Storage\Config\StorageCacheControl;
 use Appwrite\Screenshots\Client as ScreenshotsClient;
 use Appwrite\Usage\Connection as UsageConnection;
@@ -43,12 +46,12 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Container;
 use Utopia\DSN\DSN;
 use Utopia\Lock\Distributed;
-use Utopia\Logger\Logger;
+use Utopia\Messaging\Adapter\SMS as SMSAdapter;
 use Utopia\Pools\Adapter\Swoole as SwoolePoolAdapter;
 use Utopia\Pools\Group;
 use Utopia\Pools\Pool as Connections;
 use Utopia\Queue\Broker\Pool as BrokerPool;
-use Utopia\Queue\Publisher;
+use Utopia\Queue\Publisher\Synchronous as Publisher;
 use Utopia\Queue\Queue;
 use Utopia\Storage\Device;
 use Utopia\Storage\Device\AWS;
@@ -69,8 +72,6 @@ global $container;
 $container = new Container();
 
 $container->set('register', fn () => $register);
-
-$container->set('logger', fn ($register) => $register->get('logger'), ['register']);
 
 $container->set('hooks', fn ($register) => $register->get('hooks'), ['register']);
 
@@ -105,7 +106,31 @@ $container->set('screenshots', function () {
     return new ScreenshotsClient($client);
 }, []);
 
+$container->set('autogravity', function (Cache $cache) {
+    $host = System::getEnv('_APP_AUTOGRAVITY_HOST', '');
+    $client = $host === ''
+        ? null
+        : (new Client(new SwooleClientAdapter()))
+            ->withBaseUri($host)
+            ->withTimeout(30);
+
+    return new AutogravityDetector($client === null ? null : new AutogravityClient($client), $cache);
+}, ['cache']);
+
 $container->set('telemetry', fn () => new NoTelemetry(), []);
+
+/**
+ * A malformed DSN is reported and read as unset rather than thrown: this resolves for every
+ * messaging job, so one bad platform variable must not stop a project's push and email.
+ */
+$container->set('adapterForSMS', function (Telemetry $telemetry): ?SMSAdapter {
+    try {
+        return (new MessagingProvider($telemetry))->internalSMS();
+    } catch (\Throwable $error) {
+        Console::error('Ignoring _APP_SMS_PROVIDER: ' . $error->getMessage());
+        return null;
+    }
+}, ['telemetry']);
 
 $container->set('authorization', fn () => new Authorization(), []);
 
@@ -182,7 +207,7 @@ $container->set('usageConnection', function () {
     );
 }, []);
 
-$container->set('executionStore', function (?Logger $logger) {
+$container->set('executionStore', function () {
     $client = new HttpClientPool(new Connections(
         new SwoolePoolAdapter(),
         'executions',
@@ -203,14 +228,11 @@ $container->set('executionStore', function (?Logger $logger) {
     }
 
     return new ExecutionStore(
-        enabled: System::getEnv('_APP_EDITION', 'self-hosted') === 'self-hosted'
-            && System::getEnv('_APP_EXECUTIONS_DUAL_WRITE', 'enabled') !== 'disabled',
         dsn: $connection,
         client: $client,
         retention: (int) System::getEnv('_APP_MAINTENANCE_RETENTION_EXECUTION', 1209600),
-        logger: $logger,
     );
-}, ['logger']);
+}, []);
 
 $container->set('publisherForBuilds', fn (Publisher $publisher) => new BuildPublisher(
     $publisher,
@@ -259,25 +281,6 @@ $container->set('dbForPlatform', fn (DatabaseFactory $databaseFactory) => $datab
     ['host' => \gethostname(), 'project' => 'console']
 ), ['databaseFactory']);
 
-$container->set('getLogsDB', function (DatabaseFactory $databaseFactory) {
-    $database = null;
-
-    return function (?Document $project = null) use ($databaseFactory, &$database) {
-        if ($database !== null && $project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
-            $database->setTenant($project->getSequence());
-            return $database;
-        }
-
-        $database = $databaseFactory->logs(
-            $project,
-            APP_DATABASE_TIMEOUT_MILLISECONDS_API,
-            APP_DATABASE_QUERY_MAX_VALUES
-        );
-
-        return $database;
-    };
-}, ['databaseFactory']);
-
 $container->set('cache', function (Group $pools, Telemetry $telemetry) {
     $list = Config::getParam('pools-cache', []);
     $adapters = [];
@@ -294,32 +297,40 @@ $container->set('cache', function (Group $pools, Telemetry $telemetry) {
 
 $container->set('cacheControlForStorage', fn () => fn (StorageCacheControl $config): string => \sprintf('private, max-age=%d', $config->maxAge));
 
-$container->set('redis', function () {
-    $host = System::getEnv('_APP_REDIS_HOST', 'localhost');
-    $port = System::getEnv('_APP_REDIS_PORT', 6379);
-    $pass = System::getEnv('_APP_REDIS_PASS', '');
-
-    $redis = new \Redis();
-    @$redis->pconnect($host, (int) $port);
-    if ($pass) {
-        $redis->auth($pass);
-    }
-    $redis->setOption(\Redis::OPT_READ_TIMEOUT, -1);
-
-    return $redis;
-});
-
 $container->set('locks', fn (Group $pools) => fn (string $key, int $ttl, callable $callback, float $timeout = 0.0): mixed => $pools->get('lock')->use(
-    fn (\Redis $redis) => (new Distributed($redis, $key, ttl: $ttl))->withLock($callback, timeout: $timeout)
+    function (\Redis $redis) use ($key, $ttl, $callback, $timeout): mixed {
+        // The callback receives the lock so long-running holders can refresh
+        // the lease and verify it is still theirs before committing work.
+        $lock = new Distributed($redis, $key, ttl: $ttl);
+
+        return $lock->withLock(fn () => $callback($lock), timeout: $timeout);
+    }
 ), ['pools']);
 
-$container->set('timelimit', fn (\Redis $redis) => fn (string $key, int $limit, int $time) => new TimeLimitRedis($key, $limit, $time, $redis), ['redis']);
+// The lease spans the whole callback because a TimeLimit issues several round
+// trips (remaining, limit, check, reset) and must hold one connection for all of
+// them. Do not throw from the callback: the pool treats that as a failed lease
+// and reconnects the socket before returning it.
+$container->set('timelimit', fn (Group $pools) => fn (string $key, int $limit, int $time, callable $callback): mixed => $pools->get('abuse')->use(
+    fn (\Redis $redis): mixed => $callback(new TimeLimitRedis($key, $limit, $time, $redis))
+), ['pools']);
 
 $container->set('deviceForLocal', fn (Telemetry $telemetry) => new Device\Telemetry($telemetry, new Local()), ['telemetry']);
 
 function getDevice(string $root, string $connection = ''): Device
 {
-    $connection = ! empty($connection) ? $connection : System::getEnv('_APP_CONNECTIONS_STORAGE', '');
+    $configuredDevice = DeviceType::tryFrom(strtolower(System::getEnv('_APP_STORAGE_DEVICE', DeviceType::Local->value))) ?? DeviceType::Local;
+    $s3AccessKey = System::getEnv('_APP_STORAGE_S3_ACCESS_KEY', '');
+    $s3AccessSecret = System::getEnv('_APP_STORAGE_S3_SECRET', '');
+    $s3Region = System::getEnv('_APP_STORAGE_S3_REGION', '');
+    $s3Bucket = System::getEnv('_APP_STORAGE_S3_BUCKET', '');
+    $hasS3Configuration = $s3AccessKey !== '' && $s3AccessSecret !== '' && $s3Bucket !== '';
+
+    // An explicit connection remains authoritative. Otherwise the generic S3
+    // configuration takes precedence and the legacy internal DSN is a fallback.
+    if ($connection === '' && (! \in_array($configuredDevice, [DeviceType::S3, DeviceType::AwsS3], true) || ! $hasS3Configuration)) {
+        $connection = System::getEnv('_APP_CONNECTIONS_STORAGE', '');
+    }
 
     $device = DeviceType::Local;
     $accessKey = '';
@@ -339,20 +350,27 @@ function getDevice(string $root, string $connection = ''): Device
             Console::warning($e->getMessage() . 'Invalid DSN. Defaulting to Local device.');
         }
     } else {
-        $device = DeviceType::tryFrom(strtolower(System::getEnv('_APP_STORAGE_DEVICE', DeviceType::Local->value))) ?? DeviceType::Local;
+        $device = $configuredDevice;
         $prefix = match ($device) {
-            DeviceType::S3, DeviceType::AwsS3 => 'S3',
+            DeviceType::S3, DeviceType::AwsS3 => null,
             DeviceType::DoSpaces => 'DO_SPACES',
             DeviceType::Backblaze => 'BACKBLAZE',
             DeviceType::Linode => 'LINODE',
             DeviceType::Wasabi => 'WASABI',
             DeviceType::Local => null,
         };
-        if ($prefix !== null) {
-            $accessKey = System::getEnv("_APP_STORAGE_{$prefix}_ACCESS_KEY", '');
-            $accessSecret = System::getEnv("_APP_STORAGE_{$prefix}_SECRET", '');
-            $region = System::getEnv("_APP_STORAGE_{$prefix}_REGION", '');
-            $bucket = System::getEnv("_APP_STORAGE_{$prefix}_BUCKET", '');
+        if ($device !== DeviceType::Local) {
+            if ($prefix === null || $hasS3Configuration) {
+                $accessKey = $s3AccessKey;
+                $accessSecret = $s3AccessSecret;
+                $region = $s3Region;
+                $bucket = $s3Bucket;
+            } else {
+                $accessKey = System::getEnv("_APP_STORAGE_{$prefix}_ACCESS_KEY", '');
+                $accessSecret = System::getEnv("_APP_STORAGE_{$prefix}_SECRET", '');
+                $region = System::getEnv("_APP_STORAGE_{$prefix}_REGION", '');
+                $bucket = System::getEnv("_APP_STORAGE_{$prefix}_BUCKET", '');
+            }
         }
     }
 

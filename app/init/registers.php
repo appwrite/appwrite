@@ -6,8 +6,8 @@ use Appwrite\Hooks\Hooks;
 use Appwrite\PubSub\Adapter\Redis as PubSub;
 use Appwrite\URL\URL as AppwriteURL;
 use Utopia\Cache\Adapter\Redis as RedisCache;
+use Utopia\Cache\Codec\Igbinary;
 use Utopia\Config\Config;
-use Utopia\Console;
 use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Adapter\Mongo;
 use Utopia\Database\Adapter\MySQL;
@@ -17,14 +17,8 @@ use Utopia\Database\PDO;
 use Utopia\Domains\Validator\PublicDomain;
 use Utopia\DSN\DSN;
 use Utopia\Http\Http;
-use Utopia\Logger\Adapter\AppSignal;
-use Utopia\Logger\Adapter\LogOwl;
-use Utopia\Logger\Adapter\Raygun;
-use Utopia\Logger\Adapter\Sentry;
-use Utopia\Logger\Logger;
 use Utopia\Messaging\Adapter\Email\SMTP;
 use Utopia\Mongo\Client as MongoClient;
-use Utopia\Pools\Adapter\Stack as StackPool;
 use Utopia\Pools\Adapter\Swoole as SwoolePool;
 use Utopia\Pools\Group;
 use Utopia\Pools\Pool;
@@ -44,109 +38,6 @@ if (!Http::isProduction()) {
     PublicDomain::allow(['request-catcher-webhook']);
 }
 
-$register->set('logger', function () {
-    // Register error logger
-    $providerName = System::getEnv('_APP_LOGGING_PROVIDER', '');
-    $providerConfig = System::getEnv('_APP_LOGGING_CONFIG', '');
-
-    if (empty($providerConfig)) {
-        return;
-    }
-
-    try {
-        $loggingProvider = new DSN($providerConfig);
-
-        $providerName = $loggingProvider->getScheme();
-        $providerConfig = match ($providerName) {
-            'sentry' => ['key' => $loggingProvider->getPassword(), 'projectId' => $loggingProvider->getUser() ?? '', 'host' => 'https://' . $loggingProvider->getHost()],
-            'logowl' => ['ticket' => $loggingProvider->getUser() ?? '', 'host' => $loggingProvider->getHost()],
-            default => ['key' => $loggingProvider->getHost()],
-        };
-    } catch (Throwable $th) {
-        // Fallback for older Appwrite versions up to 1.5.x that use _APP_LOGGING_PROVIDER and _APP_LOGGING_CONFIG environment variables
-        Console::warning('Using deprecated logging configuration. Please update your configuration to use DSN format.' . $th->getMessage());
-        $configChunks = \explode(";", $providerConfig);
-
-        $providerConfig = match ($providerName) {
-            'sentry' => [ 'key' => $configChunks[0], 'projectId' => $configChunks[1] ?? '', 'host' => '',],
-            'logowl' => ['ticket' => $configChunks[0], 'host' => ''],
-            default => ['key' => $providerConfig],
-        };
-    }
-
-    if (empty($providerName)) {
-        return;
-    }
-
-    if (!Logger::hasProvider($providerName)) {
-        throw new Exception(Exception::GENERAL_SERVER_ERROR, "Logging provider not supported. Logging is disabled");
-    }
-
-    try {
-        $adapter = match ($providerName) {
-            'sentry' => new Sentry($providerConfig['projectId'], $providerConfig['key'], $providerConfig['host']),
-            'logowl' => new LogOwl($providerConfig['ticket'], $providerConfig['host']),
-            'raygun' => new Raygun($providerConfig['key']),
-            'appsignal' => new AppSignal($providerConfig['key']),
-            default => null
-        };
-    } catch (Throwable $th) {
-        $adapter = null;
-    }
-
-    if ($adapter === null) {
-        Console::error("Logging provider not supported. Logging is disabled");
-        return;
-    }
-
-    return new Logger($adapter);
-});
-
-$register->set('realtimeLogger', function () {
-    // Register error logger for realtime, falls back to default logging config
-    $providerConfig = System::getEnv('_APP_LOGGING_CONFIG_REALTIME', '')
-        ?: System::getEnv('_APP_LOGGING_CONFIG', '');
-
-    if (empty($providerConfig)) {
-        return;
-    }
-
-    $loggingProvider = new DSN($providerConfig);
-    $providerName = $loggingProvider->getScheme();
-    $providerConfig = match ($providerName) {
-        'sentry' => ['key' => $loggingProvider->getPassword(), 'projectId' => $loggingProvider->getUser() ?? '', 'host' => 'https://' . $loggingProvider->getHost()],
-        'logowl' => ['ticket' => $loggingProvider->getUser() ?? '', 'host' => $loggingProvider->getHost()],
-        default => ['key' => $loggingProvider->getHost()],
-    };
-
-    if (empty($providerName)) {
-        return;
-    }
-
-    if (!Logger::hasProvider($providerName)) {
-        throw new Exception(Exception::GENERAL_SERVER_ERROR, "Logging provider not supported. Logging is disabled");
-    }
-
-    try {
-        $adapter = match ($providerName) {
-            'sentry' => new Sentry($providerConfig['projectId'], $providerConfig['key'], $providerConfig['host']),
-            'logowl' => new LogOwl($providerConfig['ticket'], $providerConfig['host']),
-            'raygun' => new Raygun($providerConfig['key']),
-            'appsignal' => new AppSignal($providerConfig['key']),
-            default => null
-        };
-    } catch (Throwable $th) {
-        $adapter = null;
-    }
-
-    if ($adapter === null) {
-        Console::error("Logging provider not supported. Logging is disabled");
-        return;
-    }
-
-    return new Logger($adapter);
-});
-
 $register->set('pools', function () {
     $group = new Group();
 
@@ -154,32 +45,32 @@ $register->set('pools', function () {
         'scheme' => System::getEnv('_APP_DB_ADAPTER', 'postgresql'),
         'host' => System::getEnv('_APP_DB_HOST', 'postgresql'),
         'port' => System::getEnv('_APP_DB_PORT', '5432'),
-        'user' => System::getEnv('_APP_DB_USER', ''),
-        'pass' => System::getEnv('_APP_DB_PASS', ''),
+        'user' => \rawurlencode(System::getEnv('_APP_DB_USER', '')),
+        'pass' => \rawurlencode(System::getEnv('_APP_DB_PASS', '')),
         'path' => System::getEnv('_APP_DB_SCHEMA', ''),
     ]);
     $fallbackForRedis = 'redis_main=' . AppwriteURL::unparse([
         'scheme' => 'redis',
         'host' => System::getEnv('_APP_REDIS_HOST', 'redis'),
         'port' => System::getEnv('_APP_REDIS_PORT', '6379'),
-        'user' => System::getEnv('_APP_REDIS_USER', ''),
-        'pass' => System::getEnv('_APP_REDIS_PASS', ''),
+        'user' => \rawurlencode(System::getEnv('_APP_REDIS_USER', '')),
+        'pass' => \rawurlencode(System::getEnv('_APP_REDIS_PASS', '')),
     ]);
 
     $fallbackForDocumentsDB = 'db_main=' . AppwriteURL::unparse([
         'scheme' => System::getEnv('_APP_DB_ADAPTER_DOCUMENTSDB', 'mongodb'),
         'host' => System::getEnv('_APP_DB_HOST_DOCUMENTSDB', 'mongodb'),
         'port' => System::getEnv('_APP_DB_PORT_DOCUMENTSDB', '27017'),
-        'user' => System::getEnv('_APP_DB_USER_DOCUMENTSDB', '') ?: System::getEnv('_APP_DB_USER', ''),
-        'pass' => System::getEnv('_APP_DB_PASS_DOCUMENTSDB', '') ?: System::getEnv('_APP_DB_PASS', ''),
+        'user' => \rawurlencode(System::getEnv('_APP_DB_USER_DOCUMENTSDB', '') ?: System::getEnv('_APP_DB_USER', '')),
+        'pass' => \rawurlencode(System::getEnv('_APP_DB_PASS_DOCUMENTSDB', '') ?: System::getEnv('_APP_DB_PASS', '')),
         'path' => System::getEnv('_APP_DB_SCHEMA_DOCUMENTSDB', '') ?: System::getEnv('_APP_DB_SCHEMA', ''),
     ]);
     $fallbackForVectorsDB = 'db_main=' . AppwriteURL::unparse([
         'scheme' => System::getEnv('_APP_DB_ADAPTER_VECTORSDB', 'postgresql'),
         'host' => System::getEnv('_APP_DB_HOST_VECTORSDB', 'postgresql'),
         'port' => System::getEnv('_APP_DB_PORT_VECTORSDB', '5432'),
-        'user' => System::getEnv('_APP_DB_USER_VECTORSDB', '') ?: System::getEnv('_APP_DB_USER', ''),
-        'pass' => System::getEnv('_APP_DB_PASS_VECTORSDB', '') ?: System::getEnv('_APP_DB_PASS', ''),
+        'user' => \rawurlencode(System::getEnv('_APP_DB_USER_VECTORSDB', '') ?: System::getEnv('_APP_DB_USER', '')),
+        'pass' => \rawurlencode(System::getEnv('_APP_DB_PASS_VECTORSDB', '') ?: System::getEnv('_APP_DB_PASS', '')),
         'path' => System::getEnv('_APP_DB_SCHEMA_VECTORSDB', '') ?: System::getEnv('_APP_DB_SCHEMA', ''),
     ]);
 
@@ -208,12 +99,6 @@ $register->set('pools', function () {
             'multiple' => true,
             'schemes' => ['postgresql'],
         ],
-        'logs' => [
-            'type' => 'database',
-            'dsns' => System::getEnv('_APP_CONNECTIONS_DB_LOGS', $fallbackForDB),
-            'multiple' => false,
-            'schemes' => ['mongodb','mariadb', 'mysql','postgresql'],
-        ],
         'publisher' => [
             'type' => 'publisher',
             'dsns' => $fallbackForRedis,
@@ -238,10 +123,19 @@ $register->set('pools', function () {
             'multiple' => false,
             'schemes' => ['redis'],
         ],
+        // Abuse gets its own pool rather than sharing 'lock': lock leases are
+        // held for the whole guarded callback, which for storage chunk uploads
+        // spans the transfer. Rate limit checks must not queue behind those.
+        'abuse' => [
+            'type' => 'abuse',
+            'dsns' => $fallbackForRedis,
+            'multiple' => false,
+            'schemes' => ['redis'],
+        ],
     ];
 
     $maxConnections = (int) System::getEnv('_APP_CONNECTIONS_MAX', 151);
-    $instanceConnections = $maxConnections / (int) System::getEnv('_APP_POOL_CLIENTS', 14);
+    $instanceConnections = $maxConnections / (int) System::getEnv('_APP_POOL_CLIENTS', 15);
 
     $workerCount = intval(System::getEnv('_APP_CPU_NUM', swoole_cpu_num())) * intval(System::getEnv('_APP_WORKER_PER_CORE', 6));
     $poolSize = max(1, (int)($instanceConnections / $workerCount));
@@ -320,19 +214,17 @@ $register->set('pools', function () {
                         \PDO::ATTR_STRINGIFY_FETCHES => true
                     ));
                 },
-                default => function () use ($dsnHost, $dsnPort, $dsnPass) {
+                default => function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass) {
                     $redis = new \Redis();
                     @$redis->pconnect($dsnHost, (int)$dsnPort);
-                    if ($dsnPass) {
-                        $redis->auth($dsnPass);
+                    if ($dsnPass !== null && $dsnPass !== '') {
+                        $redis->auth($dsnUser !== null && $dsnUser !== '' ? [$dsnUser, $dsnPass] : $dsnPass);
                     }
                     $redis->setOption(\Redis::OPT_READ_TIMEOUT, -1);
 
                     return $redis;
                 },
             };
-
-            $poolAdapter = System::getEnv('_APP_POOL_ADAPTER', default: 'stack') === 'swoole' ? new SwoolePool() : new StackPool();
 
             // PubSub workers hold one long-lived subscribed connection and also need
             // spare capacity for publishes from the same process.
@@ -341,7 +233,7 @@ $register->set('pools', function () {
                 default => $poolSize,
             };
 
-            $pool = new Pool($poolAdapter, $name, $connectionPoolSize, function () use ($type, $resource, $dsn) {
+            $pool = new Pool(new SwoolePool(), $name, $connectionPoolSize, function () use ($type, $resource, $dsn) {
                 // Get Adapter
                 switch ($type) {
                     case 'database':
@@ -364,14 +256,19 @@ $register->set('pools', function () {
                         // Publishers never block on receive, so one connection backs both broker slots.
                         return match ($dsn->getScheme()) {
                             'redis' => (function () use ($dsn) {
-                                $connection = new Queue\Connection\Redis($dsn->getHost(), $dsn->getPort());
+                                $connection = new Queue\Connection\Redis(
+                                    $dsn->getHost(),
+                                    $dsn->getPort(),
+                                    $dsn->getUser() === '' ? null : $dsn->getUser(),
+                                    $dsn->getPassword() === '' ? null : $dsn->getPassword(),
+                                );
                                 return new Queue\Broker\Redis($connection, $connection);
                             })(),
                             default => null
                         };
                     case 'cache':
                         $adapter = match ($dsn->getScheme()) {
-                            'redis' => new RedisCache($resource()),
+                            'redis' => new RedisCache($resource(), new Igbinary()),
                             default => null
                         };
 
@@ -381,6 +278,7 @@ $register->set('pools', function () {
                         }
 
                         return $adapter;
+                    case 'abuse':
                     case 'lock':
                         return $resource();
                     default:
@@ -431,17 +329,31 @@ $register->set('db', function () {
 $register->set('smtp', function () {
     $username = System::getEnv('_APP_SMTP_USERNAME', '');
     $password = System::getEnv('_APP_SMTP_PASSWORD', '');
-    return new SMTP(
-        host: System::getEnv('_APP_SMTP_HOST', 'smtp'),
-        port: (int) System::getEnv('_APP_SMTP_PORT', 25),
-        username: $username,
-        password: $password,
-        smtpSecure: System::getEnv('_APP_SMTP_SECURE', ''),
-        smtpAutoTLS: false,
-        xMailer: 'Appwrite Mailer',
-        timeout: 10,
-        keepAlive: true,
-        timelimit: 30,
+
+    $workers = Config::getParam('workers', []);
+    $size = max(
+        1,
+        (int) System::getEnv('_APP_WORKER_MAX_COROUTINES', 1),
+        ((int) ($workers['mails']['maxCoroutines'] ?? 1)) + ((int) ($workers['notifications']['maxCoroutines'] ?? 1)),
+    );
+
+    return new Pool(
+        adapter: new SwoolePool(),
+        name: 'smtp',
+        size: $size,
+        init: fn () => new SMTP(
+            host: System::getEnv('_APP_SMTP_HOST', 'smtp'),
+            port: (int) System::getEnv('_APP_SMTP_PORT', 25),
+            username: $username,
+            password: $password,
+            smtpSecure: System::getEnv('_APP_SMTP_SECURE', ''),
+            smtpAutoTLS: false,
+            xMailer: 'Appwrite Mailer',
+            timeout: 10,
+            keepAlive: true,
+            timelimit: 30,
+        ),
+        timeout: (float) System::getEnv('_APP_CONNECTIONS_TIMEOUT', 10),
     );
 });
 $register->set('passwordsDictionary', function () {

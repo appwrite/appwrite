@@ -34,11 +34,11 @@ final class OAuthGitHubIntegrationTest extends Scope
         ];
 
         // Step 1: Create new organization (team)
-        $team = $this->client->call(Client::METHOD_POST, '/teams', $consoleHeaders, [
+        $team = $this->createTeamFixture($consoleHeaders, [
             'teamId' => ID::unique(),
             'name' => 'GitHub OAuth Org ' . uniqid(),
         ]);
-        $this->assertSame(201, $team['headers']['status-code']);
+        $this->assertSame(200, $team['headers']['status-code']);
         $teamId = $team['body']['$id'];
 
         // Step 2: Create new project

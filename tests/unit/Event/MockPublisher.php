@@ -2,14 +2,14 @@
 
 namespace Tests\Unit\Event;
 
-use Utopia\Queue\Publisher;
+use Utopia\Queue\Publisher\Synchronous as Publisher;
 use Utopia\Queue\Queue;
 
 class MockPublisher implements Publisher
 {
     private array $events = [];
 
-    public function enqueue(Queue $queue, array $payload, bool $priority = false): bool
+    public function publish(Queue $queue, array $payload, bool $priority = false): bool
     {
         if (!isset($this->events[$queue->name])) {
             $this->events[$queue->name] = [];
@@ -21,7 +21,7 @@ class MockPublisher implements Publisher
     public function enqueueMany(Queue $queue, array $payloads, bool $priority = false): bool
     {
         foreach ($payloads as $payload) {
-            $this->enqueue($queue, $payload, $priority);
+            $this->publish($queue, $payload, $priority);
         }
 
         return true;
