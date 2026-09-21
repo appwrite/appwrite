@@ -1,8 +1,8 @@
 ---
 layout: post
-title: "Site previews now require authentication"
+title: "Introducing authenticated preview deployments for Appwrite Sites"
 description: Preview deployments on Appwrite Sites now require an Appwrite account that belongs to the project's organization, so a preview link no longer works for anyone who finds it.
-date: 2026-09-17
+date: 2026-09-21
 cover: /images/blog/authenticated-site-previews/cover.avif
 timeToRead: 4
 author: chirag-aggarwal

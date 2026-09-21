@@ -1,7 +1,7 @@
 ---
 layout: changelog
-title: Preview deployments now require authentication
-date: 2026-09-17
+title: Introducing authenticated preview deployments for Appwrite Sites
+date: 2026-09-21
 cover: /images/blog/authenticated-site-previews/cover.avif
 tags: sites, security
 ---
