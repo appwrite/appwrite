@@ -356,7 +356,7 @@ abstract class Adapter
     public function getClient(): ClientInterface&StreamingClientInterface
     {
         if ($this->client === null) {
-            $this->client = $this->createClient();
+            $this->client = $this->defaultClient();
             $this->ownsClient = true;
         }
 
@@ -367,7 +367,7 @@ abstract class Adapter
      * Inside a coroutine, a pool of keep-alive Swoole clients shared by every
      * request this adapter makes; elsewhere a single keep-alive cURL client.
      */
-    protected function createClient(): ClientInterface&StreamingClientInterface
+    protected function defaultClient(): ClientInterface&StreamingClientInterface
     {
         $timeout = $this->timeout / 1000;
 

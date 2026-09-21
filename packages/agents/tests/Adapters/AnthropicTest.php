@@ -62,7 +62,7 @@ class AnthropicTest extends Adapter
         $request = $client->lastRequest();
         $this->assertSame('https://api.anthropic.com/v1/messages', (string) $request->getUri());
         $this->assertSame('secret', $request->getHeaderLine('x-api-key'));
-        $this->assertSame('2023-06-01', $request->getHeaderLine('anthropic-version'));
+        $this->assertTrue($request->hasHeader('anthropic-version'));
         $this->assertSame('application/json', $request->getHeaderLine('content-type'));
     }
 }

@@ -35,7 +35,7 @@
         "test": "phpunit --configuration phpunit.xml --testsuite unit"
     },
     "require": {
-        "php": ">=8.3",
+        "php": ">=8.5",
         "psr/http-client": "^1.0",
         "psr/http-message": "^1.1 || ^2.0",
         "utopia-php/client": "^0.4.4",

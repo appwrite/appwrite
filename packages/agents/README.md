@@ -20,7 +20,7 @@ composer require utopia-php/agents
 
 ## System Requirements
 
-Utopia Framework requires PHP 8.0 or later. We recommend using the latest PHP version whenever possible.
+This library requires PHP 8.5 or later. We recommend using the latest PHP version whenever possible.
 
 ## Features
 
