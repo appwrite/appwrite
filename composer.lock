@@ -4570,16 +4570,16 @@
         },
         {
             "name": "utopia-php/query",
-            "version": "0.6.0",
+            "version": "0.6.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/query.git",
-                "reference": "abaebb2f3426bdbc6f44bab04254a668de937148"
+                "reference": "67f89d99593900fe9e60ba22575e65ce8c684093"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/query/zipball/abaebb2f3426bdbc6f44bab04254a668de937148",
-                "reference": "abaebb2f3426bdbc6f44bab04254a668de937148",
+                "url": "https://api.github.com/repos/utopia-php/query/zipball/67f89d99593900fe9e60ba22575e65ce8c684093",
+                "reference": "67f89d99593900fe9e60ba22575e65ce8c684093",
                 "shasum": ""
             },
             "require": {
@@ -4613,9 +4613,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/query/issues",
-                "source": "https://github.com/utopia-php/query/tree/0.6.0"
+                "source": "https://github.com/utopia-php/query/tree/0.6.1"
             },
-            "time": "2026-08-21T11:03:36+00:00"
+            "time": "2026-09-21T05:06:19+00:00"
         },
         {
             "name": "utopia-php/queue",
