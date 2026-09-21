@@ -64,7 +64,10 @@ export function FeedbackPopover({
           <p>{t('Feedback')}</p>
         </TooltipContent>
       </Tooltip>
-      <PopoverContent align="end" className="w-80 p-0">
+      <PopoverContent
+        align="end"
+        className="overlay-scrollbar w-80 max-h-[85dvh] overflow-x-hidden overflow-y-auto overscroll-contain p-0"
+      >
         <FeedbackForm
           key={formKey}
           source={source}
