@@ -1052,22 +1052,30 @@ trait PresenceBase
     {
         $projectId = $this->getProject()['$id'];
         $userId = $this->getUser()['$id'];
-        $headers = [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-            'x-appwrite-key' => $this->getPresenceApiKey(),
-        ];
+
+        if ($this->getSide() === 'server') {
+            $headers = \array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+            ], $this->getPresenceServerHeaders());
+            $payload = ['userId' => $userId];
+        } else {
+            $headers = \array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+            ], $this->getHeaders());
+            $payload = [];
+        }
 
         for ($attempt = 0; $attempt < 20; $attempt++) {
-            $presence = $this->client->call(Client::METHOD_PUT, '/presences/' . ID::unique(), $headers, [
-                'userId' => $userId,
+            $presence = $this->client->call(Client::METHOD_PUT, '/presences/' . ID::unique(), $headers, $payload + [
                 'status' => 'online',
             ]);
             $this->assertEquals(200, $presence['headers']['status-code']);
             $presenceId = $presence['body']['$id'];
 
             [$update, $delete] = $this->callConcurrently([
-                [Client::METHOD_PATCH, '/presences/' . $presenceId, $headers, ['userId' => $userId, 'status' => 'away', 'purge' => true]],
+                [Client::METHOD_PATCH, '/presences/' . $presenceId, $headers, $payload + ['status' => 'away', 'purge' => true]],
                 [Client::METHOD_DELETE, '/presences/' . $presenceId, $headers, []],
             ]);
 
@@ -1093,44 +1101,33 @@ trait PresenceBase
     }
 
     /**
+     * Fire the requests at the same time so a delete can land while an update is in flight.
+     *
      * @param array<int, array{0: string, 1: string, 2: array<string, string>, 3: array<string, mixed>}> $requests
      * @return array<int, array{status: int, body: string}>
      */
     private function callConcurrently(array $requests): array
     {
-        $multi = \curl_multi_init();
-        $handles = [];
-
-        foreach ($requests as $index => [$method, $path, $headers, $params]) {
-            $handle = \curl_init($this->client->getEndpoint() . $path);
-            \curl_setopt($handle, CURLOPT_CUSTOMREQUEST, $method);
-            \curl_setopt($handle, CURLOPT_RETURNTRANSFER, true);
-            \curl_setopt($handle, CURLOPT_POSTFIELDS, \json_encode($params));
-            \curl_setopt($handle, CURLOPT_HTTPHEADER, \array_map(
-                static fn (string $key, string $value): string => $key . ': ' . $value,
-                \array_keys($headers),
-                $headers,
-            ));
-            \curl_multi_add_handle($multi, $handle);
-            $handles[$index] = $handle;
-        }
-
-        do {
-            $status = \curl_multi_exec($multi, $running);
-            if ($running) {
-                \curl_multi_select($multi);
-            }
-        } while ($running && $status === CURLM_OK);
-
         $results = [];
-        foreach ($handles as $index => $handle) {
-            $results[$index] = [
-                'status' => \curl_getinfo($handle, CURLINFO_RESPONSE_CODE),
-                'body' => (string) \curl_multi_getcontent($handle),
-            ];
-            \curl_multi_remove_handle($multi, $handle);
-        }
-        \curl_multi_close($multi);
+        $hooks = \Swoole\Runtime::getHookFlags();
+
+        \Swoole\Coroutine\run(function () use ($requests, &$results): void {
+            $results = \Swoole\Coroutine\batch(\array_map(
+                fn (array $request): \Closure => function () use ($request): array {
+                    [$method, $path, $headers, $params] = $request;
+                    $response = $this->client->call($method, $path, $headers, $params, false);
+
+                    return [
+                        'status' => $response['headers']['status-code'],
+                        'body' => (string) $response['body'],
+                    ];
+                },
+                $requests,
+            ));
+        });
+
+        // `Coroutine\run` leaves the curl hook enabled, which breaks the plain client calls that follow.
+        \Swoole\Runtime::setHookFlags($hooks);
 
         return $results;
     }
