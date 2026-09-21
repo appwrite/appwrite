@@ -4,9 +4,12 @@ namespace Appwrite\Platform\Workers;
 
 use Appwrite\Event\Message\Usage;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
+use Appwrite\Messaging\Adapter\Mqtt;
+use Appwrite\Messaging\Adapter\Push\Appwrite as AppwritePush;
 use Appwrite\Messaging\Provider;
 use Appwrite\Messaging\Status as MessageStatus;
 use Appwrite\OpenSSL\OpenSSL;
+use Appwrite\PubSub\Adapter\Pool as PubSubPool;
 use Appwrite\Usage\Context as UsageContext;
 use Utopia\Cache\Cache;
 use Utopia\Compression\Algorithms\GZIP;
@@ -24,9 +27,12 @@ use Utopia\Messaging\Adapter\Email as EmailAdapter;
 use Utopia\Messaging\Adapter\Email\Mailgun;
 use Utopia\Messaging\Adapter\Email\Sendgrid;
 use Utopia\Messaging\Adapter\Email\SMTP;
+use Utopia\Messaging\Adapter\Push\APNS;
 use Utopia\Messaging\Adapter\Push as PushAdapter;
+use Utopia\Messaging\Adapter\Push\FCM;
 use Utopia\Messaging\Adapter\SMS as SMSAdapter;
 use Utopia\Messaging\Adapter\SMS\GEOSMS\CallingCode;
+use Utopia\Messaging\Adapter\SMS\Mock;
 use Utopia\Messaging\Adapter\SMS\Msg91\MetadataParameter;
 use Utopia\Messaging\Adapter\SMS\WhatsApp;
 use Utopia\Messaging\Adapter\SMS\WhatsApp\MetadataParameter as WhatsAppMetadataParameter;
@@ -35,7 +41,9 @@ use Utopia\Messaging\Messages\Email\Attachment;
 use Utopia\Messaging\Messages\Push;
 use Utopia\Messaging\Messages\SMS;
 use Utopia\Messaging\Priority;
+use Utopia\Mqtt\Packet;
 use Utopia\Platform\Action;
+use Utopia\Pools\Group;
 use Utopia\Psr7\Stream;
 use Utopia\Queue\Message;
 use Utopia\Span\Span;
@@ -49,7 +57,11 @@ use function Swoole\Coroutine\batch;
 
 class Messaging extends Action
 {
+    private Telemetry $telemetry;
+
     private Provider $provider;
+
+    private Group $pools;
 
     public static function getName(): string
     {
@@ -69,6 +81,7 @@ class Messaging extends Action
             ->inject('deviceForFiles')
             ->inject('publisherForUsage')
             ->inject('telemetry')
+            ->inject('pools')
             ->inject('adapterForSMS')
             ->inject('adapterForWhatsApp')
             ->inject('cache')
@@ -82,6 +95,7 @@ class Messaging extends Action
      * @param Device $deviceForFiles
      * @param UsagePublisher $publisherForUsage
      * @param Telemetry $telemetry
+     * @param Group $pools
      * @param SMSAdapter|null $adapterForSMS
      * @param SMSAdapter|null $adapterForWhatsApp
      * @param Cache $cache
@@ -95,10 +109,13 @@ class Messaging extends Action
         Device $deviceForFiles,
         UsagePublisher $publisherForUsage,
         Telemetry $telemetry,
+        Group $pools,
         ?SMSAdapter $adapterForSMS,
         ?SMSAdapter $adapterForWhatsApp,
         Cache $cache
     ): void {
+        $this->telemetry = $telemetry;
+        $this->pools = $pools;
         $this->provider = new Provider($telemetry);
         $payload = $message->getPayload();
 
@@ -256,7 +273,7 @@ class Messaging extends Action
 
                 $adapter = match ($resolvedProviderType) {
                     MESSAGE_TYPE_SMS => $this->provider->sms($provider),
-                    MESSAGE_TYPE_PUSH => $this->provider->push($provider),
+                    MESSAGE_TYPE_PUSH => $this->getPushAdapter($provider, $dbForProject, $project, $message),
                     MESSAGE_TYPE_EMAIL => $this->provider->email($provider),
                     default => throw new \Exception('Provider with the requested ID is of the incorrect type')
                 };
@@ -1004,6 +1021,38 @@ class Messaging extends Action
         return $errors;
     }
 
+    protected function getPushAdapter(Document $provider, Database $dbForProject, Document $project, Document $message): ?PushAdapter
+    {
+        $credentials = $provider->getAttribute('credentials');
+        $options = $provider->getAttribute('options');
+
+        $adapter = match ($provider->getAttribute('provider')) {
+            'mock' => new Mock('username', 'password'),
+            'apns' => new APNS(
+                $credentials['authKey'] ?? '',
+                $credentials['authKeyId'] ?? '',
+                $credentials['teamId'] ?? '',
+                $credentials['bundleId'] ?? '',
+                $options['sandbox'] ?? false
+            ),
+            'fcm' => new FCM(\json_encode($credentials['serviceAccountJSON'])),
+            'appwrite' => new AppwritePush(
+                new Mqtt($this->telemetry, new PubSubPool($this->pools->get('pubsub'))),
+                $dbForProject,
+                $project->getId(),
+                $message->getId(),
+                $message->getSequence(),
+                $options['qos'] ?? Packet::QOS_1,
+            ),
+            default => null
+        };
+
+        if ($adapter !== null) {
+            $adapter->setTelemetry($this->telemetry);
+        }
+
+        return $adapter;
+    }
 
     /**
      * Materialise a message's attachments as files the adapters can read.
@@ -1114,9 +1163,9 @@ class Messaging extends Action
     ): Email {
         $fromName = $provider['options']['fromName'] ?? null;
         $fromEmail = $provider['options']['fromEmail'] ?? null;
-        $replyToEmail = $provider['options']['replyToEmail'] ?? null;
-        $replyToName = $provider['options']['replyToName'] ?? null;
         $data = $message['data'] ?? [];
+        $replyToEmail = !empty($data['replyToEmail']) ? $data['replyToEmail'] : ($provider['options']['replyToEmail'] ?? null);
+        $replyToName = !empty($data['replyToName']) ? $data['replyToName'] : ($provider['options']['replyToName'] ?? null);
         $ccTargets = $data['cc'] ?? [];
         $bccTargets = $data['bcc'] ?? [];
         $cc = [];
@@ -1236,6 +1285,4 @@ class Messaging extends Action
         // messages from many projects (and coroutines run them concurrently).
         return new Local(APP_STORAGE_UPLOADS . '/app-' . $project->getId());
     }
-
-
 }

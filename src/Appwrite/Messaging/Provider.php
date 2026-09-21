@@ -11,9 +11,6 @@ use Utopia\Messaging\Adapter\Email\Resend;
 use Utopia\Messaging\Adapter\Email\Sendgrid;
 use Utopia\Messaging\Adapter\Email\SES;
 use Utopia\Messaging\Adapter\Email\SMTP;
-use Utopia\Messaging\Adapter\Push\APNS;
-use Utopia\Messaging\Adapter\Push as PushAdapter;
-use Utopia\Messaging\Adapter\Push\FCM;
 use Utopia\Messaging\Adapter\SMS as SMSAdapter;
 use Utopia\Messaging\Adapter\SMS\Fast2SMS;
 use Utopia\Messaging\Adapter\SMS\GEOSMS;
@@ -36,6 +33,9 @@ use Utopia\Telemetry\Adapter as Telemetry;
  * environment variables and used for the one-time passcodes and invites Appwrite
  * sends on a project's behalf. Both end up as the same adapter, so the DSN is
  * turned into a provider document and takes the same path.
+ *
+ * Push is absent on purpose: its Appwrite provider needs the message and the project
+ * database, so a provider document alone does not describe it.
  */
 class Provider
 {
@@ -88,31 +88,6 @@ class Provider
                 $credentials['template'] ?? '',
                 $credentials['language'] ?? WhatsApp::DEFAULT_LANGUAGE,
             ),
-            default => null
-        };
-
-        if ($adapter !== null) {
-            $adapter->setTelemetry($this->telemetry);
-        }
-
-        return $adapter;
-    }
-
-    public function push(Document $provider): ?PushAdapter
-    {
-        $credentials = $provider->getAttribute('credentials');
-        $options = $provider->getAttribute('options');
-
-        $adapter = match ($provider->getAttribute('provider')) {
-            'mock' => new Mock('username', 'password'),
-            'apns' => new APNS(
-                $credentials['authKey'] ?? '',
-                $credentials['authKeyId'] ?? '',
-                $credentials['teamId'] ?? '',
-                $credentials['bundleId'] ?? '',
-                $options['sandbox'] ?? false
-            ),
-            'fcm' => new FCM(\json_encode($credentials['serviceAccountJSON'])),
             default => null
         };
 
