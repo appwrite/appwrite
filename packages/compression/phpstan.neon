@@ -1,0 +1,9 @@
+includes:
+    - ../../phpstan.neon
+
+parameters:
+    excludePaths:
+        - tests/phpstan-stubs.php
+
+    scanFiles:
+        - tests/phpstan-stubs.php

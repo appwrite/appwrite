@@ -1,0 +1,39 @@
+{
+    "name": "utopia-php/compression",
+    "description": "A simple Compression library to handle file compression",
+    "type": "library",
+    "keywords": [
+        "php",
+        "framework",
+        "upf",
+        "utopia",
+        "compression"
+    ],
+    "license": "MIT",
+    "authors": [],
+    "autoload": {
+        "psr-4": {
+            "Utopia\\Compression\\": "src/Compression"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Utopia\\Tests\\Compression\\": "tests/Compression"
+        }
+    },
+    "require": {
+        "php": ">=8.1"
+    },
+    "minimum-stability": "dev",
+    "scripts": {
+        "test": "phpunit --configuration phpunit.xml"
+    },
+    "suggest": {
+        "ext-zstd": "Required for the Zstd algorithm",
+        "ext-brotli": "Required for the Brotli algorithm",
+        "ext-lz4": "Required for the LZ4 algorithm",
+        "ext-snappy": "Required for the Snappy algorithm",
+        "ext-xz": "Required for the XZ algorithm",
+        "ext-zlib": "Required for the GZIP and Deflate algorithms"
+    }
+}
