@@ -28,10 +28,11 @@ class Create extends DatabaseCreate
             ->desc('Create database')
             ->groups(['api', 'database'])
             ->label('event', 'databases.[databaseId].create')
-            ->label('scope', 'databases.write')
+            ->label('scope', 'vectorsdb.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('audits.event', 'database.create')
             ->label('audits.resource', 'database/{response.$id}')
+            ->label('usage.resource', 'database/{response.$id}')
             ->label('sdk', new Method(
                 namespace: 'vectorsDB',
                 group: 'vectorsdb',

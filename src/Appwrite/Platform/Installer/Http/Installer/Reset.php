@@ -69,17 +69,33 @@ class Reset extends Action
         $isLocal = $config->isLocal();
         $composeFileName = $isLocal ? 'docker-compose.web-installer.yml' : 'docker-compose.yml';
         $envFileName = $isLocal ? '.env.web-installer' : '.env';
-        $path = $isLocal ? '/usr/src/code' : '/usr/src/code/appwrite';
+        $path = $isLocal ? $config->getHostPath() : '/usr/src/code/appwrite';
+
+        if ($path === null || $path === '') {
+            return 'Missing host path for local installer reset';
+        }
 
         $composeFile = $path . '/' . $composeFileName;
+        $envFile = $path . '/' . $envFileName;
 
         if (file_exists($composeFile)) {
-            $command = array_map(escapeshellarg(...), [
+            $command = [
                 'docker', 'compose',
-                '-f', $composeFile,
+            ];
+            if (file_exists($envFile)) {
+                $command[] = '--env-file';
+                $command[] = $envFile;
+            }
+            $command = array_map(escapeshellarg(...), [
+                ...$command,
+                '-f',
+                $composeFile,
                 ...($isLocal ? ['--project-name', 'appwrite'] : []),
-                '--project-directory', $path,
-                'down', '-v', '--remove-orphans',
+                '--project-directory',
+                $path,
+                'down',
+                '-v',
+                '--remove-orphans',
             ]);
 
             $output = [];
@@ -92,7 +108,6 @@ class Reset extends Action
             @unlink($composeFile);
         }
 
-        $envFile = $path . '/' . $envFileName;
         if (file_exists($envFile)) {
             @unlink($envFile);
         }

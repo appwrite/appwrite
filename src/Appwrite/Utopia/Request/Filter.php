@@ -45,12 +45,6 @@ abstract class Filter
      */
     public function getParamValue(string $key, mixed $default = ''): mixed
     {
-        try {
-            $value = $this->params[$key] ?? $default;
-        } catch (\Exception $e) {
-            $value = $default;
-        }
-
-        return $value;
+        return $this->params[$key] ?? $default;
     }
 }

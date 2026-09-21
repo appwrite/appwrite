@@ -64,7 +64,7 @@ class BodyMultipart
 
                 $partHeaderArray = \explode(':', $partHeader, 2);
 
-                $partHeaderName = \strtolower($partHeaderArray[0] ?? '');
+                $partHeaderName = \strtolower($partHeaderArray[0]);
                 $partHeaderValue = $partHeaderArray[1] ?? '';
                 if ($partHeaderName == "content-disposition") {
                     $dispositionChunks = \explode("; ", $partHeaderValue);
@@ -92,7 +92,7 @@ class BodyMultipart
      */
     public function getParts(): array
     {
-        return $this->parts ?? [];
+        return $this->parts;
     }
 
     public function getPart(string $key, mixed $default = ''): mixed
@@ -103,17 +103,6 @@ class BodyMultipart
     public function setPart(string $key, mixed $value): self
     {
         $this->parts[$key] = $value;
-        return $this;
-    }
-
-    public function getBoundary(): string
-    {
-        return $this->boundary;
-    }
-
-    public function setBoundary(string $boundary): self
-    {
-        $this->boundary = $boundary;
         return $this;
     }
 

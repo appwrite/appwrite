@@ -5,6 +5,8 @@ global $utopia, $request, $response;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
+use Appwrite\Vcs\Factory as VcsFactory;
+use Utopia\Cache\Cache;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -13,11 +15,14 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Http;
+use Utopia\Http\Route;
 use Utopia\Locale\Locale;
 use Utopia\System\System;
+use Utopia\Validator\ArrayList;
+use Utopia\Validator\Boolean;
+use Utopia\Validator\Nullable;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
-use Utopia\VCS\Adapter\Git\GitHub;
 
 Http::get('/v1/mock/tests/general/oauth2')
     ->desc('OAuth Login')
@@ -45,7 +50,7 @@ Http::get('/v1/mock/tests/locale')
     ->inject('request')
     ->inject('response')
     ->action(function (Locale $locale, array $localeCodes, Request $request, Response $response) {
-        $localeParam = (string) $request->getParam('locale', $request->getHeader('x-appwrite-locale', ''));
+        $localeParam = (string) $request->getParam('locale', $request->getHeaderLine('x-appwrite-locale', ''));
         if (\in_array($localeParam, $localeCodes)) {
             $locale->setDefault($localeParam);
         }
@@ -68,7 +73,9 @@ Http::get('/v1/mock/tests/general/oauth2/token')
     ->inject('response')
     ->action(function (string $client_id, string $client_secret, string $grantType, string $redirectURI, string $code, string $refreshToken, Response $response) {
 
-        if ($client_id != '1') {
+        $canonicalEmail = \str_starts_with($client_id, 'canonical-');
+
+        if ($client_id != '1' && !$canonicalEmail) {
             throw new Exception(Exception::GENERAL_MOCK, 'Invalid client ID');
         }
 
@@ -77,7 +84,7 @@ Http::get('/v1/mock/tests/general/oauth2/token')
         }
 
         $responseJson = [
-            'access_token' => '123456',
+            'access_token' => $canonicalEmail ? $client_id : '123456',
             'refresh_token' => 'tuvwxyz',
             'expires_in' => 14400
         ];
@@ -99,6 +106,26 @@ Http::get('/v1/mock/tests/general/oauth2/token')
         }
     });
 
+/**
+ * Static profile picture for the mock OAuth2 user, served from the Appwrite
+ * container itself so the avatars OAuth2 provider can actually fetch it.
+ */
+Http::get('/v1/mock/tests/general/oauth2/photo')
+    ->desc('OAuth2 User Photo')
+    ->groups(['mock'])
+    ->label('scope', 'public')
+    ->label('docs', false)
+    ->inject('response')
+    ->action(function (Response $response) {
+
+        // Solid #00FF00 PNG, 64x64
+        $photo = 'iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAIAAAAlC+aJAAAATUlEQVR42u3PQQ0AAAgEoNP+nbWBfzdoQGXyWicCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICArcFUYYBf4Fjt4EAAAAASUVORK5CYII=';
+
+        $response
+            ->setContentType('image/png')
+            ->file(\base64_decode($photo));
+    });
+
 Http::get('/v1/mock/tests/general/oauth2/user')
     ->desc('OAuth2 User')
     ->groups(['mock'])
@@ -108,16 +135,28 @@ Http::get('/v1/mock/tests/general/oauth2/user')
     ->inject('response')
     ->action(function (string $token, Response $response) {
 
-        if ($token != '123456') {
+        if ($token === '123456') {
+            $user = [
+                'id' => 1,
+                'name' => 'User Name',
+                'email' => 'useroauth@localhost.test',
+                'verified' => true,
+                'photo' => 'http://localhost/v1/mock/tests/general/oauth2/photo',
+            ];
+        } elseif (\str_starts_with($token, 'canonical-')) {
+            $id = \substr($token, \strlen('canonical-'));
+            $user = [
+                'id' => $id,
+                'name' => 'Canonical Email User',
+                'email' => 'oauth.' . $id . '@gmail.com',
+                'verified' => true,
+                'photo' => 'http://localhost/v1/mock/tests/general/oauth2/photo',
+            ];
+        } else {
             throw new Exception(Exception::GENERAL_MOCK, 'Invalid token');
         }
 
-        $response->json([
-            'id' => 1,
-            'name' => 'User Name',
-            'email' => 'useroauth@localhost.test',
-            'verified' => true,
-        ]);
+        $response->json($user);
     });
 
 Http::get('/v1/mock/tests/general/oauth2/user-unverified')
@@ -138,6 +177,159 @@ Http::get('/v1/mock/tests/general/oauth2/user-unverified')
             'name' => 'User Name Unverified',
             'email' => 'useroauthunverified@localhost.test',
             'verified' => false,
+        ]);
+    });
+
+Http::get('/v1/mock/tests/general/oauth2/user-no-email')
+    ->desc('OAuth2 User Without Email')
+    ->groups(['mock'])
+    ->label('scope', 'public')
+    ->label('docs', false)
+    ->param('token', '', new Text(100), 'OAuth2 Access Token.')
+    ->inject('response')
+    ->action(function (string $token, Response $response) {
+
+        if ($token != '123456') {
+            throw new Exception(Exception::GENERAL_MOCK, 'Invalid token');
+        }
+
+        $response->json([
+            'id' => 3,
+            'name' => 'User Name NoEmail',
+        ]);
+    });
+
+Http::patch('/v1/mock/tests/general/oauth2/native')
+    ->desc('Configure native ID token sign-in for a mock provider')
+    ->groups(['mock', 'api', 'projects'])
+    ->label('scope', 'public')
+    ->label('docs', false)
+    ->label('mock', true)
+    ->param('projectId', '', new UID(), 'Project ID.')
+    ->param('enabled', false, new Boolean(), 'Accept ID tokens minted by the mock provider.')
+    ->param('provider', 'mock', new WhiteList(\array_keys(\array_filter(Config::getParam('oAuthProviders', []), fn ($node) => !empty($node['mock']) && !empty($node['idToken']))), true), 'Mock provider to configure.', true)
+    ->param('appId', null, new Nullable(new Text(256, 0)), 'App ID to store for the provider. Null leaves it untouched, an empty string clears it.', true)
+    ->param('clientIds', [], new ArrayList(new Text(256, 0), 20), 'Native client IDs accepted as ID token audiences next to the app ID.', true)
+    ->inject('response')
+    ->inject('dbForPlatform')
+    ->action(function (string $projectId, bool $enabled, string $provider, ?string $appId, array $clientIds, Response $response, Database $dbForPlatform) {
+        $isDevelopment = System::getEnv('_APP_ENV', 'development') === 'development';
+
+        if (!$isDevelopment) {
+            throw new Exception(Exception::GENERAL_NOT_IMPLEMENTED);
+        }
+
+        $project = $dbForPlatform->getDocument('projects', $projectId);
+
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        // The mock providers have no console form of their own; this is the
+        // only way a test can reach the switches the real providers expose.
+        $providers = $project->getAttribute('oAuthProviders', []);
+        $providers[$provider . 'NativeEnabled'] = $enabled;
+        $providers[$provider . 'ClientIds'] = \array_values($clientIds);
+        if (!\is_null($appId)) {
+            $providers[$provider . 'Appid'] = $appId;
+        }
+
+        $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
+            'oAuthProviders' => $providers,
+        ]));
+        $dbForPlatform->purgeCachedDocument('projects', $project->getId());
+
+        $response->noContent();
+    });
+
+Http::get('/v1/mock/tests/general/oauth2/jwks')
+    ->desc('OAuth2 JWKS')
+    ->groups(['mock'])
+    ->label('scope', 'public')
+    ->label('docs', false)
+    ->label('mock', true)
+    ->inject('response')
+    ->inject('cache')
+    ->action(function (Response $response, Cache $cache) {
+        // The signing key pair is generated on first use and shared between
+        // workers through the cache, so no private key lives in the repository.
+        $key = false;
+        $cached = $cache->load('oidc-mock-signing-key', 86400);
+        if (\is_array($cached) && \is_string($cached['pem'] ?? null)) {
+            $key = \openssl_pkey_get_private($cached['pem']);
+        }
+        if ($key === false) {
+            $key = \openssl_pkey_new([
+                'private_key_bits' => 2048,
+                'private_key_type' => OPENSSL_KEYTYPE_RSA,
+            ]);
+            \openssl_pkey_export($key, $pem);
+            $cache->save('oidc-mock-signing-key', ['pem' => $pem]);
+        }
+
+        $details = \openssl_pkey_get_details($key);
+
+        $response->json([
+            'keys' => [[
+                'kty' => 'RSA',
+                'use' => 'sig',
+                'alg' => 'RS256',
+                // Derived from the modulus, so a regenerated key gets a new kid and
+                // verifiers holding a stale JWKS refresh instead of failing
+                'kid' => \substr(\sha1($details['rsa']['n']), 0, 16),
+                'n' => \rtrim(\strtr(\base64_encode($details['rsa']['n']), '+/', '-_'), '='),
+                'e' => \rtrim(\strtr(\base64_encode($details['rsa']['e']), '+/', '-_'), '='),
+            ]],
+        ]);
+    });
+
+Http::get('/v1/mock/tests/general/oauth2/id-token')
+    ->desc('OAuth2 ID Token')
+    ->groups(['mock'])
+    ->label('scope', 'public')
+    ->label('docs', false)
+    ->label('mock', true)
+    ->param('claims', '', new Text(4096, 0), 'JSON encoded ID token claims.')
+    ->param('header', '', new Text(1024, 0), 'JSON encoded ID token header overrides.', true)
+    ->inject('response')
+    ->inject('cache')
+    ->action(function (string $claims, string $header, Response $response, Cache $cache) {
+        $claims = \json_decode($claims, true);
+        $header = $header === '' ? [] : \json_decode($header, true);
+
+        if (!\is_array($claims) || !\is_array($header)) {
+            throw new Exception(Exception::GENERAL_MOCK, 'Invalid claims or header');
+        }
+
+        // Same cache-shared key pair the JWKS route publishes
+        $key = false;
+        $cached = $cache->load('oidc-mock-signing-key', 86400);
+        if (\is_array($cached) && \is_string($cached['pem'] ?? null)) {
+            $key = \openssl_pkey_get_private($cached['pem']);
+        }
+        if ($key === false) {
+            $key = \openssl_pkey_new([
+                'private_key_bits' => 2048,
+                'private_key_type' => OPENSSL_KEYTYPE_RSA,
+            ]);
+            \openssl_pkey_export($key, $pem);
+            $cache->save('oidc-mock-signing-key', ['pem' => $pem]);
+        }
+
+        // Header overrides let tests mint deliberately broken tokens (unknown kid, unsupported alg, ...)
+        $details = \openssl_pkey_get_details($key);
+        $header = \array_merge([
+            'alg' => 'RS256',
+            'kid' => \substr(\sha1($details['rsa']['n']), 0, 16),
+            'typ' => 'JWT',
+        ], $header);
+
+        $headerEncoded = \rtrim(\strtr(\base64_encode(\json_encode($header)), '+/', '-_'), '=');
+        $payloadEncoded = \rtrim(\strtr(\base64_encode(\json_encode($claims)), '+/', '-_'), '=');
+        \openssl_sign($headerEncoded . '.' . $payloadEncoded, $signature, $key, OPENSSL_ALGO_SHA256);
+
+        $response->json([
+            'token' => $headerEncoded . '.' . $payloadEncoded . '.' . \rtrim(\strtr(\base64_encode($signature), '+/', '-_'), '='),
         ]);
     });
 
@@ -226,11 +418,11 @@ Http::get('/v1/mock/github/callback')
     ->label('docs', false)
     ->param('providerInstallationId', '', new UID(), 'GitHub installation ID')
     ->param('projectId', '', new UID(), 'Project ID of the project where app is to be installed')
-    ->inject('gitHub')
+    ->inject('vcsFactory')
     ->inject('project')
     ->inject('response')
     ->inject('dbForPlatform')
-    ->action(function (string $providerInstallationId, string $projectId, GitHub $github, Document $project, Response $response, Database $dbForPlatform) {
+    ->action(function (string $providerInstallationId, string $projectId, VcsFactory $vcsFactory, Document $project, Response $response, Database $dbForPlatform) {
         $isDevelopment = System::getEnv('_APP_ENV', 'development') === 'development';
 
         if (!$isDevelopment) {
@@ -248,10 +440,11 @@ Http::get('/v1/mock/github/callback')
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Missing provider installation ID');
         }
 
-        $privateKey = System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
-        $githubAppId = System::getEnv('_APP_VCS_GITHUB_APP_ID');
-        $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
-        $owner = $github->getOwnerName($providerInstallationId) ?? '';
+        $vcs = $vcsFactory->fromInstallation(new Document([
+            'provider' => 'github',
+            'providerInstallationId' => $providerInstallationId,
+        ]));
+        $owner = $vcs->getOwnerName($providerInstallationId);
 
         $projectInternalId = $project->getSequence();
 
@@ -283,21 +476,22 @@ Http::get('/v1/mock/github/callback')
 
 Http::shutdown()
     ->groups(['mock'])
-    ->inject('utopia')
     ->inject('response')
-    ->inject('request')
-    ->action(function (Http $utopia, Response $response, Request $request) {
+    ->inject('route')
+    ->action(function (Response $response, Route $route) {
 
         $result = [];
-        $route  = $utopia->getRoute();
         $path   = APP_STORAGE_CACHE . '/tests.json';
         $tests  = (\file_exists($path)) ? \json_decode(\file_get_contents($path), true) : [];
+        $methods = $route->getMethods();
 
         if (!\is_array($tests)) {
             throw new Exception(Exception::GENERAL_MOCK, 'Failed to read results', 500);
         }
 
-        $result[$route->getMethod() . ':' . $route->getPath()] = true;
+        foreach ($methods as $method) {
+            $result[$method . ':' . $route->getPath()] = true;
+        }
 
         $tests = \array_merge($tests, $result);
 
@@ -305,5 +499,5 @@ Http::shutdown()
             throw new Exception(Exception::GENERAL_MOCK, 'Failed to save results', 500);
         }
 
-        $response->dynamic(new Document(['result' => $route->getMethod() . ':' . $route->getPath() . ':passed']), Response::MODEL_MOCK);
+        $response->dynamic(new Document(['result' => \implode(',', $methods) . ':' . $route->getPath() . ':passed']), Response::MODEL_MOCK);
     });

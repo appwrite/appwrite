@@ -1,1 +1,0 @@
-Get a list of all platforms in the project. This endpoint returns an array of all platforms and their configurations. 

@@ -1,1 +1,0 @@
-Get a variable by its unique ID.

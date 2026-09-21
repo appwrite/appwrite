@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Filter;
 
 use Appwrite\Filter\BranchDomain as BranchDomainFilter;
 use PHPUnit\Framework\TestCase;
 
-class BranchDomainTest extends TestCase
+final class BranchDomainTest extends TestCase
 {
     public function testBranchDomain(): void
     {
@@ -18,18 +20,9 @@ class BranchDomainTest extends TestCase
             'projectId' => 'proj456',
             'sitesDomain' => 'appwrite.network'
         ]);
-        $this->assertStringNotContainsString('/', $domain);
+        $this->assertStringNotContainsString('/', (string) $domain);
         $this->assertStringStartsWith('branch-feature-test-', $domain);
         $this->assertStringEndsWith('.appwrite.network', $domain);
-
-        // Branch domain consistency
-        $domain2 = $filter->apply([
-            'branch' => 'feature/test',
-            'resourceId' => 'site123',
-            'projectId' => 'proj456',
-            'sitesDomain' => 'appwrite.network'
-        ]);
-        $this->assertEquals($domain, $domain);
 
         // Different resources should produce different domains
         $domain2 = $filter->apply([

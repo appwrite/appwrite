@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\Account;
 
 use Tests\E2E\Client;
@@ -9,7 +11,7 @@ use Tests\E2E\Scopes\SideServer;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
-class AccountCustomServerTest extends Scope
+final class AccountCustomServerTest extends Scope
 {
     use AccountBase;
     use ProjectCustom;
@@ -289,7 +291,7 @@ class AccountCustomServerTest extends Scope
             $this->getHeaders(),
         ));
 
-        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertArrayHasKey('accessedAt', $response['body']);
 
         $this->assertNotEmpty($response['body']['accessedAt']);
@@ -375,11 +377,46 @@ class AccountCustomServerTest extends Scope
             ]
         ));
 
-        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['registration']));
         $this->assertEquals($response['body']['email'], $email);
         $this->assertTrue($response['body']['emailVerification']);
+    }
+
+    /**
+     * A server exchanging a token on behalf of its app gets the session
+     * secret back, the same way it does for the other server-side sign-ins.
+     */
+    public function testCreateIdTokenSession(): void
+    {
+        $this->updateMockProvider(true);
+
+        $sub = 'idtoken-' . \uniqid('', true);
+        $email = 'idtoken.server.' . \uniqid('', true) . '@localhost.test';
+
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->createIdTokenSession([
+            'provider' => 'mock',
+            'idToken' => $this->mintIdToken(['sub' => $sub, 'email' => $email, 'email_verified' => true]),
+        ], $this->getHeaders());
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEquals('mock', $response['body']['provider']);
+        $this->assertEquals($sub, $response['body']['providerUid']);
+        $this->assertNotEmpty($response['body']['secret']);
+
+        $account = $this->client->call(Client::METHOD_GET, '/account', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-session' => $response['body']['secret'],
+        ]);
+
+        $this->assertEquals(200, $account['headers']['status-code']);
+        $this->assertEquals($email, $account['body']['email']);
     }
 }

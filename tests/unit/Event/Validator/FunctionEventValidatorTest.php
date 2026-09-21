@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Event\Validator;
 
 use Appwrite\Event\Validator\FunctionEvent;
 use PHPUnit\Framework\TestCase;
 
-class FunctionEventValidatorTest extends TestCase
+final class FunctionEventValidatorTest extends TestCase
 {
     protected ?FunctionEvent $object = null;
 
@@ -27,6 +29,11 @@ class FunctionEventValidatorTest extends TestCase
         $this->assertTrue($this->object->isValid('users.torsten.update'));
         $this->assertTrue($this->object->isValid('users.torsten'));
         $this->assertTrue($this->object->isValid('users.*.update.email'));
+        $this->assertTrue($this->object->isValid('users.*.update.phone'));
+        $this->assertTrue($this->object->isValid('users.*.update.mfa'));
+        $this->assertTrue($this->object->isValid('users.*.update.labels'));
+        $this->assertTrue($this->object->isValid('users.*.update.verification'));
+        $this->assertTrue($this->object->isValid('users.*.update.impersonator'));
         $this->assertTrue($this->object->isValid('users.*.update'));
         $this->assertTrue($this->object->isValid('users.*'));
         $this->assertTrue($this->object->isValid('databases.books.tables.chapters.rows.prolog.create'));
@@ -50,6 +57,21 @@ class FunctionEventValidatorTest extends TestCase
         $this->assertTrue($this->object->isValid('databases.books'));
         $this->assertTrue($this->object->isValid('databases.books.tables.chapters'));
         $this->assertTrue($this->object->isValid('databases.books.tables.*'));
+        $this->assertTrue($this->object->isValid('tablesdb.books.tables.chapters.rows.prolog.create'));
+        $this->assertTrue($this->object->isValid('tablesdb.books.tables.chapters.rows.*.create'));
+        $this->assertTrue($this->object->isValid('tablesdb.*.tables.*.rows.*.create'));
+        $this->assertTrue($this->object->isValid('tablesdb.*.tables.*'));
+        $this->assertTrue($this->object->isValid('tablesdb.*'));
+        $this->assertTrue($this->object->isValid('documentsdb.books.collections.chapters.documents.prolog.create'));
+        $this->assertTrue($this->object->isValid('documentsdb.books.collections.chapters.documents.*.create'));
+        $this->assertTrue($this->object->isValid('documentsdb.*.collections.*.documents.*.create'));
+        $this->assertTrue($this->object->isValid('documentsdb.*.collections.*'));
+        $this->assertTrue($this->object->isValid('documentsdb.*'));
+        $this->assertTrue($this->object->isValid('vectorsdb.books.collections.chapters.documents.prolog.create'));
+        $this->assertTrue($this->object->isValid('vectorsdb.books.collections.chapters.documents.*.create'));
+        $this->assertTrue($this->object->isValid('vectorsdb.*.collections.*.documents.*.create'));
+        $this->assertTrue($this->object->isValid('vectorsdb.*.collections.*'));
+        $this->assertTrue($this->object->isValid('vectorsdb.*'));
         $this->assertTrue($this->object->isValid('buckets.*'));
         $this->assertTrue($this->object->isValid('teams.*'));
         $this->assertTrue($this->object->isValid('users.*'));
@@ -65,6 +87,9 @@ class FunctionEventValidatorTest extends TestCase
         $this->assertFalse($this->object->isValid('tables'));
         $this->assertFalse($this->object->isValid('tables.*.unknown'));
         $this->assertFalse($this->object->isValid('tables.*.rows.*.unknown'));
+        $this->assertFalse($this->object->isValid('tablesdb.books.collections.chapters.documents.prolog.create'));
+        $this->assertFalse($this->object->isValid('documentsdb.books.tables.chapters.rows.prolog.create'));
+        $this->assertFalse($this->object->isValid('vectorsdb.books.tables.chapters.rows.prolog.create'));
         $this->assertFalse($this->object->isValid('users.torsten.unknown'));
         $this->assertFalse($this->object->isValid('users.torsten.delete.email'));
         $this->assertFalse($this->object->isValid('teams.*.memberships.*.update.unknown'));

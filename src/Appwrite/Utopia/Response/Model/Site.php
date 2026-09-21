@@ -106,6 +106,13 @@ class Site extends Model
                 'default' => '',
                 'example' => 'ready',
             ])
+            ->addRule('scopes', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Allowed permission scopes.',
+                'default' => [],
+                'example' => 'users.read',
+                'array' => true,
+            ])
             ->addRule('vars', [
                 'type' => Response::MODEL_VARIABLE,
                 'description' => 'Site variables.',
@@ -172,6 +179,20 @@ class Site extends Model
                 'description' => 'Is VCS (Version Control System) connection is in silent mode? When in silence mode, no comments will be posted on the repository pull or merge requests',
                 'default' => false,
                 'example' => false,
+            ])
+            ->addRule('providerBranches', [
+                'type' => self::TYPE_STRING,
+                'description' => 'List of branch name patterns that trigger automatic deployments. Supports glob wildcards. Empty list deploys on all branches.',
+                'default' => [],
+                'example' => ['main', 'feat/*'],
+                'array' => true,
+            ])
+            ->addRule('providerPaths', [
+                'type' => self::TYPE_STRING,
+                'description' => 'List of file path patterns that trigger automatic deployments. Supports glob wildcards. Empty list deploys on all file changes.',
+                'default' => [],
+                'example' => ['src/**', '!docs/**'],
+                'array' => true,
             ])
             ->addRule('buildSpecification', [
                 'type' => self::TYPE_STRING,

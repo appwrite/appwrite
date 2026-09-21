@@ -31,7 +31,7 @@ class Update extends TransactionsUpdate
             ->setHttpPath('/v1/documentsdb/transactions/:transactionId')
             ->desc('Update transaction')
             ->groups(['api', 'database', 'transactions'])
-            ->label('scope', 'documents.write')
+            ->label('scope', 'documentsdb.documents.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
                 namespace: 'documentsDB',
@@ -56,11 +56,11 @@ class Update extends TransactionsUpdate
             ->inject('getDatabasesDB')
             ->inject('user')
             ->inject('transactionState')
-            ->inject('queueForDeletes')
+            ->inject('publisherForDeletes')
             ->inject('queueForEvents')
             ->inject('usage')
             ->inject('queueForRealtime')
-            ->inject('queueForFunctions')
+            ->inject('publisherForFunctions')
             ->inject('queueForWebhooks')
             ->inject('authorization')
             ->inject('eventProcessor')

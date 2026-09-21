@@ -51,6 +51,7 @@ abstract class PlatformBase extends Model
                 'default' => '',
                 'example' => Platform::TYPE_WEB,
                 'enum' => self::getSupportedTypes(),
+                'enumSDKName' => 'PlatformType',
             ])
         ;
     }

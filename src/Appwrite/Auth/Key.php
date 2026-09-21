@@ -105,7 +105,7 @@ class Key
 
     /**
      * Decode the given secret key into a Key object, containing the project ID, type, role, scopes, and name.
-     * Can be a stored API key or a dynamic key (JWT).
+     * Can be a stored API key or an ephemeral key (JWT).
      *
      * @throws Exception
      */
@@ -122,9 +122,9 @@ class Key
             $secret = $key;
         }
 
-        $role = User::ROLE_APPS;
+        $role = User::ROLE_KEYS;
         $roles = Config::getParam('roles', []);
-        $scopes = $roles[User::ROLE_APPS]['scopes'] ?? [];
+        $scopes = $roles[User::ROLE_KEYS]['scopes'] ?? [];
         $expired = false;
 
         $guestKey = new Key(
@@ -138,7 +138,9 @@ class Key
         );
 
         switch ($type) {
-            case API_KEY_DYNAMIC:
+            // Dynamic supported for backwards compatibility
+            case API_KEY_EPHEMERAL:
+            case 'dynamic':
                 $jwtObj = new JWT(
                     key: System::getEnv('_APP_OPENSSL_KEY_V1'),
                     algo: 'HS256',
@@ -153,7 +155,7 @@ class Key
                     $expired = true;
                 }
 
-                $name = $payload['name'] ?? 'Dynamic Key';
+                $name = $payload['name'] ?? 'Ephemeral Key';
                 $projectId = $payload['projectId'] ?? '';
                 $disabledMetrics = $payload['disabledMetrics'] ?? [];
                 $hostnameOverride = $payload['hostnameOverride'] ?? false;
@@ -268,7 +270,7 @@ class Key
 
                 $name = $key->getAttribute('name', 'UNKNOWN');
 
-                $role = User::ROLE_APPS;
+                $role = User::ROLE_KEYS;
 
                 $scopes = $key->getAttribute('scopes', []);
 

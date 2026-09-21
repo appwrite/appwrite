@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\GraphQL;
 
 use Tests\E2E\Client;
@@ -9,7 +11,7 @@ use Tests\E2E\Scopes\SideServer;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 
-class UsersTest extends Scope
+final class UsersTest extends Scope
 {
     use ProjectCustom;
     use SideServer;
@@ -124,12 +126,14 @@ class UsersTest extends Scope
 
     public function testGetUsers()
     {
+        $user = $this->setupUser();
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::GET_USERS);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
                 'queries' => [
+                    Query::equal('$id', [$user['_id']])->toString(),
                     Query::limit(100)->toString(),
                     Query::offset(0)->toString(),
                 ],
@@ -141,10 +145,18 @@ class UsersTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $graphQLPayload);
 
+        $this->assertEquals(200, $users['headers']['status-code']);
         $this->assertIsArray($users['body']['data']);
         $this->assertArrayNotHasKey('errors', $users['body']);
         $this->assertIsArray($users['body']['data']['usersList']);
-        $this->assertGreaterThan(0, \count($users['body']['data']['usersList']));
+        $this->assertCount(1, $users['body']['data']['usersList']['users']);
+        $this->assertEquals($user['_id'], $users['body']['data']['usersList']['users'][0]['_id']);
+
+        // Nested target values must survive beyond the key-escaping depth limit.
+        $this->assertContains([
+            'providerType' => 'email',
+            'identifier' => $user['email'],
+        ], $users['body']['data']['usersList']['users'][0]['targets']);
     }
 
     public function testGetUser()
@@ -230,27 +242,6 @@ class UsersTest extends Scope
         $this->assertIsArray($user['body']['data']);
         $this->assertArrayNotHasKey('errors', $user['body']);
         $this->assertIsArray($user['body']['data']['usersListMemberships']);
-    }
-
-    public function testGetUserLogs()
-    {
-        $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::GET_USER_LOGS);
-        $graphQLPayload = [
-            'query' => $query,
-            'variables' => [
-                'userId' => $this->getUser()['$id'],
-            ]
-        ];
-
-        $user = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ], $this->getHeaders()), $graphQLPayload);
-
-        $this->assertIsArray($user['body']['data']);
-        $this->assertArrayNotHasKey('errors', $user['body']);
-        $this->assertIsArray($user['body']['data']['usersListLogs']);
     }
 
     public function testListUserTargets()

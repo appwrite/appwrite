@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\Databases\DocumentsDB;
 
 use Tests\E2E\Scopes\ProjectCustom;
@@ -8,7 +10,7 @@ use Tests\E2E\Scopes\SideServer;
 use Utopia\Database\Database;
 use Utopia\Database\Helpers\ID;
 
-class DocumentsDBIndexTest extends Scope
+final class DocumentsDBIndexTest extends Scope
 {
     use ProjectCustom;
     use SideServer;

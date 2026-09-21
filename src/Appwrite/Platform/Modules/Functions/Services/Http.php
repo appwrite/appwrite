@@ -21,12 +21,11 @@ use Appwrite\Platform\Modules\Functions\Http\Functions\Deployment\Update as Upda
 use Appwrite\Platform\Modules\Functions\Http\Functions\Get as GetFunction;
 use Appwrite\Platform\Modules\Functions\Http\Functions\Update as UpdateFunction;
 use Appwrite\Platform\Modules\Functions\Http\Functions\XList as ListFunctions;
+use Appwrite\Platform\Modules\Functions\Http\Jobs\Event\Create as CreateJobEvent;
 use Appwrite\Platform\Modules\Functions\Http\Runtimes\XList as ListRuntimes;
 use Appwrite\Platform\Modules\Functions\Http\Specifications\XList as ListSpecifications;
 use Appwrite\Platform\Modules\Functions\Http\Templates\Get as GetTemplate;
 use Appwrite\Platform\Modules\Functions\Http\Templates\XList as ListTemplates;
-use Appwrite\Platform\Modules\Functions\Http\Usage\Get as GetUsage;
-use Appwrite\Platform\Modules\Functions\Http\Usage\XList as ListUsage;
 use Appwrite\Platform\Modules\Functions\Http\Variables\Create as CreateVariable;
 use Appwrite\Platform\Modules\Functions\Http\Variables\Delete as DeleteVariable;
 use Appwrite\Platform\Modules\Functions\Http\Variables\Get as GetVariable;
@@ -65,15 +64,14 @@ class Http extends Service
         $this->addAction(CreateDuplicateDeployment::getName(), new CreateDuplicateDeployment());
         $this->addAction(UpdateDeploymentStatus::getName(), new UpdateDeploymentStatus());
 
+        // Jobs (open-runtimes jobs-service build backend)
+        $this->addAction(CreateJobEvent::getName(), new CreateJobEvent());
+
         // Executions
         $this->addAction(CreateExecution::getName(), new CreateExecution());
         $this->addAction(GetExecution::getName(), new GetExecution());
         $this->addAction(ListExecutions::getName(), new ListExecutions());
         $this->addAction(DeleteExecution::getName(), new DeleteExecution());
-
-        // Usage
-        $this->addAction(GetUsage::getName(), new GetUsage());
-        $this->addAction(ListUsage::getName(), new ListUsage());
 
         // Variables
         $this->addAction(CreateVariable::getName(), new CreateVariable());

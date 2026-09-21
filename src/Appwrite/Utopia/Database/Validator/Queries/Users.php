@@ -13,8 +13,10 @@ class Users extends Base
         'registration',
         'emailVerification',
         'phoneVerification',
+        'passwordPwned',
         'labels',
         'impersonator',
+        'accessedAt',
     ];
 
     /**

@@ -8,6 +8,7 @@ use Appwrite\Platform\Tasks\Interval;
 use Appwrite\Platform\Tasks\Maintenance;
 use Appwrite\Platform\Tasks\Migrate;
 use Appwrite\Platform\Tasks\QueueRetry;
+use Appwrite\Platform\Tasks\Schedule;
 use Appwrite\Platform\Tasks\ScheduleExecutions;
 use Appwrite\Platform\Tasks\ScheduleFunctions;
 use Appwrite\Platform\Tasks\ScheduleMessages;
@@ -15,7 +16,6 @@ use Appwrite\Platform\Tasks\Screenshot;
 use Appwrite\Platform\Tasks\SDKs;
 use Appwrite\Platform\Tasks\Specs;
 use Appwrite\Platform\Tasks\SSL;
-use Appwrite\Platform\Tasks\StatsResources;
 use Appwrite\Platform\Tasks\TimeTravel;
 use Appwrite\Platform\Tasks\Upgrade;
 use Appwrite\Platform\Tasks\Vars;
@@ -37,6 +37,7 @@ class Tasks extends Service
             ->addAction(SDKs::getName(), new SDKs())
             ->addAction(SSL::getName(), new SSL())
             ->addAction(Screenshot::getName(), new Screenshot())
+            ->addAction(Schedule::getName(), new Schedule())
             ->addAction(ScheduleFunctions::getName(), new ScheduleFunctions())
             ->addAction(ScheduleExecutions::getName(), new ScheduleExecutions())
             ->addAction(ScheduleMessages::getName(), new ScheduleMessages())
@@ -44,7 +45,6 @@ class Tasks extends Service
             ->addAction(Upgrade::getName(), new Upgrade())
             ->addAction(Vars::getName(), new Vars())
             ->addAction(Version::getName(), new Version())
-            ->addAction(StatsResources::getName(), new StatsResources())
             ->addAction(TimeTravel::getName(), new TimeTravel())
         ;
     }

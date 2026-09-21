@@ -7,6 +7,28 @@ class Webhooks extends Base
     public const ALLOWED_ATTRIBUTES = [
         'name',
         'url',
+        'authUsername',
+        'tls',
+        'events',
+        'enabled',
+        'logs',
+        'attempts',
+    ];
+
+    /**
+     * Map API attribute names to DB column names.
+     */
+    private const ATTRIBUTE_ALIASES = [
+        'tls' => 'security',
+        'authUsername' => 'httpUser',
+    ];
+
+    /**
+     * DB column names used for schema validation.
+     */
+    private const DB_ATTRIBUTES = [
+        'name',
+        'url',
         'httpUser',
         'security',
         'events',
@@ -21,6 +43,33 @@ class Webhooks extends Base
      */
     public function __construct()
     {
-        parent::__construct('webhooks', self::ALLOWED_ATTRIBUTES);
+        parent::__construct('webhooks', self::DB_ATTRIBUTES);
+    }
+
+    /**
+     * Convert API attribute names to DB column names in query strings before validation.
+     */
+    public function isValid($value): bool
+    {
+        return parent::isValid($this->normalizeAliases($value));
+    }
+
+    private function normalizeAliases(mixed $value): mixed
+    {
+        if (!\is_array($value)) {
+            return $value;
+        }
+
+        foreach ($value as &$queryString) {
+            if (!\is_string($queryString)) {
+                continue;
+            }
+            foreach (self::ATTRIBUTE_ALIASES as $alias => $dbName) {
+                $queryString = \str_replace('"' . $alias . '"', '"' . $dbName . '"', $queryString);
+            }
+        }
+        unset($queryString);
+
+        return $value;
     }
 }

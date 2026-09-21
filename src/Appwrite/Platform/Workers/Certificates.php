@@ -2,11 +2,13 @@
 
 namespace Appwrite\Platform\Workers;
 
-use Appwrite\Certificates\Adapter as CertificatesAdapter;
-use Appwrite\Event\Certificate;
+use Appwrite\Bus\Events\RuleUpdated;
 use Appwrite\Event\Event;
-use Appwrite\Event\Func;
-use Appwrite\Event\Mail;
+use Appwrite\Event\Message\Func as FunctionMessage;
+use Appwrite\Event\Message\Mail as MailMessage;
+use Appwrite\Event\Publisher\Certificate;
+use Appwrite\Event\Publisher\Func as FunctionPublisher;
+use Appwrite\Event\Publisher\Mail as MailPublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception as AppwriteException;
@@ -15,6 +17,8 @@ use Appwrite\Template\Template;
 use Appwrite\Utopia\Response\Model\Rule;
 use Exception;
 use Throwable;
+use Utopia\Bus\Bus;
+use Utopia\Cdn\Certificates\Provider;
 use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -28,8 +32,8 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization as ValidatorAuthorization;
 use Utopia\Domains\Domain;
 use Utopia\Locale\Locale;
-use Utopia\Logger\Log;
 use Utopia\Queue\Message;
+use Utopia\Span\Span;
 use Utopia\System\System;
 
 class Certificates extends Action
@@ -50,30 +54,29 @@ class Certificates extends Action
             ->desc('Certificates worker')
             ->inject('message')
             ->inject('dbForPlatform')
-            ->inject('queueForMails')
+            ->inject('publisherForMails')
             ->inject('queueForEvents')
             ->inject('queueForWebhooks')
-            ->inject('queueForFunctions')
+            ->inject('publisherForFunctions')
             ->inject('queueForRealtime')
-            ->inject('queueForCertificates')
-            ->inject('log')
+            ->inject('publisherForCertificates')
             ->inject('certificates')
             ->inject('plan')
             ->inject('authorization')
+            ->inject('bus')
             ->callback($this->action(...));
     }
 
     /**
      * @param Message $message
      * @param Database $dbForPlatform
-     * @param Mail $queueForMails
+     * @param MailPublisher $publisherForMails
      * @param Event $queueForEvents
      * @param Webhook $queueForWebhooks
-     * @param Func $queueForFunctions
+     * @param FunctionPublisher $publisherForFunctions
      * @param Realtime $queueForRealtime
-     * @param Certificate $queueForCertificates
-     * @param Log $log
-     * @param CertificatesAdapter $certificates
+     * @param Certificate $publisherForCertificates
+     * @param Provider $certificates
      * @param array $plan
      * @param ValidatorAuthorization $authorization
      * @return void
@@ -83,39 +86,40 @@ class Certificates extends Action
     public function action(
         Message $message,
         Database $dbForPlatform,
-        Mail $queueForMails,
+        MailPublisher $publisherForMails,
         Event $queueForEvents,
         Webhook $queueForWebhooks,
-        Func $queueForFunctions,
+        FunctionPublisher $publisherForFunctions,
         Realtime $queueForRealtime,
-        Certificate $queueForCertificates,
-        Log $log,
-        CertificatesAdapter $certificates,
+        Certificate $publisherForCertificates,
+        Provider $certificates,
         array $plan,
         ValidatorAuthorization $authorization,
+        Bus $bus,
     ): void {
-        $payload = $message->getPayload() ?? [];
+        $payload = $message->getPayload();
 
         if (empty($payload)) {
             throw new Exception('Missing payload');
         }
 
-        $document = new Document($payload['domain'] ?? []);
+        $certificateMessage = \Appwrite\Event\Message\Certificate::fromArray($payload);
+        $document = $certificateMessage->domain;
         $domain   = new Domain($document->getAttribute('domain', ''));
         $domainType = $document->getAttribute('domainType');
-        $skipRenewCheck = $payload['skipRenewCheck'] ?? false;
-        $validationDomain = $payload['validationDomain'] ?? null;
-        $action = $payload['action'] ?? Certificate::ACTION_GENERATION;
+        $skipRenewCheck = $certificateMessage->skipRenewCheck;
+        $validationDomain = $certificateMessage->validationDomain;
+        $action = $certificateMessage->action;
 
-        $log->addTag('domain', $domain->get());
+        Span::add('domain', $domain->get());
 
         switch ($action) {
-            case Certificate::ACTION_DOMAIN_VERIFICATION:
-                $this->handleDomainVerificationAction($domain, $dbForPlatform, $queueForEvents, $queueForWebhooks, $queueForFunctions, $queueForRealtime, $queueForCertificates, $log, $authorization, $validationDomain);
+            case \Appwrite\Event\Certificate::ACTION_DOMAIN_VERIFICATION:
+                $this->handleDomainVerificationAction($domain, $dbForPlatform, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $queueForRealtime, $publisherForCertificates, $authorization, $bus, $validationDomain);
                 break;
 
-            case Certificate::ACTION_GENERATION:
-                $this->handleCertificateGenerationAction($domain, $domainType, $dbForPlatform, $queueForMails, $queueForEvents, $queueForWebhooks, $queueForFunctions, $queueForRealtime, $log, $certificates, $authorization, $skipRenewCheck, $plan, $validationDomain);
+            case \Appwrite\Event\Certificate::ACTION_GENERATION:
+                $this->handleCertificateGenerationAction($domain, $domainType, $dbForPlatform, $publisherForMails, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $queueForRealtime, $certificates, $authorization, $bus, $skipRenewCheck, $plan, $validationDomain);
                 break;
 
             default:
@@ -128,10 +132,9 @@ class Certificates extends Action
      * @param Database $dbForPlatform
      * @param Event $queueForEvents
      * @param Webhook $queueForWebhooks
-     * @param Func $queueForFunctions
+     * @param FunctionPublisher $publisherForFunctions
      * @param Realtime $queueForRealtime
-     * @param Certificate $queueForCertificates
-     * @param Log $log
+     * @param Certificate $publisherForCertificates
      * @param ValidatorAuthorization $authorization
      * @param string|null $validationDomain
      * @return void
@@ -144,11 +147,11 @@ class Certificates extends Action
         Database $dbForPlatform,
         Event $queueForEvents,
         Webhook $queueForWebhooks,
-        Func $queueForFunctions,
+        FunctionPublisher $publisherForFunctions,
         Realtime $queueForRealtime,
-        Certificate $queueForCertificates,
-        Log $log,
+        Certificate $publisherForCertificates,
         ValidatorAuthorization $authorization,
+        Bus $bus,
         ?string $validationDomain = null
     ): void {
         // Get rule
@@ -169,7 +172,7 @@ class Certificates extends Action
 
         try {
             // Verify DNS records
-            $this->validateDomain($rule, $domain, $log, $validationDomain);
+            $this->validateDomain($rule, $domain, $validationDomain);
             // Reset logs and status for the rule
             $rule->setAttribute('logs', '');
             $rule->setAttribute('status', RULE_STATUS_CERTIFICATE_GENERATING);
@@ -183,18 +186,22 @@ class Certificates extends Action
             $rule->setAttribute('logs', $logs);
         } finally {
             // Update rule and emit events
-            $this->updateRuleAndSendEvents($rule, $dbForPlatform, $queueForEvents, $queueForWebhooks, $queueForFunctions, $queueForRealtime);
+            $this->updateRuleAndSendEvents($rule, $dbForPlatform, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $queueForRealtime, $bus);
         }
 
         // Issue a TLS certificate when domain is verified
         if ($rule->getAttribute('status', '') === RULE_STATUS_CERTIFICATE_GENERATING) {
-            $queueForCertificates
-                ->setDomain(new Document([
+            $publisherForCertificates->enqueue(new \Appwrite\Event\Message\Certificate(
+                project: new Document([
+                    '$id' => $rule->getAttribute('projectId', ''),
+                    '$sequence' => $rule->getAttribute('projectInternalId', 0),
+                ]),
+                domain: new Document([
                     'domain' => $rule->getAttribute('domain'),
                     'domainType' => $rule->getAttribute('deploymentResourceType', $rule->getAttribute('type')),
-                ]))
-                ->setAction(Certificate::ACTION_GENERATION)
-                ->trigger();
+                ]),
+                action: \Appwrite\Event\Certificate::ACTION_GENERATION,
+            ));
 
             Console::success('Certificate generation triggered successfully.');
         }
@@ -204,13 +211,12 @@ class Certificates extends Action
      * @param Domain $domain
      * @param ?string $domainType
      * @param Database $dbForPlatform
-     * @param Mail $queueForMails
+     * @param MailPublisher $publisherForMails
      * @param Event $queueForEvents
      * @param Webhook $queueForWebhooks
-     * @param Func $queueForFunctions
+     * @param FunctionPublisher $publisherForFunctions
      * @param Realtime $queueForRealtime
-     * @param Log $log
-     * @param CertificatesAdapter $certificates
+     * @param Provider $certificates
      * @param ValidatorAuthorization $authorization
      * @param bool $skipRenewCheck
      * @param array $plan
@@ -228,14 +234,14 @@ class Certificates extends Action
         Domain $domain,
         ?string $domainType,
         Database $dbForPlatform,
-        Mail $queueForMails,
+        MailPublisher $publisherForMails,
         Event $queueForEvents,
         Webhook $queueForWebhooks,
-        Func $queueForFunctions,
+        FunctionPublisher $publisherForFunctions,
         Realtime $queueForRealtime,
-        Log $log,
-        CertificatesAdapter $certificates,
+        Provider $certificates,
         ValidatorAuthorization $authorization,
+        Bus $bus,
         bool $skipRenewCheck = false,
         array $plan = [],
         ?string $validationDomain = null
@@ -306,10 +312,10 @@ class Certificates extends Action
 
             // Validate domain and DNS records. Skip if job is forced
             if (!$skipRenewCheck) {
-                $this->validateDomain($rule, $domain, $log, $validationDomain);
+                $this->validateDomain($rule, $domain, $validationDomain);
 
                 // If certificate exists already, double-check expiry date. Skip if job is forced
-                if (!$certificates->isRenewRequired($domain->get(), $domainType, $log)) {
+                if (!$certificates->isRenewRequired($domain->get(), $domainType)) {
                     Console::info("Skipping, renew isn't required");
                     return;
                 }
@@ -353,7 +359,7 @@ class Certificates extends Action
             $rule->setAttribute('status', RULE_STATUS_CERTIFICATE_GENERATION_FAILED);
 
             // Send email to security email
-            $this->notifyError($domain->get(), $e->getMessage(), $attempts, $queueForMails, $plan);
+            $this->notifyError($domain->get(), $e->getMessage(), $attempts, $publisherForMails, $plan, $dbForPlatform->getDocument('projects', 'console'));
 
             throw $e;
         } finally {
@@ -364,7 +370,7 @@ class Certificates extends Action
             // Update rule and emit events
             $rule->setAttribute('certificateId', $certificate->getId());
             $rule->setAttribute('logs', $logs);
-            $this->updateRuleAndSendEvents($rule, $dbForPlatform, $queueForEvents, $queueForWebhooks, $queueForFunctions, $queueForRealtime);
+            $this->updateRuleAndSendEvents($rule, $dbForPlatform, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $queueForRealtime, $bus);
         }
     }
 
@@ -410,7 +416,7 @@ class Certificates extends Action
      * @param Database $dbForPlatform Database connection for console
      * @param Event $queueForEvents Event publisher for events
      * @param Webhook $queueForWebhooks Webhook publisher for webhooks
-     * @param Func $queueForFunctions Function publisher for functions
+     * @param FunctionPublisher $publisherForFunctions Function publisher for functions
      * @param Realtime $queueForRealtime Realtime publisher for realtime events
      *
      * @return void
@@ -420,18 +426,21 @@ class Certificates extends Action
         Database $dbForPlatform,
         Event $queueForEvents,
         Webhook $queueForWebhooks,
-        Func $queueForFunctions,
-        Realtime $queueForRealtime
+        FunctionPublisher $publisherForFunctions,
+        Realtime $queueForRealtime,
+        Bus $bus
     ): void {
         $rule = $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
             'status' => $rule->getAttribute('status'),
             'certificateId' => $rule->getAttribute('certificateId'),
             'logs' => $rule->getAttribute('logs'),
         ]));
-        $projectId = $rule->getAttribute('projectId');
+        $bus->dispatch(new RuleUpdated($rule->getArrayCopy()));
+
+        $projectId = (string) $rule->getAttribute('projectId', '');
 
         // Skip events for console project (triggered by auto-ssl generation for 1 click setups)
-        if ($projectId === 'console') {
+        if ($projectId === '' || $projectId === 'console') {
             return;
         }
 
@@ -453,9 +462,15 @@ class Certificates extends Action
             ->trigger();
 
         /** Trigger Functions */
-        $queueForFunctions
-            ->from($queueForEvents)
-            ->trigger();
+        $publisherForFunctions->enqueue(FunctionMessage::fromEvent(
+            event: $queueForEvents->getEvent(),
+            params: $queueForEvents->getParams(),
+            project: $queueForEvents->getProject(),
+            user: $queueForEvents->getUser(),
+            userId: $queueForEvents->getUserId(),
+            payload: $queueForEvents->getPayload(),
+            platform: $queueForEvents->getPlatform(),
+        ));
 
         /** Trigger Realtime Events */
         $queueForRealtime
@@ -471,25 +486,28 @@ class Certificates extends Action
      *
      * @param Document $rule Rule to validate
      * @param Domain $domain Domain to validate
-     * @param Log $log Logger for adding metrics
      * @param string|null $validationDomain Override for main domain check
      *
      * @return void
      * @throws Exception
      */
-    private function validateDomain(Document $rule, Domain $domain, Log $log, ?string $validationDomain = null): void
+    private function validateDomain(Document $rule, Domain $domain, ?string $validationDomain = null): void
     {
         $mainDomain = $validationDomain ?? $this->getMainDomain();
         $isMainDomain = !isset($mainDomain) || $domain->get() === $mainDomain;
+        $isAppwriteOwned = $rule->getAttribute('owner') === 'Appwrite';
 
-        if ($isMainDomain) {
-            // Main domain validation
+        // Skip DNS verification for the main domain and Appwrite-owned subdomains
+        // (auto-generated under _APP_DOMAIN_FUNCTIONS / _APP_DOMAIN_SITES). Appwrite
+        // created those subdomains itself; they typically rely on a wildcard A/AAAA
+        // record rather than a per-subdomain CNAME to _APP_DOMAIN_TARGET_CNAME.
+        if ($isMainDomain || $isAppwriteOwned) {
             // TODO: Would be awesome to check A/AAAA record here. Maybe dry run?
             return;
         }
 
         try {
-            $this->verifyRule($rule, $log);
+            $this->verifyRule($rule);
         } catch (AppwriteException $err) {
             $msg = $err->getMessage() . "\n";
             $msg .= "Verify your DNS records are correctly configured and try again.\n";
@@ -519,18 +537,18 @@ class Certificates extends Action
      * @param string $domain Domain that caused the error
      * @param string $errorMessage Verbose error message
      * @param int $attempt How many times it failed already
-     * @param Mail $queueForMails
+     * @param MailPublisher $publisherForMails
      * @param array $plan
      * @return void
      * @throws Exception
      */
-    private function notifyError(string $domain, string $errorMessage, int $attempt, Mail $queueForMails, array $plan): void
+    private function notifyError(string $domain, string $errorMessage, int $attempt, MailPublisher $publisherForMails, array $plan, Document $console): void
     {
         // Log error into console
         Console::warning('Cannot renew domain (' . $domain . ') on attempt no. ' . $attempt . ' certificate: ' . $errorMessage);
 
         $locale = new Locale(System::getEnv('_APP_LOCALE', 'en'));
-        $locale->setFallback(System::getEnv('_APP_LOCALE', 'en'));
+        $locale->setFallback('en');
 
         // Send mail to administrator mail
         $template = Template::fromFile(__DIR__ . '/../../../../app/config/locale/templates/email-certificate-failed.tpl');
@@ -555,14 +573,16 @@ class Certificates extends Action
         $subject = $locale->getText("emails.certificate.subject");
         $preview = $locale->getText("emails.certificate.preview");
 
-        $queueForMails
-            ->setSubject($subject)
-            ->setPreview($preview)
-            ->setBody($body)
-            ->setName('Appwrite Administrator')
-            ->setBodyTemplate(__DIR__ . '/../../../../app/config/locale/templates/email-base-styled.tpl')
-            ->setVariables($emailVariables)
-            ->setRecipient(System::getEnv('_APP_EMAIL_CERTIFICATES', System::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS')))
-            ->trigger();
+        $publisherForMails->enqueue(new MailMessage(
+            project: $console,
+            recipient: System::getEnv('_APP_EMAIL_CERTIFICATES', System::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS')),
+            name: 'Appwrite Administrator',
+            subject: $subject,
+            template: MAIL_TEMPLATE_CERTIFICATE_FAILED,
+            bodyTemplate: __DIR__ . '/../../../../app/config/locale/templates/email-base-styled.tpl',
+            body: $body,
+            preview: $preview,
+            variables: $emailVariables,
+        ));
     }
 }

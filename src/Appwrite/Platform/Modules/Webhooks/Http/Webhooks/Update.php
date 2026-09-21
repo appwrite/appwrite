@@ -8,6 +8,7 @@ use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\SDK\Specification\Validator\PasswordFormat;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -60,12 +61,12 @@ class Update extends Action
             ))
             ->param('webhookId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getAdapter()->getMaxUIDLength()), 'Webhook ID.', false, ['dbForPlatform'])
             ->param('name', null, new Text(128), 'Webhook name. Max length: 128 chars.')
-            ->param('url', '', fn () => new Multiple([new URL(['http', 'https']), new PublicDomain()], Multiple::TYPE_STRING), 'Webhook URL.')
+            ->param('url', '', fn () => new Multiple([new URL(['http', 'https']), new PublicDomain()], Multiple::TYPE_STRING), 'Webhook URL.', example: 'https://example.com/webhook')
             ->param('events', null, new ArrayList(new Event(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.')
             ->param('enabled', true, new Boolean(), 'Enable or disable a webhook.', true)
-            ->param('security', false, new Boolean(), 'Certificate verification, false for disabled or true for enabled.', true)
-            ->param('httpUser', '', new Text(256), 'Webhook HTTP user. Max length: 256 chars.', true)
-            ->param('httpPass', '', new Text(256), 'Webhook HTTP password. Max length: 256 chars.', true)
+            ->param('tls', false, new Boolean(), 'Certificate verification, false for disabled or true for enabled.', true)
+            ->param('authUsername', '', new Text(256), 'Webhook HTTP user. Max length: 256 chars.', true)
+            ->param('authPassword', '', new PasswordFormat(new Text(256)), 'Webhook HTTP password. Max length: 256 chars.', true)
             ->inject('response')
             ->inject('project')
             ->inject('queueForEvents')
@@ -80,9 +81,9 @@ class Update extends Action
         string $url,
         array $events,
         bool $enabled,
-        bool $security,
-        string $httpUser,
-        string $httpPass,
+        bool $tls,
+        string $authUsername,
+        string $authPassword,
         Response $response,
         Document $project,
         QueueEvent $queueForEvents,
@@ -102,9 +103,9 @@ class Update extends Action
             'name' => $name,
             'events' => $events,
             'url' => $url,
-            'security' => $security,
-            'httpUser' => $httpUser,
-            'httpPass' => $httpPass,
+            'security' => $tls,
+            'httpUser' => $authUsername,
+            'httpPass' => $authPassword,
             'enabled' => $enabled,
         ]);
 
@@ -117,6 +118,8 @@ class Update extends Action
         $authorization->skip(fn () => $dbForPlatform->purgeCachedDocument('projects', $project->getId()));
 
         $queueForEvents->setParam('webhookId', $webhook->getId());
+
+        $webhook->removeAttribute('signatureKey');
 
         $response->dynamic($webhook, Response::MODEL_WEBHOOK);
     }

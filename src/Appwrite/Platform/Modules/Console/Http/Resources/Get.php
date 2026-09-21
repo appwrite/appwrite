@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Console\Http\Resources;
 
 use Appwrite\Extend\Exception;
+use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
@@ -12,7 +13,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Domains\Domain as Domain;
-use Utopia\Platform\Action;
+use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
 use Utopia\Validator\Domain as DomainValidator;
@@ -56,7 +57,7 @@ class Get extends Action
             ->label('abuse-key', 'userId:{userId}, url:{url}')
             ->label('abuse-time', 60)
             ->param('value', '', new Text(256), 'Resource value.')
-            ->param('type', '', new WhiteList(['rules']), 'Resource type.')
+            ->param('type', '', new WhiteList(['rules']), 'Resource type.', enum: new Enum(name: 'ConsoleResourceType'))
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('platform')

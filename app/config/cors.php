@@ -18,10 +18,10 @@ return [
         // Appwrite
         'X-Appwrite-Project',
         'X-Appwrite-Key',
-        'X-Appwrite-Dev-Key',
         'X-Appwrite-Locale',
         'X-Appwrite-Mode',
         'X-Appwrite-JWT',
+        'X-Appwrite-Organization',
         'X-Appwrite-Response-Format',
         'X-Appwrite-Timeout',
         'X-Appwrite-ID',

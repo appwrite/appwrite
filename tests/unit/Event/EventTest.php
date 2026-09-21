@@ -1,14 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Event;
 
 use Appwrite\Event\Event;
+use Appwrite\Event\Message\Func;
 use InvalidArgumentException;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Utopia\Database\Document;
 
 require_once __DIR__ . '/../../../app/init.php';
 
-class EventTest extends TestCase
+final class EventTest extends TestCase
 {
     protected ?Event $object = null;
     protected string $queue = '';
@@ -26,17 +31,17 @@ class EventTest extends TestCase
 
     public function testQueue(): void
     {
-        $this->assertEquals($this->queue, $this->object->getQueue());
+        $this->assertSame($this->queue, $this->object->getQueue());
         $this->object->setQueue('demo');
-        $this->assertEquals('demo', $this->object->getQueue());
+        $this->assertSame('demo', $this->object->getQueue());
         $this->object->setQueue($this->queue);
     }
 
     public function testClass(): void
     {
-        $this->assertEquals('TestsV1', $this->object->getClass());
+        $this->assertSame('TestsV1', $this->object->getClass());
         $this->object->setClass('TestsV2');
-        $this->assertEquals('TestsV2', $this->object->getClass());
+        $this->assertSame('TestsV2', $this->object->getClass());
         $this->object->setClass('TestsV1');
     }
 
@@ -115,7 +120,7 @@ class EventTest extends TestCase
             'rowId' => 'prolog',
         ]);
 
-        $this->assertCount(22, $event);
+        $this->assertCount(42, $event);
         $this->assertContains('databases.chaptersDB.tables.chapters.rows.prolog.create', $event);
         $this->assertContains('databases.chaptersDB.tables.chapters.rows.prolog', $event);
         $this->assertContains('databases.chaptersDB.tables.chapters.rows.*.create', $event);
@@ -155,5 +160,166 @@ class EventTest extends TestCase
         } catch (\Throwable $th) {
             $this->assertInstanceOf(InvalidArgumentException::class, $th, 'An invalid exception was thrown');
         }
+    }
+
+    public function testWildcardDeduplicationPreservesDeliveryOrder(): void
+    {
+        $events = Event::generateEvents(
+            'databases.[databaseId].collections.[collectionId].documents.[documentId].create',
+            ['databaseId' => 'db', 'collectionId' => 'col', 'documentId' => 'doc'],
+            new Document(['type' => 'documentsdb']),
+        );
+
+        // Realtime derives its target from events[0]. Keep the concrete event
+        // first and preserve the wildcard and parent event delivery order.
+        $this->assertSame([
+            'documentsdb.db.collections.col.documents.doc.create',
+            'documentsdb.*.collections.*.documents.*.create',
+            'documentsdb.db.collections.*.documents.doc.create',
+            'documentsdb.*.collections.*.documents.doc.create',
+            'documentsdb.*.collections.col.documents.doc.create',
+            'documentsdb.db.collections.col.documents.*.create',
+            'documentsdb.*.collections.col.documents.*.create',
+            'documentsdb.db.collections.*.documents.*.create',
+            'documentsdb.db.collections.col.documents.doc',
+            'documentsdb.*.collections.*.documents.*',
+            'documentsdb.db.collections.*.documents.doc',
+            'documentsdb.*.collections.*.documents.doc',
+            'documentsdb.*.collections.col.documents.doc',
+            'documentsdb.db.collections.col.documents.*',
+            'documentsdb.*.collections.col.documents.*',
+            'documentsdb.db.collections.*.documents.*',
+            'documentsdb.db.collections.col',
+            'documentsdb.*.collections.*',
+            'documentsdb.db.collections.*',
+            'documentsdb.*.collections.col',
+            'documentsdb.db',
+            'documentsdb.*',
+        ], $events);
+    }
+
+    public function testGenerateEventsOrder(): void
+    {
+        // The first event is the concrete event that happened, in full. Consumers that
+        // report a single name take it from there -- the functions worker publishes it
+        // as `x-appwrite-event` and `APPWRITE_FUNCTION_EVENT`.
+        $this->assertSame([
+            'users.torsten.update.name',
+            'users.*.update.name',
+            'users.torsten.update',
+            'users.*.update',
+            'users.torsten',
+            'users.*',
+        ], Event::generateEvents('users.[userId].update.name', [
+            'userId' => 'torsten'
+        ]));
+
+        $membershipEvents = Event::generateEvents('teams.[teamId].memberships.[membershipId].update.status', [
+            'teamId' => 'jets',
+            'membershipId' => 'torsten',
+        ]);
+        $this->assertSame('teams.jets.memberships.torsten.update.status', $membershipEvents[0]);
+
+        // An attribute of a sub-resource does not also belong to its parent.
+        $this->assertNotContains('teams.jets.update.status', $membershipEvents);
+    }
+
+    public static function databaseEvents(): \Iterator
+    {
+        yield 'TablesDB' => ['tablesdb', 'tablesdb.db.tables.col.rows.row.create'];
+        yield 'DocumentsDB' => ['documentsdb', 'documentsdb.db.collections.col.documents.row.create'];
+        yield 'VectorsDB' => ['vectorsdb', 'vectorsdb.db.collections.col.documents.row.create'];
+        yield 'legacy' => ['legacy', 'databases.db.collections.col.documents.row.create'];
+        yield 'no context' => [null, 'databases.db.collections.col.documents.row.create'];
+    }
+
+    #[DataProvider('databaseEvents')]
+    public function testPublishDatabaseEvents(?string $type, string $expected): void
+    {
+        $database = $type === null ? null : new Document(['type' => $type]);
+        $pattern = 'databases.[databaseId].collections.[collectionId].documents.[documentId].create';
+        $params = ['databaseId' => 'db', 'collectionId' => 'col', 'documentId' => 'row'];
+        $this->object->setEvent($pattern);
+        if ($database !== null) {
+            $this->object->setContext('database', $database);
+        }
+        foreach ($params as $key => $value) {
+            $this->object->setParam($key, $value);
+        }
+
+        $this->object->trigger();
+        $message = Func::fromEvent(event: $pattern, params: $params, database: $database);
+
+        $events = $this->publisher->getEvents($this->queue)[0]['events'];
+        $this->assertSame($expected, $events[0]);
+        $this->assertSame($events, $message->events);
+    }
+
+    public function testGenerateMirrorEvents(): void
+    {
+        $legacyDatabase = new Document(['type' => 'legacy']);
+        $tableRowEvents = Event::generateEvents('databases.[databaseId].tables.[tableId].rows.[rowId].update', [
+            'databaseId' => 'factory-db',
+            'tableId' => 'assembly',
+            'rowId' => 'row-123',
+        ], $legacyDatabase);
+        $this->assertContains('databases.factory-db.collections.assembly.documents.row-123.update', $tableRowEvents);
+
+        $collectionDocumentEvents = Event::generateEvents('databases.[databaseId].collections.[collectionId].documents.[documentId].update', [
+            'databaseId' => 'factory-db',
+            'collectionId' => 'assembly',
+            'documentId' => 'doc-123',
+        ], $legacyDatabase);
+        $this->assertContains('databases.factory-db.tables.assembly.rows.doc-123.update', $collectionDocumentEvents);
+
+        $tableColumnEvents = Event::generateEvents('databases.[databaseId].tables.[tableId].columns.[columnId].create', [
+            'databaseId' => 'factory-db',
+            'tableId' => 'assembly',
+            'columnId' => 'status',
+        ], $legacyDatabase);
+        $this->assertContains('databases.factory-db.collections.assembly.attributes.status.create', $tableColumnEvents);
+
+        $collectionAttributeEvents = Event::generateEvents('databases.[databaseId].collections.[collectionId].attributes.[attributeId].create', [
+            'databaseId' => 'factory-db',
+            'collectionId' => 'assembly',
+            'attributeId' => 'status',
+        ], $legacyDatabase);
+        $this->assertContains('databases.factory-db.tables.assembly.columns.status.create', $collectionAttributeEvents);
+
+        $tablesDb = new Document(['type' => 'tablesdb']);
+        $tablesDbEvents = Event::generateEvents('databases.[databaseId].tables.[tableId].rows.[rowId].update', [
+            'databaseId' => 'factory-db',
+            'tableId' => 'assembly',
+            'rowId' => 'row-123',
+        ], $tablesDb);
+        $this->assertContains('databases.factory-db.collections.assembly.documents.row-123.update', $tablesDbEvents);
+        $this->assertContains('tablesdb.factory-db.tables.assembly.rows.row-123.update', $tablesDbEvents);
+        $tableIdWithReservedWordEvents = Event::generateEvents('databases.[databaseId].tables.[tableId].rows.[rowId].update', [
+            'databaseId' => 'factory-db',
+            'tableId' => 'rows-archive',
+            'rowId' => 'row-123',
+        ], $legacyDatabase);
+        $this->assertContains('databases.factory-db.collections.rows-archive.documents.row-123.update', $tableIdWithReservedWordEvents);
+        $this->assertNotContains('databases.factory-db.collections.documents-archive.documents.row-123.update', $tableIdWithReservedWordEvents);
+
+        $documentsDb = new Document(['type' => 'documentsdb']);
+        $documentsDbEvents = Event::generateEvents('databases.[databaseId].collections.[collectionId].documents.[documentId].update', [
+            'databaseId' => 'factory-db',
+            'collectionId' => 'assembly',
+            'documentId' => 'doc-123',
+        ], $documentsDb);
+        $this->assertContains('documentsdb.factory-db.collections.assembly.documents.doc-123.update', $documentsDbEvents);
+        $this->assertNotContains('documentsdb.factory-db.tables.assembly.rows.doc-123.update', $documentsDbEvents);
+        $this->assertNotContains('databases.factory-db.collections.assembly.documents.doc-123.update', $documentsDbEvents);
+
+        $vectorsDb = new Document(['type' => 'vectorsdb']);
+        $vectorsDbEvents = Event::generateEvents('databases.[databaseId].collections.[collectionId].documents.[documentId].update', [
+            'databaseId' => 'factory-db',
+            'collectionId' => 'assembly',
+            'documentId' => 'doc-123',
+        ], $vectorsDb);
+        $this->assertContains('vectorsdb.factory-db.collections.assembly.documents.doc-123.update', $vectorsDbEvents);
+        $this->assertNotContains('vectorsdb.factory-db.tables.assembly.rows.doc-123.update', $vectorsDbEvents);
+        $this->assertNotContains('databases.factory-db.collections.assembly.documents.doc-123.update', $vectorsDbEvents);
     }
 }

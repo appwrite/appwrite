@@ -36,11 +36,12 @@ class Update extends VarcharUpdate
             ->setHttpPath('/v1/tablesdb/:databaseId/tables/:tableId/columns/varchar/:key')
             ->desc('Update varchar column')
             ->groups(['api', 'database', 'schema'])
-            ->label('scope', ['tables.write', 'collections.write'])
+            ->label('scope', ['tables.write', 'collections.write', 'columns.write', 'attributes.write'])
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('event', 'databases.[databaseId].tables.[tableId].columns.[columnId].update')
             ->label('audits.event', 'column.update')
             ->label('audits.resource', 'database/{request.databaseId}/table/{request.tableId}')
+            ->label('usage.resource', 'database/{request.databaseId}/table/{request.tableId}')
             ->label('sdk', new Method(
                 namespace: $this->getSDKNamespace(),
                 group: $this->getSDKGroup(),
@@ -59,7 +60,7 @@ class Update extends VarcharUpdate
             ->param('tableId', '', new UID(), 'Table ID. You can create a new table using the Database service [server integration](https://appwrite.io/docs/references/cloud/server-dart/tablesDB#createTable).')
             ->param('key', '', new Key(), 'Column Key.')
             ->param('required', null, new Boolean(), 'Is column required?')
-            ->param('default', null, new Nullable(new Text(0, 0)), 'Default value for column when not provided. Cannot be set when column is required.')
+            ->param('default', null, new Nullable(new Text(0, 0)), 'Default value for column when not provided. Cannot be set when column is required.', example: 'Hello World')
             ->param('size', null, new Nullable(new Range(1, 16381, Validator::TYPE_INTEGER)), 'Maximum size of the varchar column.', true)
             ->param('newKey', null, new Nullable(new Key()), 'New Column Key.', true)
             ->inject('response')

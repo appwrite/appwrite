@@ -28,6 +28,7 @@ class Column extends Model
                 'default' => '',
                 'example' => 'available',
                 'enum' => ['available', 'processing', 'deleting', 'stuck', 'failed'],
+                'enumSDKName' => 'ColumnStatus',
             ])
             ->addRule('error', [
                 'type' => self::TYPE_STRING,

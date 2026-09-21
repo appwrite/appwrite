@@ -40,7 +40,7 @@ class V16 extends Filter
         }
 
         if (isset($content['buildSize'])) {
-            $content['size'] += + $content['buildSize'] ?? 0;
+            $content['size'] += +$content['buildSize'];
             unset($content['buildSize']);
         }
 

@@ -10,7 +10,8 @@ use Utopia\System\System;
 class Comment
 {
     public function __construct(
-        private array $platform
+        private array $platform,
+        private bool $withImages = true,
     ) {
     }
 
@@ -22,7 +23,7 @@ class Comment
         'Every Git commit and branch gets its own deployment URL automatically',
         'Custom domains work with both CNAME for subdomains and NS records for apex domains',
         'HTTPS and SSL certificates are handled automatically for all your Sites',
-        'Functions can run for up to 15 minutes before timing out',
+        'Function builds can take up to 45 minutes before timing out',
         'Schedule functions to run as often as every minute with cron expressions',
         'Environment variables can be scoped per function or shared across your project',
         'Function scopes give you fine-grained control over API permissions',
@@ -31,7 +32,7 @@ class Comment
         'Trigger functions via HTTP, SDKs, events, webhooks, or scheduled cron jobs',
         'Each function runs in its own isolated container with custom environment variables',
         'Build commands execute in runtime containers during deployment',
-        'Dynamic API keys are generated automatically for each function execution',
+        'Ephemeral API keys are generated automatically for each function execution',
         'JWT tokens let functions act on behalf of users while preserving their permissions',
         'Storage files get ClamAV malware scanning and encryption by default',
         'Roll back Sites deployments instantly by switching between versions',
@@ -49,6 +50,8 @@ class Comment
     ];
 
     protected string $statePrefix = '[appwrite]: #';
+
+    protected ?string $tip = null;
 
     /**
      * @var mixed[] $builds
@@ -81,7 +84,14 @@ class Comment
 
     public function generateComment(): string
     {
-        $json = \json_encode($this->builds);
+        if ($this->tip === null) {
+            $this->tip = $this->tips[\array_rand($this->tips)];
+        }
+
+        $json = \json_encode([
+            'builds' => $this->builds,
+            'tip' => $this->tip,
+        ]);
 
         $text = $this->statePrefix . \base64_encode($json) . "\n\n";
 
@@ -137,7 +147,7 @@ class Comment
                 foreach ($project['site'] as $siteId => $site) {
                     $imageStatus = in_array($site['status'], ['processing', 'building']) ? 'building' : $site['status'];
 
-                    $extension = $site['status'] === 'building' ? 'gif' : 'png';
+                    $extension = $imageStatus === 'building' ? 'gif' : 'png';
 
                     $pathLight = '/images/vcs/status-' . $imageStatus . '-light.' . $extension;
                     $pathDark = '/images/vcs/status-' . $imageStatus . '-dark.' . $extension;
@@ -148,10 +158,12 @@ class Comment
                         'building' => $this->generatImage($pathLight, $pathDark, 'Building', 85) . ' _Building_',
                         'ready' => $this->generatImage($pathLight, $pathDark, 'Ready', 85) . ' _Ready_',
                         'failed' => $this->generatImage($pathLight, $pathDark, 'Failed', 85) . ' _Failed_',
+                        default => '',
                     };
 
                     if ($site['action']['type'] === 'logs') {
-                        $action = '[View Logs](' . $protocol . '://' . $hostname . '/console/project-' . $site['region'] . '-' . $projectId . '/sites/site-' . $siteId . '/deployments/deployment-' . $site['deploymentId'] . ')';
+                        $logsUrl = ($this->platform['consoleUrl'] ?? '') . "/projects/{$projectId}/sites/{$siteId}/deployments/{$site['deploymentId']}";
+                        $action = "[View Logs]({$logsUrl})";
                     } else {
                         $action = '[Authorize](' . $site['action']['url'] . ')';
                     }
@@ -159,8 +171,10 @@ class Comment
                     $qrImagePathLight = '/images/vcs/qr-light.svg';
                     $qrImagePathDark = '/images/vcs/qr-dark.svg';
 
-                    $consoleUrl = $protocol . '://' . $hostname . '/v1/avatars/qr?text=' . \urlencode($site['previewUrl']);
-                    $qr = '[' . $this->generatImage($qrImagePathLight, $qrImagePathDark, 'QR Code', 28) . '](' . $consoleUrl . ')';
+                    $qrUrl = $protocol . '://' . $hostname . '/v1/avatars/qr?text=' . \urlencode($site['previewUrl']);
+                    $qr = $this->withImages
+                        ? '[' . $this->generatImage($qrImagePathLight, $qrImagePathDark, 'QR Code', 28) . '](' . $qrUrl . ')'
+                        : '[QR Code](' . $qrUrl . ')';
 
                     $preview = '[Preview URL](' . $site['previewUrl'] . ')';
 
@@ -195,10 +209,12 @@ class Comment
                         'building' => $this->generatImage($pathLight, $pathDark, 'Building', 85) . ' _Building_',
                         'ready' => $this->generatImage($pathLight, $pathDark, 'Ready', 85) . ' _Ready_',
                         'failed' => $this->generatImage($pathLight, $pathDark, 'Failed', 85) . ' _Failed_',
+                        default => '',
                     };
 
                     if ($function['action']['type'] === 'logs') {
-                        $action = '[View Logs](' . $protocol . '://' . $hostname . '/console/project-' . $function['region'] . '-' . $projectId . '/functions/function-' . $functionId . '/deployment-' . $function['deploymentId'] . ')';
+                        $logsUrl = ($this->platform['consoleUrl'] ?? '') . "/projects/{$projectId}/functions/{$functionId}/deployments/{$function['deploymentId']}";
+                        $action = "[View Logs]({$logsUrl})";
                     } else {
                         $action = '[Authorize](' . $function['action']['url'] . ')';
                     }
@@ -224,14 +240,18 @@ class Comment
             $i++;
         }
 
-        $tip = $this->tips[array_rand($this->tips)];
-        $text .= "\n<br>\n\n> [!TIP]\n> $tip\n\n";
+        $text .= "\n<br>\n\n> [!TIP]\n> {$this->tip}\n\n";
 
         return $text;
     }
 
     public function generatImage(string $pathLight, string $pathDark, string $alt, int $width): string
     {
+        // Providers without comment image support get the textual cells only.
+        if (!$this->withImages) {
+            return '';
+        }
+
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
         $hostname = $this->platform['consoleHostname'] ?? '';
 
@@ -245,13 +265,20 @@ class Comment
 
     public function parseComment(string $comment): self
     {
-        $state = \explode("\n", $comment)[0] ?? '';
+        $state = \explode("\n", $comment)[0];
         $state = substr($state, strlen($this->statePrefix));
 
         $json = \base64_decode($state);
 
-        $builds = \json_decode($json, true);
-        $this->builds = \is_array($builds) ? $builds : [];
+        $data = \json_decode($json, true);
+
+        if (\is_array($data) && \array_key_exists('builds', $data)) {
+            $this->builds = \is_array($data['builds']) ? $data['builds'] : [];
+            $this->tip = $data['tip'] ?? null;
+        } else {
+            // Backward compatibility with old state format (builds array only)
+            $this->builds = \is_array($data) ? $data : [];
+        }
 
         return $this;
     }

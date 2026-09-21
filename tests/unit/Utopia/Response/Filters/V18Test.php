@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Utopia\Response\Filters;
 
 use Appwrite\Utopia\Response;
@@ -8,7 +10,7 @@ use Appwrite\Utopia\Response\Filters\V18;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
-class V18Test extends TestCase
+final class V18Test extends TestCase
 {
     protected Filter $filter;
 
@@ -21,19 +23,17 @@ class V18Test extends TestCase
     {
     }
 
-    public static function functionProvider(): array
+    public static function functionProvider(): \Iterator
     {
-        return [
-            'remove scopes' => [
-                [
-                    'scopes' => [
-                        'example_scope',
-                        'example_scope2',
-                    ],
+        yield 'remove scopes' => [
+            [
+                'scopes' => [
+                    'example_scope',
+                    'example_scope2',
                 ],
-                [
-                ]
             ],
+            [
+            ]
         ];
     }
 
@@ -48,55 +48,53 @@ class V18Test extends TestCase
     }
 
 
-    public static function executionProvider(): array
+    public static function executionProvider(): \Iterator
     {
-        return [
-            'remove scheduledAt' => [
-                [
-                    'scheduledAt' => '2024-07-13T09:00:00.000Z',
-                ],
-                [
-                ]
+        yield 'remove scheduledAt' => [
+            [
+                'scheduledAt' => '2024-07-13T09:00:00.000Z',
             ],
-            'update 404 status' => [
-                [
-                    'statusCode' => '404',
-                    'status' => 'completed'
-                ],
-                [
-                    'statusCode' => '404',
-                    'status' => 'failed'
-                ]
+            [
+            ]
+        ];
+        yield 'update 404 status' => [
+            [
+                'statusCode' => '404',
+                'status' => 'completed'
             ],
-            'update 400 status' => [
-                [
-                    'statusCode' => '400',
-                    'status' => 'completed'
-                ],
-                [
-                    'statusCode' => '400',
-                    'status' => 'failed'
-                ]
+            [
+                'statusCode' => '404',
+                'status' => 'failed'
+            ]
+        ];
+        yield 'update 400 status' => [
+            [
+                'statusCode' => '400',
+                'status' => 'completed'
             ],
-            'dont update 200 status' => [
-                [
-                    'statusCode' => '200',
-                    'status' => 'completed'
-                ],
-                [
-                    'statusCode' => '200',
-                    'status' => 'completed'
-                ]
+            [
+                'statusCode' => '400',
+                'status' => 'failed'
+            ]
+        ];
+        yield 'dont update 200 status' => [
+            [
+                'statusCode' => '200',
+                'status' => 'completed'
             ],
-            'dont update 500 status' => [
-                [
-                    'statusCode' => '500',
-                    'status' => 'failed'
-                ],
-                [
-                    'statusCode' => '500',
-                    'status' => 'failed'
-                ]
+            [
+                'statusCode' => '200',
+                'status' => 'completed'
+            ]
+        ];
+        yield 'dont update 500 status' => [
+            [
+                'statusCode' => '500',
+                'status' => 'failed'
+            ],
+            [
+                'statusCode' => '500',
+                'status' => 'failed'
             ]
         ];
     }
@@ -111,22 +109,20 @@ class V18Test extends TestCase
         $this->assertEquals($expected, $result);
     }
 
-    public static function projectProvider(): array
+    public static function projectProvider(): \Iterator
     {
-        return [
-            'remove authMockNumbers and authSessionAlerts' => [
-                [
-                    'authMockNumbers' => [
-                        'example_mock_number',
-                        'example_mock_number2',
-                    ],
-                    'authSessionAlerts' => [
-                        'example_alert',
-                        'example_alert2',
-                    ],
+        yield 'remove authMockNumbers and authSessionAlerts' => [
+            [
+                'authMockNumbers' => [
+                    'example_mock_number',
+                    'example_mock_number2',
                 ],
-                [
-                ]
+                'authSessionAlerts' => [
+                    'example_alert',
+                    'example_alert2',
+                ],
+            ],
+            [
             ]
         ];
     }
@@ -141,15 +137,13 @@ class V18Test extends TestCase
         $this->assertEquals($expected, $result);
     }
 
-    public static function runtimeProvider(): array
+    public static function runtimeProvider(): \Iterator
     {
-        return [
-            'remove key' => [
-                [
-                    'key' => 'example_key',
-                ],
-                [
-                ]
+        yield 'remove key' => [
+            [
+                'key' => 'example_key',
+            ],
+            [
             ]
         ];
     }

@@ -30,6 +30,7 @@ class Get extends Base
             ->desc('Get variable')
             ->groups(['api', 'functions'])
             ->label('scope', 'functions.read')
+            ->label('usage.resource', 'function/{request.functionId}')
             ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
             ->label(
                 'sdk',
@@ -66,15 +67,10 @@ class Get extends Base
 
         $variable = $dbForProject->getDocument('variables', $variableId);
         if (
-            $variable === false ||
             $variable->isEmpty() ||
             $variable->getAttribute('resourceInternalId') !== $function->getSequence() ||
             $variable->getAttribute('resourceType') !== 'function'
         ) {
-            throw new Exception(Exception::VARIABLE_NOT_FOUND);
-        }
-
-        if ($variable === false || $variable->isEmpty()) {
             throw new Exception(Exception::VARIABLE_NOT_FOUND);
         }
 

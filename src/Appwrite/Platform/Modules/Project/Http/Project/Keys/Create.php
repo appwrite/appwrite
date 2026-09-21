@@ -2,8 +2,10 @@
 
 namespace Appwrite\Platform\Modules\Project\Http\Project\Keys;
 
+use Appwrite\Auth\Key;
 use Appwrite\Event\Event as QueueEvent;
 use Appwrite\Extend\Exception;
+use Appwrite\Platform\Action;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
@@ -17,13 +19,17 @@ use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Datetime;
-use Utopia\Platform\Action;
+use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
+/**
+ * TODO: Remove once the Console, CLI and SDKs use the Organization API
+ * (/v1/organization/projects/:projectId/keys) instead of this project-scoped route.
+ */
 class Create extends Base
 {
     use HTTP;
@@ -51,8 +57,10 @@ class Create extends Base
                 name: 'createKey',
                 description: <<<EOT
                 Create a new API key. It's recommended to have multiple API keys with strict scopes for separate functions within your project.
+                
+                You can also create an ephemeral API key if you need a short-lived key instead.
                 EOT,
-                auth: [AuthType::ADMIN, AuthType::KEY],
+                auth: [AuthType::ADMIN],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_CREATED,
@@ -62,30 +70,34 @@ class Create extends Base
             ))
             ->param('keyId', '', fn (Database $dbForPlatform) => new CustomId(false, $dbForPlatform->getAdapter()->getMaxUIDLength()), 'Key ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForPlatform'])
             ->param('name', null, new Text(128), 'Key name. Max length: 128 chars.')
-            ->param('scopes', null, new Nullable(new ArrayList(new WhiteList(array_keys(Config::getParam('projectScopes')), true), APP_LIMIT_ARRAY_PARAMS_SIZE)), 'Key scopes list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed.')
+            ->param('scopes', [], new ArrayList(new WhiteList(array_keys(Config::getParam('projectScopes')), true), APP_LIMIT_ARRAY_SCOPES_SIZE), 'Key scopes list. Maximum of ' . APP_LIMIT_ARRAY_SCOPES_SIZE . ' scopes are allowed.', optional: false, enum: new Enum(name: 'ProjectKeyScopes'))
             ->param('expire', null, new Nullable(new Datetime()), 'Expiration time in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. Use null for unlimited expiration.', true)
             ->inject('response')
             ->inject('queueForEvents')
             ->inject('dbForPlatform')
             ->inject('project')
             ->inject('authorization')
+            ->inject('apiKey')
             ->callback($this->action(...));
     }
 
-    /**
-     * @param array<string>|null $scopes
-     */
     public function action(
         string $keyId,
         string $name,
-        ?array $scopes,
+        array $scopes,
         ?string $expire,
         Response $response,
         QueueEvent $queueForEvents,
         Database $dbForPlatform,
         Document $project,
         Authorization $authorization,
+        ?Key $apiKey,
     ) {
+        // Dynamic supported for backwards compatibility
+        if ($apiKey !== null && \in_array($apiKey->getType(), [API_KEY_STANDARD, API_KEY_EPHEMERAL, 'dynamic'], true)) {
+            throw new Exception(Exception::KEY_CREATION_DENIED);
+        }
+
         $keyId = ($keyId == 'unique()') ? ID::unique() : $keyId;
 
         $key = new Document([
@@ -95,7 +107,7 @@ class Create extends Base
             'resourceId' => $project->getId(),
             'resourceType' => 'projects',
             'name' => $name,
-            'scopes' => $scopes ?? [],
+            'scopes' => $scopes,
             'expire' => $expire,
             'sdks' => [],
             'accessedAt' => null,

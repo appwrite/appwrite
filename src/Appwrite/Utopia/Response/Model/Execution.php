@@ -38,29 +38,35 @@ class Execution extends Model
                 'example' => [Role::any()->toString()],
                 'array' => true,
             ])
-            // TODO: Sites listLogs will not have this, and will need siteId instead
-            ->addRule('functionId', [
+            ->addRule('resourceId', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Function ID.',
+                'description' => 'Function or site ID.',
                 'default' => '',
                 'example' => '5e5ea6g16897e',
             ])
+            ->addRule('resourceType', [
+                'type' => self::TYPE_ENUM,
+                'description' => 'Execution resource type.',
+                'default' => 'functions',
+                'example' => 'functions',
+                'enum' => ['functions', 'sites'],
+            ])
             ->addRule('deploymentId', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Function\'s deployment ID used to create the execution.',
+                'description' => 'Deployment ID used to create the execution.',
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
             ->addRule('trigger', [
                 'type' => self::TYPE_ENUM,
-                'description' => 'The trigger that caused the function to execute. Possible values can be: `http`, `schedule`, or `event`.',
+                'description' => 'The trigger that caused the resource to execute. Possible values can be: `http`, `schedule`, or `event`.',
                 'default' => '',
                 'example' => 'http',
                 'enum' => ['http', 'schedule', 'event'],
             ])
             ->addRule('status', [
                 'type' => self::TYPE_ENUM,
-                'description' => 'The status of the function execution. Possible values can be: `waiting`, `processing`, `completed`, `failed`, or `scheduled`.',
+                'description' => 'The status of the resource execution. Possible values can be: `waiting`, `processing`, `completed`, `failed`, or `scheduled`.',
                 'default' => '',
                 'example' => 'processing',
                 'enum' => ['waiting', 'processing', 'completed', 'failed', 'scheduled'],
@@ -104,23 +110,23 @@ class Execution extends Model
             ])
             ->addRule('logs', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Function logs. Includes the last 4,000 characters. This will return an empty string unless the response is returned using an API key or as part of a webhook payload.',
+                'description' => 'Resource logs. Includes the last 4,000 characters. This will return an empty string unless the response is returned using an API key or as part of a webhook payload.',
                 'default' => '',
                 'example' => '',
                 'sensitive' => true,
             ])
             ->addRule('errors', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Function errors. Includes the last 4,000 characters. This will return an empty string unless the response is returned using an API key or as part of a webhook payload.',
+                'description' => 'Resource errors. Includes the last 4,000 characters. This will return an empty string unless the response is returned using an API key or as part of a webhook payload.',
                 'default' => '',
                 'example' => '',
                 'sensitive' => true,
             ])
             ->addRule('duration', [
                 'type' => self::TYPE_FLOAT,
-                'description' => 'Resource(function/site) execution duration in seconds.',
+                'description' => 'Total time the resource(function/site) took to respond, in seconds.',
                 'default' => 0,
-                'example' => 0.400,
+                'example' => 1.230,
             ])
             ->addRule('scheduledAt', [
                 'type' => self::TYPE_DATETIME,
@@ -130,6 +136,38 @@ class Execution extends Model
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
         ;
+    }
+
+    /**
+     * Normalize HTTP header values to the public string contract.
+     */
+    public function filter(Document $document): Document
+    {
+        foreach (['requestHeaders', 'responseHeaders'] as $attribute) {
+            $headers = $document->getAttribute($attribute, []);
+            if (!\is_array($headers)) {
+                continue;
+            }
+
+            foreach ($headers as $index => $header) {
+                if ($header instanceof Document) {
+                    $value = $header->getAttribute('value');
+                    if (\is_array($value)) {
+                        $header->setAttribute('value', \implode(', ', $value));
+                    }
+                    continue;
+                }
+
+                if (\is_array($header) && \is_array($header['value'] ?? null)) {
+                    $header['value'] = \implode(', ', $header['value']);
+                    $headers[$index] = $header;
+                }
+            }
+
+            $document->setAttribute($attribute, $headers);
+        }
+
+        return $document;
     }
 
     /**
@@ -150,19 +188,5 @@ class Execution extends Model
     public function getType(): string
     {
         return Response::MODEL_EXECUTION;
-    }
-
-
-    /**
-     * Convert DB structure to response model
-     *
-     * @return Document
-     */
-    public function filter(Document $document): Document
-    {
-        $document->removeAttribute('resourceType');
-        $document->setAttribute('functionId', $document->getAttribute('resourceId', ''));
-        $document->removeAttribute('resourceId');
-        return $document;
     }
 }

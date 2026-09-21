@@ -2,8 +2,9 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections;
 
-use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Event;
+use Appwrite\Event\Message\Database as DatabaseMessage;
+use Appwrite\Event\Publisher\Database as DatabasePublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -40,6 +41,7 @@ class Delete extends Action
             ->label('event', 'databases.[databaseId].collections.[collectionId].delete')
             ->label('audits.event', 'collection.delete')
             ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+            ->label('usage.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
             ->label('sdk', new Method(
                 namespace: 'databases',
                 group: $this->getSDKGroup(),
@@ -63,16 +65,16 @@ class Delete extends Action
             ->inject('response')
             ->inject('dbForProject')
             ->inject('getDatabasesDB')
-            ->inject('queueForDatabase')
+            ->inject('publisherForDatabase')
             ->inject('queueForEvents')
             ->inject('authorization')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, EventDatabase $queueForDatabase, Event $queueForEvents, Authorization $authorization): void
+    public function action(string $databaseId, string $collectionId, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, DatabasePublisher $publisherForDatabase, Event $queueForEvents, Authorization $authorization): void
     {
         $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
-        if ($database->isEmpty()) {
+        if ($database->isEmpty() || $this->isDatabaseTypeMismatch($database)) {
             throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
         }
 
@@ -89,21 +91,21 @@ class Delete extends Action
         $dbForDatabases = $getDatabasesDB($database);
         $dbForDatabases->purgeCachedCollection('database_' . $database->getSequence() . '_collection_' . $collection->getSequence());
 
-        $queueForDatabase
-            ->setType(DATABASE_TYPE_DELETE_COLLECTION)
-            ->setDatabase($database);
-
-        if ($this->isCollectionsAPI()) {
-            $queueForDatabase->setCollection($collection);
-        } else {
-            $queueForDatabase->setTable($collection);
-        }
-
         $queueForEvents
             ->setParam('databaseId', $databaseId)
             ->setContext('database', $database)
             ->setParam($this->getEventsParamKey(), $collection->getId())
             ->setPayload($response->output($collection, $this->getResponseModel()));
+
+        $publisherForDatabase->enqueue(new DatabaseMessage(
+            project: $queueForEvents->getProject(),
+            user: $queueForEvents->getUser(),
+            type: DATABASE_TYPE_DELETE_COLLECTION,
+            database: $database,
+            collection: $this->isCollectionsAPI() ? $collection : null,
+            table: $this->isCollectionsAPI() ? null : $collection,
+            events: Event::generateEvents($queueForEvents->getEvent(), $queueForEvents->getParams()),
+        ));
 
         $response->noContent();
     }

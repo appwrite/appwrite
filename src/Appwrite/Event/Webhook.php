@@ -2,7 +2,7 @@
 
 namespace Appwrite\Event;
 
-use Utopia\Queue\Publisher;
+use Utopia\Queue\Publisher\Synchronous as Publisher;
 use Utopia\System\System;
 
 class Webhook extends Event
@@ -24,7 +24,7 @@ class Webhook extends Event
     public function trimPayload(): array
     {
         $trimmed = parent::trimPayload();
-        if (isset($this->context)) {
+        if (!empty($this->context)) {
             $trimmed['context'] = [];
         }
         return $trimmed;

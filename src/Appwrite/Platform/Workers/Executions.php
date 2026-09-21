@@ -2,11 +2,14 @@
 
 namespace Appwrite\Platform\Workers;
 
+use Appwrite\Event\Message\Execution;
+use Appwrite\Event\Message\ExecutionCancelled as ExecutionCancelledMessage;
+use Appwrite\Event\Message\Executions as ExecutionsMessage;
+use Appwrite\Execution\Store;
 use Exception;
-use Utopia\Database\Database;
-use Utopia\Database\Document;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
+use Utopia\Span\Span;
 
 class Executions extends Action
 {
@@ -24,29 +27,68 @@ class Executions extends Action
             ->desc('Executions worker')
             ->groups(['executions'])
             ->inject('message')
-            ->inject('dbForProject')
+            ->inject('executionStore')
             ->callback($this->action(...));
     }
 
     public function action(
         Message $message,
-        Database $dbForProject,
+        Store $executionStore,
     ): void {
-        $payload = $message->getPayload() ?? [];
+        $payload = $message->getPayload();
 
-        if (empty($payload)) {
-            throw new Exception('Missing payload');
+        if (($payload['operation'] ?? '') === 'delete') {
+            $executionMessage = ExecutionCancelledMessage::fromArray($payload);
+            $execution = $executionMessage->execution;
+
+            if ($execution->isEmpty()) {
+                throw new Exception('Missing execution');
+            }
+
+            Span::add('project.id', $executionMessage->project->getId());
+            Span::add('execution.id', $execution->getId());
+            Span::add('execution.cancelled', true);
+
+            $executionStore->delete($executionMessage->project->getId(), $execution);
+
+            return;
         }
 
-        $execution = new Document($payload['execution'] ?? []);
+        $isBatch = isset($payload['executions']) && \is_array($payload['executions']);
 
-        if ($execution->isEmpty()) {
-            throw new Exception('Missing execution');
+        if ($isBatch) {
+            $executionMessage = ExecutionsMessage::fromArray($payload);
+            $executions = \array_values(\array_filter(
+                $executionMessage->executions,
+                fn ($execution) => !$execution->isEmpty()
+            ));
+        } else {
+            $executionMessage = Execution::fromArray($payload);
+            $executions = \array_values(\array_filter(
+                [$executionMessage->execution],
+                fn ($execution) => !$execution->isEmpty()
+            ));
         }
 
-        $project = new Document($payload['project'] ?? []);
-        if ($project->getId() != '6862e6a6000cce69f9da') {
-            $dbForProject->upsertDocument('executions', $execution);
+        if (empty($executions)) {
+            throw new Exception($isBatch ? 'Missing executions' : 'Missing execution');
         }
+
+        Span::add('project.id', $executionMessage->project->getId());
+
+        if ($isBatch) {
+            Span::add('executions.count', \count($executions));
+            $executionStore->upsertMany($executionMessage->project->getId(), $executions);
+
+            return;
+        }
+
+        $execution = $executions[0];
+        Span::add('function.id', $execution->getAttribute('resourceId', ''));
+        Span::add('execution.id', $execution->getId());
+        Span::add('deployment.id', $execution->getAttribute('deploymentId', ''));
+        Span::add('resource.type', $execution->getAttribute('resourceType', ''));
+
+        $executionStore->upsert($executionMessage->project->getId(), $execution);
     }
 }

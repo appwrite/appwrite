@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\GraphQL;
 
 use Tests\E2E\Client;
@@ -10,7 +12,7 @@ use Utopia\Database\Helpers\ID;
 use Utopia\DSN\DSN;
 use Utopia\System\System;
 
-class MessagingTest extends Scope
+final class MessagingTest extends Scope
 {
     use ProjectCustom;
     use SideServer;
@@ -96,7 +98,9 @@ class MessagingTest extends Scope
                     'type' => 'service_account',
                     "project_id" => "test-project",
                     "private_key_id" => "test-private-key-id",
-                    "private_key" => "test-private-key",
+                    "client_email" => "test@appwrite.iam.gserviceaccount.com",
+                    "token_uri" => "https://oauth2.googleapis.com/token",
+                    "private_key" => "-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----",
                 ]
             ],
             'Apns' => [
@@ -196,7 +200,9 @@ class MessagingTest extends Scope
                     'type' => 'service_account',
                     'project_id' => 'test-project',
                     'private_key_id' => 'test-project-id',
-                    'private_key' => "test-private-key",
+                    'client_email' => 'test@appwrite.iam.gserviceaccount.com',
+                    'token_uri' => 'https://oauth2.googleapis.com/token',
+                    'private_key' => "-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----",
                 ]
             ],
             'Apns' => [
@@ -548,7 +554,7 @@ class MessagingTest extends Scope
 
         $this->assertEquals(200, $message['headers']['status-code']);
         $this->assertEquals(1, $message['body']['data']['messagingGetMessage']['deliveredTotal']);
-        $this->assertEquals(0, \count($message['body']['data']['messagingGetMessage']['deliveryErrors']));
+        $this->assertCount(0, $message['body']['data']['messagingGetMessage']['deliveryErrors']);
 
         self::$cachedEmail[$key] = $message['body']['data']['messagingGetMessage'];
         return self::$cachedEmail[$key];
@@ -707,7 +713,7 @@ class MessagingTest extends Scope
 
         $this->assertEquals(200, $message['headers']['status-code']);
         $this->assertEquals(1, $message['body']['data']['messagingGetMessage']['deliveredTotal']);
-        $this->assertEquals(0, \count($message['body']['data']['messagingGetMessage']['deliveryErrors']));
+        $this->assertCount(0, $message['body']['data']['messagingGetMessage']['deliveryErrors']);
 
         self::$cachedSms[$key] = $message['body']['data']['messagingGetMessage'];
         return self::$cachedSms[$key];
@@ -742,7 +748,9 @@ class MessagingTest extends Scope
                     'type' => 'service_account',
                     "project_id" => "test-project",
                     "private_key_id" => "test-private-key-id",
-                    "private_key" => "test-private-key",
+                    "client_email" => "test@appwrite.iam.gserviceaccount.com",
+                    "token_uri" => "https://oauth2.googleapis.com/token",
+                    "private_key" => "-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----",
                 ]
             ],
         ];
@@ -868,7 +876,7 @@ class MessagingTest extends Scope
 
         $this->assertEquals(200, $message['headers']['status-code']);
         $this->assertEquals(1, $message['body']['data']['messagingGetMessage']['deliveredTotal']);
-        $this->assertEquals(0, \count($message['body']['data']['messagingGetMessage']['deliveryErrors']));
+        $this->assertCount(0, $message['body']['data']['messagingGetMessage']['deliveryErrors']);
 
         self::$cachedPush[$key] = $message['body']['data']['messagingGetMessage'];
         return self::$cachedPush[$key];
@@ -900,7 +908,7 @@ class MessagingTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], $graphQLPayload);
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(\count($providers), \count($response['body']['data']['messagingListProviders']['providers']));
+        $this->assertCount(\count($providers), $response['body']['data']['messagingListProviders']['providers']);
     }
 
     public function testGetProvider()
@@ -976,7 +984,7 @@ class MessagingTest extends Scope
         ]), $graphQLPayload);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(1, \count($response['body']['data']['messagingListTopics']['topics']));
+        $this->assertCount(1, $response['body']['data']['messagingListTopics']['topics']);
     }
 
     public function testGetTopic()
@@ -1027,7 +1035,7 @@ class MessagingTest extends Scope
         $this->assertEquals($subscriber['topicId'], $response['body']['data']['messagingListSubscribers']['subscribers'][0]['topicId']);
         $this->assertEquals($subscriber['targetId'], $response['body']['data']['messagingListSubscribers']['subscribers'][0]['targetId']);
         $this->assertEquals($subscriber['target']['userId'], $response['body']['data']['messagingListSubscribers']['subscribers'][0]['target']['userId']);
-        $this->assertEquals(1, \count($response['body']['data']['messagingListSubscribers']['subscribers']));
+        $this->assertCount(1, $response['body']['data']['messagingListSubscribers']['subscribers']);
     }
 
     public function testGetSubscriber()
@@ -1179,7 +1187,7 @@ class MessagingTest extends Scope
 
         $this->assertEquals(200, $message['headers']['status-code']);
         $this->assertEquals(1, $message['body']['data']['messagingGetMessage']['deliveredTotal']);
-        $this->assertEquals(0, \count($message['body']['data']['messagingGetMessage']['deliveryErrors']));
+        $this->assertCount(0, $message['body']['data']['messagingGetMessage']['deliveryErrors']);
     }
 
     public function testSendSMS(): void
@@ -1251,7 +1259,7 @@ class MessagingTest extends Scope
 
         $this->assertEquals(200, $message['headers']['status-code']);
         $this->assertEquals(1, $message['body']['data']['messagingGetMessage']['deliveredTotal']);
-        $this->assertEquals(0, \count($message['body']['data']['messagingGetMessage']['deliveryErrors']));
+        $this->assertCount(0, $message['body']['data']['messagingGetMessage']['deliveryErrors']);
     }
 
     public function testSendPushNotification(): void
@@ -1324,6 +1332,6 @@ class MessagingTest extends Scope
 
         $this->assertEquals(200, $message['headers']['status-code']);
         $this->assertEquals(1, $message['body']['data']['messagingGetMessage']['deliveredTotal']);
-        $this->assertEquals(0, \count($message['body']['data']['messagingGetMessage']['deliveryErrors']));
+        $this->assertCount(0, $message['body']['data']['messagingGetMessage']['deliveryErrors']);
     }
 }

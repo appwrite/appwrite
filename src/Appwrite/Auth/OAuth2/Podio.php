@@ -121,7 +121,7 @@ class Podio extends OAuth2
     {
         $user = $this->getUser($accessToken);
 
-        return \strval($user['user_id']) ?? '';
+        return \strval($user['user_id']);
     }
 
     /**

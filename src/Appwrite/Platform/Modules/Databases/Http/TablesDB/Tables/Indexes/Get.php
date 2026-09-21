@@ -32,7 +32,8 @@ class Get extends IndexGet
             ->setHttpPath('/v1/tablesdb/:databaseId/tables/:tableId/indexes/:key')
             ->desc('Get index')
             ->groups(['api', 'database'])
-            ->label('scope', ['tables.read', 'collections.read'])
+            ->label('scope', ['tables.read', 'collections.read', 'indexes.read'])
+            ->label('usage.resource', 'database/{request.databaseId}/table/{request.tableId}')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
                 namespace: $this->getSDKNamespace(),

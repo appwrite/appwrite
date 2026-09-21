@@ -1,0 +1,96 @@
+<?php
+
+namespace Appwrite\Platform\Modules\Webhooks\Http\Webhooks\Secret;
+
+use Appwrite\Event\Event as QueueEvent;
+use Appwrite\Extend\Exception;
+use Appwrite\SDK\AuthType;
+use Appwrite\SDK\Method;
+use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Response;
+use Utopia\Database\Database;
+use Utopia\Database\Document;
+use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\UID;
+use Utopia\Platform\Action;
+use Utopia\Platform\Scope\HTTP;
+use Utopia\Validator\Nullable;
+use Utopia\Validator\Text;
+
+class Update extends Action
+{
+    use HTTP;
+
+    public static function getName()
+    {
+        return 'updateWebhookSecret';
+    }
+
+    public function __construct()
+    {
+        $this->setHttpMethod(Action::HTTP_REQUEST_METHOD_PATCH)
+            ->setHttpPath('/v1/webhooks/:webhookId/secret')
+            ->httpAlias('/v1/projects/:projectId/webhooks/:webhookId/signature')
+            ->desc('Update webhook secret key')
+            ->groups(['api', 'webhooks'])
+            ->label('scope', 'webhooks.write')
+            ->label('event', 'webhooks.[webhookId].update')
+            ->label('audits.event', 'webhooks.update')
+            ->label('audits.resource', 'webhook/{response.$id}')
+            ->label('sdk', new Method(
+                namespace: 'webhooks',
+                group: null,
+                name: 'updateSecret',
+                description: <<<EOT
+                Update the webhook signing key. This endpoint can be used to regenerate the signing key used to sign and validate payload deliveries for a specific webhook.
+                EOT,
+                auth: [AuthType::ADMIN, AuthType::KEY],
+                responses: [
+                    new SDKResponse(
+                        code: Response::STATUS_CODE_OK,
+                        model: Response::MODEL_WEBHOOK,
+                    )
+                ]
+            ))
+            ->param('webhookId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getAdapter()->getMaxUIDLength()), 'Webhook ID.', false, ['dbForPlatform'])
+            ->param('secret', null, new Nullable(new Text(256, 8)), 'Webhook secret key. If not provided, a new key will be generated automatically. Key must be at least 8 characters long, and at max 256 characters.', optional: true)
+            ->inject('response')
+            ->inject('project')
+            ->inject('queueForEvents')
+            ->inject('dbForPlatform')
+            ->inject('authorization')
+            ->callback($this->action(...));
+    }
+
+    public function action(
+        string $webhookId,
+        ?string $secret,
+        Response $response,
+        Document $project,
+        QueueEvent $queueForEvents,
+        Database $dbForPlatform,
+        Authorization $authorization
+    ) {
+        $webhook = $authorization->skip(fn () => $dbForPlatform->findOne('webhooks', [
+            Query::equal('$id', [$webhookId]),
+            Query::equal('projectInternalId', [$project->getSequence()]),
+        ]));
+
+        if ($webhook->isEmpty()) {
+            throw new Exception(Exception::WEBHOOK_NOT_FOUND);
+        }
+
+        $updates = new Document([
+            'signatureKey' => $secret ?? \bin2hex(\random_bytes(64)),
+        ]);
+
+        $webhook = $authorization->skip(fn () => $dbForPlatform->updateDocument('webhooks', $webhook->getId(), $updates));
+
+        $authorization->skip(fn () => $dbForPlatform->purgeCachedDocument('projects', $project->getId()));
+
+        $queueForEvents->setParam('webhookId', $webhook->getId());
+
+        $response->dynamic($webhook, Response::MODEL_WEBHOOK);
+    }
+}

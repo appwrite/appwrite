@@ -7,6 +7,10 @@ use Appwrite\Utopia\Response\Model;
 
 class AlgoScryptModified extends Model
 {
+    public array $conditions = [
+        'type' => 'scryptMod',
+    ];
+
     public function __construct()
     {
         $this

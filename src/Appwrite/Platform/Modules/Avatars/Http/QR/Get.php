@@ -42,6 +42,7 @@ class Get extends Action
                 description: '/docs/references/avatars/get-qr.md',
                 auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 type: MethodType::LOCATION,
+                locationAuth: ['Project', 'ImpersonateUserId'],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
@@ -60,7 +61,6 @@ class Get extends Action
 
     public function action(string $text, int $size, int $margin, bool $download, Response $response)
     {
-        $download = ($download === '1' || $download === 'true' || $download === 1 || $download === true);
         $options = new QROptions([
             'addQuietzone' => true,
             'quietzoneSize' => $margin,

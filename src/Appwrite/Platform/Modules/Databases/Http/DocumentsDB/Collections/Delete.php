@@ -30,11 +30,12 @@ class Delete extends CollectionDelete
             ->setHttpPath('/v1/documentsdb/:databaseId/collections/:collectionId')
             ->desc('Delete collection')
             ->groups(['api', 'database', 'schema'])
-            ->label('scope', 'collections.write')
+            ->label('scope', 'documentsdb.collections.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('event', 'databases.[databaseId].collections.[collectionId].delete')
             ->label('audits.event', 'collection.delete')
             ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+            ->label('usage.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
             ->label('sdk', new Method(
                 namespace: 'documentsDB',
                 group: 'collections',
@@ -54,7 +55,7 @@ class Delete extends CollectionDelete
             ->inject('response')
             ->inject('dbForProject')
             ->inject('getDatabasesDB')
-            ->inject('queueForDatabase')
+            ->inject('publisherForDatabase')
             ->inject('queueForEvents')
             ->inject('authorization')
             ->callback($this->action(...));

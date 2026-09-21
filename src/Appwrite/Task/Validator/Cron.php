@@ -3,6 +3,7 @@
 namespace Appwrite\Task\Validator;
 
 use Cron\CronExpression;
+use Utopia\Schedule\Trigger\Cron as Trigger;
 use Utopia\Validator;
 
 class Cron extends Validator
@@ -38,7 +39,13 @@ class Cron extends Validator
             return false;
         }
 
-        return true;
+        try {
+            // Validate with the scheduler's parser so every accepted expression can run.
+            new Trigger($value);
+            return true;
+        } catch (\InvalidArgumentException) {
+            return false;
+        }
     }
 
     /**

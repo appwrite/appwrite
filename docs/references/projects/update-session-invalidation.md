@@ -1,1 +1,0 @@
-Invalidate all existing sessions. An optional auth security setting for projects, and enabled by default for console project.

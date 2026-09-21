@@ -3,12 +3,16 @@
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Transactions;
 
 use Appwrite\Databases\TransactionState;
-use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
+use Appwrite\Event\Message\Delete as DeleteMessage;
+use Appwrite\Event\Message\Func as FunctionMessage;
+use Appwrite\Event\Publisher\Delete as DeletePublisher;
+use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Functions\EventProcessor;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
+use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Usage\Context;
@@ -16,11 +20,13 @@ use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\Conflict as ConflictException;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Exception\Limit as LimitException;
 use Utopia\Database\Exception\NotFound as NotFoundException;
 use Utopia\Database\Exception\Query as QueryException;
+use Utopia\Database\Exception\Relationship as RelationshipException;
 use Utopia\Database\Exception\Structure as StructureException;
 use Utopia\Database\Exception\Transaction as TransactionException;
 use Utopia\Database\Query;
@@ -62,7 +68,11 @@ class Update extends Action
                         model: UtopiaResponse::MODEL_TRANSACTION,
                     )
                 ],
-                contentType: ContentType::JSON
+                contentType: ContentType::JSON,
+                deprecated: new Deprecated(
+                    since: '1.8.0',
+                    replaceWith: 'tablesDB.updateTransaction',
+                )
             ))
             ->param('transactionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Transaction ID.', false, ['dbForProject'])
             ->param('commit', false, new Boolean(), 'Commit transaction?', true)
@@ -73,11 +83,11 @@ class Update extends Action
             ->inject('getDatabasesDB')
             ->inject('user')
             ->inject('transactionState')
-            ->inject('queueForDeletes')
+            ->inject('publisherForDeletes')
             ->inject('queueForEvents')
             ->inject('usage')
             ->inject('queueForRealtime')
-            ->inject('queueForFunctions')
+            ->inject('publisherForFunctions')
             ->inject('queueForWebhooks')
             ->inject('authorization')
             ->inject('eventProcessor')
@@ -93,11 +103,11 @@ class Update extends Action
      * @param callable $getDatabasesDB
      * @param User $user
      * @param TransactionState $transactionState
-     * @param Delete $queueForDeletes
+     * @param DeletePublisher $publisherForDeletes
      * @param Event $queueForEvents
      * @param Context $usage
      * @param Event $queueForRealtime
-     * @param Event $queueForFunctions
+     * @param FunctionPublisher $publisherForFunctions
      * @param Event $queueForWebhooks
      * @param EventProcessor $eventProcessor
      * @return void
@@ -108,7 +118,7 @@ class Update extends Action
      * @throws StructureException
      * @throws \Utopia\Http\Exception
      */
-    public function action(string $transactionId, bool $commit, bool $rollback, Document $project, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, User $user, TransactionState $transactionState, Delete $queueForDeletes, Event $queueForEvents, Context $usage, Event $queueForRealtime, Event $queueForFunctions, Event $queueForWebhooks, Authorization $authorization, EventProcessor $eventProcessor): void
+    public function action(string $transactionId, bool $commit, bool $rollback, Document $project, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, User $user, TransactionState $transactionState, DeletePublisher $publisherForDeletes, Event $queueForEvents, Context $usage, Event $queueForRealtime, FunctionPublisher $publisherForFunctions, Event $queueForWebhooks, Authorization $authorization, EventProcessor $eventProcessor): void
     {
         if (!$commit && !$rollback) {
             throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Either commit or rollback must be true');
@@ -117,7 +127,7 @@ class Update extends Action
             throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Cannot commit and rollback at the same time');
         }
 
-        $isAPIKey = $user->isApp($authorization->getRoles());
+        $isAPIKey = $user->isKey($authorization->getRoles());
         $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
 
         $transaction = ($isAPIKey || $isPrivilegedUser)
@@ -154,9 +164,11 @@ class Update extends Action
                     new Document(['status' => 'committed'])
                 ));
 
-                $queueForDeletes
-                    ->setType(DELETE_TYPE_DOCUMENT)
-                    ->setDocument($transaction);
+                $publisherForDeletes->enqueue(new DeleteMessage(
+                    project: $project,
+                    type: DELETE_TYPE_DOCUMENT,
+                    document: $transaction,
+                ));
 
                 $response
                     ->setStatusCode(SwooleResponse::STATUS_CODE_OK)
@@ -293,9 +305,11 @@ class Update extends Action
                     new Document(['status' => 'committed'])
                 ));
 
-                $queueForDeletes
-                    ->setType(DELETE_TYPE_DOCUMENT)
-                    ->setDocument($transaction);
+                $publisherForDeletes->enqueue(new DeleteMessage(
+                    project: $project,
+                    type: DELETE_TYPE_DOCUMENT,
+                    document: $transaction,
+                ));
             } catch (NotFoundException $e) {
                 $authorization->skip(fn () => $dbForProject->updateDocument('transactions', $transactionId, new Document([
                     'status' => 'failed',
@@ -307,6 +321,11 @@ class Update extends Action
                     'status' => 'failed',
                 ])));
                 throw new Exception(Exception::TRANSACTION_CONFLICT, previous: $e);
+            } catch (RelationshipException $e) {
+                $authorization->skip(fn () => $dbForProject->updateDocument('transactions', $transactionId, new Document([
+                    'status' => 'failed',
+                ])));
+                throw new Exception(Exception::RELATIONSHIP_VALUE_INVALID, $e->getMessage());
             } catch (StructureException $e) {
                 $authorization->skip(fn () => $dbForProject->updateDocument('transactions', $transactionId, new Document([
                     'status' => 'failed',
@@ -327,15 +346,31 @@ class Update extends Action
                     'status' => 'failed',
                 ])));
                 throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+            } catch (AuthorizationException $e) {
+                $authorization->skip(fn () => $dbForProject->updateDocument('transactions', $transactionId, new Document([
+                    'status' => 'failed',
+                ])));
+                throw new Exception(Exception::USER_UNAUTHORIZED, previous: $e);
+            } catch (\Throwable $e) {
+                $authorization->skip(fn () => $dbForProject->updateDocument('transactions', $transactionId, new Document([
+                    'status' => 'failed',
+                ])));
+                throw $e;
             }
 
-            $usage->addMetric($this->getDatabasesOperationWriteMetric(), $totalOperations);
+            foreach ($databaseOperations as $databaseInternalId => $count) {
+                $database = $authorization->skip(fn () => $dbForProject->skipFilters(
+                    fn () => $dbForProject->findOne('databases', [
+                        Query::equal('$sequence', [$databaseInternalId])
+                    ]),
+                    APP_DATABASES_SUBQUERIES
+                ));
 
-            foreach ($databaseOperations as $sequence => $count) {
-                $usage->addMetric(
-                    str_replace('{databaseInternalId}', $sequence, $this->getDatabasesIdOperationWriteMetric()),
-                    $count
-                );
+                $usage
+                    ->setResource('database')
+                    ->setResourceId($database->getId())
+                    ->setResourceInternalId((string) $databaseInternalId)
+                    ->addMetric($this->getDatabasesOperationWriteMetric(), $count);
             }
 
             $dbCache = [];
@@ -353,21 +388,30 @@ class Update extends Action
 
                 // using a dbCache so only one time database is set with databaseInternalId
                 if (!isset($dbCache[$databaseInternalId])) {
-                    $databaseDoc = $authorization->skip(fn () => $dbForProject->findOne('databases', [
-                        Query::equal('$sequence', [$databaseInternalId])
-                    ]));
+                    $databaseDoc = $authorization->skip(fn () => $dbForProject->skipFilters(
+                        fn () => $dbForProject->findOne('databases', [
+                            Query::equal('$sequence', [$databaseInternalId])
+                        ]),
+                        APP_DATABASES_SUBQUERIES
+                    ));
                     $dbCache[$databaseInternalId] = $getDatabasesDB($databaseDoc);
                 }
 
                 $dbForDatabases = $dbCache[$databaseInternalId];
 
-                $database = $authorization->skip(fn () => $dbForProject->findOne('databases', [
-                    Query::equal('$sequence', [$databaseInternalId])
-                ]));
+                $database = $authorization->skip(fn () => $dbForProject->skipFilters(
+                    fn () => $dbForProject->findOne('databases', [
+                        Query::equal('$sequence', [$databaseInternalId])
+                    ]),
+                    APP_DATABASES_SUBQUERIES
+                ));
 
-                $collection = $authorization->skip(fn () => $dbForProject->findOne('database_' . $databaseInternalId, [
-                    Query::equal('$sequence', [$collectionInternalId])
-                ]));
+                $collection = $authorization->skip(fn () => $dbForProject->skipFilters(
+                    fn () => $dbForProject->findOne('database_' . $databaseInternalId, [
+                        Query::equal('$sequence', [$collectionInternalId])
+                    ]),
+                    APP_COLLECTIONS_SUBQUERIES
+                ));
 
                 $groupId = $this->getGroupId();
                 $resourceId = $this->getResourceId();
@@ -440,9 +484,12 @@ class Update extends Action
                 $webhooksEvents = $eventProcessor->getWebhooksEvents($project);
 
                 foreach ($documentsToTrigger as $doc) {
+                    // Match the key set processDocument() gives every other row and document
+                    // event: the synthetic $databaseId, plus whichever of $tableId or
+                    // $collectionId belongs to the surface that was called.
                     $payload = $doc->getArrayCopy();
-                    $payload['$tableId'] = $collection->getId();
-                    $payload['$collectionId'] = $collection->getId();
+                    $payload['$databaseId'] = $database->getId();
+                    $payload['$' . $groupId] = $collection->getId();
 
                     $queueForEvents
                         ->setParam('documentId', $doc->getId())
@@ -452,7 +499,8 @@ class Update extends Action
                     // Generate events for this document operation
                     $generatedEvents = Event::generateEvents(
                         $queueForEvents->getEvent(),
-                        $queueForEvents->getParams()
+                        $queueForEvents->getParams(),
+                        $queueForEvents->getContext('database')
                     );
 
                     $queueForRealtime->from($queueForEvents)->trigger();
@@ -461,7 +509,16 @@ class Update extends Action
                     if (!empty($functionsEvents)) {
                         foreach ($generatedEvents as $event) {
                             if (isset($functionsEvents[$event])) {
-                                $queueForFunctions->from($queueForEvents)->trigger();
+                                $publisherForFunctions->enqueue(FunctionMessage::fromEvent(
+                                    event: $queueForEvents->getEvent(),
+                                    params: $queueForEvents->getParams(),
+                                    project: $queueForEvents->getProject(),
+                                    user: $queueForEvents->getUser(),
+                                    userId: $queueForEvents->getUserId(),
+                                    payload: $queueForEvents->getPayload(),
+                                    platform: $queueForEvents->getPlatform(),
+                                    database: $queueForEvents->getContext('database'),
+                                ));
                                 break;
                             }
                         }
@@ -480,7 +537,6 @@ class Update extends Action
 
                 $queueForEvents->reset();
                 $queueForRealtime->reset();
-                $queueForFunctions->reset();
                 $queueForWebhooks->reset();
             }
         }
@@ -492,9 +548,11 @@ class Update extends Action
                 new Document(['status' => 'failed'])
             ));
 
-            $queueForDeletes
-                ->setType(DELETE_TYPE_DOCUMENT)
-                ->setDocument($transaction);
+            $publisherForDeletes->enqueue(new DeleteMessage(
+                project: $project,
+                type: DELETE_TYPE_DOCUMENT,
+                document: $transaction,
+            ));
         }
 
         $response

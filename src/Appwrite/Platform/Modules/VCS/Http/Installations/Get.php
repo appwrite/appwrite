@@ -59,7 +59,7 @@ class Get extends Action
     ) {
         $installation = $dbForPlatform->getDocument('installations', $installationId);
 
-        if ($installation === false || $installation->isEmpty()) {
+        if ($installation->isEmpty()) {
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
         }
 

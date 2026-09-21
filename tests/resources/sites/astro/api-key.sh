@@ -1,0 +1,9 @@
+ENDPOINT="$APPWRITE_SITE_API_ENDPOINT/users"
+PROJECT_ID="$APPWRITE_SITE_PROJECT_ID"
+API_KEY="$APPWRITE_SITE_API_KEY"
+
+apk add curl
+
+echo "KEY_FOR_TESTS=$API_KEY"
+
+curl -v -X GET $ENDPOINT -H "x-appwrite-project: $PROJECT_ID" -H "x-appwrite-key: $API_KEY"

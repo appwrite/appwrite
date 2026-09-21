@@ -34,11 +34,12 @@ class Create extends IntegerCreate
             ->setHttpPath('/v1/tablesdb/:databaseId/tables/:tableId/columns/integer')
             ->desc('Create integer column')
             ->groups(['api', 'database', 'schema'])
-            ->label('scope', ['tables.write', 'collections.write'])
+            ->label('scope', ['tables.write', 'collections.write', 'columns.write', 'attributes.write'])
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('event', 'databases.[databaseId].tables.[tableId].columns.[columnId].create')
             ->label('audits.event', 'column.create')
             ->label('audits.resource', 'database/{request.databaseId}/table/{request.tableId}')
+            ->label('usage.resource', 'database/{request.databaseId}/table/{request.tableId}')
             ->label('sdk', new Method(
                 namespace: $this->getSDKNamespace(),
                 group: $this->getSDKGroup(),
@@ -56,13 +57,13 @@ class Create extends IntegerCreate
             ->param('tableId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Table ID.', false, ['dbForProject'])
             ->param('key', '', fn (Database $dbForProject) => new Key(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Column Key.', false, ['dbForProject'])
             ->param('required', null, new Boolean(), 'Is column required?')
-            ->param('min', null, new Nullable(new Integer(false, 64)), 'Minimum value', true)
-            ->param('max', null, new Nullable(new Integer(false, 64)), 'Maximum value', true)
-            ->param('default', null, new Nullable(new Integer(false, 64)), 'Default value. Cannot be set when column is required.', true)
+            ->param('min', null, new Nullable(new Integer(false, 64)), 'Minimum value', true, example: '0')
+            ->param('max', null, new Nullable(new Integer(false, 64)), 'Maximum value', true, example: '100')
+            ->param('default', null, new Nullable(new Integer(false, 64)), 'Default value. Cannot be set when column is required.', true, example: '10')
             ->param('array', false, new Boolean(), 'Is column an array?', true)
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('queueForDatabase')
+            ->inject('publisherForDatabase')
             ->inject('queueForEvents')
             ->inject('authorization')
             ->callback($this->action(...));

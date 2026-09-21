@@ -1,8 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\Health;
 
-class AntiVirusTest extends HealthBase
+final class AntiVirusTest extends HealthBase
 {
     public function testAntiVirus(): void
     {

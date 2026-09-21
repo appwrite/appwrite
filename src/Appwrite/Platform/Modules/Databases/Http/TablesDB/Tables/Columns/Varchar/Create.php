@@ -35,11 +35,12 @@ class Create extends VarcharCreate
             ->setHttpPath('/v1/tablesdb/:databaseId/tables/:tableId/columns/varchar')
             ->desc('Create varchar column')
             ->groups(['api', 'database', 'schema'])
-            ->label('scope', ['tables.write', 'collections.write'])
+            ->label('scope', ['tables.write', 'collections.write', 'columns.write', 'attributes.write'])
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('event', 'databases.[databaseId].tables.[tableId].columns.[columnId].create')
             ->label('audits.event', 'column.create')
             ->label('audits.resource', 'database/{request.databaseId}/table/{request.tableId}')
+            ->label('usage.resource', 'database/{request.databaseId}/table/{request.tableId}')
             ->label('sdk', new Method(
                 namespace: $this->getSDKNamespace(),
                 group: $this->getSDKGroup(),
@@ -58,12 +59,12 @@ class Create extends VarcharCreate
             ->param('key', '', new Key(), 'Column Key.')
             ->param('size', null, new Range(1, 16381, Validator::TYPE_INTEGER), 'Column size for varchar columns, in number of characters. Maximum size is 16381.')
             ->param('required', null, new Boolean(), 'Is column required?')
-            ->param('default', null, new Nullable(new Text(0, 0)), 'Default value for column when not provided. Cannot be set when column is required.', true)
+            ->param('default', null, new Nullable(new Text(0, 0)), 'Default value for column when not provided. Cannot be set when column is required.', true, example: 'Hello World')
             ->param('array', false, new Boolean(), 'Is column an array?', true)
             ->param('encrypt', false, new Boolean(), 'Toggle encryption for the column. Encryption enhances security by not storing any plain text values in the database. However, encrypted columns cannot be queried.', true)
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('queueForDatabase')
+            ->inject('publisherForDatabase')
             ->inject('queueForEvents')
             ->inject('plan')
             ->inject('authorization')

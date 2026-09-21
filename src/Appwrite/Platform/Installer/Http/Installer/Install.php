@@ -35,14 +35,24 @@ class Install extends Action
             ->param('appDomain', '', new AppDomain(), 'Application domain (hostname, IP, or bracket IPv6 with optional port)')
             ->param('httpPort', 80, new Range(1, 65535), 'HTTP port')
             ->param('httpsPort', 443, new Range(1, 65535), 'HTTPS port')
+            ->param('forceHttps', false, new \Utopia\Validator\Boolean(true), 'Generate HTTPS API URLs and enforce HTTPS', true)
             ->param('emailCertificates', '', new Email(allowEmpty: true), 'Email for SSL certificates', true)
             ->param('opensslKey', '', new Text(64, 0), 'Secret API key', true)
             ->param('assistantOpenAIKey', '', new Text(256, 0), 'OpenAI API key for assistant', true)
+            ->param('accountName', '', new Text(128, 0), 'Account name', true)
             ->param('accountEmail', '', new Email(allowEmpty: true), 'Account email address', true)
             ->param('accountPassword', '', new Password(allowEmpty: true), 'Account password', true)
-            ->param('database', '', new WhiteList(['mongodb', 'mariadb', 'postgresql']), 'Database adapter', true)
+            ->param('database', '', new WhiteList(['postgresql', 'mariadb', 'mongodb']), 'Database adapter', true)
+            ->param('topology', 'combined', new WhiteList(['combined', 'separate']), 'Worker and scheduler topology', true)
             ->param('installId', '', new Text(64, 0), 'Installation ID', true)
-            ->param('retryStep', null, new Nullable(new WhiteList([Server::STEP_DOCKER_COMPOSE, Server::STEP_ENV_VARS, Server::STEP_DOCKER_CONTAINERS], true)), 'Retry from step', true)
+            ->param('retryStep', null, new Nullable(new WhiteList([
+                Server::STEP_CONFIG_FILES,
+                Server::STEP_DOCKER_COMPOSE,
+                Server::STEP_ENV_VARS,
+                Server::STEP_DOCKER_CONTAINERS,
+                Server::STEP_ACCOUNT_SETUP,
+                Server::STEP_MIGRATION,
+            ], true)), 'Retry from step', true)
             ->param('migrate', false, new \Utopia\Validator\Boolean(true), 'Run database migration after upgrade', true)
             ->inject('request')
             ->inject('response')
@@ -57,12 +67,15 @@ class Install extends Action
         string $appDomain,
         int $httpPort,
         int $httpsPort,
+        bool $forceHttps,
         string $emailCertificates,
         string $opensslKey,
         string $assistantOpenAIKey,
+        string $accountName,
         string $accountEmail,
         string $accountPassword,
         string $database,
+        string $topology,
         string $installId,
         ?string $retryStep,
         bool $migrate,
@@ -73,7 +86,7 @@ class Install extends Action
         Config $config,
         array $paths
     ): void {
-        $acceptHeader = $request->getHeader('accept');
+        $acceptHeader = $request->getHeaderLine('accept');
         $wantsStream = stripos($acceptHeader, 'text/event-stream') !== false;
 
         if ($wantsStream) {
@@ -106,23 +119,28 @@ class Install extends Action
         $account = [];
         if (!$config->isUpgrade()) {
             $accountEmail = trim($accountEmail);
-            if ($accountEmail === '' || !$state->isValidEmailAddress($accountEmail)) {
-                $this->sendBadRequest($response, $swooleResponse, $wantsStream, 'Please enter a valid email address', Server::STEP_ACCOUNT_SETUP);
-                return;
+            $accountName = trim($accountName);
+
+            // Both blank means no account is wanted: the installer skips creating one and
+            // it can be made from the console afterwards. Either one filled is an attempt
+            // to create one, so the pair still has to be valid.
+            if ($accountEmail !== '' || $accountPassword !== '') {
+                if ($accountEmail === '' || !$state->isValidEmailAddress($accountEmail)) {
+                    $this->sendBadRequest($response, $swooleResponse, $wantsStream, 'Please enter a valid email address', Server::STEP_ACCOUNT_SETUP);
+                    return;
+                }
+
+                if (!$state->isValidPassword($accountPassword)) {
+                    $this->sendBadRequest($response, $swooleResponse, $wantsStream, 'Password must be at least 8 characters', Server::STEP_ACCOUNT_SETUP);
+                    return;
+                }
+
+                $account = [
+                    'name' => $accountName !== '' ? $accountName : $this->deriveNameFromEmail($accountEmail),
+                    'email' => $accountEmail,
+                    'password' => $accountPassword,
+                ];
             }
-
-            if (!$state->isValidPassword($accountPassword)) {
-                $this->sendBadRequest($response, $swooleResponse, $wantsStream, 'Password must be at least 8 characters', Server::STEP_ACCOUNT_SETUP);
-                return;
-            }
-
-            $accountName = $this->deriveNameFromEmail($accountEmail);
-
-            $account = [
-                'name' => $accountName,
-                'email' => $accountEmail,
-                'password' => $accountPassword,
-            ];
         }
 
         $lockedDatabase = $config->getLockedDatabase();
@@ -205,6 +223,7 @@ class Install extends Action
         try {
             $state->ensureBootstrapped();
             $installer = new \Appwrite\Platform\Tasks\Install();
+            $installer->setTopology($topology);
 
             if ($wantsStream) {
                 $this->writeSseEvent($swooleResponse, 'install-id', ['installId' => $installId]);
@@ -217,8 +236,9 @@ class Install extends Action
                 '_APP_OPENSSL_KEY_V1' => $opensslKey,
                 '_APP_DOMAIN' => $appDomain ?: 'localhost',
                 '_APP_DOMAIN_TARGET' => $appDomain ?: 'localhost',
+                '_APP_OPTIONS_FORCE_HTTPS' => $forceHttps ? 'enabled' : 'disabled',
                 '_APP_EMAIL_CERTIFICATES' => $emailCertificates,
-                '_APP_DB_ADAPTER' => $lockedDatabase ?? ($database ?: 'mongodb'),
+                '_APP_DB_ADAPTER' => $lockedDatabase ?? ($database ?: 'postgresql'),
                 '_APP_ASSISTANT_OPENAI_API_KEY' => $assistantOpenAIKey,
             ];
 
@@ -231,21 +251,33 @@ class Install extends Action
                     'database' => $database,
                     'appDomain' => $appDomain,
                     'emailCertificates' => $emailCertificates,
+                    'forceHttps' => $forceHttps,
                 ];
                 foreach ($inputValues as $field => $inputValue) {
-                    if (isset($stored[$field]) && $inputValue !== '') {
-                        $storedValue = (string) $stored[$field];
-                        if (in_array($field, ['httpPort', 'httpsPort'], true)) {
-                            $storedValue = trim($storedValue);
-                            $inputValue = trim($inputValue);
-                        }
-                        if ($storedValue !== $inputValue) {
-                            if ($installId !== '') {
-                                $state->updateGlobalLock($installId, Server::STATUS_ERROR);
-                            }
+                    if (!isset($stored[$field])) {
+                        continue;
+                    }
+                    if ($field === 'forceHttps') {
+                        if ((bool) $stored[$field] !== $inputValue) {
+                            $state->updateGlobalLock($installId, Server::STATUS_ERROR);
                             $this->sendBadRequest($response, $swooleResponse, $wantsStream, 'Installation payload mismatch');
                             return;
                         }
+                        continue;
+                    }
+                    if ($inputValue === '') {
+                        continue;
+                    }
+                    $inputValue = (string) $inputValue;
+                    $storedValue = (string) $stored[$field];
+                    if (in_array($field, ['httpPort', 'httpsPort'], true)) {
+                        $storedValue = trim($storedValue);
+                        $inputValue = trim($inputValue);
+                    }
+                    if ($storedValue !== $inputValue) {
+                        $state->updateGlobalLock($installId, Server::STATUS_ERROR);
+                        $this->sendBadRequest($response, $swooleResponse, $wantsStream, 'Installation payload mismatch');
+                        return;
                     }
                 }
 
@@ -262,16 +294,12 @@ class Install extends Action
                     $incomingHash = $state->hashSensitiveValue($incomingValue);
                     if (isset($stored[$hashField])) {
                         if (!hash_equals((string) $stored[$hashField], $incomingHash)) {
-                            if ($installId !== '') {
-                                $state->updateGlobalLock($installId, Server::STATUS_ERROR);
-                            }
+                            $state->updateGlobalLock($installId, Server::STATUS_ERROR);
                             $this->sendBadRequest($response, $swooleResponse, $wantsStream, 'Installation payload mismatch');
                             return;
                         }
                     } elseif (isset($stored[$field]) && $incomingValue !== '' && (string) $stored[$field] !== $incomingValue) {
-                        if ($installId !== '') {
-                            $state->updateGlobalLock($installId, Server::STATUS_ERROR);
-                        }
+                        $state->updateGlobalLock($installId, Server::STATUS_ERROR);
                         $this->sendBadRequest($response, $swooleResponse, $wantsStream, 'Installation payload mismatch');
                         return;
                     }
@@ -281,6 +309,8 @@ class Install extends Action
                 $payloadInput['_APP_DOMAIN_TARGET'] = $stored['appDomain'] ?? $payloadInput['_APP_DOMAIN_TARGET'];
                 $payloadInput['_APP_EMAIL_CERTIFICATES'] = $stored['emailCertificates'] ?? $payloadInput['_APP_EMAIL_CERTIFICATES'];
                 $payloadInput['_APP_DB_ADAPTER'] = $lockedDatabase ?? ($stored['database'] ?? $payloadInput['_APP_DB_ADAPTER']);
+                $forceHttps = (bool) ($stored['forceHttps'] ?? $forceHttps);
+                $payloadInput['_APP_OPTIONS_FORCE_HTTPS'] = $forceHttps ? 'enabled' : 'disabled';
                 $httpPort = (int) ($stored['httpPort'] ?? $httpPort ?: $config->getDefaultHttpPort());
                 $httpsPort = (int) ($stored['httpsPort'] ?? $httpsPort ?: $config->getDefaultHttpsPort());
             }
@@ -293,9 +323,10 @@ class Install extends Action
                 'payload' => [
                     'httpPort' => $httpPort ?: $config->getDefaultHttpPort(),
                     'httpsPort' => $httpsPort ?: $config->getDefaultHttpsPort(),
-                    'database' => $lockedDatabase ?? ($database ?: 'mongodb'),
+                    'database' => $lockedDatabase ?? ($database ?: 'postgresql'),
                     'appDomain' => $appDomain ?: 'localhost',
                     'emailCertificates' => $emailCertificates,
+                    'forceHttps' => $forceHttps,
                     'opensslKeyHash' => $state->hashSensitiveValue($opensslKey),
                     'assistantOpenAIKeyHash' => $state->hashSensitiveValue($assistantOpenAIKey),
                 ],
@@ -430,7 +461,7 @@ class Install extends Action
     private function deriveNameFromEmail(string $email): string
     {
         $parts = explode('@', $email);
-        $username = $parts[0] ?? '';
+        $username = $parts[0];
         $cleaned = preg_replace('/[^a-zA-Z0-9]/', '', $username);
         return ucfirst($cleaned);
     }

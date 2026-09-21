@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Utopia\Response\Filters;
 
 use Appwrite\Utopia\Response;
@@ -7,7 +9,7 @@ use Appwrite\Utopia\Response\Filters\V21;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
-class V21Test extends TestCase
+final class V21Test extends TestCase
 {
     protected ?V21 $filter = null;
 
@@ -20,70 +22,68 @@ class V21Test extends TestCase
     {
     }
 
-    public static function functionProvider(): array
+    public static function functionProvider(): \Iterator
     {
-        return [
-            'merge buildSpecification and runtimeSpecification into specification' => [
-                [
-                    'name' => 'test-function',
-                    'buildSpecification' => 's-1vcpu-512mb',
-                    'runtimeSpecification' => 's-1vcpu-256mb',
-                    'runtime' => 'node-18.0',
-                ],
-                [
-                    'name' => 'test-function',
-                    'specification' => 's-1vcpu-512mb',
-                    'runtime' => 'node-18.0',
-                ]
+        yield 'merge buildSpecification and runtimeSpecification into specification' => [
+            [
+                'name' => 'test-function',
+                'buildSpecification' => 's-1vcpu-512mb',
+                'runtimeSpecification' => 's-1vcpu-256mb',
+                'runtime' => 'node-18.0',
             ],
-            'use buildSpecification when present' => [
-                [
-                    'buildSpecification' => 's-2vcpu-1gb',
-                    'runtimeSpecification' => 's-1vcpu-512mb',
-                ],
-                [
-                    'specification' => 's-2vcpu-1gb',
-                ]
+            [
+                'name' => 'test-function',
+                'specification' => 's-1vcpu-512mb',
+                'runtime' => 'node-18.0',
+            ]
+        ];
+        yield 'use buildSpecification when present' => [
+            [
+                'buildSpecification' => 's-2vcpu-1gb',
+                'runtimeSpecification' => 's-1vcpu-512mb',
             ],
-            'fallback to specification when buildSpecification is missing' => [
-                [
-                    'specification' => 's-1vcpu-512mb',
-                    'runtimeSpecification' => 's-1vcpu-256mb',
-                ],
-                [
-                    'specification' => 's-1vcpu-512mb',
-                ]
+            [
+                'specification' => 's-2vcpu-1gb',
+            ]
+        ];
+        yield 'fallback to specification when buildSpecification is missing' => [
+            [
+                'specification' => 's-1vcpu-512mb',
+                'runtimeSpecification' => 's-1vcpu-256mb',
             ],
-            'handle missing both buildSpecification and specification' => [
-                [
-                    'name' => 'test-function',
-                    'runtimeSpecification' => 's-1vcpu-256mb',
-                ],
-                [
-                    'name' => 'test-function',
-                    'specification' => null,
-                ]
+            [
+                'specification' => 's-1vcpu-512mb',
+            ]
+        ];
+        yield 'handle missing both buildSpecification and specification' => [
+            [
+                'name' => 'test-function',
+                'runtimeSpecification' => 's-1vcpu-256mb',
             ],
-            'handle no spec fields at all' => [
-                [
-                    'name' => 'test-function',
-                    'runtime' => 'node-18.0',
-                ],
-                [
-                    'name' => 'test-function',
-                    'specification' => null,
-                    'runtime' => 'node-18.0',
-                ]
+            [
+                'name' => 'test-function',
+                'specification' => null,
+            ]
+        ];
+        yield 'handle no spec fields at all' => [
+            [
+                'name' => 'test-function',
+                'runtime' => 'node-18.0',
             ],
-            'handle empty buildSpecification string' => [
-                [
-                    'buildSpecification' => '',
-                    'runtimeSpecification' => 's-1vcpu-256mb',
-                ],
-                [
-                    'specification' => '',
-                ]
+            [
+                'name' => 'test-function',
+                'specification' => null,
+                'runtime' => 'node-18.0',
+            ]
+        ];
+        yield 'handle empty buildSpecification string' => [
+            [
+                'buildSpecification' => '',
+                'runtimeSpecification' => 's-1vcpu-256mb',
             ],
+            [
+                'specification' => '',
+            ]
         ];
     }
 
@@ -97,68 +97,66 @@ class V21Test extends TestCase
         $this->assertEquals($expected, $result);
     }
 
-    public static function functionListProvider(): array
+    public static function functionListProvider(): \Iterator
     {
-        return [
-            'convert list of functions' => [
-                [
-                    'total' => 2,
-                    'functions' => [
-                        [
-                            'name' => 'function-1',
-                            'buildSpecification' => 's-1vcpu-512mb',
-                            'runtimeSpecification' => 's-1vcpu-256mb',
-                        ],
-                        [
-                            'name' => 'function-2',
-                            'buildSpecification' => 's-2vcpu-1gb',
-                            'runtimeSpecification' => 's-1vcpu-512mb',
-                        ],
+        yield 'convert list of functions' => [
+            [
+                'total' => 2,
+                'functions' => [
+                    [
+                        'name' => 'function-1',
+                        'buildSpecification' => 's-1vcpu-512mb',
+                        'runtimeSpecification' => 's-1vcpu-256mb',
+                    ],
+                    [
+                        'name' => 'function-2',
+                        'buildSpecification' => 's-2vcpu-1gb',
+                        'runtimeSpecification' => 's-1vcpu-512mb',
                     ],
                 ],
-                [
-                    'total' => 2,
-                    'functions' => [
-                        [
-                            'name' => 'function-1',
-                            'specification' => 's-1vcpu-512mb',
-                        ],
-                        [
-                            'name' => 'function-2',
-                            'specification' => 's-2vcpu-1gb',
-                        ],
+            ],
+            [
+                'total' => 2,
+                'functions' => [
+                    [
+                        'name' => 'function-1',
+                        'specification' => 's-1vcpu-512mb',
                     ],
-                ]
-            ],
-            'handle empty function list' => [
-                [
-                    'total' => 0,
-                    'functions' => [],
-                ],
-                [
-                    'total' => 0,
-                    'functions' => [],
-                ]
-            ],
-            'handle single function in list' => [
-                [
-                    'total' => 1,
-                    'functions' => [
-                        [
-                            'buildSpecification' => 's-1vcpu-512mb',
-                            'runtimeSpecification' => 's-1vcpu-256mb',
-                        ],
+                    [
+                        'name' => 'function-2',
+                        'specification' => 's-2vcpu-1gb',
                     ],
                 ],
-                [
-                    'total' => 1,
-                    'functions' => [
-                        [
-                            'specification' => 's-1vcpu-512mb',
-                        ],
-                    ],
-                ]
+            ]
+        ];
+        yield 'handle empty function list' => [
+            [
+                'total' => 0,
+                'functions' => [],
             ],
+            [
+                'total' => 0,
+                'functions' => [],
+            ]
+        ];
+        yield 'handle single function in list' => [
+            [
+                'total' => 1,
+                'functions' => [
+                    [
+                        'buildSpecification' => 's-1vcpu-512mb',
+                        'runtimeSpecification' => 's-1vcpu-256mb',
+                    ],
+                ],
+            ],
+            [
+                'total' => 1,
+                'functions' => [
+                    [
+                        'specification' => 's-1vcpu-512mb',
+                    ],
+                ],
+            ]
         ];
     }
 
@@ -172,61 +170,59 @@ class V21Test extends TestCase
         $this->assertEquals($expected, $result);
     }
 
-    public static function siteProvider(): array
+    public static function siteProvider(): \Iterator
     {
-        return [
-            'merge buildSpecification and runtimeSpecification into specification' => [
-                [
-                    'name' => 'test-site',
-                    'buildSpecification' => 's-1vcpu-512mb',
-                    'runtimeSpecification' => 's-1vcpu-256mb',
-                    'framework' => 'nextjs',
-                ],
-                [
-                    'name' => 'test-site',
-                    'specification' => 's-1vcpu-512mb',
-                    'framework' => 'nextjs',
-                ]
+        yield 'merge buildSpecification and runtimeSpecification into specification' => [
+            [
+                'name' => 'test-site',
+                'buildSpecification' => 's-1vcpu-512mb',
+                'runtimeSpecification' => 's-1vcpu-256mb',
+                'framework' => 'nextjs',
             ],
-            'use buildSpecification when present' => [
-                [
-                    'buildSpecification' => 's-2vcpu-1gb',
-                    'runtimeSpecification' => 's-1vcpu-512mb',
-                ],
-                [
-                    'specification' => 's-2vcpu-1gb',
-                ]
+            [
+                'name' => 'test-site',
+                'specification' => 's-1vcpu-512mb',
+                'framework' => 'nextjs',
+            ]
+        ];
+        yield 'use buildSpecification when present' => [
+            [
+                'buildSpecification' => 's-2vcpu-1gb',
+                'runtimeSpecification' => 's-1vcpu-512mb',
             ],
-            'fallback to specification when buildSpecification is missing' => [
-                [
-                    'specification' => 's-1vcpu-512mb',
-                    'runtimeSpecification' => 's-1vcpu-256mb',
-                ],
-                [
-                    'specification' => 's-1vcpu-512mb',
-                ]
+            [
+                'specification' => 's-2vcpu-1gb',
+            ]
+        ];
+        yield 'fallback to specification when buildSpecification is missing' => [
+            [
+                'specification' => 's-1vcpu-512mb',
+                'runtimeSpecification' => 's-1vcpu-256mb',
             ],
-            'handle missing both buildSpecification and specification' => [
-                [
-                    'name' => 'test-site',
-                    'runtimeSpecification' => 's-1vcpu-256mb',
-                ],
-                [
-                    'name' => 'test-site',
-                    'specification' => null,
-                ]
+            [
+                'specification' => 's-1vcpu-512mb',
+            ]
+        ];
+        yield 'handle missing both buildSpecification and specification' => [
+            [
+                'name' => 'test-site',
+                'runtimeSpecification' => 's-1vcpu-256mb',
             ],
-            'handle no spec fields at all' => [
-                [
-                    'name' => 'test-site',
-                    'framework' => 'react',
-                ],
-                [
-                    'name' => 'test-site',
-                    'specification' => null,
-                    'framework' => 'react',
-                ]
+            [
+                'name' => 'test-site',
+                'specification' => null,
+            ]
+        ];
+        yield 'handle no spec fields at all' => [
+            [
+                'name' => 'test-site',
+                'framework' => 'react',
             ],
+            [
+                'name' => 'test-site',
+                'specification' => null,
+                'framework' => 'react',
+            ]
         ];
     }
 
@@ -240,70 +236,68 @@ class V21Test extends TestCase
         $this->assertEquals($expected, $result);
     }
 
-    public static function siteListProvider(): array
+    public static function siteListProvider(): \Iterator
     {
-        return [
-            'convert list of sites' => [
-                [
-                    'total' => 2,
-                    'sites' => [
-                        [
-                            'name' => 'site-1',
-                            'buildSpecification' => 's-1vcpu-512mb',
-                            'runtimeSpecification' => 's-1vcpu-256mb',
-                        ],
-                        [
-                            'name' => 'site-2',
-                            'buildSpecification' => 's-2vcpu-1gb',
-                            'runtimeSpecification' => 's-1vcpu-512mb',
-                        ],
+        yield 'convert list of sites' => [
+            [
+                'total' => 2,
+                'sites' => [
+                    [
+                        'name' => 'site-1',
+                        'buildSpecification' => 's-1vcpu-512mb',
+                        'runtimeSpecification' => 's-1vcpu-256mb',
+                    ],
+                    [
+                        'name' => 'site-2',
+                        'buildSpecification' => 's-2vcpu-1gb',
+                        'runtimeSpecification' => 's-1vcpu-512mb',
                     ],
                 ],
-                [
-                    'total' => 2,
-                    'sites' => [
-                        [
-                            'name' => 'site-1',
-                            'specification' => 's-1vcpu-512mb',
-                        ],
-                        [
-                            'name' => 'site-2',
-                            'specification' => 's-2vcpu-1gb',
-                        ],
+            ],
+            [
+                'total' => 2,
+                'sites' => [
+                    [
+                        'name' => 'site-1',
+                        'specification' => 's-1vcpu-512mb',
                     ],
-                ]
-            ],
-            'handle empty site list' => [
-                [
-                    'total' => 0,
-                    'sites' => [],
-                ],
-                [
-                    'total' => 0,
-                    'sites' => [],
-                ]
-            ],
-            'handle single site in list' => [
-                [
-                    'total' => 1,
-                    'sites' => [
-                        [
-                            'name' => 'my-site',
-                            'buildSpecification' => 's-1vcpu-512mb',
-                            'runtimeSpecification' => 's-1vcpu-256mb',
-                        ],
+                    [
+                        'name' => 'site-2',
+                        'specification' => 's-2vcpu-1gb',
                     ],
                 ],
-                [
-                    'total' => 1,
-                    'sites' => [
-                        [
-                            'name' => 'my-site',
-                            'specification' => 's-1vcpu-512mb',
-                        ],
-                    ],
-                ]
+            ]
+        ];
+        yield 'handle empty site list' => [
+            [
+                'total' => 0,
+                'sites' => [],
             ],
+            [
+                'total' => 0,
+                'sites' => [],
+            ]
+        ];
+        yield 'handle single site in list' => [
+            [
+                'total' => 1,
+                'sites' => [
+                    [
+                        'name' => 'my-site',
+                        'buildSpecification' => 's-1vcpu-512mb',
+                        'runtimeSpecification' => 's-1vcpu-256mb',
+                    ],
+                ],
+            ],
+            [
+                'total' => 1,
+                'sites' => [
+                    [
+                        'name' => 'my-site',
+                        'specification' => 's-1vcpu-512mb',
+                    ],
+                ],
+            ]
         ];
     }
 
@@ -317,111 +311,109 @@ class V21Test extends TestCase
         $this->assertEquals($expected, $result);
     }
 
-    public static function documentProvider(): array
+    public static function documentProvider(): \Iterator
     {
-        return [
-            'cast $sequence to int' => [
-                [
-                    '$id' => 'doc1',
-                    '$sequence' => '123',
-                    'name' => 'test',
-                ],
-                [
-                    '$id' => 'doc1',
-                    '$sequence' => 123,
-                    'name' => 'test',
-                ]
+        yield 'cast $sequence to int' => [
+            [
+                '$id' => 'doc1',
+                '$sequence' => '123',
+                'name' => 'test',
             ],
-            'non-numeric $sequence becomes 0' => [
-                [
-                    '$id' => 'doc1',
-                    '$sequence' => 'abc',
-                ],
-                [
-                    '$id' => 'doc1',
-                    '$sequence' => 0,
-                ]
+            [
+                '$id' => 'doc1',
+                '$sequence' => 123,
+                'name' => 'test',
+            ]
+        ];
+        yield 'non-numeric $sequence becomes 0' => [
+            [
+                '$id' => 'doc1',
+                '$sequence' => 'abc',
             ],
-            'nested relationship document' => [
-                [
-                    '$id' => 'doc1',
-                    '$sequence' => '1',
-                    'author' => [
+            [
+                '$id' => 'doc1',
+                '$sequence' => 0,
+            ]
+        ];
+        yield 'nested relationship document' => [
+            [
+                '$id' => 'doc1',
+                '$sequence' => '1',
+                'author' => [
+                    '$id' => 'doc2',
+                    '$sequence' => '2',
+                    'name' => 'John',
+                ],
+            ],
+            [
+                '$id' => 'doc1',
+                '$sequence' => 1,
+                'author' => [
+                    '$id' => 'doc2',
+                    '$sequence' => 2,
+                    'name' => 'John',
+                ],
+            ]
+        ];
+        yield 'nested array of relationship documents' => [
+            [
+                '$id' => 'doc1',
+                '$sequence' => '1',
+                'comments' => [
+                    [
                         '$id' => 'doc2',
                         '$sequence' => '2',
-                        'name' => 'John',
+                        'text' => 'hello',
+                    ],
+                    [
+                        '$id' => 'doc3',
+                        '$sequence' => '3',
+                        'text' => 'world',
                     ],
                 ],
-                [
-                    '$id' => 'doc1',
-                    '$sequence' => 1,
-                    'author' => [
+            ],
+            [
+                '$id' => 'doc1',
+                '$sequence' => 1,
+                'comments' => [
+                    [
                         '$id' => 'doc2',
                         '$sequence' => 2,
-                        'name' => 'John',
+                        'text' => 'hello',
                     ],
-                ]
-            ],
-            'nested array of relationship documents' => [
-                [
-                    '$id' => 'doc1',
-                    '$sequence' => '1',
-                    'comments' => [
-                        [
-                            '$id' => 'doc2',
-                            '$sequence' => '2',
-                            'text' => 'hello',
-                        ],
-                        [
-                            '$id' => 'doc3',
-                            '$sequence' => '3',
-                            'text' => 'world',
-                        ],
+                    [
+                        '$id' => 'doc3',
+                        '$sequence' => 3,
+                        'text' => 'world',
                     ],
                 ],
-                [
-                    '$id' => 'doc1',
-                    '$sequence' => 1,
-                    'comments' => [
-                        [
-                            '$id' => 'doc2',
-                            '$sequence' => 2,
-                            'text' => 'hello',
-                        ],
-                        [
-                            '$id' => 'doc3',
-                            '$sequence' => 3,
-                            'text' => 'world',
-                        ],
-                    ],
-                ]
-            ],
-            'deeply nested relationships' => [
-                [
-                    '$id' => 'doc1',
-                    '$sequence' => '1',
-                    'author' => [
-                        '$id' => 'doc2',
-                        '$sequence' => '2',
-                        'profile' => [
-                            '$id' => 'doc3',
-                            '$sequence' => '3',
-                        ],
+            ]
+        ];
+        yield 'deeply nested relationships' => [
+            [
+                '$id' => 'doc1',
+                '$sequence' => '1',
+                'author' => [
+                    '$id' => 'doc2',
+                    '$sequence' => '2',
+                    'profile' => [
+                        '$id' => 'doc3',
+                        '$sequence' => '3',
                     ],
                 ],
-                [
-                    '$id' => 'doc1',
-                    '$sequence' => 1,
-                    'author' => [
-                        '$id' => 'doc2',
-                        '$sequence' => 2,
-                        'profile' => [
-                            '$id' => 'doc3',
-                            '$sequence' => 3,
-                        ],
-                    ],
-                ]
             ],
+            [
+                '$id' => 'doc1',
+                '$sequence' => 1,
+                'author' => [
+                    '$id' => 'doc2',
+                    '$sequence' => 2,
+                    'profile' => [
+                        '$id' => 'doc3',
+                        '$sequence' => 3,
+                    ],
+                ],
+            ]
         ];
     }
 
@@ -441,51 +433,49 @@ class V21Test extends TestCase
         $this->assertSame($expected, $result);
     }
 
-    public static function documentListProvider(): array
+    public static function documentListProvider(): \Iterator
     {
-        return [
-            'cast $sequence in document list' => [
-                [
-                    'total' => 2,
-                    'documents' => [
-                        [
-                            '$id' => 'doc1',
-                            '$sequence' => '10',
-                            'name' => 'first',
-                        ],
-                        [
-                            '$id' => 'doc2',
-                            '$sequence' => '20',
-                            'name' => 'second',
-                        ],
+        yield 'cast $sequence in document list' => [
+            [
+                'total' => 2,
+                'documents' => [
+                    [
+                        '$id' => 'doc1',
+                        '$sequence' => '10',
+                        'name' => 'first',
+                    ],
+                    [
+                        '$id' => 'doc2',
+                        '$sequence' => '20',
+                        'name' => 'second',
                     ],
                 ],
-                [
-                    'total' => 2,
-                    'documents' => [
-                        [
-                            '$id' => 'doc1',
-                            '$sequence' => 10,
-                            'name' => 'first',
-                        ],
-                        [
-                            '$id' => 'doc2',
-                            '$sequence' => 20,
-                            'name' => 'second',
-                        ],
+            ],
+            [
+                'total' => 2,
+                'documents' => [
+                    [
+                        '$id' => 'doc1',
+                        '$sequence' => 10,
+                        'name' => 'first',
                     ],
-                ]
-            ],
-            'handle empty document list' => [
-                [
-                    'total' => 0,
-                    'documents' => [],
+                    [
+                        '$id' => 'doc2',
+                        '$sequence' => 20,
+                        'name' => 'second',
+                    ],
                 ],
-                [
-                    'total' => 0,
-                    'documents' => [],
-                ]
+            ]
+        ];
+        yield 'handle empty document list' => [
+            [
+                'total' => 0,
+                'documents' => [],
             ],
+            [
+                'total' => 0,
+                'documents' => [],
+            ]
         ];
     }
 
@@ -510,40 +500,38 @@ class V21Test extends TestCase
         $this->assertSame($expected, $result);
     }
 
-    public static function defaultPassthroughProvider(): array
+    public static function defaultPassthroughProvider(): \Iterator
     {
-        return [
-            'unmatched model passes through unchanged' => [
-                Response::MODEL_DOCUMENT,
-                [
-                    'name' => 'test-doc',
-                    '$id' => 'doc123',
-                    'data' => 'some-value',
-                ],
-                [
-                    'name' => 'test-doc',
-                    '$id' => 'doc123',
-                    'data' => 'some-value',
-                ]
+        yield 'unmatched model passes through unchanged' => [
+            Response::MODEL_DOCUMENT,
+            [
+                'name' => 'test-doc',
+                '$id' => 'doc123',
+                'data' => 'some-value',
             ],
-            'empty content passes through unchanged' => [
-                Response::MODEL_DOCUMENT,
-                [],
-                []
+            [
+                'name' => 'test-doc',
+                '$id' => 'doc123',
+                'data' => 'some-value',
+            ]
+        ];
+        yield 'empty content passes through unchanged' => [
+            Response::MODEL_DOCUMENT,
+            [],
+            []
+        ];
+        yield 'deployment model passes through unchanged' => [
+            Response::MODEL_DEPLOYMENT,
+            [
+                'id' => 'deployment123',
+                'buildSpecification' => 's-1vcpu-512mb',
+                'runtimeSpecification' => 's-1vcpu-256mb',
             ],
-            'deployment model passes through unchanged' => [
-                Response::MODEL_DEPLOYMENT,
-                [
-                    'id' => 'deployment123',
-                    'buildSpecification' => 's-1vcpu-512mb',
-                    'runtimeSpecification' => 's-1vcpu-256mb',
-                ],
-                [
-                    'id' => 'deployment123',
-                    'buildSpecification' => 's-1vcpu-512mb',
-                    'runtimeSpecification' => 's-1vcpu-256mb',
-                ]
-            ],
+            [
+                'id' => 'deployment123',
+                'buildSpecification' => 's-1vcpu-512mb',
+                'runtimeSpecification' => 's-1vcpu-256mb',
+            ]
         ];
     }
 

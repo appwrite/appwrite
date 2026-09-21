@@ -2,13 +2,20 @@
 
 namespace Appwrite\Platform\Modules\Proxy;
 
+use Appwrite\Bus\Events\RuleCreated;
+use Appwrite\Bus\Events\RuleDeleted;
 use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\DNS as ValidatorDNS;
 use Appwrite\Platform\Action as PlatformAction;
+use Utopia\Bus\Bus;
+use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Duplicate;
+use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
 use Utopia\DNS\Message\Record;
 use Utopia\Domains\Domain;
-use Utopia\Logger\Log;
+use Utopia\Span\Span;
 use Utopia\System\System;
 use Utopia\Validator\AnyOf;
 use Utopia\Validator\Domain as ValidatorDomain;
@@ -18,6 +25,67 @@ class Action extends PlatformAction
 {
     public function __construct(protected string $dnsValidatorClass = ValidatorDNS::class)
     {
+    }
+
+    protected function createRule(Document $rule, Database $dbForPlatform, Authorization $authorization, Bus $bus): Document
+    {
+        try {
+            return $this->created($authorization->skip(fn () => $dbForPlatform->createDocument('rules', $rule)), $bus);
+        } catch (Duplicate) {
+            if (!$this->deleteOrphanedRule($rule, $dbForPlatform, $authorization, $bus)) {
+                throw new Exception(Exception::RULE_ALREADY_EXISTS);
+            }
+        }
+
+        try {
+            return $this->created($authorization->skip(fn () => $dbForPlatform->createDocument('rules', $rule)), $bus);
+        } catch (Duplicate) {
+            throw new Exception(Exception::RULE_ALREADY_EXISTS);
+        }
+    }
+
+    private function created(Document $rule, Bus $bus): Document
+    {
+        $bus->dispatch(new RuleCreated($rule->getArrayCopy()));
+
+        return $rule;
+    }
+
+    private function deleteOrphanedRule(Document $rule, Database $dbForPlatform, Authorization $authorization, Bus $bus): bool
+    {
+        $existingRule = $authorization->skip(function () use ($rule, $dbForPlatform) {
+            $existingRule = $dbForPlatform->findOne('rules', [
+                Query::equal('domain', [$rule->getAttribute('domain', '')]),
+            ]);
+            if (!$existingRule->isEmpty()) {
+                return $existingRule;
+            }
+
+            return $dbForPlatform->getDocument('rules', $rule->getId());
+        });
+
+        if ($existingRule->isEmpty()) {
+            return true;
+        }
+
+        if ($existingRule->getAttribute('domain', '') !== $rule->getAttribute('domain', '')) {
+            return false;
+        }
+
+        $projectId = $existingRule->getAttribute('projectId', '');
+        if (empty($projectId)) {
+            return false;
+        }
+
+        $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
+        if (!$project->isEmpty()) {
+            return false;
+        }
+
+        $authorization->skip(fn () => $dbForPlatform->deleteDocument('rules', $existingRule->getId()));
+        $bus->dispatch(new RuleDeleted($existingRule->getArrayCopy()));
+
+        return true;
     }
 
     /**
@@ -50,7 +118,7 @@ class Action extends PlatformAction
 
         $functionsDomains = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
         foreach (\explode(',', $functionsDomains) as $functionsDomain) {
-            if (empty($functionsDomains)) {
+            if (empty($functionsDomain)) {
                 continue;
             }
 
@@ -91,10 +159,9 @@ class Action extends PlatformAction
      * Verify or re-verify a rule
      *
      * @param Document $rule Rule to verify
-     * @param Log|null $log Log instance to add timings to
      * @return void
      */
-    protected function verifyRule(Document $rule, ?Log $log = null): void
+    protected function verifyRule(Document $rule): void
     {
         $dnsValidatorClass = $this->dnsValidatorClass;
         $dnsEnv = System::getEnv('_APP_DNS', '8.8.8.8');
@@ -117,10 +184,8 @@ class Action extends PlatformAction
             $validationStart = \microtime(true);
             $validator = new $dnsValidatorClass($caaTarget, Record::TYPE_CAA, $dnsServers);
             if (!$validator->isValid($domain->get())) {
-                if (!\is_null($log)) {
-                    $log->addExtra('dnsTimingCaa', \strval(\microtime(true) - $validationStart));
-                    $log->addTag('dnsDomain', $domain->get());
-                }
+                Span::add('dns.timing_caa', \microtime(true) - $validationStart);
+                Span::add('dns.domain', $domain->get());
                 throw new Exception(Exception::RULE_VERIFICATION_FAILED, $validator->getDescription());
             }
         }
@@ -164,9 +229,7 @@ class Action extends PlatformAction
             $validator = new AnyOf($cnameValidators);
             $validators[] = $validator;
 
-            if (\is_null($mainValidator)) {
-                $mainValidator = $validator;
-            }
+            $mainValidator = $validator;
         }
 
         // Ensure at least one of CNAME/A/AAAA record points to our servers properly
@@ -202,10 +265,8 @@ class Action extends PlatformAction
 
         $validationStart = \microtime(true);
         if (!$validator->isValid($domain->get())) {
-            if (!\is_null($log)) {
-                $log->addExtra('dnsTiming', \strval(\microtime(true) - $validationStart));
-                $log->addTag('dnsDomain', $domain->get());
-            }
+            Span::add('dns.timing', \microtime(true) - $validationStart);
+            Span::add('dns.domain', $domain->get());
             throw new Exception(Exception::RULE_VERIFICATION_FAILED, $mainValidator->getDescription());
         }
     }

@@ -1487,13 +1487,13 @@ return [
         ]
     ],
     [
-        'key' => 'crm-dashboard-react-admin',
-        'name' => 'CRM dashboard with React Admin',
-        'tagline' => 'A React-based admin dashboard template with CRM features.',
+        'key' => 'dashboard-react-admin',
+        'name' => 'E-commerce dashboard with React Admin',
+        'tagline' => 'A React-based admin dashboard template with e-commerce features.',
         'score' => 4, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
-        'useCases' => [SiteUseCases::DASHBOARD],
-        'screenshotDark' => $url . '/images/sites/templates/crm-dashboard-react-admin-dark.png',
-        'screenshotLight' => $url . '/images/sites/templates/crm-dashboard-react-admin-light.png',
+        'useCases' => [SiteUseCases::DASHBOARD, SiteUseCases::ECOMMERCE],
+        'screenshotDark' => $url . '/images/sites/templates/dashboard-react-admin-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/dashboard-react-admin-light.png',
         'frameworks' => [
             getFramework('REACT', [
                 'providerRootDirectory' => './react/react-admin',

@@ -18,11 +18,6 @@ class Delete extends TransactionsDelete
         return 'deleteDocumentsDBTransaction';
     }
 
-    protected function getResponseModel(): string
-    {
-        return UtopiaResponse::MODEL_NONE;
-    }
-
     public function __construct()
     {
         $this
@@ -30,7 +25,7 @@ class Delete extends TransactionsDelete
             ->setHttpPath('/v1/documentsdb/transactions/:transactionId')
             ->desc('Delete transaction')
             ->groups(['api', 'database', 'transactions'])
-            ->label('scope', 'documents.write')
+            ->label('scope', 'documentsdb.documents.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
                 namespace: 'documentsDB',
@@ -49,7 +44,8 @@ class Delete extends TransactionsDelete
             ->param('transactionId', '', new UID(), 'Transaction ID.')
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('queueForDeletes')
+            ->inject('publisherForDeletes')
+            ->inject('project')
             ->callback($this->action(...));
     }
 }

@@ -30,6 +30,7 @@ class Get extends Base
             ->desc('Get variable')
             ->groups(['api', 'sites'])
             ->label('scope', 'sites.read')
+            ->label('usage.resource', 'site/{request.siteId}')
             ->label('resourceType', RESOURCE_TYPE_SITES)
             ->label(
                 'sdk',
@@ -66,15 +67,10 @@ class Get extends Base
 
         $variable = $dbForProject->getDocument('variables', $variableId);
         if (
-            $variable === false ||
             $variable->isEmpty() ||
             $variable->getAttribute('resourceInternalId') !== $site->getSequence() ||
             $variable->getAttribute('resourceType') !== 'site'
         ) {
-            throw new Exception(Exception::VARIABLE_NOT_FOUND);
-        }
-
-        if ($variable === false || $variable->isEmpty()) {
             throw new Exception(Exception::VARIABLE_NOT_FOUND);
         }
 

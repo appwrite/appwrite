@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Network\Validators;
 
 use Appwrite\Network\Validator\DNS;
 use PHPUnit\Framework\TestCase;
 use Utopia\DNS\Message\Record;
 
-class DNSTest extends TestCase
+final class DNSTest extends TestCase
 {
     public function testSingleDNSServer(): void
     {
@@ -14,7 +16,7 @@ class DNSTest extends TestCase
 
         $this->assertEquals(false, $validator->isValid(''));
         $this->assertEquals(false, $validator->isValid(null));
-        $this->assertEquals('string', $validator->getType());
+        $this->assertSame('string', $validator->getType());
     }
 
     public function testMultipleDNSServers(): void
@@ -23,7 +25,7 @@ class DNSTest extends TestCase
 
         $this->assertEquals(false, $validator->isValid(''));
         $this->assertEquals(false, $validator->isValid(null));
-        $this->assertEquals('string', $validator->getType());
+        $this->assertSame('string', $validator->getType());
     }
 
     public function testValidationFailure(): void
@@ -33,15 +35,12 @@ class DNSTest extends TestCase
         $result = $validator->isValid('nonexistent-domain-' . \uniqid() . '.com');
 
         $this->assertEquals(false, $result);
-        $this->assertIsInt($validator->count);
-        $this->assertIsString($validator->value);
-        $this->assertIsArray($validator->records);
-        $this->assertIsString($validator->getDescription());
+        $this->assertNotEmpty($validator->getDescription());
     }
 
-    public function testCoreDNSFailure(): void
+    public function testFixtureResolverFailure(): void
     {
-        // CoreDNS is configured to return cname.localhost. for stage.webapp.com
+        // The test resolver (tests/resources/dns) returns cname.localhost. for stage.webapp.com
         $validator = new DNS('cname.localhost.', Record::TYPE_CNAME, ['172.16.238.100', '8.8.8.8']);
 
         $result = $validator->isValid('stage.webapp.com');

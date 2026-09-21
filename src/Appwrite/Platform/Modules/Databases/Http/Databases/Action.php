@@ -21,6 +21,42 @@ class Action extends AppwriteAction
         return $this->context;
     }
 
+    /**
+     * Database types this path may operate on. Single source of truth shared by
+     * the list filter ({@see getDatabaseTypeQueryFilters()}) and the by-id guard
+     * ({@see isDatabaseTypeMismatch()}) so they cannot diverge.
+     *
+     * TablesDB and the legacy databases API are the same product either side of a
+     * rename, so each serves both types; DocumentsDB and VectorsDB are scoped to
+     * their own. Every database carries a non-null `type` (set on create and
+     * backfilled to 'legacy' by migration V23), so null is not represented.
+     *
+     * @return string[]
+     */
+    protected function getAllowedDatabaseTypes(): array
+    {
+        return match ($this->getDatabaseType()) {
+            DATABASE_TYPE_TABLESDB => [DATABASE_TYPE_TABLESDB, DATABASE_TYPE_LEGACY],
+            DATABASE_TYPE_LEGACY => [DATABASE_TYPE_LEGACY, DATABASE_TYPE_TABLESDB],
+            default => [$this->getDatabaseType()],
+        };
+    }
+
+    /**
+     * A database resolved by id must be one of the path's allowed types; otherwise
+     * it is treated as not-found rather than proceeding to a type-mismatched backend
+     * operation that surfaces as an opaque 500.
+     *
+     * The legacy path was previously exempt, which left it resolving by id what its
+     * own list refused to return: `GET /v1/databases/{id}` answered for a DocumentsDB
+     * or VectorsDB database that `GET /v1/databases` had never listed, and
+     * `/collections` on one then 500'd against a table shaped for another product.
+     */
+    protected function isDatabaseTypeMismatch(Document $database): bool
+    {
+        return !in_array($database->getAttribute('type', ''), $this->getAllowedDatabaseTypes(), true);
+    }
+
     public function setHttpPath(string $path): self
     {
         if (\str_contains($path, '/tablesdb')) {

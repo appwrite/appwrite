@@ -70,18 +70,30 @@ class Get extends Action
             throw new Exception(Exception::MEMBERSHIP_NOT_FOUND);
         }
 
+        if ($membership->getAttribute('teamInternalId') !== $team->getSequence()) {
+            throw new Exception(Exception::TEAM_MEMBERSHIP_MISMATCH);
+        }
+
+        // Default should be "false", but existing projects already rely on this being "true"
         $membershipsPrivacy =  [
             'userName' => $project->getAttribute('auths', [])['membershipsUserName'] ?? true,
             'userEmail' => $project->getAttribute('auths', [])['membershipsUserEmail'] ?? true,
             'mfa' => $project->getAttribute('auths', [])['membershipsMfa'] ?? true,
+            'userId' => $project->getAttribute('auths', [])['membershipsUserId'] ?? true,
+            'userPhone' => $project->getAttribute('auths', [])['membershipsUserPhone'] ?? true,
+            'userAccessedAt' => $project->getAttribute('auths', [])['membershipsUserAccessedAt'] ?? false,
         ];
 
         $roles = $authorization->getRoles();
         $isPrivilegedUser = $user->isPrivileged($roles);
-        $isAppUser = $user->isApp($roles);
+        $isAppUser = $user->isKey($roles);
 
-        $membershipsPrivacy = array_map(function ($privacy) use ($isPrivilegedUser, $isAppUser) {
-            return $privacy || $isPrivilegedUser || $isAppUser;
+        // The policy only hides other members, a member always sees their own details
+        $isSelf = $user->getSequence() !== null
+            && $membership->getAttribute('userInternalId') === $user->getSequence();
+
+        $membershipsPrivacy = array_map(function ($privacy) use ($isPrivilegedUser, $isAppUser, $isSelf) {
+            return $privacy || $isPrivilegedUser || $isAppUser || $isSelf;
         }, $membershipsPrivacy);
 
         $memberUser = !empty(array_filter($membershipsPrivacy))
@@ -111,6 +123,20 @@ class Get extends Action
 
         if ($membershipsPrivacy['userEmail']) {
             $membership->setAttribute('userEmail', $memberUser->getAttribute('email'));
+        }
+
+        if ($membershipsPrivacy['userId']) {
+            $membership->setAttribute('userId', $memberUser->getId());
+        } else {
+            $membership->removeAttribute('userId');
+        }
+
+        if ($membershipsPrivacy['userPhone']) {
+            $membership->setAttribute('userPhone', $memberUser->getAttribute('phone'));
+        }
+
+        if ($membershipsPrivacy['userAccessedAt']) {
+            $membership->setAttribute('userAccessedAt', $memberUser->getAttribute('accessedAt'));
         }
 
         $membership->setAttribute('teamName', $team->getAttribute('name'));

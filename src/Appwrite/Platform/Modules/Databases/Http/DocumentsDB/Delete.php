@@ -26,11 +26,12 @@ class Delete extends DatabaseDelete
             ->setHttpPath('/v1/documentsdb/:databaseId')
             ->desc('Delete database')
             ->groups(['api', 'database', 'schema'])
-            ->label('scope', 'databases.write')
+            ->label('scope', 'documentsdb.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('event', 'databases.[databaseId].delete')
             ->label('audits.event', 'database.delete')
             ->label('audits.resource', 'database/{request.databaseId}')
+            ->label('usage.resource', 'database/{request.databaseId}')
             ->label('sdk', new Method(
                 namespace: 'documentsDB',
                 group: 'documentsdb',
@@ -48,7 +49,7 @@ class Delete extends DatabaseDelete
             ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('queueForDatabase')
+            ->inject('publisherForDatabase')
             ->inject('queueForEvents')
             ->inject('usage')
             ->callback($this->action(...));

@@ -20,7 +20,10 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Key;
+use Utopia\Lock\Distributed;
+use Utopia\Lock\Exception\Contention;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Pools\Group;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Text;
 
@@ -65,64 +68,98 @@ class Create extends Action
             ->inject('dbForProject')
             ->inject('authorization')
             ->inject('queueForEvents')
+            ->inject('project')
+            ->inject('pools')
             ->callback($this->action(...));
     }
 
-    public function action(string $teamId, string $name, array $roles, Response $response, User $user, Database $dbForProject, Authorization $authorization, Event $queueForEvents)
+    public function action(string $teamId, string $name, array $roles, Response $response, User $user, Database $dbForProject, Authorization $authorization, Event $queueForEvents, Document $project, Group $pools)
     {
         $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
-        $isAppUser = $user->isApp($authorization->getRoles());
+        $isAppUser = $user->isKey($authorization->getRoles());
 
         $teamId = $teamId == 'unique()' ? ID::unique() : $teamId;
+        $limited = $this->isOrganizationLimited($project);
+
+        $create = function () use ($dbForProject, $authorization, $teamId, $name, $roles, $user, $isPrivilegedUser, $isAppUser, $limited) {
+            // The seeded total only holds if the owner membership lands with the team.
+            return $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $teamId, $name, $roles, $user, $isPrivilegedUser, $isAppUser, $limited) {
+                if ($limited) {
+                    $organization = $authorization->skip(fn () => $dbForProject->findOne('teams'));
+
+                    if (!$organization->isEmpty()) {
+                        throw new Exception(Exception::ORGANIZATION_CREATION_PROHIBITED);
+                    }
+                }
+
+                $team = $authorization->skip(fn () => $dbForProject->createDocument('teams', new Document([
+                    '$id' => $teamId,
+                    '$permissions' => [
+                        Permission::read(Role::team($teamId)),
+                        Permission::update(Role::team($teamId, 'owner')),
+                        Permission::delete(Role::team($teamId, 'owner')),
+                    ],
+                    'labels' => [],
+                    'name' => $name,
+                    'total' => ($isPrivilegedUser || $isAppUser) ? 0 : 1,
+                    'prefs' => new \stdClass(),
+                    'search' => implode(' ', [$teamId, $name]),
+                ])));
+
+                if (!$isPrivilegedUser && !$isAppUser) { // Don't add user on server mode
+                    if (!\in_array('owner', $roles)) {
+                        $roles[] = 'owner';
+                    }
+
+                    $membershipId = ID::unique();
+                    $dbForProject->createDocument('memberships', new Document([
+                        '$id' => $membershipId,
+                        '$permissions' => [
+                            Permission::read(Role::user($user->getId())),
+                            Permission::read(Role::team($team->getId())),
+                            Permission::update(Role::user($user->getId())),
+                            Permission::update(Role::team($team->getId(), 'owner')),
+                            Permission::delete(Role::user($user->getId())),
+                            Permission::delete(Role::team($team->getId(), 'owner')),
+                        ],
+                        'userId' => $user->getId(),
+                        'userInternalId' => $user->getSequence(),
+                        'teamId' => $team->getId(),
+                        'teamInternalId' => $team->getSequence(),
+                        'roles' => $roles,
+                        'invited' => DateTime::now(),
+                        'joined' => DateTime::now(),
+                        'confirm' => true,
+                        'secret' => '',
+                        'search' => implode(' ', [$membershipId, $user->getId()])
+                    ]));
+
+                    $dbForProject->purgeCachedDocument('users', $user->getId());
+                }
+
+                return $team;
+            });
+        };
 
         try {
-            $team = $authorization->skip(fn () => $dbForProject->createDocument('teams', new Document([
-                '$id' => $teamId,
-                '$permissions' => [
-                    Permission::read(Role::team($teamId)),
-                    Permission::update(Role::team($teamId, 'owner')),
-                    Permission::delete(Role::team($teamId, 'owner')),
-                ],
-                'labels' => [],
-                'name' => $name,
-                'total' => ($isPrivilegedUser || $isAppUser) ? 0 : 1,
-                'prefs' => new \stdClass(),
-                'search' => implode(' ', [$teamId, $name]),
-            ])));
+            if ($limited) {
+                if ($user->isEmpty()) {
+                    throw new Exception(Exception::USER_UNAUTHORIZED);
+                }
+
+                // Serialize the instance-wide check and commit across accounts and adapters.
+                // Unlike best-effort request locks, failure must not bypass this limit.
+                $team = $pools->get('lock')->use(fn (\Redis $redis) => (new Distributed(
+                    $redis,
+                    'console:organizations:create',
+                ))->withLock($create, timeout: 3.0));
+            } else {
+                $team = $create();
+            }
+        } catch (Contention $th) {
+            throw new Exception(Exception::GENERAL_RESOURCE_LOCKED);
         } catch (Duplicate $th) {
             throw new Exception(Exception::TEAM_ALREADY_EXISTS);
-        }
-
-        if (!$isPrivilegedUser && !$isAppUser) { // Don't add user on server mode
-            if (!\in_array('owner', $roles)) {
-                $roles[] = 'owner';
-            }
-
-            $membershipId = ID::unique();
-            $membership = new Document([
-                '$id' => $membershipId,
-                '$permissions' => [
-                    Permission::read(Role::user($user->getId())),
-                    Permission::read(Role::team($team->getId())),
-                    Permission::update(Role::user($user->getId())),
-                    Permission::update(Role::team($team->getId(), 'owner')),
-                    Permission::delete(Role::user($user->getId())),
-                    Permission::delete(Role::team($team->getId(), 'owner')),
-                ],
-                'userId' => $user->getId(),
-                'userInternalId' => $user->getSequence(),
-                'teamId' => $team->getId(),
-                'teamInternalId' => $team->getSequence(),
-                'roles' => $roles,
-                'invited' => DateTime::now(),
-                'joined' => DateTime::now(),
-                'confirm' => true,
-                'secret' => '',
-                'search' => implode(' ', [$membershipId, $user->getId()])
-            ]);
-
-            $membership = $dbForProject->createDocument('memberships', $membership);
-            $dbForProject->purgeCachedDocument('users', $user->getId());
         }
 
         $queueForEvents->setParam('teamId', $team->getId());
@@ -134,5 +171,15 @@ class Create extends Action
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($team, Response::MODEL_TEAM);
+    }
+
+    /**
+     * Whether this instance allows only a single console organization.
+     * Self-hosted enforces it for every console request; editions that govern
+     * organizations elsewhere (cloud through its billing plans) override this.
+     */
+    protected function isOrganizationLimited(Document $project): bool
+    {
+        return $project->getId() === 'console';
     }
 }

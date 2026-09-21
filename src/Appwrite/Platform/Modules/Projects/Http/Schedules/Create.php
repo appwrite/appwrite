@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Projects\Http\Schedules;
 
 use Appwrite\Event\Event;
+use Appwrite\Execution\Store;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
@@ -15,6 +16,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
+use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\JSON;
@@ -85,7 +87,7 @@ class Create extends Action
                 ],
             ))
             ->param('projectId', '', new UID(), 'Project unique ID.')
-            ->param('resourceType', '', new WhiteList($resourceTypes, true), 'The resource type for the schedule. Possible values: '.implode(', ', $resourceTypes).'.')
+            ->param('resourceType', '', new WhiteList($resourceTypes, true), 'The resource type for the schedule. Possible values: '.implode(', ', $resourceTypes).'.', enum: new Enum(name: 'ScheduleResourceType'))
             ->param('resourceId', '', new UID(), 'The resource ID to associate with this schedule.')
             ->param('schedule', '', new Cron(), 'Schedule CRON expression.')
             ->param('active', false, new Boolean(), 'Whether the schedule is active.', true)
@@ -93,6 +95,7 @@ class Create extends Action
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('getProjectDB')
+            ->inject('executionStore')
             ->inject('queueForEvents')
             ->callback($this->action(...));
     }
@@ -107,6 +110,7 @@ class Create extends Action
         Response $response,
         Database $dbForPlatform,
         callable $getProjectDB,
+        Store $executionStore,
         Event $queueForEvents,
     ): void {
         $project = $dbForPlatform->getDocument('projects', $projectId);
@@ -115,10 +119,9 @@ class Create extends Action
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
-        $dbForProject = $getProjectDB($project);
-
-        $collection = $this->getCollection($resourceType);
-        $resource = $dbForProject->getDocument($collection, $resourceId);
+        $resource = $resourceType === SCHEDULE_RESOURCE_TYPE_EXECUTION
+            ? $executionStore->get($project->getId(), $resourceId)
+            : $getProjectDB($project)->getDocument($this->getCollection($resourceType), $resourceId);
 
         if ($resource->isEmpty()) {
             throw new Exception($this->getNotFoundException($resourceType), 'Resource not found');
@@ -131,6 +134,7 @@ class Create extends Action
             'resourceInternalId' => $resource->getSequence(),
             'resourceUpdatedAt' => DateTime::now(),
             'projectId' => $project->getId(),
+            'projectInternalId' => $project->getSequence(),
             'schedule' => $schedule,
             'active' => $active,
         ];

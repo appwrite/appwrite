@@ -3,53 +3,47 @@
 require_once __DIR__ . '/init.php';
 require_once __DIR__ . '/init/span.php';
 
-$registerRequestResources = require __DIR__ . '/init/resources/request.php';
+$setRequestContext = require __DIR__ . '/init/resources/request.php';
 
+use Appwrite\Geo\Geo;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Swoole\Constant;
 use Swoole\Process;
 use Swoole\Table;
 use Swoole\Timer;
-use Utopia\Audit\Adapter\Database as AdapterDatabase;
-use Utopia\Audit\Adapter\SQL as AuditAdapterSQL;
-use Utopia\Audit\Audit;
 use Utopia\Compression\Compression;
 use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Database\Database;
-use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
-use Utopia\Database\Query;
+use Utopia\DI\Container;
+use Utopia\Http\Adapter\Swoole\Mode;
 use Utopia\Http\Adapter\Swoole\Server;
 use Utopia\Http\Files;
 use Utopia\Http\Http;
-use Utopia\Logger\Log;
-use Utopia\Logger\Log\User;
 use Utopia\Span\Span;
 use Utopia\System\System;
 
-const DOMAIN_SYNC_TIMER = 30; // 30 seconds
-
 $files = new Files();
 $files->load(__DIR__ . '/../public');
-
-$riskyDomains = new Table(100_000);
-$riskyDomains->column('value', Table::TYPE_INT, 1);
-$riskyDomains->create();
 
 $certifiedDomains = new Table(100_000);
 $certifiedDomains->column('value', Table::TYPE_INT, 1);
 $certifiedDomains->create();
 
+$geoRecords = new Table(Geo::CACHE_SIZE);
+$geoRecords->column('value', Table::TYPE_STRING, Geo::CACHE_VALUE_SIZE);
+$geoRecords->create();
+
 global $container;
-$container->set('riskyDomains', fn () => $riskyDomains);
 $container->set('certifiedDomains', fn () => $certifiedDomains);
+$container->set('geoRecords', fn () => $geoRecords);
 $container->set('pools', function ($register) {
     return $register->get('pools');
 }, ['register']);
@@ -57,124 +51,20 @@ $container->set('pools', function ($register) {
 $payloadSize = 12 * (1024 * 1024); // 12MB - adding slight buffer for headers and other data that might be sent with the payload - update later with valid testing
 $totalWorkers = intval(System::getEnv('_APP_CPU_NUM', swoole_cpu_num())) * intval(System::getEnv('_APP_WORKER_PER_CORE', 6));
 
-$swooleAdapter = new Server(
+$swoole = new Server(
     host: "0.0.0.0",
     port: System::getEnv('PORT', 80),
     settings: [
+        // Apply Cloud's coroutine preset, retaining Appwrite's worker and payload limits.
+        ...Mode::HYPERLOOP_B->settings(),
         Constant::OPTION_WORKER_NUM => $totalWorkers,
-        Constant::OPTION_DISPATCH_FUNC => dispatch(...),
-        Constant::OPTION_DISPATCH_MODE => SWOOLE_DISPATCH_UIDMOD,
-        Constant::OPTION_HTTP_COMPRESSION => false,
         Constant::OPTION_PACKAGE_MAX_LENGTH => $payloadSize,
         Constant::OPTION_OUTPUT_BUFFER_SIZE => $payloadSize,
-        Constant::OPTION_TASK_WORKER_NUM => 1, // required for the task to fetch domains background
     ],
-    container: $container,
+    resources: $container,
 );
 
-$container->set('container', fn () => fn () => $swooleAdapter->getContainer());
-
-$http = $swooleAdapter->getServer();
-
-/**
- * Assigns HTTP requests to worker threads by analyzing its payload/content.
- *
- * Routes requests as 'safe' or 'risky' based on specific content patterns (like POST actions or certain domains)
- * to optimize load distribution between the workers. Utilizes `$safeThreadsPercent` to manage risk by assigning
- * riskier tasks to a dedicated worker subset. Prefers idle workers, with fallback to random selection if necessary.
- * doc: https://openswoole.com/docs/modules/swoole-server/configuration#dispatch_func
- *
- * @param \Swoole\Http\Server $server Swoole server instance.
- * @param int $fd client ID
- * @param int $type the type of data and its current state
- * @param string|null $data Request content for categorization.
- * @global int $totalThreads Total number of workers.
- * @return int Chosen worker ID for the request.
- */
-function dispatch(\Swoole\Http\Server $server, int $fd, int $type, $data = null): int
-{
-    $resolveWorkerId = function (\Swoole\Http\Server $server, $data = null) {
-        global $totalWorkers, $riskyDomains;
-
-        // If data is not set we can send request to any worker
-        // first we try to pick idle worker, if not we randomly pick a worker
-        if ($data === null) {
-            for ($i = 0; $i < $totalWorkers; $i++) {
-                if ($server->getWorkerStatus($i) === SWOOLE_WORKER_IDLE) {
-                    return $i;
-                }
-            }
-            return rand(0, $totalWorkers - 1);
-        }
-
-        $riskyWorkersPercent = intval(System::getEnv('_APP_RISKY_WORKERS_PERCENT', 80)) / 100; // Decimal form 0 to 1
-
-        // Each worker has numeric ID, starting from 0 and incrementing
-        // From 0 to riskyWorkers, we consider safe workers
-        // From riskyWorkers to totalWorkers, we consider risky workers
-        $riskyWorkers = (int)floor($totalWorkers * $riskyWorkersPercent); // Absolute amount of risky workers
-
-        $domain = '';
-        // max up to 3 as first line has request details and second line has host
-        $lines = explode("\n", $data, 3);
-        $request = $lines[0];
-        if (count($lines) > 1) {
-            $domain = trim(explode('Host: ', $lines[1])[1] ?? '');
-        }
-
-        // Sync executions are considered risky
-        $risky = false;
-        if (str_starts_with($request, 'POST') && str_contains($request, '/executions')) {
-            $risky = true;
-        } elseif ($riskyDomains->get(md5($domain), 'value') === 1) {
-            // executions request coming from custom domain
-            $risky = true;
-        } else {
-            foreach (\explode(',', System::getEnv('_APP_DOMAIN_FUNCTIONS')) as $riskyDomain) {
-                if (empty($riskyDomain)) {
-                    continue;
-                }
-                if (str_ends_with($domain, $riskyDomain)) {
-                    $risky = true;
-                    break;
-                }
-            }
-        }
-
-        if ($risky) {
-            // If risky request, only consider risky workers
-            for ($j = $riskyWorkers; $j < $totalWorkers; $j++) {
-                /** Reference https://openswoole.com/docs/modules/swoole-server-getWorkerStatus#description */
-                if ($server->getWorkerStatus($j) === SWOOLE_WORKER_IDLE) {
-                    // If idle worker found, give to him
-                    return $j;
-                }
-            }
-
-            // If no idle workers, give to random risky worker
-            $worker = rand($riskyWorkers, $totalWorkers - 1);
-            Console::warning("swoole_dispatch: Risky branch: did not find a idle worker, picking random worker {$worker}");
-            return $worker;
-        }
-
-        // If safe request, give to any idle worker
-        // Its fine to pick risky worker here, because it's idle. Idle is never actually risky
-        for ($i = 0; $i < $totalWorkers; $i++) {
-            if ($server->getWorkerStatus($i) === SWOOLE_WORKER_IDLE) {
-                return $i;
-            }
-        }
-
-        // If no idle worker found, give to random safe worker
-        // We avoid risky workers here, as it could be in work - not idle. Thats exactly when they are risky.
-        $worker = rand(0, $riskyWorkers - 1);
-        Console::warning("swoole_dispatch: Non-risky branch: did not find a idle worker, picking random worker {$worker}");
-        return $worker;
-    };
-    $workerId = $resolveWorkerId($server, $data);
-    $server->bind($fd, $workerId);
-    return $workerId;
-}
+$http = $swoole->getServer();
 
 $http->on(Constant::EVENT_WORKER_START, function ($server, $workerId) {
 });
@@ -192,13 +82,11 @@ $http->on(Constant::EVENT_AFTER_RELOAD, function ($server) {
     Console::success('Reload completed...');
 });
 
-$container->set('bus', function ($register) use ($swooleAdapter) {
-    return $register->get('bus')->setResolver(fn (string $name) => $swooleAdapter->getContainer()->get($name));
-}, ['register']);
+$container->set('bus', fn ($register) => $register->get('bus')->setResolver(fn (string $name) => $swoole->context()->get($name)), ['register']);
 
 include __DIR__ . '/controllers/general.php';
 
-function createDatabase(Http $app, string $resourceKey, string $dbName, array $collections, mixed $pools, ?callable $extraSetup = null): void
+function createDatabase(Container $resources, string $resourceKey, string $dbName, array $collections, mixed $pools, ?callable $extraSetup = null): void
 {
     $max = 15;
     $sleep = 2;
@@ -207,9 +95,16 @@ function createDatabase(Http $app, string $resourceKey, string $dbName, array $c
     while (true) {
         try {
             $attempts++;
-            $resource = $app->getResource($resourceKey);
+            $resource = $resources->get($resourceKey);
             /* @var $database Database */
             $database = is_callable($resource) ? $resource() : $resource;
+
+            // Building a handle reaches no backend, so this loop has to ask for
+            // a connection to learn whether one can be had. Without it the loop
+            // breaks on the first pass against a database still starting, and
+            // the wait it is here to perform falls to the create() retry below.
+            $database->ping();
+
             break; // exit loop on success
         } catch (\Throwable $e) {
             Console::warning("  └── Database not ready ({$dbName}). Retrying connection ({$attempts}): " . $e->getMessage());
@@ -273,8 +168,8 @@ function createDatabase(Http $app, string $resourceKey, string $dbName, array $c
             '$id' => ID::custom($index['$id']),
             'type' => $index['type'],
             'attributes' => $index['attributes'],
-            'lengths' => $index['lengths'],
-            'orders' => $index['orders'],
+            'lengths' => $index['lengths'] ?? [],
+            'orders' => $index['orders'] ?? [],
         ]), $collection['indexes']);
 
         $database->createCollection($key, $attributes, $indexes);
@@ -290,29 +185,18 @@ function createDatabase(Http $app, string $resourceKey, string $dbName, array $c
     Span::current()?->finish();
 }
 
-$http->on(Constant::EVENT_START, function ($http) use ($payloadSize, $totalWorkers, $swooleAdapter) {
-    $app = new Http($swooleAdapter, 'UTC');
-
+$http->on(Constant::EVENT_START, function ($http) use ($payloadSize, $totalWorkers, $container) {
     /** @var \Utopia\Pools\Group $pools */
-    $pools = $app->getResource('pools');
+    $pools = $container->get('pools');
 
-    go(function () use ($app, $pools) {
+    go(function () use ($container, $pools) {
 
         /** @var array $collections */
         $collections = Config::getParam('collections', []);
 
-        // create logs database first, `getLogsDB` is a callable.
-        createDatabase($app, 'getLogsDB', 'logs', $collections['logs'], $pools);
-
         // create appwrite database, `dbForPlatform` is a direct access call.
-        createDatabase($app, 'dbForPlatform', 'appwrite', $collections['console'], $pools, function (Database $dbForPlatform) use ($collections, $app) {
-            $authorization = $app->getResource('authorization');
-
-            if ($dbForPlatform->getCollection(AuditAdapterSQL::COLLECTION)->isEmpty()) {
-                $adapter = new AdapterDatabase($dbForPlatform);
-                $audit = new Audit($adapter);
-                $audit->setup();
-            }
+        createDatabase($container, 'dbForPlatform', 'appwrite', $collections['console'], $pools, function (Database $dbForPlatform) use ($collections, $container) {
+            $authorization = $container->get('authorization');
 
             if ($dbForPlatform->getDocument('buckets', 'default')->isEmpty()) {
                 $dbForPlatform->createDocument('buckets', new Document([
@@ -358,8 +242,8 @@ $http->on(Constant::EVENT_START, function ($http) use ($payloadSize, $totalWorke
                     '$id' => ID::custom($index['$id']),
                     'type' => $index['type'],
                     'attributes' => $index['attributes'],
-                    'lengths' => $index['lengths'],
-                    'orders' => $index['orders'],
+                    'lengths' => $index['lengths'] ?? [],
+                    'orders' => $index['orders'] ?? [],
                 ]), $files['indexes']);
 
                 $dbForPlatform->createCollection('bucket_' . $bucket->getSequence(), $attributes, $indexes);
@@ -404,8 +288,8 @@ $http->on(Constant::EVENT_START, function ($http) use ($payloadSize, $totalWorke
                     '$id' => ID::custom($index['$id']),
                     'type' => $index['type'],
                     'attributes' => $index['attributes'],
-                    'lengths' => $index['lengths'],
-                    'orders' => $index['orders'],
+                    'lengths' => $index['lengths'] ?? [],
+                    'orders' => $index['orders'] ?? [],
                 ]), $files['indexes']);
 
                 $authorization->skip(fn () => $dbForPlatform->createCollection('bucket_' . $bucket->getSequence(), $attributes, $indexes));
@@ -415,27 +299,19 @@ $http->on(Constant::EVENT_START, function ($http) use ($payloadSize, $totalWorke
         $projectCollections = $collections['projects'];
 
         $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
-        $sharedTablesV1 = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES_V1', ''));
-        $sharedTablesV2 = \array_diff($sharedTables, $sharedTablesV1);
-
         $documentsSharedTables = \explode(',', System::getEnv('_APP_DATABASE_DOCUMENTSDB_SHARED_TABLES', ''));
-        $documentsSharedTablesV1 = \explode(',', System::getEnv('_APP_DATABASE_DOCUMENTSDB_SHARED_TABLES_V1', ''));
-        $documentsSharedTablesV2 = \array_diff($documentsSharedTables, $documentsSharedTablesV1);
-
         $vectorSharedTables = \explode(',', System::getEnv('_APP_DATABASE_VECTORSDB_SHARED_TABLES', ''));
-        $vectorSharedTablesV1 = \explode(',', System::getEnv('_APP_DATABASE_VECTORSDB_SHARED_TABLES_V1', ''));
-        $vectorSharedTablesV2 = \array_diff($vectorSharedTables, $vectorSharedTablesV1);
 
-        $cache = $app->getResource('cache');
+        $cache = $container->get('cache');
 
-        // All shared tables V2 pools that need project metadata collections
-        $sharedTablesV2All = \array_values(\array_unique(\array_filter([
-            ...$sharedTablesV2,
-            ...$documentsSharedTablesV2,
-            ...$vectorSharedTablesV2,
+        // All shared tables pools that need project metadata collections
+        $allSharedTables = \array_values(\array_unique(\array_filter([
+            ...$sharedTables,
+            ...$documentsSharedTables,
+            ...$vectorSharedTables,
         ])));
 
-        foreach ($sharedTablesV2All as $hostname) {
+        foreach ($allSharedTables as $hostname) {
             Span::init('database.setup');
             Span::add('database.hostname', $hostname);
 
@@ -468,12 +344,6 @@ $http->on(Constant::EVENT_START, function ($http) use ($payloadSize, $totalWorke
                 }
             }
 
-            if ($dbForProject->getCollection(AuditAdapterSQL::COLLECTION)->isEmpty()) {
-                $adapter = new AdapterDatabase($dbForProject);
-                $audit = new Audit($adapter);
-                $audit->setup();
-            }
-
             $collectionsCreated = 0;
             foreach ($projectCollections as $key => $collection) {
                 if (($collection['$collection'] ?? '') !== Database::METADATA) {
@@ -493,6 +363,69 @@ $http->on(Constant::EVENT_START, function ($http) use ($payloadSize, $totalWorke
             Span::add('database.collections_created', $collectionsCreated);
             Span::current()?->finish();
         }
+
+        // Usage is in ClickHouse, not the primary database, so it sets itself up
+        // here. Giving up never blocks boot; reads and ingestion gate on
+        // Connection::isReady() and recover once the schema lands.
+        /** @var \Appwrite\Usage\Connection $usageConnection */
+        $usageConnection = $container->get('usageConnection');
+
+        if ($usageConnection->isEnabled()) {
+            Span::init('usage.setup');
+
+            $max = 15;
+            $sleep = 2;
+            $attempts = 0;
+
+            while (true) {
+                try {
+                    $attempts++;
+                    $usageConnection->setup();
+                    Console::success('[Setup] - Usage schema is ready');
+                    break;
+                } catch (\Throwable $e) {
+                    if ($attempts >= $max) {
+                        Span::add('usage.ready', false);
+                        Console::warning('[Setup] - Skip: usage schema is not ready: ' . $e->getMessage());
+                        break;
+                    }
+
+                    Console::warning("  └── Usage schema setup failed. Retrying ({$attempts})...");
+                    sleep($sleep);
+                }
+            }
+
+            Span::current()?->finish();
+        }
+
+        /** @var \Appwrite\Execution\Store $executionStore */
+        $executionStore = $container->get('executionStore');
+
+        Span::init('executions.setup');
+
+        $max = 15;
+        $sleep = 2;
+        $attempts = 0;
+
+        while (true) {
+            try {
+                $attempts++;
+                $executionStore->setup();
+                Console::success('[Setup] - Execution schema is ready');
+                break;
+            } catch (\Throwable $e) {
+                if ($attempts >= $max) {
+                    Span::add('executions.ready', false);
+                    Console::warning('[Setup] - Skip: execution schema is not ready: ' . $e->getMessage());
+                    break;
+                }
+
+                Console::warning("  └── Execution schema setup failed. Retrying ({$attempts})...");
+                sleep($sleep);
+            }
+        }
+
+        Span::current()?->finish();
     });
 
     Span::init('http.server.start');
@@ -502,9 +435,6 @@ $http->on(Constant::EVENT_START, function ($http) use ($payloadSize, $totalWorke
     Span::add('server.manager_pid', $http->manager_pid);
     Span::current()?->finish();
 
-    // Start the task that starts fetching custom domains
-    $http->task([], 0);
-
     // listen ctrl + c
     Process::signal(2, function () use ($http) {
         Console::log('Stop by Ctrl+C');
@@ -512,7 +442,7 @@ $http->on(Constant::EVENT_START, function ($http) use ($payloadSize, $totalWorke
     });
 });
 
-$swooleAdapter->onRequest(function ($utopiaRequest, $utopiaResponse) use ($files, $swooleAdapter, $registerRequestResources) {
+$swoole->onRequest(function ($utopiaRequest, $utopiaResponse) use ($files, $swoole, $setRequestContext) {
     Span::init('http.request');
 
     $request = new Request($utopiaRequest->getSwooleRequest());
@@ -532,20 +462,19 @@ $swooleAdapter->onRequest(function ($utopiaRequest, $utopiaResponse) use ($files
         return;
     }
 
-    $requestContainer = $swooleAdapter->getContainer();
-    $requestContainer->set('request', fn () => $request);
-    $requestContainer->set('response', fn () => $response);
+    $app = new Http($swoole, 'UTC');
+    $app->context()->set('request', fn () => $request);
+    $app->context()->set('response', fn () => $response);
+    $app->context()->set('utopia', fn () => $app);
 
-    $app = new Http($swooleAdapter, 'UTC');
-    $requestContainer->set('utopia', fn () => $app);
-
-    $registerRequestResources($requestContainer);
+    $setRequestContext($app->context());
 
     $app->setCompression(System::getEnv('_APP_COMPRESSION_ENABLED', 'enabled') === 'enabled');
     $app->setCompressionMinSize(intval(System::getEnv('_APP_COMPRESSION_MIN_SIZE_BYTES', '1024'))); // 1KB
 
+    $error = null;
     try {
-        $authorization = $app->getResource('authorization');
+        $authorization = $app->context()->get('authorization');
 
         $request->setAuthorization($authorization);
         $response->setAuthorization($authorization);
@@ -554,77 +483,32 @@ $swooleAdapter->onRequest(function ($utopiaRequest, $utopiaResponse) use ($files
 
         $app->run($request, $response);
 
-        $route = $app->getRoute();
+        $route = $app->match($request)?->route;
         Span::add('http.path', $route?->getPath() ?? 'unknown');
     } catch (\Throwable $th) {
-        Span::error($th);
+        $error = $th;
 
         $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
 
-        $logger = $app->getResource("logger");
-        if ($logger) {
-            try {
-                /** @var Utopia\Database\Document $user */
-                $user = $app->getResource('user');
-            } catch (\Throwable $_th) {
-                // All good, user is optional information for logger
+        $route = $app->match($request)?->route;
+
+        try {
+            /** @var Utopia\Database\Document $user */
+            $user = $app->context()->get('user');
+            Span::add('user.id', $user->isEmpty() ? 'guest-' . hash('sha256', $request->getIP()) : $user->getId());
+        } catch (\Throwable $_th) {
+            // All good, user is optional information
+        }
+        Span::add('http.hostname', $request->getHostname());
+        Span::add('http.locale', (string)$request->getParam('locale', $request->getHeaderLine('x-appwrite-locale', '')));
+
+        $sdk = $route?->getLabel("sdk", false);
+        if (!empty($sdk)) {
+            if (\is_array($sdk)) {
+                $sdk = $sdk[0];
             }
-
-            $route = $app->getRoute();
-
-            $log = $app->getResource("log");
-
-            if (isset($user) && !$user->isEmpty()) {
-                $log->setUser(new User($user->getId()));
-            } else {
-                $log->setUser(new User('guest-' . hash('sha256', $request->getIP())));
-            }
-
-            $log->setNamespace("http");
-            $log->setServer(System::getEnv('_APP_LOGGING_SERVICE_IDENTIFIER', \gethostname()));
-            $log->setVersion($version);
-            $log->setType(Log::TYPE_ERROR);
-            $log->setMessage($th->getMessage());
-
-            $log->addTag('method', $route?->getMethod() ?? $request->getMethod());
-            $log->addTag('url', $route?->getPath() ?? $request->getURI());
-            $log->addTag('verboseType', get_class($th));
-            $log->addTag('code', $th->getCode());
-            // $log->addTag('projectId', $project->getId()); // TODO: Figure out how to get ProjectID, if it becomes relevant
-            $log->addTag('hostname', $request->getHostname());
-            $log->addTag('locale', (string)$request->getParam('locale', $request->getHeader('x-appwrite-locale', '')));
-
-            $log->addExtra('file', $th->getFile());
-            $log->addExtra('line', $th->getLine());
-            $log->addExtra('trace', $th->getTraceAsString());
-            $log->addExtra('roles', isset($authorization) ? $authorization->getRoles() : []);
-
-            $sdk = $route?->getLabel("sdk", false);
-
-            $action = 'UNKNOWN_NAMESPACE.UNKNOWN.METHOD';
-            if (!empty($sdk)) {
-                if (\is_array($sdk)) {
-                    $sdk = $sdk[0];
-                }
-                /** @var Appwrite\SDK\Method $sdk */
-                $action = $sdk->getNamespace() . '.' . $sdk->getMethodName();
-            } elseif ($route === null) {
-                $path = ltrim(parse_url($request->getURI(), PHP_URL_PATH) ?? '/', '/') ?: 'root';
-                $action = 'http.' . $request->getMethod() . '.' . $path;
-            }
-
-            $log->setAction($action);
-            $log->addTag('service', $action);
-
-            $isProduction = System::getEnv('_APP_ENV', 'development') === 'production';
-            $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
-
-            try {
-                $responseCode = $logger->addLog($log);
-                Console::info('Error log pushed with status code: ' . $responseCode);
-            } catch (Throwable $th) {
-                Console::error('Error pushing log: ' . $th->getMessage());
-            }
+            /** @var Appwrite\SDK\Method $sdk */
+            Span::add('http.service', $sdk->getNamespace() . '.' . $sdk->getMethodName());
         }
 
         $swooleResponse = $utopiaResponse->getSwooleResponse();
@@ -646,87 +530,8 @@ $swooleAdapter->onRequest(function ($utopiaRequest, $utopiaResponse) use ($files
         $swooleResponse->end(\json_encode($output));
     } finally {
         Span::add('http.response.code', $response->getStatusCode());
-        Span::current()?->finish();
+        Span::current()?->finish(error: $error);
     }
 });
 
-// Fetch domains every `DOMAIN_SYNC_TIMER` seconds and update in the memory
-$http->on(Constant::EVENT_TASK, function () use ($swooleAdapter) {
-    $lastSyncUpdate = null;
-
-    $app = new Http($swooleAdapter, 'UTC');
-
-    /** @var Utopia\Database\Database $dbForPlatform */
-    $dbForPlatform = $app->getResource('dbForPlatform');
-
-    /** @var \Swoole\Table $riskyDomains */
-    $riskyDomains = $app->getResource('riskyDomains');
-
-    Timer::tick(DOMAIN_SYNC_TIMER * 1000, function () use ($dbForPlatform, $riskyDomains, &$lastSyncUpdate, $app) {
-        try {
-            $time = DateTime::now();
-            $limit = 1000;
-            $sum = $limit;
-            $latestDocument = null;
-
-            while ($sum === $limit) {
-                $queries = [Query::limit($limit)];
-                if ($latestDocument !== null) {
-                    $queries[] =  Query::cursorAfter($latestDocument);
-                }
-                if ($lastSyncUpdate !== null) {
-                    $queries[] = Query::greaterThanEqual('$updatedAt', $lastSyncUpdate);
-                }
-                $results = [];
-                try {
-                    $authorization = $app->getResource('authorization');
-                    $results = $authorization->skip(fn () =>  $dbForPlatform->find('rules', $queries));
-                } catch (Throwable $th) {
-                    Console::error('rules ' . $th->getMessage());
-                }
-
-                $sum = count($results);
-                foreach ($results as $document) {
-                    $domain = $document->getAttribute('domain');
-
-                    $denyDomains = [];
-                    $denyEnvVars = [
-                        System::getEnv('_APP_DOMAIN_FUNCTIONS_FALLBACK', ''),
-                        System::getEnv('_APP_DOMAIN_FUNCTIONS', ''),
-                        System::getEnv('_APP_DOMAIN_SITES', ''),
-                    ];
-                    foreach ($denyEnvVars as $denyEnvVar) {
-                        foreach (\explode(',', $denyEnvVar) as $denyDomain) {
-                            if (empty($denyDomain)) {
-                                continue;
-                            }
-                            $denyDomains[] = $denyDomain;
-                        }
-                    }
-
-                    $isDenyDomain = false;
-                    foreach ($denyDomains as $denyDomain) {
-                        if (str_ends_with($domain, $denyDomain)) {
-                            $isDenyDomain = true;
-                        }
-                    }
-
-                    if ($isDenyDomain) {
-                        continue;
-                    }
-
-                    $riskyDomains->set(md5($domain), ['value' => 1]);
-                }
-                $latestDocument = !empty(array_key_last($results)) ? $results[array_key_last($results)] : null;
-            }
-            $lastSyncUpdate = $time;
-            if ($sum > 0) {
-                Console::log("Sync domains tick: {$sum} domains were updated");
-            }
-        } catch (Throwable $th) {
-            Console::error($th->getMessage());
-        }
-    });
-});
-
-$swooleAdapter->start();
+$swoole->start();

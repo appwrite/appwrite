@@ -1,1 +1,0 @@
-Get a function by its unique ID.

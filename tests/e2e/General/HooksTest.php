@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\General;
 
 use Appwrite\Extend\Exception;
@@ -9,7 +11,7 @@ use Tests\E2E\Scopes\ProjectConsole;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
 
-class HooksTest extends Scope
+final class HooksTest extends Scope
 {
     use ProjectConsole;
     use SideClient;

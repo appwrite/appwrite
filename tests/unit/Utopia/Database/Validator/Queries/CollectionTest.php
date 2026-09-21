@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Utopia\Database\Validator\Queries;
 
 use Appwrite\Utopia\Database\Validator\Queries\Base;
@@ -7,7 +9,7 @@ use PHPUnit\Framework\TestCase;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 
-class CollectionTest extends TestCase
+final class CollectionTest extends TestCase
 {
     public function setUp(): void
     {
@@ -21,7 +23,7 @@ class CollectionTest extends TestCase
     {
         $validator = new Base('users', []);
 
-        $this->assertEquals($validator->isValid([]), true);
+        $this->assertTrue($validator->isValid([]));
     }
 
     public function testValid(): void

@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Utopia\Database\Validator;
 
 use Appwrite\Utopia\Database\Validator\CompoundUID;
 use PHPUnit\Framework\TestCase;
 
-class CompoundUIDTest extends TestCase
+final class CompoundUIDTest extends TestCase
 {
     protected ?CompoundUID $object = null;
 
@@ -20,18 +22,18 @@ class CompoundUIDTest extends TestCase
 
     public function testValues(): void
     {
-        $this->assertEquals($this->object->isValid('123:456'), true);
-        $this->assertEquals($this->object->isValid('123'), false);
-        $this->assertEquals($this->object->isValid('123:_456'), false);
-        $this->assertEquals($this->object->isValid('dasda asdasd'), false);
-        $this->assertEquals($this->object->isValid('dasda:asdasd'), true);
-        $this->assertEquals($this->object->isValid('_asdas:dasdas'), false);
-        $this->assertEquals($this->object->isValid('as$$5da:sdasdas'), false);
-        $this->assertEquals($this->object->isValid(false), false);
-        $this->assertEquals($this->object->isValid(null), false);
-        $this->assertEquals($this->object->isValid('socialAccountForYoutubeAndRestSubscribers:12345'), false);
-        $this->assertEquals($this->object->isValid('socialAccountForYoutubeAndRSubscriber:12345'), false);
-        $this->assertEquals($this->object->isValid('socialAccount:ForYoutubeSubscribe'), true);
-        $this->assertEquals($this->object->isValid('socialAccountForYoutubeSubscribe:socialAccountForYoutubeSubscribe'), true);
+        $this->assertTrue($this->object->isValid('123:456'));
+        $this->assertFalse($this->object->isValid('123'));
+        $this->assertFalse($this->object->isValid('123:_456'));
+        $this->assertFalse($this->object->isValid('dasda asdasd'));
+        $this->assertTrue($this->object->isValid('dasda:asdasd'));
+        $this->assertFalse($this->object->isValid('_asdas:dasdas'));
+        $this->assertFalse($this->object->isValid('as$$5da:sdasdas'));
+        $this->assertFalse($this->object->isValid(false));
+        $this->assertFalse($this->object->isValid(null));
+        $this->assertFalse($this->object->isValid('socialAccountForYoutubeAndRestSubscribers:12345'));
+        $this->assertFalse($this->object->isValid('socialAccountForYoutubeAndRSubscriber:12345'));
+        $this->assertTrue($this->object->isValid('socialAccount:ForYoutubeSubscribe'));
+        $this->assertTrue($this->object->isValid('socialAccountForYoutubeSubscribe:socialAccountForYoutubeSubscribe'));
     }
 }

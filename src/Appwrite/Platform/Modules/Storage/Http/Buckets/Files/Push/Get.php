@@ -40,6 +40,7 @@ class Get extends Action
             ->desc('Get file for push notification')
             ->groups(['api', 'storage'])
             ->label('scope', 'public')
+            ->label('usage.resource', 'bucket/{request.bucketId}/file/{request.fileId}')
             ->label('resourceType', RESOURCE_TYPE_BUCKETS)
             ->param('bucketId', '', new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).')
             ->param('fileId', '', new UID(), 'File ID.')
@@ -90,7 +91,7 @@ class Get extends Action
         $disposition = $decoded['disposition'] ?? 'inline';
         $dbForProject = $isInternal ? $dbForPlatform : $dbForProject;
 
-        $isAPIKey = $user->isApp($authorization->getRoles());
+        $isAPIKey = $user->isKey($authorization->getRoles());
         $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
 
         $bucket = $authorization->skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
@@ -119,7 +120,7 @@ class Get extends Action
 
         $size = $file->getAttribute('sizeOriginal', 0);
 
-        $rangeHeader = $request->getHeader('range');
+        $rangeHeader = $request->getHeaderLine('range');
         if (!empty($rangeHeader)) {
             $start = $request->getRangeStart();
             $end = $request->getRangeEnd();
@@ -150,7 +151,7 @@ class Get extends Action
 
         $source = '';
         if (!empty($file->getAttribute('openSSLCipher'))) { // Decrypt
-            $source = $deviceForFiles->read($path);
+            $source = (string) $deviceForFiles->read($path);
             $source = OpenSSL::decrypt(
                 $source,
                 $file->getAttribute('openSSLCipher'),
@@ -164,14 +165,14 @@ class Get extends Action
         switch ($file->getAttribute('algorithm', Compression::NONE)) {
             case Compression::ZSTD:
                 if (empty($source)) {
-                    $source = $deviceForFiles->read($path);
+                    $source = (string) $deviceForFiles->read($path);
                 }
                 $compressor = new Zstd();
                 $source = $compressor->decompress($source);
                 break;
             case Compression::GZIP:
                 if (empty($source)) {
-                    $source = $deviceForFiles->read($path);
+                    $source = (string) $deviceForFiles->read($path);
                 }
                 $compressor = new GZIP();
                 $source = $compressor->decompress($source);
@@ -188,7 +189,7 @@ class Get extends Action
         }
 
         if (!empty($rangeHeader)) {
-            $response->send($deviceForFiles->read($path, $start, ($end - $start + 1)));
+            $response->send((string) $deviceForFiles->read($path, $start, ($end - $start + 1)));
             return;
         }
 
@@ -196,7 +197,7 @@ class Get extends Action
         if ($size > APP_STORAGE_READ_BUFFER) {
             for ($i = 0; $i < ceil($size / MAX_OUTPUT_CHUNK_SIZE); $i++) {
                 $response->chunk(
-                    $deviceForFiles->read(
+                    (string) $deviceForFiles->read(
                         $path,
                         ($i * MAX_OUTPUT_CHUNK_SIZE),
                         min(MAX_OUTPUT_CHUNK_SIZE, $size - ($i * MAX_OUTPUT_CHUNK_SIZE))
@@ -205,7 +206,7 @@ class Get extends Action
                 );
             }
         } else {
-            $response->send($deviceForFiles->read($path));
+            $response->send((string) $deviceForFiles->read($path));
         }
     }
 }

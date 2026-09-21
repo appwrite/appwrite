@@ -2,20 +2,21 @@
 
 namespace Appwrite\Platform\Modules\Proxy\Http\Rules\Site;
 
-use Appwrite\Event\Certificate;
+use Appwrite\Certificates\Certificates;
 use Appwrite\Event\Event;
+use Appwrite\Event\Publisher\Certificate;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Proxy\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Utopia\Bus\Bus;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Helpers\ID;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
-use Utopia\Logger\Log;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
 use Utopia\Validator\Domain as ValidatorDomain;
@@ -45,12 +46,14 @@ class Create extends Action
             ->label('audits.resource', 'rule/{response.$id}')
             ->label('sdk', new Method(
                 namespace: 'proxy',
-                group: null,
+                group: 'rules',
                 name: 'createSiteRule',
                 description: <<<EOT
                 Create a new proxy rule for serving Appwrite Site on custom domain.
+
+                Rule ID is automatically generated as MD5 hash of a rule domain for performance purposes.
                 EOT,
-                auth: [AuthType::ADMIN],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_CREATED,
@@ -66,17 +69,38 @@ class Create extends Action
             ->param('branch', '', new Text(255, 0), 'Name of VCS branch to deploy changes automatically', true)
             ->inject('response')
             ->inject('project')
-            ->inject('queueForCertificates')
+            ->inject('publisherForCertificates')
+            ->inject('certificateIssuer')
             ->inject('queueForEvents')
             ->inject('dbForPlatform')
             ->inject('dbForProject')
             ->inject('platform')
-            ->inject('log')
+            ->inject('authorization')
+            ->inject('bus')
             ->callback($this->action(...));
     }
 
-    public function action(string $domain, string $siteId, ?string $branch, Response $response, Document $project, Certificate $queueForCertificates, Event $queueForEvents, Database $dbForPlatform, Database $dbForProject, array $platform, Log $log)
-    {
+    public function action(
+        string $domain,
+        string $siteId,
+        ?string $branch,
+        Response $response,
+        Document $project,
+        Certificate $publisherForCertificates,
+        Certificates $certificateIssuer,
+        Event $queueForEvents,
+        Database $dbForPlatform,
+        Database $dbForProject,
+        array $platform,
+        Authorization $authorization,
+        Bus $bus,
+    ) {
+
+        // DNS is case-insensitive, and the rule ID below is derived from the
+        // lowercased domain. Store the same canonical form so the row matches
+        // its own ID and downstream certificate providers.
+        $domain = \strtolower($domain);
+
         $this->validateDomainRestrictions($domain, $platform);
 
         $site = $dbForProject->getDocument('sites', $siteId);
@@ -118,30 +142,37 @@ class Create extends Action
 
         if ($rule->getAttribute('status', '') === RULE_STATUS_CREATED) {
             try {
-                $this->verifyRule($rule, $log);
+                $this->verifyRule($rule);
                 $rule->setAttribute('status', RULE_STATUS_CERTIFICATE_GENERATING);
             } catch (Exception $err) {
                 $rule->setAttribute('logs', $err->getMessage());
             }
         }
 
-        try {
-            $rule = $dbForPlatform->createDocument('rules', $rule);
-        } catch (Duplicate $e) {
-            throw new Exception(Exception::RULE_ALREADY_EXISTS);
-        }
+        $rule = $this->createRule($rule, $dbForPlatform, $authorization, $bus);
 
-        if ($rule->getAttribute('status', '') === RULE_STATUS_CERTIFICATE_GENERATING) {
-            $queueForCertificates
-                ->setDomain(new Document([
+        $needsCertificate = $rule->getAttribute('status', '') === RULE_STATUS_CERTIFICATE_GENERATING
+            || $certificateIssuer->isAutoIssueEnabled($rule);
+
+        if ($needsCertificate) {
+            $publisherForCertificates->enqueue(new \Appwrite\Event\Message\Certificate(
+                project: $project,
+                domain: new Document([
                     'domain' => $rule->getAttribute('domain'),
                     'domainType' => $rule->getAttribute('deploymentResourceType', $rule->getAttribute('type')),
-                ]))
-                ->setAction(Certificate::ACTION_GENERATION)
-                ->trigger();
+                ]),
+                action: \Appwrite\Event\Certificate::ACTION_GENERATION,
+            ));
         }
 
         $queueForEvents->setParam('ruleId', $rule->getId());
+
+        // Rename 'created' status to 'unverified' for consistency.
+        // 'verifying' and 'verified' statuses stay as is.
+        // 'unverified' in the meaning of failed certificate generation stays as is.
+        if ($rule->getAttribute('status') === 'created') {
+            $rule->setAttribute('status', 'unverified');
+        }
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)

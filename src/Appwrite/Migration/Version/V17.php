@@ -262,7 +262,7 @@ class V17 extends Migration
                  * Set default maxSessions
                  */
                 $document->setAttribute('auths', array_merge($document->getAttribute('auths', []), [
-                    'maxSessions' => APP_LIMIT_USER_SESSIONS_DEFAULT
+                    'maxSessions' => 10
                 ]));
                 break;
             case 'users':

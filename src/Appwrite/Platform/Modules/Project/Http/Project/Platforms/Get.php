@@ -75,7 +75,8 @@ class Get extends Action
             throw new Exception(Exception::PLATFORM_NOT_FOUND);
         }
 
-        $type = $platform->getAttribute('type');
+        $type = Platform::mapDeprecatedType($platform->getAttribute('type'));
+        $platform->setAttribute('type', $type);
 
         $model = match($type) {
             Platform::TYPE_WEB => Response::MODEL_PLATFORM_WEB,

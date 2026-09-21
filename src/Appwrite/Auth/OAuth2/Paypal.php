@@ -180,6 +180,21 @@ class Paypal extends OAuth2
      * @param string $accessToken
      *
      * @return string
+     *
+     * @see https://developer.paypal.com/api/identity/v1/definitions/userinfo/ (picture field)
+     * @see https://developer.paypal.com/api/identity/v1/userinfo-get/
+     */
+    public function getUserPhoto(string $accessToken): string
+    {
+        $user = $this->getUser($accessToken);
+
+        return $user['picture'] ?? '';
+    }
+
+    /**
+     * @param string $accessToken
+     *
+     * @return string
      */
     public function getUserName(string $accessToken): string
     {

@@ -2,9 +2,11 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes;
 
-use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Event;
+use Appwrite\Event\Message\Database as DatabaseMessage;
+use Appwrite\Event\Publisher\Database as DatabasePublisher;
 use Appwrite\Extend\Exception;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Action as DatabasesAction;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Throwable;
@@ -20,27 +22,28 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Structure;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
-use Utopia\Platform\Action as UtopiaAction;
 use Utopia\Validator\Range;
 
-abstract class Action extends UtopiaAction
+abstract class Action extends DatabasesAction
 {
     /**
-     * @var string|null The current context (either 'column' or 'attribute')
+     * @var string The current context (either 'column' or 'attribute')
      */
-    private ?string $context = ATTRIBUTES;
+    private string $context = ATTRIBUTES;
 
     /**
      * Get the correct response model.
      */
     abstract protected function getResponseModel(): string|array;
 
-    public function setHttpPath(string $path): UtopiaAction
+    public function setHttpPath(string $path): DatabasesAction
     {
         if (\str_contains($path, '/tablesdb')) {
             $this->context = COLUMNS;
         }
-        return parent::setHttpPath($path);
+        parent::setHttpPath($path);
+
+        return $this;
     }
 
     /**
@@ -241,6 +244,10 @@ abstract class Action extends UtopiaAction
                 ? UtopiaResponse::MODEL_ATTRIBUTE_INTEGER
                 : UtopiaResponse::MODEL_COLUMN_INTEGER,
 
+            Database::VAR_BIGINT => $isCollections
+                ? UtopiaResponse::MODEL_ATTRIBUTE_BIGINT
+                : UtopiaResponse::MODEL_COLUMN_BIGINT,
+
             Database::VAR_FLOAT => $isCollections
                 ? UtopiaResponse::MODEL_ATTRIBUTE_FLOAT
                 : UtopiaResponse::MODEL_COLUMN_FLOAT,
@@ -308,7 +315,7 @@ abstract class Action extends UtopiaAction
         };
     }
 
-    protected function createAttribute(string $databaseId, string $collectionId, Document $attribute, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents, Authorization $authorization): Document
+    protected function createAttribute(string $databaseId, string $collectionId, Document $attribute, Response $response, Database $dbForProject, DatabasePublisher $publisherForDatabase, Event $queueForEvents, Authorization $authorization): Document
     {
         $key = $attribute->getAttribute('key');
         $type = $attribute->getAttribute('type', '');
@@ -328,7 +335,7 @@ abstract class Action extends UtopiaAction
 
         $db = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
-        if ($db->isEmpty()) {
+        if ($db->isEmpty() || $this->isDatabaseTypeMismatch($db)) {
             throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
         }
 
@@ -460,20 +467,6 @@ abstract class Action extends UtopiaAction
             $dbForProject->purgeCachedCollection('database_' . $db->getSequence() . '_collection_' . $relatedCollection->getSequence());
         }
 
-        $queueForDatabase
-            ->setType(DATABASE_TYPE_CREATE_ATTRIBUTE)
-            ->setDatabase($db);
-
-        if ($this->isCollectionsAPI()) {
-            $queueForDatabase
-                ->setDocument($attribute)
-                ->setCollection($collection);
-        } else {
-            $queueForDatabase
-                ->setRow($attribute)
-                ->setTable($collection);
-        }
-
         $queueForEvents
             ->setContext('database', $db)
             ->setParam('databaseId', $databaseId)
@@ -482,6 +475,18 @@ abstract class Action extends UtopiaAction
             ->setParam('attributeId', $attribute->getId())
             ->setParam('columnId', $attribute->getId())
             ->setContext($this->getCollectionsEventsContext(), $collection);
+
+        $publisherForDatabase->enqueue(new DatabaseMessage(
+            project: $queueForEvents->getProject(),
+            user: $queueForEvents->getUser(),
+            type: DATABASE_TYPE_CREATE_ATTRIBUTE,
+            database: $db,
+            collection: $this->isCollectionsAPI() ? $collection : null,
+            document: $this->isCollectionsAPI() ? $attribute : null,
+            table: $this->isCollectionsAPI() ? null : $collection,
+            row: $this->isCollectionsAPI() ? null : $attribute,
+            events: Event::generateEvents($queueForEvents->getEvent(), $queueForEvents->getParams()),
+        ));
 
         $response->setStatusCode(SwooleResponse::STATUS_CODE_CREATED);
 
@@ -492,7 +497,7 @@ abstract class Action extends UtopiaAction
     {
         $db = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
-        if ($db->isEmpty()) {
+        if ($db->isEmpty() || $this->isDatabaseTypeMismatch($db)) {
             throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
         }
 
@@ -512,11 +517,14 @@ abstract class Action extends UtopiaAction
             throw new Exception($this->getNotAvailableException());
         }
 
-        if ($attribute->getAttribute(('type') !== $type)) {
+        if ($attribute->getAttribute('type') !== $type) {
             throw new Exception($this->getTypeInvalidException());
         }
 
-        if ($attribute->getAttribute('type') === Database::VAR_STRING && $attribute->getAttribute(('filter') !== $filter)) {
+        // The discriminator for a formatted string is persisted as 'format', and is
+        // the empty string for a plain one, while the plain string endpoint passes
+        // no filter at all.
+        if ($attribute->getAttribute('type') === Database::VAR_STRING && $attribute->getAttribute('format', '') !== ($filter ?? '')) {
             throw new Exception($this->getTypeInvalidException());
         }
 
@@ -526,6 +534,13 @@ abstract class Action extends UtopiaAction
 
         if ($attribute->getAttribute('array', false) && isset($default)) {
             throw new Exception($this->getDefaultUnsupportedException(), 'Cannot set default value for array ' . $this->getContext() . 's');
+        }
+
+        if ($size !== null && $size < APP_DATABASE_ENCRYPT_SIZE_MIN && \in_array('encrypt', $attribute->getAttribute('filters', []), true)) {
+            throw new Exception(
+                Exception::GENERAL_BAD_REQUEST,
+                'Size too small. Encrypted strings require a minimum size of ' . APP_DATABASE_ENCRYPT_SIZE_MIN . ' characters.'
+            );
         }
 
         $collectionId = 'database_' . $db->getSequence() . '_collection_' . $collection->getSequence();
@@ -540,6 +555,7 @@ abstract class Action extends UtopiaAction
 
         switch ($attribute->getAttribute('format')) {
             case APP_DATABASE_ATTRIBUTE_INT_RANGE:
+            case APP_DATABASE_ATTRIBUTE_BIGINT_RANGE:
             case APP_DATABASE_ATTRIBUTE_FLOAT_RANGE:
                 $min ??= $attribute->getAttribute('formatOptions')['min'];
                 $max ??= $attribute->getAttribute('formatOptions')['max'];
@@ -548,14 +564,15 @@ abstract class Action extends UtopiaAction
                     throw new Exception($this->getInvalidValueException(), 'Minimum value must be lesser than maximum value');
                 }
 
-                if ($attribute->getAttribute('format') === APP_DATABASE_ATTRIBUTE_INT_RANGE) {
-                    $validator = new Range($min, $max, Database::VAR_INTEGER);
-                } else {
+                if ($attribute->getAttribute('format') === APP_DATABASE_ATTRIBUTE_FLOAT_RANGE) {
                     $validator = new Range($min, $max, Database::VAR_FLOAT);
 
                     if (!is_null($default)) {
                         $default = \floatval($default);
                     }
+                } else {
+                    // intRange and bigintRange share the same integer range semantics
+                    $validator = new Range($min, $max, Range::TYPE_INTEGER);
                 }
 
                 if (!is_null($default) && !$validator->isValid($default)) {
@@ -630,7 +647,7 @@ abstract class Action extends UtopiaAction
             }
         } else {
             try {
-                $dbForProject->updateAttribute(
+                $definition = $dbForProject->updateAttribute(
                     collection: $collectionId,
                     id: $key,
                     size: $size,
@@ -639,6 +656,16 @@ abstract class Action extends UtopiaAction
                     formatOptions: $options,
                     newKey: $newKey ?? null
                 );
+
+                // updateAttribute() keeps the stored default when given null,
+                // but the API uses null to clear it.
+                if ($default === null && $definition->getAttribute('default') !== null) {
+                    $dbForProject->updateAttributeDefault(
+                        collection: $collectionId,
+                        id: $definition->getId(),
+                        default: null
+                    );
+                }
             } catch (DuplicateException) {
                 throw new Exception($this->getDuplicateException(), params: [$key]);
             } catch (IndexException $e) {

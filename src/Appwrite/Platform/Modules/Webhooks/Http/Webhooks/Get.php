@@ -72,6 +72,8 @@ class Get extends Action
             throw new Exception(Exception::WEBHOOK_NOT_FOUND);
         }
 
+        $webhook->removeAttribute('signatureKey');
+
         $response->dynamic($webhook, Response::MODEL_WEBHOOK);
     }
 }

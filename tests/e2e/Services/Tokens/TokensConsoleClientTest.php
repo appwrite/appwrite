@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\Tokens;
 
 use Ahc\Jwt\JWT;
@@ -15,7 +17,7 @@ use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\System\System;
 
-class TokensConsoleClientTest extends Scope
+final class TokensConsoleClientTest extends Scope
 {
     use TokensBase;
     use ProjectCustom;
@@ -126,7 +128,7 @@ class TokensConsoleClientTest extends Scope
             'expire' => '2022-11-02',
         ]);
         $this->assertEquals(400, $token['headers']['status-code']);
-        $this->assertStringContainsString('Value must be valid date in the future', $token['body']['message']);
+        $this->assertStringContainsString('Value must be valid date in the future', (string) $token['body']['message']);
 
         // Success cases: With & without expiry
         $expireList = [null, date('Y-m-d', strtotime("tomorrow"))];
@@ -147,7 +149,6 @@ class TokensConsoleClientTest extends Scope
             $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 86400 * 365 * 10, 10); // 10 years maxAge
             try {
                 $payload = $jwt->decode($token['body']['secret']);
-                $this->assertIsArray($payload, 'JWT payload should decode to an array');
                 $this->assertArrayHasKey('tokenId', $payload, 'JWT payload should contain tokenId');
                 $this->assertArrayHasKey('resourceId', $payload, 'JWT payload should contain resourceId');
                 $this->assertArrayHasKey('resourceType', $payload, 'JWT payload should contain resourceType');
@@ -184,7 +185,7 @@ class TokensConsoleClientTest extends Scope
             'expire' => '2022-11-02',
         ]);
         $this->assertEquals(400, $token['headers']['status-code']);
-        $this->assertStringContainsString('Value must be valid date in the future', $token['body']['message']);
+        $this->assertStringContainsString('Value must be valid date in the future', (string) $token['body']['message']);
 
         // Finite expiry
         $expiry = date('Y-m-d', strtotime("tomorrow"));
@@ -204,7 +205,6 @@ class TokensConsoleClientTest extends Scope
         $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 86400 * 365 * 10, 10); // 10 years maxAge
         try {
             $payload = $jwt->decode($token['body']['secret']);
-            $this->assertIsArray($payload, 'JWT payload should decode to an array');
             $this->assertArrayHasKey('exp', $payload, 'JWT payload should contain exp field');
 
             $expectedExp = (new \DateTime($expiry))->getTimestamp();
@@ -226,7 +226,6 @@ class TokensConsoleClientTest extends Scope
         // Verify JWT does not contain exp for infinite expiry using native JWT decode
         try {
             $payload = $jwt->decode($token['body']['secret']);
-            $this->assertIsArray($payload, 'JWT payload should decode to an array');
             $this->assertArrayNotHasKey('exp', $payload, 'JWT payload should not contain exp field for infinite expiry');
         } catch (JWTException $e) {
             $this->fail('Failed to decode JWT: ' . $e->getMessage());
@@ -265,7 +264,6 @@ class TokensConsoleClientTest extends Scope
             // Verify the JWT token is valid and contains correct information
             try {
                 $payload = $jwt->decode($token['secret']);
-                $this->assertIsArray($payload, 'JWT payload should decode to an array');
                 $this->assertArrayHasKey('tokenId', $payload, 'JWT payload should contain tokenId');
                 $this->assertArrayHasKey('resourceId', $payload, 'JWT payload should contain resourceId');
                 $this->assertArrayHasKey('resourceType', $payload, 'JWT payload should contain resourceType');

@@ -1,47 +1,89 @@
-name: Nightly Security Scan
+name: "Nightly"
+
+# One build a day of the active release branch, for self-hosters who want to
+# track it. Unsupported, and never publishes to appwrite/ce -- Cloud builds from
+# cl-* tags through publish.yml.
+#
+# Tags on appwrite/appwrite: X.Y-nightly.<date> to pin or roll back to,
+# X.Y-nightly to follow the line, nightly to follow whatever line is active.
+
 on:
   schedule:
-    - cron: '0 0 * * *'  # 12am UTC daily runtime
+    - cron: '0 0 * * *'  # 12am UTC daily
   workflow_dispatch:
 
-jobs:
-  scan-image:
-    name: Scan Docker Image
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v6
-        with:
-          submodules: recursive
-      - name: Build the Docker image
-        run: DOCKER_BUILDKIT=1 docker build . --target production -t appwrite_image:latest
-      - name: Run Trivy vulnerability scanner on image
-        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # v0.35.0
-        with:
-          image-ref: 'appwrite_image:latest'
-          format: 'sarif'
-          output: 'trivy-image-results.sarif'
-          ignore-unfixed: 'false'
-          severity: 'CRITICAL,HIGH'
-      - name: Upload Docker Image Scan Results
-        uses: github/codeql-action/upload-sarif@v2
-        with:
-          sarif_file: 'trivy-image-results.sarif'
+concurrency:
+  group: nightly
+  cancel-in-progress: false
 
-  scan-code:
-    name: Scan Code
+permissions:
+  contents: read
+
+jobs:
+  nightly:
+    name: Build and publish
     runs-on: ubuntu-latest
+    timeout-minutes: 120
     steps:
-      - name: Check out code
-        uses: actions/checkout@v6
-      - name: Run Trivy vulnerability scanner on filesystem
-        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # v0.35.0
+      - name: Resolve the build
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          REMOTE: ${{ github.server_url }}/${{ github.repository }}
+        run: |
+          set -euo pipefail
+
+          branch=$(git ls-remote --heads "$REMOTE" \
+            | sed -n 's#.*refs/heads/##p' \
+            | grep -E '^[0-9]+\.[0-9]+\.x$' \
+            | sort -V \
+            | tail -1)
+
+          [ -n "$branch" ] || { echo '::error::No X.Y.x release branch on origin.'; exit 1; }
+
+          # The newest CI-green commit rather than the tip, so a red branch
+          # delays the channel instead of shipping through it.
+          sha=$(gh run list --workflow=ci.yml --branch="$branch" --event=push \
+            --status=success --limit=1 --json headSha --jq '.[0].headSha // empty')
+
+          [ -n "$sha" ] || { echo "::error::No green CI run on ${branch}."; exit 1; }
+
+          line="${branch%.x}"
+          version="${line}-nightly.$(date -u +%Y%m%d)"
+
+          {
+            echo "SHA=${sha}"
+            echo "VERSION=${version}"
+            echo "TAGS=appwrite/appwrite:${version},appwrite/appwrite:${line}-nightly,appwrite/appwrite:nightly"
+          } >> "$GITHUB_ENV"
+
+          echo "Publishing ${version} from ${branch} (${sha})." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Check out the resolved commit
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
-          scan-type: 'fs'
-          format: 'sarif'
-          output: 'trivy-fs-results.sarif'
-          severity: 'CRITICAL,HIGH'
-      - name: Upload Code Scan Results
-        uses: github/codeql-action/upload-sarif@v2
+          ref: ${{ env.SHA }}
+          submodules: recursive
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@ce360397dd3f832beb865e1373c09c0e9f86d70a # v4.0.0
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
         with:
-          sarif_file: 'trivy-fs-results.sarif'
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          target: production
+          build-args: VERSION=${{ env.VERSION }}
+          push: true
+          tags: ${{ env.TAGS }}
+          labels: org.opencontainers.image.revision=${{ env.SHA }}

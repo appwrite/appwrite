@@ -2,9 +2,9 @@
 
 namespace Appwrite\Platform\Modules\Databases\Workers;
 
+use Appwrite\Event\Message\Database as DatabaseMessage;
 use Appwrite\Event\Realtime;
 use Exception;
-use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception as DatabaseException;
@@ -14,9 +14,9 @@ use Utopia\Database\Exception\NotFound;
 use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Query;
-use Utopia\Logger\Log;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
+use Utopia\Span\Span;
 
 class Databases extends Action
 {
@@ -38,7 +38,6 @@ class Databases extends Action
             ->inject('dbForProject')
             ->inject('getDatabasesDB')
             ->inject('queueForRealtime')
-            ->inject('log')
             ->callback($this->action(...));
     }
 
@@ -48,52 +47,55 @@ class Databases extends Action
      * @param Database $dbForPlatform
      * @param Database $dbForProject
      * @param Realtime $queueForRealtime
-     * @param Log $log
      * @return void
      * @throws \Exception
      */
-    public function action(Message $message, Document $project, Database $dbForPlatform, Database $dbForProject, callable $getDatabasesDB, Realtime $queueForRealtime, Log $log): void
+    public function action(Message $message, Document $project, Database $dbForPlatform, Database $dbForProject, callable $getDatabasesDB, Realtime $queueForRealtime): void
     {
-        $payload = $message->getPayload() ?? [];
+        $payload = $message->getPayload();
 
         if (empty($payload)) {
             throw new Exception('Missing payload');
         }
 
-        $type = $payload['type'];
-        $document = new Document($payload['row'] ?? $payload['document'] ?? []);
-        $collection = new Document($payload['table'] ?? $payload['collection'] ?? []);
-        $database = new Document($payload['database'] ?? []);
+        $databaseMessage = DatabaseMessage::fromArray($payload);
+
+        $type = $databaseMessage->type;
+        Span::add('payload.type', $type);
+
+        $document = $databaseMessage->row ?? $databaseMessage->document ?? new Document();
+        Span::add('database.document.id', $document->getId());
+
+        $collection = $databaseMessage->table ?? $databaseMessage->collection ?? new Document();
+        Span::add('database.collection.id', $collection->getId());
+
+        $database = $databaseMessage->database ?? new Document();
+        Span::add('database.id', $database->getId());
+        Span::add('database.namespace', $dbForProject->getNamespace());
+        Span::add('database.tenant', $dbForProject->getTenant());
+
         /**
          * @var Database $dbForDatabases
          */
         $dbForDatabases = $getDatabasesDB($database);
-        $log->addTag('projectId', $project->getId());
-        $log->addTag('type', $type);
+        Span::add('project.id', $project->getId());
+        Span::add('type', $type);
 
         if ($database->isEmpty()) {
             throw new Exception('Missing database');
         }
 
-        $log->addTag('databaseId', $database->getId());
+        Span::add('database.id', $database->getId());
 
         match (\strval($type)) {
             DATABASE_TYPE_DELETE_DATABASE => $this->deleteDatabase($database, $dbForProject, $dbForDatabases),
             DATABASE_TYPE_DELETE_COLLECTION => $this->deleteCollection($database, $collection, $dbForProject, $dbForDatabases),
-            DATABASE_TYPE_CREATE_ATTRIBUTE => $this->createAttribute($database, $collection, $document, $project, $dbForPlatform, $dbForProject, $queueForRealtime),
+            DATABASE_TYPE_CREATE_ATTRIBUTE => $this->createAttribute($database, $collection, $document, $project, $dbForPlatform, $dbForProject, $dbForDatabases, $queueForRealtime),
             DATABASE_TYPE_DELETE_ATTRIBUTE => $this->deleteAttribute($database, $collection, $document, $project, $dbForPlatform, $dbForProject, $dbForDatabases, $queueForRealtime),
             DATABASE_TYPE_CREATE_INDEX => $this->createIndex($database, $collection, $document, $project, $dbForPlatform, $dbForProject, $dbForDatabases, $queueForRealtime),
             DATABASE_TYPE_DELETE_INDEX => $this->deleteIndex($database, $collection, $document, $project, $dbForPlatform, $dbForProject, $dbForDatabases, $queueForRealtime),
             default => throw new Exception('No database operation for type: ' . \strval($type)),
         };
-
-        Console::info("Finished processing database operation: \n" . \json_encode([
-            'type' => $type,
-            'projectId' => $project->getId(),
-            'databaseId' => $database->getId(),
-            'collectionId' => $collection->getId(),
-            'documentId' => $document->getId(),
-        ], JSON_PRETTY_PRINT));
     }
 
     /**
@@ -103,6 +105,7 @@ class Databases extends Action
      * @param Document $project
      * @param Database $dbForPlatform
      * @param Database $dbForProject
+     * @param Database $dbForDatabases
      * @param Realtime $queueForRealtime
      * @return void
      * @throws Authorization
@@ -117,6 +120,7 @@ class Databases extends Action
         Document $project,
         Database $dbForPlatform,
         Database $dbForProject,
+        Database $dbForDatabases,
         Realtime $queueForRealtime
     ): void {
         if ($collection->isEmpty()) {
@@ -178,7 +182,7 @@ class Databases extends Action
                     }
 
                     if (
-                        !$dbForProject->createRelationship(
+                        !$dbForDatabases->createRelationship(
                             collection: 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
                             relatedCollection: 'database_' . $database->getSequence() . '_collection_' . $relatedCollection->getSequence(),
                             type: $options['relationType'],
@@ -197,15 +201,13 @@ class Databases extends Action
                     }
                     break;
                 default:
-                    if (!$dbForProject->createAttribute('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $key, $type, $size, $required, $default, $signed, $array, $format, $formatOptions, $filters)) {
+                    if (!$dbForDatabases->createAttribute('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $key, $type, $size, $required, $default, $signed, $array, $format, $formatOptions, $filters)) {
                         throw new Exception('Failed to create attribute/column');
                     }
             }
 
             $dbForProject->updateDocument('attributes', $attribute->getId(), $attribute->setAttribute('status', 'available'));
         } catch (\Throwable $e) {
-            Console::error($e->getMessage());
-
             if ($e instanceof DatabaseException) {
                 $attribute->setAttribute('error', $e->getMessage());
                 if (! $relatedAttribute->isEmpty()) {
@@ -307,7 +309,7 @@ class Databases extends Action
                 }
 
             } catch (NotFound $e) {
-                Console::error($e->getMessage());
+                Span::add('database.attribute.not_found', $e->getMessage());
 
                 $dbForProject->deleteDocument('attributes', $attribute->getId());
 
@@ -316,8 +318,6 @@ class Databases extends Action
                 }
 
             } catch (\Throwable $e) {
-                Console::error($e->getMessage());
-
                 if ($e instanceof DatabaseException) {
                     $attribute->setAttribute('error', $e->getMessage());
                     if (!$relatedAttribute->isEmpty()) {
@@ -454,7 +454,6 @@ class Databases extends Action
             }
             $dbForProject->updateDocument('indexes', $index->getId(), $index->setAttribute('status', 'available'));
         } catch (\Throwable $e) {
-            Console::error($e->getMessage());
             if ($e instanceof DatabaseException) {
                 $index->setAttribute('error', $e->getMessage());
             }
@@ -510,8 +509,6 @@ class Databases extends Action
             $dbForProject->deleteDocument('indexes', $index->getId());
             $index->setAttribute('status', 'deleted');
         } catch (\Throwable $e) {
-            Console::error($e->getMessage());
-
             if ($e instanceof DatabaseException) {
                 $index->setAttribute('error', $e->getMessage());
             }
@@ -611,7 +608,7 @@ class Databases extends Action
      */
     protected function deleteByGroup(string $collectionId, array $queries, Database $database, ?callable $callback = null): void
     {
-        $start = \microtime(true);
+        Span::add('delete_by_group.collection.id', $collectionId);
 
         try {
             $count = $database->deleteDocuments(
@@ -621,13 +618,11 @@ class Databases extends Action
                 $callback
             );
         } catch (\Throwable $th) {
-            $tenant = $database->getSharedTables() ? 'Tenant:'.$database->getTenant() : '';
-            Console::error("Failed to delete documents/rows for collection/table: {$database->getNamespace()}_{$collectionId} {$tenant} :{$th->getMessage()}");
+            Span::add('delete_by_group.error', $th->getMessage());
             return;
         }
 
-        $end = \microtime(true);
-        Console::info("Deleted {$count} documents/rows by group in " . ($end - $start) . " seconds");
+        Span::add('delete_by_group.count', $count);
     }
 
     /**
@@ -650,26 +645,30 @@ class Databases extends Action
         Document|null $attribute = null,
         Document|null $index = null,
     ): void {
-        $queueForRealtime
-            ->setProject($project)
-            ->setSubscribers(['console'])
-            ->setEvent($event)
-            ->setParam('databaseId', $database->getId())
-            ->setParam('tableId', $collection->getId())
-            ->setParam('collectionId', $collection->getId());
-
-        if (! empty($attribute)) {
+        try {
             $queueForRealtime
-                ->setParam('columnId', $attribute->getId())
-                ->setParam('attributeId', $attribute->getId())
-                ->setPayload($attribute->getArrayCopy());
-        }
-        if (! empty($index)) {
-            $queueForRealtime
-                ->setParam('indexId', $index->getId())
-                ->setPayload($index->getArrayCopy());
+                ->setProject($project)
+                ->setSubscribers(['console'])
+                ->setEvent($event)
+                ->setParam('databaseId', $database->getId())
+                ->setParam('tableId', $collection->getId())
+                ->setParam('collectionId', $collection->getId());
+
+            if (! empty($attribute)) {
+                $queueForRealtime
+                    ->setParam('columnId', $attribute->getId())
+                    ->setParam('attributeId', $attribute->getId())
+                    ->setPayload($attribute->getArrayCopy());
+            }
+            if (! empty($index)) {
+                $queueForRealtime
+                    ->setParam('indexId', $index->getId())
+                    ->setPayload($index->getArrayCopy());
+            }
+            $queueForRealtime->trigger();
+        } finally {
+            $queueForRealtime->reset();
         }
 
-        $queueForRealtime->trigger();
     }
 }

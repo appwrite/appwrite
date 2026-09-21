@@ -31,7 +31,7 @@ class Update extends TransactionsUpdate
             ->setHttpPath('/v1/vectorsdb/transactions/:transactionId')
             ->desc('Update transaction')
             ->groups(['api', 'database', 'transactions'])
-            ->label('scope', 'documents.write')
+            ->label('scope', 'vectorsdb.documents.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
                 namespace: 'vectorsDB',
@@ -56,11 +56,11 @@ class Update extends TransactionsUpdate
             ->inject('getDatabasesDB')
             ->inject('user')
             ->inject('transactionState')
-            ->inject('queueForDeletes')
+            ->inject('publisherForDeletes')
             ->inject('queueForEvents')
             ->inject('usage')
             ->inject('queueForRealtime')
-            ->inject('queueForFunctions')
+            ->inject('publisherForFunctions')
             ->inject('queueForWebhooks')
             ->inject('authorization')
             ->inject('eventProcessor')

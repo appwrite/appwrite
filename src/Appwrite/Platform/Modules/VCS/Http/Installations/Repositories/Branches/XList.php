@@ -7,11 +7,15 @@ use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Validator\Queries\Branches;
 use Appwrite\Utopia\Response;
+use Appwrite\Vcs\Factory as VcsFactory;
+use Appwrite\Vcs\InstallationTokens;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Query as QueryException;
+use Utopia\Database\Query;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\System\System;
 use Utopia\Validator\Text;
 use Utopia\VCS\Adapter\Git\GitHub;
 use Utopia\VCS\Exception\RepositoryNotFound;
@@ -49,33 +53,50 @@ class XList extends Action
             ))
             ->param('installationId', '', new Text(256), 'Installation Id')
             ->param('providerRepositoryId', '', new Text(256), 'Repository Id')
-            ->inject('gitHub')
+            ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
+            ->param('queries', [], new Branches(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit, offset, cursorAfter, and cursorBefore', true)
+            ->inject('vcsFactory')
+            ->inject('installationTokens')
             ->inject('response')
             ->inject('dbForPlatform')
+            ->inject('project')
             ->callback($this->action(...));
     }
 
     public function action(
         string $installationId,
         string $providerRepositoryId,
-        GitHub $github,
+        string $search,
+        array $queries,
+        VcsFactory $vcsFactory,
+        InstallationTokens $installationTokens,
         Response $response,
-        Database $dbForPlatform
+        Database $dbForPlatform,
+        Document $project
     ) {
+        try {
+            $queries = Query::parseQueries($queries);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
+
         $installation = $dbForPlatform->getDocument('installations', $installationId);
 
         if ($installation->isEmpty()) {
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
         }
 
-        $providerInstallationId = $installation->getAttribute('providerInstallationId');
-        $privateKey = System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
-        $githubAppId = System::getEnv('_APP_VCS_GITHUB_APP_ID');
-        $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
+        if ($installation->getAttribute('projectInternalId') !== $project->getSequence()) {
+            throw new Exception(Exception::INSTALLATION_NOT_FOUND);
+        }
 
-        $owner = $github->getOwnerName($providerInstallationId) ?? '';
+        $installation = $installationTokens->refreshForInstallation($installation, $dbForPlatform, $vcsFactory);
+        $providerInstallationId = $installation->getAttribute('providerInstallationId');
+        $vcs = $vcsFactory->fromInstallation($installation);
+
+        $owner = $vcs->getOwnerName($providerInstallationId);
         try {
-            $repositoryName = $github->getRepositoryName($providerRepositoryId) ?? '';
+            $repositoryName = $vcs->getRepositoryName($providerRepositoryId);
             if (empty($repositoryName)) {
                 throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
             }
@@ -83,13 +104,49 @@ class XList extends Action
             throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
         }
 
-        $branches = $github->listBranches($owner, $repositoryName) ?? [];
+        // Server-side branch search is GitHub-specific until the adapters gain signature parity upstream.
+        $branches = $vcs instanceof GitHub
+            ? $vcs->listBranches($owner, $repositoryName, search: $search)
+            : $vcs->listBranches($owner, $repositoryName);
+
+        $total = \count($branches);
+        [
+            'limit' => $limit,
+            'offset' => $offset,
+        ] = Query::groupByType($queries);
+        $cursorQuery = \current(Query::getCursorQueries($queries, false));
+
+        $limit ??= APP_LIMIT_LIST_DEFAULT;
+        $offset ??= 0;
+
+        if ($cursorQuery instanceof Query) {
+            $cursor = $cursorQuery->getValue();
+            $cursorDirection = $cursorQuery->getMethod() === Query::TYPE_CURSOR_AFTER
+                ? Database::CURSOR_AFTER
+                : Database::CURSOR_BEFORE;
+
+            $cursorIndex = \array_search($cursor, $branches, true);
+            if ($cursorIndex === false) {
+                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Branch '{$cursor}' for the 'cursor' value not found.");
+            }
+
+            $offset += $cursorDirection === Database::CURSOR_AFTER ? $cursorIndex + 1 : 0;
+
+            if ($cursorDirection === Database::CURSOR_BEFORE) {
+                $start = \max(0, $cursorIndex - $limit);
+                $branches = \array_slice($branches, $start, $cursorIndex - $start);
+            } else {
+                $branches = \array_slice($branches, $offset, $limit);
+            }
+        } else {
+            $branches = \array_slice($branches, $offset, $limit);
+        }
 
         $response->dynamic(new Document([
             'branches' => \array_map(function ($branch) {
                 return new Document(['name' => $branch]);
             }, $branches),
-            'total' => \count($branches),
+            'total' => $total,
         ]), Response::MODEL_BRANCH_LIST);
     }
 }

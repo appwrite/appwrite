@@ -42,7 +42,8 @@ class Get extends AttributesGet
             ->setHttpPath('/v1/tablesdb/:databaseId/tables/:tableId/columns/:key')
             ->desc('Get column')
             ->groups(['api', 'database'])
-            ->label('scope', ['tables.read', 'collections.read'])
+            ->label('scope', ['tables.read', 'collections.read', 'columns.read', 'attributes.read'])
+            ->label('usage.resource', 'database/{request.databaseId}/table/{request.tableId}')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
                 namespace: $this->getSDKNamespace(),

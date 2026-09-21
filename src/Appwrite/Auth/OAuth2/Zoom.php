@@ -12,11 +12,6 @@ class Zoom extends OAuth2
     private string $endpoint = 'https://zoom.us';
 
     /**
-     * @var string
-     */
-    private string $version = '2022-03-26';
-
-    /**
      * @var array
      */
     protected array $user = [];
@@ -146,6 +141,18 @@ class Zoom extends OAuth2
         }
 
         return false;
+    }
+
+    /**
+     * @param string $accessToken
+     *
+     * @return string
+     */
+    public function getUserPhoto(string $accessToken): string
+    {
+        $user = $this->getUser($accessToken);
+
+        return $user['pic_url'] ?? '';
     }
 
     /**

@@ -47,7 +47,7 @@ class AppDomain extends Validator
             if (!preg_match(self::PATTERN_IPV6_WITH_PORT, $value, $matches)) {
                 return false;
             }
-            $host = $matches[1] ?? '';
+            $host = $matches[1];
             $port = $matches[2] ?? null;
         } else {
             $parts = explode(':', $value);
@@ -59,7 +59,13 @@ class AppDomain extends Validator
             }
         }
 
-        if ($port !== null && $port !== '') {
+        // A trailing colon with no digits (e.g. example.com:) is invalid —
+        // the port was explicitly attempted but left empty.
+        if ($port !== null) {
+            if ($port === '') {
+                return false;
+            }
+
             $portInt = (int) $port;
             if ((string) $portInt !== $port || $portInt < 1 || $portInt > 65535) {
                 return false;

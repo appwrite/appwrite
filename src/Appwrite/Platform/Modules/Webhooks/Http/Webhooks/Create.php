@@ -8,6 +8,7 @@ use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\SDK\Specification\Validator\PasswordFormat;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
@@ -21,6 +22,7 @@ use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Multiple;
+use Utopia\Validator\Nullable;
 use Utopia\Validator\Text;
 use Utopia\Validator\URL;
 
@@ -61,13 +63,14 @@ class Create extends Action
                 ],
             ))
             ->param('webhookId', '', fn (Database $dbForPlatform) => new CustomId(false, $dbForPlatform->getAdapter()->getMaxUIDLength()), 'Webhook ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForPlatform'])
-            ->param('url', '', fn () => new Multiple([new URL(['http', 'https']), new PublicDomain()], Multiple::TYPE_STRING), 'Webhook URL.')
+            ->param('url', '', fn () => new Multiple([new URL(['http', 'https']), new PublicDomain()], Multiple::TYPE_STRING), 'Webhook URL.', example: 'https://example.com/webhook')
             ->param('name', null, new Text(128), 'Webhook name. Max length: 128 chars.')
             ->param('events', null, new ArrayList(new Event(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.')
             ->param('enabled', true, new Boolean(), 'Enable or disable a webhook.', true)
-            ->param('security', false, new Boolean(), 'Certificate verification, false for disabled or true for enabled.', true)
-            ->param('httpUser', '', new Text(256), 'Webhook HTTP user. Max length: 256 chars.', true)
-            ->param('httpPass', '', new Text(256), 'Webhook HTTP password. Max length: 256 chars.', true)
+            ->param('tls', false, new Boolean(), 'Certificate verification, false for disabled or true for enabled.', true)
+            ->param('authUsername', '', new Text(256), 'Webhook HTTP user. Max length: 256 chars.', true)
+            ->param('authPassword', '', new PasswordFormat(new Text(256)), 'Webhook HTTP password. Max length: 256 chars.', true)
+            ->param('secret', null, new Nullable(new Text(256, 8)), 'Webhook secret key. If not provided, a new key will be generated automatically. Key must be at least 8 characters long, and at max 256 characters.', optional: true)
             ->inject('response')
             ->inject('project')
             ->inject('queueForEvents')
@@ -85,9 +88,10 @@ class Create extends Action
         string $name,
         array $events,
         bool $enabled,
-        bool $security,
-        string $httpUser,
-        string $httpPass,
+        bool $tls,
+        string $authUsername,
+        string $authPassword,
+        ?string $secret,
         Response $response,
         Document $project,
         QueueEvent $queueForEvents,
@@ -104,10 +108,10 @@ class Create extends Action
             'name' => $name,
             'events' => $events,
             'url' => $url,
-            'security' => $security,
-            'httpUser' => $httpUser,
-            'httpPass' => $httpPass,
-            'signatureKey' => \bin2hex(\random_bytes(64)),
+            'security' => $tls,
+            'httpUser' => $authUsername,
+            'httpPass' => $authPassword,
+            'signatureKey' => $secret ?? \bin2hex(\random_bytes(64)),
             'enabled' => $enabled,
         ]);
 

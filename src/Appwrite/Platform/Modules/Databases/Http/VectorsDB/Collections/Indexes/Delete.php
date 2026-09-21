@@ -35,11 +35,12 @@ class Delete extends IndexDelete
             ->setHttpPath('/v1/vectorsdb/:databaseId/collections/:collectionId/indexes/:key')
             ->desc('Delete index')
             ->groups(['api', 'database'])
-            ->label('scope', 'collections.write')
+            ->label('scope', 'vectorsdb.indexes.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('event', 'databases.[databaseId].collections.[collectionId].indexes.[indexId].update')
             ->label('audits.event', 'index.delete')
             ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+            ->label('usage.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
             ->label('sdk', new Method(
                 namespace: 'vectorsDB',
                 group: $this->getSdkGroup(),
@@ -59,7 +60,7 @@ class Delete extends IndexDelete
             ->param('key', '', new Key(), 'Index Key.')
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('queueForDatabase')
+            ->inject('publisherForDatabase')
             ->inject('queueForEvents')
             ->inject('authorization')
             ->callback($this->action(...));
