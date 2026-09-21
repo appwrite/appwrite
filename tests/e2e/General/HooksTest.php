@@ -48,23 +48,30 @@ final class HooksTest extends Scope
         /**
         * Test for web controllers
         */
+        $this->client->setEndpoint('http://localhost');
+
+        // Requests on the console's own host are left to the proxy, so arrive on the API host
         $response = $this->client->call(Client::METHOD_GET, headers: [
+            'host' => 'appwrite.test',
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
         ], params: [
             'project' => 'console'
-        ]);
+        ], followRedirects: false);
 
-        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertEquals('http://localhost/?project=console', $response['headers']['location']);
 
         $response = $this->client->call(Client::METHOD_GET, headers: [
+            'host' => 'appwrite.test',
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
         ], params: [
             'project' => '$this_project_doesnt_exist'
-        ]);
+        ], followRedirects: false);
 
-        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertEquals('http://localhost/?project=%24this_project_doesnt_exist', $response['headers']['location']);
     }
 
     public function testUserHooks()
@@ -148,13 +155,18 @@ final class HooksTest extends Scope
         /**
         * Test for web controllers
         */
+        $this->client->setEndpoint('http://localhost');
+
+        // Requests on the console's own host are left to the proxy, so arrive on the API host
         $response = $this->client->call(Client::METHOD_GET, headers: [
+            'host' => 'appwrite.test',
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'cookie' => $cookie,
-        ]);
+        ], followRedirects: false);
 
-        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertEquals('http://localhost/', $response['headers']['location']);
     }
 }

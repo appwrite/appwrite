@@ -2,7 +2,8 @@
 
 namespace Utopia\Agents\Adapters;
 
-use Utopia\Fetch\Chunk;
+use Psr\Http\Client\ClientInterface;
+use Utopia\Psr18\StreamingClientInterface;
 
 class Perplexity extends OpenAI
 {
@@ -48,7 +49,8 @@ class Perplexity extends OpenAI
         int $maxTokens = 1024,
         float $temperature = 1.0,
         ?string $endpoint = null,
-        int $timeout = 90000
+        int $timeout = 90000,
+        (ClientInterface&StreamingClientInterface)|null $client = null
     ) {
         parent::__construct(
             $apiKey,
@@ -56,7 +58,8 @@ class Perplexity extends OpenAI
             $maxTokens,
             $temperature,
             $endpoint ?? self::ENDPOINT,
-            $timeout
+            $timeout,
+            $client
         );
     }
 
@@ -106,12 +109,12 @@ class Perplexity extends OpenAI
      *
      * @throws \Exception
      */
-    protected function process(Chunk $chunk, ?callable $listener): string
+    protected function process(string $chunk, ?callable $listener): string
     {
         $block = '';
         [$data, $lines] = $this->prepareStreamLines($chunk);
 
-        $rawData = $chunk->getData();
+        $rawData = $chunk;
         $json = $this->decodeJsonObject(trim($rawData)) ?? $this->decodeJsonObject($data);
         if (is_array($json) && isset($json['error'])) {
             return $this->formatErrorMessage($json);
