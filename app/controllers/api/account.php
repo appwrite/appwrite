@@ -4495,7 +4495,7 @@ Http::post('/v1/account/recovery/otp')
             $emailVariables = [
                 'heading' => $heading,
                 'direction' => $locale->getText('settings.direction'),
-                'user' => $deliverable ? $profile->getAttribute('name') : '',
+                'user' => $profile->getAttribute('name'),
                 'project' => $projectName,
                 'otp' => $secret,
                 'agentDevice' => $agentDevice['deviceBrand'] ?? 'UNKNOWN',
