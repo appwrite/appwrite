@@ -275,9 +275,44 @@ class Create extends Action
         $membership = $dbForProject->findOne('memberships', $queries);
 
         $secret = $proofForToken->generate();
-        $secretHash = $proofForToken->hash($secret);
-        $invitedTime = DateTime::now();
-        $confirmPending = function (Document $membership) use ($authorization, $dbForProject, $isAppUser, $isPrivilegedUser, $secretHash, $invitedTime, $team): Document {
+        if ($membership->isEmpty()) {
+            $membershipId = ID::unique();
+            $membership = new Document([
+                '$id' => $membershipId,
+                '$permissions' => [
+                    Permission::read(Role::any()),
+                    Permission::update(Role::user($invitee->getId())),
+                    Permission::update(Role::team($team->getId(), 'owner')),
+                    Permission::delete(Role::user($invitee->getId())),
+                    Permission::delete(Role::team($team->getId(), 'owner')),
+                ],
+                'userId' => $invitee->getId(),
+                'userInternalId' => $invitee->getSequence(),
+                'teamId' => $team->getId(),
+                'teamInternalId' => $team->getSequence(),
+                'roles' => $roles,
+                'invited' => DateTime::now(),
+                'joined' => ($isPrivilegedUser || $isAppUser) ? DateTime::now() : null,
+                'confirm' => ($isPrivilegedUser || $isAppUser),
+                'secret' => $proofForToken->hash($secret),
+                'search' => implode(' ', [$membershipId, $invitee->getId()]),
+            ]);
+
+            try {
+                $membership = ($isPrivilegedUser || $isAppUser) ?
+                    $authorization->skip(fn () => $dbForProject->createDocument('memberships', $membership)) :
+                    $dbForProject->createDocument('memberships', $membership);
+
+                if ($isPrivilegedUser || $isAppUser) {
+                    $authorization->skip(fn () => $dbForProject->increaseDocumentAttribute('teams', $team->getId(), 'total', 1));
+                }
+            } catch (Duplicate) {
+                throw new Exception(Exception::MEMBERSHIP_ALREADY_CONFIRMED);
+            }
+        } elseif ($membership->getAttribute('confirm') === false) {
+            $secretHash = $proofForToken->hash($secret);
+            $invitedTime = DateTime::now();
+
             if ($isPrivilegedUser || $isAppUser) {
                 $membership = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $membership, $team, $secretHash, $invitedTime) {
                     // Re-read under a lock, a concurrent invite must not count the same member twice
@@ -302,63 +337,12 @@ class Create extends Action
                 if ($membership->isEmpty()) {
                     throw new Exception(Exception::MEMBERSHIP_ALREADY_CONFIRMED);
                 }
-
-                return $membership;
+            } else {
+                $membership = $dbForProject->updateDocument('memberships', $membership->getId(), new Document([
+                    'secret' => $secretHash,
+                    'invited' => $invitedTime
+                ]));
             }
-
-            return $dbForProject->updateDocument('memberships', $membership->getId(), new Document([
-                'secret' => $secretHash,
-                'invited' => $invitedTime
-            ]));
-        };
-
-        if ($membership->isEmpty()) {
-            $membershipId = ID::unique();
-            $membership = new Document([
-                '$id' => $membershipId,
-                '$permissions' => [
-                    Permission::read(Role::any()),
-                    Permission::update(Role::user($invitee->getId())),
-                    Permission::update(Role::team($team->getId(), 'owner')),
-                    Permission::delete(Role::user($invitee->getId())),
-                    Permission::delete(Role::team($team->getId(), 'owner')),
-                ],
-                'userId' => $invitee->getId(),
-                'userInternalId' => $invitee->getSequence(),
-                'teamId' => $team->getId(),
-                'teamInternalId' => $team->getSequence(),
-                'roles' => $roles,
-                'invited' => $invitedTime,
-                'joined' => ($isPrivilegedUser || $isAppUser) ? $invitedTime : null,
-                'confirm' => ($isPrivilegedUser || $isAppUser),
-                'secret' => $secretHash,
-                'search' => implode(' ', [$membershipId, $invitee->getId()]),
-            ]);
-
-            try {
-                $membership = ($isPrivilegedUser || $isAppUser) ?
-                    $authorization->skip(fn () => $dbForProject->createDocument('memberships', $membership)) :
-                    $dbForProject->createDocument('memberships', $membership);
-
-                if ($isPrivilegedUser || $isAppUser) {
-                    $authorization->skip(fn () => $dbForProject->increaseDocumentAttribute('teams', $team->getId(), 'total', 1));
-                }
-            } catch (Duplicate) {
-                $membership = $dbForProject->findOne('memberships', $queries);
-
-                if ($membership->isEmpty() || $membership->getAttribute('confirm') === true) {
-                    throw new Exception(Exception::MEMBERSHIP_ALREADY_CONFIRMED);
-                }
-
-                // A losing client invite must not rotate the winner's secret or send a second message.
-                if (! $isPrivilegedUser && ! $isAppUser) {
-                    throw new Exception(Exception::MEMBERSHIP_ALREADY_CONFIRMED);
-                }
-
-                $membership = $confirmPending($membership);
-            }
-        } elseif ($membership->getAttribute('confirm') === false) {
-            $membership = $confirmPending($membership);
         } else {
             throw new Exception(Exception::MEMBERSHIP_ALREADY_CONFIRMED);
         }

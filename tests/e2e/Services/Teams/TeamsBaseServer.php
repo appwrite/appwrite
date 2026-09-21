@@ -277,28 +277,24 @@ trait TeamsBaseServer
 
         $requests = 8;
         $responses = $this->createMembershipsConcurrently($team['body']['$id'], $userId, $requests);
-        $statuses = array_map(fn (array $response): int => $response['headers']['status-code'], $responses);
+        $created = [];
+        $conflicts = [];
 
         foreach ($responses as $response) {
-            $status = $response['headers']['status-code'];
-            $body = is_string($response['body'])
-                ? $response['body']
-                : json_encode($response['body'], JSON_THROW_ON_ERROR);
-
-            $this->assertNotSame(500, $status);
-            $this->assertContains($status, [201, 409]);
-            $this->assertStringNotContainsString('Duplicate', $body);
-            $this->assertStringNotContainsString('Document with the requested unique attributes already exists', $body);
-
-            if ($status === 409) {
-                $this->assertIsArray($response['body']);
-                $this->assertSame('membership_already_confirmed', $response['body']['type'] ?? null);
+            if (($response['headers']['status-code'] ?? null) === 201) {
+                $created[] = $response;
+            } else {
+                $conflicts[] = $response;
             }
         }
 
-        sort($statuses);
-
-        $this->assertSame(array_merge([201], array_fill(0, $requests - 1, 409)), $statuses);
+        /**
+         * Test for SUCCESS
+         */
+        $this->assertCount(1, $created);
+        $this->assertIsArray($created[0]['body']);
+        $this->assertSame($userId, $created[0]['body']['userId'] ?? null);
+        $this->assertTrue($created[0]['body']['confirm'] ?? false);
 
         $memberships = $this->client->call(Client::METHOD_GET, '/teams/' . $team['body']['$id'] . '/memberships', array_merge([
             'content-type' => 'application/json',
@@ -320,6 +316,17 @@ trait TeamsBaseServer
 
         $this->assertSame(200, $team['headers']['status-code']);
         $this->assertSame(1, $team['body']['total']);
+
+        /**
+         * Test for FAILURE
+         */
+        $this->assertCount($requests - 1, $conflicts);
+
+        foreach ($conflicts as $response) {
+            $this->assertSame(409, $response['headers']['status-code']);
+            $this->assertIsArray($response['body']);
+            $this->assertSame('membership_already_confirmed', $response['body']['type'] ?? null);
+        }
     }
 
     private function createMembershipsConcurrently(string $teamId, string $userId, int $requests): array

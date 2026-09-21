@@ -3992,18 +3992,6 @@ final class AccountCustomClientTest extends Scope
         $this->assertSame(201, $response['headers']['status-code']);
         $this->assertSame($userId, $response['body']['userId']);
 
-        $response = $this->client->call(Client::METHOD_POST, '/account/tokens/phone', array_merge([
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ]), [
-            'userId' => $userId,
-            'phone' => '+1' . \random_int(1000000000, 9999999999),
-        ]);
-
-        $this->assertSame(409, $response['headers']['status-code']);
-        $this->assertSame('user_already_exists', $response['body']['type']);
-
         $phone = '+1' . \random_int(1000000000, 9999999999);
         $responses = $this->createPhoneTokensConcurrently($phone, [
             ID::unique(),
@@ -4011,28 +3999,26 @@ final class AccountCustomClientTest extends Scope
             ID::unique(),
             ID::unique(),
         ]);
-        $successfulUserIds = [];
+        $created = [];
+        $conflicts = [];
 
         foreach ($responses as $response) {
-            $body = (string) (\is_array($response['body']) ? \json_encode($response['body']) : $response['body']);
-
-            $this->assertNotSame(500, $response['status']);
-            $this->assertStringNotContainsString('Duplicate', $body);
-            $this->assertStringNotContainsString('Document with the requested unique attributes already exists', $body);
-
-            if ($response['status'] === 201) {
-                $this->assertIsArray($response['body']);
-                $this->assertArrayHasKey('userId', $response['body']);
-                $successfulUserIds[] = $response['body']['userId'];
-                continue;
+            if (($response['status'] ?? null) === 201) {
+                $created[] = $response;
+            } else {
+                $conflicts[] = $response;
             }
-
-            $this->assertSame(409, $response['status']);
-            $this->assertIsArray($response['body']);
-            $this->assertSame('user_already_exists', $response['body']['type']);
         }
 
-        $this->assertGreaterThan(1, \count($successfulUserIds));
+        $this->assertGreaterThan(1, \count($created));
+        $successfulUserIds = [];
+
+        foreach ($created as $response) {
+            $this->assertIsArray($response['body']);
+            $this->assertArrayHasKey('userId', $response['body']);
+            $successfulUserIds[] = $response['body']['userId'];
+        }
+
         $this->assertCount(1, \array_unique($successfulUserIds));
 
         $response = $this->client->call(Client::METHOD_GET, '/users', [
@@ -4052,6 +4038,24 @@ final class AccountCustomClientTest extends Scope
         /**
          * Test for FAILURE
          */
+        foreach ($conflicts as $response) {
+            $this->assertSame(409, $response['status']);
+            $this->assertIsArray($response['body']);
+            $this->assertSame('user_already_exists', $response['body']['type']);
+        }
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/tokens/phone', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'userId' => $userId,
+            'phone' => '+1' . \random_int(1000000000, 9999999999),
+        ]);
+
+        $this->assertSame(409, $response['headers']['status-code']);
+        $this->assertSame('user_already_exists', $response['body']['type']);
+
         $response = $this->client->call(Client::METHOD_POST, '/account/tokens/phone', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
