@@ -134,11 +134,7 @@ class File extends Model
 
     public function filter(Document $document): Document
     {
-        $compression = $document->getAttribute('algorithm', Compression::NONE);
-        if (!\in_array($compression, [Compression::NONE, Compression::GZIP, Compression::ZSTD], true)) {
-            $compression = Compression::NONE;
-        }
-        $document->setAttribute('compression', $compression);
+        $document->setAttribute('compression', $document->getAttribute('algorithm') ?: Compression::NONE);
 
         $encryption = !empty($document->getAttribute('openSSLCipher', ''));
         $document->setAttribute('encryption', $encryption);
