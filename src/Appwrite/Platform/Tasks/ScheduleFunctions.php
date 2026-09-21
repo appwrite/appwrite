@@ -57,7 +57,7 @@ class ScheduleFunctions extends Action
             },
         );
 
-        $scheduler->run(fn (array $occurrences): null => $this->dispatch($occurrences, $publisherForFunctions));
+        $scheduler->run(fn (array $occurrences): null => $this->dispatch($occurrences, $publisherForFunctions, $dbForPlatform));
 
         Span::init('schedule.functions.stopped');
         Span::current()?->finish(error: new \RuntimeException('Scheduler loop returned'));
@@ -74,7 +74,7 @@ class ScheduleFunctions extends Action
     /**
      * @param list<Occurrence> $occurrences
      */
-    private function dispatch(array $occurrences, FunctionPublisher $publisherForFunctions): null
+    private function dispatch(array $occurrences, FunctionPublisher $publisherForFunctions, Database $dbForPlatform): null
     {
         $batch = \count($occurrences);
 
@@ -85,6 +85,11 @@ class ScheduleFunctions extends Action
             $error = null;
 
             try {
+                $project = $dbForPlatform->skipFilters(
+                    fn () => $dbForPlatform->getDocument('projects', $schedule['project']->getId()),
+                    APP_PROJECTS_SUBQUERIES
+                );
+
                 Span::add('project.id', $schedule['project']->getId());
                 Span::add('function.id', $schedule['resource']->getId());
                 Span::add('schedule.id', $schedule['$id'] ?? '');
@@ -94,8 +99,12 @@ class ScheduleFunctions extends Action
                 Span::add('occurrence.batch', $batch);
                 Span::add('occurrence.index', $index);
 
+                if (($project->getAttribute('status') ?? PROJECT_STATUS_ACTIVE) !== PROJECT_STATUS_ACTIVE) {
+                    continue;
+                }
+
                 $publisherForFunctions->enqueue(new FunctionMessage(
-                    project: $schedule['project'],
+                    project: $project,
                     function: $schedule['resource'],
                     type: 'schedule',
                     method: 'POST',
