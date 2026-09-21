@@ -115,9 +115,21 @@ import { Route as PublicAgentSettingsRouteImport } from './routes/_public/agent.
 import { Route as PublicAuthPreviewRouteImport } from './routes/_public/auth.preview'
 import { Route as PublicDebugAuthorizeContributorPreviewRouteImport } from './routes/_public/debug.authorize-contributor-preview'
 import { Route as PublicDebugCodeEditorPreviewRouteImport } from './routes/_public/debug.code-editor-preview'
+import { Route as PublicDebugCommunityShareExamplesRouteImport } from './routes/_public/debug.community-share-examples'
+import { Route as PublicDebugEducationJoinPreviewRouteImport } from './routes/_public/debug.education-join-preview'
 import { Route as PublicDebugErrorPreviewRouteImport } from './routes/_public/debug.error-preview'
+import { Route as PublicDebugImpersonatePreviewRouteImport } from './routes/_public/debug.impersonate-preview'
+import { Route as PublicDebugJoinInvitePreviewRouteImport } from './routes/_public/debug.join-invite-preview'
+import { Route as PublicDebugMagicUrlPreviewRouteImport } from './routes/_public/debug.magic-url-preview'
+import { Route as PublicDebugMfaPreviewRouteImport } from './routes/_public/debug.mfa-preview'
 import { Route as PublicDebugOauth2PreviewRouteImport } from './routes/_public/debug.oauth2-preview'
+import { Route as PublicDebugOauth2RelayPreviewRouteImport } from './routes/_public/debug.oauth2-relay-preview'
 import { Route as PublicDebugOrgSetupPreviewRouteImport } from './routes/_public/debug.org-setup-preview'
+import { Route as PublicDebugRecoveryPreviewRouteImport } from './routes/_public/debug.recovery-preview'
+import { Route as PublicDebugResetPreviewRouteImport } from './routes/_public/debug.reset-preview'
+import { Route as PublicDebugSignInPreviewRouteImport } from './routes/_public/debug.sign-in-preview'
+import { Route as PublicDebugSignUpPreviewRouteImport } from './routes/_public/debug.sign-up-preview'
+import { Route as PublicDebugSitesAuthPreviewRouteImport } from './routes/_public/debug.sites-auth-preview'
 import { Route as PublicDebugVerifyEmailPreviewRouteImport } from './routes/_public/debug.verify-email-preview'
 import { Route as PublicGitAuthorizeContributorRouteImport } from './routes/_public/git.authorize-contributor'
 import { Route as PublicImpersonateIndexRouteImport } from './routes/_public/impersonate.index'
@@ -972,9 +984,44 @@ const PublicDebugCodeEditorPreviewRoute =
     path: '/debug/code-editor-preview',
     getParentRoute: () => PublicRoute,
   } as any)
+const PublicDebugCommunityShareExamplesRoute =
+  PublicDebugCommunityShareExamplesRouteImport.update({
+    id: '/debug/community-share-examples',
+    path: '/debug/community-share-examples',
+    getParentRoute: () => PublicRoute,
+  } as any)
+const PublicDebugEducationJoinPreviewRoute =
+  PublicDebugEducationJoinPreviewRouteImport.update({
+    id: '/debug/education-join-preview',
+    path: '/debug/education-join-preview',
+    getParentRoute: () => PublicRoute,
+  } as any)
 const PublicDebugErrorPreviewRoute = PublicDebugErrorPreviewRouteImport.update({
   id: '/debug/error-preview',
   path: '/debug/error-preview',
+  getParentRoute: () => PublicRoute,
+} as any)
+const PublicDebugImpersonatePreviewRoute =
+  PublicDebugImpersonatePreviewRouteImport.update({
+    id: '/debug/impersonate-preview',
+    path: '/debug/impersonate-preview',
+    getParentRoute: () => PublicRoute,
+  } as any)
+const PublicDebugJoinInvitePreviewRoute =
+  PublicDebugJoinInvitePreviewRouteImport.update({
+    id: '/debug/join-invite-preview',
+    path: '/debug/join-invite-preview',
+    getParentRoute: () => PublicRoute,
+  } as any)
+const PublicDebugMagicUrlPreviewRoute =
+  PublicDebugMagicUrlPreviewRouteImport.update({
+    id: '/debug/magic-url-preview',
+    path: '/debug/magic-url-preview',
+    getParentRoute: () => PublicRoute,
+  } as any)
+const PublicDebugMfaPreviewRoute = PublicDebugMfaPreviewRouteImport.update({
+  id: '/debug/mfa-preview',
+  path: '/debug/mfa-preview',
   getParentRoute: () => PublicRoute,
 } as any)
 const PublicDebugOauth2PreviewRoute =
@@ -983,10 +1030,45 @@ const PublicDebugOauth2PreviewRoute =
     path: '/debug/oauth2-preview',
     getParentRoute: () => PublicRoute,
   } as any)
+const PublicDebugOauth2RelayPreviewRoute =
+  PublicDebugOauth2RelayPreviewRouteImport.update({
+    id: '/debug/oauth2-relay-preview',
+    path: '/debug/oauth2-relay-preview',
+    getParentRoute: () => PublicRoute,
+  } as any)
 const PublicDebugOrgSetupPreviewRoute =
   PublicDebugOrgSetupPreviewRouteImport.update({
     id: '/debug/org-setup-preview',
     path: '/debug/org-setup-preview',
+    getParentRoute: () => PublicRoute,
+  } as any)
+const PublicDebugRecoveryPreviewRoute =
+  PublicDebugRecoveryPreviewRouteImport.update({
+    id: '/debug/recovery-preview',
+    path: '/debug/recovery-preview',
+    getParentRoute: () => PublicRoute,
+  } as any)
+const PublicDebugResetPreviewRoute = PublicDebugResetPreviewRouteImport.update({
+  id: '/debug/reset-preview',
+  path: '/debug/reset-preview',
+  getParentRoute: () => PublicRoute,
+} as any)
+const PublicDebugSignInPreviewRoute =
+  PublicDebugSignInPreviewRouteImport.update({
+    id: '/debug/sign-in-preview',
+    path: '/debug/sign-in-preview',
+    getParentRoute: () => PublicRoute,
+  } as any)
+const PublicDebugSignUpPreviewRoute =
+  PublicDebugSignUpPreviewRouteImport.update({
+    id: '/debug/sign-up-preview',
+    path: '/debug/sign-up-preview',
+    getParentRoute: () => PublicRoute,
+  } as any)
+const PublicDebugSitesAuthPreviewRoute =
+  PublicDebugSitesAuthPreviewRouteImport.update({
+    id: '/debug/sites-auth-preview',
+    path: '/debug/sites-auth-preview',
     getParentRoute: () => PublicRoute,
   } as any)
 const PublicDebugVerifyEmailPreviewRoute =
@@ -3186,9 +3268,21 @@ export interface FileRoutesByFullPath {
   '/auth/preview': typeof PublicAuthPreviewRoute
   '/debug/authorize-contributor-preview': typeof PublicDebugAuthorizeContributorPreviewRoute
   '/debug/code-editor-preview': typeof PublicDebugCodeEditorPreviewRoute
+  '/debug/community-share-examples': typeof PublicDebugCommunityShareExamplesRoute
+  '/debug/education-join-preview': typeof PublicDebugEducationJoinPreviewRoute
   '/debug/error-preview': typeof PublicDebugErrorPreviewRoute
+  '/debug/impersonate-preview': typeof PublicDebugImpersonatePreviewRoute
+  '/debug/join-invite-preview': typeof PublicDebugJoinInvitePreviewRoute
+  '/debug/magic-url-preview': typeof PublicDebugMagicUrlPreviewRoute
+  '/debug/mfa-preview': typeof PublicDebugMfaPreviewRoute
   '/debug/oauth2-preview': typeof PublicDebugOauth2PreviewRoute
+  '/debug/oauth2-relay-preview': typeof PublicDebugOauth2RelayPreviewRoute
   '/debug/org-setup-preview': typeof PublicDebugOrgSetupPreviewRoute
+  '/debug/recovery-preview': typeof PublicDebugRecoveryPreviewRoute
+  '/debug/reset-preview': typeof PublicDebugResetPreviewRoute
+  '/debug/sign-in-preview': typeof PublicDebugSignInPreviewRoute
+  '/debug/sign-up-preview': typeof PublicDebugSignUpPreviewRoute
+  '/debug/sites-auth-preview': typeof PublicDebugSitesAuthPreviewRoute
   '/debug/verify-email-preview': typeof PublicDebugVerifyEmailPreviewRoute
   '/git/authorize-contributor': typeof PublicGitAuthorizeContributorRoute
   '/impersonate/$userId': typeof PublicImpersonateUserIdRoute
@@ -3601,9 +3695,21 @@ export interface FileRoutesByTo {
   '/auth/preview': typeof PublicAuthPreviewRoute
   '/debug/authorize-contributor-preview': typeof PublicDebugAuthorizeContributorPreviewRoute
   '/debug/code-editor-preview': typeof PublicDebugCodeEditorPreviewRoute
+  '/debug/community-share-examples': typeof PublicDebugCommunityShareExamplesRoute
+  '/debug/education-join-preview': typeof PublicDebugEducationJoinPreviewRoute
   '/debug/error-preview': typeof PublicDebugErrorPreviewRoute
+  '/debug/impersonate-preview': typeof PublicDebugImpersonatePreviewRoute
+  '/debug/join-invite-preview': typeof PublicDebugJoinInvitePreviewRoute
+  '/debug/magic-url-preview': typeof PublicDebugMagicUrlPreviewRoute
+  '/debug/mfa-preview': typeof PublicDebugMfaPreviewRoute
   '/debug/oauth2-preview': typeof PublicDebugOauth2PreviewRoute
+  '/debug/oauth2-relay-preview': typeof PublicDebugOauth2RelayPreviewRoute
   '/debug/org-setup-preview': typeof PublicDebugOrgSetupPreviewRoute
+  '/debug/recovery-preview': typeof PublicDebugRecoveryPreviewRoute
+  '/debug/reset-preview': typeof PublicDebugResetPreviewRoute
+  '/debug/sign-in-preview': typeof PublicDebugSignInPreviewRoute
+  '/debug/sign-up-preview': typeof PublicDebugSignUpPreviewRoute
+  '/debug/sites-auth-preview': typeof PublicDebugSitesAuthPreviewRoute
   '/debug/verify-email-preview': typeof PublicDebugVerifyEmailPreviewRoute
   '/git/authorize-contributor': typeof PublicGitAuthorizeContributorRoute
   '/impersonate/$userId': typeof PublicImpersonateUserIdRoute
@@ -3983,9 +4089,21 @@ export interface FileRoutesById {
   '/_public/auth/preview': typeof PublicAuthPreviewRoute
   '/_public/debug/authorize-contributor-preview': typeof PublicDebugAuthorizeContributorPreviewRoute
   '/_public/debug/code-editor-preview': typeof PublicDebugCodeEditorPreviewRoute
+  '/_public/debug/community-share-examples': typeof PublicDebugCommunityShareExamplesRoute
+  '/_public/debug/education-join-preview': typeof PublicDebugEducationJoinPreviewRoute
   '/_public/debug/error-preview': typeof PublicDebugErrorPreviewRoute
+  '/_public/debug/impersonate-preview': typeof PublicDebugImpersonatePreviewRoute
+  '/_public/debug/join-invite-preview': typeof PublicDebugJoinInvitePreviewRoute
+  '/_public/debug/magic-url-preview': typeof PublicDebugMagicUrlPreviewRoute
+  '/_public/debug/mfa-preview': typeof PublicDebugMfaPreviewRoute
   '/_public/debug/oauth2-preview': typeof PublicDebugOauth2PreviewRoute
+  '/_public/debug/oauth2-relay-preview': typeof PublicDebugOauth2RelayPreviewRoute
   '/_public/debug/org-setup-preview': typeof PublicDebugOrgSetupPreviewRoute
+  '/_public/debug/recovery-preview': typeof PublicDebugRecoveryPreviewRoute
+  '/_public/debug/reset-preview': typeof PublicDebugResetPreviewRoute
+  '/_public/debug/sign-in-preview': typeof PublicDebugSignInPreviewRoute
+  '/_public/debug/sign-up-preview': typeof PublicDebugSignUpPreviewRoute
+  '/_public/debug/sites-auth-preview': typeof PublicDebugSitesAuthPreviewRoute
   '/_public/debug/verify-email-preview': typeof PublicDebugVerifyEmailPreviewRoute
   '/_public/git/authorize-contributor': typeof PublicGitAuthorizeContributorRoute
   '/_public/impersonate/$userId': typeof PublicImpersonateUserIdRoute
@@ -4406,9 +4524,21 @@ export interface FileRouteTypes {
     | '/auth/preview'
     | '/debug/authorize-contributor-preview'
     | '/debug/code-editor-preview'
+    | '/debug/community-share-examples'
+    | '/debug/education-join-preview'
     | '/debug/error-preview'
+    | '/debug/impersonate-preview'
+    | '/debug/join-invite-preview'
+    | '/debug/magic-url-preview'
+    | '/debug/mfa-preview'
     | '/debug/oauth2-preview'
+    | '/debug/oauth2-relay-preview'
     | '/debug/org-setup-preview'
+    | '/debug/recovery-preview'
+    | '/debug/reset-preview'
+    | '/debug/sign-in-preview'
+    | '/debug/sign-up-preview'
+    | '/debug/sites-auth-preview'
     | '/debug/verify-email-preview'
     | '/git/authorize-contributor'
     | '/impersonate/$userId'
@@ -4821,9 +4951,21 @@ export interface FileRouteTypes {
     | '/auth/preview'
     | '/debug/authorize-contributor-preview'
     | '/debug/code-editor-preview'
+    | '/debug/community-share-examples'
+    | '/debug/education-join-preview'
     | '/debug/error-preview'
+    | '/debug/impersonate-preview'
+    | '/debug/join-invite-preview'
+    | '/debug/magic-url-preview'
+    | '/debug/mfa-preview'
     | '/debug/oauth2-preview'
+    | '/debug/oauth2-relay-preview'
     | '/debug/org-setup-preview'
+    | '/debug/recovery-preview'
+    | '/debug/reset-preview'
+    | '/debug/sign-in-preview'
+    | '/debug/sign-up-preview'
+    | '/debug/sites-auth-preview'
     | '/debug/verify-email-preview'
     | '/git/authorize-contributor'
     | '/impersonate/$userId'
@@ -5202,9 +5344,21 @@ export interface FileRouteTypes {
     | '/_public/auth/preview'
     | '/_public/debug/authorize-contributor-preview'
     | '/_public/debug/code-editor-preview'
+    | '/_public/debug/community-share-examples'
+    | '/_public/debug/education-join-preview'
     | '/_public/debug/error-preview'
+    | '/_public/debug/impersonate-preview'
+    | '/_public/debug/join-invite-preview'
+    | '/_public/debug/magic-url-preview'
+    | '/_public/debug/mfa-preview'
     | '/_public/debug/oauth2-preview'
+    | '/_public/debug/oauth2-relay-preview'
     | '/_public/debug/org-setup-preview'
+    | '/_public/debug/recovery-preview'
+    | '/_public/debug/reset-preview'
+    | '/_public/debug/sign-in-preview'
+    | '/_public/debug/sign-up-preview'
+    | '/_public/debug/sites-auth-preview'
     | '/_public/debug/verify-email-preview'
     | '/_public/git/authorize-contributor'
     | '/_public/impersonate/$userId'
@@ -6313,11 +6467,53 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicDebugCodeEditorPreviewRouteImport
       parentRoute: typeof PublicRoute
     }
+    '/_public/debug/community-share-examples': {
+      id: '/_public/debug/community-share-examples'
+      path: '/debug/community-share-examples'
+      fullPath: '/debug/community-share-examples'
+      preLoaderRoute: typeof PublicDebugCommunityShareExamplesRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/debug/education-join-preview': {
+      id: '/_public/debug/education-join-preview'
+      path: '/debug/education-join-preview'
+      fullPath: '/debug/education-join-preview'
+      preLoaderRoute: typeof PublicDebugEducationJoinPreviewRouteImport
+      parentRoute: typeof PublicRoute
+    }
     '/_public/debug/error-preview': {
       id: '/_public/debug/error-preview'
       path: '/debug/error-preview'
       fullPath: '/debug/error-preview'
       preLoaderRoute: typeof PublicDebugErrorPreviewRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/debug/impersonate-preview': {
+      id: '/_public/debug/impersonate-preview'
+      path: '/debug/impersonate-preview'
+      fullPath: '/debug/impersonate-preview'
+      preLoaderRoute: typeof PublicDebugImpersonatePreviewRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/debug/join-invite-preview': {
+      id: '/_public/debug/join-invite-preview'
+      path: '/debug/join-invite-preview'
+      fullPath: '/debug/join-invite-preview'
+      preLoaderRoute: typeof PublicDebugJoinInvitePreviewRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/debug/magic-url-preview': {
+      id: '/_public/debug/magic-url-preview'
+      path: '/debug/magic-url-preview'
+      fullPath: '/debug/magic-url-preview'
+      preLoaderRoute: typeof PublicDebugMagicUrlPreviewRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/debug/mfa-preview': {
+      id: '/_public/debug/mfa-preview'
+      path: '/debug/mfa-preview'
+      fullPath: '/debug/mfa-preview'
+      preLoaderRoute: typeof PublicDebugMfaPreviewRouteImport
       parentRoute: typeof PublicRoute
     }
     '/_public/debug/oauth2-preview': {
@@ -6327,11 +6523,53 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicDebugOauth2PreviewRouteImport
       parentRoute: typeof PublicRoute
     }
+    '/_public/debug/oauth2-relay-preview': {
+      id: '/_public/debug/oauth2-relay-preview'
+      path: '/debug/oauth2-relay-preview'
+      fullPath: '/debug/oauth2-relay-preview'
+      preLoaderRoute: typeof PublicDebugOauth2RelayPreviewRouteImport
+      parentRoute: typeof PublicRoute
+    }
     '/_public/debug/org-setup-preview': {
       id: '/_public/debug/org-setup-preview'
       path: '/debug/org-setup-preview'
       fullPath: '/debug/org-setup-preview'
       preLoaderRoute: typeof PublicDebugOrgSetupPreviewRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/debug/recovery-preview': {
+      id: '/_public/debug/recovery-preview'
+      path: '/debug/recovery-preview'
+      fullPath: '/debug/recovery-preview'
+      preLoaderRoute: typeof PublicDebugRecoveryPreviewRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/debug/reset-preview': {
+      id: '/_public/debug/reset-preview'
+      path: '/debug/reset-preview'
+      fullPath: '/debug/reset-preview'
+      preLoaderRoute: typeof PublicDebugResetPreviewRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/debug/sign-in-preview': {
+      id: '/_public/debug/sign-in-preview'
+      path: '/debug/sign-in-preview'
+      fullPath: '/debug/sign-in-preview'
+      preLoaderRoute: typeof PublicDebugSignInPreviewRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/debug/sign-up-preview': {
+      id: '/_public/debug/sign-up-preview'
+      path: '/debug/sign-up-preview'
+      fullPath: '/debug/sign-up-preview'
+      preLoaderRoute: typeof PublicDebugSignUpPreviewRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/debug/sites-auth-preview': {
+      id: '/_public/debug/sites-auth-preview'
+      path: '/debug/sites-auth-preview'
+      fullPath: '/debug/sites-auth-preview'
+      preLoaderRoute: typeof PublicDebugSitesAuthPreviewRouteImport
       parentRoute: typeof PublicRoute
     }
     '/_public/debug/verify-email-preview': {
@@ -10266,9 +10504,21 @@ interface PublicRouteChildren {
   PublicAuthPreviewRoute: typeof PublicAuthPreviewRoute
   PublicDebugAuthorizeContributorPreviewRoute: typeof PublicDebugAuthorizeContributorPreviewRoute
   PublicDebugCodeEditorPreviewRoute: typeof PublicDebugCodeEditorPreviewRoute
+  PublicDebugCommunityShareExamplesRoute: typeof PublicDebugCommunityShareExamplesRoute
+  PublicDebugEducationJoinPreviewRoute: typeof PublicDebugEducationJoinPreviewRoute
   PublicDebugErrorPreviewRoute: typeof PublicDebugErrorPreviewRoute
+  PublicDebugImpersonatePreviewRoute: typeof PublicDebugImpersonatePreviewRoute
+  PublicDebugJoinInvitePreviewRoute: typeof PublicDebugJoinInvitePreviewRoute
+  PublicDebugMagicUrlPreviewRoute: typeof PublicDebugMagicUrlPreviewRoute
+  PublicDebugMfaPreviewRoute: typeof PublicDebugMfaPreviewRoute
   PublicDebugOauth2PreviewRoute: typeof PublicDebugOauth2PreviewRoute
+  PublicDebugOauth2RelayPreviewRoute: typeof PublicDebugOauth2RelayPreviewRoute
   PublicDebugOrgSetupPreviewRoute: typeof PublicDebugOrgSetupPreviewRoute
+  PublicDebugRecoveryPreviewRoute: typeof PublicDebugRecoveryPreviewRoute
+  PublicDebugResetPreviewRoute: typeof PublicDebugResetPreviewRoute
+  PublicDebugSignInPreviewRoute: typeof PublicDebugSignInPreviewRoute
+  PublicDebugSignUpPreviewRoute: typeof PublicDebugSignUpPreviewRoute
+  PublicDebugSitesAuthPreviewRoute: typeof PublicDebugSitesAuthPreviewRoute
   PublicDebugVerifyEmailPreviewRoute: typeof PublicDebugVerifyEmailPreviewRoute
   PublicGitAuthorizeContributorRoute: typeof PublicGitAuthorizeContributorRoute
   PublicImpersonateUserIdRoute: typeof PublicImpersonateUserIdRoute
@@ -10295,9 +10545,22 @@ const PublicRouteChildren: PublicRouteChildren = {
   PublicDebugAuthorizeContributorPreviewRoute:
     PublicDebugAuthorizeContributorPreviewRoute,
   PublicDebugCodeEditorPreviewRoute: PublicDebugCodeEditorPreviewRoute,
+  PublicDebugCommunityShareExamplesRoute:
+    PublicDebugCommunityShareExamplesRoute,
+  PublicDebugEducationJoinPreviewRoute: PublicDebugEducationJoinPreviewRoute,
   PublicDebugErrorPreviewRoute: PublicDebugErrorPreviewRoute,
+  PublicDebugImpersonatePreviewRoute: PublicDebugImpersonatePreviewRoute,
+  PublicDebugJoinInvitePreviewRoute: PublicDebugJoinInvitePreviewRoute,
+  PublicDebugMagicUrlPreviewRoute: PublicDebugMagicUrlPreviewRoute,
+  PublicDebugMfaPreviewRoute: PublicDebugMfaPreviewRoute,
   PublicDebugOauth2PreviewRoute: PublicDebugOauth2PreviewRoute,
+  PublicDebugOauth2RelayPreviewRoute: PublicDebugOauth2RelayPreviewRoute,
   PublicDebugOrgSetupPreviewRoute: PublicDebugOrgSetupPreviewRoute,
+  PublicDebugRecoveryPreviewRoute: PublicDebugRecoveryPreviewRoute,
+  PublicDebugResetPreviewRoute: PublicDebugResetPreviewRoute,
+  PublicDebugSignInPreviewRoute: PublicDebugSignInPreviewRoute,
+  PublicDebugSignUpPreviewRoute: PublicDebugSignUpPreviewRoute,
+  PublicDebugSitesAuthPreviewRoute: PublicDebugSitesAuthPreviewRoute,
   PublicDebugVerifyEmailPreviewRoute: PublicDebugVerifyEmailPreviewRoute,
   PublicGitAuthorizeContributorRoute: PublicGitAuthorizeContributorRoute,
   PublicImpersonateUserIdRoute: PublicImpersonateUserIdRoute,
