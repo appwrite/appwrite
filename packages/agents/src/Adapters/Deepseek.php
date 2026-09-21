@@ -2,10 +2,10 @@
 
 namespace Utopia\Agents\Adapters;
 
+use Psr\Http\Client\ClientInterface;
 use Utopia\Agents\Adapter;
 use Utopia\Agents\Message;
-use Utopia\Fetch\Chunk;
-use Utopia\Fetch\Client;
+use Utopia\Psr18\StreamingClientInterface;
 
 class Deepseek extends Adapter
 {
@@ -35,6 +35,8 @@ class Deepseek extends Adapter
      */
     public const MODEL_DEEPSEEK_CODER = 'deepseek-coder';
 
+    protected const ENDPOINT = 'https://api.deepseek.com/chat/completions';
+
     protected string $apiKey;
 
     protected string $model;
@@ -56,12 +58,14 @@ class Deepseek extends Adapter
         string $model = self::MODEL_DEEPSEEK_CHAT,
         int $maxTokens = 1024,
         float $temperature = 1.0,
-        int $timeout = 90000
+        int $timeout = 90000,
+        (ClientInterface&StreamingClientInterface)|null $client = null
     ) {
         $this->apiKey = $apiKey;
         $this->maxTokens = $maxTokens;
         $this->temperature = $temperature;
         $this->timeout = $timeout;
+        $this->client = $client;
         $this->setModel($model);
     }
 
@@ -85,12 +89,6 @@ class Deepseek extends Adapter
         if ($this->getAgent() === null) {
             throw new \Exception('Agent not set');
         }
-
-        $client = new Client();
-        $client
-            ->setTimeout($this->timeout)
-            ->addHeader('authorization', 'Bearer '.$this->apiKey)
-            ->addHeader('content-type', Client::CONTENT_TYPE_APPLICATION_JSON);
 
         $formattedMessages = [];
         foreach ($messages as $message) {
@@ -140,13 +138,11 @@ class Deepseek extends Adapter
         $content = '';
         $this->beginStreamProcessing();
         try {
-            $response = $client->fetch(
-                'https://api.deepseek.com/chat/completions',
-                Client::METHOD_POST,
+            $response = $this->post(
+                self::ENDPOINT,
                 $payload,
-                [],
-                function ($chunk) use (&$content, $listener) {
-                    /** @var Chunk $chunk */
+                ['authorization' => 'Bearer '.$this->apiKey],
+                function (string $chunk) use (&$content, $listener): void {
                     $content .= $this->process($chunk, $listener);
                 }
             );
@@ -236,11 +232,11 @@ class Deepseek extends Adapter
      *
      * @throws \Exception
      */
-    protected function process(Chunk $chunk, ?callable $listener): string
+    protected function process(string $chunk, ?callable $listener): string
     {
         [$data, $lines] = $this->prepareStreamLines($chunk);
 
-        $json = $this->decodeJsonObject(trim($chunk->getData())) ?? $this->decodeJsonObject($data);
+        $json = $this->decodeJsonObject(trim($chunk)) ?? $this->decodeJsonObject($data);
         if (is_array($json) && isset($json['error'])) {
             return $this->formatErrorMessage($json);
         }

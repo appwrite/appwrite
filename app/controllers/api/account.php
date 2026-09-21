@@ -2496,7 +2496,11 @@ Http::post('/v1/account/tokens/magic-url')
             ]);
 
             $user->removeAttribute('$sequence');
-            $user = $authorization->skip(fn () => $dbForProject->createDocument('users', $user));
+            try {
+                $user = $authorization->skip(fn () => $dbForProject->createDocument('users', $user));
+            } catch (Duplicate) {
+                throw new Exception(Exception::USER_ALREADY_EXISTS);
+            }
         }
 
         $proofForToken = new ProofsToken(TOKEN_LENGTH_MAGIC_URL);
@@ -2818,7 +2822,11 @@ Http::post('/v1/account/tokens/email')
             ]);
 
             $user->removeAttribute('$sequence');
-            $user = $authorization->skip(fn () => $dbForProject->createDocument('users', $user));
+            try {
+                $user = $authorization->skip(fn () => $dbForProject->createDocument('users', $user));
+            } catch (Duplicate) {
+                throw new Exception(Exception::USER_ALREADY_EXISTS);
+            }
             try {
                 $target = $authorization->skip(fn () => $dbForProject->createDocument('targets', new Document([
                     '$permissions' => [
@@ -3216,7 +3224,11 @@ Http::post('/v1/account/tokens/phone')
             ]);
 
             $user->removeAttribute('$sequence');
-            $user = $authorization->skip(fn () => $dbForProject->createDocument('users', $user));
+            try {
+                $user = $authorization->skip(fn () => $dbForProject->createDocument('users', $user));
+            } catch (Duplicate) {
+                throw new Exception(Exception::USER_ALREADY_EXISTS);
+            }
             try {
                 $target = $authorization->skip(fn () => $dbForProject->createDocument('targets', new Document([
                     '$permissions' => [
@@ -4971,11 +4983,15 @@ Http::put('/v1/account/targets/:targetId/push')
 
         $target->setAttribute('name', "{$device['deviceBrand']} {$device['deviceModel']}");
 
-        $target = $dbForProject->updateDocument('targets', $target->getId(), new Document([
-            'identifier' => $target->getAttribute('identifier'),
-            'expired' => $target->getAttribute('expired'),
-            'name' => $target->getAttribute('name'),
-        ]));
+        try {
+            $target = $dbForProject->updateDocument('targets', $target->getId(), new Document([
+                'identifier' => $target->getAttribute('identifier'),
+                'expired' => $target->getAttribute('expired'),
+                'name' => $target->getAttribute('name'),
+            ]));
+        } catch (Duplicate) {
+            throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
+        }
 
         $dbForProject->purgeCachedDocument('users', $user->getId());
 

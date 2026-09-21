@@ -57,6 +57,10 @@
         {
             "type": "vcs",
             "url": "https://github.com/utopia-php/vcs"
+        },
+        {
+            "type": "vcs",
+            "url": "https://github.com/utopia-php/mqtt"
         }
     ],
     "require": {
@@ -81,7 +85,7 @@
         "utopia-php/auth": "^0.12",
         "utopia-php/balancer": "0.4.*",
         "utopia-php/cache": "^5.1.0",
-        "utopia-php/cdn": "^0.0.11",
+        "utopia-php/cdn": "^0.0.12",
         "utopia-php/cli": "^0.24",
         "utopia-php/compression": "0.1.*",
         "utopia-php/config": "1.*",
@@ -99,10 +103,11 @@
         "utopia-php/locale": "0.8.*",
         "utopia-php/messaging": "^2.1",
         "utopia-php/migration": "^2.0.0",
-        "utopia-php/platform": "1.0.0-rc20",
+        "utopia-php/mqtt": "0.0.*",
+        "utopia-php/platform": "1.0.0-rc21",
         "utopia-php/pools": "2.*",
         "utopia-php/span": "^4.2",
-        "utopia-php/queue": "^2.2.4",
+        "utopia-php/queue": "^3.0.0",
         "utopia-php/servers": "0.4.*",
         "utopia-php/registry": "0.5.*",
         "utopia-php/storage": "^4.0",
@@ -126,6 +131,7 @@
         "utopia-php/query": "0.6.*",
         "utopia-php/openapi": "^0.2.4",
         "psr/http-factory": "^1.0",
+        "psr/http-client": "^1.0",
         "psr/http-message": "^1.1 || ^2.0"
     },
     "require-dev": {
