@@ -96,8 +96,11 @@ final class FastlyTlsTest extends TestCase
         $this->assertSame('2027-01-02 00:00:00.000', $provider->issueCertificate('cert', 'example.com', null));
     }
 
-    public function testRetriesFailedSubscription(): void
+    public function testRetriesFailedSubscriptionWithForce(): void
     {
+        // A subscription fails on a renewal while the certificate it issued
+        // earlier still serves, and Fastly refuses to edit a subscription with
+        // such an active domain unless the request carries force.
         $client = new TestClient([
             new Response(200, body: new Stream('{"data":[{"id":"sub_123","attributes":{"state":"failed"}}]}')),
             new Response(200, body: new Stream('{"data":{"id":"sub_123","attributes":{"state":"processing"}}}')),
@@ -105,6 +108,28 @@ final class FastlyTlsTest extends TestCase
         $provider = new FastlyTls('token', 'config', 'certainly', $client);
         $this->assertNull($provider->issueCertificate('cert', 'example.com', null));
         $this->assertSame('PATCH', $client->calls[1]['method']);
+        $this->assertSame('https://api.fastly.com/tls/subscriptions/sub_123?force=true', $client->calls[1]['url']);
+        $this->assertSame('retry', $client->calls[1]['body']['data']['attributes']['state']);
+    }
+
+    public function testRefusedRetrySurfacesFastlysReason(): void
+    {
+        $client = new TestClient([
+            new Response(200, body: new Stream('{"data":[{"id":"sub_123","attributes":{"state":"failed"}}]}')),
+            new Response(400, body: new Stream('{"errors":[{"title":"Bad Request","detail":"Subscription has active domains"}]}')),
+        ]);
+        $provider = new FastlyTls('token', 'config', 'certainly', $client);
+
+        try {
+            $provider->issueCertificate('cert', 'example.com', null);
+            $this->fail('Expected the refused retry to surface.');
+        } catch (\RuntimeException $error) {
+            $this->assertStringContainsString('Failed to retry Fastly TLS subscription with status 400', $error->getMessage());
+            $this->assertStringContainsString('Subscription has active domains', $error->getMessage());
+        }
+
+        // Nothing else is attempted: the deployed certificate is left serving.
+        $this->assertCount(2, $client->calls);
     }
 
     public function testRejectsMalformedSuccessfulResponse(): void

@@ -382,7 +382,12 @@ class FastlyTls implements Provider
      */
     private function retrySubscription(string $subscriptionId): array
     {
-        $result = $this->request('PATCH', '/tls/subscriptions/' . $subscriptionId, [
+        // A subscription fails on a renewal while the certificate it issued
+        // earlier is still deployed, which Fastly calls an active domain, and
+        // Fastly refuses to edit such a subscription without `force`. A retry
+        // keeps the domain and only asks for issuance again, so the deployed
+        // certificate keeps serving while the retry runs.
+        $result = $this->request('PATCH', '/tls/subscriptions/' . $subscriptionId . '?force=true', [
             'data' => [
                 'id' => $subscriptionId,
                 'type' => 'tls_subscription',
