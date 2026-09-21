@@ -46,7 +46,7 @@ final class AppwriteTest extends TestCase
 
         // The service takes the hash, so the password itself never travels
         $this->assertSame(['hash' => \strtoupper(\sha1(self::PASSWORD))], \json_decode($fetch->requests[0]['body'], true));
-        $this->assertStringNotContainsString(self::PASSWORD, $fetch->requests[0]['body']);
+        $this->assertStringNotContainsString(self::PASSWORD, (string) $fetch->requests[0]['body']);
 
         $headers = \array_change_key_case($fetch->requests[0]['headers'], CASE_LOWER);
         $this->assertSame('Bearer ' . self::SECRET, $headers['authorization'] ?? null);
