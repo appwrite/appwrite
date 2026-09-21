@@ -146,6 +146,10 @@ class Update extends Action
             ])));
         });
 
+        // A concurrent read can cache the old templates before the transaction
+        // commits. Invalidate again once the new templates are visible.
+        $dbForPlatform->purgeCachedDocument('projects', $project->getId());
+
         $template = $project->getAttribute('templates', [])[$templateKey] ?? [];
 
         $queueForEvents->setParam('templateId', $templateId);

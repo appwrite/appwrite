@@ -48,7 +48,7 @@ class Create extends CollectionAction
             ->desc('Create collection')
             ->groups(['api', 'database'])
             ->label('event', 'databases.[databaseId].collections.[collectionId].create')
-            ->label('scope', 'collections.write')
+            ->label('scope', 'vectorsdb.collections.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('audits.event', 'collection.create')
             ->label('audits.resource', 'database/{request.databaseId}/collection/{response.$id}')

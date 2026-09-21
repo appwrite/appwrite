@@ -110,7 +110,10 @@ class Get extends Action
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
-        if ($deployment->getAttribute('resourceId') !== $site->getId()) {
+        if (
+            $deployment->getAttribute('resourceId') !== $site->getId()
+            || $deployment->getAttribute('resourceType') !== 'sites'
+        ) {
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
@@ -157,14 +160,14 @@ class Get extends Action
                 ->addHeader('Content-Length', $end - $start + 1)
                 ->setStatusCode(Response::STATUS_CODE_PARTIALCONTENT);
 
-            $response->send($device->read($path, $start, ($end - $start + 1)));
+            $response->send((string) $device->read($path, $start, ($end - $start + 1)));
             return;
         }
 
         if ($size > APP_STORAGE_READ_BUFFER) {
             for ($i = 0; $i < ceil($size / MAX_OUTPUT_CHUNK_SIZE); $i++) {
                 $response->chunk(
-                    $device->read(
+                    (string) $device->read(
                         $path,
                         ($i * MAX_OUTPUT_CHUNK_SIZE),
                         min(MAX_OUTPUT_CHUNK_SIZE, $size - ($i * MAX_OUTPUT_CHUNK_SIZE))
@@ -173,7 +176,7 @@ class Get extends Action
                 );
             }
         } else {
-            $response->send($device->read($path));
+            $response->send((string) $device->read($path));
         }
     }
 }

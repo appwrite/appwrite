@@ -13,6 +13,62 @@ trait WebhooksBase
 {
     use Async;
 
+    public function testTablesDBRows(): void
+    {
+        // Test for SUCCESS: row writes deliver TablesDB events and legacy aliases.
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+        $databaseId = ID::unique();
+        $tableId = ID::unique();
+        $path = "/tablesdb/{$databaseId}/tables/{$tableId}";
+        $database = $this->client->call(Client::METHOD_POST, '/tablesdb', $headers, [
+            'databaseId' => $databaseId, 'name' => 'Webhook rows',
+        ]);
+        $this->assertEquals(201, $database['headers']['status-code']);
+        $table = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables", $headers, [
+            'tableId' => $tableId, 'name' => 'Rows',
+            'columns' => [['key' => 'value', 'type' => 'string', 'size' => 100]],
+        ]);
+        $this->assertEquals(201, $table['headers']['status-code']);
+
+        $webhooks = [];
+        foreach (['tablesdb', 'databases'] as $prefix) {
+            $webhook = $this->createWebhook(ID::unique(), 'Row events', [
+                "{$prefix}.{$databaseId}.tables.{$tableId}.rows.*.create",
+                "{$prefix}.{$databaseId}.tables.{$tableId}.rows.*.update",
+            ], true, 'http://request-catcher-webhook:5000/', false, null, null);
+            $this->assertEquals(201, $webhook['headers']['status-code']);
+            $webhooks[$prefix] = $webhook['body']['$id'];
+        }
+
+        $rowId = ID::unique();
+        $row = $this->client->call(Client::METHOD_POST, $path . '/rows', $headers, [
+            'rowId' => $rowId, 'data' => ['value' => 'created'],
+        ]);
+        $this->assertEquals(201, $row['headers']['status-code']);
+        $row = $this->client->call(Client::METHOD_PATCH, $path . '/rows/' . $rowId, $headers, [
+            'data' => ['value' => 'updated'],
+        ]);
+        $this->assertEquals(200, $row['headers']['status-code']);
+
+        foreach ($webhooks as $prefix => $webhookId) {
+            foreach (['create' => 'created', 'update' => 'updated'] as $action => $value) {
+                $event = "{$prefix}.{$databaseId}.tables.{$tableId}.rows.{$rowId}.{$action}";
+                $delivery = $this->getLastRequestForProject($this->getProject()['$id'], queryParams: [
+                    'header_X-Appwrite-Webhook-Id' => $webhookId,
+                ], probe: function (array $request) use ($event) {
+                    $this->assertContains($event, explode(',', $request['headers']['X-Appwrite-Webhook-Events'] ?? ''));
+                });
+                $this->assertNotEmpty($delivery, 'Missing webhook delivery: ' . $event);
+                $this->assertSame($value, $delivery['data']['value']);
+            }
+            $this->deleteWebhook($webhookId);
+        }
+        $this->client->call(Client::METHOD_DELETE, '/tablesdb/' . $databaseId, $headers);
+    }
+
     // Tests for all auth scenarios
 
     public function testCreateWebhook(): void
@@ -39,7 +95,7 @@ trait WebhooksBase
         $this->assertEquals('', $webhook['body']['authUsername']);
         $this->assertEquals('', $webhook['body']['authPassword']);
         $this->assertNotEmpty($webhook['body']['secret']);
-        $this->assertEquals(128, \strlen($webhook['body']['secret']));
+        $this->assertSame(128, \strlen($webhook['body']['secret']));
         $this->assertEquals(0, $webhook['body']['attempts']);
         $this->assertEquals('', $webhook['body']['logs']);
 
@@ -683,7 +739,7 @@ trait WebhooksBase
         $originalSecret = $webhook['body']['secret'];
 
         $this->assertNotEmpty($originalSecret);
-        $this->assertEquals(128, \strlen($originalSecret));
+        $this->assertSame(128, \strlen($originalSecret));
 
         // Update secret
         $updated = $this->updateWebhookSecret($webhookId);
@@ -691,7 +747,7 @@ trait WebhooksBase
         $this->assertEquals(200, $updated['headers']['status-code']);
         $this->assertEquals($webhookId, $updated['body']['$id']);
         $this->assertNotEmpty($updated['body']['secret']);
-        $this->assertEquals(128, \strlen($updated['body']['secret']));
+        $this->assertSame(128, \strlen($updated['body']['secret']));
         $this->assertNotEquals($originalSecret, $updated['body']['secret']);
 
         // Verify secret is not exposed via GET
@@ -726,7 +782,7 @@ trait WebhooksBase
         $webhookId = $webhook['body']['$id'];
         $originalSecret = $webhook['body']['secret'];
         $this->assertNotEmpty($originalSecret);
-        $this->assertEquals(128, \strlen($originalSecret));
+        $this->assertSame(128, \strlen($originalSecret));
 
         // Step 1: Trigger user creation with the original auto-generated secret
         $email1 = uniqid() . 'rotation1@localhost.test';
@@ -1908,7 +1964,7 @@ trait WebhooksBase
         $this->assertEquals('olduser', $webhook['body']['httpUser']);
         $this->assertEquals('oldpass', $webhook['body']['httpPass']);
         $this->assertNotEmpty($webhook['body']['signatureKey']);
-        $this->assertEquals(128, \strlen($webhook['body']['signatureKey']));
+        $this->assertSame(128, \strlen($webhook['body']['signatureKey']));
 
         // Cleanup
         $this->deleteWebhook($webhook['body']['$id']);
@@ -2108,7 +2164,7 @@ trait WebhooksBase
         $this->assertArrayNotHasKey('authPassword', $updated['body']);
 
         $this->assertNotEmpty($updated['body']['signatureKey']);
-        $this->assertEquals(128, \strlen($updated['body']['signatureKey']));
+        $this->assertSame(128, \strlen($updated['body']['signatureKey']));
 
         // Cleanup
         $this->deleteWebhook($webhookId);

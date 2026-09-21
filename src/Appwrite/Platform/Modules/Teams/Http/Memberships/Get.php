@@ -88,8 +88,12 @@ class Get extends Action
         $isPrivilegedUser = $user->isPrivileged($roles);
         $isAppUser = $user->isKey($roles);
 
-        $membershipsPrivacy = array_map(function ($privacy) use ($isPrivilegedUser, $isAppUser) {
-            return $privacy || $isPrivilegedUser || $isAppUser;
+        // The policy only hides other members, a member always sees their own details
+        $isSelf = $user->getSequence() !== null
+            && $membership->getAttribute('userInternalId') === $user->getSequence();
+
+        $membershipsPrivacy = array_map(function ($privacy) use ($isPrivilegedUser, $isAppUser, $isSelf) {
+            return $privacy || $isPrivilegedUser || $isAppUser || $isSelf;
         }, $membershipsPrivacy);
 
         $memberUser = !empty(array_filter($membershipsPrivacy))

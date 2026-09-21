@@ -49,6 +49,18 @@ class File extends Model
                 'default' => '',
                 'example' => 'Pink.png',
             ])
+            ->addRule('folder', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Virtual folder containing the file, with a trailing slash. Empty for the bucket root.',
+                'default' => '',
+                'example' => 'photos/2026/',
+            ])
+            ->addRule('key', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Full virtual path of the file: the folder followed by the file name.',
+                'default' => '',
+                'example' => 'photos/2026/Pink.png',
+            ])
             ->addRule('signature', [
                 'type' => self::TYPE_STRING,
                 'description' => 'File MD5 signature.',
@@ -94,7 +106,7 @@ class File extends Model
             ->addRule('compression', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Compression algorithm used for the file. Will be one of ' . Compression::NONE . ', [' . Compression::GZIP . '](https://en.wikipedia.org/wiki/Gzip), or [' . Compression::ZSTD . '](https://en.wikipedia.org/wiki/Zstd).',
-                'default' => '',
+                'default' => Compression::NONE,
                 'example' => 'gzip'
             ])
         ;
@@ -122,10 +134,13 @@ class File extends Model
 
     public function filter(Document $document): Document
     {
-        $document->setAttribute('compression', $document->getAttribute('algorithm', ''));
+        $document->setAttribute('compression', $document->getAttribute('algorithm') ?: Compression::NONE);
 
         $encryption = !empty($document->getAttribute('openSSLCipher', ''));
         $document->setAttribute('encryption', $encryption);
+
+        $folder = $document->getAttribute('folder') ?? '';
+        $document->setAttribute('key', $folder . $document->getAttribute('name', ''));
 
         return $document;
     }

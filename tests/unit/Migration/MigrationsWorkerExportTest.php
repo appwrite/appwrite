@@ -15,162 +15,12 @@ use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Migration\Destination;
-use Utopia\Migration\Destinations\CSV as DestinationCSV;
 use Utopia\Migration\Destinations\JSON as DestinationJSON;
 use Utopia\Migration\Source;
 use Utopia\Storage\Device;
 
 final class MigrationsWorkerExportTest extends TestCase
 {
-    public function testExportDestinationsWriteToMigrationScopedArtifactNames(): void
-    {
-        $worker = new class () extends Migrations {
-            public function destination(Device $deviceForFiles, Document $migration): Destination
-            {
-                $this->deviceForFiles = $deviceForFiles;
-                return $this->processDestination($migration);
-            }
-        };
-        $deviceForFiles = $this->createStub(Device::class);
-        $cases = [
-            [
-                'destination' => DestinationCSV::getName(),
-                'options' => [
-                    'bucketId' => 'default',
-                    'columns' => [],
-                    'delimiter' => ',',
-                    'enclosure' => '"',
-                    'escape' => '"',
-                    'filename' => 'same/name',
-                    'header' => true,
-                ],
-            ],
-            [
-                'destination' => DestinationJSON::getName(),
-                'options' => [
-                    'bucketId' => 'default',
-                    'columns' => [],
-                    'filename' => 'same:name',
-                ],
-            ],
-        ];
-
-        foreach ($cases as $case) {
-            $destination = $worker->destination($deviceForFiles, new Document([
-                '$id' => 'migration-id',
-                'credentials' => [],
-                'destination' => $case['destination'],
-                'options' => $case['options'],
-                'resourceId' => 'database',
-            ]));
-            $property = new \ReflectionProperty($destination, 'outputFile');
-
-            $this->assertSame('migration-id', $property->getValue($destination));
-
-            $destination->cleanUp();
-        }
-    }
-
-    public function testExportCompletionFinalizesWithoutInitiatingUser(): void
-    {
-        $file = null;
-        $dbForPlatform = $this->createMock(Database::class);
-        $dbForPlatform->expects($this->never())->method('findOne');
-        $dbForPlatform
-            ->expects($this->once())
-            ->method('getDocument')
-            ->with('buckets', 'default')
-            ->willReturn(new Document([
-                '$id' => 'default',
-                '$sequence' => 1,
-            ]));
-        $dbForPlatform
-            ->expects($this->once())
-            ->method('createDocument')
-            ->with(
-                'bucket_1',
-                $this->callback(function (Document $document) use (&$file): bool {
-                    $file = $document;
-                    return true;
-                })
-            )
-            ->willReturnArgument(1);
-
-        $deviceForFiles = $this->createMock(Device::class);
-        $deviceForFiles
-            ->expects($this->once())
-            ->method('getPath')
-            ->with('default/migration-without-user.json')
-            ->willReturn('/tmp/migration-without-user.json');
-        $deviceForFiles->expects($this->once())->method('getFileSize')->with('/tmp/migration-without-user.json')->willReturn(256);
-        $deviceForFiles->expects($this->once())->method('getFileMimeType')->with('/tmp/migration-without-user.json')->willReturn('application/json');
-        $deviceForFiles->expects($this->once())->method('getFileHash')->with('/tmp/migration-without-user.json')->willReturn('signature');
-
-        $worker = new class () extends Migrations {
-            public function complete(
-                Database $dbForPlatform,
-                Device $deviceForFiles,
-                Document $migration,
-                MailPublisher $publisherForMails,
-                Realtime $queueForRealtime,
-                Authorization $authorization,
-            ): void {
-                $this->dbForPlatform = $dbForPlatform;
-                $this->deviceForFiles = $deviceForFiles;
-                $this->plan = [];
-                $this->handleDataExportComplete(
-                    new Document(['$id' => 'project-id']),
-                    $migration,
-                    $publisherForMails,
-                    $queueForRealtime,
-                    [],
-                    $authorization,
-                );
-            }
-
-            protected function updateMigrationDocument(Document $migration, Document $project, Realtime $queueForRealtime): Document
-            {
-                return $migration;
-            }
-        };
-
-        $migration = new Document([
-            '$id' => 'migration-without-user',
-            'destination' => DestinationJSON::getName(),
-            'options' => [
-                'filename' => 'export',
-                'notify' => false,
-                'userInternalId' => '',
-            ],
-        ]);
-
-        $previousKey = \getenv('_APP_OPENSSL_KEY_V1');
-        $previousDomain = \getenv('_APP_DOMAIN');
-        \putenv('_APP_OPENSSL_KEY_V1=test-key');
-        \putenv('_APP_DOMAIN=example.test');
-
-        try {
-            $worker->complete(
-                $dbForPlatform,
-                $deviceForFiles,
-                $migration,
-                $this->createStub(MailPublisher::class),
-                $this->createStub(Realtime::class),
-                $this->createStub(Authorization::class),
-            );
-        } finally {
-            $this->restoreEnvironment('_APP_OPENSSL_KEY_V1', $previousKey);
-            $this->restoreEnvironment('_APP_DOMAIN', $previousDomain);
-        }
-
-        $this->assertInstanceOf(Document::class, $file);
-        $this->assertSame([], $file->getPermissions());
-        $this->assertStringContainsString(
-            '/v1/storage/buckets/default/files/',
-            (string) $migration->getAttribute('options')['downloadUrl']
-        );
-    }
-
     public function testExportCompletionKeepsDisplayNamesButUsesUniquePhysicalPaths(): void
     {
         $cases = [
@@ -394,53 +244,55 @@ final class MigrationsWorkerExportTest extends TestCase
         ]));
     }
 
-    public function testNotificationAndLoggerFailuresDoNotEscape(): void
+    public function testNotificationFailureIsReportedAsWarning(): void
     {
-        $reported = 0;
-        $worker = new class () extends Migrations {
-            public function notify(Document $migration, MailPublisher $publisherForMails, callable $logError): void
-            {
-                $this->logError = $logError;
-                $this->notifyExport(
-                    migration: $migration,
-                    success: true,
-                    project: new Document([]),
-                    user: new Document([]),
-                    options: ['notify' => true],
-                    publisherForMails: $publisherForMails,
-                    platform: [],
-                );
-            }
+        \Utopia\Span\Span::setStorage(new \Utopia\Span\Storage\Memory());
+        try {
+            $span = \Utopia\Span\Span::init('worker.migrations');
+            $worker = new class () extends Migrations {
+                public function notify(Document $migration, MailPublisher $publisherForMails): void
+                {
+                    $this->notifyExport(
+                        migration: $migration,
+                        success: true,
+                        project: new Document([]),
+                        user: new Document([]),
+                        options: ['notify' => true],
+                        publisherForMails: $publisherForMails,
+                        platform: [],
+                    );
+                }
 
-            protected function sendExportEmail(
-                bool $success,
-                Document $project,
-                Document $user,
-                array $options,
-                MailPublisher $publisherForMails,
-                array $platform,
-                string $exportType = 'CSV',
-                string $downloadUrl = '',
-                float $sizeMB = 0.0,
-            ): void {
-                throw new \RuntimeException('Mail unavailable');
-            }
-        };
+                protected function sendExportEmail(
+                    bool $success,
+                    Document $project,
+                    Document $user,
+                    array $options,
+                    MailPublisher $publisherForMails,
+                    array $platform,
+                    string $exportType = 'CSV',
+                    string $downloadUrl = '',
+                    float $sizeMB = 0.0,
+                ): void {
+                    throw new \RuntimeException('Mail unavailable');
+                }
+            };
 
-        $worker->notify(
-            new Document([
-                '$id' => 'migration-id',
-                'source' => 'Appwrite',
-                'destination' => DestinationJSON::getName(),
-            ]),
-            $this->createStub(MailPublisher::class),
-            function () use (&$reported): void {
-                $reported++;
-                throw new \RuntimeException('Logger unavailable');
-            }
-        );
+            $worker->notify(
+                new Document([
+                    '$id' => 'migration-id',
+                    'source' => 'Appwrite',
+                    'destination' => DestinationJSON::getName(),
+                ]),
+                $this->createStub(MailPublisher::class),
+            );
 
-        $this->assertSame(1, $reported);
+            $this->assertSame('Mail unavailable', $span->get('warning.message'));
+            $this->assertSame('migration-id', $span->get('migration.id'));
+            $this->assertNotInstanceOf(\Throwable::class, $span->getError());
+        } finally {
+            \Utopia\Span\Span::setStorage(null);
+        }
     }
 
     public function testArtifactFinalizationFailureMarksMigrationFailed(): void
@@ -470,8 +322,6 @@ final class MigrationsWorkerExportTest extends TestCase
                     '$id' => 'project-id',
                     '$sequence' => 1,
                 ]);
-                $this->logError = static function (): void {
-                };
 
                 $this->processMigration(
                     $migration,

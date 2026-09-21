@@ -31,6 +31,9 @@ const APP_MODE_ADMIN = 'admin';
 const APP_PAGING_LIMIT = 12;
 const APP_LIMIT_COUNT = 5000;
 const APP_LIMIT_USERS = 10_000;
+const APP_LIMIT_USER_PASSWORD_HISTORY = 20;
+const APP_LIMIT_USER_SESSIONS_MAX = 100;
+const APP_LIMIT_USER_SESSIONS_DEFAULT = 10;
 const APP_LIMIT_ANTIVIRUS = 20_000_000; //20MB
 const APP_LIMIT_ENCRYPTION = 20_000_000; //20MB
 const APP_LIMIT_COMPRESSION = 20_000_000; //20MB
@@ -39,11 +42,55 @@ const APP_LIMIT_ARRAY_LABELS_SIZE = 1000; // Default maximum of how many labels 
 const APP_LIMIT_ARRAY_SCOPES_SIZE = 200; // Default maximum of how many scope elements can there be in API parameter that expects array value
 const APP_LIMIT_ARRAY_ELEMENT_SIZE = 4096; // Default maximum length of element in array parameter represented by maximum URL length.
 const APP_LIMIT_SUBQUERY = 1000;
-const APP_LIMIT_SUBSCRIBERS_SUBQUERY = 1_000_000;
+const APP_LIMIT_SUBSCRIBERS_SUBQUERY = 25;
+
+const APP_PROJECTS_SUBQUERIES = [
+    'subQueryKeys',
+    'subQueryWebhooks',
+    'subQueryPlatforms',
+    'subQueryBlocks',
+];
+
+const APP_USERS_SUBQUERIES = [
+    'subQueryAuthenticators',
+    'subQuerySessions',
+    'subQueryTokens',
+    'subQueryChallenges',
+    'subQueryMemberships',
+    'subQueryTargets',
+    'subQueryAccountKeys',
+    'subQueryPaymentMethods',
+];
+
+const APP_TEAMS_SUBQUERIES = [
+    'subQueryOrganizationKeys',
+];
+
+const APP_TOPICS_SUBQUERIES = [
+    'subQueryTopicTargets',
+];
+
+const APP_FUNCTIONS_SUBQUERIES = [
+    'subQueryVariables',
+    'subQueryProjectVariables',
+];
+
+const APP_DATABASES_SUBQUERIES = [
+    'subQueryPolicies',
+    'subQueryArchives',
+];
+
+const APP_COLLECTIONS_SUBQUERIES = [
+    'subQueryAttributes',
+    'subQueryIndexes',
+];
+
 const APP_LIMIT_WRITE_RATE_DEFAULT = 60; // Default maximum write rate per rate period
 const APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT = 60; // Default maximum write rate period in seconds
 const APP_LIMIT_LIST_DEFAULT = 25; // Default maximum number of items to return in list API calls
-const APP_LIMIT_DATABASE_BATCH = 100; // Default maximum batch size for database operations
+// Default maximum batch size for database operations. Self-hosted operators can raise this
+// for their own hardware; on Cloud the plan's databasesBatchSize takes precedence.
+\define('APP_LIMIT_DATABASE_BATCH', \max(1, (int) System::getEnv('_APP_LIMIT_DATABASE_BATCH', 100)));
 const APP_LIMIT_DATABASE_TRANSACTION = 100; // Default maximum operations per transaction
 const APP_KEY_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_USER_ACCESS = 24 * 60 * 60; // 24 hours
@@ -51,8 +98,8 @@ const APP_PROJECT_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_RESOURCE_TOKEN_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_FILE_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
-const APP_CACHE_BUSTER = 4326;
-const APP_VERSION_STABLE = '1.9.5';
+const APP_CACHE_BUSTER = 4327;
+const APP_VERSION_STABLE = '2.2.0';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
 const APP_DATABASE_ATTRIBUTE_IP = 'ip';
@@ -105,11 +152,14 @@ const APP_SDK_PLATFORM_SERVER = 'server';
 const APP_SDK_PLATFORM_CLIENT = 'client';
 const APP_SDK_PLATFORM_CONSOLE = 'console';
 const APP_SDK_PLATFORM_STATIC = 'static';
+const APP_LIMIT_VCS_STATE = 4096; // Maximum length of the state the VCS authorize endpoints hand to a provider
 const APP_VCS_GITHUB_USERNAME = 'Appwrite';
 const APP_VCS_GITHUB_EMAIL = 'team@appwrite.io';
 const APP_VCS_GITHUB_URL = 'https://github.com/TeamAppwrite';
 const APP_VCS_GITEA_EMAIL = 'team@appwrite.io'; // Used to detect Appwrite's own commits
 const APP_VCS_GITLAB_EMAIL = 'team@appwrite.io'; // Used to detect Appwrite's own commits
+const APP_VCS_BITBUCKET_EMAIL = 'team@appwrite.io'; // Used to detect Appwrite's own commits
+const APP_VCS_ORIGIN_EMAIL = 'vcs@utopia.dev'; // Used to detect commits the VCS adapter pushes over Git HTTPS
 const APP_BRANDED_EMAIL_BASE_TEMPLATE = 'email-base-styled';
 
 // Embeddings
@@ -153,6 +203,7 @@ const TOKEN_TYPE_PHONE = 6;
 const TOKEN_TYPE_OAUTH2 = 7;
 const TOKEN_TYPE_GENERIC = 8;
 const TOKEN_TYPE_EMAIL = 9; // OTP
+const TOKEN_TYPE_VERIFICATION_OTP = 10;
 
 /**
  * Session Providers.
@@ -227,7 +278,6 @@ const DELETE_TYPE_EXECUTIONS = 'executions';
 const DELETE_TYPE_EXECUTIONS_LIMIT = 'executionsLimit';
 const DELETE_TYPE_AUDIT = 'audit';
 const DELETE_TYPE_ABUSE = 'abuse';
-const DELETE_TYPE_USAGE = 'usage';
 const DELETE_TYPE_REALTIME = 'realtime';
 const DELETE_TYPE_BUCKETS = 'buckets';
 const DELETE_TYPE_INSTALLATIONS = 'installations';
@@ -270,6 +320,7 @@ const APP_AUTH_TYPE_SESSION = 'Session';
 const APP_AUTH_TYPE_JWT = 'JWT';
 const APP_AUTH_TYPE_KEY = 'Key';
 const APP_AUTH_TYPE_ADMIN = 'Admin';
+const APP_AUTH_TYPE_ORGANIZATION = 'Organization';
 // Response related
 const MAX_OUTPUT_CHUNK_SIZE = 10 * 1024 * 1024; // 10MB
 const APP_LIMIT_UPLOAD_CHUNK_SIZE = 5 * 1024 * 1024; // 5MB
@@ -283,6 +334,8 @@ const FUNCTION_ALLOWLIST_HEADERS_RESPONSE = ['content-type', 'content-length'];
 const MESSAGE_TYPE_EMAIL = 'email';
 const MESSAGE_TYPE_SMS = 'sms';
 const MESSAGE_TYPE_PUSH = 'push';
+// Message providers
+const MESSAGE_PROVIDER_APPWRITE = 'appwrite';
 // Notification types
 const NOTIFICATION_TYPE_EMAIL = MESSAGE_TYPE_EMAIL;
 const NOTIFICATION_TYPE_SMS = MESSAGE_TYPE_SMS;
@@ -296,6 +349,7 @@ const MAIL_TEMPLATE_INVITATION = 'invitation';
 const MAIL_TEMPLATE_MAGIC_URL = 'magic-url';
 const MAIL_TEMPLATE_MFA_CHALLENGE = 'mfa-challenge';
 const MAIL_TEMPLATE_OTP = 'otp';
+const MAIL_TEMPLATE_OTP_VERIFICATION = 'otp-verification';
 const MAIL_TEMPLATE_RECOVERY = 'recovery';
 const MAIL_TEMPLATE_SESSION_ALERT = 'session-alert';
 const MAIL_TEMPLATE_SMTP_TEST = 'smtp-test';
@@ -360,6 +414,7 @@ const METRIC_EMBEDDINGS_TEXT_TOTAL_TOKENS = 'embeddings.text.totalTokens';
 const METRIC_EMBEDDINGS_MODEL_TEXT_TOTAL_TOKENS = 'embeddings.text.{embeddingModel}.totalTokens';
 
 const METRIC_BUCKETS = 'buckets';
+const METRIC_STORAGE = 'storage';
 const METRIC_FILES  = 'files';
 const METRIC_FILES_STORAGE  = 'files.storage';
 const METRIC_FILES_TRANSFORMATIONS  = 'files.transformations';
@@ -413,6 +468,19 @@ const METRIC_SITES_OUTBOUND = 'sites.outbound';
 const METRIC_AVATARS_SCREENSHOTS_GENERATED = 'avatars.screenshotsGenerated';
 const METRIC_FUNCTIONS_RUNTIME = 'functions.runtimes.{runtime}';
 const METRIC_SITES_FRAMEWORK = 'sites.frameworks.{framework}';
+
+// Realtime concurrency
+// `realtime.connections` is served from the gauges table as a concurrency
+// level. The same name in the events table is the raw +/-1 deltas it is folded
+// from, so reads of this metric must pass an explicit $type.
+
+// Peak is the highest 5-minute level; shorter bursts are smoothed away.
+const REALTIME_CONCURRENCY_INTERVAL = '5m';
+
+// Hold the window back so in-flight writes land first. The level is carried
+// forward and never recomputed, so a delta arriving after its bucket was
+// sampled is lost for good.
+const REALTIME_CONCURRENCY_LAG_SECONDS = 300;
 
 // Realtime metrics
 const METRIC_REALTIME_CONNECTIONS = 'realtime.connections';
@@ -518,6 +586,8 @@ const CSV_ALLOWED_DATABASE_TYPES = [
     DATABASE_TYPE_TABLESDB,
     DATABASE_TYPE_VECTORSDB
 ];
+
+const DATA_EXPORT_RETENTION = 60 * 60 * 24 * 7; // 1 week
 
 const VCS_DEPLOYMENT_SKIP_PATTERNS = [
     '[skip ci]',

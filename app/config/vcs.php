@@ -4,12 +4,16 @@
  * VCS provider registry, read by Appwrite\Vcs\Factory.
  */
 
+use Appwrite\Auth\OAuth2\Bitbucket as OAuth2Bitbucket;
 use Appwrite\Auth\OAuth2\Gitea as OAuth2Gitea;
 use Appwrite\Auth\OAuth2\Github as OAuth2Github;
 use Appwrite\Auth\OAuth2\Gitlab as OAuth2Gitlab;
+use Utopia\System\System;
+use Utopia\VCS\Adapter\Git\Bitbucket;
 use Utopia\VCS\Adapter\Git\Gitea;
 use Utopia\VCS\Adapter\Git\GitHub;
 use Utopia\VCS\Adapter\Git\GitLab;
+use Utopia\VCS\Adapter\Git\Origin;
 
 return [
     'github' => [
@@ -52,12 +56,40 @@ return [
             'clientSecret' => $clientSecret,
             'endpoint' => $endpoint,
         ]), ''),
-        // Only official gitlab.com is supported -- fixed, not configurable.
-        'endpoint' => 'https://gitlab.com',
+        // Defaults to gitlab.com; self-hosted installs point _APP_VCS_GITLAB_ENDPOINT at their own instance.
+        'endpoint' => System::getEnv('_APP_VCS_GITLAB_ENDPOINT', 'https://gitlab.com'),
         'variables' => [
             'clientId' => ['required' => true, 'envVariable' => '_APP_VCS_GITLAB_CLIENT_ID'],
             'clientSecret' => ['required' => true, 'envVariable' => '_APP_VCS_GITLAB_CLIENT_SECRET'],
             'webhookSecret' => ['required' => true, 'envVariable' => '_APP_VCS_GITLAB_WEBHOOK_SECRET'],
+        ],
+    ],
+    'origin' => [
+        'adapter' => Origin::class,
+        // No 'oauth2': Origin has no OAuth2 user flow. Installs are approved
+        // on Cursor and confirmed by a signed receipt, a handshake the
+        // adapter itself owns (getInstallUrl / verifyReceipt).
+        'variables' => [
+            // Factory::fromInstallation() reads appId + privateKey; Origin's
+            // app id doubles as its client id.
+            'appId' => ['required' => true, 'envVariable' => '_APP_VCS_ORIGIN_CLIENT_ID'],
+            'privateKey' => ['required' => true, 'envVariable' => '_APP_VCS_ORIGIN_PRIVATE_KEY'],
+            // No webhookSecret: Origin signs deliveries with its own Ed25519
+            // key, verified against its published JWKS instead of a shared secret.
+        ],
+    ],
+    'bitbucket' => [
+        'adapter' => Bitbucket::class,
+        'oauth2' => fn (string $clientId, string $clientSecret, string $endpoint) => new OAuth2Bitbucket($clientId, $clientSecret, ''),
+        // Only official bitbucket.org/api.bitbucket.org is supported -- fixed,
+        // not configurable. Deliberately no 'endpoint' key here: unlike
+        // GitLab's, Bitbucket's setEndpoint() sets the API base
+        // (api.bitbucket.org), not the browser host, so this must stay unset
+        // rather than pointed at the wrong host.
+        'variables' => [
+            'clientId' => ['required' => true, 'envVariable' => '_APP_VCS_BITBUCKET_CLIENT_ID'],
+            'clientSecret' => ['required' => true, 'envVariable' => '_APP_VCS_BITBUCKET_CLIENT_SECRET'],
+            'webhookSecret' => ['required' => true, 'envVariable' => '_APP_VCS_BITBUCKET_WEBHOOK_SECRET'],
         ],
     ],
 ];

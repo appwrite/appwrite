@@ -50,10 +50,8 @@ final class GitAction
                 default => $status
             };
 
-            $hostname = System::getEnv('_APP_CONSOLE_DOMAIN', System::getEnv('_APP_DOMAIN', ''));
-            $region = $project->getAttribute('region', 'default');
-            $segment = $isSite ? "sites/site-{$resource->getId()}" : "functions/function-{$resource->getId()}";
-            $targetUrl = "{$protocol}://{$hostname}/console/project-{$region}-{$project->getId()}/{$segment}";
+            $collection = $isSite ? 'sites' : 'functions';
+            $targetUrl = ($platform['consoleUrl'] ?? '') . "/projects/{$project->getId()}/{$collection}/{$resource->getId()}";
             $name = $resource->getAttribute('name') . ' (' . $project->getAttribute('name') . ')';
 
             $vcs->updateCommitStatus($repositoryName, $commitHash, $owner, $state, $message, $targetUrl, $name);
@@ -86,7 +84,7 @@ final class GitAction
             ]);
             $previewUrl = $isSite && !$rule->isEmpty() ? "{$protocol}://" . $rule->getAttribute('domain', '') : '';
 
-            $comment = new Comment($platform);
+            $comment = new Comment($platform, $vcs->supportsCommentImages());
             $comment->parseComment($vcs->getComment($owner, $repositoryName, $commentId));
             $comment->addBuild($project, $resource, $isSite ? 'site' : 'function', $status, $deployment->getId(), ['type' => 'logs'], $previewUrl);
             $vcs->updateComment($owner, $repositoryName, $commentId, $comment->generateComment());

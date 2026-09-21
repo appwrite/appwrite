@@ -18,11 +18,6 @@ class Get extends TransactionsGet
         return 'getDocumentsDBTransaction';
     }
 
-    protected function getResponseModel(): string
-    {
-        return UtopiaResponse::MODEL_TRANSACTION;
-    }
-
     public function __construct()
     {
         $this
@@ -30,7 +25,7 @@ class Get extends TransactionsGet
             ->setHttpPath('/v1/documentsdb/transactions/:transactionId')
             ->desc('Get transaction')
             ->groups(['api', 'database', 'transactions'])
-            ->label('scope', 'documents.read')
+            ->label('scope', 'documentsdb.documents.read')
             ->label('usage.resource', 'transaction/{request.transactionId}')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(

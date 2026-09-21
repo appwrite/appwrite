@@ -148,6 +148,22 @@ class Mock extends OAuth2
     }
 
     /**
+     * Return a fixed profile picture URL so tests have something concrete to
+     * assert on. It points back at the mock endpoints on this same host, which
+     * serve a solid-colour PNG.
+     *
+     * @param string $accessToken
+     *
+     * @return string
+     */
+    public function getUserPhoto(string $accessToken): string
+    {
+        $user = $this->getUser($accessToken);
+
+        return $user['photo'] ?? '';
+    }
+
+    /**
      * @param string $accessToken
      *
      * @return array

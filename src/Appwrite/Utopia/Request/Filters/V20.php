@@ -48,21 +48,22 @@ class V20 extends Filter
             $content['queries'] = [];
         }
 
-        // Handle case where queries is an array but empty
-        if (\is_array($content['queries'])) {
-            $content['queries'] = \array_filter($content['queries'], function ($q) {
-                if (\is_object($q) && empty((array)$q)) {
-                    return false;
-                }
-                if (\is_string($q) && \trim($q) === '') {
-                    return false;
-                }
-                if (empty($q)) {
-                    return false;
-                }
-                return true;
-            });
+        if (!\is_array($content['queries'])) {
+            return $content;
         }
+
+        $content['queries'] = \array_filter($content['queries'], function ($q) {
+            if (\is_object($q) && empty((array)$q)) {
+                return false;
+            }
+            if (\is_string($q) && \trim($q) === '') {
+                return false;
+            }
+            if (empty($q)) {
+                return false;
+            }
+            return true;
+        });
 
         try {
             $parsed = Query::parseQueries($content['queries']);

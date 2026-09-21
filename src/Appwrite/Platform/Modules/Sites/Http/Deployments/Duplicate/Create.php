@@ -2,7 +2,8 @@
 
 namespace Appwrite\Platform\Modules\Sites\Http\Deployments\Duplicate;
 
-use Appwrite\Deployment\Backend;
+use Appwrite\Bus\Events\RuleCreated;
+use Appwrite\Deployment\Deployments;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
@@ -10,6 +11,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
+use Utopia\Bus\Bus;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
@@ -67,9 +69,11 @@ class Create extends Action
             ->inject('dbForPlatform')
             ->inject('queueForEvents')
             ->inject('deployments')
+            ->inject('buildTimeout')
             ->inject('deviceForSites')
             ->inject('vcsFactory')
             ->inject('authorization')
+            ->inject('bus')
             ->inject('platform')
             ->callback($this->action(...));
     }
@@ -83,10 +87,12 @@ class Create extends Action
         Database $dbForProject,
         Database $dbForPlatform,
         Event $queueForEvents,
-        Backend $deployments,
+        Deployments $deployments,
+        int $buildTimeout,
         Device $deviceForSites,
         VcsFactory $vcsFactory,
         Authorization $authorization,
+        Bus $bus,
         array $platform
     ) {
         $site = $dbForProject->getDocument('sites', $siteId);
@@ -97,6 +103,13 @@ class Create extends Action
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
 
         if ($deployment->isEmpty()) {
+            throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
+        }
+
+        if (
+            $deployment->getAttribute('resourceId') !== $site->getId()
+            || $deployment->getAttribute('resourceType') !== 'sites'
+        ) {
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
@@ -119,7 +132,7 @@ class Create extends Action
         $destination = '';
         if ($hasSource) {
             $destination = $deviceForSites->getPath($deploymentId . '.' . \pathinfo('code.tar.gz', PATHINFO_EXTENSION));
-            $deviceForSites->transfer($path, $destination, $deviceForSites);
+            $deviceForSites->copy($path, $destination);
         }
 
         $commands = [];
@@ -161,7 +174,7 @@ class Create extends Action
         ]);
 
         if ($hasSource) {
-            $deployment = $deployments->createFromUpload($site, $deployment);
+            $deployment = $deployments->createFromUpload($site, $deployment, $buildTimeout);
         } elseif ($installationId !== '') {
             $installation = $dbForPlatform->getDocument('installations', $installationId);
             if ($installation->isEmpty()) {
@@ -171,11 +184,15 @@ class Create extends Action
             $vcs = $vcsFactory->fromInstallation($installation);
 
             $ref = $deployment->getAttribute('providerCommitHash') ?: $deployment->getAttribute('providerBranch');
-            $deployment = $deployments->createFromUrl(
+            $deployment = $deployments->createFromVcs(
                 $site,
                 $deployment,
-                $vcs->getRepositoryPresignedUrl($owner, $repository, $ref),
-                $deployment->getAttribute('providerRootDirectory', ''),
+                $buildTimeout,
+                $vcs,
+                $owner,
+                $repository,
+                $ref,
+                $site->getAttribute('providerRootDirectory', ''),
             );
         } else {
             // Public template repo: providerBranch holds the resolved ref,
@@ -183,6 +200,7 @@ class Create extends Action
             $deployment = $deployments->createFromRef(
                 $site,
                 $deployment,
+                $buildTimeout,
                 $owner,
                 $repository,
                 GitHub::CLONE_TYPE_COMMIT,
@@ -199,7 +217,7 @@ class Create extends Action
         $isMd5 = System::getEnv('_APP_RULES_FORMAT') === 'md5';
         $ruleId = $isMd5 ? md5($domain) : ID::unique();
 
-        $authorization->skip(
+        $rule = $authorization->skip(
             fn () => $dbForPlatform->createDocument('rules', new Document([
                 '$id' => $ruleId,
                 'projectId' => $project->getId(),
@@ -218,6 +236,7 @@ class Create extends Action
                 'region' => $project->getAttribute('region')
             ]))
         );
+        $bus->dispatch(new RuleCreated($rule->getArrayCopy()));
 
         $queueForEvents
             ->setParam('siteId', $site->getId())

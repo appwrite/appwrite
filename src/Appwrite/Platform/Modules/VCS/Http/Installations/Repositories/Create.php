@@ -57,6 +57,7 @@ class Create extends Action
             ->inject('user')
             ->inject('response')
             ->inject('dbForPlatform')
+            ->inject('project')
             ->callback($this->action(...));
     }
 
@@ -69,11 +70,16 @@ class Create extends Action
         InstallationTokens $installationTokens,
         Document $user,
         Response $response,
-        Database $dbForPlatform
+        Database $dbForPlatform,
+        Document $project
     ) {
         $installation = $dbForPlatform->getDocument('installations', $installationId);
 
         if ($installation->isEmpty()) {
+            throw new Exception(Exception::INSTALLATION_NOT_FOUND);
+        }
+
+        if ($installation->getAttribute('projectInternalId') !== $project->getSequence()) {
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
         }
 
@@ -112,6 +118,11 @@ class Create extends Action
         } else {
             $providerInstallationId = $installation->getAttribute('providerInstallationId');
             $vcs = $vcsFactory->fromInstallation($installation);
+
+            if (!$vcs->supportsRepositoryCreation()) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'VCS provider does not support repository creation: ' . $provider);
+            }
+
             $owner = !empty($providerNamespace) ? $providerNamespace : $vcs->getOwnerName($providerInstallationId);
 
             try {

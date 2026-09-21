@@ -12,7 +12,7 @@ RUN composer install --ignore-platform-reqs --optimize-autoloader \
     --no-plugins --no-scripts --prefer-dist \
     `if [ "$TESTING" != "true" ]; then echo "--no-dev"; fi`
 
-FROM appwrite/base:1.4.4 AS base
+FROM appwrite/base:2.1.0 AS base
 
 LABEL maintainer="team@appwrite.io"
 
@@ -23,12 +23,7 @@ ENV DEBUG=$DEBUG
 ENV _APP_VERSION=$VERSION \
     _APP_HOME=https://appwrite.io
 
-RUN \
-    if [ "$DEBUG" != "true" ]; then \
-    rm -f /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini && \
-    rm -f /usr/local/lib/php/extensions/no-debug-non-zts-*/xdebug.so; \
-    fi && \
-    if [ "$DEBUG" == "true" ]; then \
+RUN if [ "$DEBUG" == "true" ]; then \
     apk add boost boost-dev; \
     fi
 
@@ -41,7 +36,9 @@ COPY ./app /usr/src/code/app
 COPY ./public /usr/src/code/public
 COPY ./bin /usr/local/bin
 COPY ./src /usr/src/code/src
+COPY ./packages /usr/src/code/packages
 COPY ./dev /usr/src/code/dev
+COPY ./docker/opcache.ini /usr/local/etc/php/conf.d/zz-opcache.ini
 COPY ./mongo-init.js /usr/src/code/mongo-init.js
 COPY ./mongo-entrypoint.sh /usr/src/code/mongo-entrypoint.sh
 
@@ -73,7 +70,10 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/interval && \
     chmod +x /usr/local/bin/maintenance &&  \
     chmod +x /usr/local/bin/migrate && \
+    chmod +x /usr/local/bin/stats-resources && \
     chmod +x /usr/local/bin/realtime && \
+    chmod +x /usr/local/bin/mqtt && \
+    chmod +x /usr/local/bin/schedule && \
     chmod +x /usr/local/bin/schedule-functions && \
     chmod +x /usr/local/bin/schedule-executions && \
     chmod +x /usr/local/bin/schedule-messages && \
@@ -84,22 +84,27 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/screenshot && \
     chmod +x /usr/local/bin/test && \
     chmod +x /usr/local/bin/upgrade && \
+    chmod +x /usr/local/bin/usage-setup && \
     chmod +x /usr/local/bin/vars && \
     chmod +x /usr/local/bin/queue-retry && \
     chmod +x /usr/local/bin/queue-count-failed && \
     chmod +x /usr/local/bin/queue-count-processing && \
     chmod +x /usr/local/bin/queue-count-success && \
+    chmod +x /usr/local/bin/worker && \
     chmod +x /usr/local/bin/worker-builds && \
     chmod +x /usr/local/bin/worker-jobs && \
     chmod +x /usr/local/bin/worker-screenshots && \
     chmod +x /usr/local/bin/worker-certificates && \
     chmod +x /usr/local/bin/worker-databases && \
     chmod +x /usr/local/bin/worker-deletes && \
+    chmod +x /usr/local/bin/worker-executions && \
     chmod +x /usr/local/bin/worker-functions && \
     chmod +x /usr/local/bin/worker-mails && \
     chmod +x /usr/local/bin/worker-messaging && \
     chmod +x /usr/local/bin/worker-notifications && \
     chmod +x /usr/local/bin/worker-migrations && \
+    chmod +x /usr/local/bin/worker-stats-resources && \
+    chmod +x /usr/local/bin/worker-stats-usage && \
     chmod +x /usr/local/bin/worker-webhooks
 
 RUN mkdir -p /etc/letsencrypt/live/ && chmod -Rf 755 /etc/letsencrypt/live/
@@ -107,8 +112,6 @@ RUN mkdir -p /etc/letsencrypt/live/ && chmod -Rf 755 /etc/letsencrypt/live/
 FROM base AS production
 
 RUN rm -rf /usr/src/code/app/config/specs && \
-    rm -f /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini /usr/local/etc/php/conf.d/xdebug.ini && \
-    rm -f /usr/local/lib/php/extensions/no-debug-non-zts-*/xdebug.so && \
     find /usr -name '*.a' -delete 2>/dev/null || true && \
     find /usr -type d -name '__pycache__' -exec rm -rf {} + 2>/dev/null || true && \
     find /usr -name '*.pyc' -delete 2>/dev/null || true
@@ -117,12 +120,23 @@ EXPOSE 80
 
 CMD [ "php", "app/http.php" ]
 
+FROM appwrite/base:2.1.0-xdebug AS xdebug
+
 FROM base AS development
+
+# Revalidate bind-mounted source files when development workers reload.
+RUN printf 'opcache.validate_timestamps=1\nopcache.revalidate_freq=0\n' > /usr/local/etc/php/conf.d/zzz-opcache-dev.ini
 
 COPY ./docs /usr/src/code/docs
 COPY ./dev /usr/src/code/dev
 
-RUN if [ "$DEBUG" = "true" ]; then \
+# appwrite/base:2.1.0 ships without XDebug, so it cannot reach production or
+# Cloud. The -xdebug tag is the same build with the extension; mounting it
+# rather than copying keeps xdebug.so out of every layer unless DEBUG asked
+# for it, and guarantees an ABI match because both tags are one base build.
+RUN --mount=from=xdebug,source=/usr/local/lib/php/extensions,target=/tmp/extensions \
+    if [ "$DEBUG" = "true" ]; then \
+    cp /tmp/extensions/no-debug-non-zts-*/xdebug.so "$(php-config --extension-dir)/" && \
     cp /usr/src/code/dev/xdebug.ini /usr/local/etc/php/conf.d/xdebug.ini && \
     mkdir -p /tmp/xdebug && \
     apk add --update --no-cache openssh-client github-cli; \

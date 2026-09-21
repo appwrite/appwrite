@@ -18,11 +18,6 @@ class XList extends TransactionsList
         return 'listDocumentsDBTransactions';
     }
 
-    protected function getResponseModel(): string
-    {
-        return UtopiaResponse::MODEL_TRANSACTION_LIST;
-    }
-
     public function __construct()
     {
         $this
@@ -30,7 +25,7 @@ class XList extends TransactionsList
             ->setHttpPath('/v1/documentsdb/transactions')
             ->desc('List transactions')
             ->groups(['api', 'database', 'transactions'])
-            ->label('scope', 'documents.read')
+            ->label('scope', 'documentsdb.documents.read')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
                 namespace: 'documentsDB',

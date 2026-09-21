@@ -62,9 +62,74 @@ class V25 extends Migration
                 case 'projects':
                     if ($collectionType === 'console') {
                         try {
+                            $this->createAttributeFromCollection($this->dbForProject, $id, 'onboarding');
+                        } catch (Throwable $th) {
+                            Console::warning("Failed to create attribute \"onboarding\" in collection {$id}: {$th->getMessage()}");
+                        }
+
+                        try {
                             $this->createIndexFromCollection($this->dbForProject, $id, '_key_accessedAt');
                         } catch (Throwable $th) {
                             Console::warning("Failed to create index \"_key_accessedAt\" from {$id}: {$th->getMessage()}");
+                        }
+
+                        $attributes = \array_map(
+                            fn (Document $attribute) => $attribute->getId(),
+                            $this->dbForProject->getCollection($id)->getAttribute('attributes', [])
+                        );
+                        if (\in_array('devKeys', $attributes, true)) {
+                            $this->dbForProject->deleteAttribute($id, 'devKeys');
+                        }
+
+                        if (!$this->dbForProject->getCollection('devKeys')->isEmpty()) {
+                            $this->dbForProject->deleteCollection('devKeys');
+                        }
+                    }
+                    $this->dbForProject->purgeCachedCollection($id);
+                    break;
+
+                case 'schedules':
+                    if ($collectionType === 'console') {
+                        try {
+                            $this->createAttributeFromCollection($this->dbForProject, $id, 'projectInternalId');
+                        } catch (Throwable $th) {
+                            Console::warning("Failed to create attribute \"projectInternalId\" in collection {$id}: {$th->getMessage()}");
+                        }
+
+                        $this->dbForProject->purgeCachedCollection($id);
+
+                        $indexes = [
+                            '_key_region_resourceType_projectInternalId_resourceId',
+                            '_key_project_internal_id_region',
+                        ];
+                        foreach ($indexes as $index) {
+                            try {
+                                $this->createIndexFromCollection($this->dbForProject, $id, $index);
+                            } catch (Throwable $th) {
+                                Console::warning("Failed to create index \"{$index}\" from {$id}: {$th->getMessage()}");
+                            }
+                        }
+                    }
+                    $this->dbForProject->purgeCachedCollection($id);
+                    break;
+
+                case 'notifications':
+                    if ($collectionType === 'console') {
+                        $attributes = ['teamId', 'teamInternalId'];
+                        foreach ($attributes as $attribute) {
+                            try {
+                                $this->createAttributeFromCollection($this->dbForProject, $id, $attribute);
+                            } catch (Throwable $th) {
+                                Console::warning("Failed to create attribute \"{$attribute}\" in collection {$id}: {$th->getMessage()}");
+                            }
+                        }
+
+                        $this->dbForProject->purgeCachedCollection($id);
+
+                        try {
+                            $this->createIndexFromCollection($this->dbForProject, $id, '_key_team');
+                        } catch (Throwable $th) {
+                            Console::warning("Failed to create index \"_key_team\" from {$id}: {$th->getMessage()}");
                         }
                     }
                     $this->dbForProject->purgeCachedCollection($id);
@@ -74,11 +139,20 @@ class V25 extends Migration
                     if ($collectionType === 'console') {
                         foreach (['personalAccessToken', 'personalRefreshToken'] as $attribute) {
                             try {
-                                $this->dbForProject->updateAttribute($id, $attribute, size: 2048);
+                                $this->dbForProject->updateAttribute($id, $attribute, type: Database::VAR_TEXT, size: Database::MAX_TEXT_BYTES);
                             } catch (Throwable $th) {
-                                Console::warning("Failed to resize attribute \"{$attribute}\" in collection {$id}: {$th->getMessage()}");
+                                Console::warning("Failed to convert attribute \"{$attribute}\" to text in collection {$id}: {$th->getMessage()}");
                             }
                         }
+                    }
+                    $this->dbForProject->purgeCachedCollection($id);
+                    break;
+
+                case 'challenges':
+                    try {
+                        $this->createIndexFromCollection($this->dbForProject, $id, '_key_expire');
+                    } catch (Throwable $th) {
+                        Console::warning("Failed to create index \"_key_expire\" from {$id}: {$th->getMessage()}");
                     }
                     $this->dbForProject->purgeCachedCollection($id);
                     break;
@@ -113,6 +187,9 @@ class V25 extends Migration
                 case 'sites':
                     if ($collectionType === 'projects') {
                         $attributes = ['providerBranches', 'providerPaths'];
+                        if ($id === 'sites') {
+                            $attributes[] = 'scopes';
+                        }
                         try {
                             $this->createAttributesFromCollection($this->dbForProject, $id, $attributes);
                         } catch (Throwable $th) {
@@ -162,12 +239,61 @@ class V25 extends Migration
                         $this->dbForProject->purgeCachedCollection($id);
                     }
                     break;
+
+                case 'deployments':
+                    if ($collectionType === 'projects') {
+                        try {
+                            $this->createIndexFromCollection($this->dbForProject, $id, '_key_commitHash_branch');
+                        } catch (Throwable $th) {
+                            Console::warning("Failed to create index \"_key_commitHash_branch\" from {$id}: {$th->getMessage()}");
+                        }
+
+                        $this->dbForProject->purgeCachedCollection($id);
+                    }
+                    break;
+
+                case 'users':
+                    try {
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'passwordPwned');
+                    } catch (Throwable $th) {
+                        Console::warning("Failed to create attribute \"passwordPwned\" in collection {$id}: {$th->getMessage()}");
+                    }
+
+                    try {
+                        $this->createIndexFromCollection($this->dbForProject, $id, '_key_passwordPwned');
+                    } catch (Throwable $th) {
+                        Console::warning("Failed to create index \"_key_passwordPwned\" from {$id}: {$th->getMessage()}");
+                    }
+
+                    $this->dbForProject->purgeCachedCollection($id);
+                    break;
+
+                case 'identities':
+                    foreach (['photo', 'providerIdToken'] as $attribute) {
+                        try {
+                            $this->createAttributeFromCollection($this->dbForProject, $id, $attribute);
+                        } catch (Throwable $th) {
+                            Console::warning("Failed to create attribute \"{$attribute}\" in collection {$id}: {$th->getMessage()}");
+                        }
+                    }
+
+                    $this->dbForProject->purgeCachedCollection($id);
+                    break;
             }
         }
     }
 
     protected function migrateDocument(Document $document): Document
     {
+        if (\in_array($document->getCollection(), ['keys', 'functions', 'sites'], true)) {
+            $scopes = $document->getAttribute('scopes', []);
+            if (\is_array($scopes) && \array_intersect($scopes, ['devKeys.read', 'devKeys.write']) !== []) {
+                $document->setAttribute('scopes', \array_values(\array_diff($scopes, ['devKeys.read', 'devKeys.write'])));
+            }
+
+            return $document;
+        }
+
         if ($document->getCollection() !== 'migrations') {
             return $document;
         }

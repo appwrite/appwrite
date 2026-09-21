@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\E2E\General;
 
+use PHPUnit\Framework\Attributes\Group;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectNone;
 use Tests\E2E\Scopes\Scope;
@@ -120,13 +121,22 @@ final class HTTPTest extends Scope
 
     public function testDefaultOAuth2()
     {
-        $response = $this->client->call(Client::METHOD_GET, '/console/auth/oauth2/success', $this->getHeaders());
+        $this->client->setEndpoint('http://localhost');
 
-        $this->assertEquals(200, $response['headers']['status-code']);
+        // Requests on the console's own host are left to the proxy, so arrive on the API host
+        $response = $this->client->call(Client::METHOD_GET, '/auth/oauth2/success', \array_merge([
+            'host' => 'appwrite.test',
+        ], $this->getHeaders()), [], true, false);
 
-        $response = $this->client->call(Client::METHOD_GET, '/console/auth/oauth2/failure', $this->getHeaders());
+        $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertEquals('http://localhost/auth/oauth2/success', $response['headers']['location']);
 
-        $this->assertEquals(200, $response['headers']['status-code']);
+        $response = $this->client->call(Client::METHOD_GET, '/auth/oauth2/failure', \array_merge([
+            'host' => 'appwrite.test',
+        ], $this->getHeaders()), [], true, false);
+
+        $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertEquals('http://localhost/auth/oauth2/failure', $response['headers']['location']);
     }
 
     public function testCors()
@@ -156,6 +166,64 @@ final class HTTPTest extends Scope
         $this->assertNull($response['headers']['access-control-allow-origin'] ?? null);
     }
 
+    public function testCorsLoopback()
+    {
+        $endpoint = '/v1/projects'; // Can be any non-404 route
+
+        /**
+         * Test for SUCCESS
+         *
+         * Loopback origins are allowed without a registered platform.
+         */
+        $origins = [
+            'http://localhost',
+            'http://localhost:3000',
+            'http://127.0.0.1',
+            'https://127.0.0.1:5173',
+            'http://[::1]',
+            'http://[::1]:3000',
+        ];
+
+        foreach ($origins as $origin) {
+            $response = $this->client->call(Client::METHOD_GET, $endpoint, [
+                'origin' => $origin,
+            ]);
+            $this->assertEquals($origin, $response['headers']['access-control-allow-origin'] ?? null, 'Origin ' . $origin . ' was not allowed');
+
+            // Trusting loopback with credentials relies on the origin being
+            // echoed verbatim, so the browser's literal match still applies
+            $this->assertNotEquals('*', $response['headers']['access-control-allow-origin']);
+            $this->assertEquals('true', $response['headers']['access-control-allow-credentials']);
+        }
+
+        /**
+         * Test for FAILURE
+         *
+         * Hostnames that only look like loopback must not be allowed.
+         */
+        $origins = [
+            'http://127.0.0.1.example.com',
+            'http://localhost.example.com',
+            'http://128.0.0.1',
+            'http://[2001:db8::1]',
+            // A prefix or substring match would wrongly accept these
+            'http://xlocalhost',
+            'http://127.0.0.1x.example.com',
+            'http://[::1].evil.com',
+            // Only the exact loopback spellings are hardcoded
+            'http://127.0.0.2',
+            'http://[0:0:0:0:0:0:0:1]',
+            'http://localhost.',
+        ];
+
+        foreach ($origins as $origin) {
+            $response = $this->client->call(Client::METHOD_GET, $endpoint, [
+                'origin' => $origin,
+            ]);
+            $this->assertNull($response['headers']['access-control-allow-origin'] ?? null, 'Origin ' . $origin . ' was unexpectedly allowed');
+        }
+    }
+
     public function testPreflight()
     {
 
@@ -181,11 +249,13 @@ final class HTTPTest extends Scope
 
         $endpoint = '/invite?membershipId=123&userId=asdf';
 
-        $response = $this->client->call(Client::METHOD_GET, $endpoint, [], [], true, false);
+        // Requests on the console's own host are left to the proxy, so arrive on the API host
+        $response = $this->client->call(Client::METHOD_GET, $endpoint, ['host' => 'appwrite.test'], [], true, false);
 
-        $this->assertEquals('/console' . $endpoint, $response['headers']['location']);
+        $this->assertEquals('http://localhost/join?membershipId=123&userId=asdf', $response['headers']['location']);
     }
 
+    #[Group('consoleProxy')]
     public function testConsoleServed()
     {
         /**

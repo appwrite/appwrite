@@ -97,30 +97,32 @@ class XList extends Action
 
         $page = ($offset / $limit) + 1;
 
-        if (\method_exists($vcs, 'listNamespaces')) {
+        // listNamespaces() has a throwing default on the abstract Git class
+        // rather than being absent, so a provider that doesn't report
+        // namespaces is found by catching, not by checking for the method.
+        try {
             ['items' => $namespaces, 'total' => $total] = $vcs->listNamespaces($page, $limit, $search);
-            $namespaces = \array_map(fn ($namespace) => [
-                '$id' => $namespace['id'] ?? '',
-                'name' => $namespace['name'] ?? '',
-                'path' => $namespace['path'] ?? '',
-                'type' => ($namespace['kind'] ?? '') === 'user' ? 'user' : 'organization',
-                'avatarUrl' => $namespace['avatarUrl'] ?? '',
-            ], $namespaces);
-        } else {
+        } catch (\Throwable) {
             $providerInstallationId = $installation->getAttribute('providerInstallationId', '');
             $owner = $vcs->getOwnerName($providerInstallationId);
             $matches = empty($search) || \stripos($owner, $search) !== false;
             $namespaces = $matches ? [[
-                '$id' => $providerInstallationId,
+                'id' => $providerInstallationId,
                 'name' => $owner,
                 'path' => $owner,
-                'type' => $installation->getAttribute('personal', false) ? 'user' : 'organization',
+                'kind' => $installation->getAttribute('personal', false) ? 'user' : 'group',
                 'avatarUrl' => '',
             ]] : [];
             $total = \count($namespaces);
         }
 
-        $namespaces = \array_map(fn ($namespace) => new Document($namespace), $namespaces);
+        $namespaces = \array_map(fn ($namespace) => new Document([
+            '$id' => $namespace['id'] ?? '',
+            'name' => $namespace['name'] ?? '',
+            'path' => $namespace['path'] ?? '',
+            'type' => ($namespace['kind'] ?? '') === 'user' ? 'user' : 'organization',
+            'avatarUrl' => $namespace['avatarUrl'] ?? '',
+        ]), $namespaces);
 
         $response->dynamic(new Document([
             'namespaces' => $namespaces,

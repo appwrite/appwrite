@@ -4,11 +4,21 @@ declare(strict_types=1);
 
 namespace Tests\E2E\Scopes;
 
+use Appwrite\Database\Factory;
 use Appwrite\Tests\Async;
 use Appwrite\Tests\Retryable;
 use PHPUnit\Framework\TestCase;
 use Tests\E2E\Client;
+use Utopia\Cache\Adapter\Pool as CachePool;
+use Utopia\Cache\Adapter\Sharding;
+use Utopia\Cache\Cache;
+use Utopia\Config\Config;
+use Utopia\Database\DateTime;
+use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
+use Utopia\Database\Helpers\Permission;
+use Utopia\Database\Helpers\Role;
+use Utopia\Database\Validator\Authorization;
 use Utopia\System\System;
 
 abstract class Scope extends TestCase
@@ -43,6 +53,114 @@ abstract class Scope extends TestCase
     protected function tearDown(): void
     {
         $this->client = null;
+    }
+
+    /**
+     * Seed a pre-existing console organization for tests of projects, permissions,
+     * memberships, and legacy multi-org access. This is database fixture setup,
+     * not a successful POST /teams: the returned response is a real GET (200).
+     * Application teams still use the public create API (201).
+     */
+    protected function createTeamFixture(array $headers, array $params): array
+    {
+        if (($headers['x-appwrite-project'] ?? '') !== 'console') {
+            return $this->client->call(Client::METHOD_POST, '/teams', $headers, $params);
+        }
+
+        // Read console fixtures as their owner, not in project admin mode.
+        unset($headers['x-appwrite-mode']);
+
+        // The first organization of a self-hosted instance, and every organization on an
+        // edition without the instance limit, comes from the public API. Only a refusal
+        // falls through to seeding the rows directly. Creation is serialized behind an
+        // instance-wide lock, and parallel test processes contend for it, so a 409 asks
+        // for a retry rather than answering whether the organization was allowed.
+        $deadline = \microtime(true) + 10.0;
+        do {
+            $team = $this->client->call(Client::METHOD_POST, '/teams', $headers, $params);
+            $locked = $team['headers']['status-code'] === 409
+                && ($team['body']['type'] ?? '') === 'general_resource_locked';
+            if ($locked) {
+                \usleep(200_000);
+            }
+        } while ($locked && \microtime(true) < $deadline);
+
+        if ($team['headers']['status-code'] === 201) {
+            $response = $this->client->call(Client::METHOD_GET, '/teams/' . $team['body']['$id'], $headers);
+            $this->assertSame(200, $response['headers']['status-code']);
+            return $response;
+        }
+        $this->assertSame(403, $team['headers']['status-code']);
+        $this->assertSame('organization_creation_prohibited', $team['body']['type']);
+
+        $account = [];
+        $this->assertEventually(function () use ($headers, &$account) {
+            $account = $this->client->call(Client::METHOD_GET, '/account', $headers);
+            $this->assertSame(200, $account['headers']['status-code']);
+        }, 3_000, 100);
+
+        $teamId = ($params['teamId'] ?? 'unique()') === 'unique()' ? ID::unique() : $params['teamId'];
+        $seed = function () use ($account, $params, $teamId) {
+            global $register;
+            $pools = $register->get('pools');
+            $cache = new Cache(new Sharding(array_map(
+                fn (string $name) => new CachePool($pools->get($name)),
+                Config::getParam('pools-cache', []),
+            )));
+            $authorization = new Authorization();
+            $database = (new Factory($pools, $cache, $authorization))->platform();
+
+            $authorization->skip(function () use ($database, $account, $params, $teamId) {
+                $database->withTransaction(function () use ($database, $account, $params, $teamId) {
+                    $user = $database->getDocument('users', $account['body']['$id']);
+                    $team = $database->createDocument('teams', new Document([
+                        '$id' => $teamId,
+                        '$permissions' => [
+                            Permission::read(Role::team($teamId)),
+                            Permission::update(Role::team($teamId, 'owner')),
+                            Permission::delete(Role::team($teamId, 'owner')),
+                        ],
+                        'name' => $params['name'],
+                        'total' => 1,
+                        'prefs' => new \stdClass(),
+                        'search' => $teamId . ' ' . $params['name'],
+                    ]));
+                    $roles = array_values(array_unique([...($params['roles'] ?? []), 'owner']));
+                    $membershipId = ID::unique();
+                    $database->createDocument('memberships', new Document([
+                        '$id' => $membershipId,
+                        '$permissions' => [
+                            Permission::read(Role::user($user->getId())),
+                            Permission::read(Role::team($teamId)),
+                            Permission::update(Role::user($user->getId())),
+                            Permission::update(Role::team($teamId, 'owner')),
+                            Permission::delete(Role::user($user->getId())),
+                            Permission::delete(Role::team($teamId, 'owner')),
+                        ],
+                        'userId' => $user->getId(),
+                        'userInternalId' => $user->getSequence(),
+                        'teamId' => $teamId,
+                        'teamInternalId' => $team->getSequence(),
+                        'roles' => $roles,
+                        'invited' => DateTime::now(),
+                        'joined' => DateTime::now(),
+                        'confirm' => true,
+                        'secret' => '',
+                        'search' => $membershipId . ' ' . $user->getId(),
+                    ]));
+                });
+                $database->purgeCachedDocument('users', $account['body']['$id']);
+            });
+        };
+        if (\Swoole\Coroutine::getCid() >= 0) {
+            $seed();
+        } else {
+            \Swoole\Coroutine\run($seed);
+        }
+
+        $response = $this->client->call(Client::METHOD_GET, '/teams/' . $teamId, $headers);
+        $this->assertSame(200, $response['headers']['status-code']);
+        return $response;
     }
 
     /**
@@ -131,22 +249,6 @@ abstract class Scope extends TestCase
     }
 
     /**
-     * Check if the database adapter supports resizing attributes
-     */
-    protected function getSupportForAttributeResizing(): bool
-    {
-        return $this->getConsoleVariables()['supportForAttributeResizing'] ?? true;
-    }
-
-    /**
-     * Check if the database adapter supports fixed schemas with row width limits
-     */
-    protected function getSupportForSchemas(): bool
-    {
-        return $this->getConsoleVariables()['supportForSchemas'] ?? true;
-    }
-
-    /**
      * Check if the database adapter supports attributes
      */
     protected function getSupportForAttributes(): bool
@@ -160,14 +262,6 @@ abstract class Scope extends TestCase
     protected function getMaxIndexLength(): int
     {
         return $this->getConsoleVariables()['maxIndexLength'] ?? 767;
-    }
-
-    /**
-     * Check if the database adapter uses integer sequence IDs
-     */
-    protected function getSupportForIntegerIds(): bool
-    {
-        return $this->getConsoleVariables()['supportForIntegerIds'] ?? true;
     }
 
     protected function getLastEmail(int $limit = 1, ?callable $probe = null): array
@@ -274,24 +368,6 @@ abstract class Scope extends TestCase
         return [];
     }
 
-    protected function assertLastRequest(callable $probe, string $type, $timeoutMs = 20_000, $waitMs = 500): array
-    {
-        $hostname = match ($type) {
-            'webhook' => 'request-catcher-webhook',
-            'sms' => 'request-catcher-sms',
-            default => throw new \Exception('Invalid request catcher type.'),
-        };
-
-        $this->assertEventually(function () use (&$request, $probe, $hostname) {
-            $request = json_decode(file_get_contents('http://' . $hostname . ':5000/__last_request__'), true);
-            $request['data'] = json_decode($request['data'], true);
-
-            call_user_func($probe, $request);
-        }, $timeoutMs, $waitMs);
-
-        return $request;
-    }
-
     protected function assertSamePixels(string $expectedImagePath, string $actualImageBlob): void
     {
         $expected = new \Imagick($expectedImagePath);
@@ -343,9 +419,12 @@ abstract class Scope extends TestCase
         }
 
         $query = http_build_query($queryParams);
+        $url = 'http://' . $hostname . ':5000/__find_request__?' . $query;
 
-        for ($attempt = 0; $attempt < $maxAttempts; $attempt++) {
-            $requests = json_decode(file_get_contents('http://' . $hostname . ':5000/__find_request__?' . $query), true);
+        for ($attempt = 0; $attempt <= $maxAttempts; $attempt++) {
+            $response = @file_get_contents($url);
+            $requests = is_string($response) ? json_decode($response, true) : [];
+
             if (is_array($requests)) {
                 for ($i = count($requests) - 1; $i >= 0; $i--) {
                     $request = $this->decodeRequestData($requests[$i]);
@@ -369,30 +448,8 @@ abstract class Scope extends TestCase
                 }
             }
 
-            usleep($delayMs * 1000);
-        }
-
-        $requests = json_decode(file_get_contents('http://' . $hostname . ':5000/__find_request__?' . $query), true);
-        if (is_array($requests)) {
-            for ($i = count($requests) - 1; $i >= 0; $i--) {
-                $request = $this->decodeRequestData($requests[$i]);
-                if ($probe !== null) {
-                    try {
-                        $probe($request);
-                        return $request;
-                    } catch (\Throwable $error) {
-                        continue;
-                    }
-                }
-
-                if ($enforceProjectId) {
-                    $requestProjectId = $request['headers']['X-Appwrite-Webhook-Project-Id'] ?? '';
-                    if ($requestProjectId === $projectId) {
-                        return $request;
-                    }
-                } else {
-                    return $request;
-                }
+            if ($attempt < $maxAttempts) {
+                usleep($delayMs * 1000);
             }
         }
 

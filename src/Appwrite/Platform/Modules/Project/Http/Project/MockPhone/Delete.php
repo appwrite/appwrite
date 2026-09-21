@@ -52,7 +52,7 @@ class Delete extends Action
                 ],
                 contentType: ContentType::NONE
             ))
-            ->param('number', null, new Phone(), 'Phone number associated with the mock phone. Must be a valid E.164 formatted phone number.')
+            ->param('number', null, new Phone(normalize: true), 'Phone number associated with the mock phone. Must be a valid E.164 formatted phone number.')
             ->inject('response')
             ->inject('queueForEvents')
             ->inject('project')
@@ -69,6 +69,7 @@ class Delete extends Action
         Database $dbForPlatform,
         Authorization $authorization,
     ) {
+        $number = Phone::normalize($number);
         $auths = $project->getAttribute('auths', []);
 
         $mockNumbers = $auths['mockNumbers'] ?? [];

@@ -308,46 +308,50 @@ class UsageProject extends Model
                 'type' => Response::MODEL_METRIC,
                 'description' => 'Aggregated number of text embedding calls per period.',
                 'default' => [],
-                'example' => []
+                'example' => [],
+                'array' => true
             ])
             ->addRule('embeddingsTextTokens', [
                 'type' => Response::MODEL_METRIC,
                 'description' => 'Aggregated number of tokens processed by text embeddings per period.',
                 'default' => [],
-                'example' => []
+                'example' => [],
+                'array' => true
             ])
             ->addRule('embeddingsTextDuration', [
                 'type' => Response::MODEL_METRIC,
                 'description' => 'Aggregated duration spent generating text embeddings per period.',
                 'default' => [],
-                'example' => []
+                'example' => [],
+                'array' => true
             ])
             ->addRule('embeddingsTextErrors', [
                 'type' => Response::MODEL_METRIC,
                 'description' => 'Aggregated number of errors while generating text embeddings per period.',
                 'default' => [],
-                'example' => []
+                'example' => [],
+                'array' => true
             ])
             ->addRule('embeddingsTextTotal', [
-                'type' => Response::MODEL_METRIC,
+                'type' => self::TYPE_INTEGER,
                 'description' => 'Total aggregated number of text embedding calls.',
                 'default' => 0,
                 'example' => 0
             ])
             ->addRule('embeddingsTextTokensTotal', [
-                'type' => Response::MODEL_METRIC,
+                'type' => self::TYPE_INTEGER,
                 'description' => 'Total aggregated number of tokens processed by text.',
                 'default' => 0,
                 'example' => 0
             ])
             ->addRule('embeddingsTextDurationTotal', [
-                'type' => Response::MODEL_METRIC,
+                'type' => self::TYPE_INTEGER,
                 'description' => 'Total aggregated duration spent generating text embeddings.',
                 'default' => 0,
                 'example' => 0
             ])
             ->addRule('embeddingsTextErrorsTotal', [
-                'type' => Response::MODEL_METRIC,
+                'type' => self::TYPE_INTEGER,
                 'description' => 'Total aggregated number of errors while generating text embeddings.',
                 'default' => 0,
                 'example' => 0

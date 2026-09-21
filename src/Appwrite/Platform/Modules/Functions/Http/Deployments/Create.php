@@ -2,7 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Deployments;
 
-use Appwrite\Deployment\Backend;
+use Appwrite\Deployment\Deployments;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
@@ -87,6 +87,7 @@ class Create extends Action
             ->inject('deviceForFunctions')
             ->inject('deviceForLocal')
             ->inject('deployments')
+            ->inject('buildTimeout')
             ->inject('plan')
             ->inject('authorization')
             ->inject('locks')
@@ -106,7 +107,8 @@ class Create extends Action
         Document $project,
         Device $deviceForFunctions,
         Device $deviceForLocal,
-        Backend $deployments,
+        Deployments $deployments,
+        int $buildTimeout,
         array $plan,
         Authorization $authorization,
         callable $locks
@@ -181,7 +183,7 @@ class Create extends Action
         }
 
         if (!$fileSizeValidator->isValid($fileSize) && $functionSizeLimit !== 0) { // Check if file size is exceeding allowed limit
-            throw new Exception(Exception::STORAGE_INVALID_FILE_SIZE);
+            throw new Exception(Exception::DEPLOYMENT_INVALID_FILE_SIZE);
         }
 
         if (!$upload->isValid($fileTmpName)) {
@@ -221,6 +223,13 @@ class Create extends Action
                 $deployment = $dbForProject->getDocument('deployments', $deploymentId);
 
                 if (!$deployment->isEmpty()) {
+                    if (
+                        $deployment->getAttribute('resourceId') !== $function->getId()
+                        || $deployment->getAttribute('resourceType') !== 'functions'
+                    ) {
+                        throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
+                    }
+
                     $chunks = $deployment->getAttribute('sourceChunksTotal', 1);
                     $uploaded = $deployment->getAttribute('sourceChunksUploaded', 0);
                     $metadata = $deployment->getAttribute('sourceMetadata', []);
@@ -236,7 +245,7 @@ class Create extends Action
                 }
 
                 if ($deployment->isEmpty()) {
-                    $deviceForFunctions->prepareUpload($path, $metadata['content_type'] ?? '', $chunks, $metadata);
+                    $deviceForFunctions->prepare($path, $metadata['content_type'] ?? '', $chunks, $metadata);
 
                     if (!empty($contentRange)) {
                         $deployment = $deployments->upload($function, $deployment->setAttributes([
@@ -266,18 +275,19 @@ class Create extends Action
             return;
         }
 
-        $chunksUploaded = $deviceForFunctions->uploadChunk($deviceForLocal->read($fileTmpName), $path, $chunk, $chunks, $metadata);
-
-        if (empty($chunksUploaded)) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed moving file');
-        }
-
         try {
-            $locks($lockKey, 600, function () use ($activate, &$chunks, $chunksUploaded, $commands, $dbForProject, $deploymentId, $deviceForFunctions, $entrypoint, $fileSize, &$function, $path, &$metadata, $mergeUploadMetadata, $deployments, $queueForEvents, $response, $type): void {
+            $locks($lockKey, 600, function () use ($buildTimeout, $activate, $chunk, &$chunks, $commands, $dbForProject, $deploymentId, $deviceForFunctions, $deviceForLocal, $entrypoint, $fileSize, $fileTmpName, &$function, $path, &$metadata, $mergeUploadMetadata, $deployments, $queueForEvents, $response, $type): void {
                 $deployment = $dbForProject->getDocument('deployments', $deploymentId);
                 $uploaded = 0;
 
                 if (!$deployment->isEmpty()) {
+                    if (
+                        $deployment->getAttribute('resourceId') !== $function->getId()
+                        || $deployment->getAttribute('resourceType') !== 'functions'
+                    ) {
+                        throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
+                    }
+
                     $chunks = $deployment->getAttribute('sourceChunksTotal', 1);
                     $uploaded = $deployment->getAttribute('sourceChunksUploaded', 0);
                     $metadata = $mergeUploadMetadata($deployment->getAttribute('sourceMetadata', []), $metadata);
@@ -292,10 +302,25 @@ class Create extends Action
                     }
                 }
 
+                // Keep chunk writes and assembly under the same lock so another
+                // request cannot count or assemble a partially written chunk.
+                $chunksUploaded = $deviceForFunctions->upload(
+                    $deviceForLocal->read($fileTmpName),
+                    $path,
+                    $metadata['content_type'] ?? '',
+                    $chunk,
+                    $chunks,
+                    $metadata
+                );
+
+                if (empty($chunksUploaded)) {
+                    throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed moving file');
+                }
+
                 $chunksUploaded = max($uploaded, $chunksUploaded, (int) ($metadata['chunks'] ?? 0));
 
                 if ($chunksUploaded === $chunks && $uploaded < $chunks) {
-                    $deviceForFunctions->finalizeUpload($path, $chunks, $metadata);
+                    $deviceForFunctions->finalize($path, $chunks, $metadata);
 
                     $fileSize = $deviceForFunctions->getFileSize($path);
 
@@ -312,7 +337,7 @@ class Create extends Action
                         'activate' => $activate,
                         'sourceMetadata' => $metadata,
                         'type' => $type,
-                    ]));
+                    ]), $buildTimeout);
                 } else {
                     $deployment = $deployments->upload($function, $deployment->setAttributes([
                         'sourceChunksUploaded' => $chunksUploaded,
@@ -326,6 +351,8 @@ class Create extends Action
                     $queueForEvents
                         ->setParam('functionId', $function->getId())
                         ->setParam('deploymentId', $deployment->getId());
+                } else {
+                    $queueForEvents->reset();
                 }
 
                 $response

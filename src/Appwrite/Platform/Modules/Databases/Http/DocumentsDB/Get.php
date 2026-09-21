@@ -26,7 +26,7 @@ class Get extends DatabaseGet
             ->setHttpPath('/v1/documentsdb/:databaseId')
             ->desc('Get database')
             ->groups(['api', 'database'])
-            ->label('scope', 'databases.read')
+            ->label('scope', 'documentsdb.read')
             ->label('usage.resource', 'database/{request.databaseId}')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(

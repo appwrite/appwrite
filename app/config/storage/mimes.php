@@ -2,13 +2,13 @@
 
 return [
     "image/jpeg",
-    "image/jpeg",
     "image/gif",
     "image/png",
     "image/webp",
     "image/heic",
     "image/heic-sequence",
     "image/avif",
+    "image/svg+xml", // Safe to render inline; scripts are blocked by the Content-Security-Policy header
 
     // Video Files
     "video/mp4",

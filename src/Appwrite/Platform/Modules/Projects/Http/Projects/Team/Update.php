@@ -7,14 +7,12 @@ use Appwrite\Platform\Modules\Projects\Http\Projects\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
-use Appwrite\Utopia\Database\Validator\Queries\Projects;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\Validator;
 
 class Update extends Action
 {
@@ -25,11 +23,6 @@ class Update extends Action
         return 'updateProjectTeam';
     }
 
-    protected function getQueriesValidator(): Validator
-    {
-        return new Projects();
-    }
-
     public function __construct()
     {
         $this
@@ -37,6 +30,8 @@ class Update extends Action
             ->setHttpPath('/v1/projects/:projectId/team')
             ->desc('Update project team')
             ->groups(['api', 'projects'])
+            ->label('audits.event', 'projects.team.update')
+            ->label('audits.resource', 'project/{request.projectId}')
             ->label('scope', 'projects.write')
             ->label('sdk', new Method(
                 namespace: 'projects',

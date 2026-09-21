@@ -35,6 +35,7 @@ class Factory
         $database
             ->setDatabase($this->database)
             ->setAuthorization($this->authorization)
+            ->setDropUnknownAttributes(true)
             ->setNamespace($this->platformNamespace);
 
         $this->configureDocumentTypes($database);
@@ -57,7 +58,8 @@ class Factory
 
         $database
             ->setDatabase($this->database)
-            ->setAuthorization($this->authorization);
+            ->setAuthorization($this->authorization)
+            ->setDropUnknownAttributes(true);
 
         $this->configureDocumentTypes($database);
         $this->configureOptions($database, $timeout, $maxQueryValues, $metadata);
@@ -65,34 +67,10 @@ class Factory
         return $this->configureProject($database, $project, $dsn);
     }
 
-    public function logs(
-        ?Document $project = null,
-        int $timeout = 0,
-        int $maxQueryValues = 0,
-        array $metadata = [],
-    ): Database {
-        /** @var array $collections */
-        $collections = Config::getParam('collections', []);
-        $logsCollections = \array_keys($collections['logs'] ?? []);
-
-        $database = $this->newDatabase($this->adapter('logs'));
-
-        $database
-            ->setDatabase($this->database)
-            ->setAuthorization($this->authorization)
-            ->setSharedTables(true)
-            ->setGlobalCollections($logsCollections)
-            ->setNamespace('logsV1');
-
-        if ($project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
-            $database->setTenant($project->getSequence());
-        }
-
-        $this->configureOptions($database, $timeout, $maxQueryValues, $metadata);
-
-        return $database;
-    }
-
+    /**
+     * Databases and tables the caller owns. Unknown attributes stay a rejected write here:
+     * the schema is theirs, so dropping one would silently discard data they sent.
+     */
     public function tenant(
         Document $databaseDocument,
         Document $project,

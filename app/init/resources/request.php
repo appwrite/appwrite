@@ -3,33 +3,37 @@
 use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
 use Appwrite\Auth\Key;
+use Appwrite\Auth\Validator\PasswordPwned\Appwrite as PasswordPwnedAppwrite;
+use Appwrite\Auth\Validator\PasswordPwned\HIBP as PasswordPwnedHIBP;
+use Appwrite\Auth\Validator\PasswordPwned\Mock as PasswordPwnedMock;
+use Appwrite\Auth\Validator\PasswordPwned\None as PasswordPwnedNone;
 use Appwrite\Database\Factory as DatabaseFactory;
 use Appwrite\Databases\TransactionState;
-use Appwrite\Deployment\Backend;
-use Appwrite\Deployment\Backend\Executor as ExecutorBackend;
-use Appwrite\Deployment\Backend\Orchestrator;
+use Appwrite\Deployment\Deployments;
 use Appwrite\Event\Context\Audit as AuditContext;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Func as FunctionMessage;
-use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception;
 use Appwrite\Functions\EventProcessor;
+use Appwrite\Geo\Client as GeoClient;
+use Appwrite\Geo\Geo;
 use Appwrite\GraphQL\Schema;
-use Appwrite\Locale\GeoRecord;
 use Appwrite\Locking\Lock;
 use Appwrite\Network\Cors;
 use Appwrite\Network\Platform;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\Network\Validator\Redirect;
+use Appwrite\Usage\Connection as UsageConnection;
 use Appwrite\Usage\Context as UsageContext;
+use Appwrite\Usage\Policy as UsagePolicy;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
-use Executor\Executor;
 use OpenRuntimes\Orchestrator\Jobs;
+use Swoole\Table;
 use Utopia\Agents\Adapters\Appwrite as AppwriteAdapter;
 use Utopia\Agents\Agent;
 use Utopia\Audit\Adapter\Database as AdapterDatabase;
@@ -42,7 +46,6 @@ use Utopia\Auth\Proofs\Token;
 use Utopia\Auth\Store;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
-use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime as DatabaseDateTime;
 use Utopia\Database\Document;
@@ -50,20 +53,17 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Container;
 use Utopia\Domains\Domain;
-use Utopia\Fetch\Client;
+use Utopia\DSN\DSN;
 use Utopia\Http\Http;
 use Utopia\Locale\Locale;
 use Utopia\Lock\Distributed as DistributedLock;
-use Utopia\Logger\Log;
-use Utopia\Logger\Logger;
 use Utopia\Pools\Group;
-use Utopia\Queue\Publisher;
+use Utopia\Queue\Publisher\Synchronous as Publisher;
 use Utopia\Queue\Queue;
 use Utopia\Storage\Device;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
-use Utopia\Validator\URL;
-use Utopia\Validator\WhiteList;
+use Utopia\Usage\Tenant as UsageTenant;
 
 /**
  * Register per-request resources on the given container.
@@ -73,20 +73,15 @@ use Utopia\Validator\WhiteList;
 return function (Container $context): void {
     $context->set('utopia:graphql', fn ($utopia) => $utopia, ['utopia']);
 
-    $context->set('log', fn () => new Log(), []);
-
-    $context->set('logger', fn ($register) => $register->get('logger'), ['register']);
-
-    $context->set('lock', function (Group $pools, Telemetry $telemetry, ?Logger $logger, Document $project): Lock {
+    $context->set('lock', function (Group $pools, Telemetry $telemetry, Document $project): Lock {
         return new Lock(
             fn (string $key, int $ttl, Closure $callback): mixed => $pools->get('lock')->use(
                 fn (\Redis $redis): mixed => $callback(new DistributedLock($redis, $key, $ttl))
             ),
             $telemetry,
-            $logger,
             $project
         );
-    }, ['pools', 'telemetry', 'logger', 'project']);
+    }, ['pools', 'telemetry', 'project']);
 
     $context->set('authorization', fn () => new Authorization(), []);
 
@@ -122,7 +117,10 @@ return function (Container $context): void {
 
     $context->set('locale', function () {
         $locale = new Locale(System::getEnv('_APP_LOCALE', 'en'));
-        $locale->setFallback(System::getEnv('_APP_LOCALE', 'en'));
+        // Always fall back to English — it is the only complete translation set.
+        // Using _APP_LOCALE here left missing keys as {{emails.*}} when the
+        // instance default was a partial locale (e.g. fr). See #12448.
+        $locale->setFallback('en');
 
         return $locale;
     });
@@ -132,6 +130,18 @@ return function (Container $context): void {
     $context->set('queueForWebhooks', fn (Publisher $publisher) => new Webhook($publisher), ['publisher']);
     $context->set('queueForRealtime', fn () => new Realtime(), []);
     $context->set('usage', fn () => new UsageContext(), []);
+    $context->set('usageForProject', function (Document $project, UsageConnection $usageConnection): UsageTenant {
+        if (!$usageConnection->isEnabled()) {
+            throw new Exception(Exception::GENERAL_USAGE_DISABLED);
+        }
+        if (!$usageConnection->isReady()) {
+            throw new Exception(Exception::GENERAL_USAGE_NOT_READY);
+        }
+
+        $tenant = (string) $project->getSequence();
+        return new UsageTenant($usageConnection->getUsage(), $tenant === '' ? '__none__' : $tenant);
+    }, ['project', 'usageConnection']);
+    $context->set('usagePolicy', fn () => new UsagePolicy(), []);
     $context->set('auditContext', fn () => new AuditContext(), []);
 
     $context->set('impersonatorUser', function (string $mode, Document $project, Document $user, Request $request, Database $dbForProject, Database $dbForPlatform) {
@@ -139,7 +149,7 @@ return function (Container $context): void {
             return new Document();
         }
 
-        // Query params mirror the header fallback pattern used by ?project= and ?devKey=,
+        // Query params mirror the header fallback pattern used by ?project=,
         // allowing Console to embed impersonation in direct file/image URLs where headers cannot be set.
         $impersonateUserId = $request->getHeaderLine('x-appwrite-impersonate-user-id', (string)($request->getParam('impersonateuserid', '') ?: $request->getParam('impersonateUserId', '')));
         $impersonateEmail = $request->getHeaderLine('x-appwrite-impersonate-user-email', (string)($request->getParam('impersonateemail', '') ?: $request->getParam('impersonateEmail', '')));
@@ -197,13 +207,12 @@ return function (Container $context): void {
         $publisher,
         new Queue(System::getEnv('_APP_FUNCTIONS_QUEUE_NAME', Event::FUNCTIONS_QUEUE_NAME), 'utopia-queue', Event::FUNCTIONS_QUEUE_TTL)
     ), ['publisher']);
-    // Builds a Backend bound to a given project — webhook handlers resolve
+    // Builds a Deployments bound to a given project — webhook handlers resolve
     // their tenant projects mid-request, after this container is initialized.
-    $context->set('deploymentsFactory', function (BuildPublisher $publisherForBuilds, Jobs $jobs, Executor $executor, array $platform) {
-        return fn (Database $dbForProject, Document $project): Backend => System::getEnv('_APP_BUILDS_BACKEND', 'executor') === 'orchestrator'
-            ? new Orchestrator($jobs, $dbForProject, $project, $platform)
-            : new ExecutorBackend($publisherForBuilds, $dbForProject, $project, $executor, $platform);
-    }, ['publisherForBuilds', 'jobs', 'executor', 'platform']);
+    $context->set('deploymentsFactory', function (Jobs $jobs, array $platform) {
+        return fn (Database $dbForProject, Document $project): Deployments => new Deployments($jobs, $dbForProject, $project, $platform);
+    }, ['jobs', 'platform']);
+    $context->set('buildTimeout', fn () => (int) System::getEnv('_APP_COMPUTE_BUILD_TIMEOUT', 900));
     $context->set('deployments', fn (callable $deploymentsFactory, Database $dbForProject, Document $project) => $deploymentsFactory($dbForProject, $project), ['deploymentsFactory', 'dbForProject', 'project']);
     $context->set('eventProcessor', fn () => new EventProcessor(), []);
     $context->set('databaseFactory', fn (Group $pools, Cache $cache, Authorization $authorization) => new DatabaseFactory(
@@ -239,33 +248,23 @@ return function (Container $context): void {
         };
     }, ['databaseFactory', 'dbForPlatform']);
 
-    $context->set('getLogsDB', function (DatabaseFactory $databaseFactory) {
-
-        return function (?Document $project = null) use ($databaseFactory) {
-            return $databaseFactory->logs(
-                $project,
-                APP_DATABASE_TIMEOUT_MILLISECONDS_API,
-                APP_DATABASE_QUERY_MAX_VALUES
-            );
-        };
-    }, ['databaseFactory']);
-
     /**
      * List of allowed request hostnames for the request.
      */
-    $context->set('allowedHostnames', function (array $platform, Document $project, Document $rule, Document $devKey, Request $request) {
+    $context->set('allowedHostnames', function (array $platform, Document $project, Document $rule, Request $request) {
         $allowed = [...($platform['hostnames'] ?? [])];
+
+        /* Add the console host, the default OAuth2 redirects land on it even when _APP_CONSOLE_URL points elsewhere */
+        $consoleHostname = \parse_url($platform['consoleUrl'] ?? '', PHP_URL_HOST);
+        if (! empty($consoleHostname)) {
+            $allowed[] = $consoleHostname;
+        }
 
         /* Add platform configured hostnames */
         if (! $project->isEmpty() && $project->getId() !== 'console') {
             $platforms = $project->getAttribute('platforms', []);
             $hostnames = Platform::getHostnames($platforms);
             $allowed = [...$allowed, ...$hostnames];
-        }
-
-        /* Add the request hostname if a dev key is found */
-        if (! $devKey->isEmpty()) {
-            $allowed[] = $request->getHostname();
         }
 
         $originHostname = parse_url($request->getOrigin(), PHP_URL_HOST);
@@ -286,13 +285,8 @@ return function (Container $context): void {
             $allowed[] = $rule->getAttribute('domain', '');
         }
 
-        /* Allow the request origin if a dev key is found */
-        if (! $devKey->isEmpty() && ! empty($hostname)) {
-            $allowed[] = $hostname;
-        }
-
         return array_unique($allowed);
-    }, ['platform', 'project', 'rule', 'devKey', 'request']);
+    }, ['platform', 'project', 'rule', 'request']);
 
     /**
      * List of allowed request schemes for the request.
@@ -427,18 +421,14 @@ return function (Container $context): void {
 
     $context->set(
         'originValidator',
-        fn (Document $devKey, array $allowedHostnames, array $allowedSchemes) => $devKey->isEmpty()
-            ? new Origin($allowedHostnames, $allowedSchemes)
-            : new URL(),
-        ['devKey', 'allowedHostnames', 'allowedSchemes']
+        fn (array $allowedHostnames, array $allowedSchemes) => new Origin($allowedHostnames, $allowedSchemes),
+        ['allowedHostnames', 'allowedSchemes']
     );
 
     $context->set(
         'redirectValidator',
-        fn (Document $devKey, array $allowedHostnames, array $allowedSchemes) => $devKey->isEmpty()
-            ? new Redirect($allowedHostnames, $allowedSchemes)
-            : new URL(),
-        ['devKey', 'allowedHostnames', 'allowedSchemes']
+        fn (array $allowedHostnames, array $allowedSchemes) => new Redirect($allowedHostnames, $allowedSchemes),
+        ['allowedHostnames', 'allowedSchemes']
     );
 
     $context->set('user', function (string $mode, Document $project, Document $console, Request $request, Response $response, Database $dbForProject, Database $dbForPlatform, Store $store, Token $proofForToken, $authorization) {
@@ -539,16 +529,16 @@ return function (Container $context): void {
             $jwtUserId = $payload['userId'] ?? '';
             if (! empty($jwtUserId)) {
                 if ($mode === APP_MODE_ADMIN) {
+                    /** @var User $user */
                     $user = $dbForPlatform->getDocument('users', $jwtUserId);
                 } else {
+                    /** @var User $user */
                     $user = $dbForProject->getDocument('users', $jwtUserId);
                 }
             }
             $jwtSessionId = $payload['sessionId'] ?? '';
-            if (! empty($jwtSessionId)) {
-                if (empty($user->find('$id', $jwtSessionId, 'sessions'))) { // Match JWT to active token
-                    $user = new User([]);
-                }
+            if (! empty($jwtSessionId) && ! $user->sessionActive($jwtSessionId)) { // Match JWT to active session
+                $user = new User([]);
             }
         }
 
@@ -585,7 +575,22 @@ return function (Container $context): void {
         return $user;
     }, ['mode', 'project', 'console', 'request', 'response', 'dbForProject', 'dbForPlatform', 'store', 'proofForToken', 'authorization']);
 
-    $context->set('project', function ($dbForPlatform, $request, $console, $authorization, Http $utopia) {
+    $context->set('projectIdFromPath', function (Request $request, Http $utopia): string {
+        $match = $utopia->match($request);
+        if (empty($match)) {
+            return '';
+        }
+
+        $path = (string) \parse_url($request->getURI(), PHP_URL_PATH);
+        $segments = \array_values(\array_filter(\explode('/', $path), fn (string $segment) => $segment !== ''));
+        if (($segments[0] ?? '') !== 'v1' || ($segments[1] ?? '') !== 'projects') {
+            return '';
+        }
+
+        return $match->params['projectId'] ?? '';
+    }, ['request', 'utopia']);
+
+    $context->set('project', function ($dbForPlatform, $request, $console, $authorization, Http $utopia, string $projectIdFromPath) {
         /** @var Appwrite\Utopia\Request $request */
         /** @var Utopia\Database\Database $dbForPlatform */
         /** @var Utopia\Database\Document $console */
@@ -597,32 +602,50 @@ return function (Container $context): void {
         // For non-GET requests getParam() reads the body, so a project passed
         // as a query parameter (e.g. presigned artifact URLs) is only visible
         // via getQuery().
-        if (empty($projectId)) {
+        if ($projectId === '') {
             $projectId = (string) $request->getQuery('project', '');
+        }
+
+        $route = $utopia->match($request)?->route;
+
+        // S3 uses the Appwrite project ID as its SigV4 access key. Header-signed
+        // requests carry the credential scope in Authorization; presigned URLs
+        // carry it in the X-Amz-Credential query parameter.
+        if ($projectId === '' && \in_array('s3', $route?->getGroups() ?? [], true)) {
+            $credential = '';
+            $authorizationHeader = $request->getHeaderLine('authorization', '');
+            if (\preg_match('/Credential=([^\s,]+)/', $authorizationHeader, $matches) === 1) {
+                $credential = $matches[1];
+            } else {
+                $credential = $request->getQuery('X-Amz-Credential', '');
+            }
+
+            if (\is_string($credential)) {
+                $projectId = \explode('/', $credential, 2)[0];
+            }
         }
 
         // Backwards compatibility for new services, originally project resources
         // These endpoints moved from /v1/projects/:projectId/<resource> to /v1/<resource>
         // When accessed via the old alias path, extract projectId from the URI
         $deprecatedProjectPathPrefix = '/v1/projects/';
-        $route = $utopia->match($request)?->route;
         if (!empty($route)) {
-            $isDeprecatedAlias = \str_starts_with($request->getURI(), $deprecatedProjectPathPrefix) &&
+            $isDeprecatedAlias = $projectIdFromPath !== '' &&
                 !\str_starts_with($route->getPath(), $deprecatedProjectPathPrefix);
 
             if ($isDeprecatedAlias) {
-                $projectId = \explode('/', $request->getURI(), 5)[3] ?? '';
+                $projectId = $projectIdFromPath;
             }
         }
 
-        if (empty($projectId) || $projectId === 'console') {
+        if ($projectId === '' || $projectId === 'console') {
             return $console;
         }
 
         $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
 
         return $project;
-    }, ['dbForPlatform', 'request', 'console', 'authorization', 'utopia']);
+    }, ['dbForPlatform', 'request', 'console', 'authorization', 'utopia', 'projectIdFromPath']);
 
     $context->set('session', function (User $user, Store $store, Token $proofForToken) {
         if ($user->isEmpty()) {
@@ -645,7 +668,24 @@ return function (Container $context): void {
         return;
     }, ['user', 'store', 'proofForToken']);
 
-    $context->set('dbForProject', function (DatabaseFactory $databaseFactory, Database $dbForPlatform, Document $project, Response $response, Publisher $publisher, Publisher $publisherFunctions, Publisher $publisherWebhooks, Event $queueForEvents, FunctionPublisher $publisherForFunctions, Webhook $queueForWebhooks, Realtime $queueForRealtime, UsageContext $usage, Request $request) {
+    $context->set('pwnedPasswords', function (Cache $cache) {
+        // Nothing is asked until an operator points this at a service
+        $dsn = new DSN(System::getEnv('_APP_PWNED_PASSWORDS_DSN', 'none://localhost'));
+
+        return match ($dsn->getScheme()) {
+            'hibp' => new PasswordPwnedHIBP($cache),
+            'appwrite' => new PasswordPwnedAppwrite($dsn, $cache),
+            // Reports every password as safe by choice, for servers that cannot reach a breach service
+            'none' => new PasswordPwnedNone(),
+            // Reports almost every password as safe, so it must never be reachable on a real server
+            'mock' => Http::isProduction()
+                ? throw new Exception(Exception::GENERAL_SERVER_ERROR, 'The mock breach validator cannot be used in production.')
+                : new PasswordPwnedMock(),
+            default => throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Unknown _APP_PWNED_PASSWORDS_DSN scheme: ' . $dsn->getScheme()),
+        };
+    }, ['cache']);
+
+    $context->set('dbForProject', function (DatabaseFactory $databaseFactory, Database $dbForPlatform, Document $project, Response $response, Publisher $publisher, Event $queueForEvents, FunctionPublisher $publisherForFunctions, Webhook $queueForWebhooks, Realtime $queueForRealtime, UsageContext $usage, Request $request) {
         if ($project->isEmpty() || $project->getId() === 'console') {
             return $dbForPlatform;
         }
@@ -769,7 +809,7 @@ return function (Container $context): void {
         // Clone the queues, to prevent events triggered by the database listener
         // from overwriting the events that are supposed to be triggered in the shutdown hook.
         $queueForEventsClone = new Event($publisher);
-        $queueForWebhooks = new Webhook($publisherWebhooks);
+        $queueForWebhooksClone = clone $queueForWebhooks;
         $queueForRealtime = new Realtime();
 
         $database
@@ -784,7 +824,7 @@ return function (Container $context): void {
                 $response,
                 $queueForEventsClone->from($queueForEvents),
                 $publisherForFunctions,
-                $queueForWebhooks->from($queueForEvents),
+                $queueForWebhooksClone->from($queueForEvents),
                 $queueForRealtime->from($queueForEvents)
             ))
             ->on(Database::EVENT_DOCUMENT_CREATE, 'purge-function-events-cache', fn ($event, $document) => $functionsEventsCacheListener($event, $document, $project, $database))
@@ -792,7 +832,7 @@ return function (Container $context): void {
             ->on(Database::EVENT_DOCUMENT_DELETE, 'purge-function-events-cache', fn ($event, $document) => $functionsEventsCacheListener($event, $document, $project, $database));
 
         return $database;
-    }, ['databaseFactory', 'dbForPlatform', 'project', 'response', 'publisher', 'publisherFunctions', 'publisherWebhooks', 'queueForEvents', 'publisherForFunctions', 'queueForWebhooks', 'queueForRealtime', 'usage', 'request']);
+    }, ['databaseFactory', 'dbForPlatform', 'project', 'response', 'publisher', 'queueForEvents', 'publisherForFunctions', 'queueForWebhooks', 'queueForRealtime', 'usage', 'request']);
 
     $context->set('schema', function ($utopia, $dbForProject, $authorization) {
 
@@ -894,7 +934,7 @@ return function (Container $context): void {
         $mode = $request->getParam('mode', $request->getHeaderLine('x-appwrite-mode', APP_MODE_DEFAULT));
 
         $projectId = $request->getParam('project', $request->getHeaderLine('x-appwrite-project', ''));
-        if (!empty($projectId) && $project->getId() !== $projectId) {
+        if ($projectId !== '' && $project->getId() !== $projectId) {
             $mode = APP_MODE_ADMIN;
         }
 
@@ -916,56 +956,7 @@ return function (Container $context): void {
         return $requestTimestamp;
     }, ['request']);
 
-    $context->set('devKey', function (Request $request, Document $project, array $servers, Database $dbForPlatform, Authorization $authorization) {
-        $devKey = $request->getHeaderLine('x-appwrite-dev-key', $request->getParam('devKey', ''));
-
-        // Check if given key match project's development keys
-        $key = $project->find('secret', $devKey, 'devKeys');
-        if (! $key) {
-            return new Document([]);
-        }
-
-        // check expiration
-        $expire = $key->getAttribute('expire');
-        if (! empty($expire) && $expire < DatabaseDateTime::formatTz(DatabaseDateTime::now())) {
-            return new Document([]);
-        }
-
-        // update access time
-        $accessedAt = $key->getAttribute('accessedAt', 0);
-        if (empty($accessedAt) || DatabaseDateTime::formatTz(DatabaseDateTime::addSeconds(new \DateTime(), -APP_KEY_ACCESS)) > $accessedAt) {
-            $key->setAttribute('accessedAt', DatabaseDateTime::now());
-            $authorization->skip(fn () => $dbForPlatform->updateDocument('devKeys', $key->getId(), new Document([
-                'accessedAt' => $key->getAttribute('accessedAt')
-            ])));
-            $dbForPlatform->purgeCachedDocument('projects', $project->getId());
-        }
-
-        // add sdk to key
-        $sdkValidator = new WhiteList($servers, true);
-        $sdk = \strtolower($request->getHeaderLine('x-sdk-name', 'UNKNOWN'));
-
-        if ($sdk !== 'unknown' && $sdkValidator->isValid($sdk)) {
-            $sdks = $key->getAttribute('sdks', []);
-
-            if (! in_array($sdk, $sdks)) {
-                $sdks[] = $sdk;
-                $key->setAttribute('sdks', $sdks);
-
-                /** Update access time as well */
-                $key->setAttribute('accessedAt', DatabaseDateTime::now());
-                $key = $authorization->skip(fn () => $dbForPlatform->updateDocument('devKeys', $key->getId(), new Document([
-                    'sdks' => $key->getAttribute('sdks'),
-                    'accessedAt' => $key->getAttribute('accessedAt')
-                ])));
-                $dbForPlatform->purgeCachedDocument('projects', $project->getId());
-            }
-        }
-
-        return $key;
-    }, ['request', 'project', 'servers', 'dbForPlatform', 'authorization']);
-
-    $context->set('team', function (Document $project, Database $dbForPlatform, Http $utopia, Request $request, Authorization $authorization) {
+    $context->set('team', function (Document $project, Database $dbForPlatform, Http $utopia, Request $request, Authorization $authorization, string $projectIdFromPath) {
         $teamInternalId = '';
         if ($project->getId() !== 'console') {
             $teamInternalId = $project->getAttribute('teamInternalId', '');
@@ -974,9 +965,7 @@ return function (Container $context): void {
             $path = ! empty($route) ? $route->getPath() : $request->getURI();
             $orgHeader = $request->getHeaderLine('x-appwrite-organization', '');
             if (str_starts_with($path, '/v1/projects/:projectId')) {
-                $uri = $request->getURI();
-                $pid = explode('/', $uri)[3];
-                $p = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $pid));
+                $p = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectIdFromPath));
                 $teamInternalId = $p->getAttribute('teamInternalId', '');
             } elseif ($path === '/v1/projects') {
                 $teamId = $request->getParam('teamId', '');
@@ -1006,7 +995,7 @@ return function (Container $context): void {
         });
 
         return $team;
-    }, ['project', 'dbForPlatform', 'utopia', 'request', 'authorization']);
+    }, ['project', 'dbForPlatform', 'utopia', 'request', 'authorization', 'projectIdFromPath']);
 
     $context->set('previewHostname', function (Request $request, ?Key $apiKey) {
         $allowed = false;
@@ -1063,6 +1052,10 @@ return function (Container $context): void {
 
     $context->set('resourceToken', function ($project, $dbForProject, $request, Authorization $authorization) {
         $tokenJWT = $request->getParam('token');
+
+        if (! \is_string($tokenJWT)) {
+            return new Document([]);
+        }
 
         if (! empty($tokenJWT) && ! $project->isEmpty()) { // JWT authentication
             // Use a large but reasonable maxAge to avoid auto-exp when token has no expiry
@@ -1186,78 +1179,9 @@ return function (Container $context): void {
         return new Agent($adapter);
     }, ['register']);
 
-    $context->set('geoRecord', function ($request, Locale $locale, callable $getGeoForIp) {
-        $ip = $request->getIp();
-
-        if (!filter_var($ip, FILTER_VALIDATE_IP)) {
-            Console::warning("Invalid IP address: {$ip}");
-            $ip = '0.0.0.0';
-        }
-
-        return $getGeoForIp($locale, $ip);
-    }, ['request', 'locale', 'getGeoForIp']);
-
-    $context->set('getGeoForIp', function () {
-        return function (Locale $locale, string $ip): GeoRecord {
-            $record = null;
-            $geoEndpoint = System::getEnv('_APP_GEO_ENDPOINT', '');
-            $geoSecret = System::getEnv('_APP_GEO_SECRET', '');
-
-            if (!empty($geoEndpoint) && !empty($geoSecret) && filter_var($ip, FILTER_VALIDATE_IP)) {
-                try {
-                    $client = new Client();
-                    $client->addHeader('Authorization', 'Bearer ' . $geoSecret);
-                    $client->setTimeout(3000);
-
-                    $response = $client->fetch(\rtrim($geoEndpoint, '/') . "/ips/{$ip}", Client::METHOD_GET);
-                    if ($response->getStatusCode() === 200) {
-                        $body = $response->json();
-                        if (\is_array($body)) {
-                            $record = $body;
-                        }
-                    }
-                } catch (\Throwable $th) {
-                    Console::warning('Geo service unavailable: ' . $th->getMessage());
-                }
-            }
-
-            $countryCode = \strtoupper($record['countryCode'] ?? '--');
-            $continentCode = \strtoupper($record['continentCode'] ?? '--');
-
-            $eu = \array_map('strtoupper', Config::getParam('locale-eu'));
-            $currencies = Config::getParam('locale-currencies');
-            $currency = null;
-
-            if ($countryCode !== '--') {
-                foreach ($currencies as $element) {
-                    if (isset($element['locations'], $element['code']) && \in_array($countryCode, $element['locations'], true)) {
-                        $currency = $element['code'];
-                        break;
-                    }
-                }
-            }
-
-            $autonomousSystemNumber = $record['autonomousSystemNumber'] ?? null;
-
-            return (new GeoRecord([
-                'ip' => $ip,
-                'countryCode' => $countryCode,
-                'continentCode' => $continentCode,
-                'eu' => $countryCode !== '--' && \in_array($countryCode, $eu, true),
-                'currency' => $currency,
-                'latitude' => $record['latitude'] ?? null,
-                'longitude' => $record['longitude'] ?? null,
-                'timeZone' => $record['timeZone'] ?? null,
-                'weatherCode' => $record['weatherCode'] ?? null,
-                'postalCode' => $record['postalCode'] ?? null,
-                'autonomousSystemNumber' => $autonomousSystemNumber === null ? null : (string) $autonomousSystemNumber,
-                'autonomousSystemOrganization' => $record['autonomousSystemOrganization'] ?? null,
-                'connectionType' => $record['connection'] ?? null,
-                'connectionUsageType' => $record['user'] ?? $record['type'] ?? null,
-                'connectionOrganization' => $record['organization'] ?? null,
-                'isp' => $record['isp'] ?? null,
-            ]))
-                ->setLocale($locale);
-        };
-    }, []);
+    $context->set('geo', fn (Locale $locale, ?GeoClient $geoClient, Table $geoRecords) => new Geo(
+        $geoClient,
+        $locale,
+        $geoRecords
+    ), ['locale', 'geoClient', 'geoRecords']);
 };

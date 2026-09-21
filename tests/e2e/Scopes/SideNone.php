@@ -8,12 +8,4 @@ trait SideNone
     {
         return [];
     }
-
-    /**
-     * @return string
-     */
-    public function getSide()
-    {
-        return 'none';
-    }
 }
