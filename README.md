@@ -210,21 +210,13 @@ The batch is bounded by free handler slots, and `Server::start()` refuses a batc
 
 Each message keeps its own acknowledgment — there is no batch commit — so one poison message in a batch of sixteen is rejected on its own and the other fifteen are unaffected.
 
-On `Broker\Redis` this turns a claim of `4N` commands into `N + 3`: the job payloads still need a key each, because a TTL cannot be shared, but the processing list takes one push for the batch and each counter moves once. With the pop, a batch of eight costs 12 commands where eight single receives cost 40.
+Consumers expose `receive(Queue $queue, int $timeout, int $n = 1): array`. The result is always a list of up to `$n` claimed messages, or an empty list on timeout. Each returned message needs its own `commit()` or `reject()`. Counts below one use one.
 
-`Broker\Nats` fetches the batch in one pull request. Consumers that cannot batch are not required to: `Consumer\Batched` is optional, and the adapter falls back to `receive()` for anything without it.
+This folds `receiveBatch()` into `receive()` and removes `Consumer\Batched`. To migrate a single-message caller, use `$consumer->receive($queue, $timeout)[0] ?? null`; batch callers use `$consumer->receive($queue, $timeout, $n)`. Custom consumers must implement the same list-returning contract.
 
-What it costs the server is exact, and has no clock in it. Counted from Redis's own `commandstats`, per message acknowledged:
+`Broker\Redis` shares processing-list and counter writes across the batch. Each message still gets its own payload and heartbeat keys. `Broker\Nats` fetches available messages without waiting for the batch to fill.
 
-| batch | fetch and claim | acknowledge | total |
-|---|---|---|---|
-| 1 | 5.00 | 4.00 | **9.00** |
-| 4 | 2.00 | 4.00 | **6.00** |
-| 16 | 1.25 | 4.00 | **5.25** |
-
-The fetch side falls by 4x; the total only by 1.7x, because `commit()` is four commands and this does not touch it. **On Redis the acknowledgment is now the larger half of the cost**, and no batch size changes that.
-
-A batch of one is the previous single `receive()`, not an approximation of it: both send 9.00 commands per message, and the only difference is an `INCRBY key 1` where the older code sent `INCR key` — the same round trip. So the rows below are a before and after, and the three command-identical configurations (the previous code, this code's `receive()`, and this code at `batch: 1`) land within each other's run-to-run spread.
+The following measurements predate claim heartbeats and are historical comparisons.
 
 Whether that becomes throughput depends entirely on whether those commands were the constraint. Ratio of batch-16 to batch-1, 16 coroutines, 10,000 messages, two passes in opposite order:
 

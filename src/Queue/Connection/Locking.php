@@ -129,6 +129,11 @@ class Locking implements Connection
         return $this->synchronize(fn(): bool => $this->connection->set($key, $value, $ttl));
     }
 
+    public function setNotExists(string $key, string $value, int $ttl = 0): bool
+    {
+        return $this->synchronize(fn(): bool => $this->connection->setNotExists($key, $value, $ttl));
+    }
+
     public function get(string $key): array|string|null
     {
         return $this->synchronize(fn(): string|array|null => $this->connection->get($key));

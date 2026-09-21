@@ -313,9 +313,9 @@ final class ServerJobsTest extends TestCase
 
 final class FakeConsumer implements Consumer
 {
-    public function receive(Queue $queue, int $timeout): ?Message
+    public function receive(Queue $queue, int $timeout, int $n = 1): array
     {
-        return null;
+        return [];
     }
 
     public function commit(Queue $queue, Message $message): void {}
@@ -334,9 +334,9 @@ final readonly class BoundedFakeConsumer implements Consumer, Bounded
         return $this->ceiling;
     }
 
-    public function receive(Queue $queue, int $timeout): ?Message
+    public function receive(Queue $queue, int $timeout, int $n = 1): array
     {
-        return null;
+        return [];
     }
 
     public function commit(Queue $queue, Message $message): void {}
@@ -348,9 +348,9 @@ final readonly class BoundedFakeConsumer implements Consumer, Bounded
 
 final class ExclusiveFakeConsumer implements Consumer, Exclusive
 {
-    public function receive(Queue $queue, int $timeout): ?Message
+    public function receive(Queue $queue, int $timeout, int $n = 1): array
     {
-        return null;
+        return [];
     }
 
     public function commit(Queue $queue, Message $message): void {}

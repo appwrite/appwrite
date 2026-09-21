@@ -21,7 +21,7 @@ final class ContextConsumer implements Consumer
     public function __construct(private array $messages) {}
 
     #[\Override]
-    public function receive(Queue $queue, int $timeout): ?Message
+    public function receive(Queue $queue, int $timeout, int $n = 1): array
     {
         unset($queue, $timeout);
 
@@ -30,10 +30,10 @@ final class ContextConsumer implements Consumer
                 Coroutine::sleep(0.001);
             }
 
-            return null;
+            return [];
         }
 
-        return array_shift($this->messages);
+        return array_splice($this->messages, 0, max(1, $n));
     }
 
     #[\Override]

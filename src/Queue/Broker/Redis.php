@@ -6,18 +6,33 @@ use Utopia\Queue\Codec;
 use Utopia\Queue\Codec\Json;
 use Utopia\Queue\Connection;
 use Utopia\Queue\Consumer;
-use Utopia\Queue\Consumer\Batched;
 use Utopia\Queue\Message;
 use Utopia\Queue\Publisher\Synchronous;
 use Utopia\Queue\Queue;
 
-class Redis implements Synchronous, Consumer, Batched
+class Redis implements Synchronous, Consumer
 {
     private const int POP_TIMEOUT = 2;
     private const int RECONNECT_BACKOFF_MS = 100;
     private const int RECONNECT_MAX_BACKOFF_MS = 5_000;
 
+    /** Claim lifetime; handlers refresh it every third of this interval. */
+    private const int CLAIM_TTL = 90;
+
+    /** Lock expiry schedules the next fleet sweep; never release it early. */
+    private const int REAP_INTERVAL = 60;
+
+    /** Maximum claims requeued per sweep; bounds work, not elapsed time. */
+    private const int REAP_LIMIT = 1_000;
+
     private bool $closed = false;
+
+    /**
+     * Queues attempted by this broker, keyed by namespace/name pairs.
+     *
+     * @var array<string, Queue>
+     */
+    private array $served = [];
     private int $reconnectAttempt = 0;
     private int $reconnectBackoffMs = self::RECONNECT_BACKOFF_MS;
     /**
@@ -38,6 +53,9 @@ class Redis implements Synchronous, Consumer, Batched
         // far has put on the list. See Codec\Compat before changing it on a
         // queue that already holds messages.
         private readonly Codec $codec = new Json(),
+        // Minimum publish age for recovery without a live heartbeat.
+        // Keep conservative until all workers and adapters heartbeat.
+        private readonly int $reapAfter = 90_000,
     ) {}
 
     public function setReconnectCallback(?callable $callback): self
@@ -54,16 +72,15 @@ class Redis implements Synchronous, Consumer, Batched
         return $this;
     }
 
-    public function receive(Queue $queue, int $timeout): ?Message
-    {
-        return $this->receiveBatch($queue, $timeout, 1)[0] ?? null;
-    }
-
-    public function receiveBatch(Queue $queue, int $timeout, int $max): array
+    public function receive(Queue $queue, int $timeout, int $n = 1): array
     {
         if ($this->isClosed()) {
             return [];
         }
+
+        // An idle queue's stranded claims still need sweeping, so the queue is
+        // remembered on the attempt, not on the first message.
+        $this->served[serialize([$queue->namespace, $queue->name])] ??= $queue;
 
         $key = "{$queue->namespace}.queue.{$queue->name}";
 
@@ -75,8 +92,8 @@ class Redis implements Synchronous, Consumer, Batched
             // company that is not coming. A batch of one stays on BRPOP, which
             // keeps LMPOP's Redis 7.0 floor on the consumers that asked for a
             // batch rather than on every deployment.
-            if ($max > 1) {
-                $batch = $this->receive->rightPopMany($key, $max, $timeout);
+            if ($n > 1) {
+                $batch = $this->receive->rightPopMany($key, $n, $timeout);
             } else {
                 $raw = $this->receive->rightPop($key, $timeout);
                 $batch = \is_string($raw) && $raw !== '' ? [$raw] : [];
@@ -126,7 +143,8 @@ class Redis implements Synchronous, Consumer, Batched
      * queue rather than letting it evaporate, and the caller sees the error.
      *
      * The counters move once for the batch instead of once per message, so the
-     * claim costs N + 3 commands rather than 4N.
+     * claim costs 2N + 3 commands -- a job key and a claim heartbeat per
+     * message -- rather than 5N.
      *
      * @param list<string> $batch
      * @return list<Message>
@@ -168,6 +186,10 @@ class Redis implements Synchronous, Consumer, Batched
             foreach ($messages as $message) {
                 $pid = $message->getPid();
                 $this->receive->set("{$queue->namespace}.jobs.{$queue->name}.{$pid}", $unclaimed[$pid], $queue->jobTtl);
+
+                // Write the heartbeat before exposing the claim to the reaper.
+                // A failed claim leaves a key that expires on its own.
+                $this->receive->set("{$queue->namespace}.claims.{$queue->name}.{$pid}", (string) time(), self::CLAIM_TTL);
             }
 
             // The line that makes them claimed, and the only one that does: a
@@ -245,6 +267,39 @@ class Redis implements Synchronous, Consumer, Batched
         $this->commands->increment("{$queue->namespace}.stats.{$queue->name}.failed");
         $this->commands->listRemove("{$queue->namespace}.processing.{$queue->name}", $pid);
         $this->commands->decrement("{$queue->namespace}.stats.{$queue->name}.processing");
+    }
+
+    /**
+     * Refresh the claim while its handler runs. A late beat after commit is
+     * harmless: the pid is no longer on the processing list and the key expires.
+     */
+    public function extend(Queue $queue, Message $message): void
+    {
+        $this->commands->set("{$queue->namespace}.claims.{$queue->name}.{$message->getPid()}", (string) time(), self::CLAIM_TTL);
+    }
+
+    /** Refresh often enough to tolerate two missed beats. */
+    public function extendInterval(): float
+    {
+        return self::CLAIM_TTL / 3;
+    }
+
+    /** Recover stranded claims from served queues, once per fleet interval. */
+    public function maintain(): void
+    {
+        foreach ($this->served as $queue) {
+            if (!$this->commands->setNotExists("{$queue->namespace}.reap-lock.{$queue->name}", (string) time(), self::REAP_INTERVAL)) {
+                continue;
+            }
+
+            $this->reap($queue, $this->reapAfter, limit: self::REAP_LIMIT, scan: self::REAP_LIMIT * 2);
+        }
+    }
+
+    /** Idle resource hook used by Utopia\Pools\Pool::maintain(). */
+    public function tick(): void
+    {
+        $this->maintain();
     }
 
     public function close(): void
@@ -388,63 +443,84 @@ class Redis implements Synchronous, Consumer, Batched
     }
 
     /**
-     * Requeue claims whose worker died between receive() and commit/reject —
-     * their messages sit on the processing list, invisible to consumers and to
-     * retry(), until this reclaims them.
+     * Recover claims left between receive() and commit/reject(). Live heartbeats
+     * protect running handlers; the publish-age gate protects workers without
+     * heartbeats. Keep $olderThan above their longest possible runtime.
      *
-     * Claims carry no timestamp of their own, so staleness is judged from the
-     * message's enqueue timestamp: pass an $olderThan comfortably above the
-     * longest possible handler runtime (for Kubernetes Jobs, the Job's
-     * activeDeadlineSeconds) so an in-flight message can never be requeued
-     * into a duplicate run.
-     *
-     * @param int $olderThan Seconds since enqueue before a claim counts as stale
+     * @param int $olderThan Seconds since enqueue before a heartbeat-less claim
+     *        counts as stale
      * @param int|null $limit Maximum number of claims to requeue
      * @param int|null $maxAttempts Claims requeued this many times are parked
      *        on the dead queue; null reaps unbounded.
      * @param int|null $newerThan Only claims enqueued within this many seconds
      *        are requeued; older ones are parked on the dead queue.
+     * @param int|null $scan Maximum claims examined; bounded sweeps share progress.
      * @return int The number of claims requeued
      */
-    public function reap(Queue $queue, int $olderThan = 90000, ?int $limit = null, ?int $maxAttempts = null, ?int $newerThan = null): int
+    public function reap(Queue $queue, int $olderThan = 90000, ?int $limit = null, ?int $maxAttempts = null, ?int $newerThan = null, ?int $scan = null): int
     {
-        $processingList = "{$queue->namespace}.processing.{$queue->name}";
+        $processing = "{$queue->namespace}.processing.{$queue->name}";
         $now = time();
         $cutoff = $now - $olderThan;
         $requeued = 0;
 
-        $claims = $this->commands->listRange($processingList, $this->commands->listSize($processingList), 0);
+        $size = $this->commands->listSize($processing);
+        if ($size === 0) {
+            return 0;
+        }
 
-        foreach ($claims as $pid) {
+        // Share progress across sweep winners. Retained entries count from the
+        // tail; remaining entries bound the cycle so arrivals cannot delay wrapping.
+        $key = "{$queue->namespace}.reap-cursor.{$queue->name}";
+        $cursor = $scan === null ? [] : explode(':', (string) $this->commands->get($key));
+        $retained = (int) ($cursor[0] ?? 0);
+        $remaining = (int) ($cursor[1] ?? 0);
+        if ($retained < 0 || $retained >= $size || $remaining <= 0) {
+            $retained = 0;
+            $remaining = $size;
+        }
+        $remaining = min($remaining, $size - $retained);
+        $length = $scan === null ? $size : min(max(1, $scan), $remaining);
+        $claims = $this->commands->listRange($processing, $length, max(0, $size - $retained - $length));
+
+        foreach (array_reverse($claims) as $pid) {
             if ($limit !== null && $requeued >= $limit) {
                 break;
             }
 
+            $remaining--;
             if (!\is_string($pid)) {
+                $retained++;
                 continue;
             }
 
             // The payload expired: the claim is unrecoverable, drop it.
             $job = $this->getJob($queue, $pid);
             if ($job === false) {
-                $this->commands->listRemove($processingList, $pid);
+                $this->commands->listRemove($processing, $pid);
                 continue;
             }
 
-            if ($job->getTimestamp() > $cutoff) {
+            if ($job->getTimestamp() > $cutoff
+                || \is_string($this->commands->get("{$queue->namespace}.claims.{$queue->name}.{$pid}"))) {
+                $retained++;
                 continue;
             }
 
             if (($maxAttempts !== null && $job->getAttempts() >= $maxAttempts)
                 || ($newerThan !== null && $job->getTimestamp() < $now - $newerThan)) {
-                $this->commands->listRemove($processingList, $pid);
+                $this->commands->listRemove($processing, $pid);
                 $this->commands->leftPush("{$queue->namespace}.dead.{$queue->name}", $pid);
                 continue;
             }
 
             $this->requeue($queue, $job);
-            $this->commands->listRemove($processingList, $pid);
+            $this->commands->listRemove($processing, $pid);
             $requeued++;
+        }
+
+        if ($scan !== null) {
+            $this->commands->set($key, "{$retained}:{$remaining}");
         }
 
         return $requeued;

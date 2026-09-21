@@ -170,6 +170,11 @@ class FailingRedisConnection implements Connection
         return true;
     }
 
+    public function setNotExists(string $key, string $value, int $ttl = 0): bool
+    {
+        return true;
+    }
+
     public function get(string $key): array|string|null
     {
         return null;

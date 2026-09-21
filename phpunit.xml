@@ -17,6 +17,7 @@
             <file>./tests/Queue/E2E/Adapter/SwooleConcurrencyTest.php</file>
         </testsuite>
         <testsuite name="e2e">
+            <file>./tests/Queue/E2E/Adapter/RedisExpiryTest.php</file>
             <file>./tests/Queue/E2E/Adapter/NatsBrokerTest.php</file>
             <file>./tests/Queue/E2E/Adapter/NatsServerTest.php</file>
             <file>./tests/Queue/E2E/Adapter/NatsPoolTest.php</file>

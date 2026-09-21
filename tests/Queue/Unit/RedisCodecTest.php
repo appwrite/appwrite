@@ -42,7 +42,7 @@ final class RedisCodecTest extends TestCase
         $queue = new Queue(self::QUEUE, self::NAMESPACE);
 
         $broker->publish($queue, ['to' => 'a@example.com', 'attempt' => 1]);
-        $message = $broker->receive($queue, 0);
+        $message = $broker->receive($queue, 0)[0] ?? null;
 
         $this->assertInstanceOf(Message::class, $message);
         $this->assertSame(['to' => 'a@example.com', 'attempt' => 1], $message->getPayload());
@@ -63,7 +63,7 @@ final class RedisCodecTest extends TestCase
         $broker->publish($queue, ['n' => 1]);
         $published = $connection->listRange(self::NAMESPACE . '.queue.' . self::QUEUE, 1, 0)[0];
 
-        $message = $broker->receive($queue, 0);
+        $message = $broker->receive($queue, 0)[0] ?? null;
         $this->assertInstanceOf(Message::class, $message);
 
         $this->assertSame(
@@ -83,7 +83,7 @@ final class RedisCodecTest extends TestCase
         new Broker($connection, $connection, new Json())->publish($queue, ['n' => 1]);
 
         $writer = \function_exists('igbinary_serialize') ? new Igbinary() : new Json();
-        $message = new Broker($connection, $connection, new Compat($writer))->receive($queue, 0);
+        $message = (new Broker($connection, $connection, new Compat($writer))->receive($queue, 0)[0] ?? null);
 
         $this->assertInstanceOf(Message::class, $message);
         $this->assertSame(['n' => 1], $message->getPayload());
@@ -104,14 +104,14 @@ final class RedisCodecTest extends TestCase
         $connection->leftPush($key, $poison);
         $broker->publish($queue, ['n' => 1]);
 
-        $this->assertNotInstanceOf(Message::class, $broker->receive($queue, 0), 'the unreadable message is not handed to a handler');
+        $this->assertNotInstanceOf(Message::class, ($broker->receive($queue, 0)[0] ?? null), 'the unreadable message is not handed to a handler');
         $this->assertSame(
             [$poison],
             $connection->listRange(self::NAMESPACE . '.poison.' . self::QUEUE, 1, 0),
             'the bytes are set aside for a human, not discarded',
         );
 
-        $message = $broker->receive($queue, 0);
+        $message = $broker->receive($queue, 0)[0] ?? null;
         $this->assertInstanceOf(Message::class, $message);
         $this->assertSame(['n' => 1], $message->getPayload(), 'the message behind it is delivered');
     }
@@ -128,7 +128,7 @@ final class RedisCodecTest extends TestCase
 
         $connection->leftPush(self::NAMESPACE . '.queue.' . self::QUEUE, '{"hello":"world"}');
 
-        $this->assertNotInstanceOf(Message::class, $broker->receive($queue, 0));
+        $this->assertNotInstanceOf(Message::class, ($broker->receive($queue, 0)[0] ?? null));
         $this->assertSame(1, $connection->listSize(self::NAMESPACE . '.poison.' . self::QUEUE));
     }
 }

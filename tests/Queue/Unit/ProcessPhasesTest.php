@@ -311,9 +311,9 @@ final class PhaseConsumer implements Consumer
 
     public function __construct(private readonly bool $commitThrows = false) {}
 
-    public function receive(Queue $queue, int $timeout): ?Message
+    public function receive(Queue $queue, int $timeout, int $n = 1): array
     {
-        return null;
+        return [];
     }
 
     public function commit(Queue $queue, Message $message): void

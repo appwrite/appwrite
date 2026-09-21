@@ -6,8 +6,15 @@ namespace Utopia\Queue;
 
 interface Consumer
 {
-    /** Block up to $timeout seconds for the next message and claim it, or null on timeout. */
-    public function receive(Queue $queue, int $timeout): ?Message;
+    /**
+     * Block up to $timeout seconds for the first message, then claim up to $n
+     * messages without waiting for the batch to fill. Values below one use one.
+     * Every returned message needs its own commit() or reject(). A failed claim
+     * must restore messages already removed from the queue.
+     *
+     * @return list<Message> Empty on timeout.
+     */
+    public function receive(Queue $queue, int $timeout, int $n = 1): array;
 
     /** Acknowledge a processed message. */
     public function commit(Queue $queue, Message $message): void;

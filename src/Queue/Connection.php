@@ -50,6 +50,14 @@ interface Connection
     public function listRange(string $key, int $total, int $offset): array;
     public function remove(string $key): bool;
     public function set(string $key, string $value, int $ttl = 0): bool;
+
+    /**
+     * Write the key only if nothing holds it, atomically -- Redis SET NX.
+     *
+     * True means this caller now owns the key. False means somebody else got
+     * there first, which for a lock is an answer, not an error.
+     */
+    public function setNotExists(string $key, string $value, int $ttl = 0): bool;
     public function get(string $key): array|string|null;
     public function setArray(string $key, array $value, int $ttl = 0): bool;
     public function increment(string $key): int;

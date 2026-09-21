@@ -166,7 +166,7 @@ class KubernetesJob extends Adapter
         $consumer ??= $this->consumer;
 
         while (!$this->isStopped()) {
-            $message = $consumer->receive($queue, static::RECEIVE_TIMEOUT);
+            $message = $consumer->receive($queue, static::RECEIVE_TIMEOUT)[0] ?? null;
 
             if (!$message instanceof Message) {
                 break;

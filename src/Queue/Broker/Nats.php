@@ -22,7 +22,6 @@ use Utopia\NATS\JetStream\StreamConfig;
 use Utopia\Queue\Codec;
 use Utopia\Queue\Codec\Json;
 use Utopia\Queue\Consumer;
-use Utopia\Queue\Consumer\Batched;
 use Utopia\Queue\Consumer\Bounded;
 use Utopia\Queue\Message;
 use Utopia\Queue\Publisher\Synchronous;
@@ -73,7 +72,7 @@ use Utopia\Queue\Queue;
  * publish. Its commands connection is opened lazily on the first ack, so a publisher
  * never pays for a socket it will not use.
  */
-class Nats implements Synchronous, Consumer, Batched, Bounded
+class Nats implements Synchronous, Consumer, Bounded
 {
     // Wire-level identifiers (stream/subject naming, durable consumers, advisories).
     private const string STREAM_PREFIX = 'Q_';
@@ -649,15 +648,10 @@ class Nats implements Synchronous, Consumer, Batched, Bounded
         return $id;
     }
 
-    public function receive(Queue $queue, int $timeout): ?Message
-    {
-        return $this->receiveBatch($queue, $timeout, 1)[0] ?? null;
-    }
-
-    public function receiveBatch(Queue $queue, int $timeout, int $max): array
+    public function receive(Queue $queue, int $timeout, int $n = 1): array
     {
         try {
-            return $this->synchronize(fn(): array => $this->pull($queue, $timeout, max(1, $max)));
+            return $this->synchronize(fn(): array => $this->pull($queue, $timeout, max(1, $n)));
         } finally {
             // Off the lock, and on the way out however pull() ended.
             $this->flushReports();

@@ -3,7 +3,6 @@
 namespace Utopia\Queue;
 
 use Utopia\DI\Container;
-use Utopia\Queue\Consumer\Batched;
 
 abstract class Adapter
 {
@@ -267,20 +266,7 @@ abstract class Adapter
      */
     protected function nextMessage(callable $errorCallback): ?Message
     {
-        try {
-            return $this->consumer->receive($this->queue, static::RECEIVE_TIMEOUT);
-        } catch (\Throwable $error) {
-            // A reporting hook that throws must not cost the worker either.
-            try {
-                $errorCallback(null, $error);
-            } catch (\Throwable $reportFailure) {
-                $this->reportUnreported($error, $reportFailure);
-            }
-
-            sleep(static::RECEIVE_BACKOFF);
-
-            return null;
-        }
+        return $this->nextMessageFrom($errorCallback, $this->queue, $this->consumer);
     }
 
     /**
@@ -291,27 +277,11 @@ abstract class Adapter
      */
     protected function nextMessageFrom(callable $errorCallback, Queue $queue, Consumer $consumer): ?Message
     {
-        try {
-            return $consumer->receive($queue, static::RECEIVE_TIMEOUT);
-        } catch (\Throwable $error) {
-            try {
-                $errorCallback(null, $error);
-            } catch (\Throwable $reportFailure) {
-                $this->reportUnreported($error, $reportFailure);
-            }
-
-            sleep(static::RECEIVE_BACKOFF);
-
-            return null;
-        }
+        return $this->nextBatchFrom($errorCallback, $queue, $consumer, 1)[0] ?? null;
     }
 
     /**
-     * Claim up to $max messages at once, where the consumer can.
-     *
-     * A consumer that is not {@see Batched} degrades to a single receive rather
-     * than being refused: the capability is optional, and the loop above works
-     * either way.
+     * Claim up to $max messages at once.
      *
      * @param callable(?Message, \Throwable): void $errorCallback
      * @return list<Message>
@@ -319,13 +289,7 @@ abstract class Adapter
     protected function nextBatchFrom(callable $errorCallback, Queue $queue, Consumer $consumer, int $max): array
     {
         try {
-            if ($max > 1 && $consumer instanceof Batched) {
-                return $consumer->receiveBatch($queue, static::RECEIVE_TIMEOUT, $max);
-            }
-
-            $message = $consumer->receive($queue, static::RECEIVE_TIMEOUT);
-
-            return $message instanceof Message ? [$message] : [];
+            return $consumer->receive($queue, static::RECEIVE_TIMEOUT, $max);
         } catch (\Throwable $error) {
             try {
                 $errorCallback(null, $error);

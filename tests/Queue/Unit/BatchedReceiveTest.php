@@ -35,7 +35,7 @@ final class BatchedReceiveTest extends TestCase
             $broker->publish($queue, ['n' => $n]);
         }
 
-        $batch = $broker->receiveBatch($queue, 0, 4);
+        $batch = $broker->receive($queue, 0, 4);
 
         $this->assertCount(4, $batch);
         $this->assertSame([1, 2, 3, 4], array_map(static fn(Message $m): int => $m->getPayload()['n'], $batch), 'a batch is FIFO, like the single receive');
@@ -50,20 +50,20 @@ final class BatchedReceiveTest extends TestCase
 
         $broker->publish($queue, ['n' => 1]);
 
-        $this->assertCount(1, $broker->receiveBatch($queue, 0, 16));
+        $this->assertCount(1, $broker->receive($queue, 0, 16));
     }
 
     public function testAnEmptyQueueYieldsAnEmptyBatch(): void
     {
         $broker = $this->broker(new InMemoryConnection());
 
-        $this->assertSame([], $broker->receiveBatch($this->queue(), 0, 8));
+        $this->assertSame([], $broker->receive($this->queue(), 0, 8));
     }
 
     /**
-     * The single receive is the batch of one, so it cannot drift from it.
+     * Omitting the count claims exactly one message.
      */
-    public function testReceiveIsTheBatchOfOne(): void
+    public function testReceiveDefaultsToOne(): void
     {
         $connection = new InMemoryConnection();
         $broker = $this->broker($connection);
@@ -72,7 +72,9 @@ final class BatchedReceiveTest extends TestCase
         $broker->publish($queue, ['n' => 1]);
         $broker->publish($queue, ['n' => 2]);
 
-        $message = $broker->receive($queue, 0);
+        $batch = $broker->receive($queue, 0);
+        $this->assertCount(1, $batch);
+        $message = $batch[0];
 
         $this->assertInstanceOf(Message::class, $message);
         $this->assertSame(['n' => 1], $message->getPayload());
@@ -89,54 +91,48 @@ final class BatchedReceiveTest extends TestCase
             $broker->publish($queue, ['n' => $n]);
         }
 
-        $batch = $broker->receiveBatch($queue, 0, 5);
+        $batch = $broker->receive($queue, 0, 5);
 
-        $this->assertSame(5, $connection->listSize(self::NAMESPACE . '.processing.' . self::QUEUE));
-        foreach ($batch as $message) {
-            $this->assertIsString(
-                $connection->get(self::NAMESPACE . '.jobs.' . self::QUEUE . '.' . $message->getPid()),
-                'each message is recoverable by reap() on its own',
-            );
-        }
-
+        $broker->reject($queue, array_shift($batch));
         foreach ($batch as $message) {
             $broker->commit($queue, $message);
         }
+        $connection->advanceToNextExpiry();
 
-        $this->assertSame(0, $connection->listSize(self::NAMESPACE . '.processing.' . self::QUEUE));
+        $this->assertSame(1, $broker->getQueueSize($queue, failedJobs: true));
+        $this->assertSame(0, $broker->reap($queue, olderThan: 0));
+        $this->assertSame([], $broker->receive($queue, 0, 5));
     }
 
-    /**
-     * The whole point of the change: a batch of N costs N + 3 writes to claim,
-     * not 4N.
-     */
-    public function testTheClaimCostsThreeCommandsRegardlessOfBatchSize(): void
+    public function testNonPositiveCountsReceiveOneAndClosedConsumersReturnNothing(): void
     {
-        $connection = new CountingConnection();
-        $broker = new Broker($connection, $connection);
+        $broker = $this->broker(new InMemoryConnection());
         $queue = $this->queue();
+        foreach ([0, -1] as $n) {
+            $broker->publish($queue, ['n' => $n]);
+            $this->assertCount(1, $broker->receive($queue, 0, n: $n));
+        }
+        $this->assertSame([], $broker->receive($queue, 0));
+        $broker->publish($queue, ['n' => 1]);
+        $broker->close();
+        $this->assertSame([], $broker->receive($queue, 0));
+        $this->assertSame(1, $broker->getQueueSize($queue));
+    }
 
-        foreach (range(1, 8) as $n) {
+    public function testPooledConsumersHonorDefaultAndExplicitCounts(): void
+    {
+        $broker = $this->broker(new InMemoryConnection());
+        $queue = $this->queue();
+        $pool = new \Utopia\Pools\Pool(new \Utopia\Pools\Adapter\Stack(), 'consume', 1, fn(): Broker => $broker, timeout: 0.0);
+        $consumer = new \Utopia\Queue\Broker\Pool(consumer: $pool);
+        foreach (range(1, 4) as $n) {
             $broker->publish($queue, ['n' => $n]);
         }
 
-        $connection->reset();
-        $batch = $broker->receiveBatch($queue, 0, 8);
-
-        $this->assertCount(8, $batch);
-        $this->assertSame(0, $connection->commands('rightPop'), 'the blocking pop is the batch pop');
-        $this->assertSame(1, $connection->commands('rightPopMany'), 'one BLMPOP for the wait and the whole batch');
-        $this->assertSame(8, $connection->commands('set'), 'one job key each -- a TTL cannot be shared');
-        $this->assertSame(1, $connection->commands('leftPushMany'), 'one command for every claim');
-        $this->assertSame(2, $connection->commands('incrementBy'), 'two counters, moved once each');
-        $this->assertSame(0, $connection->commands('leftPush'), 'the per-message writes are gone');
-        $this->assertSame(0, $connection->commands('increment'));
-
-        $this->assertSame(
-            12,
-            array_sum($connection->counts),
-            'N + 4 commands for a batch of 8, where one at a time costs 5N = 40',
-        );
+        $this->assertCount(1, $consumer->receive($queue, 0));
+        $this->assertCount(3, $consumer->receive($queue, 0, n: 3));
+        $this->assertSame([], $consumer->receive($queue, 0));
+        $this->assertSame([], new \Utopia\Queue\Broker\Pool()->receive($queue, 0));
     }
 
     /**
@@ -145,8 +141,8 @@ final class BatchedReceiveTest extends TestCase
      */
     public function testAFailedClaimPutsTheWholeBatchBack(): void
     {
-        $connection = new CountingConnection();
-        $connection->failOn = 'leftPushMany';
+        $connection = new FailingClaimConnection();
+        $connection->failClaim = true;
         $broker = new Broker($connection, $connection);
         $queue = $this->queue();
 
@@ -155,15 +151,15 @@ final class BatchedReceiveTest extends TestCase
         }
 
         try {
-            $broker->receiveBatch($queue, 0, 4);
+            $broker->receive($queue, 0, 4);
             $this->fail('the claim failure must reach the caller');
         } catch (\RuntimeException) {
         }
 
         $this->assertSame(4, $broker->getQueueSize($queue), 'nothing is lost');
 
-        $connection->failOn = null;
-        $batch = $broker->receiveBatch($queue, 0, 4);
+        $connection->failClaim = false;
+        $batch = $broker->receive($queue, 0, 4);
 
         $this->assertSame(
             [1, 2, 3, 4],
@@ -186,113 +182,24 @@ final class BatchedReceiveTest extends TestCase
         $connection->leftPush(self::NAMESPACE . '.queue.' . self::QUEUE, '{"truncated"');
         $broker->publish($queue, ['n' => 3]);
 
-        $batch = $broker->receiveBatch($queue, 0, 8);
+        $batch = $broker->receive($queue, 0, 8);
 
         $this->assertSame([1, 3], array_map(static fn(Message $m): int => $m->getPayload()['n'], $batch));
         $this->assertSame(1, $connection->listSize(self::NAMESPACE . '.poison.' . self::QUEUE));
     }
 }
 
-/**
- * Counts the commands the broker issues, and can be told to fail one of them.
- *
- * Only the outermost call is counted. The in-memory fake implements its own
- * batch pushes by looping over the single ones, and counting those would
- * measure the fake rather than the broker -- which is the whole subject here.
- */
-final class CountingConnection extends InMemoryConnection
+final class FailingClaimConnection extends InMemoryConnection
 {
-    /** @var array<string, int> */
-    public array $counts = [];
-
-    public ?string $failOn = null;
-
-    private bool $inside = false;
-
-    public function reset(): void
-    {
-        $this->counts = [];
-    }
-
-    public function commands(string $method): int
-    {
-        return $this->counts[$method] ?? 0;
-    }
-
-    private function count(string $method): void
-    {
-        if (!$this->inside) {
-            $this->counts[$method] = ($this->counts[$method] ?? 0) + 1;
-        }
-
-        if ($this->failOn === $method) {
-            throw new \RuntimeException("{$method} failed");
-        }
-    }
-
-    /**
-     * @template T
-     * @param callable(): T $command
-     * @return T
-     */
-    private function outermost(string $method, callable $command): mixed
-    {
-        $this->count($method);
-        $outer = !$this->inside;
-        $this->inside = true;
-
-        try {
-            return $command();
-        } finally {
-            $this->inside = !$outer;
-        }
-    }
-
-    #[\Override]
-    public function rightPop(string $queue, int $timeout): string|false
-    {
-        return $this->outermost(__FUNCTION__, fn(): mixed => parent::rightPop($queue, $timeout));
-    }
-
-    #[\Override]
-    public function rightPopMany(string $queue, int $count, int $timeout): array
-    {
-        return $this->outermost(__FUNCTION__, fn(): mixed => parent::rightPopMany($queue, $count, $timeout));
-    }
-
-    #[\Override]
-    public function set(string $key, string $value, int $ttl = 0): bool
-    {
-        return $this->outermost(__FUNCTION__, fn(): mixed => parent::set($key, $value, $ttl));
-    }
-
-    #[\Override]
-    public function leftPush(string $queue, string $payload): bool
-    {
-        return $this->outermost(__FUNCTION__, fn(): mixed => parent::leftPush($queue, $payload));
-    }
+    public bool $failClaim = false;
 
     #[\Override]
     public function leftPushMany(string $queue, array $payloads): bool
     {
-        return $this->outermost(__FUNCTION__, fn(): mixed => parent::leftPushMany($queue, $payloads));
-    }
+        if ($this->failClaim) {
+            throw new \RuntimeException('claim failed');
+        }
 
-    #[\Override]
-    public function rightPushMany(string $queue, array $payloads): bool
-    {
-        return $this->outermost(__FUNCTION__, fn(): mixed => parent::rightPushMany($queue, $payloads));
-    }
-
-    #[\Override]
-    public function increment(string $key): int
-    {
-        return $this->outermost(__FUNCTION__, fn(): mixed => parent::increment($key));
-    }
-
-    #[\Override]
-    public function incrementBy(string $key, int $by): int
-    {
-        return $this->outermost(__FUNCTION__, fn(): mixed => parent::incrementBy($key, $by));
+        return parent::leftPushMany($queue, $payloads);
     }
 }

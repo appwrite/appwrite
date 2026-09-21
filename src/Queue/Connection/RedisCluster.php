@@ -157,9 +157,18 @@ class RedisCluster implements Connection
         return $this->getRedis()->set($key, $value);
     }
 
+    public function setNotExists(string $key, string $value, int $ttl = 0): bool
+    {
+        $options = $ttl > 0 ? ['nx', 'ex' => $ttl] : ['nx'];
+
+        return $this->getRedis()->set($key, $value, $options);
+    }
+
     public function get(string $key): array|string|null
     {
-        return $this->getRedis()->get($key);
+        $value = $this->getRedis()->get($key);
+
+        return $value === false ? null : $value;
     }
 
     public function listSize(string $key): int

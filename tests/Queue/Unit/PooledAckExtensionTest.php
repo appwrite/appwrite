@@ -131,9 +131,9 @@ final class PooledAckExtensionTest extends TestCase
 
 class PlainBroker implements Consumer
 {
-    public function receive(Queue $queue, int $timeout): ?Message
+    public function receive(Queue $queue, int $timeout, int $n = 1): array
     {
-        return null;
+        return [];
     }
 
     public function commit(Queue $queue, Message $message): void {}

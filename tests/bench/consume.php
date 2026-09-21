@@ -62,7 +62,6 @@ use Utopia\Queue\Broker\Redis as RedisBroker;
 use Utopia\Queue\Connection\Locking;
 use Utopia\Queue\Connection\Redis as RedisConnection;
 use Utopia\Queue\Consumer;
-use Utopia\Queue\Consumer\Batched;
 use Utopia\Queue\Message;
 use Utopia\Queue\Queue;
 
@@ -109,7 +108,7 @@ foreach (array_slice($_SERVER['argv'] ?? [], 1) as $arg) {
  * pass-through, extend() included, so the adapter's ack extension still reaches the
  * broker rather than being silently disabled by the wrapper.
  */
-final class Timed implements Consumer, Batched
+final class Timed implements Consumer
 {
     /** @var list<float> microseconds per acknowledgment */
     public array $commits = [];
@@ -126,26 +125,9 @@ final class Timed implements Consumer, Batched
 
     public function __construct(private readonly Consumer $inner) {}
 
-    public function receive(Queue $queue, int $timeout): ?Message
+    public function receive(Queue $queue, int $timeout, int $n = 1): array
     {
-        return $this->inner->receive($queue, $timeout);
-    }
-
-    /**
-     * Pass-through, and declared unconditionally for the same reason extend()
-     * is: the adapter probes the consumer it was handed, which is this wrapper.
-     * A decorator that quietly dropped the capability would measure the
-     * unbatched path and report it as the batched one.
-     */
-    public function receiveBatch(Queue $queue, int $timeout, int $max): array
-    {
-        if ($this->inner instanceof Batched) {
-            return $this->inner->receiveBatch($queue, $timeout, $max);
-        }
-
-        $message = $this->inner->receive($queue, $timeout);
-
-        return $message instanceof Message ? [$message] : [];
+        return $this->inner->receive($queue, $timeout, $n);
     }
 
     public function commit(Queue $queue, Message $message): void
@@ -354,7 +336,7 @@ function measure(string $name, array $args): array
     // own tally, and leave its own behind for the next one.
     $client->publish($queue, ['warmup' => true, 'filler' => $filler]);
     $leftover = 0;
-    while (($stale = $client->receive($queue, 1)) instanceof \Utopia\Queue\Message) {
+    while (($stale = ($client->receive($queue, 1)[0] ?? null)) instanceof \Utopia\Queue\Message) {
         $client->commit($queue, $stale);
         if (++$leftover > $total * 10) {
             return $fail('queue would not drain before the run');

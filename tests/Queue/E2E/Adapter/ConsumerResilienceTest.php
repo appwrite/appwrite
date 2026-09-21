@@ -40,7 +40,7 @@ final class ConsumerResilienceTest extends TestCase
 
             public function __construct(private readonly Redis $inner) {}
 
-            public function receive(Queue $queue, int $timeout): ?Message
+            public function receive(Queue $queue, int $timeout, int $n = 1): array
             {
                 if ($this->failures < 2) {
                     ++$this->failures;
@@ -48,7 +48,7 @@ final class ConsumerResilienceTest extends TestCase
                     throw new \RuntimeException('broker unreachable');
                 }
 
-                return $this->inner->receive($queue, $timeout);
+                return $this->inner->receive($queue, $timeout, $n);
             }
 
             public function commit(Queue $queue, Message $message): void
@@ -116,7 +116,7 @@ final class ConsumerResilienceTest extends TestCase
 
             public function drain(Queue $queue, callable $messageCallback, callable $errorCallback): void
             {
-                $message = $this->consumer->receive($queue, 0);
+                $message = $this->consumer->receive($queue, 0)[0] ?? null;
                 $this->queue = $queue;
                 $this->process($message, $messageCallback, fn(): null => null, $errorCallback);
             }

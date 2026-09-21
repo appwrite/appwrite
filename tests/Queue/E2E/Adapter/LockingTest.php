@@ -132,6 +132,7 @@ final class LockingTest extends TestCase
         yield 'listRange' => ['listRange', ['key', 10, 0], ['a', 'b']];
         yield 'remove' => ['remove', ['key'], true];
         yield 'set' => ['set', ['key', 'value', 60], true];
+        yield 'setNotExists' => ['setNotExists', ['key', 'value', 60], true];
         yield 'get' => ['get', ['key'], 'value'];
         yield 'setArray' => ['setArray', ['key', ['a' => 1], 60], true];
         yield 'increment' => ['increment', ['key'], 3];
@@ -322,6 +323,13 @@ class RecordingConnection implements Connection
         return true;
     }
 
+    public function setNotExists(string $key, string $value, int $ttl = 0): bool
+    {
+        $this->record('setNotExists', [$key, $value, $ttl]);
+
+        return true;
+    }
+
     public function get(string $key): array|string|null
     {
         $this->record('get', [$key]);
@@ -453,6 +461,11 @@ class ThrowingConnection implements Connection
     }
 
     public function set(string $key, string $value, int $ttl = 0): bool
+    {
+        return true;
+    }
+
+    public function setNotExists(string $key, string $value, int $ttl = 0): bool
     {
         return true;
     }

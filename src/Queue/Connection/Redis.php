@@ -161,9 +161,21 @@ class Redis implements Connection
         return $this->call(fn(\Redis $redis): \Redis|string|bool => $redis->set($key, $value), idempotent: true);
     }
 
+    public function setNotExists(string $key, string $value, int $ttl = 0): bool
+    {
+        $options = $ttl > 0 ? ['nx', 'ex' => $ttl] : ['nx'];
+
+        // A retried SET NX that already landed answers false the second time,
+        // which reads as "someone holds it" -- the safe answer for a lock, so
+        // the retry stays on.
+        return (bool) $this->call(fn(\Redis $redis): \Redis|string|bool => $redis->set($key, $value, $options), idempotent: true);
+    }
+
     public function get(string $key): array|string|null
     {
-        return $this->call(fn(\Redis $redis): mixed => $redis->get($key), idempotent: true);
+        $value = $this->call(fn(\Redis $redis): mixed => $redis->get($key), idempotent: true);
+
+        return $value === false ? null : $value;
     }
 
     public function listSize(string $key): int
