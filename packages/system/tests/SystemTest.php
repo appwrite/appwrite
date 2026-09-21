@@ -15,17 +15,15 @@ declare(strict_types=1);
  * @license The MIT License (MIT) <http://www.opensource.org/licenses/mit-license.php>
  */
 
-namespace Utopia\Tests;
+namespace Utopia\System\Tests;
 
+use PHPUnit\Framework\Attributes\PreserveGlobalState;
+use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use PHPUnit\Framework\TestCase;
 use Utopia\System\System;
 
 final class SystemTest extends TestCase
 {
-    public function setUp(): void {}
-
-    public function tearDown(): void {}
-
     public function testOs(): void
     {
         $this->assertNotEmpty(System::getOS());
@@ -144,8 +142,14 @@ final class SystemTest extends TestCase
         }
     }
 
+    #[RunInSeparateProcess]
+    #[PreserveGlobalState(false)]
     public function testGetEnv(): void
     {
+        putenv('TESTA=VALUEA');
+        putenv('TESTB=VALUEB');
+        putenv('TESTC');
+
         $this->assertSame('VALUEA', System::getEnv('TESTA', 'DEFAULTA'));
         $this->assertSame('VALUEB', System::getEnv('TESTB', 'DEFAULTB'));
         $this->assertSame('DEFAULTC', System::getEnv('TESTC', 'DEFAULTC'));

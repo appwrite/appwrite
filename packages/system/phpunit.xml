@@ -16,8 +16,4 @@
             <directory>src</directory>
         </include>
     </source>
-    <php>
-        <env name="TESTA" value="VALUEA"/>
-        <env name="TESTB" value="VALUEB"/>
-    </php>
 </phpunit>

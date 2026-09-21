@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "b0fd7078ec54dc2175dbcefe596d82f1",
+    "content-hash": "2fcc4d535c789ae0f58f1f78b4106e7a",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4715,57 +4715,6 @@
                 "source": "https://github.com/utopia-php/storage/tree/4.1.0"
             },
             "time": "2026-09-07T07:52:07+00:00"
-        },
-        {
-            "name": "utopia-php/system",
-            "version": "0.11.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/utopia-php/system.git",
-                "reference": "f7077643de7e012945f6e3fc4c3c36e7f1d40047"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/system/zipball/f7077643de7e012945f6e3fc4c3c36e7f1d40047",
-                "reference": "f7077643de7e012945f6e3fc4c3c36e7f1d40047",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=8.0.0"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Utopia\\System\\": "src/System"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Eldad Fux",
-                    "email": "eldad@appwrite.io"
-                },
-                {
-                    "name": "Torsten Dittmann",
-                    "email": "torsten@appwrite.io"
-                }
-            ],
-            "description": "A simple library for obtaining information about the host's system.",
-            "keywords": [
-                "framework",
-                "php",
-                "system",
-                "upf",
-                "utopia"
-            ],
-            "support": {
-                "issues": "https://github.com/utopia-php/system/issues",
-                "source": "https://github.com/utopia-php/system/tree/0.11.0"
-            },
-            "time": "2026-09-07T09:56:23+00:00"
         },
         {
             "name": "utopia-php/telemetry",

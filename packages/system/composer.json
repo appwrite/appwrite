@@ -23,7 +23,7 @@
     ],
     "autoload": {
         "psr-4": {
-            "Utopia\\System\\": "src/System"
+            "Utopia\\System\\": "src/"
         }
     },
     "scripts": {
@@ -31,5 +31,10 @@
     },
     "require": {
         "php": ">=8.0.0"
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Utopia\\System\\Tests\\": "tests/"
+        }
     }
 }

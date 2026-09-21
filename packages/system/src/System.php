@@ -162,7 +162,7 @@ class System
                     self::getCgroupCPULimit(),
                     self::getCgroupCpusetCount(),
                 ];
-                $limits = array_filter($limits, fn(?float $v): bool => $v !== null);
+                $limits = array_filter($limits, fn (?float $v): bool => $v !== null);
 
                 if ($limits !== []) {
                     return min($limits);
@@ -314,7 +314,7 @@ class System
         $cpus = explode("\n", $cpustats);
 
         // Remove non-CPU lines
-        $cpus = array_filter($cpus, fn(string $cpu): bool => (bool) preg_match('/^cpu[0-999]/', $cpu));
+        $cpus = array_filter($cpus, fn (string $cpu): bool => (bool) preg_match('/^cpu[0-999]/', $cpu));
 
         foreach ($cpus as $cpu) {
             $cpu = explode(' ', $cpu);
@@ -566,10 +566,10 @@ class System
         $diskStats = explode("\n", $diskStats);
 
         // Remove excess spaces
-        $diskStats = array_map(fn($data): ?string => preg_replace('/\t+/', ' ', trim($data)), $diskStats);
+        $diskStats = array_map(fn ($data): ?string => preg_replace('/\t+/', ' ', trim($data)), $diskStats);
 
         // Remove empty lines
-        $diskStats = array_filter($diskStats, fn($data): bool => ! empty($data));
+        $diskStats = array_filter($diskStats, fn ($data): bool => ! empty($data));
 
         $data = [];
         foreach ($diskStats as $disk) {

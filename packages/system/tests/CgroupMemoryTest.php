@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Utopia\Tests;
+namespace Utopia\System\Tests;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\PreserveGlobalState;
@@ -19,7 +19,7 @@ final class CgroupMemoryTest extends TestCase
 
     protected function setUp(): void
     {
-        require __DIR__ . '/../fixtures/cgroup-memory.php';
+        require __DIR__ . '/fixtures/cgroup-memory.php';
     }
 
     /**
