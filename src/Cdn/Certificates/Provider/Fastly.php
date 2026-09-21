@@ -7,6 +7,7 @@ use Psr\Http\Client\ClientInterface;
 use Utopia\Cdn\Certificates\Provider;
 use Utopia\Cdn\Certificates\Status;
 use Utopia\Cdn\Domain;
+use Utopia\Cdn\Exception\Certificate;
 use Utopia\Client;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Psr7\Header;
@@ -75,7 +76,18 @@ class Fastly implements Provider
                 // Finish the certificate lifecycle while ownership is still
                 // unchanged. A TLS failure must not move a live hostname.
                 $renewDate = $this->tls->issueCertificate($certName, $domain, $domainType);
-                $status = $this->tls->getCertificateStatus($domain, $domainType);
+
+                try {
+                    $status = $this->tls->getCertificateStatus($domain, $domainType);
+                } catch (Certificate $exception) {
+                    if (!$exception->isBlocked()) {
+                        throw $exception;
+                    }
+
+                    // Waiting on the domain owner: nothing is issued yet, so
+                    // the hostname stays on its current service.
+                    return $renewDate;
+                }
 
                 if (!\in_array($status, [Status::ISSUED, Status::RENEWING], true)) {
                     return $renewDate;

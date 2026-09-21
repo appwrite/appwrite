@@ -4,8 +4,10 @@ namespace Utopia\Cdn\Certificates\Provider;
 
 use Psr\Http\Client\ClientExceptionInterface;
 use Psr\Http\Client\ClientInterface;
+use Utopia\Cdn\Certificates\Challenge;
 use Utopia\Cdn\Certificates\Provider;
 use Utopia\Cdn\Certificates\Status;
+use Utopia\Cdn\Exception\Certificate;
 use Utopia\Client;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Psr7\Header;
@@ -13,6 +15,13 @@ use Utopia\Psr7\Request\Factory as RequestFactory;
 
 class FastlyTls implements Provider
 {
+    /**
+     * Fastly's ACME DNS challenge: a CNAME at `_acme-challenge.<domain>` that
+     * proves ownership without changing where the domain's traffic goes. The
+     * other challenge types point the domain itself at Fastly.
+     */
+    public const string CHALLENGE_MANAGED_DNS = 'managed-dns';
+
     private readonly ClientInterface $client;
 
     public function __construct(
@@ -43,6 +52,9 @@ class FastlyTls implements Provider
         return false;
     }
 
+    /**
+     * @throws Certificate When Fastly waits on the domain owner to prove ownership, or has stopped trying.
+     */
     public function getCertificateStatus(string $domain, ?string $domainType): string
     {
         $subscription = $this->findSubscription($domain);
@@ -51,7 +63,27 @@ class FastlyTls implements Provider
             return Status::UNKNOWN;
         }
 
-        return $this->mapStatus($subscription['resource']['attributes']['state'] ?? '');
+        $status = $this->mapStatus($subscription['resource']['attributes']['state'] ?? '');
+
+        // An issued certificate needs nothing from the domain owner, whatever
+        // an authorization left over from an earlier order still says.
+        if ($status === Status::ISSUED || $status === Status::UNKNOWN) {
+            return $status;
+        }
+
+        // Fastly keeps the subscription `pending` while an authorization is
+        // `blocked` on a DNS record only the domain owner can add, so the
+        // subscription state alone cannot tell waiting from progress.
+        $authorizations = $this->findAuthorizations($subscription, $domain);
+        if ($status !== Status::FAILED && !$this->isBlocked($authorizations)) {
+            return $status;
+        }
+
+        $status = $status === Status::FAILED ? Status::FAILED : Status::BLOCKED;
+        $challenges = $this->extractChallenges($authorizations);
+        $warnings = $this->extractWarnings($authorizations);
+
+        throw new Certificate($this->describe($domain, $status, $challenges, $warnings), $status, $challenges, $warnings);
     }
 
     public function isRenewRequired(string $domain, ?string $domainType): bool
@@ -90,7 +122,7 @@ class FastlyTls implements Provider
     {
         $query = http_build_query([
             'filter[tls_domains.id]' => $domain,
-            'include' => 'tls_certificates',
+            'include' => 'tls_certificates,tls_authorizations',
             'page[size]' => 1,
         ]);
 
@@ -124,6 +156,167 @@ class FastlyTls implements Provider
         }
 
         return ['resource' => $resource, 'included' => array_values(array_filter($included, is_array(...)))];
+    }
+
+    /**
+     * The subscription's TLS authorizations for the domain, as Fastly included
+     * them alongside the subscription.
+     *
+     * @param array{resource:array<string, mixed>,included:array<int, array<string, mixed>>} $subscription
+     * @return list<array<string, mixed>>
+     */
+    private function findAuthorizations(array $subscription, string $domain): array
+    {
+        $ids = null;
+        $references = $subscription['resource']['relationships']['tls_authorizations']['data'] ?? null;
+        if (\is_array($references)) {
+            $ids = [];
+            foreach ($references as $reference) {
+                if (\is_array($reference) && \is_string($reference['id'] ?? null)) {
+                    $ids[] = $reference['id'];
+                }
+            }
+        }
+
+        $authorizations = [];
+        foreach ($subscription['included'] as $included) {
+            if (($included['type'] ?? null) !== 'tls_authorization') {
+                continue;
+            }
+
+            if ($ids !== null && !\in_array($included['id'] ?? null, $ids, true)) {
+                continue;
+            }
+
+            $authorizedDomain = $included['relationships']['tls_domain']['data']['id'] ?? null;
+            if (\is_string($authorizedDomain) && strcasecmp($authorizedDomain, $domain) !== 0) {
+                continue;
+            }
+
+            $authorizations[] = $included;
+        }
+
+        return $authorizations;
+    }
+
+    /**
+     * @param list<array<string, mixed>> $authorizations
+     */
+    private function isBlocked(array $authorizations): bool
+    {
+        foreach ($authorizations as $authorization) {
+            $state = $authorization['attributes']['state'] ?? null;
+            if (\is_string($state) && strtolower($state) === 'blocked') {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @param list<array<string, mixed>> $authorizations
+     * @return list<Challenge>
+     */
+    private function extractChallenges(array $authorizations): array
+    {
+        $challenges = [];
+        foreach ($authorizations as $authorization) {
+            $reported = $authorization['attributes']['challenges'] ?? null;
+            if (!\is_array($reported)) {
+                continue;
+            }
+
+            foreach ($reported as $challenge) {
+                if (!\is_array($challenge)) {
+                    continue;
+                }
+
+                $type = $challenge['type'] ?? null;
+                $recordType = $challenge['record_type'] ?? null;
+                $recordName = $challenge['record_name'] ?? null;
+                $values = $challenge['values'] ?? null;
+                if (!\is_string($type)) {
+                    continue;
+                }
+                if (!\is_string($recordType)) {
+                    continue;
+                }
+                if (!\is_string($recordName)) {
+                    continue;
+                }
+                if ($recordName === '') {
+                    continue;
+                }
+                if (!\is_array($values)) {
+                    continue;
+                }
+
+                $values = array_values(array_filter($values, static fn(mixed $value): bool => \is_string($value) && $value !== ''));
+                if ($values === []) {
+                    continue;
+                }
+
+                $challenges[] = new Challenge($type, strtoupper($recordType), $recordName, $values);
+            }
+        }
+
+        return $challenges;
+    }
+
+    /**
+     * @param list<array<string, mixed>> $authorizations
+     * @return list<string>
+     */
+    private function extractWarnings(array $authorizations): array
+    {
+        $warnings = [];
+        foreach ($authorizations as $authorization) {
+            $reported = $authorization['attributes']['warnings'] ?? null;
+            if (!\is_array($reported)) {
+                continue;
+            }
+
+            foreach ($reported as $warning) {
+                $instructions = \is_array($warning) ? ($warning['instructions'] ?? null) : null;
+                if (!\is_string($instructions)) {
+                    continue;
+                }
+
+                $instructions = trim($instructions);
+                if ($instructions !== '' && !\in_array($instructions, $warnings, true)) {
+                    $warnings[] = $instructions;
+                }
+            }
+        }
+
+        return $warnings;
+    }
+
+    /**
+     * @param list<Challenge> $challenges
+     * @param list<string> $warnings
+     */
+    private function describe(string $domain, string $status, array $challenges, array $warnings): string
+    {
+        $message = $status === Status::FAILED
+            ? "Fastly stopped trying to issue a certificate for {$domain}."
+            : "Fastly cannot issue a certificate for {$domain} until its ownership is verified.";
+
+        foreach ($warnings as $warning) {
+            $message .= ' ' . rtrim($warning, '.') . '.';
+        }
+
+        if (\count($challenges) === 1) {
+            $message .= " Create a {$challenges[0]->recordType} record for {$challenges[0]->recordName} pointing to " . implode(' or ', $challenges[0]->values) . '.';
+        } elseif ($challenges !== []) {
+            $message .= ' Create one of these DNS records: ' . implode('; ', array_map(
+                static fn(Challenge $challenge): string => "{$challenge->recordType} {$challenge->recordName} -> " . implode(' or ', $challenge->values),
+                $challenges,
+            )) . '.';
+        }
+
+        return $message;
     }
 
     /**

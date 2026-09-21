@@ -173,6 +173,21 @@ $renewRequired = $certificates->isRenewRequired('cdn.example.com', null);
 
 `issueCertificate()` returns a renew date when Fastly already has an issued or renewing certificate. For asynchronous states like `pending` or `processing`, it returns `null`.
 
+`getCertificateStatus()` returns a `Certificates\Status` constant. Fastly keeps a subscription `pending` while it waits for the domain owner to prove ownership, so the provider also reads the subscription's TLS authorizations: when one is `blocked`, or the subscription has `failed`, it throws `Exception\Certificate` instead of returning a status. The exception carries `getStatus()` (`Status::BLOCKED` or `Status::FAILED`), `getChallenges()` (the DNS records to create, as `Certificates\Challenge` values with a `type`, `recordType`, `recordName` and `values`) and `getWarnings()` (Fastly's own instructions, such as a record that conflicts with a challenge). `FastlyTls::CHALLENGE_MANAGED_DNS` is the `_acme-challenge` CNAME challenge, the one that proves ownership without pointing the domain itself at Fastly.
+
+```php
+use Utopia\Cdn\Exception\Certificate as CertificateException;
+
+try {
+    $status = $certificates->getCertificateStatus('cdn.example.com', null);
+} catch (CertificateException $exception) {
+    foreach ($exception->getChallenges() as $challenge) {
+        // CNAME _acme-challenge.cdn.example.com -> abc123.fastly-validations.com
+        echo "{$challenge->recordType} {$challenge->recordName} -> {$challenge->values[0]}";
+    }
+}
+```
+
 When Fastly domain management owns the domain lifecycle, use the managed provider instead. It creates domains without a service version on the configured service and removes both the domain and TLS subscription on deletion. Classic domains are removed by cloning and activating their service version first.
 
 ```php

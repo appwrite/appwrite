@@ -31,6 +31,35 @@ final class FastlyTest extends TestCase
         $this->assertSame('example.com', $client->calls[3]['body']['data']['relationships']['tls_domains']['data'][0]['id']);
     }
 
+    public function testBlockedTlsLeavesVersionlessDomainOnItsCurrentService(): void
+    {
+        $blocked = json_encode([
+            'data' => [[
+                'id' => 'sub_1',
+                'attributes' => ['state' => 'pending'],
+                'relationships' => ['tls_authorizations' => ['data' => [['id' => 'auth_1', 'type' => 'tls_authorization']]]],
+            ]],
+            'included' => [[
+                'id' => 'auth_1',
+                'type' => 'tls_authorization',
+                'attributes' => [
+                    'state' => 'blocked',
+                    'challenges' => [['type' => 'managed-dns', 'record_type' => 'CNAME', 'record_name' => '_acme-challenge.example.com', 'values' => ['token.fastly-validations.com']]],
+                ],
+            ]],
+        ], JSON_THROW_ON_ERROR);
+        $client = new TestClient([
+            $this->json('{"data":[{"id":"domain_1","fqdn":"example.com","service_id":"old_service"}]}'),
+            $this->json($blocked),
+            $this->json($blocked),
+        ]);
+
+        $renewDate = new Fastly('token', 'service_1', client: $client)->issueCertificate('cert', 'example.com', null);
+
+        $this->assertNull($renewDate);
+        $this->assertSame(['GET', 'GET', 'GET'], array_column($client->calls, 'method'));
+    }
+
     public function testIssueReassignsVersionlessDomainFromAnotherService(): void
     {
         $client = new TestClient([
