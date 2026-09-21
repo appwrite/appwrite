@@ -28,11 +28,6 @@ abstract class Adapter
     protected const int POOL_SIZE = 8;
 
     /**
-     * Seconds a request waits for a pooled connection before failing.
-     */
-    protected const float POOL_TIMEOUT = 3.0;
-
-    /**
      * The agent instance
      */
     protected ?Agent $agent = null;
@@ -366,6 +361,8 @@ abstract class Adapter
     /**
      * Inside a coroutine, a pool of keep-alive Swoole clients shared by every
      * request this adapter makes; elsewhere a single keep-alive cURL client.
+     * A request waits for a free pooled connection as long as it would wait
+     * for a response, so a busy pool delays a call rather than failing it.
      */
     protected function defaultClient(): ClientInterface&StreamingClientInterface
     {
@@ -377,7 +374,7 @@ abstract class Adapter
                 'agents.'.$this->getName(),
                 static::POOL_SIZE,
                 static fn () => new HttpClient((new SwooleAdapter())->withConnectionReuse()->withTimeout($timeout)),
-                timeout: static::POOL_TIMEOUT,
+                timeout: $timeout,
             ));
         }
 
