@@ -53,7 +53,8 @@ class Create extends Action
     public function __construct()
     {
         $providers = Config::getParam('oAuthProviders', []);
-        $idTokenProviders = \array_keys(\array_filter($providers, fn ($node) => !empty($node['idToken']) && empty($node['mock'])));
+        $idTokenProviders = \array_keys(\array_filter($providers, fn ($node) => !empty($node['idToken'])));
+        $documentedProviders = \array_filter($idTokenProviders, fn (string $provider) => empty($providers[$provider]['mock']));
 
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_POST)
@@ -84,7 +85,7 @@ class Create extends Action
             ->label('abuse-limit', 10)
             ->label('abuse-key', 'url:{url},ip:{ip}')
             ->label('abuse-reset', [201])
-            ->param('provider', '', new WhiteList(\array_keys($providers), true), 'OAuth2 provider that issued the ID token. Currently, supported providers are: ' . \implode(', ', $idTokenProviders) . '.', enum: new Enum(name: 'OAuthProvider', exclude: ['mock', 'mock-unverified']))
+            ->param('provider', '', new WhiteList($idTokenProviders, true), 'OAuth2 provider that issued the ID token. Currently, supported providers are: ' . \implode(', ', $documentedProviders) . '.', enum: new Enum(name: 'IdTokenProvider', exclude: ['mock', 'mock-unverified']))
             ->param('idToken', '', new Text(8192, 0), 'OpenID Connect ID token (JWT) obtained natively from the provider, for example via Google Credential Manager or Sign in with Apple.')
             ->param('nonce', '', new Text(256, 0), 'Raw nonce used when requesting the ID token. Required for Apple, and whenever the token carries a nonce claim, which must match it. Ignored when the provider issued the token without a nonce.', true)
             ->param('accessToken', '', new Text(4096, 0), 'Provider access token to store alongside the session for calling provider APIs. Never used for authentication.', true)
@@ -244,7 +245,7 @@ class Create extends Action
             ? DateTime::addSeconds(new \DateTime(), $accessTokenExpiry)
             : null;
 
-        $this->upsertIdentity($user, $provider, $sub, $providerEmail, $accessToken, $accessTokenExpiresAt, $photo, $dbForProject, $authorization, $newUser, $newTarget);
+        $this->upsertIdentity($user, $provider, $sub, $providerEmail, $idToken, $accessToken, $accessTokenExpiresAt, $photo, $dbForProject, $authorization, $newUser, $newTarget);
 
         if (empty($user->getAttribute('name'))) {
             $user->setAttribute('name', $name);
@@ -558,10 +559,10 @@ class Create extends Action
 
     /**
      * Create the (provider, sub) identity for the user, or refresh its stored
-     * access token and photo. Guards against attaching an email already bound
-     * to another user's identity.
+     * ID token, access token and photo. Guards against attaching an email
+     * already bound to another user's identity.
      */
-    private function upsertIdentity(User $user, string $provider, string $sub, string $providerEmail, string $accessToken, ?string $accessTokenExpiresAt, string $photo, Database $dbForProject, Authorization $authorization, ?Document $newUser, ?Document $newTarget): void
+    private function upsertIdentity(User $user, string $provider, string $sub, string $providerEmail, string $idToken, string $accessToken, ?string $accessTokenExpiresAt, string $photo, Database $dbForProject, Authorization $authorization, ?Document $newUser, ?Document $newTarget): void
     {
         $identity = $dbForProject->findOne('identities', [
             Query::equal('userInternalId', [$user->getSequence()]),
@@ -598,6 +599,7 @@ class Create extends Action
                     'providerAccessToken' => $accessToken,
                     'providerRefreshToken' => null,
                     'providerAccessTokenExpiry' => $accessTokenExpiresAt,
+                    'providerIdToken' => $idToken,
                     'photo' => $photo ?: null,
                 ]));
             } catch (Duplicate) {
@@ -616,7 +618,9 @@ class Create extends Action
             return;
         }
 
-        $changes = [];
+        // The token is verified and required, so it always supersedes the stored
+        // one: its claims would otherwise go stale, and it expires within the hour.
+        $changes = ['providerIdToken' => $idToken];
 
         // Native sign-in often carries no access token at all, so only overwrite
         // the stored credentials when the client actually supplied one.
@@ -630,9 +634,7 @@ class Create extends Action
             $changes['photo'] = $photo;
         }
 
-        if (!empty($changes)) {
-            $dbForProject->updateDocument('identities', $identity->getId(), new Document($changes));
-        }
+        $dbForProject->updateDocument('identities', $identity->getId(), new Document($changes));
     }
 
     /**

@@ -49,7 +49,6 @@ const APP_PROJECTS_SUBQUERIES = [
     'subQueryWebhooks',
     'subQueryPlatforms',
     'subQueryBlocks',
-    'subQueryDevKeys',
 ];
 
 const APP_USERS_SUBQUERIES = [
@@ -204,6 +203,7 @@ const TOKEN_TYPE_PHONE = 6;
 const TOKEN_TYPE_OAUTH2 = 7;
 const TOKEN_TYPE_GENERIC = 8;
 const TOKEN_TYPE_EMAIL = 9; // OTP
+const TOKEN_TYPE_VERIFICATION_OTP = 10;
 
 /**
  * Session Providers.
@@ -334,6 +334,8 @@ const FUNCTION_ALLOWLIST_HEADERS_RESPONSE = ['content-type', 'content-length'];
 const MESSAGE_TYPE_EMAIL = 'email';
 const MESSAGE_TYPE_SMS = 'sms';
 const MESSAGE_TYPE_PUSH = 'push';
+// Message providers
+const MESSAGE_PROVIDER_APPWRITE = 'appwrite';
 // Notification types
 const NOTIFICATION_TYPE_EMAIL = MESSAGE_TYPE_EMAIL;
 const NOTIFICATION_TYPE_SMS = MESSAGE_TYPE_SMS;
@@ -347,6 +349,7 @@ const MAIL_TEMPLATE_INVITATION = 'invitation';
 const MAIL_TEMPLATE_MAGIC_URL = 'magic-url';
 const MAIL_TEMPLATE_MFA_CHALLENGE = 'mfa-challenge';
 const MAIL_TEMPLATE_OTP = 'otp';
+const MAIL_TEMPLATE_OTP_VERIFICATION = 'otp-verification';
 const MAIL_TEMPLATE_RECOVERY = 'recovery';
 const MAIL_TEMPLATE_SESSION_ALERT = 'session-alert';
 const MAIL_TEMPLATE_SMTP_TEST = 'smtp-test';

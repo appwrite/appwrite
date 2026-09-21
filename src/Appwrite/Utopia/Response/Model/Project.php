@@ -50,15 +50,6 @@ class Project extends Model
                 'example' => 'fra',
             ])
 
-            // Resource: Dev Keys
-            ->addRule('devKeys', [
-                'type' => Response::MODEL_DEV_KEY,
-                'description' => 'Deprecated since 1.9.5: List of dev keys.',
-                'default' => [],
-                'example' => new \stdClass(),
-                'array' => true,
-            ])
-
             // Resource: SMTP
             ->addRule('smtpEnabled', [
                 'type' => self::TYPE_BOOLEAN,
