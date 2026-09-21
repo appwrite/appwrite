@@ -486,7 +486,7 @@ return [
             ],
             [
                 'name' => '_APP_WEBHOOK_TRUSTED_ORIGINS',
-                'description' => 'Comma-separated HTTP(S) origins trusted for webhook delivery to private or reserved addresses in production, for example https://hooks.internal.example.com:8443. Empty by default. Matches scheme, hostname and effective port exactly; no wildcards or subdomain matching. Entries may have a trailing slash, but must not contain credentials, paths, queries or fragments. Invalid entries are ignored. Any webhook on this server can target these origins; only trust receivers you control. This does not change webhook URL validation at creation or redirect handling.',
+                'description' => 'Comma-separated HTTP(S) origins trusted for webhook delivery to private or reserved addresses in every environment, for example https://hooks.internal.example.com:8443. Empty by default. Matches scheme, hostname and effective port exactly; no wildcards or subdomain matching. Entries may have a trailing slash, but must not contain credentials, paths, queries or fragments. Invalid entries are ignored. Restart workers after changing this setting. Any webhook on this server can target these origins; only trust receivers you control. This does not change webhook URL validation at creation or redirect handling.',
                 'introduction' => 'TBD',
                 'default' => '',
                 'required' => false,

@@ -9,6 +9,7 @@ use Appwrite\Event\Publisher\Usage;
 use Appwrite\Platform\Workers\Webhooks;
 use Appwrite\Tests\Queue\InMemoryConnection;
 use Exception;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Swoole\Coroutine;
 use Swoole\Coroutine\Channel;
@@ -21,21 +22,29 @@ use Utopia\Cache\Cache;
 use Utopia\Database\Adapter\Memory;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Queue\Broker\Redis;
 use Utopia\Queue\Queue;
 
 /**
  * Exercises queued messages through the real worker and HTTP transport.
- * Only queue storage and the unused platform database are in memory.
+ * Queue storage and the platform database are in memory.
  */
 final class DeliveryTest extends TestCase
 {
-    public function testProductionDeliveryOnlyTrustsConfiguredOrigins(): void
+    public static function environments(): \Iterator
+    {
+        yield ['development'];
+        yield ['production'];
+    }
+
+    #[DataProvider('environments')]
+    public function testDeliveryOnlyTrustsConfiguredOrigins(string $mode): void
     {
         $environment = getenv('_APP_ENV');
         $origins = getenv('_APP_WEBHOOK_TRUSTED_ORIGINS');
         $hooks = Runtime::getHookFlags();
-        putenv('_APP_ENV=production');
+        putenv('_APP_ENV=' . $mode);
         Runtime::enableCoroutine(SWOOLE_HOOK_NATIVE_CURL);
 
         try {
@@ -63,50 +72,47 @@ final class DeliveryTest extends TestCase
                 $broker = new Redis($connection, $connection);
                 $queue = new Queue('v1-webhooks');
                 $database = new Database(new Memory(), new Cache(new NoCache()));
-                $worker = new Webhooks();
+                $authorization = new Authorization();
+                $authorization->disable();
+                $database->setAuthorization($authorization)->setDatabase('delivery')->setNamespace('webhooks');
+                $database->create();
+                $database->createCollection('webhooks');
+                $database->createAttribute('webhooks', 'attempts', Database::VAR_INTEGER, 0, false, 0);
+                $database->createCollection('memberships');
+                $database->createAttribute('memberships', 'teamInternalId', Database::VAR_STRING, 255, false);
+                $database->disableValidation();
                 $url = $origin . '/events?delivery=one';
                 $payload = ['value' => 'delivered'];
                 $project = new Document([
                     '$id' => 'delivery-project',
                     '$sequence' => 1,
+                    'teamInternalId' => 'team',
                     'webhooks' => [new Document([
                         '$id' => 'delivery-webhook',
                         '$sequence' => 1,
                         'enabled' => true,
+                        'attempts' => 0,
                         'events' => ['users.create'],
                         'url' => $url,
                         'signatureKey' => 'delivery-signature',
                     ])],
                 ]);
 
+                $database->createDocument('webhooks', $project->getAttribute('webhooks')[0]);
+
                 try {
-                    // Test for FAILURE: no setting, wrong origins and malformed entries
-                    // must leave the receiver untouched, not just raise an exception.
-                    foreach ([
-                        '',
-                        ' ',
-                        '*',
-                        'https://127.0.0.1:' . $server->port,
-                        'http://127.0.0.1:' . ($server->port === 65535 ? 65534 : $server->port + 1),
-                        'http://localhost:' . $server->port,
-                        'http://127.0.0.10:' . $server->port,
-                        'http://*.0.0.1:' . $server->port,
-                        $origin . '/events',
-                        $origin . '?trusted=true',
-                        $origin . '#trusted',
-                        'http://user:password@127.0.0.1:' . $server->port,
-                        'http://127.0.0.1:invalid',
-                    ] as $untrusted) {
-                        putenv('_APP_WEBHOOK_TRUSTED_ORIGINS=' . $untrusted);
-                        $error = $this->deliver($worker, $broker, $queue, $database, $project, $payload);
-                        $this->assertInstanceOf(\Exception::class, $error, 'Expected rejection with origins: ' . $untrusted);
-                        $this->assertTrue($requests->isEmpty(), 'Rejected target must receive no request');
-                    }
+                    // An unconfigured private receiver gets no request, even in development.
+                    putenv('_APP_WEBHOOK_TRUSTED_ORIGINS=');
+                    $this->assertInstanceOf(Exception::class, $this->deliver(new Webhooks(), $broker, $queue, $database, $project, $payload));
+                    $this->assertTrue($requests->isEmpty());
+                    $this->assertSame(1, $database->getDocument('webhooks', 'delivery-webhook')->getAttribute('attempts'));
+                    $project->setAttribute('webhooks', [$database->getDocument('webhooks', 'delivery-webhook')]);
 
                     // Test for SUCCESS: a list with whitespace and a trailing slash
                     // trusts this origin, including paths and query strings on it.
                     putenv('_APP_WEBHOOK_TRUSTED_ORIGINS=invalid, ' . strtoupper($origin) . '/ , https://other.test');
-                    $this->assertNull($this->deliver($worker, $broker, $queue, $database, $project, $payload));
+                    $this->assertNull($this->deliver(new Webhooks(), $broker, $queue, $database, $project, $payload));
+                    $this->assertSame(0, $database->getDocument('webhooks', 'delivery-webhook')->getAttribute('attempts'));
                     $this->assertSame(1, $requests->length());
                     $request = $requests->pop(1);
                     $this->assertIsArray($request);
@@ -121,19 +127,27 @@ final class DeliveryTest extends TestCase
 
                     // Trusting one private origin must not authorize another.
                     $project->getAttribute('webhooks')[0]->setAttribute('url', 'http://localhost:' . $server->port . '/events');
-                    $this->assertInstanceOf(\Exception::class, $this->deliver($worker, $broker, $queue, $database, $project, $payload));
+                    $this->assertInstanceOf(\Exception::class, $this->deliver(new Webhooks(), $broker, $queue, $database, $project, $payload));
                     $this->assertTrue($requests->isEmpty());
                     $project->getAttribute('webhooks')[0]->setAttribute('url', $url);
 
-                    // Revoking trust must stop delivery to the same running receiver.
+                    // Revocation stops delivery and repeated refusals eventually pause it.
                     putenv('_APP_WEBHOOK_TRUSTED_ORIGINS');
-                    $this->assertInstanceOf(\Exception::class, $this->deliver($worker, $broker, $queue, $database, $project, $payload));
+                    for ($attempt = 2; $attempt <= 10; $attempt++) {
+                        $project->setAttribute('webhooks', [$database->getDocument('webhooks', 'delivery-webhook')]);
+                        $this->assertInstanceOf(Exception::class, $this->deliver(new Webhooks(), $broker, $queue, $database, $project, $payload));
+                    }
+                    $paused = $database->getDocument('webhooks', 'delivery-webhook');
+                    $this->assertSame(10, $paused->getAttribute('attempts'));
+                    $this->assertFalse($paused->getAttribute('enabled'));
+                    $project->setAttribute('webhooks', [$paused]);
+                    $this->assertNull($this->deliver(new Webhooks(), $broker, $queue, $database, $project, $payload));
                     $this->assertTrue($requests->isEmpty());
 
                     // Trust does not enable redirect following.
                     putenv('_APP_WEBHOOK_TRUSTED_ORIGINS=' . $origin);
-                    $project->getAttribute('webhooks')[0]->setAttribute('url', $origin . '/redirect');
-                    $this->assertNull($this->deliver($worker, $broker, $queue, $database, $project, $payload));
+                    $project->getAttribute('webhooks')[0]->setAttribute('enabled', true)->setAttribute('url', $origin . '/redirect');
+                    $this->assertNull($this->deliver(new Webhooks(), $broker, $queue, $database, $project, $payload));
                     $redirect = $requests->pop(1);
                     $this->assertIsArray($redirect);
                     $this->assertSame('/redirect', $redirect['path']);

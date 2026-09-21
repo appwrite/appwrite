@@ -30,6 +30,9 @@ class Webhooks extends Action
 {
     private const MAX_FILE_SIZE = 5242880; // 5 MB
 
+    /** @var array<string, true> */
+    private array $trustedOrigins = [];
+
     public static function getName(): string
     {
         return 'webhooks';
@@ -40,6 +43,28 @@ class Webhooks extends Action
      */
     public function __construct()
     {
+        // Operators can trust specific internal receivers. Empty by default;
+        // this does not relax URL validation or trust other ports or subdomains.
+        foreach (\explode(',', System::getEnv('_APP_WEBHOOK_TRUSTED_ORIGINS', '')) as $origin) {
+            try {
+                $trusted = Uri::parse(\trim($origin));
+            } catch (InvalidArgumentException) {
+                continue;
+            }
+
+            if (!\in_array($trusted->getScheme(), ['http', 'https'], true)
+                || $trusted->getHost() === ''
+                || $trusted->getUserInfo() !== ''
+                || !\in_array($trusted->getPath(), ['', '/'], true)
+                || $trusted->getQuery() !== ''
+                || $trusted->getFragment() !== ''
+            ) {
+                continue;
+            }
+
+            $this->trustedOrigins[$trusted->getScheme() . '://' . $trusted->getAuthority()] = true;
+        }
+
         $this
             ->desc('Webhooks worker')
             ->inject('message')
@@ -92,38 +117,6 @@ class Webhooks extends Action
         }
     }
 
-    private function isTrustedOrigin(Uri $uri): bool
-    {
-        // Operators can trust specific internal receivers. Empty by default;
-        // this does not relax URL validation or trust other ports or subdomains.
-        foreach (\explode(',', System::getEnv('_APP_WEBHOOK_TRUSTED_ORIGINS', '')) as $origin) {
-            try {
-                $trusted = Uri::parse(\trim($origin));
-            } catch (InvalidArgumentException) {
-                continue;
-            }
-
-            if (!\in_array($trusted->getScheme(), ['http', 'https'], true)
-                || $trusted->getHost() === ''
-                || $trusted->getUserInfo() !== ''
-                || !\in_array($trusted->getPath(), ['', '/'], true)
-                || $trusted->getQuery() !== ''
-                || $trusted->getFragment() !== ''
-            ) {
-                continue;
-            }
-
-            if ($uri->getScheme() === $trusted->getScheme()
-                && $uri->getHost() === $trusted->getHost()
-                && $uri->getPort() === $trusted->getPort()
-            ) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
     /**
      * @param array $events
      * @param string $payload
@@ -145,15 +138,6 @@ class Webhooks extends Action
 
         $rawUrl = $webhook->getAttribute('url');
 
-        if (System::getEnv('_APP_ENV', 'development') === 'production') {
-            $uri = Uri::parse($rawUrl);
-            $host = $uri->getHost();
-            $hostnameValidator = new PublicHostname();
-            if (!$this->isTrustedOrigin($uri) && !$hostnameValidator->isValid($host)) {
-                return 'Webhook target ' . $host . ' rejected: ' . $hostnameValidator->getDescription();
-            }
-        }
-
         $signatureKey = $webhook->getAttribute('signatureKey');
         $signature = base64_encode(hash_hmac('sha1', $rawUrl . $payload, $signatureKey, true));
         $httpUser = $webhook->getAttribute('httpUser');
@@ -173,9 +157,16 @@ class Webhooks extends Action
         $statusCode = 0;
 
         try {
+            $uri = Uri::parse($rawUrl);
+            $origin = $uri->getScheme() . '://' . $uri->withUserInfo('')->getAuthority();
+            $hostnameValidator = new PublicHostname();
+            if (!isset($this->trustedOrigins[$origin]) && !$hostnameValidator->isValid($uri->getHost())) {
+                throw new Exception('Webhook target ' . $uri->getHost() . ' rejected: ' . $hostnameValidator->getDescription());
+            }
+
             $request = (new RequestFactory())->body(
                 method: Method::POST,
-                uri: $rawUrl,
+                uri: $uri,
                 body: $payload,
                 contentType: ContentType::JSON,
                 headers: [
