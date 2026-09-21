@@ -18,6 +18,8 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Messaging\Adapter\Email as EmailAdapter;
 use Utopia\Messaging\Messages\Email as EmailMessage;
+use Utopia\Pools\Adapter\Stack;
+use Utopia\Pools\Pool;
 use Utopia\Queue\Message;
 use Utopia\Registry\Registry;
 use Utopia\Span\Span;
@@ -390,7 +392,7 @@ final class NotificationsTest extends TestCase
     public function testLegacyMailPayloadOptionsAreAppliedByEmailChannel(): void
     {
         $spy = new SpyEmailAdapter();
-        $this->registry->set('smtp', static fn () => $spy);
+        $this->registry->set('smtp', static fn () => new Pool(new Stack(), 'smtp', 1, static fn () => $spy, 1.0));
 
         $previousSmtpHost = \getenv('_APP_SMTP_HOST');
         \putenv('_APP_SMTP_HOST=spy.smtp.test');
@@ -665,7 +667,7 @@ final class NotificationsTest extends TestCase
     public function testTrackingLogoInjectedIntoEmailHtml(): void
     {
         $spy = new SpyEmailAdapter();
-        $this->registry->set('smtp', static fn () => $spy);
+        $this->registry->set('smtp', static fn () => new Pool(new Stack(), 'smtp', 1, static fn () => $spy, 1.0));
 
         // Force the cloud SMTP branch (project has no smtp config) and
         // provide the tracking secret so injectTrackingLogo actually runs.
@@ -741,7 +743,7 @@ final class NotificationsTest extends TestCase
     public function testTrackingLogoDoesNotUseOpenSslKeyFallback(): void
     {
         $spy = new SpyEmailAdapter();
-        $this->registry->set('smtp', static fn () => $spy);
+        $this->registry->set('smtp', static fn () => new Pool(new Stack(), 'smtp', 1, static fn () => $spy, 1.0));
 
         $previousSmtpHost = \getenv('_APP_SMTP_HOST');
         $previousTrackingSecret = \getenv('_APP_NOTIFICATIONS_TRACKING_SECRET');
@@ -777,7 +779,7 @@ final class NotificationsTest extends TestCase
     public function testPersistAlertReturnsAlertIdAndStoresResource(): void
     {
         $spy = new SpyEmailAdapter();
-        $this->registry->set('smtp', static fn () => $spy);
+        $this->registry->set('smtp', static fn () => new Pool(new Stack(), 'smtp', 1, static fn () => $spy, 1.0));
 
         $previousSmtpHost = \getenv('_APP_SMTP_HOST');
         \putenv('_APP_SMTP_HOST=spy.smtp.test');
@@ -826,7 +828,7 @@ final class NotificationsTest extends TestCase
     {
         $failing = new SpyEmailAdapter();
         $failing->throwOnSend = true;
-        $this->registry->set('smtp', static fn () => $failing);
+        $this->registry->set('smtp', static fn () => new Pool(new Stack(), 'smtp', 1, static fn () => $failing, 1.0));
 
         $previousSmtpHost = \getenv('_APP_SMTP_HOST');
         \putenv('_APP_SMTP_HOST=spy.smtp.test');
@@ -866,7 +868,7 @@ final class NotificationsTest extends TestCase
             // Retry with a working adapter using the same payload — must deliver
             // AND persist exactly one alert row.
             $working = new SpyEmailAdapter();
-            $this->registry->set('smtp', static fn () => $working);
+            $this->registry->set('smtp', static fn () => new Pool(new Stack(), 'smtp', 1, static fn () => $working, 1.0));
 
             $retryWorker = new Notifications();
             $retryWorker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->platform);
@@ -888,7 +890,7 @@ final class NotificationsTest extends TestCase
     {
         $failing = new SpyEmailAdapter();
         $failing->throwOnSend = true;
-        $this->registry->set('smtp', static fn () => $failing);
+        $this->registry->set('smtp', static fn () => new Pool(new Stack(), 'smtp', 1, static fn () => $failing, 1.0));
 
         $previousSmtpHost = \getenv('_APP_SMTP_HOST');
         \putenv('_APP_SMTP_HOST=spy.smtp.test');
@@ -933,7 +935,7 @@ final class NotificationsTest extends TestCase
             $this->assertCount(0, $emailRows, 'failed email recipient must not leave an orphan dedup row');
 
             $working = new SpyEmailAdapter();
-            $this->registry->set('smtp', static fn () => $working);
+            $this->registry->set('smtp', static fn () => new Pool(new Stack(), 'smtp', 1, static fn () => $working, 1.0));
 
             $retryWorker = new Notifications();
             $retryWorker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->platform);
@@ -959,7 +961,7 @@ final class NotificationsTest extends TestCase
     public function testEmailChannelHappyPath(): void
     {
         $spy = new SpyEmailAdapter();
-        $this->registry->set('smtp', static fn () => $spy);
+        $this->registry->set('smtp', static fn () => new Pool(new Stack(), 'smtp', 1, static fn () => $spy, 1.0));
 
         $previousSmtpHost = \getenv('_APP_SMTP_HOST');
         $previousTrackingSecret = \getenv('_APP_NOTIFICATIONS_TRACKING_SECRET');

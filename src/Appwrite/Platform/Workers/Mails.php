@@ -140,22 +140,20 @@ class Mails extends Action
         // render() will return the subject in <p> tags, so use strip_tags() to remove them
         $subject = \strip_tags($subjectTemplate->render());
 
-        /** @var EmailAdapter $adapter */
-        $adapter = empty($smtp)
-            ? $register->get('smtp')
-            : new SMTP(
-                host: $smtp['host'],
-                port: (int) $smtp['port'],
-                username: $smtp['username'] ?? '',
-                password: $smtp['password'] ?? '',
-                smtpSecure: $smtp['secure'] ?? '',
-                smtpAutoTLS: false,
-                xMailer: 'Appwrite Mailer',
-                timeout: 10,
-                keepAlive: true,
-                timelimit: 30,
-            );
-        $adapter->setTelemetry($telemetry);
+        // A pooled adapter belongs to this send alone; a project's own SMTP is
+        // dialled for it and closed after.
+        $adapter = empty($smtp) ? null : new SMTP(
+            host: $smtp['host'],
+            port: (int) $smtp['port'],
+            username: $smtp['username'] ?? '',
+            password: $smtp['password'] ?? '',
+            smtpSecure: $smtp['secure'] ?? '',
+            smtpAutoTLS: false,
+            xMailer: 'Appwrite Mailer',
+            timeout: 10,
+            keepAlive: false,
+            timelimit: 30,
+        );
 
         // Resolve from/replyTo using fallback hierarchy: Custom options > SMTP config > Defaults
         $defaultFromEmail = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
@@ -210,8 +208,14 @@ class Mails extends Action
         );
         $emailMessage->setOrigin(MESSAGE_SEND_TYPE_INTERNAL);
 
+        $send = static function (EmailAdapter $adapter) use ($emailMessage, $telemetry): array {
+            $adapter->setTelemetry($telemetry);
+
+            return $adapter->send($emailMessage);
+        };
+
         try {
-            $result = $adapter->send($emailMessage);
+            $result = $adapter instanceof EmailAdapter ? $send($adapter) : $register->get('smtp')->use($send);
 
             if (($result['deliveredTo'] ?? 0) === 0) {
                 $error = $result['results'][0]['error'] ?? ($result['error'] ?? 'Unknown error');
