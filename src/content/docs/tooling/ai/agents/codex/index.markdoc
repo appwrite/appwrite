@@ -6,19 +6,28 @@ description: Learn how to use Codex with Appwrite through the Appwrite plugin, q
 
 {% section #install-plugin step=1 title="Install the Appwrite plugin" %}
 
-The fastest way to get started with Appwrite in Codex is to install the **Appwrite plugin** from the Appwrite marketplace. The plugin includes agent skills for the Appwrite CLI and all major SDKs, giving Codex the context it needs to follow the latest Appwrite code patterns.
+The fastest way to get started with Appwrite in Codex is to install the **Appwrite plugin** from the official plugin directory. The plugin includes agent skills for the Appwrite CLI and all major SDKs, giving Codex the context it needs to follow the latest Appwrite code patterns.
 
-Add the Appwrite marketplace to Codex by running the following command in your terminal:
+{% tabs %}
+{% tabsitem #desktop title="Desktop app" %}
 
-```bash
-codex plugin marketplace add appwrite/codex-plugin
-```
+![Appwrite plugin page in the ChatGPT desktop app](/images/docs/mcp/codex/install-plugin.avif)
 
-Then run `codex` and open the plugins menu to install the Appwrite plugin:
+- Open the ChatGPT desktop app.
+- Click **Plugins** in the sidebar.
+- Search for `Appwrite` and select the **Appwrite** plugin.
+- Click **Install plugin**.
 
-- Run `/plugins` in Codex.
-- Select the **Appwrite** plugin from the marketplace listing.
-- Confirm the install.
+{% /tabsitem %}
+{% tabsitem #cli title="CLI" %}
+
+- Run `codex` in your terminal, then run `/plugins`.
+- Switch to the **OpenAI Curated** marketplace.
+- Search for `Appwrite` and select the **Appwrite** plugin.
+- Select **Install plugin**.
+
+{% /tabsitem %}
+{% /tabs %}
 
 Once installed, the language and deployment skills load automatically based on your task. Add the remote Appwrite MCP server in [Step 3](#step-3) so Codex can call Appwrite APIs and search the documentation.
 
