@@ -12,6 +12,50 @@ Each Appwrite project can have its own set of unique templates. Templates also s
 
 Appwrite Cloud has a default SMTP server to get you started. This SMTP server sends generic emails and doesn't allow customizing SMTP templates. To use custom SMTP templates, you will need to configure your own SMTP server.
 
+Custom SMTP is available on Appwrite Cloud Pro and higher plans. You can connect a supported provider in one click, or enter the settings from any SMTP provider by hand.
+
+## One-click setup with Resend {% #smtp-one-click-setup %}
+
+On Appwrite Cloud, the **SMTP** tab starts with a **One-click setup** card. Connect a [Resend](https://resend.com) account and Appwrite creates a sending-only API key for one of your verified domains, then fills in and enables the custom SMTP settings for you.
+
+1. Navigate to your project's **Settings**.
+1. Navigate to the **SMTP** tab.
+1. Under **One-click setup**, click **Connect with Resend**.
+1. Authorize Appwrite in Resend. You are returned to the same tab, and the Resend tile now shows **Connected**.
+1. Select a verified **Domain**. Domains that are not yet verified in Resend are listed but can't be selected.
+1. Enter a **Sender name** and a **Sender email** on the selected domain. Appwrite suggests `noreply@<domain>`.
+1. Click **Set up**.
+
+Appwrite creates an API key in your Resend account named `Appwrite SMTP: <project name>`. The key has sending-only permission and is restricted to the selected domain. Appwrite stores it as the SMTP password and writes the rest of the settings for you.
+
+{% table %}
+* Setting
+* Value
+---
+* Server host
+* `smtp.resend.com`
+---
+* Server port
+* `587`
+---
+* Username
+* `resend`
+---
+* Secure protocol
+* TLS
+---
+* Password
+* The sending-only API key Appwrite created
+{% /table %}
+
+Custom SMTP is enabled as soon as the setup completes. Your existing reply-to email is kept. If you don't have a verified domain yet, add one in [Resend's domains page](https://resend.com/domains) and click **Check again**.
+
+The connection lives on your Console account, not the project, so it shows as **Connected** in every project you open. Appwrite keeps the Resend access token in memory only and asks you to **Reconnect** when it expires. To remove the connection, open the tile's menu and click **Disconnect**. Disconnecting removes the Resend identity from your Console account and doesn't change the SMTP settings already saved on your projects or revoke keys already in use.
+
+Mailgun and SendGrid tiles appear as **Coming soon**. Click **Notify me** on either to be told when it ships.
+
+## Configure SMTP manually {% #smtp-manual-setup %}
+
 There are many third-party SMTP providers like SendGrid and Mailgun. Before proceeding, pick an SMTP provider, create an account, and obtain **Sender name**, **Sender email**, **Server host**, **Server port**, **Username**, and **Password**.
 
 1. Navigate to your project's **Settings**.

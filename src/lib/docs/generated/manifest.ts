@@ -1218,7 +1218,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Message templates",
     "description": "Communicate using your brand and voice by customizing email and SMS message templates, localized to your user's language.",
     "layout": "article",
-    "readingTimeMinutes": 4
+    "readingTimeMinutes": 5
   },
   {
     "slug": "products/auth/mfa",
@@ -2958,7 +2958,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Resend",
     "description": "Send emails to your Appwrite users using Resend and Appwrite Messaging.",
     "layout": "article",
-    "readingTimeMinutes": 2
+    "readingTimeMinutes": 4
   },
   {
     "slug": "products/messaging/send-email-messages",

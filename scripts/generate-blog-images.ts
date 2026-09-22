@@ -205,6 +205,7 @@ async function generateAnnouncingBitbucketSupportCover(
 }
 
 const IMAGE_GENERATORS: Record<string, (outputDir: string) => Promise<void>> = {
+  'announcing-resend-one-click-setup': convertCoverSourceToAvif,
   'announcing-sites-dynamic-api-keys': convertCoverSourceToAvif,
   'announcing-console-terminal': convertCoverSourceToAvif,
   'announcing-appwrite-explorer': generateAnnouncingAppwriteExplorerCover,
