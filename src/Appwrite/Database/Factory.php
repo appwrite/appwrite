@@ -72,6 +72,25 @@ class Factory
     }
 
     /**
+     * The database a project's own collections are created in.
+     *
+     * Built through the same adapter as {@see self::project()}: the collection
+     * metadata cache is keyed by the adapter's hostname, so a provisioning
+     * database that resolved a different one would rotate an epoch no reader
+     * holds and leave its own invalidations unseen.
+     */
+    public function provisioning(Document $project): Database
+    {
+        $dsn = $this->dsn($project->getAttribute('database'));
+
+        return $this->newDatabase($this->adapter($dsn->getHost()))
+            ->setDatabase($this->database)
+            ->setSharedTables(false)
+            ->setTenant(null)
+            ->setNamespace('_' . $project->getSequence());
+    }
+
+    /**
      * Databases and tables the caller owns. Unknown attributes stay a rejected write here:
      * the schema is theirs, so dropping one would silently discard data they sent.
      */
