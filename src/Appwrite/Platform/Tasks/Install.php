@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Tasks;
 use Appwrite\Docker\Compose;
 use Appwrite\Docker\Compose\Generator;
 use Appwrite\Docker\Env;
+use Appwrite\Installer\Report;
 use Appwrite\Migration\Infrastructure\Migration as InfrastructureMigration;
 use Appwrite\Platform\Installer\Runtime\State;
 use Appwrite\Platform\Installer\Server as InstallerServer;
@@ -69,6 +70,7 @@ class Install extends Action
             ->param('database', 'postgresql', new WhiteList(['postgresql', 'mariadb', 'mongodb']), 'Database to use (postgresql|mariadb|mongodb)', true)
             ->param('topology', 'combined', new WhiteList(['combined', 'separate']), 'Worker and scheduler topology (combined|separate)', true)
             ->param('channel', self::CHANNEL_STABLE, new WhiteList([self::CHANNEL_STABLE, self::CHANNEL_NIGHTLY]), 'Release channel to track (stable|nightly). Nightly is unsupported and moves daily.', true)
+            ->param('domain', '', new Text(0), 'Appwrite hostname, also used as the custom domain CNAME target', true)
             ->callback($this->action(...));
     }
 
@@ -81,7 +83,8 @@ class Install extends Action
         bool $noStart,
         string $database,
         string $topology,
-        string $channel = self::CHANNEL_STABLE
+        string $channel = self::CHANNEL_STABLE,
+        string $domain = ''
     ): void {
         $this->channel = $channel;
         $isUpgrade = $this->isUpgrade;
@@ -242,6 +245,7 @@ class Install extends Action
         }
 
         // Fall back to CLI mode
+        $source = ($interactive === 'Y' && Console::isInteractive()) ? Report::SOURCE_CLI : Report::SOURCE_CLI_HEADLESS;
         $enableAssistant = false;
         $assistantExistsInOldCompose = false;
         if ($existingInstallation) {
@@ -277,7 +281,16 @@ class Install extends Action
         }
 
         $userInput = [];
+        if ($domain !== '') {
+            $userInput['_APP_DOMAIN'] = $domain;
+            $userInput['_APP_DOMAIN_TARGET'] = $domain;
+        }
+
         foreach ($vars as $var) {
+            if (isset($userInput[$var['name']])) {
+                continue;
+            }
+
             if ($var['name'] === '_APP_ASSISTANT_OPENAI_API_KEY') {
                 if (!$enableAssistant) {
                     $userInput[$var['name']] = '';
@@ -341,7 +354,7 @@ class Install extends Action
 
         $shouldGenerateSecrets = !$existingInstallation && !$isUpgrade;
         $input = $this->prepareEnvironmentVariables($userInput, $vars, $shouldGenerateSecrets);
-        $this->performInstallation($httpPort, $httpsPort, $organization, $image, $input, $noStart, null, null, $isUpgrade, migrate: $this->migrate);
+        $this->performInstallation($httpPort, $httpsPort, $organization, $image, $input, $noStart, null, null, $isUpgrade, migrate: $this->migrate, source: $source);
     }
 
 
@@ -541,6 +554,7 @@ class Install extends Action
         array $account = [],
         ?callable $onComplete = null,
         bool $migrate = false,
+        string $source = Report::SOURCE_CLI,
     ): void {
         $isLocalInstall = $this->isLocalInstall();
         $this->applyLocalPaths($isLocalInstall, false);
@@ -817,16 +831,6 @@ class Install extends Action
                     }
                 }
 
-                // Run tracking in a coroutine when inside a Swoole
-                // request so it doesn't block the worker.
-                if (Coroutine::getCid() !== -1) {
-                    go(function () use ($input, $isUpgrade, $version, $account) {
-                        $this->trackSelfHostedInstall($input, $isUpgrade, $version, $account);
-                    });
-                } else {
-                    $this->trackSelfHostedInstall($input, $isUpgrade, $version, $account);
-                }
-
                 if ($isCLI) {
                     Console::success('Appwrite installed successfully');
                 }
@@ -834,6 +838,16 @@ class Install extends Action
                 if ($isCLI) {
                     Console::success('Installation files created. Run "docker compose up -d" to start Appwrite');
                 }
+            }
+
+            $report = $this->report($input, $isUpgrade, $version, $account, $source, !$noStart);
+
+            // Run tracking in a coroutine when inside a Swoole
+            // request so it doesn't block the worker.
+            if (Coroutine::getCid() !== -1) {
+                go(fn () => $this->track($report));
+            } else {
+                $this->track($report);
             }
         } catch (\Throwable $e) {
             if ($currentStep) {
@@ -1003,60 +1017,40 @@ class Install extends Action
         );
     }
 
-    private function trackSelfHostedInstall(array $input, bool $isUpgrade, string $version, array $account): void
+    private function report(array $input, bool $isUpgrade, string $version, array $account, string $source, bool $started): ?Report
     {
-        if ($this->isLocalInstall()) {
-            return;
+        $environment = $input['_APP_ENV'] ?? 'development';
+        if (Report::optedOut((string) System::getEnv('DO_NOT_TRACK', ''), $environment, $this->isLocalInstall())) {
+            return null;
         }
 
-        // Opt out via DO_NOT_TRACK (https://donottrack.sh/)
-        $doNotTrack = \strtolower((string) System::getEnv('DO_NOT_TRACK', ''));
-        if (\in_array($doNotTrack, ['1', 'true', 'yes'], true)) {
-            return;
-        }
-
-        $appEnv = $input['_APP_ENV'] ?? 'development';
         $domain = $input['_APP_DOMAIN'] ?? 'localhost';
+        $hostIp = Report::isLoopback($domain) ? $domain : @gethostbyname($domain);
 
-        /* local or test instance */
-        if ($appEnv !== 'production') {
+        return new Report(
+            action: $isUpgrade ? Report::ACTION_UPGRADE : Report::ACTION_INSTALL,
+            source: $source,
+            version: $version,
+            channel: $this->channel,
+            topology: $this->topology,
+            domain: $domain,
+            database: $input['_APP_DB_ADAPTER'] ?? 'postgresql',
+            started: $started,
+            name: $account['name'] ?? null,
+            email: $account['email'] ?? null,
+            ip: ($hostIp !== $domain) ? $hostIp : null,
+            os: php_uname('s') . ' ' . php_uname('r'),
+            arch: php_uname('m'),
+            cpus: ((int) trim((string) \shell_exec('nproc'))) ?: null,
+            ram: ((int) round(((float) trim((string) \shell_exec('grep MemTotal /proc/meminfo | awk \'{print $2}\''))) / 1024)) ?: null,
+        );
+    }
+
+    private function track(?Report $report): void
+    {
+        if ($report === null) {
             return;
         }
-
-        /* prod but local or test instance */
-        if ($domain === 'localhost'
-            || str_starts_with($domain, '127.')
-            || str_starts_with($domain, '0.0.0.0')
-        ) {
-            return;
-        }
-
-        $type = $isUpgrade ? 'upgrade' : 'install';
-        $database = $input['_APP_DB_ADAPTER'] ?? 'postgresql';
-        $name = $account['name'] ?? 'Admin';
-        $email = $account['email'] ?? 'admin@selfhosted.local';
-
-        $hostIp = @gethostbyname($domain);
-
-        $payload = [
-            'action' => $type,
-            'account' => 'self-hosted',
-            'url' => 'https://' . $domain,
-            'category' => 'self_hosted',
-            'label' => 'self_hosted_' . $type,
-            'version' => $version,
-            'data' => json_encode([
-                'name' => $name,
-                'email' => $email,
-                'domain' => $domain,
-                'database' => $database,
-                'ip' => ($hostIp !== $domain) ? $hostIp : null,
-                'os' => php_uname('s') . ' ' . php_uname('r'),
-                'arch' => php_uname('m'),
-                'cpus' => ((int) trim((string) \shell_exec('nproc'))) ?: null,
-                'ram' => (int) round(((float) trim((string) \shell_exec('grep MemTotal /proc/meminfo | awk \'{print $2}\''))) / 1024),
-            ]),
-        ];
 
         try {
             $client = new Client();
@@ -1064,7 +1058,7 @@ class Install extends Action
                 ->setConnectTimeout(5000)
                 ->setTimeout(5000)
                 ->addHeader('Content-Type', 'application/json')
-                ->fetch(self::GROWTH_API_URL . '/analytics', Client::METHOD_POST, $payload);
+                ->fetch(self::GROWTH_API_URL . '/analytics', Client::METHOD_POST, $report->payload());
         } catch (\Throwable) {
             // tracking shouldn't block installation
         }
