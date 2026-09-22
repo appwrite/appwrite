@@ -6,7 +6,7 @@ import {
   DEFAULT_USAGE_CHART_INTERVAL,
   resolveUsageChartIntervalForRange,
 } from '@/lib/usage/chart-interval'
-import { getUsageLogRetentionHoursFromPlan } from '@/lib/usage/usage-log-retention'
+import { getUsageLogRetentionDaysFromPlan, getUsageLogRetentionHoursFromPlan } from '@/lib/usage/usage-log-retention'
 import { cn } from '@/lib/utils'
 import {
   useFirewallRuleImpact,
@@ -25,6 +25,10 @@ import {
 } from '@/lib/firewall/usage'
 import type { FirewallCreatableAction } from '@/lib/firewall/actions'
 import { FirewallImpactChart } from './FirewallImpactChart'
+import {
+  FIREWALL_IMPACT_FETCH_ERROR,
+  FirewallUsageChartError,
+} from './FirewallUsageChartError'
 import { useT } from '@/lib/i18n/translate'
 
 const IMPACT_DEBOUNCE_MS = 300
@@ -121,7 +125,7 @@ export function FirewallPresetImpactPreview({
     debouncedConditionSets.length === 0 ||
     !debouncedConditionSets.every(isConditionSetPreviewAvailable)
 
-  const { impact: singleImpact, isLoading: singleLoading, isFetching: singleFetching } =
+  const { impact: singleImpact, isLoading: singleLoading, isFetching: singleFetching, isError: singleError, error: singleErrorValue, refetch: refetchSingle } =
     useFirewallRuleImpact(
       !useUnion && !singlePreviewUnavailable ? projectId : null,
       singleSet,
@@ -133,7 +137,7 @@ export function FirewallPresetImpactPreview({
       action,
     )
 
-  const { impact: unionImpact, isLoading: unionLoading, isFetching: unionFetching } =
+  const { impact: unionImpact, isLoading: unionLoading, isFetching: unionFetching, isError: unionError, error: unionErrorValue, refetch: refetchUnion } =
     useFirewallRuleImpactUnion(
       projectId,
       debouncedConditionSets,
@@ -149,6 +153,9 @@ export function FirewallPresetImpactPreview({
   const impact = useUnion ? unionImpact : singleImpact
   const isLoading = useUnion ? unionLoading : singleLoading
   const isFetching = useUnion ? unionFetching : singleFetching
+  const isError = useUnion ? unionError : singleError
+  const error = useUnion ? unionErrorValue : singleErrorValue
+  const refetch = useUnion ? refetchUnion : refetchSingle
   const previewUnavailable = useUnion
     ? unionPreviewUnavailable
     : singlePreviewUnavailable
@@ -165,7 +172,17 @@ export function FirewallPresetImpactPreview({
     matched: impact?.matched ?? 0,
     rate: impact?.rate ?? 0,
   }
-  const showSubtleLoading = !previewUnavailable && isFetching && !isLoading
+  const showSubtleLoading =
+    !previewUnavailable && !isError && isFetching && !isLoading
+  const hideImpactValues = previewUnavailable || !impact
+  const [keepImpactError, setKeepImpactError] = useState(false)
+  if (impact || previewUnavailable) {
+    if (keepImpactError) setKeepImpactError(false)
+  } else if (isError && !keepImpactError) {
+    setKeepImpactError(true)
+  }
+  const showImpactError =
+    !previewUnavailable && !impact && (isError || keepImpactError)
 
   const emptyLabel = !hasCompleteConditions
     ? t('Select options above to preview matched traffic.')
@@ -234,7 +251,7 @@ export function FirewallPresetImpactPreview({
             </span>
           </div>
           <p className="text-[15px] font-semibold tabular-nums text-foreground">
-            {previewUnavailable || (isLoading && !impact)
+            {hideImpactValues
               ? '-'
               : summary.matched.toLocaleString()}
           </p>
@@ -245,7 +262,7 @@ export function FirewallPresetImpactPreview({
             <span className="text-[10px]">{t('Share of traffic')}</span>
           </div>
           <p className="text-[15px] font-semibold tabular-nums text-foreground">
-            {previewUnavailable || (isLoading && !impact)
+            {hideImpactValues
               ? '-'
               : `${(summary.rate * 100).toFixed(1)}%`}
           </p>
@@ -272,6 +289,16 @@ export function FirewallPresetImpactPreview({
           showSubtleLoading && 'opacity-60',
         )}
       >
+        {showImpactError ? (
+          <div className="p-3" style={{ height: PRESET_CHART_HEIGHT + 24 }}>
+            <FirewallUsageChartError
+              error={error}
+              retentionDays={getUsageLogRetentionDaysFromPlan(organizationPlan)}
+              fallback={FIREWALL_IMPACT_FETCH_ERROR}
+              onRetry={() => void refetch()}
+            />
+          </div>
+        ) : (
         <FirewallImpactChart
           series={series}
           dateRange={previewUnavailable ? undefined : impact?.dateRange}
@@ -280,6 +307,7 @@ export function FirewallPresetImpactPreview({
           emptyLabel={emptyLabel}
           compactMatchedScale
         />
+        )}
       </div>
     </div>
   )

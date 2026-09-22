@@ -756,6 +756,9 @@ export function firewallRuleImpactQueryOptions(
     refetchOnReconnect: false,
     placeholderData: keepPreviousData,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
+    meta: {
+      skipInitialLoader: true,
+    },
   })
 }
 
@@ -769,7 +772,7 @@ export function useFirewallRuleImpact(
   logRetentionHours?: number,
   action?: FirewallCreatableAction,
 ) {
-  const { data, isLoading, isFetching, error } = useQuery(
+  const { data, isLoading, isFetching, error, refetch } = useQuery(
     firewallRuleImpactQueryOptions(
       projectId,
       conditions,
@@ -786,7 +789,9 @@ export function useFirewallRuleImpact(
     impact: data as FirewallRuleImpactData | undefined,
     isLoading,
     isFetching,
+    isError: !!error,
     error,
+    refetch,
   }
 }
 
@@ -819,6 +824,8 @@ export function useFirewallRuleImpactUnion(
 
   const isLoading = queries.some((query) => query.isLoading)
   const isFetching = queries.some((query) => query.isFetching)
+  const isError = enabled && queries.some((query) => query.isError)
+  const error = queries.find((query) => query.error)?.error
   const impactDataKey = queries
     .map((query) => query.dataUpdatedAt ?? 0)
     .join(',')
@@ -831,7 +838,14 @@ export function useFirewallRuleImpactUnion(
     return mergeFirewallRuleImpactUnion(results)
   }, [enabled, conditionSets.length, impactDataKey, queries])
 
-  return { impact, isLoading, isFetching }
+  return {
+    impact,
+    isLoading,
+    isFetching,
+    isError,
+    error,
+    refetch: () => Promise.all(queries.map((query) => query.refetch())),
+  }
 }
 
 export type FirewallConditionBreakdownEntry = {

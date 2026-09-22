@@ -9,12 +9,11 @@ import {
 import { z } from 'zod'
 import { AppwriteException, type Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
-import { AuthAccountChip } from '@/components/global/auth/AuthAccountChip'
-import { MarketingSiteLink } from '@/components/global/shared/MarketingSiteLink'
-import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
+import {
+  AcceptInviteFlow,
+  type AcceptInviteScreen,
+} from '@/components/global/auth/AcceptInviteFlow'
 import { toast } from 'sonner'
-import { CheckCircle, Loader2, Lock, UserRoundX, XCircle } from 'lucide-react'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { useT } from '@/lib/i18n/translate'
 import { pageTitle } from '@/lib/utils/page-title'
@@ -58,16 +57,12 @@ function AcceptInvitePage() {
   const [isSwitchingAccount, setIsSwitchingAccount] = useState(false)
   const teamName = unescapeInviteTeamName(search.teamName)
 
-  // Check if we have all required parameters
   const hasAllParams =
     search.teamId && search.membershipId && search.userId && search.secret
 
-  // The invite carries the target userId - if it doesn't match the signed-in
-  // account, accepting is guaranteed to fail, so surface that upfront.
   const isWrongAccount =
     !!hasAllParams && !!account && account.$id !== search.userId
 
-  // The invitation secret establishes the invitee's session after signing out.
   const handleSwitchAccount = async () => {
     if (isSwitchingAccount) return
     setIsSwitchingAccount(true)
@@ -103,7 +98,6 @@ function AcceptInvitePage() {
       } catch {
         // The membership is confirmed; the destination can retry account loading.
       }
-      // Redirect to the organization page after a short delay
       setTimeout(() => {
         if (search.teamId) {
           navigate({
@@ -120,7 +114,6 @@ function AcceptInvitePage() {
         (err instanceof Error && err.message) ||
         t('Failed to accept invitation')
       setError(errorMessage)
-      // Switching accounts only helps when the invite targets another account.
       setErrorIsAccountMismatch(
         err instanceof AppwriteException && err.type === 'team_invite_mismatch',
       )
@@ -137,221 +130,32 @@ function AcceptInvitePage() {
   const accountLabel = account?.email || account?.name || undefined
   const isBusy = acceptMutation.isPending || isSwitchingAccount
 
-  // Resolve any existing account before accepting, but allow guests to use the
-  // invitation secret. Keep the success screen mounted during account refresh.
+  let screen: AcceptInviteScreen
   if (isLoading && !accepted) {
-    return (
-      <div className="bg-background relative flex min-h-svh flex-col items-center justify-center p-6 md:p-10">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    )
+    screen = 'loading'
+  } else if (accepted) {
+    screen = 'success'
+  } else if (isWrongAccount) {
+    screen = 'wrong-account'
+  } else if (error) {
+    screen = 'error'
+  } else if (!hasAllParams) {
+    screen = 'invalid'
+  } else {
+    screen = 'accept'
   }
 
-  const inviteDescription = teamName ? (
-    <>
-      {t("You've been invited to join")}{' '}
-      <span className="text-foreground font-medium break-words">
-        {teamName}
-      </span>
-      {'. '}
-      {t('Accept the invitation to get started.')}
-    </>
-  ) : (
-    t(
-      "You've been invited to join an organization. Accept the invitation to get started.",
-    )
-  )
-
   return (
-    <div className="bg-background h-full overflow-y-auto">
-      <div className="flex min-h-full flex-col items-center p-6 md:p-10">
-        <div className="my-auto w-full min-w-0 max-w-md">
-          <Card className="w-full min-w-0 overflow-hidden p-6 md:p-8">
-            <div className="space-y-6">
-              {accepted ? (
-                <div className="flex flex-col items-center gap-4 text-center">
-                  <div className="bg-muted text-muted-foreground flex size-14 items-center justify-center rounded-xl ring-1 ring-border/50">
-                    <CheckCircle className="size-6 text-green-500" />
-                  </div>
-                  <div className="space-y-1">
-                    <h1 className="text-2xl font-semibold tracking-tight">
-                      {t('Welcome to the organization!')}
-                    </h1>
-                    <p className="text-muted-foreground text-[13px] leading-relaxed">
-                      {t("You've successfully joined. Redirecting you now...")}
-                    </p>
-                  </div>
-                  {accountLabel ? (
-                    <AuthAccountChip accountLabel={accountLabel} />
-                  ) : null}
-                </div>
-              ) : isWrongAccount ? (
-                <>
-                  <div className="flex flex-col items-center gap-4 text-center">
-                    <div className="bg-muted text-muted-foreground flex size-14 items-center justify-center rounded-xl ring-1 ring-border/50">
-                      <UserRoundX className="size-6 text-amber-500" />
-                    </div>
-                    <div className="space-y-1">
-                      <h1 className="text-2xl font-semibold tracking-tight">
-                        {t("You're signed in with a different account")}
-                      </h1>
-                      <p className="text-muted-foreground text-[13px] leading-relaxed">
-                        {t('This invitation was sent to a different account.')}{' '}
-                        {t(
-                          'Switch to the account the invitation was sent to in order to accept it.',
-                        )}
-                      </p>
-                    </div>
-                    {accountLabel ? (
-                      <AuthAccountChip
-                        accountLabel={accountLabel}
-                        onSwitchAccount={handleSwitchAccount}
-                        disabled={isBusy}
-                      />
-                    ) : null}
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <Button
-                      variant="brandCta"
-                      className="w-full"
-                      onClick={handleSwitchAccount}
-                      disabled={isBusy}
-                    >
-                      {t('Use a different account')}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className="w-full"
-                      onClick={() => navigate({ to: '/' })}
-                      disabled={isBusy}
-                    >
-                      {t('Go to dashboard')}
-                    </Button>
-                  </div>
-                </>
-              ) : error ? (
-                <>
-                  <div className="flex flex-col items-center gap-4 text-center">
-                    <div className="bg-muted text-muted-foreground flex size-14 items-center justify-center rounded-xl ring-1 ring-border/50">
-                      <XCircle className="size-6 text-destructive" />
-                    </div>
-                    <div className="space-y-1">
-                      <h1 className="text-2xl font-semibold tracking-tight">
-                        {t('Unable to accept invitation')}
-                      </h1>
-                      <p className="text-muted-foreground text-[13px] leading-relaxed">
-                        {error}
-                      </p>
-                    </div>
-                    {accountLabel ? (
-                      <AuthAccountChip
-                        accountLabel={accountLabel}
-                        onSwitchAccount={
-                          errorIsAccountMismatch
-                            ? handleSwitchAccount
-                            : undefined
-                        }
-                        disabled={isBusy}
-                      />
-                    ) : null}
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    {errorIsAccountMismatch ? (
-                      <Button
-                        variant="brandCta"
-                        className="w-full"
-                        onClick={handleSwitchAccount}
-                        disabled={isBusy}
-                      >
-                        {t('Use a different account')}
-                      </Button>
-                    ) : null}
-                    <Button
-                      variant="outline"
-                      className="w-full"
-                      onClick={() => navigate({ to: '/' })}
-                      disabled={isBusy}
-                    >
-                      {t('Go to dashboard')}
-                    </Button>
-                  </div>
-                </>
-              ) : !hasAllParams ? (
-                <>
-                  <div className="flex flex-col items-center gap-4 text-center">
-                    <div className="bg-muted text-muted-foreground flex size-14 items-center justify-center rounded-xl ring-1 ring-border/50">
-                      <XCircle className="size-6 text-amber-500" />
-                    </div>
-                    <div className="space-y-1">
-                      <h1 className="text-2xl font-semibold tracking-tight">
-                        {t('Invalid invitation link')}
-                      </h1>
-                      <p className="text-muted-foreground text-[13px] leading-relaxed">
-                        {t(
-                          'This invitation link is missing required parameters. Please use the link from your invitation email.',
-                        )}
-                      </p>
-                    </div>
-                    {accountLabel ? (
-                      <AuthAccountChip accountLabel={accountLabel} />
-                    ) : null}
-                  </div>
-                  <Button
-                    variant="outline"
-                    className="w-full"
-                    onClick={() => navigate({ to: '/' })}
-                  >
-                    {t('Go to dashboard')}
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <div className="flex flex-col items-center gap-4 text-center">
-                    <div className="space-y-1">
-                      <h1 className="text-2xl font-semibold tracking-tight">
-                        {t('Accept invitation')}
-                      </h1>
-                      <p className="text-muted-foreground text-[13px] leading-relaxed">
-                        {inviteDescription}
-                      </p>
-                    </div>
-                    {accountLabel ? (
-                      <AuthAccountChip
-                        accountLabel={accountLabel}
-                        onSwitchAccount={handleSwitchAccount}
-                        disabled={isBusy}
-                      />
-                    ) : null}
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <Button
-                      variant="brandCta"
-                      className="w-full"
-                      onClick={handleAccept}
-                      disabled={isBusy || !hasAllParams}
-                    >
-                      {t('Accept invitation')}
-                    </Button>
-                  </div>
-                  <p className="text-muted-foreground flex flex-wrap items-center justify-center gap-x-1.5 gap-y-1 text-center text-[12px]">
-                    <span className="inline-flex items-center gap-1">
-                      <Lock className="size-3.5" />
-                      {t('By accepting this invitation, you agree to our')}
-                    </span>
-                    <MarketingSiteLink className="link-neutral" href="/terms">
-                      {t('Terms of Service')}
-                    </MarketingSiteLink>
-                    <span>{t('and')}</span>
-                    <MarketingSiteLink className="link-neutral" href="/privacy">
-                      {t('Privacy Policy')}
-                    </MarketingSiteLink>
-                  </p>
-                </>
-              )}
-            </div>
-          </Card>
-        </div>
-      </div>
-    </div>
+    <AcceptInviteFlow
+      screen={screen}
+      teamName={teamName}
+      accountLabel={accountLabel}
+      errorMessage={error}
+      errorIsAccountMismatch={errorIsAccountMismatch}
+      isBusy={isBusy}
+      onAccept={handleAccept}
+      onSwitchAccount={handleSwitchAccount}
+      onGoToDashboard={() => navigate({ to: '/' })}
+    />
   )
 }

@@ -5,7 +5,13 @@ import { Loader2, TriangleAlert } from 'lucide-react'
 import { AppwriteException } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
-import { Card } from '@/components/ui/card'
+import { AuthFlowAccountSwitcher } from '@/components/global/auth/AuthFlowAccountSwitcher'
+import {
+  AuthFlowNarrowCard,
+  authFlowOAuthNarrowCardContentClassName,
+} from '@/components/global/auth/AuthFlowCard'
+import { AuthFlowHeaderIcon } from '@/components/global/auth/AuthFlowHeaderIcon'
+import { AuthFlowShell } from '@/components/global/auth/AuthFlowShell'
 import { Button } from '@/components/ui/button'
 import {
   OAuth2ConsentCard,
@@ -398,67 +404,78 @@ function OAuth2ConsentPage() {
 
   const accountLabel = account?.email || account?.name || undefined
 
+  const accountSwitcher = accountLabel ? (
+    <AuthFlowAccountSwitcher
+      accountLabel={accountLabel}
+      onSwitchAccount={
+        accountSwitchRequest && phase === 'ready' ? switchAccount : undefined
+      }
+      disabled={switchingAccount}
+    />
+  ) : null
+
   return (
-    <div className="bg-background h-full overflow-y-auto">
-      <div className="flex min-h-full flex-col items-center p-6 md:p-10">
-        <div className="my-auto w-full max-w-xl">
-          {phase === 'loading' && (
-            <div className="flex min-h-64 items-center justify-center">
-              <Loader2 className="text-muted-foreground size-8 animate-spin" />
-            </div>
-          )}
+    <AuthFlowShell
+      width="narrow"
+      showLegal={false}
+      accountSwitcher={accountSwitcher}
+    >
+      {phase === 'loading' && (
+        <AuthFlowNarrowCard
+          contentClassName={authFlowOAuthNarrowCardContentClassName}
+        >
+          <div className="flex flex-col items-center py-8 text-center">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground motion-reduce:animate-none" />
+          </div>
+        </AuthFlowNarrowCard>
+      )}
 
-          {phase === 'error' && (
-            <Card className="overflow-hidden p-6 md:p-8">
-              <div className="space-y-6">
-                <div className="flex flex-col items-center gap-4 text-center">
-                  <div className="bg-destructive/10 flex size-10 items-center justify-center rounded-xl">
-                    <TriangleAlert className="text-destructive size-4" />
-                  </div>
-                  <div className="space-y-1">
-                    <h1 className="text-2xl font-semibold tracking-tight">
-                      {t('Authorization failed')}
-                    </h1>
-                    <p className="text-muted-foreground text-[13px] leading-relaxed">
-                      {error}
-                    </p>
-                  </div>
-                </div>
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => navigate({ to: '/', replace: true })}
-                >
-                  {t('Go to console')}
-                </Button>
+      {phase === 'error' && (
+        <AuthFlowNarrowCard
+          contentClassName={authFlowOAuthNarrowCardContentClassName}
+        >
+          <div className="space-y-6">
+            <div className="flex flex-col items-center gap-4 text-center">
+              <AuthFlowHeaderIcon icon={TriangleAlert} variant="destructive" />
+              <div className="space-y-1">
+                <h1 className="text-2xl font-semibold tracking-tight">
+                  {t('Authorization failed')}
+                </h1>
+                <p className="text-muted-foreground text-[13px] leading-relaxed">
+                  {error}
+                </p>
               </div>
-            </Card>
-          )}
+            </div>
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => navigate({ to: '/', replace: true })}
+            >
+              {t('Go to console')}
+            </Button>
+          </div>
+        </AuthFlowNarrowCard>
+      )}
 
-          {phase === 'ready' && grant && app && (
-            <OAuth2ConsentCard
-              grant={grant}
-              app={app}
-              accountLabel={accountLabel}
-              flow="authorization"
-              onSwitchAccount={accountSwitchRequest ? switchAccount : undefined}
-              switchingAccount={switchingAccount}
-              accountSwitchError={accountSwitchError}
-              onDone={onDone}
-            />
-          )}
+      {phase === 'ready' && grant && app && (
+        <OAuth2ConsentCard
+          grant={grant}
+          app={app}
+          flow="authorization"
+          switchingAccount={switchingAccount}
+          accountSwitchError={accountSwitchError}
+          onDone={onDone}
+        />
+      )}
 
-          {(phase === 'approved' || phase === 'denied') && (
-            <OAuth2OutcomeCard
-              outcome={phase}
-              flow="authorization"
-              app={app}
-              accountLabel={accountLabel}
-              redirectUrl={completedRedirectUrl}
-            />
-          )}
-        </div>
-      </div>
-    </div>
+      {(phase === 'approved' || phase === 'denied') && (
+        <OAuth2OutcomeCard
+          outcome={phase}
+          flow="authorization"
+          app={app}
+          redirectUrl={completedRedirectUrl}
+        />
+      )}
+    </AuthFlowShell>
   )
 }

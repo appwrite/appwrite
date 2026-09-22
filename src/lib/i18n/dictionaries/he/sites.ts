@@ -34,11 +34,18 @@ export const heSitesDictionary: Record<string, string> = {
   selected: 'נבחרו',
   Cancel: 'ביטול',
   Delete: 'מחיקה',
+  'Delete log': 'מחיקת לוג',
+  'Delete logs': 'מחיקת לוגים',
   'Delete Sites': 'מחיקת אתרים',
   'Are you sure you want to delete': 'האם אתם בטוחים שברצונכם למחוק',
+  'Are you sure you want to delete this log? This action cannot be undone.':
+    'האם אתם בטוחים שברצונכם למחוק לוג זה? פעולה זו אינה ניתנת לביטול.',
   'This action cannot be undone.': 'פעולה זו אינה ניתנת לביטול.',
   'Site deleted successfully': 'האתר נמחק בהצלחה',
   'Successfully deleted': 'נמחקו בהצלחה',
+  'Log deleted': 'הלוג נמחק',
+  'Failed to delete log': 'מחיקת הלוג נכשלה',
+  'Failed to delete logs': 'מחיקת הלוגים נכשלה',
   'Failed to delete sites': 'מחיקת האתרים נכשלה',
 
   // Deployments
@@ -142,6 +149,7 @@ export const heSitesDictionary: Record<string, string> = {
   'No logs yet': 'אין לוגים עדיין',
   'Logs will appear here when your site runs.':
     'לוגים יופיעו כאן כאשר האתר שלכם ירוץ.',
+  log: 'לוג',
   logs: 'לוגים',
   'No executions yet': 'אין הרצות עדיין',
   'Executions will appear here when your site runs.':
@@ -555,8 +563,8 @@ export const heSitesDictionary: Record<string, string> = {
   'Checking your access to this preview deployment.':
     'בודקים את הרשאת הגישה שלכם לפריסת התצוגה המקדימה הזו.',
   'Preview is private': 'התצוגה המקדימה פרטית',
-  "You don't have access to this preview. Ask a member of the project's organization to add you.":
-    'אין לכם גישה לתצוגה המקדימה הזו. בקשו מחבר בארגון של הפרויקט לצרף אתכם.',
+  "Your account isn't in the organization that owns this site. Ask an organization member to invite you.":
+    'החשבון שלכם אינו שייך לארגון שבבעלותו האתר. בקשו מחבר בארגון להזמין אתכם.',
   'Invalid preview link': 'הקישור לתצוגה המקדימה אינו תקין',
   'This link is missing or has a malformed preview address. Open the preview URL again to start over.':
     'כתובת התצוגה המקדימה בקישור הזה חסרה או אינה תקינה. פתחו שוב את כתובת התצוגה המקדימה כדי להתחיל מחדש.',

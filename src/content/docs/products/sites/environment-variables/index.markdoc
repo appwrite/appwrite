@@ -4,7 +4,7 @@ title: Environment variables
 description: Set environment variables for your Appwrite Sites to pass constants and secrets at build and runtime.
 ---
 
-Appwrite Sites can read environment variables at build and runtime. Use them to pass constants and secrets such as third-party API keys, connection strings, and feature flags without hardcoding them in your source. To call your own Appwrite project, you do not need to store an API key at all: Appwrite provides a [dynamic API key](/docs/products/sites/develop#dynamic-api-key) to every build and SSR request.
+Appwrite Sites can read environment variables at build and runtime. Use them to pass constants and secrets such as third-party API keys, connection strings, and feature flags without hardcoding them in your source. To call your own Appwrite project, you do not need to store an API key at all: Appwrite provides a [ephemeral API key](/docs/products/sites/develop#ephemeral-api-key) to every build and SSR request.
 
 A site reads from three sources, in this order of precedence:
 

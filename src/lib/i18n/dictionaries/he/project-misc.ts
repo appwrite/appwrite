@@ -785,6 +785,9 @@ export const heProjectMiscDictionary: Record<string, string> = {
   project: 'פרויקט',
   activities: 'פעילויות',
   'No activities yet': 'אין עדיין פעילויות',
+  'Failed to load activity': 'טעינת הפעילות נכשלה',
+  "We couldn't retrieve activity logs. This might be a temporary issue. Please try again.":
+    'לא הצלחנו לאחזר את לוג הפעילות. ייתכן שזו תקלה זמנית. נסו שוב.',
   'Activity will appear here as you use your project':
     'פעילות תופיע כאן ככל שתשתמשו בפרויקט',
   'Activity log': 'יומן פעילות',
@@ -1630,6 +1633,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
   "Couldn't load executions": 'לא ניתן היה לטעון הרצות',
   "Couldn't load requests": 'לא ניתן היה לטעון בקשות',
   "Couldn't load storage": 'לא ניתן היה לטעון נתוני אחסון',
+  "Couldn't load firewall traffic": 'לא ניתן היה לטעון תעבורת Firewall',
+  "Couldn't load impact estimate": 'לא ניתן היה לטעון הערכת השפעה',
   Deployments: 'פריסות',
   Executions: 'הרצות',
   'Executions over time': 'הרצות לאורך זמן',

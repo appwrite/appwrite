@@ -111,6 +111,13 @@ export function getBillingPlanDisplayLabel(
   return getCanonicalPlanDisplayLabel(getPlanNameFromTier(tier))
 }
 
+/** True when the organization is on a paid catalogue plan (price above zero). */
+export function isPayingBillingPlan(
+  plan: { price?: number } | null | undefined,
+): boolean {
+  return (plan?.price ?? 0) > 0
+}
+
 export type BillingPlanRecord = {
   $id?: string
   name?: string

@@ -70,7 +70,7 @@ export function SiteScopesCard({
         </h3>
         <p className="text-[13px] text-muted-foreground mt-2">
           {t(
-            'Select scopes to grant the dynamic key generated temporarily for every site build and SSR execution. It is best practice to allow only necessary permissions.',
+            'Select scopes to grant the ephemeral key generated for every site build and SSR execution. It is best practice to allow only necessary permissions.',
           )}{' '}
           <DocsRouteLink
             className="link-neutral"

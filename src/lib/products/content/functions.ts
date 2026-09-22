@@ -65,7 +65,7 @@ export const functionsProductContent: ProductPageContent = {
     {
       question: 'Can Functions access other Appwrite services?',
       answer:
-        'Yes. Functions receive a dynamic API key and run with project context. Configure scopes in Settings, then call Databases, Storage, Messaging, Auth, and other APIs from server SDKs inside your handler.',
+        'Yes. Functions receive an ephemeral API key and run with project context. Configure scopes in Settings, then call Databases, Storage, Messaging, Auth, and other APIs from server SDKs inside your handler.',
       links: [{ label: 'Develop functions', href: '/docs/products/functions/develop' }],
     },
   ],

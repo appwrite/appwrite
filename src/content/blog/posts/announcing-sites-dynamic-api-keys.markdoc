@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "Announcing dynamic API keys for Appwrite Sites"
+title: "Announcing ephemeral API keys for Appwrite Sites"
 description: Appwrite Sites now mints a scoped, short-lived API key for every build and SSR request, so server-rendered sites call your project without storing a key.
 date: 2026-09-18
 cover: /images/blog/announcing-sites-dynamic-api-keys/cover.avif
@@ -9,32 +9,32 @@ author: aditya-oberai
 category: announcements
 featured: false
 faqs:
-  - question: "What is a dynamic API key in Appwrite Sites?"
-    answer: "A dynamic API key is a short-lived key that Appwrite generates for a site automatically. It carries only the scopes granted to the site and expires on its own. Appwrite provides it as the `APPWRITE_SITE_API_KEY` environment variable during the build and on the `x-appwrite-key` request header during every server-side rendering (SSR) request. See [dynamic API keys for Sites](/docs/products/sites/develop#dynamic-api-key)."
-  - question: "How do I grant scopes to a site's dynamic API key?"
+  - question: "What is an ephemeral API key in Appwrite Sites?"
+    answer: "An ephemeral API key is a short-lived key that Appwrite generates for a site automatically. It carries only the scopes granted to the site and expires on its own. Appwrite provides it as the `APPWRITE_SITE_API_KEY` environment variable during the build and on the `x-appwrite-key` request header during every server-side rendering (SSR) request. See [ephemeral API keys for Sites](/docs/products/sites/develop#ephemeral-api-key)."
+  - question: "How do I grant scopes to a site's ephemeral API key?"
     answer: "Open the site in the Appwrite Console, go to the **Settings** tab, open the **Build** section, and select scopes in the **Scopes** card. A site starts with no scopes, so the key can call nothing until you grant some. The `scopes` parameter on the create and update site endpoints does the same through a Server SDK or the CLI."
   - question: "Do I still need to store an API key as a site environment variable?"
     answer: "No. Every SSR request already carries a key with the scopes you granted, so a stored `APPWRITE_API_KEY` variable is redundant. If a site already has one, deploy the code that reads the `x-appwrite-key` header first, then delete the variable."
-  - question: "Do static sites get a dynamic API key?"
+  - question: "Do static sites get an ephemeral API key?"
     answer: "Only during the build, as the `APPWRITE_SITE_API_KEY` environment variable. Static sites run no server code, so there is no request to attach a runtime key to. Server-side rendered sites receive the key at build time and on every request."
-  - question: "When should a site use the dynamic API key instead of the visitor's session?"
+  - question: "When should a site use the ephemeral API key instead of the visitor's session?"
     answer: "Use the key only for operations Appwrite cannot authorize on the visitor's behalf, such as sending an email OTP, creating resources when a customer signs up, or accepting anonymous form submissions. For everything a signed-in visitor does, forward their session as described in [Server-side rendering with Appwrite Auth](/docs/products/auth/server-side-rendering)."
 ---
 
 Server-rendered sites regularly need to call Appwrite with more access than a visitor's session grants. Sending an email OTP, creating a team when a customer signs up, or accepting a form submission from an anonymous respondent all need an API key. Until now that meant creating a key in the Console, pasting it into a site environment variable, and remembering to rotate it. The key lived forever, applied to every deployment, and one leaked variable exposed the whole project.
 
-Today we are announcing **dynamic API keys for Appwrite Sites**. Appwrite now generates a scoped, short-lived key for every site build and every server-side rendering (SSR) request, so your site can call your project without storing a key anywhere.
+Today we are announcing **ephemeral API keys for Appwrite Sites**. Appwrite now generates a scoped, short-lived key for every site build and every server-side rendering (SSR) request, so your site can call your project without storing a key anywhere.
 
-# What dynamic API keys give you
+# What ephemeral API keys give you
 
 - **A key with every request.** Appwrite mints a new key for each SSR request and delivers it on the `x-appwrite-key` header. Build commands get one too, as the `APPWRITE_SITE_API_KEY` environment variable.
 - **Scopes on the site, not on a key.** You grant scopes to the site itself. Every key Appwrite mints carries exactly those scopes and nothing more.
 - **Expiry for free.** A runtime key expires shortly after the site's request timeout. There is nothing to rotate and nothing left behind in a variable list.
-- **The same model as Functions.** If you have used [dynamic API keys in Appwrite Functions](/docs/products/functions/develop#dynamic-api-key), the header name, the scope model, and the security rules are identical.
+- **The same model as Functions.** If you have used [ephemeral API keys in Appwrite Functions](/docs/products/functions/develop#ephemeral-api-key), the header name, the scope model, and the security rules are identical.
 
 # Grant scopes to your site
 
-A site starts with no scopes, so its dynamic key can call nothing until you grant some.
+A site starts with no scopes, so its ephemeral key can call nothing until you grant some.
 
 1. In the Appwrite Console, navigate to **Sites** and open the site.
 2. Under the **Settings** tab, navigate to the **Build** section.
@@ -68,19 +68,19 @@ export function createAdminClient(request: Request) {
 }
 ```
 
-The [Sites docs](/docs/products/sites/develop#use-the-dynamic-api-key) show the same pattern for Next.js, Nuxt, and Astro.
+The [Sites docs](/docs/products/sites/develop#use-the-ephemeral-api-key) show the same pattern for Next.js, Nuxt, and Astro.
 
-# When to reach for the dynamic key
+# When to reach for the ephemeral key
 
-The dynamic key acts without a session and bypasses permissions, so it belongs in the small set of places where Appwrite cannot act on the visitor's behalf: sending one-time codes, provisioning resources on sign-up, accepting anonymous submissions, or adding a member by email. Everything a signed-in visitor does should still go through a client bound to their session, as described in [Server-side rendering with Appwrite Auth](/docs/products/auth/server-side-rendering). Appwrite's permission engine then decides what that visitor may read or change, and the key never enters the picture.
+The ephemeral key acts without a session and bypasses permissions, so it belongs in the small set of places where Appwrite cannot act on the visitor's behalf: sending one-time codes, provisioning resources on sign-up, accepting anonymous submissions, or adding a member by email. Everything a signed-in visitor does should still go through a client bound to their session, as described in [Server-side rendering with Appwrite Auth](/docs/products/auth/server-side-rendering). Appwrite's permission engine then decides what that visitor may read or change, and the key never enters the picture.
 
 If your site already stores an `APPWRITE_API_KEY` variable, the migration is two steps. Deploy the code that reads the header first, then delete the variable once that deployment is live.
 
-# Get started with dynamic API keys in Sites
+# Get started with ephemeral API keys in Sites
 
-Dynamic API keys are available today on Appwrite Cloud and in self-hosted Appwrite for every server-rendered site. Grant scopes on the site, read the header, and delete the stored key.
+Ephemeral API keys are available today on Appwrite Cloud and in self-hosted Appwrite for every server-rendered site. Grant scopes on the site, read the header, and delete the stored key.
 
-- [Dynamic API keys for Appwrite Sites](/docs/products/sites/develop#dynamic-api-key)
+- [Ephemeral API keys for Appwrite Sites](/docs/products/sites/develop#ephemeral-api-key)
 - [Server-side rendering on Appwrite Sites](/docs/products/sites/rendering/ssr)
 - [Server-side rendering with Appwrite Auth](/docs/products/auth/server-side-rendering)
 - [API key scopes](/docs/partners/project/api-keys#scopes)

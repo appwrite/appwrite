@@ -5,7 +5,8 @@ import { cn } from '@/lib/utils'
 
 // Projects choose their own user code length; the server clamps it to 6..12 and
 // Cloud's console project issues 8. The page cannot read that setting -- it runs
-// before sign-in -- so accept up to the maximum and let the server judge.
+// before sign-in -- so accept anything in the server's range and let it judge.
+export const OAUTH2_DEVICE_CODE_MIN_LENGTH = 6
 export const OAUTH2_DEVICE_CODE_MAX_LENGTH = 12
 
 /** Keep only the characters device user codes are built from. */
@@ -53,7 +54,6 @@ export function OAuth2DeviceCodeInput({
       disabled={disabled}
       readOnly={readOnly}
       autoFocus={autoFocus}
-      placeholder="XXXXXXXX"
       inputMode="text"
       // Not one-time-code: the code is shown on another device, so SMS autofill
       // would only ever offer the wrong value.

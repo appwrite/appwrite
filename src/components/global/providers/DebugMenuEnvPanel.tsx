@@ -1,6 +1,9 @@
 import { useMemo, useState } from 'react'
 import { Check, Minus, Search, X } from 'lucide-react'
+import { toast } from 'sonner'
+import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { sendSentryDebugTestError } from '@/lib/sentry/init-client'
 import { cn } from '@/lib/utils'
 import {
   getDebugEnvStatuses,
@@ -29,6 +32,21 @@ function groupStatuses(
     const items = byGroup.get(group)
     return items?.length ? [{ group, items }] : []
   })
+}
+
+async function runSentryEnvTest() {
+  const result = await sendSentryDebugTestError()
+  if (result.ok) {
+    toast.success(
+      `Sentry test flushed (${result.eventId}). Check Issues filtered to environment "development".`,
+    )
+    return
+  }
+  toast.error(
+    result.eventId
+      ? `${result.reason} Event: ${result.eventId}`
+      : result.reason,
+  )
 }
 
 function matchesQuery(entry: DebugEnvStatus, query: string): boolean {
@@ -161,6 +179,18 @@ export function DebugMenuEnvPanel() {
                         </p>
                       ) : null}
                     </div>
+                    {entry.key === 'VITE_SENTRY_DSN' ? (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        disabled={!entry.set}
+                        className="h-7 shrink-0 border-[color-mix(in_srgb,var(--network-globe-edge)_30%,var(--border))] bg-transparent px-2.5 text-[11px] text-foreground hover:bg-[color-mix(in_srgb,var(--network-globe-edge)_12%,transparent)]"
+                        onClick={() => void runSentryEnvTest()}
+                      >
+                        Test
+                      </Button>
+                    ) : null}
                   </li>
                 ))}
               </ul>

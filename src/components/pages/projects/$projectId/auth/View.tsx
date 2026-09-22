@@ -397,6 +397,7 @@ export function View({
   ])
 
   const [usersDisplayedPage, setUsersDisplayedPage] = useState(urlPage)
+  const [usersDisplayedLimit, setUsersDisplayedLimit] = useState(urlLimit)
   const [usersDisplayedSearch, setUsersDisplayedSearch] = useState<
     string | undefined
   >(undefined)
@@ -471,6 +472,7 @@ export function View({
     if (!isAuthUsersIndex || !usersListParams) return
     if (!hasInitedUsersDisplayedRef.current) {
       setUsersDisplayedPage(urlPage)
+      setUsersDisplayedLimit(urlLimit)
       setUsersDisplayedSearch(urlSearch ?? undefined)
       setUsersDisplayedFilterQueryString(usersFilterQueryString)
       setUsersDisplayedSortBy(urlSortBy)
@@ -481,6 +483,7 @@ export function View({
     isAuthUsersIndex,
     usersListParams,
     urlPage,
+    urlLimit,
     urlSearch,
     usersFilterQueryString,
     urlSortBy,
@@ -491,11 +494,12 @@ export function View({
   const {
     users: apiUsers,
     total: displayedUsersTotal,
+    hasMore: usersHasMore,
     isLoading: usersDisplayedLoading,
   } = useProjectUsers(
     projectId,
     usersDisplayedPage - 1,
-    urlLimit,
+    usersDisplayedLimit,
     usersDisplayedSearch ?? undefined,
     usersDisplayedFilterQueries,
     usersDisplayedSortBy,
@@ -507,12 +511,14 @@ export function View({
       return
     const match =
       urlPage === usersDisplayedPage &&
+      urlLimit === usersDisplayedLimit &&
       (urlSearch ?? '') === (usersDisplayedSearch ?? '') &&
       usersFilterQueryString === usersDisplayedFilterQueryString &&
       urlSortBy === usersDisplayedSortBy &&
       urlSortOrder === usersDisplayedSortOrder
     if (!match) {
       setUsersDisplayedPage(urlPage)
+      setUsersDisplayedLimit(urlLimit)
       setUsersDisplayedSearch(urlSearch ?? undefined)
       setUsersDisplayedFilterQueryString(usersFilterQueryString)
       setUsersDisplayedSortBy(urlSortBy)
@@ -524,11 +530,13 @@ export function View({
     usersLoading,
     usersFetched,
     urlPage,
+    urlLimit,
     urlSearch,
     usersFilterQueryString,
     urlSortBy,
     urlSortOrder,
     usersDisplayedPage,
+    usersDisplayedLimit,
     usersDisplayedSearch,
     usersDisplayedFilterQueryString,
     usersDisplayedSortBy,
@@ -634,6 +642,19 @@ export function View({
   // Paginated data - users and teams are already paginated by the API
   const paginatedUsers = extendedUsers
   const paginatedTeams = apiTeams
+
+  // `total` stops at APP_LIMIT_COUNT, so the range is built from rows actually rendered.
+  // Page and limit both come from the displayed snapshot; mixing in the URL limit would
+  // briefly describe old rows with a new page size and inflate the range past the count.
+  const usersItemRange =
+    paginatedUsers.length === 0
+      ? { start: 0, end: 0 }
+      : {
+          start: (usersDisplayedPage - 1) * usersDisplayedLimit + 1,
+          end:
+            (usersDisplayedPage - 1) * usersDisplayedLimit +
+            paginatedUsers.length,
+        }
 
   const getUserVerificationStatus = (user: (typeof paginatedUsers)[number]) => {
     if (user.status === 'verified') {
@@ -1757,7 +1778,9 @@ export function View({
                   <Pagination
                     currentPage={usersDisplayedPage}
                     totalItems={displayedUsersTotal ?? usersTotal}
-                    pageSize={urlLimit}
+                    hasNextPage={usersHasMore}
+                    displayItemRange={usersItemRange}
+                    pageSize={usersDisplayedLimit}
                     pageSizeOptions={[12, 18, 36, 72]}
                     onPageChange={handleUsersPageChange}
                     onPageSizeChange={handleUsersPageSizeChange}
@@ -1869,7 +1892,9 @@ export function View({
                   <Pagination
                     currentPage={usersDisplayedPage}
                     totalItems={displayedUsersTotal ?? usersTotal}
-                    pageSize={urlLimit}
+                    hasNextPage={usersHasMore}
+                    displayItemRange={usersItemRange}
+                    pageSize={usersDisplayedLimit}
                     pageSizeOptions={[12, 18, 36, 72]}
                     onPageChange={handleUsersPageChange}
                     onPageSizeChange={handleUsersPageSizeChange}

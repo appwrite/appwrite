@@ -9,7 +9,10 @@ export const jaDatabasesDictionary: Record<string, string> = {
   '1 backup deleted': '1 件のバックアップを削除しました',
   'About this algorithm': 'このアルゴリズムについて',
   'Appwrite now speaks PostgreSQL': 'Appwrite が PostgreSQL に対応しました',
+  'Appwrite Start, a plan built for Indian developers.':
+    'Appwrite Start。インドの開発者向けに設計されたプラン。',
   'Dismiss banner': 'バナーを閉じる',
+  'Namaste India': 'Namaste India',
   'New': '新規',
   'PostgreSQL announcement banner': 'PostgreSQL お知らせバナー',
   'Read more': '詳しく見る',

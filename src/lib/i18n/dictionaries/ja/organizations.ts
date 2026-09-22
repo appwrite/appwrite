@@ -795,6 +795,8 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Enter your card details to add a new payment method.': '新しい支払い方法を追加するには、カード情報を入力してください。',
   'Enter your full domain name to load a price quote.': '見積もりを取得するには、ドメイン名をすべて入力してください。',
   'Estimate, subject to change based on usage': '見積もりであり、使用量に応じて変動する場合があります',
+  'Usage-based estimate; updates may take up to 4 hours.':
+    '使用量に基づく見積もりです。反映まで最大 4 時間かかる場合があります。',
   'Estimated fees from the registry before you pay.': '支払い前のレジストリからの見積もり手数料。',
   'Explore all apps available in the marketplace.': 'マーケットプレイスで利用可能なすべてのアプリを見る。',
   'Failed to load domain prices. Please try again.': 'ドメイン価格の読み込みに失敗しました。もう一度お試しください。',

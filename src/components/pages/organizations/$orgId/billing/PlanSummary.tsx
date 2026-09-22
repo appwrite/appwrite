@@ -10,8 +10,10 @@ import {
   ArrowLeftRight,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Skeleton } from '@/components/ui/skeleton'
+import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
+import { BillingStorageUsageProgress } from './_components/BillingStorageUsageProgress'
+import { getBillingStorageBreakdownFromResources } from '@/lib/billing/billing-storage-breakdown'
 import {
   Tooltip,
   TooltipContent,
@@ -30,8 +32,8 @@ import {
 import {
   useOrganizationById,
   useOrganizationPlan,
+  useOrganizationCredits,
   organizationBillingAggregationQueryOptions,
-  organizationEstimationQueryOptions,
 } from '@/lib/react-query/hooks'
 import { DEFAULT_BILLING_PROJECTS_LIMIT } from '@/lib/react-query/hooks/constants'
 import {
@@ -40,6 +42,7 @@ import {
 } from '@/lib/utils/plan-filter'
 import { Link } from '@tanstack/react-router'
 import { Pagination } from '@/components/global/shared/Pagination'
+import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import type { Models } from '@appwrite.io/console'
 import {
   buildDedicatedDbBillingSpecLookup,
@@ -57,7 +60,11 @@ import {
   type BillingProjectResourceItem,
   type DedicatedDbBillingSpecGroup,
 } from '@/lib/billing/project-breakdown-resources'
-import { resolveBillingAddonDisplayName } from '@/lib/billing/billing-addon-charges'
+import {
+  getBillingAddonChargesFromResources,
+  getDedicatedDbComputeCreditFromResources,
+  resolveBillingAddonDisplayName,
+} from '@/lib/billing/billing-addon-charges'
 import { databaseSpecificationsQueryOptions, dedicatedDatabaseSourceFromEngine } from '@/lib/react-query/hooks'
 import { analyticsAttrs } from '@/lib/analytics-actions'
 import { useT } from '@/lib/i18n/translate'
@@ -141,10 +148,7 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
     displayedPage,
   ])
 
-  // Already-reconciled charges for the current cycle; this component renders them, it derives no money.
-  const { data: estimation, isLoading: estimationLoading } = useQuery(
-    organizationEstimationQueryOptions(orgId),
-  )
+  const { credits } = useOrganizationCredits(orgId, 0, 1)
 
   const dedicatedDbSpecLookupProjectId = useMemo(() => {
     const projects = aggregation?.breakdown
@@ -169,6 +173,18 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
       ),
     [databaseSpecificationsData?.specifications],
   )
+
+  // Calculate available credit
+  const availableCredit = useMemo(() => {
+    if (!credits || credits.length === 0) return 0
+    const now = new Date()
+    return credits.reduce((sum, credit) => {
+      if (credit.expiration && new Date(credit.expiration) > now) {
+        return sum + (credit.credits || 0)
+      }
+      return sum
+    }, 0)
+  }, [credits])
 
   // Get plan name from plan object
   const planName = useMemo(() => {
@@ -203,10 +219,15 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
     return basePlanPrice
   }, [aggregation, basePlanPrice])
 
-  // Payable total. Falls back to the aggregation amount so the summary still shows a
-  // figure (pre-credits) when the estimation is unavailable.
-  const estimationPending = estimationLoading && !estimation
-  const totalAmount = estimation?.grossAmount ?? baseAmount
+  // Calculate credits applied
+  const creditsApplied = useMemo(() => {
+    return Math.min(baseAmount, availableCredit)
+  }, [baseAmount, availableCredit])
+
+  // Calculate total amount
+  const totalAmount = useMemo(() => {
+    return Math.max(baseAmount - creditsApplied, 0)
+  }, [baseAmount, creditsApplied])
 
   // Get billing cycle dates from organization
   const billingCycle = useMemo(() => {
@@ -245,6 +266,17 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
     )
   }, [plan])
 
+  // Get additional members cost from aggregation
+  const additionalMembersCost = useMemo(() => {
+    if (!aggregation || !aggregation.additionalMemberAmount) return 0
+    return aggregation.additionalMemberAmount
+  }, [aggregation])
+
+  const additionalMembersCount = useMemo(() => {
+    if (!aggregation || !aggregation.additionalMembers) return 0
+    return aggregation.additionalMembers
+  }, [aggregation])
+
   // Get projects resource from aggregation API (resourceId: "projects")
   const projectsResource = useMemo(() => {
     if (!aggregation?.resources) return null
@@ -252,6 +284,62 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
       aggregation.resources.find((r) => r.resourceId === 'projects') ?? null
     )
   }, [aggregation])
+
+  // Additional projects count and cost from aggregation API when available
+  const additionalProjectsCount = useMemo(() => {
+    if (
+      projectsResource?.value !== undefined &&
+      projectsResource?.value !== null
+    ) {
+      return Number(projectsResource.value)
+    }
+    // Fallback: derive from breakdown count minus plan included
+    if (!plan || !aggregation) return 0
+    const includedProjects =
+      plan.projects || plan.addons?.projects?.planIncluded || 0
+    const projects = aggregation.breakdown || []
+    const totalProjects = Array.isArray(projects) ? projects.length : 0
+    return Math.max(0, totalProjects - includedProjects)
+  }, [plan, aggregation, projectsResource])
+
+  const additionalProjectsCost = useMemo(() => {
+    if (
+      projectsResource?.amount !== undefined &&
+      projectsResource?.amount !== null
+    ) {
+      return Number(projectsResource.amount)
+    }
+    // Fallback: derive from count * plan addon price
+    if (!plan || !aggregation) return 0
+    const includedProjects =
+      plan.projects || plan.addons?.projects?.planIncluded || 0
+    const projects = aggregation.breakdown || []
+    const totalProjects = Array.isArray(projects) ? projects.length : 0
+    if (totalProjects <= includedProjects) return 0
+    const additionalCount = totalProjects - includedProjects
+    const additionalProjectPrice = plan.addons?.projects?.price || 0
+    return additionalCount * additionalProjectPrice
+  }, [plan, aggregation, projectsResource])
+
+  // `amount` is already net of these, so they are rendered but never subtracted again.
+  const discountCharges = useMemo(
+    () =>
+      (aggregation?.resources ?? []).filter(
+        (resource) => resource.resourceId === 'billingDiscount',
+      ),
+    [aggregation?.resources],
+  )
+
+  // Toggle addons (BAA, Premium Geo DB, …) from aggregation resources
+  const billingAddonCharges = useMemo(
+    () => getBillingAddonChargesFromResources(aggregation?.resources),
+    [aggregation?.resources],
+  )
+
+  const dedicatedDbComputeCredit = useMemo(
+    () => getDedicatedDbComputeCreditFromResources(aggregation?.resources),
+    [aggregation?.resources],
+  )
 
   // Toggle project expansion
   const toggleProject = (projectId: string) => {
@@ -408,7 +496,7 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
         // Always show the resource if it exists in aggregation or if plan has a limit
         // This matches the old UI which shows all resources
         if (shouldShow) {
-          resources.push({
+          const item: BillingProjectResourceItem = {
             resourceId,
             name,
             usage,
@@ -418,7 +506,16 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
             showLimit: requiresUpgrade ? false : showLimit,
             requiresUpgrade,
             category,
-          })
+          }
+          if (resourceId === 'storage') {
+            const storageBreakdown = getBillingStorageBreakdownFromResources(
+              projectResources,
+            )
+            if (storageBreakdown.length > 0) {
+              item.storageBreakdown = storageBreakdown
+            }
+          }
+          resources.push(item)
           projectTotal += cost
         }
       })
@@ -467,7 +564,7 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
   // Always show the full base resource list; disabled plan resources (-1) render
   // an Upgrade link instead of usage. Bump listVersion when the list shape changes
   // so Fast Refresh does not keep a stale memoized result.
-  const organizationUsageListVersion = 2
+  const organizationUsageListVersion = 3
   const organizationUsageCategories = useMemo(() => {
     if (usagePerProject) return []
     return buildOrganizationUsageCategoriesFromAggregation(
@@ -535,7 +632,7 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
                 {billingCycleLabel}
               </span>
             </div>
-            {!estimationPending && totalAmount > 0 && nextPaymentDate && (
+            {totalAmount > 0 && nextPaymentDate && (
               <p className="text-[12px] text-muted-foreground mt-1">
                 {t('Next payment of')}{' '}
                 <span className="font-medium text-foreground">
@@ -553,9 +650,11 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
               </p>
             )}
           </div>
-          <div className="text-end shrink-0 flex items-end">
-            <p className="text-[11px] text-muted-foreground italic">
-              {t('Estimate, subject to change based on usage')}
+          <div className="text-end shrink-0 max-w-[240px] sm:max-w-xs">
+            <p className="text-[12px] leading-snug text-muted-foreground">
+              {t(
+                'Usage-based estimate; updates may take up to 4 hours.',
+              )}
             </p>
           </div>
         </div>
@@ -584,13 +683,30 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
       <div className="border-t border-border">
         <button
           onClick={() => setExpanded(!expanded)}
-          className="flex w-full items-center justify-between px-6 py-3 text-[13px] text-muted-foreground hover:bg-accent/50 transition-colors"
+          className="flex w-full items-center justify-between gap-3 px-6 py-3 text-[13px] text-muted-foreground hover:bg-accent/50 transition-colors"
         >
-          <span>{t('View charges breakdown')}</span>
+          <span className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5 text-start">
+            <span>{t('View charges breakdown')}</span>
+            {aggregation?.$updatedAt ? (
+              <>
+                <span className="text-border hidden sm:inline" aria-hidden>
+                  ·
+                </span>
+                <span className="text-[11px]">
+                  {t('Last updated')}:{' '}
+                  <DateTooltip
+                    date={aggregation.$updatedAt}
+                    live
+                    className="text-muted-foreground"
+                  />
+                </span>
+              </>
+            ) : null}
+          </span>
           {expanded ? (
-            <ChevronUp className="h-4 w-4" />
+            <ChevronUp className="h-4 w-4 shrink-0" />
           ) : (
-            <ChevronDown className="h-4 w-4" />
+            <ChevronDown className="h-4 w-4 shrink-0" />
           )}
         </button>
 
@@ -603,38 +719,96 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
           )}
         >
           <div className="border-t border-border px-6 py-4 space-y-4">
-            {/* Charge lines. Labels are server copy, not translation keys. */}
-            {(estimation?.items ?? []).map((item, index) => (
+            {/* Base Plan Row */}
+            <div className="flex items-center justify-between text-[13px]">
+              <span className="text-foreground">{planName} {t('plan (base)')}</span>
+              <span className="font-medium text-foreground">
+                {formatCurrency(basePlanPrice)}
+              </span>
+            </div>
+
+            {/* Additional Members */}
+            {additionalMembersCost > 0 && (
+              <div className="flex items-center justify-between text-[13px]">
+                <span className="text-foreground flex items-center gap-2">
+                  {t('Additional members')}
+                  {additionalMembersCount > 0 && (
+                    <Badge
+                      variant="info"
+                      className="h-4 px-1.5 text-[10px] font-medium shrink-0"
+                    >
+                      {additionalMembersCount}
+                    </Badge>
+                  )}
+                </span>
+                <span className="font-medium text-foreground">
+                  {formatCurrency(additionalMembersCost)}
+                </span>
+              </div>
+            )}
+
+            {/* Additional Projects */}
+            {additionalProjectsCount > 0 && (
+              <div className="flex items-center justify-between text-[13px]">
+                <span className="text-foreground flex items-center gap-2">
+                  {t('Additional projects')}
+                  <Badge
+                    variant="info"
+                    className="h-4 px-1.5 text-[10px] font-medium shrink-0"
+                  >
+                    {additionalProjectsCount}
+                  </Badge>
+                </span>
+                <span className="font-medium text-foreground">
+                  {formatCurrency(additionalProjectsCost)}
+                </span>
+              </div>
+            )}
+
+            {/* Billing addons (BAA, Premium Geo DB, …) */}
+            {billingAddonCharges.map((addon) => (
               <div
-                key={index}
+                key={addon.resourceId}
                 className="flex items-center justify-between text-[13px]"
               >
-                <span className="text-foreground">{item.label}</span>
+                <span className="text-foreground">{t(addon.name)}</span>
                 <span className="font-medium text-foreground">
-                  {formatCurrency(item.value)}
+                  {formatCurrency(addon.amount)}
                 </span>
               </div>
             ))}
 
-            {/* Discounts, in the order the server applies them (values are positive magnitudes) */}
-            {(estimation?.discounts ?? []).map((discount, index) => (
+            {/* Dedicated DB included compute credit */}
+            {dedicatedDbComputeCredit ? (
+              <div className="flex items-center justify-between text-[13px]">
+                <span className="text-foreground">
+                  {t(dedicatedDbComputeCredit.name)}
+                </span>
+                <span className="font-medium text-foreground">
+                  {formatCurrency(dedicatedDbComputeCredit.amount)}
+                </span>
+              </div>
+            ) : null}
+
+            {/* Operator-supplied text, so not run through t(). */}
+            {discountCharges.map((discount, index) => (
               <div
-                key={index}
+                key={`${discount.name}-${index}`}
                 className="flex items-center justify-between text-[13px]"
               >
-                <span className="text-muted-foreground">{discount.label}</span>
-                <span className="font-medium text-green-600 dark:text-green-400">
-                  -{formatCurrency(discount.value)}
+                <span className="text-muted-foreground">{discount.name}</span>
+                <span className="font-medium text-foreground text-green-600 dark:text-green-400">
+                  {formatCurrency(discount.amount)}
                 </span>
               </div>
             ))}
 
             {/* Credits Applied */}
-            {estimation && estimation.credits > 0 && (
+            {creditsApplied > 0 && (
               <div className="flex items-center justify-between text-[13px]">
                 <span className="text-muted-foreground">{t('Credits applied')}</span>
                 <span className="font-medium text-foreground text-green-600 dark:text-green-400">
-                  -{formatCurrency(estimation.credits)}
+                  -{formatCurrency(creditsApplied)}
                 </span>
               </div>
             )}
@@ -663,7 +837,7 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
 
             {/* Project Breakdown Section */}
             {projectBreakdowns.length > 0 && (
-              <div className="space-y-2">
+              <div className="space-y-3 border-t border-border pt-6 mt-4">
                 <div className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
                   {t('Project breakdown')}
                 </div>
@@ -759,13 +933,9 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
             {/* Total */}
             <div className="flex items-center justify-between border-t border-border pt-3 text-[13px]">
               <span className="font-medium text-foreground">{t('Total')}</span>
-              {estimationPending ? (
-                <Skeleton className="h-4 w-16" />
-              ) : (
-                <span className="font-semibold text-foreground">
-                  {formatCurrency(totalAmount)}
-                </span>
-              )}
+              <span className="font-semibold text-foreground">
+                {formatCurrency(totalAmount)}
+              </span>
             </div>
           </div>
         </div>
@@ -1010,7 +1180,17 @@ function BillingProjectResourceRow({
         </span>
 
         <div className="w-[120px] shrink-0">
-          {usagePercentage !== null ? (
+          {resource.resourceId === 'storage' &&
+          resource.storageBreakdown &&
+          resource.storageBreakdown.length > 0 &&
+          usagePercentage !== null ? (
+            <BillingStorageUsageProgress
+              totalUsageBytes={usage}
+              usagePercentage={usagePercentage}
+              segments={resource.storageBreakdown}
+              highlightWhenHigh
+            />
+          ) : usagePercentage !== null ? (
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>

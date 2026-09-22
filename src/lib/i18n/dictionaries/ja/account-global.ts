@@ -304,7 +304,6 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
   'Reset password': 'パスワードをリセット',
   'Reset your password': 'パスワードをリセット',
   'Send recovery link': 'リカバリーリンクを送信',
-  'Sending…': '送信中…',
   'Sign in': 'サインイン',
   'Sign up': 'サインアップ',
   'Sign up with Bitbucket': 'Bitbucket でサインアップ',
@@ -312,6 +311,7 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
   'Sign up with GitLab': 'GitLab でサインアップ',
   'Sign up with Google': 'Google でサインアップ',
   'Signed in as': 'サインイン:',
+  "You're signed in as": 'サインイン中のアカウント',
   'Terms of Service': '利用規約',
   'This will allow': 'これにより',
   'to:': 'が次を実行できます:',
@@ -877,7 +877,6 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
   "You've successfully joined. Redirecting you now...": '参加が完了しました。移動しています...',
   'This invitation link is missing required parameters. Please use the link from your invitation email.': 'この招待リンクには必要なパラメーターが含まれていません。招待メールに記載されたリンクをご利用ください。',
   "You've been invited to join an organization. Accept the invitation to get started.": '組織への参加に招待されています。招待を承認して始めましょう。',
-  'By accepting this invitation, you agree to our': 'この招待を承認すると、次に同意したことになります:',
   'By clicking continue, you agree to our': '続行をクリックすると、次に同意したことになります:',
   'Signed in but could not open the console': 'サインインは完了しましたが、コンソールを開けませんでした',
   'Account created but verification email could not be sent': 'アカウントは作成されましたが、確認メールを送信できませんでした',
@@ -1147,6 +1146,7 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
   'Use system theme': 'システムテーマを使用',
 
   // GitHub Education program sign-up flow (/education/join)
+  'GitHub and Appwrite': 'GitHub と Appwrite',
   'Join the Appwrite Education Program': 'Appwrite Education Program に参加',
   'Enjoy Appwrite Cloud for free throughout your student journey as part of the GitHub Student Developer Pack.':
     'GitHub Student Developer Pack の特典として、学生の間は Appwrite Cloud を無料でご利用いただけます。',
@@ -1171,4 +1171,30 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
   'We could not reach GitHub': 'GitHub に接続できませんでした',
   'Try again in a moment, or sign in and explore Appwrite.':
     '少し時間をおいてもう一度お試しいただくか、サインインして Appwrite をご覧ください。',
+  'Signing you in': 'サインインしています',
+  'Please wait while we confirm your magic URL.':
+    'Magic URL を確認しています。しばらくお待ちください。',
+  'Unable to sign you in': 'サインインできませんでした',
+  'Go to sign in': 'サインインへ',
+  'Access granted': 'アクセスが許可されました',
+  'You can close this tab.': 'このタブは閉じて構いません。',
+  "It's safe to close this tab.": 'このタブは安全に閉じることができます。',
+  'Return to your device - it will continue automatically.':
+    'デバイスに戻ってください。処理は自動的に続行されます。',
+  'You can revoke access anytime in your account settings':
+    'アクセスはアカウント設定からいつでも取り消せます',
+  'You will be automatically redirected back to your app shortly.':
+    'まもなくアプリに自動的にリダイレクトされます。',
+  'Login failed': 'ログインに失敗しました',
+  'An error occurred during the OAuth login flow.':
+    'OAuth ログインフローでエラーが発生しました。',
+  'Error type:': 'エラーの種類:',
+  'Missing redirect URL': 'リダイレクト URL がありません',
+  'Preview only': 'プレビューのみ',
+  'Demo credentials filled in. Submit does not sign in here.':
+    'デモ用の認証情報を入力しました。ここでは送信してもサインインされません。',
+  'Creating demo user': 'デモユーザーを作成しています',
+  'Failed to create demo user': 'デモユーザーを作成できませんでした',
+  'MFA verification is disabled on this preview route.':
+    'このプレビュールートでは MFA 認証は無効です。',
 }

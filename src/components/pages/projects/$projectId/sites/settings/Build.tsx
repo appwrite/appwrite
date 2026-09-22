@@ -116,7 +116,7 @@ export function View() {
           'scope',
           'permission',
           'api key',
-          'dynamic key',
+          'ephemeral key',
           'ssr',
           'access',
         ],
