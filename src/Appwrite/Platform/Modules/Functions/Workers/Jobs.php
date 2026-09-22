@@ -767,7 +767,7 @@ class Jobs extends Action
         // Template deployments reuse providerBranch for their resolved ref
         // (tags included), which must not repoint a branch rule.
         $branch = $deployment->getAttribute('providerBranch', '');
-        if (empty($branch) || empty($deployment->getAttribute('installationId'))) {
+        if ($branch === '' || empty($deployment->getAttribute('installationId'))) {
             return;
         }
 
