@@ -406,6 +406,11 @@ export function UpdatePasswordSection() {
               'Change your account password. Includes link to password recovery if forgotten.',
             )}
           </p>
+          {typeof passwordPwned !== 'boolean' && (
+            <p className="text-[13px] text-muted-foreground mb-3">
+              {t('Password not checked against known data breaches')}
+            </p>
+          )}
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="old-password">{t('Old password')}</Label>
