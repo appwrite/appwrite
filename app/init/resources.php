@@ -17,6 +17,7 @@ use Appwrite\Event\Publisher\Mail as MailPublisher;
 use Appwrite\Event\Publisher\Messaging as MessagingPublisher;
 use Appwrite\Event\Publisher\Migration as MigrationPublisher;
 use Appwrite\Event\Publisher\Notification as NotificationPublisher;
+use Appwrite\Event\Publisher\Plain as PlainPublisher;
 use Appwrite\Event\Publisher\Screenshot as ScreenshotPublisher;
 use Appwrite\Event\Publisher\StatsResources as StatsResourcesPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
@@ -134,7 +135,11 @@ $container->set('adapterForSMS', function (Telemetry $telemetry): ?SMSAdapter {
 
 $container->set('authorization', fn () => new Authorization(), []);
 
-$container->set('publisher', fn (Group $pools) => new BrokerPool(publisher: $pools->get('publisher')), ['pools']);
+// Plain wraps the pool rather than any one caller: a payload reaches the broker by more than one
+// route -- Event::trigger() publishes directly, typed messages go through Event\Publisher\Base --
+// and every one of them resolves this resource. See Event\Publisher\Plain for what it guarantees
+// and why the codec used to guarantee it by accident.
+$container->set('publisher', fn (Group $pools) => new PlainPublisher(new BrokerPool(publisher: $pools->get('publisher'))), ['pools']);
 
 $container->set('publisherForAudits', fn (Publisher $publisher) => new AuditPublisher(
     $publisher,
