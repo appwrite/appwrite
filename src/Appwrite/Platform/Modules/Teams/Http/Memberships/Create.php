@@ -267,12 +267,10 @@ class Create extends Action
             throw new Exception(Exception::USER_UNAUTHORIZED, 'User is not allowed to send invitations for this team');
         }
 
-        $queries = [
+        $membership = $dbForProject->findOne('memberships', [
             Query::equal('userInternalId', [$invitee->getSequence()]),
             Query::equal('teamInternalId', [$team->getSequence()]),
-        ];
-
-        $membership = $dbForProject->findOne('memberships', $queries);
+        ]);
 
         $secret = $proofForToken->generate();
         if ($membership->isEmpty()) {
