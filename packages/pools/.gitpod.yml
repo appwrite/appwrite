@@ -1,0 +1,26 @@
+tasks:
+  - name: Run Utopia Docker Stack
+    init: |
+      docker compose pull
+      docker compose build
+    command: |
+      docker run --rm --interactive --tty \
+      --volume $PWD:/app \
+      composer install \
+      --ignore-platform-reqs \
+      --optimize-autoloader \
+      --no-plugins \
+      --no-scripts \
+      --prefer-dist
+
+vscode:
+  extensions:
+    - ms-azuretools.vscode-docker
+
+github:
+  # https://www.gitpod.io/docs/prebuilds#github-specific-configuration
+  prebuilds:
+    # enable for pull requests coming from forks (defaults to false)
+    pullRequestsFromForks: true
+    # add a check to pull requests (defaults to true)
+    addCheck: false
