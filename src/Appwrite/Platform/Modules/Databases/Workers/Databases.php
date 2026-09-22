@@ -14,12 +14,16 @@ use Utopia\Database\Exception\NotFound;
 use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Query;
+use Utopia\Lock\Mutex;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\Span\Span;
 
 class Databases extends Action
 {
+    /** @var array<string, Mutex> */
+    private array $locks = [];
+
     public static function getName(): string
     {
         return 'databases';
@@ -87,15 +91,40 @@ class Databases extends Action
 
         Span::add('database.id', $database->getId());
 
-        match (\strval($type)) {
-            DATABASE_TYPE_DELETE_DATABASE => $this->deleteDatabase($database, $dbForProject, $dbForDatabases),
-            DATABASE_TYPE_DELETE_COLLECTION => $this->deleteCollection($database, $collection, $dbForProject, $dbForDatabases),
-            DATABASE_TYPE_CREATE_ATTRIBUTE => $this->createAttribute($database, $collection, $document, $project, $dbForPlatform, $dbForProject, $dbForDatabases, $queueForRealtime),
-            DATABASE_TYPE_DELETE_ATTRIBUTE => $this->deleteAttribute($database, $collection, $document, $project, $dbForPlatform, $dbForProject, $dbForDatabases, $queueForRealtime),
-            DATABASE_TYPE_CREATE_INDEX => $this->createIndex($database, $collection, $document, $project, $dbForPlatform, $dbForProject, $dbForDatabases, $queueForRealtime),
-            DATABASE_TYPE_DELETE_INDEX => $this->deleteIndex($database, $collection, $document, $project, $dbForPlatform, $dbForProject, $dbForDatabases, $queueForRealtime),
-            default => throw new Exception('No database operation for type: ' . \strval($type)),
-        };
+        // One shared queue can contain work for several physical backings. Keep
+        // the old shard-wide exclusion, including metadata and shared tables.
+        // Lock both backings when product data lives apart from project metadata;
+        // sorted acquisition prevents two cross-backing jobs deadlocking.
+        // These mutexes require one worker process and one active deployment.
+        $keys = array_unique([
+            $dbForProject->getAdapter()->getHostname(),
+            $dbForDatabases->getAdapter()->getHostname(),
+        ]);
+        sort($keys);
+        $held = [];
+        try {
+            foreach ($keys as $key) {
+                $lock = $this->locks[$key] ??= new Mutex();
+                if (!$lock->acquire(-1)) {
+                    throw new \RuntimeException('Failed to acquire database DDL mutex');
+                }
+                $held[] = $lock;
+            }
+
+            match (\strval($type)) {
+                DATABASE_TYPE_DELETE_DATABASE => $this->deleteDatabase($database, $dbForProject, $dbForDatabases),
+                DATABASE_TYPE_DELETE_COLLECTION => $this->deleteCollection($database, $collection, $dbForProject, $dbForDatabases),
+                DATABASE_TYPE_CREATE_ATTRIBUTE => $this->createAttribute($database, $collection, $document, $project, $dbForPlatform, $dbForProject, $dbForDatabases, $queueForRealtime),
+                DATABASE_TYPE_DELETE_ATTRIBUTE => $this->deleteAttribute($database, $collection, $document, $project, $dbForPlatform, $dbForProject, $dbForDatabases, $queueForRealtime),
+                DATABASE_TYPE_CREATE_INDEX => $this->createIndex($database, $collection, $document, $project, $dbForPlatform, $dbForProject, $dbForDatabases, $queueForRealtime),
+                DATABASE_TYPE_DELETE_INDEX => $this->deleteIndex($database, $collection, $document, $project, $dbForPlatform, $dbForProject, $dbForDatabases, $queueForRealtime),
+                default => throw new Exception('No database operation for type: ' . \strval($type)),
+            };
+        } finally {
+            foreach (array_reverse($held) as $lock) {
+                $lock->release();
+            }
+        }
     }
 
     /**
