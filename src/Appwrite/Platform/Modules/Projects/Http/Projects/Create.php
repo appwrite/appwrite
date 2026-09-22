@@ -200,6 +200,8 @@ class Create extends Action
                 ->setTenant(null)
                 ->setNamespace('_' . $project->getSequence());
 
+            \Appwrite\Databases\CacheKeyProbe::log($dbForProject, 'write-provisioning');
+
             $create = true;
 
             try {

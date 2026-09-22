@@ -13,6 +13,8 @@ class Targets
 {
     public static function delete(Database $database, Query $query): void
     {
+        \Appwrite\Databases\CacheKeyProbe::log($database, 'read-worker-targets');
+
         $database->deleteDocuments(
             'targets',
             [
