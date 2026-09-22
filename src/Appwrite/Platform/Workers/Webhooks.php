@@ -193,38 +193,29 @@ class Webhooks extends Action
 
             $webhook->setAttribute('logs', $logs);
 
-            $attempts = $webhook->getAttribute('attempts');
             $threshold = \intval(System::getEnv('_APP_WEBHOOK_MAX_FAILED_ATTEMPTS', '10'));
-            $exhausted = $webhook->getAttribute('enabled') === true && $attempts >= $threshold;
 
-            // Render the alert before claiming the pause, so a failed lookup or render leaves the webhook enabled for the retry to claim instead
-            $alerts = $exhausted
-                ? $this->prepareAlert($attempts, $statusCode, $webhook, $project, $dbForPlatform, $platform, $plan)
-                : [];
-
-            // Only the handler whose write flips enabled from true to false alerts the owners, and only with the alert already in hand
-            $paused = $dbForPlatform->withTransaction(function () use ($dbForPlatform, $webhook, $logs, $threshold, $exhausted): bool {
+            // Claim the pause under a row lock, so concurrent deliveries of the same webhook pause it once
+            $pausedAttempts = $dbForPlatform->withTransaction(function () use ($dbForPlatform, $webhook, $logs, $threshold): ?int {
                 $current = $dbForPlatform->getDocument('webhooks', $webhook->getId(), forUpdate: true);
 
                 if ($current->isEmpty()) {
-                    return false;
+                    return null;
                 }
 
-                $pause = $exhausted
-                    && $current->getAttribute('enabled') === true
-                    && $current->getAttribute('attempts') >= $threshold;
+                $attempts = $current->getAttribute('attempts');
+                $pause = $current->getAttribute('enabled') === true && $attempts >= $threshold;
 
                 $dbForPlatform->updateDocument('webhooks', $webhook->getId(), new Document(
                     $pause ? ['logs' => $logs, 'enabled' => false] : ['logs' => $logs]
                 ));
 
-                return $pause;
+                return $pause ? $attempts : null;
             });
 
-            if ($paused) {
-                foreach ($alerts as $alert) {
-                    $publisherForNotifications->enqueue($alert);
-                }
+            if ($pausedAttempts !== null) {
+                $webhook->setAttribute('enabled', false);
+                $this->sendAlert($pausedAttempts, $statusCode, $webhook, $project, $dbForPlatform, $publisherForNotifications, $platform, $plan);
             }
 
             $dbForPlatform->purgeCachedDocument('projects', $project->getId());
@@ -263,11 +254,12 @@ class Webhooks extends Action
      * @param Document $webhook
      * @param Document $project
      * @param Database $dbForPlatform
+     * @param NotificationPublisher $publisherForNotifications
      * @param array $platform
      * @param array $plan
-     * @return NotificationMessage[] One message per project owner
+     * @return void
      */
-    public function prepareAlert(int $attempts, mixed $statusCode, Document $webhook, Document $project, Database $dbForPlatform, array $platform, array $plan): array
+    public function sendAlert(int $attempts, mixed $statusCode, Document $webhook, Document $project, Database $dbForPlatform, NotificationPublisher $publisherForNotifications, array $platform, array $plan): void
     {
         $memberships = $dbForPlatform->find('memberships', [
             Query::equal('teamInternalId', [$project->getAttribute('teamInternalId')]),
@@ -280,7 +272,7 @@ class Webhooks extends Action
         );
 
         if (empty($ownerMemberships)) {
-            return [];
+            return;
         }
 
         $userIds = \array_values(\array_unique(\array_filter(\array_map(
@@ -289,7 +281,7 @@ class Webhooks extends Action
         ))));
 
         if (empty($userIds)) {
-            return [];
+            return;
         }
 
         $users = $dbForPlatform->find('users', [
@@ -298,7 +290,7 @@ class Webhooks extends Action
         ]);
 
         if (empty($users)) {
-            return [];
+            return;
         }
 
         $projectId = $project->getId();
@@ -306,8 +298,6 @@ class Webhooks extends Action
 
         $subject = 'Webhook deliveries have been paused';
         $preview = 'Webhook "' . $webhook->getAttribute('name') . '" has been paused after ' . $attempts . ' failed delivery attempts.';
-
-        $alerts = [];
 
         foreach ($users as $user) {
             $email = $user->getAttribute('email');
@@ -348,7 +338,7 @@ class Webhooks extends Action
             $template->setParam('{{path}}', "/projects/{$projectId}/settings/webhooks");
             $template->setParam('{{attempts}}', $attempts);
 
-            $alerts[] = new NotificationMessage(
+            $publisherForNotifications->enqueue(new NotificationMessage(
                 project: $project,
                 recipients: $recipients,
                 deduplicationKey: 'webhook:' . $webhook->getId() . ':paused:' . $webhook->getUpdatedAt(),
@@ -366,10 +356,8 @@ class Webhooks extends Action
                     'privacy' => $plan['privacyUrl'] ?? APP_EMAIL_PRIVACY_URL,
                     'platform' => $plan['platformName'] ?? APP_NAME,
                 ],
-            );
+            ));
         }
-
-        return $alerts;
     }
 
     private static function hasOwnerRole(Document $membership): bool
