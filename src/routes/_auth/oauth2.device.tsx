@@ -21,7 +21,6 @@ import {
 import { OAuth2OutcomeCard } from '@/components/global/auth/OAuth2OutcomeCard'
 import {
   OAuth2DeviceCodeInput,
-  OAUTH2_DEVICE_CODE_LENGTH,
   normalizeUserCode,
 } from '@/components/global/auth/OAuth2DeviceCodeInput'
 import { getOAuth2App } from '@/lib/oauth2/cimd'
@@ -159,7 +158,7 @@ function OAuth2DevicePage() {
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     const normalized = normalizeUserCode(code)
-    if (normalized.length !== OAUTH2_DEVICE_CODE_LENGTH) return
+    if (normalized.length === 0) return
     setError(null)
     // Mark this as the active submission so onSuccess accepts its result.
     activeCodeRef.current = normalized
@@ -233,10 +232,7 @@ function OAuth2DevicePage() {
                     type="submit"
                     variant="brandCta"
                     className="w-full"
-                    disabled={
-                      normalizeUserCode(code).length !==
-                        OAUTH2_DEVICE_CODE_LENGTH || submitMutation.isPending
-                    }
+                    disabled={code.length === 0 || submitMutation.isPending}
                   >
                     {t('Continue')}
                   </Button>

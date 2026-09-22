@@ -1,32 +1,19 @@
 'use client'
 
-import type { FormEvent } from 'react'
-import {
-  InputOTP,
-  InputOTPGroup,
-  InputOTPSeparator,
-  InputOTPSlot,
-} from '@/components/ui/input-otp'
+import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
 
-/** Characters allowed in OAuth2 device user codes (no vowels or ambiguous glyphs). */
-export const OAUTH2_DEVICE_USER_CODE_CHARSET =
-  'BCDFGHJKLMNPQRSTVWXZ23456789' as const
+// Projects choose their own user code length; the server clamps it to 6..12 and
+// Cloud's console project issues 8. The page cannot read that setting -- it runs
+// before sign-in -- so accept up to the maximum and let the server judge.
+export const OAUTH2_DEVICE_CODE_MAX_LENGTH = 12
 
-export const OAUTH2_DEVICE_CODE_LENGTH = 6
-
-const DEVICE_CODE_CHAR_SET = new Set(
-  OAUTH2_DEVICE_USER_CODE_CHARSET.split(''),
-)
-
-/** Keep only allowed device user code characters, uppercase, max length. */
+/** Keep only the characters device user codes are built from. */
 export function normalizeUserCode(value: string): string {
   return value
     .toUpperCase()
-    .split('')
-    .filter((char) => DEVICE_CODE_CHAR_SET.has(char))
-    .join('')
-    .slice(0, OAUTH2_DEVICE_CODE_LENGTH)
+    .replace(/[^A-Z0-9]/g, '')
+    .slice(0, OAUTH2_DEVICE_CODE_MAX_LENGTH)
 }
 
 type OAuth2DeviceCodeInputProps = {
@@ -40,6 +27,10 @@ type OAuth2DeviceCodeInputProps = {
   'aria-invalid'?: boolean
 }
 
+/**
+ * Device user code input. A fixed slot count cannot hold a code whose length
+ * varies by project, so this is a plain field that normalises what it is given.
+ */
 export function OAuth2DeviceCodeInput({
   id,
   value,
@@ -50,52 +41,30 @@ export function OAuth2DeviceCodeInput({
   className,
   'aria-invalid': ariaInvalid,
 }: OAuth2DeviceCodeInputProps) {
-  const normalized = normalizeUserCode(value)
-
-  const handleBeforeInput = (event: FormEvent<HTMLInputElement>) => {
-    if (readOnly) return
-    const nativeEvent = event.nativeEvent
-    if (!('data' in nativeEvent) || nativeEvent.data == null) return
-    const chunk = String(nativeEvent.data).toUpperCase()
-    if (chunk.length === 0) return
-    if (chunk.split('').every((char) => DEVICE_CODE_CHAR_SET.has(char))) return
-    event.preventDefault()
-  }
-
   return (
-    <div className={cn('w-full', className)}>
-      <InputOTP
-        id={id}
-        maxLength={OAUTH2_DEVICE_CODE_LENGTH}
-        value={normalized}
-        pasteTransformer={normalizeUserCode}
-        onBeforeInput={handleBeforeInput}
-        onChange={(next) => {
-          if (readOnly) return
-          onChange?.(normalizeUserCode(next))
-        }}
-        disabled={disabled}
-        readOnly={readOnly}
-        autoFocus={autoFocus}
-        inputMode="text"
-        autoComplete="off"
-        autoCapitalize="characters"
-        spellCheck={false}
-        aria-invalid={ariaInvalid}
-        containerClassName="w-full justify-center"
-      >
-        <InputOTPGroup className="flex-1">
-          <InputOTPSlot index={0} className="h-16 w-full text-2xl font-mono" />
-          <InputOTPSlot index={1} className="h-16 w-full text-2xl font-mono" />
-          <InputOTPSlot index={2} className="h-16 w-full text-2xl font-mono" />
-        </InputOTPGroup>
-        <InputOTPSeparator />
-        <InputOTPGroup className="flex-1">
-          <InputOTPSlot index={3} className="h-16 w-full text-2xl font-mono" />
-          <InputOTPSlot index={4} className="h-16 w-full text-2xl font-mono" />
-          <InputOTPSlot index={5} className="h-16 w-full text-2xl font-mono" />
-        </InputOTPGroup>
-      </InputOTP>
-    </div>
+    <Input
+      id={id}
+      type="text"
+      value={normalizeUserCode(value)}
+      onChange={(event) => {
+        if (readOnly) return
+        onChange?.(normalizeUserCode(event.currentTarget.value))
+      }}
+      disabled={disabled}
+      readOnly={readOnly}
+      autoFocus={autoFocus}
+      placeholder="XXXXXXXX"
+      inputMode="text"
+      // Not one-time-code: the code is shown on another device, so SMS autofill
+      // would only ever offer the wrong value.
+      autoComplete="off"
+      autoCapitalize="characters"
+      spellCheck={false}
+      aria-invalid={ariaInvalid}
+      className={cn(
+        'h-16 text-center font-mono text-2xl tracking-[0.3em] uppercase',
+        className,
+      )}
+    />
   )
 }
