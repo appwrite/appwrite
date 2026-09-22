@@ -213,7 +213,13 @@ class Webhooks extends Action
             });
 
             if ($pausedAt !== null) {
-                $this->sendAlert($pausedAt, $statusCode, $webhook, $project, $dbForPlatform, $publisherForNotifications, $platform, $plan);
+                try {
+                    $this->sendAlert($pausedAt, $statusCode, $webhook, $project, $dbForPlatform, $publisherForNotifications, $platform, $plan);
+                } catch (\Throwable $e) {
+                    // The pause is not final until owners were told, so release the claim for the retry to take again
+                    $dbForPlatform->updateDocument('webhooks', $webhook->getId(), new Document(['enabled' => true]));
+                    throw $e;
+                }
             }
 
             $dbForPlatform->purgeCachedDocument('projects', $project->getId());
