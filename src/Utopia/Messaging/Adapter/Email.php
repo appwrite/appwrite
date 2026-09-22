@@ -23,6 +23,23 @@ abstract class Email extends Adapter
     }
 
     /**
+     * Format an address with an optional display name, quoting the name when
+     * it carries RFC 5322 specials such as "Acme, Inc." or "Doe <John>".
+     */
+    protected function formatAddress(string $email, ?string $name): string
+    {
+        if (\in_array($name, [null, '', '0'], true)) {
+            return $email;
+        }
+
+        if (preg_match('/[,;:@<>()\[\]\\\\".]/', $name)) {
+            $name = '"' . addcslashes($name, '"\\') . '"';
+        }
+
+        return "{$name} <{$email}>";
+    }
+
+    /**
      * Process an email message.
      *
      * @return array{deliveredTo: int, type: string, results: array<array<string, mixed>>}

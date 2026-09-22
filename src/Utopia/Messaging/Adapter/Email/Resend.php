@@ -3,6 +3,7 @@
 namespace Utopia\Messaging\Adapter\Email;
 
 use Utopia\Messaging\Adapter\Email as EmailAdapter;
+use Utopia\Messaging\Exception\InvalidArgumentException;
 use Utopia\Messaging\Messages\Email as EmailMessage;
 use Utopia\Messaging\Response;
 
@@ -79,15 +80,9 @@ class Resend extends EmailAdapter
 
         $emails = [];
         foreach ($message->getTo() as $to) {
-            $toFormatted = empty($to['name'])
-                ? $to['email']
-                : "{$to['name']} <{$to['email']}>";
-
             $email = [
-                'from' => $message->getFromName() !== '' && $message->getFromName() !== '0'
-                    ? "{$message->getFromName()} <{$message->getFromEmail()}>"
-                    : $message->getFromEmail(),
-                'to' => [$toFormatted],
+                'from' => $this->formatAddress($message->getFromEmail(), $message->getFromName()),
+                'to' => [$this->formatAddress($to['email'], $to['name'] ?? null)],
                 'subject' => $message->getSubject(),
             ];
 
@@ -98,19 +93,14 @@ class Resend extends EmailAdapter
             }
 
             if (!\in_array($message->getReplyToEmail(), ['', '0'], true)) {
-                $email['reply_to'] = $message->getReplyToName() !== '' && $message->getReplyToName() !== '0'
-                    ? ["{$message->getReplyToName()} <{$message->getReplyToEmail()}>"]
-                    : [$message->getReplyToEmail()];
+                $email['reply_to'] = [$this->formatAddress($message->getReplyToEmail(), $message->getReplyToName())];
             }
 
             if (! \is_null($message->getCC()) && $message->getCC() !== []) {
-                $ccList = array_map(
-                    fn(array $cc) => empty($cc['name'])
-                        ? $cc['email']
-                        : "{$cc['name']} <{$cc['email']}>",
+                $email['cc'] = array_map(
+                    fn(array $cc): string => $this->formatAddress($cc['email'], $cc['name'] ?? null),
                     $message->getCC(),
                 );
-                $email['cc'] = $ccList;
             }
 
             if ($attachments !== []) {
@@ -118,13 +108,10 @@ class Resend extends EmailAdapter
             }
 
             if (! \is_null($message->getBCC()) && $message->getBCC() !== []) {
-                $bccList = array_map(
-                    fn(array $bcc) => empty($bcc['name'])
-                        ? $bcc['email']
-                        : "{$bcc['name']} <{$bcc['email']}>",
+                $email['bcc'] = array_map(
+                    fn(array $bcc): string => $this->formatAddress($bcc['email'], $bcc['name'] ?? null),
                     $message->getBCC(),
                 );
-                $email['bcc'] = $bccList;
             }
 
             $emails[] = $email;
@@ -157,6 +144,17 @@ class Resend extends EmailAdapter
         );
 
         $statusCode = $result['statusCode'];
+
+        // 422: Resend refused the request as malformed, so a retry cannot help.
+        if ($statusCode === 422) {
+            $recipients = $message->getTo();
+
+            throw new InvalidArgumentException(
+                InvalidArgumentException::PROVIDER_REJECTED,
+                $this->extractErrorMessage($result['response'], 'Unprocessable request'),
+                \count($recipients) === 1 ? $recipients[0]['email'] : null,
+            );
+        }
 
         if ($statusCode === 200) {
             $responseData = $result['response'];
@@ -221,6 +219,15 @@ class Resend extends EmailAdapter
             );
 
             $statusCode = $result['statusCode'];
+
+            // With several recipients a refusal stays per-recipient so the rest deliver.
+            if ($statusCode === 422 && \count($emails) === 1) {
+                throw new InvalidArgumentException(
+                    InvalidArgumentException::PROVIDER_REJECTED,
+                    $this->extractErrorMessage($result['response'], 'Unprocessable request'),
+                    $to['email'],
+                );
+            }
 
             if ($statusCode >= 200 && $statusCode < 300) {
                 $response->addResult($to['email']);

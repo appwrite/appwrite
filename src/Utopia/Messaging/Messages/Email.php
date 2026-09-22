@@ -2,6 +2,7 @@
 
 namespace Utopia\Messaging\Messages;
 
+use Utopia\Messaging\Exception\InvalidArgumentException;
 use Utopia\Messaging\Message;
 use Utopia\Messaging\Messages\Email\Attachment;
 
@@ -61,6 +62,56 @@ class Email implements Message
         if (\is_null($this->replyToEmail)) {
             $this->replyToEmail = $this->fromEmail;
         }
+
+        $this->assertAddress($this->fromEmail, InvalidArgumentException::SENDER_MALFORMED);
+        $this->assertName($this->fromName);
+        $this->assertName($this->replyToName);
+
+        // An explicitly empty reply-to tells the adapters to omit the header.
+        if (!\in_array($this->replyToEmail, ['', '0'], true)) {
+            $this->assertAddress($this->replyToEmail, InvalidArgumentException::SENDER_MALFORMED);
+        }
+    }
+
+    /**
+     * @throws InvalidArgumentException
+     */
+    private function assertAddress(string $email, string $type = InvalidArgumentException::RECIPIENT_MALFORMED): void
+    {
+        if ($email === '') {
+            throw new InvalidArgumentException(
+                $type === InvalidArgumentException::SENDER_MALFORMED ? $type : InvalidArgumentException::RECIPIENT_EMPTY,
+                'Email address must not be empty.',
+                $email,
+            );
+        }
+
+        if (filter_var($email, FILTER_VALIDATE_EMAIL, FILTER_FLAG_EMAIL_UNICODE) === false) {
+            throw new InvalidArgumentException($type, "Email address \"{$email}\" is not a valid address.", $email);
+        }
+
+        // A TLD no registry hands out (one letter, digits) can never receive mail.
+        $tld = substr($email, (int) strrpos($email, '.') + 1);
+        if (preg_match('/^(?:xn--[a-z0-9-]+|[a-z]{2,})$/i', $tld) !== 1) {
+            throw new InvalidArgumentException(
+                $type === InvalidArgumentException::SENDER_MALFORMED ? $type : InvalidArgumentException::RECIPIENT_DOMAIN_INVALID,
+                "Email address \"{$email}\" has a domain that cannot receive mail.",
+                $email,
+            );
+        }
+    }
+
+    /**
+     * A line break in a display name ends the header early; other specials
+     * are quoted by the adapter.
+     *
+     * @throws InvalidArgumentException
+     */
+    private function assertName(string $name): void
+    {
+        if (preg_match('/[\x00-\x1F\x7F]/', $name) === 1) {
+            throw new InvalidArgumentException(InvalidArgumentException::NAME_MALFORMED, 'Display name must not contain control characters.', $name);
+        }
     }
 
     /**
@@ -72,16 +123,20 @@ class Email implements Message
     private function normalizeRecipient(string|array $value): array
     {
         if (\is_string($value)) {
-            if ($value === '') {
-                throw new \InvalidArgumentException('Recipient email must not be empty.');
-            }
+            $this->assertAddress($value);
 
             return ['email' => $value];
         }
 
         if (!isset($value['email']) || $value['email'] === '') {
-            throw new \InvalidArgumentException('Each recipient must have a non-empty "email" key.');
+            throw new InvalidArgumentException(
+                InvalidArgumentException::RECIPIENT_EMPTY,
+                'Each recipient must have a non-empty "email" key.',
+            );
         }
+
+        $this->assertAddress($value['email']);
+        $this->assertName($value['name'] ?? '');
 
         return $value;
     }

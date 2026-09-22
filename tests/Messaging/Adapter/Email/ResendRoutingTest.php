@@ -6,6 +6,7 @@ namespace Utopia\Tests\Adapter\Email;
 
 use PHPUnit\Framework\TestCase;
 use Utopia\Messaging\Adapter\Email\Resend;
+use Utopia\Messaging\Exception\InvalidArgumentException;
 use Utopia\Messaging\Messages\Email;
 use Utopia\Messaging\Messages\Email\Attachment;
 
@@ -95,6 +96,76 @@ final class ResendRoutingTest extends TestCase
         $this->assertEquals('success', $response['results'][0]['status']);
         $this->assertEquals('failure', $response['results'][1]['status']);
         $this->assertEquals('Invalid recipient', $response['results'][1]['error']);
+    }
+
+    public function testDisplayNamesWithSpecialsAreQuoted(): void
+    {
+        $stub = new ResendStub('test-key');
+
+        $message = new Email(
+            to: [['email' => 'a@example.com', 'name' => 'Doe, John <JD>']],
+            subject: 'Subject',
+            content: 'Body',
+            fromName: 'Acme "Labs"',
+            fromEmail: 'from@example.com',
+            replyToName: 'Support',
+            replyToEmail: 'support@example.com',
+            cc: [['email' => 'cc@example.com', 'name' => 'Plain Name']],
+        );
+
+        $stub->send($message);
+
+        $body = $stub->capturedRequests[0]['body'][0];
+
+        $this->assertSame(['"Doe, John <JD>" <a@example.com>'], $body['to']);
+        $this->assertSame('"Acme \\"Labs\\"" <from@example.com>', $body['from']);
+        $this->assertSame(['Support <support@example.com>'], $body['reply_to']);
+        $this->assertSame(['Plain Name <cc@example.com>'], $body['cc']);
+    }
+
+    public function testEmptyReplyToOmitsTheHeader(): void
+    {
+        $stub = new ResendStub('test-key');
+
+        $message = new Email(
+            to: ['a@example.com'],
+            subject: 'Subject',
+            content: 'Body',
+            fromName: 'Sender',
+            fromEmail: 'from@example.com',
+            replyToEmail: '',
+        );
+
+        $stub->send($message);
+
+        $this->assertArrayNotHasKey('reply_to', $stub->capturedRequests[0]['body'][0]);
+    }
+
+    public function testUnprocessableResponseIsInvalidInput(): void
+    {
+        $stub = new ResendStub('test-key');
+        $stub->stubResponses[] = [
+            'statusCode' => 422,
+            'response' => ['statusCode' => 422, 'name' => 'validation_error', 'message' => 'Invalid `to` field.'],
+        ];
+
+        $message = new Email(
+            to: [['email' => 'a@example.com']],
+            subject: 'Subject',
+            content: 'Body',
+            fromName: 'Sender',
+            fromEmail: 'from@example.com',
+            attachments: [new Attachment(name: 'note.txt', path: '', type: 'text/plain', content: 'hello')],
+        );
+
+        try {
+            $stub->send($message);
+            $this->fail('Expected invalid input');
+        } catch (InvalidArgumentException $exception) {
+            $this->assertSame(InvalidArgumentException::PROVIDER_REJECTED, $exception->getType());
+            $this->assertSame('a@example.com', $exception->getValue());
+            $this->assertSame('Invalid `to` field.', $exception->getMessage());
+        }
     }
 
     public function testAttachmentExceedingMaxSizeThrows(): void

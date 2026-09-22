@@ -2,6 +2,7 @@
 
 namespace Utopia\Messaging\Messages;
 
+use Utopia\Messaging\Exception\InvalidArgumentException;
 use Utopia\Messaging\Message;
 use Utopia\Messaging\Priority;
 
@@ -46,7 +47,10 @@ class Push implements Message
             && $body === null
             && $data === null
         ) {
-            throw new \Exception('At least one of the following parameters must be set: title, body, data');
+            throw new InvalidArgumentException(
+                InvalidArgumentException::MESSAGE_EMPTY,
+                'At least one of the following parameters must be set: title, body, data',
+            );
         }
     }
 

@@ -58,16 +58,14 @@ class Mailgun extends EmailAdapter
 
         $body = [
             'to' => implode(',', array_map(
-                fn(array $to) => empty($to['name'])
-                    ? $to['email']
-                    : "{$to['name']} <{$to['email']}>",
+                fn(array $to): string => $this->formatAddress($to['email'], $to['name'] ?? null),
                 $recipients,
             )),
-            'from' => "{$message->getFromName()} <{$message->getFromEmail()}>",
+            'from' => $this->formatAddress($message->getFromEmail(), $message->getFromName()),
             'subject' => $message->getSubject(),
             'text' => $message->isHtml() ? null : $message->getContent(),
             'html' => $message->isHtml() ? $message->getContent() : null,
-            'h:Reply-To: ' . "{$message->getReplyToName()} <{$message->getReplyToEmail()}>",
+            'h:Reply-To' => $this->formatAddress($message->getReplyToEmail(), $message->getReplyToName()),
         ];
 
         if (\count($recipients) > 1) {
@@ -77,9 +75,7 @@ class Mailgun extends EmailAdapter
         if (!\is_null($message->getCC())) {
             foreach ($message->getCC() as $cc) {
                 if (!empty($cc['email'])) {
-                    $ccString = empty($cc['name'])
-                        ? $cc['email']
-                        : "{$cc['name']} <{$cc['email']}>";
+                    $ccString = $this->formatAddress($cc['email'], $cc['name'] ?? null);
 
                     $body['cc'] = empty($body['cc'])
                         ? $ccString
@@ -91,9 +87,7 @@ class Mailgun extends EmailAdapter
         if (!\is_null($message->getBCC())) {
             foreach ($message->getBCC() as $bcc) {
                 if (!empty($bcc['email'])) {
-                    $bccString = empty($bcc['name'])
-                        ? $bcc['email']
-                        : "{$bcc['name']} <{$bcc['email']}>";
+                    $bccString = $this->formatAddress($bcc['email'], $bcc['name'] ?? null);
 
                     $body['bcc'] = empty($body['bcc'])
                         ? $bccString

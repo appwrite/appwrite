@@ -446,27 +446,6 @@ class SES extends EmailAdapter
     }
 
     /**
-     * Format an email address with an optional display name (RFC 5322).
-     *
-     * When the display name contains any RFC 5322 special character it is
-     * wrapped in a quoted-string (with embedded quotes and backslashes
-     * escaped). Without this, a name such as "Acme, Inc." produces a malformed
-     * address that SES rejects with a 400.
-     */
-    private function formatAddress(string $email, ?string $name): string
-    {
-        if (\in_array($name, [null, '', '0'], true)) {
-            return $email;
-        }
-
-        if (preg_match('/[,;:@<>()\[\]\\\\".]/', $name)) {
-            $name = '"' . addcslashes($name, '"\\') . '"';
-        }
-
-        return "{$name} <{$email}>";
-    }
-
-    /**
      * Sign and dispatch a request to the SES API v2 endpoint for the
      * configured region.
      *
