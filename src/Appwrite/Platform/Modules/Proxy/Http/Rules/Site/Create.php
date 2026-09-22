@@ -110,7 +110,8 @@ class Create extends Action
         }
 
         // A branch-pinned rule must start on that branch's newest build, not on
-        // whatever the resource currently serves.
+        // whatever the resource currently serves. Template deployments reuse
+        // providerBranch for their resolved ref, so they are not a branch build.
         $deployment = $branch === ''
             ? $dbForProject->getDocument('deployments', $site->getAttribute('deploymentId', ''))
             : $dbForProject->findOne('deployments', [
@@ -118,6 +119,8 @@ class Create extends Action
                 Query::equal('resourceInternalId', [$site->getSequence()]),
                 Query::equal('providerBranch', [$branch]),
                 Query::equal('status', ['ready']),
+                Query::isNotNull('installationId'),
+                Query::notEqual('installationId', ''),
                 Query::orderDesc('$createdAt'),
                 Query::orderDesc('$sequence'),
             ]);

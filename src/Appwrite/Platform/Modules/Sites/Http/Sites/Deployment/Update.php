@@ -109,8 +109,11 @@ class Update extends Base
             'deploymentCreatedAt' => $deployment->getCreatedAt(),
         ])));
 
+        // Template deployments reuse providerBranch for their resolved ref (tags
+        // included), which must not repoint a rule pinned to a real branch.
         $branch = $deployment->getAttribute('providerBranch', '');
-        $branches = $branch === '' ? [''] : ['', $branch];
+        $isBranchBuild = $branch !== '' && ! empty($deployment->getAttribute('installationId'));
+        $branches = $isBranchBuild ? ['', $branch] : [''];
 
         $queries = [
             Query::equal('trigger', ['manual']),

@@ -730,8 +730,11 @@ class Jobs extends Action
      */
     protected function activate(Database $dbForProject, Database $dbForPlatform, Document $project, Document $resource, Document $deployment, Bus $bus): void
     {
+        // Template deployments reuse providerBranch for their resolved ref (tags
+        // included), which must not repoint a rule pinned to a real branch.
         $branch = $deployment->getAttribute('providerBranch', '');
-        $branches = $branch === '' ? [''] : ['', $branch];
+        $isBranchBuild = $branch !== '' && ! empty($deployment->getAttribute('installationId'));
+        $branches = $isBranchBuild ? ['', $branch] : [''];
 
         $dbForPlatform->forEach('rules', function (Document $rule) use ($dbForPlatform, $deployment, $bus) {
             $rule = $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
