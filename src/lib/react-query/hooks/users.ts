@@ -52,7 +52,7 @@ export async function fetchProjectUsers(
   sortOrder: 'asc' | 'desc' = USERS_DEFAULT_SORT_ORDER,
 ) {
   if (!projectId) {
-    return { users: [], total: 0 }
+    return { users: [], total: 0, hasMore: false }
   }
 
   const projectSdk = sdk.forProject(projectId)
@@ -65,15 +65,20 @@ export async function fetchProjectUsers(
       search,
     ),
     orderQuery,
-    Query.limit(limit),
+    // `total` is clamped at APP_LIMIT_COUNT (5,000) server-side, so it cannot answer whether
+    // another page exists. Fetch one row past the page and discard it: a full page alone would
+    // report a next page that does not exist when the list is an exact multiple of `limit`.
+    Query.limit(limit + 1),
     Query.offset(page * limit),
   ]
 
   const response = await projectSdk.users.list({ queries })
+  const rows = response.users || []
 
   return {
-    users: response.users || [],
+    users: rows.slice(0, limit),
     total: response.total || 0,
+    hasMore: rows.length > limit,
   }
 }
 
@@ -388,6 +393,7 @@ export function useProjectUsers(
   return {
     users,
     total: usersData?.total || 0,
+    hasMore: usersData?.hasMore ?? false,
     totalPages,
     isLoading,
     isFetching,

@@ -184,15 +184,34 @@ export function Pagination({
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize))
   const derivedStart = totalItems === 0 ? 0 : (currentPage - 1) * pageSize + 1
   const derivedEnd = Math.min(currentPage * pageSize, totalItems)
+  const rangeEnd = displayItemRange?.end ?? derivedEnd
+
+  // List APIs clamp `total` at APP_LIMIT_COUNT (5,000). A caller reporting rows the count cannot
+  // account for, or another page past the counted last one, proves the count is only a floor.
+  const totalIsLowerBound =
+    totalKnown &&
+    (rangeEnd > totalItems || (hasNextPage && currentPage >= totalPages))
+  const countExact = totalKnown && !totalIsLowerBound
+
   const startItem = displayItemRange?.start ?? derivedStart
   const endItem = displayItemRange
-    ? totalKnown
+    ? countExact
       ? Math.min(displayItemRange.end, totalItems)
       : displayItemRange.end
     : derivedEnd
 
+  // While the count is a floor the real total is unknown, but once the caller stops reporting a
+  // next page the final row index is the exact total.
+  const totalLabel = totalIsLowerBound
+    ? hasNextPage
+      ? `${Math.max(totalItems, rangeEnd).toLocaleString()}+`
+      : rangeEnd.toLocaleString()
+    : (totalDisplay ?? totalItems.toLocaleString())
+
   const canGoPrevious = currentPage > 1
-  const canGoNext = totalKnown ? currentPage < totalPages : hasNextPage
+  const canGoNext = totalKnown
+    ? currentPage < totalPages || hasNextPage
+    : hasNextPage
 
   const prevPageRef = useRef(currentPage)
   const isUserInitiatedRef = useRef(false)
@@ -240,7 +259,7 @@ export function Pagination({
   }
 
   const handleLastPage = () => {
-    if (totalKnown && canGoNext) {
+    if (countExact && canGoNext) {
       isUserInitiatedRef.current = true
       onPageChange(totalPages)
       scrollToTop()
@@ -268,7 +287,7 @@ export function Pagination({
             {totalKnown
               ? totalItems === 0
                 ? `${t('No')} ${t(itemLabel)}`
-                : `${startItem}-${endItem} ${t('of')} ${totalDisplay ?? totalItems.toLocaleString()}`
+                : `${startItem}-${endItem} ${t('of')} ${totalLabel}`
               : startItem === 0 && endItem === 0
                 ? `${t('No')} ${t(itemLabel)}`
                 : `${startItem}-${endItem}`}
@@ -352,7 +371,7 @@ export function Pagination({
             <span className="font-medium text-foreground tabular-nums text-[12px]">
               {currentPage}
             </span>
-            {totalKnown ? (
+            {countExact ? (
               <span className="text-muted-foreground whitespace-nowrap text-[12px]">
                 {t('of')} {totalPages.toLocaleString()}
               </span>
@@ -373,7 +392,7 @@ export function Pagination({
             size="icon"
             className="hidden h-8 w-8 rounded-none border-0 @[500px]:inline-flex hover:bg-muted/80"
             onClick={handleLastPage}
-            disabled={!totalKnown || !canGoNext}
+            disabled={!countExact || !canGoNext}
             aria-label={t('Go to last page')}
           >
             <ChevronsRight className={paginationChevronClass} />
