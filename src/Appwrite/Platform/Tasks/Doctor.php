@@ -311,8 +311,13 @@ class Doctor extends Action
                     ? (string)($release->json()['tag_name'] ?? '')
                     : '';
 
+                $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
+
                 if ($latest !== '') {
-                    if (\version_compare($latest, System::getEnv('_APP_VERSION', 'UNKNOWN'), '>')) {
+                    // Nightly advances within its own patch line, so stable ordering would always call it outdated
+                    if (\str_contains($version, '-nightly')) {
+                        Console::info('You are running ' . APP_NAME . ' on the nightly channel (' . $version . '). Latest stable is ' . $latest . '.');
+                    } elseif (\version_compare($latest, $version, '>')) {
                         Console::info('A new version (' . $latest . ') is available! 🥳' . "\n");
                     } else {
                         Console::info('You are running the latest version of ' . APP_NAME . '! 🥳');
