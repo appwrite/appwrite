@@ -39,7 +39,7 @@ class Update extends Action
                 group: 'policies',
                 name: 'updatePasswordPwnedPolicy',
                 description: <<<EOT
-                Updating this policy allows you to control if passwords are checked against the Have I Been Pwned breach database. When enabled, a password that appears in any known breach cannot be set or changed. Enable `sessions` to check passwords on sign-in too. Only the first five characters of the password hash are ever shared with the service. Options left out keep their current value.
+                Updating this policy allows you to control if passwords are checked against the Have I Been Pwned breach database. When enabled, every password a user signs up, signs in or resets with is checked and the result is recorded on the user as `passwordPwned`. On its own the policy only records. Enable `users` to reject a breached password when a user signs up or sets a new password, and `sessions` to refuse a sign-in with a breached password until it is reset. Only the first five characters of the password hash are ever shared with the service. Options left out keep their current value.
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
@@ -49,9 +49,9 @@ class Update extends Action
                     )
                 ],
             ))
-            ->param('enabled', null, new Boolean(), 'Toggle password pwned policy. Set to true to block passwords exposed in known data breaches, or false to allow them. Default is true. When changing this policy, existing passwords remain valid.', optional: true)
-            ->param('sessions', null, new Boolean(), 'Whether passwords are checked when a session is created. When enabled, signing in records whether the password appears in a known data breach. Default is false.', optional: true)
-            ->param('users', null, new Boolean(), 'Whether users signing in with a breached password are blocked until they reset it. Only applies when sessions are checked. Default is false, which allows the sign-in.', optional: true)
+            ->param('enabled', null, new Boolean(), 'Toggle password pwned policy. Set to true to check passwords against known data breaches and record the result on the user, or false to never check. Default is true. On its own this only records; use `users` and `sessions` to block. When changing this policy, existing passwords remain valid.', optional: true)
+            ->param('sessions', null, new Boolean(), 'Whether a sign-in with a breached password is refused until the password is reset. Default is false, which allows the sign-in and only records the result.', optional: true)
+            ->param('users', null, new Boolean(), 'Whether a breached password is rejected when a user signs up or sets a new password. Default is false, which allows the password and only records the result.', optional: true)
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('project')
