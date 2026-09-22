@@ -349,8 +349,6 @@ Database::addFilter(
         return;
     },
     function (mixed $value, Document $document, Database $database) {
-        \Appwrite\Databases\CacheKeyProbe::log($database, 'read-subquery-targets');
-
         return  $database->getAuthorization()->skip(fn () => $database
             ->find('targets', [
                 Query::equal('userInternalId', [$document->getSequence()]),
