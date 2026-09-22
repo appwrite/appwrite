@@ -16,10 +16,12 @@ namespace Utopia\Queue;
  * slot left to deliver into, so a queue stops moving because of messages that
  * were never going to succeed.
  *
- * Throwing this from a handler ends the message's life at the first attempt: the
- * broker dead-letters it immediately, where the work is still inspectable and
- * still re-drivable once the underlying fault is fixed, and the slot is returned
- * in milliseconds instead of minutes.
+ * Throwing this from a handler ends the message's life at the first attempt on a
+ * broker that charges for attempts: JetStream dead-letters it immediately and the
+ * ack slot comes back in milliseconds instead of minutes. Redis has no such
+ * window, so the message stays on the failed list its sweep reads -- nothing
+ * re-runs it there either, and that is the list an operator can still recover
+ * from once the underlying fault is fixed.
  *
  *     throw new PermanentFailure("Region hostname not configured: {$region}");
  *

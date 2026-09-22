@@ -190,7 +190,15 @@ class Redis implements Synchronous, Consumer
     {
         $pid = $message->getPid();
         $outcome = $operation === 'commit' ? 'success' : 'failed';
-        $list = $operation === 'release' ? 'queue' : ($message->isTerminal() ? 'dead' : 'failed');
+        // A terminal verdict changes nothing here, and that is deliberate. What it
+        // buys on JetStream is the ack slot back: an attempt there holds one for the
+        // length of its backoff, so enough permanent failures stop the queue. This
+        // broker has no such window -- a rejected message is already out of the way
+        // on the failed list, and nothing re-runs it until an operator sweeps. So
+        // the only thing routing it to `dead` would change is that retry() could no
+        // longer reach it, and nothing else pops that list. Terminal must not mean
+        // "unrecoverable" on the transport where recovery is a manual sweep.
+        $list = $operation === 'release' ? 'queue' : 'failed';
         $this->settlements[$queue->namespace] ??= new \Utopia\Queue\Internal\Buffer(function (array $requests, callable $resolved): void {
             $keys = $args = [];
             foreach ($requests as [$requestKeys, $requestArgs]) {

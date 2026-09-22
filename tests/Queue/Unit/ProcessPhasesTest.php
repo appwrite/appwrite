@@ -95,6 +95,52 @@ final class ProcessPhasesTest extends TestCase
         $this->assertFalse($consumer->terminal);
     }
 
+    public function testATypeErrorIsRejectedAsTerminalWithoutTheHandlerSayingSo(): void
+    {
+        $consumer = new PhaseConsumer();
+        $adapter = new PhaseAdapter($consumer);
+
+        $adapter->runOne(
+            $this->message(),
+            static function (): never {
+                // What a payload and a signature disagreeing actually looks like:
+                // staging wrote objects where handlers construct from arrays, and
+                // every delivery of those 701 messages threw exactly this.
+                throw new \TypeError('Document::__construct(): Argument #1 ($input) must be of type array, Document given');
+            },
+            static function (): void {},
+            static function (): void {},
+        );
+
+        // The payload and the signature will disagree identically on every
+        // delivery, so spending the redelivery budget to find that out costs a
+        // maxAckPending slot per attempt for the length of its backoff.
+        $this->assertSame(['reject'], $consumer->calls);
+        $this->assertTrue($consumer->terminal);
+    }
+
+    public function testExhaustionIsNotTerminalEvenThoughItIsAnError(): void
+    {
+        $consumer = new PhaseConsumer();
+        $adapter = new PhaseAdapter($consumer);
+
+        $adapter->runOne(
+            $this->message(),
+            static function (): never {
+                // \Error, but it says the host was short at that moment rather
+                // than that the work is impossible -- which is what the budget is
+                // for. Treating every \Error as terminal would dead-letter a
+                // queue's backlog during the memory pressure that backlog caused.
+                throw new \Error('Allowed memory size exhausted');
+            },
+            static function (): void {},
+            static function (): void {},
+        );
+
+        $this->assertSame(['reject'], $consumer->calls);
+        $this->assertFalse($consumer->terminal);
+    }
+
     public function testAPermanentFailureIsStillReported(): void
     {
         $consumer = new PhaseConsumer();

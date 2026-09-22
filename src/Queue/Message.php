@@ -131,10 +131,15 @@ class Message
      * fail the same way on every attempt, so spending the redelivery budget on
      * it buys nothing and — on a broker that counts an unacked message against a
      * ceiling, as JetStream does — costs a delivery slot for the whole of it.
+     * What it costs to ignore decides what a broker does with it.
      * {@see Broker\Nats::reject()} dead-letters a terminal message at once
-     * instead of scheduling the next attempt; {@see Broker\Redis::reject()}
-     * parks it where its retry sweep will not pick it up again. A broker with no
-     * notion of the distinction rejects it the way it always has.
+     * instead of scheduling the next attempt, because every further attempt
+     * would hold an ack slot for the length of its backoff.
+     * {@see Broker\Redis::reject()} has no such ceiling to protect and leaves
+     * the message on the failed list with every other rejection: nothing re-runs
+     * it there either, and that list is the only one an operator can recover
+     * from. A broker with no notion of the distinction rejects it the way it
+     * always has.
      *
      * Throwing {@see PermanentFailure} sets this and is the shorter route. This
      * is here for a handler that cannot: the exception type belongs to a library,

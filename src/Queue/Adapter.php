@@ -381,7 +381,19 @@ abstract class Adapter
             // is rejected: reject() is where the broker decides between another
             // attempt and the dead letter, and it runs here — ahead of the error
             // report below, which is the only other place a host sees the failure.
-            if ($error instanceof PermanentFailure) {
+            //
+            // A type error is the same verdict without the handler saying it: the
+            // payload and the signature disagree, and they will disagree identically
+            // on every delivery. Staging spent maxDeliver=5 over ~22 minutes of
+            // backoff on 701 of them, each holding one of 60 ack slots, while the
+            // worker delivered nothing else for hours. Not \Error at large --
+            // OutOfMemoryError and the stack overflow say the host was short at that
+            // moment, which is what the redelivery budget is for.
+            if (
+                $error instanceof PermanentFailure
+                || $error instanceof \TypeError // ArgumentCountError extends this
+                || $error instanceof \ValueError
+            ) {
                 $message->terminal();
             }
 
