@@ -6,6 +6,8 @@ namespace Tests\E2E\Adapter;
 
 use Utopia\Queue\Broker\Redis;
 use Utopia\Queue\Codec\Json;
+use Utopia\Queue\Connection\Redis as Connection;
+use Utopia\Queue\Message;
 use Utopia\Queue\Queue;
 
 /**
@@ -199,6 +201,39 @@ final class RedisBrokerRecoveryTest extends RedisTestCase
         $this->assertSame(0, $requeued);
         $this->assertSame(0, $this->processingSize());
         $this->assertSame(1, $this->deadSize(), 'the ancient claim is parked, not re-run');
+    }
+
+    public function testReapToleratesAClaimSettledMidSweep(): void
+    {
+        $this->broker->publish($this->queue, ['n' => 1]);
+        $claimed = $this->broker->receive($this->queue, 0)[0] ?? null;
+        $this->assertInstanceOf(Message::class, $claimed);
+
+        // The worker commits the claim as the sweep starts inspecting it.
+        $settle = fn() => $this->broker->commit($this->queue, $claimed);
+        $racing = new class (getenv('REDIS_HOST') ?: '127.0.0.1', (int) (getenv('REDIS_PORT') ?: 16379), $settle) extends Connection {
+            public function __construct(string $host, int $port, private ?\Closure $settle)
+            {
+                parent::__construct($host, $port);
+            }
+
+            #[\Override]
+            public function get(string $key): array|string|null
+            {
+                $value = parent::get($key);
+                if ($this->settle instanceof \Closure) {
+                    ($this->settle)();
+                    $this->settle = null;
+                }
+                return $value;
+            }
+        };
+
+        $requeued = new Redis($racing, $racing)->reap($this->queue, olderThan: 0);
+
+        $this->assertSame(0, $requeued);
+        $this->assertSame(0, $this->processingSize(), 'the commit stands');
+        $this->assertSame(0, $this->broker->getQueueSize($this->queue), 'no duplicate is enqueued');
     }
 
     public function testAHeartbeatedClaimIsNeverReaped(): void
