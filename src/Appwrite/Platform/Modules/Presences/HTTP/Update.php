@@ -200,6 +200,10 @@ class Update extends PlatformAction
             $presenceState->purgeListCache($dbForProject);
         }
 
+        if ($presence->isEmpty()) {
+            throw new Exception(Exception::PRESENCE_NOT_FOUND, params: [$presenceId]);
+        }
+
         $queueForEvents->setParam('presenceId', $presence->getId());
 
         $response->dynamic($presence, Response::MODEL_PRESENCE);

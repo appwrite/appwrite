@@ -342,7 +342,7 @@ $register->set('smtp', function () {
     $size = max(
         1,
         (int) System::getEnv('_APP_WORKER_MAX_COROUTINES', 1),
-        ((int) ($workers['mails']['maxCoroutines'] ?? 1)) + ((int) ($workers['notifications']['maxCoroutines'] ?? 1)),
+        ((int) ($workers['mails']['coroutines'] ?? 1)) + ((int) ($workers['notifications']['coroutines'] ?? 1)),
     );
 
     return new Pool(

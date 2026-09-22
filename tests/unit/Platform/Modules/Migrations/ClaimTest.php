@@ -332,12 +332,12 @@ final class ClaimTest extends TestCase
     {
         $terminal = $this->createFailedMigration();
         $publisher = new class () implements Publisher {
-            public function publish(Queue $queue, array $payload, bool $priority = false): bool
+            public function publish(Queue $queue, array $payload): bool
             {
                 throw new \RuntimeException('Queue unavailable');
             }
 
-            public function enqueueMany(Queue $queue, array $payloads, bool $priority = false): bool
+            public function publishMany(Queue $queue, array $payloads): bool
             {
                 throw new \RuntimeException('Queue unavailable');
             }
@@ -383,7 +383,7 @@ final class ClaimTest extends TestCase
             }
 
             #[\Override]
-            public function publish(Queue $queue, array $payload, bool $priority = false): bool
+            public function publish(Queue $queue, array $payload): bool
             {
                 $this->database->updateDocument('migrations', $this->migrationId, new Document([
                     'attemptId' => 'attempt-newer',
@@ -395,7 +395,7 @@ final class ClaimTest extends TestCase
             }
 
             #[\Override]
-            public function enqueueMany(Queue $queue, array $payloads, bool $priority = false): bool
+            public function publishMany(Queue $queue, array $payloads): bool
             {
                 throw new \LogicException('Not used');
             }
@@ -443,13 +443,13 @@ final class ClaimTest extends TestCase
         $claims = new Claim($this->database, $this->locks());
         $publisher = new class () implements Publisher {
             #[\Override]
-            public function publish(Queue $queue, array $payload, bool $priority = false): bool
+            public function publish(Queue $queue, array $payload): bool
             {
                 throw new \RuntimeException('Queue unavailable');
             }
 
             #[\Override]
-            public function enqueueMany(Queue $queue, array $payloads, bool $priority = false): bool
+            public function publishMany(Queue $queue, array $payloads): bool
             {
                 throw new \LogicException('Not used');
             }
@@ -499,7 +499,7 @@ final class ClaimTest extends TestCase
             }
 
             #[\Override]
-            public function publish(Queue $queue, array $payload, bool $priority = false): bool
+            public function publish(Queue $queue, array $payload): bool
             {
                 $this->database->updateDocument('migrations', $this->migrationId, new Document([
                     'attemptId' => 'attempt-newer',
@@ -511,7 +511,7 @@ final class ClaimTest extends TestCase
             }
 
             #[\Override]
-            public function enqueueMany(Queue $queue, array $payloads, bool $priority = false): bool
+            public function publishMany(Queue $queue, array $payloads): bool
             {
                 throw new \LogicException('Not used');
             }
@@ -819,7 +819,7 @@ final class ClaimTest extends TestCase
             public int $published = 0;
 
             #[\Override]
-            public function publish(Queue $queue, array $payload, bool $priority = false): bool
+            public function publish(Queue $queue, array $payload): bool
             {
                 $this->published++;
                 ($this->duringEnqueue ?? throw new \LogicException('Missing concurrent retry'))();
@@ -828,7 +828,7 @@ final class ClaimTest extends TestCase
             }
 
             #[\Override]
-            public function enqueueMany(Queue $queue, array $payloads, bool $priority = false): bool
+            public function publishMany(Queue $queue, array $payloads): bool
             {
                 throw new \LogicException('Not used');
             }
