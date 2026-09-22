@@ -65,6 +65,11 @@ class Store
         'version',
     ];
 
+    /** Columns whose stored value may vary in case; filters on them ignore case. */
+    private const array CASE_INSENSITIVE_COLUMNS = [
+        'requestMethod',
+    ];
+
     private const array QUERY_COLUMNS = [
         '$id' => ['id', 'String'],
         '$createdAt' => ['createdAt', 'DateTime'],
@@ -641,6 +646,17 @@ class Store
         $parameters = [];
         foreach ($values as $value) {
             $parameters[] = $this->parameter($type, $value, $params);
+        }
+
+        // Executions written before the method was normalised hold it in mixed case,
+        // so compare it case-insensitively. ClickHouse comparisons are case-sensitive
+        // and `requestMethod` is not part of the sorting key, so nothing is lost.
+        if (\in_array($query->getAttribute(), self::CASE_INSENSITIVE_COLUMNS, true)) {
+            $column = "upper({$column})";
+            $parameters = \array_map(
+                static fn (string $parameter) => "upper({$parameter})",
+                $parameters
+            );
         }
 
         return match ($method) {
