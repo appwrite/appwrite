@@ -470,6 +470,49 @@ export async function fetchFunctionExecution(
 }
 
 /**
+ * Delete a function execution by its unique ID.
+ */
+export async function deleteFunctionExecution(
+  projectId: string,
+  functionId: string,
+  executionId: string,
+) {
+  if (!projectId || !functionId || !executionId) {
+    throw new Error('Project ID, Function ID, and Execution ID are required')
+  }
+
+  const projectSdk = sdk.forProject(projectId)
+  return await projectSdk.functions.deleteExecution({
+    functionId,
+    executionId,
+  })
+}
+
+/**
+ * Hook to delete a function execution
+ */
+export function useDeleteFunctionExecution(
+  projectId: string | null | undefined,
+  functionId: string | null | undefined,
+) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (executionId: string) => {
+      if (!projectId || !functionId) {
+        throw new Error('Project ID and Function ID are required')
+      }
+      return await deleteFunctionExecution(projectId, functionId, executionId)
+    },
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
+        queryKey: ['executions', 'function', projectId, functionId],
+      })
+    },
+  })
+}
+
+/**
  * Query function to fetch all function variables.
  * The API defaults to 25 per page; we page through the rest. UI paginates via `useFunctionVariables`.
  */
