@@ -9,7 +9,10 @@ import {
   type OAuth2Outcome,
 } from '@/components/global/auth/OAuth2ConsentCard'
 import { OAuth2OutcomeCard } from '@/components/global/auth/OAuth2OutcomeCard'
-import { OAuth2DeviceCodeInput } from '@/components/global/auth/OAuth2DeviceCodeInput'
+import {
+  OAUTH2_DEVICE_CODE_MIN_LENGTH,
+  OAuth2DeviceCodeInput,
+} from '@/components/global/auth/OAuth2DeviceCodeInput'
 import { Button } from '@/components/ui/button'
 import { AuthFlowAccountSwitcherStatic } from '@/components/global/auth/AuthFlowAccountSwitcherStatic'
 import {
@@ -211,7 +214,7 @@ function DeviceCodeCard({
             type="submit"
             variant="brandCta"
             className="w-full"
-            disabled={code.length === 0}
+            disabled={code.length < OAUTH2_DEVICE_CODE_MIN_LENGTH}
           >
             Continue
           </Button>
