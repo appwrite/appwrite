@@ -636,6 +636,13 @@ class Jobs extends Action
             ));
         }
 
+        // A build that is not activated never reaches activate() above, and a
+        // push to a non-production branch never produces an activated one.
+        // Sites get this from activateBranchPreviewRule; functions have none.
+        if ($applied > 0 && $success && $collection !== 'sites' && $deployment->getAttribute('activate') !== true && ! $resource->isEmpty()) {
+            $this->activateBranchRule($dbForPlatform, $project, $resource, $deployment, $bus);
+        }
+
         // (Re)activate its schedule so the scheduler enqueues cron executions
         // (sites have no scheduleId, so schedule() no-ops for them).
         if (! $resource->isEmpty()) {
@@ -723,8 +730,11 @@ class Jobs extends Action
      */
     protected function activate(Database $dbForProject, Database $dbForPlatform, Document $project, Document $resource, Document $deployment, Bus $bus): void
     {
+        // Template deployments reuse providerBranch for their resolved ref (tags
+        // included), which must not repoint a rule pinned to a real branch.
         $branch = $deployment->getAttribute('providerBranch', '');
-        $branches = $branch === '' ? [''] : ['', $branch];
+        $isBranchBuild = $branch !== '' && ! empty($deployment->getAttribute('installationId'));
+        $branches = $isBranchBuild ? ['', $branch] : [''];
 
         $dbForPlatform->forEach('rules', function (Document $rule) use ($dbForPlatform, $deployment, $bus) {
             $rule = $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
@@ -747,6 +757,34 @@ class Jobs extends Action
             'deploymentInternalId' => $deployment->getSequence(),
             'deploymentCreatedAt' => $deployment->getCreatedAt(),
         ]));
+    }
+
+    /**
+     * Repoint the function's branch-pinned rules at this deployment.
+     */
+    protected function activateBranchRule(Database $dbForPlatform, Document $project, Document $resource, Document $deployment, Bus $bus): void
+    {
+        // Template deployments reuse providerBranch for their resolved ref
+        // (tags included), which must not repoint a branch rule.
+        $branch = $deployment->getAttribute('providerBranch', '');
+        if ($branch === '' || empty($deployment->getAttribute('installationId'))) {
+            return;
+        }
+
+        $dbForPlatform->forEach('rules', function (Document $rule) use ($dbForPlatform, $deployment, $bus) {
+            $rule = $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
+                'deploymentId' => $deployment->getId(),
+                'deploymentInternalId' => $deployment->getSequence(),
+            ]));
+            $bus->dispatch(new RuleUpdated($rule->getArrayCopy()));
+        }, [
+            Query::equal('projectInternalId', [$project->getSequence()]),
+            Query::equal('type', ['deployment']),
+            Query::equal('deploymentResourceInternalId', [$resource->getSequence()]),
+            Query::equal('deploymentResourceType', ['function']),
+            Query::equal('trigger', ['manual']),
+            Query::equal('deploymentVcsProviderBranch', [$branch]),
+        ]);
     }
 
     /**
