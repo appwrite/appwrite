@@ -1,73 +1,85 @@
-> 好消息！Appwrite 云现已进入公开测试版！立即访问 cloud.appwrite.io 注册，体验无忧的托管服务。今天就加入我们的云端吧！:cloud: :tada:
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/55a81268-4ecc-46cd-bdf5-73f7e8662fee" />
 
 <br />
 <p align="center">
-    <a href="https://appwrite.io" target="_blank"><img src="./public/images/banner.png" alt="Appwrite banner, with logo and text saying "The Developer's Cloud""></a>
-    <br />
-    <br />
-    <b>适用于[Flutter/Vue/Angular/React/iOS/Android/* 等等平台 *]的完整后端服务</b>
+    <h1>Appwrite</h1>
+    <b>Appwrite 是开源、面向 MCP 与智能体的开发平台。后端基础设施、网站托管和智能体工具，都在同一个地方。</b>
     <br />
     <br />
 </p>
 
-<!-- [![Build Status](https://img.shields.io/travis/com/appwrite/appwrite?style=flat-square)](https://travis-ci.com/appwrite/appwrite) -->
-
-[![We're Hiring](https://img.shields.io/static/v1?label=We're&message=Hiring&color=blue&style=flat-square)](https://appwrite.io/company/careers)
-[![Hacktoberfest](https://img.shields.io/static/v1?label=hacktoberfest&message=friendly&color=191120&style=flat-square)](https://hacktoberfest.appwrite.io)
-[![Discord](https://img.shields.io/discord/564160730845151244?label=discord&style=flat-square)](https://appwrite.io/discord?r=Github)
-[![Build Status](https://img.shields.io/github/actions/workflow/status/appwrite/appwrite/tests.yml?branch=master&label=tests&style=flat-square)](https://github.com/appwrite/appwrite/actions)
-[![Twitter Account](https://img.shields.io/twitter/follow/appwrite?color=00acee&label=twitter&style=flat-square)](https://twitter.com/appwrite)
-
-<!-- [![Docker Pulls](https://img.shields.io/docker/pulls/appwrite/appwrite?color=f02e65&style=flat-square)](https://hub.docker.com/r/appwrite/appwrite) -->
-<!-- [![Swag Store](https://img.shields.io/badge/swag%20store-f02e65?style=flat-square)](https://store.appwrite.io) -->
+[![Discord](https://img.shields.io/badge/chat-5865F2?style=flat-square&logo=discord&logoColor=white)](https://appwrite.io/discord)
+[![X](https://img.shields.io/badge/follow-000000?style=flat-square&logo=x&logoColor=white)](https://x.com/appwrite)
+[![Appwrite Cloud](https://img.shields.io/badge/Cloud-F02E65?style=flat-square&logo=icloud&logoColor=white)](https://cloud.appwrite.io)
 
 [English](README.md) | 简体中文
 
-[**Appwrite 云公开测试版！立即注册！**](https://cloud.appwrite.io)
+Appwrite 是开源、面向 MCP 与智能体的开发平台，可用于构建网页、移动和 AI 应用。它把后端基础设施、网站托管和智能体工具放在一起，让团队和智能体不必拼凑零散的技术栈就能构建、发布和扩展。Appwrite 提供托管云服务，也可以在你自己控制的基础设施上自托管。
 
-Appwrite 是一个基于 Docker 的端到端开发者平台，其容器化的微服务库可应用于网页端，移动端，原生应用，以及后端。它既包含后端服务器，也提供了用于部署静态和服务器端渲染前端的完全集成托管解决方案。Appwrite 通过视觉化界面简化了从零开始构建现代应用的复杂性和重复性，让您能够更快地构建安全的全栈应用。
+使用 Appwrite，你可以添加身份验证、数据库、存储、云函数、消息推送、实时能力，以及通过 Sites 集成的 Web 应用托管。通过托管 MCP 服务器连接智能体，安装 agent skills 以生成准确的 SDK 代码，并让模型访问你的项目和文档。它旨在减少启动现代产品所需的重复后端工作，同时为开发者和智能体提供安全原语与灵活 API，从而更快地构建生产级应用。
 
-Appwrite 可以提供给开发者用户验证，外部授权，用户数据读写检索，文件储存，图像处理，云函数计算，[等多种服务](https://appwrite.io/docs).
-
-![Appwrite](public/images/github.png)
-
-更多信息请到 Appwrite 官网查看： [https://appwrite.io](https://appwrite.io)
+更多信息请到 Appwrite 官网查看：[https://appwrite.io](https://appwrite.io)。
 
 内容：
 
-- [开始](#开始)
-- [安装](#安装)
+- [产品](#产品)
+- [安装与配置](#安装与配置)
+- [自托管](#自托管)
   - [Unix](#unix)
   - [Windows](#windows)
     - [CMD](#cmd)
     - [PowerShell](#powershell)
+  - [Docker API 版本不匹配](#docker-api-版本不匹配)
   - [从旧版本升级](#从旧版本升级)
+- [一键配置](#一键配置)
 - [入门](#入门)
-  - [软件服务](#软件服务)
+  - [智能体](#智能体)
   - [开发套件](#开发套件)
     - [客户端](#客户端)
     - [服务器](#服务器)
-    - [开发者社区](#开发者社区)
 - [软件架构](#软件架构)
 - [贡献代码](#贡献代码)
 - [安全](#安全)
 - [订阅我们](#订阅我们)
 - [版权说明](#版权说明)
 
-## 开始
 
-要轻松开始使用 Appwrite，您可以[**免费注册 Appwrite Cloud**](https://cloud.appwrite.io/)。在 Appwrite Cloud 公开测试版期间，您可以完全免费使用 Appwrite，而且我们不会收集您的信用卡信息。
+## 产品
 
-## 安装
+- **[Appwrite Auth](https://appwrite.io/docs/products/auth)** - 安全的用户身份验证，支持邮箱/密码、短信、OAuth、匿名会话和 Magic URL 等多种登录方式。包含会话管理、多因素认证和用户验证流程。
 
-Appwrite 的容器化服务器只需要一行指令就可以运行。您可以使用 docker-compose 在本地主机上运行 Appwrite，也可以在任何其他容器化工具（如 [Kubernetes](https://kubernetes.io/docs/home/)、[Docker Swarm](https://docs.docker.com/engine/swarm/) 或 [Rancher](https://rancher.com/docs/)）上运行 Appwrite。
+- **[Appwrite Databases](https://appwrite.io/docs/products/databases)** - 可扩展的结构化数据存储，支持数据库、表和行。包含查询、分页、索引和关系，用于建模复杂的应用数据。
 
-启动 Appwrite 服务器的最简单方法是运行我们的 docker-compose 文件。在运行安装命令之前，请确保您的机器上安装了 [Docker](https://dockerdocs.cn/get-docker/index.html)：
+- **[Appwrite Storage](https://appwrite.io/docs/products/storage)** - 安全的文件存储，支持上传、下载、加密、压缩，以及对媒体和资源的文件转换。
+
+- **[Appwrite Functions](https://appwrite.io/docs/products/functions)** - 无服务器计算平台，在隔离运行时中执行自定义后端逻辑，可由 HTTP、事件或定时任务触发。包含用于托管自建 MCP 服务器的模板。
+
+- **[Appwrite Messaging](https://appwrite.io/docs/products/messaging)** - 多渠道消息系统，可通过邮件、短信和推送通知向用户发送互动、告警和事务类消息。
+
+- **[Appwrite Sites](https://appwrite.io/docs/products/sites)** - 集成托管平台，用于部署和扩展 Web 应用，支持自定义域名、SSR 以及与后端的无缝集成。支持 Git 集成和预览。
+
+- **[Appwrite Realtime](https://appwrite.io/docs/apis/realtime)** - 通过 WebSocket 订阅 Auth、数据库、存储、云函数等项目事件，让应用和智能体在数据变化时即时响应。
+
+- **[Appwrite MCP](https://appwrite.io/docs/tooling/ai/mcp-servers/api)** - 托管的 Model Context Protocol 服务器，让智能体可以用自然语言搜索 Appwrite 文档并操作你的项目。Cloud 上无需本地安装。
+
+- **[Appwrite Network](https://appwrite.io/docs/products/network)** - Appwrite Cloud 上用于 API、云函数和托管站点的全球 CDN、DDoS 防护、TLS 和边缘分发。
+
+
+## 安装与配置
+
+开始使用 Appwrite 最简单的方式是[注册 Appwrite Cloud](https://cloud.appwrite.io/)。Cloud 提供[免费套餐](https://appwrite.io/pricing)，你可以立即开始构建，需要扩展时再升级到付费套餐。
+
+## 自托管
+
+Appwrite 设计为在容器化环境中运行。从终端运行一条命令即可启动服务器。你可以使用 docker-compose 在本地运行 Appwrite，也可以在 [Kubernetes](https://kubernetes.io/docs/home/)、[Docker Swarm](https://docs.docker.com/engine/swarm/) 或 [Rancher](https://ranchermanager.docs.rancher.com/) 等容器编排工具上运行。
+
+运行安装命令之前，请确保机器上已安装 [Docker](https://www.docker.com/products/docker-desktop)。安装向导监听 **20080** 端口；如果在远程主机上安装，请在安装完成前开放该端口。
 
 ### Unix
 
 ```bash
 docker run -it --rm \
+    --publish 20080:20080 \
     --volume /var/run/docker.sock:/var/run/docker.sock \
     --volume "$(pwd)"/appwrite:/usr/src/code/appwrite:rw \
     --entrypoint="install" \
@@ -80,6 +92,7 @@ docker run -it --rm \
 
 ```cmd
 docker run -it --rm ^
+    --publish 20080:20080 ^
     --volume //var/run/docker.sock:/var/run/docker.sock ^
     --volume "%cd%"/appwrite:/usr/src/code/appwrite:rw ^
     --entrypoint="install" ^
@@ -90,19 +103,36 @@ docker run -it --rm ^
 
 ```powershell
 docker run -it --rm `
+    --publish 20080:20080 `
     --volume /var/run/docker.sock:/var/run/docker.sock `
     --volume ${pwd}/appwrite:/usr/src/code/appwrite:rw `
     --entrypoint="install" `
     appwrite/appwrite:2.2.0
 ```
 
-运行后，可以在浏览器上访问 http://localhost 找到 Appwrite 控制台。在非 Linux 的本机主机上完成安装后，服务器可能需要几分钟才能启动。
+安装程序运行后，打开 http://localhost:20080 完成安装向导。安装完成后，访问 http://localhost 即可从浏览器进入 Appwrite 控制台。请注意，在非 Linux 本机主机上，安装完成后服务器可能需要几分钟才能启动。
 
-需要自定义容器构架，请查看我们的 Docker [环境变量](https://appwrite.io/docs/environment-variables) 文档。您还可以参考我们的 [docker-compose.yml](https://appwrite.io/install/compose) 和 [.env](https://appwrite.io/install/env) 文件手动设置环境。
+### Docker API 版本不匹配
+
+如果安装或升级失败，并出现类似 `client version 1.52 is too new. Maximum supported API version is 1.42` 的错误，说明 Appwrite 镜像内的 Docker CLI 比宿主机 Docker Engine 更新。请传入 `DOCKER_API_VERSION`，设为错误信息中的最高 API 版本（或升级宿主机上的 Docker）：
+
+```bash
+docker run -it --rm \
+    --env DOCKER_API_VERSION=1.42 \
+    --publish 20080:20080 \
+    --volume /var/run/docker.sock:/var/run/docker.sock \
+    --volume "$(pwd)"/appwrite:/usr/src/code/appwrite:rw \
+    --entrypoint="install" \
+    appwrite/appwrite:2.2.0
+```
+
+升级时，请为 `--entrypoint="upgrade"` 使用相同的 `--env DOCKER_API_VERSION=...` 参数。
+
+需要自定义生产或高级安装，请查看我们的 Docker [环境变量](https://appwrite.io/docs/advanced/self-hosting/configuration/environment-variables) 文档。你也可以使用公开的 [docker-compose.yml](https://appwrite.io/install/compose) 和 [.env](https://appwrite.io/install/env) 文件手动设置环境。
 
 ### 从旧版本升级
 
-如果您从旧版本升级 Appwrite 服务器，则应在设置完成后使用 Appwrite 迁移工具。有关这方面的更多信息，请查看 [安装文档](https://appwrite.io/docs/self-hosting)。
+如果您从旧版本升级 Appwrite 服务器，则应在设置完成后使用 Appwrite 迁移工具。有关这方面的更多信息，请查看 [安装文档](https://appwrite.io/docs/advanced/self-hosting)。
 
 ## 一键配置
 
@@ -135,7 +165,35 @@ docker run -it --rm `
 
 ## 入门
 
-开始使用 Appwrite 只需要在控制台创建一个新项目，选择开发平台，然后抓取我们的开发套件。您可以从以下的教程中找到你喜欢的平台开始使用 Appwrite。
+开始使用 Appwrite 只需要创建一个新项目、连接智能体，或将 SDK 集成到代码中。你可以从提示词、快速开始教程或托管 MCP 服务器入手。
+
+### 智能体
+
+让编程智能体访问你的 Appwrite 项目和最新文档。托管 MCP 服务器使用 OAuth，因此你无需创建或管理 API 密钥。如果使用自托管实例，请改用[本地 MCP 服务器](https://appwrite.io/docs/advanced/self-hosting/mcp)。
+
+将远程服务器添加到 Cursor、Claude Code、Codex、VS Code 和其他 MCP 客户端：
+
+```json
+{
+    "mcpServers": {
+        "appwrite": {
+            "url": "https://mcp.appwrite.io/"
+        }
+    }
+}
+```
+
+你也可以[一键将 MCP 服务器添加到 Cursor](https://cursor.com/install-mcp?name=appwrite&config=eyJ1cmwiOiJodHRwczovL21jcC5hcHB3cml0ZS5pby8ifQ==)。
+
+安装特定语言的 [agent skills](https://appwrite.io/docs/tooling/ai/skills)，让模型生成正确的 SDK 调用：
+
+```bash
+npx skills add appwrite/agent-skills
+```
+
+浏览[快速开始提示词](https://appwrite.io/docs/tooling/ai/quickstart-prompts)，为仓库生成 [AGENTS.md](https://appwrite.io/docs/tooling/ai/agents-md)，或查看 [AI 工具文档](https://appwrite.io/docs/tooling/ai) 了解 IDE 和 vibe coding 配置。
+
+你也可以从以下教程开始使用自己喜欢的平台。
 
 | 类别               | 技术                                                                        |
 | ------------------ | --------------------------------------------------------------------------- |
@@ -145,9 +203,11 @@ docker run -it --rm `
 |                    | [Vue.js 快速开始](https://appwrite.io/docs/quick-starts/vue)                |
 |                    | [Nuxt 快速开始](https://appwrite.io/docs/quick-starts/nuxt)                 |
 |                    | [SvelteKit 快速开始](https://appwrite.io/docs/quick-starts/sveltekit)       |
+|                    | [Astro 快速开始](https://appwrite.io/docs/quick-starts/astro)               |
+|                    | [TanStack Start 快速开始](https://appwrite.io/docs/quick-starts/tanstack-start) |
 |                    | [Refine 快速开始](https://appwrite.io/docs/quick-starts/refine)             |
 |                    | [Angular 快速开始](https://appwrite.io/docs/quick-starts/angular)           |
-| **苹果于安卓应用** | [React Native 快速开始](https://appwrite.io/docs/quick-starts/react-native) |
+| **移动与原生应用** | [React Native 快速开始](https://appwrite.io/docs/quick-starts/react-native) |
 |                    | [Flutter 快速开始](https://appwrite.io/docs/quick-starts/flutter)           |
 |                    | [Apple 快速开始](https://appwrite.io/docs/quick-starts/apple)               |
 |                    | [Android 快速开始](https://appwrite.io/docs/quick-starts/android)           |
@@ -163,52 +223,32 @@ docker run -it --rm `
 |                    | [Go 快速开始](https://appwrite.io/docs/quick-starts/go)                     |
 |                    | [Rust 快速开始](https://appwrite.io/docs/quick-starts/rust)                 |
 
-### 软件服务
-
-- [**帐户**](https://appwrite.io/docs/references/cloud/client-web/account) -管理当前用户的帐户和登录方式。跟踪和管理用户 Session，登录设备，登录方法和查看相关记录。
-- [**用户**](https://appwrite.io/docs/server/users) - 在以管理员模式登录时管理和列出所有用户。
-- [**团队**](https://appwrite.io/docs/references/cloud/client-web/teams) - 管理用户分组。邀请成员，管理团队中的用户权限和用户角色。
-- [**数据库**](https://appwrite.io/docs/references/cloud/client-web/databases) - 管理数据库文档和文档集。用检索界面来对文档和文档集进行读取，创建，更新，和删除。
-- [**贮存**](https://appwrite.io/docs/references/cloud/client-web/storage) - 管理文件的阅读、创建、删除和预览。设置文件的预览来满足程序的个性化需求。所有文件都由 ClamAV 扫描并安全存储和加密。
-- [**云函数**](https://appwrite.io/docs/server/functions) - 在安全，隔离的环境中运行自定义代码。这些代码可以被事件，CRON，或者手动操作触发。
-- [**消息传递**](https://appwrite.io/docs/references/cloud/client-web/messaging) - 使用 Appwrite 消息传递功能通过推送通知、电子邮件和短信与用户进行通信。
-- [**语言适配**](https://appwrite.io/docs/references/cloud/client-web/locale) - 根据用户所在的的国家和地区做出合适的语言适配。
-- [**头像**](https://appwrite.io/docs/references/cloud/client-web/avatars) -管理用户头像、国家旗帜、浏览器图标、信用卡符号，和生成二维码。
-- [**MCP**](https://appwrite.io/docs/tooling/mcp) - 使用 Appwrite 的模型上下文协议（Model Context Protocol）服务器，允许大语言模型（LLM）和 AI 工具（如 Claude Desktop、Cursor 和 Windsurf Editor）通过自然语言直接与您的 Appwrite 项目交互。
-- [**站点**](https://appwrite.io/docs/products/sites) - 直接从 Appwrite 开发、部署和扩展您的 Web 应用程序，与您的后端一起。
-  如需完整的 API 界面文档，请访问 [https://appwrite.io/docs](https://appwrite.io/docs)。如需更多教程、新闻和公告，请订阅我们的 [博客](https://medium.com/appwrite-io) 和 加入我们的[Discord 社区](https://discord.gg/GSeTUeA)。
-
 ### 开发套件
 
 以下是当前支持的平台和语言列表。如果您想帮助我们为您选择的平台添加支持，您可以访问我们的 [SDK 生成器](https://github.com/appwrite/sdk-generator) 项目并查看我们的 [贡献指南](https://github.com/appwrite/sdk-generator/blob/master/CONTRIBUTING.md)。
 
 #### 客户端
 
-- :white_check_mark: &nbsp; [Web](https://github.com/appwrite/sdk-for-web) (由 Appwrite 团队维护)
-- :white_check_mark: &nbsp; [Flutter](https://github.com/appwrite/sdk-for-flutter) (由 Appwrite 团队维护)
-- :white_check_mark: &nbsp; [Apple](https://github.com/appwrite/sdk-for-apple) (由 Appwrite 团队维护)
-- :white_check_mark: &nbsp; [Android](https://github.com/appwrite/sdk-for-android) (由 Appwrite 团队维护)
-- :white_check_mark: &nbsp; [React Native](https://github.com/appwrite/sdk-for-react-native) - **公测** (由 Appwrite 团队维护)
+- :white_check_mark: &nbsp; [Web](https://github.com/appwrite/sdk-for-web)
+- :white_check_mark: &nbsp; [Flutter](https://github.com/appwrite/sdk-for-flutter)
+- :white_check_mark: &nbsp; [Apple](https://github.com/appwrite/sdk-for-apple)
+- :white_check_mark: &nbsp; [Android](https://github.com/appwrite/sdk-for-android)
+- :white_check_mark: &nbsp; [React Native](https://github.com/appwrite/sdk-for-react-native)
 
 #### 服务器
 
-- :white_check_mark: &nbsp; [Node.js](https://github.com/appwrite/sdk-for-node) (由 Appwrite 团队维护)
-- :white_check_mark: &nbsp; [Python](https://github.com/appwrite/sdk-for-python) (由 Appwrite 团队维护)
-- :white_check_mark: &nbsp; [Dart](https://github.com/appwrite/sdk-for-dart) (由 Appwrite 团队维护)
-- :white_check_mark: &nbsp; [PHP](https://github.com/appwrite/sdk-for-php) (由 Appwrite 团队维护)
-- :white_check_mark: &nbsp; [Ruby](https://github.com/appwrite/sdk-for-ruby) (由 Appwrite 团队维护)
-- :white_check_mark: &nbsp; [.NET](https://github.com/appwrite/sdk-for-dotnet) (由 Appwrite 团队维护)
-- :white_check_mark: &nbsp; [Go](https://github.com/appwrite/sdk-for-go) (由 Appwrite 团队维护)
-- :white_check_mark: &nbsp; [Swift](https://github.com/appwrite/sdk-for-swift) (由 Appwrite 团队维护)
-- :white_check_mark: &nbsp; [Kotlin](https://github.com/appwrite/sdk-for-kotlin) (由 Appwrite 团队维护)
-- :white_check_mark: &nbsp; [Rust](https://github.com/appwrite/sdk-for-rust) (由 Appwrite 团队维护)
+- :white_check_mark: &nbsp; [Node.js](https://github.com/appwrite/sdk-for-node)
+- :white_check_mark: &nbsp; [Python](https://github.com/appwrite/sdk-for-python)
+- :white_check_mark: &nbsp; [Dart](https://github.com/appwrite/sdk-for-dart)
+- :white_check_mark: &nbsp; [PHP](https://github.com/appwrite/sdk-for-php)
+- :white_check_mark: &nbsp; [Ruby](https://github.com/appwrite/sdk-for-ruby)
+- :white_check_mark: &nbsp; [.NET](https://github.com/appwrite/sdk-for-dotnet)
+- :white_check_mark: &nbsp; [Go](https://github.com/appwrite/sdk-for-go)
+- :white_check_mark: &nbsp; [Swift](https://github.com/appwrite/sdk-for-swift)
+- :white_check_mark: &nbsp; [Kotlin](https://github.com/appwrite/sdk-for-kotlin)
+- :white_check_mark: &nbsp; [Rust](https://github.com/appwrite/sdk-for-rust)
 
-#### 开发者社区
-
-- :white_check_mark: &nbsp; [Appcelerator Titanium](https://github.com/m1ga/ti.appwrite) (维护者 [Michael Gangolf](https://github.com/m1ga/))
-- :white_check_mark: &nbsp; [Godot Engine](https://github.com/GodotNuts/appwrite-sdk) (维护者 [fenix-hub @GodotNuts](https://github.com/fenix-hub))
-
-找不到需要的的 SDK？ - 欢迎通过发起 PR 来帮助我们完善 Appwrite 的软件生态环境 [SDK 生成器](https://github.com/appwrite/sdk-generator)!
+找不到需要的 SDK？ - 欢迎通过发起 PR 来帮助我们完善 Appwrite 的软件生态环境 [SDK 生成器](https://github.com/appwrite/sdk-generator)!
 
 ## 软件架构
 
@@ -234,9 +274,9 @@ flowchart TB
   Executor --> openRuntimes[Open Runtimes]
 ```
 
-Appwrite 使用高拓展性的微服务架构。此外，Appwrite 支持多种 API（REST、WebSocket 和 GraphQL），来迎合您的个性化开发习惯。
+Appwrite 使用面向扩展与职责拆分的混合单体-微服务架构。此外，Appwrite 支持多种 API（REST、WebSocket 和 GraphQL），来迎合您的个性化开发习惯。
 
-Appwrite API 界面层利用后台缓存和任务委派来提供极速的响应时间。后台的 Worker 代理还允许您使用消息队列来处理负载，并精确控制硬件合理分配和成本。您可以在 [AGENTS.md](AGENTS.md) 中了解有关我们架构的更多信息。
+Appwrite API 界面层利用内存缓存和任务委派来提供极速的响应时间。后台的 Worker 代理还允许您使用消息队列来处理负载，并精确控制硬件合理分配和成本。您可以在 [AGENTS.md](AGENTS.md) 中了解有关我们架构的更多信息。
 
 ## 贡献代码
 
