@@ -123,12 +123,18 @@ class Update extends Base
             'active' => $schedule->getAttribute('active'),
         ])));
 
+        // Template deployments reuse providerBranch for their resolved ref (tags
+        // included), which must not repoint a rule pinned to a real branch.
+        $branch = $deployment->getAttribute('providerBranch', '');
+        $isBranchBuild = $branch !== '' && ! empty($deployment->getAttribute('installationId'));
+        $branches = $isBranchBuild ? ['', $branch] : [''];
+
         $queries = [
             Query::equal('trigger', ['manual']),
             Query::equal('type', ['deployment']),
             Query::equal('deploymentResourceType', ['function']),
             Query::equal('deploymentResourceInternalId', [$function->getSequence()]),
-            Query::equal('deploymentVcsProviderBranch', ['']),
+            Query::equal('deploymentVcsProviderBranch', $branches),
             Query::equal('projectInternalId', [$project->getSequence()])
         ];
 

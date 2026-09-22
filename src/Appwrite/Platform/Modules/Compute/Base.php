@@ -514,6 +514,9 @@ class Base extends Action
             Query::equal('deploymentId', ['']),
             Query::equal('type', ['deployment']),
             Query::equal('trigger', ['manual']),
+            // A branch-pinned rule is bound by the build of its own branch, not
+            // by whichever deployment happens to be the resource's first.
+            Query::equal('deploymentVcsProviderBranch', ['']),
         ];
         $dbForPlatform->forEach('rules', function (Document $rule) use ($deployment, $dbForPlatform, $authorization, $bus) {
             $rule = $authorization->skip(fn () => $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
