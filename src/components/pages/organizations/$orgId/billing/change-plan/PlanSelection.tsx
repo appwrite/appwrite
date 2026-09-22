@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { BillingPlanTier } from '@/lib/constants/billing-plan'
-import { isStartPlanRef } from '@/lib/pricing/start-plan'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -269,9 +268,9 @@ export function PlanSelection({
     </div>
   )
 
-  const recommendedPlanId =
-    availablePlans.find(([tier, data]) => isStartPlanRef(tier, data))?.[0] ??
-    BillingPlanTier.Tier1
+  // Pro keeps the badge wherever Start is sold: Start is the regional price of Pro, not a
+  // better plan, so recommending it over Pro reads as a downgrade being pushed.
+  const recommendedPlanId = BillingPlanTier.Tier1
 
   const radioGroupContent = (
     <>
