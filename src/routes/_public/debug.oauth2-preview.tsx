@@ -10,9 +10,8 @@ import {
 } from '@/components/global/auth/OAuth2ConsentCard'
 import { OAuth2OutcomeCard } from '@/components/global/auth/OAuth2OutcomeCard'
 import {
+  OAUTH2_DEVICE_CODE_MIN_LENGTH,
   OAuth2DeviceCodeInput,
-  OAUTH2_DEVICE_CODE_LENGTH,
-  normalizeUserCode,
 } from '@/components/global/auth/OAuth2DeviceCodeInput'
 import { Button } from '@/components/ui/button'
 import { AuthFlowAccountSwitcherStatic } from '@/components/global/auth/AuthFlowAccountSwitcherStatic'
@@ -215,9 +214,7 @@ function DeviceCodeCard({
             type="submit"
             variant="brandCta"
             className="w-full"
-            disabled={
-              normalizeUserCode(code).length !== OAUTH2_DEVICE_CODE_LENGTH
-            }
+            disabled={code.length < OAUTH2_DEVICE_CODE_MIN_LENGTH}
           >
             Continue
           </Button>
@@ -327,7 +324,7 @@ function OAuth2PreviewPage() {
 
       {!outcome && screen === 'device-code' ? (
         <DeviceCodeCard
-          code={deviceStep === 'confirm' ? 'MDF2TN' : ''}
+          code={deviceStep === 'confirm' ? 'MDF2TN39' : ''}
           hasPrefilledCode={deviceStep === 'confirm'}
         />
       ) : null}
