@@ -327,7 +327,7 @@ class Handler implements MqttHandler
 
     private function cursorKey(Connection $connection): string
     {
-        return 'appwrite:push:cursor:' . $connection->prefix
+        return 'push:cursor:' . $connection->prefix
             . ':' . ($connection->identity['userId'] ?? '')
             . ':' . $connection->getClientId();
     }
