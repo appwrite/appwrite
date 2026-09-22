@@ -323,14 +323,10 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
   // `amount` is already net of these, so they are rendered but never subtracted again.
   const discountCharges = useMemo(
     () =>
-      (aggregation?.resources ?? [])
-        .filter((resource) => resource.resourceId === 'billingDiscount')
-        .map((resource) => ({
-          name: resource.name ?? '',
-          amount: Math.abs(Number(resource.amount) || 0),
-        }))
-        .filter((discount) => discount.amount > 0),
-    [aggregation],
+      (aggregation?.resources ?? []).filter(
+        (resource) => resource.resourceId === 'billingDiscount',
+      ),
+    [aggregation?.resources],
   )
 
   // Toggle addons (BAA, Premium Geo DB, …) from aggregation resources
@@ -782,7 +778,7 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
               >
                 <span className="text-muted-foreground">{discount.name}</span>
                 <span className="font-medium text-foreground text-green-600 dark:text-green-400">
-                  -{formatCurrency(discount.amount)}
+                  {formatCurrency(discount.amount)}
                 </span>
               </div>
             ))}
