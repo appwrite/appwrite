@@ -27,7 +27,7 @@ trait StatisticalAggregates
         $this->assertSame(200, $result['headers']['status-code']);
         $row = $result['body'][$this->getRecordResource()][0];
         $this->assertArrayHasKey('spread', $row);
-        $this->assertEqualsWithDelta($this->isPostgreSQL() ? 77.3985 : 67.0238, (float) $row['spread'], 0.01);
+        $this->assertEqualsWithDelta(67.0238, (float) $row['spread'], 0.01);
     }
 
     public function testStddevPopOrderAmount(): void
@@ -93,7 +93,7 @@ trait StatisticalAggregates
 
         $this->assertSame(200, $result['headers']['status-code']);
         $row = $result['body'][$this->getRecordResource()][0];
-        $this->assertEqualsWithDelta($this->isPostgreSQL() ? 5989.583 : 4492.1875, (float) $row['varAmount'], 0.1);
+        $this->assertEqualsWithDelta(4492.1875, (float) $row['varAmount'], 0.1);
     }
 
     public function testVarPopOrderAmount(): void

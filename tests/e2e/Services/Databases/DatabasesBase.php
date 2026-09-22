@@ -60,21 +60,6 @@ trait DatabasesBase
         return $this->getProject()['$id'] ?? 'default';
     }
 
-    protected function getDatabaseAdapter(): string
-    {
-        return (string) ($this->getConsoleVariables()['_APP_DB_ADAPTER'] ?? 'mariadb');
-    }
-
-    protected function isPostgreSQL(): bool
-    {
-        return $this->getDatabaseAdapter() === 'postgresql';
-    }
-
-    protected function isMariaDB(): bool
-    {
-        return $this->getDatabaseAdapter() === 'mariadb';
-    }
-
     /**
      * Setup: Create database and return data
      * Uses static caching to avoid recreating resources
