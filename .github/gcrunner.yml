@@ -19,11 +19,13 @@ runners:
     ram: 16
     disk: 80gb
 
+  # A preempted build leaves a half-pushed digest.
   build:
     family: c3d
     cpu: 4
     ram: 16
     disk: 80gb
+    spot: false
 
   deploy:
     family: c3d
