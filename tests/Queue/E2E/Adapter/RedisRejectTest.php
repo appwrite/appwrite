@@ -27,7 +27,7 @@ final class RedisRejectTest extends RedisTestCase
         $message = $broker->receive($queue, 0)[0];
         $broker->reject($queue, $message);
 
-        $this->assertSame(1, $broker->getQueueSize($queue, failedJobs: true));
+        $this->assertSame(1, $broker->getFailedCount($queue));
         $this->assertSame([], $broker->receive($queue, 0));
         $this->assertSame(0, $connection->listSize($this->namespace . '.dead.audits'));
     }
@@ -44,7 +44,8 @@ final class RedisRejectTest extends RedisTestCase
 
         // The dead list is where an exhausted message ends up anyway; a terminal
         // one gets there on the first failure instead of after N of them.
-        $this->assertSame(0, $broker->getQueueSize($queue, failedJobs: true));
+        $this->assertSame(0, $connection->listSize($this->namespace . '.failed.audits'), 'nothing for the retry sweep to pick up');
+        $this->assertSame(1, $broker->getFailedCount($queue), 'but still work the queue could not get through');
         $this->assertSame([], $broker->receive($queue, 0));
         $this->assertSame([$message->getPid()], $connection->listRange($this->namespace . '.dead.audits', 10, 0));
     }

@@ -527,12 +527,39 @@ class Redis implements Synchronous, Consumer
         return \is_array($value) ? new Message($value) : false;
     }
 
+    /**
+     * Pending work, or everything this queue could not get through.
+     *
+     * The failed count is a sum of three lists because a message leaves the
+     * work queue for three different reasons, and an operator asking "is this
+     * queue in trouble" means all of them:
+     *
+     *  - failed: rejected with attempts left, waiting for {@see self::retry()}.
+     *  - dead:   rejected terminally, or out of attempts. Nothing retries these.
+     *  - poison: bytes no codec here could read, set aside by {@see self::park()}.
+     *
+     * Counting only the failed list reported zero through exactly the incidents
+     * the other two lists exist to record -- a handler declaring work permanently
+     * impossible, or a codec change leaving envelopes nobody can decode -- while
+     * {@see Broker\Nats} answered the same call with its dead stream. The gauge
+     * built on this flag ({@see \Utopia\Queue\Server::setTelemetry()}) read flat
+     * for both, so the one number watching a poisoned queue was the one number
+     * that could not see it.
+     */
     public function getQueueSize(Queue $queue, bool $failedJobs = false): int
     {
-        $queueName = "{$queue->namespace}.queue.{$queue->name}";
-        if ($failedJobs) {
-            $queueName = "{$queue->namespace}.failed.{$queue->name}";
-        }
-        return $this->commands->listSize($queueName);
+        return $failedJobs
+            ? $this->getFailedCount($queue)
+            : $this->commands->listSize("{$queue->namespace}.queue.{$queue->name}");
+    }
+
+    /**
+     * Everything this queue could not get through, from all three lists it uses.
+     */
+    public function getFailedCount(Queue $queue): int
+    {
+        return $this->commands->listSize("{$queue->namespace}.failed.{$queue->name}")
+            + $this->commands->listSize("{$queue->namespace}.dead.{$queue->name}")
+            + $this->commands->listSize("{$queue->namespace}.poison.{$queue->name}");
     }
 }

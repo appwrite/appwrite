@@ -1017,15 +1017,34 @@ class Nats implements Synchronous, Consumer, Bounded
      */
     public function getQueueSize(Queue $queue, bool $failedJobs = false): int
     {
+        if ($failedJobs) {
+            return $this->getFailedCount($queue);
+        }
+
         $stream = $this->workStream($queue);
 
-        return $this->command(function () use ($queue, $stream, $failedJobs): int {
-            try {
-                if ($failedJobs) {
-                    return $this->commandsJs()->getStreamInfo($this->deadStream($queue))->state->messages;
-                }
+        return $this->count(fn(): int => $this->commandsConsumer($stream)->info(true)->numPending);
+    }
 
-                return $this->commandsConsumer($stream)->info(true)->numPending;
+    /**
+     * The dead stream, which is where every failure this broker keeps ends up: a
+     * terminal reject and an exhausted one are copied to the same place.
+     */
+    public function getFailedCount(Queue $queue): int
+    {
+        return $this->count(fn(): int => $this->commandsJs()->getStreamInfo($this->deadStream($queue))->state->messages);
+    }
+
+    /**
+     * A read of JetStream state, answering 0 for what is not provisioned yet.
+     *
+     * @param callable(): int $read
+     */
+    private function count(callable $read): int
+    {
+        return $this->command(function () use ($read): int {
+            try {
+                return $read();
             } catch (JetStreamException $e) {
                 if ($e->apiError?->code === 404) {
                     return 0; // stream/consumer not provisioned yet — nothing enqueued

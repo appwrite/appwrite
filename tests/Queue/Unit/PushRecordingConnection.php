@@ -27,6 +27,13 @@ final class PushRecordingConnection implements Connection
     /** @var list<array<string, mixed>> */
     public array $arrays = [];
 
+    /**
+     * List lengths this fake reports, keyed by the full Redis key.
+     *
+     * @var array<string, int>
+     */
+    public array $sizes = [];
+
     public function leftPushArray(string $queue, array $payload): bool
     {
         $this->calls[] = ['leftPushArray', $queue];
@@ -119,7 +126,7 @@ final class PushRecordingConnection implements Connection
 
     public function listSize(string $key): int
     {
-        return 0;
+        return $this->sizes[$key] ?? 0;
     }
 
     public function listRange(string $key, int $total, int $offset): array

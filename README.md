@@ -244,6 +244,8 @@ On NATS every published message carries a `Content-Type` header naming the forma
 
 Bytes that no codec can read are parked rather than dropped or retried: the Redis broker moves them to `<namespace>.poison.<queue>`, and the NATS broker publishes them to the queue's dead subject and terminates the delivery. The pop has already taken them off the queue by the time anything can tell, so the only question is where they go — and a message every worker chokes on must not sit at the head of the queue.
 
+Parked bytes are counted by `getFailedCount()` — and by `getQueueSize($queue, failedJobs: true)`, the older spelling that delegates to it — which reports everything a queue could not get through: the retry sweep's list, the dead letters, and the parked bytes together. Counting the retry list alone answers zero for a queue whose handlers declare every message permanently impossible, and zero again for one whose envelopes nothing can decode — the two cases where the number matters most.
+
 ## Background publishing
 
 `Broker\Background` wraps a synchronous publisher with a bounded in-process buffer. `enqueue()` hands work to reader coroutines, applying back pressure when the buffer is full; `publish()` bypasses the buffer and remains synchronous. Call `shutdown()` to drain accepted messages before the process exits.

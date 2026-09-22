@@ -40,6 +40,18 @@ final class RedisBrokerRecoveryTest extends RedisTestCase
     }
 
     /**
+     * The retry sweep's own list, on its own.
+     *
+     * getQueueSize(failedJobs: true) sums this with the dead and poison lists --
+     * an operator asking what a queue could not get through means all three --
+     * so proving a message *moved off* this list needs the list itself.
+     */
+    private function failedSize(): int
+    {
+        return $this->connection->listSize($this->namespace . '.failed.recovery');
+    }
+
+    /**
      * retry() treats same-second timestamps as its own sweep wrapping around;
      * age the payload so a just-rejected test message looks like real backlog.
      */
@@ -149,8 +161,9 @@ final class RedisBrokerRecoveryTest extends RedisTestCase
         $this->broker->retry($this->queue, maxAttempts: 3);
 
         $this->assertSame(0, $this->broker->getQueueSize($this->queue), 'nothing is requeued');
-        $this->assertSame(0, $this->broker->getQueueSize($this->queue, failedJobs: true));
+        $this->assertSame(0, $this->failedSize(), 'the sweep is done with it');
         $this->assertSame(1, $this->deadSize(), 'the exhausted message is parked');
+        $this->assertSame(1, $this->broker->getQueueSize($this->queue, failedJobs: true), 'and it still counts as work this queue could not get through');
     }
 
     public function testRetrySkipsEntriesWhosePayloadExpired(): void
@@ -184,8 +197,9 @@ final class RedisBrokerRecoveryTest extends RedisTestCase
         $this->broker->retry($this->queue, newerThan: 600);
 
         $this->assertSame(0, $this->broker->getQueueSize($this->queue), 'ancient work is not resurrected');
-        $this->assertSame(0, $this->broker->getQueueSize($this->queue, failedJobs: true));
+        $this->assertSame(0, $this->failedSize(), 'the sweep is done with it');
         $this->assertSame(1, $this->deadSize(), 'the ancient entry is parked for inspection');
+        $this->assertSame(1, $this->broker->getQueueSize($this->queue, failedJobs: true), 'parking for inspection is not the same as nothing to inspect');
     }
 
     public function testReapParksClaimsOlderThanTheAgeGate(): void

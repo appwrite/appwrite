@@ -197,6 +197,11 @@ final class BackgroundTest extends TestCase
                 return 0;
             }
 
+            public function getFailedCount(Queue $queue): int
+            {
+                return 0;
+            }
+
             /** @return list<array<string, mixed>> */
             public function published(): array
             {
@@ -270,6 +275,11 @@ final class BackgroundTest extends TestCase
             public function retry(Queue $queue, ?int $limit = null): void {}
 
             public function getQueueSize(Queue $queue, bool $failedJobs = false): int
+            {
+                return 0;
+            }
+
+            public function getFailedCount(Queue $queue): int
             {
                 return 0;
             }
@@ -364,6 +374,11 @@ final class BackgroundTest extends TestCase
             {
                 return \count($this->buffer);
             }
+
+            public function getFailedCount(Queue $queue): int
+            {
+                return 0;
+            }
         };
     }
 
@@ -398,6 +413,11 @@ final class BackgroundTest extends TestCase
             public function getQueueSize(Queue $queue, bool $failedJobs = false): int
             {
                 return \count($this->batches);
+            }
+
+            public function getFailedCount(Queue $queue): int
+            {
+                return 0;
             }
         };
     }

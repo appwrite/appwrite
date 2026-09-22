@@ -151,6 +151,11 @@ abstract class MaintenanceConsumer implements Consumer
         return 0;
     }
 
+    public function getFailedCount(Queue $queue): int
+    {
+        return 0;
+    }
+
     public function close(): void {}
 }
 

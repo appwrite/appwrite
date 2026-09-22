@@ -102,6 +102,8 @@ final class RedisCodecTest extends RedisTestCase
             'the bytes are set aside for a human, not discarded',
         );
 
+        $this->assertSame(1, $broker->getFailedCount($queue), 'bytes nobody can read are work this queue did not get through');
+
         $message = $broker->receive($queue, 0)[0] ?? null;
         $this->assertInstanceOf(Message::class, $message);
         $this->assertSame(['n' => 1], $message->getPayload(), 'the message behind it is delivered');

@@ -45,6 +45,11 @@ readonly class Pool implements Synchronous, Consumer, Bounded
         return $this->delegate($this->publisher, __FUNCTION__, \func_get_args());
     }
 
+    public function getFailedCount(Queue $queue): int
+    {
+        return $this->delegate($this->publisher, __FUNCTION__, \func_get_args());
+    }
+
     public function receive(Queue $queue, int $timeout, int $n = 1): array
     {
         return $this->delegate($this->consumer, __FUNCTION__, \func_get_args()) ?? [];
