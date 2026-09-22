@@ -8,8 +8,11 @@ use Appwrite\Migration\Migration;
 use Appwrite\Migration\Version\V24;
 use Appwrite\Migration\Version\V25;
 use PHPUnit\Framework\TestCase;
+use Utopia\Audit\Adapter\Database as AdapterDatabase;
+use Utopia\Audit\Audit;
 use Utopia\Cache\Adapter\None as NoCache;
 use Utopia\Cache\Cache;
+use Utopia\Config\Config;
 use Utopia\Database\Adapter\Memory;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -340,14 +343,14 @@ final class MigrationVersionsTest extends TestCase
     }
 
     /**
-     * A legacy install has users without the email metadata columns. The fixture
-     * below is a frozen snapshot of that shape, written out rather than derived
-     * from the current config, so it keeps describing the old install even as
-     * the config moves on.
+     * A legacy install has users without the email metadata columns. That one
+     * collection is a frozen snapshot of the old shape, written out rather than
+     * derived from the current config, so it keeps describing the old install
+     * even as the config moves on. Everything around it is built the way project
+     * provisioning builds it, because execute() walks the whole project.
      *
-     * Drives migrateCollections twice, as the other migration tests here do, then
-     * does the thing the columns exist for: write a user carrying them. Before the
-     * repair this fails with Unknown attribute: "emailCanonical".
+     * Then does the thing the columns exist for: write a user carrying them.
+     * Before the repair this fails with Unknown attribute: "emailCanonical".
      */
     public function testV25LetsALegacyInstallWriteAUserCarryingEmailMetadata(): void
     {
@@ -360,6 +363,20 @@ final class MigrationVersionsTest extends TestCase
             ->setDatabase('migrationV25EmailMetadata')
             ->setNamespace('migration_email_metadata_' . \uniqid());
         $database->create();
+
+        (new Audit(new AdapterDatabase($database)))->setup();
+
+        foreach (Config::getParam('collections', [])['projects'] as $key => $collection) {
+            if ($key === 'users' || ($collection['$collection'] ?? '') !== Database::METADATA) {
+                continue;
+            }
+
+            $database->createCollection(
+                $key,
+                \array_map(fn (array $attribute) => new Document($attribute), $collection['attributes']),
+                \array_map(fn (array $index) => new Document($index), $collection['indexes']),
+            );
+        }
 
         $string = fn (string $id, int $size): Document => new Document([
             '$id' => $id,
@@ -395,7 +412,6 @@ final class MigrationVersionsTest extends TestCase
             $boolean('reset'),
             $boolean('mfa'),
         ]);
-        $database->createCollection('databases');
 
         $migration = new V25();
         $migration->setProject(
@@ -405,11 +421,9 @@ final class MigrationVersionsTest extends TestCase
             $authorization,
         );
 
-        $migrateCollections = new \ReflectionMethod($migration, 'migrateCollections');
         \ob_start();
         try {
-            $migrateCollections->invoke($migration);
-            $migrateCollections->invoke($migration);
+            $migration->execute();
         } finally {
             \ob_end_clean();
         }
