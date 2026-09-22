@@ -49,7 +49,7 @@ class Builds extends Action
         $rootDirectory = \ltrim($rootDirectory, '.');
         $rootDirectory = \ltrim($rootDirectory, '/');
 
-        if ($rootDirectory !== '' && \preg_match('#(^|/)\.\.(/|$)#', $rootDirectory)) {
+        if (\in_array('..', \explode('/', $rootDirectory), true)) {
             throw new \Exception('Invalid root directory');
         }
 

@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Platform\Modules\Functions\Workers;
 
 use Appwrite\Platform\Modules\Functions\Workers\Builds;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
-class BuildsTest extends TestCase
+final class BuildsTest extends TestCase
 {
     #[DataProvider('validRootDirectoryProvider')]
     public function testNormalizeRootDirectoryNormalizesValidPaths(string $input, string $expected): void
@@ -14,21 +16,19 @@ class BuildsTest extends TestCase
         $this->assertSame($expected, Builds::normalizeRootDirectory($input));
     }
 
-    public static function validRootDirectoryProvider(): array
+    public static function validRootDirectoryProvider(): \Iterator
     {
-        return [
-            'empty stays empty' => ['', ''],
-            'current directory collapses to empty' => ['./', ''],
-            'bare dot collapses to empty' => ['.', ''],
-            'bare parent collapses to empty' => ['..', ''],
-            'leading ./ is stripped' => ['./src', 'src'],
-            'surrounding slashes are stripped' => ['/src/', 'src'],
-            'trailing slash is stripped' => ['src/', 'src'],
-            'leading ./ with trailing slash' => ['./src/', 'src'],
-            'nested path is preserved' => ['src/app', 'src/app'],
-            'dotfile parent is preserved' => ['src/.env.local', 'src/.env.local'],
-            'single leading parent collapses to in-sandbox subdir' => ['../etc', 'etc'],
-        ];
+        yield 'empty stays empty' => ['', ''];
+        yield 'current directory collapses to empty' => ['./', ''];
+        yield 'bare dot collapses to empty' => ['.', ''];
+        yield 'bare parent collapses to empty' => ['..', ''];
+        yield 'leading ./ is stripped' => ['./src', 'src'];
+        yield 'surrounding slashes are stripped' => ['/src/', 'src'];
+        yield 'trailing slash is stripped' => ['src/', 'src'];
+        yield 'leading ./ with trailing slash' => ['./src/', 'src'];
+        yield 'nested path is preserved' => ['src/app', 'src/app'];
+        yield 'dotfile parent is preserved' => ['src/.env.local', 'src/.env.local'];
+        yield 'single leading parent collapses to in-sandbox subdir' => ['../etc', 'etc'];
     }
 
     #[DataProvider('traversalRootDirectoryProvider')]
@@ -40,14 +40,12 @@ class BuildsTest extends TestCase
         Builds::normalizeRootDirectory($input);
     }
 
-    public static function traversalRootDirectoryProvider(): array
+    public static function traversalRootDirectoryProvider(): \Iterator
     {
-        return [
-            'multi level parent escape' => ['../../etc/passwd'],
-            'embedded parent segment' => ['foo/../bar'],
-            'trailing parent segment' => ['foo/..'],
-            'dot slash parent' => ['./../etc'],
-            'multi embedded parent' => ['foo/../../bar'],
-        ];
+        yield 'multi level parent escape' => ['../../etc/passwd'];
+        yield 'embedded parent segment' => ['foo/../bar'];
+        yield 'trailing parent segment' => ['foo/..'];
+        yield 'dot slash parent' => ['./../etc'];
+        yield 'multi embedded parent' => ['foo/../../bar'];
     }
 }
