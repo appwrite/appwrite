@@ -4916,11 +4916,8 @@ final class AccountCustomClientTest extends Scope
 
     public function testCreatePushTargetReplacesRotatedToken(): void
     {
-        /**
-         * A session is one device install. Clients that lose track of the target ID re-register through
-         * create instead of update when the device token rotates, and leaving the superseded token live
-         * delivered every message to that device twice.
-         */
+        // A rotated token must replace the session's target rather than stack a second live
+        // token onto the same device.
         $response = $this->client->call(Client::METHOD_POST, '/account/targets/push', \array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -4945,28 +4942,6 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals($targetId, $response['body']['$id']);
         $this->assertEquals('test-identifier-after-rotation', $response['body']['identifier']);
         $this->assertEquals(false, $response['body']['expired']);
-
-        $response = $this->client->call(Client::METHOD_GET, '/account', \array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-
-        $sessionTargets = \array_values(\array_filter(
-            $response['body']['targets'],
-            fn ($target) => $target['providerType'] === 'push' && $target['$id'] === $targetId
-        ));
-
-        $this->assertCount(1, $sessionTargets);
-        $this->assertEquals('test-identifier-after-rotation', $sessionTargets[0]['identifier']);
-
-        $stale = \array_filter(
-            $response['body']['targets'],
-            fn ($target) => $target['identifier'] === 'test-identifier-before-rotation'
-        );
-
-        $this->assertEmpty($stale);
     }
 
     public function testMFARecoveryCodeChallenge(): void

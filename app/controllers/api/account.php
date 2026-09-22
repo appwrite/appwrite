@@ -5279,13 +5279,9 @@ Http::post('/v1/account/targets/push')
         $session = $dbForProject->getDocument('sessions', $sessionId);
         $name = "{$device['deviceBrand']} {$device['deviceModel']}";
 
-        /**
-         * A session is one device install, and an install holds one push token at a time. When the device
-         * token rotates, clients that did not keep the target ID around re-register through this endpoint,
-         * which used to leave the superseded token live: both targets then resolve to the same device and
-         * every message reaches it twice. Re-registering replaces the session's push target for that
-         * provider instead, so the device keeps a single live token along with its topic subscriptions.
-         */
+        // A session is one device install holding one push token. Clients that re-register after the
+        // token rotates, rather than updating, used to leave the superseded token live: both targets
+        // resolved to the same device, so every message arrived there twice.
         $existing = $session->isEmpty()
             ? new Document()
             : $authorization->skip(fn () => $dbForProject->findOne('targets', [
