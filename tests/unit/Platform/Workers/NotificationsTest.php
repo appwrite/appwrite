@@ -1054,7 +1054,9 @@ final class NotificationsTest extends TestCase
         }
 
         $this->assertSame(0, $spy->sendCount, 'an address no provider can deliver to must never reach SMTP');
-        $this->assertSame(0, $worker->persistAlertCalls, 'a skipped email must not persist an alert');
+        $this->assertCount(0, $this->database->find('notifications', [
+            Query::equal('messageId', [\md5('undeliverable-email')]),
+        ]), 'a skipped email must leave no alert behind');
     }
 
     public function testConsoleChannelHappyPath(): void

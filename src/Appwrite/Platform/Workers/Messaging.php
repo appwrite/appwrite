@@ -645,15 +645,38 @@ class Messaging extends Action
 
             $retry = [];
 
-            // The try/catch wraps the message build and the provider send. The build is rebuilt scoped to only
-            // the still-pending recipients so a partially-delivered batch never re-sends to recipients that
-            // already succeeded on an earlier attempt, and it throws for input no provider can deliver, which
-            // is terminal. A whole-batch throw from the send is retryable when transient, otherwise it records
-            // one representative terminal error. The previous behaviour of resetting $delivered to 0 on a throw
-            // is gone — the retry refactor sums delivered across attempts, and the expired-device-token cleanup
-            // below is isolated in its own try so a DB hiccup there can never be misattributed as a send failure.
+            // Rebuild the provider message scoped to only the still-pending recipients so a partially-delivered
+            // batch never re-sends to recipients that already succeeded on an earlier attempt. A recipient no
+            // provider can deliver to is recorded as terminal and dropped, so it never costs the rest their send.
+            $data = null;
+            while ($pending !== []) {
+                try {
+                    $data = $this->buildMessage($pending, $message, $provider, $providerType, $dbForProject, $attachments);
+                    break;
+                } catch (InvalidArgumentException $e) {
+                    $recipient = $e->getValue();
+
+                    if ($recipient === null || !\in_array($recipient, $pending, true)) {
+                        $this->recordError($errors, 'Failed sending to targets with error: ' . $e->getMessage());
+                        $pending = [];
+                        break;
+                    }
+
+                    $this->recordError($errors, "Failed sending to target {$recipient} with error: {$e->getMessage()}");
+                    $pending = \array_values(\array_diff($pending, [$recipient]));
+                }
+            }
+
+            if ($data === null) {
+                break;
+            }
+
+            // The try/catch wraps ONLY the provider send. A whole-batch throw is retryable when transient,
+            // otherwise it records one representative terminal error. The previous behaviour of resetting
+            // $delivered to 0 on a throw is gone — the retry refactor sums delivered across attempts, and the
+            // expired-device-token cleanup below is isolated in its own try so a DB hiccup there can never be
+            // misattributed as a send failure.
             try {
-                $data = $this->buildMessage($pending, $message, $provider, $providerType, $dbForProject, $attachments);
                 $response = $adapter->send($data);
             } catch (\Throwable $e) {
                 if ($hasRetriesLeft && !$e instanceof InvalidArgumentException && $this->isRetryableError($e->getMessage())) {
