@@ -17,6 +17,8 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
+use Utopia\Psr7\Stream;
+use Utopia\Storage\Device\S3;
 use Utopia\System\System;
 
 final class StorageCustomServerTest extends Scope
@@ -474,22 +476,17 @@ final class StorageCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(201, $bucket['headers']['status-code']);
-        $bucketId = $bucket['body']['$id'];
+
+        // The gateway's AWS access key is the project ID and its secret an API key.
+        $device = new S3(
+            root: $bucket['body']['$id'],
+            accessKey: $this->getProject()['$id'],
+            secretKey: $this->getProject()['apiKey'],
+            host: $this->client->getEndpoint() . '/s3',
+            region: 'us-east-1',
+        );
 
         $body = (string) \file_get_contents(__DIR__ . '/../../../resources/app.apk');
-        $payloadHash = \hash('sha256', $body);
-        $emptyHash = \hash('sha256', '');
-
-        // The S3 access key is the project ID and the secret is an API key.
-        $endpoint = (string) $this->client->getEndpoint();
-        $host = (string) \parse_url($endpoint, PHP_URL_HOST);
-        $base = (string) \parse_url($endpoint, PHP_URL_PATH);
-        $region = 'us-east-1';
-        $amzDate = \gmdate('Ymd\THis\Z');
-        $dateStamp = \substr($amzDate, 0, 8);
-        $scope = $dateStamp . '/' . $region . '/s3/aws4_request';
-        $credential = $this->getProject()['$id'] . '/' . $scope;
-        $signingKey = \hash_hmac('sha256', 'aws4_request', \hash_hmac('sha256', 's3', \hash_hmac('sha256', $region, \hash_hmac('sha256', $dateStamp, 'AWS4' . $this->getProject()['apiKey'], true), true), true), true);
 
         // An S3 client sees the zip container an APK is built from and declares it.
         $cases = [
@@ -498,45 +495,11 @@ final class StorageCustomServerTest extends Scope
         ];
 
         foreach ($cases as $key => $expected) {
-            $path = '/s3/' . $bucketId . '/' . $key;
+            $path = $device->getPath($key);
 
-            $canonical = \implode("\n", [
-                Client::METHOD_PUT,
-                $base . $path,
-                '',
-                'content-type:application/zip' . "\n" . 'host:' . $host . "\n" . 'x-amz-content-sha256:' . $payloadHash . "\n" . 'x-amz-date:' . $amzDate . "\n",
-                'content-type;host;x-amz-content-sha256;x-amz-date',
-                $payloadHash,
-            ]);
-            $signature = \hash_hmac('sha256', "AWS4-HMAC-SHA256\n" . $amzDate . "\n" . $scope . "\n" . \hash('sha256', $canonical), $signingKey);
+            $device->write($path, new Stream($body), 'application/zip');
 
-            $upload = $this->client->call(Client::METHOD_PUT, $path, [
-                'content-type' => 'application/zip',
-                'x-amz-content-sha256' => $payloadHash,
-                'x-amz-date' => $amzDate,
-                'authorization' => 'AWS4-HMAC-SHA256 Credential=' . $credential . ',SignedHeaders=content-type;host;x-amz-content-sha256;x-amz-date,Signature=' . $signature,
-            ], $body);
-
-            $this->assertEquals(200, $upload['headers']['status-code'], $key);
-
-            $canonical = \implode("\n", [
-                Client::METHOD_GET,
-                $base . $path,
-                '',
-                'host:' . $host . "\n" . 'x-amz-content-sha256:' . $emptyHash . "\n" . 'x-amz-date:' . $amzDate . "\n",
-                'host;x-amz-content-sha256;x-amz-date',
-                $emptyHash,
-            ]);
-            $signature = \hash_hmac('sha256', "AWS4-HMAC-SHA256\n" . $amzDate . "\n" . $scope . "\n" . \hash('sha256', $canonical), $signingKey);
-
-            $download = $this->client->call(Client::METHOD_GET, $path, [
-                'x-amz-content-sha256' => $emptyHash,
-                'x-amz-date' => $amzDate,
-                'authorization' => 'AWS4-HMAC-SHA256 Credential=' . $credential . ',SignedHeaders=host;x-amz-content-sha256;x-amz-date,Signature=' . $signature,
-            ]);
-
-            $this->assertEquals(200, $download['headers']['status-code'], $key);
-            $this->assertEquals($expected, $download['headers']['content-type'], $key);
+            $this->assertEquals($expected, $device->getFileMimeType($path), $key);
         }
     }
 
