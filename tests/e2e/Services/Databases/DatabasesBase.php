@@ -1811,6 +1811,73 @@ trait DatabasesBase
         $this->assertEquals(200, $response['headers']['status-code']);
     }
 
+    public function testUpdateRelationshipAttributeAliasPrecedence(): void
+    {
+        if (!$this->getSupportForRelationships()) {
+            $this->markTestSkipped('Relationships are not supported by this database adapter');
+        }
+
+        $database = $this->client->call(Client::METHOD_POST, $this->getApiBasePath(), [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'databaseId' => ID::unique(),
+            'name' => 'Alias Precedence Database'
+        ]);
+
+        $databaseId = $database['body']['$id'];
+
+        $container = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            $this->getContainerIdParam() => ID::unique(),
+            'name' => 'AliasPrecedence',
+            'permissions' => [
+                Permission::create(Role::any()),
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+
+        $containerId = $container['body']['$id'];
+
+        $created = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $containerId) . '/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]), [
+            'key' => 'relationship',
+            'size' => 256,
+            'required' => false,
+        ]);
+
+        $this->assertEquals(202, $created['headers']['status-code']);
+
+        $this->waitForAttribute($databaseId, $containerId, 'relationship');
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_PATCH, $this->getSchemaUrl($databaseId, $containerId, 'string', 'relationship'), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]), [
+            'required' => false,
+            'default' => 'plain',
+        ]);
+
+        // The legacy `/:key/relationship` alias outranks the typed route, so the request
+        // reaches the relationship update keyed `string` instead of the string update
+        // keyed `relationship`. Dropping the alias is what would flip this to a 200.
+        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertEquals($this->getSchemaParam() . '_not_found', $response['body']['type']);
+    }
+
     public function testAttributeResponseModels(): void
     {
         if (!$this->getSupportForAttributes()) {
