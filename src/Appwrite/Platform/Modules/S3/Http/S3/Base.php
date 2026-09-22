@@ -324,11 +324,19 @@ abstract class Base extends Action
     protected function contentType(string $name, string $contentType, string $body = ''): string
     {
         $contentType = \strtolower(\trim(\explode(';', $contentType)[0]));
+        $extension = \strtolower(\pathinfo($name, PATHINFO_EXTENSION));
+
+        // An APK is a zip container, so clients and libmagic alike commonly report one as a
+        // plain zip. The stored type is echoed back as Content-Type on download, and clients
+        // that trust it over the file name then save the APK under the wrong extension.
+        if ($extension === 'apk' && \in_array($contentType, ['', 'application/zip', 'application/octet-stream', 'binary/octet-stream'], true)) {
+            return 'application/vnd.android.package-archive';
+        }
+
         if ($contentType !== '' && $contentType !== 'application/octet-stream' && $contentType !== 'binary/octet-stream') {
             return $contentType;
         }
 
-        $extension = \strtolower(\pathinfo($name, PATHINFO_EXTENSION));
         $byExtension = [
             'avif' => 'image/avif',
             'bmp' => 'image/bmp',
