@@ -108,6 +108,52 @@ final class VCSGiteaConsoleClientTest extends Scope
         $webhookDeploymentId = $this->waitForNewDeploymentReadyHelper($functionId, $knownIds);
         $this->assertNotContains($webhookDeploymentId, $knownIds);
         $this->assertEventually(fn () => $this->assertExecutionOutputHelper($functionId, 'gitea-v2'), 30000, 1000);
+
+        $headers = \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders());
+
+        // A rule pinned to a branch starts on that branch's newest ready build.
+        $rule = $this->client->call(Client::METHOD_POST, '/proxy/rules/function', $headers, [
+            'domain' => \uniqid() . '-gitea-branch.custom.localhost',
+            'functionId' => $functionId,
+            'branch' => 'main',
+        ]);
+        $this->assertEquals(201, $rule['headers']['status-code'], \json_encode($rule['body']));
+        $this->assertEquals($webhookDeploymentId, $rule['body']['deploymentId']);
+        $ruleId = $rule['body']['$id'];
+
+        // A build that is never activated does not reach activate(), so only the
+        // branch rebind in finalize() can move the rule to it.
+        $unactivated = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments/vcs', $headers, [
+            'type' => 'branch',
+            'reference' => 'main',
+            'activate' => false,
+        ]);
+        $this->assertEquals(202, $unactivated['headers']['status-code'], \json_encode($unactivated['body']));
+        $unactivatedId = $unactivated['body']['$id'];
+        $this->waitForDeploymentReadyHelper($functionId, $unactivatedId);
+
+        $this->assertEventually(function () use ($ruleId, $headers, $unactivatedId) {
+            $rule = $this->client->call(Client::METHOD_GET, '/proxy/rules/' . $ruleId, $headers);
+            $this->assertEquals($unactivatedId, $rule['body']['deploymentId'], \json_encode($rule['body']));
+        }, 30000, 1000);
+
+        $function = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId, $headers);
+        $this->assertEquals($webhookDeploymentId, $function['body']['deploymentId'], 'an unactivated build must not become the function\'s own deployment');
+
+        // Activating a build of the branch repoints the rule too, which the
+        // manual route used to skip for anything pinned to a branch.
+        $activated = $this->client->call(Client::METHOD_PATCH, '/functions/' . $functionId . '/deployment', $headers, [
+            'deploymentId' => $webhookDeploymentId,
+        ]);
+        $this->assertEquals(200, $activated['headers']['status-code'], \json_encode($activated['body']));
+
+        $this->assertEventually(function () use ($ruleId, $headers, $webhookDeploymentId) {
+            $rule = $this->client->call(Client::METHOD_GET, '/proxy/rules/' . $ruleId, $headers);
+            $this->assertEquals($webhookDeploymentId, $rule['body']['deploymentId'], \json_encode($rule['body']));
+        }, 30000, 1000);
     }
 
     public function testCreateDuplicateDeploymentWithRootDirectory(): void
