@@ -12,6 +12,7 @@ use Utopia\Messaging\Adapter\Email\Sendgrid;
 use Utopia\Messaging\Adapter\Email\SES;
 use Utopia\Messaging\Adapter\Email\SMTP;
 use Utopia\Messaging\Adapter\SMS as SMSAdapter;
+use Utopia\Messaging\Adapter\SMS\Clickatell;
 use Utopia\Messaging\Adapter\SMS\Fast2SMS;
 use Utopia\Messaging\Adapter\SMS\GEOSMS;
 use Utopia\Messaging\Adapter\SMS\Inforu;
@@ -64,6 +65,9 @@ class Provider
                 $credentials['senderId'] ?? '',
                 $credentials['authKey'] ?? '',
                 $credentials['templateId'] ?? ''
+            ),
+            'clickatell' => new Clickatell(
+                $credentials['apiKey'] ?? ''
             ),
             'vonage' => new Vonage(
                 $credentials['apiKey'] ?? '',
@@ -224,6 +228,9 @@ class Provider
                     'senderId' => $user,
                     'authKey' => $password,
                     'templateId' => $dsn->getParam('templateId', $from),
+                ],
+                'clickatell' => [
+                    'apiKey' => $password
                 ],
                 'vonage' => [
                     'apiKey' => $user,
