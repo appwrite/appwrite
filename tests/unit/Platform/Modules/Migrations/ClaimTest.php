@@ -617,7 +617,7 @@ final class ClaimTest extends TestCase
     /** @return \Iterator<string, array{string, int|string|null}> */
     public static function staleIdentities(): \Iterator
     {
-        yield 'prior version with identical timestamp' => ['$version', 0];
+        yield 'different attempt with identical timestamp' => ['attemptId', 'attempt-b'];
         yield 'different immutable sequence' => ['$sequence', 'replacement'];
     }
 
@@ -640,26 +640,26 @@ final class ClaimTest extends TestCase
 
         $stored = $this->database->getDocument('migrations', $active->getId());
         $this->assertSame('processing', $stored->getAttribute('status'));
-        $this->assertSame($active->getVersion(), $stored->getVersion());
+        $this->assertSame($active->getUpdatedAt(), $stored->getUpdatedAt());
         $this->assertSame($active->getSequence(), $stored->getSequence());
     }
 
     public function testWorkerPersistenceRefusesAGenerationItCannotCompare(): void
     {
         $active = $this->database->createDocument('migrations', new Document([
-            '$id' => 'migration-unversioned',
+            '$id' => 'migration-undated',
             'attemptId' => 'attempt-a',
             'status' => 'processing',
             'stage' => 'migrating',
             'resourceData' => [],
         ]));
-        $unversioned = new Document($active->getArrayCopy());
-        $unversioned->removeAttribute('$version');
-        $unversioned->setAttribute('status', 'completed');
-        $unversioned->setAttribute('stage', 'finished');
+        $undated = new Document($active->getArrayCopy());
+        $undated->removeAttribute('$updatedAt');
+        $undated->setAttribute('status', 'completed');
+        $undated->setAttribute('stage', 'finished');
 
         try {
-            (new Claim($this->database))->persist($unversioned);
+            (new Claim($this->database))->persist($undated);
             $this->fail('A generation that cannot be compared must be refused, not treated as superseded');
         } catch (\LogicException) {
         }
@@ -667,7 +667,7 @@ final class ClaimTest extends TestCase
         $stored = $this->database->getDocument('migrations', $active->getId());
         $this->assertSame('processing', $stored->getAttribute('status'));
         $this->assertSame('migrating', $stored->getAttribute('stage'));
-        $this->assertSame($active->getVersion(), $stored->getVersion());
+        $this->assertSame($active->getUpdatedAt(), $stored->getUpdatedAt());
     }
 
     public function testWorkerPersistenceLosesStorageRaceAfterGenerationRead(): void

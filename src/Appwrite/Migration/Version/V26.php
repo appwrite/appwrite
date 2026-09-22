@@ -49,10 +49,15 @@ class V26 extends V25
                 continue;
             }
 
+            $readAt = $migration->getUpdatedAt();
+
             try {
-                $this->dbForProject->updateDocument('migrations', $migration->getId(), new Document([
-                    'stage' => 'finished',
-                ]), expectedVersion: $migration->getVersion());
+                $this->dbForProject->withRequestTimestamp(
+                    $readAt === null ? null : new \DateTime($readAt),
+                    fn (): Document => $this->dbForProject->updateDocument('migrations', $migration->getId(), new Document([
+                        'stage' => 'finished',
+                    ])),
+                );
             } catch (Conflict) {
                 // A retry claimed this migration after the iterator read it.
             }

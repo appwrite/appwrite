@@ -119,16 +119,16 @@ final readonly class Claim
                     if (
                         !\is_string($attemptId)
                         || $attemptId === ''
-                        || !$this->sameGeneration($live, $migration)
+                        || !$this->sameObservation($live, $migration)
                         || $live->getAttribute('status') !== self::STATUS_PENDING
                         || $live->getAttribute('stage') !== self::STAGE_INIT
                     ) {
                         throw new \LogicException('Initial migration generation is no longer publishable');
                     }
 
-                    return $this->required($this->database->updateDocument('migrations', $migrationId, new Document([
+                    return $this->write($live, new Document([
                         'attemptId' => ID::unique(),
-                    ]), expectedVersion: $this->version($live)));
+                    ]));
                 });
             },
         );
@@ -149,10 +149,9 @@ final readonly class Claim
                     $live->getAttribute('status') === self::STATUS_PENDING
                     && $live->getAttribute('stage') === self::STAGE_INIT
                 ) {
-                    $this->database->deleteDocument(
-                        'migrations',
-                        $migrationId,
-                        expectedVersion: $this->version($live),
+                    $this->database->withRequestTimestamp(
+                        $this->readAt($live),
+                        fn (): bool => $this->database->deleteDocument('migrations', $migrationId),
                     );
                 }
             });
@@ -200,11 +199,11 @@ final readonly class Claim
                         'status' => $migration->getAttribute('status'),
                         'stage' => $migration->getAttribute('stage'),
                     ]);
-                    $claimed = $this->required($this->database->updateDocument('migrations', $migrationId, new Document([
+                    $claimed = $this->write($migration, new Document([
                         'attemptId' => ID::unique(),
                         'status' => self::STATUS_PENDING,
                         'stage' => self::STAGE_FINISHED,
-                    ]), expectedVersion: $this->version($migration)));
+                    ]));
 
                     return [$claimed, $terminal];
                 });
@@ -223,16 +222,16 @@ final readonly class Claim
                 throw new \RuntimeException('Failed to enqueue migration');
             }
         } catch (\Throwable $error) {
-            $this->withGeneration($claimed, function (Document $live) use ($migrationId, $terminal): void {
+            $this->withGeneration($claimed, function (Document $live) use ($terminal): void {
                 if (
                     $live->getAttribute('status') === self::STATUS_PENDING
                     && $live->getAttribute('stage') === self::STAGE_FINISHED
                 ) {
-                    $this->database->updateDocument('migrations', $migrationId, new Document([
+                    $this->write($live, new Document([
                         'attemptId' => $terminal->getAttribute('attemptId'),
                         'status' => self::STATUS_FAILED,
                         'stage' => self::STAGE_FINISHED,
-                    ]), expectedVersion: $this->version($live));
+                    ]));
                 }
             });
 
@@ -261,7 +260,7 @@ final readonly class Claim
                 function () use ($message, $migrationId, $queued): ?Delivery {
                     return $this->database->withTransaction(function () use ($message, $migrationId, $queued): ?Delivery {
                         $live = $this->database->getDocument('migrations', $migrationId, forUpdate: true);
-                        if ($live->isEmpty() || !$this->sameGeneration($live, $queued)) {
+                        if ($live->isEmpty() || !$this->sameObservation($live, $queued)) {
                             // A redelivery of an already-claimed generation is stale and is
                             // acknowledged. If its worker died mid-attempt, maintenance turns
                             // the old processing row into a failed/finished retryable terminal.
@@ -322,11 +321,11 @@ final readonly class Claim
                             $liveAttemptId = ID::unique();
                         }
 
-                        $migration = $this->required($this->database->updateDocument('migrations', $migrationId, new Document([
+                        $migration = $this->write($live, new Document([
                             'attemptId' => $liveAttemptId,
                             'status' => self::STATUS_PROCESSING,
                             'stage' => self::STAGE_PROCESSING,
-                        ]), expectedVersion: $this->version($live)));
+                        ]));
 
                         return new Delivery($migration, $terminal);
                     });
@@ -357,23 +356,12 @@ final readonly class Claim
 
             return $updates === []
                 ? $live
-                : $this->required($this->database->updateDocument(
-                    'migrations',
-                    $live->getId(),
-                    new Document($updates),
-                    expectedVersion: $this->version($live),
-                ));
+                : $this->write($live, new Document($updates));
         });
     }
 
     /**
      * Turn one observed stale processing generation into a retryable terminal.
-     *
-     * The maintenance sweep reads its candidates through Query::select, and no
-     * projection can carry $version: the query layer has no column for it, so
-     * selecting it is a hard SQL error and leaving it out yields null. A swept
-     * row therefore pins its generation on the observation, not on the update
-     * counter, and the write still commits under the version read under lock.
      */
     public function expire(Document $migration): ?Document
     {
@@ -389,10 +377,10 @@ final readonly class Claim
                     return null;
                 }
 
-                return $this->required($this->database->updateDocument('migrations', $live->getId(), new Document([
+                return $this->write($live, new Document([
                     'status' => self::STATUS_FAILED,
                     'stage' => self::STAGE_FINISHED,
-                ]), expectedVersion: $this->version($live)));
+                ]));
             });
         } catch (Conflict) {
             return null;
@@ -461,14 +449,14 @@ final readonly class Claim
 
     private function withGeneration(Document $migration, callable $callback): mixed
     {
-        if ($migration->getVersion() === null) {
-            throw new \LogicException('Migration generation cannot be compared without a version');
+        if ($migration->getUpdatedAt() === null) {
+            throw new \LogicException('Migration generation cannot be compared without an update timestamp');
         }
 
         try {
             return $this->database->withTransaction(function () use ($callback, $migration): mixed {
                 $live = $this->database->getDocument('migrations', $migration->getId(), forUpdate: true);
-                if (!$this->sameGeneration($live, $migration)) {
+                if (!$this->sameObservation($live, $migration)) {
                     return null;
                 }
 
@@ -479,14 +467,26 @@ final readonly class Claim
         }
     }
 
-    private function version(Document $document): int
+    /**
+     * Every update moves `$updatedAt` strictly forward, so a write pinned to the
+     * timestamp the row was read with is refused once another writer got there first.
+     */
+    private function write(Document $live, Document $updates): Document
     {
-        $version = $document->getVersion();
-        if ($version === null) {
-            throw new \LogicException('Migration document version is missing');
+        return $this->required($this->database->withRequestTimestamp(
+            $this->readAt($live),
+            fn (): Document => $this->database->updateDocument('migrations', $live->getId(), $updates),
+        ));
+    }
+
+    private function readAt(Document $document): \DateTime
+    {
+        $updatedAt = $document->getUpdatedAt();
+        if ($updatedAt === null || $updatedAt === '') {
+            throw new \LogicException('Migration document update timestamp is missing');
         }
 
-        return $version;
+        return new \DateTime($updatedAt);
     }
 
     private function required(Document $document): Document
@@ -496,13 +496,6 @@ final readonly class Claim
         }
 
         return $document;
-    }
-
-    private function sameGeneration(Document $live, Document $queued): bool
-    {
-        return $this->sameObservation($live, $queued)
-            && $live->getVersion() !== null
-            && $live->getVersion() === $queued->getVersion();
     }
 
     private function sameObservation(Document $live, Document $queued): bool

@@ -34,7 +34,7 @@ final class ClaimTest extends TestCase
     }
 
     #[DataProvider('adapters')]
-    public function testStaleSnapshotCannotCompleteNewerVersionWithIdenticalTimestamp(string $adapter): void
+    public function testStaleSnapshotCannotCompleteNewerGeneration(string $adapter): void
     {
         $name = 'migration_claim_' . \bin2hex(\random_bytes(12));
         $connection = match ($adapter) {
@@ -77,13 +77,10 @@ final class ClaimTest extends TestCase
                 'status' => 'processing',
                 'stage' => 'processing',
             ]));
-            $database->setPreserveDates(true);
             $newer = $database->updateDocument('migrations', $active->getId(), new Document([
-                '$updatedAt' => $active->getUpdatedAt(),
                 'stage' => 'migrating',
-            ]), expectedVersion: $active->getVersion());
-            $this->assertSame($active->getUpdatedAt(), $newer->getUpdatedAt());
-            $this->assertNotSame($active->getVersion(), $newer->getVersion());
+            ]));
+            $this->assertNotSame($active->getUpdatedAt(), $newer->getUpdatedAt(), 'Every update must move the timestamp the claim protocol compares generations by');
 
             $active->setAttribute('status', 'completed');
             $active->setAttribute('stage', 'finished');
@@ -92,7 +89,7 @@ final class ClaimTest extends TestCase
             $stored = $database->getDocument('migrations', $active->getId());
             $this->assertSame('processing', $stored->getAttribute('status'));
             $this->assertSame('migrating', $stored->getAttribute('stage'));
-            $this->assertSame($newer->getVersion(), $stored->getVersion());
+            $this->assertSame($newer->getUpdatedAt(), $stored->getUpdatedAt());
         } finally {
             $database->delete();
         }

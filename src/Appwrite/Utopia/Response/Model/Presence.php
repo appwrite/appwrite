@@ -85,7 +85,6 @@ class Presence extends Model
     {
         $document->removeAttribute('$collection');
         $document->removeAttribute('$tenant');
-        $document->removeAttribute('$version');
         $document->removeAttribute('hostname');
         $document->removeAttribute('permissionsHash');
         $document->removeAttribute('userInternalId');

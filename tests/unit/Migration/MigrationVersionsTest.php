@@ -526,13 +526,9 @@ final class MigrationVersionsTest extends TestCase
             private bool $interleave = true;
 
             #[\Override]
-            public function updateDocument(
-                string $collection,
-                string $id,
-                Document $document,
-                ?int $expectedVersion = null,
-            ): Document {
-                if ($this->interleave && $collection === 'migrations' && $expectedVersion !== null) {
+            public function updateDocument(string $collection, string $id, Document $document): Document
+            {
+                if ($this->interleave && $collection === 'migrations' && $this->timestamp !== null) {
                     $this->interleave = false;
                     parent::updateDocument($collection, $id, new Document([
                         'attemptId' => 'attempt-retry',
@@ -541,7 +537,7 @@ final class MigrationVersionsTest extends TestCase
                     ]));
                 }
 
-                return parent::updateDocument($collection, $id, $document, $expectedVersion);
+                return parent::updateDocument($collection, $id, $document);
             }
         };
         $database

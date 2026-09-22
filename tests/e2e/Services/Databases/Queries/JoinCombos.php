@@ -245,7 +245,6 @@ trait JoinCombos
             '$createdAt',
             '$updatedAt',
             '$tenant',
-            '$version',
             '$collection',
             '$distance',
             '$deletedAt',

@@ -150,7 +150,7 @@ final class ScheduleDatabase extends Database
         return $this->documents[$collection][$id] ?? new Document();
     }
 
-    public function deleteDocument(string $collection, string $id, ?int $expectedVersion = null): bool
+    public function deleteDocument(string $collection, string $id): bool
     {
         if ($this->deleteError !== null) {
             throw $this->deleteError;

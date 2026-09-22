@@ -685,7 +685,7 @@ class Update extends Action
 
     private function stripResponseMetadata(Document $document): Document
     {
-        foreach (['$databaseId', '$collectionId', '$tableId', '$sequence', '$version'] as $attribute) {
+        foreach (['$databaseId', '$collectionId', '$tableId', '$sequence'] as $attribute) {
             unset($document[$attribute]);
         }
 
