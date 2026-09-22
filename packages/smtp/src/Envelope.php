@@ -55,6 +55,6 @@ final readonly class Envelope
         if ($this->utf8) {
             return true;
         }
-        return array_any([$this->sender, ...$this->recipients], fn(string $path): bool => preg_match('/^[\x00-\x7F]*$/', $path) !== 1);
+        return array_any([$this->sender, ...$this->recipients], fn (string $path): bool => preg_match('/^[\x00-\x7F]*$/', $path) !== 1);
     }
 }

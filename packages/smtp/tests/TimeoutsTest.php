@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Utopia\SMTP\Tests\Unit;
+namespace Utopia\SMTP\Tests;
 
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
@@ -11,7 +11,7 @@ use Utopia\SMTP\Encryption;
 use Utopia\SMTP\Envelope;
 use Utopia\SMTP\Exception\ConnectionException;
 use Utopia\SMTP\Exception\TimeoutException;
-use Utopia\SMTP\Tests\Unit\Support\FakeTransport;
+use Utopia\SMTP\Tests\Support\FakeTransport;
 use Utopia\SMTP\Timeouts;
 use Utopia\SMTP\Transport\Native;
 
@@ -69,7 +69,7 @@ final class TimeoutsTest extends TestCase
 
     public function testTheClientAsksForEachWaitByName(): void
     {
-        $transport = new class extends FakeTransport {
+        $transport = new class () extends FakeTransport {
             /** @var list<string> */
             public array $waits = [];
 

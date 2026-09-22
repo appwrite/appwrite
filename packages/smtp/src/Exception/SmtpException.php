@@ -13,4 +13,6 @@ namespace Utopia\SMTP\Exception;
  * something that went wrong, and raises the SPL \InvalidArgumentException.
  * Using a transport that was never connected raises \LogicException.
  */
-class SmtpException extends \Exception {}
+class SmtpException extends \Exception
+{
+}

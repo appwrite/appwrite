@@ -7,4 +7,6 @@ namespace Utopia\SMTP\Exception;
 /**
  * The message could not be produced, such as an attachment that stopped being readable.
  */
-class MessageException extends SmtpException {}
+class MessageException extends SmtpException
+{
+}

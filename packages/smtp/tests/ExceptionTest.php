@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Utopia\SMTP\Tests\Unit;
+namespace Utopia\SMTP\Tests;
 
 use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -23,7 +23,7 @@ use Utopia\SMTP\Exception\TransactionException;
 use Utopia\SMTP\Message;
 use Utopia\SMTP\Outcome;
 use Utopia\SMTP\Reply;
-use Utopia\SMTP\Tests\Unit\Support\FakeTransport;
+use Utopia\SMTP\Tests\Support\FakeTransport;
 use Utopia\SMTP\Transport\Native;
 
 /**

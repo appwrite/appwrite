@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Utopia\SMTP\Tests\Unit;
+namespace Utopia\SMTP\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Utopia\SMTP\Client;
@@ -10,7 +10,7 @@ use Utopia\SMTP\Encryption;
 use Utopia\SMTP\Envelope;
 use Utopia\SMTP\Exception\ConnectionException;
 use Utopia\SMTP\Exception\ProtocolException;
-use Utopia\SMTP\Tests\Unit\Support\FakeTransport;
+use Utopia\SMTP\Tests\Support\FakeTransport;
 
 /**
  * The reply reader is the one part of the client fed by something it does not

@@ -11,4 +11,6 @@ namespace Utopia\SMTP\Exception;
  * differently: it says nothing about whether the server is healthy, only that
  * it did not answer in time.
  */
-class TimeoutException extends ConnectionException {}
+class TimeoutException extends ConnectionException
+{
+}

@@ -14,7 +14,8 @@ final readonly class Login implements Authenticator
         private string $username,
         #[\SensitiveParameter]
         private string $password,
-    ) {}
+    ) {
+    }
 
     public function mechanism(): string
     {

@@ -24,7 +24,8 @@ final class Native implements Transport
         private readonly string $host,
         private readonly int $port,
         private readonly Tls $options = new Tls(),
-    ) {}
+    ) {
+    }
 
     public function connect(float $timeout, bool $tls): void
     {

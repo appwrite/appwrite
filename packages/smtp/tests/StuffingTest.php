@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Utopia\SMTP\Tests\Unit;
+namespace Utopia\SMTP\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Utopia\SMTP\Client;
 use Utopia\SMTP\Encryption;
 use Utopia\SMTP\Envelope;
-use Utopia\SMTP\Tests\Unit\Support\FakeTransport;
+use Utopia\SMTP\Tests\Support\FakeTransport;
 
 /**
  * Transparency, per RFC 5321 section 4.5.2. A dot that opens a line ends the

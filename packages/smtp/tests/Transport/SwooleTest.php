@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Utopia\SMTP\Tests\Unit\Transport;
+namespace Utopia\SMTP\Tests\Transport;
 
 use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use PHPUnit\Framework\TestCase;

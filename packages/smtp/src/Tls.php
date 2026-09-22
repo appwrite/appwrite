@@ -19,5 +19,6 @@ final readonly class Tls
         public ?string $peerName = null,
         public ?string $caFile = null,
         public ?string $ciphers = null,
-    ) {}
+    ) {
+    }
 }

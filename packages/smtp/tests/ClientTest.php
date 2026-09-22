@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Utopia\SMTP\Tests\Unit;
+namespace Utopia\SMTP\Tests;
 
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
@@ -19,7 +19,7 @@ use Utopia\SMTP\Exception\ProtocolException;
 use Utopia\SMTP\Exception\TransactionException;
 use Utopia\SMTP\Message;
 use Utopia\SMTP\Outcome;
-use Utopia\SMTP\Tests\Unit\Support\FakeTransport;
+use Utopia\SMTP\Tests\Support\FakeTransport;
 
 final class ClientTest extends TestCase
 {
@@ -462,7 +462,7 @@ final class ClientTest extends TestCase
         $client->sendRaw($this->envelope(), 'Body');
 
         $commands = $transport->commands();
-        $this->assertCount(2, array_filter($commands, static fn(string $line): bool => str_starts_with($line, 'EHLO')));
+        $this->assertCount(2, array_filter($commands, static fn (string $line): bool => str_starts_with($line, 'EHLO')));
     }
 
     public function testKeepsTheConnectionWhenTheServerRefusesTheData(): void
@@ -596,7 +596,7 @@ final class ClientTest extends TestCase
 
         // The channel is gone, so no second RCPT, no RSET and no DATA follow.
         $commands = $transport->commands();
-        $this->assertCount(1, array_filter($commands, static fn(string $line): bool => str_starts_with($line, 'RCPT TO')));
+        $this->assertCount(1, array_filter($commands, static fn (string $line): bool => str_starts_with($line, 'RCPT TO')));
         $this->assertNotContains('DATA', $commands);
         $this->assertNotContains('RSET', $commands);
         $this->assertTrue($transport->closed);
@@ -625,7 +625,7 @@ final class ClientTest extends TestCase
         $result = $client->sendRaw($this->envelope(), 'Body');
 
         $this->assertSame(['john@example.test'], $result->accepted);
-        $this->assertCount(2, array_filter($transport->commands(), static fn(string $line): bool => str_starts_with($line, 'EHLO')));
+        $this->assertCount(2, array_filter($transport->commands(), static fn (string $line): bool => str_starts_with($line, 'EHLO')));
     }
 
     public function testIdleIsInfiniteWithNoSessionAndSmallAfterAReply(): void

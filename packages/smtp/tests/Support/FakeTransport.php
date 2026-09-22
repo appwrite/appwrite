@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Utopia\SMTP\Tests\Unit\Support;
+namespace Utopia\SMTP\Tests\Support;
 
 use Utopia\SMTP\Exception\ConnectionException;
 use Utopia\SMTP\Transport\Transport;
@@ -119,7 +119,7 @@ class FakeTransport implements Transport
     {
         return array_values(array_filter(
             explode("\r\n", $this->written),
-            static fn(string $line): bool => $line !== '',
+            static fn (string $line): bool => $line !== '',
         ));
     }
 }
