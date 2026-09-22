@@ -553,6 +553,57 @@ trait StorageBase
         }
     }
 
+    public function testCreateBucketFileApkMimeType(): void
+    {
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'bucketId' => ID::unique(),
+            'name' => 'Apk Mime Type',
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+            ],
+        ]);
+
+        $this->assertEquals(201, $bucket['headers']['status-code']);
+        $bucketId = $bucket['body']['$id'];
+
+        // The fixture's first archive entry is under res/, so libmagic reports a plain zip.
+        $source = realpath(__DIR__ . '/../../../resources/app.apk');
+
+        $apk = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => ID::unique(),
+            'file' => new CURLFile($source, 'application/zip', 'app.apk'),
+            'permissions' => [
+                Permission::read(Role::any()),
+            ],
+        ]);
+
+        $this->assertEquals(201, $apk['headers']['status-code']);
+        $this->assertEquals('application/vnd.android.package-archive', $apk['body']['mimeType']);
+
+        // Same bytes under a .zip name: an ordinary archive keeps the sniffed type.
+        $zip = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => ID::unique(),
+            'file' => new CURLFile($source, 'application/zip', 'archive.zip'),
+            'permissions' => [
+                Permission::read(Role::any()),
+            ],
+        ]);
+
+        $this->assertEquals(201, $zip['headers']['status-code']);
+        $this->assertEquals('application/zip', $zip['body']['mimeType']);
+    }
+
     public function testCreateBucketFileWithFolder(): void
     {
         $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
