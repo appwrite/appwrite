@@ -492,7 +492,7 @@ trait ProxyBase
 
         $rule = $this->getRule($ruleId);
         $this->assertEquals(200, $rule['headers']['status-code']);
-        $this->assertEmpty($rule['body']['deploymentId'], 'a branch-pinned rule must not adopt a deployment built from another branch');
+        $this->assertEmpty($rule['body']['deploymentId'], 'a branch-pinned rule must not adopt the resource\'s manually uploaded deployment');
 
         $this->cleanupRule($ruleId);
     }
@@ -513,7 +513,7 @@ trait ProxyBase
 
         $rule = $this->getRule($ruleId);
         $this->assertEquals(200, $rule['headers']['status-code']);
-        $this->assertEmpty($rule['body']['deploymentId'], 'a branch-pinned rule must not adopt a deployment built from another branch');
+        $this->assertEmpty($rule['body']['deploymentId'], 'a branch-pinned rule must not adopt the resource\'s manually uploaded deployment');
 
         $this->cleanupRule($ruleId);
 

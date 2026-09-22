@@ -637,8 +637,8 @@ class Jobs extends Action
         }
 
         // A build that is not activated never reaches activate() above, and a
-        // push to a branch that is not the production one never is. Sites get
-        // this from activateBranchPreviewRule; functions have no equivalent.
+        // push to a non-production branch never produces an activated one.
+        // Sites get this from activateBranchPreviewRule; functions have none.
         if ($applied > 0 && $success && $collection !== 'sites' && $deployment->getAttribute('activate') !== true && ! $resource->isEmpty()) {
             $this->activateBranchRule($dbForPlatform, $project, $resource, $deployment, $bus);
         }

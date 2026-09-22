@@ -142,6 +142,18 @@ final class VCSGiteaConsoleClientTest extends Scope
 
         $function = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId, $headers);
         $this->assertEquals($webhookDeploymentId, $function['body']['deploymentId'], 'an unactivated build must not become the function\'s own deployment');
+
+        // Activating a build of the branch repoints the rule too, which the
+        // manual route used to skip for anything pinned to a branch.
+        $activated = $this->client->call(Client::METHOD_PATCH, '/functions/' . $functionId . '/deployment', $headers, [
+            'deploymentId' => $webhookDeploymentId,
+        ]);
+        $this->assertEquals(200, $activated['headers']['status-code'], \json_encode($activated['body']));
+
+        $this->assertEventually(function () use ($ruleId, $headers, $webhookDeploymentId) {
+            $rule = $this->client->call(Client::METHOD_GET, '/proxy/rules/' . $ruleId, $headers);
+            $this->assertEquals($webhookDeploymentId, $rule['body']['deploymentId'], \json_encode($rule['body']));
+        }, 30000, 1000);
     }
 
     public function testCreateDuplicateDeploymentWithRootDirectory(): void

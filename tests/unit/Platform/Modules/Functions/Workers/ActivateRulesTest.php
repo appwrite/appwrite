@@ -89,17 +89,17 @@ final class ActivateRulesTest extends TestCase
         $rebound = [];
         $dbForPlatform = $this->platformDatabaseApplyingQueries($rebound);
 
-        $this->activateBranch($dbForPlatform, deploymentBranch: 'feature');
+        $this->activateBranchRule($dbForPlatform, deploymentBranch: 'feature');
 
         $this->assertSame(['rule-feature'], $rebound);
     }
 
-    public function testActivateBranchRuleSkipsDeploymentWithoutInstallation(): void
+    public function testActivateBranchRuleSkipsTemplate(): void
     {
         $rebound = [];
         $dbForPlatform = $this->platformDatabaseApplyingQueries($rebound);
 
-        $this->activateBranch($dbForPlatform, deploymentBranch: 'main', installationId: '');
+        $this->activateBranchRule($dbForPlatform, deploymentBranch: 'main', installationId: '');
 
         $this->assertSame([], $rebound, 'a template deployment reuses providerBranch for its resolved ref and must not repoint a rule pinned to that branch');
     }
@@ -133,7 +133,7 @@ final class ActivateRulesTest extends TestCase
         );
     }
 
-    private function activateBranch(Database $dbForPlatform, string $deploymentBranch, string $installationId = 'inst-1'): void
+    private function activateBranchRule(Database $dbForPlatform, string $deploymentBranch, string $installationId = 'inst-1'): void
     {
         (new ActivateRulesTestJobs())->exposeActivateBranchRule(
             $dbForPlatform,
