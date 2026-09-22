@@ -5277,25 +5277,49 @@ Http::post('/v1/account/targets/push')
 
         $sessionId = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken);
         $session = $dbForProject->getDocument('sessions', $sessionId);
+        $name = "{$device['deviceBrand']} {$device['deviceModel']}";
+
+        /**
+         * A session is one device install, and an install holds one push token at a time. When the device
+         * token rotates, clients that did not keep the target ID around re-register through this endpoint,
+         * which used to leave the superseded token live: both targets then resolve to the same device and
+         * every message reaches it twice. Re-registering replaces the session's push target for that
+         * provider instead, so the device keeps a single live token along with its topic subscriptions.
+         */
+        $existing = $session->isEmpty()
+            ? new Document()
+            : $authorization->skip(fn () => $dbForProject->findOne('targets', [
+                Query::equal('sessionInternalId', [$session->getSequence()]),
+                Query::equal('providerType', [MESSAGE_TYPE_PUSH]),
+                empty($providerId)
+                    ? Query::isNull('providerId')
+                    : Query::equal('providerId', [$providerId]),
+            ]));
 
         try {
-            $target = $dbForProject->createDocument('targets', new Document([
-                '$id' => $targetId,
-                '$permissions' => [
-                    Permission::read(Role::user($user->getId())),
-                    Permission::update(Role::user($user->getId())),
-                    Permission::delete(Role::user($user->getId())),
-                ],
-                'providerId' => !empty($providerId) ? $providerId : null,
-                'providerInternalId' => !empty($providerId) ? $provider->getSequence() : null,
-                'providerType' => MESSAGE_TYPE_PUSH,
-                'userId' => $user->getId(),
-                'userInternalId' => $user->getSequence(),
-                'sessionId' => $session->getId(),
-                'sessionInternalId' => $session->getSequence(),
-                'identifier' => $identifier,
-                'name' => "{$device['deviceBrand']} {$device['deviceModel']}"
-            ]));
+            $target = $existing->isEmpty()
+                ? $dbForProject->createDocument('targets', new Document([
+                    '$id' => $targetId,
+                    '$permissions' => [
+                        Permission::read(Role::user($user->getId())),
+                        Permission::update(Role::user($user->getId())),
+                        Permission::delete(Role::user($user->getId())),
+                    ],
+                    'providerId' => !empty($providerId) ? $providerId : null,
+                    'providerInternalId' => !empty($providerId) ? $provider->getSequence() : null,
+                    'providerType' => MESSAGE_TYPE_PUSH,
+                    'userId' => $user->getId(),
+                    'userInternalId' => $user->getSequence(),
+                    'sessionId' => $session->getId(),
+                    'sessionInternalId' => $session->getSequence(),
+                    'identifier' => $identifier,
+                    'name' => $name
+                ]))
+                : $dbForProject->updateDocument('targets', $existing->getId(), new Document([
+                    'identifier' => $identifier,
+                    'expired' => false,
+                    'name' => $name,
+                ]));
         } catch (Duplicate) {
             throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
         }
