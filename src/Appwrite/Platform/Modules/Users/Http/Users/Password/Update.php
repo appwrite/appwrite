@@ -86,10 +86,11 @@ class Update extends Action
             }
         }
 
-        $passwordPwned = \strlen($password) === 0 || !($project->getAttribute('auths', [])['passwordPwned']['enabled'] ?? true)
+        $pwnedPolicy = $project->getAttribute('auths', [])['passwordPwned'] ?? [];
+        $passwordPwned = \strlen($password) === 0 || !($pwnedPolicy['enabled'] ?? true)
             ? null
             : !$pwnedPasswords->isValid($password);
-        if ($passwordPwned) {
+        if ($passwordPwned && ($pwnedPolicy['users'] ?? false)) {
             throw new Exception(Exception::USER_PASSWORD_PWNED);
         }
 

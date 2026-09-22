@@ -28,8 +28,10 @@
             "Executor\\": "src/Executor",
             "Utopia\\Agents\\": "packages/agents/src",
             "Utopia\\Bus\\": "packages/bus/src",
+            "Utopia\\Compression\\": "packages/compression/src",
             "Utopia\\Lock\\": "packages/lock/src",
-            "Utopia\\Psr7\\": "packages/psr7/src"
+            "Utopia\\Psr7\\": "packages/psr7/src",
+            "Utopia\\System\\": "packages/system/src"
         }
     },
     "autoload-dev": {
@@ -39,8 +41,10 @@
             "Appwrite\\Tests\\": "tests/extensions",
             "Utopia\\Agents\\Tests\\": "packages/agents/tests",
             "Utopia\\Bus\\Tests\\": "packages/bus/tests",
+            "Utopia\\Compression\\Tests\\": "packages/compression/tests",
             "Utopia\\Lock\\Tests\\": "packages/lock/tests",
-            "Utopia\\Psr7\\Tests\\": "packages/psr7/tests"
+            "Utopia\\Psr7\\Tests\\": "packages/psr7/tests",
+            "Utopia\\System\\Tests\\": "packages/system/tests"
         }
     },
     "minimum-stability": "dev",
@@ -87,7 +91,6 @@
         "utopia-php/cache": "^5.1.0",
         "utopia-php/cdn": "^0.0.12",
         "utopia-php/cli": "^0.24",
-        "utopia-php/compression": "0.1.*",
         "utopia-php/config": "1.*",
         "utopia-php/console": "^0.2",
         "utopia-php/database": "^7.3.11",
@@ -104,14 +107,13 @@
         "utopia-php/messaging": "^2.1",
         "utopia-php/migration": "^2.0.0",
         "utopia-php/mqtt": "0.0.*",
-        "utopia-php/platform": "1.0.0-rc21",
+        "utopia-php/platform": "1.0.0-rc24",
         "utopia-php/pools": "2.*",
         "utopia-php/span": "^4.2",
-        "utopia-php/queue": "^3.0.0",
+        "utopia-php/queue": "^5.0.1",
         "utopia-php/servers": "0.4.*",
         "utopia-php/registry": "0.5.*",
         "utopia-php/storage": "^4.0",
-        "utopia-php/system": "^0.10 || ^0.11",
         "utopia-php/telemetry": "^0.4",
         "utopia-php/user-agent": "0.1.*",
         "mustangostang/spyc": "0.6.*",
@@ -163,7 +165,9 @@
     "replace": {
         "utopia-php/agents": "*",
         "utopia-php/bus": "*",
+        "utopia-php/compression": "*",
         "utopia-php/lock": "*",
-        "utopia-php/psr7": "*"
+        "utopia-php/psr7": "*",
+        "utopia-php/system": "*"
     }
 }
