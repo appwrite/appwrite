@@ -526,7 +526,7 @@ final class MigrationVersionsTest extends TestCase
             private bool $interleave = true;
 
             #[\Override]
-            public function updateDocument(string $collection, string $id, Document $document): Document
+            public function updateDocument(string $collection, string $id, Document $document, ?int $expectedVersion = null): Document
             {
                 if ($this->interleave && $collection === 'migrations' && $this->timestamp !== null) {
                     $this->interleave = false;
