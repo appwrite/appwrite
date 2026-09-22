@@ -9,6 +9,7 @@ use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Message\Usage;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
+use Appwrite\Execution\Store;
 use Appwrite\Extend\Exception;
 use Appwrite\Usage\Connection as UsageConnection;
 use Appwrite\Usage\Context as UsageContext;
@@ -26,12 +27,10 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception as DatabaseException;
 use Utopia\Database\Exception\Conflict;
-use Utopia\Database\Exception\NotFound as NotFoundException;
 use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Query;
 use Utopia\DSN\DSN;
-use Utopia\Logger\Log;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\Span\Span;
@@ -63,7 +62,6 @@ class Deletes extends Action
             ->inject('dbForPlatform')
             ->inject('getProjectDB')
             ->inject('getDatabasesDB')
-            ->inject('getLogsDB')
             ->inject('deviceForFiles')
             ->inject('deviceForFunctions')
             ->inject('deviceForSites')
@@ -73,10 +71,10 @@ class Deletes extends Action
             ->inject('executor')
             ->inject('executionRetention')
             ->inject('executionsRetentionCount')
-            ->inject('log')
             ->inject('publisherForDeletes')
             ->inject('publisherForUsage')
-            ->inject('bus');
+            ->inject('bus')
+            ->inject('executionStore');
 
         if (System::getEnv('_APP_EDITION', 'self-hosted') === 'self-hosted') {
             $this
@@ -94,7 +92,6 @@ class Deletes extends Action
         Database $dbForPlatform,
         callable $getProjectDB,
         callable $getDatabasesDB,
-        callable $getLogsDB,
         Device $deviceForFiles,
         Device $deviceForFunctions,
         Device $deviceForSites,
@@ -104,10 +101,10 @@ class Deletes extends Action
         Executor $executor,
         string $executionRetention,
         int $executionsRetentionCount,
-        Log $log,
         DeletePublisher $publisherForDeletes,
         UsagePublisher $publisherForUsage,
         Bus $bus,
+        Store $executionStore,
         UsageConnection $usageConnection,
     ): void {
         $payload = $message->getPayload();
@@ -128,7 +125,6 @@ class Deletes extends Action
             $dbForPlatform,
             $getProjectDB,
             $getDatabasesDB,
-            $getLogsDB,
             $deviceForFiles,
             $deviceForFunctions,
             $deviceForSites,
@@ -138,10 +134,10 @@ class Deletes extends Action
             $executor,
             $executionRetention,
             $executionsRetentionCount,
-            $log,
             $publisherForDeletes,
             $publisherForUsage,
             $bus,
+            $executionStore,
         );
 
         // Sweep rows that landed between the purge and the delete. The
@@ -222,7 +218,6 @@ class Deletes extends Action
         Database $dbForPlatform,
         callable $getProjectDB,
         callable $getDatabasesDB,
-        callable $getLogsDB,
         Device $deviceForFiles,
         Device $deviceForFunctions,
         Device $deviceForSites,
@@ -232,10 +227,10 @@ class Deletes extends Action
         Executor $executor,
         string $executionRetention,
         int $executionsRetentionCount,
-        Log $log,
         DeletePublisher $publisherForDeletes,
         UsagePublisher $publisherForUsage,
         Bus $bus,
+        Store $executionStore,
     ): void {
         $payload = $message->getPayload();
 
@@ -246,25 +241,24 @@ class Deletes extends Action
         $deleteMessage = DeleteMessage::fromArray($payload);
         $type = $deleteMessage->type;
         $datetime = $deleteMessage->datetime;
-        $hourlyUsageRetentionDatetime = $deleteMessage->hourlyUsageRetentionDatetime;
         $resource = $deleteMessage->resource;
         $resourceType = $deleteMessage->resourceType;
         $document = $deleteMessage->document ?? new Document();
 
-        $log->addTag('projectId', $project->getId());
-        $log->addTag('type', $type);
+        Span::add('project.id', $project->getId());
+        Span::add('type', $type);
 
         switch (\strval($type)) {
             case DELETE_TYPE_DOCUMENT:
                 switch ($document->getCollection()) {
                     case DELETE_TYPE_PROJECTS:
-                        $this->deleteProject($dbForPlatform, $getProjectDB, $getDatabasesDB, $deviceForFiles, $deviceForSites, $deviceForFunctions, $deviceForBuilds, $deviceForCache, $certificates, $document, $bus);
+                        $this->deleteProject($dbForPlatform, $getProjectDB, $getDatabasesDB, $deviceForFiles, $deviceForSites, $deviceForFunctions, $deviceForBuilds, $deviceForCache, $certificates, $document, $bus, $executionStore);
                         break;
                     case DELETE_TYPE_SITES:
-                        $this->deleteSite($dbForPlatform, $getProjectDB, $deviceForSites, $deviceForBuilds, $deviceForFiles, $document, $certificates, $project, $bus);
+                        $this->deleteSite($dbForPlatform, $getProjectDB, $deviceForSites, $deviceForBuilds, $deviceForFiles, $document, $certificates, $project, $bus, $executionStore);
                         break;
                     case DELETE_TYPE_FUNCTIONS:
-                        $this->deleteFunction($dbForPlatform, $getProjectDB, $deviceForFunctions, $deviceForBuilds, $certificates, $document, $project, $executor, $bus);
+                        $this->deleteFunction($dbForPlatform, $getProjectDB, $deviceForFunctions, $deviceForBuilds, $certificates, $document, $project, $executor, $bus, $executionStore);
                         break;
                     case DELETE_TYPE_DEPLOYMENTS:
                         $this->deleteDeployment($dbForPlatform, $getProjectDB, $deviceForFunctions, $deviceForSites, $deviceForBuilds, $deviceForFiles, $document, $certificates, $project, $executor, $bus);
@@ -293,10 +287,10 @@ class Deletes extends Action
                 }
                 break;
             case DELETE_TYPE_TEAM_PROJECTS:
-                $this->deleteProjectsByTeam($dbForPlatform, $getProjectDB, $getDatabasesDB, $certificates, $document, $bus);
+                $this->deleteProjectsByTeam($dbForPlatform, $getProjectDB, $getDatabasesDB, $certificates, $document, $bus, $executionStore);
                 break;
             case DELETE_TYPE_EXECUTIONS:
-                $this->deleteExecutionLogs($project, $getProjectDB, $executionRetention);
+                $this->deleteExecutionLogs($project, $getProjectDB, $executionRetention, executionStore: $executionStore);
                 break;
             case DELETE_TYPE_EXECUTIONS_LIMIT:
                 $resourceInternalId = $payload['resource'] ?? null;
@@ -307,7 +301,8 @@ class Deletes extends Action
                         $getProjectDB,
                         $executionsRetentionCount,
                         $resourceInternalId,
-                        $resourceType
+                        $resourceType,
+                        $executionStore,
                     );
                 }
                 break;
@@ -316,9 +311,6 @@ class Deletes extends Action
                 break;
             case DELETE_TYPE_SESSIONS:
                 $this->deleteExpiredSessions($project, $getProjectDB);
-                break;
-            case DELETE_TYPE_USAGE:
-                $this->deleteUsageStats($project, $getProjectDB, $getLogsDB, $hourlyUsageRetentionDatetime);
                 break;
             case DELETE_TYPE_CACHE_BY_RESOURCE:
                 $this->deleteCacheByResource($project, $getProjectDB, $resource, $resourceType);
@@ -346,13 +338,13 @@ class Deletes extends Action
                 break;
             case DELETE_TYPE_MAINTENANCE:
                 $this->deleteExpiredTargets($project, $getProjectDB);
-                $this->deleteExecutionLogs($project, $getProjectDB, $executionRetention, $executionsRetentionCount);
-                $this->deleteUsageStats($project, $getProjectDB, $getLogsDB, $hourlyUsageRetentionDatetime);
+                $this->deleteExecutionLogs($project, $getProjectDB, $executionRetention, $executionsRetentionCount, $executionStore);
                 $this->deleteExpiredSessions($project, $getProjectDB);
                 $this->deleteExpiredTokens($project, $getProjectDB);
                 $this->deleteExpiredChallenges($project, $getProjectDB);
                 $this->deleteExpiredTransactions($project, $getProjectDB);
                 $this->deleteExpiredPresences($project, $getProjectDB, $publisherForUsage);
+                $this->deleteExpiredPushLedger($project, $getProjectDB);
                 $this->deleteOldDeployments($publisherForDeletes, $project, $getProjectDB);
                 $this->updateProcessingMigrations($project, $getProjectDB);
                 break;
@@ -450,33 +442,27 @@ class Deletes extends Action
                     return;
                 }
 
-                $collectionId = match ($document->getAttribute('resourceType')) {
-                    'function' => 'functions',
-                    'execution' => 'executions',
-                    'message' => 'messages',
-                    default => throw new \Exception('Unknown resource type: ' . $document->getAttribute('resourceType')),
-                };
+                $resourceType = $document->getAttribute('resourceType');
+                $resourceId = $document->getAttribute('resourceId');
+
+                // One-shot execution schedules are claimed then deleted by the
+                // functions worker; this sweeper does not reap them.
+                if ($resourceType === 'execution') {
+                    return;
+                }
 
                 try {
-                    $resource = $getProjectDB($project)->getDocument(
-                        $collectionId,
-                        $document->getAttribute('resourceId')
-                    );
+                    $resource = match ($resourceType) {
+                        'function' => $getProjectDB($project)->getDocument('functions', $resourceId),
+                        'message' => $getProjectDB($project)->getDocument('messages', $resourceId),
+                        default => throw new \Exception('Unknown resource type: ' . $resourceType),
+                    };
                 } catch (Throwable $e) {
                     Console::error('Failed to get resource for schedule ' . $document->getId() . ' ' . $e->getMessage());
                     return;
                 }
 
-                $delete = true;
-
-                switch ($document->getAttribute('resourceType')) {
-                    case 'function':
-                        $delete = $resource->isEmpty();
-                        break;
-                    case 'execution':
-                        $delete = false;
-                        break;
-                }
+                $delete = $resourceType === 'function' ? $resource->isEmpty() : true;
 
                 if ($delete) {
                     $dbForPlatform->deleteDocument('schedules', $document->getId());
@@ -709,47 +695,6 @@ class Deletes extends Action
 
     /**
      * @param callable $getProjectDB
-     * @param string $hourlyUsageRetentionDatetime
-     * @return void
-     * @throws Exception
-     */
-    private function deleteUsageStats(Document $project, callable $getProjectDB, callable $getLogsDB, string $hourlyUsageRetentionDatetime): void
-    {
-        if ($project->getId() === 'console') {
-            return;
-        }
-
-        Console::info('Delete usage stats');
-
-        /** @var Database $dbForProject */
-        $dbForProject = $getProjectDB($project);
-
-        $selects = [...$this->selects, 'time'];
-
-        // Delete Usage stats from projectDB
-        $this->deleteByGroup('stats', [
-            Query::select($selects),
-            Query::equal('period', ['1h']),
-            Query::lessThan('time', $hourlyUsageRetentionDatetime),
-            Query::orderDesc('time'),
-            Query::orderDesc(),
-        ], $dbForProject);
-
-        /** @var Database $dbForLogs */
-        $dbForLogs = call_user_func($getLogsDB, $project);
-
-        // Delete Usage stats from logsDB
-        $this->deleteByGroup('stats', [
-            Query::select($selects),
-            Query::equal('period', ['1h']),
-            Query::lessThan('time', $hourlyUsageRetentionDatetime),
-            Query::orderDesc('time'),
-            Query::orderDesc(),
-        ], $dbForLogs);
-    }
-
-    /**
-     * @param callable $getProjectDB
      * @param Document $document teams document
      * @param Document $project
      * @return void
@@ -785,7 +730,7 @@ class Deletes extends Action
      * @throws Structure
      * @throws Exception
      */
-    protected function deleteProjectsByTeam(Database $dbForPlatform, callable $getProjectDB, callable $getDatabasesDB, Provider $certificates, Document $document, Bus $bus): void
+    protected function deleteProjectsByTeam(Database $dbForPlatform, callable $getProjectDB, callable $getDatabasesDB, Provider $certificates, Document $document, Bus $bus, ?Store $executionStore = null): void
     {
 
         $projects = $dbForPlatform->find('projects', [
@@ -800,7 +745,7 @@ class Deletes extends Action
             $deviceForBuilds = getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId());
             $deviceForCache = getDevice(APP_STORAGE_CACHE . '/app-' . $project->getId());
 
-            $this->deleteProject($dbForPlatform, $getProjectDB, $getDatabasesDB, $deviceForFiles, $deviceForSites, $deviceForFunctions, $deviceForBuilds, $deviceForCache, $certificates, $project, $bus);
+            $this->deleteProject($dbForPlatform, $getProjectDB, $getDatabasesDB, $deviceForFiles, $deviceForSites, $deviceForFunctions, $deviceForBuilds, $deviceForCache, $certificates, $project, $bus, $executionStore);
             $dbForPlatform->deleteDocument('projects', $project->getId());
         }
     }
@@ -817,10 +762,12 @@ class Deletes extends Action
      * @throws Exception
      * @throws DatabaseException
      */
-    protected function deleteProject(Database $dbForPlatform, callable $getProjectDB, callable $getDatabasesDB, Device $deviceForFiles, Device $deviceForSites, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, Provider $certificates, Document $document, Bus $bus): void
+    protected function deleteProject(Database $dbForPlatform, callable $getProjectDB, callable $getDatabasesDB, Device $deviceForFiles, Device $deviceForSites, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, Provider $certificates, Document $document, Bus $bus, ?Store $executionStore = null): void
     {
         $projectInternalId = $document->getSequence();
         $projectId = $document->getId();
+
+        $executionStore?->deleteProject($projectId);
 
         try {
             $dsn = new DSN($document->getAttribute('database', 'console'));
@@ -1163,7 +1110,7 @@ class Deletes extends Action
      * @return void
      * @throws Exception|DatabaseException
      */
-    private function deleteExecutionLogs(Document $project, callable $getProjectDB, string $datetime, ?int $executionsRetentionCount = 0): void
+    private function deleteExecutionLogs(Document $project, callable $getProjectDB, string $datetime, ?int $executionsRetentionCount = 0, ?Store $executionStore = null): void
     {
         if ($project->getId() === 'console') {
             return;
@@ -1171,19 +1118,10 @@ class Deletes extends Action
 
         Console::info('Delete execution logs');
 
-        /** @var Database $dbForProject */
-        $dbForProject = $getProjectDB($project);
-
-        // Delete Executions
-        $this->deleteByGroup('executions', [
-            Query::select([...$this->selects, '$createdAt']),
-            Query::lessThan('$createdAt', $datetime),
-            Query::orderDesc('$createdAt'),
-            Query::orderDesc(),
-        ], $dbForProject);
+        $executionStore?->deleteBefore($project->getId(), $datetime);
 
         /* delete based on custom retention, if any */
-        $this->deleteExecutionsByLimit($project, $getProjectDB, $executionsRetentionCount);
+        $this->deleteExecutionsByLimit($project, $getProjectDB, $executionsRetentionCount, executionStore: $executionStore);
     }
 
     /**
@@ -1200,9 +1138,10 @@ class Deletes extends Action
         callable $getProjectDB,
         ?int $executionsRetentionCount = 0,
         ?string $resourceInternalId = null,
-        ?string $resourceType = null
+        ?string $resourceType = null,
+        ?Store $executionStore = null,
     ): void {
-        if ($executionsRetentionCount <= 0 || $project->getId() === 'console') {
+        if ($executionsRetentionCount <= 0 || $project->getId() === 'console' || $executionStore === null) {
             return;
         }
 
@@ -1210,47 +1149,38 @@ class Deletes extends Action
         $dbForProject = $getProjectDB($project);
 
         /* delete log for a given $resourceInternalId  */
-        $delete = function (Database $dbForProject, string $resourceInternalId, string $resourceType) use ($executionsRetentionCount) {
-            // get the execution at position `N+1`
-            try {
-                $execution = $dbForProject->findOne('executions', [
-                    Query::select(['$createdAt']),
-                    Query::equal('resourceInternalId', [$resourceInternalId]),
-                    Query::equal('resourceType', [$resourceType]),
-                    Query::orderDesc('$createdAt'),
-                    Query::orderDesc(),
-                    Query::offset($executionsRetentionCount),
-                ]);
-            } catch (NotFoundException) {
+        $delete = function (string $resourceInternalId, string $resourceType) use ($executionsRetentionCount, $executionStore, $project) {
+            $executions = $executionStore->find($project->getId(), [
+                Query::equal('resourceInternalId', [$resourceInternalId]),
+                Query::equal('resourceType', [$resourceType]),
+                Query::orderDesc('$createdAt'),
+                Query::limit(1),
+                Query::offset($executionsRetentionCount),
+            ]);
+
+            if ($executions === []) {
                 return;
             }
 
-            if (!$execution->isEmpty()) {
-                // delete everything older
-                $cutoffTime = $execution->getAttribute('$createdAt');
-
-                $this->deleteByGroup('executions', [
-                    Query::select([...$this->selects, '$createdAt']),
-                    Query::equal('resourceInternalId', [$resourceInternalId]),
-                    Query::equal('resourceType', [$resourceType]),
-                    Query::lessThan('$createdAt', $cutoffTime),
-                    Query::orderDesc('$createdAt'),
-                    Query::orderDesc(),
-                ], $dbForProject);
+            $cutoffTime = $executions[0]->getCreatedAt();
+            if ($cutoffTime === null || $cutoffTime === '') {
+                return;
             }
+
+            $executionStore->deleteByResource($project->getId(), $resourceInternalId, $resourceType, $cutoffTime);
         };
 
         if (!empty($resourceInternalId)) {
             // fast path, no need to list anything!
-            $delete($dbForProject, $resourceInternalId, $resourceType);
+            $delete($resourceInternalId, $resourceType);
         } else {
             foreach ([RESOURCE_TYPE_SITES, RESOURCE_TYPE_FUNCTIONS] as $type) {
                 $this->listByGroup(
                     collection: $type,
                     queries: [Query::select(['$id', '$sequence'])],
                     database: $dbForProject,
-                    callback: function (Document $resource) use ($dbForProject, $delete, $type) {
-                        $delete($dbForProject, $resource->getSequence(), $type);
+                    callback: function (Document $resource) use ($delete, $type) {
+                        $delete($resource->getSequence(), $type);
                     }
                 );
             }
@@ -1303,6 +1233,8 @@ class Deletes extends Action
             TOKEN_TYPE_OAUTH2,
             TOKEN_TYPE_GENERIC,
             TOKEN_TYPE_EMAIL,
+            TOKEN_TYPE_VERIFICATION_OTP,
+            TOKEN_TYPE_RECOVERY_OTP,
         ];
 
         // Current index is on {`type`, `expire`}
@@ -1352,7 +1284,7 @@ class Deletes extends Action
             return;
         }
 
-        $oneWeekAgo = DateTime::addSeconds(new \DateTime(), -1 * 60 * 60 * 24 * 7); // 1 week
+        $oneWeekAgo = DateTime::addSeconds(new \DateTime(), -1 * DATA_EXPORT_RETENTION);
 
         Console::info("Deleting CSV export files older than " . $oneWeekAgo);
 
@@ -1397,7 +1329,7 @@ class Deletes extends Action
      * @return void
      * @throws Exception
      */
-    private function deleteSite(Database $dbForPlatform, callable $getProjectDB, Device $deviceForSites, Device $deviceForBuilds, Device $deviceForFiles, Document $document, Provider $certificates, Document $project, Bus $bus): void
+    private function deleteSite(Database $dbForPlatform, callable $getProjectDB, Device $deviceForSites, Device $deviceForBuilds, Device $deviceForFiles, Document $document, Provider $certificates, Document $project, Bus $bus, ?Store $executionStore = null): void
     {
         $dbForProject = $getProjectDB($project);
         $siteId = $document->getId();
@@ -1446,12 +1378,7 @@ class Deletes extends Action
          * Delete Logs
          */
         Console::info("Deleting logs for site " . $siteId);
-        $this->deleteByGroup('executions', [
-            Query::select($this->selects),
-            Query::equal('resourceInternalId', [$siteInternalId]),
-            Query::equal('resourceType', ['sites']),
-            Query::orderAsc()
-        ], $dbForProject);
+        $executionStore?->deleteByResource($project->getId(), (string) $siteInternalId, RESOURCE_TYPE_SITES);
 
         /**
          * Delete VCS Repositories and VCS Comments
@@ -1481,7 +1408,7 @@ class Deletes extends Action
      * @return void
      * @throws Exception
      */
-    private function deleteFunction(Database $dbForPlatform, callable $getProjectDB, Device $deviceForFunctions, Device $deviceForBuilds, Provider $certificates, Document $document, Document $project, Executor $executor, Bus $bus): void
+    private function deleteFunction(Database $dbForPlatform, callable $getProjectDB, Device $deviceForFunctions, Device $deviceForBuilds, Provider $certificates, Document $document, Document $project, Executor $executor, Bus $bus, ?Store $executionStore = null): void
     {
         $projectId = $project->getId();
         $dbForProject = $getProjectDB($project);
@@ -1531,12 +1458,7 @@ class Deletes extends Action
          * Delete Executions
          */
         Console::info("Deleting executions for function " . $functionId);
-        $this->deleteByGroup('executions', [
-            Query::select($this->selects),
-            Query::equal('resourceInternalId', [$functionInternalId]),
-            Query::equal('resourceType', ['functions']),
-            Query::orderAsc()
-        ], $dbForProject);
+        $executionStore?->deleteByResource($project->getId(), (string) $functionInternalId, RESOURCE_TYPE_FUNCTIONS);
 
         /**
          * Delete VCS Repositories and VCS Comments
@@ -1830,10 +1752,14 @@ class Deletes extends Action
      */
     protected function deleteRule(Database $dbForPlatform, Document $document, Provider $certificates, Bus $bus): void
     {
-        $bus->dispatch(new RuleDeleted($document->getArrayCopy()));
-
         $domain = $document->getAttribute('domain');
-        $certificates->deleteCertificate($domain);
+
+        // A queued deletion can outlive its rule. Leave TLS and routing alone
+        // when the domain has since been recreated.
+        if ($dbForPlatform->findOne('rules', [Query::equal('domain', [$domain])])->isEmpty()) {
+            $bus->dispatch(new RuleDeleted($document->getArrayCopy()));
+            $certificates->deleteCertificate($domain, $document->getAttribute('deploymentResourceType', $document->getAttribute('type')));
+        }
 
         // Delete certificate document, so Appwrite is aware of change
         if (isset($document['certificateId'])) {
@@ -1987,10 +1913,36 @@ class Deletes extends Action
             return;
         }
 
-        $dbForProject->deleteDocuments('transactionLogs', [
-            Query::equal('transactionInternalId', $transactionInternalIds),
+        foreach (\array_chunk($transactionInternalIds, \max(1, $dbForProject->getMaxQueryValues())) as $batch) {
+            $dbForProject->deleteDocuments('transactionLogs', [
+                Query::equal('transactionInternalId', $batch),
+            ], onError: function (Throwable $th) {
+                // Swallow errors to avoid breaking the cleanup process
+            });
+        }
+    }
+
+    /**
+     * The push ledger (appwritePushLedger) is the append-only record of QoS 1 push
+     * messages the MQTT broker keeps so it can replay any a client missed while offline.
+     * Replay only ever reaches back one week, so entries older than that are dead weight
+     * and are pruned here, mirroring how expired presences are cleaned up.
+     */
+    private function deleteExpiredPushLedger(Document $project, callable $getProjectDB): void
+    {
+        Console::info('Delete expired push ledger messages');
+
+        $dbForProject = $getProjectDB($project);
+        if ($dbForProject->getCollection('appwritePushLedger')->isEmpty()) {
+            return;
+        }
+
+        $expired = DateTime::addSeconds(new \DateTime(), -1 * 60 * 60 * 24 * 7);
+
+        $dbForProject->deleteDocuments('appwritePushLedger', [
+            Query::lessThan('$createdAt', $expired),
         ], onError: function (Throwable $th) {
-            // Swallow errors to avoid breaking the cleanup process
+            // Swallow errors (e.g. projects without the push ledger collection).
         });
     }
 

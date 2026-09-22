@@ -194,6 +194,7 @@ class Delete extends Action
 
         $usage
             ->setResource('database')
+            ->setResourceId($database->getId())
             ->setResourceInternalId((string) $database->getSequence())
             ->addMetric($this->getDatabasesOperationWriteMetric(), \max(1, $modified));
 

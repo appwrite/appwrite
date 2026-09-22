@@ -191,11 +191,26 @@ class Update extends Action
             ;
         }
 
-        $membership = $dbForProject->updateDocument('memberships', $membership->getId(), new Document(['joined' => $membership->getAttribute('joined'), 'confirm' => true]));
+        $membership = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $membership, $team) {
+            // Re-read under a lock, a concurrent accept of the same invite must not be counted twice
+            $current = $authorization->skip(fn () => $dbForProject->getDocument('memberships', $membership->getId(), forUpdate: true));
+
+            if ($current->getAttribute('confirm') === true) {
+                return new Document();
+            }
+
+            $confirmed = $dbForProject->updateDocument('memberships', $membership->getId(), new Document(['joined' => $membership->getAttribute('joined'), 'confirm' => true]));
+
+            $authorization->skip(fn () => $dbForProject->increaseDocumentAttribute('teams', $team->getId(), 'total', 1));
+
+            return $confirmed;
+        });
+
+        if ($membership->isEmpty()) {
+            throw new Exception(Exception::MEMBERSHIP_ALREADY_CONFIRMED);
+        }
 
         $dbForProject->purgeCachedDocument('users', $targetUser->getId());
-
-        $authorization->skip(fn () => $dbForProject->increaseDocumentAttribute('teams', $team->getId(), 'total', 1));
 
         $queueForEvents
             ->setParam('userId', $targetUser->getId())

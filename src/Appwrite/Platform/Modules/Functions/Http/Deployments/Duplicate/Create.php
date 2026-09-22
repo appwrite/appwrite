@@ -65,6 +65,7 @@ class Create extends Action
             ->inject('dbForPlatform')
             ->inject('queueForEvents')
             ->inject('deployments')
+            ->inject('buildTimeout')
             ->inject('deviceForFunctions')
             ->inject('vcsFactory')
             ->callback($this->action(...));
@@ -79,6 +80,7 @@ class Create extends Action
         Database $dbForPlatform,
         Event $queueForEvents,
         Deployments $deployments,
+        int $buildTimeout,
         Device $deviceForFunctions,
         VcsFactory $vcsFactory,
     ) {
@@ -147,7 +149,7 @@ class Create extends Action
         ]);
 
         if ($hasSource) {
-            $deployment = $deployments->createFromUpload($function, $deployment);
+            $deployment = $deployments->createFromUpload($function, $deployment, $buildTimeout);
         } elseif ($installationId !== '') {
             $installation = $dbForPlatform->getDocument('installations', $installationId);
             if ($installation->isEmpty()) {
@@ -160,11 +162,12 @@ class Create extends Action
             $deployment = $deployments->createFromVcs(
                 $function,
                 $deployment,
+                $buildTimeout,
                 $github,
                 $owner,
                 $repository,
                 $ref,
-                $deployment->getAttribute('providerRootDirectory', ''),
+                $function->getAttribute('providerRootDirectory', ''),
             );
         } else {
             // Public template repo: providerBranch holds the resolved ref,
@@ -172,6 +175,7 @@ class Create extends Action
             $deployment = $deployments->createFromRef(
                 $function,
                 $deployment,
+                $buildTimeout,
                 $owner,
                 $repository,
                 GitHub::CLONE_TYPE_COMMIT,

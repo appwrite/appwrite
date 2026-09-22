@@ -92,7 +92,6 @@ class Create extends Action
             ->inject('publisherForMails')
             ->inject('publisherForMessaging')
             ->inject('queueForEvents')
-            ->inject('timelimit')
             ->inject('usage')
             ->inject('plan')
             ->inject('platform')
@@ -101,8 +100,14 @@ class Create extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $teamId, string $email, string $userId, string $phone, array $roles, string $url, string $name, Response $response, Document $project, User $user, Database $dbForProject, Authorization $authorization, Locale $locale, MailPublisher $publisherForMails, MessagingPublisher $publisherForMessaging, Event $queueForEvents, callable $timelimit, Context $usage, array $plan, array $platform, Password $proofForPassword, Token $proofForToken)
+    public function action(string $teamId, ?string $email, ?string $userId, ?string $phone, array $roles, ?string $url, ?string $name, Response $response, Document $project, User $user, Database $dbForProject, Authorization $authorization, Locale $locale, MailPublisher $publisherForMails, MessagingPublisher $publisherForMessaging, Event $queueForEvents, Context $usage, array $plan, array $platform, Password $proofForPassword, Token $proofForToken)
     {
+        $email ??= '';
+        $userId ??= '';
+        $phone ??= '';
+        $url ??= '';
+        $name ??= '';
+
         $isAppUser = $user->isKey($authorization->getRoles());
         $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
         $invitee = new Document();
@@ -192,19 +197,19 @@ class Create extends Action
             } catch (\Throwable) {
             }
 
-            if ((($project->getId() === 'console') || ($plan['supportsDisposableEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['disposableEmails'] ?? false) && ($emailMetadata['emailIsDisposable'] ?? false)) {
+            if ((($project->getId() === 'console') || empty($plan) || ($plan['supportsDisposableEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['disposableEmails'] ?? false) && ($emailMetadata['emailIsDisposable'] ?? false)) {
                 throw new Exception(Exception::USER_EMAIL_DISPOSABLE);
             }
 
-            if ((($project->getId() === 'console') || ($plan['supportsCanonicalEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false) && ($emailMetadata['emailIsCanonical'] ?? true) === false) {
+            if ((($project->getId() === 'console') || empty($plan) || ($plan['supportsCanonicalEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false) && ($emailMetadata['emailIsCanonical'] ?? true) === false) {
                 throw new Exception(Exception::USER_EMAIL_NOT_CANONICAL);
             }
 
-            if ((($project->getId() === 'console') || ($plan['supportsFreeEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['freeEmails'] ?? false) && ($emailMetadata['emailIsFree'] ?? false)) {
+            if ((($project->getId() === 'console') || empty($plan) || ($plan['supportsFreeEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['freeEmails'] ?? false) && ($emailMetadata['emailIsFree'] ?? false)) {
                 throw new Exception(Exception::USER_EMAIL_FREE);
             }
 
-            if ((($project->getId() === 'console') || ($plan['supportsCorporateEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['corporateEmails'] ?? false) && !($emailMetadata['emailIsCorporate'] ?? true)) {
+            if ((($project->getId() === 'console') || empty($plan) || ($plan['supportsCorporateEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['corporateEmails'] ?? false) && !($emailMetadata['emailIsCorporate'] ?? true)) {
                 throw new Exception(Exception::USER_EMAIL_NOT_CORPORATE);
             }
 
@@ -303,12 +308,29 @@ class Create extends Action
             $invitedTime = DateTime::now();
 
             if ($isPrivilegedUser || $isAppUser) {
-                $membership = $authorization->skip(fn () => $dbForProject->updateDocument('memberships', $membership->getId(), new Document([
-                    'secret' => $secretHash,
-                    'invited' => $invitedTime,
-                    'joined' => DateTime::now(),
-                    'confirm' => true
-                ])));
+                $membership = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $membership, $team, $secretHash, $invitedTime) {
+                    // Re-read under a lock, a concurrent invite must not count the same member twice
+                    $current = $authorization->skip(fn () => $dbForProject->getDocument('memberships', $membership->getId(), forUpdate: true));
+
+                    if ($current->getAttribute('confirm') === true) {
+                        return new Document();
+                    }
+
+                    $confirmed = $authorization->skip(fn () => $dbForProject->updateDocument('memberships', $membership->getId(), new Document([
+                        'secret' => $secretHash,
+                        'invited' => $invitedTime,
+                        'joined' => DateTime::now(),
+                        'confirm' => true
+                    ])));
+
+                    $authorization->skip(fn () => $dbForProject->increaseDocumentAttribute('teams', $team->getId(), 'total', 1));
+
+                    return $confirmed;
+                });
+
+                if ($membership->isEmpty()) {
+                    throw new Exception(Exception::MEMBERSHIP_ALREADY_CONFIRMED);
+                }
             } else {
                 $membership = $dbForProject->updateDocument('memberships', $membership->getId(), new Document([
                     'secret' => $secretHash,
@@ -461,7 +483,7 @@ class Create extends Action
 
                 $message = Template::fromFile(APP_CE_CONFIG_DIR . '/locale/templates/sms-base.tpl');
 
-                $message = $message->setParam('{{token}}', $url);
+                $message = $message->setParam('{{token}}', $url, escapeHtml: false);
                 $message = $message->render();
 
                 $messageDoc = new Document([

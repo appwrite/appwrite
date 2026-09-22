@@ -49,7 +49,6 @@ const APP_PROJECTS_SUBQUERIES = [
     'subQueryWebhooks',
     'subQueryPlatforms',
     'subQueryBlocks',
-    'subQueryDevKeys',
 ];
 
 const APP_USERS_SUBQUERIES = [
@@ -100,7 +99,7 @@ const APP_RESOURCE_TOKEN_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_FILE_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
 const APP_CACHE_BUSTER = 4327;
-const APP_VERSION_STABLE = '2.0.0';
+const APP_VERSION_STABLE = '2.2.0';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
 const APP_DATABASE_ATTRIBUTE_IP = 'ip';
@@ -153,6 +152,7 @@ const APP_SDK_PLATFORM_SERVER = 'server';
 const APP_SDK_PLATFORM_CLIENT = 'client';
 const APP_SDK_PLATFORM_CONSOLE = 'console';
 const APP_SDK_PLATFORM_STATIC = 'static';
+const APP_LIMIT_VCS_STATE = 4096; // Maximum length of the state the VCS authorize endpoints hand to a provider
 const APP_VCS_GITHUB_USERNAME = 'Appwrite';
 const APP_VCS_GITHUB_EMAIL = 'team@appwrite.io';
 const APP_VCS_GITHUB_URL = 'https://github.com/TeamAppwrite';
@@ -203,6 +203,8 @@ const TOKEN_TYPE_PHONE = 6;
 const TOKEN_TYPE_OAUTH2 = 7;
 const TOKEN_TYPE_GENERIC = 8;
 const TOKEN_TYPE_EMAIL = 9; // OTP
+const TOKEN_TYPE_VERIFICATION_OTP = 10;
+const TOKEN_TYPE_RECOVERY_OTP = 11;
 
 /**
  * Session Providers.
@@ -277,7 +279,6 @@ const DELETE_TYPE_EXECUTIONS = 'executions';
 const DELETE_TYPE_EXECUTIONS_LIMIT = 'executionsLimit';
 const DELETE_TYPE_AUDIT = 'audit';
 const DELETE_TYPE_ABUSE = 'abuse';
-const DELETE_TYPE_USAGE = 'usage';
 const DELETE_TYPE_REALTIME = 'realtime';
 const DELETE_TYPE_BUCKETS = 'buckets';
 const DELETE_TYPE_INSTALLATIONS = 'installations';
@@ -334,6 +335,8 @@ const FUNCTION_ALLOWLIST_HEADERS_RESPONSE = ['content-type', 'content-length'];
 const MESSAGE_TYPE_EMAIL = 'email';
 const MESSAGE_TYPE_SMS = 'sms';
 const MESSAGE_TYPE_PUSH = 'push';
+// Message providers
+const MESSAGE_PROVIDER_APPWRITE = 'appwrite';
 // Notification types
 const NOTIFICATION_TYPE_EMAIL = MESSAGE_TYPE_EMAIL;
 const NOTIFICATION_TYPE_SMS = MESSAGE_TYPE_SMS;
@@ -347,6 +350,8 @@ const MAIL_TEMPLATE_INVITATION = 'invitation';
 const MAIL_TEMPLATE_MAGIC_URL = 'magic-url';
 const MAIL_TEMPLATE_MFA_CHALLENGE = 'mfa-challenge';
 const MAIL_TEMPLATE_OTP = 'otp';
+const MAIL_TEMPLATE_OTP_VERIFICATION = 'otp-verification';
+const MAIL_TEMPLATE_OTP_RECOVERY = 'otp-recovery';
 const MAIL_TEMPLATE_RECOVERY = 'recovery';
 const MAIL_TEMPLATE_SESSION_ALERT = 'session-alert';
 const MAIL_TEMPLATE_SMTP_TEST = 'smtp-test';
@@ -583,6 +588,8 @@ const CSV_ALLOWED_DATABASE_TYPES = [
     DATABASE_TYPE_TABLESDB,
     DATABASE_TYPE_VECTORSDB
 ];
+
+const DATA_EXPORT_RETENTION = 60 * 60 * 24 * 7; // 1 week
 
 const VCS_DEPLOYMENT_SKIP_PATTERNS = [
     '[skip ci]',

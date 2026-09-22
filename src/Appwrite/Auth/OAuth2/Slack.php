@@ -140,6 +140,26 @@ class Slack extends OAuth2
      *
      * @return string
      */
+    public function getUserPhoto(string $accessToken): string
+    {
+        $user = $this->getUser($accessToken);
+        $profile = $user['user'] ?? [];
+
+        foreach (['image_512', 'image_192', 'image_72'] as $field) {
+            $url = $profile[$field] ?? '';
+            if ($url !== '') {
+                return $url;
+            }
+        }
+
+        return '';
+    }
+
+    /**
+     * @param string $accessToken
+     *
+     * @return string
+     */
     public function getUserName(string $accessToken): string
     {
         $user = $this->getUser($accessToken);

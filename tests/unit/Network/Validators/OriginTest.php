@@ -79,6 +79,11 @@ final class OriginTest extends TestCase
         $this->assertEquals(false, $validator->isValid('tauri://example.com'));
         $this->assertSame('Invalid Origin. Register your new client (example.com) as a new Web (Tauri) platform on your project console dashboard', $validator->getDescription());
 
+        $this->assertEquals(true, $validator->isValid('capacitor://localhost'));
+        $this->assertEquals(true, $validator->isValid('capacitor://appwrite.io'));
+        $this->assertEquals(false, $validator->isValid('capacitor://example.com'));
+        $this->assertSame('Invalid Origin. Register your new client (example.com) as a new Web (Capacitor) platform on your project console dashboard', $validator->getDescription());
+
         $this->assertEquals(false, $validator->isValid('random-scheme://localhost'));
         $this->assertSame('Invalid Scheme. The scheme used (random-scheme) in the Origin (random-scheme://localhost) is not supported. If you are using a custom scheme, please change it to `appwrite-callback-<PROJECT_ID>`', $validator->getDescription());
     }

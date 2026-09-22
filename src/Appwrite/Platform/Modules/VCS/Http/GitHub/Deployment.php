@@ -77,7 +77,8 @@ trait Deployment
                     throw new Exception(Exception::PROJECT_NOT_FOUND, 'Repository references non-existent project');
                 }
 
-                $this->beforeCreateGitDeployment($project, $repository, $dbForPlatform, $authorization);
+                $timeout = $this->beforeCreateGitDeployment($project, $repository, $dbForPlatform, $authorization)
+                    ?? (int) System::getEnv('_APP_COMPUTE_BUILD_TIMEOUT', 900);
 
                 try {
                     $dsn = new DSN($project->getAttribute('database'));
@@ -97,6 +98,11 @@ trait Deployment
                 $dbForProject = $getProjectDB($project);
                 $resourceCollection = $resourceType === "function" ? 'functions' : 'sites';
                 $resource = $authorization->skip(fn () => $dbForProject->getDocument($resourceCollection, $resourceId));
+                if ($resource->isEmpty()) {
+                    Span::add("{$logBase}.build.skipped.reason", 'resource not found');
+                    Span::add("{$logBase}.build.skipped", 'true');
+                    continue;
+                }
                 $resourceInternalId = $resource->getSequence();
 
                 $validator = new Contains(VCS_DEPLOYMENT_SKIP_PATTERNS);
@@ -163,9 +169,9 @@ trait Deployment
                 Span::add("{$logBase}.authorized", $isAuthorized);
 
                 $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
-                $hostname = $platform['consoleHostname'] ?? '';
+                $consoleUrl = $platform['consoleUrl'] ?? '';
 
-                $authorizeUrl = $protocol . '://' . $hostname . "/console/git/authorize-contributor?projectId={$projectId}&installationId={$installationId}&repositoryId={$repositoryId}&providerPullRequestId={$providerPullRequestId}";
+                $authorizeUrl = $consoleUrl . "/git/authorize-contributor?projectId={$projectId}&installationId={$installationId}&repositoryId={$repositoryId}&providerPullRequestId={$providerPullRequestId}";
 
                 $action = $isAuthorized ? ['type' => 'logs'] : ['type' => 'authorize', 'url' => $authorizeUrl];
 
@@ -398,6 +404,7 @@ trait Deployment
                     ->createFromVcs(
                         $resource,
                         $deployment,
+                        $timeout,
                         $vcs,
                         $providerRepositoryOwner,
                         $providerRepositoryName,
@@ -553,7 +560,6 @@ trait Deployment
                 if (!empty($providerCommitHash) && $resource->getAttribute('providerSilentMode', false) === false) {
                     $resourceName = $resource->getAttribute('name');
                     $projectName = $project->getAttribute('name');
-                    $region = $project->getAttribute('region', 'default');
                     $name = "{$resourceName} ({$projectName})";
                     $message = 'Starting...';
 
@@ -565,7 +571,7 @@ trait Deployment
                     }
                     $owner = $vcs->getOwnerName($providerInstallationId, (int) $providerRepositoryId);
 
-                    $providerTargetUrl = $protocol . '://' . $hostname . "/console/project-$region-$projectId/$resourceCollection/$resourceType-$resourceId";
+                    $providerTargetUrl = $consoleUrl . "/projects/$projectId/$resourceCollection/$resourceId";
                     $vcs->updateCommitStatus($repositoryName, $providerCommitHash, $owner, 'pending', $message, $providerTargetUrl, $name);
                 }
 
@@ -590,8 +596,10 @@ trait Deployment
         }
     }
 
-    protected function beforeCreateGitDeployment(Document $project, Document $repository, Database $dbForPlatform, Authorization $authorization): void
+    /** Validate the tenant before submission and optionally supply its build budget. */
+    protected function beforeCreateGitDeployment(Document $project, Document $repository, Database $dbForPlatform, Authorization $authorization): ?int
     {
+        return null;
     }
 
 }

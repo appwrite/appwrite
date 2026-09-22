@@ -206,6 +206,122 @@ trait TransactionPermissionsBase
     }
 
     /**
+     * Regression: a commit whose write fails authorization at commit time must leave
+     * the transaction in the terminal `failed` state, never stuck in `committing`.
+     * A staged update is authorized when staged, then the row permission is revoked
+     * before commit, so the commit's write is rejected with 401.
+     */
+    public function testCommitAuthorizationFailureResetsStatus(): void
+    {
+        $userId = $this->getUser()['$id'];
+
+        // Document security on, and no collection-level update permission, so update
+        // is only ever granted at the row level.
+        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($this->getPermissionsDatabase()), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            $this->getContainerIdParam() => ID::unique(),
+            'name' => 'Commit Authorization Failure',
+            'permissions' => [
+                Permission::read(Role::users()),
+            ],
+            $this->getSecurityParam() => true,
+        ]);
+        $this->assertEquals(201, $collection['headers']['status-code']);
+        $collectionId = $collection['body']['$id'];
+
+        if ($this->getSupportForAttributes()) {
+            $attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($this->getPermissionsDatabase(), $collectionId, 'string'), array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'key' => 'title',
+                'size' => 255,
+                'required' => true,
+            ]);
+            $this->assertEquals(202, $attribute['headers']['status-code']);
+            $this->waitForAllAttributes($this->getPermissionsDatabase(), $collectionId);
+        }
+
+        // API key creates a row the user is allowed to update at the row level.
+        $row = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($this->getPermissionsDatabase(), $collectionId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            $this->getRecordIdParam() => ID::unique(),
+            'data' => ['title' => 'Original Title'],
+            'permissions' => [
+                Permission::read(Role::user($userId)),
+                Permission::update(Role::user($userId)),
+            ],
+        ]);
+        $this->assertEquals(201, $row['headers']['status-code']);
+        $rowId = $row['body']['$id'];
+
+        // User opens a transaction and stages an update they are currently allowed to make.
+        $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+        $this->assertEquals(201, $transaction['headers']['status-code']);
+        $transactionId = $transaction['body']['$id'];
+
+        $staged = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl($transactionId) . '/operations', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'operations' => [[
+                'action' => 'update',
+                'databaseId' => $this->getPermissionsDatabase(),
+                $this->getContainerIdParam() => $collectionId,
+                $this->getRecordIdParam() => $rowId,
+                'data' => ['title' => 'Updated Title'],
+            ]]
+        ]);
+        $this->assertEquals(201, $staged['headers']['status-code']);
+
+        // Revoke the user's update permission before they commit.
+        $revoke = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($this->getPermissionsDatabase(), $collectionId, $rowId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'permissions' => [
+                Permission::read(Role::user($userId)),
+            ],
+        ]);
+        $this->assertEquals(200, $revoke['headers']['status-code']);
+
+        // Commit now fails the authorization check at write time.
+        $commit = $this->client->call(Client::METHOD_PATCH, $this->getTransactionUrl($transactionId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), ['commit' => true]);
+        $this->assertEquals(401, $commit['headers']['status-code']);
+
+        // The transaction must be terminal `failed`, never left stuck in `committing`.
+        $status = $this->client->call(Client::METHOD_GET, $this->getTransactionUrl($transactionId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+        $this->assertEquals(200, $status['headers']['status-code']);
+        $this->assertEquals('failed', $status['body']['status']);
+
+        // The staged write must have rolled back; the row is unchanged.
+        $read = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($this->getPermissionsDatabase(), $collectionId, $rowId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+        $this->assertEquals(200, $read['headers']['status-code']);
+        $this->assertEquals('Original Title', $read['body']['title']);
+    }
+
+    /**
      * Test collection-level delete permission check on staging
      */
     public function testCollectionDeletePermissionDenied(): void

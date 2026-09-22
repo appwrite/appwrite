@@ -32,8 +32,8 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization as ValidatorAuthorization;
 use Utopia\Domains\Domain;
 use Utopia\Locale\Locale;
-use Utopia\Logger\Log;
 use Utopia\Queue\Message;
+use Utopia\Span\Span;
 use Utopia\System\System;
 
 class Certificates extends Action
@@ -60,7 +60,6 @@ class Certificates extends Action
             ->inject('publisherForFunctions')
             ->inject('queueForRealtime')
             ->inject('publisherForCertificates')
-            ->inject('log')
             ->inject('certificates')
             ->inject('plan')
             ->inject('authorization')
@@ -77,7 +76,6 @@ class Certificates extends Action
      * @param FunctionPublisher $publisherForFunctions
      * @param Realtime $queueForRealtime
      * @param Certificate $publisherForCertificates
-     * @param Log $log
      * @param Provider $certificates
      * @param array $plan
      * @param ValidatorAuthorization $authorization
@@ -94,7 +92,6 @@ class Certificates extends Action
         FunctionPublisher $publisherForFunctions,
         Realtime $queueForRealtime,
         Certificate $publisherForCertificates,
-        Log $log,
         Provider $certificates,
         array $plan,
         ValidatorAuthorization $authorization,
@@ -111,18 +108,19 @@ class Certificates extends Action
         $domain   = new Domain($document->getAttribute('domain', ''));
         $domainType = $document->getAttribute('domainType');
         $skipRenewCheck = $certificateMessage->skipRenewCheck;
+        $skipDomainValidation = $certificateMessage->skipDomainValidation;
         $validationDomain = $certificateMessage->validationDomain;
         $action = $certificateMessage->action;
 
-        $log->addTag('domain', $domain->get());
+        Span::add('domain', $domain->get());
 
         switch ($action) {
             case \Appwrite\Event\Certificate::ACTION_DOMAIN_VERIFICATION:
-                $this->handleDomainVerificationAction($domain, $dbForPlatform, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $queueForRealtime, $publisherForCertificates, $log, $authorization, $bus, $validationDomain);
+                $this->handleDomainVerificationAction($domain, $dbForPlatform, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $queueForRealtime, $publisherForCertificates, $authorization, $bus, $validationDomain);
                 break;
 
             case \Appwrite\Event\Certificate::ACTION_GENERATION:
-                $this->handleCertificateGenerationAction($domain, $domainType, $dbForPlatform, $publisherForMails, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $queueForRealtime, $log, $certificates, $authorization, $bus, $skipRenewCheck, $plan, $validationDomain);
+                $this->handleCertificateGenerationAction($domain, $domainType, $dbForPlatform, $publisherForMails, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $queueForRealtime, $certificates, $authorization, $bus, $skipRenewCheck, $plan, $validationDomain, $skipDomainValidation);
                 break;
 
             default:
@@ -138,7 +136,6 @@ class Certificates extends Action
      * @param FunctionPublisher $publisherForFunctions
      * @param Realtime $queueForRealtime
      * @param Certificate $publisherForCertificates
-     * @param Log $log
      * @param ValidatorAuthorization $authorization
      * @param string|null $validationDomain
      * @return void
@@ -154,7 +151,6 @@ class Certificates extends Action
         FunctionPublisher $publisherForFunctions,
         Realtime $queueForRealtime,
         Certificate $publisherForCertificates,
-        Log $log,
         ValidatorAuthorization $authorization,
         Bus $bus,
         ?string $validationDomain = null
@@ -177,7 +173,7 @@ class Certificates extends Action
 
         try {
             // Verify DNS records
-            $this->validateDomain($rule, $domain, $log, $validationDomain);
+            $this->validateDomain($rule, $domain, $validationDomain);
             // Reset logs and status for the rule
             $rule->setAttribute('logs', '');
             $rule->setAttribute('status', RULE_STATUS_CERTIFICATE_GENERATING);
@@ -206,6 +202,7 @@ class Certificates extends Action
                     'domainType' => $rule->getAttribute('deploymentResourceType', $rule->getAttribute('type')),
                 ]),
                 action: \Appwrite\Event\Certificate::ACTION_GENERATION,
+                skipDomainValidation: true,
             ));
 
             Console::success('Certificate generation triggered successfully.');
@@ -221,12 +218,12 @@ class Certificates extends Action
      * @param Webhook $queueForWebhooks
      * @param FunctionPublisher $publisherForFunctions
      * @param Realtime $queueForRealtime
-     * @param Log $log
      * @param Provider $certificates
      * @param ValidatorAuthorization $authorization
      * @param bool $skipRenewCheck
      * @param array $plan
      * @param string|null $validationDomain
+     * @param bool $skipDomainValidation The enqueuer verified DNS itself moments ago
      * @return void
      * @throws Authorization
      * @throws Conflict
@@ -245,13 +242,13 @@ class Certificates extends Action
         Webhook $queueForWebhooks,
         FunctionPublisher $publisherForFunctions,
         Realtime $queueForRealtime,
-        Log $log,
         Provider $certificates,
         ValidatorAuthorization $authorization,
         Bus $bus,
         bool $skipRenewCheck = false,
         array $plan = [],
-        ?string $validationDomain = null
+        ?string $validationDomain = null,
+        bool $skipDomainValidation = false
     ): void {
         /**
          * 1. Read arguments and validate domain
@@ -317,9 +314,14 @@ class Certificates extends Action
             // Ensure certificate is associated with the rule
             $rule->setAttribute('certificateId', $certificate->getId());
 
-            // Validate domain and DNS records. Skip if job is forced
+            // Validate domain and DNS records. Skip if job is forced, or if the
+            // enqueuer verified DNS itself moments ago: a second run of the same
+            // check can only agree, or fail on a transient and contradict the
+            // status the enqueuer just wrote.
             if (!$skipRenewCheck) {
-                $this->validateDomain($rule, $domain, $log, $validationDomain);
+                if (!$skipDomainValidation) {
+                    $this->validateDomain($rule, $domain, $validationDomain);
+                }
 
                 // If certificate exists already, double-check expiry date. Skip if job is forced
                 if (!$certificates->isRenewRequired($domain->get(), $domainType)) {
@@ -366,7 +368,7 @@ class Certificates extends Action
             $rule->setAttribute('status', RULE_STATUS_CERTIFICATE_GENERATION_FAILED);
 
             // Send email to security email
-            $this->notifyError($domain->get(), $e->getMessage(), $attempts, $publisherForMails, $plan);
+            $this->notifyError($domain->get(), $e->getMessage(), $attempts, $publisherForMails, $plan, $dbForPlatform->getDocument('projects', 'console'));
 
             throw $e;
         } finally {
@@ -444,10 +446,10 @@ class Certificates extends Action
         ]));
         $bus->dispatch(new RuleUpdated($rule->getArrayCopy()));
 
-        $projectId = $rule->getAttribute('projectId');
+        $projectId = (string) $rule->getAttribute('projectId', '');
 
         // Skip events for console project (triggered by auto-ssl generation for 1 click setups)
-        if ($projectId === 'console') {
+        if ($projectId === '' || $projectId === 'console') {
             return;
         }
 
@@ -493,13 +495,12 @@ class Certificates extends Action
      *
      * @param Document $rule Rule to validate
      * @param Domain $domain Domain to validate
-     * @param Log $log Logger for adding metrics
      * @param string|null $validationDomain Override for main domain check
      *
      * @return void
      * @throws Exception
      */
-    private function validateDomain(Document $rule, Domain $domain, Log $log, ?string $validationDomain = null): void
+    private function validateDomain(Document $rule, Domain $domain, ?string $validationDomain = null): void
     {
         $mainDomain = $validationDomain ?? $this->getMainDomain();
         $isMainDomain = !isset($mainDomain) || $domain->get() === $mainDomain;
@@ -515,7 +516,7 @@ class Certificates extends Action
         }
 
         try {
-            $this->verifyRule($rule, $log);
+            $this->verifyRule($rule);
         } catch (AppwriteException $err) {
             $msg = $err->getMessage() . "\n";
             $msg .= "Verify your DNS records are correctly configured and try again.\n";
@@ -550,7 +551,7 @@ class Certificates extends Action
      * @return void
      * @throws Exception
      */
-    private function notifyError(string $domain, string $errorMessage, int $attempt, MailPublisher $publisherForMails, array $plan): void
+    private function notifyError(string $domain, string $errorMessage, int $attempt, MailPublisher $publisherForMails, array $plan, Document $console): void
     {
         // Log error into console
         Console::warning('Cannot renew domain (' . $domain . ') on attempt no. ' . $attempt . ' certificate: ' . $errorMessage);
@@ -582,6 +583,7 @@ class Certificates extends Action
         $preview = $locale->getText("emails.certificate.preview");
 
         $publisherForMails->enqueue(new MailMessage(
+            project: $console,
             recipient: System::getEnv('_APP_EMAIL_CERTIFICATES', System::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS')),
             name: 'Appwrite Administrator',
             subject: $subject,

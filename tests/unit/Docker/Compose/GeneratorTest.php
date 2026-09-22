@@ -68,6 +68,7 @@ final class GeneratorTest extends TestCase
         $this->assertArrayHasKey('appwrite-task-scheduler', $compose['services']);
         $this->assertArrayHasKey('appwrite-task-interval', $compose['services']);
         $this->assertArrayHasKey('appwrite-embedding', $compose['services']);
+        $this->assertArrayHasKey('appwrite-autogravity', $compose['services']);
         $this->assertArrayNotHasKey('profiles', $compose['services']['appwrite-worker']);
         $this->assertArrayNotHasKey('profiles', $compose['services']['appwrite-task-scheduler']);
     }
@@ -100,7 +101,7 @@ final class GeneratorTest extends TestCase
             'database' => 'mongodb',
         ]);
 
-        $this->assertContains('./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro', $compose['services']['mongodb']['volumes']);
+        $this->assertContains('./mongo-init.js:/mongo-init.js:ro', $compose['services']['mongodb']['volumes']);
         $this->assertContains('./mongo-entrypoint.sh:/mongo-entrypoint.sh:ro', $compose['services']['mongodb']['volumes']);
     }
 
@@ -122,10 +123,28 @@ final class GeneratorTest extends TestCase
             'database' => 'mongodb',
         ]);
 
-        $this->assertContains('/tmp/appwrite/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro', $compose['services']['mongodb']['volumes']);
+        $this->assertContains('/tmp/appwrite/mongo-init.js:/mongo-init.js:ro', $compose['services']['mongodb']['volumes']);
         $this->assertContains('/tmp/appwrite/mongo-entrypoint.sh:/mongo-entrypoint.sh:ro', $compose['services']['mongodb']['volumes']);
-        $this->assertNotContains('./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro', $compose['services']['mongodb']['volumes']);
+        $this->assertNotContains('./mongo-init.js:/mongo-init.js:ro', $compose['services']['mongodb']['volumes']);
         $this->assertNotContains('./mongo-entrypoint.sh:/mongo-entrypoint.sh:ro', $compose['services']['mongodb']['volumes']);
+    }
+
+    public function testLeavesNoRelativeBindMountOnPublishedVersions(): void
+    {
+        $compose = $this->render([
+            'hostPath' => '/tmp/appwrite',
+            'database' => 'mongodb',
+        ]);
+
+        foreach ($compose['services'] as $name => $service) {
+            foreach ($service['volumes'] ?? [] as $volume) {
+                if (!\is_string($volume)) {
+                    continue;
+                }
+
+                $this->assertStringStartsNotWith('./', $volume, "{$name} mounts {$volume}, which resolves against wherever the generated file is run rather than the installation");
+            }
+        }
     }
 
     public function testDoesNotAddDatabaseDependencyWithoutPlaceholder(): void
@@ -149,15 +168,7 @@ final class GeneratorTest extends TestCase
         ]);
 
         $this->assertSame(['mysqld', '--innodb-flush-method=fsync'], $mariadb['services']['mariadb']['command']);
-        $this->assertSame([
-            'postgres',
-            '-c',
-            'fsync=off',
-            '-c',
-            'synchronous_commit=off',
-            '-c',
-            'full_page_writes=off',
-        ], $postgresql['services']['postgresql']['command']);
+        $this->assertSame(['postgres'], $postgresql['services']['postgresql']['command']);
         $this->assertSame([
             'redis-server',
             '--maxmemory',

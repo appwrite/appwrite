@@ -3,6 +3,10 @@
 use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
 use Appwrite\Auth\Key;
+use Appwrite\Auth\Validator\PasswordPwned\Appwrite as PasswordPwnedAppwrite;
+use Appwrite\Auth\Validator\PasswordPwned\HIBP as PasswordPwnedHIBP;
+use Appwrite\Auth\Validator\PasswordPwned\Mock as PasswordPwnedMock;
+use Appwrite\Auth\Validator\PasswordPwned\None as PasswordPwnedNone;
 use Appwrite\Database\Factory as DatabaseFactory;
 use Appwrite\Databases\TransactionState;
 use Appwrite\Deployment\Deployments;
@@ -49,20 +53,17 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Container;
 use Utopia\Domains\Domain;
+use Utopia\DSN\DSN;
 use Utopia\Http\Http;
 use Utopia\Locale\Locale;
 use Utopia\Lock\Distributed as DistributedLock;
-use Utopia\Logger\Log;
-use Utopia\Logger\Logger;
 use Utopia\Pools\Group;
-use Utopia\Queue\Publisher;
+use Utopia\Queue\Publisher\Synchronous as Publisher;
 use Utopia\Queue\Queue;
 use Utopia\Storage\Device;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
 use Utopia\Usage\Tenant as UsageTenant;
-use Utopia\Validator\URL;
-use Utopia\Validator\WhiteList;
 
 /**
  * Register per-request resources on the given container.
@@ -72,20 +73,15 @@ use Utopia\Validator\WhiteList;
 return function (Container $context): void {
     $context->set('utopia:graphql', fn ($utopia) => $utopia, ['utopia']);
 
-    $context->set('log', fn () => new Log(), []);
-
-    $context->set('logger', fn ($register) => $register->get('logger'), ['register']);
-
-    $context->set('lock', function (Group $pools, Telemetry $telemetry, ?Logger $logger, Document $project): Lock {
+    $context->set('lock', function (Group $pools, Telemetry $telemetry, Document $project): Lock {
         return new Lock(
             fn (string $key, int $ttl, Closure $callback): mixed => $pools->get('lock')->use(
                 fn (\Redis $redis): mixed => $callback(new DistributedLock($redis, $key, $ttl))
             ),
             $telemetry,
-            $logger,
             $project
         );
-    }, ['pools', 'telemetry', 'logger', 'project']);
+    }, ['pools', 'telemetry', 'project']);
 
     $context->set('authorization', fn () => new Authorization(), []);
 
@@ -153,7 +149,7 @@ return function (Container $context): void {
             return new Document();
         }
 
-        // Query params mirror the header fallback pattern used by ?project= and ?devKey=,
+        // Query params mirror the header fallback pattern used by ?project=,
         // allowing Console to embed impersonation in direct file/image URLs where headers cannot be set.
         $impersonateUserId = $request->getHeaderLine('x-appwrite-impersonate-user-id', (string)($request->getParam('impersonateuserid', '') ?: $request->getParam('impersonateUserId', '')));
         $impersonateEmail = $request->getHeaderLine('x-appwrite-impersonate-user-email', (string)($request->getParam('impersonateemail', '') ?: $request->getParam('impersonateEmail', '')));
@@ -216,6 +212,7 @@ return function (Container $context): void {
     $context->set('deploymentsFactory', function (Jobs $jobs, array $platform) {
         return fn (Database $dbForProject, Document $project): Deployments => new Deployments($jobs, $dbForProject, $project, $platform);
     }, ['jobs', 'platform']);
+    $context->set('buildTimeout', fn () => (int) System::getEnv('_APP_COMPUTE_BUILD_TIMEOUT', 900));
     $context->set('deployments', fn (callable $deploymentsFactory, Database $dbForProject, Document $project) => $deploymentsFactory($dbForProject, $project), ['deploymentsFactory', 'dbForProject', 'project']);
     $context->set('eventProcessor', fn () => new EventProcessor(), []);
     $context->set('databaseFactory', fn (Group $pools, Cache $cache, Authorization $authorization) => new DatabaseFactory(
@@ -251,33 +248,23 @@ return function (Container $context): void {
         };
     }, ['databaseFactory', 'dbForPlatform']);
 
-    $context->set('getLogsDB', function (DatabaseFactory $databaseFactory) {
-
-        return function (?Document $project = null) use ($databaseFactory) {
-            return $databaseFactory->logs(
-                $project,
-                APP_DATABASE_TIMEOUT_MILLISECONDS_API,
-                APP_DATABASE_QUERY_MAX_VALUES
-            );
-        };
-    }, ['databaseFactory']);
-
     /**
      * List of allowed request hostnames for the request.
      */
-    $context->set('allowedHostnames', function (array $platform, Document $project, Document $rule, Document $devKey, Request $request) {
+    $context->set('allowedHostnames', function (array $platform, Document $project, Document $rule, Request $request) {
         $allowed = [...($platform['hostnames'] ?? [])];
+
+        /* Add the console host, the default OAuth2 redirects land on it even when _APP_CONSOLE_URL points elsewhere */
+        $consoleHostname = \parse_url($platform['consoleUrl'] ?? '', PHP_URL_HOST);
+        if (! empty($consoleHostname)) {
+            $allowed[] = $consoleHostname;
+        }
 
         /* Add platform configured hostnames */
         if (! $project->isEmpty() && $project->getId() !== 'console') {
             $platforms = $project->getAttribute('platforms', []);
             $hostnames = Platform::getHostnames($platforms);
             $allowed = [...$allowed, ...$hostnames];
-        }
-
-        /* Add the request hostname if a dev key is found */
-        if (! $devKey->isEmpty()) {
-            $allowed[] = $request->getHostname();
         }
 
         $originHostname = parse_url($request->getOrigin(), PHP_URL_HOST);
@@ -298,13 +285,8 @@ return function (Container $context): void {
             $allowed[] = $rule->getAttribute('domain', '');
         }
 
-        /* Allow the request origin if a dev key is found */
-        if (! $devKey->isEmpty() && ! empty($hostname)) {
-            $allowed[] = $hostname;
-        }
-
         return array_unique($allowed);
-    }, ['platform', 'project', 'rule', 'devKey', 'request']);
+    }, ['platform', 'project', 'rule', 'request']);
 
     /**
      * List of allowed request schemes for the request.
@@ -439,18 +421,14 @@ return function (Container $context): void {
 
     $context->set(
         'originValidator',
-        fn (Document $devKey, array $allowedHostnames, array $allowedSchemes) => $devKey->isEmpty()
-            ? new Origin($allowedHostnames, $allowedSchemes)
-            : new URL(),
-        ['devKey', 'allowedHostnames', 'allowedSchemes']
+        fn (array $allowedHostnames, array $allowedSchemes) => new Origin($allowedHostnames, $allowedSchemes),
+        ['allowedHostnames', 'allowedSchemes']
     );
 
     $context->set(
         'redirectValidator',
-        fn (Document $devKey, array $allowedHostnames, array $allowedSchemes) => $devKey->isEmpty()
-            ? new Redirect($allowedHostnames, $allowedSchemes)
-            : new URL(),
-        ['devKey', 'allowedHostnames', 'allowedSchemes']
+        fn (array $allowedHostnames, array $allowedSchemes) => new Redirect($allowedHostnames, $allowedSchemes),
+        ['allowedHostnames', 'allowedSchemes']
     );
 
     $context->set('user', function (string $mode, Document $project, Document $console, Request $request, Response $response, Database $dbForProject, Database $dbForPlatform, Store $store, Token $proofForToken, $authorization) {
@@ -628,11 +606,29 @@ return function (Container $context): void {
             $projectId = (string) $request->getQuery('project', '');
         }
 
+        $route = $utopia->match($request)?->route;
+
+        // S3 uses the Appwrite project ID as its SigV4 access key. Header-signed
+        // requests carry the credential scope in Authorization; presigned URLs
+        // carry it in the X-Amz-Credential query parameter.
+        if ($projectId === '' && \in_array('s3', $route?->getGroups() ?? [], true)) {
+            $credential = '';
+            $authorizationHeader = $request->getHeaderLine('authorization', '');
+            if (\preg_match('/Credential=([^\s,]+)/', $authorizationHeader, $matches) === 1) {
+                $credential = $matches[1];
+            } else {
+                $credential = $request->getQuery('X-Amz-Credential', '');
+            }
+
+            if (\is_string($credential)) {
+                $projectId = \explode('/', $credential, 2)[0];
+            }
+        }
+
         // Backwards compatibility for new services, originally project resources
         // These endpoints moved from /v1/projects/:projectId/<resource> to /v1/<resource>
         // When accessed via the old alias path, extract projectId from the URI
         $deprecatedProjectPathPrefix = '/v1/projects/';
-        $route = $utopia->match($request)?->route;
         if (!empty($route)) {
             $isDeprecatedAlias = $projectIdFromPath !== '' &&
                 !\str_starts_with($route->getPath(), $deprecatedProjectPathPrefix);
@@ -671,6 +667,23 @@ return function (Container $context): void {
 
         return;
     }, ['user', 'store', 'proofForToken']);
+
+    $context->set('pwnedPasswords', function (Cache $cache) {
+        // Nothing is asked until an operator points this at a service
+        $dsn = new DSN(System::getEnv('_APP_PWNED_PASSWORDS_DSN', 'none://localhost'));
+
+        return match ($dsn->getScheme()) {
+            'hibp' => new PasswordPwnedHIBP($cache),
+            'appwrite' => new PasswordPwnedAppwrite($dsn, $cache),
+            // Reports every password as safe by choice, for servers that cannot reach a breach service
+            'none' => new PasswordPwnedNone(),
+            // Reports almost every password as safe, so it must never be reachable on a real server
+            'mock' => Http::isProduction()
+                ? throw new Exception(Exception::GENERAL_SERVER_ERROR, 'The mock breach validator cannot be used in production.')
+                : new PasswordPwnedMock(),
+            default => throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Unknown _APP_PWNED_PASSWORDS_DSN scheme: ' . $dsn->getScheme()),
+        };
+    }, ['cache']);
 
     $context->set('dbForProject', function (DatabaseFactory $databaseFactory, Database $dbForPlatform, Document $project, Response $response, Publisher $publisher, Event $queueForEvents, FunctionPublisher $publisherForFunctions, Webhook $queueForWebhooks, Realtime $queueForRealtime, UsageContext $usage, Request $request) {
         if ($project->isEmpty() || $project->getId() === 'console') {
@@ -942,55 +955,6 @@ return function (Container $context): void {
 
         return $requestTimestamp;
     }, ['request']);
-
-    $context->set('devKey', function (Request $request, Document $project, array $servers, Database $dbForPlatform, Authorization $authorization) {
-        $devKey = $request->getHeaderLine('x-appwrite-dev-key', $request->getParam('devKey', ''));
-
-        // Check if given key match project's development keys
-        $key = $project->find('secret', $devKey, 'devKeys');
-        if (! $key) {
-            return new Document([]);
-        }
-
-        // check expiration
-        $expire = $key->getAttribute('expire');
-        if (! empty($expire) && $expire < DatabaseDateTime::formatTz(DatabaseDateTime::now())) {
-            return new Document([]);
-        }
-
-        // update access time
-        $accessedAt = $key->getAttribute('accessedAt', 0);
-        if (empty($accessedAt) || DatabaseDateTime::formatTz(DatabaseDateTime::addSeconds(new \DateTime(), -APP_KEY_ACCESS)) > $accessedAt) {
-            $key->setAttribute('accessedAt', DatabaseDateTime::now());
-            $authorization->skip(fn () => $dbForPlatform->updateDocument('devKeys', $key->getId(), new Document([
-                'accessedAt' => $key->getAttribute('accessedAt')
-            ])));
-            $dbForPlatform->purgeCachedDocument('projects', $project->getId());
-        }
-
-        // add sdk to key
-        $sdkValidator = new WhiteList($servers, true);
-        $sdk = \strtolower($request->getHeaderLine('x-sdk-name', 'UNKNOWN'));
-
-        if ($sdk !== 'unknown' && $sdkValidator->isValid($sdk)) {
-            $sdks = $key->getAttribute('sdks', []);
-
-            if (! in_array($sdk, $sdks)) {
-                $sdks[] = $sdk;
-                $key->setAttribute('sdks', $sdks);
-
-                /** Update access time as well */
-                $key->setAttribute('accessedAt', DatabaseDateTime::now());
-                $key = $authorization->skip(fn () => $dbForPlatform->updateDocument('devKeys', $key->getId(), new Document([
-                    'sdks' => $key->getAttribute('sdks'),
-                    'accessedAt' => $key->getAttribute('accessedAt')
-                ])));
-                $dbForPlatform->purgeCachedDocument('projects', $project->getId());
-            }
-        }
-
-        return $key;
-    }, ['request', 'project', 'servers', 'dbForPlatform', 'authorization']);
 
     $context->set('team', function (Document $project, Database $dbForPlatform, Http $utopia, Request $request, Authorization $authorization, string $projectIdFromPath) {
         $teamInternalId = '';
