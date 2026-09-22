@@ -3,7 +3,7 @@
 namespace Appwrite\Installer;
 
 /**
- * What a self-hosted install or upgrade tells growth.appwrite.io about itself.
+ * Anonymous usage report for a self-hosted install or upgrade.
  *
  * Every entry point (web installer, interactive CLI, headless CLI) builds one of
  * these, so the decision to opt out and the payload shape live here rather than
@@ -70,8 +70,8 @@ final readonly class Report
     }
 
     /**
-     * The User-Agent sent with the report. Growth stores it on every row, so the
-     * entry point, channel and topology travel here rather than as new columns:
+     * The User-Agent sent with the report, carrying the entry point, channel,
+     * topology and whether the containers were started:
      * `Appwrite-Installer/2.0.0 (cli-headless; stable; combined; started)`.
      */
     public function userAgent(): string
