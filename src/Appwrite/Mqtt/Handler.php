@@ -306,7 +306,7 @@ class Handler implements MqttHandler
             $connection->resume($filter, $from);
 
             $start = max($from + 1, $tail - $maxDepth + 1);
-            $messages = $projectDB->getAuthorization()->skip(fn () => $projectDB->find('appwritePushLedger', [
+            $messages = $projectDB->getAuthorization()->skip(fn () => $projectDB->find('pushLedger', [
                 Query::equal('topic', [$filter]),
                 Query::greaterThanEqual('sequence', $start),
                 Query::orderAsc('sequence'),

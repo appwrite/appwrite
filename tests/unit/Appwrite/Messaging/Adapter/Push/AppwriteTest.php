@@ -110,12 +110,12 @@ final class AppwriteTest extends TestCase
         // The append-only ledger. `data` is a plain string here (the adapter passes an
         // already-encoded JSON envelope); the production collection's json filter is a
         // storage detail, not adapter behaviour.
-        $this->database->createCollection('appwritePushLedger', [], [], $any, false);
-        $this->database->createAttribute('appwritePushLedger', 'topic', Database::VAR_STRING, 255, true);
-        $this->database->createAttribute('appwritePushLedger', 'data', Database::VAR_STRING, 65535, true);
-        $this->database->createAttribute('appwritePushLedger', 'messageId', Database::VAR_STRING, 255, false);
-        $this->database->createAttribute('appwritePushLedger', 'messageInternalId', Database::VAR_STRING, 255, false);
-        $this->database->createAttribute('appwritePushLedger', 'sequence', Database::VAR_INTEGER, 0, true);
+        $this->database->createCollection('pushLedger', [], [], $any, false);
+        $this->database->createAttribute('pushLedger', 'topic', Database::VAR_STRING, 255, true);
+        $this->database->createAttribute('pushLedger', 'data', Database::VAR_STRING, 65535, true);
+        $this->database->createAttribute('pushLedger', 'messageId', Database::VAR_STRING, 255, false);
+        $this->database->createAttribute('pushLedger', 'messageInternalId', Database::VAR_STRING, 255, false);
+        $this->database->createAttribute('pushLedger', 'sequence', Database::VAR_INTEGER, 0, true);
     }
 
     /** Seed a topic row with a starting sequence (the current tail). */
@@ -144,7 +144,7 @@ final class AppwriteTest extends TestCase
      */
     private function ledger(): array
     {
-        return $this->database->getAuthorization()->skip(fn () => $this->database->find('appwritePushLedger'));
+        return $this->database->getAuthorization()->skip(fn () => $this->database->find('pushLedger'));
     }
 
     /** The topic counter row, read past authorization. */
