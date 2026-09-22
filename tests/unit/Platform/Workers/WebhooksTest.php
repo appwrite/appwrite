@@ -22,7 +22,7 @@ require_once __DIR__ . '/../../../../app/init.php';
 
 final class WebhooksTest extends TestCase
 {
-    public function testSendAlertPublishesNotificationMessage(): void
+    public function testPrepareAlertPublishesNotificationMessage(): void
     {
         $database = $this->createPlatformDatabase();
         $this->seedOwnerUser($database);
@@ -31,7 +31,7 @@ final class WebhooksTest extends TestCase
         $publisherForNotifications = new NotificationPublisher($publisher, new Queue('v1-notifications'));
         $worker = new Webhooks();
 
-        $worker->sendAlert(
+        $alerts = $worker->prepareAlert(
             attempts: 10,
             statusCode: 500,
             webhook: new Document([
@@ -48,10 +48,13 @@ final class WebhooksTest extends TestCase
                 'region' => 'fra',
             ]),
             dbForPlatform: $database,
-            publisherForNotifications: $publisherForNotifications,
             platform: ['consoleUrl' => 'https://console.example.test'],
             plan: []
         );
+
+        foreach ($alerts as $alert) {
+            $publisherForNotifications->enqueue($alert);
+        }
 
         $events = $publisher->getEvents('v1-notifications');
 
@@ -96,7 +99,7 @@ final class WebhooksTest extends TestCase
         ], $payload['recipients'][1]);
     }
 
-    public function testSendAlertPersonalizesBodyPerOwner(): void
+    public function testPrepareAlertPersonalizesBodyPerOwner(): void
     {
         $database = $this->createPlatformDatabase();
         $this->seedOwnerUser($database);
@@ -117,7 +120,7 @@ final class WebhooksTest extends TestCase
         $publisherForNotifications = new NotificationPublisher($publisher, new Queue('v1-notifications'));
         $worker = new Webhooks();
 
-        $worker->sendAlert(
+        $alerts = $worker->prepareAlert(
             attempts: 10,
             statusCode: 500,
             webhook: new Document([
@@ -134,10 +137,13 @@ final class WebhooksTest extends TestCase
                 'region' => 'fra',
             ]),
             dbForPlatform: $database,
-            publisherForNotifications: $publisherForNotifications,
             platform: ['consoleUrl' => 'https://console.example.test'],
             plan: []
         );
+
+        foreach ($alerts as $alert) {
+            $publisherForNotifications->enqueue($alert);
+        }
 
         $events = $publisher->getEvents('v1-notifications');
 
@@ -160,7 +166,7 @@ final class WebhooksTest extends TestCase
         $this->assertStringNotContainsString('Ada Lovelace', (string) $bodies['grace@example.test']);
     }
 
-    public function testSendAlertDeduplicationKeyChangesPerPauseCycle(): void
+    public function testPrepareAlertDeduplicationKeyChangesPerPauseCycle(): void
     {
         $database = $this->createPlatformDatabase();
         $this->seedOwnerUser($database);
@@ -176,7 +182,7 @@ final class WebhooksTest extends TestCase
         ]);
 
         foreach (['2026-01-01T00:00:00.000+00:00', '2026-01-02T00:00:00.000+00:00'] as $updatedAt) {
-            $worker->sendAlert(
+            $alerts = $worker->prepareAlert(
                 attempts: 10,
                 statusCode: 500,
                 webhook: new Document([
@@ -187,10 +193,13 @@ final class WebhooksTest extends TestCase
                 ]),
                 project: $project,
                 dbForPlatform: $database,
-                publisherForNotifications: $publisherForNotifications,
                 platform: ['consoleUrl' => 'https://console.example.test'],
                 plan: []
             );
+
+            foreach ($alerts as $alert) {
+                $publisherForNotifications->enqueue($alert);
+            }
         }
 
         $events = $publisher->getEvents('v1-notifications');
