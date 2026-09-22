@@ -16,6 +16,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Messaging\Exception\InvalidArgumentException;
 use Utopia\Messaging\Messages\Email;
 use Utopia\Messaging\Messages\Push;
 use Utopia\Messaging\Priority;
@@ -334,8 +335,7 @@ final class AppwriteTest extends TestCase
 
     public function testInvalidMessageTypeRejected(): void
     {
-        $this->expectException(\Exception::class);
-        $this->expectExceptionMessage('Invalid message type.');
+        $this->expectException(InvalidArgumentException::class);
 
         // A non-push message is rejected by the base adapter before process() runs.
         $this->adapter(new FakeBroker())->send(new Email(

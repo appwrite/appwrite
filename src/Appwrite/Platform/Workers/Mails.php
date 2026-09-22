@@ -7,6 +7,7 @@ use Exception;
 use Utopia\Database\Document;
 use Utopia\Messaging\Adapter\Email as EmailAdapter;
 use Utopia\Messaging\Adapter\Email\SMTP;
+use Utopia\Messaging\Exception\InvalidArgumentException;
 use Utopia\Messaging\Messages\Email as EmailMessage;
 use Utopia\Messaging\Messages\Email\Attachment;
 use Utopia\Platform\Action;
@@ -195,32 +196,39 @@ class Mails extends Action
             ];
         }
 
-        $emailMessage = new EmailMessage(
-            to: [['email' => $recipient, 'name' => $name]],
-            subject: $subject,
-            content: $body,
-            fromName: $fromName,
-            fromEmail: $fromEmail,
-            replyToName: $replyToName,
-            replyToEmail: $replyTo,
-            attachments: $attachments,
-            html: true,
-        );
-        $emailMessage->setOrigin(MESSAGE_SEND_TYPE_INTERNAL);
-
-        $send = static function (EmailAdapter $adapter) use ($emailMessage, $telemetry): array {
-            $adapter->setTelemetry($telemetry);
-
-            return $adapter->send($emailMessage);
-        };
-
         try {
+            $emailMessage = new EmailMessage(
+                to: [['email' => $recipient, 'name' => $name]],
+                subject: $subject,
+                content: $body,
+                fromName: $fromName,
+                fromEmail: $fromEmail,
+                replyToName: $replyToName,
+                replyToEmail: $replyTo,
+                attachments: $attachments,
+                html: true,
+            );
+            $emailMessage->setOrigin(MESSAGE_SEND_TYPE_INTERNAL);
+
+            $send = static function (EmailAdapter $adapter) use ($emailMessage, $telemetry): array {
+                $adapter->setTelemetry($telemetry);
+
+                return $adapter->send($emailMessage);
+            };
+
             $result = $adapter instanceof EmailAdapter ? $send($adapter) : $register->get('smtp')->use($send);
 
             if (($result['deliveredTo'] ?? 0) === 0) {
                 $error = $result['results'][0]['error'] ?? ($result['error'] ?? 'Unknown error');
                 throw new Exception($error);
             }
+        } catch (InvalidArgumentException $error) {
+            // The address or name can never be delivered, so a retry cannot help.
+            Span::add('mail.status', 'skipped');
+            Span::add('mail.error', $error->getType());
+            Span::add('mail.error.message', $error->getMessage());
+
+            return;
         } catch (\Throwable $error) {
             Span::add('mail.status', 'failure');
 
