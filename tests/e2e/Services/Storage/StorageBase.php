@@ -1153,6 +1153,67 @@ trait StorageBase
         $this->assertEquals(404, $file8['headers']['status-code']);
     }
 
+    public function testGetBucketFileRange(): void
+    {
+        $data = $this->setupBucketFile();
+        $bucketId = $data['bucketId'];
+        $path = __DIR__ . '/../../../resources/logo.png';
+        $size = 47218;
+
+        foreach (['view', 'download'] as $route) {
+            $endpoint = '/storage/buckets/' . $bucketId . '/files/' . $data['fileId'] . '/' . $route;
+
+            /**
+             * Test for SUCCESS
+             */
+            // Range bounds are inclusive, so a start equal to the end asks for one byte.
+            $firstByte = $this->client->call(Client::METHOD_GET, $endpoint, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'Range' => 'bytes=0-0',
+            ], $this->getHeaders()));
+
+            $this->assertEquals(206, $firstByte['headers']['status-code']);
+            $this->assertEquals('bytes 0-0/' . $size, $firstByte['headers']['content-range']);
+            $this->assertEquals('1', $firstByte['headers']['content-length']);
+            $this->assertEquals(\file_get_contents($path, false, null, 0, 1), $firstByte['body']);
+
+            $lastByte = $this->client->call(Client::METHOD_GET, $endpoint, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'Range' => 'bytes=' . ($size - 1) . '-' . ($size - 1),
+            ], $this->getHeaders()));
+
+            $this->assertEquals(206, $lastByte['headers']['status-code']);
+            $this->assertEquals('bytes ' . ($size - 1) . '-' . ($size - 1) . '/' . $size, $lastByte['headers']['content-range']);
+            $this->assertEquals('1', $lastByte['headers']['content-length']);
+            $this->assertEquals(\file_get_contents($path, false, null, $size - 1, 1), $lastByte['body']);
+
+            // An end past the last byte is clamped to it, not rejected.
+            $pastEnd = $this->client->call(Client::METHOD_GET, $endpoint, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'Range' => 'bytes=' . ($size - 100) . '-' . ($size + 500),
+            ], $this->getHeaders()));
+
+            $this->assertEquals(206, $pastEnd['headers']['status-code']);
+            $this->assertEquals('bytes ' . ($size - 100) . '-' . ($size - 1) . '/' . $size, $pastEnd['headers']['content-range']);
+            $this->assertEquals('100', $pastEnd['headers']['content-length']);
+            $this->assertEquals(\file_get_contents($path, false, null, $size - 100, 100), $pastEnd['body']);
+
+            /**
+             * Test for FAILURE
+             */
+            $pastStart = $this->client->call(Client::METHOD_GET, $endpoint, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'Range' => 'bytes=' . $size . '-' . ($size + 500),
+            ], $this->getHeaders()));
+
+            $this->assertEquals(416, $pastStart['headers']['status-code']);
+        }
+    }
+
     public function testFilePreviewOversized(): void
     {
         $data = $this->setupBucketFile();
