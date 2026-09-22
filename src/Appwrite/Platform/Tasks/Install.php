@@ -1057,6 +1057,7 @@ class Install extends Action
             $client
                 ->setConnectTimeout(5000)
                 ->setTimeout(5000)
+                ->setUserAgent($report->userAgent())
                 ->addHeader('Content-Type', 'application/json')
                 ->fetch(self::GROWTH_API_URL . '/analytics', Client::METHOD_POST, $report->payload());
         } catch (\Throwable) {

@@ -70,6 +70,18 @@ final readonly class Report
     }
 
     /**
+     * The User-Agent sent with the report. Growth stores it on every row, so the
+     * entry point, channel and topology travel here rather than as new columns:
+     * `Appwrite-Installer/2.0.0 (cli-headless; stable; combined; started)`.
+     */
+    public function userAgent(): string
+    {
+        $facts = [$this->source, $this->channel, $this->topology, $this->started ? 'started' : 'not-started'];
+
+        return 'Appwrite-Installer/' . $this->version . ' (' . \implode('; ', $facts) . ')';
+    }
+
+    /**
      * @return array<string, mixed>
      */
     public function payload(): array
@@ -86,10 +98,6 @@ final readonly class Report
                 'email' => $this->email,
                 'domain' => $this->domain,
                 'database' => $this->database,
-                'source' => $this->source,
-                'started' => $this->started,
-                'channel' => $this->channel,
-                'topology' => $this->topology,
                 'ip' => $this->ip,
                 'os' => $this->os,
                 'arch' => $this->arch,

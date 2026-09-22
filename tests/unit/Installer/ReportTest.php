@@ -82,15 +82,27 @@ class ReportTest extends TestCase
         $this->assertSame('admin@example.com', $data['email']);
         $this->assertSame('appwrite.example.com', $data['domain']);
         $this->assertSame('postgresql', $data['database']);
-        $this->assertSame(Report::SOURCE_WEB, $data['source']);
-        $this->assertTrue($data['started']);
-        $this->assertSame('stable', $data['channel']);
-        $this->assertSame('combined', $data['topology']);
+        $this->assertArrayNotHasKey('source', $data);
+        $this->assertArrayNotHasKey('started', $data);
         $this->assertSame('203.0.113.7', $data['ip']);
         $this->assertSame('Linux 6.1', $data['os']);
         $this->assertSame('x86_64', $data['arch']);
         $this->assertSame(4, $data['cpus']);
         $this->assertSame(8192, $data['ram']);
+    }
+
+    public function testUserAgent(): void
+    {
+        // Growth stores the User-Agent on every installation row, so the facts a
+        // dashboard splits on travel there instead of as new columns.
+        $this->assertSame(
+            'Appwrite-Installer/2.0.0 (web; stable; combined; started)',
+            $this->report()->userAgent()
+        );
+        $this->assertSame(
+            'Appwrite-Installer/2.0.0 (cli-headless; stable; combined; not-started)',
+            $this->report(source: Report::SOURCE_CLI_HEADLESS, started: false)->userAgent()
+        );
     }
 
     public function testUpgradeLabel(): void
@@ -116,8 +128,6 @@ class ReportTest extends TestCase
         );
         $data = \json_decode($report->payload()['data'], true);
 
-        $this->assertSame(Report::SOURCE_CLI_HEADLESS, $data['source']);
-        $this->assertFalse($data['started']);
         $this->assertNull($data['name']);
         $this->assertNull($data['email']);
         $this->assertNull($data['ip']);
