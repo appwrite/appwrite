@@ -844,7 +844,7 @@ These are provided alongside any custom headers sent to the function.
 |---------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `x-appwrite-trigger`        |  Describes how the function execution was invoked. Possible values are `http`, `schedule` or `event`.                                                      |
 | `x-appwrite-event`          |  If the function execution was triggered by an event, describes the triggering event.                                                                |
-| `x-appwrite-key`            |  The dynamic API key is used for server authentication. [Learn more about dynamic api keys](/docs/products/functions/develop#dynamic-api-key). |
+| `x-appwrite-key`            |  The ephemeral API key is used for server authentication. [Learn more about ephemeral API keys](/docs/products/functions/develop#ephemeral-api-key). |
 | `x-appwrite-user-id`        |  If the function execution was invoked by an authenticated user, display the user ID. This doesn't apply to Appwrite Console users or API keys.      |
 | `x-appwrite-user-jwt`       |  JWT token generated from the invoking user's session. Used to authenticate Server SDKs to respect access permissions. [Learn more about JWT tokens](/docs/products/auth/jwt).  |
 | `x-appwrite-country-code`   |  Displays the country code of the configured locale.                                                                                                 |
@@ -1546,25 +1546,25 @@ By default, we include the following package managers in each runtime.
 
 # Using Appwrite in a function {% #using-appwrite %}
 Appwrite can be used in your functions by adding the relevant SDK to your function's dependencies.
-Authenticating with Appwrite is done via a dynamic API key or a JWT token.
+Authenticating with Appwrite is done via an ephemeral API key or a JWT token.
 
-## Dynamic API key {% #dynamic-api-key %}
-Dynamic API keys are the same as [API keys](/docs/partners/project/api-keys) but are automatically generated.
+## Ephemeral API key {% #ephemeral-api-key %}
+Ephemeral API keys are the same as [API keys](/docs/partners/project/api-keys) but are automatically generated.
 They are generated in your functions per execution.
-However, you can only use dynamic API keys inside Appwrite Functions and [Appwrite Sites](/docs/products/sites/develop#dynamic-api-key).
+However, you can only use ephemeral API keys inside Appwrite Functions and [Appwrite Sites](/docs/products/sites/develop#ephemeral-api-key).
 
-During the build process, dynamic API keys are automatically provided as the environment variable `APPWRITE_FUNCTION_API_KEY`. This environment variable doesn't need to be initialized.
+During the build process, ephemeral API keys are automatically provided as the environment variable `APPWRITE_FUNCTION_API_KEY`. This environment variable doesn't need to be initialized.
 
-During execution, dynamic API keys are automatically provided in the `x-appwrite-key` [header](#headers).
+During execution, ephemeral API keys are automatically provided in the `x-appwrite-key` [header](#headers).
 
-Dynamic API keys grant access and operate without sessions.
+Ephemeral API keys grant access and operate without sessions.
 They allow your function to act as an admin-type role instead of acting on behalf of a user.
 Update the function settings to configure the scopes of the function.
 
 1. In Appwrite Console, navigate to **Functions**.
 2. Click to open a function you wish to configure.
 3. Under the **Settings** tab, navigate to **Scopes**.
-4. Select the scopes you want to grant the dynamic key.
+4. Select the scopes you want to grant the ephemeral key.
 5. It is best practice to allow only necessary permissions.
 
 {% multicode %}

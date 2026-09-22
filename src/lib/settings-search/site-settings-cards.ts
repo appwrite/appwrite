@@ -48,7 +48,7 @@ export const SITE_SETTINGS_CARD_INDEX: SettingsCardIndexEntry[] = [
       'scope',
       'permission',
       'api key',
-      'dynamic key',
+      'ephemeral key',
       'ssr',
       'access',
     ],

@@ -36,7 +36,7 @@ Appwrite Functions can be triggered by HTTP requests, CRON schedules, or any [Ap
 
 ## Global environment variables
 
-Aside from environment variables scoped to each function, Appwrite supports project-level variables that are shared across every function in the project. Combine that with the dynamic API key Appwrite injects into each execution and your Rust function can talk to the rest of your project without ever managing credentials yourself.
+Aside from environment variables scoped to each function, Appwrite supports project-level variables that are shared across every function in the project. Combine that with the ephemeral API key Appwrite injects into each execution and your Rust function can talk to the rest of your project without ever managing credentials yourself.
 
 ## Permissions system
 
