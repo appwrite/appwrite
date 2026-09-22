@@ -11,6 +11,7 @@ use Appwrite\Platform\Services\Workers;
 use Appwrite\Platform\Workers\Executions;
 use Appwrite\Platform\Workers\Mails;
 use Appwrite\Platform\Workers\Notifications;
+use Appwrite\Workers\Jobs;
 use PHPUnit\Framework\TestCase;
 use Utopia\Config\Config;
 
@@ -50,11 +51,16 @@ final class RegistrationTest extends TestCase
         $this->assertSame($expected, $registered);
         $this->assertSame(1, Config::getParam('workers')['databases']['coroutines']);
         $this->assertSame(8, Config::getParam('workers')['stats-usage']['coroutines']);
-        $this->assertSame('v1-stats-calculations', Config::getParam('workers')['stats-calculations']['queue']);
-        $this->assertSame('v1-stats-events', Config::getParam('workers')['stats-events']['queue']);
-        $this->assertNotSame(
-            Config::getParam('workers')['stats-calculations']['queue'],
-            Config::getParam('workers')['stats-events']['queue'],
-        );
+    }
+
+    public function testEachWorkerConsumesItsOwnQueue(): void
+    {
+        $config = Config::getParam('workers');
+        $jobs = Jobs::resolve(\array_keys($config), $config, fn (string $key, mixed $default = null): mixed => $default);
+
+        $queues = \array_column($jobs, 'queue');
+        $shared = \array_keys(\array_filter(\array_count_values($queues), fn (int $count): bool => $count > 1));
+
+        $this->assertSame([], $shared, 'Workers share a queue: ' . \implode(', ', $shared));
     }
 }

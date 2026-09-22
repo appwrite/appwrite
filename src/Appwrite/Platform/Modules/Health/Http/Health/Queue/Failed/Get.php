@@ -68,6 +68,7 @@ class Get extends Base
             ->inject('publisherForFunctions')
             ->inject('publisherForStatsResources')
             ->inject('publisherForStatsEvents')
+            ->inject('publisherForStatsLegacy')
             ->inject('publisherForUsage')
             ->inject('queueForWebhooks')
             ->inject('publisherForCertificates')
@@ -90,6 +91,7 @@ class Get extends Base
         FunctionPublisher $publisherForFunctions,
         StatsResourcesPublisher $publisherForStatsResources,
         StatsResourcesPublisher $publisherForStatsEvents,
+        StatsResourcesPublisher $publisherForStatsLegacy,
         UsagePublisher $publisherForUsage,
         Webhook $queueForWebhooks,
         Certificate $publisherForCertificates,
@@ -109,7 +111,7 @@ class Get extends Base
             System::getEnv('_APP_FUNCTIONS_QUEUE_NAME', Event::FUNCTIONS_QUEUE_NAME) => $publisherForFunctions,
             System::getEnv('_APP_STATS_CALCULATIONS_QUEUE_NAME', Event::STATS_CALCULATIONS_QUEUE_NAME) => $publisherForStatsResources,
             System::getEnv('_APP_STATS_EVENTS_QUEUE_NAME', Event::STATS_EVENTS_QUEUE_NAME) => $publisherForStatsEvents,
-            System::getEnv('_APP_STATS_RESOURCES_QUEUE_NAME', Event::STATS_RESOURCES_QUEUE_NAME) => $publisherForStatsResources,
+            System::getEnv('_APP_STATS_RESOURCES_QUEUE_NAME', Event::STATS_RESOURCES_QUEUE_NAME) => $publisherForStatsLegacy,
             System::getEnv('_APP_STATS_USAGE_QUEUE_NAME', Event::STATS_USAGE_QUEUE_NAME) => $publisherForUsage,
             System::getEnv('_APP_WEBHOOK_QUEUE_NAME', Event::WEBHOOK_QUEUE_NAME) => $queueForWebhooks,
             System::getEnv('_APP_CERTIFICATES_QUEUE_NAME', Event::CERTIFICATES_QUEUE_NAME) => $publisherForCertificates,

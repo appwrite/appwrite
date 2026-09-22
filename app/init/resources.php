@@ -188,6 +188,14 @@ $container->set('publisherForStatsEvents', fn (Publisher $publisher) => new Stat
     new Queue(System::getEnv('_APP_STATS_EVENTS_QUEUE_NAME', Event::STATS_EVENTS_QUEUE_NAME))
 ), ['publisher']);
 
+// Reporting only. Nothing publishes to the pre-split queue any more, but the
+// health endpoint still accepts its name so an operator can read what is left
+// on that list while an install is being cut over.
+$container->set('publisherForStatsLegacy', fn (Publisher $publisher) => new StatsResourcesPublisher(
+    $publisher,
+    new Queue(System::getEnv('_APP_STATS_RESOURCES_QUEUE_NAME', Event::STATS_RESOURCES_QUEUE_NAME))
+), ['publisher']);
+
 $container->set('usageConnection', function () {
     $client = new HttpClientPool(new Connections(
         new SwoolePoolAdapter(),
