@@ -1922,7 +1922,7 @@ class Deletes extends Action
     }
 
     /**
-     * The push ledger (appwritePushLedger) is the append-only record of QoS 1 push
+     * The push ledger (pushLedger) is the append-only record of QoS 1 push
      * messages the MQTT broker keeps so it can replay any a client missed while offline.
      * Replay only ever reaches back one week, so entries older than that are dead weight
      * and are pruned here, mirroring how expired presences are cleaned up.
@@ -1932,13 +1932,13 @@ class Deletes extends Action
         Console::info('Delete expired push ledger messages');
 
         $dbForProject = $getProjectDB($project);
-        if ($dbForProject->getCollection('appwritePushLedger')->isEmpty()) {
+        if ($dbForProject->getCollection('pushLedger')->isEmpty()) {
             return;
         }
 
         $expired = DateTime::addSeconds(new \DateTime(), -1 * 60 * 60 * 24 * 7);
 
-        $dbForProject->deleteDocuments('appwritePushLedger', [
+        $dbForProject->deleteDocuments('pushLedger', [
             Query::lessThan('$createdAt', $expired),
         ], onError: function (Throwable $th) {
             // Swallow errors (e.g. projects without the push ledger collection).

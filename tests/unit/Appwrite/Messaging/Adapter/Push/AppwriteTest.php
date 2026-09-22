@@ -119,7 +119,7 @@ final class AppwriteTest extends TestCase
         // already-encoded JSON envelope); the production collection's json filter is a
         // storage detail, not adapter behaviour.
         $this->database->createCollection(new Collection(
-            id: 'appwritePushLedger',
+            id: 'pushLedger',
             attributes: [
                 Attribute::string(key: 'topic', size: 255, required: true),
                 Attribute::string(key: 'data', size: 65535, required: true),
@@ -158,7 +158,7 @@ final class AppwriteTest extends TestCase
      */
     private function ledger(): array
     {
-        return $this->database->getAuthorization()->skip(fn () => $this->database->find('appwritePushLedger'));
+        return $this->database->getAuthorization()->skip(fn () => $this->database->find('pushLedger'));
     }
 
     /** The topic counter row, read past authorization. */

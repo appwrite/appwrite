@@ -355,9 +355,9 @@ return [
         ],
     ],
 
-    'appwritePushLedger' => [
+    'pushLedger' => [
         '$collection' => ID::custom(DATABASE::METADATA),
-        '$id' => ID::custom('appwritePushLedger'),
+        '$id' => ID::custom('pushLedger'),
         'name' => 'MQTT Messages',
         'attributes' => [
             Attribute::string(key: 'topic', required: true),
