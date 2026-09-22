@@ -10,6 +10,7 @@ use Appwrite\Utopia\Messaging\Messages\Console as ConsoleMessage;
 use Appwrite\Utopia\Messaging\Messages\Webhook as WebhookMessage;
 use Exception;
 use Throwable;
+use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
@@ -17,6 +18,7 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\UID;
 use Utopia\Messaging\Adapter\Email as EmailAdapter;
+use Utopia\Messaging\Exception\InvalidArgumentException;
 use Utopia\Messaging\Adapter\Email\SMTP;
 use Utopia\Messaging\Messages\Email as EmailMessage;
 use Utopia\Messaging\Messages\Email\Attachment;
@@ -326,26 +328,31 @@ class Notifications extends Action
             ];
         }
 
-        $emailMessage = new EmailMessage(
-            to: [['email' => $address, 'name' => $name]],
-            subject: $subject,
-            content: $body,
-            fromName: $fromName,
-            fromEmail: $fromEmail,
-            replyToName: $replyToName,
-            replyToEmail: $replyTo,
-            attachments: $attachments,
-            html: true,
-        );
-
-        $send = static fn (EmailAdapter $adapter): array => $adapter->send($emailMessage);
-
         try {
+            $emailMessage = new EmailMessage(
+                to: [['email' => $address, 'name' => $name]],
+                subject: $subject,
+                content: $body,
+                fromName: $fromName,
+                fromEmail: $fromEmail,
+                replyToName: $replyToName,
+                replyToEmail: $replyTo,
+                attachments: $attachments,
+                html: true,
+            );
+
+            $send = static fn (EmailAdapter $adapter): array => $adapter->send($emailMessage);
+
             if ($adapter instanceof EmailAdapter) {
                 $send($adapter);
             } else {
                 $register->get('smtp')->use($send);
             }
+        } catch (InvalidArgumentException $error) {
+            // The address or name can never be delivered, so a retry cannot help.
+            Console::warning("Skipped notification email: {$error->getMessage()}");
+
+            return null;
         } catch (Throwable $error) {
             throw new Exception('Error sending notification: ' . $error->getMessage(), $type === 'smtp' ? 401 : 500);
         }

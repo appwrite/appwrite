@@ -32,6 +32,7 @@ use Utopia\Messaging\Adapter\SMS as SMSAdapter;
 use Utopia\Messaging\Adapter\SMS\GEOSMS\CallingCode;
 use Utopia\Messaging\Adapter\SMS\Mock;
 use Utopia\Messaging\Adapter\SMS\Msg91\MetadataParameter;
+use Utopia\Messaging\Exception\InvalidArgumentException;
 use Utopia\Messaging\Messages\Email;
 use Utopia\Messaging\Messages\Email\Attachment;
 use Utopia\Messaging\Messages\Push;
@@ -642,21 +643,20 @@ class Messaging extends Action
         for ($attempt = 1; $attempt <= MESSAGE_SEND_MAX_RETRIES; $attempt++) {
             $hasRetriesLeft = $attempt < MESSAGE_SEND_MAX_RETRIES;
 
-            // Rebuild the provider message scoped to only the still-pending recipients so a partially-delivered
-            // batch never re-sends to recipients that already succeeded on an earlier attempt.
-            $data = $this->buildMessage($pending, $message, $provider, $providerType, $dbForProject, $attachments);
-
             $retry = [];
 
-            // The try/catch wraps ONLY the provider send. A whole-batch throw is retryable when transient,
-            // otherwise it records one representative terminal error. The previous behaviour of resetting
-            // $delivered to 0 on a throw is gone — the retry refactor sums delivered across attempts, and the
-            // expired-device-token cleanup below is isolated in its own try so a DB hiccup there can never be
-            // misattributed as a send failure.
+            // The try/catch wraps the message build and the provider send. The build is rebuilt scoped to only
+            // the still-pending recipients so a partially-delivered batch never re-sends to recipients that
+            // already succeeded on an earlier attempt, and it throws for input no provider can deliver, which
+            // is terminal. A whole-batch throw from the send is retryable when transient, otherwise it records
+            // one representative terminal error. The previous behaviour of resetting $delivered to 0 on a throw
+            // is gone — the retry refactor sums delivered across attempts, and the expired-device-token cleanup
+            // below is isolated in its own try so a DB hiccup there can never be misattributed as a send failure.
             try {
+                $data = $this->buildMessage($pending, $message, $provider, $providerType, $dbForProject, $attachments);
                 $response = $adapter->send($data);
             } catch (\Throwable $e) {
-                if ($hasRetriesLeft && $this->isRetryableError($e->getMessage())) {
+                if ($hasRetriesLeft && !$e instanceof InvalidArgumentException && $this->isRetryableError($e->getMessage())) {
                     $retry = $pending;
                 } else {
                     $this->recordError($errors, 'Failed sending to targets with error: ' . $e->getMessage());
