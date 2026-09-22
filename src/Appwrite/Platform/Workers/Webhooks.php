@@ -178,7 +178,6 @@ class Webhooks extends Action
         if (!empty($clientError) || $statusCode >= 400) {
             $dbForPlatform->increaseDocumentAttribute('webhooks', $webhook->getId(), 'attempts', 1);
             $webhook = $dbForPlatform->getDocument('webhooks', $webhook->getId());
-            $attempts = $webhook->getAttribute('attempts');
 
             $logs = '';
             $logs .= 'URL: ' . $rawUrl . "\n";
@@ -194,15 +193,29 @@ class Webhooks extends Action
 
             $webhook->setAttribute('logs', $logs);
 
-            $updatePayload = ['logs' => $logs];
+            // Only the handler whose write flips enabled from true to false alerts the owners.
+            $pausedAt = $dbForPlatform->withTransaction(function () use ($dbForPlatform, $webhook, $logs): ?int {
+                $current = $dbForPlatform->getDocument('webhooks', $webhook->getId(), forUpdate: true);
 
-            if ($attempts >= \intval(System::getEnv('_APP_WEBHOOK_MAX_FAILED_ATTEMPTS', '10'))) {
-                $webhook->setAttribute('enabled', false);
-                $updatePayload['enabled'] = false;
-                $this->sendAlert($attempts, $statusCode, $webhook, $project, $dbForPlatform, $publisherForNotifications, $platform, $plan);
+                if ($current->isEmpty()) {
+                    return null;
+                }
+
+                $locked = $current->getAttribute('attempts');
+                $pause = $current->getAttribute('enabled') === true
+                    && $locked >= \intval(System::getEnv('_APP_WEBHOOK_MAX_FAILED_ATTEMPTS', '10'));
+
+                $dbForPlatform->updateDocument('webhooks', $webhook->getId(), new Document(
+                    $pause ? ['logs' => $logs, 'enabled' => false] : ['logs' => $logs]
+                ));
+
+                return $pause ? $locked : null;
+            });
+
+            if ($pausedAt !== null) {
+                $this->sendAlert($pausedAt, $statusCode, $webhook, $project, $dbForPlatform, $publisherForNotifications, $platform, $plan);
             }
 
-            $dbForPlatform->updateDocument('webhooks', $webhook->getId(), new Document($updatePayload));
             $dbForPlatform->purgeCachedDocument('projects', $project->getId());
 
             $error = $logs;
