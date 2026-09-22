@@ -1218,6 +1218,8 @@ export function ExecutionDetailsDrawer({
       confirmVariant="destructive"
       onConfirm={handleConfirmDelete}
       isConfirming={deleteMutation.isPending}
+      contentClassName="z-[130]"
+      overlayClassName="z-[130]"
     />
     </>
   )

@@ -355,6 +355,21 @@ export function LogsListView({
     setSelectedIds(new Set())
   }, [currentPage, pageSize, projectId, resourceId, resourceVariant])
 
+  // Drop selections that are no longer in the visible list (filters, refetch).
+  useEffect(() => {
+    setSelectedIds((prev) => {
+      if (prev.size === 0) return prev
+      const visibleIds = new Set(executions.map((execution) => execution.$id))
+      let changed = false
+      const next = new Set<string>()
+      for (const id of prev) {
+        if (visibleIds.has(id)) next.add(id)
+        else changed = true
+      }
+      return changed ? next : prev
+    })
+  }, [executions])
+
   useLayoutEffect(() => {
     if (executions.length > 0 && currentPage !== undefined) {
       const container = scrollContainerRef.current
@@ -419,41 +434,84 @@ export function LogsListView({
     })
   }
 
+  const refetchExecutionsList = async () => {
+    if (resourceVariant === 'function') {
+      await queryClient.refetchQueries({
+        queryKey: ['executions', 'function', projectId, resourceId],
+      })
+      return
+    }
+    await queryClient.refetchQueries({
+      queryKey: ['logs', 'site', projectId, resourceId],
+    })
+  }
+
   const bulkDeleteMutation = useMutation({
     mutationFn: async (ids: string[]) => {
       if (!projectId || !resourceId || !resourceVariant) {
         throw new Error('Project ID and resource ID are required')
       }
-      await Promise.all(
+      const results = await Promise.allSettled(
         ids.map((id) =>
           resourceVariant === 'function'
             ? deleteFunctionExecution(projectId, resourceId, id)
             : deleteSiteLog(projectId, resourceId, id),
         ),
       )
-    },
-    onSuccess: async (_data, ids) => {
-      if (resourceVariant === 'function') {
-        await queryClient.refetchQueries({
-          queryKey: ['executions', 'function', projectId, resourceId],
-        })
-      } else {
-        await queryClient.refetchQueries({
-          queryKey: ['logs', 'site', projectId, resourceId],
-        })
+      const deleted: string[] = []
+      const failed: string[] = []
+      results.forEach((result, index) => {
+        const id = ids[index]
+        if (result.status === 'fulfilled') deleted.push(id)
+        else failed.push(id)
+      })
+      if (deleted.length === 0 && failed.length > 0) {
+        const firstFailure = results.find(
+          (result): result is PromiseRejectedResult =>
+            result.status === 'rejected',
+        )
+        throw firstFailure?.reason instanceof Error
+          ? firstFailure.reason
+          : new Error(
+              resourceVariant === 'site'
+                ? 'Failed to delete logs'
+                : 'Failed to delete executions',
+            )
       }
-      toast.success(
-        `${t('Successfully deleted')} ${ids.length} ${t(
-          ids.length > 1 ? pluralLabel : singularLabel,
-        )}`,
-      )
-      setSelectedIds(new Set())
-      setDeleteDialogOpen(false)
-      if (selectedExecutionId && ids.includes(selectedExecutionId)) {
+      return { deleted, failed }
+    },
+    onSuccess: async ({ deleted, failed }) => {
+      await refetchExecutionsList()
+      setSelectedIds((prev) => {
+        if (deleted.length === 0) return prev
+        const next = new Set(prev)
+        for (const id of deleted) next.delete(id)
+        return next
+      })
+      if (deleted.length > 0) {
+        toast.success(
+          `${t('Successfully deleted')} ${deleted.length} ${t(
+            deleted.length > 1 ? pluralLabel : singularLabel,
+          )}`,
+        )
+      }
+      if (failed.length > 0) {
+        toast.error(
+          t(
+            resourceVariant === 'site'
+              ? 'Failed to delete logs'
+              : 'Failed to delete executions',
+          ),
+        )
+      } else {
+        setDeleteDialogOpen(false)
+      }
+      if (selectedExecutionId && deleted.includes(selectedExecutionId)) {
         handleDrawerClose(false)
       }
     },
     onError: (error: Error) => {
+      void refetchExecutionsList()
       toast.error(
         getErrorMessage(error) ||
           t(
