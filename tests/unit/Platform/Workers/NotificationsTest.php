@@ -1018,6 +1018,38 @@ final class NotificationsTest extends TestCase
      * NOT call `persistAlert` for console recipients. Permissions must grant
      * the recipient resource read/update/delete access.
      */
+    public function testEmailChannelSkipsUndeliverableAddressWithoutPersisting(): void
+    {
+        $spy = new SpyEmailAdapter();
+        $this->registry->set('smtp', static fn () => new Pool(new Stack(), 'smtp', 1, static fn () => $spy, 1.0));
+
+        $previousSmtpHost = \getenv('_APP_SMTP_HOST');
+        \putenv('_APP_SMTP_HOST=spy.smtp.test');
+
+        try {
+            $worker = new CountingPersistAlertNotifications();
+
+            $payload = [
+                'project' => ['$id' => 'project-x'],
+                'recipients' => [
+                    $this->userRecipient('john@c.c', NOTIFICATION_TYPE_EMAIL, 'user-undeliverable'),
+                ],
+                'subject' => 'Welcome aboard',
+                'body' => 'plain body',
+                'deduplicationKey' => 'undeliverable-email',
+            ];
+
+            $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->platform);
+        } finally {
+            \putenv($previousSmtpHost === false ? '_APP_SMTP_HOST' : '_APP_SMTP_HOST=' . $previousSmtpHost);
+        }
+
+        $this->assertSame(0, $spy->sendCount, 'an address no provider can deliver to must never reach SMTP');
+        $this->assertCount(0, $this->database->find('notifications', [
+            Query::equal('messageId', [\md5('undeliverable-email')]),
+        ]), 'a skipped email must leave no alert behind');
+    }
+
     public function testConsoleChannelHappyPath(): void
     {
         $worker = new CountingPersistAlertNotifications();

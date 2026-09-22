@@ -4253,108 +4253,96 @@ final class RealtimeCustomClientTest extends Scope
             $this->assertEquals('available', $response['body']['status'] ?? null);
         }, 30000, 250);
 
-        Coroutine\run(function () use ($session, $projectId, $databaseId, $collectionId) {
-            $headers = [
-                'origin' => 'http://localhost',
-                'cookie' => 'a_session_' . $projectId . '=' . $session
-            ];
+        $headers = [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $projectId . '=' . $session
+        ];
 
-            $clientCount = 5;
-            $timeout = 90;
-            $clients = [];
-            for ($i = 0; $i < $clientCount; $i++) {
-                $clients[] = $this->getWebsocket(['documents', 'collections'], $headers, timeout: $timeout);
-            }
+        $clientCount = 5;
+        $clients = [];
+        for ($i = 0; $i < $clientCount; $i++) {
+            $clients[] = $this->getWebsocket(['documents', 'collections'], $headers);
+        }
 
-            foreach ($clients as $client) {
-                $response = json_decode($client->receive(), true);
-                $this->assertEquals('connected', $response['type']);
-            }
+        foreach ($clients as $client) {
+            $response = json_decode($client->receive(), true);
+            $this->assertEquals('connected', $response['type']);
+        }
 
-            $creates = [
-                ['name' => 'Doc A'],
-                ['name' => 'Doc B'],
-                ['name' => 'Doc C'],
-                ['name' => 'Doc D'],
-                ['name' => 'Doc E'],
-                ['name' => 'Doc F'],
-            ];
+        $creates = [
+            ['name' => 'Doc A'],
+            ['name' => 'Doc B'],
+            ['name' => 'Doc C'],
+            ['name' => 'Doc D'],
+            ['name' => 'Doc E'],
+            ['name' => 'Doc F'],
+        ];
+        $expectedEvents = count($creates);
 
-            $expectedEvents = count($creates);
+        // The creates race each other through curl_multi rather than inside the
+        // coroutine below: curl under Swoole's coroutine hook fails on CI without
+        // ever reaching the API, which left the receivers waiting on nothing.
+        $responses = $this->client->callConcurrently(array_map(fn (array $payload) => [
+            Client::METHOD_POST,
+            "/databases/{$databaseId}/collections/{$collectionId}/documents",
+            [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ],
+            [
+                'documentId' => ID::unique(),
+                'data' => $payload,
+                'permissions' => [
+                    Permission::read(Role::any()),
+                    Permission::update(Role::any()),
+                    Permission::delete(Role::any()),
+                ],
+            ],
+        ], $creates));
 
-            // Per-client receipts
-            /** @var array<int, list<mixed>> $receivedEvents */
-            $receivedEvents = array_fill(0, $clientCount, []);
+        foreach ($responses as $response) {
+            $this->assertEquals(201, $response['headers']['status-code']);
+        }
 
-            // Launch receiver coroutines (one per client)
+        // Drain every client at the same time; the frames are already buffered on
+        // the sockets. Assertions stay outside the coroutine so a failure reports
+        // instead of killing the process.
+        /** @var array<int, list<mixed>> $receivedEvents */
+        $receivedEvents = array_fill(0, $clientCount, []);
+        Coroutine\run(function () use ($clients, &$receivedEvents, $expectedEvents) {
             foreach ($clients as $idx => $client) {
                 Coroutine::create(function () use ($client, &$receivedEvents, $expectedEvents, $idx) {
-                    $local = [];
                     for ($i = 0; $i < $expectedEvents; $i++) {
                         try {
-                            $event = json_decode($client->receive(), true);
-                            $local[] = $event;
-                        } catch (TimeoutException) {
-                            break;
+                            $receivedEvents[$idx][] = json_decode($client->receive(), true);
+                        } catch (TimeoutException | ConnectionException) {
+                            return;
                         }
                     }
-                    $receivedEvents[$idx] = $local;
                 });
             }
-
-            // Create docs
-            foreach ($creates as $payload) {
-                $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$collectionId}/documents", array_merge([
-                    'content-type' => 'application/json',
-                    'x-appwrite-project' => $projectId,
-                    'x-appwrite-key' => $this->getProject()['apiKey']
-                ]), [
-                    'documentId' => ID::unique(),
-                    'data' => $payload,
-                    'permissions' => [
-                        Permission::read(Role::any()),
-                        Permission::update(Role::any()),
-                        Permission::delete(Role::any()),
-                    ],
-                ]);
-            }
-
-            // Wait for receivers to collect
-            $deadline = microtime(true) + $timeout;
-            while (microtime(true) < $deadline) {
-                $done = true;
-                foreach ($receivedEvents as $events) {
-                    if (count($events) < $expectedEvents) {
-                        $done = false;
-                        break;
-                    }
-                }
-                if ($done) {
-                    break;
-                }
-                Coroutine::sleep(0.1);
-            }
-
-            $expectedNames = array_column($creates, 'name');
-
-            for ($c = 0; $c < $clientCount; $c++) {
-                $events = $receivedEvents[$c];
-                $this->assertCount($expectedEvents, $events, 'Unexpected event count on client '.$c);
-                $seen = [];
-                foreach ($events as $event) {
-                    $this->assertEquals('event', $event['type']);
-                    $this->assertArrayHasKey('payload', $event['data']);
-                    $seen[] = $event['data']['payload']['name'] ?? '';
-                }
-                foreach ($expectedNames as $name) {
-                    $this->assertContains($name, $seen);
-                }
-            }
-
-            foreach ($clients as $client) {
-                $client->close();
-            }
         });
+
+        $expectedNames = array_column($creates, 'name');
+
+        for ($c = 0; $c < $clientCount; $c++) {
+            $events = $receivedEvents[$c];
+            $this->assertCount($expectedEvents, $events, 'Unexpected event count on client ' . $c);
+            $seen = [];
+            foreach ($events as $event) {
+                $this->assertEquals('event', $event['type']);
+                $this->assertArrayHasKey('payload', $event['data']);
+                $seen[] = $event['data']['payload']['name'] ?? '';
+            }
+            foreach ($expectedNames as $name) {
+                $this->assertContains($name, $seen);
+            }
+        }
+
+        foreach ($clients as $client) {
+            $client->close();
+        }
     }
     public function testChannelTablesDB()
     {

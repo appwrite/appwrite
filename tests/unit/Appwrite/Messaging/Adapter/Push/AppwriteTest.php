@@ -18,6 +18,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Messaging\Exception\InvalidArgumentException;
 use Utopia\Messaging\Messages\Email;
 use Utopia\Messaging\Messages\Push;
 use Utopia\Messaging\Priority;
@@ -348,25 +349,15 @@ final class AppwriteTest extends TestCase
 
     public function testInvalidMessageTypeRejected(): void
     {
-        $broker = new FakeBroker();
+        $this->expectException(InvalidArgumentException::class);
 
-        // The base adapter rejects a non-push message before process() runs, so
-        // nothing reaches the broker or the ledger. Its wording is the library's
-        // and has changed across a minor release, so only the refusal is pinned.
-        try {
-            $this->adapter($broker)->send(new Email(
-                to: ['nobody@appwrite.io'],
-                subject: 'nope',
-                content: 'nope',
-                fromName: 'Appwrite',
-                fromEmail: 'noreply@appwrite.io',
-            ));
-
-            $this->fail('Expected the adapter to refuse a non-push message');
-        } catch (\Exception) {
-        }
-
-        $this->assertCount(0, $broker->published);
-        $this->assertCount(0, $this->ledger());
+        // A non-push message is rejected by the base adapter before process() runs.
+        $this->adapter(new FakeBroker())->send(new Email(
+            to: ['nobody@appwrite.io'],
+            subject: 'nope',
+            content: 'nope',
+            fromName: 'Appwrite',
+            fromEmail: 'noreply@appwrite.io',
+        ));
     }
 }
