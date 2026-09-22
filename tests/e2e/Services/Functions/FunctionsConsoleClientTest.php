@@ -933,6 +933,24 @@ final class FunctionsConsoleClientTest extends Scope
 
         $this->assertNotSame($deploymentMd5, $buildMd5);
 
+        // Range bounds are inclusive and an end past the last byte is clamped
+        // to it, so asking for the final byte and overshooting returns that one
+        // byte rather than 416.
+        $size = \strlen($response['body']);
+
+        $range = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/deployments/' . $deploymentId . '/download', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'Range' => 'bytes=' . ($size - 1) . '-' . ($size + 500),
+        ], $this->getHeaders()), [
+            'type' => 'output',
+        ]);
+
+        $this->assertEquals(206, $range['headers']['status-code']);
+        $this->assertEquals('bytes ' . ($size - 1) . '-' . ($size - 1) . '/' . $size, $range['headers']['content-range']);
+        $this->assertEquals('1', $range['headers']['content-length']);
+        $this->assertEquals(\substr($response['body'], -1), $range['body']);
+
         $this->cleanupFunction($functionId);
     }
 

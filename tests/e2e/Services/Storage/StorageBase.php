@@ -1155,13 +1155,51 @@ trait StorageBase
 
     public function testGetBucketFileRange(): void
     {
-        $data = $this->setupBucketFile();
-        $bucketId = $data['bucketId'];
         $path = __DIR__ . '/../../../resources/logo.png';
         $size = \filesize($path);
 
+        // A file small enough to be encrypted is decrypted in full and then
+        // sliced in memory, which never reaches the ranged read on the storage
+        // device. Opting out of encryption keeps the served bytes identical to
+        // the uploaded ones and puts the range on the device instead.
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'bucketId' => ID::unique(),
+            'name' => 'Test Bucket Range',
+            'fileSecurity' => true,
+            'encryption' => false,
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+
+        $this->assertEquals(201, $bucket['headers']['status-code']);
+
+        $bucketId = $bucket['body']['$id'];
+
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => ID::unique(),
+            'file' => new CURLFile(\realpath($path), 'image/png', 'logo.png'),
+            'permissions' => [
+                Permission::read(Role::any()),
+            ],
+        ]);
+
+        $this->assertEquals(201, $file['headers']['status-code']);
+
+        $fileId = $file['body']['$id'];
+
         foreach (['view', 'download'] as $route) {
-            $endpoint = '/storage/buckets/' . $bucketId . '/files/' . $data['fileId'] . '/' . $route;
+            $endpoint = '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/' . $route;
 
             /**
              * Test for SUCCESS
@@ -1204,13 +1242,22 @@ trait StorageBase
             /**
              * Test for FAILURE
              */
-            $pastStart = $this->client->call(Client::METHOD_GET, $endpoint, array_merge([
+            // Clamping the end never rescues a start that has nothing left to read.
+            $startAtEnd = $this->client->call(Client::METHOD_GET, $endpoint, array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'Range' => 'bytes=' . $size . '-' . ($size + 500),
             ], $this->getHeaders()));
 
-            $this->assertEquals(416, $pastStart['headers']['status-code']);
+            $this->assertEquals(416, $startAtEnd['headers']['status-code']);
+
+            $startPastEnd = $this->client->call(Client::METHOD_GET, $endpoint, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'Range' => 'bytes=' . ($size + 500) . '-',
+            ], $this->getHeaders()));
+
+            $this->assertEquals(416, $startPastEnd['headers']['status-code']);
         }
     }
 
