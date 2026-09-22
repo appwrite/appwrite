@@ -42,6 +42,7 @@ import {
 } from '@/lib/utils/plan-filter'
 import { Link } from '@tanstack/react-router'
 import { Pagination } from '@/components/global/shared/Pagination'
+import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import type { Models } from '@appwrite.io/console'
 import {
   buildDedicatedDbBillingSpecLookup,
@@ -649,9 +650,11 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
               </p>
             )}
           </div>
-          <div className="text-end shrink-0 flex items-end">
-            <p className="text-[11px] text-muted-foreground italic">
-              {t('Estimate, subject to change based on usage')}
+          <div className="text-end shrink-0 max-w-[240px] sm:max-w-xs">
+            <p className="text-[12px] leading-snug text-muted-foreground">
+              {t(
+                'Usage-based estimate; updates may take up to 4 hours.',
+              )}
             </p>
           </div>
         </div>
@@ -680,13 +683,30 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
       <div className="border-t border-border">
         <button
           onClick={() => setExpanded(!expanded)}
-          className="flex w-full items-center justify-between px-6 py-3 text-[13px] text-muted-foreground hover:bg-accent/50 transition-colors"
+          className="flex w-full items-center justify-between gap-3 px-6 py-3 text-[13px] text-muted-foreground hover:bg-accent/50 transition-colors"
         >
-          <span>{t('View charges breakdown')}</span>
+          <span className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5 text-start">
+            <span>{t('View charges breakdown')}</span>
+            {aggregation?.$updatedAt ? (
+              <>
+                <span className="text-border hidden sm:inline" aria-hidden>
+                  ·
+                </span>
+                <span className="text-[11px]">
+                  {t('Last updated')}:{' '}
+                  <DateTooltip
+                    date={aggregation.$updatedAt}
+                    live
+                    className="text-muted-foreground"
+                  />
+                </span>
+              </>
+            ) : null}
+          </span>
           {expanded ? (
-            <ChevronUp className="h-4 w-4" />
+            <ChevronUp className="h-4 w-4 shrink-0" />
           ) : (
-            <ChevronDown className="h-4 w-4" />
+            <ChevronDown className="h-4 w-4 shrink-0" />
           )}
         </button>
 
@@ -817,7 +837,7 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
 
             {/* Project Breakdown Section */}
             {projectBreakdowns.length > 0 && (
-              <div className="space-y-2">
+              <div className="space-y-3 border-t border-border pt-6 mt-4">
                 <div className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
                   {t('Project breakdown')}
                 </div>
