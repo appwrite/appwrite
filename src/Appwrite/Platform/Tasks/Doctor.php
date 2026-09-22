@@ -12,6 +12,7 @@ use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Domains\Domain;
 use Utopia\DSN\DSN;
+use Utopia\Fetch\Client;
 use Utopia\Http\Http;
 use Utopia\Platform\Action;
 use Utopia\Pools\Group;
@@ -298,13 +299,23 @@ class Doctor extends Action
         try {
             if (Http::isProduction()) {
                 Console::log('');
-                $version = \json_decode(@\file_get_contents(System::getEnv('_APP_HOME', 'http://localhost') . '/version'), true);
 
-                if ($version && isset($version['version'])) {
-                    if (\version_compare($version['version'], System::getEnv('_APP_VERSION', 'UNKNOWN')) === 0) {
-                        Console::info('You are running the latest version of ' . APP_NAME . '! 🥳');
+                // Drafts and pre-releases are excluded by the endpoint itself. GitHub answers 403 without a user agent
+                $release = (new Client())
+                    ->setUserAgent(APP_NAME)
+                    ->setConnectTimeout(3 * 1000)
+                    ->setTimeout(5 * 1000)
+                    ->fetch('https://api.github.com/repos/appwrite/appwrite/releases/latest');
+
+                $latest = $release->getStatusCode() === 200
+                    ? (string)($release->json()['tag_name'] ?? '')
+                    : '';
+
+                if ($latest !== '') {
+                    if (\version_compare($latest, System::getEnv('_APP_VERSION', 'UNKNOWN'), '>')) {
+                        Console::info('A new version (' . $latest . ') is available! 🥳' . "\n");
                     } else {
-                        Console::info('A new version (' . $version['version'] . ') is available! 🥳' . "\n");
+                        Console::info('You are running the latest version of ' . APP_NAME . '! 🥳');
                     }
                 } else {
                     Console::error('Failed to check for a newer version' . "\n");
