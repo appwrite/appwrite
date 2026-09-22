@@ -177,7 +177,9 @@ class Client
             'multipart/form-data' => $this->flatten($params),
             'application/graphql' => $params[0],
             'text/plain' => $params,
-            default => http_build_query($params),
+            // A string body under any other content type is sent verbatim, so a
+            // test can post raw bytes (an S3 PutObject) under the type it declares.
+            default => \is_string($params) ? $params : http_build_query($params),
         };
 
         $formattedHeaders = [];

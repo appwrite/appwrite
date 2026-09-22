@@ -452,6 +452,95 @@ final class StorageCustomServerTest extends Scope
     }
 
     /**
+     * The S3 gateway keeps its own content-type resolution, so the APK
+     * correction on the Storage API does not cover PutObject.
+     */
+    public function testCreateS3ObjectApkMimeType(): void
+    {
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'bucketId' => ID::unique(),
+            'name' => 'S3 Apk Mime Type',
+            // The gateway serves the stored bytes verbatim, so it refuses a
+            // bucket that encrypts or compresses them.
+            'encryption' => false,
+            'compression' => 'none',
+            'permissions' => [
+                Permission::create(Role::any()),
+                Permission::read(Role::any()),
+            ],
+        ]);
+
+        $this->assertEquals(201, $bucket['headers']['status-code']);
+        $bucketId = $bucket['body']['$id'];
+
+        $body = (string) \file_get_contents(__DIR__ . '/../../../resources/app.apk');
+        $payloadHash = \hash('sha256', $body);
+        $emptyHash = \hash('sha256', '');
+
+        // The S3 access key is the project ID and the secret is an API key.
+        $endpoint = (string) $this->client->getEndpoint();
+        $host = (string) \parse_url($endpoint, PHP_URL_HOST);
+        $base = (string) \parse_url($endpoint, PHP_URL_PATH);
+        $region = 'us-east-1';
+        $amzDate = \gmdate('Ymd\THis\Z');
+        $dateStamp = \substr($amzDate, 0, 8);
+        $scope = $dateStamp . '/' . $region . '/s3/aws4_request';
+        $credential = $this->getProject()['$id'] . '/' . $scope;
+        $signingKey = \hash_hmac('sha256', 'aws4_request', \hash_hmac('sha256', 's3', \hash_hmac('sha256', $region, \hash_hmac('sha256', $dateStamp, 'AWS4' . $this->getProject()['apiKey'], true), true), true), true);
+
+        // An S3 client sees the zip container an APK is built from and declares it.
+        $cases = [
+            'app.apk' => 'application/vnd.android.package-archive',
+            'archive.zip' => 'application/zip',
+        ];
+
+        foreach ($cases as $key => $expected) {
+            $path = '/s3/' . $bucketId . '/' . $key;
+
+            $canonical = \implode("\n", [
+                Client::METHOD_PUT,
+                $base . $path,
+                '',
+                'content-type:application/zip' . "\n" . 'host:' . $host . "\n" . 'x-amz-content-sha256:' . $payloadHash . "\n" . 'x-amz-date:' . $amzDate . "\n",
+                'content-type;host;x-amz-content-sha256;x-amz-date',
+                $payloadHash,
+            ]);
+            $signature = \hash_hmac('sha256', "AWS4-HMAC-SHA256\n" . $amzDate . "\n" . $scope . "\n" . \hash('sha256', $canonical), $signingKey);
+
+            $upload = $this->client->call(Client::METHOD_PUT, $path, [
+                'content-type' => 'application/zip',
+                'x-amz-content-sha256' => $payloadHash,
+                'x-amz-date' => $amzDate,
+                'authorization' => 'AWS4-HMAC-SHA256 Credential=' . $credential . ',SignedHeaders=content-type;host;x-amz-content-sha256;x-amz-date,Signature=' . $signature,
+            ], $body);
+
+            $this->assertEquals(200, $upload['headers']['status-code'], $key);
+
+            $canonical = \implode("\n", [
+                Client::METHOD_GET,
+                $base . $path,
+                '',
+                'host:' . $host . "\n" . 'x-amz-content-sha256:' . $emptyHash . "\n" . 'x-amz-date:' . $amzDate . "\n",
+                'host;x-amz-content-sha256;x-amz-date',
+                $emptyHash,
+            ]);
+            $signature = \hash_hmac('sha256', "AWS4-HMAC-SHA256\n" . $amzDate . "\n" . $scope . "\n" . \hash('sha256', $canonical), $signingKey);
+
+            $download = $this->client->call(Client::METHOD_GET, $path, [
+                'x-amz-content-sha256' => $emptyHash,
+                'x-amz-date' => $amzDate,
+                'authorization' => 'AWS4-HMAC-SHA256 Credential=' . $credential . ',SignedHeaders=host;x-amz-content-sha256;x-amz-date,Signature=' . $signature,
+            ]);
+
+            $this->assertEquals(200, $download['headers']['status-code'], $key);
+            $this->assertEquals($expected, $download['headers']['content-type'], $key);
+        }
+    }
+
+    /**
      * Regression for chunked uploads under the antivirus size limit.
      *
      * Requires ClamAV (compose profile `antivirus`) and
