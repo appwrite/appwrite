@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
-import { useQuery } from '@tanstack/react-query'
+import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { z } from 'zod'
 import { Loader2, MonitorSmartphone, TriangleAlert } from 'lucide-react'
 import type { Models } from '@appwrite.io/console'
@@ -51,6 +51,8 @@ const oauth2PreviewSearchSchema = z.object({
   deviceStep: z.enum(OAUTH2_DEVICE_CODE_STEPS).optional(),
   /** Console app id, or omit / `mock` for the built-in Cursor demo client. */
   appId: z.string().optional(),
+  /** Marketplace catalog name used until `apps.get` resolves (stable header copy). */
+  appName: z.string().optional(),
   /** Organization whose apps populate the debug navigator app picker. */
   orgId: z.string().optional(),
 })
@@ -265,11 +267,10 @@ function OAuth2PreviewPage() {
   const previewAppId = resolveOAuth2PreviewAppId(search.appId)
   const [outcome, setOutcome] = useState<OAuth2Outcome | null>(null)
 
-  const {
-    data: previewAppFromApi,
-    isLoading: previewAppLoading,
-    isError: previewAppError,
-  } = useQuery(organizationAppQueryOptions(previewAppId))
+  const { data: previewAppFromApi } = useQuery({
+    ...organizationAppQueryOptions(previewAppId),
+    placeholderData: keepPreviousData,
+  })
 
   useEffect(() => {
     setOutcome(null)
@@ -285,10 +286,19 @@ function OAuth2PreviewPage() {
     [],
   )
 
-  const app = useMemo(
-    () => previewAppFromApi ?? mockApp(),
-    [previewAppFromApi],
-  )
+  const app = useMemo(() => {
+    if (!previewAppId) return mockApp()
+    if (previewAppFromApi?.$id === previewAppId) return previewAppFromApi
+    const hint = search.appName?.trim()
+    return mockApp({
+      $id: previewAppId,
+      name: hint || 'Application',
+      logoUri: '',
+      clientUri: '',
+      redirectUris: ['https://example.com/callback'],
+      description: '',
+    })
+  }, [previewAppId, previewAppFromApi, search.appName])
 
   const mcp = useMemo(() => mcpGrant({ appId: app.$id }), [app.$id])
 
@@ -320,8 +330,6 @@ function OAuth2PreviewPage() {
     app.redirectUris?.find((uri) => uri.includes('://')) ??
     app.redirectUris?.[0]
 
-  const waitingForPreviewApp = Boolean(previewAppId && previewAppLoading)
-
   return (
     <AuthFlowShell
       width="narrow"
@@ -330,33 +338,9 @@ function OAuth2PreviewPage() {
         <AuthFlowAccountSwitcherStatic accountLabel={ACCOUNT_LABEL} preview />
       }
     >
-      {waitingForPreviewApp ? (
-        <AuthFlowNarrowCard
-          contentClassName={authFlowOAuthNarrowCardContentClassName}
-        >
-          <div className="flex flex-col items-center py-8 text-center">
-            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground motion-reduce:animate-none" />
-          </div>
-        </AuthFlowNarrowCard>
-      ) : null}
-
-      {previewAppError && previewAppId ? (
-        <AuthFlowNarrowCard
-          contentClassName={authFlowOAuthNarrowCardContentClassName}
-        >
-          <div className="space-y-3 py-4 text-center">
-            <p className="text-[13px] text-muted-foreground">
-              Could not load app{' '}
-              <span className="font-mono text-foreground">{previewAppId}</span>.
-              Pick another app in the demo navigator or sign in with access.
-            </p>
-          </div>
-        </AuthFlowNarrowCard>
-      ) : null}
-
-      {showConsent && !waitingForPreviewApp && !previewAppError ? (
+      {showConsent ? (
         <OAuth2ConsentCard
-          key={`${screen}-${app.$id}`}
+          key={screen}
           grant={activeGrant}
           app={app}
           flow={consentFlow}
@@ -365,7 +349,7 @@ function OAuth2PreviewPage() {
         />
       ) : null}
 
-      {outcome && !waitingForPreviewApp && !previewAppError ? (
+      {outcome ? (
         <OAuth2OutcomeCard
           outcome={outcome}
           flow={consentFlow}
@@ -387,24 +371,15 @@ function OAuth2PreviewPage() {
         />
       ) : null}
 
-      {!outcome &&
-      !waitingForPreviewApp &&
-      !previewAppError &&
-      screen === 'outcome-approved' ? (
+      {!outcome && screen === 'outcome-approved' ? (
         <OAuth2OutcomeCard outcome="approved" flow="authorization" app={app} />
       ) : null}
 
-      {!outcome &&
-      !waitingForPreviewApp &&
-      !previewAppError &&
-      screen === 'outcome-approved-device' ? (
+      {!outcome && screen === 'outcome-approved-device' ? (
         <OAuth2OutcomeCard outcome="approved" flow="device" app={app} />
       ) : null}
 
-      {!outcome &&
-      !waitingForPreviewApp &&
-      !previewAppError &&
-      screen === 'outcome-approved-deeplink' ? (
+      {!outcome && screen === 'outcome-approved-deeplink' ? (
         <OAuth2OutcomeCard
           outcome="approved"
           flow="authorization"
@@ -413,10 +388,7 @@ function OAuth2PreviewPage() {
         />
       ) : null}
 
-      {!outcome &&
-      !waitingForPreviewApp &&
-      !previewAppError &&
-      screen === 'outcome-denied' ? (
+      {!outcome && screen === 'outcome-denied' ? (
         <OAuth2OutcomeCard outcome="denied" flow="authorization" app={app} />
       ) : null}
 

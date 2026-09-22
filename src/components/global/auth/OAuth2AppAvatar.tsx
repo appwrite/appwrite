@@ -92,7 +92,7 @@ export function OAuth2AppAvatar({
 
   useEffect(() => {
     setSourceIndex(0)
-  }, [sources])
+  }, [app?.$id, app?.logoUri])
 
   const frameClassName = cn(
     'bg-muted text-muted-foreground flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border/60',

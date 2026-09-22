@@ -1,6 +1,6 @@
 import { useEffect, useMemo, type ReactNode } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
@@ -27,6 +27,7 @@ import { dispatchDebugDemoPreviewControl } from '@/lib/debug-demos/preview-contr
 import {
   MARKETPLACE_APPS_LIMIT,
   marketplaceCatalogPickerQueryOptions,
+  organizationAppQueryOptions,
   useOrganizations,
 } from '@/lib/react-query/hooks'
 
@@ -41,6 +42,7 @@ type OAuth2PreviewSearch = {
   screen?: OAuth2PreviewScreen
   deviceStep?: 'enter' | 'confirm'
   appId?: string
+  appName?: string
   orgId?: string
 }
 
@@ -54,6 +56,7 @@ function buildOAuth2PreviewSearch(
   }
   if (patch.appId !== undefined && isOAuth2PreviewMockAppId(patch.appId)) {
     delete next.appId
+    delete next.appName
   }
   if (patch.screen && patch.screen !== 'device-code') {
     delete next.deviceStep
@@ -69,6 +72,7 @@ export function DebugOAuth2PreviewOptions({
   params,
 }: DebugOAuth2PreviewOptionsProps) {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const { isAuthenticated } = useAuth()
   const { organizations, isLoading: orgsLoading } = useOrganizations()
 
@@ -80,6 +84,7 @@ export function DebugOAuth2PreviewOptions({
   const deviceStep: 'enter' | 'confirm' =
     deviceStepRaw === 'confirm' ? 'confirm' : 'enter'
   const appIdParam = params.get('appId') ?? OAUTH2_PREVIEW_MOCK_APP_ID
+  const appNameParam = params.get('appName') ?? undefined
   const orgIdParam = params.get('orgId') ?? ''
 
   const resolvedOrgId = useMemo(() => {
@@ -129,6 +134,7 @@ export function DebugOAuth2PreviewOptions({
     screen,
     deviceStep: screen === 'device-code' ? deviceStep : undefined,
     appId: isOAuth2PreviewMockAppId(appIdParam) ? undefined : appIdParam,
+    appName: appNameParam,
     orgId: resolvedOrgId || undefined,
   }
 
@@ -150,10 +156,20 @@ export function DebugOAuth2PreviewOptions({
   }
 
   const setPreviewApp = (value: string) => {
+    const catalogName =
+      value === OAUTH2_PREVIEW_MOCK_APP_ID
+        ? undefined
+        : marketplaceApps.find((app) => app.$id === value)?.name
+
+    if (!isOAuth2PreviewMockAppId(value)) {
+      void queryClient.prefetchQuery(organizationAppQueryOptions(value))
+    }
+
     navigate({
       to: '/debug/oauth2-preview',
       search: buildOAuth2PreviewSearch(currentSearch, {
         appId: value,
+        appName: catalogName,
         orgId: resolvedOrgId || undefined,
       }),
       replace: true,

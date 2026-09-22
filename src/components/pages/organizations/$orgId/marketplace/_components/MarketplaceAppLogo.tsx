@@ -54,6 +54,7 @@ export function MarketplaceAppLogo({
       <img
         src={src}
         alt={alt}
+        decoding="async"
         className={
           monochrome
             ? PUBLIC_CATALOG_LOGO_IMAGE_CLASSES
