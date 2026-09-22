@@ -2,6 +2,7 @@
 
 namespace Tests\E2E\Services\Storage;
 
+use Ahc\Jwt\JWT;
 use Appwrite\Extend\Exception;
 use CURLFile;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -12,6 +13,7 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
+use Utopia\System\System;
 
 trait StorageBase
 {
@@ -1198,8 +1200,19 @@ trait StorageBase
 
         $fileId = $file['body']['$id'];
 
-        foreach (['view', 'download'] as $route) {
+        // The push route is public and authorizes on a signed token instead of
+        // the session, so it needs one minted for this exact file to be reached
+        // at all.
+        $encoder = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 3600, 0);
+        $pushToken = $encoder->encode([
+            'projectId' => $this->getProject()['$id'],
+            'bucketId' => $bucketId,
+            'fileId' => $fileId,
+        ]);
+
+        foreach (['view', 'download', 'push'] as $route) {
             $endpoint = '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/' . $route;
+            $params = $route === 'push' ? ['jwt' => $pushToken] : [];
 
             /**
              * Test for SUCCESS
@@ -1209,7 +1222,7 @@ trait StorageBase
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'Range' => 'bytes=0-0',
-            ], $this->getHeaders()));
+            ], $this->getHeaders()), $params);
 
             $this->assertEquals(206, $firstByte['headers']['status-code']);
             $this->assertEquals('bytes 0-0/' . $size, $firstByte['headers']['content-range']);
@@ -1220,7 +1233,7 @@ trait StorageBase
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'Range' => 'bytes=' . ($size - 1) . '-' . ($size - 1),
-            ], $this->getHeaders()));
+            ], $this->getHeaders()), $params);
 
             $this->assertEquals(206, $lastByte['headers']['status-code']);
             $this->assertEquals('bytes ' . ($size - 1) . '-' . ($size - 1) . '/' . $size, $lastByte['headers']['content-range']);
@@ -1232,7 +1245,7 @@ trait StorageBase
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'Range' => 'bytes=' . ($size - 100) . '-' . ($size + 500),
-            ], $this->getHeaders()));
+            ], $this->getHeaders()), $params);
 
             $this->assertEquals(206, $pastEnd['headers']['status-code']);
             $this->assertEquals('bytes ' . ($size - 100) . '-' . ($size - 1) . '/' . $size, $pastEnd['headers']['content-range']);
@@ -1247,7 +1260,7 @@ trait StorageBase
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'Range' => 'bytes=' . $size . '-' . ($size + 500),
-            ], $this->getHeaders()));
+            ], $this->getHeaders()), $params);
 
             $this->assertEquals(416, $startAtEnd['headers']['status-code']);
 
@@ -1255,10 +1268,16 @@ trait StorageBase
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'Range' => 'bytes=' . ($size + 500) . '-',
-            ], $this->getHeaders()));
+            ], $this->getHeaders()), $params);
 
             $this->assertEquals(416, $startPastEnd['headers']['status-code']);
         }
+
+        $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $bucketId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
     }
 
     public function testFilePreviewOversized(): void

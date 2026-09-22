@@ -951,6 +951,17 @@ final class FunctionsConsoleClientTest extends Scope
         $this->assertEquals('1', $range['headers']['content-length']);
         $this->assertEquals(\substr($response['body'], -1), $range['body']);
 
+        // Clamping the end never rescues a start that has nothing left to read.
+        $rejected = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/deployments/' . $deploymentId . '/download', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'Range' => 'bytes=' . $size . '-',
+        ], $this->getHeaders()), [
+            'type' => 'output',
+        ]);
+
+        $this->assertEquals(416, $rejected['headers']['status-code']);
+
         $this->cleanupFunction($functionId);
     }
 
