@@ -74,10 +74,11 @@ class Create extends Base
 
     public function action(string $userId, ?string $email, ?string $phone, ?string $password, ?string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks, array $plan, PasswordPwned $pwnedPasswords): void
     {
-        $passwordPwned = empty($password) || !($project->getAttribute('auths', [])['passwordPwned']['enabled'] ?? true)
+        $pwnedPolicy = $project->getAttribute('auths', [])['passwordPwned'] ?? [];
+        $passwordPwned = empty($password) || !($pwnedPolicy['enabled'] ?? true)
             ? null
             : !$pwnedPasswords->isValid($password);
-        if ($passwordPwned) {
+        if ($passwordPwned && ($pwnedPolicy['users'] ?? false)) {
             throw new Exception(Exception::USER_PASSWORD_PWNED);
         }
 
