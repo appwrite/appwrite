@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes;
 
+use Appwrite\Databases\FormatOptions;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Deprecated;
@@ -98,7 +99,7 @@ class Get extends Action
             $attribute->setAttribute($key, $option);
         }
 
-        self::applyFormatOptions($attribute);
+        FormatOptions::apply($attribute);
 
         $model = $this->getModel($type, $format);
 
