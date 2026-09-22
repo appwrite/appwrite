@@ -1,0 +1,97 @@
+---
+layout: post
+title: "Introducing the official Appwrite plugin for ChatGPT"
+description: Appwrite is now an official ChatGPT plugin. Connect your account to explore projects, manage resources, and use the same plugin within Codex to build apps.
+date: 2026-09-23
+cover: /images/blog/announcing-appwrite-chatgpt-plugin/cover.avif
+timeToRead: 4
+author: aditya-oberai
+category: announcement
+featured: true
+unlisted: false
+faqs:
+  - question: "Can I use Appwrite through ChatGPT?"
+    answer: "Yes. Install the Appwrite plugin from the plugin directory and connect your Appwrite account. You can explore your projects, inspect databases and storage, and manage resources through the connected Appwrite tools."
+  - question: "Can I use Appwrite's ChatGPT plugin within Codex?"
+    answer: "Yes. The same ChatGPT plugin can also be used within Codex. It includes thirteen agent skills covering the Appwrite CLI, ten SDKs, and deployment workflows for Sites and Functions. Follow the [Codex tutorial](/blog/post/appwrite-codex-plugin-hosted-mcp) to install it and run your first project query."
+  - question: "Do I need an Appwrite API key to connect the plugin?"
+    answer: "No. The hosted Appwrite connection uses OAuth, so you sign in with your Appwrite account and authorize access. This authenticates the plugin; your application still needs its own Appwrite SDK configuration. See the [MCP documentation](/docs/tooling/ai/mcp-servers)."
+  - question: "What can the Appwrite plugin do with my project?"
+    answer: "It can discover your projects, inspect resources, and expose operations for databases, users, storage, functions, messaging, and sites. Changes use write confirmation. Documentation search is also available when enabled on the connection."
+  - question: "Can I use the hosted plugin with self-hosted Appwrite?"
+    answer: "The hosted connection authenticates against Appwrite Cloud. For a self-hosted instance, configure the [local Appwrite MCP server](/docs/advanced/self-hosting/mcp) with your instance's endpoint and an API key."
+---
+
+Working with an AI assistant on an Appwrite project often starts with copying context: which project you mean, what tables exist, and which SDK your application uses. That setup gets in the way when you just want to inspect a resource or build the next feature.
+
+Today, we are announcing the **official Appwrite plugin for ChatGPT**. Install it from the ChatGPT plugin directory, connect your Appwrite account, and work with your project from the conversation. You can also use this same ChatGPT plugin within Codex, where Appwrite tools and SDK skills help you build against your backend.
+
+The ChatGPT plugin brings the Appwrite connection and thirteen agent skills into one install. OpenAI's shared [plugin directory](https://developers.openai.com/plugins/concepts/plugins) also makes that plugin available within Codex.
+
+# What the Appwrite ChatGPT plugin gives you
+
+The plugin connects the conversation to your Appwrite project. Instead of describing a database from memory, you can ask the assistant to inspect it before suggesting a change.
+
+- **Explore your projects.** Find the project you want to work on and inspect its resources without copying details from the Console into every prompt.
+- **Work with Appwrite services.** Inspect databases and storage, manage users, and work with functions, messaging, and sites through the available tools. Changes use write confirmation.
+- **Look up implementation details.** Search the official Appwrite documentation when documentation search is enabled on your connection.
+- **Build with SDK guidance.** In Codex, bundled skills provide language-specific instructions for the Appwrite CLI and the TypeScript, Dart, .NET, Go, Kotlin, PHP, Python, Ruby, Rust, and Swift SDKs.
+- **Follow deployment workflows.** Two additional skills guide Codex through deploying Appwrite Sites and Functions with the CLI.
+
+The tools and skills serve different purposes. The [Appwrite MCP server](/docs/tooling/ai/mcp-servers) gives the assistant access to live project operations. [Agent skills](/docs/tooling/ai/skills) provide instructions for writing code and following repeatable workflows. Installing a skill alone does not connect an account or give it access to project data.
+
+# Install the Appwrite plugin in ChatGPT
+
+In the ChatGPT desktop app:
+
+1. Open **Plugins** in the sidebar.
+2. Search for `Appwrite` and open the **Appwrite** listing.
+3. Click **Install plugin**.
+4. Follow the connection prompt to sign in to Appwrite and authorize access.
+5. Start a new conversation with Appwrite available and ask it to list your projects.
+
+![Appwrite listing in the ChatGPT desktop app, showing Install plugin, the connected app, and bundled skills](/images/docs/mcp/codex/install-plugin.avif)
+
+The hosted connection uses OAuth. You do not need to run an MCP server locally or create an API key for the plugin. Use an [Appwrite Cloud](https://appwrite.io) account with access to the project you want to work on.
+
+To use this ChatGPT plugin within Codex, you can also install it through the **OpenAI Curated** marketplace in the CLI's `/plugins` menu. Our [Codex setup tutorial](/blog/post/appwrite-codex-plugin-hosted-mcp) covers desktop and CLI installation, signing in, selecting a project, and creating your first table.
+
+# Start with a question about your project
+
+In ChatGPT, start with a concrete request that identifies what you want to inspect:
+
+```text
+Use Appwrite to list the projects I can access. Show their names and IDs
+so I can choose the project for this conversation.
+```
+
+After selecting a project, ask a follow-up such as:
+
+```text
+In project <PROJECT_ID>, list the databases and explain what each one
+contains. Read the current project data before answering.
+```
+
+Replace `<PROJECT_ID>` with the ID returned by the first request. Naming the project makes the next action specific, especially when your account belongs to more than one organization.
+
+You can also use the ChatGPT plugin within Codex to supply context for a coding task. Ask it to inspect an existing table, then implement a screen that reads those columns using your application's framework. The agent can use the appropriate SDK skill while it works on the code.
+
+![Example of Codex returning a user list from an Appwrite project through MCP](/images/docs/mcp/codex/test-integration.avif)
+
+This existing CLI example shows an Appwrite user query and the returned result. Your response will reflect the data in the project you select.
+
+# Use ChatGPT to inspect, and Codex to build
+
+The plugin is useful when a question depends on the backend you actually have. You might need to understand a project's tables before planning a feature, inspect a site's configuration, or check which users exist in a development project. ChatGPT can bring that information into the conversation through Appwrite tools.
+
+When the work involves application files, use the plugin in Codex. Give it a specific outcome, such as adding a task list backed by [Appwrite TablesDB](/docs/products/databases/tablesdb), and have it inspect the schema before writing the integration. The SDK skills supply implementation guidance while the tools provide the resource details.
+
+You still choose the project and review proposed changes. The connection does not replace your application's authentication or permissions. It gives the assistant a way to work with Appwrite while you build.
+
+# Get started with Appwrite's ChatGPT plugin
+
+Install Appwrite from the ChatGPT plugin directory and connect your [Appwrite Cloud account](https://appwrite.io). Try a project query in ChatGPT, then follow the [Codex tutorial](/blog/post/appwrite-codex-plugin-hosted-mcp) to use the same plugin in your development workflow.
+
+- [Set up Appwrite in Codex](/docs/tooling/ai/agents/codex)
+- [Understand the Appwrite MCP connection](/docs/tooling/ai/mcp-servers)
+- [Explore Appwrite agent skills](/docs/tooling/ai/skills)
