@@ -363,10 +363,11 @@ Http::post('/v1/account')
         }
 
         // null when the policy did not look, false when it looked and found nothing
-        $passwordPwned = ($project->getAttribute('auths', [])['passwordPwned']['enabled'] ?? true)
+        $pwnedPolicy = $project->getAttribute('auths', [])['passwordPwned'] ?? [];
+        $passwordPwned = ($pwnedPolicy['enabled'] ?? true)
             ? !$pwnedPasswords->isValid($password)
             : null;
-        if ($passwordPwned) {
+        if ($passwordPwned && ($pwnedPolicy['users'] ?? false)) {
             throw new Exception(Exception::USER_PASSWORD_PWNED);
         }
 
@@ -1066,8 +1067,8 @@ Http::post('/v1/account/sessions/email')
 
         $pwnedPolicy = $project->getAttribute('auths', [])['passwordPwned'] ?? [];
 
-        if (($pwnedPolicy['enabled'] ?? true) && ($pwnedPolicy['sessions'] ?? false)) {
-            // The outcome is recorded either way; only a forced reset needs an answer, so an outage never blocks a plain sign-in
+        if ($pwnedPolicy['enabled'] ?? true) {
+            // Every sign-in records the outcome so the flag follows the breach corpus; only the sessions option refuses the sign-in
             $passwordPwned = !$pwnedPasswords->isValid($password);
 
             if ($passwordPwned !== $user->getAttribute('passwordPwned')) {
@@ -1077,7 +1078,7 @@ Http::post('/v1/account/sessions/email')
                 ]));
             }
 
-            if ($passwordPwned && ($pwnedPolicy['users'] ?? false)) {
+            if ($passwordPwned && ($pwnedPolicy['sessions'] ?? false)) {
                 throw new Exception(Exception::USER_PASSWORD_RESET_REQUIRED);
             }
         }
@@ -3535,10 +3536,11 @@ Http::patch('/v1/account/password')
         }
 
         // null when the policy did not look, false when it looked and found nothing
-        $passwordPwned = ($project->getAttribute('auths', [])['passwordPwned']['enabled'] ?? true)
+        $pwnedPolicy = $project->getAttribute('auths', [])['passwordPwned'] ?? [];
+        $passwordPwned = ($pwnedPolicy['enabled'] ?? true)
             ? !$pwnedPasswords->isValid($password)
             : null;
-        if ($passwordPwned) {
+        if ($passwordPwned && ($pwnedPolicy['users'] ?? false)) {
             throw new Exception(Exception::USER_PASSWORD_PWNED);
         }
 
@@ -3641,10 +3643,11 @@ Http::patch('/v1/account/email')
                 }
             }
 
-            $passwordPwned = ($project->getAttribute('auths', [])['passwordPwned']['enabled'] ?? true)
+            $pwnedPolicy = $project->getAttribute('auths', [])['passwordPwned'] ?? [];
+            $passwordPwned = ($pwnedPolicy['enabled'] ?? true)
                 ? !$pwnedPasswords->isValid($password)
                 : null;
-            if ($passwordPwned) {
+            if ($passwordPwned && ($pwnedPolicy['users'] ?? false)) {
                 throw new Exception(Exception::USER_PASSWORD_PWNED);
             }
         }
@@ -3817,10 +3820,11 @@ Http::patch('/v1/account/phone')
                 }
             }
 
-            $passwordPwned = ($project->getAttribute('auths', [])['passwordPwned']['enabled'] ?? true)
+            $pwnedPolicy = $project->getAttribute('auths', [])['passwordPwned'] ?? [];
+            $passwordPwned = ($pwnedPolicy['enabled'] ?? true)
                 ? !$pwnedPasswords->isValid($password)
                 : null;
-            if ($passwordPwned) {
+            if ($passwordPwned && ($pwnedPolicy['users'] ?? false)) {
                 throw new Exception(Exception::USER_PASSWORD_PWNED);
             }
         }
@@ -4267,10 +4271,11 @@ Http::put('/v1/account/recovery')
         }
 
         // null when the policy did not look, false when it looked and found nothing
-        $passwordPwned = ($project->getAttribute('auths', [])['passwordPwned']['enabled'] ?? true)
+        $pwnedPolicy = $project->getAttribute('auths', [])['passwordPwned'] ?? [];
+        $passwordPwned = ($pwnedPolicy['enabled'] ?? true)
             ? !$pwnedPasswords->isValid($password)
             : null;
-        if ($passwordPwned) {
+        if ($passwordPwned && ($pwnedPolicy['users'] ?? false)) {
             throw new Exception(Exception::USER_PASSWORD_PWNED);
         }
 
@@ -4636,10 +4641,11 @@ Http::put('/v1/account/recovery/otp')
         }
 
         // null when the policy did not look, false when it looked and found nothing
-        $passwordPwned = ($project->getAttribute('auths', [])['passwordPwned']['enabled'] ?? true)
+        $pwnedPolicy = $project->getAttribute('auths', [])['passwordPwned'] ?? [];
+        $passwordPwned = ($pwnedPolicy['enabled'] ?? true)
             ? !$pwnedPasswords->isValid($password)
             : null;
-        if ($passwordPwned) {
+        if ($passwordPwned && ($pwnedPolicy['users'] ?? false)) {
             throw new Exception(Exception::USER_PASSWORD_PWNED);
         }
 

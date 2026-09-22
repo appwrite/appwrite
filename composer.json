@@ -31,6 +31,7 @@
             "Utopia\\Compression\\": "packages/compression/src",
             "Utopia\\Lock\\": "packages/lock/src",
             "Utopia\\Psr7\\": "packages/psr7/src",
+            "Utopia\\SMTP\\": "packages/smtp/src",
             "Utopia\\System\\": "packages/system/src"
         }
     },
@@ -44,6 +45,7 @@
             "Utopia\\Compression\\Tests\\": "packages/compression/tests",
             "Utopia\\Lock\\Tests\\": "packages/lock/tests",
             "Utopia\\Psr7\\Tests\\": "packages/psr7/tests",
+            "Utopia\\SMTP\\Tests\\": "packages/smtp/tests",
             "Utopia\\System\\Tests\\": "packages/system/tests"
         }
     },
@@ -184,6 +186,7 @@
         "utopia-php/compression": "*",
         "utopia-php/lock": "*",
         "utopia-php/psr7": "*",
+        "utopia-php/smtp": "*",
         "utopia-php/system": "*"
     }
 }

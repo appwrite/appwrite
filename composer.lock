@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "bf0fea1216baa4486c8b92659660e150",
+    "content-hash": "b2531ef0b99b6962c509d291dc774352",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3521,12 +3521,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "b5f0cf48f45dbb97726137bba51746d9faffd13a"
+                "reference": "482e752a2abca179ff8de5ed9d3fa43427865ed4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/b5f0cf48f45dbb97726137bba51746d9faffd13a",
-                "reference": "b5f0cf48f45dbb97726137bba51746d9faffd13a",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/482e752a2abca179ff8de5ed9d3fa43427865ed4",
+                "reference": "482e752a2abca179ff8de5ed9d3fa43427865ed4",
                 "shasum": ""
             },
             "require": {
@@ -3614,7 +3614,7 @@
                 "source": "https://github.com/utopia-php/database/tree/feat-query-lib",
                 "issues": "https://github.com/utopia-php/database/issues"
             },
-            "time": "2026-09-22T08:04:21+00:00"
+            "time": "2026-09-22T08:53:35+00:00"
         },
         {
             "name": "utopia-php/detector",
@@ -4794,51 +4794,6 @@
                 "source": "https://github.com/utopia-php/servers/tree/0.4.11"
             },
             "time": "2026-09-02T15:57:19+00:00"
-        },
-        {
-            "name": "utopia-php/smtp",
-            "version": "0.2.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/utopia-php/smtp.git",
-                "reference": "7115e54d75209d3f02bcdede6cf948b30a4d68d6"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/smtp/zipball/7115e54d75209d3f02bcdede6cf948b30a4d68d6",
-                "reference": "7115e54d75209d3f02bcdede6cf948b30a4d68d6",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=8.4"
-            },
-            "suggest": {
-                "ext-fileinfo": "Detects the media type of an attachment added by path",
-                "ext-openssl": "Required for TLS, whether implicit or through STARTTLS",
-                "ext-swoole": "Required for the coroutine-native Transport\\Swoole"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Utopia\\SMTP\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "description": "Lite & fast micro PHP SMTP library that is easy to learn",
-            "keywords": [
-                "email",
-                "mail",
-                "mime",
-                "smtp"
-            ],
-            "support": {
-                "issues": "https://github.com/utopia-php/smtp/issues",
-                "source": "https://github.com/utopia-php/smtp/tree/0.2.0"
-            },
-            "time": "2026-09-16T10:11:15+00:00"
         },
         {
             "name": "utopia-php/span",
