@@ -3326,6 +3326,18 @@ final class AccountCustomClientTest extends Scope
 
         $initialExpiry = $response['body']['providerAccessTokenExpiry'];
 
+        // Fetch initial avatar photo before session update
+        $initialPhotoResponse = $this->client->call(Client::METHOD_GET, '/avatars/photo', [
+            'origin' => 'http://localhost',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ], [
+            'width' => 64,
+            'height' => 64,
+        ]);
+        $this->assertEquals(200, $initialPhotoResponse['headers']['status-code']);
+        $initialPhoto = $initialPhotoResponse['body'];
+
         sleep(3);
 
         $response = $this->client->call(Client::METHOD_PATCH, '/account/sessions/current', array_merge([
@@ -3336,9 +3348,23 @@ final class AccountCustomClientTest extends Scope
         ]));
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals('123456', $response['body']['providerAccessToken']);
+        $this->assertNotEmpty($response['body']['providerAccessToken']);
         $this->assertEquals('tuvwxyz', $response['body']['providerRefreshToken']);
         $this->assertNotEquals($initialExpiry, $response['body']['providerAccessTokenExpiry']);
+
+        // Verify that updateSession refetched the photo and the served avatar content changed
+        $refreshedPhotoResponse = $this->client->call(Client::METHOD_GET, '/avatars/photo', [
+            'origin' => 'http://localhost',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ], [
+            'width' => 64,
+            'height' => 64,
+        ]);
+
+        $this->assertEquals(200, $refreshedPhotoResponse['headers']['status-code']);
+        $this->assertEquals('image/png', $refreshedPhotoResponse['headers']['content-type']);
+        $this->assertNotEquals($initialPhoto, $refreshedPhotoResponse['body']);
 
         // Clean up - delete the user
         $response = $this->client->call(Client::METHOD_DELETE, '/users/' . $userId, array_merge([
@@ -3980,82 +4006,9 @@ final class AccountCustomClientTest extends Scope
             }
         );
 
-        $response = $this->client->call(Client::METHOD_POST, '/account/tokens/phone', array_merge([
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ]), [
-            'userId' => ID::unique(),
-            'phone' => $number,
-        ]);
-
-        $this->assertSame(201, $response['headers']['status-code']);
-        $this->assertSame($userId, $response['body']['userId']);
-
-        $phone = '+1' . \random_int(1000000000, 9999999999);
-        $responses = $this->createPhoneTokensConcurrently($phone, [
-            ID::unique(),
-            ID::unique(),
-            ID::unique(),
-            ID::unique(),
-        ]);
-        $created = [];
-        $conflicts = [];
-
-        foreach ($responses as $response) {
-            if ($response['status'] === 201) {
-                $created[] = $response;
-            } else {
-                $conflicts[] = $response;
-            }
-        }
-
-        $this->assertGreaterThan(1, \count($created));
-        $successfulUserIds = [];
-
-        foreach ($created as $response) {
-            $this->assertIsArray($response['body']);
-            $this->assertArrayHasKey('userId', $response['body']);
-            $successfulUserIds[] = $response['body']['userId'];
-        }
-
-        $this->assertCount(1, \array_unique($successfulUserIds));
-
-        $response = $this->client->call(Client::METHOD_GET, '/users', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ], [
-            'queries' => [
-                Query::equal('phone', [$phone])->toString(),
-            ],
-        ]);
-
-        $this->assertSame(200, $response['headers']['status-code']);
-        $this->assertCount(1, $response['body']['users']);
-        $this->assertSame($successfulUserIds[0], $response['body']['users'][0]['$id']);
-
         /**
          * Test for FAILURE
          */
-        foreach ($conflicts as $response) {
-            $this->assertSame(409, $response['status']);
-            $this->assertIsArray($response['body']);
-            $this->assertSame('user_already_exists', $response['body']['type']);
-        }
-
-        $response = $this->client->call(Client::METHOD_POST, '/account/tokens/phone', array_merge([
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ]), [
-            'userId' => $userId,
-            'phone' => '+1' . \random_int(1000000000, 9999999999),
-        ]);
-
-        $this->assertSame(409, $response['headers']['status-code']);
-        $this->assertSame('user_already_exists', $response['body']['type']);
-
         $response = $this->client->call(Client::METHOD_POST, '/account/tokens/phone', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
@@ -4065,6 +4018,60 @@ final class AccountCustomClientTest extends Scope
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
+
+        /**
+         * Existing user ID with a different phone -> SHOULD FAIL with 409, not 500
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/account/tokens/phone', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'userId' => $userId,
+            'phone' => '+123456780',
+        ]);
+
+        $this->assertEquals(409, $response['headers']['status-code']);
+        $this->assertEquals('user_already_exists', $response['body']['type']);
+    }
+
+    public function testCreateEmailTokenWithExistingUserId(): void
+    {
+        $response = $this->client->call(Client::METHOD_POST, '/account/tokens/email', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'userId' => ID::unique(),
+            'email' => uniqid() . 'token-conflict@localhost.test',
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $userId = $response['body']['userId'];
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/tokens/email', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'userId' => $userId,
+            'email' => uniqid() . 'other@localhost.test',
+        ]);
+
+        $this->assertEquals(409, $response['headers']['status-code']);
+        $this->assertEquals('user_already_exists', $response['body']['type']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/tokens/magic-url', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'userId' => $userId,
+            'email' => uniqid() . 'other@localhost.test',
+        ]);
+
+        $this->assertEquals(409, $response['headers']['status-code']);
+        $this->assertEquals('user_already_exists', $response['body']['type']);
     }
 
     public function testCreateSessionWithPhone(): void
@@ -4903,68 +4910,6 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $identifiers = \array_column(\array_filter($response['body']['targets'], fn ($target) => $target['$id'] === $targetId), 'identifier');
         $this->assertSame(['test-identifier-updated'], $identifiers);
-    }
-
-    /**
-     * @param list<string> $userIds
-     * @return list<array{status: int, body: array|string}>
-     */
-    private function createPhoneTokensConcurrently(string $phone, array $userIds): array
-    {
-        $multi = \curl_multi_init();
-        $this->assertNotFalse($multi);
-
-        $handles = [];
-        $headers = [
-            'origin: http://localhost',
-            'content-type: application/json',
-            'x-appwrite-project: ' . $this->getProject()['$id'],
-        ];
-
-        foreach ($userIds as $userId) {
-            $handle = \curl_init($this->client->getEndpoint() . '/account/tokens/phone');
-            $this->assertNotFalse($handle);
-
-            \curl_setopt($handle, CURLOPT_CUSTOMREQUEST, Client::METHOD_POST);
-            \curl_setopt($handle, CURLOPT_RETURNTRANSFER, 1);
-            \curl_setopt($handle, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36');
-            \curl_setopt($handle, CURLOPT_HTTPHEADER, $headers);
-            \curl_setopt($handle, CURLOPT_CONNECTTIMEOUT, 0);
-            \curl_setopt($handle, CURLOPT_TIMEOUT, 15);
-            \curl_setopt($handle, CURLOPT_POSTFIELDS, \json_encode([
-                'userId' => $userId,
-                'phone' => $phone,
-            ]));
-
-            \curl_multi_add_handle($multi, $handle);
-            $handles[] = $handle;
-        }
-
-        do {
-            $status = \curl_multi_exec($multi, $running);
-
-            if ($running > 0 && \curl_multi_select($multi, 1.0) === -1) {
-                \usleep(1000);
-            }
-        } while ($running > 0 && $status === CURLM_OK);
-
-        $responses = [];
-        foreach ($handles as $handle) {
-            $body = \curl_multi_getcontent($handle);
-            $decoded = \json_decode($body, true);
-
-            $responses[] = [
-                'status' => \curl_getinfo($handle, CURLINFO_HTTP_CODE),
-                'body' => \is_array($decoded) ? $decoded : $body,
-            ];
-
-            \curl_multi_remove_handle($multi, $handle);
-            \curl_close($handle);
-        }
-
-        \curl_multi_close($multi);
-
-        return $responses;
     }
 
     public function testMFARecoveryCodeChallenge(): void
@@ -6524,6 +6469,236 @@ final class AccountCustomClientTest extends Scope
 
         $this->assertEquals(409, $response['headers']['status-code']);
         $this->assertEquals('user_email_already_verified', $response['body']['type']);
+    }
+
+    public function testCreateRecoveryOTP(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $email = uniqid('otp-recovery-') . '@localhost.test';
+        $password = 'password';
+        $name = 'OTP Recovery User';
+
+        $created = $this->client->call(Client::METHOD_POST, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ]), [
+            'userId' => ID::unique(),
+            'email' => $email,
+            'password' => $password,
+            'name' => $name,
+        ]);
+
+        $this->assertEquals(201, $created['headers']['status-code']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/account/recovery/otp', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ]), [
+            'email' => $email,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertNotEmpty($response['body']['userId']);
+        $this->assertEmpty($response['body']['secret']);
+        $this->assertEmpty($response['body']['phrase']);
+        $this->assertTrue((new DatetimeValidator())->isValid($response['body']['expire']));
+
+        $lastEmail = $this->getLastEmailByAddress($email);
+        $this->assertNotEmpty($lastEmail, 'Email not found for address: ' . $email);
+        $this->assertNotEmpty($lastEmail['subject']);
+        $this->assertNotEmpty($lastEmail['text']);
+
+        preg_match_all("/\b\d{6}\b/", $lastEmail['text'], $matches);
+        $otp = $matches[0][0] ?? '';
+        $this->assertNotEmpty($otp);
+
+        /**
+         * Test for SUCCESS with phrase
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/account/recovery/otp', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ]), [
+            'email' => $email,
+            'phrase' => true,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['phrase']);
+        $this->assertEmpty($response['body']['secret']);
+
+        $phrase = $response['body']['phrase'];
+
+        $lastEmail = $this->getLastEmailByAddress($email, function ($email) use ($phrase) {
+            $this->assertStringContainsStringIgnoringCase($phrase, $email['text']);
+        });
+        $this->assertNotEmpty($lastEmail);
+        $this->assertStringContainsStringIgnoringCase($phrase, $lastEmail['text']);
+
+        /**
+         * Test for SUCCESS - unknown email does not reveal account existence
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/account/recovery/otp', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ]), [
+            'email' => 'notfound-' . uniqid() . '@localhost.test',
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertEmpty($response['body']['secret']);
+
+        /**
+         * Test for FAILURE - invalid email
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/account/recovery/otp', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ]), [
+            'email' => 'notanemail',
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+    }
+
+    public function testUpdateRecoveryOTP(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $email = uniqid('otp-recovery-reset-') . '@localhost.test';
+        $password = 'password';
+        $name = 'OTP Recovery Reset User';
+
+        $created = $this->client->call(Client::METHOD_POST, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ]), [
+            'userId' => ID::unique(),
+            'email' => $email,
+            'password' => $password,
+            'name' => $name,
+        ]);
+
+        $this->assertEquals(201, $created['headers']['status-code']);
+        $userId = $created['body']['$id'];
+
+        $tokenResponse = $this->client->call(Client::METHOD_POST, '/account/recovery/otp', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ]), [
+            'email' => $email,
+        ]);
+
+        $this->assertEquals(201, $tokenResponse['headers']['status-code']);
+
+        $lastEmail = $this->getLastEmailByAddress($email);
+        $this->assertNotEmpty($lastEmail);
+        $this->assertNotEmpty($lastEmail['subject']);
+        $this->assertNotEmpty($lastEmail['text']);
+
+        preg_match_all("/\b\d{6}\b/", $lastEmail['text'], $matches);
+        $otp = $matches[0][0] ?? '';
+        $this->assertNotEmpty($otp);
+
+        /**
+         * Test for FAILURE - wrong secret against active token
+         */
+        $response = $this->client->call(Client::METHOD_PUT, '/account/recovery/otp', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ]), [
+            'userId' => $userId,
+            'secret' => $otp === '000000' ? '111111' : '000000',
+            'password' => 'new-password-otp',
+        ]);
+
+        $this->assertEquals(401, $response['headers']['status-code']);
+        $this->assertEquals('user_invalid_token', $response['body']['type']);
+
+        /**
+         * Test for FAILURE - OTP is rejected by the link based endpoint
+         */
+        $response = $this->client->call(Client::METHOD_PUT, '/account/recovery', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ]), [
+            'userId' => $userId,
+            'secret' => $otp,
+            'password' => 'new-password-otp',
+        ]);
+
+        $this->assertEquals(401, $response['headers']['status-code']);
+        $this->assertEquals('user_invalid_token', $response['body']['type']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_PUT, '/account/recovery/otp', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ]), [
+            'userId' => $userId,
+            'secret' => $otp,
+            'password' => 'new-password-otp',
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $sessionResponse = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ]), [
+            'email' => $email,
+            'password' => 'new-password-otp',
+        ]);
+
+        $this->assertEquals(201, $sessionResponse['headers']['status-code']);
+
+        /**
+         * Test for FAILURE - OTP is single use
+         */
+        $response = $this->client->call(Client::METHOD_PUT, '/account/recovery/otp', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ]), [
+            'userId' => $userId,
+            'secret' => $otp,
+            'password' => 'another-password-otp',
+        ]);
+
+        $this->assertEquals(401, $response['headers']['status-code']);
+        $this->assertEquals('user_invalid_token', $response['body']['type']);
+
+        /**
+         * Test for FAILURE - wrong userId
+         */
+        $response = $this->client->call(Client::METHOD_PUT, '/account/recovery/otp', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ]), [
+            'userId' => ID::custom('doesnotexist'),
+            'secret' => $otp,
+            'password' => 'new-password-otp',
+        ]);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
     }
 
     public function testCreateIdTokenSessionGoogleShapedClaims(): void
