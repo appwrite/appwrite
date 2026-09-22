@@ -4,6 +4,7 @@ import { toast } from 'sonner'
 import {
   DEFAULT_AUTH_SECURITY,
   projectAuthSecurityQueryOptions,
+  type PasswordPwnedPolicy,
 } from '@/lib/project-settings'
 import { X, RefreshCw, Plus, Copy, Check } from 'lucide-react'
 import {
@@ -13,6 +14,7 @@ import {
   useUpdateAuthPasswordHistory,
   useUpdateAuthPasswordDictionary,
   useUpdatePersonalDataCheck,
+  useUpdatePasswordPwnedPolicy,
   useUpdateSessionAlerts,
   useUpdateSessionInvalidation,
   useUpdateMockNumbers,
@@ -878,6 +880,151 @@ export function PersonalDataCard({
           >
             {t('Deny personal data in passwords')}
           </Label>
+        </div>
+      </div>
+      <div className="px-6 py-4 border-t border-border bg-muted/30">
+        <Button
+          size="sm"
+          className="h-9 text-[13px]"
+          disabled={!hasChanges || mutation.isPending}
+          onClick={handleSubmit}
+        >
+          {t('Update')}
+        </Button>
+      </div>
+    </div>
+  )
+}
+
+const PASSWORD_PWNED_ENFORCEMENTS = [
+  {
+    key: 'users' as const,
+    label: 'Reject breached passwords',
+    description:
+      'A password found in a known breach cannot be set when a user signs up or changes their password.',
+  },
+  {
+    key: 'sessions' as const,
+    label: 'Block sign-in with a breached password',
+    description:
+      'Users whose password appears in a known breach cannot sign in until they reset it.',
+  },
+]
+
+export function PasswordPwnedCard({
+  projectId,
+  currentPolicy,
+}: {
+  projectId: string
+  currentPolicy: PasswordPwnedPolicy
+}) {
+  const t = useT()
+  const [policy, setPolicy] = useState(currentPolicy)
+  const mutation = useUpdatePasswordPwnedPolicy(projectId)
+  const lastSubmittedValue = useRef<string | null>(null)
+
+  useEffect(() => {
+    // Only sync from server if:
+    // 1. Mutation is not pending
+    // 2. Server value matches what we expect (last submitted value), or we haven't submitted anything
+    if (!mutation.isPending) {
+      const currentPolicyStr = JSON.stringify(currentPolicy)
+      if (
+        lastSubmittedValue.current === null ||
+        currentPolicyStr === lastSubmittedValue.current
+      ) {
+        setPolicy(currentPolicy)
+        // Reset ref once we've synced to the expected value
+        if (
+          lastSubmittedValue.current !== null &&
+          currentPolicyStr === lastSubmittedValue.current
+        ) {
+          lastSubmittedValue.current = null
+        }
+      }
+    }
+  }, [currentPolicy, mutation.isPending])
+
+  const hasChanges = useMemo(
+    () =>
+      policy.enabled !== currentPolicy.enabled ||
+      policy.users !== currentPolicy.users ||
+      policy.sessions !== currentPolicy.sessions,
+    [policy, currentPolicy],
+  )
+
+  const handleSubmit = () => {
+    lastSubmittedValue.current = JSON.stringify(policy)
+    mutation.mutate(policy, {
+      onSuccess: () => {
+        toast.success(t('Updated breached password policy'))
+      },
+      onError: (error: Error) => {
+        toast.error(
+          error.message || t('Failed to update breached password policy'),
+        )
+        // Revert on error
+        lastSubmittedValue.current = null
+      },
+    })
+  }
+
+  return (
+    <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+      <div className="px-6 py-4">
+        <h3 className="text-[15px] font-semibold text-foreground">
+          {t('Breached passwords')}
+        </h3>
+        <p className="text-[13px] text-muted-foreground mt-1">
+          {t(
+            'Check every password your users sign up, sign in, or reset with against the Have I Been Pwned breach database and record the result on the user. Only the first five characters of the password hash are ever shared.',
+          )}
+        </p>
+      </div>
+      <div className="border-t border-border" />
+      <div className="px-6 py-4">
+        <div className="space-y-4">
+          <div className="flex items-center gap-3">
+            <Switch
+              id="password-pwned-enabled"
+              checked={policy.enabled}
+              onCheckedChange={(checked) =>
+                setPolicy({ ...policy, enabled: checked })
+              }
+              disabled={mutation.isPending}
+            />
+            <Label
+              htmlFor="password-pwned-enabled"
+              className="text-[13px] text-foreground cursor-pointer"
+            >
+              {t('Check passwords against known data breaches')}
+            </Label>
+          </div>
+          {PASSWORD_PWNED_ENFORCEMENTS.map((enforcement) => (
+            <div key={enforcement.key} className="flex items-start gap-3">
+              <Checkbox
+                id={`password-pwned-${enforcement.key}`}
+                checked={policy[enforcement.key]}
+                onCheckedChange={(checked) =>
+                  setPolicy({ ...policy, [enforcement.key]: checked === true })
+                }
+                // Enforcement only applies while passwords are being checked.
+                disabled={mutation.isPending || !policy.enabled}
+                className="mt-0.5"
+              />
+              <div className="min-w-0 flex-1">
+                <Label
+                  htmlFor={`password-pwned-${enforcement.key}`}
+                  className="text-[13px] font-medium text-foreground cursor-pointer"
+                >
+                  {t(enforcement.label)}
+                </Label>
+                <p className="text-[12px] text-muted-foreground mt-0.5">
+                  {t(enforcement.description)}
+                </p>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
       <div className="px-6 py-4 border-t border-border bg-muted/30">

@@ -1252,4 +1252,27 @@ export const jaAuthStorageDictionary: Record<string, string> = {
 
   'View prompt': 'プロンプトを表示',
 
+  // Breached (pwned) password policy and per-user breach check result
+  'Breached passwords': '漏洩したパスワード',
+  'Check every password your users sign up, sign in, or reset with against the Have I Been Pwned breach database and record the result on the user. Only the first five characters of the password hash are ever shared.':
+    'ユーザーが登録、サインイン、リセットに使用するすべてのパスワードを Have I Been Pwned の漏洩データベースと照合し、結果をユーザーに記録します。共有されるのはパスワードハッシュの先頭5文字のみです。',
+  'Check passwords against known data breaches':
+    '既知のデータ漏洩とパスワードを照合する',
+  'Reject breached passwords': '漏洩したパスワードを拒否',
+  'A password found in a known breach cannot be set when a user signs up or changes their password.':
+    '既知の漏洩で見つかったパスワードは、ユーザーの登録時やパスワード変更時に設定できません。',
+  'Block sign-in with a breached password':
+    '漏洩したパスワードでのサインインをブロック',
+  'Users whose password appears in a known breach cannot sign in until they reset it.':
+    'パスワードが既知の漏洩に含まれるユーザーは、リセットするまでサインインできません。',
+  'Updated breached password policy': '漏洩パスワードポリシーを更新しました',
+  'Failed to update breached password policy':
+    '漏洩パスワードポリシーの更新に失敗しました',
+  'Password found in a known data breach':
+    'パスワードが既知のデータ漏洩で見つかりました',
+  'Password not found in known data breaches':
+    'パスワードは既知のデータ漏洩では見つかりませんでした',
+  'Password not checked against known data breaches':
+    'パスワードは既知のデータ漏洩と照合されていません',
+  'breached password': '漏洩したパスワード',
 }

@@ -32,6 +32,8 @@ import {
   XCircle,
   Mail,
   Phone,
+  ShieldAlert,
+  ShieldCheck,
 } from 'lucide-react'
 import {
   useProjectUsers,
@@ -1479,6 +1481,9 @@ export function View({
                           <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-center w-[80px]">
                             {t('MFA')}
                           </TableHead>
+                          <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-center w-[100px]">
+                            {t('Password')}
+                          </TableHead>
                           <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end">
                             {t('Joined')}
                           </TableHead>
@@ -1730,6 +1735,49 @@ export function View({
                                           </TooltipContent>
                                         </Tooltip>
                                       )}
+                                    </Link>
+                                  </div>
+                                </TableCell>
+                                <TableCell className="px-4 py-3">
+                                  <div className="flex items-center justify-center">
+                                    <Link
+                                      to="/projects/$projectId/auth/users/$userId"
+                                      params={{
+                                        projectId: projectId!,
+                                        userId: user.$id,
+                                      }}
+                                      className="block"
+                                    >
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <div className="flex items-center justify-center">
+                                            {user.passwordPwned === true ? (
+                                              <ShieldAlert className="h-4 w-4 text-red-600 dark:text-red-400" />
+                                            ) : user.passwordPwned === false ? (
+                                              <ShieldCheck className="h-4 w-4 text-green-600 dark:text-green-400" />
+                                            ) : (
+                                              <span className="text-[11px] text-muted-foreground">
+                                                -
+                                              </span>
+                                            )}
+                                          </div>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                          <p className="text-xs">
+                                            {user.passwordPwned === true
+                                              ? t(
+                                                  'Password found in a known data breach',
+                                                )
+                                              : user.passwordPwned === false
+                                                ? t(
+                                                    'Password not found in known data breaches',
+                                                  )
+                                                : t(
+                                                    'Password not checked against known data breaches',
+                                                  )}
+                                          </p>
+                                        </TooltipContent>
+                                      </Tooltip>
                                     </Link>
                                   </div>
                                 </TableCell>

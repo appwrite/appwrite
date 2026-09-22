@@ -92,4 +92,16 @@ export const POLICIES_SETTINGS_CARD_INDEX: SettingsCardIndexEntry[] = [
     title: 'Personal data',
     keywords: ['name', 'email in password'],
   },
+  {
+    sectionId: 'passwords',
+    title: 'Breached passwords',
+    keywords: [
+      'pwned',
+      'have i been pwned',
+      'hibp',
+      'breach',
+      'leaked',
+      'compromised',
+    ],
+  },
 ]

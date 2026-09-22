@@ -1259,4 +1259,25 @@ export const heAuthStorageDictionary: Record<string, string> = {
 
   'View prompt': 'הצגת הפרומפט',
 
+  // Breached (pwned) password policy and per-user breach check result
+  'Breached passwords': 'סיסמאות שדלפו',
+  'Check every password your users sign up, sign in, or reset with against the Have I Been Pwned breach database and record the result on the user. Only the first five characters of the password hash are ever shared.':
+    'בדיקת כל סיסמה שהמשתמשים נרשמים, מתחברים או מאפסים איתה מול מאגר הדליפות Have I Been Pwned, ורישום התוצאה אצל המשתמש. רק חמשת התווים הראשונים של ה-hash של הסיסמה משותפים.',
+  'Check passwords against known data breaches':
+    'בדיקת סיסמאות מול דליפות מידע ידועות',
+  'Reject breached passwords': 'דחיית סיסמאות שדלפו',
+  'A password found in a known breach cannot be set when a user signs up or changes their password.':
+    'סיסמה שנמצאה בדליפה ידועה לא תתקבל כשמשתמש נרשם או משנה את הסיסמה שלו.',
+  'Block sign-in with a breached password': 'חסימת התחברות עם סיסמה שדלפה',
+  'Users whose password appears in a known breach cannot sign in until they reset it.':
+    'משתמשים שהסיסמה שלהם מופיעה בדליפה ידועה לא יוכלו להתחבר עד שיאפסו אותה.',
+  'Updated breached password policy': 'מדיניות הסיסמאות שדלפו עודכנה',
+  'Failed to update breached password policy':
+    'עדכון מדיניות הסיסמאות שדלפו נכשל',
+  'Password found in a known data breach': 'הסיסמה נמצאה בדליפת מידע ידועה',
+  'Password not found in known data breaches':
+    'הסיסמה לא נמצאה בדליפות מידע ידועות',
+  'Password not checked against known data breaches':
+    'הסיסמה לא נבדקה מול דליפות מידע ידועות',
+  'breached password': 'סיסמה שדלפה',
 }

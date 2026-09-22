@@ -837,6 +837,42 @@ export function useUpdatePersonalDataCheck(
 }
 
 /**
+ * Hook to update the breached (pwned) password policy.
+ *
+ * `enabled` checks every password against known breaches and records the
+ * result on the user; `users` rejects a breached password on sign-up or
+ * change; `sessions` refuses a sign-in with a breached password.
+ *
+ * @param projectId - The project ID
+ */
+export function useUpdatePasswordPwnedPolicy(
+  projectId: string | null | undefined,
+) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (policy: {
+      enabled: boolean
+      sessions: boolean
+      users: boolean
+    }) => {
+      if (!projectId) {
+        throw new Error('Project ID is required')
+      }
+
+      return await sdk.forProject(projectId).project.updatePasswordPwnedPolicy({
+        enabled: policy.enabled,
+        sessions: policy.sessions,
+        users: policy.users,
+      })
+    },
+    onSuccess: () => {
+      invalidateProjectAuthQueries(queryClient, projectId)
+    },
+  })
+}
+
+/**
  * Hook to update project session alerts
  *
  * @param projectId - The project ID
