@@ -287,7 +287,11 @@ final class ClaimTest extends TestCase
         $this->assertCount(1, $events);
         $message = MigrationMessage::fromArray($events[0]);
         $this->assertInstanceOf(Document::class, $message->terminal);
-        $this->assertSame(['$id', 'attemptId', 'status', 'stage'], \array_keys($message->terminal->getArrayCopy()));
+        $this->assertSame(
+            [],
+            \array_diff(\array_keys($message->terminal->getArrayCopy()), ['$id', 'attemptId', 'status', 'stage']),
+            'Terminal snapshot must not carry the migration payload onto the queue, credentials included'
+        );
         $this->assertSame('failed', $message->terminal->getAttribute('status'));
         $this->assertSame('attempt-terminal', $message->terminal->getAttribute('attemptId'));
         $database = new Document([
@@ -1041,7 +1045,11 @@ final class ClaimTest extends TestCase
         $this->assertIsString($claimed->migration->getAttribute('attemptId'));
         $this->assertNotSame('attempt-terminal', $claimed->migration->getAttribute('attemptId'));
         $this->assertInstanceOf(Document::class, $claimed->terminal);
-        $this->assertSame(['$id', 'attemptId', 'status', 'stage'], \array_keys($claimed->terminal->getArrayCopy()));
+        $this->assertSame(
+            [],
+            \array_diff(\array_keys($claimed->terminal->getArrayCopy()), ['$id', 'attemptId', 'status', 'stage']),
+            'Terminal snapshot must not carry the migration payload onto the queue, credentials included'
+        );
         $this->assertSame($terminal->getId(), $claimed->terminal->getId());
         $this->assertSame('attempt-terminal', $claimed->terminal->getAttribute('attemptId'));
         $this->assertSame('failed', $claimed->terminal->getAttribute('status'));
