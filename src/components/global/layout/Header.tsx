@@ -30,6 +30,7 @@ import {
   ArrowLeft,
   DatabaseZap,
   ShieldAlert,
+  KeyRound,
   Sparkles,
   Eye,
   Home,
@@ -563,6 +564,27 @@ export function ConsoleHeader({
   const is2FAEnabled =
     headerAccount?.mfa === true ||
     headerAccount?.twoFactorAuthenticatorEnabled === true
+
+  // Result of the last breached-password check; null when never checked.
+  const passwordPwned = headerAccount?.passwordPwned
+  const passwordStatus =
+    passwordPwned === true
+      ? {
+          label: headerCopy.accountMenu.passwordBreached,
+          iconClass: 'text-red-500',
+          textClass: 'text-red-500',
+        }
+      : passwordPwned === false
+        ? {
+            label: headerCopy.accountMenu.passwordNotBreached,
+            iconClass: 'text-emerald-500',
+            textClass: 'text-foreground',
+          }
+        : {
+            label: headerCopy.accountMenu.passwordNotChecked,
+            iconClass: 'text-muted-foreground',
+            textClass: 'text-muted-foreground',
+          }
 
   const hasSidebar = !isOrgOverview
   const showBackToOrganization =
@@ -1725,43 +1747,69 @@ export function ConsoleHeader({
                       </div>
                     )}
 
-                    {/* Account Status */}
+                    {/* Account status: activity, 2FA and password breach check in one list */}
                     <div>
                       <p className="text-[11px] text-muted-foreground mb-1.5">
                         {headerCopy.accountMenu.accountStatus}
                       </p>
-                      <div className="flex items-center gap-2">
-                        <div className="h-2 w-2 rounded-full bg-emerald-500" />
-                        <p className="text-[14px] text-foreground">
-                          {accountStatus}
-                        </p>
-                      </div>
+                      <ul className="space-y-1.5">
+                        <li className="flex items-center gap-2">
+                          <span className="flex h-3.5 w-3.5 items-center justify-center">
+                            <span
+                              className={cn(
+                                'h-2 w-2 rounded-full',
+                                headerAccount
+                                  ? 'bg-emerald-500'
+                                  : 'bg-muted-foreground',
+                              )}
+                            />
+                          </span>
+                          <p className="text-[14px] text-foreground">
+                            {accountStatus}
+                          </p>
+                        </li>
+                        {features.accountMfa && (
+                          <li className="flex items-center gap-2">
+                            <Shield
+                              className={cn(
+                                'h-3.5 w-3.5',
+                                is2FAEnabled
+                                  ? 'text-emerald-500'
+                                  : 'text-muted-foreground',
+                              )}
+                            />
+                            <p
+                              className={cn(
+                                'text-[14px]',
+                                is2FAEnabled
+                                  ? 'text-foreground'
+                                  : 'text-muted-foreground',
+                              )}
+                            >
+                              {is2FAEnabled
+                                ? headerCopy.accountMenu.twoFactorEnabled
+                                : headerCopy.accountMenu.twoFactorDisabled}
+                            </p>
+                          </li>
+                        )}
+                        <li className="flex items-center gap-2">
+                          <KeyRound
+                            className={cn(
+                              'h-3.5 w-3.5',
+                              passwordStatus.iconClass,
+                            )}
+                          />
+                          <p
+                            className={cn(
+                              'text-[14px]',
+                              passwordStatus.textClass,
+                            )}
+                          >
+                            {passwordStatus.label}
+                          </p>
+                        </li>
+                      </ul>
                     </div>
-
-                    {features.accountMfa && (
-                      <div>
-                        <p className="text-[11px] text-muted-foreground mb-1.5">
-                          {headerCopy.accountMenu.twoFactor}
-                        </p>
-                        <div className="flex items-center gap-2">
-                          {is2FAEnabled ? (
-                            <>
-                              <Shield className="h-3.5 w-3.5 text-emerald-500" />
-                              <p className="text-[14px] text-foreground">
-                                {headerCopy.accountMenu.enabled}
-                              </p>
-                            </>
-                          ) : (
-                            <>
-                              <Shield className="h-3.5 w-3.5 text-muted-foreground" />
-                              <p className="text-[14px] text-muted-foreground">
-                                {headerCopy.accountMenu.disabled}
-                              </p>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    )}
 
                     {/* Account ID */}
                     {accountId && (
