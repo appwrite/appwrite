@@ -79,6 +79,9 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Contact sales': '営業に連絡',
   'Cookie preferences': 'Cookie の設定',
   'Cookies Policy': 'Cookie ポリシー',
+  'Crash and performance diagnostics to help us fix issues in Appwrite.':
+    'クラッシュとパフォーマンスの診断を送信し、Appwrite の不具合修正に役立てます。',
+  'Error reporting': 'エラー報告',
   'We use cookies to improve Appwrite.':
     'Appwrite の改善のために Cookie を使用しています。',
   'Copied line': '行をコピーしました',
@@ -152,6 +155,7 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Filter name': 'フィルター名',
   'Find a branch...': 'ブランチを検索...',
   'Fix payment': '支払いを修正',
+  'Authorize payment': '支払いを承認',
   'Fix with an Agent': 'Agent で修正',
   'For me': '自分用',
   'For team': 'チーム用',
@@ -369,6 +373,46 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Select shown': '表示分を選択',
   'Send feedback': 'フィードバックを送信',
   'Share your feedback...': 'フィードバックを共有...',
+  'How is your experience with the console?': 'コンソールの使い心地はいかがですか?',
+  'How is the console working for you?': 'コンソールは問題なく使えていますか?',
+  'Feedback sentiment': 'フィードバックの種類',
+  'Works well': '問題ない',
+  'Needs improvement': '改善してほしい',
+  Positive: '良い',
+  Negative: '改善したい',
+  'Add details (optional)': '詳細 (任意)',
+  'Submit feedback': 'フィードバックを送信',
+  'Report a bug on GitHub': 'GitHub でバグを報告',
+  'For issues in Appwrite with steps to reproduce':
+    'Appwrite 本体の再現手順付きの不具合',
+  'Tell us what you build': '作っているものを教えてください',
+  'Request received. We will be in touch.': '依頼を受け付けました。追って連絡します。',
+  'What you build and results you have seen. We may reach out for a short interview.':
+    '構築内容と得られた成果。短いインタビューのためご連絡することがあります。',
+  'What you ship and the results you have seen': 'リリース内容と得られた成果',
+  'Request interview': 'インタビューを依頼',
+  'What could we improve?': '改善してほしい点は?',
+  'What is working well? (optional)': 'うまくいっている点 (任意)',
+  'Tell us what was confusing or missing': '分かりにくかった点や不足していた点を教えてください',
+  'Share what you liked (optional)': '良かった点を共有 (任意)',
+  'Report a bug': 'バグを報告',
+  'For reproducible defects in Appwrite itself, open a GitHub issue with steps to reproduce.':
+    'Appwrite 本体の再現可能な不具合は、再現手順付きで GitHub issue を開いてください。',
+  'Open GitHub issue': 'GitHub issue を開く',
+  'Share your customer story': '導入事例を共有',
+  'Story request received': 'ストーリー依頼を受け付けました',
+  'Our team will review your note and contact you if we move forward with a customer story.':
+    '内容を確認し、導入事例として進める場合はご連絡します。',
+  'What would you like to share?': '何を共有したいですか?',
+  'Product, results, and how Appwrite fits your stack':
+    'プロダクト、成果、Appwrite がスタックにどうフィットするか',
+  'Request customer story interview': '導入事例インタビューを依頼',
+  'Story requests are not configured. Set VITE_GROWTH_ENDPOINT in .env to enable submission.':
+    'ストーリー依頼は設定されていません。送信を有効にするには .env で VITE_GROWTH_ENDPOINT を設定してください。',
+  'Failed to submit story request': 'ストーリー依頼の送信に失敗しました',
+  'Too many requests. Try again in a few minutes.':
+    'リクエストが多すぎます。数分後にもう一度お試しください。',
+  'Internal server error.': '内部サーバーエラー。',
   'Sort field': 'ソートフィールド',
   'Source code': 'ソースコード',
   'Status Code': 'ステータスコード',
@@ -383,14 +427,20 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'This feature is coming soon': 'この機能は近日公開予定です',
   'This organization has reached its budget limit and is now blocked. To continue using Appwrite services, update the budget limit.':
     'この組織は予算上限に達したためブロックされています。Appwrite サービスを引き続き利用するには、予算上限を更新してください。',
+  'This project is in readonly mode. Please contact the organization admin for details.':
+    'このプロジェクトは読み取り専用です。詳細は組織の管理者にお問い合わせください。',
   'This organization has reached its budget limit and is now blocked. Increase the budget cap below to restore access to billable services.':
     'この組織は予算上限に達したためブロックされています。請求対象サービスへのアクセスを復元するには、下の予算上限を引き上げてください。',
   'This organization has reached its plan limit for':
     'この組織はプラン上限に達しました:',
-  '. Upgrade your plan or wait until the end of the billing cycle to restore access.':
-    '。プランをアップグレードするか、請求サイクルの終了まで待ってアクセスを復元してください。',
-  'This organization has reached its plan usage limit and is now blocked. Upgrade your plan or wait until the end of the billing cycle to restore access.':
-    'この組織はプランの使用上限に達したためブロックされています。プランをアップグレードするか、請求サイクルの終了まで待ってアクセスを復元してください。',
+  '. API access to this project is suspended. Upgrade your plan or wait until the end of the billing cycle to restore service.':
+    '。このプロジェクトの API アクセスは停止されています。プランをアップグレードするか、請求サイクルの終了まで待って API アクセスを再開してください。',
+  '. API access to this project is suspended. Delete files or other stored data to free capacity, or upgrade your plan.':
+    '。このプロジェクトの API アクセスは停止されています。ファイルやその他の保存データを削除して容量を確保するか、プランをアップグレードしてください。',
+  '. API access to this project is suspended. Delete unused users to free capacity, or upgrade your plan.':
+    '。このプロジェクトの API アクセスは停止されています。未使用のユーザーを削除して枠を確保するか、プランをアップグレードしてください。',
+  'This organization has reached its plan usage limit. API access to this project is suspended. Upgrade your plan or wait until the end of the billing cycle to restore service.':
+    'この組織はプランの使用上限に達しました。このプロジェクトの API アクセスは停止されています。プランをアップグレードするか、請求サイクルの終了まで待って API アクセスを再開してください。',
   'Plan limit reached': 'プラン上限に達しました',
   'Phone auth': '電話認証',
   'View current cycle usage': '現在のサイクル使用量を表示',
@@ -849,6 +899,8 @@ export const jaSharedUiDictionary: Record<string, string> = {
     'オペレーターのコンテキストが失われました。なりすましを停止してから、もう一度開始してください。',
   'Payment failed - act now. Unresolved billing may interrupt your projects and services.':
     '支払いに失敗しました。今すぐ対応してください。未解決の請求により、プロジェクトとサービスが中断される可能性があります。',
+  'Payment authorization required. Complete authentication now. Unresolved billing may interrupt your projects and services.':
+    '支払いの承認が必要です。今すぐ認証を完了してください。未解決の請求により、プロジェクトとサービスが中断される可能性があります。',
   'Payment failed - your organization has restricted access due to an unresolved billing issue. Changes to projects and services are restricted until payment succeeds. Update billing to restore full access.':
     '支払いに失敗しました。未解決の請求問題により、組織は制限付きアクセスになっています。支払いが完了するまで、プロジェクトとサービスへの変更は制限されます。請求情報を更新して、完全なアクセスを回復してください。',
   'Privacy-friendly usage analytics and error reporting to help us improve Appwrite.':
@@ -1224,4 +1276,11 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Operator account': 'オペレーターアカウント',
   'After you confirm, the Console will open this page.':
     '確認後、コンソールはこのページを開きます。',
+  'Not set': '未設定',
+  'Browser timezone': 'ブラウザのタイムゾーン',
+  'Stored in UTC': 'UTC での保存値',
+  'Appwrite 2.0 is launching on Product Hunt today':
+    'Appwrite 2.0 が本日 Product Hunt でローンチ',
+  'Appwrite 2.0 on Product Hunt': 'Product Hunt の Appwrite 2.0',
+  'Share your take': 'フィードバックを送る',
 }

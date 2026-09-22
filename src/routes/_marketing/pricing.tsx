@@ -1,13 +1,18 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { MARKETING_PAGE_ROUTE_STATIC_DATA } from '@/lib/marketing/route-static-data'
+import {
+  MARKETING_PAGE_ROUTE_STATIC_DATA,
+  marketingRouteLifetime,
+} from '@/lib/marketing/route-static-data'
 import { View } from '@/components/pages/pricing/View'
 import { getMarketingPageMetaTags } from '@/lib/marketing/route-meta'
 import {
   isPricingHashTarget,
   resetPricingPageScrollContainers,
 } from '@/lib/pricing/comparison-scroll'
+import { prefetchVisitorCountry } from '@/lib/react-query/hooks/locale'
 
 export const Route = createFileRoute('/_marketing/pricing')({
+  ...marketingRouteLifetime,
   staticData: MARKETING_PAGE_ROUTE_STATIC_DATA,
   ssr: true,
   head: () => ({
@@ -25,7 +30,7 @@ export const Route = createFileRoute('/_marketing/pricing')({
         resetPricingPageScrollContainers(true)
       }
     }
-
+    await prefetchVisitorCountry(context.queryClient)
   },
   component: PricingPage,
 })

@@ -4,7 +4,7 @@ import {
   databaseRouteKindFromApiType,
   type TanStackNavLink,
 } from '@/lib/database-routes'
-import { OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT } from '@/lib/usage/breakdown-limits'
+import { normalizeIds } from '@/lib/appwrite-id'
 import { fetchProjectDatabasesByIds } from '@/lib/react-query/hooks/databases'
 
 export interface DatabaseBreakdownResource {
@@ -51,13 +51,9 @@ export function resolveDatabaseBreakdownResource(
 export function normalizeDatabaseBreakdownResourceIds(
   resourceIds: string[],
 ): string[] {
-  return [
-    ...new Set(
-      resourceIds
-        .map((id) => parseDatabaseIdFromUsageResourceLabel(id))
-        .filter((id) => id.length > 0),
-    ),
-  ].slice(0, OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT)
+  return normalizeIds(
+    resourceIds.map((id) => parseDatabaseIdFromUsageResourceLabel(id)),
+  )
 }
 
 export async function fetchDatabaseBreakdownResources(

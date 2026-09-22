@@ -36,6 +36,7 @@ import {
   buildFirewallResourceUsageQueries,
   draftsFromUsageConditionSnapshots,
   firewallConditionBreakdownDimension,
+  mergeFirewallRuleImpactUnion,
   type FirewallRuleImpactData,
   type FirewallUsageConditionSnapshot,
 } from '@/lib/firewall/usage'
@@ -755,6 +756,9 @@ export function firewallRuleImpactQueryOptions(
     refetchOnReconnect: false,
     placeholderData: keepPreviousData,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
+    meta: {
+      skipInitialLoader: true,
+    },
   })
 }
 
@@ -768,7 +772,7 @@ export function useFirewallRuleImpact(
   logRetentionHours?: number,
   action?: FirewallCreatableAction,
 ) {
-  const { data, isLoading, isFetching, error } = useQuery(
+  const { data, isLoading, isFetching, error, refetch } = useQuery(
     firewallRuleImpactQueryOptions(
       projectId,
       conditions,
@@ -785,7 +789,62 @@ export function useFirewallRuleImpact(
     impact: data as FirewallRuleImpactData | undefined,
     isLoading,
     isFetching,
+    isError: !!error,
     error,
+    refetch,
+  }
+}
+
+export function useFirewallRuleImpactUnion(
+  projectId: string | null | undefined,
+  conditionSets: FirewallConditionDraft[][],
+  resourceType: FirewallResourceType,
+  resourceId: string | undefined,
+  dateRange: DateRange | undefined,
+  chartInterval: UsageChartInterval | undefined,
+  logRetentionHours: number | undefined,
+  action: FirewallCreatableAction | undefined,
+  enabled: boolean,
+) {
+  const queries = useQueries({
+    queries: conditionSets.map((conditions) => ({
+      ...firewallRuleImpactQueryOptions(
+        projectId,
+        conditions,
+        resourceType,
+        resourceId,
+        dateRange,
+        chartInterval,
+        logRetentionHours,
+        action,
+      ),
+      enabled: enabled && !!projectId,
+    })),
+  })
+
+  const isLoading = queries.some((query) => query.isLoading)
+  const isFetching = queries.some((query) => query.isFetching)
+  const isError = enabled && queries.some((query) => query.isError)
+  const error = queries.find((query) => query.error)?.error
+  const impactDataKey = queries
+    .map((query) => query.dataUpdatedAt ?? 0)
+    .join(',')
+  const impact = useMemo(() => {
+    if (!enabled || conditionSets.length === 0) return undefined
+    const results = queries
+      .map((query) => query.data as FirewallRuleImpactData | undefined)
+      .filter((data): data is FirewallRuleImpactData => data != null)
+    if (results.length !== conditionSets.length) return undefined
+    return mergeFirewallRuleImpactUnion(results)
+  }, [enabled, conditionSets.length, impactDataKey, queries])
+
+  return {
+    impact,
+    isLoading,
+    isFetching,
+    isError,
+    error,
+    refetch: () => Promise.all(queries.map((query) => query.refetch())),
   }
 }
 

@@ -1,4 +1,9 @@
 import { resetConsoleShellDocumentScroll } from '@/lib/utils'
+import {
+  getPageSurfaceOffsetTop,
+  resetPageSurfaceScroll,
+  scrollPageSurfaceTo,
+} from '@/lib/layout/marketing-document-scroll'
 import { PRICING_DATABASE_ANCHOR_ID } from './dedicated-databases'
 import { comparisonPageSections } from './comparison-sections'
 
@@ -22,8 +27,7 @@ export function resetPricingPageScrollContainers(resetMain = false) {
 
   if (!resetMain) return
 
-  const main = document.getElementById('main-content')
-  if (main) main.scrollTop = 0
+  resetPageSurfaceScroll()
 }
 
 export function scrollToComparisonSection(
@@ -32,21 +36,14 @@ export function scrollToComparisonSection(
 ) {
   if (typeof document === 'undefined') return
 
-  const main = document.getElementById('main-content')
   const el = document.getElementById(sectionId)
-  if (!main || !el) return
+  if (!el) return
 
   resetConsoleShellDocumentScroll()
 
-  const mainRect = main.getBoundingClientRect()
-  const elRect = el.getBoundingClientRect()
   const targetTop =
-    main.scrollTop +
-    elRect.top -
-    mainRect.top -
-    COMPARISON_SECTION_SCROLL_OFFSET_PX
-
-  main.scrollTo({ top: Math.max(0, targetTop), behavior })
+    getPageSurfaceOffsetTop(el) - COMPARISON_SECTION_SCROLL_OFFSET_PX
+  scrollPageSurfaceTo(targetTop, behavior)
 
   if (typeof window !== 'undefined') {
     const nextHash = `#${sectionId}`

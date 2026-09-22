@@ -1,4 +1,4 @@
-import type { Models } from '@appwrite.io/console'
+import type * as AgentModels from '@/lib/appwrite/agent/models'
 
 export type AssistantTurnStatus =
   | 'queued'
@@ -53,7 +53,7 @@ export type TurnView = {
 }
 
 export type AssistantMessageLike = Pick<
-  Models.AgentMessage,
+  AgentModels.AgentMessage,
   | '$id'
   | 'status'
   | 'contentText'
@@ -103,10 +103,12 @@ export function isAssistantMessageInFlight(status?: string | null): boolean {
   )
 }
 
-export function isAssistantConversationInFlight(conversation?: {
-  status?: string | null
-  lockState?: string | null
-} | null): boolean {
+export function isAssistantConversationInFlight(
+  conversation?: {
+    status?: string | null
+    lockState?: string | null
+  } | null,
+): boolean {
   if (!conversation) return false
   const status = conversation.status?.toLowerCase()
   const lockState = conversation.lockState?.toLowerCase()
@@ -121,10 +123,12 @@ export type AssistantConversationStatusTone =
   | 'failed'
   | 'stopped'
 
-export function getAssistantConversationStatusTone(conversation?: {
-  status?: string | null
-  lockState?: string | null
-} | null): AssistantConversationStatusTone {
+export function getAssistantConversationStatusTone(
+  conversation?: {
+    status?: string | null
+    lockState?: string | null
+  } | null,
+): AssistantConversationStatusTone {
   if (!conversation) return 'ready'
   const status = conversation.status?.toLowerCase() ?? ''
   const lockState = conversation.lockState?.toLowerCase() ?? ''
@@ -311,7 +315,7 @@ function findRunningToolKey(
 function applyToolDocument(
   tools: Record<string, TurnToolView>,
   toolOrder: string[],
-  tool: Models.AgentTool | TurnToolView | Record<string, unknown>,
+  tool: AgentModels.AgentTool | TurnToolView | Record<string, unknown>,
 ): void {
   const record = tool as Record<string, unknown>
   const name =
@@ -327,8 +331,7 @@ function applyToolDocument(
         ? record.id
         : undefined
   const agent = typeof record.agent === 'string' ? record.agent : undefined
-  const status =
-    typeof record.status === 'string' ? record.status : 'running'
+  const status = typeof record.status === 'string' ? record.status : 'running'
   const input =
     record.input !== undefined
       ? record.input
@@ -372,7 +375,9 @@ function applyToolDocument(
  */
 export function replayTimeline(
   timeline: TimelineEvent[],
-  seedTools: Array<Models.AgentTool | TurnToolView | Record<string, unknown>> = [],
+  seedTools: Array<
+    AgentModels.AgentTool | TurnToolView | Record<string, unknown>
+  > = [],
   seedRoute?: TurnRoute,
 ): Pick<
   TurnView,
@@ -413,9 +418,10 @@ export function replayTimeline(
       }
       case 'subagent_start': {
         statusLabel = undefined
-        const agent =
-          typeof event.agent === 'string' ? event.agent : 'unknown'
-        const existing = agents.find((entry) => entry.agent === agent && entry.open)
+        const agent = typeof event.agent === 'string' ? event.agent : 'unknown'
+        const existing = agents.find(
+          (entry) => entry.agent === agent && entry.open,
+        )
         if (existing) {
           existing.open = true
         } else {
@@ -424,8 +430,7 @@ export function replayTimeline(
         break
       }
       case 'subagent_end': {
-        const agent =
-          typeof event.agent === 'string' ? event.agent : 'unknown'
+        const agent = typeof event.agent === 'string' ? event.agent : 'unknown'
         const section =
           [...agents].reverse().find((entry) => entry.agent === agent) ??
           agents[agents.length - 1]
@@ -624,7 +629,7 @@ function finalizeTurnDerivedState(
 export function buildTurnView(
   message: AssistantMessageLike,
   extraTools: Array<
-    Models.AgentTool | TurnToolView | Record<string, unknown>
+    AgentModels.AgentTool | TurnToolView | Record<string, unknown>
   > = [],
 ): TurnView {
   const timeline = normalizeTimeline(
@@ -693,10 +698,7 @@ export function getAssistantBubblePhase(input: {
   return 'waiting'
 }
 
-export function toolsForAgent(
-  turn: TurnView,
-  agent?: string,
-): TurnToolView[] {
+export function toolsForAgent(turn: TurnView, agent?: string): TurnToolView[] {
   return turn.toolOrder
     .map((key) => turn.tools[key])
     .filter((tool): tool is TurnToolView => {

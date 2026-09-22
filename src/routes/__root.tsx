@@ -16,6 +16,8 @@ import {
   getRuntimeConfigScript,
 } from '@/lib/runtime-config'
 import { getSsrClientIpScript } from '@/lib/ssr-client-ip'
+import { getSsrVisitorCountryScript } from '@/lib/ssr-visitor-country'
+import { getLocalePrefetchScript } from '@/lib/locale/prefetch-locale'
 
 import type { QueryClient } from '@tanstack/react-query'
 import { useQueryClient } from '@tanstack/react-query'
@@ -39,7 +41,8 @@ import {
   ConsoleRightPane,
   ConsoleRightPaneProvider,
 } from '@/components/global/providers/ConsoleRightPane'
-import { DebugMenu } from '@/components/global/providers/DebugMenu'
+import { DebugDemoNavigatorMount } from '@/components/global/providers/DebugDemoNavigatorMount'
+import { DebugMenuMount } from '@/components/global/providers/DebugMenuMount'
 import { PromoBannerProvider } from '@/components/global/providers/PromoBanner'
 import { CookieConsentProvider } from '@/components/global/providers/CookieConsent'
 import { CommunitySupportPromptProvider } from '@/components/global/providers/CommunitySupportPromptProvider'
@@ -86,6 +89,7 @@ import {
 import { getRequestSiteOrigin } from '@/lib/marketing/site-origin'
 import { getSeoRobotsMetaTags } from '@/lib/seo/indexing'
 import { I18nProvider } from '@/lib/i18n'
+import { isMarketingPage } from '@/lib/marketing/is-marketing-page'
 import { MarketingSiteLayoutGate } from '@/lib/marketing/MarketingSiteLayoutGate'
 import { DevConstructionStripe } from '@/components/global/layout/DevConstructionStripe'
 import { isConsoleRedirectHopPath } from '@/lib/root-guest-redirect'
@@ -412,7 +416,12 @@ function RootAppShell({ children }: { children: React.ReactNode }) {
     <div className="root-container flex w-full min-w-0 flex-col overflow-hidden">
       <DevConstructionStripe />
       <div className="flex min-h-0 min-w-0 flex-1 overflow-hidden">
-        <div className="root-scroll-container h-full min-h-0 flex-1 overflow-hidden">
+        {/* min-w-0: marketing document-scroll mode forces `overflow: visible`
+            here (styles.css), which revives the flex `min-width: auto` floor.
+            Without it any over-wide descendant (promo banners, code blocks)
+            stretches the whole shell past the viewport and the page pans
+            sideways on mobile. */}
+        <div className="root-scroll-container h-full min-h-0 min-w-0 flex-1 overflow-hidden">
           <MarketingSiteLayoutGate>{children}</MarketingSiteLayoutGate>
         </div>
         <ConsoleRightPane />
@@ -423,11 +432,9 @@ function RootAppShell({ children }: { children: React.ReactNode }) {
 
 const STATUS_PAGE_URL = 'https://status.appwrite.online'
 
-function RootDocument({ children }: { children: React.ReactNode }) {
-  const queryClient = useQueryClient()
+function RootFullscreenLoader() {
   const { isLoading, skipStaticLoader } = useInitialLoader()
   const [clientMounted, setClientMounted] = useState(false)
-  const location = useLocation()
   const { isCloud, features } = useConsoleProfile()
   const { account, isFetched } = useAuth()
   const cloudStatusEnabled = isCloud && features.systemStatus
@@ -436,22 +443,12 @@ function RootDocument({ children }: { children: React.ReactNode }) {
   const { data: statusData, isSuccess: isStatusSuccess } =
     useAppwriteCloudStatus(cloudStatusEnabled && showCloudStatusToOperator)
   const { showFullscreenLoader } = useDebugOverrides()
-  useGlobalAnalyticsTracker()
 
   useEffect(() => {
     setClientMounted(true)
-    return installBrowserApi()
   }, [])
 
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    void queryClient
-      .prefetchQuery(consoleProjectScopesQueryOptions())
-      .catch(() => {})
-  }, [queryClient])
-
   const isLoaderVisible = isLoading || showFullscreenLoader
-
   const statusBanner =
     cloudStatusEnabled &&
     showCloudStatusToOperator &&
@@ -472,6 +469,81 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       : undefined
 
   return (
+    <FullscreenLoader
+      isVisible={showFullscreenLoader || (!skipStaticLoader && isLoading)}
+      statusBanner={
+        clientMounted && isLoaderVisible ? statusBanner : undefined
+      }
+    />
+  )
+}
+
+function RootBrowserApi() {
+  useEffect(() => installBrowserApi(), [])
+  return null
+}
+
+function RootAnalyticsTracker() {
+  useGlobalAnalyticsTracker()
+  return null
+}
+
+function RootConsoleScopesPrefetch() {
+  const queryClient = useQueryClient()
+  const pathname = useRouterState({
+    select: (s) => s.resolvedLocation?.pathname ?? s.location.pathname,
+  })
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    if (isMarketingPage({ pathname })) return
+    void queryClient
+      .prefetchQuery(consoleProjectScopesQueryOptions())
+      .catch(() => {})
+  }, [pathname, queryClient])
+
+  return null
+}
+
+function RootUploadProgress() {
+  const pathname = useRouterState({
+    select: (s) => s.resolvedLocation?.pathname ?? s.location.pathname,
+  })
+  if (isProjectRoute(pathname)) return null
+  return <GlobalUploadProgress />
+}
+
+function RootAppProviders({ children }: { children: React.ReactNode }) {
+  const { features } = useConsoleProfile()
+  const shell = (
+    <>
+      <RootAppShell>{children}</RootAppShell>
+      <ClientOnly>
+        <DebugDemoNavigatorMount />
+        <DebugMenuMount />
+      </ClientOnly>
+    </>
+  )
+
+  if (features.agent) {
+    return (
+      <AgentChatProvider>
+        <DocsPreviewProvider>
+          <PromoBannerProvider>{shell}</PromoBannerProvider>
+        </DocsPreviewProvider>
+      </AgentChatProvider>
+    )
+  }
+
+  return (
+    <DocsPreviewProvider>
+      <PromoBannerProvider>{shell}</PromoBannerProvider>
+    </DocsPreviewProvider>
+  )
+}
+
+function RootDocument({ children }: { children: React.ReactNode }) {
+  return (
     <html lang="en" suppressHydrationWarning>
       <head>
         <meta charSet="utf-8" />
@@ -482,6 +554,8 @@ function RootDocument({ children }: { children: React.ReactNode }) {
             Must precede <Scripts /> so module-level config reads see it. */}
         <ScriptOnce>{getRuntimeConfigScript()}</ScriptOnce>
         <ScriptOnce>{getSsrClientIpScript()}</ScriptOnce>
+        <ScriptOnce>{getSsrVisitorCountryScript()}</ScriptOnce>
+        <ScriptOnce>{getLocalePrefetchScript()}</ScriptOnce>
         <ScriptOnce>{THEME_SCRIPT}</ScriptOnce>
         <ScriptOnce>{PRE_LAUNCH_BOOT_SCRIPT}</ScriptOnce>
         {/* Must run before <Scripts /> so entry/main chunk 404s after deploy can
@@ -493,17 +567,11 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         {/* I18n outside ClientThemeProvider so FullscreenLoader is not remounted when
             ThemeProvider attaches after client mount (that remount reset the 1.5s spinner). */}
         <I18nProvider>
-          {/* Branded loader from first paint (isLoading starts true on console routes).
-              Do not force-visible on !clientMounted: remounting RootDocument used to
-              flash this overlay on later navigations. */}
-          <FullscreenLoader
-            isVisible={
-              showFullscreenLoader || (!skipStaticLoader && isLoading)
-            }
-            statusBanner={
-              clientMounted && isLoaderVisible ? statusBanner : undefined
-            }
-          />
+          {/* Isolated so auth / query / loader updates do not re-render the page. */}
+          <RootFullscreenLoader />
+          <RootBrowserApi />
+          <RootAnalyticsTracker />
+          <RootConsoleScopesPrefetch />
           <ClientThemeProvider>
               <PreLaunchRedirect />
               <AnalyticsSessionPropsSync />
@@ -516,29 +584,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
                           <DebugModeProvider>
                             <ScreenshotModeProvider>
                               <ConsoleRightPaneProvider>
-                              {/* Mount when the agent profile feature is on so the
-                                  header agent button never no-ops. */}
-                              {features.agent ? (
-                                <AgentChatProvider>
-                                  <DocsPreviewProvider>
-                                    <PromoBannerProvider>
-                                      <RootAppShell>{children}</RootAppShell>
-                                      <ClientOnly>
-                                        <DebugMenu />
-                                      </ClientOnly>
-                                    </PromoBannerProvider>
-                                  </DocsPreviewProvider>
-                                </AgentChatProvider>
-                              ) : (
-                                <DocsPreviewProvider>
-                                  <PromoBannerProvider>
-                                    <RootAppShell>{children}</RootAppShell>
-                                    <ClientOnly>
-                                      <DebugMenu />
-                                    </ClientOnly>
-                                  </PromoBannerProvider>
-                                </DocsPreviewProvider>
-                              )}
+                              <RootAppProviders>{children}</RootAppProviders>
                               <ClientOnly>
                                 <CommunitySupportPromptProvider />
                               </ClientOnly>
@@ -554,9 +600,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
                         <Toaster />
                       </ClientOnly>
                       <ClientOnly>
-                        {!isProjectRoute(location.pathname) && (
-                          <GlobalUploadProgress />
-                        )}
+                        <RootUploadProgress />
                       </ClientOnly>
                     </RecentResourcesProvider>
                   </NavigationHistoryProvider>

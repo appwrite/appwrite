@@ -1,9 +1,16 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { Card } from '@/components/ui/card'
-import { AppwriteLogo } from '@/components/global/auth/AppwriteLogo'
+import {
+  AuthFlowDescription,
+  AuthFlowNarrowCard,
+  AuthFlowTitle,
+  authFlowMetaClassName,
+  authFlowOAuthNarrowCardContentClassName,
+} from '@/components/global/auth/AuthFlowCard'
+import { AuthFlowHeaderIcon } from '@/components/global/auth/AuthFlowHeaderIcon'
 import { useT } from '@/lib/i18n/translate'
+import { Link2Off, Smartphone, TriangleAlert } from 'lucide-react'
 
 const CREATE_OAUTH2_SESSION_DOCS =
   'https://appwrite.io/docs/references/cloud/client-web/account#createOAuth2Session'
@@ -81,44 +88,50 @@ export function OAuth2RelayCard({
   }, [callbackLink, preview])
 
   const content = (
-    <Card className="overflow-hidden p-6 md:p-8">
+    <AuthFlowNarrowCard
+      contentClassName={authFlowOAuthNarrowCardContentClassName}
+    >
       {project ? (
-        <div className="space-y-2 text-center">
-          <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
-          <p className="text-muted-foreground text-[13px] leading-relaxed">
+        <div className="flex flex-col items-center gap-4 text-center">
+          <AuthFlowHeaderIcon icon={Smartphone} />
+          <div className="space-y-2">
+          <AuthFlowTitle>{title}</AuthFlowTitle>
+          <AuthFlowDescription>
             {t(
               'You will be automatically redirected back to your app shortly.',
             )}
-          </p>
-          <p className="text-muted-foreground text-[13px] leading-relaxed">
+          </AuthFlowDescription>
+          <AuthFlowDescription>
             {t('If you are not redirected, please click on the following')}{' '}
             <a href={callbackLink ?? '#'} className="link-neutral">
               {t('link')}
             </a>
             .
-          </p>
+          </AuthFlowDescription>
+          </div>
         </div>
       ) : oauthError ? (
-        <div className="space-y-2 text-center">
-          <h1 className="text-2xl font-semibold tracking-tight">
-            {t('Login failed')}
-          </h1>
-          <p className="text-muted-foreground text-[13px] leading-relaxed">
+        <div className="flex flex-col items-center gap-4 text-center">
+          <AuthFlowHeaderIcon icon={TriangleAlert} variant="destructive" />
+          <div className="space-y-2">
+          <AuthFlowTitle>{t('Login failed')}</AuthFlowTitle>
+          <AuthFlowDescription>
             {oauthError.message ??
               t('An error occurred during the OAuth login flow.')}
-          </p>
+          </AuthFlowDescription>
           {oauthError.type ? (
-            <p className="text-muted-foreground text-[12px]">
+            <p className={authFlowMetaClassName}>
               {t('Error type:')} {oauthError.type}
             </p>
           ) : null}
+          </div>
         </div>
       ) : (
-        <div className="space-y-2 text-center">
-          <h1 className="text-2xl font-semibold tracking-tight">
-            {t('Missing redirect URL')}
-          </h1>
-          <p className="text-muted-foreground text-[13px] leading-relaxed">
+        <div className="flex flex-col items-center gap-4 text-center">
+          <AuthFlowHeaderIcon icon={Link2Off} variant="destructive" />
+          <div className="space-y-2">
+          <AuthFlowTitle>{t('Missing redirect URL')}</AuthFlowTitle>
+          <AuthFlowDescription>
             {t(
               'Your OAuth login flow is missing a proper redirect URL. Please check the',
             )}{' '}
@@ -131,26 +144,12 @@ export function OAuth2RelayCard({
               {t('OAuth docs')}
             </a>{' '}
             {t('and send request for new session with a valid callback URL.')}
-          </p>
-        </div>
-      )}
-    </Card>
-  )
-
-  if (preview) {
-    return content
-  }
-
-  return (
-    <div className="bg-background relative h-full overflow-y-auto">
-      <div className="flex min-h-full flex-col items-center p-6 md:p-10">
-        <div className="my-auto w-full max-w-xl">
-          {content}
-          <div className="mt-10 flex justify-center md:mt-16">
-            <AppwriteLogo className="h-6 w-auto" />
+          </AuthFlowDescription>
           </div>
         </div>
-      </div>
-    </div>
+      )}
+    </AuthFlowNarrowCard>
   )
+
+  return content
 }

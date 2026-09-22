@@ -74,11 +74,26 @@ export function nativeDatabasePath(
   suffix = '',
 ): string {
   const base = `/projects/${projectId}/databases/${ENGINE[engine].pathKind}/${databaseId}`
-  return suffix ? `${base}${suffix.startsWith('/') ? suffix : `/${suffix}`}` : base
+  return suffix
+    ? `${base}${suffix.startsWith('/') ? suffix : `/${suffix}`}`
+    : base
 }
 
 function nativeSqlEditorMount(page: Page) {
-  return page.locator('.monaco-editor, textarea.inputarea').first()
+  return page.locator('.monaco-editor').first()
+}
+
+/**
+ * Monaco's focusable input. Chromium supports the EditContext API, so Monaco
+ * 0.55 renders a `div.native-edit-context` there instead of the legacy
+ * `textarea.inputarea` it still uses in Firefox and WebKit.
+ */
+function nativeSqlEditorInput(page: Page) {
+  return page
+    .locator(
+      '.monaco-editor .native-edit-context, .monaco-editor textarea.inputarea',
+    )
+    .first()
 }
 
 /** Shell chrome is up; do not sit on "Loading database..." for minutes. */
@@ -118,7 +133,18 @@ export async function waitForNativeSqlEditor(page: Page): Promise<void> {
 
 async function recoverIfNativeServerError(page: Page): Promise<boolean> {
   const heading = page.getByRole('heading', { name: /Server Error|^Error$/ })
-  if (!(await heading.first().isVisible().catch(() => false))) return false
+  if (
+    !(await heading
+      .first()
+      .isVisible()
+      .catch(() => false))
+  )
+    return false
+  const details = await page
+    .locator('h1 + p, .font-mono')
+    .allInnerTexts()
+    .catch(() => [] as string[])
+  console.warn(`[e2e] console error boundary: ${details.join(' | ')}`)
   const tryAgain = page.getByRole('button', { name: 'Try again' })
   if (await tryAgain.isVisible().catch(() => false)) {
     await tryAgain.click()
@@ -141,7 +167,10 @@ export async function createNativeDatabaseViaWizard(
   await enableDatabaseFeatureFlags(page)
   const config = ENGINE[engine]
   const databaseName =
-    `${options?.namePrefix ?? `e2e-${engine}-db`}-${uniqueSuffix()}`.slice(0, 128)
+    `${options?.namePrefix ?? `e2e-${engine}-db`}-${uniqueSuffix()}`.slice(
+      0,
+      128,
+    )
 
   await openCreateDatabaseWizard(page, projectId)
   await selectWizardDatabaseType(page, config.wizardType)
@@ -246,7 +275,10 @@ export async function expectNativeTabRenders(
     )
     await waitForDedicatedDatabaseReady(
       page,
-      Math.min(NATIVE_READY_NAV_TIMEOUT_MS, Math.max(5_000, deadline - Date.now())),
+      Math.min(
+        NATIVE_READY_NAV_TIMEOUT_MS,
+        Math.max(5_000, deadline - Date.now()),
+      ),
     )
     await expect(page.getByText(/Database not found/i)).toHaveCount(0)
     await expect(page.getByText(/trim is not a function/i)).toHaveCount(0)
@@ -273,7 +305,10 @@ export async function expectNativeTabRenders(
     }
   }
 
-  if (lastError) throw lastError
+  throw (
+    lastError ??
+    new Error(`${path} kept showing the console error boundary`)
+  )
 }
 
 /**
@@ -383,10 +418,35 @@ export async function typeNativeSql(page: Page, sql: string): Promise<void> {
   }, sql)
 
   if (!setViaMonaco) {
+    // Insert the text in one shot instead of typing it: per-key typing opens
+    // Monaco's suggest widget, which then swallows keystrokes and leaves
+    // garbled statements such as `SELok` in the editor. Focus Monaco's own
+    // input first so select-all clears the previous statement instead of
+    // selecting the page and leaving two statements in the editor.
     const modifier = process.platform === 'darwin' ? 'Meta' : 'Control'
+    await nativeSqlEditorInput(page).focus()
     await page.keyboard.press(`${modifier}+KeyA`)
     await page.keyboard.press('Backspace')
-    await page.keyboard.type(sql, { delay: 5 })
+    await page.keyboard.insertText(sql)
+
+    // Monaco auto-closes the statement's `(`, leaving a stray `)` past the
+    // caret that the API rejects as a second statement. Delete to end of file.
+    await page.keyboard.press(
+      modifier === 'Meta' ? 'Meta+Shift+ArrowDown' : 'Control+Shift+End',
+    )
+    await page.keyboard.press('Delete')
+    await page.keyboard.press('Escape')
+
+    // Monaco virtualises `.view-lines`; scroll line 1 back into view first.
+    await page.keyboard.press(
+      modifier === 'Meta' ? 'Meta+ArrowUp' : 'Control+Home',
+    )
+
+    const firstLine = sql.trim().split('\n')[0]!.trim()
+    const lines = page.locator('.monaco-editor .view-lines').first()
+    await expect(lines).toContainText(firstLine.slice(0, 24), {
+      timeout: 5_000,
+    })
   }
 
   await page.waitForTimeout(200)
@@ -445,11 +505,8 @@ async function submitNativeDdlForm(
   successToast: string,
   columnName: string,
 ): Promise<void> {
-  // A previous column's toast can outlive the next drawer opening. Wait for
-  // it to leave before submitting so success belongs to this operation.
-  await expect(page.getByText(successToast, { exact: true })).toHaveCount(0, {
-    timeout: 30_000,
-  })
+  // Success belongs to this operation because the matched execution response
+  // carries this column's DDL; a previous column's toast may still be showing.
   await expect(submit).toBeEnabled({ timeout: 15_000 })
   const deadline = Date.now() + 90_000
   let lastError = 'Create did not reach the SQL API'
@@ -526,7 +583,10 @@ export function expectNativeExecutionCell(
   expect(stringifyExecutionValue(value)).toBe(expected)
 }
 
-function isRetriableNativeSqlFailure(status: number, bodyText: string): boolean {
+function isRetriableNativeSqlFailure(
+  status: number,
+  bodyText: string,
+): boolean {
   if (status === 409) {
     return (
       bodyText.includes('provisioning') ||
@@ -637,9 +697,9 @@ export async function expectNativeQueryResult(
   }
 
   await expect(
-    page
-      .locator('thead th')
-      .filter({ hasText: new RegExp(`^${escapeRegExp(options.column)}$`, 'i') }),
+    page.locator('thead th').filter({
+      hasText: new RegExp(`^${escapeRegExp(options.column)}$`, 'i'),
+    }),
   ).toBeVisible()
 
   await expect(
@@ -680,9 +740,11 @@ export async function createNativeTableViaUi(
   await expect(createTableButton).toBeEnabled({ timeout: 60_000 })
   await createTableButton.click()
 
-  await expect(page.getByRole('heading', { name: 'Create table' })).toBeVisible({
-    timeout: 30_000,
-  })
+  await expect(page.getByRole('heading', { name: 'Create table' })).toBeVisible(
+    {
+      timeout: 30_000,
+    },
+  )
   await page.locator('#table-name').fill(tableName)
   await expect(page.locator('[data-fullscreen-loader]')).toHaveCount(0, {
     timeout: 60_000,
@@ -728,9 +790,9 @@ export async function addNativeColumnViaUi(
   await expect(addButton).toBeVisible({ timeout: 30_000 })
   await addButton.click()
 
-  await expect(page.getByRole('heading', { name: 'Create column' })).toBeVisible(
-    { timeout: 15_000 },
-  )
+  await expect(
+    page.getByRole('heading', { name: 'Create column' }),
+  ).toBeVisible({ timeout: 15_000 })
   await selectNativeColumnType(page, engine, options.typeSearch)
   await page.locator('#column-name').fill(options.name)
 
@@ -758,10 +820,9 @@ export async function addNativeColumnViaUi(
     'Column created',
     options.name,
   )
-  await expect(page.getByRole('heading', { name: 'Create column' })).toHaveCount(
-    0,
-    { timeout: 15_000 },
-  )
+  await expect(
+    page.getByRole('heading', { name: 'Create column' }),
+  ).toHaveCount(0, { timeout: 15_000 })
 
   const columnName = page
     .locator('code')
@@ -786,13 +847,17 @@ export async function addNativeIndexViaUi(
     unique?: boolean
   },
 ): Promise<void> {
-  const createButton = page.getByRole('button', { name: 'Create index' }).first()
+  const createButton = page
+    .getByRole('button', { name: 'Create index' })
+    .first()
   await expect(createButton).toBeVisible({ timeout: 30_000 })
   await createButton.click()
 
-  await expect(page.getByRole('heading', { name: 'Create index' })).toBeVisible({
-    timeout: 15_000,
-  })
+  await expect(page.getByRole('heading', { name: 'Create index' })).toBeVisible(
+    {
+      timeout: 15_000,
+    },
+  )
 
   await chooseCommandItem(
     page,
@@ -825,9 +890,9 @@ export async function addNativeIndexViaUi(
       .getByRole('button', { name: 'Create', exact: true }),
   )
   await expectToast(page, 'Index created')
-  await expect(page.getByText(options.name, { exact: true }).first()).toBeVisible(
-    { timeout: 30_000 },
-  )
+  await expect(
+    page.getByText(options.name, { exact: true }).first(),
+  ).toBeVisible({ timeout: 30_000 })
 }
 
 export async function renameNativeDatabase(
@@ -914,7 +979,10 @@ export async function renameNativeDatabase(
     await page.waitForTimeout(3_000)
     await waitForDedicatedDatabaseReady(
       page,
-      Math.min(NATIVE_READY_NAV_TIMEOUT_MS, Math.max(5_000, deadline - Date.now())),
+      Math.min(
+        NATIVE_READY_NAV_TIMEOUT_MS,
+        Math.max(5_000, deadline - Date.now()),
+      ),
       { reload: false },
     )
     await expect(updateButton).toBeEnabled({ timeout: 15_000 })
@@ -956,7 +1024,7 @@ export async function createNativeEnumViaUi(
     .getByRole('button', { name: 'Create', exact: true })
     .click()
   await expectToast(page, 'Enum created')
-  await expect(page.getByText(options.name, { exact: true }).first()).toBeVisible(
-    { timeout: 30_000 },
-  )
+  await expect(
+    page.getByText(options.name, { exact: true }).first(),
+  ).toBeVisible({ timeout: 30_000 })
 }

@@ -349,6 +349,9 @@ export function affiliateUsageQueryOptions(params: AffiliateUsageQueryParams) {
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     placeholderData: keepPreviousData,
+    meta: {
+      skipInitialLoader: true,
+    },
   })
 }
 

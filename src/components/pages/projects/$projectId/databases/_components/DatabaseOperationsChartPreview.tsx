@@ -10,14 +10,9 @@ import {
 } from '@/lib/react-query/hooks'
 import { getStableUsageChartDateRange } from '@/lib/usage/usage-date-range'
 import { sumUsageChartPoints } from '@/lib/usage/database-usage'
-import { DATABASE_CLUSTER_PREVIEW_HEIGHT } from './DatabaseClusterPreview'
 
 const READ_COLOR = 'var(--chart-brand)'
 const WRITE_COLOR = 'var(--chart-2)'
-
-/** Legend row: `pt-2.5` (10) + `h-5` (20). Chart uses the rest of the card body. */
-const LEGEND_HEIGHT_PX = 30
-const CHART_HEIGHT_PX = DATABASE_CLUSTER_PREVIEW_HEIGHT - LEGEND_HEIGHT_PX
 
 type OperationsPoint = {
   index: number
@@ -129,10 +124,7 @@ export function DatabaseOperationsChartPreview({
         className,
       )}
     >
-      <div
-        className="shrink-0 overflow-hidden px-4 pt-2.5"
-        style={{ height: LEGEND_HEIGHT_PX }}
-      >
+      <div className="shrink-0 overflow-hidden px-4 pt-2.5">
         <div className="flex h-5 min-w-0 items-center justify-between gap-3 overflow-hidden whitespace-nowrap">
           <div className="flex min-w-0 items-center gap-3 overflow-hidden">
             <span className="inline-flex min-w-0 items-center gap-1.5 text-[12px] font-medium leading-none text-muted-foreground">
@@ -166,27 +158,16 @@ export function DatabaseOperationsChartPreview({
 
       <div
         className={cn(
-          'relative min-h-0 w-full min-w-0 shrink-0 overflow-hidden',
+          'relative min-h-0 w-full min-w-0 flex-1 overflow-hidden',
           FORCE_LTR_CLASS,
         )}
-        style={{ height: CHART_HEIGHT_PX }}
         role="img"
         aria-label={`${t('Read and write operations')}. ${t('Last 24 hours')}`}
       >
-        <ResponsiveContainer
-          width="100%"
-          height={CHART_HEIGHT_PX}
-          minWidth={0}
-          minHeight={CHART_HEIGHT_PX}
-          debounce={0}
-          initialDimension={{
-            width: 320,
-            height: CHART_HEIGHT_PX,
-          }}
-        >
+        <ResponsiveContainer width="100%" height="100%" minWidth={0}>
           <AreaChart
             data={chartData}
-            margin={{ top: 4, right: 0, left: 0, bottom: 0 }}
+            margin={{ top: 4, right: 0, left: 0, bottom: 4 }}
           >
             <defs>
               <linearGradient

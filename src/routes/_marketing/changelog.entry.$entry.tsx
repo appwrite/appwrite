@@ -1,5 +1,8 @@
 import { createFileRoute, notFound } from '@tanstack/react-router'
-import { MARKETING_PAGE_ROUTE_STATIC_DATA } from '@/lib/marketing/route-static-data'
+import {
+  MARKETING_PAGE_ROUTE_STATIC_DATA,
+  marketingRouteLifetime,
+} from '@/lib/marketing/route-static-data'
 import { ChangelogSeenSync } from '@/components/pages/changelog/ChangelogSeenSync'
 import { DetailView } from '@/components/pages/changelog/DetailView'
 import {
@@ -16,6 +19,7 @@ import { CHANGELOG_RSS_PATH } from '@/lib/seo/rss'
 import { trackServerPageview } from '@/lib/server-analytics'
 
 export const Route = createFileRoute('/_marketing/changelog/entry/$entry')({
+  ...marketingRouteLifetime,
   staticData: MARKETING_PAGE_ROUTE_STATIC_DATA,
   ssr: true,
   server: {

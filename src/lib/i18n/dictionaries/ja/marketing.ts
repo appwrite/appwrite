@@ -405,6 +405,10 @@ export const jaMarketingDictionary: Record<string, string> = {
   'For enterprises that need more power and premium support.': 'より高いパワーとプレミアムサポートが必要なエンタープライズ向け。',
   'For enterprises that need more power, premium support, and advanced security features.': 'より高いパワー、プレミアムサポート、高度なセキュリティ機能が必要なエンタープライズ向け。',
   'For production applications that need powerful functionality and resources to scale.': '強力な機能とスケールに必要なリソースを求める本番アプリケーション向け。',
+  'For production applications that scale with included resources and pay as you go.':
+    '含まれたリソースと従量課金で成長できる本番アプリケーション向け。',
+  'Pay as you go when you exceed included limits':
+    '含まれた上限を超えたら従量課金',
   'Forks': 'フォーク',
   'Founder': '創業者',
   'Founder & CEO': '創業者 & CEO',
@@ -607,6 +611,7 @@ export const jaMarketingDictionary: Record<string, string> = {
   'Open-source alternative to Hacker News.': 'Hacker Newsのオープンソース代替。',
   'Open-source launch': 'オープンソースローンチ',
   'or': 'または',
+  'or Appwrite DBs': 'または Appwrite DBs',
   'Organization members': '組織メンバー',
   'Organization roles': '組織ロール',
   'Original': 'オリジナル',

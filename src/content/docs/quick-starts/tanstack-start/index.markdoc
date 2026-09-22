@@ -26,10 +26,10 @@ Then, under **Add a platform**, add a **Web app**. The **Hostname** should be `l
 {% partial file="note-on-cors.md" /%}
 
 {% only_dark %}
-![Add a platform](/images/docs/quick-starts/dark/add-platform.avif)
+![Add a platform](/images/docs/quick-starts/dark/add-platform-tanstack-start.avif)
 {% /only_dark %}
 {% only_light %}
-![Add a platform](/images/docs/quick-starts/add-platform.avif)
+![Add a platform](/images/docs/quick-starts/add-platform-tanstack-start.avif)
 {% /only_light %}
 
 You can skip optional steps.

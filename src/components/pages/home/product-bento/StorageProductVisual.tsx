@@ -131,7 +131,7 @@ function MockImagePreview() {
         />
       </div>
       <div
-        className="pointer-events-none absolute inset-2 rounded-sm border border-dashed border-primary/0 opacity-0 transition-[opacity,border-color] duration-500 group-hover:border-primary/45 group-hover:opacity-100 motion-reduce:group-hover:opacity-100"
+        className="pointer-events-none absolute inset-2 rounded-sm bg-primary/8 opacity-0 transition-opacity duration-500 group-hover:opacity-100 motion-reduce:group-hover:opacity-100"
         style={{ transitionDelay: '160ms' }}
       />
     </div>

@@ -3,6 +3,7 @@ import { isOptionalAuthPage } from '@/components/global/auth/RequireAuth'
 import { shouldSkipRootAccountProbe } from '@/lib/console-account-get'
 import { kickoffDefaultOrganizationPrefetch } from '@/lib/organization-overview-prefetch'
 import { requiresConsoleEmailVerification } from '@/lib/post-auth-navigation'
+import { hasConsoleImpersonationSessionTarget } from '@/lib/console-impersonation'
 import { ensureConsoleAccountQueryData } from '@/lib/react-query/hooks/auth'
 import { prefetchOptionalAuthHeaderData } from '@/lib/marketing/route-loader'
 import { consoleVariablesQueryOptions } from '@/lib/react-query/hooks/console-variables'
@@ -40,7 +41,8 @@ export const Route = createFileRoute('/_public')({
       if (
         account &&
         location.pathname === '/' &&
-        !requiresConsoleEmailVerification(account)
+        !requiresConsoleEmailVerification(account) &&
+        !hasConsoleImpersonationSessionTarget()
       ) {
         kickoffDefaultOrganizationPrefetch(queryClient, account)
       }

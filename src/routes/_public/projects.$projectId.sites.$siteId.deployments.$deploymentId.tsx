@@ -6,6 +6,7 @@ import {
   deploymentProxyRulesQueryOptions,
 } from '@/lib/react-query/hooks/sites'
 import { projectQueryOptions } from '@/lib/react-query/hooks'
+import { ensureQueryDataIfFound } from '@/lib/react-query/ensure-query-data-if-found'
 export const Route = createFileRoute(
   '/_public/projects/$projectId/sites/$siteId/deployments/$deploymentId',
 )({
@@ -35,9 +36,11 @@ export const Route = createFileRoute(
       queryClient.ensureQueryData(
         deploymentProxyRulesQueryOptions(projectId, siteId, deploymentId),
       ),
-      // Fetch active deployment so it stays in sync when viewing deployment details
+      // Fetch active deployment so it stays in sync when viewing deployment details.
+      // The referenced deployment may have been deleted (404); don't fail the page for it.
       site?.deploymentId
-        ? queryClient.ensureQueryData(
+        ? ensureQueryDataIfFound(
+            queryClient,
             siteDeploymentQueryOptions(projectId, siteId, site.deploymentId),
           )
         : Promise.resolve(),

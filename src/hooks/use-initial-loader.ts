@@ -213,16 +213,16 @@ export function useInitialLoader() {
     if (!shouldShowLoader) {
       // Stay on `/` until the destination route decides. Completing here
       // would hide the console overlay after `/` → org.
-      if (location.pathname !== '/') {
-        if (skipStaticLoader) {
-          completeInitialLoad()
-        } else if (
-          routerStatus === 'idle' &&
-          isFetching === 0 &&
-          isMutating === 0
-        ) {
-          completeInitialLoad()
-        }
+      // Marketing/auth pages must not mark the console initial load complete,
+      // or homepage → console never shows the branded overlay.
+      if (
+        location.pathname !== '/' &&
+        !skipStaticLoader &&
+        routerStatus === 'idle' &&
+        isFetching === 0 &&
+        isMutating === 0
+      ) {
+        completeInitialLoad()
       }
       if (wasLoadingRef.current) {
         setIsLoading(false)
@@ -234,10 +234,10 @@ export function useInitialLoader() {
 
     const currentHasActiveRequests = isFetching > 0 || isMutating > 0
     const isRouterLoading = routerStatus !== 'idle'
-    const shouldShowLoadingState = isRouterLoading || currentHasActiveRequests
 
     const shouldHideLoader =
       !currentHasActiveRequests &&
+      !isRouterLoading &&
       shellGatesReady &&
       wasLoadingRef.current
 
@@ -253,13 +253,15 @@ export function useInitialLoader() {
       }, 20000)
     }
 
-    if (shouldShowLoadingState && !wasLoadingRef.current) {
+    // Arm on first console entry (including soft nav from marketing). useState
+    // only initializes isLoading on mount, so a warm cache must still show the overlay.
+    if (!wasLoadingRef.current) {
       clearHideTimeout()
       setIsLoading(true)
       startTimeRef.current = Date.now()
       wasLoadingRef.current = true
       startMaxTimeout()
-    } else if (wasLoadingRef.current) {
+    } else {
       startMaxTimeout()
     }
 
@@ -280,7 +282,7 @@ export function useInitialLoader() {
           clearMaxTimeout()
         }, remainingTime)
       }
-    } else if (currentHasActiveRequests) {
+    } else if (currentHasActiveRequests || isRouterLoading) {
       clearHideTimeout()
     }
   }, [

@@ -7,17 +7,25 @@ import {
   type AnalyticsActionId,
 } from '@/lib/analytics-actions'
 import { useT } from '@/lib/i18n/translate'
-import { pricingPlans } from '@/lib/pricing/plans'
+import { getVisiblePricingPlans } from '@/lib/pricing/start-plan'
 import type { PlanId, PricingPlan } from '@/lib/pricing/types'
+import { useStartPlanVisibility } from '@/hooks/use-start-plan-visibility'
 import {
   outlineTierButtonClassName,
   pricingGlassSurfaceClassName,
+  getProPlanBadgeLabel,
+  getPricingPlanCardsContainerClassName,
+  getPricingPlanCardsGridClassName,
+  pricingCompactCardsReserveClassName,
+  PricingPlanCardWrapper,
+  PricingPlanCardsShell,
 } from './_components/PricingShared'
 import { PricingSectionHeading } from './_components/PricingSectionHeading'
 import { cn } from '@/lib/utils'
 
 const PRICING_PROMO_CTA_ACTIONS: Record<PlanId, AnalyticsActionId> = {
   free: 'pricing-promo-start-free',
+  start: 'pricing-promo-start-start',
   pro: 'pricing-promo-start-pro',
   enterprise: 'pricing-promo-contact-enterprise',
 }
@@ -26,6 +34,8 @@ function getPlanPromoCtaLabel(planId: PlanId): string {
   switch (planId) {
     case 'free':
       return 'Start for free'
+    case 'start':
+      return 'Get started'
     case 'pro':
       return 'Start on Pro'
     case 'enterprise':
@@ -33,23 +43,37 @@ function getPlanPromoCtaLabel(planId: PlanId): string {
   }
 }
 
-function PricingPromoPlanCard({ plan }: { plan: PricingPlan }) {
+function PricingPromoPlanCard({
+  plan,
+  fourPlanGrid,
+}: {
+  plan: PricingPlan
+  fourPlanGrid: boolean
+}) {
   const t = useT()
   const isPro = plan.id === 'pro'
+  const badgeLabel = isPro ? getProPlanBadgeLabel(fourPlanGrid) : undefined
 
   return (
     <article
       className={cn(
         pricingGlassSurfaceClassName,
-        'flex h-full flex-col p-5 sm:p-6',
-        isPro && 'lg:shadow-md',
+        'flex h-full flex-col',
+        isPro ? 'p-5 shadow-md sm:p-6 lg:p-8' : 'p-5 sm:p-6',
       )}
     >
       <div className="flex flex-wrap items-center gap-2">
-        <h3 className="text-[15px] font-semibold text-foreground">{t(plan.name)}</h3>
-        {plan.popular ? (
+        <h3
+          className={cn(
+            'font-semibold text-foreground',
+            isPro ? 'text-[16px]' : 'text-[15px]',
+          )}
+        >
+          {t(plan.name)}
+        </h3>
+        {badgeLabel ? (
           <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-600 dark:text-emerald-400">
-            {t('Popular')}
+            {t(badgeLabel)}
           </span>
         ) : null}
       </div>
@@ -61,7 +85,7 @@ function PricingPromoPlanCard({ plan }: { plan: PricingPlan }) {
         <span
           className={cn(
             'font-aeonik-pro font-normal leading-none tracking-tight text-foreground',
-            isPro ? 'text-[36px]' : 'text-[32px]',
+            isPro ? 'text-[36px] lg:text-[40px]' : 'text-[32px]',
           )}
         >
           {t(plan.price)}
@@ -93,7 +117,7 @@ function PricingPromoPlanCard({ plan }: { plan: PricingPlan }) {
           ) : plan.internal ? (
             <Link
               to={plan.href}
-              {...(plan.id === 'enterprise' ? {} : { search: { redirect: '/' } })}
+              search={{ redirect: '/' }}
               {...analyticsAttrs(PRICING_PROMO_CTA_ACTIONS[plan.id])}
             >
               {t(getPlanPromoCtaLabel(plan.id))}
@@ -116,10 +140,18 @@ function PricingPromoPlanCard({ plan }: { plan: PricingPlan }) {
 
 export function PricingCtaSection() {
   const t = useT()
+  const { ready, showStartPlan } = useStartPlanVisibility()
+  const plans = getVisiblePricingPlans(showStartPlan)
+
   return (
     <section className="relative overflow-hidden border-t border-border bg-background py-16 sm:py-20">
       <HomeSoftLights variant="testimonials" className="opacity-50" />
-      <div className="relative mx-auto w-full max-w-7xl px-4 sm:px-6">
+      <div
+        className={cn(
+          'relative',
+          getPricingPlanCardsContainerClassName(ready, showStartPlan),
+        )}
+      >
         <PricingSectionHeading
           align="center"
           title={t('Ready to get started?')}
@@ -127,11 +159,27 @@ export function PricingCtaSection() {
           className="max-w-2xl"
         />
 
-        <div className="mt-10 grid gap-4 sm:grid-cols-3 sm:gap-6">
-          {pricingPlans.map((plan) => (
-            <PricingPromoPlanCard key={plan.id} plan={plan} />
-          ))}
-        </div>
+        <PricingPlanCardsShell
+          ready={ready}
+          reserveClassName={pricingCompactCardsReserveClassName}
+          className="mt-10"
+        >
+          <div
+            className={cn(
+              getPricingPlanCardsGridClassName(showStartPlan),
+              'lg:items-stretch lg:py-6',
+            )}
+          >
+            {plans.map((plan) => {
+              const featured = plan.id === 'pro'
+              return (
+                <PricingPlanCardWrapper key={plan.id} featured={featured}>
+                  <PricingPromoPlanCard plan={plan} fourPlanGrid={showStartPlan} />
+                </PricingPlanCardWrapper>
+              )
+            })}
+          </div>
+        </PricingPlanCardsShell>
       </div>
     </section>
   )

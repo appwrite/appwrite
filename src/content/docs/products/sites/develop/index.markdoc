@@ -55,6 +55,185 @@ On Appwrite Cloud, customizing specifications requires the **Pro** plan. See [Co
 
 On Appwrite Cloud, the **build** phase of each deployment must complete within your plan’s **maximum build duration** (for example, 15 minutes on Free and 45 minutes on Pro and Scale). See [Build timeouts](/docs/advanced/billing/compute#build-timeouts) and the [pricing page](/pricing).
 
+# Dynamic API key {% #dynamic-api-key %}
+
+Server code in a site often needs more access than a visitor's session grants, for example to create a user, send an email OTP, or write to a collection no user has permission on. Instead of storing an [API key](/docs/partners/project/api-keys) as an environment variable, Appwrite Sites generates a **dynamic API key** for the site. Appwrite creates it automatically, limits it to the scopes granted to the site, and expires it on its own, so there is no long-lived secret to store or rotate.
+
+Dynamic API keys can only be used inside the site's build and SSR executions. Appwrite provides them in two places:
+
+- **At build time** as the environment variable `APPWRITE_SITE_API_KEY`. Use it in install and build commands that call your project, such as fetching content to prerender.
+- **At run time** as the `x-appwrite-key` request header. Appwrite mints a new key for every request routed to a server-side rendered site, and the key expires shortly after the site's [timeout](#timeouts) elapses. Static sites run no server code, so they receive the key only during the build.
+
+Dynamic API keys act without a session and bypass permissions, so use them only for operations Appwrite cannot authorize on the visitor's behalf. For everything a signed-in visitor does, forward their session as described in [Server-side rendering with Appwrite Auth](/docs/products/auth/server-side-rendering).
+
+## Scopes {% #scopes %}
+
+A site starts with no scopes, so its dynamic API key can call nothing until you grant some. Grant only the scopes your server code needs.
+
+1. In the Appwrite Console, navigate to **Sites** and open the site.
+2. Under the **Settings** tab, navigate to the **Build** section.
+3. In the **Scopes** card, select the scopes to grant the dynamic key and click **Update**.
+
+{% only_dark %}
+![Scopes card in a site's Build settings](/images/docs/sites/dark/site-scopes.avif)
+{% /only_dark %}
+{% only_light %}
+![Scopes card in a site's Build settings](/images/docs/sites/site-scopes.avif)
+{% /only_light %}
+
+Scopes are stored on the site itself, so you can also set them with the `scopes` parameter of the create site and update site endpoints through a [Server SDK](/docs/sdks#server), or with the repeatable `--scopes` flag of `appwrite sites create` and `appwrite sites update` in the [Appwrite CLI](/docs/tooling/command-line/sites). The update site endpoint replaces every setting you omit with its default. Only `scopes` and the Git connection are kept when omitted, so read the site first and pass every existing setting back along with the new scopes.
+
+{% multicode %}
+```server-nodejs
+import { Client, Sites } from 'node-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>'); // requires the sites.write scope
+
+const sites = new Sites(client);
+
+const site = await sites.get({
+    siteId: '<SITE_ID>'
+});
+
+await sites.update({
+    siteId: site.$id,
+    name: site.name,
+    framework: site.framework,
+    enabled: site.enabled ?? undefined,
+    logging: site.logging ?? undefined,
+    timeout: site.timeout ?? undefined,
+    installCommand: site.installCommand ?? undefined,
+    buildCommand: site.buildCommand ?? undefined,
+    startCommand: site.startCommand ?? undefined,
+    outputDirectory: site.outputDirectory ?? undefined,
+    buildRuntime: site.buildRuntime ?? undefined,
+    adapter: site.adapter ?? undefined,
+    fallbackFile: site.fallbackFile ?? undefined,
+    installationId: site.installationId ?? undefined,
+    providerRepositoryId: site.providerRepositoryId ?? undefined,
+    providerBranch: site.providerBranch ?? undefined,
+    providerSilentMode: site.providerSilentMode ?? undefined,
+    providerRootDirectory: site.providerRootDirectory ?? undefined,
+    providerBranches: site.providerBranches ?? undefined,
+    providerPaths: site.providerPaths ?? undefined,
+    buildSpecification: site.buildSpecification ?? undefined,
+    runtimeSpecification: site.runtimeSpecification ?? undefined,
+    deploymentRetention: site.deploymentRetention ?? undefined,
+    scopes: ['users.read', 'users.write', 'sessions.write']
+});
+```
+{% /multicode %}
+
+{% arrow_link href="/docs/partners/project/api-keys#scopes" %}
+Learn more about scopes
+{% /arrow_link %}
+
+## Use the key in SSR code {% #use-the-dynamic-api-key %}
+
+Read the `x-appwrite-key` header on the server and pass it to `setKey`. Create the client per request instead of sharing one, because each key belongs to the request that carried it. The endpoint and project ID come from the `APPWRITE_SITE_API_ENDPOINT` and `APPWRITE_SITE_PROJECT_ID` variables that Appwrite [injects at run time](/docs/products/sites/environment-variables), so nothing has to be configured. Appwrite sets the header on every SSR request, so the examples read it without a fallback.
+
+{% tabs %}
+
+{% tabsitem #sveltekit title="SvelteKit" %}
+```ts
+// src/lib/server/appwrite.ts
+import { env } from '$env/dynamic/private';
+import { Client, Users } from 'node-appwrite';
+
+export function createAdminClient(request: Request) {
+    const key = request.headers.get('x-appwrite-key')!;
+    const client = new Client()
+        .setEndpoint(env.APPWRITE_SITE_API_ENDPOINT)
+        .setProject(env.APPWRITE_SITE_PROJECT_ID)
+        .setKey(key);
+
+    return { users: new Users(client) };
+}
+```
+
+```ts
+// src/routes/+page.server.ts
+import { createAdminClient } from '$lib/server/appwrite';
+
+export const load = async ({ request }) => {
+    const { users } = createAdminClient(request);
+    const { total } = await users.list();
+    return { total };
+};
+```
+{% /tabsitem %}
+
+{% tabsitem #nextjs title="Next.js" %}
+```ts
+// src/lib/server/appwrite.ts
+import { headers } from 'next/headers';
+import { Client, Users } from 'node-appwrite';
+
+export async function createAdminClient() {
+    const key = (await headers()).get('x-appwrite-key')!;
+    const client = new Client()
+        .setEndpoint(process.env.APPWRITE_SITE_API_ENDPOINT!)
+        .setProject(process.env.APPWRITE_SITE_PROJECT_ID!)
+        .setKey(key);
+
+    return { users: new Users(client) };
+}
+```
+
+```tsx
+// src/app/page.tsx
+import { createAdminClient } from '@/lib/server/appwrite';
+
+export default async function Page() {
+    const { users } = await createAdminClient();
+    const { total } = await users.list();
+    return <p>{total} users</p>;
+}
+```
+{% /tabsitem %}
+
+{% tabsitem #nuxt title="Nuxt" %}
+```ts
+// server/api/users.get.ts
+import { Client, Users } from 'node-appwrite';
+
+export default defineEventHandler(async (event) => {
+    const key = getRequestHeader(event, 'x-appwrite-key')!;
+    const client = new Client()
+        .setEndpoint(process.env.APPWRITE_SITE_API_ENDPOINT!)
+        .setProject(process.env.APPWRITE_SITE_PROJECT_ID!)
+        .setKey(key);
+
+    const { total } = await new Users(client).list();
+    return { total };
+});
+```
+{% /tabsitem %}
+
+{% tabsitem #astro title="Astro" %}
+```ts
+// src/pages/api/users.ts
+import type { APIRoute } from 'astro';
+import { Client, Users } from 'node-appwrite';
+
+export const GET: APIRoute = async ({ request }) => {
+    const key = request.headers.get('x-appwrite-key')!;
+    const client = new Client()
+        .setEndpoint(process.env.APPWRITE_SITE_API_ENDPOINT!)
+        .setProject(process.env.APPWRITE_SITE_PROJECT_ID!)
+        .setKey(key);
+
+    const { total } = await new Users(client).list();
+    return Response.json({ total });
+};
+```
+{% /tabsitem %}
+
+{% /tabs %}
+
 # Project dependencies
 
 To install your dependencies before your site is built, you should add the relevant install command to your site’s build settings. Here are the steps to add the install command:

@@ -1,4 +1,3 @@
-import { useLayoutEffect } from 'react'
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import {
   buildAffiliateApiInviteUrl,
@@ -9,37 +8,45 @@ import {
  * Short affiliate invite links on the app domain.
  * Example: https://cloud.appwrite.io/i/Ab12Cd34 → API /v1/affiliates/invite/Ab12Cd34
  *
- * Client-only so `getApiEndpoint()` can use the active endpoint (env or debug
- * override in localStorage), not the SSR-only env value.
+ * Server 302 so crawlers and first visits never wait on JS. The API then
+ * records the click, sets attribution, and continues to signup.
  */
 export const Route = createFileRoute('/i/$linkId')({
-  ssr: false,
-  beforeLoad: ({ params }) => {
-    if (typeof window === 'undefined') return
-
-    const linkId = params.linkId?.trim() ?? ''
-    if (!isValidAffiliateLinkId(linkId)) {
-      throw redirect({ to: '/sign-up', replace: true })
-    }
-
-    // Prefer a hard navigation so the browser follows the API invite redirect
-    // chain (set cookie → signup) against the active endpoint.
-    window.location.replace(buildAffiliateApiInviteUrl(linkId))
+  ssr: true,
+  server: {
+    handlers: {
+      GET: ({ params }) => affiliateInviteRedirectResponse(params.linkId),
+    },
   },
-  component: AffiliateInviteRedirect,
+  beforeLoad: ({ params }) => {
+    throwAffiliateInviteRedirect(params.linkId)
+  },
 })
 
-function AffiliateInviteRedirect() {
-  const { linkId: rawLinkId } = Route.useParams()
+function throwAffiliateInviteRedirect(rawLinkId: string | undefined): never {
+  const linkId = rawLinkId?.trim() ?? ''
+  if (!isValidAffiliateLinkId(linkId)) {
+    throw redirect({ to: '/sign-up', replace: true })
+  }
 
-  useLayoutEffect(() => {
-    const linkId = rawLinkId?.trim() ?? ''
-    if (!isValidAffiliateLinkId(linkId)) {
-      window.location.replace('/sign-up')
-      return
-    }
-    window.location.replace(buildAffiliateApiInviteUrl(linkId))
-  }, [rawLinkId])
+  throw redirect({
+    href: buildAffiliateApiInviteUrl(linkId),
+    statusCode: 302,
+    replace: true,
+  })
+}
 
-  return null
+function affiliateInviteRedirectResponse(rawLinkId: string | undefined) {
+  const linkId = rawLinkId?.trim() ?? ''
+  if (!isValidAffiliateLinkId(linkId)) {
+    return new Response(null, {
+      status: 302,
+      headers: { Location: '/sign-up' },
+    })
+  }
+
+  return new Response(null, {
+    status: 302,
+    headers: { Location: buildAffiliateApiInviteUrl(linkId) },
+  })
 }

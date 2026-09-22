@@ -77,8 +77,6 @@ export const jaCatalog: EnCatalog = {
         enabled: '有効',
         disabled: '無効',
         console: 'コンソール',
-        // Temporary: remove once the old console is retired
-        oldConsole: '旧コンソール',
         home: 'ホーム',
         docs: 'ドキュメント',
         changelog: '変更履歴',

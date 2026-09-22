@@ -39,10 +39,10 @@ Then, under **Add a platform**, add an **Android app**.
 Add your app's **name** and **package name**, your package name is the one entered when creating an Android project. For existing projects, you should use the **applicationId** in your app-level [build.gradle](https://github.com/appwrite/playground-for-android/blob/master/app/build.gradle#L11) file.
 
 {% only_dark %}
-![Add a platform](/images/docs/quick-starts/dark/add-platform.avif)
+![Add a platform](/images/docs/quick-starts/dark/add-platform-android.avif)
 {% /only_dark %}
 {% only_light %}
-![Add a platform](/images/docs/quick-starts/add-platform.avif)
+![Add a platform](/images/docs/quick-starts/add-platform-android.avif)
 {% /only_light %}
 
 You can skip optional steps.

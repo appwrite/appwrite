@@ -9,7 +9,10 @@ export const heDatabasesDictionary: Record<string, string> = {
   '1 backup deleted': 'גיבוי אחד נמחק',
   'About this algorithm': 'על האלגוריתם הזה',
   'Appwrite now speaks PostgreSQL': 'Appwrite מדבר PostgreSQL',
+  'Appwrite Start, a plan built for Indian developers.':
+    'Appwrite Start, תוכנית שנבנתה למפתחים בהודו.',
   'Dismiss banner': 'סגירת באנר',
+  'Namaste India': 'Namaste India',
   'New': 'חדש',
   'PostgreSQL announcement banner': 'באנר הודעה על PostgreSQL',
   'Read more': 'למידע נוסף',

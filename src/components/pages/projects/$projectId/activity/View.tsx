@@ -119,13 +119,17 @@ function ActivityTableCountryCell({
   )
 }
 
+/** Min width keeps columns legible on narrow screens - the table scrolls horizontally instead of squeezing every cell. */
+const ACTIVITY_TABLE_CLASS_NAME = 'w-full min-w-[60rem] table-fixed'
+
 /** Column widths for activity log table - shared by `colgroup` and kept in sync with header labels. */
 function ActivityLogsTableColGroup() {
   return (
     <colgroup>
       <col className="w-[14%]" />
       <col className="w-[12%]" />
-      <col className="w-[10%]" />
+      {/* Fixed so the longest actor badge (PROJECT KEY) fits without spilling into Resource. */}
+      <col className="w-[8.5rem]" />
       <col className="" />
       <col className="w-[12%]" />
       <col className="w-[10%]" />
@@ -249,7 +253,7 @@ function ActivityLogsLoadingTable({ rowCount }: { rowCount: number }) {
       >
         <Table
           withScrollContainer={false}
-          className="table-fixed w-full"
+          className={ACTIVITY_TABLE_CLASS_NAME}
         >
           <ActivityLogsTableColGroup />
           <ActivityLogsTableHead />
@@ -553,6 +557,7 @@ export function View({ projectId, initialData }: ViewProps) {
     isLoading,
     isFetching,
     isPending,
+    error: activitiesError,
     refetch,
   } = useProjectActivities({
     projectId,
@@ -578,7 +583,10 @@ export function View({ projectId, initialData }: ViewProps) {
   const hasMore =
     useLoaderList && initialData ? initialData.hasMore : hasMoreFromHook
   const showListLoading =
-    events.length === 0 && (isLoading || isFetching || isPending)
+    events.length === 0 &&
+    !activitiesError &&
+    (isLoading || isFetching || isPending)
+  const showListError = events.length === 0 && !!activitiesError
 
   const activityListFetchingCount = useIsFetching({
     queryKey: ['activities', 'project', projectId],
@@ -908,7 +916,7 @@ export function View({ projectId, initialData }: ViewProps) {
           title={t('Activity')}
           showFilters
           filterTrigger={
-            <div className="flex shrink-0 items-center gap-2">
+            <div className="flex min-w-0 items-center gap-2">
               <FiltersPopover
                 open={filtersOpen}
                 onOpenChange={setFiltersOpen}
@@ -942,7 +950,7 @@ export function View({ projectId, initialData }: ViewProps) {
               <DateRangePicker
                 dateRange={dateRangeForPicker}
                 onDateRangeChange={handleDateRangeChange}
-                className="h-9 min-w-[200px]"
+                className="h-9 min-w-0 shrink @[640px]:min-w-[200px]"
                 popoverContentAlign="start"
                 retentionHours={
                   hasFiniteActivityLogRetention(organizationPlan)
@@ -957,6 +965,7 @@ export function View({ projectId, initialData }: ViewProps) {
               <TooltipTrigger asChild>
                 <button
                   type="button"
+                  aria-label={`${t('Retention')} ${t(activityLogRetentionLabel)}`}
                   className={cn(
                     'inline-flex max-w-[10.5rem] shrink-0 items-center gap-1.5 rounded-md px-1.5 py-1 text-start sm:max-w-[13rem]',
                     'border border-transparent text-muted-foreground',
@@ -966,7 +975,7 @@ export function View({ projectId, initialData }: ViewProps) {
                 >
                   <Clock className="h-3.5 w-3.5 shrink-0 text-blue-600 dark:text-blue-400" />
                   <span className="min-w-0 truncate text-[11px] leading-tight">
-                    <span className="text-muted-foreground">
+                    <span className="hidden text-muted-foreground @[560px]:inline">
                       {t('Retention')}{' '}
                     </span>
                     <span className="font-medium text-foreground">
@@ -1065,12 +1074,33 @@ export function View({ projectId, initialData }: ViewProps) {
 
         {showListLoading ? (
           <ActivityLogsLoadingTable rowCount={pageSize} />
+        ) : showListError ? (
+          <EmptyState
+            icon={AlertCircle}
+            title={t('Failed to load activity')}
+            description={t(
+              "We couldn't retrieve activity logs. This might be a temporary issue. Please try again.",
+            )}
+            isEmpty={true}
+            variant="centered"
+            action={
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  void refetch()
+                }}
+              >
+                {t('Try again')}
+              </Button>
+            }
+          />
         ) : events.length > 0 ? (
           <>
             <div className="min-h-0 flex-1 overflow-auto">
               <Table
                 withScrollContainer={false}
-                className="table-fixed w-full"
+                className={ACTIVITY_TABLE_CLASS_NAME}
               >
                 <ActivityLogsTableColGroup />
                 <ActivityLogsTableHead />
@@ -1198,7 +1228,7 @@ export function View({ projectId, initialData }: ViewProps) {
                           return (
                             <span
                               className={cn(
-                                'inline-block rounded px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider',
+                                'inline-block max-w-full truncate rounded px-1.5 py-0.5 align-middle text-[10px] font-medium uppercase tracking-wider',
                                 badge.tone,
                               )}
                             >

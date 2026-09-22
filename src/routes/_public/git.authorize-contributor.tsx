@@ -13,11 +13,13 @@ function accountDisplayLabel(account: unknown): string {
   return user.email || user.name || ''
 }
 
+// Search parsing turns numeric values such as a pull request number into
+// numbers, so coerce them back to the strings the view expects.
 const authorizeContributorSearchSchema = z.object({
-  projectId: z.string().optional(),
-  installationId: z.string().optional(),
-  repositoryId: z.string().optional(),
-  providerPullRequestId: z.string().optional(),
+  projectId: z.coerce.string().optional(),
+  installationId: z.coerce.string().optional(),
+  repositoryId: z.coerce.string().optional(),
+  providerPullRequestId: z.coerce.string().optional(),
 })
 
 export const Route = createFileRoute('/_public/git/authorize-contributor')({

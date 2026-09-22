@@ -67,8 +67,6 @@ export const enCatalog = {
         enabled: 'Enabled',
         disabled: 'Disabled',
         console: 'Console',
-        // Temporary: remove once the old console is retired
-        oldConsole: 'Old console',
         home: 'Home',
         docs: 'Docs',
         changelog: 'Changelog',

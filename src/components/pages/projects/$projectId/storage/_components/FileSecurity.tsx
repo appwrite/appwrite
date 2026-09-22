@@ -847,6 +847,8 @@ export function FileSecurity({
                         'mt-1.5',
                         createTokenExpiryInvalid && 'border-destructive',
                       )}
+                      timeZoneMode="preferred"
+                      showTimeZoneInTrigger
                     />
                     {createTokenExpiryInvalid && (
                       <p className="text-[12px] text-destructive mt-1">

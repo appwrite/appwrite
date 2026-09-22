@@ -1,29 +1,26 @@
 import { Mail } from 'lucide-react'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
-import { productBentoContainer, productBentoIdle } from './MockSyntax'
+import { productBentoBrand, productBentoContainer, productBentoIdle, productBentoLightAngle, productBentoLightStyle, productBentoSoftFillHover } from './MockSyntax'
 
 const OAUTH_PROVIDERS = [
   {
     id: 'google',
     label: 'Google',
     icon: '/icons/google.svg',
-    hoverClass:
-      'group-hover:border-blue-500/35 group-hover:bg-blue-500/[0.06] motion-reduce:group-hover:border-border motion-reduce:group-hover:bg-background',
+    color: productBentoBrand.mint,
   },
   {
     id: 'github',
     label: 'GitHub',
     icon: '/icons/github.svg',
-    hoverClass:
-      'group-hover:border-foreground/25 group-hover:bg-foreground/[0.04] motion-reduce:group-hover:border-border motion-reduce:group-hover:bg-background',
+    color: productBentoBrand.purple,
   },
   {
     id: 'apple',
     label: 'Apple',
     icon: '/icons/apple.svg',
-    hoverClass:
-      'group-hover:border-foreground/30 group-hover:bg-foreground/[0.05] motion-reduce:group-hover:border-border motion-reduce:group-hover:bg-background',
+    color: productBentoBrand.orange,
   },
 ] as const
 
@@ -78,13 +75,17 @@ function OAuthButton({
   return (
     <div
       className={cn(
-        'flex items-center justify-center gap-1.5 rounded-md border border-border bg-background px-2 py-1.5 text-[12px] transition-[border-color,background-color,transform,box-shadow,color] duration-300',
+        'flex items-center justify-center gap-1.5 rounded-md border border-border bg-background px-2 py-1.5 text-[12px] transition-[transform,box-shadow,color] duration-300',
         productBentoIdle.text,
-        provider.hoverClass,
+        productBentoSoftFillHover,
         highlighted &&
-          'group-hover:animate-[product-bento-oauth-highlight_0.45s_ease-out_both] motion-reduce:group-hover:animate-none',
+          'product-bento-pink-cta group-hover:animate-[product-bento-oauth-highlight_0.45s_ease-out_both] motion-reduce:group-hover:animate-none',
       )}
-      style={highlighted ? { animationDelay: `${80 + index * 90}ms` } : undefined}
+      style={productBentoLightStyle(
+        provider.color,
+        productBentoLightAngle(index),
+        highlighted ? { animationDelay: `${80 + index * 90}ms` } : undefined,
+      )}
     >
       <img src={provider.icon} alt="" className={cn('size-3.5 shrink-0', productBentoIdle.providerIcon)} aria-hidden />
       <span className="truncate">{provider.label}</span>
@@ -96,7 +97,7 @@ export function AuthProductVisual() {
   const t = useT()
   return (
     <div className="absolute inset-0 flex flex-col">
-      <div className="relative mx-auto flex h-full min-h-0 w-full max-w-[20rem] flex-col">
+      <div className="relative flex h-full min-h-0 w-full flex-col">
         <div className={cn('flex min-h-0 flex-1 flex-col', productBentoContainer.shell)}>
           <div className={cn(productBentoContainer.header, 'px-3 py-2')}>
             <div className="flex items-center gap-1.5">
@@ -142,10 +143,12 @@ export function AuthProductVisual() {
             </div>
 
             <div
-              className="flex items-center justify-center gap-1.5 rounded-md border border-border bg-muted/30 px-2 py-1.5 text-[12px] font-medium text-muted-foreground transition-[border-color,background-color,color] duration-300 group-hover:border-[color-mix(in_srgb,var(--brand-cta)_35%,var(--border))] group-hover:bg-[color-mix(in_srgb,var(--brand-cta)_12%,var(--background))] group-hover:text-foreground motion-reduce:group-hover:border-border motion-reduce:group-hover:bg-muted/30 motion-reduce:group-hover:text-muted-foreground"
-              style={{ transitionDelay: '480ms' }}
+              className={cn(
+                'flex items-center justify-center gap-1.5 rounded-md px-2 py-1.5 text-[12px] font-medium',
+                productBentoIdle.pinkButton,
+              )}
             >
-              <Mail className={cn('size-3.5 shrink-0', productBentoIdle.brandIcon)} aria-hidden />
+              <Mail className="size-3.5 shrink-0" aria-hidden />
               <span>{t('Send magic link')}</span>
             </div>
           </div>

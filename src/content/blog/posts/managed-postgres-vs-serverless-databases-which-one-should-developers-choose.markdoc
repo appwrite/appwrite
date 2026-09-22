@@ -1,0 +1,129 @@
+---
+layout: post
+title: "Dedicated Postgres vs. serverless databases: Which one should developers choose?"
+description: Compare dedicated Postgres and serverless databases across scaling, pricing, performance, and when to choose each for your app.
+date: 2026-09-13
+cover: /images/blog/managed-postgres-vs-serverless-databases-which-one-should-developers-choose/cover.avif
+timeToRead: 5
+author: atharva
+category: comparisons
+featured: false
+unlisted: true
+faqs:
+  - question: Is a serverless database cheaper than dedicated Postgres?
+    answer: A serverless database is usually cheaper for low-traffic, spiky, or unpredictable workloads because you pay based on usage. Dedicated Postgres can be cheaper for steady, high-volume workloads because the provisioned capacity is used consistently.
+  - question: Do serverless databases have cold starts?
+    answer: Some serverless databases can have cold starts when compute scales to zero and needs to resume. This can add latency to the first query after an idle period, so it matters for latency-sensitive applications.
+  - question: Is serverless Postgres the same as dedicated Postgres?
+    answer: No. Serverless Postgres is managed by the provider but automatically scales compute based on demand. Dedicated Postgres uses provisioned database capacity that remains available regardless of traffic.
+  - question: Is dedicated Postgres better than a serverless database?
+    answer: Dedicated Postgres is better for steady workloads, predictable traffic, low-latency applications, and teams that need dedicated, predictable database capacity. A serverless database is better for spiky, unpredictable, or low-traffic workloads where automatic scaling and usage-based pricing matter more.
+---
+Choosing between dedicated Postgres and a serverless database usually comes down to how predictable your workload is. If your traffic is steady, dedicated capacity gives you more predictable performance and costs. If traffic changes dramatically throughout the day, serverless can take care of scaling without you having to plan capacity in advance.
+
+Neither model is inherently better. The right choice depends on how your application behaves, how much control you need, and how you want to pay for infrastructure. This guide breaks down those trade-offs across scaling, pricing, performance, and operations.
+
+# What is a dedicated Postgres database?
+
+**A dedicated Postgres database gives your application dedicated database capacity that is provisioned for you rather than dynamically scaled per request.** The database can still be hosted and maintained by a cloud provider, which handles tasks such as backups, patching, replication, and failover, while you control the provisioned capacity and configuration.
+
+Services like [Appwrite native PostgreSQL](/blog/post/appwrite-now-speaks-postgresql), [Amazon RDS for PostgreSQL](https://aws.amazon.com/rds/postgresql/), [Google Cloud SQL](https://cloud.google.com/sql), and Azure Database for PostgreSQL are common examples.
+
+With Appwrite, you choose a compute specification and get direct access to a managed PostgreSQL engine, while Appwrite handles the underlying infrastructure. In each case, you get provisioned database capacity that remains available continuously.
+
+The model is predictable. You know exactly how much compute you have, connection pooling behaves the way you expect, and there are no cold starts. The trade-off is that you provision for peak load, so capacity can sit idle during quiet periods while you continue paying for the provisioned capacity.
+
+# What is a serverless database?
+
+**A serverless database separates storage from compute and scales that compute automatically based on demand, often down to zero when idle, and bills you for actual usage rather than reserved capacity.** You do not choose an instance size. The platform adds and removes resources for you as queries arrive.
+
+[Amazon Aurora Serverless](https://aws.amazon.com/rds/aurora/serverless/) and [Neon](https://neon.tech/) are well-known Postgres-compatible examples. If you are new to the broader model, our guide on [what serverless means](/blog/post/what-is-serverless-an-expert-guide-for-developers) covers the fundamentals of event-driven, pay-per-use infrastructure.
+
+The appeal is that you stop thinking about capacity. Traffic doubles overnight and the database scales without a manual resize. Traffic drops to nothing and your bill follows. The trade-off is less direct control and, in some implementations, a cold start when the compute layer has scaled to zero and needs to spin back up.
+
+# Dedicated Postgres vs. serverless databases: The key differences
+
+Both options can run identical SQL. The differences live in how they scale, how they charge, how they perform under load, and how much operational work they push back to you.
+
+## Scaling
+
+**Dedicated Postgres scales vertically and manually.** When you outgrow your provisioned capacity, you resize it, which can require a maintenance window or a brief failover to a larger machine. You can add read replicas to spread read traffic, but write scaling and sharding take real engineering effort.
+
+**Serverless databases scale automatically and elastically.** The compute layer expands to absorb bursts and contracts when demand falls, with no manual resize. This is the single biggest reason teams reach for serverless: unpredictable workloads stop being a capacity-planning problem.
+
+If your load is steady and well understood, manual scaling is rarely a burden. If it swings wildly or you genuinely cannot predict it, automatic scaling earns its keep.
+
+## Pricing
+
+**Dedicated Postgres bills for provisioned capacity.** You pay for the provisioned capacity around the clock, so a database sized for peak traffic costs the same at 3 a.m. as it does during your busiest hour. For steady, high-utilisation workloads this can be the cheaper model because you are not paying a premium for elasticity.
+
+**Serverless databases bill for actual usage,** typically some combination of compute units consumed, storage, and data transfer. For spiky or low-average traffic this can be dramatically cheaper, since idle time costs little or nothing. For sustained high traffic, usage-based pricing can end up more expensive than a right-sized dedicated database.
+
+From a budgeting perspective, managed cloud databases are typically treated as **Operating Expenditure (OpEx)**, while **Capital Expenditure (CapEx)** is more relevant when you purchase and operate your own database infrastructure.
+
+The honest summary: serverless wins on variable and bursty workloads, while dedicated Postgres wins on steady, predictable ones. Model your real traffic before assuming either is cheaper.
+
+## Performance and cold starts
+
+**Dedicated Postgres delivers consistent, predictable latency** because the database is always running and warm. There is no spin-up penalty, which matters for latency-sensitive applications where every request must be fast.
+
+**Serverless databases can introduce cold starts.** When compute has scaled to zero, the first query after an idle period waits for the layer to resume, adding latency to that request. Providers have narrowed this gap considerably, and many keep a warm floor available, but it remains a real consideration for workloads that cannot tolerate an occasional slow first request.
+
+Connection handling also differs. Traditional Postgres has a finite connection limit, and serverless application layers that open many short-lived connections can exhaust it. Serverless databases usually build in pooling to handle this, whereas with dedicated Postgres you may need to add a pooler like PgBouncer yourself.
+
+## Operational overhead
+
+**Dedicated Postgres uses provisioned capacity that you scale deliberately.** You can scale vertically by moving to a larger compute specification, or horizontally by adding read replicas, sharding, or distributing workloads across multiple instances.
+
+**Serverless databases automate much of that scaling.** Depending on the implementation, the platform may scale vertically, horizontally, or use a combination of both as demand changes. The key difference is that those scaling decisions are handled automatically rather than requiring you to resize capacity yourself.
+
+# Dedicated Postgres vs. serverless databases at a glance
+
+| Aspect      | Dedicated Postgres                              | Serverless database                          |
+| ----------- | ----------------------------------------------- | -------------------------------------------- |
+| Scaling     | Provisioned capacity, scaled manually           | Automatic, elastic, often to zero            |
+| Pricing     | Provisioned capacity, billed continuously        | Usage-based, pay for what runs               |
+| Latency     | Consistent, always warm                         | Fast when warm, cold starts possible         |
+| Connections | You manage pooling                              | Pooling usually built in                     |
+| Operations  | Provider handles maintenance, you plan capacity | Platform handles scaling too                 |
+| Best for    | Steady, predictable, high-utilisation workloads | Spiky, unpredictable, or low-average traffic |
+
+# When should you choose dedicated Postgres?
+
+Pick dedicated Postgres when your workload is steady and your access patterns are well understood. If your database runs at consistent utilisation most of the day, provisioned pricing is usually cheaper and latency is predictable.
+
+It is also the stronger choice when you need dedicated, predictable capacity and fine-grained control over the database environment, such as specific extensions, custom configuration, or a particular connection-pooling setup. And if you are latency-sensitive enough that an occasional cold start would hurt user experience, an always-warm database removes that risk entirely.
+
+In short, dedicated Postgres rewards predictability. When you can size for your load and keep utilisation high, you get a proven engine with predictable capacity and performance.
+
+# When should you choose a serverless database?
+
+Pick a serverless database when your traffic is spiky, seasonal, or genuinely unpredictable. Development and staging environments, side projects, and early-stage products with uneven usage all benefit from scale-to-zero, because you stop paying for a database that mostly sits idle.
+
+It also fits teams that want to avoid capacity planning altogether. If you would rather not think about instance sizes and resize windows, letting the platform scale compute automatically frees up real engineering time.
+
+Just weigh the trade-offs honestly. If you know your workload will grow into steady, high-volume traffic, run the numbers, because usage-based pricing can cross over and become more expensive than a right-sized dedicated database at scale.
+
+# Where Appwrite fits in
+
+Appwrite gives you both a native PostgreSQL database and its API-first Appwrite Databases, depending on how you want to work with your data.
+
+[Appwrite native PostgreSQL](/blog/post/appwrite-now-speaks-postgresql) gives you a managed PostgreSQL instance with direct access to the database engine. You can connect with `psql`, use ORMs such as Prisma and Drizzle, run your own migrations, and install extensions like PostGIS and pgvector without an Appwrite-specific abstraction between your application and PostgreSQL.
+
+Appwrite handles the operational work around the database, including backups, point-in-time recovery, scaling, connection pooling, high availability, and network security, while you keep control of the PostgreSQL engine and the tools you already use.
+
+[Appwrite Databases](/docs/products/databases) takes a different approach. TablesDB, DocumentsDB, and VectorsDB are accessed through Appwrite APIs and SDKs, with permissions, queries, and realtime capabilities built in. If you want direct SQL access and the PostgreSQL ecosystem, native PostgreSQL is the better fit. If you want those backend capabilities integrated into the platform, Appwrite Databases gives you that abstraction.
+
+# Getting started with Appwrite Postgres
+
+You can provision a native PostgreSQL database directly from the Appwrite Console by choosing the compute specification that fits your workload. Appwrite provisions the database in your project's region and gives you the hostname, credentials, and TLS configuration you need to connect.
+
+[Get started with native PostgreSQL on Appwrite](/blog/post/appwrite-now-speaks-postgresql).
+
+# Resources
+
+* [Appwrite Databases documentation](/docs/products/databases)
+* [What is serverless? An expert guide for developers](/blog/post/what-is-serverless-an-expert-guide-for-developers)
+* [SQL vs NoSQL: Choosing the right database for your project](/blog/post/sql-vs-nosql)
+* [Integrate SQL, NoSQL, Vector, Graph, or any database into your Appwrite project](/blog/post/integrate-sql-nosql-vector-graph-or-any-database-into-your-appwrite-project)
+* [Join the Appwrite Discord](https://appwrite.io/discord)

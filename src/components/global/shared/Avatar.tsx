@@ -62,6 +62,8 @@ const sizePixels: Record<AvatarSize, number> = {
   lg: 80,
 }
 
+const loadedPhotoSrcs = new Set<string>()
+
 function getInitials(name?: string): string {
   if (!name) return '?'
 
@@ -126,7 +128,6 @@ export function PhotoAvatar({
   className,
 }: PhotoAvatarProps) {
   const [failed, setFailed] = useState(false)
-  const [loaded, setLoaded] = useState(false)
   const [screenshotModeEpoch, setScreenshotModeEpoch] = useState(0)
   const trimmedUserId = userId?.trim() || ''
   const pixels = sizePixels[size]
@@ -164,17 +165,21 @@ export function PhotoAvatar({
     return null
   }, [pixels, trimmedUserId, useCurrentUser, isCurrentUser, screenshotModeEpoch])
 
+  const [loaded, setLoaded] = useState(() =>
+    src ? loadedPhotoSrcs.has(src) : false,
+  )
   const [activeSrc, setActiveSrc] = useState(src)
   const imageRef = useRef<HTMLImageElement | null>(null)
   if (src !== activeSrc) {
     setActiveSrc(src)
     setFailed(false)
-    setLoaded(false)
+    setLoaded(src ? loadedPhotoSrcs.has(src) : false)
   }
 
   useEffect(() => {
     const image = imageRef.current
-    if (image?.complete && image.naturalWidth > 0) {
+    if (image?.complete && image.naturalWidth > 0 && src) {
+      loadedPhotoSrcs.add(src)
       setLoaded(true)
     }
   }, [src])
@@ -204,7 +209,10 @@ export function PhotoAvatar({
         height={pixels}
         decoding="async"
         onLoad={(event) => {
-          if (event.currentTarget.naturalWidth > 0) setLoaded(true)
+          if (event.currentTarget.naturalWidth > 0) {
+            loadedPhotoSrcs.add(src)
+            setLoaded(true)
+          }
         }}
         onError={() => setFailed(true)}
         className={cn(

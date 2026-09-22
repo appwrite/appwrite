@@ -4,6 +4,7 @@ import { markdocToMarkdown } from '@/lib/seo/markdoc-to-markdown'
 import {
   BLOG_CATEGORY_SPOTLIGHT_POST_COUNT,
   BLOG_FEATURED_SLUG_ORDER,
+  BLOG_INDEX_SPOTLIGHT_EXCLUDED_SLUGS,
   BLOG_POSTS_PER_PAGE,
   BLOG_SECONDARY_FEATURED_COUNT,
   BLOG_SECONDARY_LATEST_COUNT,
@@ -198,6 +199,12 @@ export function getPublicBlogPosts(): BlogPostMeta[] {
   return BLOG_POSTS.filter(isPublicPost)
 }
 
+// Unlisted posts stay out of the index, categories, search, and sitemap,
+// but remain visible on their author's profile.
+function getNonDraftBlogPosts(): BlogPostMeta[] {
+  return BLOG_POSTS.filter((post) => !post.draft)
+}
+
 /** Draft posts, newest first. Only surfaced when the blogDrafts flag is on. */
 export function getDraftBlogPosts(): BlogPostMeta[] {
   return BLOG_POSTS.filter((post) => post.draft)
@@ -309,7 +316,7 @@ export function postMatchesAuthor(post: BlogPostMeta, authorSlug: string): boole
 }
 
 export function getPostsForAuthor(authorSlug: string): BlogPostMeta[] {
-  return getPublicBlogPosts().filter((post) => postMatchesAuthor(post, authorSlug))
+  return getNonDraftBlogPosts().filter((post) => postMatchesAuthor(post, authorSlug))
 }
 
 export function getPostsForCategory(categorySlug: string): BlogPostMeta[] {
@@ -366,10 +373,13 @@ function buildBlogIndexSpotlights(posts: BlogPostMeta[]): {
   categorySpotlights: BlogCategorySpotlight[]
   excludedSlugs: Set<string>
 } {
+  const spotlightPosts = posts.filter(
+    (post) => !BLOG_INDEX_SPOTLIGHT_EXCLUDED_SLUGS.has(post.slug),
+  )
   const featuredRank = new Map<string, number>(
     BLOG_FEATURED_SLUG_ORDER.map((slug, index) => [slug, index]),
   )
-  const featuredPosts = posts
+  const featuredPosts = spotlightPosts
     .filter((post) => post.featured)
     .sort((a, b) => {
       const aRank = featuredRank.get(a.slug) ?? Number.MAX_SAFE_INTEGER
@@ -390,7 +400,7 @@ function buildBlogIndexSpotlights(posts: BlogPostMeta[]): {
   }
 
   if (secondaryFeatured.length < BLOG_SECONDARY_FEATURED_COUNT) {
-    const fillers = posts
+    const fillers = spotlightPosts
       .filter((post) => !excludedSlugs.has(post.slug))
       .slice(0, BLOG_SECONDARY_FEATURED_COUNT - secondaryFeatured.length)
 
@@ -400,7 +410,7 @@ function buildBlogIndexSpotlights(posts: BlogPostMeta[]): {
     }
   }
 
-  const latestSecondary = posts
+  const latestSecondary = spotlightPosts
     .filter((post) => !excludedSlugs.has(post.slug))
     .slice(0, BLOG_SECONDARY_LATEST_COUNT)
 
@@ -417,6 +427,7 @@ function buildBlogIndexSpotlights(posts: BlogPostMeta[]): {
 
     const categoryPosts = getPostsForCategory(slug)
       .filter((post) => !excludedSlugs.has(post.slug))
+      .filter((post) => !BLOG_INDEX_SPOTLIGHT_EXCLUDED_SLUGS.has(post.slug))
       .slice(0, BLOG_CATEGORY_SPOTLIGHT_POST_COUNT)
 
     if (categoryPosts.length === 0) continue
@@ -446,17 +457,27 @@ export function getBlogPostsPage(options: {
   const categoryQuery = options.category ? normalizeCategory(options.category) : ''
 
   let posts = getPublicBlogPosts()
-  const showSpotlights = currentPage === 1 && !searchQuery && !categoryQuery
+  const isDefaultIndex = !searchQuery && !categoryQuery
+  const showSpotlights = currentPage === 1 && isDefaultIndex
 
   let featured: BlogPostMeta | null = null
   let secondaryFeatured: BlogPostMeta[] = []
   let categorySpotlights: BlogCategorySpotlight[] = []
+  let featuredListSlugs = new Set<string>()
 
-  if (showSpotlights) {
+  if (isDefaultIndex) {
     const spotlights = buildBlogIndexSpotlights(posts)
-    featured = spotlights.featured
-    secondaryFeatured = spotlights.secondaryFeatured
-    categorySpotlights = spotlights.categorySpotlights
+    if (spotlights.featured) {
+      featuredListSlugs.add(spotlights.featured.slug)
+    }
+    for (const post of spotlights.secondaryFeatured) {
+      featuredListSlugs.add(post.slug)
+    }
+    if (showSpotlights) {
+      featured = spotlights.featured
+      secondaryFeatured = spotlights.secondaryFeatured
+      categorySpotlights = spotlights.categorySpotlights
+    }
   }
 
   if (searchQuery || categoryQuery) {
@@ -469,9 +490,11 @@ export function getBlogPostsPage(options: {
     })
   }
 
-  // "All articles" is the full archive: posts already shown in the hero,
-  // secondary featured row, or a category spotlight still list here.
-  const listPosts = posts
+  // Keep hero and secondary featured posts out of "All articles" so they
+  // are not listed twice on the index. Search and category views stay complete.
+  const listPosts = isDefaultIndex
+    ? posts.filter((post) => !featuredListSlugs.has(post.slug))
+    : posts
 
   const totalPages = Math.max(1, Math.ceil(listPosts.length / BLOG_POSTS_PER_PAGE))
   const safePage = Math.min(currentPage, totalPages)

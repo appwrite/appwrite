@@ -37,6 +37,37 @@ export function docsHrefToRoute(href: string) {
     }
   }
 
+  if (pathname === '/docs/partners' || pathname === '/docs/partners/') {
+    return {
+      to: '/docs/partners/' as const,
+      params: undefined,
+      hash: hashValue,
+    }
+  }
+
+  const referencePath = pathname.match(
+    /^\/docs\/references\/([^/]+)\/([^/]+)\/([^/]+)\/?$/,
+  )
+  if (referencePath) {
+    const [, version, platformOrModels, serviceOrModel] = referencePath
+    if (platformOrModels === 'models') {
+      return {
+        to: '/docs/references/$version/models/$model' as const,
+        params: { version, model: serviceOrModel },
+        hash: hashValue,
+      }
+    }
+    return {
+      to: '/docs/references/$version/$platform/$service' as const,
+      params: {
+        version,
+        platform: platformOrModels,
+        service: serviceOrModel,
+      },
+      hash: hashValue,
+    }
+  }
+
   if (pathname.startsWith('/docs/')) {
     return {
       to: '/docs/$' as const,

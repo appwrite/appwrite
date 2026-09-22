@@ -19,14 +19,19 @@ import {
 import type { Models } from '@appwrite.io/console'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
+import {
+  AuthFlowDescription,
+  AuthFlowNarrowCard,
+  AuthFlowTitle,
+  authFlowOAuthNarrowCardContentClassName,
+} from '@/components/global/auth/AuthFlowCard'
 import { Checkbox } from '@/components/ui/checkbox'
 import { cn } from '@/lib/utils'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { sdk } from '@/lib/appwrite/sdk'
 import { useT } from '@/lib/i18n/translate'
 import { OAuth2AppAvatar } from '@/components/global/auth/OAuth2AppAvatar'
-import { AuthAccountChip } from '@/components/global/auth/AuthAccountChip'
+import { authFlowShellFooterRowClassName } from '@/components/global/auth/AuthFlowShell'
 import {
   buildConsentPermissions,
   buildTierEditorRows,
@@ -65,14 +70,10 @@ export type OAuth2Outcome = 'approved' | 'denied'
 interface OAuth2ConsentCardProps {
   grant: Models.Oauth2Grant
   app: Models.App
-  /** Email/name of the signed-in account, shown so the user knows who they are. */
-  accountLabel?: string
   /** 'authorization' redirects back to the client; 'device' shows a done state. */
   flow: OAuth2Flow
   /** Called when the flow completes without a browser-navigating web redirect. */
   onDone?: (outcome: OAuth2Outcome, redirectUrl?: string) => void
-  /** When provided, the account chip becomes a menu with "Use a different account". */
-  onSwitchAccount?: () => void | Promise<void>
   switchingAccount?: boolean
   accountSwitchError?: string | null
   /** Debug preview: skip approve/reject API calls and invoke onDone instead. */
@@ -90,16 +91,18 @@ function hostnameOf(uri: string): string | null {
 export function OAuth2ConsentCard({
   grant,
   app,
-  accountLabel,
   flow,
   onDone,
-  onSwitchAccount,
   switchingAccount = false,
   accountSwitchError,
   preview = false,
 }: OAuth2ConsentCardProps) {
   const t = useT()
   const [error, setError] = useState<string | null>(null)
+  // Set once the browser has been handed a web redirect. The consent page
+  // stays on screen until the client's first byte arrives, which on a cold
+  // start can take a while: the buttons stay disabled for that whole stretch.
+  const [redirecting, setRedirecting] = useState(false)
   const [showPermissions, setShowPermissions] = useState(true)
   const [permissionGroupOpen, setPermissionGroupOpen] = useState<
     Record<string, boolean>
@@ -181,8 +184,6 @@ export function OAuth2ConsentCard({
     projectScopesRequested && projectIdentifiers.length > 0
   const organizationRequested =
     organizationScopesRequested && organizationIdentifiers.length > 0
-
-  const redirectHost = hostnameOf(grant.redirectUri)
 
   // Reset the selection to exactly what the client requested whenever the grant
   // changes, so a stale selection can't leak across requests.
@@ -402,8 +403,10 @@ export function OAuth2ConsentCard({
         onDone?.('approved', result.redirectUrl)
         return
       }
+      const web = isWebRedirect(result.redirectUrl)
+      setRedirecting(web)
       window.location.assign(result.redirectUrl)
-      if (!isWebRedirect(result.redirectUrl)) {
+      if (!web) {
         onDone?.('approved', result.redirectUrl)
       }
     },
@@ -434,8 +437,10 @@ export function OAuth2ConsentCard({
         onDone?.('denied', result.redirectUrl)
         return
       }
+      const web = isWebRedirect(result.redirectUrl)
+      setRedirecting(web)
       window.location.assign(result.redirectUrl)
-      if (!isWebRedirect(result.redirectUrl)) {
+      if (!web) {
         onDone?.('denied', result.redirectUrl)
       }
     },
@@ -446,8 +451,21 @@ export function OAuth2ConsentCard({
     },
   })
 
+  // A back navigation restores this page from the bfcache with `redirecting`
+  // still set; the user must be able to act again.
+  useEffect(() => {
+    const restore = (event: PageTransitionEvent) => {
+      if (event.persisted) setRedirecting(false)
+    }
+    window.addEventListener('pageshow', restore)
+    return () => window.removeEventListener('pageshow', restore)
+  }, [])
+
   const isBusy =
-    switchingAccount || approveMutation.isPending || rejectMutation.isPending
+    switchingAccount ||
+    approveMutation.isPending ||
+    rejectMutation.isPending ||
+    redirecting
 
   const editorGroup = (
     tierKey: 'project' | 'organization',
@@ -586,26 +604,19 @@ export function OAuth2ConsentCard({
   }
 
   return (
-    <Card className="overflow-hidden p-6 md:p-8">
-      <div className="space-y-6">
-        <div className="flex flex-col items-center gap-4 text-center">
-          <OAuth2AppAvatar app={app} />
+    <>
+      <AuthFlowNarrowCard
+        contentClassName={authFlowOAuthNarrowCardContentClassName}
+      >
+        <div className="space-y-6">
+          <div className="flex flex-col items-center gap-4 text-center">
+            <OAuth2AppAvatar app={app} />
           <div className="space-y-1">
-            <h1 className="text-2xl font-semibold tracking-tight">
+            <AuthFlowTitle>
               {t('Authorize')} {app.name}
-            </h1>
-            <p className="text-muted-foreground text-[13px] leading-relaxed">
-              {summary}
-            </p>
+            </AuthFlowTitle>
+            <AuthFlowDescription>{summary}</AuthFlowDescription>
           </div>
-
-          {accountLabel ? (
-            <AuthAccountChip
-              accountLabel={accountLabel}
-              onSwitchAccount={onSwitchAccount}
-              disabled={isBusy}
-            />
-          ) : null}
         </div>
 
         {accountSwitchError ? (
@@ -902,45 +913,65 @@ export function OAuth2ConsentCard({
             {t('Cancel')}
           </Button>
         </div>
-
-        <p className="text-muted-foreground flex flex-wrap items-center justify-center gap-x-1.5 gap-y-1 text-center text-[12px]">
-          <span className="inline-flex items-center gap-1">
-            <Lock className="size-3.5" />
-            {flow === 'authorization' && redirectHost
-              ? `${t("You'll be returned to")} ${redirectHost}`
-              : flow === 'device'
-                ? t('After authorizing, return to your device')
-                : t('You can revoke access anytime')}
-          </span>
-          {app.privacyPolicyUrl ? (
-            <>
-              <span aria-hidden>·</span>
-              <a
-                href={app.privacyPolicyUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="link-neutral"
-              >
-                {t('Privacy')}
-              </a>
-            </>
-          ) : null}
-          {app.termsUrl ? (
-            <>
-              <span aria-hidden>·</span>
-              <a
-                href={app.termsUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="link-neutral"
-              >
-                {t('Terms')}
-              </a>
-            </>
-          ) : null}
-        </p>
+        </div>
+      </AuthFlowNarrowCard>
+      <div className={authFlowShellFooterRowClassName}>
+        <OAuth2ConsentShellFooter grant={grant} app={app} flow={flow} />
       </div>
-    </Card>
+    </>
+  )
+}
+
+/** Shell footer below the consent card (redirect notice, app privacy/terms links). */
+export function OAuth2ConsentShellFooter({
+  grant,
+  app,
+  flow,
+}: {
+  grant: Models.Oauth2Grant
+  app: Models.App
+  flow: OAuth2Flow
+}) {
+  const t = useT()
+  const redirectHost = hostnameOf(grant.redirectUri)
+
+  return (
+    <>
+      <span className="inline-flex items-center gap-1">
+        <Lock className="size-3.5 shrink-0" aria-hidden />
+        {flow === 'authorization' && redirectHost
+          ? `${t("You'll be returned to")} ${redirectHost}`
+          : flow === 'device'
+            ? t('After authorizing, return to your device')
+            : t('You can revoke access anytime')}
+      </span>
+      {app.termsUrl ? (
+        <>
+          <span aria-hidden>·</span>
+          <a
+            href={app.termsUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="link-neutral"
+          >
+            {t('Terms of Service')}
+          </a>
+        </>
+      ) : null}
+      {app.privacyPolicyUrl ? (
+        <>
+          <span aria-hidden>·</span>
+          <a
+            href={app.privacyPolicyUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="link-neutral"
+          >
+            {t('Privacy Policy')}
+          </a>
+        </>
+      ) : null}
+    </>
   )
 }
 

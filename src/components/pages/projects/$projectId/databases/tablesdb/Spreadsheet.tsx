@@ -1,5 +1,6 @@
 // Table spreadsheet UI (rows, columns, indexes, security, settings) for this database product.
 import { cn } from '@/lib/utils'
+import { resolveRowSaveTarget } from '@/lib/database-row-save'
 import {
   applyColumnResizeRailPosition,
   horizontalResizeDeltaPx,
@@ -244,7 +245,12 @@ import {
   DATABASE_ROW_FIELD_INLINE_COUNTER_PADDING,
   DATABASE_ROW_TEXTAREA_CLASS,
 } from '@/components/pages/projects/$projectId/databases/_components/DatabaseArrayItemTextField'
-import { isSpreadsheetRtlText } from '@/lib/spreadsheet-cell-formatting'
+import {
+  createInstantCellFormatter,
+  isSpreadsheetRtlText,
+} from '@/lib/spreadsheet-cell-formatting'
+import { useDisplayTimeZone } from '@/lib/timezones'
+import { DisplayTimeZoneBadge } from '@/components/global/shared/DisplayTimeZoneBadge'
 import {
   Select,
   SelectContent,
@@ -1441,9 +1447,12 @@ function RowEditDrawer({
   }
 
   const handleSave = () => {
-    // For create mode, pass customRowId if set, otherwise pass null to use auto-generated
-    // For update mode, pass the existing row ID
-    const idToSave = isCreateMode ? customRowId || null : row?.$id || null
+    // A non-null rowId means "update"; create mode sends its custom ID separately.
+    const { rowId: idToSave, customId: customIdToSave } = resolveRowSaveTarget({
+      isCreateMode,
+      existingRowId: row?.$id,
+      customRowId,
+    })
     // Always pass permissions when updating (even if empty, to allow clearing permissions)
     // For create mode, only pass if permissions are set
     const permissionsToSave = isCreateMode
@@ -1586,7 +1595,7 @@ function RowEditDrawer({
     ) {
       payload['$updatedAt'] = now
     }
-    onSave(idToSave, payload, customRowId, permissionsToSave)
+    onSave(idToSave, payload, customIdToSave, permissionsToSave)
     // Don't close drawer here - wait for mutation to complete
   }
 
@@ -2346,6 +2355,7 @@ function RowEditDrawer({
                                                     clearable={!isRequired}
                                                     placeholder={`Item ${index + 1}`}
                                                     className="h-9 rounded-none border-0 bg-transparent px-3 text-[13px] hover:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                                                    timeZoneMode="preferred"
                                                   />
                                                 ) : (
                                                   <DatabaseArrayItemTextField
@@ -2439,6 +2449,8 @@ function RowEditDrawer({
                                     ? t('Select date & time')
                                     : 'NULL'
                                 }
+                                timeZoneMode="preferred"
+                                showTimeZoneInTrigger
                               />
                             ) : fieldType === 'email' ? (
                               <Input
@@ -3000,6 +3012,11 @@ export function RowsSpreadsheet({
   rowsListSelectAttrKeys,
 }: SpreadsheetProps) {
   const t = useT()
+  const { timeZone: displayTimeZone } = useDisplayTimeZone()
+  const formatInstantCell = useMemo(
+    () => createInstantCellFormatter(displayTimeZone),
+    [displayTimeZone],
+  )
   const dbLabels = getLocalizedDatabaseConsoleLabels(t, DB_KIND)
   const params = useParams({
     strict: false,
@@ -4564,8 +4581,12 @@ export function RowsSpreadsheet({
       | undefined,
     columnInfo?: unknown,
   ) => {
-    if ((columnInfo as { type?: string } | undefined)?.type === 'relationship') {
+    const columnType = (columnInfo as { type?: string } | undefined)?.type
+    if (columnType === 'relationship') {
       return formatRelationshipCellValue(value, columnInfo)
+    }
+    if (columnType === 'datetime') {
+      return formatInstantCell(value)
     }
     if (value === null || value === undefined)
       return { full: 'null', display: 'null', isNull: true }
@@ -4605,18 +4626,7 @@ export function RowsSpreadsheet({
     value: string | null | undefined,
   ): { full: string; display: string; isNull: boolean } => {
     if (!value) return { full: 'null', display: 'N/A', isNull: true }
-    const d = new Date(value)
-    if (Number.isNaN(d.getTime())) {
-      return { full: value, display: value, isNull: false }
-    }
-    return {
-      full: value,
-      display: d.toLocaleString(undefined, {
-        dateStyle: 'short',
-        timeStyle: 'short',
-      }),
-      isNull: false,
-    }
+    return formatInstantCell(value)
   }
 
   // Detect RTL content
@@ -5270,6 +5280,7 @@ export function RowsSpreadsheet({
                             />
                           )}
                         </button>
+                        <DisplayTimeZoneBadge />
                         <button
                           type="button"
                           onClick={() => handleSortColumn(gridKey)}
@@ -5349,6 +5360,9 @@ export function RowsSpreadsheet({
                           />
                         )}
                       </button>
+                      {columnType === 'datetime' ? (
+                        <DisplayTimeZoneBadge />
+                      ) : null}
                       <span className="min-w-0 flex-1 shrink" aria-hidden />
                       {isEncryptedColumn ? (
                         <Tooltip>

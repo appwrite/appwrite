@@ -7,6 +7,7 @@ import {
   organizationQueryOptions,
   organizationPlanQueryOptions,
   organizationBillingAggregationQueryOptions,
+  organizationEstimationQueryOptions,
   organizationCreditsQueryOptions,
   paymentMethodsQueryOptions,
   billingAddressesQueryOptions,
@@ -53,6 +54,14 @@ export const Route = createFileRoute(
       // Don't block on optional data
     })
 
+    // Same: the summary renders without the estimate and fills it in when it lands, so
+    // awaiting it here would only delay navigation.
+    queryClient
+      .prefetchQuery(organizationEstimationQueryOptions(orgId))
+      .catch(() => {
+        // Don't block on optional data
+      })
+
     // Fetch critical data before rendering to prevent layout shifts
     const [orgData] = await Promise.all([
       queryClient.ensureQueryData(organizationQueryOptions(orgId)),
@@ -70,28 +79,24 @@ export const Route = createFileRoute(
             ),
           ]
         : []),
-      queryClient.ensureQueryData(organizationCreditsQueryOptions(orgId, 0, 1)),
       queryClient.ensureQueryData(
         organizationCreditsQueryOptions(orgId, 0, CREDITS_PER_PAGE),
       ),
       queryClient.ensureQueryData(paymentMethodsQueryOptions()),
       queryClient.ensureQueryData(billingAddressesQueryOptions()),
+      ...(orgData?.billingAggregationId
+        ? [
+            queryClient.ensureQueryData(
+              organizationBillingAggregationQueryOptions(
+                orgId,
+                orgData.billingAggregationId,
+                DEFAULT_BILLING_PROJECTS_LIMIT,
+                0,
+              ),
+            ),
+          ]
+        : []),
     ])
-
-    // Usage/aggregation is non-critical: PlanSummary shows its own skeleton while
-    // this loads, so a slow usage API must not block the rest of billing.
-    if (orgData?.billingAggregationId) {
-      void queryClient
-        .prefetchQuery(
-          organizationBillingAggregationQueryOptions(
-            orgId,
-            orgData.billingAggregationId,
-            DEFAULT_BILLING_PROJECTS_LIMIT,
-            0,
-          ),
-        )
-        .catch(() => undefined)
-    }
 
     const optionalPrefetches = []
     if (orgData?.paymentMethodId) {

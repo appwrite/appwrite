@@ -10,9 +10,13 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { type Invoice } from '@/lib/utils/mock-data'
 import { formatCurrency, formatDate } from './utils'
-import { getInvoiceStatusBadgeVariant } from '@/lib/utils/status-badge'
+import {
+  getInvoiceStatusBadgeVariant,
+  mapInvoiceApiStatus,
+} from '@/lib/utils/status-badge'
 import {
   useOrganizationInvoices,
+  organizationBillingInvoicePresenceQueryOptions,
 } from '@/lib/react-query/hooks'
 import { useParams } from '@tanstack/react-router'
 import { useQueryClient } from '@tanstack/react-query'
@@ -30,38 +34,7 @@ const ITEMS_PER_PAGE = 5
  * Map API Invoice model to component Invoice interface.
  */
 function mapApiInvoiceToComponent(apiInvoice: Models.Invoice): Invoice {
-  // API statuses: succeeded, pending, due, requires_authentication, failed,
-  // cancelled. 'paid' and 'requires_action' are accepted aliases from older
-  // responses / Stripe naming. 'overdue' is not returned by the API but is
-  // kept as a valid component status for UI-derived overdue rendering.
-  let status: Invoice['status']
-  const apiStatus = apiInvoice.status?.toLowerCase() || ''
-  switch (apiStatus) {
-    case 'succeeded':
-    case 'paid':
-      status = 'paid'
-      break
-    case 'requires_authentication':
-    case 'requires_action':
-      status = 'requires_authentication'
-      break
-    case 'failed':
-      status = 'failed'
-      break
-    case 'cancelled':
-      status = 'cancelled'
-      break
-    case 'due':
-      status = 'due'
-      break
-    case 'overdue':
-      status = 'overdue'
-      break
-    case 'pending':
-    default:
-      status = 'pending'
-      break
-  }
+  const status = mapInvoiceApiStatus(apiInvoice.status)
 
   const idToUse = apiInvoice.aggregationId || apiInvoice.$id
   const invoiceNumber = `INV-${idToUse.slice(-8).toUpperCase()}`
@@ -121,6 +94,10 @@ export function PaymentHistory() {
         })
         await queryClient.invalidateQueries({
           queryKey: ['organization', orgId],
+        })
+        await queryClient.invalidateQueries({
+          queryKey:
+            organizationBillingInvoicePresenceQueryOptions(orgId).queryKey,
         })
       }
     } catch (error) {
@@ -237,7 +214,10 @@ export function PaymentHistory() {
 
   return (
     <>
-    <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+    <div
+      id="payment-history"
+      className="scroll-mt-24 rounded-xl border border-border bg-card/50 overflow-hidden"
+    >
       <div className="px-6 py-4 flex items-center justify-between">
         <h3 className="text-[15px] font-semibold text-foreground">
           {t('Payment history')}
@@ -469,7 +449,9 @@ function InvoiceRow({
         >
           {invoice.status === 'requires_authentication'
             ? t('Action required')
-            : invoice.status}
+            : invoice.status === 'abandoned'
+              ? t('Abandoned')
+              : invoice.status}
         </Badge>
       </td>
       <td className="px-6 py-3 text-end">

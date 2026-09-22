@@ -16,6 +16,7 @@ import {
   PRE_LAUNCH_DEBUG_STORAGE_KEY,
   syncPreLaunchCookie,
 } from '@/lib/pre-launch'
+import { syncMockLocaleCountryCookie } from '@/lib/locale/visitor-country'
 
 const DEBUG_OVERRIDE_EVENT = 'debugOverridesChange'
 
@@ -45,6 +46,8 @@ export const DEBUG_OVERRIDE_KEYS = {
   pageDirection: 'debug:pageDirection',
   /** App copy language preference used by the i18n provider. */
   language: 'debug:language',
+  /** Mock ISO 3166-1 alpha-2 country for locale.get() consumers (Start plan, etc.). */
+  mockLocaleCountry: 'debug:mockLocaleCountry',
   /** Pre-launch lock: only Init (and sign-in) is reachable. Default on. */
   preLaunch: PRE_LAUNCH_DEBUG_STORAGE_KEY,
 } as const
@@ -119,6 +122,11 @@ export type DebugOverrides = {
   /** App language preference from debug menu. */
   language: DebugLanguageOverride
   /**
+   * Mock visitor country (ISO 3166-1 alpha-2) for locale.get() consumers.
+   * Null uses the live Appwrite locale country.
+   */
+  mockLocaleCountry: string | null
+  /**
    * When true, only `/init` is public; `/` redirects there and other pages are
    * locked. Sign-in stays open and returns to `/init`. Default on.
    */
@@ -184,6 +192,16 @@ function readNullableInitTicketTypeFromStorage(key: string): InitTicketTypeId | 
   const raw = storage.getItem(key)
   if (raw === null || raw === 'auto') return null
   return isInitTicketTypeId(raw) ? raw : null
+}
+
+function readNullableCountryCodeFromStorage(key: string): string | null {
+  const storage = getStorage()
+  if (!storage) return null
+  const raw = storage.getItem(key)
+  if (raw === null || raw === 'auto') return null
+  const normalized = raw.trim().toUpperCase()
+  if (!/^[A-Z]{2}$/.test(normalized)) return null
+  return normalized
 }
 
 const USER_OS_OVERRIDE_VALUES = ['auto', ...USER_OS_VALUES] as const
@@ -282,6 +300,9 @@ export function loadDebugOverrides(): DebugOverrides {
       ['en', 'he', 'ja'] as const,
       'en',
     ),
+    mockLocaleCountry: readNullableCountryCodeFromStorage(
+      DEBUG_OVERRIDE_KEYS.mockLocaleCountry,
+    ),
     preLaunch: readBooleanFromStorage(
       DEBUG_OVERRIDE_KEYS.preLaunch,
       getPreLaunchDefault(),
@@ -291,6 +312,9 @@ export function loadDebugOverrides(): DebugOverrides {
   const storedPreLaunch = storage?.getItem(DEBUG_OVERRIDE_KEYS.preLaunch)
   if (storedPreLaunch === 'true' || storedPreLaunch === 'false') {
     syncPreLaunchCookie(storedPreLaunch === 'true')
+  }
+  if (typeof window !== 'undefined') {
+    syncMockLocaleCountryCookie(overrides.mockLocaleCountry)
   }
   return overrides
 }
@@ -316,8 +340,14 @@ export function setDebugOverride<K extends keyof DebugOverrides>(
     }
   } else if (typeof value === 'string') {
     storage.setItem(storageKey, value)
+    if (key === 'mockLocaleCountry') {
+      syncMockLocaleCountryCookie(value)
+    }
   } else if (value === null) {
     storage.removeItem(storageKey)
+    if (key === 'mockLocaleCountry') {
+      syncMockLocaleCountryCookie(null)
+    }
   } else if (typeof value === 'number') {
     storage.setItem(storageKey, String(value))
   } else if (value) {
@@ -338,6 +368,7 @@ export function resetDebugOverrides() {
     storage.removeItem(key)
   })
   syncPreLaunchCookie(null)
+  syncMockLocaleCountryCookie(null)
   window.dispatchEvent(new CustomEvent(DEBUG_OVERRIDE_EVENT))
 }
 
@@ -454,6 +485,7 @@ export function getDefaultDebugOverrides(): DebugOverrides {
     previewCommunitySupportWizard: false,
     pageDirection: 'ltr',
     language: 'en',
+    mockLocaleCountry: null,
     preLaunch: getPreLaunchDefault(),
   }
 }

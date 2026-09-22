@@ -54,7 +54,13 @@ export const docsMarkdocConfig: Config = {
     },
     call_to_action: {
       render: 'CallToAction',
-      attributes: { href: { type: String }, title: { type: String } },
+      attributes: {
+        href: { type: String },
+        url: { type: String },
+        title: { type: String },
+        cta: { type: String },
+        description: { type: String },
+      },
     },
     blockquote: { render: 'Blockquote' },
     icon: {

@@ -41,18 +41,28 @@ export function hasLikelyConsoleSession(): boolean {
 }
 
 /**
- * Skip `account.get` on `/` only for localhost guests (no cookieFallback).
+ * Skip `account.get` on `/` only for localhost guests we already resolved.
  * Production session cookies are HttpOnly, so {@link hasLikelyConsoleSession}
  * is false even when signed in. Those visits stay on `/` and always probe.
+ *
+ * Local HttpOnly sessions match production (probe once). Skip only when the
+ * singleton already holds a guest 401 so repeat `/` visits avoid extra calls.
  */
 export function shouldSkipRootAccountProbe(): boolean {
   if (typeof window === 'undefined') return true
   if (hasLikelyConsoleSession()) return false
+
+  let isLocalHost = false
   try {
-    return isLocalDevelopmentHost(window.location.hostname)
+    isLocalHost = isLocalDevelopmentHost(window.location.hostname)
   } catch {
     return false
   }
+  if (!isLocalHost) return false
+
+  const revision = getConsoleAccountQueryRevision()
+  if (getConsoleAccountSync(revision)) return false
+  return Boolean(getConsoleAccountUnauthenticatedError(revision))
 }
 
 /** Called once from `sdk.ts` so every `account.get` shares the same singleton. */
@@ -104,9 +114,10 @@ export async function fetchConsoleAccount(
     if (cached) return cached
 
     const cachedUnauthenticated = getConsoleAccountUnauthenticatedError(revision)
-    // Do not replay a guest 401 just because document.cookie is empty.
-    // Production `a_session_console` is HttpOnly.
-    if (cachedUnauthenticated && shouldSkipRootAccountProbe()) {
+    // First probe still runs when nothing is cached (HttpOnly session cookies
+    // are invisible to JS). After a guest 401, replay it. Sign-in and
+    // impersonation pass `force: true`.
+    if (cachedUnauthenticated) {
       throw cachedUnauthenticated
     }
   } else {

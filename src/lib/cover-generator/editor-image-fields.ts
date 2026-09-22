@@ -179,6 +179,7 @@ export function getCoverGeneratorImageFieldKeys(
     case 'title-icon':
       return ['icon']
     case 'screenshot':
+    case 'screenshot-two-line':
     case 'screenshot-side':
     case 'screenshot-angled':
       return ['screenshot']

@@ -3,8 +3,7 @@ import { useMutation } from '@tanstack/react-query'
 import { createFileRoute, useSearch } from '@tanstack/react-router'
 import { z } from 'zod'
 import { Recovery } from '@/components/global/auth/Recovery'
-import { AppwriteLogo } from '@/components/global/auth/AppwriteLogo'
-import { MarketingSiteLink } from '@/components/global/shared/MarketingSiteLink'
+import { AuthFlowShell } from '@/components/global/auth/AuthFlowShell'
 import { toast } from 'sonner'
 import { sdk } from '@/lib/appwrite/sdk'
 import { AppwriteException } from '@appwrite.io/console'
@@ -58,31 +57,13 @@ function RecoveryPage() {
   })
 
   return (
-    <div className="bg-background relative h-full overflow-y-auto">
-      <div className="flex min-h-full flex-col items-center p-6 md:p-10">
-        <div className="my-auto w-full max-w-sm md:max-w-4xl">
-          <Recovery
-            onSubmit={(data) => recoveryMutation.mutate(data)}
-            isLoading={recoveryMutation.isPending}
-            isSuccess={isSuccess}
-            initialEmail={search.email}
-          />
-          <p className="mt-6 text-center text-xs text-muted-foreground">
-            {t('By clicking continue, you agree to our')}{' '}
-            <MarketingSiteLink className="link-neutral" href="/terms">
-              {t('Terms of Service')}
-            </MarketingSiteLink>{' '}
-            {t('and')}{' '}
-            <MarketingSiteLink className="link-neutral" href="/privacy">
-              {t('Privacy Policy')}
-            </MarketingSiteLink>
-            .
-          </p>
-          <div className="mt-10 md:mt-16 flex justify-center">
-            <AppwriteLogo className="h-6 w-auto" />
-          </div>
-        </div>
-      </div>
-    </div>
+    <AuthFlowShell width="illustration">
+      <Recovery
+        onSubmit={(data) => recoveryMutation.mutate(data)}
+        isLoading={recoveryMutation.isPending}
+        isSuccess={isSuccess}
+        initialEmail={search.email}
+      />
+    </AuthFlowShell>
   )
 }

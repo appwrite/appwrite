@@ -33,6 +33,10 @@ export type FirewallRateLimitKey =
 
 export const FIREWALL_RATE_LIMIT_KEY_DEFAULT: FirewallRateLimitKey = 'ip'
 
+/** Rate-limit window length bounds, in seconds (Console allows 1s to 24h). */
+export const FIREWALL_RATE_LIMIT_INTERVAL_MIN = 1
+export const FIREWALL_RATE_LIMIT_INTERVAL_MAX = 86400
+
 /** Rate-limiting algorithms a rate-limit rule can use. */
 export const FIREWALL_RATE_LIMIT_STRATEGIES = [
   { value: 'fixedWindow', label: 'Fixed window' },

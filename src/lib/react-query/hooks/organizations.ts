@@ -25,6 +25,7 @@ import { sdk } from '@/lib/appwrite/sdk'
 import { confirmPayment } from '@/lib/utils/stripe'
 import { resolveStripeProviderMethodId } from '@/lib/billing/addons'
 import { fetchConsoleAccount } from '@/lib/console-account-get'
+import { getConsoleAccountQueryRevision } from '@/lib/console-impersonation'
 import {
   hasProjectSpecificRoles,
   projectIdsFromRoles,
@@ -42,7 +43,7 @@ const ESTIMATION_STALE_TIME = 5 * 60 * 1000
 const EMPTY_ESTIMATION_INVITES: string[] = []
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import {
-  getPlanNameFromTier,
+  resolveOrganizationCanonicalPlan,
   type CanonicalPlanId,
 } from '@/lib/utils/plan-filter'
 import {
@@ -93,7 +94,10 @@ export function isBudgetLimitReached(
  * True when plan usage limits are at or above 100% (e.g. free-plan GBHours).
  * See {@link isPlanUsageLimitReached} in `@/lib/billing/billing-limits`.
  */
-export { isPlanUsageLimitReached } from '@/lib/billing/billing-limits'
+export {
+  isPlanUsageLimitReached,
+  isProjectLockedByPlanUsage,
+} from '@/lib/billing/billing-limits'
 
 /**
  * @deprecated Prefer {@link isBudgetLimitReached}. Same check for organization documents.
@@ -413,40 +417,65 @@ export async function fetchOrganizationInvoices(
   }
 }
 
+export type OrganizationBillingInvoicePresence = {
+  hasFailedInvoice: boolean
+  hasInvoiceRequiringAuthentication: boolean
+}
+
+const EMPTY_BILLING_INVOICE_PRESENCE: OrganizationBillingInvoicePresence = {
+  hasFailedInvoice: false,
+  hasInvoiceRequiringAuthentication: false,
+}
+
+function invoiceStatus(invoice: { status?: string | null }): string {
+  return invoice.status?.toLowerCase() ?? ''
+}
+
 /**
- * Whether the organization has at least one failed **subscription** invoice.
- * Uses a single filtered list request (limit 1) for efficiency.
+ * Open billing-alert invoices (failed subscription or 3DS / SCA) in one
+ * `listInvoices` request. Shared by the failed-payment and authorize banners.
  */
-export async function fetchOrganizationHasFailedInvoice(
+export async function fetchOrganizationBillingInvoicePresence(
   organizationId: string,
-): Promise<{ hasFailedInvoice: boolean }> {
+): Promise<OrganizationBillingInvoicePresence> {
   if (!organizationId) {
-    return { hasFailedInvoice: false }
+    return EMPTY_BILLING_INVOICE_PRESENCE
   }
 
   try {
     const response = await sdk.forConsole.organizations.listInvoices({
       organizationId,
       queries: [
-        Query.equal('status', 'failed'),
-        Query.equal('type', 'subscription'),
+        Query.equal('status', ['failed', 'requires_authentication']),
         Query.orderDesc('$createdAt'),
-        Query.limit(1),
+        Query.limit(10),
         Query.offset(0),
       ],
     })
-    const total = response.total ?? 0
-    const count = response.invoices?.length ?? 0
-    return { hasFailedInvoice: total > 0 || count > 0 }
+    const invoices = response.invoices ?? []
+    return {
+      hasFailedInvoice: invoices.some(
+        (invoice) =>
+          invoiceStatus(invoice) === 'failed' &&
+          invoice.type === 'subscription',
+      ),
+      hasInvoiceRequiringAuthentication: invoices.some((invoice) => {
+        const status = invoiceStatus(invoice)
+        return (
+          status === 'requires_authentication' || status === 'requires_action'
+        )
+      }),
+    }
   } catch {
-    return { hasFailedInvoice: false }
+    return EMPTY_BILLING_INVOICE_PRESENCE
   }
 }
 
 /**
- * Query options for failed subscription-invoice presence (org-wide banner).
+ * Query options for org-wide billing invoice banners (failed payment and
+ * payment authorization). One cache entry, one listInvoices call.
  */
-export function organizationFailedInvoicePresenceQueryOptions(
+export function organizationBillingInvoicePresenceQueryOptions(
   organizationId: string | null | undefined,
 ) {
   return queryOptions({
@@ -455,10 +484,9 @@ export function organizationFailedInvoicePresenceQueryOptions(
       'organization',
       organizationId,
       'presence',
-      'failed',
-      'subscription',
+      'billing-alerts',
     ],
-    queryFn: () => fetchOrganizationHasFailedInvoice(organizationId!),
+    queryFn: () => fetchOrganizationBillingInvoicePresence(organizationId!),
     enabled: !!organizationId,
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
@@ -475,10 +503,11 @@ export function organizationFailedInvoicePresenceQueryOptions(
 }
 
 /**
- * Failed-invoice presence for an organization (use team / org id from project or route).
- * Shares cache with {@link organizationFailedInvoicePresenceQueryOptions}; does not fetch the org document.
+ * Billing-invoice presence for an organization (use team / org id from project
+ * or route). Shares cache with
+ * {@link organizationBillingInvoicePresenceQueryOptions}; does not fetch the org document.
  */
-export function useOrganizationFailedInvoicePresence(
+export function useOrganizationBillingInvoicePresence(
   organizationId: string | null | undefined,
 ) {
   // Billing is org-level, so resolve org-wide even when rendered inside a project.
@@ -487,7 +516,7 @@ export function useOrganizationFailedInvoicePresence(
   })
   const canFetchInvoices = canSeeOrganizationBilling(access)
   return useQuery({
-    ...organizationFailedInvoicePresenceQueryOptions(organizationId),
+    ...organizationBillingInvoicePresenceQueryOptions(organizationId),
     enabled: !!organizationId && canFetchInvoices,
   })
 }
@@ -526,6 +555,19 @@ export async function fetchOrganizationBillingAggregation(
     }
     throw error
   }
+}
+
+/**
+ * Query function to fetch the current billing cycle estimation for an organization
+ *
+ * The response is already reconciled server-side: items sum to `amount`,
+ * discounts sum to `discount`, and `grossAmount` is the payable total.
+ *
+ * @param organizationId - The organization ID to estimate the current cycle for
+ * @returns Estimation for the current billing cycle
+ */
+export async function fetchOrganizationEstimation(organizationId: string) {
+  return await sdk.forConsole.organizations.getEstimation({ organizationId })
 }
 
 /**
@@ -1433,7 +1475,7 @@ export async function deleteBillingAddress(params: {
  */
 export function organizationsQueryOptions() {
   return queryOptions({
-    queryKey: ['organizations', 'console'],
+    queryKey: ['organizations', 'console', getConsoleAccountQueryRevision()],
     queryFn: fetchOrganizations,
     staleTime: LONG_STALE_TIME,
     // Default QueryClient gcTime is 0. Without this, loader prefetch is
@@ -1528,7 +1570,7 @@ export function organizationScopesQueryOptions(
     queryKey: ['organization', 'scopes', organizationId, projectId ?? null],
     queryFn: () => fetchOrganizationScopes(organizationId!, projectId),
     enabled,
-    staleTime: DEFAULT_STALE_TIME,
+    staleTime: LONG_STALE_TIME,
     retry: false,
     refetchOnMount: false,
     refetchOnWindowFocus: false,
@@ -1624,7 +1666,7 @@ export async function prefetchOrganizationInvoiceDataIfAllowed(
   if (!canSeeOrganizationBilling(access)) return
   await queryClient
     .ensureQueryData(
-      organizationFailedInvoicePresenceQueryOptions(organizationId),
+      organizationBillingInvoicePresenceQueryOptions(organizationId),
     )
     .catch(() => {})
 }
@@ -1722,6 +1764,7 @@ export function useOrganizations() {
     error,
     refetch,
   } = useQuery(organizationsQueryOptions())
+  const { plans: billingPlans } = useBillingPlans()
   const [screenshotModeEpoch, setScreenshotModeEpoch] = useState(0)
 
   useEffect(() => {
@@ -1740,12 +1783,16 @@ export function useOrganizations() {
         name: string
         total?: number
         billingPlan?: string
+        billingPlanId?: string
         billingPlanDowngrade?: unknown
         status?: string
       }
       const mocked = applyScreenshotModeOrganizationName(o)
-      // Map billingPlan to plan name using the filter
-      const plan = getPlanNameFromTier(o.billingPlan) as CanonicalPlanId
+      const plan = resolveOrganizationCanonicalPlan({
+        billingPlan: o.billingPlan,
+        billingPlanId: o.billingPlanId,
+        plans: billingPlans,
+      })
 
       return {
         $id: o.$id,
@@ -1755,10 +1802,12 @@ export function useOrganizations() {
         plan,
         members: o.total || 0,
         status: o.status,
+        billingPlan: o.billingPlan,
+        billingPlanId: o.billingPlanId,
         billingPlanDowngrade: o.billingPlanDowngrade,
       }
     }) as Organization[]
-  }, [organizationsData, screenshotModeEpoch])
+  }, [organizationsData, screenshotModeEpoch, billingPlans])
 
   return {
     organizations,
@@ -1800,6 +1849,7 @@ export function useOrganizationById(orgId: string | null | undefined) {
     error,
     refetch,
   } = useQuery(organizationQueryOptions(orgId))
+  const { plans: billingPlans } = useBillingPlans()
   const [screenshotModeEpoch, setScreenshotModeEpoch] = useState(0)
 
   useEffect(() => {
@@ -1812,8 +1862,12 @@ export function useOrganizationById(orgId: string | null | undefined) {
   const organization = useMemo(() => {
     if (!orgData) return null
 
-    const planName = getPlanNameFromTier(orgData.billingPlan)
-    const plan = planName as CanonicalPlanId
+    const plan = resolveOrganizationCanonicalPlan({
+      billingPlan: orgData.billingPlan,
+      billingPlanId: (orgData as { billingPlanId?: string }).billingPlanId,
+      plans: billingPlans,
+    })
+    const planName = plan
     const mocked = applyScreenshotModeOrganizationName(orgData)
 
     return {
@@ -1822,7 +1876,7 @@ export function useOrganizationById(orgId: string | null | undefined) {
       planName,
       billingPlan: orgData.billingPlan,
     }
-  }, [orgData, screenshotModeEpoch])
+  }, [orgData, screenshotModeEpoch, billingPlans])
 
   return {
     organization,
@@ -1997,6 +2051,33 @@ export function organizationBillingAggregationQueryOptions(
     gcTime: organizationId && aggregationId ? 5 * 60 * 1000 : 0,
     meta: {
       // Slow usage aggregation must never keep the fullscreen initial loader up.
+      skipInitialLoader: true,
+    },
+  })
+}
+
+/**
+ * Query options for fetching the current billing cycle estimation for an organization
+ *
+ * This can be used in both route loaders and hooks to ensure consistent query configuration.
+ */
+export function organizationEstimationQueryOptions(
+  organizationId: string | null | undefined,
+) {
+  return queryOptions({
+    queryKey: ['billing-estimation', 'organization', organizationId],
+    queryFn: () => fetchOrganizationEstimation(organizationId!),
+    enabled: !!organizationId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false, // Don't retry on error
+    // Estimation moves with usage and addons, same as the aggregation it summarises.
+    refetchOnMount: true,
+    refetchOnWindowFocus: false, // Prevent refetch when switching tabs/windows
+    refetchOnReconnect: false, // Prevent refetch on network reconnect
+    // Don't keep disabled queries in cache
+    gcTime: organizationId ? 5 * 60 * 1000 : 0,
+    meta: {
+      // Slow billing estimation must never keep the fullscreen initial loader up.
       skipInitialLoader: true,
     },
   })
@@ -2562,7 +2643,7 @@ export function useRetryInvoicePayment() {
         queryKey: ['organization', variables.organizationId],
       })
       queryClient.invalidateQueries({
-        queryKey: organizationFailedInvoicePresenceQueryOptions(
+        queryKey: organizationBillingInvoicePresenceQueryOptions(
           variables.organizationId,
         ).queryKey,
       })

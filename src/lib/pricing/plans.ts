@@ -31,7 +31,7 @@ export const pricingPlans: readonly PricingPlan[] = [
     pricePrefix: 'From',
     priceSuffix: '/month',
     description:
-      'For production applications that need powerful functionality and resources to scale.',
+      'For production applications that scale with included resources and pay as you go.',
     callout: DATABASE_COMPUTE_CREDITS_NOTE,
     featuresIntro: 'Dedicated resources per project:',
     features: [
@@ -39,6 +39,7 @@ export const pricingPlans: readonly PricingPlan[] = [
       '150GB storage',
       '3.5M executions',
       '200K monthly active users',
+      'Pay as you go when you exceed included limits',
       'Organization roles',
       'Email support',
       'Daily backups stored for 7 days',
@@ -61,7 +62,8 @@ export const pricingPlans: readonly PricingPlan[] = [
     featuresIntro: 'Everything in Pro, plus:',
     features: [
       'Uptime SLAs',
-      'Success manager and 24/7 support on Slack',
+      'Success manager',
+      '24/7 support on Slack',
       'Volume discounts',
       'Log drains',
       '90-day log retention',

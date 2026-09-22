@@ -162,12 +162,22 @@ const { account, isAuthenticated } = useAuth()
 </DialogContent>
 ```
 
+**No-content modals** (confirmations, presets with description-only copy): skip the standalone header separator and the content section. Go from header straight to the footer; the footer’s top border is the only separator.
+
+```tsx
+<DialogHeader className="px-6 pt-6 pb-4 text-left">...</DialogHeader>
+<div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+  ...
+</div>
+```
+
 **Rules**:
 
 - **Title**: Use sentence case (only first letter capitalized)
 - **Header spacing**: Include `pb-4` for proper spacing before separator
 - **CTA buttons**: No icons in primary action buttons
-- **Exception**: No-content modals skip content section, go directly from header to footer
+- **No orphan separator**: Never render `<div className="border-t border-border" />` after the header unless a content section follows before the footer. A separator with empty space above the footer is not allowed.
+- **No-content modals**: Use the no-content pattern above (see `ConfirmActionDialog`).
 
 ### Settings Card Structure
 
@@ -488,6 +498,12 @@ Checklist (in this order):
 - **Button icon spacing**: Use `mr-1.5` or `gap-1.5`, not `mr-2` or larger
 - **Date tooltips**: Always include when showing dates for timezone clarity
 
+### Date and time (Appwrite datetimes)
+
+- **`DateTimePicker timeZoneMode="preferred"`**: Appwrite datetime fields only. Postgres/MySQL columns (any datetime type), `FiltersPopoverContent` and role drawers keep the default browser mode.
+- **Display zone**: Per device in localStorage `console.datetime.timeZone`, read with `useDisplayTimeZone()` from `@/lib/timezones`. No stored value means the browser zone.
+- **Grid cells**: Format Appwrite datetime cells with `createInstantCellFormatter(timeZone)` from `@/lib/spreadsheet-cell-formatting` and put `<DisplayTimeZoneBadge />` in their headers; copy paths keep reading raw values.
+
 ### Viewport units (CRITICAL - fixes mobile/iPad layout bugs)
 
 **Never use `vh`** (or `h-screen`, `min-h-screen`, `max-h-screen`). On iOS Safari, iPadOS, Chrome on Android, and any browser with a dynamic toolbar, `100vh` refers to the _layout viewport_, which is taller than the actually visible viewport when browser chrome (URL bar, toolbar) is on screen. Anything sized via `vh` extends below the visible area, hiding sticky footers, CTAs, and dialog actions.
@@ -539,7 +555,8 @@ Use the status-style badge variants so all badges share the same design (tinted 
 - `projects` - Project management, API keys, platforms, webhooks → `services/projects.ts`
 - `domains` - Domain management, DNS records, presets → `services/domains.ts`
 - `console` - Campaigns, coupons, plans, regions, resources → `services/console.ts`
-- `teams`, `vcs`, `backups`, `agent`, `assistant` (legacy chat), `avatars` → See service files
+- `teams`, `vcs`, `backups`, `assistant` (legacy chat), `avatars` → See service files
+- `agent` - Agent conversations, messages, MCPs, memories, models, automations → **not** from the SDK. The agent API has not merged into cloud `main`, so `sdk.forConsole.agent` is the hand-written client in `@/lib/appwrite/agent`. Keep it in step with `src/Appwrite/Cloud/Platform/Modules/Agent`, and delete it for the generated service once the API ships.
 
 **Project SDK** (`sdk.forProject(projectId)`):
 
@@ -1156,12 +1173,12 @@ These flags do not grant backend permissions. Curl cannot call this browser API.
 
 **Init day unlocks** (always controlled; never calendar-driven):
 
-- Default is **after the event** (`getInitMockCurrentDayDefault()` in `src/lib/init/mock-current-day.ts` → `getInitMockDayAfter()`, recap mode with all days unlocked).
+- Default is **post-event, no banner** (`getInitMockCurrentDayDefault()` in `src/lib/init/mock-current-day.ts` → `getInitMockDayBannerExpired()`, recap mode with all days unlocked and the org promo banner hidden).
 - Advance the day from debug menu → Init → **Day** (slider: Before → Day 1–5 → After → Banner off).
 - When ready for a new default for everyone, change `getInitMockCurrentDayDefault()` to the day you want unlocked.
 **Debug mode:** When debug menu is open (type `pink`, case-insensitive), use Console profile submenu to override the env-selected profile. Override is stored in localStorage and takes precedence until "Use env var" is selected.
 
-**Feature flags:** Use `useConsoleProfile()` or `getActiveProfileFeatures()` for flags that still vary by profile or env (e.g. `features.billing`, `features.compliance`, `features.databaseBackups`, `features.nativeDbsMongo`, `features.agent`, `features.notifications`, `features.cookieBanner`). Cloud-only surfaces that shipped during Init (domains, marketplace, firewall, storage S3, OAuth2 server, OAuth apps, dedicated/product/native Postgres and MySQL databases) no longer have profile flags; gate them with `isCloudProfile()` from `@/lib/console-profiles` or helpers such as `isCloudDedicatedDatabasesEnabled()` from `@/lib/database-routes`.
+**Feature flags:** Use `useConsoleProfile()` or `getActiveProfileFeatures()` for flags that still vary by profile or env (e.g. `features.billing`, `features.compliance`, `features.databaseBackups`, `features.databaseSpecifications`, `features.nativeDbsMongo`, `features.accountApplications`, `features.agent`, `features.notifications`, `features.cookieBanner`). Prefer adding a flag over a bare profile check: every cloud/self-hosted difference should be a row in the debug Compare profiles table. Cloud-only surfaces that shipped during Init (domains, marketplace, firewall, storage S3, OAuth2 server, OAuth apps, dedicated/product/native Postgres and MySQL databases) no longer have profile flags; gate them with `isCloudProfile()` from `@/lib/console-profiles` or helpers such as `isCloudDedicatedDatabasesEnabled()` from `@/lib/database-routes`.
 
 **Feature-driven keys:** Each remaining flag must map to a single, specific feature. Do not use generic or grouped flags (e.g. `orgCloudSettings`, `databaseCloudFeatures`). Split into explicit flags per feature (e.g. `compliance`, `orgApiKeys` for org settings; `databaseBackups`, `databasePitrRestore`, `nativeDbsMongo` for database).
 
@@ -1677,7 +1694,7 @@ Set `VITE_APPWRITE_ENDPOINT` in `.env` (default: `https://cloud.appwrite.io/v1`)
 
 ## Cursor Cloud specific instructions
 
-- **Runtime/package manager**: This project uses **Bun** (not npm/pnpm, even though a `pnpm-lock.yaml` exists). Use `bun run <script>` for all scripts in `package.json`. Bun is installed at `~/.bun/bin/bun`; the update script runs `bun install`.
+- **Runtime/package manager**: This project uses **Bun** (not npm/pnpm). `bun.lock` is the only lockfile, and `lint:sdk-pins` scans every lockfile it finds. Use `bun run <script>` for all scripts in `package.json`. Bun is installed at `~/.bun/bin/bun`; the update script runs `bun install`.
 - **No local backend**: There is no local backend server and no `docker-compose`. The console is a client-side app that talks to a **remote backend** whose endpoint is set via the `VITE_*` endpoint variable documented in the `## Environment` section above. Copy `.env` from `.env.example` (`.env` is gitignored). In Cloud Agent VMs, the endpoint, the console fingerprint key, and other `VITE_*` values are injected as secrets and take precedence over the placeholder values in `.env.example`.
 - **Standard commands** (see README "Scripts" and `package.json`): `bun run dev` (Vite dev server on port 3000), `bun run lint` (ESLint), `bun run check` (`tsc --noEmit`), `bun run test` / `bun run e2e` (Playwright; needs `bun run install-browsers` first plus a reachable backend and `E2E_TEST_EMAIL`/`E2E_TEST_PASSWORD` or `E2E_TEST_SESSION_SECRET`). Database write suites need `E2E_ORG_ID` (Frankfurt). Use `bun run e2e:mysql`, `bun run e2e:postgres`, `bun run e2e:tablesdb`, `bun run e2e:documentsdb`, `bun run e2e:vectorsdb`, or `bun run e2e:databases` to run only those projects.
 - **Pre-existing lint/type issues**: `bun run lint` and `bun run check` currently report many pre-existing errors in the repo (e.g. unused imports, and config-file type mismatches from the `rolldown-vite` alias in `vite.config.ts`). These are not caused by environment setup; do not treat them as setup failures.

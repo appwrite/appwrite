@@ -16,7 +16,6 @@ import {
   Globe,
   FlaskConical,
   AlertTriangle,
-  Loader2,
   Check,
   Minus,
   Columns2,
@@ -30,21 +29,11 @@ import {
   Search,
   X,
   Languages,
-  HeartHandshake,
-  MessageSquareQuote,
   Variable,
-  Mail,
-  Code2,
-  KeyRound,
-  ShieldCheck,
-  Folder,
-  MonitorSmartphone,
-  ExternalLink,
-  Link2,
   Network,
-  GitBranch,
   Camera,
   Info,
+  MapPin,
 } from 'lucide-react'
 import {
   Popover,
@@ -56,7 +45,6 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { usePromoBanner } from './PromoBanner'
 import { useDebugMode } from './DebugMode'
 import { useScreenshotMode } from './ScreenshotMode'
 import { DebugMenuSwitch } from '@/components/global/providers/DebugMenuSwitch'
@@ -118,7 +106,6 @@ import { useDebugMcpEndpoint } from '@/hooks/use-debug-mcp-endpoint'
 import { usePromptDialog } from '@/hooks/use-prompt-dialog'
 import { McpIcon } from '@/components/global/shared/McpIcon'
 import { useNavigate } from '@tanstack/react-router'
-import { useQueryClient } from '@tanstack/react-query'
 import { Branch as DismissableLayerBranch } from '@radix-ui/react-dismissable-layer'
 import { cn } from '@/lib/utils'
 import type {
@@ -136,6 +123,8 @@ import { DebugMenuCommunityShareExamplesPanel } from '@/components/global/provid
 import { DebugMenuEnvPanel } from '@/components/global/providers/DebugMenuEnvPanel'
 import { DebugMenuFaviconPanel } from '@/components/global/providers/DebugMenuFaviconPanel'
 import { DebugMenuIpPanel } from '@/components/global/providers/DebugMenuIpPanel'
+import { DebugMenuLocalePanel } from '@/components/global/providers/DebugMenuLocalePanel'
+import { DebugMenuDemosPanel } from '@/components/global/providers/DebugMenuDemosPanel'
 import {
   useInitLowPowerAnimationDecision,
   type InitLowPowerAnimationDecision,
@@ -150,13 +139,15 @@ import {
   writeDebugMenuPosition,
   type DebugMenuPosition,
 } from '@/lib/debug-menu-position'
+import {
+  readDebugMenuUiState,
+  writeDebugMenuUiState,
+} from '@/lib/debug-menu-ui-state'
 import { getEnglishCatalog } from '@/lib/i18n'
-import { sendSentryDebugTestError } from '@/lib/sentry/init-client'
 import {
   COMMUNITY_SUPPORT_REMINDER_MS,
   COMMUNITY_SUPPORT_UNIQUE_DAYS_THRESHOLD,
 } from '@/lib/community/support-prompt'
-import { toast } from 'sonner'
 
 const COMMUNITY_SUPPORT_REMINDER_DAYS = Math.round(
   COMMUNITY_SUPPORT_REMINDER_MS / (24 * 60 * 60 * 1000),
@@ -247,10 +238,14 @@ interface MenuItem {
     | 'envStatus'
     | 'faviconStatus'
     | 'clientIp'
+    | 'localeStatus'
+    | 'demos'
   /** Extra classes on submenu row buttons (e.g. separator above reset actions). */
   rowClassName?: string
   /** Feature flags submenu: group label for categorized lists. */
   category?: string
+  /** Tighter single-line switch row (label + optional info tooltip + switch). */
+  compact?: boolean
   /** Optional secondary remove action (e.g. saved custom endpoints). */
   onRemove?: () => void
   /** Accessible label for the remove button. */
@@ -263,81 +258,45 @@ interface MenuSection {
   items: MenuItem[]
 }
 
-const DEBUG_MENU_DESCRIPTION_MAX_LENGTH = 44
-
 /** Above the debug menu popover shell (`z-[10060]`). */
 const DEBUG_MENU_TOOLTIP_Z_CLASS = 'z-[10070]'
 
-const DEBUG_MENU_ITEM_DESCRIPTION_CLASS =
-  'min-w-0 flex-1 truncate text-[11px] font-normal text-[var(--network-globe-edge)]/80'
+const DEBUG_MENU_ITEM_BADGE_CLASS =
+  'flex-shrink-0 rounded-full bg-[color-mix(in_srgb,var(--network-globe-edge)_22%,transparent)] px-2 py-0.5 text-[11px] font-medium text-[var(--network-globe-edge)]'
 
-function normalizeDebugMenuDescription(
-  description: string,
-  descriptionTooltip?: string,
-): { description: string; descriptionTooltip?: string } {
-  const inline = description.replace(/\s+/g, ' ').trim()
-  const tooltip = descriptionTooltip?.replace(/\s+/g, ' ').trim()
-
-  if (tooltip) {
-    return { description: inline, descriptionTooltip: tooltip }
-  }
-
-  if (inline.length <= DEBUG_MENU_DESCRIPTION_MAX_LENGTH) {
-    return { description: inline }
-  }
-
-  return {
-    description: `${inline.slice(0, DEBUG_MENU_DESCRIPTION_MAX_LENGTH - 1).trimEnd()}…`,
-    descriptionTooltip: inline,
-  }
+function isMinimalDebugMenuBadge(
+  badge: string | number | undefined,
+): badge is string | number {
+  if (badge === undefined || badge === null) return false
+  const text = String(badge).trim()
+  if (!text) return false
+  return !/\s/.test(text)
 }
 
-function DebugMenuItemDescription({
-  description,
-  descriptionTooltip,
-}: {
-  description?: string
-  descriptionTooltip?: string
-}) {
-  if (!description) return null
+const DEBUG_MENU_THEME_BADGES: Record<string, string> = {
+  light: 'Light',
+  dark: 'Dark',
+  system: 'System',
+  crazy: 'Crazy',
+  stealth: 'Stealth',
+  premium: 'Premium',
+  'high-contrast': 'Contrast',
+  barbie: 'Barbie',
+  nineties: '90s',
+  legacy: 'Legacy',
+}
 
-  const normalized = normalizeDebugMenuDescription(
-    description,
-    descriptionTooltip,
-  )
+const DEBUG_MENU_LANGUAGE_BADGES = {
+  en: 'English',
+  he: 'Hebrew',
+  ja: 'Japanese',
+} as const
 
-  return (
-    <div className="mt-0.5 flex min-w-0 items-center gap-1">
-      <span className={DEBUG_MENU_ITEM_DESCRIPTION_CLASS}>
-        {normalized.description}
-      </span>
-      {normalized.descriptionTooltip ? (
-        <Tooltip delayDuration={200}>
-          <TooltipTrigger asChild>
-            <button
-              type="button"
-              tabIndex={-1}
-              className="flex h-4 w-4 shrink-0 items-center justify-center rounded-sm text-[var(--network-globe-edge)]/70 transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--network-globe-edge)]/40"
-              aria-label="More info"
-              onClick={(event) => event.stopPropagation()}
-            >
-              <Info className="h-3 w-3" aria-hidden />
-            </button>
-          </TooltipTrigger>
-          <TooltipContent
-            side="top"
-            sideOffset={6}
-            className={cn(
-              'max-w-xs whitespace-pre-line text-[12px] leading-relaxed',
-              DEBUG_MENU_TOOLTIP_Z_CLASS,
-            )}
-          >
-            {normalized.descriptionTooltip}
-          </TooltipContent>
-        </Tooltip>
-      ) : null}
-    </div>
-  )
+function debugMenuUserOsSelectionBadge(
+  userOs: UserOsOverride,
+): string | undefined {
+  if (userOs === 'auto') return 'Auto'
+  return USER_OS_LABELS[userOs]
 }
 
 function formatFeatureFlagDefaultLabel(defaultValue: boolean): string {
@@ -445,6 +404,69 @@ function DebugMenuSwitchRow({
 }) {
   const showReset = isFeatureFlagOverridden(item)
 
+  if (item.compact) {
+    return (
+      <div
+        id={id}
+        role="option"
+        aria-selected={highlighted}
+        data-debug-nav-index={navIndex}
+        onMouseEnter={onHighlight}
+        className={cn(
+          'flex items-center justify-between gap-2 rounded-lg px-3 py-1.5 transition-colors',
+          highlighted
+            ? 'bg-[color-mix(in_srgb,var(--network-globe-edge)_18%,var(--muted))] text-foreground'
+            : 'hover:bg-[color-mix(in_srgb,var(--network-globe-edge)_10%,transparent)]',
+          item.disabled && 'opacity-50',
+          item.rowClassName,
+        )}
+      >
+        <div className="flex min-w-0 flex-1 items-center gap-2">
+          {item.icon ? (
+            <span className="flex-shrink-0 text-[var(--network-globe-edge)]">
+              {item.icon}
+            </span>
+          ) : null}
+          <span className="truncate text-[13px] font-medium text-foreground">
+            {item.label}
+          </span>
+          {item.descriptionTooltip ? (
+            <Tooltip delayDuration={200}>
+              <TooltipTrigger asChild>
+                <span
+                  tabIndex={-1}
+                  className="flex h-4 w-4 shrink-0 cursor-default items-center justify-center rounded-sm text-[var(--network-globe-edge)]/70 transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--network-globe-edge)]/40"
+                  aria-label="More info"
+                  onClick={(event) => event.stopPropagation()}
+                  onPointerDown={(event) => event.stopPropagation()}
+                >
+                  <Info className="h-3 w-3" aria-hidden />
+                </span>
+              </TooltipTrigger>
+              <TooltipContent
+                side="top"
+                sideOffset={6}
+                className={cn(
+                  'max-w-xs whitespace-pre-line text-[12px] leading-relaxed',
+                  DEBUG_MENU_TOOLTIP_Z_CLASS,
+                )}
+              >
+                {item.descriptionTooltip}
+              </TooltipContent>
+            </Tooltip>
+          ) : null}
+        </div>
+        <DebugMenuSwitch
+          checked={item.switchValue}
+          onCheckedChange={item.switchOnChange}
+          disabled={item.disabled}
+          className="flex-shrink-0"
+          tabIndex={-1}
+        />
+      </div>
+    )
+  }
+
   return (
     <div
       id={id}
@@ -472,10 +494,6 @@ function DebugMenuSwitchRow({
             </span>
           )}
         </div>
-        <DebugMenuItemDescription
-          description={item.description}
-          descriptionTooltip={item.descriptionTooltip}
-        />
       </div>
       <div className="flex flex-shrink-0 items-center gap-1.5">
         {showReset && (
@@ -580,18 +598,10 @@ function renderDebugSubmenuItemRow(
       {item.icon && (
         <span className="flex-shrink-0 text-[var(--network-globe-edge)]">{item.icon}</span>
       )}
-      <span className="min-w-0 flex-1">
-        <span className="block font-medium">{item.label}</span>
-        <DebugMenuItemDescription
-          description={item.description}
-          descriptionTooltip={item.descriptionTooltip}
-        />
-      </span>
-      {item.badge !== undefined && (
-        <span className="flex-shrink-0 rounded-full bg-[color-mix(in_srgb,var(--network-globe-edge)_22%,transparent)] px-2 py-0.5 text-[11px] font-medium text-[var(--network-globe-edge)]">
-          {item.badge}
-        </span>
-      )}
+      <span className="min-w-0 flex-1 truncate font-medium">{item.label}</span>
+      {isMinimalDebugMenuBadge(item.badge) ? (
+        <span className={DEBUG_MENU_ITEM_BADGE_CLASS}>{item.badge}</span>
+      ) : null}
       {hasNestedSubmenu && (
         <ChevronRight className="h-4 w-4 flex-shrink-0 text-[var(--network-globe-edge)]/60" />
       )}
@@ -692,7 +702,9 @@ function isDebugPanelSubmenuVariant(
     variant === 'recentResources' ||
     variant === 'envStatus' ||
     variant === 'faviconStatus' ||
-    variant === 'clientIp'
+    variant === 'clientIp' ||
+    variant === 'localeStatus' ||
+    variant === 'demos'
   )
 }
 
@@ -777,7 +789,9 @@ function menuItemHasSubmenu(item: MenuItem): boolean {
     item.submenuVariant === 'recentResources' ||
     item.submenuVariant === 'envStatus' ||
     item.submenuVariant === 'faviconStatus' ||
-    item.submenuVariant === 'clientIp'
+    item.submenuVariant === 'clientIp' ||
+    item.submenuVariant === 'localeStatus' ||
+    item.submenuVariant === 'demos'
   )
 }
 
@@ -991,16 +1005,18 @@ function TableCell({ className, ...props }: ComponentProps<'td'>) {
 export function DebugMenu({ actions = [] }: DebugMenuProps) {
   const { isDebugModeOpen: isVisible, closeDebugMode } = useDebugMode()
   const { isScreenshotModeActive, setScreenshotModeActive } = useScreenshotMode()
-  const queryClient = useQueryClient()
-  const [isOpen, setIsOpen] = useState(false)
+  const [isOpen, setIsOpen] = useState(
+    () => readDebugMenuUiState().popoverOpen,
+  )
   const { prompt, promptDialog } = usePromptDialog(DEBUG_MENU_DIALOG_LAYER)
   const [overrides, setOverrides] = useState<DebugOverrides>(loadDebugOverrides)
-  const { addMockBanner, clearAllBanners, banners } = usePromoBanner()
   const [faviconStatus, setFaviconStatus] = useState<FaviconStatus>(() =>
     getFaviconStatus(),
   )
   const { theme, setTheme } = useTheme()
-  const [activeSubmenu, setActiveSubmenu] = useState<string | null>(null)
+  const [activeSubmenu, setActiveSubmenu] = useState<string | null>(
+    () => readDebugMenuUiState().activeSubmenu,
+  )
   const [menuSearch, setMenuSearch] = useState('')
   const [featureFlagsSearch, setFeatureFlagsSearch] = useState('')
   const [highlightedIndex, setHighlightedIndex] = useState(-1)
@@ -1169,10 +1185,16 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     return subscribeFaviconStatus(setFaviconStatus)
   }, [isOpen])
 
-  // Reset submenu and search when popover closes
+  useEffect(() => {
+    writeDebugMenuUiState({
+      popoverOpen: isOpen,
+      activeSubmenu,
+    })
+  }, [isOpen, activeSubmenu])
+
+  // Reset search when popover closes (keep active submenu for reload restore)
   useEffect(() => {
     if (!isOpen) {
-      setActiveSubmenu(null)
       setMenuSearch('')
       setFeatureFlagsSearch('')
       setHighlightedIndex(-1)
@@ -1325,6 +1347,16 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
       icon: <Languages className="h-3 w-3" />,
     }))
 
+    const countryDescription = overrides.mockLocaleCountry
+      ? `Mock: ${overrides.mockLocaleCountry}`
+      : 'Auto (live locale.get())'
+
+    const localeMenuDescription = [
+      languageDescription,
+      overrides.pageDirection === 'rtl' ? 'RTL' : 'LTR',
+      countryDescription,
+    ].join(' · ')
+
     const activeEndpointUrl = endpointEffectiveUrl ?? endpointEnvUrl ?? '—'
     const activeEndpointBadge = !endpointPreset
       ? 'Env'
@@ -1343,7 +1375,6 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
           ]?.label ?? mcpEndpointPreset
 
     const activeProfileLabel = CONSOLE_PROFILES[profileId].label
-    const activeProfileBadge = profileFromOverride ? 'Override' : 'Env'
     const activeProfileDescription = profileFromOverride
       ? `${activeProfileLabel} (debug override)`
       : `${activeProfileLabel} (VITE_CONSOLE_PROFILE → ${CONSOLE_PROFILES[envProfileId].label})`
@@ -1508,30 +1539,78 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
       },
     ]
 
-    return [
-      {
-        title: 'Capture',
-        icon: <Camera className="h-3.5 w-3.5" />,
-        items: [
-          {
-            label: 'Screenshot mode',
-            description: isScreenshotModeActive ? 'On · Demo identity' : 'Off',
-            descriptionTooltip: isScreenshotModeActive
-              ? "Walter O'Brien, walter@appwrite.io. Masks name, email, avatar, and org names. Toggle with smile or this switch."
-              : 'Masks account name, email, avatar, and org names for captures. Toggle with smile or this switch.',
-            icon: <Camera className="h-3 w-3" />,
-            variant: 'switch',
-            switchValue: isScreenshotModeActive,
-            switchOnChange: setScreenshotModeActive,
+    const statusAlertSelectionBadge =
+      overrides.mockCloudStatusAlert === 'live'
+        ? 'Live'
+        : overrides.mockCloudStatusAlert === 'operational'
+          ? 'None'
+          : overrides.mockCloudStatusAlert.charAt(0).toUpperCase() +
+            overrides.mockCloudStatusAlert.slice(1)
+
+    const statusAlertMenuItem: MenuItem = {
+      label: 'Status alert',
+      description: statusAlertSelectionBadge,
+      badge: statusAlertSelectionBadge,
+      icon: <Cloud className="h-3 w-3" />,
+      submenu: [
+        {
+          label: 'Live',
+          description: 'Use the public Appwrite Cloud status page.',
+          onClick: () => {
+            setDebugOverride('mockCloudStatusAlert', 'live')
+            setIsOpen(false)
           },
-        ],
-      },
+          active: overrides.mockCloudStatusAlert === 'live',
+          icon: <Cloud className="h-3 w-3" />,
+        },
+        ...(
+          [
+            {
+              label: 'None',
+              value: 'operational',
+              description: 'Normal operational state with no alert.',
+            },
+            {
+              label: 'Degraded',
+              value: 'degraded',
+              description: 'Degraded-service alert.',
+            },
+            {
+              label: 'Downtime',
+              value: 'downtime',
+              description: 'Outage alert.',
+            },
+            {
+              label: 'Maintenance',
+              value: 'maintenance',
+              description: 'Maintenance alert.',
+            },
+          ] as const
+        ).map((option) => ({
+          label: option.label,
+          description: option.description,
+          onClick: () => {
+            setDebugOverride(
+              'mockCloudStatusAlert',
+              option.value as MockCloudStatusAlert,
+            )
+            setIsOpen(false)
+          },
+          active: overrides.mockCloudStatusAlert === option.value,
+          icon: <AlertTriangle className="h-3 w-3" />,
+        })),
+      ],
+    }
+
+    return [
       {
         title: 'Appearance',
         icon: <Palette className="h-3.5 w-3.5" />,
         items: [
+          statusAlertMenuItem,
           {
             label: 'Theme',
+            badge: DEBUG_MENU_THEME_BADGES[theme ?? 'system'],
             icon: <Palette className="h-3 w-3" />,
             submenu: themeOptions,
           },
@@ -1544,509 +1623,60 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
           {
             label: 'Operating system',
             description: userOsDescription,
+            badge: debugMenuUserOsSelectionBadge(overrides.userOs),
             icon: <Monitor className="h-3 w-3" />,
             submenu: userOsOptions,
           },
           {
-            label: 'Page direction',
-            description: pageDirectionDescription,
+            label: 'Locale',
+            description: localeMenuDescription,
+            badge: DEBUG_MENU_LANGUAGE_BADGES[overrides.language],
             icon: <Languages className="h-3 w-3" />,
-            submenu: pageDirectionOptions,
-          },
-          {
-            label: languageCopy.label,
-            description: languageDescription,
-            icon: <Languages className="h-3 w-3" />,
-            submenu: languageOptions,
+            submenu: [
+              {
+                label: languageCopy.label,
+                description: languageDescription,
+                badge: DEBUG_MENU_LANGUAGE_BADGES[overrides.language],
+                icon: <Languages className="h-3 w-3" />,
+                submenu: languageOptions,
+              },
+              {
+                label: 'Page direction',
+                description: pageDirectionDescription,
+                badge: overrides.pageDirection === 'rtl' ? 'RTL' : 'LTR',
+                icon: <Languages className="h-3 w-3" />,
+                submenu: pageDirectionOptions,
+              },
+              {
+                label: 'Country',
+                description: countryDescription,
+                icon: <MapPin className="h-3 w-3" />,
+                submenuVariant: 'localeStatus',
+              },
+              {
+                label: 'IP',
+                description: 'Compare browser IP with the IP SSR saw.',
+                icon: <Network className="h-3 w-3" />,
+                submenuVariant: 'clientIp',
+              },
+            ],
           },
           {
             label: 'Demos',
-            description: 'Preview alerts, banners, loaders, OAuth2, Git, and pages.',
+            description: 'Preview auth, OAuth2, Git, console screens, and tools.',
             icon: <Bug className="h-3 w-3" />,
-            submenu: [
-              {
-                label: 'Status alert',
-                description:
-                  overrides.mockCloudStatusAlert === 'live'
-                    ? 'Live'
-                    : overrides.mockCloudStatusAlert === 'operational'
-                      ? 'None'
-                      : overrides.mockCloudStatusAlert.charAt(0).toUpperCase() +
-                        overrides.mockCloudStatusAlert.slice(1),
-                icon: <Cloud className="h-3 w-3" />,
-                submenu: [
-                  {
-                    label: 'Live',
-                    description: 'Use the public Appwrite Cloud status page.',
-                    onClick: () => {
-                      setDebugOverride('mockCloudStatusAlert', 'live')
-                      setIsOpen(false)
-                    },
-                    active: overrides.mockCloudStatusAlert === 'live',
-                    icon: <Cloud className="h-3 w-3" />,
-                  },
-                  ...(
-                    [
-                      {
-                        label: 'None',
-                        value: 'operational',
-                        description: 'Normal operational state with no alert.',
-                      },
-                      {
-                        label: 'Degraded',
-                        value: 'degraded',
-                        description: 'Degraded-service alert.',
-                      },
-                      {
-                        label: 'Downtime',
-                        value: 'downtime',
-                        description: 'Outage alert.',
-                      },
-                      {
-                        label: 'Maintenance',
-                        value: 'maintenance',
-                        description: 'Maintenance alert.',
-                      },
-                    ] as const
-                  ).map((option) => ({
-                    label: option.label,
-                    description: option.description,
-                    onClick: () => {
-                      setDebugOverride(
-                        'mockCloudStatusAlert',
-                        option.value as MockCloudStatusAlert,
-                      )
-                      setIsOpen(false)
-                    },
-                    active: overrides.mockCloudStatusAlert === option.value,
-                    icon: <AlertTriangle className="h-3 w-3" />,
-                  })),
-                ],
-              },
-              {
-                label: 'Promo banner',
-                description:
-                  banners.length > 0
-                    ? `${banners.length} active`
-                    : 'None active',
-                icon: <Megaphone className="h-3 w-3" />,
-                badge: banners.length > 0 ? banners.length : undefined,
-                submenu: [
-                  {
-                    label: 'Add',
-                    description: 'Add a mock promo banner.',
-                    onClick: () => {
-                      addMockBanner()
-                      setIsOpen(false)
-                    },
-                    icon: <Megaphone className="h-3 w-3" />,
-                  },
-                  ...(banners.length > 0
-                    ? [
-                        {
-                          label: 'Clear all',
-                          description: 'Remove all promo banners.',
-                          onClick: () => {
-                            clearAllBanners()
-                            setIsOpen(false)
-                          },
-                          icon: <Trash2 className="h-3 w-3" />,
-                        },
-                      ]
-                    : []),
-                ],
-              },
-              {
-                label: 'Fullscreen loader',
-                description: overrides.showFullscreenLoader ? 'On' : 'Off',
-                icon: <Loader2 className="h-3 w-3" />,
-                submenu: [
-                  {
-                    label: 'On',
-                    description:
-                      'Keep the initial loader visible to preview it.',
-                    onClick: () => {
-                      setOverrides((prev) => ({
-                        ...prev,
-                        showFullscreenLoader: true,
-                      }))
-                      setDebugOverride('showFullscreenLoader', true)
-                      setIsOpen(false)
-                    },
-                    active: overrides.showFullscreenLoader,
-                    icon: <Loader2 className="h-3 w-3" />,
-                  },
-                  {
-                    label: 'Off',
-                    description: 'Return to normal loading behavior.',
-                    onClick: () => {
-                      setOverrides((prev) => ({
-                        ...prev,
-                        showFullscreenLoader: false,
-                      }))
-                      setDebugOverride('showFullscreenLoader', false)
-                      setIsOpen(false)
-                    },
-                    active: !overrides.showFullscreenLoader,
-                    icon: <RotateCcw className="h-3 w-3" />,
-                  },
-                ],
-              },
-              {
-                label: 'Error page',
-                description: 'Preview the error page.',
-                onClick: () => {
-                  navigate({ to: '/debug/error-preview' })
-                  setIsOpen(false)
-                },
-                icon: <Bug className="h-3 w-3" />,
-              },
-              {
-                label: 'Test Sentry',
-                description: 'Force-init and send a test exception.',
-                onClick: () => {
-                  setIsOpen(false)
-                  void (async () => {
-                    const result = await sendSentryDebugTestError()
-                    if (result.ok) {
-                      toast.success(
-                        `Sentry test flushed (${result.eventId}). Check Issues filtered to environment "development".`,
-                      )
-                      return
-                    }
-                    toast.error(
-                      result.eventId
-                        ? `${result.reason} Event: ${result.eventId}`
-                        : result.reason,
-                    )
-                  })()
-                },
-                icon: <AlertTriangle className="h-3 w-3" />,
-              },
-              {
-                label: 'Org setup',
-                description: 'Preview organization creation progress.',
-                onClick: () => {
-                  navigate({ to: '/debug/org-setup-preview' })
-                  setIsOpen(false)
-                },
-                icon: <Loader2 className="h-3 w-3" />,
-              },
-              {
-                label: 'Verify email',
-                description: 'Preview the email verification page.',
-                onClick: () => {
-                  navigate({ to: '/debug/verify-email-preview' })
-                  setIsOpen(false)
-                },
-                icon: <Mail className="h-3 w-3" />,
-              },
-              {
-                label: 'OAuth2',
-                description: 'Preview consent, device, outcome, and relay screens.',
-                icon: <KeyRound className="h-3 w-3" />,
-                submenu: [
-                  {
-                    label: 'All screens',
-                    description: 'Open the OAuth2 preview with a screen picker.',
-                    onClick: () => {
-                      navigate({
-                        to: '/debug/oauth2-preview',
-                        search: { screen: 'consent' },
-                      })
-                      setIsOpen(false)
-                    },
-                    icon: <KeyRound className="h-3 w-3" />,
-                  },
-                  {
-                    label: 'Consent',
-                    description: 'Standard authorization consent.',
-                    onClick: () => {
-                      navigate({
-                        to: '/debug/oauth2-preview',
-                        search: { screen: 'consent' },
-                      })
-                      setIsOpen(false)
-                    },
-                    icon: <ShieldCheck className="h-3 w-3" />,
-                  },
-                  {
-                    label: 'Consent (MCP)',
-                    description: 'MCP grant with scope narrowing.',
-                    onClick: () => {
-                      navigate({
-                        to: '/debug/oauth2-preview',
-                        search: { screen: 'consent-mcp' },
-                      })
-                      setIsOpen(false)
-                    },
-                    icon: <McpIcon className="h-3 w-3" />,
-                  },
-                  {
-                    label: 'Consent (resources)',
-                    description: 'Project and organization resource pickers.',
-                    onClick: () => {
-                      navigate({
-                        to: '/debug/oauth2-preview',
-                        search: { screen: 'consent-resources' },
-                      })
-                      setIsOpen(false)
-                    },
-                    icon: <Folder className="h-3 w-3" />,
-                  },
-                  {
-                    label: 'Device code',
-                    description: 'Enter a device authorization code.',
-                    onClick: () => {
-                      navigate({
-                        to: '/debug/oauth2-preview',
-                        search: { screen: 'device-enter-code' },
-                      })
-                      setIsOpen(false)
-                    },
-                    icon: <MonitorSmartphone className="h-3 w-3" />,
-                  },
-                  {
-                    label: 'Device confirm',
-                    description: 'Confirm a prefilled device code.',
-                    onClick: () => {
-                      navigate({
-                        to: '/debug/oauth2-preview',
-                        search: { screen: 'device-confirm-code' },
-                      })
-                      setIsOpen(false)
-                    },
-                    icon: <MonitorSmartphone className="h-3 w-3" />,
-                  },
-                  {
-                    label: 'Device consent',
-                    description: 'Device-flow consent screen.',
-                    onClick: () => {
-                      navigate({
-                        to: '/debug/oauth2-preview',
-                        search: { screen: 'device-consent' },
-                      })
-                      setIsOpen(false)
-                    },
-                    icon: <ShieldCheck className="h-3 w-3" />,
-                  },
-                  {
-                    label: 'Access granted',
-                    description: 'Authorization approved outcome.',
-                    onClick: () => {
-                      navigate({
-                        to: '/debug/oauth2-preview',
-                        search: { screen: 'outcome-approved' },
-                      })
-                      setIsOpen(false)
-                    },
-                    icon: <Check className="h-3 w-3" />,
-                  },
-                  {
-                    label: 'Device connected',
-                    description: 'Device-flow approved outcome.',
-                    onClick: () => {
-                      navigate({
-                        to: '/debug/oauth2-preview',
-                        search: { screen: 'outcome-approved-device' },
-                      })
-                      setIsOpen(false)
-                    },
-                    icon: <Check className="h-3 w-3" />,
-                  },
-                  {
-                    label: 'Access granted (deep link)',
-                    description: 'Approved with native deep-link retry.',
-                    onClick: () => {
-                      navigate({
-                        to: '/debug/oauth2-preview',
-                        search: { screen: 'outcome-approved-deeplink' },
-                      })
-                      setIsOpen(false)
-                    },
-                    icon: <ExternalLink className="h-3 w-3" />,
-                  },
-                  {
-                    label: 'Request cancelled',
-                    description: 'Denied / cancelled outcome.',
-                    onClick: () => {
-                      navigate({
-                        to: '/debug/oauth2-preview',
-                        search: { screen: 'outcome-denied' },
-                      })
-                      setIsOpen(false)
-                    },
-                    icon: <X className="h-3 w-3" />,
-                  },
-                  {
-                    label: 'Authorization failed',
-                    description: 'Invalid or expired request error.',
-                    onClick: () => {
-                      navigate({
-                        to: '/debug/oauth2-preview',
-                        search: { screen: 'error' },
-                      })
-                      setIsOpen(false)
-                    },
-                    icon: <AlertTriangle className="h-3 w-3" />,
-                  },
-                  {
-                    label: 'Loading',
-                    description: 'Consent / device loading spinner.',
-                    onClick: () => {
-                      navigate({
-                        to: '/debug/oauth2-preview',
-                        search: { screen: 'loading' },
-                      })
-                      setIsOpen(false)
-                    },
-                    icon: <Loader2 className="h-3 w-3" />,
-                  },
-                  {
-                    label: 'Relay success',
-                    description: 'Native OAuth callback success.',
-                    onClick: () => {
-                      navigate({
-                        to: '/debug/oauth2-preview',
-                        search: { screen: 'relay-success' },
-                      })
-                      setIsOpen(false)
-                    },
-                    icon: <Check className="h-3 w-3" />,
-                  },
-                  {
-                    label: 'Relay failure',
-                    description: 'Native OAuth callback failure.',
-                    onClick: () => {
-                      navigate({
-                        to: '/debug/oauth2-preview',
-                        search: { screen: 'relay-failure' },
-                      })
-                      setIsOpen(false)
-                    },
-                    icon: <AlertTriangle className="h-3 w-3" />,
-                  },
-                  {
-                    label: 'Relay missing URL',
-                    description: 'Missing project redirect URL.',
-                    onClick: () => {
-                      navigate({
-                        to: '/debug/oauth2-preview',
-                        search: { screen: 'relay-missing' },
-                      })
-                      setIsOpen(false)
-                    },
-                    icon: <Link2 className="h-3 w-3" />,
-                  },
-                  {
-                    label: 'Relay error',
-                    description: 'OAuth error payload without project.',
-                    onClick: () => {
-                      navigate({
-                        to: '/debug/oauth2-preview',
-                        search: { screen: 'relay-error' },
-                      })
-                      setIsOpen(false)
-                    },
-                    icon: <AlertTriangle className="h-3 w-3" />,
-                  },
-                ],
-              },
-              {
-                label: 'Git authorization',
-                description: 'Preview the GitHub contributor approval page.',
-                icon: <GitBranch className="h-3 w-3" />,
-                submenu: [
-                  {
-                    label: 'All screens',
-                    description: 'Open the Git authorization preview.',
-                    onClick: () => {
-                      navigate({
-                        to: '/debug/authorize-contributor-preview',
-                        search: { status: 'awaiting' },
-                      })
-                      setIsOpen(false)
-                    },
-                    icon: <GitBranch className="h-3 w-3" />,
-                  },
-                  {
-                    label: 'Awaiting',
-                    description: 'PR deployment waiting for owner approval.',
-                    onClick: () => {
-                      navigate({
-                        to: '/debug/authorize-contributor-preview',
-                        search: { status: 'awaiting' },
-                      })
-                      setIsOpen(false)
-                    },
-                    icon: <GitBranch className="h-3 w-3" />,
-                  },
-                  {
-                    label: 'Approved',
-                    description: 'Successful authorization outcome.',
-                    onClick: () => {
-                      navigate({
-                        to: '/debug/authorize-contributor-preview',
-                        search: { status: 'success' },
-                      })
-                      setIsOpen(false)
-                    },
-                    icon: <Check className="h-3 w-3" />,
-                  },
-                  {
-                    label: 'Failed',
-                    description: 'Authorization error from the API.',
-                    onClick: () => {
-                      navigate({
-                        to: '/debug/authorize-contributor-preview',
-                        search: { status: 'error' },
-                      })
-                      setIsOpen(false)
-                    },
-                    icon: <AlertTriangle className="h-3 w-3" />,
-                  },
-                ],
-              },
-              {
-                label: 'Functions editor',
-                description: 'Preview the Functions local editor.',
-                onClick: () => {
-                  navigate({ to: '/debug/code-editor-preview' })
-                  setIsOpen(false)
-                },
-                icon: <Code2 className="h-3 w-3" />,
-              },
-              {
-                label: 'Community support',
-                description: 'Wizard preview and X share examples',
-                icon: <HeartHandshake className="h-3 w-3" />,
-                submenuNote: COMMUNITY_SUPPORT_WIZARD_CADENCE,
-                submenu: [
-                  {
-                    label: 'Preview wizard',
-                    description: overrides.previewCommunitySupportWizard
-                      ? 'Previewing'
-                      : 'Force-show the fullscreen wizard',
-                    active: overrides.previewCommunitySupportWizard,
-                    onClick: () => {
-                      setOverrides((prev) => ({
-                        ...prev,
-                        previewCommunitySupportWizard: true,
-                      }))
-                      setDebugOverride('previewCommunitySupportWizard', true)
-                      setIsOpen(false)
-                    },
-                    icon: <HeartHandshake className="h-3 w-3" />,
-                  },
-                  {
-                    label: 'X share examples',
-                    description: 'Review all Cloud and self-hosted share drafts',
-                    icon: <MessageSquareQuote className="h-3 w-3" />,
-                    submenuVariant: 'communityShareExamples',
-                  },
-                ],
-              },
-            ],
+            submenuVariant: 'demos',
+          },
+          {
+            label: 'Screenshot mode',
+            descriptionTooltip: isScreenshotModeActive
+              ? "Walter O'Brien, walter@appwrite.io. Masks name, email, avatar, and org names. Toggle with smile or this switch."
+              : 'Masks account name, email, avatar, and org names for captures. Toggle with smile or this switch.',
+            icon: <Camera className="h-3 w-3" />,
+            variant: 'switch',
+            switchValue: isScreenshotModeActive,
+            switchOnChange: setScreenshotModeActive,
+            compact: true,
           },
         ],
       },
@@ -2065,18 +1695,6 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
             description: 'Preview console promo banners and reset dismissals.',
             icon: <Megaphone className="h-3 w-3" />,
             submenuVariant: 'consoleBanners',
-          },
-          {
-            label: 'Env',
-            description: 'Check if env vars are set (values never shown).',
-            icon: <Variable className="h-3 w-3" />,
-            submenuVariant: 'envStatus',
-          },
-          {
-            label: 'IP',
-            description: 'Compare browser IP with the IP SSR saw.',
-            icon: <Network className="h-3 w-3" />,
-            submenuVariant: 'clientIp',
           },
           {
             label: 'Terminal',
@@ -2126,6 +1744,22 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 profileId,
                 features.databasePitrRestore,
                 { category: 'Databases' },
+              ),
+              createProfileFeatureFlagItem(
+                'Database specifications',
+                'Specification settings tab, route, and sidebar compute card for product databases.',
+                'databaseSpecifications',
+                profileId,
+                features.databaseSpecifications,
+                { category: 'Databases' },
+              ),
+              createProfileFeatureFlagItem(
+                'Account applications',
+                'Account Applications page listing OAuth2 apps authorized on the console account.',
+                'accountApplications',
+                profileId,
+                features.accountApplications,
+                { category: 'Auth & security' },
               ),
               createProfileFeatureFlagItem(
                 'Console user verification',
@@ -2354,7 +1988,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
           {
             label: 'Console profile',
             description: activeProfileDescription,
-            badge: activeProfileBadge,
+            badge: activeProfileLabel,
             icon:
               profileId === 'cloud' ? (
                 <Cloud className="h-3 w-3" />
@@ -2427,7 +2061,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                             ? endpointCustomUrl
                             : activeEndpointUrl !== '—'
                               ? activeEndpointUrl
-                              : 'http://localhost/v1',
+                              : 'http://localhost:9601/v1',
                       },
                     ],
                     confirmLabel: 'Use endpoint',
@@ -2533,6 +2167,12 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
               submenu: mcpEndpointOptions,
             }
           })(),
+          {
+            label: 'Variables',
+            description: 'Check if env vars are set (values never shown).',
+            icon: <Variable className="h-3 w-3" />,
+            submenuVariant: 'envStatus',
+          },
         ],
       },
       ...(actions.length > 0
@@ -2580,12 +2220,9 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     overrides,
     isScreenshotModeActive,
     setScreenshotModeActive,
-    banners.length,
     actions,
     navigate,
     setTheme,
-    addMockBanner,
-    clearAllBanners,
     languageCopy,
     applyOverrideAndGoHome,
     prompt,
@@ -2957,9 +2594,11 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
               currentSubmenu?.submenuVariant === 'recentResources' ||
               currentSubmenu?.submenuVariant === 'envStatus' ||
               currentSubmenu?.submenuVariant === 'faviconStatus' ||
-              currentSubmenu?.submenuVariant === 'clientIp'
-              ? 'w-[min(92vw,720px)]'
-              : 'w-80',
+              currentSubmenu?.submenuVariant === 'clientIp' ||
+              currentSubmenu?.submenuVariant === 'localeStatus' ||
+              currentSubmenu?.submenuVariant === 'demos'
+                ? 'w-[min(92vw,720px)]'
+                : 'w-80',
           )}
           onWheelCapture={(event) => {
             event.stopPropagation()
@@ -3097,6 +2736,10 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 <DebugMenuFaviconPanel />
               ) : currentSubmenu.submenuVariant === 'clientIp' ? (
                 <DebugMenuIpPanel />
+              ) : currentSubmenu.submenuVariant === 'localeStatus' ? (
+                <DebugMenuLocalePanel />
+              ) : currentSubmenu.submenuVariant === 'demos' ? (
+                <DebugMenuDemosPanel onLaunchDemo={() => setIsOpen(false)} />
               ) : (
                 <div className="space-y-0.5">
                   {currentSubmenu.note ? (
@@ -3236,20 +2879,14 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                                 {item.icon}
                               </span>
                             )}
-                            <span className="min-w-0 flex-1">
-                              <span className="block font-medium">
-                                {item.label}
-                              </span>
-                              <DebugMenuItemDescription
-                                description={item.description}
-                                descriptionTooltip={item.descriptionTooltip}
-                              />
+                            <span className="min-w-0 flex-1 truncate font-medium">
+                              {item.label}
                             </span>
-                            {item.badge !== undefined && (
-                              <span className="flex-shrink-0 rounded-full bg-[color-mix(in_srgb,var(--network-globe-edge)_22%,transparent)] px-2 py-0.5 text-[11px] font-medium text-[var(--network-globe-edge)]">
+                            {isMinimalDebugMenuBadge(item.badge) ? (
+                              <span className={DEBUG_MENU_ITEM_BADGE_CLASS}>
                                 {item.badge}
                               </span>
-                            )}
+                            ) : null}
                             {hasSubmenu && (
                               <ChevronRight className="h-4 w-4 flex-shrink-0 text-[var(--network-globe-edge)]/60" />
                             )}
