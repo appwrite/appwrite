@@ -13,11 +13,13 @@ runners:
     ram: 16
     disk: 80gb
 
+  # A preempted database lane leaks its dedicated database.
   e2e-long:
     family: c3d
     cpu: 4
     ram: 16
     disk: 80gb
+    spot: false
 
   # A preempted build leaves a half-pushed digest.
   build:
