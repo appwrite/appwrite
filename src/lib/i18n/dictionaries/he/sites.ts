@@ -34,11 +34,18 @@ export const heSitesDictionary: Record<string, string> = {
   selected: 'נבחרו',
   Cancel: 'ביטול',
   Delete: 'מחיקה',
+  'Delete log': 'מחיקת לוג',
+  'Delete logs': 'מחיקת לוגים',
   'Delete Sites': 'מחיקת אתרים',
   'Are you sure you want to delete': 'האם אתם בטוחים שברצונכם למחוק',
+  'Are you sure you want to delete this log? This action cannot be undone.':
+    'האם אתם בטוחים שברצונכם למחוק לוג זה? פעולה זו אינה ניתנת לביטול.',
   'This action cannot be undone.': 'פעולה זו אינה ניתנת לביטול.',
   'Site deleted successfully': 'האתר נמחק בהצלחה',
   'Successfully deleted': 'נמחקו בהצלחה',
+  'Log deleted': 'הלוג נמחק',
+  'Failed to delete log': 'מחיקת הלוג נכשלה',
+  'Failed to delete logs': 'מחיקת הלוגים נכשלה',
   'Failed to delete sites': 'מחיקת האתרים נכשלה',
 
   // Deployments
@@ -142,6 +149,7 @@ export const heSitesDictionary: Record<string, string> = {
   'No logs yet': 'אין לוגים עדיין',
   'Logs will appear here when your site runs.':
     'לוגים יופיעו כאן כאשר האתר שלכם ירוץ.',
+  log: 'לוג',
   logs: 'לוגים',
   'No executions yet': 'אין הרצות עדיין',
   'Executions will appear here when your site runs.':

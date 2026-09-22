@@ -1,5 +1,6 @@
-import { useLayoutEffect, useRef, Fragment } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, Fragment } from 'react'
 import { useNavigate, useLocation } from '@tanstack/react-router'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Zap, Clock } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { EmptyState } from '@/components/global/shared/EmptyState'
@@ -15,7 +16,16 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Skeleton } from '@/components/ui/skeleton'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { ExecutionDetailsDrawer } from '@/components/pages/projects/$projectId/functions/ExecutionDetailsDrawer'
 import {
   ExecutionRowContextMenu,
@@ -25,6 +35,12 @@ import {
   getExecutionStatusBadge,
   getStatusCodeBadge,
 } from '@/components/pages/projects/$projectId/functions/Executions'
+import {
+  deleteFunctionExecution,
+  deleteSiteLog,
+} from '@/lib/react-query/hooks'
+import { getErrorMessage } from '@/lib/utils/error-formatting'
+import { toast } from 'sonner'
 import { useT } from '@/lib/i18n/translate'
 import type { Models } from '@appwrite.io/console'
 
@@ -60,9 +76,10 @@ function getTriggerBadge(trigger: string) {
   )
 }
 
-function LogsTableColGroup() {
+function LogsTableColGroup({ showCheckbox }: { showCheckbox: boolean }) {
   return (
     <colgroup>
+      {showCheckbox ? <col className="w-10" /> : null}
       <col className="w-[11rem]" />
       <col className="w-[11rem]" />
       <col className="w-[6.5rem]" />
@@ -78,11 +95,32 @@ function LogsTableColGroup() {
 
 const logsTableClassName = 'w-full min-w-[77rem] table-fixed'
 
-function LogsTableHead() {
+function LogsTableHead({
+  showCheckbox,
+  allSelected,
+  someSelected,
+  onToggleAll,
+}: {
+  showCheckbox: boolean
+  allSelected?: boolean
+  someSelected?: boolean
+  onToggleAll?: () => void
+}) {
   const t = useT()
   return (
     <TableHeader>
       <TableRow className="hover:bg-transparent border-b border-border">
+        {showCheckbox ? (
+          <TableHead className="sticky top-0 z-10 w-[40px] bg-background px-4 shadow-[inset_0_-1px_0_var(--border)]">
+            <Checkbox
+              checked={
+                allSelected ? true : someSelected ? 'indeterminate' : false
+              }
+              onCheckedChange={onToggleAll}
+              aria-label={t('Select all')}
+            />
+          </TableHead>
+        ) : null}
         <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 ps-6 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground shadow-[inset_0_-1px_0_var(--border)] sm:ps-8">
           {t('Execution ID')}
         </TableHead>
@@ -115,7 +153,13 @@ function LogsTableHead() {
   )
 }
 
-function LogsSkeletonRows({ rowCount }: { rowCount: number }) {
+function LogsSkeletonRows({
+  rowCount,
+  showCheckbox,
+}: {
+  rowCount: number
+  showCheckbox: boolean
+}) {
   return (
     <>
       {Array.from({ length: rowCount }, (_, i) => (
@@ -124,6 +168,11 @@ function LogsSkeletonRows({ rowCount }: { rowCount: number }) {
           className="pointer-events-none hover:bg-transparent"
           aria-hidden
         >
+          {showCheckbox ? (
+            <TableCell className="px-4 py-3">
+              <Skeleton className="h-4 w-4" />
+            </TableCell>
+          ) : null}
           <TableCell className="min-w-0 px-4 py-3 ps-6 sm:ps-8">
             <Skeleton className="h-4 w-32 max-w-full" />
           </TableCell>
@@ -175,7 +224,13 @@ function LogsPaginationSkeleton() {
   )
 }
 
-function LogsLoadingTable({ rowCount }: { rowCount: number }) {
+function LogsLoadingTable({
+  rowCount,
+  showCheckbox,
+}: {
+  rowCount: number
+  showCheckbox: boolean
+}) {
   const t = useT()
   return (
     <>
@@ -187,10 +242,13 @@ function LogsLoadingTable({ rowCount }: { rowCount: number }) {
         aria-label={t('Loading logs')}
       >
         <Table withScrollContainer={false} className={logsTableClassName}>
-          <LogsTableColGroup />
-          <LogsTableHead />
+          <LogsTableColGroup showCheckbox={showCheckbox} />
+          <LogsTableHead showCheckbox={showCheckbox} />
           <TableBody>
-            <LogsSkeletonRows rowCount={rowCount} />
+            <LogsSkeletonRows
+              rowCount={rowCount}
+              showCheckbox={showCheckbox}
+            />
           </TableBody>
         </Table>
       </div>
@@ -278,11 +336,24 @@ export function LogsListView({
   const t = useT()
   const navigate = useNavigate()
   const location = useLocation()
+  const queryClient = useQueryClient()
   const scrollContainerRef = useRef<HTMLDivElement>(null)
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
 
+  const canDelete = Boolean(projectId && resourceVariant && resourceId)
   const selectedExecution =
     executions.find((e) => e.$id === selectedExecutionId) || null
   const drawerOpen = selectedExecutionId !== null
+  const allSelected =
+    executions.length > 0 && executions.every((e) => selectedIds.has(e.$id))
+  const someSelected = selectedIds.size > 0 && !allSelected
+  const singularLabel = resourceVariant === 'site' ? 'log' : 'execution'
+  const pluralLabel = resourceVariant === 'site' ? 'logs' : 'executions'
+
+  useEffect(() => {
+    setSelectedIds(new Set())
+  }, [currentPage, pageSize, projectId, resourceId, resourceVariant])
 
   useLayoutEffect(() => {
     if (executions.length > 0 && currentPage !== undefined) {
@@ -319,10 +390,85 @@ export function LogsListView({
     }
   }
 
+  const handleDeleted = (executionId: string) => {
+    setSelectedIds((prev) => {
+      if (!prev.has(executionId)) return prev
+      const next = new Set(prev)
+      next.delete(executionId)
+      return next
+    })
+    if (selectedExecutionId === executionId) {
+      handleDrawerClose(false)
+    }
+  }
+
+  const toggleAll = () => {
+    if (allSelected) {
+      setSelectedIds(new Set())
+      return
+    }
+    setSelectedIds(new Set(executions.map((e) => e.$id)))
+  }
+
+  const toggleOne = (executionId: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(executionId)) next.delete(executionId)
+      else next.add(executionId)
+      return next
+    })
+  }
+
+  const bulkDeleteMutation = useMutation({
+    mutationFn: async (ids: string[]) => {
+      if (!projectId || !resourceId || !resourceVariant) {
+        throw new Error('Project ID and resource ID are required')
+      }
+      await Promise.all(
+        ids.map((id) =>
+          resourceVariant === 'function'
+            ? deleteFunctionExecution(projectId, resourceId, id)
+            : deleteSiteLog(projectId, resourceId, id),
+        ),
+      )
+    },
+    onSuccess: async (_data, ids) => {
+      if (resourceVariant === 'function') {
+        await queryClient.refetchQueries({
+          queryKey: ['executions', 'function', projectId, resourceId],
+        })
+      } else {
+        await queryClient.refetchQueries({
+          queryKey: ['logs', 'site', projectId, resourceId],
+        })
+      }
+      toast.success(
+        `${t('Successfully deleted')} ${ids.length} ${t(
+          ids.length > 1 ? pluralLabel : singularLabel,
+        )}`,
+      )
+      setSelectedIds(new Set())
+      setDeleteDialogOpen(false)
+      if (selectedExecutionId && ids.includes(selectedExecutionId)) {
+        handleDrawerClose(false)
+      }
+    },
+    onError: (error: Error) => {
+      toast.error(
+        getErrorMessage(error) ||
+          t(
+            resourceVariant === 'site'
+              ? 'Failed to delete logs'
+              : 'Failed to delete executions',
+          ),
+      )
+    },
+  })
+
   if (isLoading && executions.length === 0) {
     return (
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-        <LogsLoadingTable rowCount={pageSize} />
+        <LogsLoadingTable rowCount={pageSize} showCheckbox={canDelete} />
       </div>
     )
   }
@@ -336,8 +482,13 @@ export function LogsListView({
             className="relative min-h-0 min-w-0 flex-1 overflow-auto"
           >
             <Table withScrollContainer={false} className={logsTableClassName}>
-              <LogsTableColGroup />
-              <LogsTableHead />
+              <LogsTableColGroup showCheckbox={canDelete} />
+              <LogsTableHead
+                showCheckbox={canDelete}
+                allSelected={allSelected}
+                someSelected={someSelected}
+                onToggleAll={toggleAll}
+              />
               <TableBody>
                 {executions.map((execution) => {
                   const executionData = execution as Models.Execution
@@ -357,6 +508,7 @@ export function LogsListView({
                   const path = executionData.requestPath || 'N/A'
                   const isSelected =
                     drawerOpen && selectedExecutionId === executionId
+                  const isChecked = selectedIds.has(executionId)
 
                   const row = (
                     <TableRow
@@ -375,6 +527,19 @@ export function LogsListView({
                         }
                       }}
                     >
+                      {canDelete ? (
+                        <TableCell
+                          className="px-4 py-3"
+                          onClick={(e) => e.stopPropagation()}
+                          onKeyDown={(e) => e.stopPropagation()}
+                        >
+                          <Checkbox
+                            checked={isChecked}
+                            onCheckedChange={() => toggleOne(executionId)}
+                            aria-label={t('Select row')}
+                          />
+                        </TableCell>
+                      ) : null}
                       <TableCell className="min-w-0 px-4 py-3 ps-6 sm:ps-8">
                         <CopyableId
                           id={executionId}
@@ -471,15 +636,14 @@ export function LogsListView({
                         resourceId={resourceId}
                         execution={executionData}
                         onOpenDetails={() => onExecutionSelect(executionId)}
+                        onDeleted={handleDeleted}
                       >
                         {row}
                       </ExecutionRowContextMenu>
                     )
                   }
 
-                  return (
-                    <Fragment key={executionId}>{row}</Fragment>
-                  )
+                  return <Fragment key={executionId}>{row}</Fragment>
                 })}
               </TableBody>
             </Table>
@@ -510,6 +674,78 @@ export function LogsListView({
         </div>
       )}
 
+      {selectedIds.size > 0 && (
+        <div className="fixed bottom-4 start-1/2 z-50 -translate-x-1/2">
+          <div className="mx-auto flex min-w-[400px] items-center justify-between gap-3 rounded-lg border border-border bg-background px-6 py-3">
+            <Badge variant="secondary" className="h-6 px-2.5">
+              {selectedIds.size}{' '}
+              {t(selectedIds.size > 1 ? pluralLabel : singularLabel)}{' '}
+              {t('selected')}
+            </Badge>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setSelectedIds(new Set())}
+                className="h-8 text-xs"
+              >
+                {t('Cancel')}
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => setDeleteDialogOpen(true)}
+                disabled={bulkDeleteMutation.isPending}
+                className="h-8 gap-2"
+              >
+                {t('Delete')}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-md p-0">
+          <DialogHeader className="px-6 pt-6 pb-4 text-start">
+            <DialogTitle>
+              {t(
+                selectedIds.size > 1
+                  ? resourceVariant === 'site'
+                    ? 'Delete logs'
+                    : 'Delete executions'
+                  : resourceVariant === 'site'
+                    ? 'Delete log'
+                    : 'Delete execution',
+              )}
+            </DialogTitle>
+            <DialogDescription className="text-[13px] mt-2">
+              {t('Are you sure you want to delete')} {selectedIds.size}{' '}
+              {t(selectedIds.size > 1 ? pluralLabel : singularLabel)}?{' '}
+              {t('This action cannot be undone.')}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <Button
+              variant="outline"
+              onClick={() => setDeleteDialogOpen(false)}
+              disabled={bulkDeleteMutation.isPending}
+            >
+              {t('Cancel')}
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() =>
+                bulkDeleteMutation.mutate(Array.from(selectedIds))
+              }
+              disabled={bulkDeleteMutation.isPending}
+            >
+              {t('Delete')}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <ExecutionDetailsDrawer
         open={drawerOpen}
         onOpenChange={handleDrawerClose}
@@ -517,6 +753,7 @@ export function LogsListView({
         executions={executions as Models.Execution[]}
         func={func}
         onNavigate={handleNavigate}
+        onDeleted={handleDeleted}
         projectId={projectId}
         resourceVariant={resourceVariant}
         resourceId={resourceId}
