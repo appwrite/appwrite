@@ -9,6 +9,7 @@ use Appwrite\Installer\Report;
 use Appwrite\Migration\Infrastructure\Migration as InfrastructureMigration;
 use Appwrite\Platform\Installer\Runtime\State;
 use Appwrite\Platform\Installer\Server as InstallerServer;
+use Appwrite\Platform\Installer\Validator\AppDomain;
 use Appwrite\Utopia\View;
 use Swoole\Coroutine;
 use Utopia\Auth\Proofs\Password;
@@ -70,7 +71,7 @@ class Install extends Action
             ->param('database', 'postgresql', new WhiteList(['postgresql', 'mariadb', 'mongodb']), 'Database to use (postgresql|mariadb|mongodb)', true)
             ->param('topology', 'combined', new WhiteList(['combined', 'separate']), 'Worker and scheduler topology (combined|separate)', true)
             ->param('channel', self::CHANNEL_STABLE, new WhiteList([self::CHANNEL_STABLE, self::CHANNEL_NIGHTLY]), 'Release channel to track (stable|nightly). Nightly is unsupported and moves daily.', true)
-            ->param('domain', '', new Text(0), 'Appwrite hostname, also used as the custom domain CNAME target', true)
+            ->param('domain', '', new AppDomain(), 'Appwrite hostname, also used as the custom domain CNAME target', true)
             ->callback($this->action(...));
     }
 
@@ -1025,7 +1026,13 @@ class Install extends Action
         }
 
         $domain = $input['_APP_DOMAIN'] ?? 'localhost';
-        $hostIp = Report::isLoopback($domain) ? $domain : @gethostbyname($domain);
+        $loopback = Report::isLoopback($domain);
+        $hostIp = $loopback ? $domain : @gethostbyname($domain);
+
+        // A loopback host is a local or test instance; count it, but without the account.
+        if ($loopback) {
+            $account = [];
+        }
 
         return new Report(
             action: $isUpgrade ? Report::ACTION_UPGRADE : Report::ACTION_INSTALL,

@@ -3,7 +3,7 @@
 namespace Appwrite\Installer;
 
 /**
- * Anonymous usage report for a self-hosted install or upgrade.
+ * Usage report for a self-hosted install or upgrade.
  *
  * Every entry point (web installer, interactive CLI, headless CLI) builds one of
  * these, so the decision to opt out and the payload shape live here rather than
@@ -60,7 +60,8 @@ final readonly class Report
     }
 
     /**
-     * A loopback or unspecified host never resolves to anything worth reporting.
+     * A loopback or unspecified host is a local or test instance: it never
+     * resolves to anything worth reporting and its account stays private.
      */
     public static function isLoopback(string $domain): bool
     {
