@@ -706,12 +706,10 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
             $execution->setAttribute('errors', $errors);
             $execution->setAttribute('responseStatusCode', $executionResponse['statusCode']);
             $execution->setAttribute('responseHeaders', $headersFiltered);
-            $execution->setAttribute('duration', $executionResponse['duration']);
+            $execution->setAttribute('duration', \microtime(true) - $durationStart);
         } catch (\Throwable $th) {
-            $durationEnd = \microtime(true);
-
             $execution
-                ->setAttribute('duration', $durationEnd - $durationStart)
+                ->setAttribute('duration', \microtime(true) - $durationStart)
                 ->setAttribute('responseStatusCode', 500);
 
             if ($type === 'function') {
@@ -815,6 +813,22 @@ Http::init()
         $geoRecord = $geo->get($request->getIP());
         $country = $geoRecord->isEmpty() ? '' : strtolower($geoRecord->getCountryCode());
 
+        $queryKeys = '';
+        $rawQuery = parse_url($uri, PHP_URL_QUERY);
+        if (is_string($rawQuery) && $rawQuery !== '') {
+            $queryKeySet = [];
+            foreach (explode('&', $rawQuery) as $pair) {
+                if ($pair === '') {
+                    continue;
+                }
+                $key = strtolower(urldecode(explode('=', $pair, 2)[0]));
+                if ($key !== '') {
+                    $queryKeySet[$key] = true;
+                }
+            }
+            $queryKeys = implode(',', array_keys($queryKeySet));
+        }
+
         $usage
             ->setPath($uri)
             ->setMethod($request->getMethod())
@@ -824,6 +838,10 @@ Http::init()
             ->setIp($request->getIP())
             ->setSdk(strtolower($request->getHeaderLine('x-sdk-name', '')))
             ->setSdkVersion($request->getHeaderLine('x-sdk-version', ''))
+            ->setProtocol(strtolower($request->getProtocol()))
+            ->setAccept($request->getHeaderLine('accept', ''))
+            ->setAcceptLanguage($request->getHeaderLine('accept-language', ''))
+            ->setQueryKeys($queryKeys)
             ->setRegion(System::getEnv('_APP_REGION', 'default'))
             ->setService($parts[1] ?? $parts[0])
             ->setResourceType('')

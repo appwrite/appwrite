@@ -228,6 +228,41 @@ final class SignatureV4Test extends TestCase
         );
     }
 
+    public function testVerifiesHeadObjectSignatureAfterProxyRewritesToGet(): void
+    {
+        $secret = 'test-api-key-secret';
+        $signed = $this->signedRequest('HEAD', '/v1/s3/bucket/object.txt', '', $secret, query: 'x-id=HeadObject');
+        $request = new TestRequest('GET', $signed->uri, $signed->headerMap, $signed->body, $signed->query);
+
+        $key = (new SignatureV4())->verify(
+            $request,
+            $this->project($secret, ['files.read']),
+            new Document(),
+            new User(),
+            ['files.read']
+        );
+
+        $this->assertSame('project-test', $key->getProjectId());
+    }
+
+    public function testRejectsHeadSignatureReplayedAsGetObject(): void
+    {
+        $secret = 'test-api-key-secret';
+        $signed = $this->signedRequest('HEAD', '/v1/s3/bucket/object.txt', '', $secret);
+        $request = new TestRequest('GET', $signed->uri, $signed->headerMap, $signed->body, $signed->query);
+
+        $this->expectException(AppwriteException::class);
+        $this->expectExceptionMessage('Signature does not match.');
+
+        (new SignatureV4())->verify(
+            $request,
+            $this->project($secret, ['files.read']),
+            new Document(),
+            new User(),
+            ['files.read']
+        );
+    }
+
     private function project(string $secret, array $scopes): Document
     {
         return new Document([

@@ -7,6 +7,7 @@ use Appwrite\Auth\Validator\EmailWhitelist;
 use Appwrite\Auth\Validator\Password;
 use Appwrite\Auth\Validator\PasswordDictionary;
 use Appwrite\Auth\Validator\PasswordHistory;
+use Appwrite\Auth\Validator\PasswordPwned;
 use Appwrite\Auth\Validator\PasswordStrength;
 use Appwrite\Auth\Validator\PersonalData;
 use Appwrite\Auth\Validator\Phone;
@@ -314,7 +315,8 @@ Http::post('/v1/account')
     ->inject('authorization')
     ->inject('hooks')
     ->inject('plan')
-    ->action(function (string $userId, string $email, string $password, ?string $name, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Authorization $authorization, Hooks $hooks, array $plan) {
+    ->inject('pwnedPasswords')
+    ->action(function (string $userId, string $email, string $password, ?string $name, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Authorization $authorization, Hooks $hooks, array $plan, PasswordPwned $pwnedPasswords) {
         $name ??= '';
         $email = \strtolower($email);
         if ('console' === $project->getId()) {
@@ -357,6 +359,15 @@ Http::post('/v1/account')
             if (!$personalDataValidator->isValid($password)) {
                 throw new Exception(Exception::USER_PASSWORD_PERSONAL_DATA);
             }
+        }
+
+        // null when the policy did not look, false when it looked and found nothing
+        $pwnedPolicy = $project->getAttribute('auths', [])['passwordPwned'] ?? [];
+        $passwordPwned = ($pwnedPolicy['enabled'] ?? true)
+            ? !$pwnedPasswords->isValid($password)
+            : null;
+        if ($passwordPwned && ($pwnedPolicy['users'] ?? false)) {
+            throw new Exception(Exception::USER_PASSWORD_PWNED);
         }
 
         $hooks->trigger('passwordValidator', [$dbForProject, $project, $password, &$user, true]);
@@ -435,6 +446,7 @@ Http::post('/v1/account')
                 'emailIsCorporate' => $emailMetadata['emailIsCorporate'],
                 'emailIsDisposable' => $emailMetadata['emailIsDisposable'],
                 'emailIsFree' => $emailMetadata['emailIsFree'],
+                'passwordPwned' => $passwordPwned,
             ]);
 
             $user->removeAttribute('$sequence');
@@ -917,6 +929,20 @@ Http::patch('/v1/account/sessions/:sessionId')
                 ->setAttribute('providerRefreshToken', $oauth2->getRefreshToken(''))
                 ->setAttribute('providerAccessTokenExpiry', DateTime::formatTz(DateTime::addSeconds(new \DateTime(), (int) $oauth2->getAccessTokenExpiry(''))));
 
+            try {
+                $identity = $dbForProject->findOne('identities', [
+                    Query::equal('provider', [$provider]),
+                    Query::equal('providerUid', [$session->getAttribute('providerUid', '')]),
+                ]);
+
+                if (!$identity->isEmpty()) {
+                    $dbForProject->updateDocument('identities', $identity->getId(), new Document([
+                        'photo' => $oauth2->getUserPhoto($oauth2->getAccessToken('')),
+                    ]));
+                }
+            } catch (\Throwable $th) {
+                // Photo refresh is best-effort and must not block session token refresh
+            }
         }
 
         // Save changes
@@ -978,7 +1004,8 @@ Http::post('/v1/account/sessions/email')
     ->inject('domainVerification')
     ->inject('cookieDomain')
     ->inject('authorization')
-    ->action(function (string $email, string $password, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, Geo $geo, Event $queueForEvents, Bus $bus, Hooks $hooks, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken, bool $domainVerification, ?string $cookieDomain, Authorization $authorization) {
+    ->inject('pwnedPasswords')
+    ->action(function (string $email, string $password, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, Geo $geo, Event $queueForEvents, Bus $bus, Hooks $hooks, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken, bool $domainVerification, ?string $cookieDomain, Authorization $authorization, PasswordPwned $pwnedPasswords) {
         $email = \strtolower($email);
         $protocol = $request->getProtocol();
 
@@ -1036,6 +1063,24 @@ Http::post('/v1/account/sessions/email')
         ));
 
         $authorization->addRole(Role::user($user->getId())->toString());
+
+        $pwnedPolicy = $project->getAttribute('auths', [])['passwordPwned'] ?? [];
+
+        if ($pwnedPolicy['enabled'] ?? true) {
+            // Every sign-in records the outcome so the flag follows the breach corpus; only the sessions option refuses the sign-in
+            $passwordPwned = !$pwnedPasswords->isValid($password);
+
+            if ($passwordPwned !== $user->getAttribute('passwordPwned')) {
+                $user->setAttribute('passwordPwned', $passwordPwned);
+                $dbForProject->updateDocument('users', $user->getId(), new Document([
+                    'passwordPwned' => $passwordPwned,
+                ]));
+            }
+
+            if ($passwordPwned && ($pwnedPolicy['sessions'] ?? false)) {
+                throw new Exception(Exception::USER_PASSWORD_RESET_REQUIRED);
+            }
+        }
 
         // Re-hash if not using recommended algo
         if ($user->getAttribute('hash') !== $proofForPassword->getHash()->getName()) {
@@ -2460,7 +2505,11 @@ Http::post('/v1/account/tokens/magic-url')
             ]);
 
             $user->removeAttribute('$sequence');
-            $user = $authorization->skip(fn () => $dbForProject->createDocument('users', $user));
+            try {
+                $user = $authorization->skip(fn () => $dbForProject->createDocument('users', $user));
+            } catch (Duplicate) {
+                throw new Exception(Exception::USER_ALREADY_EXISTS);
+            }
         }
 
         $proofForToken = new ProofsToken(TOKEN_LENGTH_MAGIC_URL);
@@ -2782,7 +2831,11 @@ Http::post('/v1/account/tokens/email')
             ]);
 
             $user->removeAttribute('$sequence');
-            $user = $authorization->skip(fn () => $dbForProject->createDocument('users', $user));
+            try {
+                $user = $authorization->skip(fn () => $dbForProject->createDocument('users', $user));
+            } catch (Duplicate) {
+                throw new Exception(Exception::USER_ALREADY_EXISTS);
+            }
             try {
                 $target = $authorization->skip(fn () => $dbForProject->createDocument('targets', new Document([
                     '$permissions' => [
@@ -3180,7 +3233,11 @@ Http::post('/v1/account/tokens/phone')
             ]);
 
             $user->removeAttribute('$sequence');
-            $user = $authorization->skip(fn () => $dbForProject->createDocument('users', $user));
+            try {
+                $user = $authorization->skip(fn () => $dbForProject->createDocument('users', $user));
+            } catch (Duplicate) {
+                throw new Exception(Exception::USER_ALREADY_EXISTS);
+            }
             try {
                 $target = $authorization->skip(fn () => $dbForProject->createDocument('targets', new Document([
                     '$permissions' => [
@@ -3447,7 +3504,8 @@ Http::patch('/v1/account/password')
     ->inject('store')
     ->inject('proofForPassword')
     ->inject('proofForToken')
-    ->action(function (string $password, string $oldPassword, Response $response, User $user, Document $project, Database $dbForProject, Event $queueForEvents, Hooks $hooks, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken) {
+    ->inject('pwnedPasswords')
+    ->action(function (string $password, string $oldPassword, Response $response, User $user, Document $project, Database $dbForProject, Event $queueForEvents, Hooks $hooks, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken, PasswordPwned $pwnedPasswords) {
         $userProofForPassword = ProofsPassword::createHash($user->getAttribute('hash'), $user->getAttribute('hashOptions'));
         // Check old password only if its an existing user.
         if (!empty($user->getAttribute('passwordUpdate')) && !$userProofForPassword->verify($oldPassword, $user->getAttribute('password'))) { // Double check user password
@@ -3476,11 +3534,21 @@ Http::patch('/v1/account/password')
             }
         }
 
+        // null when the policy did not look, false when it looked and found nothing
+        $pwnedPolicy = $project->getAttribute('auths', [])['passwordPwned'] ?? [];
+        $passwordPwned = ($pwnedPolicy['enabled'] ?? true)
+            ? !$pwnedPasswords->isValid($password)
+            : null;
+        if ($passwordPwned && ($pwnedPolicy['users'] ?? false)) {
+            throw new Exception(Exception::USER_PASSWORD_PWNED);
+        }
+
         $hooks->trigger('passwordValidator', [$dbForProject, $project, $password, &$user, true]);
 
         $user
             ->setAttribute('password', $newPassword)
             ->setAttribute('passwordHistory', $history)
+            ->setAttribute('passwordPwned', $passwordPwned)
             ->setAttribute('passwordUpdate', DateTime::now())
             ->setAttribute('hash', $proofForPassword->getHash()->getName())
             ->setAttribute('hashOptions', $proofForPassword->getHash()->getOptions());
@@ -3539,7 +3607,9 @@ Http::patch('/v1/account/email')
     ->inject('plan')
     ->inject('proofForPassword')
     ->inject('authorization')
-    ->action(function (string $email, string $password, ?\DateTime $requestTimestamp, Response $response, User $user, Database $dbForProject, Event $queueForEvents, Document $project, Hooks $hooks, array $plan, ProofsPassword $proofForPassword, Authorization $authorization) {
+    ->inject('passwordsDictionary')
+    ->inject('pwnedPasswords')
+    ->action(function (string $email, string $password, ?\DateTime $requestTimestamp, Response $response, User $user, Database $dbForProject, Event $queueForEvents, Document $project, Hooks $hooks, array $plan, ProofsPassword $proofForPassword, Authorization $authorization, array $passwordsDictionary, PasswordPwned $pwnedPasswords) {
         // passwordUpdate will be empty if the user has never set a password
         $passwordUpdate = $user->getAttribute('passwordUpdate');
 
@@ -3550,6 +3620,35 @@ Http::patch('/v1/account/email')
             !$userProofForPassword->verify($password, $user->getAttribute('password'))
         ) { // Double check user password
             throw new Exception(Exception::USER_INVALID_CREDENTIALS);
+        }
+
+        $passwordPwned = null;
+        if (empty($passwordUpdate)) {
+            // First password for an anonymous account: apply the same policies as account creation
+            $strength = new PasswordStrength($project->getAttribute('auths', [])['passwordStrength'] ?? []);
+            if (!$strength->isValid($password)) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid `password` param: ' . $strength->getDescription());
+            }
+
+            $dictionary = new PasswordDictionary($passwordsDictionary, enabled: $project->getAttribute('auths', [])['passwordDictionary'] ?? false);
+            if (!$dictionary->isValid($password)) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid `password` param: ' . $dictionary->getDescription());
+            }
+
+            if ($project->getAttribute('auths', [])['personalDataCheck'] ?? false) {
+                $personalDataValidator = new PersonalData($user->getId(), $email, $user->getAttribute('name'), $user->getAttribute('phone'));
+                if (!$personalDataValidator->isValid($password)) {
+                    throw new Exception(Exception::USER_PASSWORD_PERSONAL_DATA);
+                }
+            }
+
+            $pwnedPolicy = $project->getAttribute('auths', [])['passwordPwned'] ?? [];
+            $passwordPwned = ($pwnedPolicy['enabled'] ?? true)
+                ? !$pwnedPasswords->isValid($password)
+                : null;
+            if ($passwordPwned && ($pwnedPolicy['users'] ?? false)) {
+                throw new Exception(Exception::USER_PASSWORD_PWNED);
+            }
         }
 
         $hooks->trigger('passwordValidator', [$dbForProject, $project, $password, &$user, false]);
@@ -3617,8 +3716,12 @@ Http::patch('/v1/account/email')
         ;
 
         if (empty($passwordUpdate)) {
+            $newPassword = $proofForPassword->hash($password);
+            $historyLimit = $project->getAttribute('auths', [])['passwordHistory'] ?? 0;
             $user
-                ->setAttribute('password', $proofForPassword->hash($password))
+                ->setAttribute('password', $newPassword)
+                ->setAttribute('passwordHistory', $historyLimit > 0 ? [$newPassword] : [])
+                ->setAttribute('passwordPwned', $passwordPwned)
                 ->setAttribute('hash', $proofForPassword->getHash()->getName())
                 ->setAttribute('hashOptions', $proofForPassword->getHash()->getOptions())
                 ->setAttribute('passwordUpdate', DateTime::now());
@@ -3681,7 +3784,9 @@ Http::patch('/v1/account/phone')
     ->inject('hooks')
                 ->inject('proofForPassword')
 ->inject('authorization')
-    ->action(function (string $phone, string $password, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Document $project, Hooks $hooks, ProofsPassword $proofForPassword, Authorization $authorization) {
+    ->inject('passwordsDictionary')
+    ->inject('pwnedPasswords')
+    ->action(function (string $phone, string $password, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Document $project, Hooks $hooks, ProofsPassword $proofForPassword, Authorization $authorization, array $passwordsDictionary, PasswordPwned $pwnedPasswords) {
         // passwordUpdate will be empty if the user has never set a password
         $passwordUpdate = $user->getAttribute('passwordUpdate');
 
@@ -3692,6 +3797,35 @@ Http::patch('/v1/account/phone')
             !$userProofForPassword->verify($password, $user->getAttribute('password'))
         ) { // Double check user password
             throw new Exception(Exception::USER_INVALID_CREDENTIALS);
+        }
+
+        $passwordPwned = null;
+        if (empty($passwordUpdate)) {
+            // First password for an anonymous account: apply the same policies as account creation
+            $strength = new PasswordStrength($project->getAttribute('auths', [])['passwordStrength'] ?? []);
+            if (!$strength->isValid($password)) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid `password` param: ' . $strength->getDescription());
+            }
+
+            $dictionary = new PasswordDictionary($passwordsDictionary, enabled: $project->getAttribute('auths', [])['passwordDictionary'] ?? false);
+            if (!$dictionary->isValid($password)) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid `password` param: ' . $dictionary->getDescription());
+            }
+
+            if ($project->getAttribute('auths', [])['personalDataCheck'] ?? false) {
+                $personalDataValidator = new PersonalData($user->getId(), $user->getAttribute('email'), $user->getAttribute('name'), $phone);
+                if (!$personalDataValidator->isValid($password)) {
+                    throw new Exception(Exception::USER_PASSWORD_PERSONAL_DATA);
+                }
+            }
+
+            $pwnedPolicy = $project->getAttribute('auths', [])['passwordPwned'] ?? [];
+            $passwordPwned = ($pwnedPolicy['enabled'] ?? true)
+                ? !$pwnedPasswords->isValid($password)
+                : null;
+            if ($passwordPwned && ($pwnedPolicy['users'] ?? false)) {
+                throw new Exception(Exception::USER_PASSWORD_PWNED);
+            }
         }
 
         $hooks->trigger('passwordValidator', [$dbForProject, $project, $password, &$user, false]);
@@ -3712,8 +3846,12 @@ Http::patch('/v1/account/phone')
         ;
 
         if (empty($passwordUpdate)) {
+            $newPassword = $proofForPassword->hash($password);
+            $historyLimit = $project->getAttribute('auths', [])['passwordHistory'] ?? 0;
             $user
-                ->setAttribute('password', $proofForPassword->hash($password))
+                ->setAttribute('password', $newPassword)
+                ->setAttribute('passwordHistory', $historyLimit > 0 ? [$newPassword] : [])
+                ->setAttribute('passwordPwned', $passwordPwned)
                 ->setAttribute('hash', $proofForPassword->getHash()->getName())
                 ->setAttribute('hashOptions', $proofForPassword->getHash()->getOptions())
                 ->setAttribute('passwordUpdate', DateTime::now());
@@ -4098,7 +4236,8 @@ Http::put('/v1/account/recovery')
     ->inject('proofForPassword')
     ->inject('proofForToken')
 ->inject('authorization')
-    ->action(function (string $userId, string $secret, string $password, Response $response, User $user, Database $dbForProject, Document $project, Event $queueForEvents, Hooks $hooks, ProofsPassword $proofForPassword, ProofsToken $proofForToken, Authorization $authorization) {
+    ->inject('pwnedPasswords')
+    ->action(function (string $userId, string $secret, string $password, Response $response, User $user, Database $dbForProject, Document $project, Event $queueForEvents, Hooks $hooks, ProofsPassword $proofForPassword, ProofsToken $proofForToken, Authorization $authorization, PasswordPwned $pwnedPasswords) {
         /** @var Appwrite\Utopia\Database\Documents\User $profile */
         $profile = $dbForProject->getDocument('users', $userId);
 
@@ -4130,6 +4269,15 @@ Http::put('/v1/account/recovery')
             $history = array_slice($history, (count($history) - $historyLimit), $historyLimit);
         }
 
+        // null when the policy did not look, false when it looked and found nothing
+        $pwnedPolicy = $project->getAttribute('auths', [])['passwordPwned'] ?? [];
+        $passwordPwned = ($pwnedPolicy['enabled'] ?? true)
+            ? !$pwnedPasswords->isValid($password)
+            : null;
+        if ($passwordPwned && ($pwnedPolicy['users'] ?? false)) {
+            throw new Exception(Exception::USER_PASSWORD_PWNED);
+        }
+
         $hooks->trigger('passwordValidator', [$dbForProject, $project, $password, &$user, true]);
 
         $sessions = $profile->getAttribute('sessions', []);
@@ -4138,6 +4286,377 @@ Http::put('/v1/account/recovery')
             [
                 'password' => $newPassword,
                 'passwordHistory' => $history,
+                'passwordPwned' => $passwordPwned,
+                'passwordUpdate' => DateTime::now(),
+                'hash' => $proofForPassword->getHash()->getName(),
+                'hashOptions' => $proofForPassword->getHash()->getOptions(),
+                'emailVerification' => true]
+        ));
+
+        $user->setAttributes($profile->getArrayCopy());
+
+        $invalidate = $project->getAttribute('auths', default: [])['invalidateSessions'] ?? false;
+        if ($invalidate) {
+            foreach ($sessions as $session) {
+                /** @var Document $session */
+                $dbForProject->deleteDocument('sessions', $session->getId());
+            }
+        }
+
+        $recoveryDocument = $dbForProject->getDocument('tokens', $verifiedToken->getId());
+
+        /**
+         * We act like we're updating and validating
+         *  the recovery token but actually we don't need it anymore.
+         */
+        $dbForProject->deleteDocument('tokens', $verifiedToken->getId());
+        $dbForProject->purgeCachedDocument('users', $profile->getId());
+
+        $queueForEvents
+            ->setParam('userId', $profile->getId())
+            ->setParam('tokenId', $recoveryDocument->getId())
+            ->setPayload($response->showSensitive(fn () => $response->output($recoveryDocument, Response::MODEL_TOKEN)), sensitive: ['secret']);
+
+        $response->dynamic($recoveryDocument, Response::MODEL_TOKEN);
+    });
+
+Http::post('/v1/account/recovery/otp')
+    ->desc('Create password recovery (OTP)')
+    ->groups(['api', 'account'])
+    ->label('scope', 'sessions.write')
+    ->label('event', 'users.[userId].recovery.[tokenId].create')
+    ->label('audits.event', 'recovery.create')
+    ->label('audits.resource', 'user/{response.userId}')
+    ->label('audits.userId', '{response.userId}')
+    ->label('sdk', new Method(
+        namespace: 'account',
+        group: 'recovery',
+        name: 'createRecoveryOTP',
+        description: '/docs/references/account/create-recovery-otp.md',
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_TOKEN,
+            )
+        ],
+        contentType: ContentType::JSON,
+    ))
+    ->label('abuse-limit', 10)
+    ->label('abuse-key', ['url:{url},email:{param-email}', 'url:{url},ip:{ip}'])
+    ->param('email', '', new EmailValidator(), 'User email.')
+    ->param('phrase', false, new Boolean(), 'Toggle for security phrase. If enabled, email will be sent with a randomly generated phrase and the phrase will also be included in the response. Confirming phrases match increases the security of your authentication flow.', true)
+    ->inject('request')
+    ->inject('response')
+    ->inject('user')
+    ->inject('dbForProject')
+    ->inject('project')
+    ->inject('platform')
+    ->inject('locale')
+    ->inject('publisherForMails')
+    ->inject('queueForEvents')
+    ->inject('proofForCode')
+    ->inject('authorization')
+    ->action(function (string $email, bool $phrase, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, MailPublisher $publisherForMails, Event $queueForEvents, ProofsCode $proofForCode, Authorization $authorization) {
+        if (empty(System::getEnv('_APP_SMTP_HOST'))) {
+            throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP Disabled');
+        }
+
+        $email = \strtolower($email);
+
+        if ($phrase === true) {
+            $phrase = (new Phrase())->generate();
+        }
+
+        $profile = $dbForProject->findOne('users', [
+            Query::equal('email', [$email]),
+        ]);
+
+        $deliverable = !$profile->isEmpty() && $profile->getAttribute('status') !== false;
+
+        if ($deliverable) {
+            $user->setAttributes($profile->getArrayCopy());
+        }
+
+        $userId = $deliverable ? $profile->getId() : ID::unique();
+
+        $secret = $proofForCode->generate();
+        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), TOKEN_EXPIRATION_OTP));
+
+        $recovery = new Document([
+            '$id' => ID::unique(),
+            'userId' => $userId,
+            'userInternalId' => $deliverable ? $profile->getSequence() : ID::unique(),
+            'type' => TOKEN_TYPE_RECOVERY_OTP,
+            'secret' => $proofForCode->hash($secret),
+            'expire' => $expire,
+            'userAgent' => $request->getUserAgent('UNKNOWN'),
+            'ip' => $request->getIP(),
+        ]);
+
+        $authorization->addRole(Role::user($userId)->toString());
+
+        $recovery = $dbForProject->createDocument('tokens', $recovery
+            ->setAttribute('$permissions', [
+                Permission::read(Role::user($userId)),
+                Permission::update(Role::user($userId)),
+                Permission::delete(Role::user($userId)),
+            ]));
+
+        if ($deliverable) {
+            $dbForProject->purgeCachedDocument('users', $profile->getId());
+        } else {
+            $authorization->skip(fn () => $dbForProject->deleteDocument('tokens', $recovery->getId()));
+        }
+
+        if ($deliverable) {
+            $subject = $locale->getText('emails.otpRecovery.subject');
+            $preview = $locale->getText('emails.otpRecovery.preview');
+            $heading = $locale->getText('emails.otpRecovery.heading');
+
+            $customTemplate =
+                $project->getAttribute('templates', [])['email.otpRecovery-' . $locale->default] ??
+                $project->getAttribute('templates', [])['email.otpRecovery-' . $locale->fallback] ?? [];
+            $smtpBaseTemplate = $project->getAttribute('smtpBaseTemplate', 'email-base');
+
+            $validator = new FileName();
+            if (!$validator->isValid($smtpBaseTemplate)) {
+                throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid template path');
+            }
+
+            $bodyTemplate = __DIR__ . '/../../config/locale/templates/' . $smtpBaseTemplate . '.tpl';
+
+            $detector = new Detector($request->getUserAgent('UNKNOWN'));
+            $agentOs = $detector->getOS();
+            $agentClient = $detector->getClient();
+            $agentDevice = $detector->getDevice();
+
+            $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-otp.tpl');
+            $message
+                ->setParam('{{hello}}', $locale->getText('emails.otpRecovery.hello'))
+                ->setParam('{{description}}', $locale->getText('emails.otpRecovery.description'))
+                ->setParam('{{clientInfo}}', $locale->getText('emails.otpRecovery.clientInfo'))
+                ->setParam('{{thanks}}', $locale->getText('emails.otpRecovery.thanks'))
+                ->setParam('{{signature}}', $locale->getText('emails.otpRecovery.signature'));
+
+            if (!empty($phrase)) {
+                $message->setParam('{{securityPhrase}}', $locale->getText('emails.otpRecovery.securityPhrase'));
+            } else {
+                $message->setParam('{{securityPhrase}}', '');
+            }
+
+            $body = $message->render();
+
+            $smtp = $project->getAttribute('smtp', []);
+            $smtpEnabled = $smtp['enabled'] ?? false;
+
+            $senderEmail = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
+            $senderName = System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
+            $replyToEmail = '';
+            $replyToName = '';
+            $smtpConfig = [];
+
+            if ($smtpEnabled) {
+                if (!empty($smtp['senderEmail'])) {
+                    $senderEmail = $smtp['senderEmail'];
+                }
+                if (!empty($smtp['senderName'])) {
+                    $senderName = $smtp['senderName'];
+                }
+                $smtpReplyToEmail = $smtp['replyToEmail'] ?? $smtp['replyTo'] ?? '';
+                if (!empty($smtpReplyToEmail)) {
+                    $replyToEmail = $smtpReplyToEmail;
+                }
+                if (!empty($smtp['replyToName'])) {
+                    $replyToName = $smtp['replyToName'];
+                }
+
+                if (!empty($customTemplate)) {
+                    if (!empty($customTemplate['senderEmail'])) {
+                        $senderEmail = $customTemplate['senderEmail'];
+                    }
+                    if (!empty($customTemplate['senderName'])) {
+                        $senderName = $customTemplate['senderName'];
+                    }
+                    $customReplyToEmail = $customTemplate['replyToEmail'] ?? $customTemplate['replyTo'] ?? '';
+                    if (!empty($customReplyToEmail)) {
+                        $replyToEmail = $customReplyToEmail;
+                    }
+                    if (!empty($customTemplate['replyToName'])) {
+                        $replyToName = $customTemplate['replyToName'];
+                    }
+
+                    $body = $customTemplate['message'] ?? '';
+                    $subject = $customTemplate['subject'] ?? $subject;
+                }
+
+                $smtpConfig = [
+                    'host' => $smtp['host'] ?? '',
+                    'port' => $smtp['port'] ?? '',
+                    'username' => $smtp['username'] ?? '',
+                    'password' => $smtp['password'] ?? '',
+                    'secure' => $smtp['secure'] ?? '',
+                    'replyToEmail' => $replyToEmail,
+                    'replyToName' => $replyToName,
+                    'senderEmail' => $senderEmail,
+                    'senderName' => $senderName,
+                ];
+            }
+
+            $projectName = $project->isEmpty()
+                ? 'Console'
+                : $project->getAttribute('name', '[APP-NAME]');
+
+            if ($project->getId() === 'console') {
+                $projectName = $platform['platformName'];
+            }
+
+            $emailVariables = [
+                'heading' => $heading,
+                'direction' => $locale->getText('settings.direction'),
+                'user' => $profile->getAttribute('name'),
+                'project' => $projectName,
+                'otp' => $secret,
+                'agentDevice' => $agentDevice['deviceBrand'] ?? 'UNKNOWN',
+                'agentClient' => $agentClient['clientName'] ?? 'UNKNOWN',
+                'agentOs' => $agentOs['osName'] ?? 'UNKNOWN',
+                'phrase' => !empty($phrase) ? $phrase : '',
+                'team' => '',
+            ];
+
+            if ($smtpBaseTemplate === APP_BRANDED_EMAIL_BASE_TEMPLATE) {
+                $emailVariables = array_merge($emailVariables, [
+                    'accentColor' => $platform['accentColor'],
+                    'logoUrl' => $platform['logoUrl'],
+                    'twitter' => $platform['twitterUrl'],
+                    'discord' => $platform['discordUrl'],
+                    'github' => $platform['githubUrl'],
+                    'terms' => $platform['termsUrl'],
+                    'privacy' => $platform['privacyUrl'],
+                    'platform' => $platform['platformName'],
+                ]);
+            }
+
+            $publisherForMails->enqueue(new MailMessage(
+                project: $project,
+                recipient: $profile->getAttribute('email', ''),
+                name: $profile->getAttribute('name', ''),
+                subject: $subject,
+                template: MAIL_TEMPLATE_OTP_RECOVERY,
+                bodyTemplate: $bodyTemplate,
+                body: $body,
+                preview: $preview,
+                smtp: $smtpConfig,
+                variables: $emailVariables,
+                customMailOptions: $project->getId() === 'console' ? ['senderName' => $platform['emailSenderName']] : [],
+                platform: $platform,
+            ));
+        }
+
+        $recovery->setAttribute('secret', $secret);
+
+        if (!empty($phrase)) {
+            $recovery->setAttribute('phrase', $phrase);
+        }
+
+        $queueForEvents
+            ->setParam('userId', $userId)
+            ->setParam('tokenId', $recovery->getId())
+            ->setUser($deliverable ? $profile : new Document())
+            ->setPayload($response->showSensitive(fn () => $response->output($recovery, Response::MODEL_TOKEN)), sensitive: ['secret']);
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($recovery, Response::MODEL_TOKEN);
+    });
+
+Http::put('/v1/account/recovery/otp')
+    ->desc('Update password recovery (OTP)')
+    ->groups(['api', 'account'])
+    ->label('scope', 'sessions.write')
+    ->label('event', 'users.[userId].recovery.[tokenId].update')
+    ->label('audits.event', 'recovery.update')
+    ->label('audits.resource', 'user/{response.userId}')
+    ->label('audits.userId', '{response.userId}')
+    ->label('sdk', new Method(
+        namespace: 'account',
+        group: 'recovery',
+        name: 'updateRecoveryOTP',
+        description: '/docs/references/account/update-recovery-otp.md',
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_TOKEN,
+            )
+        ],
+        contentType: ContentType::JSON,
+    ))
+    ->label('abuse-limit', 10)
+    ->label('abuse-key', 'url:{url},userId:{param-userId}')
+    ->param('userId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'User ID.', false, ['dbForProject'])
+    ->param('secret', '', new Text(256), 'Valid recovery OTP code.')
+    ->param('password', '', fn ($project, $passwordsDictionary) => new PasswordFormat(new AllOf([new PasswordStrength($project->getAttribute('auths', [])['passwordStrength'] ?? []), new PasswordDictionary($passwordsDictionary, enabled: $project->getAttribute('auths', [])['passwordDictionary'] ?? false)], Validator::TYPE_STRING)), 'New user password. Must be between 8 and 256 chars.', false, ['project', 'passwordsDictionary'])
+    ->inject('response')
+    ->inject('user')
+    ->inject('dbForProject')
+    ->inject('project')
+    ->inject('queueForEvents')
+    ->inject('hooks')
+    ->inject('proofForPassword')
+    ->inject('proofForCode')
+    ->inject('authorization')
+    ->inject('pwnedPasswords')
+    ->action(function (string $userId, string $secret, string $password, Response $response, User $user, Database $dbForProject, Document $project, Event $queueForEvents, Hooks $hooks, ProofsPassword $proofForPassword, ProofsCode $proofForCode, Authorization $authorization, PasswordPwned $pwnedPasswords) {
+        /** @var Appwrite\Utopia\Database\Documents\User $profile */
+        $profile = $dbForProject->getDocument('users', $userId);
+
+        if ($profile->isEmpty()) {
+            throw new Exception(Exception::USER_NOT_FOUND);
+        }
+
+        $verifiedToken = $profile->tokenVerify(TOKEN_TYPE_RECOVERY_OTP, $secret, $proofForCode);
+
+        if (!$verifiedToken) {
+            throw new Exception(Exception::USER_INVALID_TOKEN);
+        }
+
+        $authorization->addRole(Role::user($profile->getId())->toString());
+
+        $newPassword = $proofForPassword->hash($password);
+
+        $hash = ProofsPassword::createHash($profile->getAttribute('hash'), $profile->getAttribute('hashOptions'));
+        $historyLimit = $project->getAttribute('auths', [])['passwordHistory'] ?? 0;
+        $history = $profile->getAttribute('passwordHistory', []);
+
+        if ($historyLimit > 0) {
+            $validator = new PasswordHistory($history, $hash);
+            if (!$validator->isValid($password)) {
+                throw new Exception(Exception::USER_PASSWORD_RECENTLY_USED);
+            }
+
+            $history[] = $newPassword;
+            $history = array_slice($history, (count($history) - $historyLimit), $historyLimit);
+        }
+
+        // null when the policy did not look, false when it looked and found nothing
+        $pwnedPolicy = $project->getAttribute('auths', [])['passwordPwned'] ?? [];
+        $passwordPwned = ($pwnedPolicy['enabled'] ?? true)
+            ? !$pwnedPasswords->isValid($password)
+            : null;
+        if ($passwordPwned && ($pwnedPolicy['users'] ?? false)) {
+            throw new Exception(Exception::USER_PASSWORD_PWNED);
+        }
+
+        $hooks->trigger('passwordValidator', [$dbForProject, $project, $password, &$user, true]);
+
+        $sessions = $profile->getAttribute('sessions', []);
+
+        $profile = $dbForProject->updateDocument('users', $profile->getId(), new Document(
+            [
+                'password' => $newPassword,
+                'passwordHistory' => $history,
+                'passwordPwned' => $passwordPwned,
                 'passwordUpdate' => DateTime::now(),
                 'hash' => $proofForPassword->getHash()->getName(),
                 'hashOptions' => $proofForPassword->getHash()->getOptions(),
@@ -4846,11 +5365,15 @@ Http::put('/v1/account/targets/:targetId/push')
 
         $target->setAttribute('name', "{$device['deviceBrand']} {$device['deviceModel']}");
 
-        $target = $dbForProject->updateDocument('targets', $target->getId(), new Document([
-            'identifier' => $target->getAttribute('identifier'),
-            'expired' => $target->getAttribute('expired'),
-            'name' => $target->getAttribute('name'),
-        ]));
+        try {
+            $target = $dbForProject->updateDocument('targets', $target->getId(), new Document([
+                'identifier' => $target->getAttribute('identifier'),
+                'expired' => $target->getAttribute('expired'),
+                'name' => $target->getAttribute('name'),
+            ]));
+        } catch (Duplicate) {
+            throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
+        }
 
         $dbForProject->purgeCachedDocument('users', $user->getId());
 

@@ -6,6 +6,7 @@ use Appwrite\Hooks\Hooks;
 use Appwrite\PubSub\Adapter\Redis as PubSub;
 use Appwrite\URL\URL as AppwriteURL;
 use Utopia\Cache\Adapter\Redis as RedisCache;
+use Utopia\Cache\Codec\Igbinary;
 use Utopia\Config\Config;
 use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Adapter\Mongo;
@@ -267,7 +268,7 @@ $register->set('pools', function () {
                         };
                     case 'cache':
                         $adapter = match ($dsn->getScheme()) {
-                            'redis' => new RedisCache($resource()),
+                            'redis' => new RedisCache($resource(), new Igbinary()),
                             default => null
                         };
 
@@ -333,7 +334,7 @@ $register->set('smtp', function () {
     $size = max(
         1,
         (int) System::getEnv('_APP_WORKER_MAX_COROUTINES', 1),
-        ((int) ($workers['mails']['maxCoroutines'] ?? 1)) + ((int) ($workers['notifications']['maxCoroutines'] ?? 1)),
+        ((int) ($workers['mails']['coroutines'] ?? 1)) + ((int) ($workers['notifications']['coroutines'] ?? 1)),
     );
 
     return new Pool(

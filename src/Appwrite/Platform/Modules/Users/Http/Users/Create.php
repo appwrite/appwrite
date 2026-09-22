@@ -3,8 +3,10 @@
 namespace Appwrite\Platform\Modules\Users\Http\Users;
 
 use Appwrite\Auth\Validator\PasswordDictionary;
+use Appwrite\Auth\Validator\PasswordPwned;
 use Appwrite\Auth\Validator\PasswordStrength;
 use Appwrite\Auth\Validator\Phone;
+use Appwrite\Extend\Exception;
 use Appwrite\Hooks\Hooks;
 use Appwrite\Platform\Action;
 use Appwrite\Platform\Modules\Users\Base;
@@ -66,14 +68,23 @@ class Create extends Base
             ->inject('dbForProject')
             ->inject('hooks')
             ->inject('plan')
+            ->inject('pwnedPasswords')
             ->callback($this->action(...));
     }
 
-    public function action(string $userId, ?string $email, ?string $phone, ?string $password, ?string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks, array $plan): void
+    public function action(string $userId, ?string $email, ?string $phone, ?string $password, ?string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks, array $plan, PasswordPwned $pwnedPasswords): void
     {
+        $pwnedPolicy = $project->getAttribute('auths', [])['passwordPwned'] ?? [];
+        $passwordPwned = empty($password) || !($pwnedPolicy['enabled'] ?? true)
+            ? null
+            : !$pwnedPasswords->isValid($password);
+        if ($passwordPwned && ($pwnedPolicy['users'] ?? false)) {
+            throw new Exception(Exception::USER_PASSWORD_PWNED);
+        }
+
         $plaintext = new Plaintext();
 
-        $user = $this->createUser($plaintext, $userId, $email, $password, $phone, $name, $project, $dbForProject, $hooks, $plan);
+        $user = $this->createUser($plaintext, $userId, $email, $password, $phone, $name, $project, $dbForProject, $hooks, $plan, $passwordPwned);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
