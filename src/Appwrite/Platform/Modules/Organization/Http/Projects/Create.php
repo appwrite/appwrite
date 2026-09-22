@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Organization\Http\Projects;
 
+use Appwrite\Database\Factory as DatabaseFactory;
 use Appwrite\Extend\Exception;
 use Appwrite\Hooks\Hooks;
 use Appwrite\SDK\AuthType;
@@ -14,7 +15,6 @@ use Utopia\Audit\Adapter\Database as AdapterDatabase;
 use Utopia\Audit\Audit;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
-use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -70,13 +70,14 @@ class Create extends Action
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('cache')
+            ->inject('databaseFactory')
             ->inject('pools')
             ->inject('hooks')
             ->inject('team')
             ->callback($this->action(...));
     }
 
-    public function action(string $projectId, string $name, string $region, Response $response, Database $dbForPlatform, Cache $cache, Group $pools, Hooks $hooks, Document $team)
+    public function action(string $projectId, string $name, string $region, Response $response, Database $dbForPlatform, Cache $cache, DatabaseFactory $databaseFactory, Group $pools, Hooks $hooks, Document $team)
     {
         $allowList = \array_filter(\explode(',', System::getEnv('_APP_PROJECT_REGIONS', '')));
 
@@ -195,13 +196,7 @@ class Create extends Action
         $projectTables = !\in_array($dsn->getHost(), $sharedTables);
 
         if ($projectTables) {
-            $adapter = new DatabasePool($pools->get($dsn->getHost()));
-            $dbForProject = new Database($adapter, $cache);
-            $dbForProject
-                ->setDatabase(APP_DATABASE)
-                ->setSharedTables(false)
-                ->setTenant(null)
-                ->setNamespace('_' . $project->getSequence());
+            $dbForProject = $databaseFactory->provisioning($project);
 
             $create = true;
 

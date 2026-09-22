@@ -6,72 +6,71 @@ namespace Tests\Unit\Database;
 
 use Appwrite\Database\Factory;
 use PHPUnit\Framework\TestCase;
-use Utopia\Cache\Adapter\None as NoCache;
+use Utopia\Cache\Adapter\Memory as MemoryCache;
 use Utopia\Cache\Cache;
 use Utopia\Database\Adapter\Memory;
+use Utopia\Database\Attribute;
 use Utopia\Database\Capability;
-use Utopia\Database\Database;
+use Utopia\Database\Collection;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Pools\Adapter\Stack;
 use Utopia\Pools\Group;
 use Utopia\Pools\Pool;
+use Utopia\Query\Schema\ColumnType;
 
 final class FactoryTest extends TestCase
 {
-    public function testProvisioningAndProjectAgreeOnTheCollectionCacheKey(): void
+    public function testACollectionCreatedByProvisioningIsVisibleToAProjectRead(): void
     {
-        $project = new Document([
-            '$id' => 'project-1',
-            '$sequence' => '7',
-            'database' => 'mysql://database_db_main',
-        ]);
+        $factory = $this->factory();
+        $project = $this->project();
 
-        $factory = $this->factory('database_db_main');
+        $read = $factory->project($project);
+        $provisioning = $factory->provisioning($project);
+        $provisioning->create();
 
-        $provisioning = $factory->provisioning($project)->getCacheBaseKeys(Database::METADATA, 'targets');
-        $read = $factory->project($project)->getCacheBaseKeys(Database::METADATA, 'targets');
+        // The maintenance sweep reads a collection that provisioning has not
+        // created yet, which caches its absence.
+        $this->assertTrue($read->getCollection('targets')->isEmpty());
 
-        $this->assertSame(
-            $read,
-            $provisioning,
-            'Provisioning creates the collections the project database later reads, so both must resolve one cache key or an invalidation lands where nobody looks'
+        $provisioning->createCollection(new Collection(
+            id: 'targets',
+            attributes: [new Attribute('userInternalId', ColumnType::String, size: 255)],
+        ));
+
+        $this->assertFalse(
+            $read->getCollection('targets')->isEmpty(),
+            'Provisioning creates the collections a project database later reads, so its cache invalidation has to reach that reader'
         );
     }
 
-    public function testTheCollectionCacheKeyIsScopedToThePoolHostname(): void
+    private function factory(): Factory
     {
-        $project = new Document([
+        $adapter = new ConnectedAdapter();
+        $pools = new Group();
+        $pools->add(new Pool(new Stack(), 'database_db_main', 1, static fn (): ConnectedAdapter => $adapter, 1.0));
+
+        return new Factory($pools, new Cache(new MemoryCache()), new Authorization());
+    }
+
+    private function project(): Document
+    {
+        return new Document([
             '$id' => 'project-1',
             '$sequence' => '7',
             'database' => 'mysql://database_db_main',
         ]);
-
-        [$collectionKey] = $this->factory('database_db_main')
-            ->provisioning($project)
-            ->getCacheBaseKeys(Database::METADATA, 'targets');
-
-        $this->assertStringContainsString('database_db_main', $collectionKey);
-        $this->assertStringNotContainsString(ConnectedAdapter::HOSTNAME, $collectionKey);
-    }
-
-    private function factory(string $pool): Factory
-    {
-        $pools = new Group();
-        $pools->add(new Pool(new Stack(), $pool, 1, static fn (): ConnectedAdapter => new ConnectedAdapter(), 1.0));
-
-        return new Factory($pools, new Cache(new NoCache()), new Authorization());
     }
 }
 
 /**
  * Reports a hostname of its own, the way a pooled SQL connection reports the
- * host it dialled rather than the pool it came from.
+ * host it dialled rather than the pool it was taken from. Without it the cache
+ * key carries no hostname at all and the two paths cannot disagree.
  */
 final class ConnectedAdapter extends Memory
 {
-    public const string HOSTNAME = 'mariadb';
-
     public function supports(Capability $feature): bool
     {
         return $feature === Capability::Hostname || parent::supports($feature);
@@ -79,6 +78,6 @@ final class ConnectedAdapter extends Memory
 
     public function getHostname(): string
     {
-        return self::HOSTNAME;
+        return 'mariadb';
     }
 }
