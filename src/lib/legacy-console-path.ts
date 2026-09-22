@@ -30,7 +30,6 @@ const TYPED_RESOURCE_PREFIXES = [
   'message',
   'platform',
   'key',
-  'devkey',
   'variable',
   'installation',
   'domain',
