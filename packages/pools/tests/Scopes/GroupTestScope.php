@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Utopia\Tests\Scopes;
+namespace Utopia\Pools\Tests\Scopes;
 
 use Exception;
 use Utopia\Pools\Adapter;
@@ -28,7 +28,7 @@ trait GroupTestScope
     {
         $this->execute(function (): void {
             $this->setUpGroup();
-            $this->groupObject->add(new Pool($this->getAdapter(), 'test', 1, fn(): string => 'x', timeout: 0.0));
+            $this->groupObject->add(new Pool($this->getAdapter(), 'test', 1, fn (): string => 'x', timeout: 0.0));
 
             $this->assertInstanceOf(Pool::class, $this->groupObject->get('test'));
         });
@@ -38,7 +38,7 @@ trait GroupTestScope
     {
         $this->execute(function (): void {
             $this->setUpGroup();
-            $this->groupObject->add(new Pool($this->getAdapter(), 'test', 1, fn(): string => 'x', timeout: 0.0));
+            $this->groupObject->add(new Pool($this->getAdapter(), 'test', 1, fn (): string => 'x', timeout: 0.0));
 
             $this->assertInstanceOf(Pool::class, $this->groupObject->get('test'));
 
@@ -52,7 +52,7 @@ trait GroupTestScope
     {
         $this->execute(function (): void {
             $this->setUpGroup();
-            $this->groupObject->add(new Pool($this->getAdapter(), 'test', 1, fn(): string => 'x', timeout: 0.0));
+            $this->groupObject->add(new Pool($this->getAdapter(), 'test', 1, fn (): string => 'x', timeout: 0.0));
 
             $this->assertInstanceOf(Pool::class, $this->groupObject->get('test'));
 
@@ -68,7 +68,7 @@ trait GroupTestScope
     {
         $this->execute(function (): void {
             $this->setUpGroup();
-            $this->groupObject->add(new Pool($this->getAdapter(), 'test', 5, fn(): string => 'x', timeout: 0.0));
+            $this->groupObject->add(new Pool($this->getAdapter(), 'test', 5, fn (): string => 'x', timeout: 0.0));
 
             $this->assertSame(5, $this->groupObject->get('test')->count());
 
@@ -88,9 +88,9 @@ trait GroupTestScope
     {
         $this->execute(function (): void {
             $this->setUpGroup();
-            $pool1 = new Pool($this->getAdapter(), 'pool1', 1, fn(): string => '1', timeout: 0.0);
-            $pool2 = new Pool($this->getAdapter(), 'pool2', 1, fn(): string => '2', timeout: 0.0);
-            $pool3 = new Pool($this->getAdapter(), 'pool3', 1, fn(): string => '3', timeout: 0.0);
+            $pool1 = new Pool($this->getAdapter(), 'pool1', 1, fn (): string => '1', timeout: 0.0);
+            $pool2 = new Pool($this->getAdapter(), 'pool2', 1, fn (): string => '2', timeout: 0.0);
+            $pool3 = new Pool($this->getAdapter(), 'pool3', 1, fn (): string => '3', timeout: 0.0);
 
             $this->groupObject->add($pool1);
             $this->groupObject->add($pool2);
@@ -125,7 +125,9 @@ trait GroupTestScope
             $pool = new Pool($this->getAdapter(), 'pool1', 1, function () use (&$created, &$resources): object {
                 ++$created;
                 $resource = new readonly class ('resource-' . $created) implements \Stringable {
-                    public function __construct(private string $name) {}
+                    public function __construct(private string $name)
+                    {
+                    }
 
                     public function __toString(): string
                     {
@@ -140,7 +142,8 @@ trait GroupTestScope
             $this->groupObject->add($pool);
 
             try {
-                $this->groupObject->use(['pool1', 'missing'], function (): void {});
+                $this->groupObject->use(['pool1', 'missing'], function (): void {
+                });
                 $this->fail('Should have thrown');
             } catch (Exception) {
                 // expected
@@ -163,7 +166,7 @@ trait GroupTestScope
             $telemetry = new TestTelemetry();
 
             $this->groupObject
-                ->add(new Pool($this->getAdapter(), 'pool1', 1, fn(): string => '1', timeout: 0.0, telemetry: $telemetry));
+                ->add(new Pool($this->getAdapter(), 'pool1', 1, fn (): string => '1', timeout: 0.0, telemetry: $telemetry));
 
             $this->assertArrayNotHasKey('pool.connection.use_time', $telemetry->histograms);
 
@@ -183,7 +186,7 @@ trait GroupTestScope
         $this->execute(function (): void {
             $this->setUpGroup();
 
-            $pool1 = new class ($this->getAdapter(), 'pool1', 1, fn(): string => '1', 0.0) extends Pool {
+            $pool1 = new class ($this->getAdapter(), 'pool1', 1, fn (): string => '1', 0.0) extends Pool {
                 public bool $released = false;
 
                 public function release(Connection $connection, bool $failed = false): static
@@ -193,7 +196,7 @@ trait GroupTestScope
                     return parent::release($connection, $failed);
                 }
             };
-            $pool2 = new class ($this->getAdapter(), 'pool2', 1, fn(): string => '2', 0.0) extends Pool {
+            $pool2 = new class ($this->getAdapter(), 'pool2', 1, fn (): string => '2', 0.0) extends Pool {
                 public bool $released = false;
 
                 public function release(Connection $connection, bool $failed = false): static

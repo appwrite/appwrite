@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Utopia\Tests\Adapter;
+namespace Utopia\Pools\Tests\Adapter;
 
 use PHPUnit\Framework\TestCase;
 use Swoole\Coroutine;
@@ -105,7 +105,7 @@ final class WaiterTest extends TestCase
             });
             Coroutine::create(static function () use ($pool, $completed): void {
                 try {
-                    $completed->push($pool->use(static fn(): string => 'replacement'));
+                    $completed->push($pool->use(static fn (): string => 'replacement'));
                 } catch (\Throwable $error) {
                     $completed->push($error);
                 }
@@ -135,7 +135,7 @@ final class WaiterTest extends TestCase
             for ($index = 0; $index < 2; ++$index) {
                 Coroutine::create(static function () use ($pool, $completed): void {
                     try {
-                        $completed->push($pool->use(static fn(string $value): string => $value));
+                        $completed->push($pool->use(static fn (string $value): string => $value));
                     } catch (\Throwable $error) {
                         $completed->push($error);
                     }
@@ -151,7 +151,7 @@ final class WaiterTest extends TestCase
     public function testReleasedWaitsDoNotExtendTheOriginalDeadline(): void
     {
         $adapter = new Swoole();
-        $pool = new Pool($adapter, 'deadline', 1, static fn(): string => 'occupied', 0.04);
+        $pool = new Pool($adapter, 'deadline', 1, static fn (): string => 'occupied', 0.04);
         $failure = null;
         $elapsed = 0.0;
         Coroutine\run(static function () use ($pool, $adapter, &$failure, &$elapsed): void {
@@ -181,7 +181,7 @@ final class WaiterTest extends TestCase
         $active = 0;
         $maximum = 0;
         $results = [];
-        $pool = new Pool(new Swoole(), 'capacity', 2, static fn(): object => new \stdClass(), 0.5);
+        $pool = new Pool(new Swoole(), 'capacity', 2, static fn (): object => new \stdClass(), 0.5);
         Coroutine\run(static function () use ($pool, &$active, &$maximum, &$results): void {
             $completed = new Channel(8);
             for ($index = 0; $index < 8; ++$index) {

@@ -81,7 +81,7 @@ class Group
             }
 
             $started = true;
-            $result = $callback(...array_map(fn(Connection $connection): mixed => $connection->resource, $connections));
+            $result = $callback(...array_map(fn (Connection $connection): mixed => $connection->resource, $connections));
         } catch (\Throwable $error) {
             $thrown = $error;
             $failed = $started;

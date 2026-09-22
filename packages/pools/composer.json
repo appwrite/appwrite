@@ -18,16 +18,16 @@
     ],
     "autoload": {
         "psr-4": {
-            "Utopia\\Pools\\": "src/Pools"
+            "Utopia\\Pools\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Utopia\\Tests\\": "tests/Pools"
+            "Utopia\\Pools\\Tests\\": "tests/"
         }
     },
     "scripts": {
-        "test": "phpunit --configuration phpunit.xml"
+        "test": "phpunit --configuration phpunit.xml --testsuite unit"
     },
     "require": {
         "php": ">=8.4",

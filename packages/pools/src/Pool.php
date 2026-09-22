@@ -92,10 +92,10 @@ class Pool
 
         // Connection counts are gauges: only their value at export time matters, so observe
         // them lazily at collection rather than recording on every pop/push/reclaim.
-        $this->observeGauge($telemetry, 'pool.connection.active.count', fn(): int => \count($this->active));
-        $this->observeGauge($telemetry, 'pool.connection.idle.count', fn(): int => $this->adapter->count());
-        $this->observeGauge($telemetry, 'pool.connection.open.count', fn(): int => \count($this->active) + $this->adapter->count());
-        $this->observeGauge($telemetry, 'pool.connection.capacity.count', fn(): int => $this->reserved);
+        $this->observeGauge($telemetry, 'pool.connection.active.count', fn (): int => \count($this->active));
+        $this->observeGauge($telemetry, 'pool.connection.idle.count', fn (): int => $this->adapter->count());
+        $this->observeGauge($telemetry, 'pool.connection.open.count', fn (): int => \count($this->active) + $this->adapter->count());
+        $this->observeGauge($telemetry, 'pool.connection.capacity.count', fn (): int => $this->reserved);
     }
 
     /**
@@ -106,7 +106,7 @@ class Pool
     private function observeGauge(Telemetry $telemetry, string $name, callable $sample): void
     {
         $telemetry->createObservableGauge($name)
-            ->observe(fn(callable $observe) => $observe($sample(), $this->telemetryAttributes));
+            ->observe(fn (callable $observe) => $observe($sample(), $this->telemetryAttributes));
     }
 
     /**

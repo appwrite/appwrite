@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Utopia\Tests\Scopes;
+namespace Utopia\Pools\Tests\Scopes;
 
 /**
  * A pooled resource that counts its own upkeep, so a maintenance sweep is
@@ -19,7 +19,8 @@ final class TickingResource
     public function __construct(
         public readonly int $serial,
         private readonly ?\Closure $onTick = null,
-    ) {}
+    ) {
+    }
 
     public function tick(): void
     {

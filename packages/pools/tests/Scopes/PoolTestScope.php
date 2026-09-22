@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Utopia\Tests\Scopes;
+namespace Utopia\Pools\Tests\Scopes;
 
 use Exception;
 use Utopia\Pools\Adapter;
@@ -24,7 +24,7 @@ trait PoolTestScope
 
     protected function setUpPool(): void
     {
-        $this->poolObject = new Pool($this->getAdapter(), 'test', 5, fn(): string => 'x', timeout: 0.0);
+        $this->poolObject = new Pool($this->getAdapter(), 'test', 5, fn (): string => 'x', timeout: 0.0);
     }
 
     public function testPoolGetName(): void
@@ -222,7 +222,7 @@ trait PoolTestScope
     {
         $this->execute(function (): void {
             // timeout is the whole budget: one wait, no retry loop on top.
-            $pool = new Pool($this->getAdapter(), 'test-budget', 1, fn(): string => 'x', timeout: 0.25);
+            $pool = new Pool($this->getAdapter(), 'test-budget', 1, fn (): string => 'x', timeout: 0.25);
             $pool->pop();
 
             $start = microtime(true);
@@ -355,7 +355,9 @@ trait PoolTestScope
                 ++$created;
 
                 return new readonly class ('resource-' . $created, $created === 1) implements \Stringable {
-                    public function __construct(private string $name, private bool $failRecovery) {}
+                    public function __construct(private string $name, private bool $failRecovery)
+                    {
+                    }
 
                     public function __toString(): string
                     {
@@ -395,7 +397,9 @@ trait PoolTestScope
                 ++$created;
 
                 return new readonly class ('resource-' . $created) implements \Stringable {
-                    public function __construct(private string $name) {}
+                    public function __construct(private string $name)
+                    {
+                    }
 
                     public function __toString(): string
                     {
@@ -433,7 +437,9 @@ trait PoolTestScope
                 ++$created;
 
                 return new readonly class ('resource-' . $created) implements \Stringable {
-                    public function __construct(private string $name) {}
+                    public function __construct(private string $name)
+                    {
+                    }
 
                     public function __toString(): string
                     {
@@ -470,7 +476,9 @@ trait PoolTestScope
                 ++$created;
 
                 return new readonly class ('resource-' . $created) implements \Stringable {
-                    public function __construct(private string $name) {}
+                    public function __construct(private string $name)
+                    {
+                    }
 
                     public function __toString(): string
                     {
@@ -531,7 +539,7 @@ trait PoolTestScope
     public function testUseForgetsConnectionWhenDestroyCleanupFails(): void
     {
         $this->execute(function (): void {
-            $adapter = new class extends Stack {
+            $adapter = new class () extends Stack {
                 public bool $failSynchronized = false;
 
                 public function synchronized(callable $callback): mixed
@@ -550,7 +558,9 @@ trait PoolTestScope
                 ++$created;
 
                 return new readonly class ('resource-' . $created) implements \Stringable {
-                    public function __construct(private string $name) {}
+                    public function __construct(private string $name)
+                    {
+                    }
 
                     public function __toString(): string
                     {
@@ -586,7 +596,9 @@ trait PoolTestScope
                 }
 
                 return new readonly class ('resource-' . $created) implements \Stringable {
-                    public function __construct(private string $name) {}
+                    public function __construct(private string $name)
+                    {
+                    }
 
                     public function __toString(): string
                     {
@@ -618,7 +630,7 @@ trait PoolTestScope
     {
         $this->execute(function (): void {
             $telemetry = new TestTelemetry();
-            $this->poolObject = new Pool($this->getAdapter(), 'test', 5, fn(): string => 'x', timeout: 0.0, telemetry: $telemetry);
+            $this->poolObject = new Pool($this->getAdapter(), 'test', 5, fn (): string => 'x', timeout: 0.0, telemetry: $telemetry);
 
             $this->assertArrayHasKey('pool.connection.open.count', $telemetry->observableGauges);
             $this->assertArrayHasKey('pool.connection.active.count', $telemetry->observableGauges);
@@ -686,8 +698,8 @@ trait PoolTestScope
             // series; a single-callback gauge would drop all but the last pool to bind.
             $telemetry = new TestTelemetry();
 
-            $alpha = new Pool($this->getAdapter(), 'alpha', 5, fn(): string => 'x', timeout: 0.0, telemetry: $telemetry);
-            $beta = new Pool($this->getAdapter(), 'beta', 5, fn(): string => 'x', timeout: 0.0, telemetry: $telemetry);
+            $alpha = new Pool($this->getAdapter(), 'alpha', 5, fn (): string => 'x', timeout: 0.0, telemetry: $telemetry);
+            $beta = new Pool($this->getAdapter(), 'beta', 5, fn (): string => 'x', timeout: 0.0, telemetry: $telemetry);
 
             $alpha->pop();
             $beta->pop();
@@ -718,7 +730,7 @@ trait PoolTestScope
     {
         $this->execute(function (): void {
             $telemetry = new TestTelemetry();
-            $this->poolObject = new Pool($this->getAdapter(), 'test', 5, fn(): string => 'x', timeout: 0.0, telemetry: $telemetry);
+            $this->poolObject = new Pool($this->getAdapter(), 'test', 5, fn (): string => 'x', timeout: 0.0, telemetry: $telemetry);
 
             $this->assertArrayNotHasKey('pool.connection.use_time', $telemetry->histograms);
 
@@ -793,7 +805,7 @@ trait PoolTestScope
     public function testMaintainIgnoresResourcesThatCannotTick(): void
     {
         $this->execute(function (): void {
-            $pool = new Pool($this->getAdapter(), 'test-maintain-no-tick', 2, fn(): string => 'x', timeout: 0.0);
+            $pool = new Pool($this->getAdapter(), 'test-maintain-no-tick', 2, fn (): string => 'x', timeout: 0.0);
 
             $connection = $pool->pop();
             $pool->reclaim($connection);

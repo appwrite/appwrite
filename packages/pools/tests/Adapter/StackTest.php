@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Utopia\Tests\Adapter;
+namespace Utopia\Pools\Tests\Adapter;
 
 use Utopia\Pools\Adapter\Stack;
-use Utopia\Tests\Base;
+use Utopia\Pools\Tests\Base;
 
 final class StackTest extends Base
 {

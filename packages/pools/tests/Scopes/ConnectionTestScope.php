@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Utopia\Tests\Scopes;
+namespace Utopia\Pools\Tests\Scopes;
 
 use Utopia\Pools\Adapter;
 use Utopia\Pools\Connection;
@@ -22,7 +22,7 @@ trait ConnectionTestScope
      */
     private function checkedOutConnection(string $name = 'test'): Connection
     {
-        return new Pool($this->getAdapter(), $name, 2, fn(): string => 'x', timeout: 0.0)->pop();
+        return new Pool($this->getAdapter(), $name, 2, fn (): string => 'x', timeout: 0.0)->pop();
     }
 
     public function testConnectionIdIsNamespacedByPool(): void
@@ -44,7 +44,7 @@ trait ConnectionTestScope
     public function testConnectionReclaim(): void
     {
         $this->execute(function (): void {
-            $pool = new Pool($this->getAdapter(), 'test', 2, fn(): string => 'x', timeout: 0.0);
+            $pool = new Pool($this->getAdapter(), 'test', 2, fn (): string => 'x', timeout: 0.0);
 
             $this->assertSame(2, $pool->count());
 
@@ -109,7 +109,7 @@ trait ConnectionTestScope
             TrackedResource::$freed = 0;
 
             (function (): void {
-                $pool = new Pool($this->getAdapter(), 'lifetime', 3, fn(): TrackedResource => new TrackedResource(), timeout: 1.0);
+                $pool = new Pool($this->getAdapter(), 'lifetime', 3, fn (): TrackedResource => new TrackedResource(), timeout: 1.0);
 
                 // Check every slot out at once so three distinct resources exist,
                 // then hand them all back: the pool is left holding them idle in

@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Utopia\Tests\Adapter;
+namespace Utopia\Pools\Tests\Adapter;
 
 use Swoole\Coroutine;
 use Swoole\Coroutine\Channel;
 use Utopia\Pools\Adapter\Swoole;
 use Utopia\Pools\Connection;
 use Utopia\Pools\Pool;
-use Utopia\Tests\Base;
+use Utopia\Pools\Tests\Base;
 
 final class SwooleTest extends Base
 {
@@ -335,7 +335,7 @@ final class SwooleTest extends Base
 
     public function testInitOutsideCoroutineDoesNotThrow(): void
     {
-        $pool = new Pool(new Swoole(), 'test', 1, fn(): string => 'x', timeout: 0.0);
+        $pool = new Pool(new Swoole(), 'test', 1, fn (): string => 'x', timeout: 0.0);
         $this->assertInstanceOf(Pool::class, $pool);
     }
 }

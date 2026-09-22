@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Utopia\Tests;
+namespace Utopia\Pools\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Utopia\Pools\Adapter;
-use Utopia\Tests\Scopes\ConnectionTestScope;
-use Utopia\Tests\Scopes\GroupTestScope;
-use Utopia\Tests\Scopes\PoolTestScope;
+use Utopia\Pools\Tests\Scopes\ConnectionTestScope;
+use Utopia\Pools\Tests\Scopes\GroupTestScope;
+use Utopia\Pools\Tests\Scopes\PoolTestScope;
 
 abstract class Base extends TestCase
 {
