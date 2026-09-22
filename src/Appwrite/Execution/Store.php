@@ -65,7 +65,13 @@ class Store
         'version',
     ];
 
-    /** Columns whose stored value may vary in case; filters on them ignore case. */
+    /**
+     * Columns whose stored value varies in case between writers, compared case-insensitively.
+     *
+     * The router and the WAF store `requestMethod` uppercase while cloud's edge reports it
+     * lowercase, and ClickHouse comparisons are case-sensitive. None of these columns are
+     * part of the sorting key, so normalising them costs no index.
+     */
     private const array CASE_INSENSITIVE_COLUMNS = [
         'requestMethod',
     ];
@@ -641,22 +647,12 @@ class Store
             return '(' . \implode(' AND ', $parts) . ')';
         }
 
-        [$column, $type] = $this->column($query->getAttribute());
-        $values = $query->getValues();
+        $attribute = $query->getAttribute();
+        [$column, $type] = $this->column($attribute);
+        $column = $this->comparable($attribute, $column);
         $parameters = [];
-        foreach ($values as $value) {
-            $parameters[] = $this->parameter($type, $value, $params);
-        }
-
-        // Executions written before the method was normalised hold it in mixed case,
-        // so compare it case-insensitively. ClickHouse comparisons are case-sensitive
-        // and `requestMethod` is not part of the sorting key, so nothing is lost.
-        if (\in_array($query->getAttribute(), self::CASE_INSENSITIVE_COLUMNS, true)) {
-            $column = "upper({$column})";
-            $parameters = \array_map(
-                static fn (string $parameter) => "upper({$parameter})",
-                $parameters
-            );
+        foreach ($query->getValues() as $value) {
+            $parameters[] = $this->comparable($attribute, $this->parameter($type, $value, $params));
         }
 
         return match ($method) {
@@ -716,7 +712,9 @@ class Store
                 $parts[] = 'rand()';
                 continue;
             }
-            [$column] = $this->column($query->getAttribute());
+            $attribute = $query->getAttribute();
+            [$column] = $this->column($attribute);
+            $column = $this->comparable($attribute, $column);
             $ascending = $query->getMethod() === Query::TYPE_ORDER_ASC;
             if ($before) {
                 $ascending = !$ascending;
@@ -747,8 +745,9 @@ class Store
         $equal = [];
 
         foreach ($order as $query) {
-            [$column, $type] = $this->column($query->getAttribute());
             $attribute = $query->getAttribute();
+            [$column, $type] = $this->column($attribute);
+            $column = $this->comparable($attribute, $column);
             $value = match ($attribute) {
                 '$id' => $document->getId(),
                 '$createdAt' => $document->getCreatedAt(),
@@ -763,7 +762,7 @@ class Store
                 );
             }
 
-            $parameter = $this->parameter($type, $value, $params);
+            $parameter = $this->comparable($attribute, $this->parameter($type, $value, $params));
             $ascending = $query->getMethod() === Query::TYPE_ORDER_ASC;
             $operator = ($ascending === $after) ? '>' : '<';
             $conditions = [...$equal, "{$column} {$operator} {$parameter}"];
@@ -772,6 +771,21 @@ class Store
         }
 
         return '(' . \implode(' OR ', $branches) . ')';
+    }
+
+    /**
+     * Wrap a column or parameter so that comparisons on it ignore case.
+     *
+     * Applied to filters, ordering and cursors alike, so a cursor always compares
+     * the same expression the results were ordered by.
+     */
+    private function comparable(string $attribute, string $expression): string
+    {
+        if (!\in_array($attribute, self::CASE_INSENSITIVE_COLUMNS, true)) {
+            return $expression;
+        }
+
+        return "upper({$expression})";
     }
 
     /** @return array{0: string, 1: string} */
