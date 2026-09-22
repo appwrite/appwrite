@@ -3,7 +3,9 @@
 namespace Appwrite\Event\Publisher;
 
 use Appwrite\Event\Message\Execution as ExecutionMessage;
-use Utopia\Queue\Publisher;
+use Appwrite\Event\Message\ExecutionCancelled as ExecutionCancelledMessage;
+use Appwrite\Event\Message\Executions as ExecutionsMessage;
+use Utopia\Queue\Publisher\Synchronous as Publisher;
 use Utopia\Queue\Queue;
 
 readonly class Execution extends Base
@@ -15,7 +17,7 @@ readonly class Execution extends Base
         parent::__construct($publisher);
     }
 
-    public function enqueue(ExecutionMessage $message): string|bool
+    public function enqueue(ExecutionMessage|ExecutionCancelledMessage|ExecutionsMessage $message): string|bool
     {
         return $this->publish($this->queue, $message);
     }

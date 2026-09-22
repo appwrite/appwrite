@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\Projects\Schedules;
 
 use Tests\E2E\Client;
@@ -10,7 +12,7 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\System\System;
 
-class SchedulesConsoleClientTest extends Scope
+final class SchedulesConsoleClientTest extends Scope
 {
     use ProjectConsole;
     use SchedulesBase;
@@ -324,7 +326,7 @@ class SchedulesConsoleClientTest extends Scope
         $scheduleId = $data['scheduleId'];
 
         // Create a second project
-        $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
+        $team = $this->createTeamFixture(array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -332,7 +334,7 @@ class SchedulesConsoleClientTest extends Scope
             'name' => 'Isolation Test Team',
         ]);
 
-        $this->assertEquals(201, $team['headers']['status-code']);
+        $this->assertEquals(200, $team['headers']['status-code']);
 
         $otherProject = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
             'content-type' => 'application/json',

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\Realtime;
 
 use Tests\E2E\Client;
@@ -11,9 +13,10 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use WebSocket\Client as WebSocketClient;
+use WebSocket\ConnectionException;
 use WebSocket\TimeoutException;
 
-class RealtimeCustomClientQueryTestWithMessage extends Scope
+final class RealtimeCustomClientQueryTestWithMessage extends Scope
 {
     use ProjectCustom;
     use SideClient;
@@ -537,7 +540,7 @@ class RealtimeCustomClientQueryTestWithMessage extends Scope
         // Invalid payloads are rejected
         $errNonString = $this->sendUnsubscribeMessage($client, [['subscriptionId' => 123]]);
         $this->assertEquals('error', $errNonString['type']);
-        $this->assertStringContainsString('subscriptionId', $errNonString['data']['message']);
+        $this->assertStringContainsString('subscriptionId', (string) $errNonString['data']['message']);
 
         $errEmpty = $this->sendUnsubscribeMessage($client, [['subscriptionId' => '']]);
         $this->assertEquals('error', $errEmpty['type']);
@@ -598,8 +601,8 @@ class RealtimeCustomClientQueryTestWithMessage extends Scope
             Query::contains('status', ['active'])->toString(),
         ]);
         $this->assertEquals('error', $response['type']);
-        $this->assertStringContainsString('not supported in Realtime queries', $response['data']['message']);
-        $this->assertStringContainsString('contains', $response['data']['message']);
+        $this->assertStringContainsString('not supported in Realtime queries', (string) $response['data']['message']);
+        $this->assertStringContainsString('contains', (string) $response['data']['message']);
 
         // Test 2: Invalid query method in nested AND query
         $response = $this->receiveSubscribeMessageResponse(['documents'], $headers, [
@@ -609,8 +612,8 @@ class RealtimeCustomClientQueryTestWithMessage extends Scope
             ])->toString(),
         ]);
         $this->assertEquals('error', $response['type']);
-        $this->assertStringContainsString('not supported in Realtime queries', $response['data']['message']);
-        $this->assertStringContainsString('search', $response['data']['message']);
+        $this->assertStringContainsString('not supported in Realtime queries', (string) $response['data']['message']);
+        $this->assertStringContainsString('search', (string) $response['data']['message']);
 
         // Test 3: Invalid query method in nested OR query
         $response = $this->receiveSubscribeMessageResponse(['documents'], $headers, [
@@ -620,8 +623,8 @@ class RealtimeCustomClientQueryTestWithMessage extends Scope
             ])->toString(),
         ]);
         $this->assertEquals('error', $response['type']);
-        $this->assertStringContainsString('not supported in Realtime queries', $response['data']['message']);
-        $this->assertStringContainsString('between', $response['data']['message']);
+        $this->assertStringContainsString('not supported in Realtime queries', (string) $response['data']['message']);
+        $this->assertStringContainsString('between', (string) $response['data']['message']);
 
         // Test 4: Deeply nested invalid query (AND -> OR -> invalid)
         $response = $this->receiveSubscribeMessageResponse(['documents'], $headers, [
@@ -634,8 +637,8 @@ class RealtimeCustomClientQueryTestWithMessage extends Scope
             ])->toString(),
         ]);
         $this->assertEquals('error', $response['type']);
-        $this->assertStringContainsString('not supported in Realtime queries', $response['data']['message']);
-        $this->assertStringContainsString('startsWith', $response['data']['message']);
+        $this->assertStringContainsString('not supported in Realtime queries', (string) $response['data']['message']);
+        $this->assertStringContainsString('startsWith', (string) $response['data']['message']);
 
         // Test 5: Multiple invalid 'queries' in nested structure
         $response = $this->receiveSubscribeMessageResponse(['documents'], $headers, [
@@ -648,11 +651,95 @@ class RealtimeCustomClientQueryTestWithMessage extends Scope
             ])->toString(),
         ]);
         $this->assertEquals('error', $response['type']);
-        $this->assertStringContainsString('not supported in Realtime queries', $response['data']['message']);
+        $this->assertStringContainsString('not supported in Realtime queries', (string) $response['data']['message']);
         $this->assertTrue(
             \str_contains($response['data']['message'], 'contains') ||
             \str_contains($response['data']['message'], 'endsWith')
         );
+    }
+
+    public function testConnectionJWT(): void
+    {
+        $user = $this->getUser();
+        $userId = $user['$id'] ?? '';
+        $session = $user['session'] ?? '';
+        $projectId = $this->getProject()['$id'];
+
+        // Mint a JWT for the authenticated user.
+        $response = $this->client->call(Client::METHOD_POST, '/account/jwt', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['jwt']);
+        $jwt = $response['body']['jwt'];
+
+        /**
+         * Test for SUCCESS - JWT via x-appwrite-jwt header.
+         * Connection authenticates at handshake time; the `connected` payload carries the user.
+         */
+        $client = $this->getWebsocketWithCustomQuery([
+            'project' => $projectId,
+        ], [
+            'origin' => 'http://localhost',
+            'x-appwrite-jwt' => $jwt,
+        ]);
+        $connected = \json_decode($client->receive(), true);
+
+        $this->assertEquals('connected', $connected['type'] ?? null);
+        $this->assertNotEmpty($connected['data']['user']);
+        $this->assertEquals($userId, $connected['data']['user']['$id']);
+
+        // The authenticated user can subscribe to their account channel.
+        $subscribe = $this->sendSubscribeMessage($client, [[
+            'channels' => ['account'],
+        ]]);
+        $this->assertContains('account', $subscribe['data']['subscriptions'][0]['channels']);
+
+        $client->close();
+
+        /**
+         * Test for SUCCESS - JWT via ?jwt= query string.
+         */
+        $client = $this->getWebsocketWithCustomQuery([
+            'project' => $projectId,
+            'jwt' => $jwt,
+        ], [
+            'origin' => 'http://localhost',
+        ]);
+        $connected = \json_decode($client->receive(), true);
+
+        $this->assertEquals('connected', $connected['type'] ?? null);
+        $this->assertNotEmpty($connected['data']['user']);
+        $this->assertEquals($userId, $connected['data']['user']['$id']);
+
+        $subscribe = $this->sendSubscribeMessage($client, [[
+            'channels' => ['account'],
+        ]]);
+        $this->assertContains('account', $subscribe['data']['subscriptions'][0]['channels']);
+
+        $client->close();
+
+        /**
+         * Test for FAILURE - invalid JWT via query string is rejected at handshake.
+         */
+        $client = $this->getWebsocketWithCustomQuery([
+            'project' => $projectId,
+            'jwt' => 'invalid-token',
+        ], [
+            'origin' => 'http://localhost',
+        ]);
+        $error = \json_decode($client->receive(), true);
+
+        $this->assertEquals('error', $error['type'] ?? null);
+        $this->assertEquals(401, $error['data']['code']); // USER_JWT_INVALID
+
+        \usleep(250000); // 250ms
+        $this->expectException(ConnectionException::class); // server should disconnect
+        $client->close();
     }
 
     public function testProjectChannelWithHeaderOnly(): void
@@ -807,5 +894,346 @@ class RealtimeCustomClientQueryTestWithMessage extends Scope
         }
 
         $client->close();
+    }
+
+    /**
+     * Create a database + collection (Role::any) with a string attribute, BEFORE the
+     * tail connection opens, so the setup events don't appear in the tail.
+     *
+     * @return array{databaseId:string, collectionId:string}
+     */
+    private function setupTailCollection(): array
+    {
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $database = $this->client->call(Client::METHOD_POST, '/databases', $headers, [
+            'databaseId' => ID::unique(),
+            'name' => 'Tail DB',
+        ]);
+        $this->assertEquals(201, $database['headers']['status-code']);
+        $databaseId = $database['body']['$id'];
+
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', $headers, [
+            'collectionId' => ID::unique(),
+            'name' => 'Actors',
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $collection['headers']['status-code']);
+        $collectionId = $collection['body']['$id'];
+
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/string', $headers, [
+            'key' => 'name',
+            'size' => 256,
+            'required' => true,
+        ]);
+
+        $this->assertEventually(function () use ($databaseId, $collectionId, $headers) {
+            $attribute = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/name', $headers);
+            $this->assertEquals(200, $attribute['headers']['status-code']);
+            $this->assertEquals('available', $attribute['body']['status']);
+        }, 120000, 500);
+
+        return ['databaseId' => $databaseId, 'collectionId' => $collectionId];
+    }
+
+    /**
+     * Open a console connection (root session) in message mode and subscribe to a
+     * `console.tail.<projectId>` channel with optional filter queries.
+     *
+     * @param array<int,string> $queries
+     */
+    private function openConsoleTail(string $targetProjectId, array $queries = [], string $subscriptionId = 'tail-1'): WebSocketClient
+    {
+        $queryString = \http_build_query(['project' => 'console']);
+        $client = new WebSocketClient(
+            'ws://appwrite.test/v1/realtime?' . $queryString,
+            [
+                'headers' => [
+                    'origin' => 'http://localhost',
+                    'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+                ],
+                'timeout' => 10,
+            ]
+        );
+
+        $connected = \json_decode($client->receive(), true);
+        $this->assertEquals('connected', $connected['type'] ?? null);
+
+        $sub = ['channels' => ['console.tail.' . $targetProjectId], 'subscriptionId' => $subscriptionId];
+        if (!empty($queries)) {
+            $sub['queries'] = $queries;
+        }
+
+        $client->send(\json_encode(['type' => 'subscribe', 'data' => [$sub]]));
+
+        $response = \json_decode($client->receive(), true);
+        $this->assertEquals('response', $response['type'] ?? null);
+        $this->assertEquals('subscribe', $response['data']['to'] ?? null);
+        $this->assertTrue($response['data']['success'] ?? false);
+
+        return $client;
+    }
+
+    /**
+     * Receive frames until a `console.tail` event arrives, returning its payload (an
+     * array of compact frames). Skips the periodic `console.tail.stats` counter frames.
+     *
+     * @return array<int,array<string,mixed>>
+     */
+    private function receiveTailFrames(WebSocketClient $client, int $maxFrames = 5): array
+    {
+        for ($i = 0; $i < $maxFrames; $i++) {
+            $message = \json_decode($client->receive(), true);
+            $this->assertEquals('event', $message['type']);
+            if (($message['data']['events'][0] ?? null) === 'console.tail') {
+                return $message['data']['payload'];
+            }
+        }
+        $this->fail('No console.tail event frame received.');
+    }
+
+    public function testConsoleTailReceivesCompactMetadata(): void
+    {
+        ['databaseId' => $databaseId, 'collectionId' => $collectionId] = $this->setupTailCollection();
+
+        $projectId = $this->getProject()['$id'];
+        $client = $this->openConsoleTail($projectId);
+
+        $document = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'documentId' => ID::unique(),
+            'data' => ['name' => 'Spiderman'],
+        ]);
+        $this->assertEquals(201, $document['headers']['status-code']);
+        $documentId = $document['body']['$id'];
+
+        $frames = $this->receiveTailFrames($client);
+
+        $match = null;
+        foreach ($frames as $frame) {
+            if (($frame['resourceId'] ?? null) === $documentId) {
+                $match = $frame;
+                break;
+            }
+        }
+
+        $this->assertNotNull($match, 'document.create not present in tail: ' . \json_encode($frames));
+        $this->assertSame('databases', $match['type']);
+        $this->assertSame('create', $match['action']);
+        $this->assertSame($databaseId, $match['databaseId']);
+        $this->assertSame($collectionId, $match['collectionId']);
+        // Compact: no full document body, and no scope ids from other resource types.
+        $this->assertArrayNotHasKey('name', $match);
+        $this->assertArrayNotHasKey('functionId', $match);
+        $this->assertArrayNotHasKey('bucketId', $match);
+
+        $client->close();
+    }
+
+    public function testConsoleTailServerSideFilter(): void
+    {
+        ['databaseId' => $databaseId, 'collectionId' => $collectionId] = $this->setupTailCollection();
+
+        $projectId = $this->getProject()['$id'];
+        // Only deletes should reach this tail.
+        $client = $this->openConsoleTail($projectId, [Query::equal('action', ['delete'])->toString()]);
+
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        // create — must be filtered out (never reaches the token bucket).
+        $document = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', $headers, [
+            'documentId' => ID::unique(),
+            'data' => ['name' => 'Ironman'],
+        ]);
+        $this->assertEquals(201, $document['headers']['status-code']);
+        $documentId = $document['body']['$id'];
+
+        // delete — must pass the filter.
+        $deleted = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $documentId, $headers);
+        $this->assertEquals(204, $deleted['headers']['status-code']);
+
+        $frames = $this->receiveTailFrames($client);
+
+        foreach ($frames as $frame) {
+            $this->assertSame('delete', $frame['action'], 'filter leaked a non-delete event: ' . \json_encode($frame));
+        }
+        $deleteFrames = \array_filter($frames, fn ($f) => ($f['resourceId'] ?? null) === $documentId);
+        $this->assertNotEmpty($deleteFrames, 'expected the delete event in the tail');
+
+        $client->close();
+    }
+
+    public function testConsoleTailUnauthorizedProjectIsRejected(): void
+    {
+        $queryString = \http_build_query(['project' => 'console']);
+        $client = new WebSocketClient(
+            'ws://appwrite.test/v1/realtime?' . $queryString,
+            [
+                'headers' => [
+                    'origin' => 'http://localhost',
+                    'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+                ],
+                'timeout' => 10,
+            ]
+        );
+
+        $connected = \json_decode($client->receive(), true);
+        $this->assertEquals('connected', $connected['type'] ?? null);
+
+        // A project the console user's team does not own (does not exist) → policy violation.
+        $client->send(\json_encode([
+            'type' => 'subscribe',
+            'data' => [['channels' => ['console.tail.nonexistentproject'], 'subscriptionId' => 'tail-x']],
+        ]));
+
+        // A 1008 policy violation sends the error frame and then closes the connection.
+        // Depending on flush/close timing the client may read the error frame, or the
+        // socket may already be dead — both are valid rejections. What must NOT happen
+        // is a successful `response` subscription.
+        try {
+            $response = \json_decode($client->receive(), true);
+            $this->assertEquals('error', $response['type'] ?? null);
+            $this->assertEquals(1008, $response['data']['code'] ?? null);
+        } catch (ConnectionException) {
+            $this->addToAssertionCount(1);
+        }
+
+        // close() can itself throw on an already-closed socket — best effort.
+        try {
+            $client->close();
+        } catch (ConnectionException) {
+            // already closed by the server
+        }
+    }
+
+    public function testConsoleTailSeesEventsNotReadableByTheConsoleUser(): void
+    {
+        // The tail authorizes the *viewer* by team membership at subscribe time and then
+        // forwards every project event regardless of the resource's read ACL. A document
+        // readable only by some OTHER user (not `any`, not the console user) must still
+        // appear in the console tail.
+        $projectId = $this->getProject()['$id'];
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $database = $this->client->call(Client::METHOD_POST, '/databases', $headers, [
+            'databaseId' => ID::unique(),
+            'name' => 'Tail ACL DB',
+        ]);
+        $this->assertEquals(201, $database['headers']['status-code']);
+        $databaseId = $database['body']['$id'];
+
+        // documentSecurity ON and NO read(any) at the collection level, so the only read
+        // grant comes from the document's own (restricted) permission.
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', $headers, [
+            'collectionId' => ID::unique(),
+            'name' => 'Secrets',
+            'documentSecurity' => true,
+            'permissions' => [Permission::create(Role::any())],
+        ]);
+        $this->assertEquals(201, $collection['headers']['status-code']);
+        $collectionId = $collection['body']['$id'];
+
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/string', $headers, [
+            'key' => 'name',
+            'size' => 256,
+            'required' => true,
+        ]);
+        $this->assertEventually(function () use ($databaseId, $collectionId, $headers) {
+            $attribute = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/name', $headers);
+            $this->assertEquals(200, $attribute['headers']['status-code']);
+            $this->assertEquals('available', $attribute['body']['status']);
+        }, 120000, 500);
+
+        $client = $this->openConsoleTail($projectId);
+
+        // Read restricted to a user that is NOT the console user → the console viewer
+        // could never read this document directly, yet the tail must surface its event.
+        $document = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', $headers, [
+            'documentId' => ID::unique(),
+            'data' => ['name' => 'top secret'],
+            'permissions' => [Permission::read(Role::user('not-the-console-user'))],
+        ]);
+        $this->assertEquals(201, $document['headers']['status-code']);
+        $documentId = $document['body']['$id'];
+
+        $frames = $this->receiveTailFrames($client);
+
+        $match = null;
+        foreach ($frames as $frame) {
+            if (($frame['resourceId'] ?? null) === $documentId) {
+                $match = $frame;
+                break;
+            }
+        }
+
+        $this->assertNotNull($match, 'restricted-read document.create not present in tail: ' . \json_encode($frames));
+        $this->assertSame('databases', $match['type']);
+        $this->assertSame('create', $match['action']);
+        $this->assertArrayNotHasKey('name', $match); // still no document body
+
+        $client->close();
+    }
+
+    public function testProjectConnectionCannotTail(): void
+    {
+        // A normal project websocket (not the console project) must not be able to tail,
+        // even for a team member — only the console connection may. Expect a 1008 reject.
+        $user = $this->getUser();
+        $session = $user['session'] ?? '';
+        $projectId = $this->getProject()['$id'];
+
+        $queryString = \http_build_query(['project' => $projectId]); // NOT console
+        $client = new WebSocketClient(
+            'ws://appwrite.test/v1/realtime?' . $queryString,
+            [
+                'headers' => [
+                    'origin' => 'http://localhost',
+                    'cookie' => 'a_session_' . $projectId . '=' . $session,
+                ],
+                'timeout' => 10,
+            ]
+        );
+
+        $connected = \json_decode($client->receive(), true);
+        $this->assertEquals('connected', $connected['type'] ?? null);
+
+        $client->send(\json_encode([
+            'type' => 'subscribe',
+            'data' => [['channels' => ['console.tail.' . $projectId], 'subscriptionId' => 'tail-proj']],
+        ]));
+
+        try {
+            $response = \json_decode($client->receive(), true);
+            $this->assertEquals('error', $response['type'] ?? null);
+            $this->assertEquals(1008, $response['data']['code'] ?? null);
+        } catch (ConnectionException) {
+            $this->addToAssertionCount(1);
+        }
+
+        try {
+            $client->close();
+        } catch (ConnectionException) {
+            // already closed by the server
+        }
     }
 }

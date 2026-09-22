@@ -12,23 +12,23 @@ final class Audit extends Base
         public readonly array $payload,
         public readonly Document $project = new Document(),
         public readonly Document $user = new Document(),
+        public readonly Document $impersonatorUser = new Document(),
         public readonly string $resource = '',
         public readonly string $mode = '',
         public readonly string $ip = '',
         public readonly string $userAgent = '',
         public readonly string $hostname = '',
+        public readonly string $sdk = '',
+        public readonly string $sdkVersion = '',
     ) {
     }
 
     public function toArray(): array
     {
         return [
-            'project' => [
-                '$id' => $this->project->getId(),
-                '$sequence' => $this->project->getSequence(),
-                'database' => $this->project->getAttribute('database', ''),
-            ],
+            'project' => ProjectContext::fromDocument($this->project)->toArray(),
             'user' => $this->user->getArrayCopy(),
+            'impersonatorUser' => $this->impersonatorUser->getArrayCopy(),
             'payload' => $this->payload,
             'resource' => $this->resource,
             'mode' => $this->mode,
@@ -36,6 +36,8 @@ final class Audit extends Base
             'userAgent' => $this->userAgent,
             'event' => $this->event,
             'hostname' => $this->hostname,
+            'sdk' => $this->sdk,
+            'sdkVersion' => $this->sdkVersion,
         ];
     }
 
@@ -46,11 +48,14 @@ final class Audit extends Base
             payload: $data['payload'] ?? [],
             project: new Document($data['project'] ?? []),
             user: new Document($data['user'] ?? []),
+            impersonatorUser: new Document($data['impersonatorUser'] ?? []),
             resource: $data['resource'] ?? '',
             mode: $data['mode'] ?? '',
             ip: $data['ip'] ?? '',
             userAgent: $data['userAgent'] ?? '',
             hostname: $data['hostname'] ?? '',
+            sdk: $data['sdk'] ?? '',
+            sdkVersion: $data['sdkVersion'] ?? '',
         );
     }
 
@@ -61,11 +66,14 @@ final class Audit extends Base
             payload: $context->payload,
             project: $context->project ?? new Document(),
             user: $context->user ?? new Document(),
+            impersonatorUser: $context->impersonatorUser ?? new Document(),
             resource: $context->resource,
             mode: $context->mode,
             ip: $context->ip,
             userAgent: $context->userAgent,
             hostname: $context->hostname,
+            sdk: $context->sdk,
+            sdkVersion: $context->sdkVersion,
         );
     }
 }

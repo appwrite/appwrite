@@ -44,7 +44,7 @@ class Get extends Action
                     )
                 ]
             ))
-            ->param('number', null, new Phone(), 'Phone number associated with the mock phone. Must be a valid E.164 formatted phone number.')
+            ->param('number', null, new Phone(normalize: true), 'Phone number associated with the mock phone. Must be a valid E.164 formatted phone number.')
             ->inject('response')
             ->inject('project')
             ->callback($this->action(...));
@@ -55,6 +55,7 @@ class Get extends Action
         Response $response,
         Document $project
     ) {
+        $number = Phone::normalize($number);
         $auths = $project->getAttribute('auths', []);
 
         $mockNumbers = $auths['mockNumbers'] ?? [];

@@ -5,16 +5,17 @@ $registerWorkerMessageResources = require __DIR__ . '/init/worker/message.php';
 
 use Appwrite\Certificates\LetsEncrypt;
 use Appwrite\Platform\Appwrite;
+use Appwrite\Workers\Jobs;
 use Swoole\Runtime;
+use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Logger\Log;
-use Utopia\Logger\Logger;
 use Utopia\Platform\Service;
-use Utopia\Pools\Group;
 use Utopia\Queue\Adapter\Swoole;
-use Utopia\Queue\Broker\Pool as BrokerPool;
+use Utopia\Queue\Broker\Redis;
+use Utopia\Queue\Connection\Locking;
+use Utopia\Queue\Connection\Redis as Connection;
 use Utopia\Queue\Server;
 use Utopia\Span\Span;
 use Utopia\System\System;
@@ -36,24 +37,6 @@ $container->set('authorization', function () {
 
 $container->set('project', fn () => new Document([]), []);
 
-$container->set('log', fn () => new Log(), []);
-
-$container->set('consumer', function (Group $pools) {
-    return new BrokerPool(consumer: $pools->get('consumer'));
-}, ['pools']);
-
-$container->set('consumerDatabases', function (BrokerPool $consumer) {
-    return $consumer;
-}, ['consumer']);
-
-$container->set('consumerMigrations', function (BrokerPool $consumer) {
-    return $consumer;
-}, ['consumer']);
-
-$container->set('consumerStatsUsage', function (BrokerPool $consumer) {
-    return $consumer;
-}, ['consumer']);
-
 $container->set('certificates', function () {
     $email = System::getEnv('_APP_EMAIL_CERTIFICATES', System::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS'));
     if (empty($email)) {
@@ -66,35 +49,69 @@ $container->set('certificates', function () {
 $platform = new Appwrite();
 $args = $_SERVER['argv'] ?? [];
 
-if (! isset($args[1])) {
-    Console::error('Missing worker name');
-    Console::exit(1);
-}
-
 \array_shift($args);
-$workerName = $args[0];
-
-if (\str_starts_with($workerName, 'databases')) {
-    $queueName = System::getEnv('_APP_QUEUE_NAME', 'database_db_main');
-} else {
-    $queueName = System::getEnv('_APP_QUEUE_NAME', 'v1-' . strtolower($workerName));
+$requested = [];
+foreach ($args as $arg) {
+    if (!\is_string($arg) || $arg === '' || \str_starts_with($arg, '-')) {
+        continue;
+    }
+    foreach (\preg_split('/[,\s]+/', strtolower($arg), -1, PREG_SPLIT_NO_EMPTY) ?: [] as $name) {
+        $requested[] = $name;
+    }
 }
 
-/** @var \Utopia\Pools\Group $pools */
-$pools = $container->get('pools');
+/** @var array<string, array{queue: string, queueEnv?: string, coroutines?: int}> $workersConfig */
+$workersConfig = Config::getParam('workers', []);
+$known = \array_keys($workersConfig);
 
+if ($requested === [] || \in_array('all', $requested, true)) {
+    $workers = $known;
+    $workerName = 'all';
+} else {
+    $unknown = \array_values(\array_diff($requested, $known));
+    if ($unknown !== []) {
+        Console::error('Unknown worker: ' . \implode(', ', $unknown) . '. Valid: ' . \implode(', ', $known));
+        Console::exit(1);
+    }
+    $workers = $requested;
+    $workerName = $workers[0];
+}
+
+// Same as a single worker: resolve queue + concurrency from config/env.
+// For one worker, `_APP_WORKER_MAX_COROUTINES` still overrides (except databases).
+// For many, each queue keeps its own cap so databases stays at 1.
+$jobs = Jobs::resolve($workers, $workersConfig, System::getEnv(...));
+
+// Keep commands available for heartbeats and recovery while receive blocks.
+$createConsumer = static function (): Redis {
+    $connection = [
+        System::getEnv('_APP_REDIS_HOST', 'redis'),
+        (int) System::getEnv('_APP_REDIS_PORT', '6379'),
+        System::getEnv('_APP_REDIS_USER', ''),
+        System::getEnv('_APP_REDIS_PASS', ''),
+    ];
+
+    return new Redis(
+        receive: new Connection(...$connection),
+        commands: new Locking(new Connection(...$connection)),
+    );
+};
+
+// Adapter is transport only — queue names and concurrency come from job().
 $adapter = new Swoole(
-    $pools->get('consumer')->pop()->getResource(),
+    $createConsumer,
     System::getEnv('_APP_WORKERS_NUM', 1),
-    $queueName
+    resources: $container,
 );
 
-$worker = new Server($adapter, $container);
+$worker = new Server($adapter);
 
 try {
-    $worker->init()->action(function () use ($worker, $registerWorkerMessageResources, $queueName) {
-        $registerWorkerMessageResources($worker->getContainer());
-        Span::init("worker.{$queueName}");
+    $worker->init()->action(function () use ($worker, $registerWorkerMessageResources) {
+        $registerWorkerMessageResources($worker->context());
+        $message = $worker->context()->get('message');
+        $spanQueue = $message instanceof \Utopia\Queue\Message ? $message->getQueue() : 'worker';
+        Span::init("worker.{$spanQueue}");
     });
 
     $worker->shutdown()->action(function () {
@@ -103,61 +120,46 @@ try {
 
     $container->set('bus', function ($register) use ($worker) {
         return $register->get('bus')->setResolver(
-            fn (string $name) => $worker->getContainer()->get($name)
+            fn (string $name) => $worker->context()->get($name)
         );
     }, ['register']);
 
     $platform->setWorker($worker);
     $platform->init(Service::TYPE_WORKER, [
-        'workerName' => strtolower($workerName),
+        'workerName' => $workerName,
+        'workers' => $workerName === 'all' ? ['all'] : $workers,
+        'jobs' => $jobs,
     ]);
 } catch (\Throwable $e) {
     Console::error($e->getMessage() . ', File: ' . $e->getFile() . ', Line: ' . $e->getLine());
     Console::exit(1);
 }
 
+$combined = $workerName === 'all';
+Console::title($combined ? 'Worker V1 (combined)' : 'Worker V1 (' . $workerName . ')');
+Console::success(APP_NAME . ' worker v1 has started');
+Console::info('Mode: ' . ($combined ? 'combined — all queues in one process' : 'dedicated — single queue'));
+Console::info('Workers: ' . \count($jobs) . '  |  processes: ' . System::getEnv('_APP_WORKERS_NUM', 1));
+Console::info(str_pad('queue', 16) . str_pad('redis key', 28) . str_pad('coroutines', 14) . 'prefetch');
+Console::info(str_repeat('-', 70));
+foreach ($jobs as $name => $job) {
+    Console::info(
+        str_pad($name, 16)
+        . str_pad($job['queue'], 28)
+        . str_pad((string) $job['coroutines'], 14)
+        . (string) $worker->prefetch($job['queue'])
+    );
+}
+Console::info(str_repeat('-', 70));
+Console::success('Listening for jobs…');
+
 $worker
     ->error()
     ->inject('error')
-    ->inject('logger')
-    ->inject('log')
-    ->inject('project')
-    ->inject('authorization')
-    ->action(function (Throwable $error, ?Logger $logger, Log $log, Document $project, Authorization $authorization) use ($queueName) {
-        $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
-
-        Span::error($error);
-
-        if ($logger) {
-            $log->setNamespace('appwrite-worker');
-            $log->setServer(System::getEnv('_APP_LOGGING_SERVICE_IDENTIFIER', \gethostname()));
-            $log->setVersion($version);
-            $log->setType(Log::TYPE_ERROR);
-            $log->setMessage($error->getMessage());
-            $log->setAction('appwrite-queue-' . $queueName);
-            $log->addTag('verboseType', get_class($error));
-            $log->addTag('code', $error->getCode());
-            $log->addTag('projectId', $project->getId());
-            $log->addExtra('file', $error->getFile());
-            $log->addExtra('line', $error->getLine());
-            $log->addExtra('trace', $error->getTraceAsString());
-            $log->addExtra('roles', $authorization->getRoles());
-
-            $isProduction = System::getEnv('_APP_ENV', 'development') === 'production';
-            $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
-
-            try {
-                $responseCode = $logger->addLog($log);
-                Console::info('Error log pushed with status code: ' . $responseCode);
-            } catch (Throwable $th) {
-                Console::error('Error pushing log: ' . $th->getMessage());
-            }
-        }
-
-        Console::error('[Error] Type: ' . get_class($error));
-        Console::error('[Error] Message: ' . $error->getMessage());
-        Console::error('[Error] File: ' . $error->getFile());
-        Console::error('[Error] Line: ' . $error->getLine());
+    ->action(function (Throwable $error) use ($workerName) {
+        // Initialization can fail before the message span or project is available.
+        $span = Span::current() ?? Span::init("worker.{$workerName}");
+        $span->finish(error: $error);
     });
 
 $worker->start();

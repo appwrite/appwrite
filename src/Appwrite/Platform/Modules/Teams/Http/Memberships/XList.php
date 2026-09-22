@@ -121,7 +121,7 @@ class XList extends Action
         }
 
 
-        $memberships = array_filter($memberships, fn (Document $membership) => !empty($membership->getAttribute('userId')));
+        $memberships = \array_values(array_filter($memberships, fn (Document $membership) => !empty($membership->getAttribute('userId'))));
 
         // Default should be "false", but existing projects already rely on this being "true"
         $membershipsPrivacy =  [
@@ -130,6 +130,7 @@ class XList extends Action
             'mfa' => $project->getAttribute('auths', [])['membershipsMfa'] ?? true,
             'userId' => $project->getAttribute('auths', [])['membershipsUserId'] ?? true,
             'userPhone' => $project->getAttribute('auths', [])['membershipsUserPhone'] ?? true,
+            'userAccessedAt' => $project->getAttribute('auths', [])['membershipsUserAccessedAt'] ?? false,
         ];
 
         $roles = $authorization->getRoles();
@@ -140,7 +141,14 @@ class XList extends Action
             return $privacy || $isPrivilegedUser || $isAppUser;
         }, $membershipsPrivacy);
 
-        $memberships = array_map(function ($membership) use ($dbForProject, $team, $membershipsPrivacy) {
+        // The policy only hides other members, a member always sees their own details
+        $selfPrivacy = array_fill_keys(array_keys($membershipsPrivacy), true);
+        $userSequence = $user->getSequence();
+
+        $memberships = array_map(function ($membership) use ($dbForProject, $team, $membershipsPrivacy, $selfPrivacy, $userSequence) {
+            $isSelf = $userSequence !== null && $membership->getAttribute('userInternalId') === $userSequence;
+            $membershipsPrivacy = $isSelf ? $selfPrivacy : $membershipsPrivacy;
+
             $memberUser = !empty(array_filter($membershipsPrivacy))
                 ? $dbForProject->getDocument('users', $membership->getAttribute('userId'))
                 : new Document();
@@ -178,6 +186,10 @@ class XList extends Action
 
             if ($membershipsPrivacy['userPhone']) {
                 $membership->setAttribute('userPhone', $memberUser->getAttribute('phone'));
+            }
+
+            if ($membershipsPrivacy['userAccessedAt']) {
+                $membership->setAttribute('userAccessedAt', $memberUser->getAttribute('accessedAt'));
             }
 
             $membership->setAttribute('teamName', $team->getAttribute('name'));

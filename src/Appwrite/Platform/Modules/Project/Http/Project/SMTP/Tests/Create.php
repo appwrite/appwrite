@@ -10,6 +10,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\SDK\Specification\Validator\PasswordFormat;
 use Appwrite\Template\Template;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response as UtopiaResponse;
@@ -40,6 +41,8 @@ class Create extends Action
             ->httpAlias('/v1/projects/:projectId/smtp/tests')
             ->desc('Create project SMTP test')
             ->groups(['api', 'project'])
+            ->label('audits.event', 'project.smtp.test')
+            ->label('audits.resource', 'project/{project.$id}')
             ->label('scope', 'project.write')
             ->label('sdk', new Method(
                 namespace: 'project',
@@ -62,9 +65,9 @@ class Create extends Action
             ->param('senderEmail', '', new Email(), 'Email of the sender', optional: true, deprecated: true) // Backwards compatibility
             ->param('replyTo', '', new Email(), 'Reply to email', optional: true, deprecated: true) // Backwards compatibility
             ->param('host', '', new Hostname(), 'SMTP server host name', optional: true, deprecated: true) // Backwards compatibility
-            ->param('port', null, new Integer(), 'SMTP server port', optional: true, deprecated: true) // Backwards compatibility
+            ->param('port', null, new Integer(), 'SMTP server port', optional: true, deprecated: true, example: '587') // Backwards compatibility
             ->param('username', '', new Text(256), 'SMTP server username', optional: true, deprecated: true) // Backwards compatibility
-            ->param('password', '', new Text(256), 'SMTP server password', optional: true, deprecated: true) // Backwards compatibility
+            ->param('password', '', new PasswordFormat(new Text(256)), 'SMTP server password', optional: true, deprecated: true) // Backwards compatibility
             ->param('secure', '', new WhiteList(['tls', 'ssl'], true), 'Does SMTP server use secure connection', optional: true, deprecated: true) // Backwards compatibility
             ->inject('response')
             ->inject('project')
@@ -151,6 +154,7 @@ class Create extends Action
                 project: $project,
                 recipient: $email,
                 subject: $subject,
+                template: MAIL_TEMPLATE_SMTP_TEST,
                 bodyTemplate: APP_CE_CONFIG_DIR . '/locale/templates/email-base-styled.tpl',
                 body: $template->render(),
                 smtp: [

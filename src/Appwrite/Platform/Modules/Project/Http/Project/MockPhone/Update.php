@@ -52,7 +52,7 @@ class Update extends Action
                     )
                 ]
             ))
-            ->param('number', null, new Phone(), 'Phone number associated with the mock phone. Must be a valid E.164 formatted phone number.')
+            ->param('number', null, new Phone(normalize: true), 'Phone number associated with the mock phone. Must be a valid E.164 formatted phone number.')
             ->param('otp', '', new Text(6, 6, Text::NUMBERS), 'One-time password (OTP) to associate with the mock phone. Must be a 6-digit numeric code.')
             ->inject('response')
             ->inject('queueForEvents')
@@ -71,6 +71,7 @@ class Update extends Action
         Database $dbForPlatform,
         Authorization $authorization,
     ) {
+        $number = Phone::normalize($number);
         $auths = $project->getAttribute('auths', []);
 
         $mockNumbers = $auths['mockNumbers'] ?? [];
@@ -97,6 +98,7 @@ class Update extends Action
         ]);
 
         $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), $updates));
+        $authorization->skip(fn () => $dbForPlatform->purgeCachedDocument('projects', $project->getId()));
 
         $queueForEvents->setParam('number', $number);
 

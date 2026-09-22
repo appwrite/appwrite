@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Utopia\Response\Filters;
 
 use Appwrite\Utopia\Response;
@@ -10,7 +12,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Utopia\Database\DateTime;
 
-class V16Test extends TestCase
+final class V16Test extends TestCase
 {
     protected Filter $filter;
 
@@ -23,42 +25,38 @@ class V16Test extends TestCase
     {
     }
 
-    public static function deploymentProvider(): array
+    public static function deploymentProvider(): \Iterator
     {
-        return [
-            'buildStdout and buildStderr' => [
-                [
-                    'buildLogs' => 'Compiling source files...',
-                ],
-                [
-                    'buildStdout' => 'Compiling source files...',
-                    'buildStderr' => '',
-                ],
+        yield 'buildStdout and buildStderr' => [
+            [
+                'buildLogs' => 'Compiling source files...',
             ],
-            'size and buildSize' => [
-                [
-                    'size' => 20,
-                    'buildSize' => 40
-                ],
-                [
-                    'size' => 60
-                ],
+            [
+                'buildStdout' => 'Compiling source files...',
+                'buildStderr' => '',
             ],
-
-            'size and buildSize missing' => [
-                [
-                    'size' => 20
-                ],
-                [
-                    'size' => 20
-                ],
+        ];
+        yield 'size and buildSize' => [
+            [
+                'size' => 20,
+                'buildSize' => 40
             ],
-
-            'empty no errors' => [
-                [
-                ],
-                [
-                ],
+            [
+                'size' => 60
+            ],
+        ];
+        yield 'size and buildSize missing' => [
+            [
+                'size' => 20
+            ],
+            [
+                'size' => 20
+            ],
+        ];
+        yield 'empty no errors' => [
+            [
+            ],
+            [
             ],
         ];
     }
@@ -73,40 +71,38 @@ class V16Test extends TestCase
         $this->assertEquals($expected, $result);
     }
 
-    public static function executionProvider(): array
+    public static function executionProvider(): \Iterator
     {
-        return [
-            'statusCode' => [
-                [
-                    'responseStatusCode' => 200,
-                ],
-                [
-                    'statusCode' => 200,
-                ],
+        yield 'statusCode' => [
+            [
+                'responseStatusCode' => 200,
             ],
-            'response' => [
-                [
-                    'responseBody' => 'Sample response.',
-                ],
-                [
-                    'response' => 'Sample response.',
-                ],
+            [
+                'statusCode' => 200,
             ],
-            'stdout' => [
-                [
-                    'logs' => 'Sample log.',
-                ],
-                [
-                    'stdout' => 'Sample log.',
-                ],
+        ];
+        yield 'response' => [
+            [
+                'responseBody' => 'Sample response.',
             ],
-            'stderr' => [
-                [
-                    'errors' => 'Sample error.',
-                ],
-                [
-                    'stderr' => 'Sample error.',
-                ],
+            [
+                'response' => 'Sample response.',
+            ],
+        ];
+        yield 'stdout' => [
+            [
+                'logs' => 'Sample log.',
+            ],
+            [
+                'stdout' => 'Sample log.',
+            ],
+        ];
+        yield 'stderr' => [
+            [
+                'errors' => 'Sample error.',
+            ],
+            [
+                'stderr' => 'Sample error.',
             ],
         ];
     }
@@ -121,18 +117,16 @@ class V16Test extends TestCase
         $this->assertEquals($expected, $result);
     }
 
-    public static function functionProvider(): array
+    public static function functionProvider(): \Iterator
     {
-        return [
-            'empty schedule' => [
-                [
-                    'schedule' => '',
-                ],
-                [
-                    'schedule' => '',
-                    'schedulePrevious' => '',
-                    'scheduleNext' => '',
-                ],
+        yield 'empty schedule' => [
+            [
+                'schedule' => '',
+            ],
+            [
+                'schedule' => '',
+                'schedulePrevious' => '',
+                'scheduleNext' => '',
             ],
         ];
     }
@@ -168,39 +162,37 @@ class V16Test extends TestCase
         $this->assertEquals($expected, $result);
     }
 
-    public static function projectProvider(): array
+    public static function projectProvider(): \Iterator
     {
-        return [
-            'oAuthProviders' => [
-                [
-                    'oAuthProviders' => [
-                        [
-                            'key' => 'github',
-                            'name' => 'GitHub',
-                            'appId' => 'client_id',
-                            'secret' => 'client_secret',
-                            'enabled' => true,
-                        ],
+        yield 'oAuthProviders' => [
+            [
+                'oAuthProviders' => [
+                    [
+                        'key' => 'github',
+                        'name' => 'GitHub',
+                        'appId' => 'client_id',
+                        'secret' => 'client_secret',
+                        'enabled' => true,
                     ],
-                ],
-                [
-                    'oAuthProviders' => [
-                        [
-                            'name' => 'Github',
-                            'appId' => 'client_id',
-                            'secret' => 'client_secret',
-                            'enabled' => true,
-                        ],
-                    ],
-                    'domains' => [],
                 ],
             ],
-            'domains' => [
-                [
+            [
+                'oAuthProviders' => [
+                    [
+                        'name' => 'Github',
+                        'appId' => 'client_id',
+                        'secret' => 'client_secret',
+                        'enabled' => true,
+                    ],
                 ],
-                [
-                    'domains' => [],
-                ],
+                'domains' => [],
+            ],
+        ];
+        yield 'domains' => [
+            [
+            ],
+            [
+                'domains' => [],
             ],
         ];
     }
@@ -215,16 +207,14 @@ class V16Test extends TestCase
         $this->assertEquals($expected, $result);
     }
 
-    public static function variableProvider(): array
+    public static function variableProvider(): \Iterator
     {
-        return [
-            'functionId' => [
-                [
-                    'resourceId' => '5e5ea5c16897e',
-                ],
-                [
-                    'functionId' => '5e5ea5c16897e',
-                ],
+        yield 'functionId' => [
+            [
+                'resourceId' => '5e5ea5c16897e',
+            ],
+            [
+                'functionId' => '5e5ea5c16897e',
             ],
         ];
     }

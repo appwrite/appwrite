@@ -43,14 +43,11 @@ class Project extends Model
                 'default' => '',
                 'example' => '1592981250',
             ])
-
-            // Resource: Dev Keys
-            ->addRule('devKeys', [
-                'type' => Response::MODEL_DEV_KEY,
-                'description' => 'Deprecated since 1.9.5: List of dev keys.',
-                'default' => [],
-                'example' => new \stdClass(),
-                'array' => true,
+            ->addRule('region', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Project region.',
+                'default' => 'default',
+                'example' => 'fra',
             ])
 
             // Resource: SMTP
@@ -105,9 +102,10 @@ class Project extends Model
             ])
             ->addRule('smtpPassword', [
                 'type' => self::TYPE_STRING,
+                'format' => 'password',
                 'description' => 'SMTP server password. This property is write-only and always returned empty.',
                 'default' => '',
-                'example' => '',
+                'example' => 'smtp-password',
             ])
             ->addRule('smtpSecure', [
                 'type' => self::TYPE_STRING,
@@ -146,6 +144,12 @@ class Project extends Model
                 'default' => 'active',
                 'example' => 'active',
             ])
+            ->addRule('onboarding', [
+                'type' => self::TYPE_JSON,
+                'description' => 'Stage progress (completed or skipped) with timestamps and actor types, keyed by stage id.',
+                'default' => new \stdClass(),
+                'example' => new \stdClass(),
+            ])
 
             // Resource: Auth methods
             ->addRule('authMethods', [
@@ -172,6 +176,25 @@ class Project extends Model
                 'default' => [],
                 'example' => new \stdClass(),
                 'array' => true,
+            ])
+            ->addRule('blocks', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Project blocks information.',
+                'default' => [],
+                'example' => [],
+                'array' => true,
+            ])
+            ->addRule('consoleAccessedAt', [
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Last time the project was accessed via console.',
+                'default' => '',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
+            ])
+            ->addRule('wafEnabled', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether WAF enforcement is enabled for the project.',
+                'default' => false,
+                'example' => false,
             ])
         ;
     }
@@ -207,8 +230,20 @@ class Project extends Model
         $this->expandServices($document);
         $this->expandProtocols($document);
         $this->expandAuthMethods($document);
+        $this->expandConsoleAccessedAt($document);
+        $document->setAttribute('wafEnabled', (bool) $document->getAttribute('wafEnabled', false));
+
+        $onboarding = $document->getAttribute('onboarding', []);
+        if (\is_array($onboarding) && empty($onboarding)) {
+            $document->setAttribute('onboarding', new \stdClass());
+        }
 
         return $document;
+    }
+
+    private function expandConsoleAccessedAt(Document $document): void
+    {
+        $document->setAttribute('consoleAccessedAt', $document->getAttribute('accessedAt', ''));
     }
 
     private function expandSmtpFields(Document $document): void

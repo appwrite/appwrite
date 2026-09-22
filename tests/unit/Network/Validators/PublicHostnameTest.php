@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Network\Validators;
 
 use Appwrite\Network\Validator\PublicHostname;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
-class PublicHostnameTest extends TestCase
+final class PublicHostnameTest extends TestCase
 {
     public function testRejectsEmptyAndNonString(): void
     {
@@ -30,25 +32,23 @@ class PublicHostnameTest extends TestCase
         $this->assertFalse(PublicHostname::isPublicIp($ip));
     }
 
-    public static function privateIpv4Addresses(): array
+    public static function privateIpv4Addresses(): \Iterator
     {
-        return [
-            'unspecified'        => ['0.0.0.0'],
-            'private 10/8'       => ['10.0.0.1'],
-            'private 172.16/12'  => ['172.16.5.10'],
-            'private 192.168/16' => ['192.168.1.1'],
-            'cgnat'              => ['100.64.0.1'],
-            'loopback'           => ['127.0.0.1'],
-            'link-local imds'    => ['169.254.169.254'],
-            'gcp metadata'       => ['169.254.169.254'],
-            'multicast'          => ['224.0.0.1'],
-            'reserved 240/4'     => ['240.0.0.1'],
-            'broadcast'          => ['255.255.255.255'],
-            'test-net-1'         => ['192.0.2.1'],
-            'test-net-2'         => ['198.51.100.1'],
-            'test-net-3'         => ['203.0.113.1'],
-            'benchmark'          => ['198.18.0.1'],
-        ];
+        yield 'unspecified' => ['0.0.0.0'];
+        yield 'private 10/8' => ['10.0.0.1'];
+        yield 'private 172.16/12' => ['172.16.5.10'];
+        yield 'private 192.168/16' => ['192.168.1.1'];
+        yield 'cgnat' => ['100.64.0.1'];
+        yield 'loopback' => ['127.0.0.1'];
+        yield 'link-local imds' => ['169.254.169.254'];
+        yield 'gcp metadata' => ['169.254.169.254'];
+        yield 'multicast' => ['224.0.0.1'];
+        yield 'reserved 240/4' => ['240.0.0.1'];
+        yield 'broadcast' => ['255.255.255.255'];
+        yield 'test-net-1' => ['192.0.2.1'];
+        yield 'test-net-2' => ['198.51.100.1'];
+        yield 'test-net-3' => ['203.0.113.1'];
+        yield 'benchmark' => ['198.18.0.1'];
     }
 
     #[DataProvider('privateIpv6Addresses')]
@@ -63,23 +63,21 @@ class PublicHostnameTest extends TestCase
         $this->assertFalse(PublicHostname::isPublicIp($ip));
     }
 
-    public static function privateIpv6Addresses(): array
+    public static function privateIpv6Addresses(): \Iterator
     {
-        return [
-            'loopback'                 => ['::1'],
-            'unspecified'              => ['::'],
-            'link-local'               => ['fe80::1'],
-            'unique-local'             => ['fc00::1'],
-            'unique-local fd'          => ['fd12:3456:789a::1'],
-            'multicast'                => ['ff02::1'],
-            'ipv4-mapped loopback'     => ['::ffff:127.0.0.1'],
-            'ipv4-mapped private'     => ['::ffff:10.0.0.1'],
-            'ipv4-mapped imds'         => ['::ffff:169.254.169.254'],
-            '6to4 loopback'            => ['2002:7f00:1::'],
-            '6to4 imds'                => ['2002:a9fe:a9fe::'],
-            'teredo'                   => ['2001:0:1::1'],
-            'documentation'            => ['2001:db8::1'],
-        ];
+        yield 'loopback' => ['::1'];
+        yield 'unspecified' => ['::'];
+        yield 'link-local' => ['fe80::1'];
+        yield 'unique-local' => ['fc00::1'];
+        yield 'unique-local fd' => ['fd12:3456:789a::1'];
+        yield 'multicast' => ['ff02::1'];
+        yield 'ipv4-mapped loopback' => ['::ffff:127.0.0.1'];
+        yield 'ipv4-mapped private' => ['::ffff:10.0.0.1'];
+        yield 'ipv4-mapped imds' => ['::ffff:169.254.169.254'];
+        yield '6to4 loopback' => ['2002:7f00:1::'];
+        yield '6to4 imds' => ['2002:a9fe:a9fe::'];
+        yield 'teredo' => ['2001:0:1::1'];
+        yield 'documentation' => ['2001:db8::1'];
     }
 
     #[DataProvider('publicIpAddresses')]
@@ -94,14 +92,12 @@ class PublicHostnameTest extends TestCase
         $this->assertTrue(PublicHostname::isPublicIp($ip));
     }
 
-    public static function publicIpAddresses(): array
+    public static function publicIpAddresses(): \Iterator
     {
-        return [
-            'google dns'    => ['8.8.8.8'],
-            'cloudflare'    => ['1.1.1.1'],
-            'opendns'       => ['208.67.222.222'],
-            'public ipv6'   => ['2606:4700:4700::1111'],
-        ];
+        yield 'google dns' => ['8.8.8.8'];
+        yield 'cloudflare' => ['1.1.1.1'];
+        yield 'opendns' => ['208.67.222.222'];
+        yield 'public ipv6' => ['2606:4700:4700::1111'];
     }
 
     public function testRejectsMalformedInput(): void

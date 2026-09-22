@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\Databases\Permissions;
 
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -13,7 +15,7 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 
-class LegacyPermissionsTeamTest extends Scope
+final class LegacyPermissionsTeamTest extends Scope
 {
     use DatabasesPermissionsBase;
     use ProjectCustom;
@@ -122,32 +124,28 @@ class LegacyPermissionsTeamTest extends Scope
      * $success = can $user read from $collection
      * [$user, $collection, $success]
      */
-    public static function readDocumentsProvider(): array
+    public static function readDocumentsProvider(): \Iterator
     {
-        return [
-            ['user1', 'collection1', true],
-            ['user2', 'collection1', false],
-            ['user3', 'collection1', true],
-            ['user1', 'collection2', false],
-            ['user2', 'collection2', true],
-            ['user3', 'collection2', true],
-        ];
+        yield ['user1', 'collection1', true];
+        yield ['user2', 'collection1', false];
+        yield ['user3', 'collection1', true];
+        yield ['user1', 'collection2', false];
+        yield ['user2', 'collection2', true];
+        yield ['user3', 'collection2', true];
     }
 
     /*
      * $success = can $user write to $collection
      * [$user, $collection, $success]
      */
-    public static function writeDocumentsProvider(): array
+    public static function writeDocumentsProvider(): \Iterator
     {
-        return [
-            ['user1', 'collection1', true],
-            ['user2', 'collection1', false],
-            ['user3', 'collection1', false],
-            ['user1', 'collection2', false],
-            ['user2', 'collection2', true],
-            ['user3', 'collection2', false],
-        ];
+        yield ['user1', 'collection1', true];
+        yield ['user2', 'collection1', false];
+        yield ['user3', 'collection1', false];
+        yield ['user1', 'collection2', false];
+        yield ['user2', 'collection2', true];
+        yield ['user3', 'collection2', false];
     }
 
     /**

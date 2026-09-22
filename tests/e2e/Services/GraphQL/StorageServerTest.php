@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\GraphQL;
 
 use CURLFile;
@@ -11,7 +13,7 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 
-class StorageServerTest extends Scope
+final class StorageServerTest extends Scope
 {
     use ProjectCustom;
     use SideServer;
@@ -241,7 +243,7 @@ class StorageServerTest extends Scope
      * @return array
      * @throws \Exception
      */
-    public function testGetFilePreview()
+    public function testGetFilePreview(): array
     {
         $file = $this->setupFile();
 
@@ -271,7 +273,7 @@ class StorageServerTest extends Scope
      * @return array
      * @throws \Exception
      */
-    public function testGetFileDownload()
+    public function testGetFileDownload(): array
     {
         $file = $this->setupFile();
 
@@ -290,7 +292,7 @@ class StorageServerTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $gqlPayload);
 
-        $this->assertEquals(47218, \strlen($file['body']));
+        $this->assertSame(47218, \strlen($file['body']));
 
         return $file;
     }
@@ -317,7 +319,7 @@ class StorageServerTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $gqlPayload);
 
-        $this->assertEquals(47218, \strlen($file['body']));
+        $this->assertSame(47218, \strlen($file['body']));
     }
 
     /**

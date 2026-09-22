@@ -7,6 +7,14 @@ use Appwrite\Auth\OAuth2;
 // Reference Material
 // https://docs.gitlab.com/ee/api/oauth2.html
 
+/**
+ * Shared with the "Sign in with GitLab" account-login OAuth2 provider, which
+ * stores its secret as JSON ({"clientSecret": "...", "endpoint": "..."}) to
+ * support self-hosted GitLab per-project. The VCS flow (see app/config/vcs.php)
+ * and the console project (see app/config/console.php) encode to that same JSON
+ * shape, taking their endpoint from _APP_VCS_GITLAB_ENDPOINT and
+ * _APP_CONSOLE_GITLAB_ENDPOINT respectively.
+ */
 class Gitlab extends OAuth2
 {
     /**
@@ -148,11 +156,75 @@ class Gitlab extends OAuth2
      *
      * @return string
      */
+    public function getUserPhoto(string $accessToken): string
+    {
+        $user = $this->getUser($accessToken);
+
+        return $user['avatar_url'] ?? '';
+    }
+
+    /**
+     * @param string $accessToken
+     *
+     * @return string
+     */
     public function getUserName(string $accessToken): string
     {
         $user = $this->getUser($accessToken);
 
         return $user['name'] ?? '';
+    }
+
+    /**
+     * @param string $accessToken
+     *
+     * @return string
+     */
+    public function getUserSlug(string $accessToken): string
+    {
+        $user = $this->getUser($accessToken);
+
+        return $user['username'] ?? '';
+    }
+
+    /**
+     * @link https://docs.gitlab.com/ee/api/projects.html#create-project
+     *
+     * @param string $accessToken
+     * @param string $repositoryName
+     * @param bool $private
+     *
+     * @return array
+     */
+    public function createRepository(string $accessToken, string $repositoryName, bool $private, string $namespaceId = ''): array
+    {
+        $payload = [
+            'name' => $repositoryName,
+            'visibility' => $private ? 'private' : 'public',
+        ];
+
+        if (!empty($namespaceId)) {
+            $payload['namespace_id'] = (int) $namespaceId;
+        }
+
+        $repository = $this->request('POST', $this->getEndpoint() . '/api/v4/projects', ['Authorization: Bearer ' . $accessToken, 'Content-Type: application/json'], \json_encode($payload));
+
+        $repository = \json_decode($repository, true) ?? [];
+
+        // Normalize to the GitHub/Gitea field shape ProviderRepository expects.
+        if (isset($repository['visibility'])) {
+            $repository['private'] = $repository['visibility'] !== 'public';
+        }
+
+        if (isset($repository['last_activity_at'])) {
+            $repository['pushed_at'] = $repository['last_activity_at'];
+        }
+
+        if (isset($repository['message']) && !\is_string($repository['message'])) {
+            $repository['message'] = \json_encode($repository['message']);
+        }
+
+        return $repository;
     }
 
     /**
@@ -171,7 +243,8 @@ class Gitlab extends OAuth2
     }
 
     /**
-     * Decode the JSON stored in appSecret
+     * Decode the JSON stored in appSecret.
+     * Falls back to treating the raw string as the client secret for backwards compatibility.
      *
      * @return array
      */
@@ -180,14 +253,19 @@ class Gitlab extends OAuth2
         try {
             $secret = \json_decode($this->appSecret, true, 512, JSON_THROW_ON_ERROR);
         } catch (\Throwable $th) {
-            throw new \Exception('Invalid secret');
+            return ['clientSecret' => $this->appSecret];
         }
+
+        if (!\is_array($secret)) {
+            return ['clientSecret' => $this->appSecret];
+        }
+
         return $secret;
     }
 
-
     /**
-     * Extracts the Tenant Id from the JSON stored in appSecret. Defaults to 'common' as a fallback
+     * Extracts the endpoint from the JSON stored in appSecret. Defaults to
+     * gitlab.com as a fallback.
      *
      * @return string
      */
@@ -196,6 +274,6 @@ class Gitlab extends OAuth2
         $defaultEndpoint = 'https://gitlab.com';
         $secret = $this->getAppSecret();
         $endpoint = $secret['endpoint'] ?? $defaultEndpoint;
-        return empty($endpoint) ? $defaultEndpoint : $endpoint;
+        return empty($endpoint) ? $defaultEndpoint : \rtrim($endpoint, '/');
     }
 }

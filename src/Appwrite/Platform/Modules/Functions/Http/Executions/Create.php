@@ -3,6 +3,9 @@
 namespace Appwrite\Platform\Modules\Functions\Http\Executions;
 
 use Ahc\Jwt\JWT;
+use Appwrite\Bus\Events\ExecutionCompleted;
+use Appwrite\Bus\Events\ExecutionScheduled;
+use Appwrite\Deployment\Deployments;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Message\Func as FunctionMessage;
@@ -11,19 +14,18 @@ use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Functions\Validator\Headers;
+use Appwrite\Geo\Geo;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
-use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
-use Appwrite\Usage\Context;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use Executor\Exception\Timeout as ExecutorTimeout;
 use Executor\Executor;
-use MaxMind\Db\Reader;
 use Utopia\Auth\Proofs\Token;
 use Utopia\Auth\Store;
+use Utopia\Bus\Bus;
 use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Database;
@@ -41,9 +43,8 @@ use Utopia\Platform\Action;
 use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
-use Utopia\Validator\AnyOf;
-use Utopia\Validator\Assoc;
 use Utopia\Validator\Boolean;
+use Utopia\Validator\JSON\ObjectValidator as JSONObject;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
@@ -67,6 +68,7 @@ class Create extends Base
             ->label('scope', ['executions.write', 'execution.write'])
             ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
             ->label('event', 'functions.[functionId].executions.[executionId].create')
+            ->label('usage.resource', 'function/{request.functionId}')
             ->label('sdk', new Method(
                 namespace: 'functions',
                 group: 'executions',
@@ -81,14 +83,15 @@ class Create extends Base
                         model: Response::MODEL_EXECUTION,
                     )
                 ],
-                contentType: ContentType::MULTIPART,
             ))
             ->param('functionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Function ID.', false, ['dbForProject'])
             ->param('body', '', new Text(10485760, 0), 'HTTP body of execution. Default value is empty string.', true)
             ->param('async', false, new Boolean(true), 'Execute code in the background. Default value is false.', true)
             ->param('path', '/', new Text(2048), 'HTTP path of execution. Path can include query params. Default value is /', true)
             ->param('method', 'POST', new Whitelist(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'], true), 'HTTP method of execution. Default value is POST.', true, enum: new Enum(name: 'ExecutionMethod'))
-            ->param('headers', [], new AnyOf([new Assoc(), new Text(65535)], AnyOf::TYPE_MIXED), 'HTTP headers of execution. Defaults to empty.', true)
+            // JSONObject accepts empty JSON `{}` (stdClass from utopia-http) and `[]`;
+            // Assoc + Text AnyOf rejected empty objects after http started preserving them.
+            ->param('headers', [], new JSONObject(65535), 'HTTP headers of execution. Defaults to empty.', true)
             ->param('scheduledAt', null, new Nullable(new Text(100)), 'Scheduled execution time in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future with precision in minutes.', true)
             ->inject('response')
             ->inject('request')
@@ -97,9 +100,8 @@ class Create extends Base
             ->inject('dbForPlatform')
             ->inject('user')
             ->inject('queueForEvents')
-            ->inject('usage')
             ->inject('publisherForFunctions')
-            ->inject('geodb')
+            ->inject('geo')
             ->inject('store')
             ->inject('proofForToken')
             ->inject('executor')
@@ -107,6 +109,7 @@ class Create extends Base
             ->inject('authorization')
             ->inject('publisherForDeletes')
             ->inject('executionsRetentionCount')
+            ->inject('bus')
             ->callback($this->action(...));
     }
 
@@ -114,7 +117,7 @@ class Create extends Base
         string $functionId,
         string $body,
         mixed $async,
-        string $path,
+        ?string $path,
         string $method,
         mixed $headers,
         ?string $scheduledAt,
@@ -125,9 +128,8 @@ class Create extends Base
         Database $dbForPlatform,
         User $user,
         Event $queueForEvents,
-        Context $usage,
         FunctionPublisher $publisherForFunctions,
-        Reader $geodb,
+        Geo $geo,
         Store $store,
         Token $proofForToken,
         Executor $executor,
@@ -135,7 +137,9 @@ class Create extends Base
         Authorization $authorization,
         DeletePublisher $publisherForDeletes,
         int $executionsRetentionCount,
+        Bus $bus,
     ) {
+        $path ??= '/';
         $async = \strval($async) === 'true' || \strval($async) === '1';
 
         if (!$async && !is_null($scheduledAt)) {
@@ -149,8 +153,14 @@ class Create extends Base
             }
         }
 
-        if (!is_array($headers)) {
+        if ($headers instanceof \stdClass) {
+            $headers = (array) $headers;
+        } elseif (\is_string($headers)) {
             $headers = \json_decode($headers, true);
+        }
+
+        if (!\is_array($headers)) {
+            $headers = [];
         }
 
         // 'headers' validator
@@ -220,6 +230,9 @@ class Create extends Base
                     'userId' => $user->getId(),
                     'sessionId' => $current->getId(),
                 ]);
+            } else {
+                // A JWT cannot be used to create another JWT, so forward the caller's token as-is
+                $jwt = $request->getHeaderLine('x-appwrite-jwt');
             }
         }
 
@@ -227,7 +240,7 @@ class Create extends Base
         $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $jwtExpiry, 0);
         $apiKey = $jwtObj->encode([
             'projectId' => $project->getId(),
-            'scopes' => $function->getAttribute('scopes', [])
+            'scopes' => Deployments::scopes($function)
         ]);
 
         $executionId = ID::unique();
@@ -243,14 +256,11 @@ class Create extends Base
         $headers['x-appwrite-client-ip'] = $ip;
 
         if (!empty($ip)) {
-            $record = $geodb->get($ip);
-
-            if ($record) {
-                $eu = Config::getParam('locale-eu');
-
-                $headers['x-appwrite-country-code'] = $record['country']['iso_code'] ?? '';
-                $headers['x-appwrite-continent-code'] = $record['continent']['code'] ?? '';
-                $headers['x-appwrite-continent-eu'] = (\in_array($record['country']['iso_code'], $eu)) ? 'true' : 'false';
+            $geoRecord = $geo->get($ip);
+            if (!$geoRecord->isEmpty()) {
+                $headers['x-appwrite-country-code'] = $geoRecord->getCountryCode();
+                $headers['x-appwrite-continent-code'] = $geoRecord->getContinentCode();
+                $headers['x-appwrite-continent-eu'] = $geoRecord->isEu() ? 'true' : 'false';
             }
         }
 
@@ -261,8 +271,6 @@ class Create extends Base
             }
         }
 
-
-
         $status = $async ? 'waiting' : 'processing';
 
         if (!is_null($scheduledAt)) {
@@ -272,6 +280,8 @@ class Create extends Base
         $execution = new Document([
             '$id' => $executionId,
             '$permissions' => !$user->isEmpty() ? [Permission::read(Role::user($user->getId()))] : [],
+            '$createdAt' => DateTime::now(),
+            '$updatedAt' => DateTime::now(),
             'resourceInternalId' => $function->getSequence(),
             'resourceId' => $function->getId(),
             'resourceType' => 'functions',
@@ -296,7 +306,6 @@ class Create extends Base
 
         if ($async) {
             if (is_null($scheduledAt)) {
-                $execution = $authorization->skip(fn () => $dbForProject->createDocument('executions', $execution));
                 $publisherForFunctions->enqueue(new FunctionMessage(
                     project: $project,
                     user: $user,
@@ -316,7 +325,8 @@ class Create extends Base
                     'path' => $path,
                     'method' => $method,
                     'body' => $body,
-                    'userId' => $user->getId()
+                    'userId' => $user->getId(),
+                    'functionId' => $function->getId(),
                 ];
 
                 $schedule = $dbForPlatform->createDocument('schedules', new Document([
@@ -326,6 +336,7 @@ class Create extends Base
                     'resourceInternalId' => $execution->getSequence(),
                     'resourceUpdatedAt' => DateTime::now(),
                     'projectId' => $project->getId(),
+                    'projectInternalId' => $project->getSequence(),
                     'schedule' => $scheduledAt,
                     'data' => $data,
                     'active' => true,
@@ -335,9 +346,12 @@ class Create extends Base
                     ->setAttribute('scheduleId', $schedule->getId())
                     ->setAttribute('scheduleInternalId', $schedule->getSequence())
                     ->setAttribute('scheduledAt', $scheduledAt);
-
-                $execution = $authorization->skip(fn () => $dbForProject->createDocument('executions', $execution));
             }
+
+            $bus->dispatch(new ExecutionScheduled(
+                execution: $execution->getArrayCopy(),
+                project: $project->getArrayCopy(),
+            ));
 
             if ($executionsRetentionCount > 0 && ENABLE_EXECUTIONS_LIMIT_ON_ROUTE) {
                 $publisherForDeletes->enqueue(new DeleteMessage(
@@ -409,17 +423,17 @@ class Create extends Base
         ]);
 
         /** Execute function */
+        $executionResponse = [
+            'headers' => [],
+            'body' => '',
+        ];
+
         try {
             $version = $function->getAttribute('version', 'v2');
-            $command = $runtime['startCommand'];
-
-            if (!empty($deployment->getAttribute('startCommand', ''))) {
-                $command = 'cd /usr/local/server/src/function/ && ' . $deployment->getAttribute('startCommand', '');
-            }
+            $command = Deployments::startCommand($deployment, $runtime['startCommand']);
 
             $source = $deployment->getAttribute('buildPath', '');
-            $extension = str_ends_with($source, '.tar') ? 'tar' : 'tar.gz';
-            $command = $version === 'v2' ? '' : "cp /tmp/code.$extension /mnt/code/code.$extension && nohup helpers/start.sh \"$command\"";
+            $command = $version === 'v2' ? '' : "nohup helpers/start.sh \"$command\"";
             try {
                 $executionResponse = $executor->createExecution(
                     projectId: $project->getId(),
@@ -479,12 +493,10 @@ class Create extends Base
             $execution->setAttribute('responseHeaders', $headersFiltered);
             $execution->setAttribute('logs', $logs);
             $execution->setAttribute('errors', $errors);
-            $execution->setAttribute('duration', $executionResponse['duration']);
+            $execution->setAttribute('duration', \microtime(true) - $durationStart);
         } catch (\Throwable $th) {
-            $durationEnd = \microtime(true);
-
             $execution
-                ->setAttribute('duration', $durationEnd - $durationStart)
+                ->setAttribute('duration', \microtime(true) - $durationStart)
                 ->setAttribute('status', 'failed')
                 ->setAttribute('responseStatusCode', 500)
                 ->setAttribute('errors', $th->getMessage() . '\nError Code: ' . $th->getCode());
@@ -494,19 +506,12 @@ class Create extends Base
                 throw $th;
             }
         } finally {
-            $usage
-                ->addMetric(METRIC_EXECUTIONS, 1)
-                ->addMetric(str_replace(['{resourceType}'], [RESOURCE_TYPE_FUNCTIONS], METRIC_RESOURCE_TYPE_EXECUTIONS), 1)
-                ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS, $function->getSequence()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS), 1)
-                ->addMetric(METRIC_EXECUTIONS_COMPUTE, (int)($execution->getAttribute('duration') * 1000)) // per project
-                ->addMetric(str_replace(['{resourceType}'], [RESOURCE_TYPE_FUNCTIONS], METRIC_RESOURCE_TYPE_EXECUTIONS_COMPUTE), (int)($execution->getAttribute('duration') * 1000)) // per function
-                ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS, $function->getSequence()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS_COMPUTE), (int)($execution->getAttribute('duration') * 1000)) // per function
-                ->addMetric(METRIC_EXECUTIONS_MB_SECONDS, (int)(($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT) * $execution->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT)))
-                ->addMetric(str_replace(['{resourceType}'], [RESOURCE_TYPE_FUNCTIONS], METRIC_RESOURCE_TYPE_EXECUTIONS_MB_SECONDS), (int)(($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT) * $execution->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT)))
-                ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS, $function->getSequence()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS_MB_SECONDS), (int)(($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT) * $execution->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT)))
-            ;
-
-            $execution = $authorization->skip(fn () => $dbForProject->createDocument('executions', $execution));
+            $bus->dispatch(new ExecutionCompleted(
+                execution: $execution->getArrayCopy(),
+                project: $project->getArrayCopy(),
+                spec: $spec,
+                resource: $function->getArrayCopy(),
+            ));
         }
 
         $executionResponse['headers']['x-appwrite-execution-id'] = $execution->getId();
@@ -519,7 +524,7 @@ class Create extends Base
         $execution->setAttribute('responseBody', $executionResponse['body'] ?? '');
         $execution->setAttribute('responseHeaders', $headers);
 
-        $acceptTypes = \explode(', ', $request->getHeader('accept'));
+        $acceptTypes = \explode(', ', $request->getHeaderLine('accept'));
         foreach ($acceptTypes as $acceptType) {
             if (\str_starts_with($acceptType, 'application/json') || \str_starts_with($acceptType, 'application/*')) {
                 $response->setContentType(Response::CONTENT_TYPE_JSON);

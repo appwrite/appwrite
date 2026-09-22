@@ -70,10 +70,17 @@ class Origin extends Validator
             Platform::SCHEME_SAFARI_EXTENSION,
             Platform::SCHEME_EDGE_EXTENSION,
             Platform::SCHEME_TAURI,
+            Platform::SCHEME_CAPACITOR,
         ];
         if (in_array($this->scheme, $webPlatforms, true)) {
             $validator = new Hostname($this->allowedHostnames);
-            return $validator->isValid($this->host);
+            if ($validator->isValid($this->host)) {
+                return true;
+            }
+
+            /* Fall back to the alias, see Platform::LOOPBACK_ALIASES */
+            return in_array($this->host, Platform::LOOPBACK_ALIASES, true)
+                && $validator->isValid(Platform::LOOPBACK_HOSTNAME);
         }
 
         if (!empty($this->scheme) && in_array($this->scheme, $this->allowedSchemes, true)) {

@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\URL;
 
 use Appwrite\URL\URL;
 use PHPUnit\Framework\TestCase;
 
-class URLTest extends TestCase
+final class URLTest extends TestCase
 {
     public function testParse(): void
     {
@@ -44,7 +46,7 @@ class URLTest extends TestCase
             'query' => 'query=string&param=value',
         ]);
 
-        $this->assertEquals('https://appwrite.io:8080/path?query=string&param=value', $url);
+        $this->assertSame('https://appwrite.io:8080/path?query=string&param=value', $url);
 
         $url = URL::unparse([
             'scheme' => 'https',
@@ -54,7 +56,7 @@ class URLTest extends TestCase
             'query' => 'query=string&param=value',
         ]);
 
-        $this->assertEquals('https://appwrite.io/path?query=string&param=value', $url);
+        $this->assertSame('https://appwrite.io/path?query=string&param=value', $url);
 
         $url = URL::unparse([
             'scheme' => 'https',
@@ -64,7 +66,7 @@ class URLTest extends TestCase
             'query' => '',
         ]);
 
-        $this->assertEquals('https://appwrite.io/', $url);
+        $this->assertSame('https://appwrite.io/', $url);
 
         $url = URL::unparse([
             'scheme' => 'https',
@@ -74,7 +76,7 @@ class URLTest extends TestCase
             'fragment' => 'bottom',
         ]);
 
-        $this->assertEquals('https://appwrite.io/#bottom', $url);
+        $this->assertSame('https://appwrite.io/#bottom', $url);
 
         $url = URL::unparse([
             'scheme' => 'https',
@@ -86,7 +88,7 @@ class URLTest extends TestCase
             'fragment' => 'bottom',
         ]);
 
-        $this->assertEquals('https://eldad:fux@appwrite.io/#bottom', $url);
+        $this->assertSame('https://eldad:fux@appwrite.io/#bottom', $url);
 
         $url = URL::unparse([
             'scheme' => 'https',
@@ -98,21 +100,21 @@ class URLTest extends TestCase
             'fragment' => '',
         ]);
 
-        $this->assertEquals('https://appwrite.io/#', $url);
+        $this->assertSame('https://appwrite.io/#', $url);
     }
 
     public function testParseQuery(): void
     {
         $result = URL::parseQuery('param1=value1&param2=value2');
 
-        $this->assertEquals(['param1' => 'value1', 'param2' => 'value2'], $result);
+        $this->assertSame(['param1' => 'value1', 'param2' => 'value2'], $result);
     }
 
     public function testUnParseQuery(): void
     {
         $result = URL::unparseQuery(['param1' => 'value1', 'param2' => 'value2']);
 
-        $this->assertEquals('param1=value1&param2=value2', $result);
+        $this->assertSame('param1=value1&param2=value2', $result);
     }
 
     /**

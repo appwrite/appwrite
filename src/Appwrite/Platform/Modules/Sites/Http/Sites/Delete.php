@@ -38,6 +38,7 @@ class Delete extends Base
             ->label('event', 'sites.[siteId].delete')
             ->label('audits.event', 'site.delete')
             ->label('audits.resource', 'site/{request.siteId}')
+            ->label('usage.resource', 'site/{request.siteId}')
             ->label('sdk', new Method(
                 namespace: 'sites',
                 group: 'sites',

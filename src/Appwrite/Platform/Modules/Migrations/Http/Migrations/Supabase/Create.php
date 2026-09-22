@@ -9,6 +9,7 @@ use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\SDK\Specification\Validator\PasswordFormat;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -60,8 +61,8 @@ class Create extends Action
             ->param('apiKey', '', new Text(512), 'Source\'s API Key')
             ->param('databaseHost', '', new Text(512), 'Source\'s Database Host')
             ->param('username', '', new Text(512), 'Source\'s Database Username')
-            ->param('password', '', new Text(512), 'Source\'s Database Password')
-            ->param('port', 5432, new Integer(true), 'Source\'s Database Port', true)
+            ->param('password', '', new PasswordFormat(new Text(512)), 'Source\'s Database Password')
+            ->param('port', 5432, new Integer(true), 'Source\'s Database Port', true, example: '5432')
             ->inject('response')
             ->inject('dbForProject')
             ->inject('project')

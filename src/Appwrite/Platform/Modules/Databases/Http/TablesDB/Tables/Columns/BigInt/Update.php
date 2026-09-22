@@ -40,6 +40,7 @@ class Update extends BigIntUpdate
             ->label('event', 'databases.[databaseId].tables.[tableId].columns.[columnId].update')
             ->label('audits.event', 'column.update')
             ->label('audits.resource', 'database/{request.databaseId}/table/{request.tableId}')
+            ->label('usage.resource', 'database/{request.databaseId}/table/{request.tableId}')
             ->label('sdk', new Method(
                 namespace: $this->getSDKNamespace(),
                 group: $this->getSDKGroup(),
@@ -58,9 +59,9 @@ class Update extends BigIntUpdate
             ->param('tableId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Table ID.', false, ['dbForProject'])
             ->param('key', '', fn (Database $dbForProject) => new Key(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Column Key.', false, ['dbForProject'])
             ->param('required', null, new Boolean(), 'Is column required?')
-            ->param('min', null, new Nullable(new Integer(false, 64)), 'Minimum value', true)
-            ->param('max', null, new Nullable(new Integer(false, 64)), 'Maximum value', true)
-            ->param('default', null, new Nullable(new Integer(false, 64)), 'Default value. Cannot be set when column is required.')
+            ->param('min', null, new Nullable(new Integer(false, 64)), 'Minimum value', true, example: '0')
+            ->param('max', null, new Nullable(new Integer(false, 64)), 'Maximum value', true, example: '1000000')
+            ->param('default', null, new Nullable(new Integer(false, 64)), 'Default value. Cannot be set when column is required.', example: '0')
             ->param('newKey', null, fn (Database $dbForProject) => new Nullable(new Key(false, $dbForProject->getAdapter()->getMaxUIDLength())), 'New Column Key.', true, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')

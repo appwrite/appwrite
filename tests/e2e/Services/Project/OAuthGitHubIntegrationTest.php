@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\Project;
 
 use Tests\E2E\Client;
@@ -9,7 +11,7 @@ use Tests\E2E\Scopes\SideServer;
 use Utopia\Database\Helpers\ID;
 use Utopia\System\System;
 
-class OAuthGitHubIntegrationTest extends Scope
+final class OAuthGitHubIntegrationTest extends Scope
 {
     use ProjectCustom;
     use SideServer;
@@ -32,11 +34,11 @@ class OAuthGitHubIntegrationTest extends Scope
         ];
 
         // Step 1: Create new organization (team)
-        $team = $this->client->call(Client::METHOD_POST, '/teams', $consoleHeaders, [
+        $team = $this->createTeamFixture($consoleHeaders, [
             'teamId' => ID::unique(),
             'name' => 'GitHub OAuth Org ' . uniqid(),
         ]);
-        $this->assertSame(201, $team['headers']['status-code']);
+        $this->assertSame(200, $team['headers']['status-code']);
         $teamId = $team['body']['$id'];
 
         // Step 2: Create new project
@@ -104,8 +106,8 @@ class OAuthGitHubIntegrationTest extends Scope
         $this->assertSame(301, $oauthInit['headers']['status-code']);
         $this->assertArrayHasKey('location', $oauthInit['headers']);
         $this->assertStringStartsWith('https://github.com/login/oauth/authorize', $oauthInit['headers']['location']);
-        $this->assertStringContainsString('client_id=' . \urlencode($clientId), $oauthInit['headers']['location']);
-        $this->assertStringContainsString('redirect_uri=', $oauthInit['headers']['location']);
+        $this->assertStringContainsString('client_id=' . \urlencode($clientId), (string) $oauthInit['headers']['location']);
+        $this->assertStringContainsString('redirect_uri=', (string) $oauthInit['headers']['location']);
 
         // Follow the redirect to GitHub's authorization endpoint. With a real user agent, GitHub
         // would prompt for login + app approval, then redirect back to Appwrite's callback with a

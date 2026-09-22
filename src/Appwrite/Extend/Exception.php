@@ -45,8 +45,10 @@ class Exception extends \Exception
     public const string GENERAL_SERVICE_DISABLED = 'general_service_disabled';
     public const string GENERAL_UNAUTHORIZED_SCOPE = 'general_unauthorized_scope';
     public const string GENERAL_RATE_LIMIT_EXCEEDED = 'general_rate_limit_exceeded';
+    public const string GENERAL_RESOURCE_LOCKED = 'general_resource_locked';
     public const string GENERAL_SMTP_DISABLED = 'general_smtp_disabled';
     public const string GENERAL_PHONE_DISABLED = 'general_phone_disabled';
+    public const string GENERAL_PWNED_PASSWORDS_UNAVAILABLE = 'general_pwned_passwords_unavailable';
     public const string GENERAL_ARGUMENT_INVALID = 'general_argument_invalid';
     public const string GENERAL_COLUMN_QUERY_LIMIT_EXCEEDED = 'general_column_query_limit_exceeded';
     public const string GENERAL_ATTRIBUTE_QUERY_LIMIT_EXCEEDED = 'general_attribute_query_limit_exceeded';
@@ -58,6 +60,7 @@ class Exception extends \Exception
     public const string GENERAL_FEATURE_UNSUPPORTED = 'general_feature_unsupported';
     public const string GENERAL_CODES_DISABLED = 'general_codes_disabled';
     public const string GENERAL_USAGE_DISABLED = 'general_usage_disabled';
+    public const string GENERAL_USAGE_NOT_READY = 'general_usage_not_ready';
     public const string GENERAL_NOT_IMPLEMENTED = 'general_not_implemented';
     public const string GENERAL_INVALID_EMAIL = 'general_invalid_email';
     public const string GENERAL_INVALID_PHONE = 'general_invalid_phone';
@@ -81,9 +84,11 @@ class Exception extends \Exception
     public const string USER_NOT_FOUND = 'user_not_found';
     public const string USER_PASSWORD_RECENTLY_USED = 'password_recently_used';
     public const string USER_PASSWORD_PERSONAL_DATA = 'password_personal_data';
+    public const string USER_PASSWORD_PWNED = 'password_pwned';
     public const string USER_EMAIL_ALREADY_EXISTS = 'user_email_already_exists';
     public const string USER_EMAIL_DISPOSABLE = 'user_email_disposable';
     public const string USER_EMAIL_FREE = 'user_email_free';
+    public const string USER_EMAIL_NOT_CORPORATE = 'user_email_not_corporate';
     public const string USER_EMAIL_NOT_CANONICAL = 'user_email_not_canonical';
     public const string USER_PASSWORD_MISMATCH = 'user_password_mismatch';
     public const string USER_SESSION_NOT_FOUND = 'user_session_not_found';
@@ -97,7 +102,6 @@ class Exception extends \Exception
     public const string USER_EMAIL_NOT_VERIFIED = 'user_email_not_verified';
     public const string USER_MISSING_ID = 'user_missing_id';
     public const string USER_MORE_FACTORS_REQUIRED = 'user_more_factors_required';
-    public const string USER_INVALID_CHALLENGE = 'user_invalid_challenge';
     public const string USER_AUTHENTICATOR_NOT_FOUND = 'user_authenticator_not_found';
     public const string USER_AUTHENTICATOR_ALREADY_VERIFIED = 'user_authenticator_already_verified';
     public const string USER_RECOVERY_CODES_ALREADY_EXISTS = 'user_recovery_codes_already_exists';
@@ -105,7 +109,9 @@ class Exception extends \Exception
     public const string USER_CHALLENGE_REQUIRED = 'user_challenge_required';
     public const string USER_OAUTH2_BAD_REQUEST = 'user_oauth2_bad_request';
     public const string USER_OAUTH2_UNAUTHORIZED = 'user_oauth2_unauthorized';
+    public const string USER_OAUTH2_TOKEN_INVALID = 'user_oauth2_token_invalid';
     public const string USER_OAUTH2_PROVIDER_ERROR = 'user_oauth2_provider_error';
+    public const string USER_OAUTH2_PROVIDER_FAILURE = 'user_oauth2_provider_failure';
     public const string USER_EMAIL_ALREADY_VERIFIED = 'user_email_already_verified';
     public const string USER_PHONE_ALREADY_VERIFIED = 'user_phone_already_verified';
     public const string USER_DELETION_PROHIBITED = 'user_deletion_prohibited';
@@ -113,6 +119,7 @@ class Exception extends \Exception
     public const string USER_TARGET_ALREADY_EXISTS = 'user_target_already_exists';
     public const string USER_API_KEY_AND_SESSION_SET = 'user_api_key_and_session_set';
     public const string USER_JWT_AND_COOKIE_SET = 'user_jwt_and_cookie_set';
+    public const string USER_JWT_CREATION_DENIED = 'user_jwt_creation_denied';
     public const string USER_ID_MISSING = 'user_id_missing';
 
     public const string API_KEY_EXPIRED = 'api_key_expired';
@@ -126,6 +133,7 @@ class Exception extends \Exception
     public const string TEAM_ALREADY_EXISTS = 'team_already_exists';
 
     public const string ORGANIZATION_ID_MISSING = 'organization_id_missing';
+    public const string ORGANIZATION_CREATION_PROHIBITED = 'organization_creation_prohibited';
 
     /** Console */
     public const string RESOURCE_ALREADY_EXISTS = 'resource_already_exists';
@@ -150,6 +158,7 @@ class Exception extends \Exception
     public const string STORAGE_DEVICE_NOT_FOUND = 'storage_device_not_found';
     public const string STORAGE_FILE_EMPTY = 'storage_file_empty';
     public const string STORAGE_FILE_TYPE_UNSUPPORTED = 'storage_file_type_unsupported';
+    public const string STORAGE_IMAGE_RESOLUTION_EXCEEDED = 'storage_image_resolution_exceeded';
     public const string STORAGE_INVALID_FILE_SIZE = 'storage_invalid_file_size';
     public const string STORAGE_INVALID_FILE = 'storage_invalid_file';
     public const string STORAGE_BUCKET_ALREADY_EXISTS = 'storage_bucket_already_exists';
@@ -185,6 +194,7 @@ class Exception extends \Exception
 
     /** Deployments */
     public const string DEPLOYMENT_NOT_FOUND = 'deployment_not_found';
+    public const string DEPLOYMENT_INVALID_FILE_SIZE = 'deployment_invalid_file_size';
 
     /** Builds */
     public const string BUILD_NOT_FOUND = 'build_not_found';
@@ -228,6 +238,7 @@ class Exception extends \Exception
     public const string DOCUMENT_MISSING_DATA = 'document_missing_data';
     public const string DOCUMENT_MISSING_PAYLOAD = 'document_missing_payload';
     public const string DOCUMENT_ALREADY_EXISTS = 'document_already_exists';
+    public const string DOCUMENT_UNIQUE_CONSTRAINT_VIOLATION = 'document_unique_constraint_violation';
     public const string DOCUMENT_UPDATE_CONFLICT = 'document_update_conflict';
     public const string DOCUMENT_DELETE_RESTRICTED = 'document_delete_restricted';
 
@@ -237,6 +248,7 @@ class Exception extends \Exception
     public const string ROW_MISSING_DATA = 'row_missing_data';
     public const string ROW_MISSING_PAYLOAD = 'row_missing_payload';
     public const string ROW_ALREADY_EXISTS = 'row_already_exists';
+    public const string ROW_UNIQUE_CONSTRAINT_VIOLATION = 'row_unique_constraint_violation';
     public const string ROW_UPDATE_CONFLICT = 'row_update_conflict';
     public const string ROW_DELETE_RESTRICTED = 'row_delete_restricted';
 
@@ -331,11 +343,13 @@ class Exception extends \Exception
     /** Keys */
     public const string KEY_NOT_FOUND = 'key_not_found';
     public const string KEY_ALREADY_EXISTS = 'key_already_exists';
+    public const string KEY_CREATION_DENIED = 'key_creation_denied';
 
     /** Variables */
     public const string VARIABLE_NOT_FOUND = 'variable_not_found';
     public const string VARIABLE_ALREADY_EXISTS = 'variable_already_exists';
     public const string VARIABLE_CANNOT_UNSET_SECRET = 'variable_cannot_unset_secret';
+    public const string VARIABLE_INVALID_KEY = 'variable_invalid_key';
 
     /** Platform */
     public const string PLATFORM_NOT_FOUND = 'platform_not_found';
@@ -345,6 +359,7 @@ class Exception extends \Exception
     /** GraphqQL */
     public const string GRAPHQL_NO_QUERY = 'graphql_no_query';
     public const string GRAPHQL_TOO_MANY_QUERIES = 'graphql_too_many_queries';
+    public const string GRAPHQL_METHOD_UNSUPPORTED = 'graphql_method_unsupported';
 
     /** Migrations */
     public const string MIGRATION_NOT_FOUND = 'migration_not_found';

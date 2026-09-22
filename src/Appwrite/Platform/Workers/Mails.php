@@ -4,9 +4,7 @@ namespace Appwrite\Platform\Workers;
 
 use Appwrite\Template\Template;
 use Exception;
-use Swoole\Runtime;
 use Utopia\Database\Document;
-use Utopia\Logger\Log;
 use Utopia\Messaging\Adapter\Email as EmailAdapter;
 use Utopia\Messaging\Adapter\Email\SMTP;
 use Utopia\Messaging\Messages\Email as EmailMessage;
@@ -14,7 +12,9 @@ use Utopia\Messaging\Messages\Email\Attachment;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\Registry\Registry;
+use Utopia\Span\Span;
 use Utopia\System\System;
+use Utopia\Telemetry\Adapter as Telemetry;
 
 class Mails extends Action
 {
@@ -38,7 +38,7 @@ class Mails extends Action
             ->inject('message')
             ->inject('project')
             ->inject('register')
-            ->inject('log')
+            ->inject('telemetry')
             ->callback($this->action(...));
     }
 
@@ -54,13 +54,12 @@ class Mails extends Action
      * @param Message $message
      * @param Document $project
      * @param Registry $register
-     * @param Log $log
+     * @param Telemetry $telemetry
      * @return void
      * @throws Exception
      */
-    public function action(Message $message, Document $project, Registry $register, Log $log): void
+    public function action(Message $message, Document $project, Registry $register, Telemetry $telemetry): void
     {
-        Runtime::setHookFlags(SWOOLE_HOOK_ALL ^ SWOOLE_HOOK_TCP);
         $payload = $message->getPayload();
 
         if (empty($payload)) {
@@ -74,13 +73,19 @@ class Mails extends Action
         }
 
         $type = empty($smtp) ? 'cloud' : 'smtp';
-        $log->addTag('type', $type);
+        Span::add('type', $type);
 
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
         $hostname = System::getEnv('_APP_CONSOLE_DOMAIN');
 
         $recipient = $payload['recipient'];
         $subject = $payload['subject'];
+        $template = $payload['template'] ?? 'unknown';
+        $recipientDomain = \strtolower(\substr(\strrchr($recipient, '@') ?: '', 1));
+
+        Span::add('mail.template', $template);
+        Span::add('mail.smtp_type', $type);
+        Span::add('mail.recipient_domain', $recipientDomain);
         $variables = $payload['variables'];
         $variables['host'] = $protocol . '://' . $hostname;
         $name = $payload['name'];
@@ -111,7 +116,7 @@ class Mails extends Action
         if (!empty($preview)) {
             $previewTemplate = Template::fromString($preview);
             foreach ($variables as $key => $value) {
-                $previewTemplate->setParam('{{' . $key . '}}', $value);
+                $previewTemplate->setParam('{{' . $key . '}}', $value, escapeHtml: false);
             }
             // render() will return the subject in <p> tags, so use strip_tags() to remove them
             $preview = \strip_tags($previewTemplate->render());
@@ -130,26 +135,25 @@ class Mails extends Action
 
         $subjectTemplate = Template::fromString($subject);
         foreach ($variables as $key => $value) {
-            $subjectTemplate->setParam('{{' . $key . '}}', $value);
+            $subjectTemplate->setParam('{{' . $key . '}}', $value, escapeHtml: false);
         }
         // render() will return the subject in <p> tags, so use strip_tags() to remove them
         $subject = \strip_tags($subjectTemplate->render());
 
-        /** @var EmailAdapter $adapter */
-        $adapter = empty($smtp)
-            ? $register->get('smtp')
-            : new SMTP(
-                host: $smtp['host'],
-                port: (int) $smtp['port'],
-                username: $smtp['username'] ?? '',
-                password: $smtp['password'] ?? '',
-                smtpSecure: $smtp['secure'] ?? '',
-                smtpAutoTLS: false,
-                xMailer: 'Appwrite Mailer',
-                timeout: 10,
-                keepAlive: true,
-                timelimit: 30,
-            );
+        // A pooled adapter belongs to this send alone; a project's own SMTP is
+        // dialled for it and closed after.
+        $adapter = empty($smtp) ? null : new SMTP(
+            host: $smtp['host'],
+            port: (int) $smtp['port'],
+            username: $smtp['username'] ?? '',
+            password: $smtp['password'] ?? '',
+            smtpSecure: $smtp['secure'] ?? '',
+            smtpAutoTLS: false,
+            xMailer: 'Appwrite Mailer',
+            timeout: 10,
+            keepAlive: false,
+            timelimit: 30,
+        );
 
         // Resolve from/replyTo using fallback hierarchy: Custom options > SMTP config > Defaults
         $defaultFromEmail = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
@@ -202,14 +206,30 @@ class Mails extends Action
             attachments: $attachments,
             html: true,
         );
+        $emailMessage->setOrigin(MESSAGE_SEND_TYPE_INTERNAL);
+
+        $send = static function (EmailAdapter $adapter) use ($emailMessage, $telemetry): array {
+            $adapter->setTelemetry($telemetry);
+
+            return $adapter->send($emailMessage);
+        };
 
         try {
-            $adapter->send($emailMessage);
+            $result = $adapter instanceof EmailAdapter ? $send($adapter) : $register->get('smtp')->use($send);
+
+            if (($result['deliveredTo'] ?? 0) === 0) {
+                $error = $result['results'][0]['error'] ?? ($result['error'] ?? 'Unknown error');
+                throw new Exception($error);
+            }
         } catch (\Throwable $error) {
+            Span::add('mail.status', 'failure');
+
             if ($type === 'smtp') {
                 throw new Exception('Error sending mail: ' . $error->getMessage(), 401);
             }
             throw new Exception('Error sending mail: ' . $error->getMessage(), 500);
         }
+
+        Span::add('mail.status', 'success');
     }
 }

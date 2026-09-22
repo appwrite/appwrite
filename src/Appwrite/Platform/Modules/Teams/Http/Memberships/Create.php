@@ -17,8 +17,6 @@ use Appwrite\Template\Template;
 use Appwrite\Usage\Context;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
-use libphonenumber\NumberParseException;
-use libphonenumber\PhoneNumberUtil;
 use Utopia\Auth\Proofs\Password;
 use Utopia\Auth\Proofs\Token;
 use Utopia\Database\Database;
@@ -35,7 +33,9 @@ use Utopia\Database\Validator\UID;
 use Utopia\Emails\Email;
 use Utopia\Emails\Validator\Email as EmailValidator;
 use Utopia\Locale\Locale;
+use Utopia\Messaging\Adapter\SMS\GEOSMS\CallingCode;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Storage\Validator\FileName;
 use Utopia\System\System;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Text;
@@ -92,7 +92,6 @@ class Create extends Action
             ->inject('publisherForMails')
             ->inject('publisherForMessaging')
             ->inject('queueForEvents')
-            ->inject('timelimit')
             ->inject('usage')
             ->inject('plan')
             ->inject('platform')
@@ -101,8 +100,14 @@ class Create extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $teamId, string $email, string $userId, string $phone, array $roles, string $url, string $name, Response $response, Document $project, User $user, Database $dbForProject, Authorization $authorization, Locale $locale, MailPublisher $publisherForMails, MessagingPublisher $publisherForMessaging, Event $queueForEvents, callable $timelimit, Context $usage, array $plan, array $platform, Password $proofForPassword, Token $proofForToken)
+    public function action(string $teamId, ?string $email, ?string $userId, ?string $phone, array $roles, ?string $url, ?string $name, Response $response, Document $project, User $user, Database $dbForProject, Authorization $authorization, Locale $locale, MailPublisher $publisherForMails, MessagingPublisher $publisherForMessaging, Event $queueForEvents, Context $usage, array $plan, array $platform, Password $proofForPassword, Token $proofForToken)
     {
+        $email ??= '';
+        $userId ??= '';
+        $phone ??= '';
+        $url ??= '';
+        $name ??= '';
+
         $isAppUser = $user->isKey($authorization->getRoles());
         $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
         $invitee = new Document();
@@ -192,16 +197,20 @@ class Create extends Action
             } catch (\Throwable) {
             }
 
-            if ((($project->getId() === 'console') || ($plan['supportsDisposableEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['disposableEmails'] ?? false) && ($emailMetadata['emailIsDisposable'] ?? false)) {
+            if ((($project->getId() === 'console') || empty($plan) || ($plan['supportsDisposableEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['disposableEmails'] ?? false) && ($emailMetadata['emailIsDisposable'] ?? false)) {
                 throw new Exception(Exception::USER_EMAIL_DISPOSABLE);
             }
 
-            if ((($project->getId() === 'console') || ($plan['supportsCanonicalEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false) && ($emailMetadata['emailIsCanonical'] ?? true) === false) {
+            if ((($project->getId() === 'console') || empty($plan) || ($plan['supportsCanonicalEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false) && ($emailMetadata['emailIsCanonical'] ?? true) === false) {
                 throw new Exception(Exception::USER_EMAIL_NOT_CANONICAL);
             }
 
-            if ((($project->getId() === 'console') || ($plan['supportsFreeEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['freeEmails'] ?? false) && ($emailMetadata['emailIsFree'] ?? false)) {
+            if ((($project->getId() === 'console') || empty($plan) || ($plan['supportsFreeEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['freeEmails'] ?? false) && ($emailMetadata['emailIsFree'] ?? false)) {
                 throw new Exception(Exception::USER_EMAIL_FREE);
+            }
+
+            if ((($project->getId() === 'console') || empty($plan) || ($plan['supportsCorporateEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['corporateEmails'] ?? false) && !($emailMetadata['emailIsCorporate'] ?? true)) {
+                throw new Exception(Exception::USER_EMAIL_NOT_CORPORATE);
             }
 
             $hash = $proofForPassword->hash($proofForPassword->generate());
@@ -299,12 +308,29 @@ class Create extends Action
             $invitedTime = DateTime::now();
 
             if ($isPrivilegedUser || $isAppUser) {
-                $membership = $authorization->skip(fn () => $dbForProject->updateDocument('memberships', $membership->getId(), new Document([
-                    'secret' => $secretHash,
-                    'invited' => $invitedTime,
-                    'joined' => DateTime::now(),
-                    'confirm' => true
-                ])));
+                $membership = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $membership, $team, $secretHash, $invitedTime) {
+                    // Re-read under a lock, a concurrent invite must not count the same member twice
+                    $current = $authorization->skip(fn () => $dbForProject->getDocument('memberships', $membership->getId(), forUpdate: true));
+
+                    if ($current->getAttribute('confirm') === true) {
+                        return new Document();
+                    }
+
+                    $confirmed = $authorization->skip(fn () => $dbForProject->updateDocument('memberships', $membership->getId(), new Document([
+                        'secret' => $secretHash,
+                        'invited' => $invitedTime,
+                        'joined' => DateTime::now(),
+                        'confirm' => true
+                    ])));
+
+                    $authorization->skip(fn () => $dbForProject->increaseDocumentAttribute('teams', $team->getId(), 'total', 1));
+
+                    return $confirmed;
+                });
+
+                if ($membership->isEmpty()) {
+                    throw new Exception(Exception::MEMBERSHIP_ALREADY_CONFIRMED);
+                }
             } else {
                 $membership = $dbForProject->updateDocument('memberships', $membership->getId(), new Document([
                     'secret' => $secretHash,
@@ -323,6 +349,19 @@ class Create extends Action
             $url = Template::unParseURL($url);
             if (! empty($email)) {
                 $projectName = $project->isEmpty() ? 'Console' : $project->getAttribute('name', '[APP-NAME]');
+                if ($project->getId() === 'console') {
+                    $projectName = $platform['platformName'];
+                }
+
+                $smtpBaseTemplate = $project->getAttribute('smtpBaseTemplate', 'email-base');
+                if (! (new FileName())->isValid($smtpBaseTemplate)) {
+                    throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid template path');
+                }
+                $bodyTemplate = APP_CE_CONFIG_DIR . '/locale/templates/' . $smtpBaseTemplate . '.tpl';
+                if (! \is_readable($bodyTemplate)) {
+                    $smtpBaseTemplate = 'email-base';
+                    $bodyTemplate = APP_CE_CONFIG_DIR . '/locale/templates/email-base.tpl';
+                }
 
                 $body = $locale->getText('emails.invitation.body');
                 $preview = $locale->getText('emails.invitation.preview');
@@ -409,15 +448,32 @@ class Create extends Action
                     'project' => $projectName,
                 ];
 
+                if ($smtpBaseTemplate === APP_BRANDED_EMAIL_BASE_TEMPLATE) {
+                    $emailVariables = [
+                        ...$emailVariables,
+                        'accentColor' => $platform['accentColor'],
+                        'logoUrl' => $platform['logoUrl'],
+                        'twitter' => $platform['twitterUrl'],
+                        'discord' => $platform['discordUrl'],
+                        'github' => $platform['githubUrl'],
+                        'terms' => $platform['termsUrl'],
+                        'privacy' => $platform['privacyUrl'],
+                        'platform' => $platform['platformName'],
+                    ];
+                }
+
                 $publisherForMails->enqueue(new MailMessage(
                     project: $project,
                     recipient: $invitee->getAttribute('email'),
                     name: $invitee->getAttribute('name', ''),
                     subject: $subject,
+                    template: MAIL_TEMPLATE_INVITATION,
+                    bodyTemplate: $bodyTemplate,
                     body: $body,
                     preview: $preview,
                     smtp: $smtpConfig,
                     variables: $emailVariables,
+                    customMailOptions: $smtpBaseTemplate === APP_BRANDED_EMAIL_BASE_TEMPLATE ? ['senderName' => $platform['emailSenderName']] : [],
                     platform: $platform,
                 ));
             } elseif (! empty($phone)) {
@@ -427,7 +483,7 @@ class Create extends Action
 
                 $message = Template::fromFile(APP_CE_CONFIG_DIR . '/locale/templates/sms-base.tpl');
 
-                $message = $message->setParam('{{token}}', $url);
+                $message = $message->setParam('{{token}}', $url, escapeHtml: false);
                 $message = $message->render();
 
                 $messageDoc = new Document([
@@ -445,15 +501,9 @@ class Create extends Action
                     providerType: 'SMS',
                 ));
 
-                $helper = PhoneNumberUtil::getInstance();
-                try {
-                    $countryCode = $helper->parse($phone)->getCountryCode();
-
-                    if (! empty($countryCode)) {
-                        $usage->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
-                    }
-                } catch (NumberParseException $e) {
-                    // Ignore invalid phone number for country code stats
+                $countryCode = CallingCode::fromPhoneNumber($phone);
+                if (! empty($countryCode)) {
+                    $usage->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
                 }
                 $usage->addMetric(METRIC_AUTH_METHOD_PHONE, 1);
             }

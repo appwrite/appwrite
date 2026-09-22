@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Utopia\Request\Filters;
 
 use Appwrite\Utopia\Request\Filter;
@@ -7,7 +9,7 @@ use Appwrite\Utopia\Request\Filters\V17;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
-class V17Test extends TestCase
+final class V17Test extends TestCase
 {
     /**
      * @var Filter
@@ -23,21 +25,19 @@ class V17Test extends TestCase
     {
     }
 
-    public static function createUpdateRecoveryProvider(): array
+    public static function createUpdateRecoveryProvider(): \Iterator
     {
-        return [
-            'remove passwordAgain' => [
-                [
-                    'userId' => 'test',
-                    'secret' => 'test',
-                    'password' => '123456',
-                    'passwordAgain' => '123456'
-                ],
-                [
-                    'userId' => 'test',
-                    'secret' => 'test',
-                    'password' => '123456',
-                ]
+        yield 'remove passwordAgain' => [
+            [
+                'userId' => 'test',
+                'secret' => 'test',
+                'password' => '123456',
+                'passwordAgain' => '123456'
+            ],
+            [
+                'userId' => 'test',
+                'secret' => 'test',
+                'password' => '123456',
             ]
         ];
     }
@@ -52,25 +52,23 @@ class V17Test extends TestCase
         $this->assertEquals($expected, $result);
     }
 
-    public static function createQueryProvider(): array
+    public static function createQueryProvider(): \Iterator
     {
-        return [
-            'convert queries' => [
-                [
-                    'queries' => [
-                        'cursorAfter("exampleId")',
-                        'search("name", ["example"])',
-                        'isNotNull("name")'
-                    ]
-                ],
-                [
-                    'queries' => [
-                        '{"method":"cursorAfter","values":["exampleId"]}',
-                        '{"method":"search","attribute":"name","values":["example"]}',
-                        '{"method":"isNotNull","attribute":"name"}'
-                    ]
-                ],
-            ]
+        yield 'convert queries' => [
+            [
+                'queries' => [
+                    'cursorAfter("exampleId")',
+                    'search("name", ["example"])',
+                    'isNotNull("name")'
+                ]
+            ],
+            [
+                'queries' => [
+                    '{"method":"cursorAfter","values":["exampleId"]}',
+                    '{"method":"search","attribute":"name","values":["example"]}',
+                    '{"method":"isNotNull","attribute":"name"}'
+                ]
+            ],
         ];
     }
 

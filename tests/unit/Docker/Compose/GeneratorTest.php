@@ -1,0 +1,196 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Tests\Unit\Docker\Compose;
+
+use Appwrite\Docker\Compose\Generator;
+use PHPUnit\Framework\TestCase;
+
+final class GeneratorTest extends TestCase
+{
+    private Generator $generator;
+
+    public function setUp(): void
+    {
+        $compose = \file_get_contents(__DIR__ . '/../../../../docker-compose.yml');
+
+        $this->assertIsString($compose);
+
+        $this->generator = new Generator($compose);
+    }
+
+    public function testSelectsDatabaseService(): void
+    {
+        $compose = $this->render([
+            'database' => 'mariadb',
+            'enableAssistant' => false,
+        ]);
+
+        $this->assertArrayHasKey('mariadb', $compose['services']);
+        $this->assertArrayNotHasKey('mongodb', $compose['services']);
+        $this->assertArrayNotHasKey('postgresql', $compose['services']);
+        $this->assertArrayHasKey('appwrite-mariadb', $compose['volumes']);
+        $this->assertArrayNotHasKey('appwrite-mongodb', $compose['volumes']);
+        $this->assertArrayNotHasKey('appwrite-postgresql', $compose['volumes']);
+    }
+
+    public function testDefaultsToPostgreSQL(): void
+    {
+        $compose = $this->render();
+
+        $this->assertArrayHasKey('postgresql', $compose['services']);
+        $this->assertArrayNotHasKey('mongodb', $compose['services']);
+        $this->assertArrayNotHasKey('mariadb', $compose['services']);
+        $this->assertArrayHasKey('appwrite-postgresql', $compose['volumes']);
+        $this->assertArrayNotHasKey('appwrite-mongodb', $compose['volumes']);
+        $this->assertArrayNotHasKey('appwrite-mariadb', $compose['volumes']);
+    }
+
+    public function testTogglesAssistantService(): void
+    {
+        $disabled = $this->render([
+            'enableAssistant' => false,
+        ]);
+        $enabled = $this->render([
+            'enableAssistant' => true,
+        ]);
+
+        $this->assertArrayNotHasKey('appwrite-assistant', $disabled['services']);
+        $this->assertArrayHasKey('appwrite-assistant', $enabled['services']);
+    }
+
+    public function testKeepsProductionWorkers(): void
+    {
+        $compose = $this->render();
+
+        $this->assertArrayHasKey('appwrite-worker', $compose['services']);
+        $this->assertArrayHasKey('appwrite-task-scheduler', $compose['services']);
+        $this->assertArrayHasKey('appwrite-task-interval', $compose['services']);
+        $this->assertArrayHasKey('appwrite-embedding', $compose['services']);
+        $this->assertArrayHasKey('appwrite-autogravity', $compose['services']);
+        $this->assertArrayNotHasKey('profiles', $compose['services']['appwrite-worker']);
+        $this->assertArrayNotHasKey('profiles', $compose['services']['appwrite-task-scheduler']);
+    }
+
+    public function testSelectsSeparateTopology(): void
+    {
+        $compose = $this->render([
+            'topology' => 'separate',
+        ]);
+
+        $this->assertSame(['combined'], $compose['services']['appwrite-worker']['profiles']);
+        $this->assertSame(['combined'], $compose['services']['appwrite-task-scheduler']['profiles']);
+        $this->assertArrayHasKey('appwrite-worker-screenshots', $compose['services']);
+        $this->assertArrayHasKey('appwrite-worker-executions', $compose['services']);
+        $this->assertArrayHasKey('appwrite-worker-functions', $compose['services']);
+        $this->assertArrayHasKey('appwrite-task-scheduler-functions', $compose['services']);
+        $this->assertArrayNotHasKey('profiles', $compose['services']['appwrite-worker-functions']);
+        $this->assertArrayNotHasKey('profiles', $compose['services']['appwrite-task-scheduler-functions']);
+
+        foreach (['appwrite-worker-stats-usage', 'appwrite-worker-stats-resources', 'appwrite-task-stats-resources'] as $name) {
+            $this->assertArrayHasKey($name, $compose['services']);
+            $this->assertArrayNotHasKey('extends', $compose['services'][$name]);
+            $this->assertArrayNotHasKey('profiles', $compose['services'][$name]);
+        }
+    }
+
+    public function testKeepsMongoInitFiles(): void
+    {
+        $compose = $this->render([
+            'database' => 'mongodb',
+        ]);
+
+        $this->assertContains('./mongo-init.js:/mongo-init.js:ro', $compose['services']['mongodb']['volumes']);
+        $this->assertContains('./mongo-entrypoint.sh:/mongo-entrypoint.sh:ro', $compose['services']['mongodb']['volumes']);
+    }
+
+    public function testAddsLocalHostPathMount(): void
+    {
+        $compose = $this->render([
+            'version' => 'local',
+            'hostPath' => '/tmp/appwrite',
+        ]);
+
+        $this->assertSame('/tmp/appwrite:/usr/src/code:rw', $compose['services']['appwrite']['volumes'][0]);
+    }
+
+    public function testRewritesLocalRelativeBindMountsToHostPath(): void
+    {
+        $compose = $this->render([
+            'version' => 'local',
+            'hostPath' => '/tmp/appwrite',
+            'database' => 'mongodb',
+        ]);
+
+        $this->assertContains('/tmp/appwrite/mongo-init.js:/mongo-init.js:ro', $compose['services']['mongodb']['volumes']);
+        $this->assertContains('/tmp/appwrite/mongo-entrypoint.sh:/mongo-entrypoint.sh:ro', $compose['services']['mongodb']['volumes']);
+        $this->assertNotContains('./mongo-init.js:/mongo-init.js:ro', $compose['services']['mongodb']['volumes']);
+        $this->assertNotContains('./mongo-entrypoint.sh:/mongo-entrypoint.sh:ro', $compose['services']['mongodb']['volumes']);
+    }
+
+    public function testLeavesNoRelativeBindMountOnPublishedVersions(): void
+    {
+        $compose = $this->render([
+            'hostPath' => '/tmp/appwrite',
+            'database' => 'mongodb',
+        ]);
+
+        foreach ($compose['services'] as $name => $service) {
+            foreach ($service['volumes'] ?? [] as $volume) {
+                if (!\is_string($volume)) {
+                    continue;
+                }
+
+                $this->assertStringStartsNotWith('./', $volume, "{$name} mounts {$volume}, which resolves against wherever the generated file is run rather than the installation");
+            }
+        }
+    }
+
+    public function testDoesNotAddDatabaseDependencyWithoutPlaceholder(): void
+    {
+        $compose = $this->render([
+            'database' => 'postgresql',
+        ]);
+
+        $this->assertSame(['appwrite'], $compose['services']['traefik']['depends_on']);
+        $this->assertArrayHasKey('postgresql', $compose['services']['appwrite']['depends_on']);
+        $this->assertArrayNotHasKey('${_APP_DB_HOST:-postgresql}', $compose['services']['appwrite']['depends_on']);
+    }
+
+    public function testKeepsLongCommandsReadable(): void
+    {
+        $mariadb = $this->render([
+            'database' => 'mariadb',
+        ]);
+        $postgresql = $this->render([
+            'database' => 'postgresql',
+        ]);
+
+        $this->assertSame(['mysqld', '--innodb-flush-method=fsync'], $mariadb['services']['mariadb']['command']);
+        $this->assertSame(['postgres'], $postgresql['services']['postgresql']['command']);
+        $this->assertSame([
+            'redis-server',
+            '--maxmemory',
+            '512mb',
+            '--maxmemory-policy',
+            'allkeys-lru',
+            '--maxmemory-samples',
+            '5',
+        ], $postgresql['services']['redis']['command']);
+    }
+
+    /**
+     * @param array<string, mixed> $params
+     * @return array<string, mixed>
+     */
+    private function render(array $params = []): array
+    {
+        $yaml = $this->generator->render($params);
+        $compose = \yaml_parse($yaml);
+
+        $this->assertIsArray($compose);
+
+        return $compose;
+    }
+}

@@ -71,6 +71,7 @@ class Update extends Action
         $labels = (array) \array_values(\array_unique($labels));
 
         $project = $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document(['labels' => $labels])));
+        $authorization->skip(fn () => $dbForPlatform->purgeCachedDocument('projects', $project->getId()));
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     }

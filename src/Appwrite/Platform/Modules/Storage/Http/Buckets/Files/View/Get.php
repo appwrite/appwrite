@@ -44,6 +44,7 @@ class Get extends Action
             ->desc('Get file for view')
             ->groups(['api', 'storage'])
             ->label('scope', 'files.read')
+            ->label('usage.resource', 'bucket/{request.bucketId}/file/{request.fileId}')
             ->label('resourceType', RESOURCE_TYPE_BUCKETS)
             ->label('sdk', new Method(
                 namespace: 'storage',
@@ -58,7 +59,8 @@ class Get extends Action
                     )
                 ],
                 contentType: ContentType::ANY,
-                type: MethodType::LOCATION
+                type: MethodType::LOCATION,
+                locationAuth: ['Project', 'ImpersonateUserId'],
             ))
             ->param('bucketId', '', new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).')
             ->param('fileId', '', new UID(), 'File ID.')
@@ -134,9 +136,16 @@ class Get extends Action
             $contentType = $file->getAttribute('mimeType');
         }
 
+        // SVG is an executable document, not a passive image: a browser that
+        // navigates to it will run any embedded script in this origin. Forcing
+        // a download means it is never rendered as a top-level document.
+        // Embedding through <img src> still works and is safe (browsers load
+        // SVG there in a restricted mode with no scripting).
+        $disposition = $contentType === 'image/svg+xml' ? 'attachment' : 'inline';
+
         $size = $file->getAttribute('sizeOriginal', 0);
 
-        $rangeHeader = $request->getHeader('range');
+        $rangeHeader = $request->getHeaderLine('range');
         if (!empty($rangeHeader)) {
             $start = $request->getRangeStart();
             $end = $request->getRangeEnd();
@@ -159,16 +168,16 @@ class Get extends Action
 
         $response
             ->setContentType($contentType)
-            ->addHeader('Content-Security-Policy', 'script-src none;')
+            ->addHeader('Content-Security-Policy', "script-src 'none';")
             ->addHeader('X-Content-Type-Options', 'nosniff')
-            ->addHeader('Content-Disposition', 'inline; filename="' . $file->getAttribute('name', '') . '"')
+            ->addHeader('Content-Disposition', $disposition . '; filename="' . $file->getAttribute('name', '') . '"')
             ->addHeader('Cache-Control', 'private, max-age=3888000') // 45 days
             ->addHeader('X-Peak', \memory_get_peak_usage())
         ;
 
         $source = '';
         if (!empty($file->getAttribute('openSSLCipher'))) { // Decrypt
-            $source = $deviceForFiles->read($path);
+            $source = (string) $deviceForFiles->read($path);
             $source = OpenSSL::decrypt(
                 $source,
                 $file->getAttribute('openSSLCipher'),
@@ -182,14 +191,14 @@ class Get extends Action
         switch ($file->getAttribute('algorithm', Compression::NONE)) {
             case Compression::ZSTD:
                 if (empty($source)) {
-                    $source = $deviceForFiles->read($path);
+                    $source = (string) $deviceForFiles->read($path);
                 }
                 $compressor = new Zstd();
                 $source = $compressor->decompress($source);
                 break;
             case Compression::GZIP:
                 if (empty($source)) {
-                    $source = $deviceForFiles->read($path);
+                    $source = (string) $deviceForFiles->read($path);
                 }
                 $compressor = new GZIP();
                 $source = $compressor->decompress($source);
@@ -206,7 +215,7 @@ class Get extends Action
         }
 
         if (!empty($rangeHeader)) {
-            $response->send($deviceForFiles->read($path, $start, ($end - $start + 1)));
+            $response->send((string) $deviceForFiles->read($path, $start, ($end - $start + 1)));
             return;
         }
 
@@ -214,7 +223,7 @@ class Get extends Action
         if ($size > APP_STORAGE_READ_BUFFER) {
             for ($i = 0; $i < ceil($size / MAX_OUTPUT_CHUNK_SIZE); $i++) {
                 $response->chunk(
-                    $deviceForFiles->read(
+                    (string) $deviceForFiles->read(
                         $path,
                         ($i * MAX_OUTPUT_CHUNK_SIZE),
                         min(MAX_OUTPUT_CHUNK_SIZE, $size - ($i * MAX_OUTPUT_CHUNK_SIZE))
@@ -223,7 +232,7 @@ class Get extends Action
                 );
             }
         } else {
-            $response->send($deviceForFiles->read($path));
+            $response->send((string) $deviceForFiles->read($path));
         }
     }
 }

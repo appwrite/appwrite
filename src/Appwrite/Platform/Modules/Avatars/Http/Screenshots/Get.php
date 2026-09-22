@@ -48,8 +48,7 @@ class Get extends Action
             ->label('usage.metric', METRIC_AVATARS_SCREENSHOTS_GENERATED)
             ->label('abuse-limit', 60)
             ->label('cache', true)
-            ->label('cache.resourceType', 'avatar/screenshot')
-            ->label('cache.resource', 'screenshot/{request.url}/{request.width}/{request.height}/{request.scale}/{request.theme}/{request.userAgent}/{request.fullpage}/{request.locale}/{request.timezone}/{request.latitude}/{request.longitude}/{request.accuracy}/{request.touch}/{request.permissions}/{request.sleep}/{request.quality}/{request.output}')
+            ->label('cache.resource', 'avatar/screenshot')
             ->label('sdk', new Method(
                 namespace: 'avatars',
                 group: null,
@@ -57,6 +56,7 @@ class Get extends Action
                 description: '/docs/references/avatars/get-screenshot.md',
                 auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 type: MethodType::LOCATION,
+                locationAuth: ['Project', 'ImpersonateUserId'],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,

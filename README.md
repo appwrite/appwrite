@@ -29,6 +29,7 @@ Table of Contents:
   - [Windows](#windows)
     - [CMD](#cmd)
     - [PowerShell](#powershell)
+  - [Docker API version mismatch](#docker-api-version-mismatch)
   - [Upgrade from an Older Version](#upgrade-from-an-older-version)
 - [One-Click Setups](#one-click-setups)
 - [Getting Started](#getting-started)
@@ -75,7 +76,7 @@ docker run -it --rm \
     --volume /var/run/docker.sock:/var/run/docker.sock \
     --volume "$(pwd)"/appwrite:/usr/src/code/appwrite:rw \
     --entrypoint="install" \
-    appwrite/appwrite:1.9.0
+    appwrite/appwrite:2.2.0
 ```
 
 ### Windows
@@ -88,7 +89,7 @@ docker run -it --rm ^
     --volume //var/run/docker.sock:/var/run/docker.sock ^
     --volume "%cd%"/appwrite:/usr/src/code/appwrite:rw ^
     --entrypoint="install" ^
-    appwrite/appwrite:1.9.0
+    appwrite/appwrite:2.2.0
 ```
 
 #### PowerShell
@@ -99,10 +100,26 @@ docker run -it --rm `
     --volume /var/run/docker.sock:/var/run/docker.sock `
     --volume ${pwd}/appwrite:/usr/src/code/appwrite:rw `
     --entrypoint="install" `
-    appwrite/appwrite:1.9.0
+    appwrite/appwrite:2.2.0
 ```
 
 Once the Docker installation is complete, go to http://localhost to access the Appwrite console from your browser. Please note that on non-Linux native hosts, the server might take a few minutes to start after completing the installation.
+
+### Docker API version mismatch
+
+If install or upgrade fails with an error like `client version 1.52 is too new. Maximum supported API version is 1.42`, the Docker CLI inside the Appwrite image is newer than your host Docker Engine. Pass `DOCKER_API_VERSION` set to the maximum API version from the error (or upgrade Docker on the host):
+
+```bash
+docker run -it --rm \
+    --env DOCKER_API_VERSION=1.42 \
+    --publish 20080:20080 \
+    --volume /var/run/docker.sock:/var/run/docker.sock \
+    --volume "$(pwd)"/appwrite:/usr/src/code/appwrite:rw \
+    --entrypoint="install" \
+    appwrite/appwrite:2.2.0
+```
+
+Use the same `--env DOCKER_API_VERSION=...` flag with `--entrypoint="upgrade"` when upgrading.
 
 For advanced production and custom installation, check out our Docker [environment variables](https://appwrite.io/docs/environment-variables) docs. You can also use our public [docker-compose.yml](https://appwrite.io/install/compose) and [.env](https://appwrite.io/install/env) files to manually set up an environment.
 
@@ -166,6 +183,8 @@ Getting started with Appwrite is as easy as creating a new project, choosing you
 |                       | [Quick start for PHP](https://appwrite.io/docs/quick-starts/php)                   |
 |                       | [Quick start for Kotlin](https://appwrite.io/docs/quick-starts/kotlin)             |
 |                       | [Quick start for Swift](https://appwrite.io/docs/quick-starts/swift)               |
+|                       | [Quick start for Go](https://appwrite.io/docs/quick-starts/go)                     |
+|                       | [Quick start for Rust](https://appwrite.io/docs/quick-starts/rust)                 |
 
 ### SDKs
 
@@ -181,25 +200,46 @@ Below is a list of currently supported platforms and languages. If you would lik
 
 #### Server
 
-- :white_check_mark: &nbsp; [NodeJS](https://github.com/appwrite/sdk-for-node)
-- :white_check_mark: &nbsp; [PHP](https://github.com/appwrite/sdk-for-php)
-- :white_check_mark: &nbsp; [Dart](https://github.com/appwrite/sdk-for-dart)
-- :white_check_mark: &nbsp; [Deno](https://github.com/appwrite/sdk-for-deno)
-- :white_check_mark: &nbsp; [Ruby](https://github.com/appwrite/sdk-for-ruby)
+- :white_check_mark: &nbsp; [Node.js](https://github.com/appwrite/sdk-for-node)
 - :white_check_mark: &nbsp; [Python](https://github.com/appwrite/sdk-for-python)
-- :white_check_mark: &nbsp; [Kotlin](https://github.com/appwrite/sdk-for-kotlin)
-- :white_check_mark: &nbsp; [Swift](https://github.com/appwrite/sdk-for-swift)
+- :white_check_mark: &nbsp; [Dart](https://github.com/appwrite/sdk-for-dart)
+- :white_check_mark: &nbsp; [PHP](https://github.com/appwrite/sdk-for-php)
+- :white_check_mark: &nbsp; [Ruby](https://github.com/appwrite/sdk-for-ruby)
 - :white_check_mark: &nbsp; [.NET](https://github.com/appwrite/sdk-for-dotnet)
+- :white_check_mark: &nbsp; [Go](https://github.com/appwrite/sdk-for-go)
+- :white_check_mark: &nbsp; [Swift](https://github.com/appwrite/sdk-for-swift)
+- :white_check_mark: &nbsp; [Kotlin](https://github.com/appwrite/sdk-for-kotlin)
+- :white_check_mark: &nbsp; [Rust](https://github.com/appwrite/sdk-for-rust)
 
 Looking for more SDKs? - Help us by contributing a pull request to our [SDK Generator](https://github.com/appwrite/sdk-generator)!
 
 ## Architecture
 
-![Appwrite Architecture showing how Appwrite is built and the services and tools it uses](docs/specs/overview.drawio.svg)
+```mermaid
+flowchart TB
+  Console & Flutter & iOS & Android & Web & Agents & MCP & CLI & SDKs & Terraform --> Appwrite
+  Appwrite --> REST & Realtime & GraphQL & S3
+  REST & Realtime & GraphQL & S3 --> securityLayer[Security layer]
+  securityLayer --> services
+  subgraph services [Services]
+    Auth
+    Databases
+    Functions
+    Sites
+    Messaging
+    Storage
+    Avatars
+    Locale
+  end
+  services --> Executor & Queue & Cache & Browser & SMTP & Embeddings
+  Cache --> Database
+  Queue --> Workers
+  Executor --> openRuntimes[Open Runtimes]
+```
 
 Appwrite uses a microservices architecture that was designed for easy scaling and delegation of responsibilities. In addition, Appwrite supports multiple APIs, such as REST, WebSocket, and GraphQL to allow you to interact with your resources by leveraging your existing knowledge and protocols of choice.
 
-The Appwrite API layer was designed to be extremely fast by leveraging in-memory caching and delegating any heavy-lifting tasks to the Appwrite background workers. The background workers also allow you to precisely control your compute capacity and costs using a message queue to handle the load. You can learn more about our architecture in the [contribution guide](CONTRIBUTING.md#architecture-1).
+The Appwrite API layer was designed to be extremely fast by leveraging in-memory caching and delegating any heavy-lifting tasks to the Appwrite background workers. The background workers also allow you to precisely control your compute capacity and costs using a message queue to handle the load. You can learn more about our architecture in [AGENTS.md](AGENTS.md).
 
 ## Contributing
 
@@ -209,11 +249,11 @@ We truly :heart: pull requests! If you wish to help, you can learn more about ho
 
 ## Security
 
-For security issues, kindly email us at [security@appwrite.io](mailto:security@appwrite.io) instead of posting a public issue on GitHub.
+Please see [SECURITY.md](SECURITY.md) for how to report a vulnerability. Do not open a public GitHub issue for security reports.
 
 ## Follow Us
 
-Join our growing community around the world! Check out our official [Blog](https://appwrite.io/blog). Follow us on [X](https://twitter.com/appwrite), [LinkedIn](https://www.linkedin.com/company/appwrite/), [Dev Community](https://dev.to/appwrite) or join our live [Discord server](https://appwrite.io/discord) for more help, ideas, and discussions.
+Join our growing community around the world! Read the [Blog](https://appwrite.io/blog), or follow us on [Discord](https://appwrite.io/discord), [GitHub](https://github.com/appwrite), [X](https://x.com/appwrite), [LinkedIn](https://linkedin.com/company/appwrite), [YouTube](https://youtube.com/c/appwrite), [daily.dev](https://app.daily.dev/squads/appwrite), [Bluesky](https://bsky.app/profile/appwrite.io), [TikTok](https://tiktok.com/@appwrite), and [Instagram](https://instagram.com/appwrite.io).
 
 ## License
 

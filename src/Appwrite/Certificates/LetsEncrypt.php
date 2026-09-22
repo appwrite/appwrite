@@ -4,12 +4,13 @@ namespace Appwrite\Certificates;
 
 use Appwrite\Certificates\Exception\CertificateStatus as CertificateStatusException;
 use Exception;
+use Utopia\Cdn\Certificates\Provider;
+use Utopia\Command;
 use Utopia\Console;
 use Utopia\Database\DateTime;
 use Utopia\Http\Http;
-use Utopia\Logger\Log;
 
-class LetsEncrypt implements Adapter
+class LetsEncrypt implements Provider
 {
     private string $email;
 
@@ -24,17 +25,22 @@ class LetsEncrypt implements Adapter
         $stdout = '';
         $stderr = '';
 
-        $staging = (Http::isProduction()) ? '' : ' --dry-run';
-        $exit = Console::execute(
-            "certbot certonly -v --webroot --noninteractive --agree-tos{$staging}"
-            . " --email " . $this->email
-            . " --cert-name " . $certName
-            . " -w " . APP_STORAGE_CERTIFICATES
-            . " -d {$domain}",
-            '',
-            $stdout,
-            $stderr
-        );
+        $certbot = (new Command('certbot'))
+            ->argument('certonly')
+            ->flag('-v')
+            ->flag('--webroot')
+            ->flag('--noninteractive')
+            ->flag('--agree-tos')
+            ->option('--email', $this->email)
+            ->option('--cert-name', $certName)
+            ->option('-w', APP_STORAGE_CERTIFICATES)
+            ->option('-d', $domain);
+
+        if (!Http::isProduction()) {
+            $certbot->flag('--dry-run');
+        }
+
+        $exit = Console::execute($certbot, '', $stdout, $stderr);
 
         // Unexpected error, usually 5XX, API limits, ...
         if ($exit !== 0) {
@@ -95,7 +101,7 @@ class LetsEncrypt implements Adapter
         throw new CertificateStatusException('Certificate status retrieval is not supported for LetsEncrypt.');
     }
 
-    public function isRenewRequired(string $domain, ?string $domainType, Log $log): bool
+    public function isRenewRequired(string $domain, ?string $domainType): bool
     {
         $certPath = APP_STORAGE_CERTIFICATES . '/' . $domain . '/cert.pem';
         if (\file_exists($certPath)) {
@@ -103,15 +109,12 @@ class LetsEncrypt implements Adapter
             $validTo = $certData['validTo_time_t'] ?? 0;
 
             if (empty($validTo)) {
-                $log->addTag('certificateDomain', $domain);
                 throw new Exception('Unable to read certificate file (cert.pem).');
             }
 
             // LetsEncrypt allows renewal 30 days before expiry
             $expiryInAdvance = (60 * 60 * 24 * 30);
             if ($validTo - $expiryInAdvance > \time()) {
-                $log->addTag('certificateDomain', $domain);
-                $log->addExtra('certificateData', \is_array($certData) ? \json_encode($certData) : \strval($certData));
                 return false;
             }
         }
@@ -119,7 +122,7 @@ class LetsEncrypt implements Adapter
         return true;
     }
 
-    public function deleteCertificate(string $domain): void
+    public function deleteCertificate(string $domain, ?string $domainType = null): void
     {
         $directory = APP_STORAGE_CERTIFICATES . '/' . $domain;
         $checkTraversal = realpath($directory) === $directory;

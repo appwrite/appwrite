@@ -15,13 +15,16 @@ trait PoliciesBase
         return [
             'password-dictionary' => ['enabled'],
             'password-history' => ['total'],
+            'password-strength' => ['min', 'uppercase', 'lowercase', 'number', 'symbols'],
             'password-personal-data' => ['enabled'],
+            'password-pwned' => ['enabled', 'sessions', 'users'],
             'session-alert' => ['enabled'],
             'session-duration' => ['duration'],
             'session-invalidation' => ['enabled'],
             'session-limit' => ['total'],
             'user-limit' => ['total'],
-            'membership-privacy' => ['userId', 'userEmail', 'userPhone', 'userName', 'userMFA'],
+            'membership-privacy' => ['userId', 'userEmail', 'userPhone', 'userName', 'userMFA', 'userAccessedAt'],
+            'mfa-factors' => ['totp', 'email', 'phone', 'custom'],
         ];
     }
 
@@ -66,6 +69,13 @@ trait PoliciesBase
     {
         $this->updatePasswordDictionaryPolicy(true);
         $this->updatePasswordHistoryPolicy(5);
+        $this->updatePasswordStrengthPolicy([
+            'min' => 12,
+            'uppercase' => true,
+            'lowercase' => true,
+            'number' => true,
+            'symbols' => true,
+        ]);
         $this->updateSessionDurationPolicy(3600);
         $this->updateMembershipPrivacyPolicy([
             'userId' => true,
@@ -73,10 +83,12 @@ trait PoliciesBase
             'userPhone' => false,
             'userName' => true,
             'userMFA' => true,
+            'userAccessedAt' => true,
         ]);
 
         $passwordDictionary = $this->getPolicy('password-dictionary');
         $passwordHistory = $this->getPolicy('password-history');
+        $passwordStrength = $this->getPolicy('password-strength');
         $sessionDuration = $this->getPolicy('session-duration');
         $membershipPrivacy = $this->getPolicy('membership-privacy');
 
@@ -85,6 +97,13 @@ trait PoliciesBase
 
         $this->assertSame(200, $passwordHistory['headers']['status-code']);
         $this->assertSame(5, $passwordHistory['body']['total']);
+
+        $this->assertSame(200, $passwordStrength['headers']['status-code']);
+        $this->assertSame(12, $passwordStrength['body']['min']);
+        $this->assertSame(true, $passwordStrength['body']['uppercase']);
+        $this->assertSame(true, $passwordStrength['body']['lowercase']);
+        $this->assertSame(true, $passwordStrength['body']['number']);
+        $this->assertSame(true, $passwordStrength['body']['symbols']);
 
         $this->assertSame(200, $sessionDuration['headers']['status-code']);
         $this->assertSame(3600, $sessionDuration['body']['duration']);
@@ -95,10 +114,12 @@ trait PoliciesBase
         $this->assertSame(false, $membershipPrivacy['body']['userPhone']);
         $this->assertSame(true, $membershipPrivacy['body']['userName']);
         $this->assertSame(true, $membershipPrivacy['body']['userMFA']);
+        $this->assertSame(true, $membershipPrivacy['body']['userAccessedAt']);
 
         // Cleanup
         $this->updatePasswordDictionaryPolicy(false);
         $this->updatePasswordHistoryPolicy(null);
+        $this->resetPasswordStrengthPolicy();
         $this->updateSessionDurationPolicy(31536000);
         $this->updateMembershipPrivacyPolicy([
             'userId' => false,
@@ -106,6 +127,7 @@ trait PoliciesBase
             'userPhone' => false,
             'userName' => false,
             'userMFA' => false,
+            'userAccessedAt' => false,
         ]);
     }
 
@@ -180,6 +202,13 @@ trait PoliciesBase
     {
         $this->updatePasswordDictionaryPolicy(true);
         $this->updatePasswordHistoryPolicy(5);
+        $this->updatePasswordStrengthPolicy([
+            'min' => 12,
+            'uppercase' => true,
+            'lowercase' => true,
+            'number' => true,
+            'symbols' => true,
+        ]);
         $this->updateSessionDurationPolicy(3600);
         $this->updateMembershipPrivacyPolicy([
             'userId' => true,
@@ -187,6 +216,7 @@ trait PoliciesBase
             'userPhone' => false,
             'userName' => true,
             'userMFA' => true,
+            'userAccessedAt' => true,
         ]);
 
         $response = $this->listPolicies();
@@ -200,16 +230,23 @@ trait PoliciesBase
 
         $this->assertSame(true, $byId['password-dictionary']['enabled']);
         $this->assertSame(5, $byId['password-history']['total']);
+        $this->assertSame(12, $byId['password-strength']['min']);
+        $this->assertSame(true, $byId['password-strength']['uppercase']);
+        $this->assertSame(true, $byId['password-strength']['lowercase']);
+        $this->assertSame(true, $byId['password-strength']['number']);
+        $this->assertSame(true, $byId['password-strength']['symbols']);
         $this->assertSame(3600, $byId['session-duration']['duration']);
         $this->assertSame(true, $byId['membership-privacy']['userId']);
         $this->assertSame(true, $byId['membership-privacy']['userEmail']);
         $this->assertSame(false, $byId['membership-privacy']['userPhone']);
         $this->assertSame(true, $byId['membership-privacy']['userName']);
         $this->assertSame(true, $byId['membership-privacy']['userMFA']);
+        $this->assertSame(true, $byId['membership-privacy']['userAccessedAt']);
 
         // Cleanup
         $this->updatePasswordDictionaryPolicy(false);
         $this->updatePasswordHistoryPolicy(null);
+        $this->resetPasswordStrengthPolicy();
         $this->updateSessionDurationPolicy(31536000);
         $this->updateMembershipPrivacyPolicy([
             'userId' => false,
@@ -217,6 +254,7 @@ trait PoliciesBase
             'userPhone' => false,
             'userName' => false,
             'userMFA' => false,
+            'userAccessedAt' => false,
         ]);
     }
 
@@ -375,10 +413,10 @@ trait PoliciesBase
 
     public function testUpdatePasswordHistoryPolicyMax(): void
     {
-        $response = $this->updatePasswordHistoryPolicy(5000);
+        $response = $this->updatePasswordHistoryPolicy(20);
 
         $this->assertSame(200, $response['headers']['status-code']);
-        $this->assertSame(5000, $response['body']['authPasswordHistory']);
+        $this->assertSame(20, $response['body']['authPasswordHistory']);
 
         // Cleanup
         $this->updatePasswordHistoryPolicy(null);
@@ -407,7 +445,7 @@ trait PoliciesBase
 
     public function testUpdatePasswordHistoryPolicyAboveMax(): void
     {
-        $response = $this->updatePasswordHistoryPolicy(5001);
+        $response = $this->updatePasswordHistoryPolicy(21);
 
         $this->assertSame(400, $response['headers']['status-code']);
     }
@@ -431,6 +469,112 @@ trait PoliciesBase
     public function testUpdatePasswordHistoryPolicyWithoutAuth(): void
     {
         $response = $this->updatePasswordHistoryPolicy(5, false);
+
+        $this->assertSame(401, $response['headers']['status-code']);
+    }
+
+    // =========================================================================
+    // Password Strength
+    // =========================================================================
+
+    public function testUpdatePasswordStrengthPolicy(): void
+    {
+        $response = $this->updatePasswordStrengthPolicy([
+            'min' => 12,
+            'uppercase' => true,
+            'lowercase' => true,
+            'number' => true,
+            'symbols' => true,
+        ]);
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame('password-strength', $response['body']['$id']);
+        $this->assertSame(12, $response['body']['min']);
+        $this->assertSame(true, $response['body']['uppercase']);
+        $this->assertSame(true, $response['body']['lowercase']);
+        $this->assertSame(true, $response['body']['number']);
+        $this->assertSame(true, $response['body']['symbols']);
+
+        $policy = $this->getPolicy('password-strength');
+        $this->assertSame(200, $policy['headers']['status-code']);
+        $this->assertSame(12, $policy['body']['min']);
+        $this->assertSame(true, $policy['body']['uppercase']);
+        $this->assertSame(true, $policy['body']['lowercase']);
+        $this->assertSame(true, $policy['body']['number']);
+        $this->assertSame(true, $policy['body']['symbols']);
+
+        // Cleanup
+        $this->resetPasswordStrengthPolicy();
+    }
+
+    public function testUpdatePasswordStrengthPolicyOptionPreservesOtherOptions(): void
+    {
+        $response = $this->updatePasswordStrengthPolicy([
+            'min' => 12,
+            'uppercase' => true,
+            'lowercase' => true,
+            'number' => true,
+            'symbols' => true,
+        ]);
+
+        $this->assertSame(200, $response['headers']['status-code']);
+
+        $response = $this->updatePasswordStrengthPolicy([
+            'lowercase' => false,
+        ]);
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame(12, $response['body']['min']);
+        $this->assertSame(true, $response['body']['uppercase']);
+        $this->assertSame(false, $response['body']['lowercase']);
+        $this->assertSame(true, $response['body']['number']);
+        $this->assertSame(true, $response['body']['symbols']);
+
+        // Cleanup
+        $this->resetPasswordStrengthPolicy();
+    }
+
+    public function testUpdatePasswordStrengthPolicyMin(): void
+    {
+        $response = $this->updatePasswordStrengthPolicy([
+            'min' => 8,
+        ]);
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame(8, $response['body']['min']);
+
+        // Cleanup
+        $this->resetPasswordStrengthPolicy();
+    }
+
+    public function testUpdatePasswordStrengthPolicyBelowMin(): void
+    {
+        $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/password-strength', $this->buildHeaders(), [
+            'min' => 7,
+        ]);
+
+        $this->assertSame(400, $response['headers']['status-code']);
+    }
+
+    public function testUpdatePasswordStrengthPolicyEmptyBody(): void
+    {
+        $this->resetPasswordStrengthPolicy();
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/password-strength', $this->buildHeaders(), []);
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame(8, $response['body']['min']);
+        $this->assertSame(false, $response['body']['uppercase']);
+        $this->assertSame(false, $response['body']['lowercase']);
+        $this->assertSame(false, $response['body']['number']);
+        $this->assertSame(false, $response['body']['symbols']);
+    }
+
+    public function testUpdatePasswordStrengthPolicyWithoutAuth(): void
+    {
+        $response = $this->updatePasswordStrengthPolicy([
+            'min' => 12,
+        ], false);
 
         $this->assertSame(401, $response['headers']['status-code']);
     }
@@ -488,6 +632,122 @@ trait PoliciesBase
     public function testUpdatePasswordPersonalDataPolicyWithoutAuth(): void
     {
         $response = $this->updatePasswordPersonalDataPolicy(true, false);
+
+        $this->assertSame(401, $response['headers']['status-code']);
+    }
+
+    // =========================================================================
+    // Password Pwned Policy
+    // =========================================================================
+
+    public function testUpdatePasswordPwnedPolicyEnable(): void
+    {
+        $response = $this->updatePasswordPwnedPolicy(['enabled' => true]);
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+
+        $policy = $this->getPolicy('password-pwned');
+        $this->assertSame(200, $policy['headers']['status-code']);
+        $this->assertSame(true, $policy['body']['enabled']);
+        $this->assertSame(false, $policy['body']['sessions']);
+        $this->assertSame(false, $policy['body']['users']);
+
+        // Cleanup
+        $this->updatePasswordPwnedPolicy(['enabled' => false]);
+    }
+
+    public function testUpdatePasswordPwnedPolicyDisable(): void
+    {
+        $this->updatePasswordPwnedPolicy(['enabled' => true]);
+
+        $response = $this->updatePasswordPwnedPolicy(['enabled' => false]);
+
+        $this->assertSame(200, $response['headers']['status-code']);
+
+        $policy = $this->getPolicy('password-pwned');
+        $this->assertSame(200, $policy['headers']['status-code']);
+        $this->assertSame(false, $policy['body']['enabled']);
+    }
+
+    public function testUpdatePasswordPwnedPolicyDefaults(): void
+    {
+        $this->resetPasswordPwnedPolicy();
+
+        $policy = $this->getPolicy('password-pwned');
+
+        $this->assertSame(200, $policy['headers']['status-code']);
+        $this->assertSame('password-pwned', $policy['body']['$id']);
+        $this->assertSame(true, $policy['body']['enabled']);
+        $this->assertSame(false, $policy['body']['sessions']);
+        $this->assertSame(false, $policy['body']['users']);
+    }
+
+    public function testUpdatePasswordPwnedPolicySessions(): void
+    {
+        $response = $this->updatePasswordPwnedPolicy(['sessions' => true]);
+
+        $this->assertSame(200, $response['headers']['status-code']);
+
+        $policy = $this->getPolicy('password-pwned');
+        $this->assertSame(true, $policy['body']['sessions']);
+
+        $response = $this->updatePasswordPwnedPolicy(['sessions' => false]);
+
+        $this->assertSame(200, $response['headers']['status-code']);
+
+        $policy = $this->getPolicy('password-pwned');
+        $this->assertSame(false, $policy['body']['sessions']);
+    }
+
+    public function testUpdatePasswordPwnedPolicyOptionPreservesOtherOptions(): void
+    {
+        $response = $this->updatePasswordPwnedPolicy([
+            'sessions' => true,
+            'users' => true,
+        ]);
+
+        $this->assertSame(200, $response['headers']['status-code']);
+
+        $response = $this->updatePasswordPwnedPolicy(['enabled' => true]);
+
+        $this->assertSame(200, $response['headers']['status-code']);
+
+        $policy = $this->getPolicy('password-pwned');
+        $this->assertSame(true, $policy['body']['enabled']);
+        $this->assertSame(true, $policy['body']['sessions']);
+        $this->assertSame(true, $policy['body']['users']);
+
+        // Cleanup
+        $this->resetPasswordPwnedPolicy();
+    }
+
+    public function testUpdatePasswordPwnedPolicyEmptyBody(): void
+    {
+        $this->resetPasswordPwnedPolicy();
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/password-pwned', $this->buildHeaders(), []);
+
+        $this->assertSame(200, $response['headers']['status-code']);
+
+        $policy = $this->getPolicy('password-pwned');
+        $this->assertSame(true, $policy['body']['enabled']);
+        $this->assertSame(false, $policy['body']['sessions']);
+        $this->assertSame(false, $policy['body']['users']);
+    }
+
+    public function testUpdatePasswordPwnedPolicyInvalidType(): void
+    {
+        foreach (['enabled', 'sessions', 'users'] as $option) {
+            $response = $this->updatePasswordPwnedPolicy([$option => 'not-a-boolean']);
+
+            $this->assertSame(400, $response['headers']['status-code'], $option);
+        }
+    }
+
+    public function testUpdatePasswordPwnedPolicyWithoutAuth(): void
+    {
+        $response = $this->updatePasswordPwnedPolicy(['enabled' => true], false);
 
         $this->assertSame(401, $response['headers']['status-code']);
     }
@@ -571,10 +831,10 @@ trait PoliciesBase
 
     public function testUpdateSessionDurationPolicyMin(): void
     {
-        $response = $this->updateSessionDurationPolicy(5);
+        $response = $this->updateSessionDurationPolicy(60);
 
         $this->assertSame(200, $response['headers']['status-code']);
-        $this->assertSame(5, $response['body']['authDuration']);
+        $this->assertSame(60, $response['body']['authDuration']);
 
         // Cleanup
         $this->updateSessionDurationPolicy(31536000);
@@ -590,7 +850,7 @@ trait PoliciesBase
 
     public function testUpdateSessionDurationPolicyBelowMin(): void
     {
-        $response = $this->updateSessionDurationPolicy(4);
+        $response = $this->updateSessionDurationPolicy(59);
 
         $this->assertSame(400, $response['headers']['status-code']);
     }
@@ -715,21 +975,10 @@ trait PoliciesBase
 
     public function testUpdateSessionLimitPolicyMax(): void
     {
-        $response = $this->updateSessionLimitPolicy(5000);
+        $response = $this->updateSessionLimitPolicy(100);
 
         $this->assertSame(200, $response['headers']['status-code']);
-        $this->assertSame(5000, $response['body']['authSessionsLimit']);
-
-        // Cleanup
-        $this->updateSessionLimitPolicy(10);
-    }
-
-    public function testUpdateSessionLimitPolicyDisable(): void
-    {
-        $response = $this->updateSessionLimitPolicy(null);
-
-        $this->assertSame(200, $response['headers']['status-code']);
-        $this->assertSame(0, $response['body']['authSessionsLimit']);
+        $this->assertSame(100, $response['body']['authSessionsLimit']);
 
         // Cleanup
         $this->updateSessionLimitPolicy(10);
@@ -744,7 +993,7 @@ trait PoliciesBase
 
     public function testUpdateSessionLimitPolicyAboveMax(): void
     {
-        $response = $this->updateSessionLimitPolicy(5001);
+        $response = $this->updateSessionLimitPolicy(101);
 
         $this->assertSame(400, $response['headers']['status-code']);
     }
@@ -805,10 +1054,10 @@ trait PoliciesBase
 
     public function testUpdateUserLimitPolicyMax(): void
     {
-        $response = $this->updateUserLimitPolicy(5000);
+        $response = $this->updateUserLimitPolicy(10000);
 
         $this->assertSame(200, $response['headers']['status-code']);
-        $this->assertSame(5000, $response['body']['authLimit']);
+        $this->assertSame(10000, $response['body']['authLimit']);
 
         // Cleanup
         $this->updateUserLimitPolicy(null);
@@ -828,16 +1077,24 @@ trait PoliciesBase
         $this->assertSame(0, $project['body']['authLimit']);
     }
 
-    public function testUpdateUserLimitPolicyBelowMin(): void
+    public function testUpdateUserLimitPolicyZeroMeansUnlimited(): void
     {
         $response = $this->updateUserLimitPolicy(0);
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame(0, $response['body']['authLimit']);
+    }
+
+    public function testUpdateUserLimitPolicyBelowMin(): void
+    {
+        $response = $this->updateUserLimitPolicy(-1);
 
         $this->assertSame(400, $response['headers']['status-code']);
     }
 
     public function testUpdateUserLimitPolicyAboveMax(): void
     {
-        $response = $this->updateUserLimitPolicy(5001);
+        $response = $this->updateUserLimitPolicy(10001);
 
         $this->assertSame(400, $response['headers']['status-code']);
     }
@@ -877,6 +1134,7 @@ trait PoliciesBase
             'userPhone' => true,
             'userName' => true,
             'userMFA' => true,
+            'userAccessedAt' => true,
         ]);
 
         $this->assertSame(200, $response['headers']['status-code']);
@@ -886,6 +1144,7 @@ trait PoliciesBase
         $this->assertSame(true, $response['body']['authMembershipsUserPhone']);
         $this->assertSame(true, $response['body']['authMembershipsUserName']);
         $this->assertSame(true, $response['body']['authMembershipsMfa']);
+        $this->assertSame(true, $response['body']['authMembershipsUserAccessedAt']);
 
         $project = $this->getProjectDocument();
         $this->assertSame(200, $project['headers']['status-code']);
@@ -894,6 +1153,7 @@ trait PoliciesBase
         $this->assertSame(true, $project['body']['authMembershipsUserPhone']);
         $this->assertSame(true, $project['body']['authMembershipsUserName']);
         $this->assertSame(true, $project['body']['authMembershipsMfa']);
+        $this->assertSame(true, $project['body']['authMembershipsUserAccessedAt']);
     }
 
     public function testUpdateMembershipPrivacyPolicyAllDisabled(): void
@@ -904,6 +1164,7 @@ trait PoliciesBase
             'userPhone' => false,
             'userName' => false,
             'userMFA' => false,
+            'userAccessedAt' => false,
         ]);
 
         $this->assertSame(200, $response['headers']['status-code']);
@@ -912,6 +1173,7 @@ trait PoliciesBase
         $this->assertSame(false, $response['body']['authMembershipsUserPhone']);
         $this->assertSame(false, $response['body']['authMembershipsUserName']);
         $this->assertSame(false, $response['body']['authMembershipsMfa']);
+        $this->assertSame(false, $response['body']['authMembershipsUserAccessedAt']);
 
         $project = $this->getProjectDocument();
         $this->assertSame(200, $project['headers']['status-code']);
@@ -920,6 +1182,7 @@ trait PoliciesBase
         $this->assertSame(false, $project['body']['authMembershipsUserPhone']);
         $this->assertSame(false, $project['body']['authMembershipsUserName']);
         $this->assertSame(false, $project['body']['authMembershipsMfa']);
+        $this->assertSame(false, $project['body']['authMembershipsUserAccessedAt']);
 
         // Cleanup (restore defaults)
         $this->updateMembershipPrivacyPolicy([
@@ -928,6 +1191,7 @@ trait PoliciesBase
             'userPhone' => true,
             'userName' => true,
             'userMFA' => true,
+            'userAccessedAt' => true,
         ]);
     }
 
@@ -939,6 +1203,7 @@ trait PoliciesBase
             'userPhone' => true,
             'userName' => false,
             'userMFA' => true,
+            'userAccessedAt' => false,
         ]);
 
         $this->assertSame(200, $response['headers']['status-code']);
@@ -947,6 +1212,7 @@ trait PoliciesBase
         $this->assertSame(true, $response['body']['authMembershipsUserPhone']);
         $this->assertSame(false, $response['body']['authMembershipsUserName']);
         $this->assertSame(true, $response['body']['authMembershipsMfa']);
+        $this->assertSame(false, $response['body']['authMembershipsUserAccessedAt']);
 
         // Cleanup
         $this->updateMembershipPrivacyPolicy([
@@ -955,6 +1221,7 @@ trait PoliciesBase
             'userPhone' => true,
             'userName' => true,
             'userMFA' => true,
+            'userAccessedAt' => true,
         ]);
     }
 
@@ -967,6 +1234,7 @@ trait PoliciesBase
             'userPhone' => true,
             'userName' => true,
             'userMFA' => true,
+            'userAccessedAt' => true,
         ]);
 
         $fields = [
@@ -975,6 +1243,7 @@ trait PoliciesBase
             'userPhone' => 'authMembershipsUserPhone',
             'userName' => 'authMembershipsUserName',
             'userMFA' => 'authMembershipsMfa',
+            'userAccessedAt' => 'authMembershipsUserAccessedAt',
         ];
 
         // Each field can be toggled individually without clobbering the others
@@ -987,7 +1256,7 @@ trait PoliciesBase
                 if ($otherParam === $param) {
                     continue;
                 }
-                $this->assertSame(true, $response['body'][$otherAttribute], $otherAttribute . ' should be untouched while only ' . $param . ' was updated');
+                $this->assertSame(true, $response['body'][$otherAttribute], $otherAttribute.' should be untouched while only '.$param.' was updated');
             }
 
             // Restore the field before the next iteration
@@ -1005,16 +1274,19 @@ trait PoliciesBase
             'userPhone' => true,
             'userName' => true,
             'userMFA' => true,
+            'userAccessedAt' => true,
         ]);
 
         $response = $this->updateMembershipPrivacyPolicy([
             'userId' => false,
             'userPhone' => false,
+            'userAccessedAt' => false,
         ]);
 
         $this->assertSame(200, $response['headers']['status-code']);
         $this->assertSame(false, $response['body']['authMembershipsUserId']);
         $this->assertSame(false, $response['body']['authMembershipsUserPhone']);
+        $this->assertSame(false, $response['body']['authMembershipsUserAccessedAt']);
         $this->assertSame(true, $response['body']['authMembershipsUserEmail']);
         $this->assertSame(true, $response['body']['authMembershipsUserName']);
         $this->assertSame(true, $response['body']['authMembershipsMfa']);
@@ -1026,6 +1298,7 @@ trait PoliciesBase
             'userPhone' => true,
             'userName' => true,
             'userMFA' => true,
+            'userAccessedAt' => true,
         ]);
     }
 
@@ -1038,6 +1311,7 @@ trait PoliciesBase
             'userPhone' => false,
             'userName' => false,
             'userMFA' => false,
+            'userAccessedAt' => false,
         ]);
 
         $response = $this->updateMembershipPrivacyPolicy([]);
@@ -1047,6 +1321,7 @@ trait PoliciesBase
         $this->assertSame(false, $response['body']['authMembershipsUserPhone']);
         $this->assertSame(false, $response['body']['authMembershipsUserName']);
         $this->assertSame(false, $response['body']['authMembershipsMfa']);
+        $this->assertSame(false, $response['body']['authMembershipsUserAccessedAt']);
 
         // Cleanup
         $this->updateMembershipPrivacyPolicy([
@@ -1055,6 +1330,7 @@ trait PoliciesBase
             'userPhone' => true,
             'userName' => true,
             'userMFA' => true,
+            'userAccessedAt' => true,
         ]);
     }
 
@@ -1102,10 +1378,10 @@ trait PoliciesBase
 
     protected function getProjectDocument(): array
     {
-        return $this->client->call(Client::METHOD_GET, '/projects/' . $this->getProject()['$id'], [
+        return $this->client->call(Client::METHOD_GET, '/projects/'.$this->getProject()['$id'], [
             'content-type' => 'application/json',
             'x-appwrite-project' => 'console',
-            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'cookie' => 'a_session_console='.$this->getRoot()['session'],
             'x-appwrite-response-format' => '1.9.4',
         ]);
     }
@@ -1127,7 +1403,7 @@ trait PoliciesBase
 
     protected function getPolicy(string $policyId, bool $authenticated = true): mixed
     {
-        return $this->client->call(Client::METHOD_GET, '/project/policies/' . $policyId, $this->buildHeaders($authenticated));
+        return $this->client->call(Client::METHOD_GET, '/project/policies/'.$policyId, $this->buildHeaders($authenticated));
     }
 
     protected function updatePasswordDictionaryPolicy(bool $enabled, bool $authenticated = true): mixed
@@ -1144,10 +1420,46 @@ trait PoliciesBase
         ]);
     }
 
+    /**
+     * @param  array<string, bool|int>  $params
+     */
+    protected function updatePasswordStrengthPolicy(array $params, bool $authenticated = true): mixed
+    {
+        return $this->client->call(Client::METHOD_PATCH, '/project/policies/password-strength', $this->buildHeaders($authenticated), $params);
+    }
+
+    protected function resetPasswordStrengthPolicy(): void
+    {
+        $this->updatePasswordStrengthPolicy([
+            'min' => 8,
+            'uppercase' => false,
+            'lowercase' => false,
+            'number' => false,
+            'symbols' => false,
+        ]);
+    }
+
     protected function updatePasswordPersonalDataPolicy(bool $enabled, bool $authenticated = true): mixed
     {
         return $this->client->call(Client::METHOD_PATCH, '/project/policies/password-personal-data', $this->buildHeaders($authenticated), [
             'enabled' => $enabled,
+        ]);
+    }
+
+    /**
+     * @param  array<string, bool|int|string>  $params
+     */
+    protected function updatePasswordPwnedPolicy(array $params, bool $authenticated = true): mixed
+    {
+        return $this->client->call(Client::METHOD_PATCH, '/project/policies/password-pwned', $this->buildHeaders($authenticated), $params);
+    }
+
+    protected function resetPasswordPwnedPolicy(): void
+    {
+        $this->updatePasswordPwnedPolicy([
+            'enabled' => true,
+            'sessions' => false,
+            'users' => false,
         ]);
     }
 
@@ -1187,7 +1499,7 @@ trait PoliciesBase
     }
 
     /**
-     * @param array<string, bool> $params
+     * @param  array<string, bool>  $params
      */
     protected function updateMembershipPrivacyPolicy(array $params, bool $authenticated = true): mixed
     {

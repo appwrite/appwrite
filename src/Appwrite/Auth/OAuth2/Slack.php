@@ -131,9 +131,28 @@ class Slack extends OAuth2
      */
     public function isEmailVerified(string $accessToken): bool
     {
-        $email = $this->getUserEmail($accessToken);
+        // email_verified lives on openid.connect.userInfo, not users.identity; unverified is the safe default until we migrate
+        return false;
+    }
 
-        return !empty($email);
+    /**
+     * @param string $accessToken
+     *
+     * @return string
+     */
+    public function getUserPhoto(string $accessToken): string
+    {
+        $user = $this->getUser($accessToken);
+        $profile = $user['user'] ?? [];
+
+        foreach (['image_512', 'image_192', 'image_72'] as $field) {
+            $url = $profile[$field] ?? '';
+            if ($url !== '') {
+                return $url;
+            }
+        }
+
+        return '';
     }
 
     /**

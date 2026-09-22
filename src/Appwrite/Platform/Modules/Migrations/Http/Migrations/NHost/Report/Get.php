@@ -7,6 +7,7 @@ use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\SDK\Specification\Validator\PasswordFormat;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Document;
 use Utopia\Migration\Sources\NHost;
@@ -53,8 +54,8 @@ class Get extends Action
             ->param('adminSecret', '', new Text(512), 'Source\'s Admin Secret.')
             ->param('database', '', new Text(512), 'Source\'s Database Name.')
             ->param('username', '', new Text(512), 'Source\'s Database Username.')
-            ->param('password', '', new Text(512), 'Source\'s Database Password.')
-            ->param('port', 5432, new Integer(true), 'Source\'s Database Port.', true)
+            ->param('password', '', new PasswordFormat(new Text(512)), 'Source\'s Database Password.')
+            ->param('port', 5432, new Integer(true), 'Source\'s Database Port.', true, example: '5432')
             ->inject('response')
             ->callback($this->action(...));
     }

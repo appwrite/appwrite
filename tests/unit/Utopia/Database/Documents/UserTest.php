@@ -1,9 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Utopia\Database\Documents;
 
 use Appwrite\Utopia\Database\Documents\User;
 use PHPUnit\Framework\TestCase;
+use Utopia\Auth\Proofs\Code;
 use Utopia\Auth\Proofs\Token;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -12,7 +15,7 @@ use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Roles;
 
-class UserTest extends TestCase
+final class UserTest extends TestCase
 {
     private $authorization;
 
@@ -90,9 +93,40 @@ class UserTest extends TestCase
         ]);
 
         $this->assertEquals('token1', $user1->sessionVerify($secret, $proofForToken));
-        $this->assertEquals($user1->sessionVerify('false-secret', $proofForToken), false);
-        $this->assertEquals($user2->sessionVerify($secret, $proofForToken), false);
-        $this->assertEquals($user2->sessionVerify('false-secret', $proofForToken), false);
+        $this->assertEquals(false, $user1->sessionVerify('false-secret', $proofForToken));
+        $this->assertEquals(false, $user2->sessionVerify($secret, $proofForToken));
+        $this->assertEquals(false, $user2->sessionVerify('false-secret', $proofForToken));
+    }
+
+    public function testSessionActive(): void
+    {
+        $user = new User([
+            '$id' => ID::custom('user1'),
+            'sessions' => [
+                new Document([
+                    '$id' => ID::custom('active'),
+                    'secret' => 'secret',
+                    'provider' => SESSION_PROVIDER_EMAIL,
+                    'expire' => DateTime::addSeconds(new \DateTime(), 60 * 60),
+                ]),
+                new Document([
+                    '$id' => ID::custom('expired'),
+                    'secret' => 'secret',
+                    'provider' => SESSION_PROVIDER_EMAIL,
+                    'expire' => DateTime::addSeconds(new \DateTime(), -60),
+                ]),
+                new Document([
+                    '$id' => ID::custom('missing-expire'),
+                    'secret' => 'secret',
+                    'provider' => SESSION_PROVIDER_EMAIL,
+                ]),
+            ],
+        ]);
+
+        $this->assertTrue($user->sessionActive('active'));
+        $this->assertFalse($user->sessionActive('expired'));
+        $this->assertFalse($user->sessionActive('missing-expire'));
+        $this->assertFalse($user->sessionActive('missing'));
     }
 
     public function testTokenVerify(): void
@@ -162,11 +196,107 @@ class UserTest extends TestCase
 
         $this->assertEquals($user1->tokenVerify(TOKEN_TYPE_RECOVERY, $secret, $proofForToken), $tokens1[0]);
         $this->assertEquals($user1->tokenVerify(null, $secret, $proofForToken), $tokens1[0]);
-        $this->assertEquals($user1->tokenVerify(TOKEN_TYPE_RECOVERY, 'false-secret', $proofForToken), false);
-        $this->assertEquals($user2->tokenVerify(TOKEN_TYPE_RECOVERY, $secret, $proofForToken), false);
-        $this->assertEquals($user2->tokenVerify(TOKEN_TYPE_RECOVERY, 'false-secret', $proofForToken), false);
-        $this->assertEquals($user3->tokenVerify(TOKEN_TYPE_RECOVERY, $secret, $proofForToken), false);
-        $this->assertEquals($user3->tokenVerify(TOKEN_TYPE_RECOVERY, 'false-secret', $proofForToken), false);
+        $this->assertEquals(false, $user1->tokenVerify(TOKEN_TYPE_RECOVERY, 'false-secret', $proofForToken));
+        $this->assertEquals(false, $user2->tokenVerify(TOKEN_TYPE_RECOVERY, $secret, $proofForToken));
+        $this->assertEquals(false, $user2->tokenVerify(TOKEN_TYPE_RECOVERY, 'false-secret', $proofForToken));
+        $this->assertEquals(false, $user3->tokenVerify(TOKEN_TYPE_RECOVERY, $secret, $proofForToken));
+        $this->assertEquals(false, $user3->tokenVerify(TOKEN_TYPE_RECOVERY, 'false-secret', $proofForToken));
+    }
+
+    public function testTokenVerifyVerificationOtp(): void
+    {
+        $proofForCode = new Code();
+        $proofForToken = new Token();
+
+        $code = $proofForCode->generate();
+        $token = $proofForToken->generate();
+        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), 60 * 60 * 24));
+
+        $user = new User([
+            '$id' => ID::custom('user1'),
+            'tokens' => [
+                new Document([
+                    '$id' => ID::custom('otp'),
+                    'type' => TOKEN_TYPE_VERIFICATION_OTP,
+                    'expire' => $expire,
+                    'secret' => $proofForCode->hash($code),
+                ]),
+                new Document([
+                    '$id' => ID::custom('link'),
+                    'type' => TOKEN_TYPE_VERIFICATION,
+                    'expire' => $expire,
+                    'secret' => $proofForToken->hash($token),
+                ]),
+            ],
+        ]);
+
+        $this->assertSame('otp', $user->tokenVerify(TOKEN_TYPE_VERIFICATION_OTP, $code, $proofForCode)->getId());
+        $this->assertSame('link', $user->tokenVerify(TOKEN_TYPE_VERIFICATION, $token, $proofForToken)->getId());
+
+        $this->assertEquals(false, $user->tokenVerify(TOKEN_TYPE_VERIFICATION, $code, $proofForToken));
+        $this->assertEquals(false, $user->tokenVerify(TOKEN_TYPE_VERIFICATION_OTP, $token, $proofForCode));
+
+        $expired = new User([
+            '$id' => ID::custom('user2'),
+            'tokens' => [
+                new Document([
+                    '$id' => ID::custom('otp'),
+                    'type' => TOKEN_TYPE_VERIFICATION_OTP,
+                    'expire' => DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -60 * 60 * 24)),
+                    'secret' => $proofForCode->hash($code),
+                ]),
+            ],
+        ]);
+
+        $this->assertEquals(false, $expired->tokenVerify(TOKEN_TYPE_VERIFICATION_OTP, $code, $proofForCode));
+    }
+
+    public function testTokenVerifyRecoveryOtp(): void
+    {
+        $proofForCode = new Code();
+        $proofForToken = new Token();
+
+        $code = $proofForCode->generate();
+        $token = $proofForToken->generate();
+        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), 60 * 60 * 24));
+
+        $user = new User([
+            '$id' => ID::custom('user1'),
+            'tokens' => [
+                new Document([
+                    '$id' => ID::custom('otp'),
+                    'type' => TOKEN_TYPE_RECOVERY_OTP,
+                    'expire' => $expire,
+                    'secret' => $proofForCode->hash($code),
+                ]),
+                new Document([
+                    '$id' => ID::custom('link'),
+                    'type' => TOKEN_TYPE_RECOVERY,
+                    'expire' => $expire,
+                    'secret' => $proofForToken->hash($token),
+                ]),
+            ],
+        ]);
+
+        $this->assertSame('otp', $user->tokenVerify(TOKEN_TYPE_RECOVERY_OTP, $code, $proofForCode)->getId());
+        $this->assertSame('link', $user->tokenVerify(TOKEN_TYPE_RECOVERY, $token, $proofForToken)->getId());
+
+        $this->assertEquals(false, $user->tokenVerify(TOKEN_TYPE_RECOVERY, $code, $proofForToken));
+        $this->assertEquals(false, $user->tokenVerify(TOKEN_TYPE_RECOVERY_OTP, $token, $proofForCode));
+
+        $expired = new User([
+            '$id' => ID::custom('user2'),
+            'tokens' => [
+                new Document([
+                    '$id' => ID::custom('otp'),
+                    'type' => TOKEN_TYPE_RECOVERY_OTP,
+                    'expire' => DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -60 * 60 * 24)),
+                    'secret' => $proofForCode->hash($code),
+                ]),
+            ],
+        ]);
+
+        $this->assertEquals(false, $expired->tokenVerify(TOKEN_TYPE_RECOVERY_OTP, $code, $proofForCode));
     }
 
     public function testIsPrivilegedUser(): void

@@ -14,12 +14,15 @@ class Specification extends Validator
 
     private int $maxMemory;
 
-    public function __construct(array $plan, array $specifications, float $maxCpus, int $maxMemory)
+    private string $planKey;
+
+    public function __construct(array $plan, array $specifications, float $maxCpus, int $maxMemory, string $planKey = 'runtimeSpecifications')
     {
         $this->plan = $plan;
         $this->specifications = $specifications;
         $this->maxCpus = $maxCpus;
         $this->maxMemory = $maxMemory;
+        $this->planKey = $planKey;
     }
 
     /**
@@ -35,8 +38,8 @@ class Specification extends Validator
 
         foreach ($this->specifications as $size => $values) {
             if ((empty($this->maxCpus) || $values['cpus'] <= $this->maxCpus) && (empty($this->maxMemory) || $values['memory'] <= $this->maxMemory)) {
-                if (!empty($this->plan) && array_key_exists('runtimeSpecifications', $this->plan)) {
-                    if (!\in_array($size, $this->plan['runtimeSpecifications'])) {
+                if (!empty($this->plan) && array_key_exists($this->planKey, $this->plan)) {
+                    if (!\in_array($size, $this->plan[$this->planKey])) {
                         continue;
                     }
                 }

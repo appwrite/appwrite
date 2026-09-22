@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Platform\Modules\Installer\Validator;
 
 use Appwrite\Platform\Installer\Validator\AppDomain;
 use PHPUnit\Framework\TestCase;
 
-class AppDomainTest extends TestCase
+final class AppDomainTest extends TestCase
 {
     protected ?AppDomain $validator = null;
 
@@ -31,7 +33,7 @@ class AppDomainTest extends TestCase
 
     public function testType(): void
     {
-        $this->assertEquals($this->validator::TYPE_STRING, $this->validator->getType());
+        $this->assertSame($this->validator::TYPE_STRING, $this->validator->getType());
     }
 
     public function testRejectsNonStringTypes(): void
@@ -159,9 +161,11 @@ class AppDomainTest extends TestCase
         $this->assertTrue($this->validator->isValid('  example.com  '));
     }
 
-    public function testAcceptsEmptyPortSegment(): void
+    public function testRejectsEmptyPortSegment(): void
     {
-        // 'localhost:' splits into host='localhost', port='' — empty port is skipped
-        $this->assertTrue($this->validator->isValid('localhost:'));
+        // Trailing colon with no digits is an explicit but empty port.
+        $this->assertFalse($this->validator->isValid('localhost:'));
+        $this->assertFalse($this->validator->isValid('example.com:'));
+        $this->assertFalse($this->validator->isValid('127.0.0.1:'));
     }
 }

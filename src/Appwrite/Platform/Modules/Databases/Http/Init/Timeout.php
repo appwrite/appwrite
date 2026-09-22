@@ -25,7 +25,7 @@ class Timeout extends Action
             ->inject('request')
             ->inject('dbForProject')
             ->callback(function (Request $request, Database $dbForProject) {
-                $timeout = \intval($request->getHeader('x-appwrite-timeout'));
+                $timeout = \intval($request->getHeaderLine('x-appwrite-timeout'));
 
                 if (!empty($timeout) && Http::isDevelopment()) {
                     $dbForProject->setTimeout($timeout);

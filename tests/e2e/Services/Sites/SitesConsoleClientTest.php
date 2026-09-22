@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\Sites;
 
 use PHPUnit\Framework\Attributes\Group;
@@ -7,10 +9,11 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideConsole;
+use Utopia\Command;
 use Utopia\Console;
 use Utopia\Database\Helpers\ID;
 
-class SitesConsoleClientTest extends Scope
+final class SitesConsoleClientTest extends Scope
 {
     use ProjectCustom;
     use SideConsole;
@@ -51,8 +54,8 @@ class SitesConsoleClientTest extends Scope
         $response = $proxyClient->call(Client::METHOD_GET, '/');
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertStringContainsString("Themed website", $response['body']);
-        $this->assertStringContainsString("@media (prefers-color-scheme: dark)", $response['body']);
+        $this->assertStringContainsString("Themed website", (string) $response['body']);
+        $this->assertStringContainsString("@media (prefers-color-scheme: dark)", (string) $response['body']);
 
         $deployment = null;
         $site = null;
@@ -136,7 +139,7 @@ class SitesConsoleClientTest extends Scope
         $screenshotDarkHash = \md5($file['body']);
         $this->assertNotEmpty($screenshotDarkHash);
 
-        $this->assertNotEquals($screenshotDarkHash, $screenshotHash);
+        $this->assertNotSame($screenshotDarkHash, $screenshotHash);
 
         $screenshotId = $deployment['body']['screenshotLight'];
         $file = $this->client->call(Client::METHOD_GET, "/storage/buckets/screenshots/files/$screenshotId/preview?project=console");
@@ -180,12 +183,20 @@ class SitesConsoleClientTest extends Scope
 
         $stdout = '';
         $stderr = '';
-        $code = Console::execute("docker exec appwrite task-time-travel --projectId={$this->getProject()['$id']} --resourceType=deployment --resourceId={$deploymentIdInactiveOld} --createdAt=2020-01-01T00:00:00Z", '', $stdout, $stderr);
+        $timeTravel = (new Command('docker'))
+            ->argument('exec')
+            ->argument('appwrite')
+            ->argument('task-time-travel')
+            ->argument('--projectId=' . $this->getProject()['$id'])
+            ->argument('--resourceType=deployment')
+            ->argument('--resourceId=' . $deploymentIdInactiveOld)
+            ->argument('--createdAt=2020-01-01T00:00:00Z');
+        $code = Console::execute($timeTravel, '', $stdout, $stderr);
         $this->assertSame(0, $code, "Time-travel command failed with code $code: $stderr ($stdout)");
 
         $stdout = '';
         $stderr = '';
-        $code = Console::execute("docker exec appwrite maintenance --type=trigger", '', $stdout, $stderr);
+        $code = Console::execute((new Command('docker'))->argument('exec')->argument('appwrite')->argument('maintenance')->argument('--type=trigger'), '', $stdout, $stderr);
         $this->assertSame(0, $code, "Maintenance command failed with code $code: $stderr ($stdout)");
 
         $this->assertEventually(function () use ($siteId) {

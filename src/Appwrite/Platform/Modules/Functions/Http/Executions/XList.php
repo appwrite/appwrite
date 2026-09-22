@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Executions;
 
+use Appwrite\Execution\Store;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
@@ -40,6 +41,7 @@ class XList extends Base
             ->desc('List executions')
             ->groups(['api', 'functions'])
             ->label('scope', ['executions.read', 'execution.read'])
+            ->label('usage.resource', 'function/{request.functionId}')
             ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
             ->label('sdk', new Method(
                 namespace: 'functions',
@@ -60,7 +62,9 @@ class XList extends Base
             ->param('queries', [], new Executions(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Executions::ALLOWED_ATTRIBUTES), true)
             ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
             ->inject('response')
+            ->inject('project')
             ->inject('dbForProject')
+            ->inject('executionStore')
             ->inject('authorization')
             ->inject('user')
             ->callback($this->action(...));
@@ -71,7 +75,9 @@ class XList extends Base
         array $queries,
         bool $includeTotal,
         Response $response,
+        Document $project,
         Database $dbForProject,
+        Store $executionStore,
         Authorization $authorization,
         User $user
     ) {
@@ -79,6 +85,7 @@ class XList extends Base
 
         $isAPIKey = $user->isKey($authorization->getRoles());
         $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
+        $roles = ($isAPIKey || $isPrivilegedUser) ? null : $authorization->getRoles();
 
         if ($function->isEmpty() || (!$function->getAttribute('enabled') && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::FUNCTION_NOT_FOUND);
@@ -104,7 +111,7 @@ class XList extends Base
             }
 
             $executionId = $cursor->getValue();
-            $cursorDocument = $dbForProject->getDocument('executions', $executionId);
+            $cursorDocument = $executionStore->get($project->getId(), $executionId, $roles);
 
             if ($cursorDocument->isEmpty()) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Execution '{$executionId}' for the 'cursor' value not found.");
@@ -126,9 +133,9 @@ class XList extends Base
             }
         }
 
-        // If the caller is filtering by 'failed', expand the DB query to also return
+        // If the caller is filtering by 'failed', expand the query to also return
         // waiting/processing executions created before the timeout threshold, so timed-out
-        // executions that were never marked failed in the DB are included in the results.
+        // executions that were never marked failed are included in the results.
         foreach ($queries as $index => $query) {
             if ($query->getMethod() === Query::TYPE_EQUAL && $query->getAttribute() === 'status' && \in_array('failed', $query->getValues())) {
                 $queries[$index] = Query::or([
@@ -145,8 +152,8 @@ class XList extends Base
         $filterQueries = Query::groupByType($queries)['filters'];
 
         try {
-            $results = $dbForProject->find('executions', $queries);
-            $total = $includeTotal ? $dbForProject->count('executions', $filterQueries, APP_LIMIT_COUNT) : 0;
+            $results = $executionStore->find($project->getId(), $queries, $roles);
+            $total = $includeTotal ? $executionStore->count($project->getId(), $filterQueries, APP_LIMIT_COUNT, $roles) : 0;
         } catch (OrderException $e) {
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
         }

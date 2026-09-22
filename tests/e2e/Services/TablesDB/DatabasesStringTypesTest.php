@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\TablesDB;
 
 use Tests\E2E\Client;
@@ -13,7 +15,7 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 
-class DatabasesStringTypesTest extends Scope
+final class DatabasesStringTypesTest extends Scope
 {
     use ProjectCustom;
     use SideServer;

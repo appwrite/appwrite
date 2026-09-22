@@ -45,6 +45,7 @@ class Get extends Action
                 description: '/docs/references/avatars/get-image.md',
                 auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 type: MethodType::LOCATION,
+                locationAuth: ['Project', 'ImpersonateUserId'],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
@@ -100,8 +101,8 @@ class Get extends Action
 
         try {
             $image = new Image($res->getBody());
-        } catch (\Throwable $exception) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Unable to parse image');
+        } catch (\ImagickException) {
+            throw new Exception(Exception::AVATAR_IMAGE_NOT_FOUND);
         }
 
         $image->crop((int) $width, (int) $height);
