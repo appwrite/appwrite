@@ -4,10 +4,6 @@ namespace Appwrite\Platform\Modules\Health\Http\Health\AntiVirus;
 
 use Appwrite\ClamAV\Network;
 use Appwrite\Extend\Exception;
-use Appwrite\SDK\AuthType;
-use Appwrite\SDK\ContentType;
-use Appwrite\SDK\Method;
-use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Document;
 use Utopia\Platform\Action;
@@ -31,20 +27,6 @@ class Get extends Action
             ->desc('Get antivirus')
             ->groups(['api', 'health'])
             ->label('scope', 'health.read')
-            ->label('sdk', new Method(
-                namespace: 'health',
-                group: 'health',
-                name: 'getAntivirus',
-                description: '/docs/references/health/get-storage-anti-virus.md',
-                auth: [AuthType::ADMIN, AuthType::KEY],
-                responses: [
-                    new SDKResponse(
-                        code: Response::STATUS_CODE_OK,
-                        model: Response::MODEL_HEALTH_ANTIVIRUS,
-                    )
-                ],
-                contentType: ContentType::JSON
-            ))
             ->inject('response')
             ->callback($this->action(...));
     }

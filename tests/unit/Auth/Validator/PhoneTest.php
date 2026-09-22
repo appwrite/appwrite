@@ -45,4 +45,29 @@ final class PhoneTest extends TestCase
         $this->assertTrue($this->object->isValid('+55115525632534'));
         $this->assertTrue($this->object->isValid('+919367788755111'));
     }
+
+    public function testNormalizeRecoversPathEncoding(): void
+    {
+        $this->assertSame('+15550102680', Phone::normalize('%2B15550102680'));
+        $this->assertSame('+15550102680', Phone::normalize(' 15550102680'));
+        $this->assertSame('  15550102680', Phone::normalize('  15550102680'));
+        $this->assertSame('+15550102680', Phone::normalize('15550102680'));
+        $this->assertSame('+15550102680', Phone::normalize('+15550102680'));
+    }
+
+    public function testNormalizeFlagAcceptsPathEncoding(): void
+    {
+        $phone = new Phone(normalize: true);
+
+        $this->assertTrue($phone->isValid('%2B15550102680'));
+        $this->assertTrue($phone->isValid(' 15550102680'));
+        $this->assertTrue($phone->isValid('15550102680'));
+        $this->assertTrue($phone->isValid('+15550102680'));
+        $this->assertFalse($phone->isValid('  15550102680'));
+
+        // Default validator still rejects path-damaged values.
+        $this->assertFalse($this->object->isValid('%2B15550102680'));
+        $this->assertFalse($this->object->isValid(' 15550102680'));
+        $this->assertFalse($this->object->isValid('15550102680'));
+    }
 }

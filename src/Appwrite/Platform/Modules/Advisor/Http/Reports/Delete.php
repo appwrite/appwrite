@@ -38,7 +38,6 @@ class Delete extends Action
             ->label('resourceType', RESOURCE_TYPE_REPORTS)
             ->label('audits.event', 'report.delete')
             ->label('audits.resource', 'report/{request.reportId}')
-            ->label('usage.resource', 'report/{request.reportId}')
             ->label('abuse-key', 'projectId:{projectId},userId:{userId}')
             ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT)
             ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)

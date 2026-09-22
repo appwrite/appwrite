@@ -23,7 +23,7 @@ use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\Validator\JSON;
+use Utopia\Validator\JSON\ObjectValidator as JSONObject;
 use Utopia\Validator\Text;
 
 class Upsert extends PlatformAction
@@ -46,14 +46,13 @@ class Upsert extends PlatformAction
             ->label('event', 'presences.[presenceId].upsert')
             ->label('audits.event', 'presence.upsert')
             ->label('audits.resource', 'presence/{response.$id}')
-            ->label('usage.resource', 'presence/{response.$id}')
             ->label('sdk', [
                 // Client-side SDK: `userId` is not accepted (session callers should just upsert their own presence).
                 new Method(
                     namespace: 'presences',
                     group: 'presences',
                     name: 'upsert',
-                    desc: 'Upsert presence',
+                    summary: 'Upsert presence',
                     description: '/docs/references/presences/upsert.md',
                     auth: [AuthType::SESSION, AuthType::ADMIN],
                     responses: [
@@ -75,7 +74,7 @@ class Upsert extends PlatformAction
                     namespace: 'presences',
                     group: 'presences',
                     name: 'upsert',
-                    desc: 'Upsert presence',
+                    summary: 'Upsert presence',
                     description: '/docs/references/presences/upsert.md',
                     auth: [AuthType::KEY, AuthType::JWT],
                     responses: [
@@ -98,12 +97,12 @@ class Upsert extends PlatformAction
             ->param('userId', null, new UID(), 'User ID.', true)
             ->param('status', '', new Text(Database::LENGTH_KEY), 'Presence status.', false)
             ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE]), 'An array of permissions strings. By default, only the current user is granted all permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
-            ->param('expiresAt', null, new DatetimeValidator(
+            ->param('expiresAt', null, fn () => new DatetimeValidator(
                 new \DateTime(),
                 (new \DateTime())->modify('+30 days'),
                 requireDateInFuture: true
             ), 'Presence expiry datetime.', true)
-            ->param('metadata', [], new JSON(), 'Presence metadata object.', true)
+            ->param('metadata', [], new JSONObject(), 'Presence metadata object.', true)
             ->inject('response')
             ->inject('request')
             ->inject('dbForProject')
@@ -120,7 +119,7 @@ class Upsert extends PlatformAction
         ?string $status,
         ?array $permissions,
         ?string $expiresAt,
-        array $metadata,
+        array|\stdClass $metadata,
         Response $response,
         Request $request,
         Database $dbForProject,
@@ -159,16 +158,17 @@ class Upsert extends PlatformAction
         }
         $isGraphQL = $request->getHeaderLine('x-appwrite-source') === 'graphql';
 
+        $presenceState = new PresenceState();
+
         $presenceData = [
             'userInternalId' => $userInternalId,
             'userId' => $resolvedUserId,
             'status' => $status,
             'source' => $isGraphQL ? 'graphql' : 'rest',
             'expiresAt' => $expiresAt ?? DateTime::addSeconds(new \DateTime(), 15 * 60),
-            'metadata' => $metadata,
+            'metadata' => $presenceState->normalizeMetadata($metadata),
         ];
 
-        $presenceState = new PresenceState();
         $presenceDocument = new Document($presenceData);
         $ownerOverride = $permissions === null && ($isAPIKey || $isPrivilegedUser)
             ? $resolvedUserId

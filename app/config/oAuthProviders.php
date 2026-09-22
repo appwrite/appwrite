@@ -22,7 +22,26 @@ return [
         'form' => 'apple.phtml', // Preparation for adding ability to customized OAuth UI forms, currently handled hardcoded.
         'beta' => true,
         'mock' => false,
+        // Native ID token sign-in. `issuers` are accepted `iss` values, matched exactly.
+        'idToken' => [
+            'issuers' => ['https://appleid.apple.com'],
+            'jwksUrl' => 'https://appleid.apple.com/auth/keys',
+            // ASAuthorizationController always supports request.nonce, and a
+            // nonce-less Apple token is replayable for its full lifetime
+            'nonceRequired' => true,
+        ],
         'class' => 'Appwrite\\Auth\\OAuth2\\Apple',
+    ],
+    'appwrite' => [
+        'name' => 'Appwrite',
+        'developers' => 'https://appwrite.io/docs/products/auth',
+        'icon' => 'icon-appwrite',
+        'enabled' => true,
+        'sandbox' => false,
+        'form' => false,
+        'beta' => false,
+        'mock' => false,
+        'class' => 'Appwrite\\Auth\\OAuth2\\Appwrite',
     ],
     'auth0' => [
         'name' => 'Auth0',
@@ -89,6 +108,17 @@ return [
         'beta' => false,
         'mock' => false,
         'class' => 'Appwrite\\Auth\\OAuth2\\Box',
+    ],
+    'cloudflare' => [
+        'name' => 'Cloudflare',
+        'developers' => 'https://developers.cloudflare.com/fundamentals/oauth/',
+        'icon' => 'icon-cloudflare',
+        'enabled' => true,
+        'sandbox' => false,
+        'form' => false,
+        'beta' => false,
+        'mock' => false,
+        'class' => 'Appwrite\\Auth\\OAuth2\\Cloudflare',
     ],
     'dailymotion' => [
         'name' => 'Dailymotion',
@@ -209,7 +239,35 @@ return [
         'form' => false,
         'beta' => false,
         'mock' => false,
+        'idToken' => [
+            // Google issued tokens without the scheme historically; both remain valid.
+            'issuers' => ['https://accounts.google.com', 'accounts.google.com'],
+            'jwksUrl' => 'https://www.googleapis.com/oauth2/v3/certs',
+            'nonceRequired' => false,
+        ],
         'class' => 'Appwrite\\Auth\\OAuth2\\Google',
+    ],
+    'huggingface' => [
+        'name' => 'Hugging Face',
+        'developers' => 'https://huggingface.co/docs/hub/oauth',
+        'icon' => 'icon-huggingface',
+        'enabled' => true,
+        'sandbox' => false,
+        'form' => false,
+        'beta' => false,
+        'mock' => false,
+        'class' => 'Appwrite\\Auth\\OAuth2\\HuggingFace',
+    ],
+    'kakao' => [
+        'name' => 'Kakao',
+        'developers' => 'https://developers.kakao.com/docs/latest/en/kakaologin/common',
+        'icon' => 'icon-kakao',
+        'enabled' => true,
+        'sandbox' => false,
+        'form' => false,
+        'beta' => false,
+        'mock' => false,
+        'class' => 'Appwrite\\Auth\\OAuth2\\Kakao',
     ],
     'keycloak' => [
         'name' => 'Keycloak',
@@ -321,6 +379,17 @@ return [
         'mock' => false,
         'class' => 'Appwrite\\Auth\\OAuth2\\Podio',
     ],
+    'resend' => [
+        'name' => 'Resend',
+        'developers' => 'https://resend.com/docs/guides/building-a-resend-oauth-client',
+        'icon' => 'icon-resend',
+        'enabled' => true,
+        'sandbox' => false,
+        'form' => false,
+        'beta' => false,
+        'mock' => false,
+        'class' => 'Appwrite\\Auth\\OAuth2\\Resend',
+    ],
     'salesforce' => [
         'name' => 'Salesforce',
         'developers' => 'https://developer.salesforce.com/docs/',
@@ -364,6 +433,17 @@ return [
         'beta' => false,
         'mock' => false,
         'class' => 'Appwrite\\Auth\\OAuth2\\Stripe',
+    ],
+    'tiktok' => [
+        'name' => 'TikTok',
+        'developers' => 'https://developers.tiktok.com/doc/login-kit-web',
+        'icon' => 'icon-tiktok',
+        'enabled' => true,
+        'sandbox' => false,
+        'form' => false,
+        'beta' => false,
+        'mock' => false,
+        'class' => 'Appwrite\\Auth\\OAuth2\\TikTok',
     ],
     'tradeshift' => [
         'name' => 'Tradeshift',
@@ -504,6 +584,11 @@ return [
         'form' => false,
         'beta' => false,
         'mock' => true,
+        'idToken' => [
+            'issuers' => ['https://localhost/v1/mock'],
+            'jwksUrl' => 'http://localhost/v1/mock/tests/general/oauth2/jwks',
+            'nonceRequired' => false,
+        ],
         'class' => 'Appwrite\\Auth\\OAuth2\\Mock',
     ],
     'mock-unverified' => [
@@ -515,6 +600,24 @@ return [
         'form' => false,
         'beta' => false,
         'mock' => true,
+        // Same mock signing keys as `mock`, but with Apple's nonce policy, so
+        // the required-nonce path is covered end to end
+        'idToken' => [
+            'issuers' => ['https://localhost/v1/mock'],
+            'jwksUrl' => 'http://localhost/v1/mock/tests/general/oauth2/jwks',
+            'nonceRequired' => true,
+        ],
         'class' => 'Appwrite\\Auth\\OAuth2\\MockUnverified',
+    ],
+    'mock-no-email' => [
+        'name' => 'MockNoEmail',
+        'developers' => 'https://appwrite.io',
+        'icon' => 'icon-appwrite',
+        'enabled' => true,
+        'sandbox' => false,
+        'form' => false,
+        'beta' => false,
+        'mock' => true,
+        'class' => 'Appwrite\\Auth\\OAuth2\\MockNoEmail',
     ],
 ];

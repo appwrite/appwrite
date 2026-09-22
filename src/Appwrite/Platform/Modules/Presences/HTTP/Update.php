@@ -24,7 +24,7 @@ use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Validator\Boolean;
-use Utopia\Validator\JSON;
+use Utopia\Validator\JSON\ObjectValidator as JSONObject;
 use Utopia\Validator\Text;
 
 class Update extends PlatformAction
@@ -45,14 +45,13 @@ class Update extends PlatformAction
             ->label('event', 'presences.[presenceId].update')
             ->label('audits.event', 'presence.update')
             ->label('audits.resource', 'presence/{response.$id}')
-            ->label('usage.resource', 'presence/{response.$id}')
             ->label('sdk', [
                 // Client-side SDK: `userId` is not accepted (session callers can only update their own presence).
                 new Method(
                     namespace: 'presences',
                     group: 'presences',
                     name: 'update',
-                    desc: 'Update presence',
+                    summary: 'Update presence',
                     description: '/docs/references/presences/update.md',
                     auth: [AuthType::SESSION, AuthType::ADMIN],
                     responses: [
@@ -75,7 +74,7 @@ class Update extends PlatformAction
                     namespace: 'presences',
                     group: 'presences',
                     name: 'update',
-                    desc: 'Update presence',
+                    summary: 'Update presence',
                     description: '/docs/references/presences/update.md',
                     auth: [AuthType::KEY, AuthType::JWT],
                     responses: [
@@ -98,12 +97,12 @@ class Update extends PlatformAction
             ->param('presenceId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Presence unique ID.', false, ['dbForProject'])
             ->param('userId', null, new UID(), 'User ID.', true)
             ->param('status', null, new Text(Database::LENGTH_KEY), 'Presence status.', true)
-            ->param('expiresAt', null, new DatetimeValidator(
+            ->param('expiresAt', null, fn () => new DatetimeValidator(
                 new \DateTime(),
                 (new \DateTime())->modify('+30 days'),
                 requireDateInFuture: true
             ), 'Presence expiry datetime.', true)
-            ->param('metadata', null, new JSON(), 'Presence metadata object.', true)
+            ->param('metadata', null, new JSONObject(), 'Presence metadata object.', true)
             ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE]), 'An array of permissions strings. By default, only the current user is granted all permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->param('purge', false, new Boolean(true), 'When true, purge cached responses used by list presences endpoint.', true)
             ->inject('response')
@@ -119,7 +118,7 @@ class Update extends PlatformAction
         ?string $userId,
         ?string $status,
         ?string $expiresAt,
-        ?array $metadata,
+        array|\stdClass|null $metadata,
         ?array $permissions,
         bool $purge,
         Response $response,
@@ -167,7 +166,7 @@ class Update extends PlatformAction
         }
 
         if ($metadata !== null) {
-            $updateData['metadata'] = $metadata;
+            $updateData['metadata'] = $presenceState->normalizeMetadata($metadata);
         }
 
         $updates = new Document($updateData);
@@ -198,6 +197,10 @@ class Update extends PlatformAction
 
         if ($purge) {
             $presenceState->purgeListCache($dbForProject);
+        }
+
+        if ($presence->isEmpty()) {
+            throw new Exception(Exception::PRESENCE_NOT_FOUND, params: [$presenceId]);
         }
 
         $queueForEvents->setParam('presenceId', $presence->getId());

@@ -12,7 +12,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
-use Utopia\Validator\JSON;
+use Utopia\Validator\JSON\ObjectValidator as JSONObject;
 
 class Update extends DocumentUpdate
 {
@@ -34,7 +34,7 @@ class Update extends DocumentUpdate
             ->desc('Update document')
             ->groups(['api', 'database'])
             ->label('event', 'databases.[databaseId].collections.[collectionId].documents.[documentId].update')
-            ->label('scope', 'documents.write')
+            ->label('scope', 'documentsdb.documents.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('audits.event', 'document.update')
             ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}/document/{response.$id}')
@@ -59,7 +59,7 @@ class Update extends DocumentUpdate
             ->param('databaseId', '', new UID(), 'Database ID.')
             ->param('collectionId', '', new UID(), 'Collection ID.')
             ->param('documentId', '', new UID(), 'Document ID.')
-            ->param('data', [], new JSON(), 'Document data as JSON object. Include only fields and value pairs to be updated.', true)
+            ->param('data', [], new JSONObject(), 'Document data as JSON object. Include only fields and value pairs to be updated.', true)
             ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE]), 'An array of permissions strings. By default, the current permissions are inherited. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->param('transactionId', null, new UID(), 'Transaction ID for staging the operation.', true)
             ->inject('requestTimestamp')

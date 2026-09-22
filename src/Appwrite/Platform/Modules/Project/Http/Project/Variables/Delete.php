@@ -35,7 +35,6 @@ class Delete extends Action
             ->label('event', 'variables.[variableId].delete')
             ->label('audits.event', 'project.variable.delete')
             ->label('audits.resource', 'project.variable/{request.variableId}')
-            ->label('usage.resource', 'project.variable/{request.variableId}')
             ->label('sdk', new Method(
                 namespace: 'project',
                 group: 'variables',

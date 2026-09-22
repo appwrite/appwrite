@@ -35,7 +35,6 @@ class Update extends Action
             // ->label('event', 'project.labels.update')
             ->label('audits.event', 'project.labels.update')
             ->label('audits.resource', 'project.labels/{response.$id}')
-            ->label('usage.resource', 'project.labels/{response.$id}')
             ->label('sdk', new Method(
                 namespace: 'project',
                 group: null,
@@ -72,6 +71,7 @@ class Update extends Action
         $labels = (array) \array_values(\array_unique($labels));
 
         $project = $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document(['labels' => $labels])));
+        $authorization->skip(fn () => $dbForPlatform->purgeCachedDocument('projects', $project->getId()));
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     }

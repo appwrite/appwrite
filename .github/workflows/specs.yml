@@ -1,7 +1,7 @@
 name: "Generate Specs"
 
 env:
-  COMPOSE_FILE: docker-compose.yml
+  COMPOSE_FILE: docker-compose.yml:docker-compose.override.yml
 
 on:
   workflow_dispatch:
@@ -11,6 +11,8 @@ on:
         description: "Appwrite version to generate specs for"
         required: true
         options:
+          - "2.0.x"
+          - "1.9.x"
           - "1.8.x"
           - "1.7.x"
           - "1.6.x"
@@ -28,7 +30,7 @@ on:
 jobs:
   generate:
     name: Generate Specs
-    runs-on: ubuntu-latest
+    runs-on: gcrunner=${{ github.run_id }}-generate-${{ strategy.job-index }}/runner=publish
     steps:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2

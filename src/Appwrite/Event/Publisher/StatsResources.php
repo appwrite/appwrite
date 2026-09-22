@@ -4,8 +4,9 @@ namespace Appwrite\Event\Publisher;
 
 use Appwrite\Event\Message\StatsResources as StatsResourcesMessage;
 use Utopia\Console;
-use Utopia\Queue\Publisher;
+use Utopia\Queue\Publisher\Synchronous as Publisher;
 use Utopia\Queue\Queue;
+use Utopia\System\System;
 
 readonly class StatsResources extends Base
 {
@@ -18,6 +19,10 @@ readonly class StatsResources extends Base
 
     public function enqueue(StatsResourcesMessage $message): string|bool
     {
+        if (System::getEnv('_APP_USAGE_STATS', 'enabled') === 'disabled') {
+            return false;
+        }
+
         // Resource stats are best-effort; publishing failures should not interrupt the scheduler loop.
         try {
             return $this->publish($this->queue, $message);

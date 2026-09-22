@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Sites\Http\Logs;
 
+use Appwrite\Execution\Store;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
@@ -9,6 +10,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
@@ -49,11 +51,13 @@ class Get extends Base
             ->param('siteId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Site ID.', false, ['dbForProject'])
             ->param('logId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Log ID.', false, ['dbForProject'])
             ->inject('response')
+            ->inject('project')
             ->inject('dbForProject')
+            ->inject('executionStore')
             ->callback($this->action(...));
     }
 
-    public function action(string $siteId, string $logId, Response $response, Database $dbForProject)
+    public function action(string $siteId, string $logId, Response $response, Document $project, Database $dbForProject, Store $executionStore)
     {
         $site = $dbForProject->getDocument('sites', $siteId);
 
@@ -61,13 +65,9 @@ class Get extends Base
             throw new Exception(Exception::SITE_NOT_FOUND);
         }
 
-        $log = $dbForProject->getDocument('executions', $logId);
+        $log = $executionStore->get($project->getId(), $logId);
 
-        if ($log->getAttribute('resourceType') !== 'sites' && $log->getAttribute('resourceInternalId') !== $site->getSequence()) {
-            throw new Exception(Exception::LOG_NOT_FOUND);
-        }
-
-        if ($log->isEmpty()) {
+        if ($log->isEmpty() || $log->getAttribute('resourceType') !== 'sites' || $log->getAttribute('resourceInternalId') !== $site->getSequence()) {
             throw new Exception(Exception::LOG_NOT_FOUND);
         }
 

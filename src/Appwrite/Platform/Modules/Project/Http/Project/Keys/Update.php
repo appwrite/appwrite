@@ -24,6 +24,10 @@ use Utopia\Validator\Nullable;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
+/**
+ * TODO: Remove once the Console, CLI and SDKs use the Organization API
+ * (/v1/organization/projects/:projectId/keys) instead of this project-scoped route.
+ */
 class Update extends Base
 {
     use HTTP;
@@ -44,7 +48,6 @@ class Update extends Base
             ->label('event', 'keys.[keyId].update')
             ->label('audits.event', 'project.key.update')
             ->label('audits.resource', 'project.key/{response.$id}')
-            ->label('usage.resource', 'project.key/{response.$id}')
             ->label('sdk', new Method(
                 namespace: 'project',
                 group: 'keys',
@@ -62,7 +65,7 @@ class Update extends Base
             ))
             ->param('keyId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getAdapter()->getMaxUIDLength()), 'Key ID.', false, ['dbForPlatform'])
             ->param('name', null, new Text(128), 'Key name. Max length: 128 chars.')
-            ->param('scopes', [], new ArrayList(new WhiteList(array_keys(Config::getParam('projectScopes')), true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Key scopes list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed.', optional: false, enum: new Enum(name: 'ProjectKeyScopes'))
+            ->param('scopes', [], new ArrayList(new WhiteList(array_keys(Config::getParam('projectScopes')), true), APP_LIMIT_ARRAY_SCOPES_SIZE), 'Key scopes list. Maximum of ' . APP_LIMIT_ARRAY_SCOPES_SIZE . ' scopes are allowed.', optional: false, enum: new Enum(name: 'ProjectKeyScopes'))
             ->param('expire', null, new Nullable(new Datetime()), 'Expiration time in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. Use null for unlimited expiration.', true)
             ->inject('response')
             ->inject('queueForEvents')

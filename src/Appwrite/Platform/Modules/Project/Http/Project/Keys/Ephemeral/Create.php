@@ -21,6 +21,10 @@ use Utopia\Validator\ArrayList;
 use Utopia\Validator\Range;
 use Utopia\Validator\WhiteList;
 
+/**
+ * TODO: Remove once the Console, CLI and SDKs use the Organization API
+ * (/v1/organization/projects/:projectId/keys) instead of this project-scoped route.
+ */
 class Create extends Base
 {
     use HTTP;
@@ -42,7 +46,6 @@ class Create extends Base
             ->label('event', 'keys.[keyId].create')
             ->label('audits.event', 'project.key.create')
             ->label('audits.resource', 'project.key/{response.$id}')
-            ->label('usage.resource', 'project.key/{response.$id}')
             ->label('sdk', new Method(
                 namespace: 'project',
                 group: 'keys',
@@ -60,7 +63,7 @@ class Create extends Base
                     )
                 ],
             ))
-            ->param('scopes', [], new ArrayList(new WhiteList(array_keys(Config::getParam('projectScopes')), true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Key scopes list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed.', optional: false, enum: new Enum(name: 'ProjectKeyScopes'))
+            ->param('scopes', [], new ArrayList(new WhiteList(array_keys(Config::getParam('projectScopes')), true), APP_LIMIT_ARRAY_SCOPES_SIZE), 'Key scopes list. Maximum of ' . APP_LIMIT_ARRAY_SCOPES_SIZE . ' scopes are allowed.', optional: false, enum: new Enum(name: 'ProjectKeyScopes'))
             ->param('duration', null, new Range(1, 3600), 'Time in seconds before ephemeral key expires. Maximum duration is 3600 seconds.', optional: false, example: 600)
             ->inject('response')
             ->inject('queueForEvents')

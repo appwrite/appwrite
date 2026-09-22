@@ -37,7 +37,6 @@ class Create extends Action
             ->label('event', 'mock-phones.[number].create')
             ->label('audits.event', 'project.mock-phone.create')
             ->label('audits.resource', 'project.mock-phone/{response.number}')
-            ->label('usage.resource', 'project.mock-phone/{response.number}')
             ->label('sdk', new Method(
                 namespace: 'project',
                 group: 'mocks',
@@ -102,6 +101,7 @@ class Create extends Action
         ]);
 
         $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), $updates));
+        $authorization->skip(fn () => $dbForPlatform->purgeCachedDocument('projects', $project->getId()));
 
         $queueForEvents->setParam('number', $number);
 

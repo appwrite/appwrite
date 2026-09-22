@@ -38,7 +38,6 @@ class Delete extends Action
             ->label('event', 'webhooks.[webhookId].delete')
             ->label('audits.event', 'webhook.delete')
             ->label('audits.resource', 'webhook/{request.webhookId}')
-            ->label('usage.resource', 'webhook/{request.webhookId}')
             ->label('sdk', new Method(
                 namespace: 'webhooks',
                 group: null,

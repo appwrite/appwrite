@@ -24,7 +24,6 @@ use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Pools\Group;
 use Utopia\System\System;
-use Utopia\Validator;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
@@ -37,11 +36,6 @@ class Create extends Action
         return 'createProject';
     }
 
-    protected function getQueriesValidator(): Validator
-    {
-        return new Projects();
-    }
-
     public function __construct()
     {
         $this
@@ -51,7 +45,6 @@ class Create extends Action
             ->groups(['api', 'projects'])
             ->label('audits.event', 'projects.create')
             ->label('audits.resource', 'project/{response.$id}')
-            ->label('usage.resource', 'project/{response.$id}')
             ->label('scope', 'projects.write')
             ->param('projectId', '', new ProjectId(), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, and hyphen. Can\'t start with a special char. Max length is 36 chars.')
             ->param('name', null, new Text(128), 'Project name. Max length: 128 chars.')
@@ -83,7 +76,7 @@ class Create extends Action
         $auth = Config::getParam('auth', []);
         $auths = [
             'limit' => 0,
-            'maxSessions' => 0,
+            'maxSessions' => APP_LIMIT_USER_SESSIONS_DEFAULT,
             'passwordStrength' => [
                 'min' => 8,
                 'uppercase' => false,
@@ -95,6 +88,11 @@ class Create extends Action
             'passwordDictionary' => false,
             'duration' => TOKEN_EXPIRATION_LOGIN_LONG,
             'personalDataCheck' => false,
+            'passwordPwned' => [
+                'enabled' => true,
+                'sessions' => false,
+                'users' => false,
+            ],
             'disposableEmails' => false,
             'canonicalEmails' => false,
             'freeEmails' => false,
@@ -106,7 +104,13 @@ class Create extends Action
             'membershipsMfa' => false,
             'membershipsUserId' => false,
             'membershipsUserPhone' => false,
-            'invalidateSessions' => true
+            'invalidateSessions' => true,
+            'mfaFactors' => [
+                'totp' => true,
+                'email' => true,
+                'phone' => true,
+                'custom' => false,
+            ],
         ];
 
         foreach ($auth as $method) {

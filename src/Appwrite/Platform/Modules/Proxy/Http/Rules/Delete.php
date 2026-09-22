@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Proxy\Http\Rules;
 
+use Appwrite\Bus\Events\RuleDeleted;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
@@ -11,6 +12,7 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Utopia\Bus\Bus;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
@@ -38,7 +40,6 @@ class Delete extends Action
             ->label('event', 'rules.[ruleId].delete')
             ->label('audits.event', 'rules.delete')
             ->label('audits.resource', 'rule/{request.ruleId}')
-            ->label('usage.resource', 'rule/{request.ruleId}')
             ->label('sdk', new Method(
                 namespace: 'proxy',
                 group: 'rules',
@@ -62,6 +63,7 @@ class Delete extends Action
             ->inject('publisherForDeletes')
             ->inject('queueForEvents')
             ->inject('authorization')
+            ->inject('bus')
             ->callback($this->action(...));
     }
 
@@ -73,6 +75,7 @@ class Delete extends Action
         DeletePublisher $publisherForDeletes,
         Event $queueForEvents,
         Authorization $authorization,
+        Bus $bus,
     ) {
         $rule = $authorization->skip(fn () => $dbForPlatform->getDocument('rules', $ruleId));
 
@@ -81,6 +84,8 @@ class Delete extends Action
         }
 
         $authorization->skip(fn () => $dbForPlatform->deleteDocument('rules', $rule->getId()));
+
+        $bus->dispatch(new RuleDeleted($rule->getArrayCopy()));
 
         $publisherForDeletes->enqueue(new DeleteMessage(
             project: $project,

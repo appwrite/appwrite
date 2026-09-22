@@ -72,13 +72,15 @@ class Resolvers
      *
      * @param Http $utopia
      * @param ?Route $route
+     * @param string $method
      * @return callable
      */
     public static function api(
         Http $utopia,
         ?Route $route,
+        string $method,
     ): callable {
-        return static fn ($type, $args, $context, $info) => new Swoole(function (callable $resolve, callable $reject) use ($utopia, $route, $args) {
+        return static fn ($type, $args, $context, $info) => new Swoole(function (callable $resolve, callable $reject) use ($utopia, $route, $method, $args) {
             $utopia = $utopia->context()->get('utopia:graphql');
             $request = $utopia->context()->get('request');
             $response = $utopia->context()->get('response');
@@ -89,7 +91,7 @@ class Resolvers
                 $response,
                 $resolve,
                 $reject,
-                prepareRequest: static function (Request $request) use ($route, $args): void {
+                prepareRequest: static function (Request $request) use ($route, $method, $args): void {
                     $path = $route->getPath();
                     foreach ($args as $key => $value) {
                         if (\str_contains($path, '/:' . $key)) {
@@ -97,10 +99,10 @@ class Resolvers
                         }
                     }
 
-                    $request->setMethod($route->getMethod());
+                    $request->setMethod($method);
                     $request->setURI($path);
 
-                    switch ($route->getMethod()) {
+                    switch ($method) {
                         case 'GET':
                             $request->setQueryString($args);
                             break;
@@ -405,21 +407,25 @@ class Resolvers
         $resolve($payload);
     }
 
-    private static function escapePayload(array $payload, int $depth)
+    private static function escapePayload(array $payload, int $depth): array
     {
         if ($depth > System::getEnv('_APP_GRAPHQL_MAX_DEPTH', 3)) {
-            return;
+            return $payload;
         }
 
         foreach ($payload as $key => $value) {
+            // Escape after recursing, so an array held under a $-prefixed key
+            // is written once, to the escaped key, rather than resurrecting the
+            // original key the escape had just removed.
+            if (\is_array($value)) {
+                $value = self::escapePayload($value, $depth + 1);
+                $payload[$key] = $value;
+            }
+
             if (\str_starts_with($key, '$')) {
                 $escapedKey = \str_replace('$', '_', $key);
                 $payload[$escapedKey] = $value;
                 unset($payload[$key]);
-            }
-
-            if (\is_array($value)) {
-                $payload[$key] = self::escapePayload($value, $depth + 1);
             }
         }
 

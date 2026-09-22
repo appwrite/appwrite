@@ -14,8 +14,6 @@ class Client
     public const METHOD_DELETE = 'DELETE';
     public const METHOD_HEAD = 'HEAD';
     public const METHOD_OPTIONS = 'OPTIONS';
-    public const METHOD_CONNECT = 'CONNECT';
-    public const METHOD_TRACE = 'TRACE';
 
     /**
      * Is Self Signed Certificates Allowed?
@@ -49,66 +47,6 @@ class Client
     }
 
     /**
-     * Set Project
-     *
-     * Your Appwrite project ID. You can find your project ID in your Appwrite console project settings.
-     *
-     * @param string $value
-     *
-     * @return self $this
-     */
-    public function setProject(string $value): self
-    {
-        $this->addHeader('X-Appwrite-Project', $value);
-
-        return $this;
-    }
-
-    /**
-     * Set Key
-     *
-     * Your Appwrite project secret key. You can can create a new API key from your Appwrite console API keys dashboard.
-     *
-     * @param string $value
-     *
-     * @return self $this
-     */
-    public function setKey(string $value): self
-    {
-        $this->addHeader('X-Appwrite-Key', $value);
-
-        return $this;
-    }
-
-    /**
-     * Set Locale
-     *
-     * @param string $value
-     *
-     * @return self $this
-     */
-    public function setLocale(string $value): self
-    {
-        $this->addHeader('X-Appwrite-Locale', $value);
-
-        return $this;
-    }
-
-    /**
-     * Set Mode
-     *
-     * @param string $value
-     *
-     * @return self $this
-     */
-    public function setMode(string $value): self
-    {
-        $this->addHeader('X-Appwrite-Mode', $value);
-
-        return $this;
-    }
-
-    /**
      * Set Response Format
      *
      * @param string $value
@@ -118,17 +56,6 @@ class Client
     public function setResponseFormat(string $value): self
     {
         $this->addHeader('X-Appwrite-Response-Format', $value);
-
-        return $this;
-    }
-
-    /**
-     * @param bool $status true
-     * @return self $this
-     */
-    public function setSelfSigned(bool $status = true): self
-    {
-        $this->selfSigned = $status;
 
         return $this;
     }
@@ -172,18 +99,70 @@ class Client
      *
      * @param string $method
      * @param string $path
-     * @param array $params
      * @param array $headers
+     * @param mixed $params
      * @param bool $decode
+     * @param bool $followRedirects
+     * @param int $timeout
      * @return array
      * @throws Exception
      */
-    public function call(string $method, string $path = '', array $headers = [], mixed $params = [], bool $decode = true, bool $followRedirects = true): array
+    public function call(string $method, string $path = '', array $headers = [], mixed $params = [], bool $decode = true, bool $followRedirects = true, int $timeout = 120): array
     {
-        $headers            = array_merge($this->headers, $headers);
-        $ch                 = curl_init($this->endpoint . $path . (($method == self::METHOD_GET && !empty($params)) ? '?' . http_build_query($params) : ''));
-        $responseHeaders    = [];
-        $cookies = [];
+        $responseHeaders = [];
+        $ch = $this->handle($method, $path, $headers, $params, $followRedirects, $timeout, $responseHeaders);
+
+        $responseBody = curl_exec($ch);
+
+        return $this->response($ch, $method, $path, $params, $decode, $responseHeaders, $responseBody);
+    }
+
+    /**
+     * Send several requests at the same time and return each response in request order.
+     *
+     * @param array<int, array{0: string, 1: string, 2: array<string, string>, 3: mixed}> $requests `[method, path, headers, params]` per request
+     * @return array<int, array{headers: array, cookies: array, body: mixed}>
+     * @throws Exception
+     */
+    public function callConcurrently(array $requests, bool $decode = true): array
+    {
+        $multi = curl_multi_init();
+        $handles = [];
+        $responseHeaders = [];
+
+        foreach ($requests as $index => [$method, $path, $headers, $params]) {
+            $responseHeaders[$index] = [];
+            $handles[$index] = $this->handle($method, $path, $headers, $params, true, 120, $responseHeaders[$index]);
+            curl_multi_add_handle($multi, $handles[$index]);
+        }
+
+        do {
+            $status = curl_multi_exec($multi, $running);
+            if ($running) {
+                curl_multi_select($multi);
+            }
+        } while ($running && $status === CURLM_OK);
+
+        $responses = [];
+        foreach ($handles as $index => $ch) {
+            curl_multi_remove_handle($multi, $ch);
+            [$method, $path, , $params] = $requests[$index];
+            $responses[$index] = $this->response($ch, $method, $path, $params, $decode, $responseHeaders[$index], curl_multi_getcontent($ch));
+        }
+        curl_multi_close($multi);
+
+        return $responses;
+    }
+
+    /**
+     * Build a curl handle for a request; response headers are collected into `$responseHeaders` as it runs.
+     *
+     * @throws Exception
+     */
+    private function handle(string $method, string $path, array $headers, mixed $params, bool $followRedirects, int $timeout, array &$responseHeaders): \CurlHandle
+    {
+        $headers = array_merge($this->headers, $headers);
+        $ch = curl_init($this->endpoint . $path . (($method == self::METHOD_GET && !empty($params)) ? '?' . http_build_query($params) : ''));
 
         if (isset($params['queries'])) {
             foreach ($params['queries'] as $value) {
@@ -218,7 +197,7 @@ class Client
         curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36');
         curl_setopt($ch, CURLOPT_HTTPHEADER, $formattedHeaders);
         curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 0);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 120);
+        curl_setopt($ch, CURLOPT_TIMEOUT, $timeout);
         curl_setopt($ch, CURLOPT_COOKIEFILE, ''); // enable in-memory RFC 6265 cookie engine
         curl_setopt($ch, CURLOPT_HEADERFUNCTION, function ($curl, $header) use (&$responseHeaders) {
             $len = strlen($header);
@@ -232,7 +211,6 @@ class Client
 
             return $len;
         });
-
 
         if ($method === self::METHOD_HEAD) {
             curl_setopt($ch, CURLOPT_NOBODY, true); // This is crucial for HEAD requests
@@ -250,7 +228,18 @@ class Client
             curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
             curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
         }
-        $responseBody   = curl_exec($ch);
+
+        return $ch;
+    }
+
+    /**
+     * Turn a finished curl handle into the `headers`, `cookies` and `body` array every call returns.
+     *
+     * @throws Exception
+     */
+    private function response(\CurlHandle $ch, string $method, string $path, mixed $params, bool $decode, array $responseHeaders, string|bool|null $responseBody): array
+    {
+        $cookies = [];
         $responseType   = $responseHeaders['content-type'] ?? '';
         $responseStatus = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
@@ -266,12 +255,12 @@ class Client
                 case 'multipart/form-data':
                     $boundary = \explode('boundary=', $responseHeaders['content-type'])[1] ?? '';
                     $multipartResponse = new BodyMultipart($boundary);
-                    $multipartResponse->load(\is_bool($responseBody) ? '' : $responseBody);
+                    $multipartResponse->load(\is_string($responseBody) ? $responseBody : '');
 
                     $responseBody = $multipartResponse->getParts();
                     break;
                 case 'application/json':
-                    if (\is_bool($responseBody)) {
+                    if (!\is_string($responseBody)) {
                         throw new Exception('Response is not a valid JSON.');
                     }
 

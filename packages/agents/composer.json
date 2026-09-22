@@ -1,0 +1,45 @@
+{
+    "name": "utopia-php/agents",
+    "description": "A simple PHP AI agents library",
+    "type": "library",
+    "keywords": [
+        "php",
+        "ai",
+        "agents",
+        "automation",
+        "machine-learning"
+    ],
+    "license": "MIT",
+    "minimum-stability": "stable",
+    "authors": [
+        {
+            "name": "Utopia PHP",
+            "email": "team@appwrite.io"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "Utopia\\Agents\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Utopia\\Agents\\Tests\\": "tests/"
+        }
+    },
+    "suggest": {
+        "ext-curl": "HTTP transport outside Swoole coroutines",
+        "ext-swoole": "Pooled coroutine HTTP transport inside Swoole"
+    },
+    "scripts": {
+        "test": "phpunit --configuration phpunit.xml --testsuite unit"
+    },
+    "require": {
+        "php": ">=8.5",
+        "psr/http-client": "^1.0",
+        "psr/http-message": "^1.1 || ^2.0",
+        "utopia-php/client": "^0.4.4",
+        "utopia-php/pools": "^2.0",
+        "utopia-php/psr7": "^0.2.1"
+    }
+}

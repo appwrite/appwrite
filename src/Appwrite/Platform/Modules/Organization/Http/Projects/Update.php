@@ -33,7 +33,6 @@ class Update extends Action
             ->label('scope', 'projects.write')
             ->label('audits.event', 'projects.update')
             ->label('audits.resource', 'project/{response.$id}')
-            ->label('usage.resource', 'project/{response.$id}')
             ->label('sdk', new Method(
                 namespace: 'organization',
                 group: 'projects',
@@ -41,7 +40,7 @@ class Update extends Action
                 description: <<<EOT
                 Update a project by its unique ID.
                 EOT,
-                auth: [AuthType::ADMIN, AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY, AuthType::ORGANIZATION],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,

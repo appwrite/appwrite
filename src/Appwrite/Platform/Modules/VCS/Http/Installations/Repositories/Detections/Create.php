@@ -8,6 +8,8 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Appwrite\Vcs\Factory as VcsFactory;
+use Appwrite\Vcs\InstallationTokens;
 use Swoole\Coroutine\WaitGroup;
 use Utopia\Config\Adapters\Dotenv as ConfigDotenv;
 use Utopia\Config\Config;
@@ -48,10 +50,8 @@ use Utopia\Detector\Detector\Runtime;
 use Utopia\Detector\Detector\Strategy;
 use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\System\System;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
-use Utopia\VCS\Adapter\Git\GitHub;
 use Utopia\VCS\Exception\FileNotFound;
 use Utopia\VCS\Exception\RepositoryNotFound;
 
@@ -94,9 +94,11 @@ class Create extends Action
             ->param('providerRepositoryId', '', new Text(256), 'Repository Id')
             ->param('type', '', new WhiteList(['runtime', 'framework']), 'Detector type. Must be one of the following: runtime, framework', enum: new Enum(name: 'VCSDetectionType'))
             ->param('providerRootDirectory', '', new Text(256, 0), 'Path to Root Directory', true)
-            ->inject('gitHub')
+            ->inject('vcsFactory')
+            ->inject('installationTokens')
             ->inject('response')
             ->inject('dbForPlatform')
+            ->inject('project')
             ->callback($this->action(...));
     }
 
@@ -105,9 +107,11 @@ class Create extends Action
         string $providerRepositoryId,
         string $type,
         string $providerRootDirectory,
-        GitHub $github,
+        VcsFactory $vcsFactory,
+        InstallationTokens $installationTokens,
         Response $response,
-        Database $dbForPlatform
+        Database $dbForPlatform,
+        Document $project
     ) {
         $installation = $dbForPlatform->getDocument('installations', $installationId);
 
@@ -115,14 +119,17 @@ class Create extends Action
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
         }
 
-        $providerInstallationId = $installation->getAttribute('providerInstallationId');
-        $privateKey = System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
-        $githubAppId = System::getEnv('_APP_VCS_GITHUB_APP_ID');
-        $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
+        if ($installation->getAttribute('projectInternalId') !== $project->getSequence()) {
+            throw new Exception(Exception::INSTALLATION_NOT_FOUND);
+        }
 
-        $owner = $github->getOwnerName($providerInstallationId);
+        $installation = $installationTokens->refreshForInstallation($installation, $dbForPlatform, $vcsFactory);
+        $providerInstallationId = $installation->getAttribute('providerInstallationId');
+        $vcs = $vcsFactory->fromInstallation($installation);
+
+        $owner = $vcs->getOwnerName($providerInstallationId);
         try {
-            $repositoryName = $github->getRepositoryName($providerRepositoryId);
+            $repositoryName = $vcs->getRepositoryName($providerRepositoryId);
             if (empty($repositoryName)) {
                 throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
             }
@@ -130,9 +137,9 @@ class Create extends Action
             throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
         }
 
-        $files = $github->listRepositoryContents($owner, $repositoryName, $providerRootDirectory);
+        $files = $vcs->listRepositoryContents($owner, $repositoryName, $providerRootDirectory);
         $files = \array_column($files, 'name');
-        $languages = $github->listRepositoryLanguages($owner, $repositoryName);
+        $languages = $vcs->listRepositoryLanguages($owner, $repositoryName);
 
         $detector = new Packager();
         foreach ($files as $file) {
@@ -149,9 +156,10 @@ class Create extends Action
         if ($type === 'framework') {
             $packages = '';
             try {
-                $contentResponse = $github->getRepositoryContent($owner, $repositoryName, \rtrim($providerRootDirectory, '/') . '/package.json');
+                $contentResponse = $vcs->getRepositoryContent($owner, $repositoryName, \rtrim($providerRootDirectory, '/') . '/package.json');
                 $packages = $contentResponse['content'] ?? '';
             } catch (FileNotFound $e) {
+                // Continue detection without package.json
             }
 
             $output = new Document([
@@ -159,7 +167,6 @@ class Create extends Action
                 'installCommand' => '',
                 'buildCommand' => '',
                 'outputDirectory' => '',
-                'adapter' => '',
             ]);
 
             $detector = new Framework($packager);
@@ -190,43 +197,19 @@ class Create extends Action
                 $output->setAttribute('installCommand', $framework->getInstallCommand());
                 $output->setAttribute('buildCommand', $framework->getBuildCommand());
                 $output->setAttribute('outputDirectory', $framework->getOutputDirectory());
-                $frameworkName = $framework->getName();
-
-                $configContent = '';
-                foreach ($framework->getConfigFiles() as $configFile) {
-                    if (!\in_array($configFile, $files, true)) {
-                        continue;
-                    }
-                    try {
-                        $configPath = \rtrim($providerRootDirectory, '/') . '/' . $configFile;
-                        $configResponse = $github->getRepositoryContent($owner, $repositoryName, $configPath);
-                        $configContent = $configResponse['content'] ?? '';
-                        if (!empty($configContent)) {
-                            break;
-                        }
-                    } catch (FileNotFound $e) {
-                    }
-                }
-
-                $detectedAdapter = !empty($configContent) ? $framework->getAdapter($configContent) : '';
+                $framework = $framework->getName();
             } else {
-                $frameworkName = 'other';
-                $detectedAdapter = '';
+                $framework = 'other';
+                $output->setAttribute('installCommand', '');
+                $output->setAttribute('buildCommand', '');
+                $output->setAttribute('outputDirectory', '');
             }
 
             $frameworks = Config::getParam('frameworks');
-            if (!\in_array($frameworkName, \array_keys($frameworks), true)) {
-                $frameworkName = 'other';
+            if (!\in_array($framework, \array_keys($frameworks), true)) {
+                $framework = 'other';
             }
-            $output->setAttribute('framework', $frameworkName);
-
-            $frameworkConfig = $frameworks[$frameworkName] ?? [];
-            if (!empty($frameworkConfig['adapters'])) {
-                $adapter = (!empty($detectedAdapter) && isset($frameworkConfig['adapters'][$detectedAdapter]))
-                    ? $detectedAdapter
-                    : \array_key_first($frameworkConfig['adapters']);
-                $output->setAttribute('adapter', $adapter);
-            }
+            $output->setAttribute('framework', $framework);
         } else {
             $output = new Document([
                 'runtime' => '',
@@ -303,9 +286,9 @@ class Create extends Action
             }
 
             $wg->add();
-            go(function () use ($github, $owner, $repositoryName, $providerRootDirectory, $file, $wg, &$envs) {
+            go(function () use ($vcs, $owner, $repositoryName, $providerRootDirectory, $file, $wg, &$envs) {
                 try {
-                    $contentResponse = $github->getRepositoryContent($owner, $repositoryName, \rtrim($providerRootDirectory, '/') . '/' . $file);
+                    $contentResponse = $vcs->getRepositoryContent($owner, $repositoryName, \rtrim($providerRootDirectory, '/') . '/' . $file);
                     $envFile = $contentResponse['content'] ?? '';
 
                     $configAdapter = new ConfigDotenv();
@@ -337,5 +320,4 @@ class Create extends Action
 
         $response->dynamic($output, $type === 'framework' ? Response::MODEL_DETECTION_FRAMEWORK : Response::MODEL_DETECTION_RUNTIME);
     }
-
 }

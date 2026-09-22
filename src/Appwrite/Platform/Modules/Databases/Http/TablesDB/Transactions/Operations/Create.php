@@ -21,11 +21,6 @@ class Create extends OperationsCreate
         return 'createOperations';
     }
 
-    protected function getResponseModel(): string
-    {
-        return UtopiaResponse::MODEL_TRANSACTION;
-    }
-
     public function __construct()
     {
         $this

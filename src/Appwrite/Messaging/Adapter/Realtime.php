@@ -915,7 +915,7 @@ class Realtime extends MessagingAdapter
                         $channels[] = 'projects.' . $project->getId();
                         $channels[] = 'executions';
                         $channels[] = 'executions.' . $payload->getId();
-                        $channels[] = 'functions.' . $payload->getAttribute('functionId');
+                        $channels[] = 'functions.' . $payload->getAttribute('resourceId');
                         $roles = $payload->getRead();
                     }
                 } elseif ($parts[2] === 'deployments') {

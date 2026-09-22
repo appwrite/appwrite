@@ -36,12 +36,11 @@ class Delete extends PlatformAction
             ->label('event', 'presences.[presenceId].delete')
             ->label('audits.event', 'presence.delete')
             ->label('audits.resource', 'presence/{request.presenceId}')
-            ->label('usage.resource', 'presence/{request.presenceId}')
             ->label('sdk', new Method(
                 namespace: 'presences',
                 group: 'presences',
                 name: 'delete',
-                desc: 'Delete presence',
+                summary: 'Delete presence',
                 description: '/docs/references/presences/delete.md',
                 auth: [AuthType::ADMIN, AuthType::KEY, AuthType::SESSION, AuthType::JWT],
                 responses: [

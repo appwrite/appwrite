@@ -3,7 +3,9 @@
 namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Docker\Compose;
+use Appwrite\Docker\Compose\Generator;
 use Appwrite\Docker\Env;
+use Appwrite\Migration\Infrastructure\Migration as InfrastructureMigration;
 use Appwrite\Platform\Installer\Runtime\State;
 use Appwrite\Platform\Installer\Server as InstallerServer;
 use Appwrite\Utopia\View;
@@ -14,6 +16,7 @@ use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Fetch\Client;
 use Utopia\Platform\Action;
+use Utopia\System\System;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
@@ -26,11 +29,15 @@ class Install extends Action
 
     private const int HEALTH_CHECK_ATTEMPTS = 30;
     private const int HEALTH_CHECK_DELAY_SECONDS = 1;
+    private const int DOCKER_COMPOSE_UP_TIMEOUT_SECONDS = 600;
     private const int PROC_CLOSE_TIMEOUT_SECONDS = 60;
 
     private const string PATTERN_ENV_VAR_NAME = '/^[A-Z0-9_]+$/';
     private const string PATTERN_DB_PASSWORD_VAR = '/^_APP_DB_.*_PASS$/';
     private const string PATTERN_SESSION_COOKIE = '/a_session_console=([^;]+)/';
+
+    public const string CHANNEL_STABLE = 'stable';
+    public const string CHANNEL_NIGHTLY = 'nightly';
 
     private const string APPWRITE_API_URL = 'http://appwrite';
     private const string GROWTH_API_URL = 'https://growth.appwrite.io/v1';
@@ -41,6 +48,8 @@ class Install extends Action
     protected ?bool $isLocalInstall = null;
     protected ?array $installerConfig = null;
     protected string $path = '/usr/src/code/appwrite';
+    protected string $topology = 'combined';
+    protected string $channel = self::CHANNEL_STABLE;
 
     public static function getName(): string
     {
@@ -57,7 +66,9 @@ class Install extends Action
             ->param('image', 'appwrite', new Text(0), 'Main appwrite docker image', true)
             ->param('interactive', 'Y', new Text(1), 'Run an interactive session', true)
             ->param('no-start', false, new Boolean(true), 'Run an interactive session', true)
-            ->param('database', 'mongodb', new WhiteList(['mongodb', 'mariadb']), 'Database to use (mongodb|mariadb)', true)
+            ->param('database', 'postgresql', new WhiteList(['postgresql', 'mariadb', 'mongodb']), 'Database to use (postgresql|mariadb|mongodb)', true)
+            ->param('topology', 'combined', new WhiteList(['combined', 'separate']), 'Worker and scheduler topology (combined|separate)', true)
+            ->param('channel', self::CHANNEL_STABLE, new WhiteList([self::CHANNEL_STABLE, self::CHANNEL_NIGHTLY]), 'Release channel to track (stable|nightly). Nightly is unsupported and moves daily.', true)
             ->callback($this->action(...));
     }
 
@@ -68,8 +79,11 @@ class Install extends Action
         string $image,
         string $interactive,
         bool $noStart,
-        string $database
+        string $database,
+        string $topology,
+        string $channel = self::CHANNEL_STABLE
     ): void {
+        $this->channel = $channel;
         $isUpgrade = $this->isUpgrade;
         $defaultHttpPort = '80';
         $defaultHttpsPort = '443';
@@ -110,6 +124,12 @@ class Install extends Action
             Console::info('Compose file found, creating backup: ' . $composeFileName . '.' . $time . '.backup');
             file_put_contents($this->path . '/' . $composeFileName . '.' . $time . '.backup', $data);
             $compose = new Compose($data);
+            if (!$this->hasExplicitTopologyParam()) {
+                $detected = $this->detectTopologyFromCompose($compose);
+                if ($detected !== null) {
+                    $topology = $detected;
+                }
+            }
             $appwrite = $compose->getService('appwrite');
             $oldVersion = $appwrite->getImageVersion();
             try {
@@ -200,12 +220,14 @@ class Install extends Action
         }
 
         $installerConfig = $this->readInstallerConfig();
-        $enabledDatabases = $installerConfig['enabledDatabases'] ?? ['mongodb', 'mariadb'];
+        $enabledDatabases = $installerConfig['enabledDatabases'] ?? ['postgresql', 'mariadb', 'mongodb'];
         $isExistingDatabase = $isUpgrade && $existingDatabase !== null && $database === $existingDatabase;
         if (!in_array($database, $enabledDatabases, true) && !$isExistingDatabase) {
             Console::error("Database '{$database}' is not available. Available options: " . implode(', ', $enabledDatabases));
             Console::exit(1);
         }
+
+        $this->setTopology($topology);
 
         // If interactive and web mode enabled, start web server
         // Skip the web installer when explicit CLI params are provided
@@ -333,12 +355,12 @@ class Install extends Action
         $state->clearStaleLock();
 
         $installerConfig = $this->readInstallerConfig();
-        $enabledDatabases = $installerConfig['enabledDatabases'] ?? ['mongodb', 'mariadb'];
+        $enabledDatabases = $installerConfig['enabledDatabases'] ?? ['postgresql', 'mariadb', 'mongodb'];
         if ($isUpgrade && $lockedDatabase !== null && !in_array($lockedDatabase, $enabledDatabases, true)) {
             $enabledDatabases[] = $lockedDatabase;
         }
 
-        $this->setInstallerConfig([
+        $config = [
             'defaultHttpPort' => $defaultHttpPort,
             'defaultHttpsPort' => $defaultHttpsPort,
             'organization' => $organization,
@@ -347,10 +369,20 @@ class Install extends Action
             'vars' => $vars,
             'isUpgrade' => $isUpgrade,
             'lockedDatabase' => $lockedDatabase,
+            'topology' => $this->topology,
             'enabledDatabases' => $enabledDatabases,
             'isLocal' => $this->isLocalInstall(),
             'hostPath' => $this->hostPath ?: null,
-        ]);
+        ];
+
+        // Restarting the installer rewrites this config, which would drop the version an
+        // interrupted upgrade started from -- the one record left once the compose file and
+        // .env read as the version being installed.
+        if (isset($installerConfig['upgradeFrom'])) {
+            $config['upgradeFrom'] = $installerConfig['upgradeFrom'];
+        }
+
+        $this->setInstallerConfig($config);
 
         // Start Swoole-based installer server in background
         // Redirect stdout/stderr to a log file so exec() returns immediately
@@ -424,17 +456,11 @@ class Install extends Action
             }
         }
 
-        foreach ($input as $key => $value) {
-            if (!is_string($value)) {
-                continue;
-            }
-            if (str_contains($value, "\n") || str_contains($value, "\r")) {
-                throw new \InvalidArgumentException('Invalid value for ' . $key);
-            }
-        }
+        // Multiline values (e.g. GitHub App PEM private keys) are allowed; env.phtml
+        // encodes them as escaped single-line double-quoted assignments.
 
         // Set database-specific connection details
-        $database = $input['_APP_DB_ADAPTER'] ?? 'mongodb';
+        $database = $input['_APP_DB_ADAPTER'] ?? 'postgresql';
         if ($database === 'mongodb') {
             $input['_APP_DB_HOST'] = 'mongodb';
             $input['_APP_DB_PORT'] = 27017;
@@ -493,6 +519,7 @@ class Install extends Action
             return;
         }
 
+        $this->installerConfig = $config;
         putenv('APPWRITE_INSTALLER_CONFIG=' . $json);
         $path = InstallerServer::INSTALLER_CONFIG_FILE;
         if (@file_put_contents($path, $json) === false) {
@@ -532,13 +559,85 @@ class Install extends Action
         }
 
         $templateForEnv = new View($this->buildFromProjectPath('/app/views/install/env.phtml'));
-        $templateForCompose = new View($this->buildFromProjectPath('/app/views/install/compose.phtml'));
+        $composePath = $this->buildFromProjectPath('/docker-compose.yml');
+        $composeYaml = \file_get_contents($composePath);
+        if ($composeYaml === false) {
+            throw new \RuntimeException('Failed to read docker-compose.yml from ' . $composePath);
+        }
+        $composeGenerator = new Generator($composeYaml);
 
-        $database = $input['_APP_DB_ADAPTER'] ?? 'mongodb';
+        $database = $input['_APP_DB_ADAPTER'] ?? 'postgresql';
 
-        $version = \getenv('_APP_VERSION') ?: (\defined('APP_VERSION_STABLE') ? APP_VERSION_STABLE : 'latest');
+        $stableVersion = \defined('APP_VERSION_STABLE') ? APP_VERSION_STABLE : 'latest';
+        $version = \getenv('_APP_VERSION') ?: $stableVersion;
+
+        // A nightly image reports the tag it was pulled under -- 2.0-nightly.<date> --
+        // which names a channel rather than a release, and so cannot be carried forward:
+        // there is no X.Y to re-derive a nightly tag from, and writing it back would keep
+        // an install asking for the stable channel on nightly. The release the image was
+        // built from is compiled in, and both channels take their tag from it.
+        if ($this->isNightlyTag($version)) {
+            $version = $stableVersion;
+        }
+
+        // The nightly channel tracks the minor line rather than one release, so the
+        // tag has to stay rolling -- pinning X.Y.Z would freeze the install on a
+        // single build. See the Releases section of AGENTS.md.
+        if ($this->channel === self::CHANNEL_NIGHTLY) {
+            $version = $this->nightlyTag($version);
+        }
+
         if ($isLocalInstall) {
             $version = 'local';
+        }
+
+        // Read before the compose file and .env are rewritten below, which would replace
+        // the version being upgraded from with the one being upgraded to. The compose file
+        // is authoritative -- it is what the running containers were started from -- and
+        // .env covers installations whose compose file is missing or unreadable.
+        $installedVersion = '';
+        if ($isUpgrade) {
+            $existingCompose = $this->readExistingCompose();
+
+            if ($existingCompose !== '') {
+                try {
+                    $tag = (new Compose($existingCompose))->getService('appwrite')->getImageVersion();
+
+                    // Compose files before 2.0 interpolate the tag, so the service reads
+                    // back "${_APP_IMAGE:-appwrite/appwrite}:${_APP_VERSION:-latest}" and
+                    // the part after the first colon is an expression, not a version.
+                    // Anything that does not start with a digit is left to .env below,
+                    // which holds the value that expression resolves to.
+                    if (\preg_match('/^\d/', $tag) === 1) {
+                        $installedVersion = $tag;
+                    }
+                } catch (\Throwable) {
+                    // No appwrite service to read a tag from; .env below covers it.
+                }
+            }
+
+            if ($installedVersion === '') {
+                $existingEnv = @\file_get_contents($this->path . '/' . $this->getEnvFileName());
+                $installedVersion = $existingEnv === false
+                    ? ''
+                    : (string) ((new Env($existingEnv))->list()['_APP_VERSION'] ?? '');
+            }
+
+            // An attempt that was interrupted after rewriting those files leaves both
+            // reading as the version being installed, which would look like an upgrade with
+            // nothing to cross. Remember the version first, so a resumed attempt still knows
+            // where it started; the infrastructure changes below forget it once applied.
+            $installerConfig = $this->readInstallerConfig();
+
+            if ($installedVersion === '' || $installedVersion === $version) {
+                $installedVersion = (string) ($installerConfig['upgradeFrom'] ?? '');
+            } elseif (($installerConfig['upgradeFrom'] ?? null) !== $installedVersion) {
+                $this->setInstallerConfig(\array_merge($installerConfig, ['upgradeFrom' => $installedVersion]));
+            }
+        }
+
+        if (!$isLocalInstall && $this->hostPath === '') {
+            $this->hostPath = $this->detectInstallerHostPath($this->path) ?? '';
         }
 
         $assistantKey = (string) ($input['_APP_ASSISTANT_OPENAI_API_KEY'] ?? '');
@@ -557,16 +656,19 @@ class Install extends Action
         }
         $executorImages = \implode(',', \array_unique($runtimeImages));
 
-        $templateForCompose
-            ->setParam('httpPort', $httpPort)
-            ->setParam('httpsPort', $httpsPort)
-            ->setParam('version', $version)
-            ->setParam('organization', $organization)
-            ->setParam('image', $image)
-            ->setParam('database', $database)
-            ->setParam('hostPath', $this->hostPath)
-            ->setParam('enableAssistant', $enableAssistant)
-            ->setParam('executorImages', $executorImages);
+        $input['_APP_HTTP_PORT'] = $httpPort;
+        $input['_APP_HTTPS_PORT'] = $httpsPort;
+        $input['_APP_IMAGE'] = "{$organization}/{$image}";
+        $input['_APP_VERSION'] = $version;
+        $input['_APP_EXECUTOR_IMAGES'] = $executorImages;
+
+        $composeContent = $composeGenerator->render([
+            'version' => $version,
+            'database' => $database,
+            'hostPath' => $this->hostPath,
+            'enableAssistant' => $enableAssistant,
+            'topology' => $this->topology,
+        ]);
 
         $templateForEnv->setParam('vars', $input);
 
@@ -604,7 +706,7 @@ class Install extends Action
                 $this->updateProgress($progress, InstallerServer::STEP_DOCKER_COMPOSE, InstallerServer::STATUS_IN_PROGRESS, $messages);
 
                 if (!$useExistingConfig) {
-                    $this->writeComposeFile($templateForCompose);
+                    $this->writeComposeFile($composeContent);
                 }
 
                 $this->updateProgress($progress, InstallerServer::STEP_DOCKER_COMPOSE, InstallerServer::STATUS_COMPLETED, $messages);
@@ -623,7 +725,40 @@ class Install extends Action
             }
 
             if ($database === 'mongodb' && !$useExistingConfig && $startIndex <= 1) {
-                $this->copyMongoEntrypointIfNeeded();
+                $this->copyMongoFilesIfNeeded();
+            }
+
+            // Changes to what the containers run on, rather than to what is inside the
+            // database. The new compose file and .env are written by now, and a volume or a
+            // mount can only be moved while nothing is attached to it -- so this has to
+            // happen before anything starts, including a start the operator does by hand
+            // after --no-start. Not bounded by the step being resumed from: a version is
+            // only still here because the changes for it have not all landed yet, whichever
+            // step the attempt that left it got to.
+            if ($isUpgrade && $installedVersion !== '') {
+                $applied = true;
+
+                foreach (InfrastructureMigration::between($installedVersion, $version) as $migration) {
+                    Console::info('Applying infrastructure changes from ' . $migration->getName() . '...');
+
+                    try {
+                        $applied = $migration->setContext($input, $this->path)->execute() && $applied;
+                    } catch (\Throwable $error) {
+                        // The containers still start: what could not be changed is reported
+                        // rather than taking the upgrade down with it.
+                        $applied = false;
+                        Console::warning('Infrastructure changes from ' . $migration->getName() . ' failed: ' . $error->getMessage());
+                    }
+                }
+
+                // Forgotten only once everything landed, so anything that failed is tried
+                // again next time; from here a later upgrade reads its starting version off
+                // the compose file rather than replaying this one.
+                if ($applied) {
+                    $installerConfig = $this->readInstallerConfig();
+                    unset($installerConfig['upgradeFrom']);
+                    $this->setInstallerConfig($installerConfig);
+                }
             }
 
             if (!$noStart) {
@@ -631,6 +766,7 @@ class Install extends Action
                 if ($shouldStartContainers) {
                     $currentStep = InstallerServer::STEP_DOCKER_CONTAINERS;
                     $this->updateProgress($progress, InstallerServer::STEP_DOCKER_CONTAINERS, InstallerServer::STATUS_IN_PROGRESS, $messages);
+
                     $this->runDockerCompose($input, $isLocalInstall, $useExistingConfig, $isCLI, $progress, $isUpgrade);
 
                     if (!$isUpgrade) {
@@ -639,7 +775,7 @@ class Install extends Action
                     }
                 }
 
-                if (!$isLocalInstall || file_exists('/.dockerenv') || file_exists('/run/.containerenv')) {
+                if (!$isLocalInstall && (file_exists('/.dockerenv') || file_exists('/run/.containerenv'))) {
                     $this->connectInstallerToAppwriteNetwork();
                 }
 
@@ -710,6 +846,35 @@ class Install extends Action
             }
             throw $e;
         }
+    }
+
+    /**
+     * The tags nightly.yml publishes: `nightly`, `X.Y-nightly` and
+     * `X.Y-nightly.<date>`. A self-hoster's own tag that happens to mention the
+     * word is theirs, not this channel's, and is carried forward untouched.
+     */
+    private function isNightlyTag(string $version): bool
+    {
+        return $version === 'nightly'
+            || \str_ends_with($version, '-nightly')
+            || \str_contains($version, '-nightly.');
+    }
+
+    /**
+     * The rolling nightly tag for the minor line a stable version belongs to,
+     * e.g. 2.0.1 -> 2.0-nightly.
+     */
+    private function nightlyTag(string $version): string
+    {
+        [$major, $minor] = \array_pad(\explode('.', $version), 2, '');
+
+        if (!\ctype_digit($major) || !\ctype_digit($minor)) {
+            Console::warning("Cannot derive a nightly tag from '{$version}'; using the bare nightly tag.");
+
+            return 'nightly';
+        }
+
+        return "{$major}.{$minor}-nightly";
     }
 
     private function createInitialAdminAccount(array $account, ?callable $progress, string $apiUrl, string $domain): void
@@ -844,6 +1009,12 @@ class Install extends Action
             return;
         }
 
+        // Opt out via DO_NOT_TRACK (https://donottrack.sh/)
+        $doNotTrack = \strtolower((string) System::getEnv('DO_NOT_TRACK', ''));
+        if (\in_array($doNotTrack, ['1', 'true', 'yes'], true)) {
+            return;
+        }
+
         $appEnv = $input['_APP_ENV'] ?? 'development';
         $domain = $input['_APP_DOMAIN'] ?? 'localhost';
 
@@ -861,7 +1032,7 @@ class Install extends Action
         }
 
         $type = $isUpgrade ? 'upgrade' : 'install';
-        $database = $input['_APP_DB_ADAPTER'] ?? 'mongodb';
+        $database = $input['_APP_DB_ADAPTER'] ?? 'postgresql';
         $name = $account['name'] ?? 'Admin';
         $email = $account['email'] ?? 'admin@selfhosted.local';
 
@@ -919,10 +1090,9 @@ class Install extends Action
         $healthPath = '/v1/health/version';
 
         if ($isLocalInstall) {
-            $candidates = [
-                self::APPWRITE_API_URL . $healthPath,
-                'http://localhost:' . $httpPort . $healthPath,
-            ];
+            $candidates = (file_exists('/.dockerenv') || file_exists('/run/.containerenv'))
+                ? ['http://host.docker.internal:' . $httpPort . $healthPath]
+                : ['http://localhost:' . $httpPort . $healthPath];
         } else {
             $candidates = [
                 self::APPWRITE_API_URL . $healthPath,
@@ -1079,11 +1249,10 @@ class Install extends Action
         ];
     }
 
-    private function writeComposeFile(View $template): void
+    private function writeComposeFile(string $renderedContent): void
     {
         $composeFileName = $this->getComposeFileName();
         $targetPath = $this->path . '/' . $composeFileName;
-        $renderedContent = $template->render(false);
 
         $result = @file_put_contents($targetPath, $renderedContent);
         if ($result === false) {
@@ -1101,13 +1270,23 @@ class Install extends Action
         }
     }
 
-    private function copyMongoEntrypointIfNeeded(): void
+    private function copyMongoFilesIfNeeded(): void
     {
-        $mongoEntrypoint = $this->buildFromProjectPath('/mongo-entrypoint.sh');
+        $files = [
+            'mongo-entrypoint.sh',
+            'mongo-init.js',
+        ];
 
-        if (file_exists($mongoEntrypoint)) {
-            // Always use container path for file operations
-            copy($mongoEntrypoint, $this->path . '/mongo-entrypoint.sh');
+        foreach ($files as $file) {
+            $source = $this->buildFromProjectPath('/' . $file);
+            if (file_exists($source)) {
+                $target = $this->path . '/' . $file;
+                if (@copy($source, $target) === false) {
+                    $lastError = error_get_last();
+                    $errorMsg = $lastError ? $lastError['message'] : 'Unknown error';
+                    throw new \RuntimeException('Failed to copy ' . $file . ' to ' . $target . ': ' . $errorMsg);
+                }
+            }
         }
     }
 
@@ -1153,6 +1332,16 @@ class Install extends Action
 
         $command[] = '--project-directory';
         $command[] = $composePath;
+
+        $validateCommand = $command;
+        $validateCommand[] = 'config';
+        $validateCommand[] = '--quiet';
+        \exec($env . implode(' ', array_map(escapeshellarg(...), $validateCommand)) . ' 2>&1', $validateOutput, $validateExit);
+        if ($validateExit !== 0) {
+            $message = trim(implode("\n", $validateOutput));
+            throw new \RuntimeException('Invalid Docker Compose file', 0, $message !== '' ? new \RuntimeException($message) : null);
+        }
+
         $command[] = 'up';
         $command[] = '-d';
         $command[] = '--remove-orphans';
@@ -1218,11 +1407,17 @@ class Install extends Action
         }
 
         stream_set_blocking($pipes[1], false);
-        $deadline = time() + self::PROC_CLOSE_TIMEOUT_SECONDS;
+        $deadline = time() + self::DOCKER_COMPOSE_UP_TIMEOUT_SECONDS;
         $buffer = '';
+        $timedOut = false;
 
-        while (time() < $deadline) {
+        while (true) {
             $status = proc_get_status($process);
+            if (time() >= $deadline && $status['running']) {
+                $timedOut = true;
+                $output[] = 'Docker Compose did not finish starting containers within ' . self::DOCKER_COMPOSE_UP_TIMEOUT_SECONDS . ' seconds.';
+                break;
+            }
 
             $read = [$pipes[1]];
             $write = null;
@@ -1271,7 +1466,17 @@ class Install extends Action
 
         fclose($pipes[1]);
 
-        $exit = $this->procCloseWithTimeout($process, self::PROC_CLOSE_TIMEOUT_SECONDS);
+        if ($timedOut) {
+            proc_terminate($process, SIGTERM);
+            usleep(500_000);
+
+            if (proc_get_status($process)['running']) {
+                proc_terminate($process, SIGKILL);
+            }
+        }
+
+        $closeExit = $this->procCloseWithTimeout($process, self::PROC_CLOSE_TIMEOUT_SECONDS);
+        $exit = $timedOut ? 124 : $closeExit;
 
         return ['output' => $output, 'exit' => $exit];
     }
@@ -1362,12 +1567,80 @@ class Install extends Action
         return $cwd !== false ? $cwd : '.';
     }
 
+    protected function detectInstallerHostPath(string $containerPath): ?string
+    {
+        if (!file_exists('/.dockerenv') && !file_exists('/run/.containerenv')) {
+            return null;
+        }
+
+        $containerId = trim((string) @file_get_contents('/etc/hostname'));
+        if ($containerId === '') {
+            return null;
+        }
+
+        $command = \implode(' ', \array_map(\escapeshellarg(...), [
+            'docker',
+            'inspect',
+            '--format',
+            '{{ json .Mounts }}',
+            $containerId,
+        ]));
+        $output = [];
+        @\exec($command . ' 2>/dev/null', $output, $exitCode);
+        if ($exitCode !== 0 || empty($output)) {
+            return null;
+        }
+
+        $mounts = \json_decode(\implode("\n", $output), true);
+        if (!\is_array($mounts)) {
+            return null;
+        }
+
+        $containerPath = \rtrim($containerPath, '/');
+        foreach ($mounts as $mount) {
+            if (!\is_array($mount)) {
+                continue;
+            }
+            $source = $mount['Source'] ?? null;
+            $destination = $mount['Destination'] ?? null;
+            if (!\is_string($source) || !\is_string($destination) || $source === '' || $destination === '') {
+                continue;
+            }
+
+            $destination = \rtrim($destination, '/');
+            $hostPath = match (true) {
+                $destination === $containerPath => \rtrim($source, '/'),
+                \str_starts_with($containerPath . '/', $destination . '/') => \rtrim($source, '/') . \substr($containerPath, \strlen($destination)),
+                default => null,
+            };
+
+            if ($hostPath !== null) {
+                return $hostPath;
+            }
+        }
+
+        return null;
+    }
+
     protected function buildFromProjectPath(string $suffix): string
     {
         if ($suffix !== '' && $suffix[0] !== '/') {
             $suffix = '/' . $suffix;
         }
-        return dirname(__DIR__, 4) . $suffix;
+
+        $roots = [
+            dirname(__DIR__, 4),
+            '/usr/local/share/appwrite',
+        ];
+
+        foreach ($roots as $root) {
+            $path = $root . $suffix;
+            if (file_exists($path)) {
+                return $path;
+            }
+        }
+
+        return $roots[0] . $suffix;
     }
 
     protected function applyLocalPaths(bool $isLocalInstall, bool $force = false): void
@@ -1418,6 +1691,37 @@ class Install extends Action
             if ($host !== null && in_array($host, $dbServices, true)) {
                 return $host;
             }
+        }
+
+        return null;
+    }
+
+    public function setTopology(string $topology): void
+    {
+        $this->topology = \in_array($topology, ['combined', 'separate'], true)
+            ? $topology
+            : 'combined';
+    }
+
+    private function hasExplicitTopologyParam(): bool
+    {
+        foreach ($_SERVER['argv'] ?? [] as $arg) {
+            if (\str_starts_with((string) $arg, '--topology')) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function detectTopologyFromCompose(Compose $compose): ?string
+    {
+        $names = array_keys($compose->getServices());
+        if (\in_array('appwrite-worker', $names, true)) {
+            return 'combined';
+        }
+        if (\in_array('appwrite-worker-functions', $names, true)) {
+            return 'separate';
         }
 
         return null;

@@ -4,51 +4,48 @@ namespace Appwrite\Platform\Workers;
 
 use Appwrite\Event\Message\Usage;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
+use Appwrite\Messaging\Adapter\Mqtt;
+use Appwrite\Messaging\Adapter\Push\Appwrite as AppwritePush;
+use Appwrite\Messaging\Provider;
 use Appwrite\Messaging\Status as MessageStatus;
+use Appwrite\OpenSSL\OpenSSL;
+use Appwrite\PubSub\Adapter\Pool as PubSubPool;
 use Appwrite\Usage\Context as UsageContext;
-use libphonenumber\NumberParseException;
-use libphonenumber\PhoneNumberUtil;
-use Swoole\Runtime;
+use Utopia\Compression\Algorithms\GZIP;
+use Utopia\Compression\Algorithms\Zstd;
+use Utopia\Compression\Compression;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
-use Utopia\DSN\DSN;
 use Utopia\Lock\Semaphore;
-use Utopia\Logger\Log;
 use Utopia\Messaging\Adapter\Email as EmailAdapter;
 use Utopia\Messaging\Adapter\Email\Mailgun;
-use Utopia\Messaging\Adapter\Email\Resend;
 use Utopia\Messaging\Adapter\Email\Sendgrid;
-use Utopia\Messaging\Adapter\Email\SES;
 use Utopia\Messaging\Adapter\Email\SMTP;
 use Utopia\Messaging\Adapter\Push\APNS;
 use Utopia\Messaging\Adapter\Push as PushAdapter;
 use Utopia\Messaging\Adapter\Push\FCM;
 use Utopia\Messaging\Adapter\SMS as SMSAdapter;
-use Utopia\Messaging\Adapter\SMS\Fast2SMS;
-use Utopia\Messaging\Adapter\SMS\GEOSMS;
-use Utopia\Messaging\Adapter\SMS\Inforu;
+use Utopia\Messaging\Adapter\SMS\GEOSMS\CallingCode;
 use Utopia\Messaging\Adapter\SMS\Mock;
-use Utopia\Messaging\Adapter\SMS\Msg91;
 use Utopia\Messaging\Adapter\SMS\Msg91\MetadataParameter;
-use Utopia\Messaging\Adapter\SMS\Telesign;
-use Utopia\Messaging\Adapter\SMS\TextMagic;
-use Utopia\Messaging\Adapter\SMS\Twilio;
-use Utopia\Messaging\Adapter\SMS\Vonage;
 use Utopia\Messaging\Messages\Email;
 use Utopia\Messaging\Messages\Email\Attachment;
 use Utopia\Messaging\Messages\Push;
 use Utopia\Messaging\Messages\SMS;
 use Utopia\Messaging\Priority;
+use Utopia\Mqtt\Packet;
 use Utopia\Platform\Action;
+use Utopia\Pools\Group;
+use Utopia\Psr7\Stream;
 use Utopia\Queue\Message;
 use Utopia\Span\Span;
 use Utopia\Storage\Device;
 use Utopia\Storage\Device\Local;
-use Utopia\Storage\Storage;
+use Utopia\Storage\DeviceType;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
 
@@ -56,9 +53,11 @@ use function Swoole\Coroutine\batch;
 
 class Messaging extends Action
 {
-    private ?SMSAdapter $adapter = null;
-
     private Telemetry $telemetry;
+
+    private Provider $provider;
+
+    private Group $pools;
 
     public static function getName(): string
     {
@@ -74,37 +73,40 @@ class Messaging extends Action
             ->desc('Messaging worker')
             ->inject('message')
             ->inject('project')
-            ->inject('log')
             ->inject('dbForProject')
             ->inject('deviceForFiles')
             ->inject('publisherForUsage')
             ->inject('telemetry')
+            ->inject('pools')
+            ->inject('adapterForSMS')
             ->callback($this->action(...));
     }
 
     /**
      * @param Message $message
      * @param Document $project
-     * @param Log $log
      * @param Database $dbForProject
      * @param Device $deviceForFiles
      * @param UsagePublisher $publisherForUsage
      * @param Telemetry $telemetry
+     * @param SMSAdapter|null $adapterForSMS
+     * @param Group $pools
      * @return void
      * @throws \Exception
      */
     public function action(
         Message $message,
         Document $project,
-        Log $log,
         Database $dbForProject,
         Device $deviceForFiles,
         UsagePublisher $publisherForUsage,
-        Telemetry $telemetry
+        Telemetry $telemetry,
+        Group $pools,
+        ?SMSAdapter $adapterForSMS
     ): void {
-        Runtime::setHookFlags(SWOOLE_HOOK_ALL ^ SWOOLE_HOOK_TCP);
-
         $this->telemetry = $telemetry;
+        $this->pools = $pools;
+        $this->provider = new Provider($telemetry);
         $payload = $message->getPayload();
 
         if (empty($payload)) {
@@ -120,15 +122,62 @@ class Messaging extends Action
                 $message = new Document($payload['message'] ?? []);
                 $recipients = $payload['recipients'] ?? [];
 
-                $this->sendInternalSMSMessage($message, $project, $recipients, $log);
+                $this->sendInternalSMSMessage($message, $project, $recipients, $adapterForSMS);
                 break;
             case MESSAGE_SEND_TYPE_EXTERNAL:
-                $message = $dbForProject->getDocument('messages', $payload['messageId']);
+                $messageId = $payload['messageId'];
+                $message = $dbForProject->getDocument('messages', $messageId);
 
-                $this->sendExternalMessage($dbForProject, $message, $deviceForFiles, $project, $publisherForUsage);
+                // Unique per job so a redelivery cannot reclaim a directory a live job is still
+                // reading; the underscore prefix is unreachable, as a bucket ID may not start with one.
+                $attachmentsPath = $this->getLocalDevice($project)->getPath('_attachments/' . ID::unique());
+
+                try {
+                    if ($message->isEmpty()) {
+                        throw new \Exception('Message not found: ' . $messageId);
+                    }
+
+                    $this->sendExternalMessage($dbForProject, $message, $deviceForFiles, $project, $publisherForUsage, $attachmentsPath);
+                } catch (\Throwable $e) {
+                    $this->markFailed($dbForProject, $messageId, $e);
+
+                    throw $e;
+                } finally {
+                    // Decrypted plaintext must not linger. A failed delete and an absent directory both come
+                    // back false, so only a directory that is still there after the attempt is worth
+                    // reporting; throwing here would bury whatever the send itself threw.
+                    $deviceForLocal = $this->getLocalDevice($project);
+                    $deviceForLocal->delete($attachmentsPath, true);
+
+                    if ($deviceForLocal->exists($attachmentsPath)) {
+                        Span::add('message.attachments_cleanup_failed', $attachmentsPath);
+                    }
+                }
                 break;
             default:
                 throw new \Exception('Unknown message type: ' . $type);
+        }
+    }
+
+    /**
+     * Record a failure for a job that died before writing a terminal status. A failed job is dead-lettered
+     * rather than redelivered, so a message left processing stays that way for good.
+     */
+    private function markFailed(Database $dbForProject, string $messageId, \Throwable $error): void
+    {
+        try {
+            $message = $dbForProject->getDocument('messages', $messageId);
+
+            if ($message->isEmpty() || \in_array($message->getAttribute('status'), [MessageStatus::SENT, MessageStatus::FAILED], true)) {
+                return;
+            }
+
+            $dbForProject->updateDocument('messages', $messageId, new Document([
+                'status' => MessageStatus::FAILED,
+                'deliveryErrors' => [$error->getMessage()],
+            ]));
+        } catch (\Throwable) {
+            // Never mask the original failure, which the caller rethrows.
         }
     }
 
@@ -137,7 +186,8 @@ class Messaging extends Action
         Document $message,
         Device $deviceForFiles,
         Document $project,
-        UsagePublisher $publisherForUsage
+        UsagePublisher $publisherForUsage,
+        string $attachmentsPath
     ): void {
         $status = $message->getAttribute('status');
 
@@ -170,6 +220,11 @@ class Messaging extends Action
             return;
         }
 
+        // Hoisted out of buildMessage(), which every batch and every retry attempt calls.
+        $attachments = $providerType === MESSAGE_TYPE_EMAIL
+            ? $this->prepareAttachments($dbForProject, $message, $deviceForFiles, $project, $attachmentsPath)
+            : [];
+
         /**
          * Resolved providers cached for the lifetime of this job, keyed by provider id.
          * Seeded with the default provider so most sends never touch the providers collection.
@@ -198,9 +253,9 @@ class Messaging extends Action
                 $resolvedProviderType = $provider->getAttribute('type');
 
                 $adapter = match ($resolvedProviderType) {
-                    MESSAGE_TYPE_SMS => $this->getSmsAdapter($provider),
-                    MESSAGE_TYPE_PUSH => $this->getPushAdapter($provider),
-                    MESSAGE_TYPE_EMAIL => $this->getEmailAdapter($provider),
+                    MESSAGE_TYPE_SMS => $this->provider->sms($provider),
+                    MESSAGE_TYPE_PUSH => $this->getPushAdapter($provider, $dbForProject, $project, $message),
+                    MESSAGE_TYPE_EMAIL => $this->provider->email($provider),
                     default => throw new \Exception('Provider with the requested ID is of the incorrect type')
                 };
 
@@ -218,9 +273,9 @@ class Messaging extends Action
                             $resolvedProviderType,
                             $adapter,
                             $dbForProject,
-                            $deviceForFiles,
                             $project,
-                            $publisherForUsage
+                            $publisherForUsage,
+                            $attachments
                         )
                     );
                 }
@@ -295,37 +350,6 @@ class Messaging extends Action
             'deliveredTotal' => $message->getAttribute('deliveredTotal'),
             'deliveredAt' => $message->getAttribute('deliveredAt'),
         ]));
-
-        // Delete any attachments that were downloaded to local storage
-        if ($providerType === MESSAGE_TYPE_EMAIL) {
-            if ($deviceForFiles->getType() === Storage::DEVICE_LOCAL) {
-                return;
-            }
-
-            $data = $message->getAttribute('data');
-            $attachments = $data['attachments'] ?? [];
-
-            foreach ($attachments as $attachment) {
-                $bucketId = $attachment['bucketId'];
-                $fileId = $attachment['fileId'];
-
-                $bucket = $dbForProject->getDocument('buckets', $bucketId);
-                if ($bucket->isEmpty()) {
-                    throw new \Exception('Storage bucket with the requested ID could not be found');
-                }
-
-                $file = $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId);
-                if ($file->isEmpty()) {
-                    throw new \Exception('Storage file with the requested ID could not be found');
-                }
-
-                $path = $file->getAttribute('path', '');
-
-                if ($this->getLocalDevice($project)->exists($path)) {
-                    $this->getLocalDevice($project)->delete($path);
-                }
-            }
-        }
     }
 
     /**
@@ -333,7 +357,9 @@ class Messaging extends Action
      *
      * Peak memory is O(MESSAGE_RECIPIENTS_PAGE_SIZE), never O(topic size): topics are walked through the
      * subscribers collection with cursor pagination rather than reading the topic's `targets` attribute, which
-     * triggers the subQueryTopicTargets filter and loads up to APP_LIMIT_SUBSCRIBERS_SUBQUERY rows at once.
+     * is capped at APP_LIMIT_SUBSCRIBERS_SUBQUERY and would silently drop the rest of the recipients.
+     * Decode filters run regardless of Query::select, so the topic lookup below skips that filter explicitly
+     * rather than relying on selecting only $sequence.
      *
      * @param array<string> $topicIds
      * @param array<string> $userIds
@@ -352,11 +378,14 @@ class Messaging extends Action
         Document $default
     ): \Generator {
         if (\count($topicIds) > 0) {
-            $topics = $dbForProject->find('topics', [
-                Query::select(['$sequence']),
-                Query::equal('$id', $topicIds),
-                Query::limit(\count($topicIds)),
-            ]);
+            $topics = $dbForProject->skipFilters(
+                fn () => $dbForProject->find('topics', [
+                    Query::select(['$sequence']),
+                    Query::equal('$id', $topicIds),
+                    Query::limit(\count($topicIds)),
+                ]),
+                APP_TOPICS_SUBQUERIES
+            );
 
             foreach ($topics as $topic) {
                 $cursor = null;
@@ -546,6 +575,7 @@ class Messaging extends Action
      * reports the original batch size so the caller's `failed = recipients - delivered` holds.
      *
      * @param array<string> $batch
+     * @param array<Attachment> $attachments
      * @return array{delivered: int, recipients: int, errors: array<string>}
      */
     private function sendBatch(
@@ -555,16 +585,16 @@ class Messaging extends Action
         string $providerType,
         EmailAdapter|SMSAdapter|PushAdapter $adapter,
         Database $dbForProject,
-        Device $deviceForFiles,
         Document $project,
-        UsagePublisher $publisherForUsage
+        UsagePublisher $publisherForUsage,
+        array $attachments
     ): array {
         $recipients = \count($batch);
 
         [
             'delivered' => $delivered,
             'errors' => $errors,
-        ] = $this->retrySend($batch, $message, $provider, $providerType, $adapter, $dbForProject, $deviceForFiles, $project);
+        ] = $this->retrySend($batch, $message, $provider, $providerType, $adapter, $dbForProject, $attachments);
 
         $failed = $recipients - $delivered;
 
@@ -609,6 +639,7 @@ class Messaging extends Action
      * adapter-agnostic and rely on exponential backoff alone.
      *
      * @param array<string> $batch
+     * @param array<Attachment> $attachments
      * @return array{delivered: int, errors: array<string>}
      */
     private function retrySend(
@@ -618,8 +649,7 @@ class Messaging extends Action
         string $providerType,
         EmailAdapter|SMSAdapter|PushAdapter $adapter,
         Database $dbForProject,
-        Device $deviceForFiles,
-        Document $project
+        array $attachments
     ): array {
         $delivered = 0;
         $errors = [];
@@ -632,7 +662,7 @@ class Messaging extends Action
 
             // Rebuild the provider message scoped to only the still-pending recipients so a partially-delivered
             // batch never re-sends to recipients that already succeeded on an earlier attempt.
-            $data = $this->buildMessage($pending, $message, $provider, $providerType, $dbForProject, $deviceForFiles, $project);
+            $data = $this->buildMessage($pending, $message, $provider, $providerType, $dbForProject, $attachments);
 
             $retry = [];
 
@@ -780,6 +810,7 @@ class Messaging extends Action
      * Build the provider-specific message for a set of recipients.
      *
      * @param array<string> $to
+     * @param array<Attachment> $attachments
      */
     private function buildMessage(
         array $to,
@@ -787,8 +818,7 @@ class Messaging extends Action
         Document $provider,
         string $providerType,
         Database $dbForProject,
-        Device $deviceForFiles,
-        Document $project
+        array $attachments
     ): Email|SMS|Push {
         $messageData = clone $message;
         $messageData->setAttribute('to', $to);
@@ -796,7 +826,7 @@ class Messaging extends Action
         $data = match ($providerType) {
             MESSAGE_TYPE_SMS => $this->buildSmsMessage($messageData, $provider),
             MESSAGE_TYPE_PUSH => $this->buildPushMessage($messageData),
-            MESSAGE_TYPE_EMAIL => $this->buildEmailMessage($dbForProject, $messageData, $provider, $deviceForFiles, $project),
+            MESSAGE_TYPE_EMAIL => $this->buildEmailMessage($dbForProject, $messageData, $provider, $attachments),
             default => throw new \Exception('Provider with the requested ID is of the incorrect type')
         };
 
@@ -805,13 +835,9 @@ class Messaging extends Action
         return $data;
     }
 
-    private function sendInternalSMSMessage(Document $message, Document $project, array $recipients, Log $log): void
+    private function sendInternalSMSMessage(Document $message, Document $project, array $recipients, ?SMSAdapter $adapterForSMS): void
     {
-        if ($this->adapter === null) {
-            $this->adapter = $this->createInternalSMSAdapter();
-        }
-
-        if ($this->adapter === null) {
+        if ($adapterForSMS === null) {
             throw new \Exception('SMS adapter is not set.');
         }
 
@@ -829,12 +855,7 @@ class Messaging extends Action
         $from = System::getEnv('_APP_SMS_FROM', '');
         Span::add('message.from', $from);
 
-        try {
-            $phoneNumber = PhoneNumberUtil::getInstance()->parse($recipients[0] ?? '');
-            Span::add('message.country_code', $phoneNumber->getCountryCode());
-        } catch (NumberParseException $e) {
-            Span::add('message.country_code', 'unknown');
-        }
+        Span::add('message.country_code', CallingCode::fromPhoneNumber($recipients[0] ?? '') ?? 'unknown');
 
         $sms = new SMS(
             $recipients,
@@ -847,60 +868,11 @@ class Messaging extends Action
         // webhooks can be attributed back to the originating project.
         $sms->setMetadata([MetadataParameter::UUID->value => $project->getId()]);
 
-        $this->adapter->send($sms);
+        $adapterForSMS->send($sms);
     }
 
 
-    protected function getSmsAdapter(Document $provider): ?SMSAdapter
-    {
-        $credentials = $provider->getAttribute('credentials');
-
-        $adapter = match ($provider->getAttribute('provider')) {
-            'mock' => (new Mock('username', 'password'))->setEndpoint('http://request-catcher-sms:5000/'),
-            'twilio' => new Twilio(
-                $credentials['accountSid'] ?? '',
-                $credentials['authToken'] ?? '',
-                null,
-                $credentials['messagingServiceSid'] ?? null
-            ),
-            'textmagic' => new TextMagic(
-                $credentials['username'] ?? '',
-                $credentials['apiKey'] ?? ''
-            ),
-            'telesign' => new Telesign(
-                $credentials['customerId'] ?? '',
-                $credentials['apiKey'] ?? ''
-            ),
-            'msg91' => new Msg91(
-                $credentials['senderId'] ?? '',
-                $credentials['authKey'] ?? '',
-                $credentials['templateId'] ?? ''
-            ),
-            'vonage' => new Vonage(
-                $credentials['apiKey'] ?? '',
-                $credentials['apiSecret'] ??  ''
-            ),
-            'fast2sms' => new Fast2SMS(
-                $credentials['apiKey'] ?? '',
-                $credentials['senderId'] ?? '',
-                $credentials['messageId'] ?? '',
-                $credentials['useDLT'] ?? true
-            ),
-            'inforu' => new Inforu(
-                $credentials['senderId'] ?? '',
-                $credentials['apiKey'] ?? '',
-            ),
-            default => null
-        };
-
-        if ($adapter !== null) {
-            $adapter->setTelemetry($this->telemetry);
-        }
-
-        return $adapter;
-    }
-
-    protected function getPushAdapter(Document $provider): ?PushAdapter
+    protected function getPushAdapter(Document $provider, Database $dbForProject, Document $project, Document $message): ?PushAdapter
     {
         $credentials = $provider->getAttribute('credentials');
         $options = $provider->getAttribute('options');
@@ -915,45 +887,13 @@ class Messaging extends Action
                 $options['sandbox'] ?? false
             ),
             'fcm' => new FCM(\json_encode($credentials['serviceAccountJSON'])),
-            default => null
-        };
-
-        if ($adapter !== null) {
-            $adapter->setTelemetry($this->telemetry);
-        }
-
-        return $adapter;
-    }
-
-    protected function getEmailAdapter(Document $provider): ?EmailAdapter
-    {
-        $credentials = $provider->getAttribute('credentials', []);
-        $options = $provider->getAttribute('options', []);
-        $apiKey = $credentials['apiKey'] ?? '';
-
-        $adapter = match ($provider->getAttribute('provider')) {
-            'mock' => new Mock('username', 'password'),
-            'smtp' => new SMTP(
-                $credentials['host'] ??  '',
-                $credentials['port'] ?? 25,
-                $credentials['username'] ?? '',
-                $credentials['password'] ?? '',
-                $options['encryption'] ?? '',
-                $options['autoTLS'] ??  false,
-                $options['mailer'] ??  '',
-            ),
-            'mailgun' => new Mailgun(
-                $apiKey,
-                $credentials['domain'] ?? '',
-                $credentials['isEuRegion'] ?? false
-            ),
-            'sendgrid' => new Sendgrid($apiKey),
-            'resend' => new Resend($apiKey),
-            'ses' => new SES(
-                $credentials['accessKey'] ?? '',
-                $credentials['secretKey'] ?? '',
-                $credentials['region'] ?? '',
-                $credentials['sessionToken'] ?? null,
+            'appwrite' => new AppwritePush(
+                new Mqtt($this->telemetry, new PubSubPool($this->pools->get('pubsub'))),
+                $dbForProject,
+                $project->getId(),
+                $message->getId(),
+                $message->getSequence(),
+                $options['qos'] ?? Packet::QOS_1,
             ),
             default => null
         };
@@ -965,23 +905,122 @@ class Messaging extends Action
         return $adapter;
     }
 
+    /**
+     * Materialise a message's attachments as files the adapters can read.
+     *
+     * Uploads are compressed and then encrypted, so a stored file is not what the recipient should get; both
+     * are undone here in reverse, as the storage read endpoints do. The plaintext is written under
+     * $directory and never back to the file's own path, which on a local install is the stored original.
+     *
+     * Bytes travel as a path rather than as Attachment content because Sendgrid and Mailgun read only
+     * getPath(), and content would otherwise stay resident for the whole fan-out.
+     *
+     * @return array<Attachment>
+     */
+    private function prepareAttachments(
+        Database $dbForProject,
+        Document $message,
+        Device $deviceForFiles,
+        Document $project,
+        string $directory
+    ): array {
+        $prepared = [];
+        $mimes = Config::getParam('storage-mimes');
+
+        foreach ($message->getAttribute('data', [])['attachments'] ?? [] as $attachment) {
+            $bucket = $dbForProject->getDocument('buckets', $attachment['bucketId']);
+            if ($bucket->isEmpty()) {
+                throw new \Exception('Storage bucket with the requested ID could not be found');
+            }
+
+            $file = $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $attachment['fileId']);
+            if ($file->isEmpty()) {
+                throw new \Exception('Storage file with the requested ID could not be found');
+            }
+
+            $path = $file->getAttribute('path', '');
+            if (!$deviceForFiles->exists($path)) {
+                throw new \Exception('File not found in ' . $path);
+            }
+
+            $contentType = \in_array($file->getAttribute('mimeType'), $mimes)
+                ? $file->getAttribute('mimeType')
+                : 'text/plain';
+
+            $cipher = $file->getAttribute('openSSLCipher', '');
+            $algorithm = $file->getAttribute('algorithm', Compression::NONE);
+            $target = $directory . '/' . $bucket->getId() . '/' . $file->getId();
+
+            if (empty($cipher) && !\in_array($algorithm, [Compression::GZIP, Compression::ZSTD], true)) {
+                if ($deviceForFiles->getType() !== DeviceType::Local) {
+                    $deviceForFiles->copy($path, $target, $this->getLocalDevice($project));
+                    $path = $target;
+                }
+
+                $prepared[] = new Attachment($file->getAttribute('name'), $path, $contentType);
+                continue;
+            }
+
+            $source = (string) $deviceForFiles->read($path);
+
+            if (!empty($cipher)) {
+                $source = OpenSSL::decrypt(
+                    $source,
+                    $cipher,
+                    System::getEnv('_APP_OPENSSL_KEY_V' . $file->getAttribute('openSSLVersion')),
+                    0,
+                    \hex2bin($file->getAttribute('openSSLIV')),
+                    \hex2bin($file->getAttribute('openSSLTag'))
+                );
+
+                // A rotated or missing key leaves ciphertext no one can read, which must fail the send rather
+                // than reach a recipient.
+                if ($source === false) {
+                    throw new \Exception('Failed to decrypt attachment ' . $file->getId());
+                }
+            }
+
+            $decompressed = match ($algorithm) {
+                Compression::ZSTD => (new Zstd())->decompress($source),
+                Compression::GZIP => (new GZIP())->decompress($source),
+                default => $source,
+            };
+
+            // A decompressor reports failure as an empty string. Files stored above the read buffer before 1.5.0
+            // recorded an algorithm they were never compressed with, so their bytes are already what the
+            // recipient wants; the storage read endpoints fall back to them rather than failing the read.
+            $source = $decompressed === '' && (int) $file->getAttribute('sizeOriginal') > 0
+                ? $source
+                : $decompressed;
+
+            if (!$this->getLocalDevice($project)->write($target, new Stream($source), $contentType)) {
+                throw new \Exception('Failed to prepare attachment ' . $file->getId());
+            }
+
+            $prepared[] = new Attachment($file->getAttribute('name'), $target, $contentType);
+        }
+
+        return $prepared;
+    }
+
+    /**
+     * @param array<Attachment> $attachments
+     */
     private function buildEmailMessage(
         Database $dbForProject,
         Document $message,
         Document $provider,
-        Device $deviceForFiles,
-        Document $project,
+        array $attachments,
     ): Email {
         $fromName = $provider['options']['fromName'] ?? null;
         $fromEmail = $provider['options']['fromEmail'] ?? null;
-        $replyToEmail = $provider['options']['replyToEmail'] ?? null;
-        $replyToName = $provider['options']['replyToName'] ?? null;
         $data = $message['data'] ?? [];
+        $replyToEmail = !empty($data['replyToEmail']) ? $data['replyToEmail'] : ($provider['options']['replyToEmail'] ?? null);
+        $replyToName = !empty($data['replyToName']) ? $data['replyToName'] : ($provider['options']['replyToName'] ?? null);
         $ccTargets = $data['cc'] ?? [];
         $bccTargets = $data['bcc'] ?? [];
         $cc = [];
         $bcc = [];
-        $attachments = $data['attachments'] ?? [];
 
         if (!empty($ccTargets)) {
             $ccTargets = $dbForProject->find('targets', [
@@ -1003,56 +1042,19 @@ class Messaging extends Action
             }
         }
 
-        if (!empty($attachments)) {
-            foreach ($attachments as &$attachment) {
-                $bucketId = $attachment['bucketId'];
-                $fileId = $attachment['fileId'];
-
-                $bucket = $dbForProject->getDocument('buckets', $bucketId);
-                if ($bucket->isEmpty()) {
-                    throw new \Exception('Storage bucket with the requested ID could not be found');
-                }
-
-                $file = $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId);
-                if ($file->isEmpty()) {
-                    throw new \Exception('Storage file with the requested ID could not be found');
-                }
-
-                $mimes = Config::getParam('storage-mimes');
-                $path = $file->getAttribute('path', '');
-
-                if (!$deviceForFiles->exists($path)) {
-                    throw new \Exception('File not found in ' . $path);
-                }
-
-                $contentType = 'text/plain';
-
-                if (\in_array($file->getAttribute('mimeType'), $mimes)) {
-                    $contentType = $file->getAttribute('mimeType');
-                }
-
-                if ($deviceForFiles->getType() !== Storage::DEVICE_LOCAL) {
-                    $deviceForFiles->transfer($path, $path, $this->getLocalDevice($project));
-                }
-
-                $attachment = new Attachment(
-                    $file->getAttribute('name'),
-                    $path,
-                    $contentType
-                );
-            }
-        }
-
         $to = $message['to'];
         $subject = $data['subject'];
         $content = $data['content'];
         $html = $data['html'] ?? false;
 
-        // For SMTP, move all recipients to BCC and use default recipient in TO field
-        if ($provider->getAttribute('provider') === 'smtp') {
+        // An SMTP batch is one message, so a visible To header is readable by every other address on
+        // it. Only a lone recipient with nobody else on the envelope keeps theirs; the rest move to
+        // BCC, which leaves the message with no To header at all.
+        if ($provider->getAttribute('provider') === 'smtp' && (\count($to) > 1 || !empty($cc) || !empty($bcc))) {
             foreach ($to as $recipient) {
                 $bcc[] = ['email' => $recipient];
             }
+
             $to = [];
         }
 
@@ -1138,128 +1140,4 @@ class Messaging extends Action
         return new Local(APP_STORAGE_UPLOADS . '/app-' . $project->getId());
     }
 
-    private function createInternalSMSAdapter(): ?SMSAdapter
-    {
-        if (empty(System::getEnv('_APP_SMS_PROVIDER')) || empty(System::getEnv('_APP_SMS_FROM'))) {
-            return null;
-        }
-
-        $providers = System::getEnv('_APP_SMS_PROVIDER', '');
-
-        $dsns = [];
-        if (!empty($providers)) {
-            $providers = explode(',', $providers);
-            foreach ($providers as $provider) {
-                $dsns[] = new DSN($provider);
-            }
-        }
-
-        if (count($dsns) === 1) {
-            $provider = $this->createProviderFromDSN($dsns[0]);
-            $adapter = $this->getSmsAdapter($provider);
-            return $adapter;
-        }
-
-        $defaultDSN = null;
-        $localDSNs = [];
-
-        /** @var DSN $dsn */
-        foreach ($dsns as $dsn) {
-            if ($dsn->getParam('local', '') === 'default') {
-                $defaultDSN = $dsn;
-            } else {
-                $localDSNs[] = $dsn;
-            }
-        }
-
-        if ($defaultDSN === null) {
-            throw new \Exception('No default SMS provider found');
-        }
-
-        $defaultProvider = $this->createProviderFromDSN($defaultDSN);
-        $adapter = $this->getSmsAdapter($defaultProvider);
-        $geosms = new GEOSMS($adapter);
-        $geosms->setTelemetry($this->telemetry);
-
-        /** @var DSN $localDSN */
-        foreach ($localDSNs as $localDSN) {
-            try {
-                $provider = $this->createProviderFromDSN($localDSN);
-                $adapter = $this->getSmsAdapter($provider);
-            } catch (\Exception) {
-                continue;
-            }
-
-            $callingCode = $localDSN->getParam('local', '');
-            if (empty($callingCode)) {
-                continue;
-            }
-
-            $geosms->setLocal($callingCode, $adapter);
-        }
-        return $geosms;
-    }
-
-    private function createProviderFromDSN(DSN $dsn): Document
-    {
-        $host = $dsn->getHost();
-        $password = $dsn->getPassword();
-        $user = $dsn->getUser();
-        $from = System::getEnv('_APP_SMS_FROM');
-
-        $provider = new Document([
-            '$id' => ID::unique(),
-            'provider' => $host,
-            'type' => MESSAGE_TYPE_SMS,
-            'name' => 'Internal SMS',
-            'enabled' => true,
-            'credentials' => match ($host) {
-                'twilio' => [
-                    'accountSid' => $user,
-                    'authToken' => $password,
-                    // Twilio Messaging Service SIDs always start with MG
-                    // https://www.twilio.com/docs/messaging/services
-                    'messagingServiceSid' => \str_starts_with($from, 'MG') ? $from : null
-                ],
-                'textmagic' => [
-                    'username' => $user,
-                    'apiKey' => $password
-                ],
-                'telesign' => [
-                    'customerId' => $user,
-                    'apiKey' => $password
-                ],
-                'msg91' => [
-                    'senderId' => $user,
-                    'authKey' => $password,
-                    'templateId' => $dsn->getParam('templateId', $from),
-                ],
-                'vonage' => [
-                    'apiKey' => $user,
-                    'apiSecret' => $password
-                ],
-                'fast2sms' => [
-                    'senderId' => $user,
-                    'apiKey' => $password,
-                    'messageId' => $dsn->getParam('messageId'),
-                    'useDLT' => $dsn->getParam('useDLT'),
-                ],
-                'inforu' => [
-                    'senderId' => $user,
-                    'apiKey' => $password,
-                ],
-                default => null
-            },
-            'options' => match ($host) {
-                'twilio' => [
-                    'from' => \str_starts_with($from, 'MG') ? null : $from
-                ],
-                default => [
-                    'from' => $from
-                ]
-            }
-        ]);
-
-        return $provider;
-    }
 }

@@ -12,7 +12,6 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\Validator\Nullable;
 use Utopia\Validator\Range;
 
 class Update extends Action
@@ -36,7 +35,6 @@ class Update extends Action
             ->label('event', 'projects.[projectId].policies.[policy].update')
             ->label('audits.event', 'projects.[projectId].policies.[policy].update')
             ->label('audits.resource', 'project/{response.$id}')
-            ->label('usage.resource', 'project/{response.$id}')
             ->label('sdk', new Method(
                 namespace: 'project',
                 group: 'policies',
@@ -52,7 +50,7 @@ class Update extends Action
                     )
                 ],
             ))
-            ->param('total', null, new Nullable(new Range(1, APP_LIMIT_COUNT)), 'Set the maximum number of sessions allowed per user. Value can be between 1 and ' . APP_LIMIT_COUNT . ', or null to disable the limit.')
+            ->param('total', null, new Range(1, APP_LIMIT_USER_SESSIONS_MAX), 'Set the maximum number of sessions allowed per user. Value can be between 1 and ' . APP_LIMIT_USER_SESSIONS_MAX . '.')
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('project')
@@ -62,7 +60,7 @@ class Update extends Action
     }
 
     public function action(
-        ?int $total,
+        int $total,
         Response $response,
         Database $dbForPlatform,
         Document $project,
@@ -70,12 +68,7 @@ class Update extends Action
         Event $queueForEvents,
     ): void {
         $auths = $project->getAttribute('auths', []);
-
-        if (\is_null($total)) {
-            $auths['maxSessions'] = 0;
-        } else {
-            $auths['maxSessions'] = $total;
-        }
+        $auths['maxSessions'] = $total;
 
         $updates = new Document([
             'auths' => $auths,

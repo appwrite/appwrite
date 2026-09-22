@@ -59,7 +59,7 @@ class Update extends IPUpdate
             ->param('tableId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Table ID.', false, ['dbForProject'])
             ->param('key', '', fn (Database $dbForProject) => new Key(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Column Key.', false, ['dbForProject'])
             ->param('required', null, new Boolean(), 'Is column required?')
-            ->param('default', null, new Nullable(new IP()), 'Default value. Cannot be set when column is required.')
+            ->param('default', null, new Nullable(new IP()), 'Default value. Cannot be set when column is required.', example: '192.0.2.0')
             ->param('newKey', null, fn (Database $dbForProject) => new Nullable(new Key(false, $dbForProject->getAdapter()->getMaxUIDLength())), 'New Column Key.', true, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')

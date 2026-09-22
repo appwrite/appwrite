@@ -12,8 +12,7 @@ trait ProxyBase
 
     protected function tearDown(): void
     {
-        // Cleanup for testRuleVerification test
-        // Required as it uses static domain name
+        // Cleanup fixture rules left by failed verification tests
         $rules = $this->listRules([
             'queries' => [
                 Query::endsWith('domain', 'webapp.com')->toString(),
@@ -35,7 +34,7 @@ trait ProxyBase
                 ]
             ]);
             $this->assertEquals(200, $rules['headers']['status-code']);
-            $this->assertEquals(0, count($rules['body']['rules']));
+            $this->assertSame(0, count($rules['body']['rules']));
             $this->assertEquals(0, $rules['body']['total']);
         }
     }
@@ -203,6 +202,82 @@ trait ProxyBase
 
         $rule = $this->createAPIRule($domain . '/some-path');
         $this->assertEquals(400, $rule['headers']['status-code']);
+    }
+
+    public function testCreateAPIRuleFoldsDomainCase(): void
+    {
+        $domain = \uniqid() . '-Case.Custom.LOCALHOST';
+        $canonical = \strtolower($domain);
+
+        $rule = $this->createAPIRule($domain);
+        $this->assertEquals(201, $rule['headers']['status-code'], \json_encode($rule));
+        $this->assertEquals($canonical, $rule['body']['domain']);
+
+        // Re-read, so this pins what was persisted rather than how the create
+        // response was shaped. The stored value is what the delete path and the
+        // certificate providers are handed.
+        $fetched = $this->getRule($rule['body']['$id']);
+        $this->assertEquals(200, $fetched['headers']['status-code']);
+        $this->assertEquals($canonical, $fetched['body']['domain']);
+
+        // Deleting a mixed-case rule is the path that broke: a non-canonical
+        // stored domain must not stop the rule from being removed.
+        $this->cleanupRule($rule['body']['$id']);
+    }
+
+    public function testDeleteAPIRule(): void
+    {
+        $domain = \uniqid() . '-delete-api.custom.localhost';
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://appwrite.test');
+        $proxyClient->addHeader('x-appwrite-hostname', $domain);
+
+        /**
+         * Test for SUCCESS
+         */
+        $ruleId = $this->setupAPIRule($domain);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/versions');
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(APP_VERSION_STABLE, $response['body']['server']);
+
+        $rule = $this->deleteRule($ruleId);
+        $this->assertEquals(204, $rule['headers']['status-code']);
+
+        $this->assertEventually(function () use ($proxyClient) {
+            $response = $proxyClient->call(Client::METHOD_GET, '/versions');
+            $this->assertEquals(401, $response['headers']['status-code']);
+        });
+
+        /**
+         * Test for FAILURE
+         */
+        $rule = $this->getRule($ruleId);
+        $this->assertEquals(404, $rule['headers']['status-code']);
+        $this->assertEquals('rule_not_found', $rule['body']['type']);
+
+        $rule = $this->deleteRule($ruleId);
+        $this->assertEquals(404, $rule['headers']['status-code']);
+        $this->assertEquals('rule_not_found', $rule['body']['type']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $ruleId = $this->setupAPIRule($domain);
+
+        $rules = $this->listRules([
+            'queries' => [Query::equal('domain', [$domain])->toString()],
+        ]);
+        $this->assertEquals(1, $rules['body']['total']);
+        $this->assertEquals($ruleId, $rules['body']['rules'][0]['$id']);
+
+        $this->assertEventually(function () use ($proxyClient) {
+            $response = $proxyClient->call(Client::METHOD_GET, '/versions');
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertEquals(APP_VERSION_STABLE, $response['body']['server']);
+        });
+
+        $this->cleanupRule($ruleId);
     }
 
     public function testCreateRedirectRule(): void
@@ -621,6 +696,14 @@ trait ProxyBase
         $ruleDomains = \array_column($rules['body']['rules'], 'domain');
         $this->assertContains($rule2Domain, $ruleDomains);
 
+        $rules = $this->listRules([
+            'queries' => [
+                Query::search('domain', $rule1Domain)->toString(),
+            ],
+        ]);
+        $this->assertEquals(400, $rules['headers']['status-code']);
+        $this->assertSame('general_query_invalid', $rules['body']['type']);
+
         $rules = $this->listRules();
         $this->assertEquals(200, $rules['headers']['status-code']);
         foreach ($rules['body']['rules'] as $rule) {
@@ -636,12 +719,13 @@ trait ProxyBase
 
     public function testRuleVerification(): void
     {
+        $fixture = \uniqid($this->getSide() . '-');
 
         // 1. Site rule can verify
         $site = $this->setupSite();
         $siteId = $site['siteId'];
 
-        $rule = $this->createSiteRule('stage-site.webapp.com', $siteId);
+        $rule = $this->createSiteRule("{$fixture}.stage-site.webapp.com", $siteId);
         $this->assertEquals(201, $rule['headers']['status-code']);
         $this->assertEquals('verifying', $rule['body']['status']);
         $this->assertEmpty($rule['body']['logs']);
@@ -661,13 +745,13 @@ trait ProxyBase
         $function = $this->setupFunction();
         $functionId = $function['functionId'];
 
-        $rule = $this->createFunctionRule('stage-function.webapp.com', $functionId);
+        $rule = $this->createFunctionRule("{$fixture}.stage-function.webapp.com", $functionId);
         $this->assertEquals(201, $rule['headers']['status-code']);
         $this->assertEquals('verifying', $rule['body']['status']);
         $this->assertEmpty($rule['body']['logs']);
         $this->cleanupRule($rule['body']['$id']);
 
-        $rule = $this->createAPIRule('stage-site.webapp.com');
+        $rule = $this->createAPIRule("{$fixture}.stage-site.webapp.com");
         $this->assertEquals(201, $rule['headers']['status-code']);
         $this->assertEquals('unverified', $rule['body']['status']);
         $this->assertStringContainsString('has incorrect CNAME value', $rule['body']['logs']);
@@ -676,7 +760,7 @@ trait ProxyBase
         $this->cleanupFunction($functionId);
 
         // 3. Wrong A record fails to verify
-        $rule = $this->createAPIRule('wrong-a-webapp.com');
+        $rule = $this->createAPIRule("{$fixture}.wrong-a-webapp.com");
         $this->assertEquals(201, $rule['headers']['status-code']);
         $this->assertEquals('unverified', $rule['body']['status']);
         $this->assertStringContainsString('is missing CNAME record', $rule['body']['logs']);
@@ -693,7 +777,7 @@ trait ProxyBase
         $this->cleanupRule($ruleId);
 
         // 4. Correct A record can verify
-        $rule = $this->createAPIRule('webapp.com');
+        $rule = $this->createAPIRule("{$fixture}.correct-a.webapp.com");
         $this->assertEquals(201, $rule['headers']['status-code']);
         $this->assertEquals('verifying', $rule['body']['status']);
         $this->assertEmpty($rule['body']['logs']);
@@ -701,7 +785,7 @@ trait ProxyBase
         $this->cleanupRule($rule['body']['$id']);
 
         // 5. Correct CNAME record can verify (no CAA record)
-        $rule = $this->createAPIRule('stage.webapp.com');
+        $rule = $this->createAPIRule("{$fixture}.stage.webapp.com");
         $this->assertEquals(201, $rule['headers']['status-code']);
         $this->assertEquals('verifying', $rule['body']['status']);
         $this->assertEmpty($rule['body']['logs']);
@@ -709,7 +793,7 @@ trait ProxyBase
         $this->cleanupRule($rule['body']['$id']);
 
         // 6. Missing CNAME record fails to verify
-        $rule = $this->createAPIRule('stage-missing-cname.webapp.com');
+        $rule = $this->createAPIRule("{$fixture}.stage-missing-cname.webapp.com");
         $this->assertEquals(201, $rule['headers']['status-code']);
         $this->assertEquals('unverified', $rule['body']['status']);
         $this->assertStringContainsString('is missing CNAME record', $rule['body']['logs']);
@@ -726,7 +810,7 @@ trait ProxyBase
         $this->cleanupRule($ruleId);
 
         // 7. Wrong CNAME record fails to verify
-        $rule = $this->createAPIRule('stage-wrong-cname.webapp.com');
+        $rule = $this->createAPIRule("{$fixture}.stage-wrong-cname.webapp.com");
         $this->assertEquals(201, $rule['headers']['status-code']);
         $this->assertEquals('unverified', $rule['body']['status']);
         $this->assertStringContainsString('has incorrect CNAME value', $rule['body']['logs']);
@@ -743,7 +827,7 @@ trait ProxyBase
         $this->cleanupRule($ruleId);
 
         // 8. Wrong CAA record fails to verify
-        $rule = $this->createAPIRule('stage-wrong-caa.webapp.com');
+        $rule = $this->createAPIRule("{$fixture}.stage-wrong-caa.webapp.com");
         $this->assertEquals(201, $rule['headers']['status-code']);
         $this->assertEquals('unverified', $rule['body']['status']);
         $this->assertStringContainsString('has incorrect CAA value', $rule['body']['logs']);
@@ -760,7 +844,7 @@ trait ProxyBase
         $this->cleanupRule($ruleId);
 
         // 9. Correct CAA record can verify
-        $rule = $this->createAPIRule('stage-correct-caa.webapp.com');
+        $rule = $this->createAPIRule("{$fixture}.stage-correct-caa.webapp.com");
         $this->assertEquals(201, $rule['headers']['status-code']);
         $this->assertEquals('verifying', $rule['body']['status']);
         $this->assertEmpty($rule['body']['logs']);

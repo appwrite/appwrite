@@ -5,13 +5,13 @@ namespace Appwrite\Platform\Modules\Teams\Http\Memberships\Status;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
+use Appwrite\Geo\Geo;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
-use MaxMind\Db\Reader;
 use Utopia\Auth\Proofs\Token;
 use Utopia\Auth\Store;
 use Utopia\Config\Config;
@@ -46,7 +46,6 @@ class Update extends Action
             ->label('scope', 'public')
             ->label('audits.event', 'membership.update')
             ->label('audits.resource', 'team/{request.teamId}')
-            ->label('usage.resource', 'team/{request.teamId}')
             ->label('audits.userId', '{request.userId}')
             ->label('sdk', new Method(
                 namespace: 'teams',
@@ -71,7 +70,7 @@ class Update extends Action
             ->inject('dbForProject')
             ->inject('authorization')
             ->inject('project')
-            ->inject('geodb')
+            ->inject('geo')
             ->inject('queueForEvents')
             ->inject('store')
             ->inject('proofForToken')
@@ -80,7 +79,7 @@ class Update extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $teamId, string $membershipId, string $userId, string $secret, Request $request, Response $response, Document $targetUser, Database $dbForProject, Authorization $authorization, $project, Reader $geodb, Event $queueForEvents, Store $store, Token $proofForToken, bool $domainVerification, ?string $cookieDomain)
+    public function action(string $teamId, string $membershipId, string $userId, string $secret, Request $request, Response $response, Document $targetUser, Database $dbForProject, Authorization $authorization, $project, Geo $geo, Event $queueForEvents, Store $store, Token $proofForToken, bool $domainVerification, ?string $cookieDomain)
     {
         $protocol = $request->getProtocol();
 
@@ -134,7 +133,6 @@ class Update extends Action
             $authorization->addRole(Role::user($targetUser->getId())->toString());
 
             $detector = new Detector($request->getUserAgent('UNKNOWN'));
-            $record = $geodb->get($request->getIP());
             $authDuration = $project->getAttribute('auths', [])['duration'] ?? TOKEN_EXPIRATION_LOGIN_LONG;
             $expire = DateTime::addSeconds(new \DateTime(), $authDuration);
             $secret = $proofForToken->generate();
@@ -153,7 +151,7 @@ class Update extends Action
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'ip' => $request->getIP(),
                 'factors' => ['email'],
-                'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
+                'countryCode' => \strtolower($geo->get($request->getIP())->getCountryCode()),
                 'expire' => DateTime::addSeconds(new \DateTime(), $authDuration)
             ], $detector->getOS(), $detector->getClient(), $detector->getDevice()));
 
@@ -193,11 +191,26 @@ class Update extends Action
             ;
         }
 
-        $membership = $dbForProject->updateDocument('memberships', $membership->getId(), new Document(['joined' => $membership->getAttribute('joined'), 'confirm' => true]));
+        $membership = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $membership, $team) {
+            // Re-read under a lock, a concurrent accept of the same invite must not be counted twice
+            $current = $authorization->skip(fn () => $dbForProject->getDocument('memberships', $membership->getId(), forUpdate: true));
+
+            if ($current->getAttribute('confirm') === true) {
+                return new Document();
+            }
+
+            $confirmed = $dbForProject->updateDocument('memberships', $membership->getId(), new Document(['joined' => $membership->getAttribute('joined'), 'confirm' => true]));
+
+            $authorization->skip(fn () => $dbForProject->increaseDocumentAttribute('teams', $team->getId(), 'total', 1));
+
+            return $confirmed;
+        });
+
+        if ($membership->isEmpty()) {
+            throw new Exception(Exception::MEMBERSHIP_ALREADY_CONFIRMED);
+        }
 
         $dbForProject->purgeCachedDocument('users', $targetUser->getId());
-
-        $authorization->skip(fn () => $dbForProject->increaseDocumentAttribute('teams', $team->getId(), 'total', 1));
 
         $queueForEvents
             ->setParam('userId', $targetUser->getId())

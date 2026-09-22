@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Proxy\Http\Rules\Status;
 
+use Appwrite\Bus\Events\RuleUpdated;
 use Appwrite\Event\Event;
 use Appwrite\Event\Publisher\Certificate;
 use Appwrite\Extend\Exception;
@@ -10,12 +11,12 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Utopia\Bus\Bus;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
-use Utopia\Logger\Log;
 use Utopia\Platform\Scope\HTTP;
 
 class Update extends Action
@@ -41,7 +42,6 @@ class Update extends Action
             ->label('event', 'rules.[ruleId].update')
             ->label('audits.event', 'rule.update')
             ->label('audits.resource', 'rule/{response.$id}')
-            ->label('usage.resource', 'rule/{response.$id}')
             ->label('sdk', new Method(
                 namespace: 'proxy',
                 group: 'rules',
@@ -63,8 +63,8 @@ class Update extends Action
             ->inject('queueForEvents')
             ->inject('project')
             ->inject('dbForPlatform')
-            ->inject('log')
             ->inject('authorization')
+            ->inject('bus')
             ->callback($this->action(...));
     }
 
@@ -75,8 +75,8 @@ class Update extends Action
         Event $queueForEvents,
         Document $project,
         Database $dbForPlatform,
-        Log $log,
         Authorization $authorization,
+        Bus $bus,
     ) {
         $rule = $authorization->skip(fn () => $dbForPlatform->getDocument('rules', $ruleId));
 
@@ -93,12 +93,13 @@ class Update extends Action
         }
 
         try {
-            $this->verifyRule($rule, $log);
+            $this->verifyRule($rule);
             // Reset logs and status for the rule
             $rule = $authorization->skip(fn () => $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
                 'logs' => '',
                 'status' => RULE_STATUS_CERTIFICATE_GENERATING,
             ])));
+            $bus->dispatch(new RuleUpdated($rule->getArrayCopy()));
 
             $certificateId = $rule->getAttribute('certificateId', '');
             // Reset logs for the associated certificate.
@@ -111,16 +112,19 @@ class Update extends Action
             $authorization->skip(fn () => $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
                 '$updatedAt' => DateTime::now(),
             ])));
+            $bus->dispatch(new RuleUpdated($rule->getArrayCopy()));
             throw $err;
         }
 
-        // Issue a TLS certificate when DNS verification is successful
+        // Issue a TLS certificate when DNS verification is successful. The worker
+        // does not verify DNS again: verifyRule() above just did.
         $publisherForCertificates->enqueue(new \Appwrite\Event\Message\Certificate(
             project: $project,
             domain: new Document([
                 'domain' => $rule->getAttribute('domain'),
                 'domainType' => $rule->getAttribute('deploymentResourceType', $rule->getAttribute('type')),
             ]),
+            skipDomainValidation: true,
         ));
 
         if (!empty($certificate)) {

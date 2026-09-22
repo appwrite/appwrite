@@ -10,11 +10,11 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Utopia\Bus\Bus;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Logger\Log;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
 use Utopia\Validator\Domain as ValidatorDomain;
@@ -41,7 +41,6 @@ class Create extends Action
             ->label('event', 'rules.[ruleId].create')
             ->label('audits.event', 'rule.create')
             ->label('audits.resource', 'rule/{response.$id}')
-            ->label('usage.resource', 'rule/{response.$id}')
             ->label('sdk', new Method(
                 namespace: 'proxy',
                 group: 'rules',
@@ -69,8 +68,8 @@ class Create extends Action
             ->inject('queueForEvents')
             ->inject('dbForPlatform')
             ->inject('platform')
-            ->inject('log')
             ->inject('authorization')
+            ->inject('bus')
             ->callback($this->action(...));
     }
 
@@ -82,9 +81,14 @@ class Create extends Action
         Event $queueForEvents,
         Database $dbForPlatform,
         array $platform,
-        Log $log,
         Authorization $authorization,
+        Bus $bus,
     ) {
+        // DNS is case-insensitive, and the rule ID below is derived from the
+        // lowercased domain. Store the same canonical form so the row matches
+        // its own ID and downstream certificate providers.
+        $domain = \strtolower($domain);
+
         $this->validateDomainRestrictions($domain, $platform);
 
         // TODO: (@Meldiron) Remove after 1.7.x migration
@@ -113,14 +117,14 @@ class Create extends Action
 
         if ($rule->getAttribute('status', '') === RULE_STATUS_CREATED) {
             try {
-                $this->verifyRule($rule, $log);
+                $this->verifyRule($rule);
                 $rule->setAttribute('status', RULE_STATUS_CERTIFICATE_GENERATING);
             } catch (Exception $err) {
                 $rule->setAttribute('logs', $err->getMessage());
             }
         }
 
-        $rule = $this->createRule($rule, $dbForPlatform, $authorization);
+        $rule = $this->createRule($rule, $dbForPlatform, $authorization, $bus);
 
         if ($rule->getAttribute('status', '') === RULE_STATUS_CERTIFICATE_GENERATING) {
             $publisherForCertificates->enqueue(new \Appwrite\Event\Message\Certificate(
@@ -130,6 +134,8 @@ class Create extends Action
                     'domainType' => $rule->getAttribute('deploymentResourceType', $rule->getAttribute('type')),
                 ]),
                 action: \Appwrite\Event\Certificate::ACTION_GENERATION,
+                // verifyRule() above passed, which is what put the rule in this status.
+                skipDomainValidation: true,
             ));
         }
 

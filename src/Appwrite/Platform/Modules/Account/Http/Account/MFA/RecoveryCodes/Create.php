@@ -36,7 +36,6 @@ class Create extends Action
             ->label('scope', 'account')
             ->label('audits.event', 'user.update')
             ->label('audits.resource', 'user/{response.$id}')
-            ->label('usage.resource', 'user/{response.$id}')
             ->label('audits.userId', '{response.$id}')
             ->label('sdk', [
                 new Method(

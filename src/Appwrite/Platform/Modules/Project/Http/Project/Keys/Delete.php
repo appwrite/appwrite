@@ -17,6 +17,10 @@ use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 
+/**
+ * TODO: Remove once the Console, CLI and SDKs use the Organization API
+ * (/v1/organization/projects/:projectId/keys) instead of this project-scoped route.
+ */
 class Delete extends Base
 {
     use HTTP;
@@ -38,7 +42,6 @@ class Delete extends Base
             ->label('event', 'keys.[keyId].delete')
             ->label('audits.event', 'project.key.delete')
             ->label('audits.resource', 'project.key/{request.keyId}')
-            ->label('usage.resource', 'project.key/{request.keyId}')
             ->label('sdk', new Method(
                 namespace: 'project',
                 group: 'keys',

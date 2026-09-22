@@ -45,6 +45,7 @@ class Get extends Action
             ->desc('Get attribute')
             ->groups(['api', 'database'])
             ->label('scope', 'collections.read')
+            ->label('usage.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
                 namespace: $this->getSDKNamespace(),

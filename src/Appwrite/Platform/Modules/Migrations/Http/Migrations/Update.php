@@ -35,7 +35,6 @@ class Update extends Action
             ->label('event', 'migrations.[migrationId].retry')
             ->label('audits.event', 'migration.retry')
             ->label('audits.resource', 'migrations/{request.migrationId}')
-            ->label('usage.resource', 'migrations/{request.migrationId}')
             ->label('sdk', new Method(
                 namespace: 'migrations',
                 group: null,

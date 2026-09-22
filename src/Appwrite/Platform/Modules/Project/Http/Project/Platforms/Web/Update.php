@@ -39,7 +39,6 @@ class Update extends Action
             ->label('event', 'platforms.[platformId].update')
             ->label('audits.event', 'project.platform.update')
             ->label('audits.resource', 'project.platform/{response.$id}')
-            ->label('usage.resource', 'project.platform/{response.$id}')
             ->label('sdk', new Method(
                 namespace: 'project',
                 group: 'platforms',
@@ -56,9 +55,9 @@ class Update extends Action
                 ]
             ))
             ->param('platformId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getAdapter()->getMaxUIDLength()), 'Platform ID.', false, ['dbForPlatform'])
-            ->param('name', null, new Text(128), 'Platform name. Max length: 128 chars.')
+            ->param('name', null, new Text(128, requireNonBlank: true), 'Platform name. Max length: 128 chars.')
             ->param('hostname', '', new Hostname(), 'Platform web hostname. Max length: 256 chars.', optional: true, example: 'app.example.com') // Optional for backwards compatibility
-            ->param('key', '', new Text(256), 'Package name for Android or bundle ID for iOS or macOS. Max length: 256 chars.', optional: true, deprecated: true) // Exists for backwards compatibility
+            ->param('key', '', new Text(256, requireNonBlank: true), 'Package name for Android or bundle ID for iOS or macOS. Max length: 256 chars.', optional: true, deprecated: true) // Exists for backwards compatibility
             ->inject('response')
             ->inject('queueForEvents')
             ->inject('dbForPlatform')
@@ -84,9 +83,16 @@ class Update extends Action
         // Used to have: type, name, key, hostname
         if (!empty($key)) {
             // Validate deprecated app id (key)
-            $keyValidator = new Text(256);
+            $keyValidator = new Text(256, requireNonBlank: true);
             if (!$keyValidator->isValid($key)) {
                 throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Param "key" is invalid: ' . $keyValidator->getDescription());
+            }
+        }
+
+        if ($hostname !== '') {
+            $hostnameValidator = new Text(253, requireNonBlank: true);
+            if (!$hostnameValidator->isValid($hostname)) {
+                throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Param "hostname" is invalid: ' . $hostnameValidator->getDescription());
             }
         }
 

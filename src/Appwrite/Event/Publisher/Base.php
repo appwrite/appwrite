@@ -3,7 +3,7 @@
 namespace Appwrite\Event\Publisher;
 
 use Appwrite\Event\Message\Base as BaseMessage;
-use Utopia\Queue\Publisher;
+use Utopia\Queue\Publisher\Synchronous as Publisher;
 use Utopia\Queue\Queue;
 
 readonly class Base
@@ -20,7 +20,7 @@ readonly class Base
     {
         $payload = $message->toArray();
 
-        return $this->publisher->enqueue($queue, $payload);
+        return $this->publisher->publish($queue, $payload);
     }
 
     /**

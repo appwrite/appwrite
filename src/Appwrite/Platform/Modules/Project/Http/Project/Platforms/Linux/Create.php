@@ -39,7 +39,6 @@ class Create extends Action
             ->label('event', 'platforms.[platformId].create')
             ->label('audits.event', 'project.platform.create')
             ->label('audits.resource', 'project.platform/{response.$id}')
-            ->label('usage.resource', 'project.platform/{response.$id}')
             ->label('sdk', new Method(
                 namespace: 'project',
                 group: 'platforms',
@@ -56,8 +55,8 @@ class Create extends Action
                 ],
             ))
             ->param('platformId', '', fn (Database $dbForPlatform) => new CustomId(false, $dbForPlatform->getAdapter()->getMaxUIDLength()), 'Platform ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForPlatform'])
-            ->param('name', null, new Text(128), 'Platform name. Max length: 128 chars.')
-            ->param('packageName', '', new Text(256), 'Linux package name. Max length: 256 chars.')
+            ->param('name', null, new Text(128, requireNonBlank: true), 'Platform name. Max length: 128 chars.')
+            ->param('packageName', '', new Text(256, requireNonBlank: true), 'Linux package name. Max length: 256 chars.')
             ->inject('response')
             ->inject('queueForEvents')
             ->inject('project')

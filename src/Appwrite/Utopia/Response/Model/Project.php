@@ -50,15 +50,6 @@ class Project extends Model
                 'example' => 'fra',
             ])
 
-            // Resource: Dev Keys
-            ->addRule('devKeys', [
-                'type' => Response::MODEL_DEV_KEY,
-                'description' => 'Deprecated since 1.9.5: List of dev keys.',
-                'default' => [],
-                'example' => new \stdClass(),
-                'array' => true,
-            ])
-
             // Resource: SMTP
             ->addRule('smtpEnabled', [
                 'type' => self::TYPE_BOOLEAN,
@@ -153,6 +144,12 @@ class Project extends Model
                 'default' => 'active',
                 'example' => 'active',
             ])
+            ->addRule('onboarding', [
+                'type' => self::TYPE_JSON,
+                'description' => 'Stage progress (completed or skipped) with timestamps and actor types, keyed by stage id.',
+                'default' => new \stdClass(),
+                'example' => new \stdClass(),
+            ])
 
             // Resource: Auth methods
             ->addRule('authMethods', [
@@ -193,6 +190,12 @@ class Project extends Model
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
+            ->addRule('wafEnabled', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether WAF enforcement is enabled for the project.',
+                'default' => false,
+                'example' => false,
+            ])
         ;
     }
 
@@ -228,6 +231,12 @@ class Project extends Model
         $this->expandProtocols($document);
         $this->expandAuthMethods($document);
         $this->expandConsoleAccessedAt($document);
+        $document->setAttribute('wafEnabled', (bool) $document->getAttribute('wafEnabled', false));
+
+        $onboarding = $document->getAttribute('onboarding', []);
+        if (\is_array($onboarding) && empty($onboarding)) {
+            $document->setAttribute('onboarding', new \stdClass());
+        }
 
         return $document;
     }

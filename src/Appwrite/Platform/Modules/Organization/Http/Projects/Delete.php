@@ -35,7 +35,6 @@ class Delete extends Action
             ->label('scope', 'projects.write')
             ->label('audits.event', 'projects.delete')
             ->label('audits.resource', 'project/{request.projectId}')
-            ->label('usage.resource', 'project/{request.projectId}')
             ->label('sdk', new Method(
                 namespace: 'organization',
                 group: 'projects',
@@ -43,7 +42,7 @@ class Delete extends Action
                 description: <<<EOT
                 Delete a project by its unique ID.
                 EOT,
-                auth: [AuthType::ADMIN, AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY, AuthType::ORGANIZATION],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_NOCONTENT,

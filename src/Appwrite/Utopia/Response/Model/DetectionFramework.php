@@ -38,12 +38,6 @@ class DetectionFramework extends Detection
                 'description' => 'Site Output Directory',
                 'default' => '',
                 'example' => 'dist',
-            ])
-            ->addRule('adapter', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Site Adapter',
-                'default' => '',
-                'example' => 'ssr',
             ]);
     }
 

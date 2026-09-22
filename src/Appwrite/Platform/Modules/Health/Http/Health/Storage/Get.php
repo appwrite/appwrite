@@ -2,14 +2,11 @@
 
 namespace Appwrite\Platform\Modules\Health\Http\Health\Storage;
 
-use Appwrite\SDK\AuthType;
-use Appwrite\SDK\ContentType;
-use Appwrite\SDK\Method;
-use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Document;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Psr7\Stream;
 use Utopia\Storage\Device;
 
 class Get extends Action
@@ -29,20 +26,6 @@ class Get extends Action
             ->desc('Get storage')
             ->groups(['api', 'health'])
             ->label('scope', 'health.read')
-            ->label('sdk', new Method(
-                namespace: 'health',
-                group: 'storage',
-                name: 'getStorage',
-                description: '/docs/references/health/get-storage.md',
-                auth: [AuthType::ADMIN, AuthType::KEY],
-                responses: [
-                    new SDKResponse(
-                        code: Response::STATUS_CODE_OK,
-                        model: Response::MODEL_HEALTH_STATUS,
-                    )
-                ],
-                contentType: ContentType::JSON
-            ))
             ->inject('response')
             ->inject('deviceForFiles')
             ->inject('deviceForFunctions')
@@ -60,11 +43,11 @@ class Get extends Action
             $path = $device->getPath(\uniqid('health', true));
 
             try {
-                if (!$device->write($path, 'test', 'text/plain')) {
+                if (!$device->write($path, new Stream('test'), 'text/plain')) {
                     throw new \Exception("Failed writing test file to {$device->getRoot()}");
                 }
 
-                $content = $device->read($path);
+                $content = (string) $device->read($path);
                 if ($content !== 'test') {
                     throw new \Exception("Failed reading test file from {$device->getRoot()}: content mismatch");
                 }

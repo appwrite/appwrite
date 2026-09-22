@@ -37,7 +37,6 @@ class Update extends Action
             ->label('event', 'platforms.[platformId].update')
             ->label('audits.event', 'project.platform.update')
             ->label('audits.resource', 'project.platform/{response.$id}')
-            ->label('usage.resource', 'project.platform/{response.$id}')
             ->label('sdk', new Method(
                 namespace: 'project',
                 group: 'platforms',
@@ -54,8 +53,8 @@ class Update extends Action
                 ]
             ))
             ->param('platformId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getAdapter()->getMaxUIDLength()), 'Platform ID.', false, ['dbForPlatform'])
-            ->param('name', null, new Text(128), 'Platform name. Max length: 128 chars.')
-            ->param('applicationId', '', new Text(256), 'Android application ID. Max length: 256 chars.')
+            ->param('name', null, new Text(128, requireNonBlank: true), 'Platform name. Max length: 128 chars.')
+            ->param('applicationId', '', new Text(256, requireNonBlank: true), 'Android application ID. Max length: 256 chars.')
             ->inject('response')
             ->inject('queueForEvents')
             ->inject('dbForPlatform')

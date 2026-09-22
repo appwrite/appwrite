@@ -8,6 +8,8 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectConsole;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
+use Utopia\Database\Helpers\ID;
+use Utopia\System\System;
 
 final class TeamsConsoleClientTest extends Scope
 {
@@ -15,6 +17,95 @@ final class TeamsConsoleClientTest extends Scope
     use TeamsBaseClient;
     use ProjectConsole;
     use SideClient;
+
+    public function testCreateOrganization(): void
+    {
+        if (System::getEnv('_APP_E2E_FRESH_INSTANCE', 'disabled') !== 'enabled') {
+            $this->markTestSkipped('Requires an isolated fresh instance with console signup enabled.');
+        }
+
+        $accounts = [$this->getUser(true), $this->getUser(true)];
+        $headers = ['content-type' => 'application/json', 'x-appwrite-project' => 'console'];
+        $handles = [];
+        $multi = curl_multi_init();
+        $owner = null;
+        $organization = null;
+
+        /**
+         * Test for SUCCESS: same-account and cross-account races create only one organization.
+         */
+        try {
+            foreach ([0, 1, 0, 1] as $index) {
+                $handle = curl_init($this->endpoint . '/teams');
+                curl_setopt_array($handle, [
+                    CURLOPT_POST => true,
+                    CURLOPT_RETURNTRANSFER => true,
+                    CURLOPT_TIMEOUT => 30,
+                    CURLOPT_HTTPHEADER => [
+                        'Content-Type: application/json',
+                        'X-Appwrite-Project: console',
+                        'Cookie: a_session_console=' . $accounts[$index]['session'],
+                    ],
+                    CURLOPT_POSTFIELDS => json_encode(['teamId' => ID::unique(), 'name' => 'Instance organization']),
+                ]);
+                curl_multi_add_handle($multi, $handle);
+                $handles[] = [$handle, $index];
+            }
+            do {
+                $this->assertSame(CURLM_OK, curl_multi_exec($multi, $running));
+                if ($running) {
+                    curl_multi_select($multi, 0.1);
+                }
+            } while ($running);
+
+            $created = 0;
+            foreach ($handles as [$handle, $index]) {
+                $this->assertSame(0, curl_errno($handle), curl_error($handle));
+                $code = curl_getinfo($handle, CURLINFO_RESPONSE_CODE);
+                $body = json_decode(curl_multi_getcontent($handle), true);
+                if ($code === 201) {
+                    $created++;
+                    $owner = $accounts[$index];
+                    $organization = $body;
+                } else {
+                    $this->assertContains($code, [403, 409], json_encode($body));
+                    $this->assertSame($code === 403 ? 'organization_creation_prohibited' : 'general_resource_locked', $body['type']);
+                }
+            }
+            $this->assertSame(1, $created);
+        } finally {
+            foreach ($handles as [$handle]) {
+                curl_multi_remove_handle($multi, $handle);
+            }
+            curl_multi_close($multi);
+        }
+
+        $ownerHeaders = [...$headers, 'cookie' => 'a_session_console=' . $owner['session']];
+        $response = $this->client->call(Client::METHOD_GET, '/teams', $ownerHeaders);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame(1, $response['body']['total']);
+        $this->assertSame($organization['$id'], $response['body']['teams'][0]['$id']);
+
+        /**
+         * Test for FAILURE: neither the owner nor a newly registered account can create another.
+         */
+        $outsiderHeaders = [...$headers, 'cookie' => 'a_session_console=' . $this->getUser(true)['session']];
+        $response = $this->client->call(Client::METHOD_GET, '/teams', $outsiderHeaders);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame(0, $response['body']['total']);
+
+        foreach ([$ownerHeaders, $outsiderHeaders] as $requestHeaders) {
+            $response = $this->client->call(Client::METHOD_POST, '/teams', $requestHeaders, [
+                'teamId' => ID::unique(),
+                'name' => 'Another organization',
+            ]);
+            $this->assertSame(403, $response['headers']['status-code']);
+            $this->assertSame('organization_creation_prohibited', $response['body']['type']);
+        }
+        $response = $this->client->call(Client::METHOD_GET, '/teams', $ownerHeaders);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame(1, $response['body']['total']);
+    }
 
     public function testConsoleMembershipPrivacyDefaults(): void
     {

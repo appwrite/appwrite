@@ -14,7 +14,6 @@ abstract class Model
     public const TYPE_DATETIME = 'datetime';
     public const TYPE_DATETIME_EXAMPLE = '2020-10-15T06:38:00.000+00:00';
     public const TYPE_RELATIONSHIP = 'relationship';
-    public const TYPE_PAYLOAD = 'payload';
     public const TYPE_ARRAY = 'array';
     public const TYPE_ENUM = 'enum';
     public const TYPE_ID = 'id';
@@ -111,27 +110,6 @@ abstract class Model
 
         foreach ($this->rules as $key => $rule) {
             if ($rule['required'] ?? false) {
-                $list[] = $key;
-            }
-        }
-
-        return $list;
-    }
-
-    /**
-     * Get Readonly Fields
-     *
-     * Returns list of field names that are marked as readOnly
-     * and should not be allowed in create/update payloads
-     *
-     * @return array
-     */
-    public function getReadonlyFields(): array
-    {
-        $list = [];
-
-        foreach ($this->rules as $key => $rule) {
-            if ($rule['readOnly'] ?? false) {
                 $list[] = $key;
             }
         }
