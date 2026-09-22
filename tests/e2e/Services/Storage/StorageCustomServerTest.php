@@ -488,18 +488,34 @@ final class StorageCustomServerTest extends Scope
 
         $body = (string) \file_get_contents(__DIR__ . '/../../../resources/app.apk');
 
-        // An S3 client sees the zip container an APK is built from and declares it.
+        // A client uploading an APK declares the zip container it is built from
         $cases = [
             'app.apk' => 'application/vnd.android.package-archive',
             'archive.zip' => 'application/zip',
         ];
 
+        foreach (\array_keys($cases) as $key) {
+            $device->write($device->getPath($key), new Stream($body), 'application/zip');
+        }
+
+        $files = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucket['body']['$id'] . '/files', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $files['headers']['status-code']);
+
+        $stored = \array_column($files['body']['files'], '$id', 'name');
+
         foreach ($cases as $key => $expected) {
-            $path = $device->getPath($key);
+            $this->assertArrayHasKey($key, $stored, $key);
 
-            $device->write($path, new Stream($body), 'application/zip');
+            $download = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucket['body']['$id'] . '/files/' . $stored[$key] . '/download', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
 
-            $this->assertEquals($expected, $device->getFileMimeType($path), $key);
+            $this->assertEquals($expected, $download['headers']['content-type'], $key);
         }
     }
 
