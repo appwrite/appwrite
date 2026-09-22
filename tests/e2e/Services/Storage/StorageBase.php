@@ -1158,7 +1158,7 @@ trait StorageBase
         $data = $this->setupBucketFile();
         $bucketId = $data['bucketId'];
         $path = __DIR__ . '/../../../resources/logo.png';
-        $size = 47218;
+        $size = \filesize($path);
 
         foreach (['view', 'download'] as $route) {
             $endpoint = '/storage/buckets/' . $bucketId . '/files/' . $data['fileId'] . '/' . $route;
