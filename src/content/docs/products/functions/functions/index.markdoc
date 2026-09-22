@@ -166,7 +166,7 @@ There is a system wide maximum timeout of 900 seconds (15 minutes).
 
 ## Scopes {% #scopes %}
 
-You can configure the permission scopes for the function [dynamic API key](/docs/products/functions/develop#dynamic-api-key). The dynamic API key is automatically generated to access your project resources like users and buckets but can only be used inside of Appwrite functions. Navigate to your function > **Settings** > **Scopes** to configure your dynamic API key permission scopes.
+You can configure the permission scopes for the function [ephemeral API key](/docs/products/functions/develop#ephemeral-api-key). The ephemeral API key is automatically generated to access your project resources like users and buckets but can only be used inside of Appwrite functions. Navigate to your function > **Settings** > **Scopes** to configure your ephemeral API key permission scopes.
 
 {% arrow_link href="/docs/partners/project/api-keys#scopes" %}
 Learn more about scopes

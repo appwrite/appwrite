@@ -536,8 +536,8 @@ export const heFunctionsDictionary: Record<string, string> = {
   'Select branch': 'בחירת Branch',
   'Select organization': 'בחרו ארגון',
   'Select runtime': 'בחרו סביבת ריצה',
-  'Select scopes to grant the dynamic key generated temporarily for your function. It is best practice to allow only necessary permissions.':
-    'בחרו הרשאות גישה להענקה למפתח הדינמי שנוצר זמנית עבור הפונקציה שלכם. מומלץ לאפשר רק את ההרשאות הנחוצות.',
+  'Select scopes to grant the ephemeral key generated for your function. It is best practice to allow only necessary permissions.':
+    'בחרו הרשאות גישה להענקה למפתח הזמני שנוצר עבור הפונקציה שלכם. מומלץ לאפשר רק את ההרשאות הנחוצות.',
   'Select specification': 'בחרו מפרט',
   'Select the runtime specification for your function':
     'בחרו את מפרט סביבת הריצה של הפונקציה שלכם',
