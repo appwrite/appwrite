@@ -2194,7 +2194,7 @@ trait MessagingBase
 
         $this->assertEquals(200, $message['headers']['status-code']);
         $this->assertEquals(1, $message['body']['deliveredTotal']);
-        $this->assertEquals(0, \count($message['body']['deliveryErrors']));
+        $this->assertSame(0, \count($message['body']['deliveryErrors']));
     }
 
     public function testCreateDraftPushWithImage(): void
