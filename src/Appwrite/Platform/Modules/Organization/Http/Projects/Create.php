@@ -2,7 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Organization\Http\Projects;
 
-use Appwrite\Database\Factory as DatabaseFactory;
+use Appwrite\Database\Provisioner;
 use Appwrite\Extend\Exception;
 use Appwrite\Hooks\Hooks;
 use Appwrite\SDK\AuthType;
@@ -77,7 +77,7 @@ class Create extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $projectId, string $name, string $region, Response $response, Database $dbForPlatform, Cache $cache, DatabaseFactory $databaseFactory, Group $pools, Hooks $hooks, Document $team)
+    public function action(string $projectId, string $name, string $region, Response $response, Database $dbForPlatform, Cache $cache, Provisioner $databaseFactory, Group $pools, Hooks $hooks, Document $team)
     {
         $allowList = \array_filter(\explode(',', System::getEnv('_APP_PROJECT_REGIONS', '')));
 

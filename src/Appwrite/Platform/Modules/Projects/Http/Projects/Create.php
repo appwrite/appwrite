@@ -2,7 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Projects\Http\Projects;
 
-use Appwrite\Database\Factory as DatabaseFactory;
+use Appwrite\Database\Provisioner;
 use Appwrite\Extend\Exception;
 use Appwrite\Hooks\Hooks;
 use Appwrite\Utopia\Database\Validator\ProjectId;
@@ -61,7 +61,7 @@ class Create extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $projectId, string $name, string $teamId, string $region, Request $request, Response $response, Database $dbForPlatform, Cache $cache, DatabaseFactory $databaseFactory, Group $pools, Hooks $hooks)
+    public function action(string $projectId, string $name, string $teamId, string $region, Request $request, Response $response, Database $dbForPlatform, Cache $cache, Provisioner $databaseFactory, Group $pools, Hooks $hooks)
     {
         $team = $dbForPlatform->getDocument('teams', $teamId);
 

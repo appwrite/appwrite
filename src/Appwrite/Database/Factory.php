@@ -17,7 +17,7 @@ use Utopia\DSN\DSN;
 use Utopia\Pools\Group;
 use Utopia\System\System;
 
-class Factory
+class Factory implements Provisioner
 {
     public function __construct(
         protected Group $pools,
