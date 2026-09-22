@@ -4,7 +4,6 @@ namespace Appwrite\Platform\Workers;
 
 use Appwrite\Template\Template;
 use Exception;
-use Utopia\Console;
 use Utopia\Database\Document;
 use Utopia\Messaging\Adapter\Email as EmailAdapter;
 use Utopia\Messaging\Adapter\Email\SMTP;
@@ -227,7 +226,7 @@ class Mails extends Action
             // The address or name can never be delivered, so a retry cannot help.
             Span::add('mail.status', 'skipped');
             Span::add('mail.error', $error->getType());
-            Console::warning("Skipped {$template} mail to {$recipientDomain}: {$error->getMessage()}");
+            Span::add('mail.error.message', $error->getMessage());
 
             return;
         } catch (\Throwable $error) {

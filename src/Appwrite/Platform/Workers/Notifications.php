@@ -10,7 +10,6 @@ use Appwrite\Utopia\Messaging\Messages\Console as ConsoleMessage;
 use Appwrite\Utopia\Messaging\Messages\Webhook as WebhookMessage;
 use Exception;
 use Throwable;
-use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
@@ -350,7 +349,8 @@ class Notifications extends Action
             }
         } catch (InvalidArgumentException $error) {
             // The address or name can never be delivered, so a retry cannot help.
-            Console::warning("Skipped notification email: {$error->getMessage()}");
+            Span::add('email.skipped', $error->getType());
+            Span::add('email.error', $error->getMessage());
 
             return null;
         } catch (Throwable $error) {
