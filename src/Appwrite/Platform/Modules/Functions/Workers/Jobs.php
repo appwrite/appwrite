@@ -369,7 +369,7 @@ class Jobs extends Action
     }
 
     /**
-     * Anything outside USER_ARTIFACT_ERRORS is reported to Sentry and shown as a generic error.
+     * Anything outside USER_ARTIFACT_ERRORS is recorded on the span and shown as a generic error.
      */
     protected function artifactFailure(Document $project, Document $deployment, JobArtifact $artifact): string
     {
@@ -378,13 +378,12 @@ class Jobs extends Action
             return self::USER_ARTIFACT_ERRORS[$error->code->value];
         }
 
-        Span::current()
-            ?->setError(new \RuntimeException("Build artifact '{$artifact->artifactId}' failed: " . ($error->message ?? 'no error reported'), 500))
-            ->set('project.id', $project->getId())
-            ->set('deployment.id', $deployment->getId())
-            ->set('artifact.id', $artifact->artifactId)
-            ->set('artifact.type', $artifact->artifactType)
-            ->set('artifact.error.code', $error?->code->value);
+        Span::add('project.id', $project->getId());
+        Span::add('deployment.id', $deployment->getId());
+        Span::add('artifact.id', $artifact->artifactId);
+        Span::add('artifact.type', $artifact->artifactType);
+        Span::add('artifact.error.code', $error?->code->value);
+        Span::add('artifact.error.message', $error?->message);
 
         return self::INTERNAL_ERROR_MESSAGE;
     }
