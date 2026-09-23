@@ -42,7 +42,7 @@ The tools and skills serve different purposes. The [Appwrite MCP server](/docs/t
 
 # Install the Appwrite plugin in ChatGPT
 
-In the ChatGPT desktop app:
+In the ChatGPT (or Codex) desktop app:
 
 1. Open **Plugins** in the sidebar.
 2. Search for `Appwrite` and open the **Appwrite** listing.
@@ -54,7 +54,7 @@ In the ChatGPT desktop app:
 
 The hosted connection uses OAuth. You do not need to run an MCP server locally or create an API key for the plugin. Use an [Appwrite Cloud](https://appwrite.io) account with access to the project you want to work on.
 
-To use this ChatGPT plugin within Codex, you can also install it through the **OpenAI Curated** marketplace in the CLI's `/plugins` menu. Our [Codex setup tutorial](/blog/post/appwrite-codex-plugin-hosted-mcp) covers desktop and CLI installation, signing in, selecting a project, and creating your first table.
+To use this ChatGPT plugin within Codex CLI, you can also install it through the **OpenAI Curated** marketplace in the CLI's `/plugins` menu. Our [Codex setup tutorial](/blog/post/appwrite-codex-plugin-hosted-mcp) covers desktop and CLI installation, signing in, selecting a project, and creating your first table.
 
 # Start with a question about your project
 
