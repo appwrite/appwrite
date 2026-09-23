@@ -8,7 +8,7 @@ readtime: 6
 
 Appwrite Functions can execute when an email arrives at an address that is connected to the function.
 Appwrite receives the email, stores its content and attachments, and executes your function in the background with the parsed email as the request body.
-Your function can save the email, reply to the sender, or send the content to another service.
+Your function can save the email to a table, reply to the sender with Messaging, or send the content to another service.
 
 Email triggers only receive email. To send email from your app, use [Messaging](/docs/products/messaging).
 
@@ -17,7 +17,7 @@ Email triggers only receive email. To send email from your app, use [Messaging](
 - Each email that arrives at a connected address creates one [asynchronous execution](/docs/products/functions/execute#asynchronous-executions).
 - The execution is a `POST` request to the `/` path of your function, and the `x-appwrite-trigger` header is `email`.
 - When one email is sent to more than one address of the same function, the function executes one time and receives all of these addresses.
-- Appwrite accepts the email before your function executes. If your function fails, the sender does not receive an error.
+- Appwrite accepts the email before your function executes. A failed execution does not send an error to the sender.
 - Appwrite rejects email that is sent to a function without an active deployment.
 
 # Built-in address {% #built-in-address %}
@@ -732,7 +732,7 @@ The request body of an email execution has this format:
 {% /info %}
 
 - `id`: the unique ID of the email. It is the same value as the `x-appwrite-email-id` header.
-- `envelope.from`: the address that the sending mail server gave for the sender.
+- `envelope.from`: the sender address that the sending mail server reported.
 - `envelope.to`: the addresses of your function that received the email.
 - `from`, `to`, `cc`, and `replyTo`: the values of these headers in the email.
 - `subject`, `messageId`, and `date`: the values of these headers in the email.
