@@ -390,9 +390,6 @@ class Create extends Action
                 $mimeType = $deviceForFiles->getFileMimeType($path); // Get mime-type before compression and encryption
                 $formats = Config::getParam('storage-formats');
 
-                // Sniffing reports the container a file is packed in, not the format inside
-                // it, so an APK, a JAR or a TrueType font comes back as a plain zip or a bare
-                // SFNT. Where only the extension can tell them apart, the extension wins.
                 if (\in_array($mimeType, $formats['ambiguous'], true)) {
                     $mimeType = $formats['extensions'][\strtolower(\pathinfo($fileName, PATHINFO_EXTENSION))] ?? $mimeType;
                 }

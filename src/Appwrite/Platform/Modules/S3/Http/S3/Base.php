@@ -331,9 +331,6 @@ abstract class Base extends Action
         $extension = \strtolower(\pathinfo($name, PATHINFO_EXTENSION));
         $formats = Config::getParam('storage-formats');
 
-        // A client uploading an APK, a JAR or a font commonly declares the zip or SFNT
-        // container it is packed in rather than the format inside. Where only the
-        // extension can tell the two apart, the extension wins.
         if (($contentType === '' || \in_array($contentType, $formats['ambiguous'], true)) && isset($formats['extensions'][$extension])) {
             return $formats['extensions'][$extension];
         }
