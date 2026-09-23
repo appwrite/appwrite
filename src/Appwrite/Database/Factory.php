@@ -83,11 +83,13 @@ class Factory implements Provisioner
     {
         $dsn = $this->dsn($project->getAttribute('database'));
 
-        return $this->newDatabase($this->adapter($dsn->getHost()))
-            ->setDatabase($this->database)
-            ->setSharedTables(false)
-            ->setTenant(null)
-            ->setNamespace('_' . $project->getSequence());
+        return $this->applyHooks(
+            $this->newDatabase($this->adapter($dsn->getHost()))
+                ->setDatabase($this->database)
+                ->setSharedTables(false)
+                ->setTenant(null)
+                ->setNamespace('_' . $project->getSequence())
+        );
     }
 
     /**
