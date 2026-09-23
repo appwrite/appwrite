@@ -37,6 +37,8 @@ use Utopia\Validator\Text;
 
 class XList extends Action
 {
+    public const string LIST_CACHE_FIELD_OPERATIONS = 'operations';
+
     public static function getName(): string
     {
         return 'listDocuments';
@@ -173,6 +175,7 @@ class XList extends Action
                 $cacheKey = $this->getListCacheKey($dbForProject, $collectionId);
                 $roles = $dbForProject->getAuthorization()->getRoles();
                 $documentsField = $this->getListCacheField($collection, $roles, $queries, self::LIST_CACHE_FIELD_DOCUMENTS);
+                $operationsField = $this->getListCacheField($collection, $roles, $queries, self::LIST_CACHE_FIELD_OPERATIONS);
 
                 $documentsCacheHit = false;
                 try {
@@ -188,6 +191,13 @@ class XList extends Action
                         return new Document($doc);
                     }, $cachedDocuments);
                     $documentsCacheHit = true;
+
+                    try {
+                        $cachedOperations = $dbForProject->getCache()->load($cacheKey, $ttl, $operationsField);
+                    } catch (\Throwable) {
+                        $cachedOperations = null;
+                    }
+                    $this->recordCachedOperations($operations, $documents, $cachedOperations);
                 } else {
                     $documents = $find();
 
@@ -195,7 +205,12 @@ class XList extends Action
                         return $doc->getArrayCopy();
                     }, $documents);
                     try {
-                        $dbForProject->getCache()->save($cacheKey, $documentsArray, $documentsField);
+                        if ($documentsArray !== []) {
+                            $dbForProject->getCache()->saveMany($cacheKey, [
+                                $documentsField => $documentsArray,
+                                $operationsField => $operations->counts($documents),
+                            ]);
+                        }
                     } catch (\Throwable) {
                     }
                 }
@@ -269,5 +284,26 @@ class XList extends Action
      */
     protected function afterQuery(float $dbDurationMs, Document $database, Document $collection, array $queries, ?Http $utopia): void
     {
+    }
+
+    /**
+     * @param array<Document> $documents
+     */
+    private function recordCachedOperations(Operations $operations, array $documents, mixed $counts): void
+    {
+        $documents = \array_values($documents);
+        if (!\is_array($counts) || !\array_is_list($counts) || \count($counts) !== \count($documents)) {
+            return;
+        }
+
+        foreach ($counts as $count) {
+            if (!\is_int($count) || $count < 1) {
+                return;
+            }
+        }
+
+        foreach ($documents as $index => $document) {
+            $operations->record($document, $counts[$index]);
+        }
     }
 }

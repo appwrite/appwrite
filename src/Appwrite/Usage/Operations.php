@@ -33,12 +33,19 @@ final readonly class Operations
      */
     public function reads(array $documents): int
     {
-        $operations = 0;
-        foreach ($documents as $document) {
-            $operations += $this->documents[$document] ?? 1;
-        }
+        return \array_sum($this->counts($documents));
+    }
 
-        return $operations;
+    /**
+     * @param array<Document> $documents
+     * @return list<int>
+     */
+    public function counts(array $documents): array
+    {
+        return \array_values(\array_map(
+            fn (Document $document): int => $this->documents[$document] ?? 1,
+            $documents,
+        ));
     }
 
     /**

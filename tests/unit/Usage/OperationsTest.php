@@ -41,6 +41,17 @@ final class OperationsTest extends TestCase
         $this->assertSame(1, $operations->reads([new Document(['$id' => 'album'])]), 'the same document read again is another read');
     }
 
+    public function testCountsListTheOperationsOfEachDocumentInOrder(): void
+    {
+        $operations = new Operations();
+        $album = new Document(['$id' => 'album']);
+        $operations->record($album, 7);
+
+        $this->assertSame([1, 7, 1], $operations->counts([new Document(['$id' => 'single']), $album, new Document(['$id' => 'cached'])]));
+        $this->assertSame([7], $operations->counts(['album' => $album]), 'the counts are a list, whatever the documents are keyed by');
+        $this->assertSame([], $operations->counts([]));
+    }
+
     public function testWritesCountEveryRelatedDocumentNestedInThePayload(): void
     {
         $payload = [
