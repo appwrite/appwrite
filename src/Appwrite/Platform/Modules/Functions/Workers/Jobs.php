@@ -31,6 +31,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
+use Utopia\Queue\PermanentFailure;
 use Utopia\Span\Span;
 use Utopia\Storage\Device;
 use Utopia\Storage\DeviceType;
@@ -139,7 +140,9 @@ class Jobs extends Action
             return;
         }
 
-        $locks('jobs-deployment:' . $deploymentId, self::LOCK_TTL, function () use ($event, $project, $dbForProject, $dbForPlatform, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $publisherForScreenshots, $publisherForUsage, $usage, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $deploymentId, $bus): void {
+        $failure = null;
+
+        $locks('jobs-deployment:' . $deploymentId, self::LOCK_TTL, function () use ($event, $project, $dbForProject, $dbForPlatform, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $publisherForScreenshots, $publisherForUsage, $usage, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $deploymentId, $bus, &$failure): void {
             if ($event->id !== '') {
                 $key = 'jobs-event-' . $event->id;
                 if ($cache->load($key, self::DEDUPE_TTL) !== false) {
@@ -156,9 +159,12 @@ class Jobs extends Action
             $statusBefore = $deployment->getAttribute('status');
             $durationBefore = $deployment->getAttribute('buildDuration');
 
-            $deployment = match (CallbackEvent::tryFrom($event->event)) {
+            $callback = CallbackEvent::tryFrom($event->event);
+            $artifact = $callback === CallbackEvent::Artifact ? JobArtifact::fromArray($event->data) : null;
+
+            $deployment = match ($callback) {
                 CallbackEvent::Log => $this->onLog($dbForProject, $dbForPlatform, $project, $deployment, JobLog::fromArray($event->data), $vcsFactory, $platform),
-                CallbackEvent::Artifact => $this->onArtifact($dbForProject, $dbForPlatform, $project, $deployment, JobArtifact::fromArray($event->data), $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
+                CallbackEvent::Artifact => $this->onArtifact($dbForProject, $dbForPlatform, $project, $deployment, $artifact, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
                 CallbackEvent::Exit => $this->onExit($dbForProject, $dbForPlatform, $project, $deployment, JobExit::fromArray($event->data), $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
                 CallbackEvent::Complete => $this->onComplete($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
                 default => $this->onCallback($event->event, $dbForProject, $dbForPlatform, $project, $deployment, $event->data, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
@@ -193,7 +199,18 @@ class Jobs extends Action
             if ($statusBefore !== $deployment->getAttribute('status') && \in_array($deployment->getAttribute('status'), ['ready', 'failed'], true)) {
                 $this->dispatchUpdate($queueForEvents, $queueForWebhooks, $publisherForFunctions, $project, $deployment);
             }
+
+            if ($artifact !== null) {
+                $failure = $this->internalFailure($deployment, $artifact);
+            }
         }, self::LOCK_TIMEOUT);
+
+        // Thrown only once the callback is fully applied and the lock released,
+        // so the error reaches Sentry without skipping realtime or webhooks.
+        // Permanent: the event is deduplicated, so a redelivery would be a no-op.
+        if ($failure !== null) {
+            throw $failure;
+        }
     }
 
     protected function onLog(Database $dbForProject, Database $dbForPlatform, Document $project, Document $deployment, JobLog $log, VcsFactory $vcsFactory, array $platform): Document
@@ -331,7 +348,7 @@ class Jobs extends Action
             if ($failed) {
                 // Fail immediately even if exit delivery is lost. Leave duration
                 // unknown until exit arrives, rather than billing callback wait.
-                return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, $this->artifactFailure($project, $deployment, $artifact), $publisherForScreenshots, $vcsFactory, $platform, $bus);
+                return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, $this->artifactFailure($artifact), $publisherForScreenshots, $vcsFactory, $platform, $bus);
             }
 
             if ($artifact->status !== 'success') {
@@ -349,7 +366,7 @@ class Jobs extends Action
         // build cache upload is the one best-effort artifact: losing it costs
         // the next build time, not this one.
         if ($failed && $artifact->artifactId !== 'cache') {
-            return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, $this->artifactFailure($project, $deployment, $artifact), $publisherForScreenshots, $vcsFactory, $platform, $bus);
+            return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, $this->artifactFailure($artifact), $publisherForScreenshots, $vcsFactory, $platform, $bus);
         }
 
         if ($artifact->artifactId !== 'sourceSize' || $artifact->status !== 'success') {
@@ -369,23 +386,32 @@ class Jobs extends Action
     }
 
     /**
-     * Anything outside USER_ARTIFACT_ERRORS is recorded on the span and shown as a generic error.
+     * The build log message for a failed artifact: a safe message when the
+     * user can fix it, the generic internal error otherwise.
      */
-    protected function artifactFailure(Document $project, Document $deployment, JobArtifact $artifact): string
+    protected function artifactFailure(JobArtifact $artifact): string
     {
-        $error = $artifact->error;
-        if ($error !== null && isset(self::USER_ARTIFACT_ERRORS[$error->code->value])) {
-            return self::USER_ARTIFACT_ERRORS[$error->code->value];
+        return self::USER_ARTIFACT_ERRORS[$artifact->error?->code->value ?? ''] ?? self::INTERNAL_ERROR_MESSAGE;
+    }
+
+    /**
+     * The error to report for a platform-side artifact failure that failed
+     * the build, or null. The cache upload and manifest never fail a build.
+     */
+    protected function internalFailure(Document $deployment, JobArtifact $artifact): ?PermanentFailure
+    {
+        if ($artifact->status !== 'failed'
+            || \in_array($artifact->artifactId, ['cache', 'manifest'], true)
+            || isset(self::USER_ARTIFACT_ERRORS[$artifact->error?->code->value ?? ''])) {
+            return null;
         }
 
-        Span::add('project.id', $project->getId());
         Span::add('deployment.id', $deployment->getId());
         Span::add('artifact.id', $artifact->artifactId);
         Span::add('artifact.type', $artifact->artifactType);
-        Span::add('artifact.error.code', $error?->code->value);
-        Span::add('artifact.error.message', $error?->message);
+        Span::add('artifact.error.code', $artifact->error?->code->value);
 
-        return self::INTERNAL_ERROR_MESSAGE;
+        return new PermanentFailure("Build artifact '{$artifact->artifactId}' failed: " . ($artifact->error->message ?? 'no error reported'), 500);
     }
 
     /**
