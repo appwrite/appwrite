@@ -3,6 +3,19 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "appwrite-firewall-use-cases",
+    "href": "/blog/post/appwrite-firewall-use-cases",
+    "title": "Twelve Appwrite Firewall rules that stop real attacks",
+    "description": "Practical Appwrite Firewall rules for OTP abuse, database scraping, per-user quotas, regional access, trusted networks, webhook Functions, and Sites under attack.",
+    "date": "2026-09-23",
+    "lastUpdated": "2026-09-23",
+    "timeToRead": 12,
+    "author": "atharva",
+    "category": "security, best-practices",
+    "cover": "/images/blog/appwrite-firewall-use-cases/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-firewall-presets",
     "href": "/blog/post/announcing-firewall-presets",
     "title": "Announcing Firewall presets: ready-made traffic rules",
