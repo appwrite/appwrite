@@ -3,6 +3,21 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "claude-opus-55-reaches-fable-level-performance",
+    "href": "/blog/post/claude-opus-55-reaches-fable-level-performance",
+    "title": "Claude Opus 5.5 reaches Fable-level performance",
+    "description": "Claude Opus 5.5 brings Fable 5.1-level performance, 40% lower typical workload costs, faster output, and stronger agentic coding.",
+    "date": "2026-09-23",
+    "lastUpdated": "2026-09-23",
+    "timeToRead": 5,
+    "author": "aishwari",
+    "category": "news",
+    "featured": false,
+    "unlisted": true,
+    "cover": "/images/blog/claude-opus-55-reaches-fable-level-performance/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-firewall-presets",
     "href": "/blog/post/announcing-firewall-presets",
     "title": "Announcing Firewall presets: ready-made traffic rules",
