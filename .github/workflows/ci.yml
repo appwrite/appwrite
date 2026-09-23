@@ -243,7 +243,17 @@ jobs:
 
             const pr = context.payload.pull_request;
 
-            const isDatabaseVersionChanged = async () => {
+            // Every library whose queries run on the matrix databases; usage writes to ClickHouse instead.
+            const databasePackages = [
+              'utopia-php/abuse',
+              'utopia-php/audit',
+              'utopia-php/database',
+              'utopia-php/migration',
+              'utopia-php/mongo',
+              'utopia-php/query',
+            ];
+
+            const databasePackagesChanged = async () => {
               const getContent = (ref) => github.rest.repos.getContent({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
@@ -251,18 +261,26 @@ jobs:
                 ref,
               });
 
-              const getDbVersion = (lock) => lock.packages?.find(p => p.name === 'utopia-php/database')?.version;
+              // A branch constraint locks the branch name as the version on every update,
+              // so only the source commit tells two builds of the same branch apart.
+              const getReferences = (lock) => new Map((lock.packages ?? [])
+                .filter((entry) => databasePackages.includes(entry.name))
+                .map((entry) => [entry.name, entry.source?.reference ?? entry.version]));
+
               const [{ data: base }, { data: head }] = await Promise.all([
                 getContent(pr.base.sha),
                 getContent(pr.head.sha),
               ]);
 
               const decode = (content) => JSON.parse(Buffer.from(content, 'base64').toString());
-              return getDbVersion(decode(base.content)) !== getDbVersion(decode(head.content));
+              const baseReferences = getReferences(decode(base.content));
+              const headReferences = getReferences(decode(head.content));
+
+              return databasePackages.some((name) => baseReferences.get(name) !== headReferences.get(name));
             };
 
             const fullMatrix = context.eventName === 'workflow_dispatch'
-              || (pr && await isDatabaseVersionChanged());
+              || (pr && await databasePackagesChanged());
 
             if (fullMatrix) {
               core.setOutput('databases', JSON.stringify(['MariaDB', 'PostgreSQL', 'MongoDB']));
