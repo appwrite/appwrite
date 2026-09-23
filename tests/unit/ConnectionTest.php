@@ -5,7 +5,14 @@ declare(strict_types=1);
 namespace Utopia\Mqtt\Tests\Unit;
 
 use PHPUnit\Framework\TestCase;
+use Utopia\Mqtt\Adapter;
+use Utopia\Mqtt\Adapter\Swoole\Timer;
+use Utopia\Mqtt\Adapter\Swoole\Timers\NoTimer;
 use Utopia\Mqtt\Connection;
+use Utopia\Mqtt\Packet;
+use Utopia\Mqtt\Packet\Disconnect;
+use Utopia\Mqtt\Properties;
+use Utopia\Mqtt\Property;
 
 final class ConnectionTest extends TestCase
 {
@@ -110,5 +117,125 @@ final class ConnectionTest extends TestCase
 
         $this->assertNull($connection->acknowledge(7), 'a second ack for the same id resolves to nothing');
         $this->assertNull($connection->acknowledge(99), 'an ack for an untracked id resolves to nothing');
+    }
+
+    public function testDisconnectSendsAReasonCodeAndStringThenCloses(): void
+    {
+        $adapter = new RecordingAdapter();
+        $connection = new Connection(9, $adapter);
+        $connection->protocol = 5; // MQTT 5.0
+
+        $connection->disconnect(Disconnect::NOT_AUTHORIZED, 'Session expired');
+
+        $this->assertCount(1, $adapter->sent, 'a 5.0 client is sent one DISCONNECT');
+        $packet = Packet::parse($adapter->sent[0][1]);
+        $this->assertSame(Packet::DISCONNECT, $packet->type);
+        $this->assertSame(Disconnect::NOT_AUTHORIZED, ord($packet->body[0]));
+
+        [$parsed] = Properties::parse($packet->body, 1);
+        $this->assertSame('Session expired', $parsed->get(Property::REASON_STRING));
+
+        $this->assertSame([9], $adapter->closed, 'the socket is always closed');
+    }
+
+    public function testDisconnectWithoutAReasonStringSendsOnlyTheCode(): void
+    {
+        $adapter = new RecordingAdapter();
+        $connection = new Connection(9, $adapter);
+        $connection->protocol = 5;
+
+        $connection->disconnect(Disconnect::NOT_AUTHORIZED);
+
+        $packet = Packet::parse($adapter->sent[0][1]);
+        [$parsed] = Properties::parse($packet->body, 1);
+        $this->assertNull($parsed->get(Property::REASON_STRING), 'no reason string means an empty property block');
+        $this->assertSame([9], $adapter->closed);
+    }
+
+    public function testDisconnectOnA311ClientClosesWithoutSendingAPacket(): void
+    {
+        // MQTT 3.1.1 has no server-initiated DISCONNECT, so the reason is dropped and only the
+        // socket is closed.
+        $adapter = new RecordingAdapter();
+        $connection = new Connection(9, $adapter);
+        $connection->protocol = 4;
+
+        $connection->disconnect(Disconnect::NOT_AUTHORIZED, 'Session expired');
+
+        $this->assertSame([], $adapter->sent, 'nothing is sent to a 3.1.1 client');
+        $this->assertSame([9], $adapter->closed, 'but the socket is still closed');
+    }
+
+    public function testDisconnectWithReasonZeroClosesWithoutSendingAPacket(): void
+    {
+        $adapter = new RecordingAdapter();
+        $connection = new Connection(9, $adapter);
+        $connection->protocol = 5;
+
+        $connection->disconnect(); // reason 0 (normal)
+
+        $this->assertSame([], $adapter->sent, 'reason 0 sends no DISCONNECT');
+        $this->assertSame([9], $adapter->closed);
+    }
+}
+
+/**
+ * A minimal Adapter that records send() and close() calls so a Connection's outbound behaviour
+ * can be asserted without a real transport.
+ */
+final class RecordingAdapter extends Adapter
+{
+    /** @var array<int, array{0: int, 1: string}> */
+    public array $sent = [];
+
+    /** @var array<int, int> */
+    public array $closed = [];
+
+    public function send(int $connection, string $message): void
+    {
+        $this->sent[] = [$connection, $message];
+    }
+
+    public function close(int $connection): void
+    {
+        $this->closed[] = $connection;
+    }
+
+    public function onStart(callable $callback): self
+    {
+        return $this;
+    }
+
+    public function onWorkerStart(callable $callback): self
+    {
+        return $this;
+    }
+
+    public function onOpen(callable $callback): self
+    {
+        return $this;
+    }
+
+    public function onReceive(callable $callback): self
+    {
+        return $this;
+    }
+
+    public function onClose(callable $callback): self
+    {
+        return $this;
+    }
+
+    public function timer(): Timer
+    {
+        return new NoTimer();
+    }
+
+    public function start(): void
+    {
+    }
+
+    public function shutdown(): void
+    {
     }
 }
