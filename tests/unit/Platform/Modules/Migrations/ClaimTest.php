@@ -1349,6 +1349,110 @@ final class ClaimTest extends TestCase
         $this->assertNotInstanceOf(Delivery::class, $claims->consume('project-1', $message));
     }
 
+    /** @return \Iterator<string, array{string, int}> */
+    public static function abandonedStages(): \Iterator
+    {
+        yield 'processing' => ['processing', Claim::LIVENESS_LEASE + 60];
+        yield 'migrating' => ['migrating', Claim::LIVENESS_LEASE + 60];
+        yield 'finalizing' => ['finalizing', Claim::FINALIZING_LEASE + 60];
+    }
+
+    #[DataProvider('abandonedStages')]
+    public function testRedeliveryOfAnAbandonedAttemptTakesTheMigrationOver(string $stage, int $silence): void
+    {
+        $claims = new Claim($this->database, $this->locks());
+        $queued = $this->database->createDocument('migrations', new Document([
+            '$id' => 'migration-1',
+            'attemptId' => 'attempt-a',
+            'status' => 'pending',
+            'stage' => 'init',
+            'resourceData' => [],
+        ]));
+        $abandoned = $this->age($queued->getId(), 'processing', $stage, $silence);
+        $message = new MigrationMessage(project: new Document(['$id' => 'project-1']), migration: $queued);
+
+        $delivery = $claims->consume('project-1', $message);
+
+        $this->assertInstanceOf(Delivery::class, $delivery);
+        $this->assertIsString($delivery->migration->getAttribute('attemptId'));
+        $this->assertNotSame('attempt-a', $delivery->migration->getAttribute('attemptId'));
+        $this->assertSame('processing', $delivery->migration->getAttribute('status'));
+        $this->assertSame('processing', $delivery->migration->getAttribute('stage'));
+        $this->assertNotInstanceOf(Document::class, $delivery->terminal);
+
+        $late = new Document($abandoned->getArrayCopy());
+        $late->setAttribute('status', 'completed');
+        $late->setAttribute('stage', 'finished');
+        $this->assertNotInstanceOf(Document::class, $claims->persist($late), 'The abandoned worker must be fenced out');
+        $this->assertNotInstanceOf(Delivery::class, $claims->consume('project-1', $message), 'Only one redelivery may take over');
+
+        $stored = $this->database->getDocument('migrations', $queued->getId());
+        $this->assertSame($delivery->migration->getAttribute('attemptId'), $stored->getAttribute('attemptId'));
+        $this->assertSame('processing', $stored->getAttribute('status'));
+        $this->assertSame($delivery->migration->getUpdatedAt(), $stored->getUpdatedAt());
+    }
+
+    /** @return \Iterator<string, array{string, int}> */
+    public static function runningAttempts(): \Iterator
+    {
+        yield 'processing' => ['processing', 60];
+        yield 'migrating' => ['migrating', 60];
+        yield 'finalizing past the liveness lease' => ['finalizing', Claim::LIVENESS_LEASE + 60];
+    }
+
+    #[DataProvider('runningAttempts')]
+    public function testRedeliveryOfARunningAttemptIsDropped(string $stage, int $silence): void
+    {
+        $queued = $this->database->createDocument('migrations', new Document([
+            '$id' => 'migration-1',
+            'attemptId' => 'attempt-a',
+            'status' => 'pending',
+            'stage' => 'init',
+            'resourceData' => [],
+        ]));
+        $running = $this->age($queued->getId(), 'processing', $stage, $silence);
+
+        $this->assertNotInstanceOf(Delivery::class, (new Claim($this->database, $this->locks()))->consume(
+            'project-1',
+            new MigrationMessage(project: new Document(['$id' => 'project-1']), migration: $queued),
+        ));
+
+        $stored = $this->database->getDocument('migrations', $queued->getId());
+        $this->assertSame('attempt-a', $stored->getAttribute('attemptId'));
+        $this->assertSame($stage, $stored->getAttribute('stage'));
+        $this->assertSame($running->getUpdatedAt(), $stored->getUpdatedAt());
+    }
+
+    /** @return \Iterator<string, array{?string}> */
+    public static function otherAttempts(): \Iterator
+    {
+        yield 'a superseded attempt' => ['attempt-a'];
+        yield 'a legacy delivery without an attempt' => [null];
+    }
+
+    #[DataProvider('otherAttempts')]
+    public function testRedeliveryOfAnotherAttemptIsDropped(?string $attemptId): void
+    {
+        $queued = $this->database->createDocument('migrations', new Document([
+            '$id' => 'migration-1',
+            'attemptId' => $attemptId,
+            'status' => 'pending',
+            'stage' => 'init',
+            'resourceData' => [],
+        ]));
+        $this->database->updateDocument('migrations', $queued->getId(), new Document(['attemptId' => 'attempt-b']));
+        $abandoned = $this->age($queued->getId(), 'processing', 'migrating', Claim::LIVENESS_LEASE + 60);
+
+        $this->assertNotInstanceOf(Delivery::class, (new Claim($this->database, $this->locks()))->consume(
+            'project-1',
+            new MigrationMessage(project: new Document(['$id' => 'project-1']), migration: $queued),
+        ));
+
+        $stored = $this->database->getDocument('migrations', $queued->getId());
+        $this->assertSame('attempt-b', $stored->getAttribute('attemptId'));
+        $this->assertSame($abandoned->getUpdatedAt(), $stored->getUpdatedAt());
+    }
+
     public function testRecoveryRequiresExactAuthoritativeOwnerLifecycle(): void
     {
         $claims = new Claim($this->database, $this->locks());
@@ -1437,6 +1541,25 @@ final class ClaimTest extends TestCase
                 'status' => $status,
                 'stage' => $stage,
                 'resourceData' => [],
+            ]));
+        } finally {
+            $this->database->setPreserveDates(false);
+        }
+    }
+
+    /**
+     * Move a migration to the given lifecycle as a worker that last wrote
+     * `$silence` seconds ago would have left it.
+     */
+    private function age(string $id, string $status, string $stage, int $silence): Document
+    {
+        $this->database->setPreserveDates(true);
+
+        try {
+            return $this->database->updateDocument('migrations', $id, new Document([
+                '$updatedAt' => DateTime::addSeconds(new \DateTime(), -$silence),
+                'status' => $status,
+                'stage' => $stage,
             ]));
         } finally {
             $this->database->setPreserveDates(false);

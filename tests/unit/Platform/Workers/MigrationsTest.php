@@ -22,6 +22,7 @@ use Utopia\Database\Adapter\Memory;
 use Utopia\Database\Attribute;
 use Utopia\Database\Collection;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
@@ -806,6 +807,75 @@ final class MigrationsTest extends TestCase
 
         $this->deliverClaim($worker, $database, $project, $queued);
         $this->assertCount(2, $worker->attempts, 'A replay of the first delivery must not run a third attempt');
+    }
+
+    public function testRedeliveryResumesAnAttemptWhoseWorkerDied(): void
+    {
+        $database = $this->createClaimDatabase();
+        $project = new Document([
+            '$id' => 'project-1',
+            '$sequence' => 1,
+            'teamId' => 'team-1',
+        ]);
+        $migration = $database->createDocument('migrations', new Document([
+            '$id' => 'migration-1',
+            'attemptId' => 'attempt-1',
+            'status' => 'pending',
+            'stage' => 'init',
+            'resourceData' => [],
+            'errors' => [],
+        ]));
+        $worker = new class () extends Migrations {
+            /** @var array<string> */
+            public array $attempts = [];
+
+            #[\Override]
+            protected function processMigration(
+                Document $migration,
+                Realtime $queueForRealtime,
+                MailPublisher $publisherForMails,
+                Context $usage,
+                UsagePublisher $publisherForUsage,
+                array $platform,
+                Authorization $authorization,
+            ): void {
+                $project = $this->project ?? throw new \LogicException('Project missing');
+                $this->attempts[] = (string) $migration->getAttribute('attemptId');
+
+                $migration->setAttribute('stage', 'migrating');
+                $migration = $this->updateMigrationDocument($migration, $project, $queueForRealtime);
+
+                if (\count($this->attempts) === 1) {
+                    return;
+                }
+
+                $migration->setAttribute('status', 'completed');
+                $migration->setAttribute('stage', 'finished');
+                $this->updateMigrationDocument($migration, $project, $queueForRealtime);
+            }
+        };
+        $delivery = $this->migrationDelivery($project, $migration);
+
+        $this->deliverClaim($worker, $database, $project, $delivery);
+        $database->setPreserveDates(true);
+        try {
+            $database->updateDocument('migrations', $migration->getId(), new Document([
+                '$updatedAt' => DateTime::addSeconds(new \DateTime(), -Claim::LIVENESS_LEASE - 60),
+                'errors' => ['last progress write before the worker died'],
+            ]));
+        } finally {
+            $database->setPreserveDates(false);
+        }
+
+        $this->deliverClaim($worker, $database, $project, $delivery);
+
+        $this->assertCount(2, $worker->attempts);
+        $this->assertSame('attempt-1', $worker->attempts[0]);
+        $this->assertNotSame('attempt-1', $worker->attempts[1]);
+        $stored = $database->getDocument('migrations', $migration->getId());
+        $this->assertSame('completed', $stored->getAttribute('status'));
+        $this->assertSame('finished', $stored->getAttribute('stage'));
+        $this->assertSame($worker->attempts[1], $stored->getAttribute('attemptId'));
     }
 
     private function createClaimDatabase(): Database

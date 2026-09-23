@@ -255,8 +255,11 @@ final readonly class Claim
     }
 
     /**
-     * Claim one exact queued generation for processing. Duplicate or stale
-     * deliveries return null after observing authoritative live state.
+     * Claim one exact queued generation for processing. A redelivery of an
+     * attempt that stopped writing for longer than its lease takes the
+     * migration over with a new attempt, which fences the dead worker out.
+     * Every other duplicate or stale delivery returns null after observing
+     * authoritative live state.
      */
     public function consume(string $projectId, MigrationMessage $message): ?Delivery
     {
@@ -273,11 +276,23 @@ final readonly class Claim
                 function () use ($message, $migrationId, $queued): ?Delivery {
                     return $this->database->withTransaction(function () use ($message, $migrationId, $queued): ?Delivery {
                         $live = $this->database->getDocument('migrations', $migrationId, forUpdate: true);
-                        if ($live->isEmpty() || !$this->sameObservation($live, $queued)) {
-                            // A redelivery of an already-claimed generation is stale and is
-                            // acknowledged. If its worker died mid-attempt, maintenance turns
-                            // the old processing row into a failed/finished retryable terminal.
+                        if ($live->isEmpty()) {
                             return null;
+                        }
+
+                        if (!$this->sameObservation($live, $queued)) {
+                            if (!$this->abandoned($live, $queued)) {
+                                return null;
+                            }
+
+                            return new Delivery(
+                                migration: $this->write($live, new Document([
+                                    'attemptId' => ID::unique(),
+                                    'status' => self::STATUS_PROCESSING,
+                                    'stage' => self::STAGE_PROCESSING,
+                                ])),
+                                terminal: null,
+                            );
                         }
 
                         $terminal = $message->terminal;
@@ -433,6 +448,17 @@ final readonly class Claim
             && \in_array($stage, [self::STAGE_FINISHED, self::STAGE_PROCESSING, self::STAGE_MIGRATING], true);
 
         return $terminalOwner ? new ProvisioningOwner($migrationId, $attemptId) : null;
+    }
+
+    private function abandoned(Document $live, Document $queued): bool
+    {
+        $attemptId = $queued->getAttribute('attemptId');
+
+        return \is_string($attemptId)
+            && $attemptId !== ''
+            && $attemptId === $live->getAttribute('attemptId')
+            && $live->getSequence() === $queued->getSequence()
+            && $this->lapsed($live);
     }
 
     private function lapsed(Document $live): bool
