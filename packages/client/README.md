@@ -18,7 +18,7 @@ Use `ext-curl` for the cURL adapter and `ext-swoole` for the Swoole coroutine ad
 ```php
 <?php
 
-use Utopia\Client;
+use Utopia\Client\Client;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Psr7\Method;
 use Utopia\Psr7\Request;
@@ -38,7 +38,7 @@ echo $response->getStatusCode();
 echo $response->json()['name'];
 ```
 
-`Utopia\Client` implements `Psr\Http\Client\ClientInterface`, so it works anywhere a PSR-18 client is expected. HTTP/1.1 is used by default and redirects are not followed unless you call `withFollowRedirects()`, so you receive exactly the response the server returned.
+`Utopia\Client\Client` implements `Psr\Http\Client\ClientInterface`, so it works anywhere a PSR-18 client is expected. HTTP/1.1 is used by default and redirects are not followed unless you call `withFollowRedirects()`, so you receive exactly the response the server returned.
 
 The concrete `Utopia\Psr7` messages and factories are provided by the `utopia-php/psr7` dependency.
 

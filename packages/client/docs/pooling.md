@@ -12,7 +12,7 @@ composer require utopia-php/pools
 ```php
 <?php
 
-use Utopia\Client;
+use Utopia\Client\Client;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Client\Pool;
 use Utopia\Pools\Adapter\Stack;
@@ -33,8 +33,8 @@ Pair the pooled adapters with [`withConnectionReuse()`](configuration.md#connect
 without it the pool still bounds concurrency, but each borrow dials a fresh
 connection, so the handshake savings are lost.
 
-Because `Utopia\Client` implements `Adapter` (and therefore both
-`Psr\Http\Client\ClientInterface` and `Utopia\Psr18\StreamingClientInterface`),
+Because `Utopia\Client\Client` implements `Adapter` (and therefore both
+`Psr\Http\Client\ClientInterface` and `Utopia\Client\Psr18\StreamingClientInterface`),
 the `init` callback can return a fully configured client — base URI, default
 headers, auth, retries — so every pooled connection carries the same setup:
 
@@ -55,7 +55,7 @@ and have `init` return a Swoole adapter with reuse enabled.
 ```php
 <?php
 
-use Utopia\Client;
+use Utopia\Client\Client;
 use Utopia\Client\Adapter\SwooleCoroutine\Client as SwooleAdapter;
 use Utopia\Client\Pool;
 use Utopia\Pools\Adapter\Swoole;

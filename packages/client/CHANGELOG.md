@@ -8,6 +8,7 @@ This project follows semantic versioning.
 
 ### Changed
 
+- Move `Utopia\Client` to `Utopia\Client\Client` and `Utopia\Psr18\StreamingClientInterface` to `Utopia\Client\Psr18\StreamingClientInterface`, so the package declares a single `Utopia\Client\` prefix. The old names remain as aliases until the next major release.
 - Require `utopia-php/psr7` `^0.2.1` so `Request\Factory::multipart` always sets `Content-Type` with the body boundary.
 
 ### Added

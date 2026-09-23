@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Utopia\Psr18;
+namespace Utopia\Client\Psr18;
 
 use Psr\Http\Client\ClientExceptionInterface;
 use Psr\Http\Message\RequestInterface;

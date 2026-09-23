@@ -143,7 +143,7 @@ The Swoole adapter must run inside a coroutine. Pass native client settings with
 <?php
 
 use Swoole\Coroutine;
-use Utopia\Client;
+use Utopia\Client\Client;
 use Utopia\Client\Adapter\SwooleCoroutine\Client as SwooleAdapter;
 use Utopia\Psr7\Method;
 use Utopia\Psr7\Request;
