@@ -3788,12 +3788,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/http.git",
-                "reference": "99feea9b75ee6ebb46a9fac14288ec4e0b95f8e3"
+                "reference": "7d191232694ec3eef734d6c3ddfa5418d179219b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/http/zipball/99feea9b75ee6ebb46a9fac14288ec4e0b95f8e3",
-                "reference": "99feea9b75ee6ebb46a9fac14288ec4e0b95f8e3",
+                "url": "https://api.github.com/repos/utopia-php/http/zipball/7d191232694ec3eef734d6c3ddfa5418d179219b",
+                "reference": "7d191232694ec3eef734d6c3ddfa5418d179219b",
                 "shasum": ""
             },
             "require": {
@@ -3833,7 +3833,7 @@
                 "issues": "https://github.com/utopia-php/http/issues",
                 "source": "https://github.com/utopia-php/http/tree/fix/http-null-optional-default"
             },
-            "time": "2026-09-23T09:36:38+00:00"
+            "time": "2026-09-23T10:45:56+00:00"
         },
         {
             "name": "utopia-php/image",
