@@ -66,18 +66,10 @@ class Jobs extends Action
     private const LOCK_TTL = 30;
     private const LOCK_TIMEOUT = 10.0;
 
-    /**
-     * Shown in the build logs in place of an artifact failure that is ours to
-     * fix, not the user's. The raw error goes to Sentry instead.
-     */
     public const string INTERNAL_ERROR_MESSAGE = 'Internal server error. Please try again.';
 
     /**
-     * Artifact failures caused by the platform rather than the build: object
-     * storage transport, sidecar I/O and mounts. Their messages carry bucket
-     * URLs, internal addresses and workspace paths, so they must not reach
-     * the build logs. Failures the user can act on (an empty or corrupt
-     * archive, a repository that cannot be cloned) keep their own message.
+     * Platform-side artifact failures; their messages leak internal URLs and paths.
      */
     private const array INTERNAL_ARTIFACT_ERRORS = [
         ErrorCode::ArtifactPermissionDenied,
@@ -357,10 +349,9 @@ class Jobs extends Action
 
         // Any other artifact failing dooms the build — the orchestrator aborts
         // the job on a pre-job failure, and a lost output has nothing to serve
-        // — so fail it now rather than waiting for the bare exit code, with
-        // the artifact's own message when the user can act on it (see
-        // artifactFailure()). The build cache upload is the one best-effort
-        // artifact: losing it costs the next build time, not this one.
+        // — so fail it now rather than waiting for the bare exit code. The
+        // build cache upload is the one best-effort artifact: losing it costs
+        // the next build time, not this one.
         if ($failed && $artifact->artifactId !== 'cache') {
             return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, $this->artifactFailure($project, $deployment, $artifact), $publisherForScreenshots, $vcsFactory, $platform, $bus);
         }
@@ -382,9 +373,7 @@ class Jobs extends Action
     }
 
     /**
-     * The build log line for a failed artifact. A platform failure is reported
-     * to Sentry as a 500 on the worker's span and shown to the user as a
-     * generic internal error; a failure the user caused keeps its message.
+     * Platform failures are reported to Sentry and shown as a generic error.
      */
     protected function artifactFailure(Document $project, Document $deployment, JobArtifact $artifact): string
     {
