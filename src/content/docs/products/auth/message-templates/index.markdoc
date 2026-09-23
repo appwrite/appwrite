@@ -18,6 +18,13 @@ Custom SMTP is available on Appwrite Cloud Pro and higher plans. You can connect
 
 On Appwrite Cloud, the **SMTP** tab starts with a **One-click setup** card. Connect a [Resend](https://resend.com) account and Appwrite creates a sending-only API key for one of your verified domains, then fills in and enables the custom SMTP settings for you.
 
+{% only_dark %}
+![One-click setup card on the SMTP tab](/images/docs/auth/smtp/dark/one-click-setup.avif)
+{% /only_dark %}
+{% only_light %}
+![One-click setup card on the SMTP tab](/images/docs/auth/smtp/one-click-setup.avif)
+{% /only_light %}
+
 1. Navigate to your project's **Settings**.
 1. Navigate to the **SMTP** tab.
 1. Under **One-click setup**, click **Connect with Resend**.
@@ -25,6 +32,13 @@ On Appwrite Cloud, the **SMTP** tab starts with a **One-click setup** card. Conn
 1. Select a verified **Domain**. Domains that are not yet verified in Resend are listed but can't be selected.
 1. Enter a **Sender name** and a **Sender email** on the selected domain. Appwrite suggests `noreply@<domain>`.
 1. Click **Set up**.
+
+{% only_dark %}
+![Set up SMTP with Resend](/images/docs/auth/smtp/dark/one-click-setup-resend.avif)
+{% /only_dark %}
+{% only_light %}
+![Set up SMTP with Resend](/images/docs/auth/smtp/one-click-setup-resend.avif)
+{% /only_light %}
 
 Appwrite creates an API key in your Resend account named `Appwrite SMTP: <project name>`. The key has sending-only permission and is restricted to the selected domain. Appwrite stores it as the SMTP password and writes the rest of the settings for you.
 
@@ -50,7 +64,7 @@ Appwrite creates an API key in your Resend account named `Appwrite SMTP: <projec
 
 Custom SMTP is enabled as soon as the setup completes. Your existing reply-to email is kept. If you don't have a verified domain yet, add one in [Resend's domains page](https://resend.com/domains) and click **Check again**.
 
-The connection lives on your Console account, not the project, so it shows as **Connected** in every project you open. Appwrite keeps the Resend access token in memory only and asks you to **Reconnect** when it expires. To remove the connection, open the tile's menu and click **Disconnect**. Disconnecting removes the Resend identity from your Console account and doesn't change the SMTP settings already saved on your projects or revoke keys already in use.
+The connection lives on your Console account, not the project, so it shows as **Connected** in every project you open. Resend issues a short-lived access token that Appwrite stores on the linked identity of your Console account, and Appwrite asks you to **Reconnect** when it expires. To remove the connection, open the tile's menu and click **Disconnect**. Disconnecting removes the Resend identity from your Console account and doesn't change the SMTP settings already saved on your projects or revoke keys already in use.
 
 Mailgun and SendGrid tiles appear as **Coming soon**. Click **Notify me** on either to be told when it ships.
 

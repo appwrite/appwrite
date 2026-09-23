@@ -27,7 +27,7 @@ Setting up email for an Appwrite project has always ended in the same loop betwe
 
 None of those steps is difficult. Together they are enough friction that plenty of projects keep sending sign-in and verification emails through the shared default server longer than they should, or end up with a full-access Resend key pasted where a sending-only key would do.
 
-Today we are announcing **one-click Resend setup** in the Appwrite Console. Connect your Resend account once, pick a verified domain, and Appwrite creates a sending-only API key and fills in everything else. It works in two places: your project's custom SMTP settings, and the Resend provider in [Appwrite Messaging](/docs/products/messaging).
+Today we are announcing **one-click Resend setup** in the Appwrite Console. Connect your Resend account once, pick a verified domain, and Appwrite creates a sending-only API key and fills in everything else. It works in two places: the Resend provider in [Appwrite Messaging](/docs/products/messaging), and your project's custom SMTP settings.
 
 # What one-click Resend setup gives you
 
@@ -38,12 +38,27 @@ Today we are announcing **one-click Resend setup** in the Appwrite Console. Conn
 - **No stray keys left behind.** If the save fails, or you leave the Messaging wizard without creating the provider, Appwrite revokes the key it generated.
 - **Reconnect and disconnect from the same card.** Expired authorizations ask you to reconnect instead of silently bouncing you to a consent screen. Disconnecting removes the Resend identity from your Console account without touching SMTP settings already saved on your projects.
 
+# Add a Resend provider to Appwrite Messaging
+
+Messaging providers send the emails you compose yourself: announcements, reminders, and scheduled campaigns to [topics](/docs/products/messaging/topics) and [targets](/docs/products/messaging/targets). The Resend provider talks to Resend's API rather than the SMTP relay, so it needs an API key instead of relay settings.
+
+1. Go to **Messaging** > **Providers** > **Add provider** and choose **Resend** under **Email**.
+2. In the **Configure** step, click **Connect with Resend** on the **One-click setup** card and authorize Appwrite in Resend. You land back on the same step.
+3. Pick a verified **Domain** and click **Generate API key**.
+4. Review the filled-in fields and click **Create provider**.
+
+![The Configure Resend step in Messaging, with the One-click setup card showing a domain picker and a Generate API key button](/images/blog/announcing-resend-one-click-setup/messaging-resend-one-click-ready.avif)
+
+Appwrite fills the **API key** and any field you left empty: the sender email becomes `noreply@<domain>` unless yours already sits on that domain, the sender name defaults to the project name, and the provider name defaults to `One-click Resend sender`. Anything you typed first is left alone. See the [Messaging Resend docs](/docs/products/messaging/resend#one-click-setup) for the details.
+
+![The same step after Generate API key: the key, provider name, sender name, and sender email are filled in, ready to create the provider](/images/blog/announcing-resend-one-click-setup/messaging-resend-one-click-done.avif)
+
 # Set up custom SMTP with Resend
 
 Custom SMTP replaces Appwrite Cloud's default sender for authentication emails and unlocks [custom email templates](/docs/products/auth/message-templates#customize). It is available on Pro and higher plans.
 
 1. Open your project's **Settings** and go to the **SMTP** tab.
-2. Under **One-click setup**, click **Connect with Resend** and authorize Appwrite in Resend. You land back on the same tab.
+2. Under **One-click setup**, click **Connect with Resend**. If you already connected Resend in Messaging, this opens the setup straight away.
 3. Select a verified **Domain**. Unverified domains are listed but can't be chosen.
 4. Enter a **Sender name** and a **Sender email** on that domain, then click **Set up**.
 
@@ -63,26 +78,11 @@ The sidebar shows what will be written before you confirm it:
 
 When the setup finishes, custom SMTP is enabled and your project sends through Resend. Your existing reply-to address is kept. The manual form is still right below the card, so you can review or edit any value afterwards. The full steps are in the [custom SMTP docs](/docs/products/auth/message-templates#smtp-one-click-setup).
 
-# Add a Resend provider to Appwrite Messaging
-
-Messaging providers send the emails you compose yourself: announcements, reminders, and scheduled campaigns to [topics](/docs/products/messaging/topics) and [targets](/docs/products/messaging/targets). The Resend provider here talks to Resend's API rather than the SMTP relay, so it needs an API key instead of relay settings.
-
-1. Go to **Messaging** > **Providers** > **Add provider** and choose **Resend** under **Email**.
-2. In the **Configure** step, click **Connect with Resend** on the **One-click setup** card. If you already connected Resend from the SMTP tab, this skips straight to your domains.
-3. Pick a verified **Domain** and click **Generate API key**.
-4. Review the filled-in fields and click **Create provider**.
-
-![The Configure Resend step in Messaging, with the One-click setup card showing a domain picker and a Generate API key button](/images/blog/announcing-resend-one-click-setup/messaging-resend-one-click-ready.avif)
-
-Appwrite fills the **API key** and any field you left empty: the sender email becomes `noreply@<domain>` unless yours already sits on that domain, the sender name defaults to the project name, and the provider name defaults to `One-click Resend sender`. Anything you typed first is left alone. See the [Messaging Resend docs](/docs/products/messaging/resend#one-click-setup) for the details.
-
-![The same step after Generate API key: the key, provider name, sender name, and sender email are filled in, ready to create the provider](/images/blog/announcing-resend-one-click-setup/messaging-resend-one-click-done.avif)
-
 # How the connection works
 
 The flow is built on the same OAuth2 machinery the Console uses for account sign-in. Resend is an OAuth2 provider for the Appwrite Cloud Console, so **Connect with Resend** starts a token flow that returns to the page you started from. The round trip adds a Resend identity to your Console account and leaves a short-lived access token on it.
 
-Appwrite asks Resend for full access on that token because listing domains and creating API keys require it. That token is what stays broad, and it is kept in memory only and expires after minutes. The key Appwrite creates for your project is the opposite: sending-only, tied to one domain, and the only credential your project ever stores. When the token expires, the next setup asks you to **Reconnect** rather than failing halfway through.
+Appwrite asks Resend for full access on that token because listing domains and creating API keys require it. That token is what stays broad, and it is short-lived: Resend issues it for minutes, and Appwrite stores it on the linked identity of your Console account rather than on any project. The key Appwrite creates for your project is the opposite: sending-only, tied to one domain, and the only credential your project ever stores. When the token expires, the next setup asks you to **Reconnect** rather than failing halfway through.
 
 Because the identity is on your account, not the project, one authorization covers every project you manage and both setup surfaces. Disconnecting from the SMTP tab deletes that identity. Keys already saved on projects keep working until you revoke them in Resend.
 

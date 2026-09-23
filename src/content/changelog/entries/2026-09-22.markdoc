@@ -8,7 +8,7 @@ tags: auth, messaging, console, integrations
 
 The Appwrite Cloud Console can now set up Resend for you. Click **Connect with Resend**, authorize Appwrite, and pick a verified domain. Appwrite creates a sending-only API key restricted to that domain, named `Appwrite SMTP: <project name>`, and writes the rest of the configuration itself.
 
-On the project **Settings** > **SMTP** tab, the new **One-click setup** card fills in the [custom SMTP settings](/docs/products/auth/message-templates#smtp-one-click-setup) with `smtp.resend.com`, port `587`, the `resend` username, TLS, and the new key as the password, then enables the custom server. In **Messaging** > **Providers**, the same card on the [Resend provider](/docs/products/messaging/resend#one-click-setup) generates the API key and fills the sender fields before you click **Create provider**. One authorization covers both, and Appwrite revokes any key it generated that never gets saved.
+In **Messaging** > **Providers**, the **One-click setup** card on the [Resend provider](/docs/products/messaging/resend#one-click-setup) generates the API key and fills the sender fields before you click **Create provider**. On the project **Settings** > **SMTP** tab, the same card fills in and enables the [custom SMTP settings](/docs/products/auth/message-templates#smtp-one-click-setup) for you. One authorization covers both, and Appwrite revokes any key it generated that never gets saved.
 
 {% arrow_link href="/blog/post/announcing-resend-one-click-setup" %}
 Read the announcement
