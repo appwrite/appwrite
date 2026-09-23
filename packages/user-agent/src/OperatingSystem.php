@@ -10,7 +10,8 @@ final readonly class OperatingSystem
         public ?string $code = null,
         public ?string $name = null,
         public ?string $version = null,
-    ) {}
+    ) {
+    }
 
     public function isKnown(): bool
     {

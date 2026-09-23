@@ -27,7 +27,9 @@ final class UserAgent
 
     private bool $botResolved = false;
 
-    private function __construct(private readonly string $value) {}
+    private function __construct(private readonly string $value)
+    {
+    }
 
     public static function parse(string $value): self
     {

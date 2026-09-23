@@ -13,7 +13,8 @@ final readonly class Client
         public ?string $version = null,
         public ?string $engine = null,
         public ?string $engineVersion = null,
-    ) {}
+    ) {
+    }
 
     public function isKnown(): bool
     {

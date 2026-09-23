@@ -9,7 +9,8 @@ final readonly class Bot
     public function __construct(
         public string $name,
         public string $category = 'crawler',
-    ) {}
+    ) {
+    }
 
     /**
      * @return array{name: string, category: string}

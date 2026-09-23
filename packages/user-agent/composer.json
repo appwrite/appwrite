@@ -10,7 +10,7 @@
     "license": "MIT",
     "autoload": {
         "psr-4": {
-            "Utopia\\UserAgent\\": "src/UserAgent/"
+            "Utopia\\UserAgent\\": "src/"
         }
     },
     "autoload-dev": {

@@ -10,7 +10,8 @@ final readonly class Device
         public ?string $type = null,
         public ?string $brand = null,
         public ?string $model = null,
-    ) {}
+    ) {
+    }
 
     public function isKnown(): bool
     {
