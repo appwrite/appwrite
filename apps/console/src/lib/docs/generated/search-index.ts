@@ -4484,6 +4484,17 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     ]
   },
   {
+    "slug": "products/functions/email",
+    "title": "Email triggers",
+    "description": "Execute Appwrite Functions when your app receives email. Use the built-in address of each function or connect your own domain.",
+    "excerpt": "Appwrite Functions can execute when an email arrives at an address that is connected to the function. Appwrite receives the email, stores its content and attachments, and executes your function in the background with the parsed email as the request body. Your function can save the email, reply to the sender, or send the content to another service. Email triggers only receive email. To send email from your app, use Messaging. How email triggers work - Each email that arrives…",
+    "breadcrumbs": [
+      "Functions",
+      "Guides",
+      "Email triggers"
+    ]
+  },
+  {
     "slug": "products/functions/environment-variables",
     "title": "Environment variables",
     "description": "Set environment variables for your Appwrite Functions to pass constants and secrets at build and runtime.",
@@ -5002,7 +5013,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/sites/environment-variables",
     "title": "Environment variables",
     "description": "Set environment variables for your Appwrite Sites to pass constants and secrets at build and runtime.",
-    "excerpt": "Appwrite Sites can read environment variables at build and runtime. Use them to pass constants and secrets such as third-party API keys, connection strings, and feature flags without hardcoding them in your source. To call your own Appwrite project, you do not need to store an API key at all: Appwrite provides an ephemeral API key to every build and SSR request. A site reads from three sources, in this order of precedence: 1. **Project variables** are shared across every…",
+    "excerpt": "Appwrite Sites can read environment variables at build and runtime. Use them to pass constants and secrets such as third-party API keys, connection strings, and feature flags without hardcoding them in your source. To call your own Appwrite project, you do not need to store an API key at all: Appwrite provides a ephemeral API key to every build and SSR request. A site reads from three sources, in this order of precedence: 1. **Project variables** are shared across every…",
     "breadcrumbs": [
       "Sites",
       "Concepts",
