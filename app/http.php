@@ -15,7 +15,6 @@ use Swoole\Timer;
 use Utopia\Compression\Compression;
 use Utopia\Config\Config;
 use Utopia\Console;
-use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -264,7 +263,8 @@ $http->on(Constant::EVENT_START, function ($http) use ($payloadSize, $totalWorke
         $documentsSharedTables = \explode(',', System::getEnv('_APP_DATABASE_DOCUMENTSDB_SHARED_TABLES', ''));
         $vectorSharedTables = \explode(',', System::getEnv('_APP_DATABASE_VECTORSDB_SHARED_TABLES', ''));
 
-        $cache = $container->get('cache');
+        /** @var \Appwrite\Database\Factory $databaseFactory */
+        $databaseFactory = $container->get('databaseFactory');
 
         // All shared tables pools that need project metadata collections
         $allSharedTables = \array_values(\array_unique(\array_filter([
@@ -277,12 +277,7 @@ $http->on(Constant::EVENT_START, function ($http) use ($payloadSize, $totalWorke
             Span::init('database.setup');
             Span::add('database.hostname', $hostname);
 
-            $adapter = new DatabasePool($pools->get($hostname));
-            $dbForProject = (new Database($adapter, $cache))
-                ->setDatabase('appwrite')
-                ->setSharedTables(true)
-                ->setTenant(null)
-                ->setNamespace(System::getEnv('_APP_DATABASE_SHARED_NAMESPACE', ''));
+            $dbForProject = $databaseFactory->setup($hostname);
 
             $max = 15;
             $sleep = 2;

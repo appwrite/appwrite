@@ -92,6 +92,15 @@ class Factory implements Provisioner
         );
     }
 
+    public function setup(string $hostname): Database
+    {
+        return $this->newDatabase($this->adapter($hostname))
+            ->setDatabase($this->database)
+            ->setSharedTables(true)
+            ->setTenant(null)
+            ->setNamespace(System::getEnv('_APP_DATABASE_SHARED_NAMESPACE', ''));
+    }
+
     /**
      * Databases and tables the caller owns. Unknown attributes stay a rejected write here:
      * the schema is theirs, so dropping one would silently discard data they sent.
