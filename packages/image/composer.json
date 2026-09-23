@@ -1,0 +1,30 @@
+{
+    "name": "utopia-php/image",
+    "description": "A simple Image manipulation library",
+    "type": "library",
+    "keywords": [
+        "php",
+        "framework",
+        "upf",
+        "utopia",
+        "image"
+    ],
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Utopia\\Image\\": "src/Image"
+        }
+    },
+    "scripts": {
+        "test": "phpunit --testsuite unit"
+    },
+    "require": {
+        "php": ">=8.1",
+        "ext-imagick": "*",
+        "ext-gd": "*"
+    },
+    "suggest": {
+        "ext-imagick": "Imagick extension is required for Imagick adapter"
+    },
+    "minimum-stability": "dev"
+}
