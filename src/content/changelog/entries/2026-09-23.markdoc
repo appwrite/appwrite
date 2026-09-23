@@ -6,7 +6,9 @@ cover: /images/blog/announcing-native-sign-in/cover.avif
 tags: auth, mobile
 ---
 
-Mobile apps can now sign users in with the account picker built into the device and create an Appwrite session from the ID token it returns. Sign in with Apple on iOS and Credential Manager on Android return the token straight to your app, and Appwrite turns it into a session in one request, with no web sheet or redirect.
+Mobile apps can now sign users in with the account picker built into the device and create an Appwrite session from the ID token it returns.
+
+Sign in with Apple on iOS and Credential Manager on Android return the token straight to your app, and Appwrite turns it into a session in one request, with no web sheet or redirect.
 
 Check it out in the [native sign-in docs](/docs/products/auth/native-sign-in).
 
