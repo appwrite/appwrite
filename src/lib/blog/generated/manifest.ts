@@ -6,7 +6,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "slug": "announcing-native-sign-in",
     "href": "/blog/post/announcing-native-sign-in",
     "title": "Announcing native sign-in: Create Appwrite sessions from Apple and Google ID tokens",
-    "description": "Your mobile app can now use the platform's own Sign in with Apple or Google account picker and exchange the ID token for an Appwrite session in one request, with no redirect through Appwrite and no client secret.",
+    "description": "Your mobile app can now use the platform's own Sign in with Apple or Google account picker and exchange the ID token for an Appwrite session in one request, with no redirect through Appwrite.",
     "date": "2026-09-23",
     "lastUpdated": "2026-09-23",
     "timeToRead": 6,

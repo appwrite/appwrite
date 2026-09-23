@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "Announcing native sign-in: Create Appwrite sessions from Apple and Google ID tokens"
-description: Your mobile app can now use the platform's own Sign in with Apple or Google account picker and exchange the ID token for an Appwrite session in one request, with no redirect through Appwrite and no client secret.
+description: Your mobile app can now use the platform's own Sign in with Apple or Google account picker and exchange the ID token for an Appwrite session in one request, with no redirect through Appwrite.
 date: 2026-09-23
 cover: /images/blog/announcing-native-sign-in/cover.avif
 timeToRead: 6
@@ -13,20 +13,20 @@ faqs:
   - question: "What is native sign-in in Appwrite?"
     answer: "Native sign-in creates an Appwrite session from an OpenID Connect ID token that your app obtained on the device through Sign in with Apple or Google's SDKs. Appwrite verifies the token against the provider's signing keys and returns a session without a redirect through Appwrite."
   - question: "Which providers support native sign-in?"
-    answer: "Apple and Google. Sign in with Apple on iOS, and Google through Credential Manager on Android or Google Sign-In on iOS."
+    answer: "Apple and Google. Apple through Sign in with Apple on iOS, and Google through Credential Manager on Android."
   - question: "Does native sign-in need a client secret?"
     answer: "No. Native sign-in verifies a signature instead of redeeming an authorization code, so the provider only needs the client IDs of your apps. Secrets, key IDs, and team IDs are only needed for the browser-based OAuth2 flow."
   - question: "Which Google client ID goes into Appwrite for native sign-in?"
-    answer: "The client ID of the Web application client in Google Cloud. Android and iOS apps pass that ID to Google as the server client ID, so Google issues the ID token to it. The Android and iOS clients must also exist in the same Google Cloud project, but their IDs do not go into Appwrite."
+    answer: "The client ID of the Web application client in Google Cloud. Your Android app passes that ID to Google as the server client ID, so Google issues the ID token to it. The Android client must also exist in the same Google Cloud project, but its ID does not go into Appwrite."
   - question: "Can I use native sign-in and OAuth2 login on the same provider?"
     answer: "Yes. Each provider has separate switches for the browser-based flow and native sign-in, so a web app can keep using redirects while the mobile app uses the platform account picker."
   - question: "Does native sign-in give my app a refresh token for the provider's APIs?"
     answer: "No. Platform SDKs hand the app an ID token and, at most, a short-lived access token. Appwrite can store that access token on the session but cannot renew it. For long-lived access to provider APIs, use the browser-based OAuth2 flow."
 ---
 
-OAuth2 login on a phone runs through a browser. The user taps a button in your app, a browser sheet opens, the user picks an account on a web page, and a custom URL scheme returns the user to the app. That flow never uses the account picker that Android and iOS show for other apps.
+With OAuth2 login, a mobile app opens a browser sheet with the provider's sign-in page. The user picks an account on that page, and a custom URL scheme sends them back to the app. The user never sees the account picker that Android and iOS show in other apps.
 
-Both platforms ship a native way to do this. Sign in with Apple and Google's Credential Manager return an ID token straight to the app without a browser. Until now, Appwrite had no way to accept that token.
+Sign in with Apple and Google's Credential Manager show that picker and return an ID token straight to the app. Until now, Appwrite had no way to accept that token.
 
 # Native sign-in creates a session from an ID token
 
@@ -48,14 +48,12 @@ Appwrite verifies a signature rather than redeeming an authorization code, so th
 
 ![The Google account picker on Android](/images/blog/announcing-native-sign-in/android-google-account-picker.avif)
 
-Google Cloud asks for two kinds of OAuth client, and they do different jobs. If an app passes the wrong one, Google fails the sign-in on the device and Appwrite never receives a token.
+Google Cloud asks for two OAuth clients, and they do different jobs. If an app passes the wrong one, Google fails the sign-in on the device and Appwrite never receives a token.
 
-- **The web client represents Appwrite.** Your app passes its ID to Google's SDK as the server client ID, and Google issues the ID token for it. It is the only Google client ID you enter in Appwrite. The type is named **Web application**, but it covers any server that receives tokens. For native sign-in, it needs no redirect URIs.
-- **The Android and iOS clients represent your app.** An Android client ties your package name to the SHA-1 fingerprint of your signing certificate, and an iOS client ties your bundle ID to the app. Google refuses to show the account picker to an app with no matching client. Neither your code nor Appwrite uses the Android client's ID, and the iOS client's ID only goes in your app's iOS configuration.
+- **The web client represents Appwrite.** Your app passes the web client ID to Google's SDK as the server client ID, and Google issues the ID token for it. It is the only Google client ID you enter in Appwrite. The type is named **Web application**, but it covers any server that receives tokens. For native sign-in, it needs no redirect URIs.
+- **The Android client represents your app.** It ties your package name to the SHA-1 fingerprint of your signing certificate. Google refuses to show the account picker to an app with no matching client. Neither your code nor Appwrite uses the Android client's ID.
 
-To create them, open **Clients** in [Google Auth Platform](https://console.cloud.google.com/auth/clients) and select **Create client** once per client type. Pick **Web application** and leave the origins and redirect URIs empty. Pick **Android** and enter your package name and SHA-1 fingerprint. Create one Android client for each signing key. If you publish on Google Play, include the Play app signing key. Pick **iOS** and enter your bundle ID. The [native sign-in docs](/docs/products/auth/native-sign-in#google-cloud-clients) cover each step.
-
-Passing the Android client ID as the server client ID does not work. Google rejects the request with a developer error, even in an app that only runs on Android.
+To create them, open **Clients** in [Google Auth Platform](https://console.cloud.google.com/auth/clients) and select **Create client** once per client type. Pick **Web application** and leave the origins and redirect URIs empty. Pick **Android** and enter your package name and SHA-1 fingerprint. Create one Android client for each signing key. If you publish on Google Play, include the Play app signing key.
 
 On Android, Credential Manager draws the account picker. Pass your web client ID as the server client ID, take the ID token from the returned credential, and send it to Appwrite.
 
@@ -94,6 +92,8 @@ val session = account.createIdTokenSession(
     idToken = idToken,
 )
 ```
+
+From here, the user has a normal Appwrite session. Calls such as `account.get()`, table permissions, and Realtime subscriptions work the same way they do after any other sign-in.
 
 # Sign in with Apple
 
@@ -140,13 +140,18 @@ let session = try await account.createIdTokenSession(
 )
 ```
 
+From here, the user has a normal Appwrite session, the same as after any other sign-in.
+
 # Sign in with Google and Apple in React Native
 
 ![The Google account picker on Android and the Sign in with Apple sheet on iOS](/images/blog/announcing-native-sign-in/android-and-ios-sign-in.avif)
 
 React Native apps use one package per provider and the same `createIdTokenSession` call for both. The packages include native code, so they need a development build rather than Expo Go.
 
-For Google, use the free Original module of the community `@react-native-google-signin/google-signin` package. It wraps Google's legacy Sign-In SDK on Android and the Google Sign-In SDK on iOS. The web client ID goes in `webClientId` on both platforms, and the iOS client ID goes in `iosClientId`.
+{% tabs %}
+{% tabsitem #react-native-android title="Android" %}
+
+On Android, the `@react-native-google-signin/google-signin` package shows the Google account picker. Pass your web client ID as `webClientId`.
 
 ```client-react-native
 import { GoogleSignin, isSuccessResponse } from '@react-native-google-signin/google-signin';
@@ -159,8 +164,7 @@ const client = new Client()
 const account = new Account(client);
 
 GoogleSignin.configure({
-    webClientId: '<GOOGLE_WEB_CLIENT_ID>', // Web application client
-    iosClientId: '<GOOGLE_IOS_CLIENT_ID>', // iOS client, used on iOS only
+    webClientId: '<GOOGLE_WEB_CLIENT_ID>',
 });
 
 await GoogleSignin.hasPlayServices();
@@ -174,7 +178,11 @@ if (isSuccessResponse(response) && response.data.idToken) {
 }
 ```
 
-For Apple, `expo-apple-authentication` presents the Sign in with Apple sheet on iOS, and `expo-crypto` hashes the nonce. The nonce and name handling are the same as in Swift.
+{% /tabsitem %}
+
+{% tabsitem #react-native-ios title="iOS" %}
+
+On iOS, `expo-apple-authentication` presents the Sign in with Apple sheet and `expo-crypto` hashes the nonce. The nonce and name handling are the same as in Swift.
 
 ```client-react-native
 import * as AppleAuthentication from 'expo-apple-authentication';
@@ -213,6 +221,9 @@ const session = await account.createIdTokenSession({
 });
 ```
 
+{% /tabsitem %}
+{% /tabs %}
+
 # Verification and account matching
 
 Appwrite does not trust the token until it passes these checks.
@@ -224,14 +235,15 @@ Appwrite does not trust the token until it passes these checks.
 
 If the user has signed in with this Google or Apple account before, Appwrite signs them in to the same user. If a verified email matches an existing user, Appwrite attaches the new identity to that user. If the matching email is unverified, Appwrite rejects the request. With no match, Appwrite creates a new user. If the request already carries a session, including an anonymous one, Appwrite links the identity to that user instead.
 
-# Native sign-in does not return refresh tokens
+# Native sign-in opens up more of your app to mobile users
 
-Native sign-in never returns a refresh token. The platform SDKs give the app an ID token and sometimes a short-lived access token. You can store that access token on the session, but Appwrite cannot renew it once it expires. For long-lived access to a provider's APIs, such as reading a user's Google Calendar every night, keep using the browser-based OAuth2 flow.
+Sign-in is often where people drop off on mobile, and a one-tap account picker makes that step shorter. Users who already signed up on the web with Google or Apple land in the same account on their phone, because Appwrite matches them by identity and verified email. An app that starts users as anonymous guests can link Google or Apple to that guest account later, so a user keeps their cart or saved items when they sign up.
 
-# Getting started
+The session is an ordinary Appwrite session, so the rest of the project does not need to know how the user signed in. Database permissions, Storage access, Functions that read the user, and team membership all work with it. Web apps can keep the browser-based OAuth2 flow on the same provider while the mobile app uses native sign-in.
 
-Open your project in the [Appwrite Console](https://cloud.appwrite.io), turn on native sign-in for Apple or Google, and replace the redirect in your mobile app with the platform's account picker and one `createIdTokenSession` call.
+# Resources
 
 - [Native sign-in](/docs/products/auth/native-sign-in)
 - [OAuth2 login](/docs/products/auth/oauth2)
 - [Identities](/docs/products/auth/identities)
+- [Join the Appwrite Discord](https://appwrite.io/discord)
