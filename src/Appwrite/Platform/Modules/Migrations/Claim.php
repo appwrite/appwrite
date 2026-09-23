@@ -22,13 +22,29 @@ final readonly class Claim
      */
     private const int LOCK_TTL = 30;
     private const float LOCK_TIMEOUT = 10.0;
-    private const string STAGE_FINISHED = 'finished';
-    private const string STAGE_INIT = 'init';
-    private const string STAGE_MIGRATING = 'migrating';
-    private const string STAGE_PROCESSING = 'processing';
-    private const string STATUS_FAILED = 'failed';
-    private const string STATUS_PENDING = 'pending';
-    private const string STATUS_PROCESSING = 'processing';
+
+    /**
+     * Seconds a live attempt may go without a progress write. Must stay below
+     * the queue reaper's 25 hour redelivery delay, so a dead attempt has lapsed
+     * by the time its message comes back.
+     */
+    public const int LIVENESS_LEASE = 3_600;
+
+    /**
+     * Seconds a live attempt may spend finalizing, which writes no progress
+     * while it flips database statuses, sweeps overwrite orphans or registers
+     * an export. Must exceed the longest finalization a live worker runs.
+     */
+    public const int FINALIZING_LEASE = 86_400;
+
+    public const string STAGE_FINALIZING = 'finalizing';
+    public const string STAGE_FINISHED = 'finished';
+    public const string STAGE_INIT = 'init';
+    public const string STAGE_MIGRATING = 'migrating';
+    public const string STAGE_PROCESSING = 'processing';
+    public const string STATUS_FAILED = 'failed';
+    public const string STATUS_PENDING = 'pending';
+    public const string STATUS_PROCESSING = 'processing';
 
     private ?\Closure $locks;
 
@@ -179,10 +195,7 @@ final readonly class Claim
                         throw new Exception(Exception::MIGRATION_NOT_FOUND);
                     }
 
-                    if (
-                        $migration->getAttribute('status') !== self::STATUS_FAILED
-                        || $migration->getAttribute('stage') !== self::STAGE_FINISHED
-                    ) {
+                    if ($migration->getAttribute('status') !== self::STATUS_FAILED) {
                         throw new Exception(Exception::MIGRATION_IN_PROGRESS, 'Migration is not in a terminal failed state');
                     }
 
@@ -222,8 +235,8 @@ final readonly class Claim
                 ) {
                     $this->write($live, new Document([
                         'attemptId' => $terminal->getAttribute('attemptId'),
-                        'status' => self::STATUS_FAILED,
-                        'stage' => self::STAGE_FINISHED,
+                        'status' => $terminal->getAttribute('status'),
+                        'stage' => $terminal->getAttribute('stage'),
                     ]));
                 }
             });
@@ -285,7 +298,6 @@ final readonly class Claim
                         $retry = $terminal !== null
                             && $terminal->getId() === $migrationId
                             && $terminal->getAttribute('status') === self::STATUS_FAILED
-                            && $terminal->getAttribute('stage') === self::STAGE_FINISHED
                             && $queued->getAttribute('status') === self::STATUS_PENDING
                             && $queued->getAttribute('stage') === self::STAGE_FINISHED
                             && $live->getAttribute('status') === self::STATUS_PENDING
@@ -293,9 +305,7 @@ final readonly class Claim
                             && ($terminalAttemptId === null || $terminalAttemptId !== $liveAttemptId);
                         $legacyRetry = $terminal === null
                             && $queued->getAttribute('status') === self::STATUS_PENDING
-                            && $queued->getAttribute('stage') === self::STAGE_FINISHED
-                            && $live->getAttribute('status') === self::STATUS_FAILED
-                            && $live->getAttribute('stage') === self::STAGE_FINISHED;
+                            && $live->getAttribute('status') === self::STATUS_FAILED;
 
                         if (!$initial && !$retry && !$legacyRetry) {
                             return null;
@@ -354,7 +364,8 @@ final readonly class Claim
     }
 
     /**
-     * Turn one observed stale processing generation into a retryable terminal.
+     * Turn one observed processing generation whose lease has lapsed into a
+     * retryable terminal.
      */
     public function expire(Document $migration): ?Document
     {
@@ -362,11 +373,7 @@ final readonly class Claim
             return $this->database->withTransaction(function () use ($migration): ?Document {
                 $live = $this->database->getDocument('migrations', $migration->getId(), forUpdate: true);
 
-                if (
-                    !$this->sameObservation($live, $migration)
-                    || $live->getAttribute('status') !== self::STATUS_PROCESSING
-                    || !\in_array($live->getAttribute('stage'), [self::STAGE_PROCESSING, self::STAGE_MIGRATING], true)
-                ) {
+                if (!$this->sameObservation($live, $migration) || !$this->lapsed($live)) {
                     return null;
                 }
 
@@ -419,6 +426,21 @@ final readonly class Claim
             && \in_array($stage, [self::STAGE_FINISHED, self::STAGE_PROCESSING, self::STAGE_MIGRATING], true);
 
         return $terminalOwner ? new ProvisioningOwner($migrationId, $attemptId) : null;
+    }
+
+    private function lapsed(Document $live): bool
+    {
+        if ($live->getAttribute('status') !== self::STATUS_PROCESSING) {
+            return false;
+        }
+
+        $lease = match ($live->getAttribute('stage')) {
+            self::STAGE_PROCESSING, self::STAGE_MIGRATING => self::LIVENESS_LEASE,
+            self::STAGE_FINALIZING => self::FINALIZING_LEASE,
+            default => null,
+        };
+
+        return $lease !== null && $this->readAt($live)->getTimestamp() < \time() - $lease;
     }
 
     private function key(string $projectId, string $migrationId): string

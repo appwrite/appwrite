@@ -524,27 +524,30 @@ class Deletes extends Action
 
         /** @var Database $dbForProject */
         $dbForProject = $getProjectDB($project);
+        $claims = new Claim($dbForProject);
 
-        $date = DateTime::addSeconds(new \DateTime(), -self::PROCESSING_STUCK_RETENTION_SECONDS);
-
-        $queries = [
-            Query::select([...$this->selects, 'attemptId', 'status', 'stage']),
-            Query::equal('status', ['processing']),
-            Query::lessThan('$updatedAt', $date),
-        ];
-
-        $this->listByGroup(
-            'migrations',
-            $queries,
-            $dbForProject,
-            function (Document $migration) use ($dbForProject, $project) {
-                try {
-                    (new Claim($dbForProject))->expire($migration);
-                } catch (Throwable $th) {
-                    Console::error("Failed to update processing migration {$migration->getId()} for project {$project->getId()}: " . $th->getMessage());
+        foreach ([
+            [[Claim::STAGE_PROCESSING, Claim::STAGE_MIGRATING], self::PROCESSING_STUCK_RETENTION_SECONDS],
+            [[Claim::STAGE_FINALIZING], Claim::FINALIZING_LEASE],
+        ] as [$stages, $retention]) {
+            $this->listByGroup(
+                'migrations',
+                [
+                    Query::select([...$this->selects, 'attemptId', 'status', 'stage']),
+                    Query::equal('status', [Claim::STATUS_PROCESSING]),
+                    Query::equal('stage', $stages),
+                    Query::lessThan('$updatedAt', DateTime::addSeconds(new \DateTime(), -$retention)),
+                ],
+                $dbForProject,
+                function (Document $migration) use ($claims, $project) {
+                    try {
+                        $claims->expire($migration);
+                    } catch (Throwable $th) {
+                        Console::error("Failed to update processing migration {$migration->getId()} for project {$project->getId()}: " . $th->getMessage());
+                    }
                 }
-            }
-        );
+            );
+        }
     }
 
     private function deleteOldDeployments(DeletePublisher $publisherForDeletes, Document $project, callable $getProjectDB): void

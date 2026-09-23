@@ -41,6 +41,122 @@ final class DeletesTest extends TestCase
 {
     public function testMaintenanceMakesStaleProcessingAttemptRetryable(): void
     {
+        $database = $this->createDatabase();
+        $migration = $this->createMigration($database, 'migration-1', 'processing', Deletes::PROCESSING_STUCK_RETENTION_SECONDS + 1);
+        $project = $this->project();
+        $publisher = new MockPublisher();
+
+        $this->maintain($database, $this->sweeper());
+
+        $terminal = $database->getDocument('migrations', $migration->getId());
+        $this->assertSame('failed', $terminal->getAttribute('status'));
+        $this->assertSame('finished', $terminal->getAttribute('stage'));
+        $this->assertSame('attempt-1', $terminal->getAttribute('attemptId'));
+
+        $retried = (new Claim(
+            $database,
+            static fn (string $key, int $ttl, callable $callback, float $timeout): mixed => $callback(),
+        ))->retry(
+            project: $project,
+            migrationId: $migration->getId(),
+            platform: [],
+            publisher: new MigrationPublisher($publisher, new Queue('migrations')),
+        );
+
+        $this->assertSame('pending', $retried->getAttribute('status'));
+        $this->assertSame('finished', $retried->getAttribute('stage'));
+        $this->assertNotSame('attempt-1', $retried->getAttribute('attemptId'));
+        $queued = MigrationMessage::fromArray($publisher->getEvents('migrations')[0]);
+        $this->assertInstanceOf(Document::class, $queued->terminal);
+        $this->assertSame('attempt-1', $queued->terminal->getAttribute('attemptId'));
+        $this->assertSame('failed', $queued->terminal->getAttribute('status'));
+        $this->assertSame('finished', $queued->terminal->getAttribute('stage'));
+
+        $late = $this->createMigration($database, 'migration-2', 'migrating', Deletes::PROCESSING_STUCK_RETENTION_SECONDS + 1, 'attempt-a');
+
+        $race = new class () extends Deletes {
+            public ?\Closure $beforeUpdate = null;
+
+            #[\Override]
+            protected function deleteByGroup(
+                string $collection,
+                array $queries,
+                Database $database,
+                ?callable $callback = null,
+            ): void {
+            }
+
+            #[\Override]
+            protected function listByGroup(
+                string $collection,
+                array $queries,
+                Database $database,
+                ?callable $callback = null,
+            ): void {
+                if ($collection !== 'migrations') {
+                    return;
+                }
+
+                foreach ($database->find($collection, $queries) as $document) {
+                    ($this->beforeUpdate ?? throw new \LogicException('Missing retry interleaving'))($document);
+                    if ($callback !== null) {
+                        $callback($document);
+                    }
+                }
+            }
+        };
+        $newAttempt = '';
+        $race->beforeUpdate = function (Document $snapshot) use ($database, $project, $publisher, &$newAttempt): void {
+            $database->updateDocument('migrations', $snapshot->getId(), new Document([
+                'status' => 'failed',
+                'stage' => 'finished',
+            ]));
+            $claim = new Claim(
+                $database,
+                static fn (string $key, int $ttl, callable $callback, float $timeout): mixed => $callback(),
+            );
+            $retried = $claim->retry(
+                project: $project,
+                migrationId: $snapshot->getId(),
+                platform: [],
+                publisher: new MigrationPublisher($publisher, new Queue('migrations-race')),
+            );
+            $newAttempt = (string) $retried->getAttribute('attemptId');
+        };
+
+        $this->maintain($database, $race);
+
+        $stored = $database->getDocument('migrations', $late->getId());
+        $this->assertNotSame('', $newAttempt);
+        $this->assertSame($newAttempt, $stored->getAttribute('attemptId'));
+        $this->assertSame('pending', $stored->getAttribute('status'));
+        $this->assertSame('finished', $stored->getAttribute('stage'));
+    }
+
+    public function testMaintenanceFailsFinalizingAttemptOnceItsLeaseLapses(): void
+    {
+        $database = $this->createDatabase();
+        $abandoned = $this->createMigration($database, 'migration-abandoned', 'finalizing', Claim::FINALIZING_LEASE + 60);
+        $finalizing = $this->createMigration($database, 'migration-finalizing', 'finalizing', Claim::FINALIZING_LEASE - 3_600);
+        $migrating = $this->createMigration($database, 'migration-migrating', 'migrating', Claim::FINALIZING_LEASE + 60);
+
+        $this->maintain($database, $this->sweeper());
+
+        $expired = $database->getDocument('migrations', $abandoned->getId());
+        $this->assertSame('failed', $expired->getAttribute('status'));
+        $this->assertSame('finished', $expired->getAttribute('stage'));
+        $this->assertSame('attempt-1', $expired->getAttribute('attemptId'));
+
+        foreach ([$finalizing, $migrating] as $running) {
+            $stored = $database->getDocument('migrations', $running->getId());
+            $this->assertSame('processing', $stored->getAttribute('status'), $running->getId() . ' is still within its lease');
+            $this->assertSame($running->getAttribute('stage'), $stored->getAttribute('stage'));
+            $this->assertSame($running->getUpdatedAt(), $stored->getUpdatedAt());
+        }
+    }
+
+    private function createDatabase(): Database
+    {
         // A SQL projection cannot return $version; the in-memory adapter hands it
         // back regardless, which is what hid this sweep expiring nothing at all.
         $database = new Database(
@@ -96,41 +212,45 @@ final class DeletesTest extends TestCase
             documentSecurity: false,
         ));
 
-        $stale = DateTime::addSeconds(
-            new \DateTime(),
-            -Deletes::PROCESSING_STUCK_RETENTION_SECONDS - 1,
-        );
+        return $database;
+    }
+
+    private function createMigration(
+        Database $database,
+        string $id,
+        string $stage,
+        int $age,
+        string $attemptId = 'attempt-1',
+    ): Document {
+        $updatedAt = DateTime::addSeconds(new \DateTime(), -$age);
         $database->setPreserveDates(true);
+
         try {
-            $migration = $database->createDocument('migrations', new Document([
-                '$id' => 'migration-1',
-                '$createdAt' => $stale,
-                '$updatedAt' => $stale,
-                'attemptId' => 'attempt-1',
+            return $database->createDocument('migrations', new Document([
+                '$id' => $id,
+                '$createdAt' => $updatedAt,
+                '$updatedAt' => $updatedAt,
+                'attemptId' => $attemptId,
                 'status' => 'processing',
-                'stage' => 'processing',
+                'stage' => $stage,
             ]));
         } finally {
             $database->setPreserveDates(false);
         }
+    }
 
-        $project = new Document([
+    private function project(): Document
+    {
+        return new Document([
             '$id' => 'project-1',
             '$sequence' => 1,
             'auths' => [],
         ]);
-        $now = DateTime::now();
-        $message = new Message([
-            'pid' => 'pid-1',
-            'queue' => 'v1-deletes',
-            'timestamp' => \time(),
-            'payload' => (new DeleteMessage(
-                project: $project,
-                type: DELETE_TYPE_MAINTENANCE,
-                datetime: $now,
-            ))->toArray(),
-        ]);
-        $worker = new class () extends Deletes {
+    }
+
+    private function sweeper(): Deletes
+    {
+        return new class () extends Deletes {
             #[\Override]
             protected function deleteByGroup(
                 string $collection,
@@ -152,127 +272,43 @@ final class DeletesTest extends TestCase
                 }
             }
         };
+    }
+
+    private function maintain(Database $database, Deletes $worker): void
+    {
+        $project = $this->project();
+        $now = DateTime::now();
         $publisher = new MockPublisher();
         $queue = new Queue('test');
-        $run = function (Deletes $deletes) use ($database, $message, $now, $project, $publisher, $queue): void {
-            $deletes->action(
-                message: $message,
-                project: $project,
-                dbForPlatform: $database,
-                getProjectDB: static fn (Document $document): Database => $database,
-                getDatabasesDB: static fn (Document $document): Database => $database,
-                deviceForFiles: $this->createStub(Device::class),
-                deviceForFunctions: $this->createStub(Device::class),
-                deviceForSites: $this->createStub(Device::class),
-                deviceForBuilds: $this->createStub(Device::class),
-                deviceForCache: $this->createStub(Device::class),
-                certificates: $this->createStub(Provider::class),
-                executor: $this->createStub(Executor::class),
-                executionRetention: $now,
-                executionsRetentionCount: 0,
-                publisherForDeletes: new DeletePublisher($publisher, $queue),
-                publisherForUsage: new UsagePublisher($publisher, $queue),
-                bus: $this->createStub(Bus::class),
-                executionStore: new Store(dsn: 'http://appwrite:secret@clickhouse:8123/appwrite', client: new CapturingClient()),
-            );
-        };
 
-        $run($worker);
-
-        $terminal = $database->getDocument('migrations', $migration->getId());
-        $this->assertSame('failed', $terminal->getAttribute('status'));
-        $this->assertSame('finished', $terminal->getAttribute('stage'));
-        $this->assertSame('attempt-1', $terminal->getAttribute('attemptId'));
-
-        $retried = (new Claim(
-            $database,
-            static fn (string $key, int $ttl, callable $callback, float $timeout): mixed => $callback(),
-        ))->retry(
+        $worker->action(
+            message: new Message([
+                'pid' => 'pid-1',
+                'queue' => 'v1-deletes',
+                'timestamp' => \time(),
+                'payload' => (new DeleteMessage(
+                    project: $project,
+                    type: DELETE_TYPE_MAINTENANCE,
+                    datetime: $now,
+                ))->toArray(),
+            ]),
             project: $project,
-            migrationId: $migration->getId(),
-            platform: [],
-            publisher: new MigrationPublisher($publisher, new Queue('migrations')),
+            dbForPlatform: $database,
+            getProjectDB: static fn (Document $document): Database => $database,
+            getDatabasesDB: static fn (Document $document): Database => $database,
+            deviceForFiles: $this->createStub(Device::class),
+            deviceForFunctions: $this->createStub(Device::class),
+            deviceForSites: $this->createStub(Device::class),
+            deviceForBuilds: $this->createStub(Device::class),
+            deviceForCache: $this->createStub(Device::class),
+            certificates: $this->createStub(Provider::class),
+            executor: $this->createStub(Executor::class),
+            executionRetention: $now,
+            executionsRetentionCount: 0,
+            publisherForDeletes: new DeletePublisher($publisher, $queue),
+            publisherForUsage: new UsagePublisher($publisher, $queue),
+            bus: $this->createStub(Bus::class),
+            executionStore: new Store(dsn: 'http://appwrite:secret@clickhouse:8123/appwrite', client: new CapturingClient()),
         );
-
-        $this->assertSame('pending', $retried->getAttribute('status'));
-        $this->assertSame('finished', $retried->getAttribute('stage'));
-        $this->assertNotSame('attempt-1', $retried->getAttribute('attemptId'));
-        $queued = MigrationMessage::fromArray($publisher->getEvents('migrations')[0]);
-        $this->assertInstanceOf(Document::class, $queued->terminal);
-        $this->assertSame('attempt-1', $queued->terminal->getAttribute('attemptId'));
-        $this->assertSame('failed', $queued->terminal->getAttribute('status'));
-        $this->assertSame('finished', $queued->terminal->getAttribute('stage'));
-
-        $database->setPreserveDates(true);
-        try {
-            $late = $database->createDocument('migrations', new Document([
-                '$id' => 'migration-2',
-                '$createdAt' => $stale,
-                '$updatedAt' => $stale,
-                'attemptId' => 'attempt-a',
-                'status' => 'processing',
-                'stage' => 'migrating',
-            ]));
-        } finally {
-            $database->setPreserveDates(false);
-        }
-
-        $race = new class () extends Deletes {
-            public ?\Closure $beforeUpdate = null;
-
-            #[\Override]
-            protected function deleteByGroup(
-                string $collection,
-                array $queries,
-                Database $database,
-                ?callable $callback = null,
-            ): void {
-            }
-
-            #[\Override]
-            protected function listByGroup(
-                string $collection,
-                array $queries,
-                Database $database,
-                ?callable $callback = null,
-            ): void {
-                if ($collection !== 'migrations') {
-                    return;
-                }
-
-                foreach ($database->find($collection, $queries) as $document) {
-                    ($this->beforeUpdate ?? throw new \LogicException('Missing retry interleaving'))($document);
-                    if ($callback !== null) {
-                        $callback($document);
-                    }
-                }
-            }
-        };
-        $newAttempt = '';
-        $race->beforeUpdate = function (Document $snapshot) use ($database, $project, $publisher, &$newAttempt): void {
-            $database->updateDocument('migrations', $snapshot->getId(), new Document([
-                'status' => 'failed',
-                'stage' => 'finished',
-            ]));
-            $claim = new Claim(
-                $database,
-                static fn (string $key, int $ttl, callable $callback, float $timeout): mixed => $callback(),
-            );
-            $retried = $claim->retry(
-                project: $project,
-                migrationId: $snapshot->getId(),
-                platform: [],
-                publisher: new MigrationPublisher($publisher, new Queue('migrations-race')),
-            );
-            $newAttempt = (string) $retried->getAttribute('attemptId');
-        };
-
-        $run($race);
-
-        $stored = $database->getDocument('migrations', $late->getId());
-        $this->assertNotSame('', $newAttempt);
-        $this->assertSame($newAttempt, $stored->getAttribute('attemptId'));
-        $this->assertSame('pending', $stored->getAttribute('status'));
-        $this->assertSame('finished', $stored->getAttribute('stage'));
     }
 }
