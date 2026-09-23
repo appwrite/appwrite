@@ -11,7 +11,7 @@ faqs:
   - question: "What can Appwrite Firewall protect?"
     answer: "Appwrite Firewall applies rules to three kinds of traffic: your project API (the requests behind Auth, Databases, Storage, and the other services), public traffic to a single Function, and public traffic to a single Site. Each rule matches requests on conditions such as path, method, header, IP address, or country, and then denies, bypasses, challenges, rate limits, or redirects them. See [Resource scopes](/docs/products/firewall/scopes)."
   - question: "How do I rate limit OTP requests in Appwrite?"
-    answer: "Open **Firewall** in your project, choose **Add preset**, and pick **Rate limit OTP**. The preset creates one rate limit rule for each OTP path you select: phone and email, send and verification. Requests over the quota get HTTP `429` with a `Retry-After` header."
+    answer: "Open **Firewall** in your project, choose **Add preset**, and pick **Rate limit OTP**. The preset creates one rate limit rule for each channel and step you select: phone and email, send and verification. Each rule counts requests per IP address. Requests over the quota get HTTP `429` with a `Retry-After` header."
   - question: "Can Appwrite Firewall rate limit each user instead of each IP address?"
     answer: "Yes. Set **Limit by** to **User ID** on a rate limit rule. Each signed-in user then gets a separate quota, even when many users share one IP address. Requests without a signed-in user skip that rule, so pair it with an IP-based rule for anonymous traffic."
   - question: "How do I find out which Firewall rule blocked a request?"
@@ -39,7 +39,7 @@ The **Rate limit OTP** preset handles this. On the **Firewall** page, keep the r
 - **Rate limit phone OTP send** and **Rate limit email OTP send** cover requests that send codes.
 - **Rate limit phone OTP verification** and **Rate limit email OTP verification** cover requests that verify codes.
 
-With a limit of 5 requests per hour, a client can request five email codes. The sixth request gets HTTP `429` with a `Retry-After` header. The limit on the verification step also slows down guesses against a code that was already sent.
+The preset counts requests per IP address, not per phone number or email address. Each rule also has a separate counter. With a limit of 5 requests per hour on the email send rule, one IP address can request five email codes in that hour, for any mix of email addresses. The sixth request gets HTTP `429` with a `Retry-After` header. Phone codes use the phone send rule, so they have a separate quota of five. The limit on the verification step also slows down guesses against a code that was already sent.
 
 The preset uses the fixed window strategy, so the window follows the clock. The `Retry-After` value counts the seconds until the current hour ends, not a full hour from the last request. If attackers time bursts around the window edge, delete the rule and create one with the sliding window strategy. [Choosing a rate limit strategy](/blog/post/firewall-rate-limit-strategies) explains the difference.
 
@@ -118,8 +118,6 @@ The second rule denies requests without the sender's signature header. The condi
 
 This rule only checks that the header exists. It does not check that the signature is valid, so your function must still verify the signature with the sender's secret. The rule removes unsigned traffic before it starts an execution.
 
-The **Estimated impact** panel cannot preview header conditions, because Appwrite has no usage data to estimate them from. The rule still applies to every request after you save it.
-
 # Keep bots off a Site's forms and admin paths {% #site-bots %}
 
 Sites receive traffic from scanners that try every well-known path, and from scripts that submit forms. Set **Resource type** to **Sites** and select the site.
@@ -156,7 +154,7 @@ During a flood of traffic, precise rules take too long to write. **Attack mode**
 
 Attack mode creates a challenge rule that matches every path and runs at priority `0`, before the rules at the default priority of `100`. While it is on, every page of the site returns the challenge first.
 
-Your own automation also gets the challenge, and an uptime monitor then reports the site as down. A bypass rule must run before the attack mode rule, so it needs a **negative** priority. The bypass in the list above matches **User agent** **Starts with** `UptimeRobot` at priority `-10`. Monitor requests pass, and every other visitor still gets the challenge. To stop attack mode, click **Turn off** in the banner.
+Your own automation also gets the challenge, and an uptime monitor then reports the site as down. A bypass rule must run before the attack mode rule, so it needs a **negative** priority. In the example above, the bypass rule matches **User agent** **Starts with** `UptimeRobot` at priority `-10`. Use the user agent of your own monitor or automation. Requests from that tool pass, and every other visitor still gets the challenge. To stop attack mode, click **Turn off** in the banner.
 
 # Find out which rule acted on a request {% #which-rule %}
 
@@ -170,6 +168,14 @@ X-Appwrite-WAF-Action: rateLimit
 `X-Appwrite-WAF-Rule` is the rule ID, which you can search for in the rules list. `X-Appwrite-WAF-Action` is the action that the rule applied. A `429` from a rate limit rule also includes `Retry-After`. The headers appear on API, Function, and Site responses.
 
 Firewall rules do not apply to the Console. A rule that is too strict cannot lock you out of the page where you disable it.
+
+# Conclusion
+
+Each problem in this post takes one or two rules to fix. The OTP preset stops SMS pumping, and one rate limit protects your tables from scrapers. Rules by country, IP address, and header control who reaches your API, your Functions, and your Sites. Attack mode protects a site during a flood with one click, and the response headers name the rule for every blocked request.
+
+All of this runs before a request reaches your project. Blocked traffic never starts a function execution, reads a row, or sends a message, and your code stays the same. New rules apply as soon as you save them, so a new attack takes minutes to stop, not a deploy.
+
+Start with the presets, check the **Estimated impact** panel before you save, and add your own rules as your traffic changes.
 
 # Resources
 
