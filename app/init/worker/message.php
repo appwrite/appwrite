@@ -93,19 +93,19 @@ return function (Container $container): void {
         };
     }, ['databaseFactory', 'dbForPlatform']);
 
-    $container->set('getDatabasesDB', function (DatabaseFactory $databaseFactory, Document $project, Context $usage) {
-        return function (Document $database, ?Document $projectDocument = null) use ($databaseFactory, $project, $usage): Database {
-            $projectDocument ??= $project;
+    $container->set('getDatabasesDB', function (DatabaseFactory $databaseFactory, Document $messageProject, Context $usage) {
+        return function (Document $database, ?Document $project = null) use ($databaseFactory, $messageProject, $usage): Database {
+            $project ??= $messageProject;
 
             // Backwards-compatibility: older or seeded legacy databases may not have a DSN stored
             // in the "database" attribute. In that case, fall back to the project's database DSN.
             $databaseConfig = $database->getAttribute('database', '') === ''
-                ? new Document(\array_merge($database->getArrayCopy(), ['database' => $projectDocument->getAttribute('database', '')]))
+                ? new Document(\array_merge($database->getArrayCopy(), ['database' => $project->getAttribute('database', '')]))
                 : $database;
 
             $dbForDatabases = $databaseFactory->tenant(
                 $databaseConfig,
-                $projectDocument,
+                $project,
                 APP_DATABASE_TIMEOUT_MILLISECONDS_WORKER,
             );
 

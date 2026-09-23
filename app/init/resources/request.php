@@ -1029,6 +1029,9 @@ return function (Container $context): void {
         return function (Document $database, ?Document $collection = null) use ($databaseFactory, $project, $request, $dbForProject, $usage): Database {
             $originalDatabase = $database;
             $context = str_contains($request->getURI(), '/tablesdb/') ? 'table' : 'collection';
+            $publicIds = $collection === null || $collection->isEmpty()
+                ? []
+                : ['database_' . $originalDatabase->getSequence() . '_collection_' . $collection->getSequence() => $collection->getId()];
 
             $database = $databaseFactory->tenant(
                 $originalDatabase,
@@ -1047,7 +1050,7 @@ return function (Container $context): void {
                 ->addHook(new Metadata(
                     database: $originalDatabase,
                     context: $context,
-                    resolvePublicId: Metadata::resolver($database, $dbForProject),
+                    resolvePublicId: Metadata::resolver($database, $dbForProject, $publicIds),
                     tenant: $database,
                 ))
                 ->addHook(new Usage($usage, $originalDatabase->getAttribute('type', '')));
