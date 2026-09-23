@@ -22,27 +22,27 @@ Email triggers only receive email. To send email from your app, use [Messaging](
 
 # Built-in address {% #built-in-address %}
 
-{% info title="SMTP-DOCS-TODO: Screenshot pending (built-in-address)" %}
-**SMTP-DOCS-TODO screenshot:built-in-address.** Capture the **Domains** tab of a function that shows the built-in email address card. Light and dark, 1460x822 viewport at 2x, screenshot mode on. Save as `/images/docs/functions/email/built-in-address.avif` and `/images/docs/functions/email/dark/built-in-address.avif`, then replace this block with `only_light` and `only_dark` image tags.
-{% /info %}
+{% docs_todo kind="screenshot" id="smtp-built-in-address" %}
+SMTP-DOCS-TODO screenshot:built-in-address. Capture the **Domains** tab of a function that shows the built-in email address card. Light and dark, 1460x822 viewport at 2x, screenshot mode on. Save as `/images/docs/functions/email/built-in-address.avif` and `/images/docs/functions/email/dark/built-in-address.avif`, then replace this block with `only_light` and `only_dark` image tags.
+{% /docs_todo %}
 
 Each function has a built-in email address that ends with `<FUNCTION_ID>.appwrite.email`.
 You can use any name before the `@`. For example, `support@<FUNCTION_ID>.appwrite.email` and `invoices@<FUNCTION_ID>.appwrite.email` both execute the same function, and the function can read which address received the email.
 You do not need to configure DNS records for the built-in address.
 
-{% info title="SMTP-DOCS-TODO: Console steps pending (built-in-address)" %}
-**SMTP-DOCS-TODO steps:built-in-address.** Confirm these steps against the released Console, then remove this block.
+{% docs_todo kind="steps" id="smtp-built-in-address" %}
+SMTP-DOCS-TODO steps:built-in-address. Confirm these steps against the released Console, then remove this block.
 
 1. In the Appwrite Console's sidebar, click **Functions**.
 1. Open your function.
 1. Under the **Domains** tab, copy the email address.
-{% /info %}
+{% /docs_todo %}
 
 # Custom domain {% #custom-domain %}
 
-{% info title="SMTP-DOCS-TODO: Screenshot pending (custom-domain)" %}
-**SMTP-DOCS-TODO screenshot:custom-domain.** Capture the Console screen that shows the MX and TXT records for a new email domain. Light and dark, 1460x822 viewport at 2x, screenshot mode on. Save as `/images/docs/functions/email/custom-domain.avif` and `/images/docs/functions/email/dark/custom-domain.avif`, then replace this block with `only_light` and `only_dark` image tags.
-{% /info %}
+{% docs_todo kind="screenshot" id="smtp-custom-domain" %}
+SMTP-DOCS-TODO screenshot:custom-domain. Capture the Console screen that shows the MX and TXT records for a new email domain. Light and dark, 1460x822 viewport at 2x, screenshot mode on. Save as `/images/docs/functions/email/custom-domain.avif` and `/images/docs/functions/email/dark/custom-domain.avif`, then replace this block with `only_light` and `only_dark` image tags.
+{% /docs_todo %}
 
 You can connect a domain that you own, such as `mail.example.com`, to your function.
 Email to any address at this domain executes the function.
@@ -56,9 +56,9 @@ To verify that you own the domain, add two DNS records at your domain registrar:
 
 Appwrite executes the function only after it verifies the domain. DNS records can take up to 48 hours to propagate.
 
-{% info title="SMTP-DOCS-TODO: Console steps pending (custom-domain)" %}
-**SMTP-DOCS-TODO steps:custom-domain.** The Console does not have this flow yet. Write the numbered steps to add an email domain, copy the DNS records, and verify the domain. Then remove this block.
-{% /info %}
+{% docs_todo kind="steps" id="smtp-custom-domain" %}
+SMTP-DOCS-TODO steps:custom-domain. The Console does not have this flow yet. Write the numbered steps to add an email domain, copy the DNS records, and verify the domain. Then remove this block.
+{% /docs_todo %}
 
 A domain can receive email and HTTP requests at the same time.
 For example, `support.example.com` can serve a site and also send its email to a function, because the email rule and the HTTP rule are separate.
@@ -727,9 +727,9 @@ The request body of an email execution has this format:
 }
 ```
 
-{% info title="SMTP-DOCS-TODO: Verify download URL host" %}
-**SMTP-DOCS-TODO verify:download-url-host.** The `url` host in this example is a guess. Replace it with the host that Appwrite Cloud returns, then remove this block.
-{% /info %}
+{% docs_todo kind="verify" id="smtp-download-url-host" %}
+SMTP-DOCS-TODO verify:download-url-host. The `url` host in this example is a guess. Replace it with the host that Appwrite Cloud returns, then remove this block.
+{% /docs_todo %}
 
 - `id`: the unique ID of the email. It is the same value as the `x-appwrite-email-id` header.
 - `envelope.from`: the address that the sending mail server gave for the sender.
@@ -764,9 +764,9 @@ The [example function](#handle-an-email) uses the `id` as the row ID, so Appwrit
 
 # Limits {% #limits %}
 
-{% info title="SMTP-DOCS-TODO: Verify limits" %}
-**SMTP-DOCS-TODO verify:limits.** These values come from the current implementation and can change for each plan. Confirm them before release, then remove this block.
-{% /info %}
+{% docs_todo kind="verify" id="smtp-limits" %}
+SMTP-DOCS-TODO verify:limits. These values come from the current implementation and can change for each plan. Confirm them before release, then remove this block.
+{% /docs_todo %}
 
 - Maximum size of an email, including attachments: 25 MB.
 - Maximum size of the email body after decoding: 8 MB.
