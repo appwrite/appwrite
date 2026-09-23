@@ -67,7 +67,7 @@ class Jobs extends Action
     private const LOCK_TTL = 30;
     private const LOCK_TIMEOUT = 10.0;
 
-    public const string INTERNAL_ERROR_MESSAGE = 'Internal server error. Please try again.';
+    private const string INTERNAL_ERROR_MESSAGE = 'Internal server error. Please try again.';
 
     /**
      * Artifact failures the user can fix, with a safe message for each. Raw
@@ -200,8 +200,16 @@ class Jobs extends Action
                 $this->dispatchUpdate($queueForEvents, $queueForWebhooks, $publisherForFunctions, $project, $deployment);
             }
 
-            if ($artifact !== null) {
-                $failure = $this->internalFailure($deployment, $artifact);
+            // A platform-side artifact failure that failed the build. The cache
+            // upload and manifest never fail a build.
+            if ($artifact?->status === 'failed'
+                && !\in_array($artifact->artifactId, ['cache', 'manifest'], true)
+                && !isset(self::USER_ARTIFACT_ERRORS[$artifact->error?->code->value ?? ''])) {
+                Span::add('deployment.id', $deploymentId);
+                Span::add('artifact.id', $artifact->artifactId);
+                Span::add('artifact.type', $artifact->artifactType);
+                Span::add('artifact.error.code', $artifact->error?->code->value);
+                $failure = new PermanentFailure("Build artifact '{$artifact->artifactId}' failed: " . ($artifact->error->message ?? 'no error reported'), 500);
             }
         }, self::LOCK_TIMEOUT);
 
@@ -328,6 +336,7 @@ class Jobs extends Action
         Bus $bus,
     ): Document {
         $failed = $artifact->status === 'failed';
+        $message = self::USER_ARTIFACT_ERRORS[$artifact->error?->code->value ?? ''] ?? self::INTERNAL_ERROR_MESSAGE;
         if ($artifact->artifactId === 'manifest') {
             // A failed manifest degrades to an empty listing (detection
             // skipped), never a failed build.
@@ -348,7 +357,7 @@ class Jobs extends Action
             if ($failed) {
                 // Fail immediately even if exit delivery is lost. Leave duration
                 // unknown until exit arrives, rather than billing callback wait.
-                return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, $this->artifactFailure($artifact), $publisherForScreenshots, $vcsFactory, $platform, $bus);
+                return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, $message, $publisherForScreenshots, $vcsFactory, $platform, $bus);
             }
 
             if ($artifact->status !== 'success') {
@@ -366,7 +375,7 @@ class Jobs extends Action
         // build cache upload is the one best-effort artifact: losing it costs
         // the next build time, not this one.
         if ($failed && $artifact->artifactId !== 'cache') {
-            return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, $this->artifactFailure($artifact), $publisherForScreenshots, $vcsFactory, $platform, $bus);
+            return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, $message, $publisherForScreenshots, $vcsFactory, $platform, $bus);
         }
 
         if ($artifact->artifactId !== 'sourceSize' || $artifact->status !== 'success') {
@@ -383,35 +392,6 @@ class Jobs extends Action
             'sourceSize' => $size,
             'totalSize' => $size + (int) $deployment->getAttribute('buildSize', 0),
         ]));
-    }
-
-    /**
-     * The build log message for a failed artifact: a safe message when the
-     * user can fix it, the generic internal error otherwise.
-     */
-    protected function artifactFailure(JobArtifact $artifact): string
-    {
-        return self::USER_ARTIFACT_ERRORS[$artifact->error?->code->value ?? ''] ?? self::INTERNAL_ERROR_MESSAGE;
-    }
-
-    /**
-     * The error to report for a platform-side artifact failure that failed
-     * the build, or null. The cache upload and manifest never fail a build.
-     */
-    protected function internalFailure(Document $deployment, JobArtifact $artifact): ?PermanentFailure
-    {
-        if ($artifact->status !== 'failed'
-            || \in_array($artifact->artifactId, ['cache', 'manifest'], true)
-            || isset(self::USER_ARTIFACT_ERRORS[$artifact->error?->code->value ?? ''])) {
-            return null;
-        }
-
-        Span::add('deployment.id', $deployment->getId());
-        Span::add('artifact.id', $artifact->artifactId);
-        Span::add('artifact.type', $artifact->artifactType);
-        Span::add('artifact.error.code', $artifact->error?->code->value);
-
-        return new PermanentFailure("Build artifact '{$artifact->artifactId}' failed: " . ($artifact->error->message ?? 'no error reported'), 500);
     }
 
     /**
