@@ -12,7 +12,6 @@ use Utopia\Database\Document;
 use Utopia\Database\Exception\Conflict;
 use Utopia\Database\Helpers\ID;
 use Utopia\Migration\Destinations\Appwrite\ProvisioningOwner;
-use Utopia\System\System;
 
 final readonly class Claim
 {
@@ -48,12 +47,6 @@ final readonly class Claim
      */
     public function assertReady(): void
     {
-        // Operators enable this only after V26 schema migration and claim-aware
-        // workers are fully rolled out. The default-disabled phase blocks producers.
-        if (System::getEnv('_APP_MIGRATIONS_CLAIM_ENABLED', 'disabled') !== 'enabled') {
-            throw new Exception(Exception::MIGRATION_CLAIM_DISABLED);
-        }
-
         $missing = [];
 
         foreach ([

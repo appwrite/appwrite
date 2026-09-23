@@ -5,10 +5,9 @@ namespace Appwrite\Event\Message;
 use Utopia\Database\Document;
 
 /**
- * Roll out the V26 schema first, then claim-aware migration workers while the
- * producer flag stays disabled, and only then enable producers. Older workers
- * ignore this protocol and cannot provide atomic generation claiming during a
- * rolling deployment.
+ * Producers publish only once the project has the V26 ownership schema. Workers
+ * older than the claim protocol ignore it, so they cannot fence generations
+ * during a rolling deployment.
  */
 final class Migration extends Base
 {

@@ -89,15 +89,10 @@ final class ExclusiveClaimLock
 
 final class ClaimTest extends TestCase
 {
-    private string|false $claimEnabled;
-
     private Database $database;
 
     protected function setUp(): void
     {
-        $this->claimEnabled = \getenv('_APP_MIGRATIONS_CLAIM_ENABLED');
-        \putenv('_APP_MIGRATIONS_CLAIM_ENABLED=enabled');
-
         $this->database = new InterleavingClaimDatabase(new StandaloneClaimMemory(), new Cache(new NoCache()));
         $this->database
             ->setAuthorization(new Authorization())
@@ -127,13 +122,6 @@ final class ClaimTest extends TestCase
             ],
             documentSecurity: false,
         ));
-    }
-
-    protected function tearDown(): void
-    {
-        \putenv($this->claimEnabled === false
-            ? '_APP_MIGRATIONS_CLAIM_ENABLED'
-            : '_APP_MIGRATIONS_CLAIM_ENABLED=' . $this->claimEnabled);
     }
 
     /**
@@ -186,40 +174,29 @@ final class ClaimTest extends TestCase
         $this->addToAssertionCount(1);
     }
 
-    public function testDisabledProtocolRefusesProducerButStillConsumesLegacyDelivery(): void
+    public function testProducersAndLegacyDeliveriesNeedNothingButTheOwnershipSchema(): void
     {
-        \putenv('_APP_MIGRATIONS_CLAIM_ENABLED=disabled');
         $claims = new Claim($this->database, $this->locks());
-
-        try {
-            $claims->assertReady();
-            $this->fail('Expected disabled claim protocol to refuse producers');
-        } catch (Exception $error) {
-            $this->assertSame(Exception::MIGRATION_CLAIM_DISABLED, $error->getType());
-            $this->assertSame(503, $error->getCode());
-        }
+        $claims->assertReady();
 
         $terminal = $this->createFailedMigration();
         $publisher = new MockPublisher();
-        try {
-            $claims->retry(
-                project: new Document(['$id' => 'project-1']),
-                migrationId: $terminal->getId(),
-                platform: [],
-                publisher: new MigrationPublisher($publisher, new Queue('migrations')),
-            );
-            $this->fail('Expected disabled claim protocol to refuse retry');
-        } catch (Exception $error) {
-            $this->assertSame(Exception::MIGRATION_CLAIM_DISABLED, $error->getType());
-        }
+        $claimed = $claims->retry(
+            project: new Document(['$id' => 'project-1']),
+            migrationId: $terminal->getId(),
+            platform: [],
+            publisher: new MigrationPublisher($publisher, new Queue('migrations')),
+        );
+
         $stored = $this->database->getDocument('migrations', $terminal->getId());
-        $this->assertSame('attempt-terminal', $stored->getAttribute('attemptId'));
-        $this->assertSame('failed', $stored->getAttribute('status'));
-        $this->assertEmpty($publisher->getEvents('migrations'));
-        $this->database->deleteDocument('migrations', $terminal->getId());
+        $this->assertSame('pending', $stored->getAttribute('status'));
+        $this->assertSame('finished', $stored->getAttribute('stage'));
+        $this->assertSame($claimed->getAttribute('attemptId'), $stored->getAttribute('attemptId'));
+        $this->assertNotSame('attempt-terminal', $stored->getAttribute('attemptId'));
+        $this->assertCount(1, $publisher->getEvents('migrations'));
 
         $queued = $this->database->createDocument('migrations', new Document([
-            '$id' => 'migration-1',
+            '$id' => 'migration-legacy',
             'status' => 'pending',
             'stage' => 'init',
             'resourceData' => [],

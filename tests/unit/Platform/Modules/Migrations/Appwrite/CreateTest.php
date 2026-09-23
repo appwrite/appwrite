@@ -30,21 +30,6 @@ require_once __DIR__ . '/../../../../../../app/init.php';
 
 final class CreateTest extends TestCase
 {
-    private string|false $claimEnabled;
-
-    protected function setUp(): void
-    {
-        $this->claimEnabled = \getenv('_APP_MIGRATIONS_CLAIM_ENABLED');
-        \putenv('_APP_MIGRATIONS_CLAIM_ENABLED=enabled');
-    }
-
-    protected function tearDown(): void
-    {
-        \putenv($this->claimEnabled === false
-            ? '_APP_MIGRATIONS_CLAIM_ENABLED'
-            : '_APP_MIGRATIONS_CLAIM_ENABLED=' . $this->claimEnabled);
-    }
-
     public function testRefusesIncompleteOwnershipSchemaBeforePersistingAttempt(): void
     {
         $database = new Database(new Memory(), new Cache(new NoCache()));
@@ -154,32 +139,6 @@ final class CreateTest extends TestCase
             ->expects($this->once())
             ->method('dynamic')
             ->with($this->isInstanceOf(Document::class), Response::MODEL_MIGRATION);
-
-        \putenv('_APP_MIGRATIONS_CLAIM_ENABLED=disabled');
-        try {
-            (new Create())->action(
-                resources: [],
-                endpoint: 'https://example.test/v1',
-                projectId: 'source-project',
-                apiKey: 'source-key',
-                onDuplicate: OnDuplicate::Fail->value,
-                response: $response,
-                dbForProject: $database,
-                project: new Document(['$id' => 'project-1']),
-                platform: ['name' => 'test-platform'],
-                queueForEvents: $events,
-                publisherForMigrations: new MigrationPublisher($publisher, new Queue('migrations')),
-                locks: static fn (string $key, int $ttl, callable $callback, float $timeout): mixed => $callback(),
-            );
-            $this->fail('Expected disabled claim protocol to refuse the producer');
-        } catch (Exception $error) {
-            $this->assertSame(Exception::MIGRATION_CLAIM_DISABLED, $error->getType());
-            $this->assertSame(503, $error->getCode());
-        }
-        $this->assertSame([], $database->find('migrations'));
-        $this->assertEmpty($publisher->getEvents('migrations'));
-
-        \putenv('_APP_MIGRATIONS_CLAIM_ENABLED=enabled');
 
         (new Create())->action(
             resources: [],

@@ -364,7 +364,6 @@ class Exception extends \Exception
     /** Migrations */
     public const string MIGRATION_NOT_FOUND = 'migration_not_found';
     public const string MIGRATION_ALREADY_EXISTS = 'migration_already_exists';
-    public const string MIGRATION_CLAIM_DISABLED = 'migration_claim_disabled';
     public const string MIGRATION_IN_PROGRESS = 'migration_in_progress';
     public const string MIGRATION_SCHEMA_NOT_READY = 'migration_schema_not_ready';
     public const string MIGRATION_PROVIDER_ERROR = 'migration_provider_error';

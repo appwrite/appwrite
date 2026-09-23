@@ -184,23 +184,15 @@ final class DeletesTest extends TestCase
         $this->assertSame('finished', $terminal->getAttribute('stage'));
         $this->assertSame('attempt-1', $terminal->getAttribute('attemptId'));
 
-        $claimEnabled = \getenv('_APP_MIGRATIONS_CLAIM_ENABLED');
-        \putenv('_APP_MIGRATIONS_CLAIM_ENABLED=enabled');
-        try {
-            $retried = (new Claim(
-                $database,
-                static fn (string $key, int $ttl, callable $callback, float $timeout): mixed => $callback(),
-            ))->retry(
-                project: $project,
-                migrationId: $migration->getId(),
-                platform: [],
-                publisher: new MigrationPublisher($publisher, new Queue('migrations')),
-            );
-        } finally {
-            \putenv($claimEnabled === false
-                ? '_APP_MIGRATIONS_CLAIM_ENABLED'
-                : '_APP_MIGRATIONS_CLAIM_ENABLED=' . $claimEnabled);
-        }
+        $retried = (new Claim(
+            $database,
+            static fn (string $key, int $ttl, callable $callback, float $timeout): mixed => $callback(),
+        ))->retry(
+            project: $project,
+            migrationId: $migration->getId(),
+            platform: [],
+            publisher: new MigrationPublisher($publisher, new Queue('migrations')),
+        );
 
         $this->assertSame('pending', $retried->getAttribute('status'));
         $this->assertSame('finished', $retried->getAttribute('stage'));
@@ -275,15 +267,7 @@ final class DeletesTest extends TestCase
             $newAttempt = (string) $retried->getAttribute('attemptId');
         };
 
-        $claimEnabled = \getenv('_APP_MIGRATIONS_CLAIM_ENABLED');
-        \putenv('_APP_MIGRATIONS_CLAIM_ENABLED=enabled');
-        try {
-            $run($race);
-        } finally {
-            \putenv($claimEnabled === false
-                ? '_APP_MIGRATIONS_CLAIM_ENABLED'
-                : '_APP_MIGRATIONS_CLAIM_ENABLED=' . $claimEnabled);
-        }
+        $run($race);
 
         $stored = $database->getDocument('migrations', $late->getId());
         $this->assertNotSame('', $newAttempt);

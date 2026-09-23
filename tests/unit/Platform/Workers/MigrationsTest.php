@@ -572,21 +572,13 @@ final class MigrationsTest extends TestCase
         $this->assertSame(1, $worker->apiKeyCalls);
         $this->assertSame('failed', $database->getDocument('migrations', $migration->getId())->getAttribute('status'));
 
-        $claimEnabled = \getenv('_APP_MIGRATIONS_CLAIM_ENABLED');
-        \putenv('_APP_MIGRATIONS_CLAIM_ENABLED=enabled');
-        try {
-            $migrationPublisher = new MockPublisher();
-            $retried = (new Claim($database, $locks))->retry(
-                project: $project,
-                migrationId: $migration->getId(),
-                platform: [],
-                publisher: new MigrationPublisher($migrationPublisher, new Queue('migrations')),
-            );
-        } finally {
-            \putenv($claimEnabled === false
-                ? '_APP_MIGRATIONS_CLAIM_ENABLED'
-                : '_APP_MIGRATIONS_CLAIM_ENABLED=' . $claimEnabled);
-        }
+        $migrationPublisher = new MockPublisher();
+        $retried = (new Claim($database, $locks))->retry(
+            project: $project,
+            migrationId: $migration->getId(),
+            platform: [],
+            publisher: new MigrationPublisher($migrationPublisher, new Queue('migrations')),
+        );
 
         $this->assertSame('pending', $retried->getAttribute('status'));
         $this->assertSame('finished', $retried->getAttribute('stage'));
@@ -719,31 +711,23 @@ final class MigrationsTest extends TestCase
         $queue = new Queue('test');
         $device = $this->createStub(Device::class);
         $locks = static fn (string $key, int $ttl, callable $callback, float $timeout): mixed => $callback();
-        $claimEnabled = \getenv('_APP_MIGRATIONS_CLAIM_ENABLED');
-        \putenv('_APP_MIGRATIONS_CLAIM_ENABLED=enabled');
-        try {
-            $worker->action(
-                message: $message,
-                project: $project,
-                dbForProject: $database,
-                dbForPlatform: $database,
-                getDatabasesDB: static fn (Document $document): Database => $database,
-                getProjectDB: static fn (Document $document): Database => $database,
-                queueForRealtime: $realtime,
-                deviceForMigrations: $device,
-                deviceForFiles: $device,
-                publisherForMails: new MailPublisher($publisher, $queue),
-                usage: new Context(),
-                publisherForUsage: new UsagePublisher($publisher, $queue),
-                plan: [],
-                authorization: new Authorization(),
-                locks: $locks,
-            );
-        } finally {
-            \putenv($claimEnabled === false
-                ? '_APP_MIGRATIONS_CLAIM_ENABLED'
-                : '_APP_MIGRATIONS_CLAIM_ENABLED=' . $claimEnabled);
-        }
+        $worker->action(
+            message: $message,
+            project: $project,
+            dbForProject: $database,
+            dbForPlatform: $database,
+            getDatabasesDB: static fn (Document $document): Database => $database,
+            getProjectDB: static fn (Document $document): Database => $database,
+            queueForRealtime: $realtime,
+            deviceForMigrations: $device,
+            deviceForFiles: $device,
+            publisherForMails: new MailPublisher($publisher, $queue),
+            usage: new Context(),
+            publisherForUsage: new UsagePublisher($publisher, $queue),
+            plan: [],
+            authorization: new Authorization(),
+            locks: $locks,
+        );
 
         $this->assertSame(['progress', 'failure', 'ready'], $worker->refused);
         $stored = $database->getDocument('migrations', $migration->getId());
