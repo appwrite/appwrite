@@ -235,7 +235,7 @@ class XList extends Action
             $attribute = $this->isCollectionsAPI() ? 'attribute' : 'column';
             $message = "The order $attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all $documents order $attribute values are non-null.";
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, $message);
-        } catch (QueryException|UnsupportedException|ValidationException|QueryLibException $e) {
+        } catch (QueryException|ValidationException $e) {
             $this->mapQueryFailure($e);
         } catch (Timeout) {
             throw new Exception(Exception::DATABASE_TIMEOUT);

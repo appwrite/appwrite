@@ -128,7 +128,7 @@ class Get extends Action
                 // has no selects, disable relationship looping on documents!
                 $document = $dbForDatabases->skipRelationships(fn () => $dbForDatabases->getDocument($collectionTableId, $documentId, $queries));
             }
-        } catch (QueryException|UnsupportedException|ValidationException|QueryLibException $e) {
+        } catch (QueryException|ValidationException $e) {
             $this->mapQueryFailure($e);
         }
 
