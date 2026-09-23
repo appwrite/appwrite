@@ -83,7 +83,7 @@ Anthropic also raised five-hour usage limits on Pro, Max, Team, and seat-based E
 
 # Claude Opus 5.5 for agentic coding and large migrations
 
-Opus 5.5 is built for long, sprawling jobs rather than single-file edits. The examples Anthropic published are about duration and token spend as much as correctness:
+Opus 5.5 is particularly well suited to long, sprawling jobs such as codebase-wide migrations and audits. The examples Anthropic published are about duration and token spend as much as correctness:
 
 * **A 680,000-line code migration** completed by an early tester in under a day, work that would have taken an engineering team weeks.
 * **A 200,000-line codebase audit and fix** finished in under three hours, where Opus 5 took over 20 hours and burned 2.5x as many tokens.
