@@ -3,7 +3,7 @@
 <br />
 <p align="center">
     <h1>Appwrite</h1>
-    <b>Appwrite is an open-source, MCP and agent-first development platform. Use built-in backend infrastructure, web hosting, and agent tooling, all from a single place.</b>
+    <b>The open-source cloud for agents and developers. Appwrite is an MCP and agent-first platform for building and scaling apps. Give your agents Auth, Databases, Storage, Functions, Messaging, Realtime, and Hosting, all in one place.</b>
     <br />
     <br />
 </p>
@@ -14,9 +14,9 @@
 
 English | [简体中文](README-CN.md)
 
-Appwrite is an open-source, MCP and agent-first platform for building web, mobile, and AI applications. It brings together backend infrastructure, web hosting, and agent tooling in one place, so teams and agents can build, ship, and scale without stitching together a fragmented stack. Appwrite is available as a managed cloud platform and can also be self-hosted on infrastructure you control.
+Appwrite is an MCP and agent-first, open-source platform for building and scaling apps. MCP is included, so coding agents can operate on a live Appwrite project. Appwrite is available as a managed cloud platform and can also be self-hosted on infrastructure you control.
 
-With Appwrite, you can add authentication, databases, storage, functions, messaging, realtime capabilities, and integrated web app hosting through Sites. Connect agents through the hosted MCP server, install agent skills for SDK-accurate code, and give models access to your project and docs. It is designed to reduce the repetitive backend work required to launch modern products while giving developers and agents secure primitives and flexible APIs to build production-ready applications faster.
+It is designed for the AI agents in your workflow as well as for developers. Connect Cursor, Claude Code, Codex, and other agents through the hosted MCP server, or integrate an SDK into your app. Modular products stay unified from the first prototype to production scale.
 
 Find out more at [https://appwrite.io](https://appwrite.io).
 
@@ -46,23 +46,23 @@ Table of Contents:
 
 ## Products
 
-- **[Appwrite Auth](https://appwrite.io/docs/products/auth)** - Secure user authentication with multiple login methods including email/password, SMS, OAuth, anonymous sessions, and magic URLs. Includes session management, multi-factor authentication, and user verification flows.
+- **[Appwrite Auth](https://appwrite.io/docs/products/auth)** - Authenticate users securely with email, SMS, OAuth, anonymous sessions, and magic URLs.
 
-- **[Appwrite Databases](https://appwrite.io/docs/products/databases)** - Scalable structured data storage with support for databases, tables, and rows. Includes querying, pagination, indexing, and relationships to model complex application data.
+- **[Appwrite Databases](https://appwrite.io/docs/products/databases)** - Model, query, and scale with Appwrite databases or managed PostgreSQL and MySQL, so you can match your use case and team needs.
 
-- **[Appwrite Storage](https://appwrite.io/docs/products/storage)** - Secure file storage with support for uploads, downloads, encryption, compression, and file transformations for media and assets.
+- **[Appwrite Storage](https://appwrite.io/docs/products/storage)** - Store files with compression, encryption, image transformations, and access control.
 
-- **[Appwrite Functions](https://appwrite.io/docs/products/functions)** - Serverless compute platform to run custom backend logic in isolated runtimes, triggered by HTTP, events, or scheduled jobs. Includes templates for hosting your own MCP servers.
+- **[Appwrite Functions](https://appwrite.io/docs/products/functions)** - Deploy serverless functions with secure isolated runtimes and event-driven execution.
 
-- **[Appwrite Messaging](https://appwrite.io/docs/products/messaging)** - Multi-channel messaging system for sending emails, SMS, and push notifications to users for engagement, alerts, and transactional workflows.
+- **[Appwrite Sites](https://appwrite.io/docs/products/sites)** - Deploy static, SSR, and CSR frontends from Git with instant previews and Appwrite behind them.
 
-- **[Appwrite Sites](https://appwrite.io/docs/products/sites)** - Integrated hosting platform to deploy and scale web applications with support for custom domains, SSR, and seamless backend integration. Git integration and previews are supported.
+- **[Appwrite Messaging](https://appwrite.io/docs/products/messaging)** - Send email, SMS, and push notifications through a unified messaging service.
 
-- **[Appwrite Realtime](https://appwrite.io/docs/apis/realtime)** - Subscribe to Auth, Databases, Storage, Functions, and other project events over WebSockets so apps and agents can react as data changes.
+- **[Appwrite Firewall](https://appwrite.io/docs/products/network)** - Protect apps with traffic rules, abuse controls, and edge security for every project.
 
-- **[Appwrite MCP](https://appwrite.io/docs/tooling/ai/mcp-servers/api)** - Hosted Model Context Protocol server so agents can search Appwrite docs and operate on your project with natural language. No local install required on Cloud.
+- **[Appwrite Realtime](https://appwrite.io/docs/apis/realtime)** - Subscribe and react to events across your project as they happen.
 
-- **[Appwrite Network](https://appwrite.io/docs/products/network)** - Global CDN, DDoS protection, TLS, and edge delivery for APIs, functions, and hosted sites on Appwrite Cloud.
+- **[Appwrite MCP](https://appwrite.io/docs/tooling/ai/mcp-servers/api)** - Connect agents to your Appwrite project, APIs, and docs. MCP is included on Cloud, with no local install required.
 
 
 ## Installation & Setup
@@ -169,7 +169,7 @@ Getting started with Appwrite is as easy as creating a new project, connecting a
 
 ### Agents
 
-Give coding agents access to your Appwrite project and the latest docs. The hosted MCP server uses OAuth, so you do not need to create or manage API keys. For a self-hosted instance, use the [local MCP server](https://appwrite.io/docs/advanced/self-hosting/mcp) instead.
+Designed for the AI agents in your workflow. Query a database, chart traffic, or ship a change: your agent does it on a live Appwrite project. The hosted MCP server uses OAuth, so you do not need to create or manage API keys. For a self-hosted instance, use the [local MCP server](https://appwrite.io/docs/advanced/self-hosting/mcp) instead.
 
 Add the remote server to Cursor, Claude Code, Codex, VS Code, and other MCP clients:
 

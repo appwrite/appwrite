@@ -3,7 +3,7 @@
 <br />
 <p align="center">
     <h1>Appwrite</h1>
-    <b>Appwrite 是开源、面向 MCP 与智能体的开发平台。后端基础设施、网站托管和智能体工具，都在同一个地方。</b>
+    <b>面向智能体与开发者的开源云。Appwrite 是面向 MCP 与智能体的平台，用于构建和扩展应用。为你的智能体提供 Auth、数据库、存储、云函数、消息、实时和托管，全部集中在一处。</b>
     <br />
     <br />
 </p>
@@ -14,9 +14,9 @@
 
 [English](README.md) | 简体中文
 
-Appwrite 是开源、面向 MCP 与智能体的开发平台，可用于构建网页、移动和 AI 应用。它把后端基础设施、网站托管和智能体工具放在一起，让团队和智能体不必拼凑零散的技术栈就能构建、发布和扩展。Appwrite 提供托管云服务，也可以在你自己控制的基础设施上自托管。
+Appwrite 是面向 MCP 与智能体的开源平台，用于构建和扩展应用。MCP 已包含在内，编程智能体可以直接操作线上的 Appwrite 项目。Appwrite 提供托管云服务，也可以在你自己控制的基础设施上自托管。
 
-使用 Appwrite，你可以添加身份验证、数据库、存储、云函数、消息推送、实时能力，以及通过 Sites 集成的 Web 应用托管。通过托管 MCP 服务器连接智能体，安装 agent skills 以生成准确的 SDK 代码，并让模型访问你的项目和文档。它旨在减少启动现代产品所需的重复后端工作，同时为开发者和智能体提供安全原语与灵活 API，从而更快地构建生产级应用。
+它既面向开发者，也面向你工作流中的 AI 智能体。通过托管 MCP 服务器连接 Cursor、Claude Code、Codex 等智能体，或将 SDK 集成到应用中。模块化产品从最初的原型到生产规模都保持统一。
 
 更多信息请到 Appwrite 官网查看：[https://appwrite.io](https://appwrite.io)。
 
@@ -46,23 +46,23 @@ Appwrite 是开源、面向 MCP 与智能体的开发平台，可用于构建网
 
 ## 产品
 
-- **[Appwrite Auth](https://appwrite.io/docs/products/auth)** - 安全的用户身份验证，支持邮箱/密码、短信、OAuth、匿名会话和 Magic URL 等多种登录方式。包含会话管理、多因素认证和用户验证流程。
+- **[Appwrite Auth](https://appwrite.io/docs/products/auth)** - 通过邮箱、短信、OAuth、匿名会话和 Magic URL 安全地验证用户。
 
-- **[Appwrite Databases](https://appwrite.io/docs/products/databases)** - 可扩展的结构化数据存储，支持数据库、表和行。包含查询、分页、索引和关系，用于建模复杂的应用数据。
+- **[Appwrite Databases](https://appwrite.io/docs/products/databases)** - 使用 Appwrite 数据库或托管的 PostgreSQL 和 MySQL 进行建模、查询和扩展，以匹配你的用例和团队需求。
 
-- **[Appwrite Storage](https://appwrite.io/docs/products/storage)** - 安全的文件存储，支持上传、下载、加密、压缩，以及对媒体和资源的文件转换。
+- **[Appwrite Storage](https://appwrite.io/docs/products/storage)** - 存储文件，支持压缩、加密、图像转换和访问控制。
 
-- **[Appwrite Functions](https://appwrite.io/docs/products/functions)** - 无服务器计算平台，在隔离运行时中执行自定义后端逻辑，可由 HTTP、事件或定时任务触发。包含用于托管自建 MCP 服务器的模板。
+- **[Appwrite Functions](https://appwrite.io/docs/products/functions)** - 部署无服务器函数，使用安全隔离的运行时和事件驱动执行。
 
-- **[Appwrite Messaging](https://appwrite.io/docs/products/messaging)** - 多渠道消息系统，可通过邮件、短信和推送通知向用户发送互动、告警和事务类消息。
+- **[Appwrite Sites](https://appwrite.io/docs/products/sites)** - 从 Git 部署静态、SSR 和 CSR 前端，支持即时预览，并由 Appwrite 作为后端。
 
-- **[Appwrite Sites](https://appwrite.io/docs/products/sites)** - 集成托管平台，用于部署和扩展 Web 应用，支持自定义域名、SSR 以及与后端的无缝集成。支持 Git 集成和预览。
+- **[Appwrite Messaging](https://appwrite.io/docs/products/messaging)** - 通过统一的消息服务发送邮件、短信和推送通知。
 
-- **[Appwrite Realtime](https://appwrite.io/docs/apis/realtime)** - 通过 WebSocket 订阅 Auth、数据库、存储、云函数等项目事件，让应用和智能体在数据变化时即时响应。
+- **[Appwrite Firewall](https://appwrite.io/docs/products/network)** - 通过流量规则、滥用防护和边缘安全保护每个项目中的应用。
 
-- **[Appwrite MCP](https://appwrite.io/docs/tooling/ai/mcp-servers/api)** - 托管的 Model Context Protocol 服务器，让智能体可以用自然语言搜索 Appwrite 文档并操作你的项目。Cloud 上无需本地安装。
+- **[Appwrite Realtime](https://appwrite.io/docs/apis/realtime)** - 订阅并响应项目中正在发生的事件。
 
-- **[Appwrite Network](https://appwrite.io/docs/products/network)** - Appwrite Cloud 上用于 API、云函数和托管站点的全球 CDN、DDoS 防护、TLS 和边缘分发。
+- **[Appwrite MCP](https://appwrite.io/docs/tooling/ai/mcp-servers/api)** - 将智能体连接到你的 Appwrite 项目、API 和文档。Cloud 已包含 MCP，无需本地安装。
 
 
 ## 安装与配置
@@ -169,7 +169,7 @@ docker run -it --rm \
 
 ### 智能体
 
-让编程智能体访问你的 Appwrite 项目和最新文档。托管 MCP 服务器使用 OAuth，因此你无需创建或管理 API 密钥。如果使用自托管实例，请改用[本地 MCP 服务器](https://appwrite.io/docs/advanced/self-hosting/mcp)。
+为你工作流中的 AI 智能体而设计。查询数据库、绘制流量图或发布一次变更：你的智能体都可以在线上的 Appwrite 项目中完成。托管 MCP 服务器使用 OAuth，因此你无需创建或管理 API 密钥。如果使用自托管实例，请改用[本地 MCP 服务器](https://appwrite.io/docs/advanced/self-hosting/mcp)。
 
 将远程服务器添加到 Cursor、Claude Code、Codex、VS Code 和其他 MCP 客户端：
 
