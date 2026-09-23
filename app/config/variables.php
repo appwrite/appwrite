@@ -769,6 +769,48 @@ return [
         ],
     ],
     [
+        'category' => 'MQTT',
+        'description' => 'Appwrite runs an MQTT broker that delivers push notifications to devices. Traefik terminates TLS for MQTT (mqtts) and MQTT over WebSocket (wss) and forwards both to the appwrite-mqtt container.',
+        'variables' => [
+            [
+                'name' => '_APP_MQTT_PORT',
+                'description' => 'Host port Traefik publishes for MQTT over TLS (mqtts). Change it when the port is already taken on the host. Default value is: \'8883\'.',
+                'introduction' => '2.3.0',
+                'default' => '8883',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_MQTT_WSS_PORT',
+                'description' => 'Host port Traefik publishes for MQTT over secure WebSocket (wss), used by browser clients. Change it when the port is already taken on the host. Default value is: \'8084\'.',
+                'introduction' => '2.3.0',
+                'default' => '8084',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_MQTT_REPLAY_DEPTH',
+                'description' => 'Maximum number of missed QoS 1 messages the broker replays per topic when a device resubscribes after being offline. Minimum 1. Default value is: \'5\'.',
+                'introduction' => '2.3.0',
+                'default' => '5',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_MQTT_MAX_PACKET_SIZE',
+                'description' => 'Maximum size in bytes of a single MQTT packet the broker accepts. Default value is: \'64000\'.',
+                'introduction' => '2.3.0',
+                'default' => '64000',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+        ],
+    ],
+    [
         'category' => 'InfluxDB',
         'description' => 'Deprecated since 1.4.8.',
         'variables' => [
