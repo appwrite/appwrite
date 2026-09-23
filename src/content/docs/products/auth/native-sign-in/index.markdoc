@@ -21,7 +21,7 @@ Native sign-in has its own switch on each provider, separate from browser sign-i
 1. In the Appwrite Console, open your project and go to **Auth**, then the **Social providers** tab.
 2. Select **Apple** or **Google**.
 3. Turn on **Native sign-in**.
-4. Under **Native client IDs**, enter a client ID and press Enter. Repeat for each ID.
+4. Enter the ID in the field below the switch and press Enter. The field is **Web client IDs** for Google and **Bundle IDs** for Apple. Repeat for each ID.
 5. Select **Update**.
 
 Every ID token names the app it was issued for. Appwrite only accepts tokens issued for a client ID in this list. Each provider needs a different value.
@@ -29,13 +29,13 @@ Every ID token names the app it was issued for. Appwrite only accepts tokens iss
 - **Apple.** Enter your app's bundle ID, such as `com.example.fieldnotes`. If you ship more than one app with its own bundle ID, such as an iOS app and a macOS app, add each one.
 - **Google.** Enter the client ID of the **Web application** client from Google Cloud. Do not enter the Android or iOS client ID. [Create the Google Cloud clients](#google-cloud-clients) explains the difference.
 
-Native sign-in needs no client secret, key ID, team ID, or private key. Those fields belong to browser sign-in, and the dialog shows them only after you turn on **Browser sign-in**. If a browser sign-in client ID is saved on the provider, Appwrite also accepts tokens issued for it, even while browser sign-in is off. You do not need to repeat that ID under **Native client IDs**.
+Native sign-in needs no client secret, key ID, team ID, or private key. Those fields belong to browser sign-in, and the dialog shows them only after you turn on **Browser sign-in**. If a browser sign-in client ID is saved on the provider, Appwrite also accepts tokens issued for it, even while browser sign-in is off. You do not need to add that ID to the list again.
 
 Appwrite does not let you turn on native sign-in until the provider has at least one client ID. While native sign-in is off, sign-in requests fail with a `project_provider_disabled` error.
 
 # Sign in with Apple {% #apple %}
 
-Add the **Sign in with Apple** capability to your app target in Xcode, under **Signing & Capabilities**. Apple issues the ID token for your bundle ID, which is the value you added under **Native client IDs**.
+Add the **Sign in with Apple** capability to your app target in Xcode, under **Signing & Capabilities**. Apple issues the ID token for your bundle ID, which is the value you added under **Bundle IDs**.
 
 Sign in with Apple requires a nonce. Generate a random string, hash it with SHA-256, and pass the hash to Apple. Send the original, unhashed value to Appwrite, which compares it against the hashed nonce in the token. If the request to Apple has no nonce, Apple still issues a token. Appwrite rejects that token, because a token without a nonce can be replayed for its full lifetime.
 
@@ -181,7 +181,7 @@ Google identifies every app that asks for a token by an OAuth client in Google C
 
 | Client type | Create one per | Where its ID goes |
 | --- | --- | --- |
-| Web application | Google Cloud project | The server client ID in your app, and **Native client IDs** in Appwrite |
+| Web application | Google Cloud project | The server client ID in your app, and **Web client IDs** in Appwrite |
 | Android | Package name and signing certificate | Not used in your code or in Appwrite |
 | iOS | Bundle ID | Your app's iOS configuration, such as `GIDClientID` in `Info.plist` or `iosClientId` in React Native |
 
@@ -196,7 +196,7 @@ If your app passes the Android client ID as the server client ID, Google rejects
 3. Set **Application type** to **Web application** and enter a name, such as `Appwrite`.
 4. Leave **Authorized JavaScript origins** and **Authorized redirect URIs** empty, then select **Create**.
 5. Copy the client ID. It ends in `.apps.googleusercontent.com`.
-6. Add the client ID under **Native client IDs** on the Google provider in Appwrite, as described in [Enable native sign-in](#enable).
+6. Add the client ID under **Web client IDs** on the Google provider in Appwrite, as described in [Enable native sign-in](#enable).
 
 If you also turn on browser sign-in for Google, you can use the same web client. In that case, add the redirect URI that the Appwrite Console shows under **Browser sign-in** to **Authorized redirect URIs**.
 
@@ -412,7 +412,7 @@ A token that fails a check returns a `user_oauth2_token_invalid` error. The mess
 
 | Message | Cause |
 | --- | --- |
-| `Audience mismatch. Add the token's client ID to the provider configuration.` | The token was issued for a client ID that is not on the provider. For Google, check that your app passes the web client ID and that the same ID is under **Native client IDs**. |
+| `Audience mismatch. Add the token's client ID to the provider configuration.` | The token was issued for a client ID that is not on the provider. For Google, check that your app passes the web client ID and that the same ID is under **Web client IDs**. |
 | `Nonce required` | The provider requires a nonce and the token has none, or the token carries a nonce and the request did not pass one. |
 | `Nonce mismatch` | The nonce passed to Appwrite is not the one the token was issued with. |
 | `Invalid issuer` | The token was not issued by Apple or Google. |

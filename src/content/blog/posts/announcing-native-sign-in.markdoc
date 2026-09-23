@@ -40,7 +40,7 @@ Native sign-in has its own switch on each provider, separate from the browser fl
 
 ![Google provider settings with native sign-in enabled](/images/blog/announcing-native-sign-in/google-provider-native.avif)
 
-Turn on **Native sign-in**, then add your app's client IDs under **Native client IDs** and select **Update**. Appwrite only accepts tokens issued for these IDs. For Apple, that is your app's bundle ID. For Google, it is the client ID of the **Web application** client in Google Cloud, not the Android or iOS client. The next section explains why.
+Turn on **Native sign-in**, add your app's IDs in the field below the switch, and select **Update**. Appwrite only accepts tokens issued for these IDs. For Apple, the field is **Bundle IDs** and takes your app's bundle ID. For Google, the field is **Web client IDs** and takes the client ID of the **Web application** client in Google Cloud, not the Android or iOS client. The next section explains why.
 
 Appwrite verifies a signature rather than redeeming an authorization code, so the provider needs neither a client secret nor a key file, and you do not register a callback URL. Browser sign-in stays off unless you also want the redirect flow.
 
