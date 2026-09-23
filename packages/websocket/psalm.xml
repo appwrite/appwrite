@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<psalm
+    errorLevel="7"
+    resolveFromConfigFile="true"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns="https://getpsalm.org/schema/config"
+    xsi:schemaLocation="https://getpsalm.org/schema/config vendor/vimeo/psalm/config.xsd"
+>
+    <projectFiles>
+        <directory name="src" />
+        <ignoreFiles>
+            <directory name="vendor" />
+        </ignoreFiles>
+    </projectFiles>
+    <stubs>
+        <file name="vendor/swoole/ide-helper/output/swoole/aliases.php"/>
+        <file name="vendor/swoole/ide-helper/output/swoole/functions.php"/>
+        <file name="vendor/swoole/ide-helper/output/swoole/constants.php"/>
+        <file name="vendor/swoole/ide-helper/output/swoole/namespace/Server.php"/>
+        <file name="vendor/swoole/ide-helper/output/swoole/namespace/Process.php"/>
+        <file name="vendor/swoole/ide-helper/output/swoole/namespace/Http/Server.php"/>
+        <file name="vendor/swoole/ide-helper/output/swoole/namespace/Http/Request.php"/>
+        <file name="vendor/swoole/ide-helper/output/swoole/namespace/WebSocket/Frame.php"/>
+        <file name="vendor/swoole/ide-helper/output/swoole/namespace/WebSocket/Server.php"/>
+    </stubs>
+</psalm>

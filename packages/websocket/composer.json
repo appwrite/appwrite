@@ -1,0 +1,40 @@
+{
+    "name": "utopia-php/websocket",
+    "description": "A simple abstraction for WebSocket servers.",
+    "type": "library",
+    "keywords": [
+        "php",
+        "framework",
+        "upf",
+        "utopia",
+        "websocket"
+    ],
+    "license": "MIT",
+    "scripts": {
+        "test": "phpunit --testsuite unit",
+        "test:e2e": "tests/e2e.sh"
+    },
+    "minimum-stability": "stable",
+    "autoload": {
+        "psr-4": {
+            "Utopia\\WebSocket\\": "src/WebSocket"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Utopia\\WebSocket\\Tests\\": "tests/"
+        }
+    },
+    "require": {
+        "php": ">=8.0"
+    },
+    "require-dev": {
+        "swoole/ide-helper": "5.1.2",
+        "workerman/workerman": "^4.1 || ^5.0"
+    },
+    "suggest": {
+        "ext-pcntl": "Required to run the Workerman server adapter.",
+        "ext-swoole": "Required to use the Swoole client and server adapter.",
+        "workerman/workerman": "Required to use the Workerman server adapter."
+    }
+}
