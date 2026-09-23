@@ -526,6 +526,15 @@ class Deletes extends Action
         $dbForProject = $getProjectDB($project);
         $claims = new Claim($dbForProject);
 
+        $selects = [...$this->selects, 'status', 'stage'];
+        $declared = \array_map(
+            static fn (Document $attribute): string => $attribute->getId(),
+            $dbForProject->getCollection('migrations')->getAttribute('attributes', []),
+        );
+        if (\in_array('attemptId', $declared, true)) {
+            $selects[] = 'attemptId';
+        }
+
         foreach ([
             [[Claim::STAGE_PROCESSING, Claim::STAGE_MIGRATING], self::PROCESSING_STUCK_RETENTION_SECONDS],
             [[Claim::STAGE_FINALIZING], Claim::FINALIZING_LEASE],
@@ -533,7 +542,7 @@ class Deletes extends Action
             $this->listByGroup(
                 'migrations',
                 [
-                    Query::select([...$this->selects, 'attemptId', 'status', 'stage']),
+                    Query::select($selects),
                     Query::equal('status', [Claim::STATUS_PROCESSING]),
                     Query::equal('stage', $stages),
                     Query::lessThan('$updatedAt', DateTime::addSeconds(new \DateTime(), -$retention)),

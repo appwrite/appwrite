@@ -56,10 +56,11 @@ final readonly class Claim
     }
 
     /**
-     * Refuse attempt creation until V26 has installed every ownership field.
-     *
-     * The check lives on the request path as a deployment safety net: a new
-     * API can start only after its project schema has crossed V26.
+     * Refuse to create, retry or claim an attempt until V26 has installed every
+     * ownership field: without them the attempt identifier would be silently
+     * dropped. A new API starts attempts only after its project schema has
+     * crossed V26, and a worker hands the delivery back to the queue, leaving
+     * the migration pending, so the queue can redeliver it once V26 has run.
      */
     public function assertReady(): void
     {
@@ -269,6 +270,8 @@ final readonly class Claim
         if ($migrationId === '') {
             return null;
         }
+
+        $this->assertReady();
 
         try {
             return $this->guard(

@@ -9,6 +9,7 @@ use Appwrite\Event\Publisher\Mail as MailPublisher;
 use Appwrite\Event\Publisher\Migration as MigrationPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\Realtime;
+use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Migrations\Claim;
 use Appwrite\Platform\Modules\Migrations\Superseded;
 use Appwrite\Platform\Workers\Migrations;
@@ -376,6 +377,13 @@ final class MigrationsTest extends TestCase
             ->setDatabase('migrationWorkerReuse')
             ->setNamespace('migration_worker_reuse_' . \uniqid());
         $database->create();
+        $database->createCollection(new Collection(
+            id: 'databases',
+            attributes: [
+                new Attribute('migrationId', ColumnType::String, size: Database::LENGTH_KEY),
+                new Attribute('migrationAttemptId', ColumnType::String, size: Database::LENGTH_KEY),
+            ],
+        ));
         $database->createCollection(new Collection(
             id: 'migrations',
             attributes: [
@@ -878,30 +886,91 @@ final class MigrationsTest extends TestCase
         $this->assertSame($worker->attempts[1], $stored->getAttribute('attemptId'));
     }
 
-    private function createClaimDatabase(): Database
+    public function testActionHandsTheDeliveryBackUntilTheOwnershipSchemaExists(): void
+    {
+        $database = $this->createClaimDatabase(ownership: false);
+        $project = new Document([
+            '$id' => 'project-1',
+            '$sequence' => 1,
+            'teamId' => 'team-1',
+        ]);
+        $migration = $database->createDocument('migrations', new Document([
+            '$id' => 'migration-1',
+            'status' => 'pending',
+            'stage' => 'init',
+            'resourceData' => [],
+            'errors' => [],
+        ]));
+        $worker = new class () extends Migrations {
+            /** @var array<mixed> */
+            public array $attempts = [];
+
+            #[\Override]
+            protected function processMigration(
+                Document $migration,
+                Realtime $queueForRealtime,
+                MailPublisher $publisherForMails,
+                Context $usage,
+                UsagePublisher $publisherForUsage,
+                array $platform,
+                Authorization $authorization,
+            ): void {
+                $this->attempts[] = $migration->getAttribute('attemptId');
+            }
+        };
+        $delivery = $this->migrationDelivery($project, $migration);
+
+        try {
+            $this->deliverClaim($worker, $database, $project, $delivery);
+            $this->fail('Expected the delivery to be handed back to the queue');
+        } catch (Exception $error) {
+            $this->assertSame(Exception::MIGRATION_SCHEMA_NOT_READY, $error->getType());
+        }
+
+        $this->assertSame([], $worker->attempts);
+        $stored = $database->getDocument('migrations', $migration->getId());
+        $this->assertSame('pending', $stored->getAttribute('status'));
+        $this->assertSame('init', $stored->getAttribute('stage'));
+        $this->assertSame($migration->getUpdatedAt(), $stored->getUpdatedAt());
+
+        $database->createAttribute('databases', new Attribute('migrationId', ColumnType::String, size: Database::LENGTH_KEY));
+        $database->createAttribute('databases', new Attribute('migrationAttemptId', ColumnType::String, size: Database::LENGTH_KEY));
+        $database->createAttribute('migrations', new Attribute('attemptId', ColumnType::String, size: Database::LENGTH_KEY));
+
+        $this->deliverClaim($worker, $database, $project, $delivery);
+
+        $this->assertCount(1, $worker->attempts);
+        $this->assertIsString($worker->attempts[0]);
+        $this->assertSame($worker->attempts[0], $database->getDocument('migrations', $migration->getId())->getAttribute('attemptId'));
+    }
+
+    private function createClaimDatabase(bool $ownership = true): Database
     {
         $database = new Database(new Memory(), new Cache(new NoCache()));
         $database
             ->setAuthorization(new Authorization())
+            ->setDropUnknownAttributes(true)
             ->setDatabase('migrationWorkerClaims')
             ->setNamespace('migration_worker_claims_' . \uniqid());
         $database->create();
         $database->createCollection(new Collection(
             id: 'databases',
-            attributes: [
-                new Attribute('migrationId', ColumnType::String, size: Database::LENGTH_KEY),
-                new Attribute('migrationAttemptId', ColumnType::String, size: Database::LENGTH_KEY),
-            ],
+            attributes: $ownership
+                ? [
+                    new Attribute('migrationId', ColumnType::String, size: Database::LENGTH_KEY),
+                    new Attribute('migrationAttemptId', ColumnType::String, size: Database::LENGTH_KEY),
+                ]
+                : [new Attribute('name', ColumnType::String, size: 256)],
         ));
         $database->createCollection(new Collection(
             id: 'migrations',
-            attributes: [
+            attributes: \array_values(\array_filter([
                 new Attribute('status', ColumnType::String, size: 255, required: true),
                 new Attribute('stage', ColumnType::String, size: 255, required: true),
-                new Attribute('attemptId', ColumnType::String, size: Database::LENGTH_KEY),
+                $ownership ? new Attribute('attemptId', ColumnType::String, size: Database::LENGTH_KEY) : null,
                 new Attribute('resourceData', ColumnType::String, size: 131_070, required: true, filters: ['json']),
                 new Attribute('errors', ColumnType::String, size: 1_000_000, array: true),
-            ],
+            ])),
             permissions: [
                 Permission::create(Role::any()),
                 Permission::read(Role::any()),

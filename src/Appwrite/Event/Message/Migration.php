@@ -5,9 +5,9 @@ namespace Appwrite\Event\Message;
 use Utopia\Database\Document;
 
 /**
- * Producers publish only once the project has the V26 ownership schema. Workers
- * older than the claim protocol ignore it, so they cannot fence generations
- * during a rolling deployment.
+ * Producers publish, and workers claim, only once the project has the V26
+ * ownership schema. Workers older than the claim protocol ignore it, so they
+ * cannot fence generations during a rolling deployment.
  */
 final class Migration extends Base
 {

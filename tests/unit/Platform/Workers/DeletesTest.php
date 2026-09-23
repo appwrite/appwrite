@@ -155,7 +155,19 @@ final class DeletesTest extends TestCase
         }
     }
 
-    private function createDatabase(): Database
+    public function testMaintenanceExpiresStaleAttemptsBeforeTheOwnershipSchemaExists(): void
+    {
+        $database = $this->createDatabase(ownership: false);
+        $migration = $this->createMigration($database, 'migration-1', 'migrating', Deletes::PROCESSING_STUCK_RETENTION_SECONDS + 1, attemptId: null);
+
+        $this->maintain($database, $this->sweeper());
+
+        $terminal = $database->getDocument('migrations', $migration->getId());
+        $this->assertSame('failed', $terminal->getAttribute('status'));
+        $this->assertSame('finished', $terminal->getAttribute('stage'));
+    }
+
+    private function createDatabase(bool $ownership = true): Database
     {
         // A SQL projection cannot return $version; the in-memory adapter hands it
         // back regardless, which is what hid this sweep expiring nothing at all.
@@ -176,20 +188,22 @@ final class DeletesTest extends TestCase
         ];
         $database->createCollection(new Collection(
             id: 'databases',
-            attributes: [
-                new Attribute('migrationId', ColumnType::String, size: Database::LENGTH_KEY),
-                new Attribute('migrationAttemptId', ColumnType::String, size: Database::LENGTH_KEY),
-            ],
+            attributes: $ownership
+                ? [
+                    new Attribute('migrationId', ColumnType::String, size: Database::LENGTH_KEY),
+                    new Attribute('migrationAttemptId', ColumnType::String, size: Database::LENGTH_KEY),
+                ]
+                : [new Attribute('name', ColumnType::String, size: 256)],
             permissions: $permissions,
             documentSecurity: false,
         ));
         $database->createCollection(new Collection(
             id: 'migrations',
-            attributes: [
+            attributes: \array_values(\array_filter([
                 new Attribute('status', ColumnType::String, size: 255, required: true),
                 new Attribute('stage', ColumnType::String, size: 255, required: true),
-                new Attribute('attemptId', ColumnType::String, size: Database::LENGTH_KEY),
-            ],
+                $ownership ? new Attribute('attemptId', ColumnType::String, size: Database::LENGTH_KEY) : null,
+            ])),
             permissions: $permissions,
             documentSecurity: false,
         ));
@@ -220,20 +234,24 @@ final class DeletesTest extends TestCase
         string $id,
         string $stage,
         int $age,
-        string $attemptId = 'attempt-1',
+        ?string $attemptId = 'attempt-1',
     ): Document {
         $updatedAt = DateTime::addSeconds(new \DateTime(), -$age);
+        $migration = new Document([
+            '$id' => $id,
+            '$createdAt' => $updatedAt,
+            '$updatedAt' => $updatedAt,
+            'status' => 'processing',
+            'stage' => $stage,
+        ]);
+        if ($attemptId !== null) {
+            $migration->setAttribute('attemptId', $attemptId);
+        }
+
         $database->setPreserveDates(true);
 
         try {
-            return $database->createDocument('migrations', new Document([
-                '$id' => $id,
-                '$createdAt' => $updatedAt,
-                '$updatedAt' => $updatedAt,
-                'attemptId' => $attemptId,
-                'status' => 'processing',
-                'stage' => $stage,
-            ]));
+            return $database->createDocument('migrations', $migration);
         } finally {
             $database->setPreserveDates(false);
         }

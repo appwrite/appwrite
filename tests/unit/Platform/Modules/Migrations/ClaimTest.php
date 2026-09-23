@@ -1453,6 +1453,69 @@ final class ClaimTest extends TestCase
         $this->assertSame($abandoned->getUpdatedAt(), $stored->getUpdatedAt());
     }
 
+    public function testConsumeLeavesMigrationPendingUntilTheOwnershipSchemaExists(): void
+    {
+        $database = new Database(new Memory(), new Cache(new NoCache()));
+        $database
+            ->setAuthorization(new Authorization())
+            ->setDropUnknownAttributes(true)
+            ->setDatabase('migrationClaimLegacy')
+            ->setNamespace('migration_claim_legacy_' . \uniqid());
+        $database->create();
+        $database->createCollection(new Collection(
+            id: 'databases',
+            attributes: [new Attribute('name', ColumnType::String, size: 256)],
+        ));
+        $database->createCollection(new Collection(
+            id: 'migrations',
+            attributes: [
+                new Attribute('status', ColumnType::String, size: 255, required: true),
+                new Attribute('stage', ColumnType::String, size: 255, required: true),
+                new Attribute('resourceData', ColumnType::String, size: 131_070, required: true, filters: ['json']),
+            ],
+            permissions: [
+                Permission::create(Role::any()),
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+            ],
+            documentSecurity: false,
+        ));
+        $queued = $database->createDocument('migrations', new Document([
+            '$id' => 'migration-1',
+            'status' => 'pending',
+            'stage' => 'init',
+            'resourceData' => [],
+        ]));
+        $claims = new Claim($database, $this->locks());
+        $message = new MigrationMessage(project: new Document(['$id' => 'project-1']), migration: $queued);
+
+        try {
+            $claims->consume('project-1', $message);
+            $this->fail('Expected the delivery to wait for the ownership schema');
+        } catch (Exception $error) {
+            $this->assertSame(Exception::MIGRATION_SCHEMA_NOT_READY, $error->getType());
+        }
+
+        $stored = $database->getDocument('migrations', $queued->getId());
+        $this->assertSame('pending', $stored->getAttribute('status'));
+        $this->assertSame('init', $stored->getAttribute('stage'));
+        $this->assertSame($queued->getUpdatedAt(), $stored->getUpdatedAt());
+
+        $database->createAttribute('databases', new Attribute('migrationId', ColumnType::String, size: Database::LENGTH_KEY));
+        $database->createAttribute('databases', new Attribute('migrationAttemptId', ColumnType::String, size: Database::LENGTH_KEY));
+        $database->createAttribute('migrations', new Attribute('attemptId', ColumnType::String, size: Database::LENGTH_KEY));
+
+        $delivery = $claims->consume('project-1', $message);
+
+        $this->assertInstanceOf(Delivery::class, $delivery);
+        $this->assertIsString($delivery->migration->getAttribute('attemptId'));
+        $this->assertSame('processing', $delivery->migration->getAttribute('status'));
+        $this->assertSame(
+            $delivery->migration->getAttribute('attemptId'),
+            $database->getDocument('migrations', $queued->getId())->getAttribute('attemptId'),
+        );
+    }
+
     public function testRecoveryRequiresExactAuthoritativeOwnerLifecycle(): void
     {
         $claims = new Claim($this->database, $this->locks());
