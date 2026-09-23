@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "806bd86e0d18636aeb7b4aae111cc140",
+    "content-hash": "371cdb761315d3f8d68a675b434028c6",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3930,16 +3930,16 @@
         },
         {
             "name": "utopia-php/messaging",
-            "version": "2.4.0",
+            "version": "dev-feat/messaging-email-headers",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/messaging.git",
-                "reference": "0b6431b5d39c23ebb3b11eb0bf17d7f4acb6422f"
+                "reference": "7bdc91fc8486eae6c88b4e18c07f7f8c48899d19"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/messaging/zipball/0b6431b5d39c23ebb3b11eb0bf17d7f4acb6422f",
-                "reference": "0b6431b5d39c23ebb3b11eb0bf17d7f4acb6422f",
+                "url": "https://api.github.com/repos/utopia-php/messaging/zipball/7bdc91fc8486eae6c88b4e18c07f7f8c48899d19",
+                "reference": "7bdc91fc8486eae6c88b4e18c07f7f8c48899d19",
                 "shasum": ""
             },
             "require": {
@@ -3978,9 +3978,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/messaging/issues",
-                "source": "https://github.com/utopia-php/messaging/tree/2.4.0"
+                "source": "https://github.com/utopia-php/messaging/tree/feat/messaging-email-headers"
             },
-            "time": "2026-09-22T11:38:29+00:00"
+            "time": "2026-09-23T09:31:22+00:00"
         },
         {
             "name": "utopia-php/migration",
@@ -8160,10 +8160,18 @@
             "time": "2026-07-03T20:44:34+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/messaging",
+            "version": "dev-feat/messaging-email-headers",
+            "alias": "2.4.999",
+            "alias_normalized": "2.4.999.0"
+        }
+    ],
     "minimum-stability": "dev",
     "stability-flags": {
-        "utopia-php/http": 5
+        "utopia-php/http": 5,
+        "utopia-php/messaging": 20
     },
     "prefer-stable": true,
     "prefer-lowest": false,
