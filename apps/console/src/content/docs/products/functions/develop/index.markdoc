@@ -842,8 +842,11 @@ These are provided alongside any custom headers sent to the function.
 
 | Variable                  | Description                                                                                                                                          |
 |---------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `x-appwrite-trigger`        |  Describes how the function execution was invoked. Possible values are `http`, `schedule` or `event`.                                                      |
+| `x-appwrite-trigger`        |  Describes how the function execution was invoked. Possible values are `http`, `schedule`, `event`, or `email`.                                             |
 | `x-appwrite-event`          |  If the function execution was triggered by an event, describes the triggering event.                                                                |
+| `x-appwrite-email-id`       |  If the function execution was triggered by an email, the unique ID of the email. [Learn more about email triggers](/docs/products/functions/email).  |
+| `x-appwrite-email-domain`   |  If the function execution was triggered by an email, the domain that received the email.                                                          |
+| `x-appwrite-email-recipient`|  If the function execution was triggered by an email, the first address of the function that received the email.                                  |
 | `x-appwrite-key`            |  The ephemeral API key is used for server authentication. [Learn more about ephemeral API keys](/docs/products/functions/develop#ephemeral-api-key). |
 | `x-appwrite-user-id`        |  If the function execution was invoked by an authenticated user, display the user ID. This doesn't apply to Appwrite Console users or API keys.      |
 | `x-appwrite-user-jwt`       |  JWT token generated from the invoking user's session. Used to authenticate Server SDKs to respect access permissions. [Learn more about JWT tokens](/docs/products/auth/jwt).  |
