@@ -11,7 +11,11 @@ use Utopia\Http\Adapter\FPM\Request;
 use Utopia\Http\Adapter\FPM\Response;
 use Utopia\Http\Adapter\FPM\Server;
 use Utopia\Http\Tests\UtopiaFPMRequestTest;
+use Utopia\Validator\AnyOf;
+use Utopia\Validator\Integer;
+use Utopia\Validator\Nullable;
 use Utopia\Validator\Text;
+use Utopia\Validator\WhiteList;
 
 final class HttpTest extends TestCase
 {
@@ -22,6 +26,16 @@ final class HttpTest extends TestCase
     protected ?string $method;
 
     protected ?string $uri;
+
+    /**
+     * @var array<string, mixed>
+     */
+    protected array $get = [];
+
+    /**
+     * @var array<string, mixed>
+     */
+    protected array $post = [];
 
     public function setUp(): void
     {
@@ -42,12 +56,16 @@ final class HttpTest extends TestCase
     {
         $this->method = $_SERVER['REQUEST_METHOD'] ?? null;
         $this->uri = $_SERVER['REQUEST_URI'] ?? null;
+        $this->get = $_GET;
+        $this->post = $_POST;
     }
 
     protected function restoreRequest(): void
     {
         $_SERVER['REQUEST_METHOD'] = $this->method;
         $_SERVER['REQUEST_URI'] = $this->uri;
+        $_GET = $this->get;
+        $_POST = $this->post;
     }
 
     public function testCanGetDifferentModes(): void
@@ -929,6 +947,76 @@ final class HttpTest extends TestCase
         ob_end_clean();
 
         $this->assertSame('generated: generated-value', $result);
+    }
+
+    public function testExplicitNullOptionalParamFallsBackToDefault(): void
+    {
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+
+        $run = function (string $path, array $params): string {
+            $_SERVER['REQUEST_URI'] = $path;
+
+            $request = new UtopiaFPMRequestTest();
+            $request::_setParams($params);
+
+            ob_start();
+            $this->http->execute($request, new Response());
+            $result = ob_get_contents();
+            ob_end_clean();
+
+            $request::_setParams(null);
+
+            return (string) $result;
+        };
+
+        // Typed action with a non-null default: null reaches the action as the default, which is not validated
+        Http::get('/typed')
+            ->param('image', '', new WhiteList(['a', 'b']), 'image param', true)
+            ->param('badge', -1, new Integer(), 'badge param', true)
+            ->action(function (string $image, int $badge) {
+                echo var_export([$image, $badge], true);
+            });
+
+        $this->assertSame($run('/typed', []), $run('/typed', ['image' => null, 'badge' => null]));
+        $this->assertSame(var_export(['', -1], true), $run('/typed', ['image' => null, 'badge' => null]));
+
+        // Validators that accept null declare it as a value, so it is passed through
+        Http::get('/nullable')
+            ->param('x', 'x-def', new Nullable(new Text(200)), 'x param', true)
+            ->param('y', 'y-def', fn() => new Nullable(new Text(200)), 'y param', true)
+            ->param('z', 'z-def', new AnyOf([new Nullable(new Text(200)), new Integer()]), 'z param', true)
+            ->action(function (?string $x, ?string $y, mixed $z) {
+                echo var_export([$x, $y, $z], true);
+            });
+
+        $this->assertSame(var_export([null, null, null], true), $run('/nullable', ['x' => null, 'y' => null, 'z' => null]));
+
+        // A null default already matches the explicit null
+        Http::get('/null-default')
+            ->param('x', null, new Text(200), 'x param', true)
+            ->action(function (?string $x) {
+                echo var_export($x, true);
+            });
+
+        $this->assertSame('NULL', $run('/null-default', ['x' => null]));
+
+        // A param that skips validation receives an explicit null as before, even when its validator rejects null
+        Http::get('/skip-validation')
+            ->param('x', 'x-def', new Text(200), 'x param', true, skipValidation: true)
+            ->action(function (?string $x) {
+                echo var_export($x, true);
+            });
+
+        $this->assertSame('NULL', $run('/skip-validation', ['x' => null]));
+
+        // A path value takes precedence over an explicit null in the request for the same key
+        Http::get('/items/:x')
+            ->param('x', 'x-def', new Text(200), 'x param', true)
+            ->action(function (string $x) {
+                echo var_export($x, true);
+            });
+
+        $this->assertSame(var_export('abc', true), $run('/items/abc', ['x' => null]));
     }
 
     public function testCanInjectResourceAndParamWithSameName(): void

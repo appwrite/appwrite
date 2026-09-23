@@ -731,6 +731,15 @@ class Http
 
             $existsInRequest = \array_key_exists($requestKey, $requestParams);
             $existsInValues = \array_key_exists($valuesKey, $values);
+
+            // An explicit null is treated as omitted unless the validator accepts null as a value
+            if ($existsInRequest && !$existsInValues && $requestParams[$requestKey] === null && $param['optional'] && $param['default'] !== null && !$param['skipValidation']) {
+                $validator = $this->resolveValidator($param);
+                if ($validator instanceof Validator && !$validator->isValid(null)) {
+                    $existsInRequest = false;
+                }
+            }
+
             $paramExists = $existsInRequest || $existsInValues;
 
             $arg = $existsInRequest ? $requestParams[$requestKey] : $param['default'];
@@ -884,12 +893,7 @@ class Http
             return;
         }
 
-        $validator = $param['validator']; // checking whether the class exists
-
-        if (\is_callable($validator)) {
-            $context = $this->adapter->context();
-            $validator = \call_user_func_array($validator, array_map($context->get(...), $param['injections']));
-        }
+        $validator = $this->resolveValidator($param);
 
         if (!$validator instanceof Validator) { // is the validator object an instance of the Validator class
             throw new Exception('Validator object is not an instance of the Validator class', 500);
@@ -898,6 +902,23 @@ class Http
         if (!$validator->isValid($value)) {
             throw new Exception('Invalid `' . $key . '` param: ' . $validator->getDescription(), 400);
         }
+    }
+
+    /**
+     * Build the param's validator, resolving a factory closure with its injections.
+     *
+     * @param  array<string, mixed>  $param
+     */
+    private function resolveValidator(array $param): mixed
+    {
+        $validator = $param['validator'];
+
+        if (\is_callable($validator)) {
+            $context = $this->adapter->context();
+            $validator = \call_user_func_array($validator, array_map($context->get(...), $param['injections']));
+        }
+
+        return $validator;
     }
 
     /**
