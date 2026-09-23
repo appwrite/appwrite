@@ -94,7 +94,7 @@ class XList extends Action
         $providerInstallationId = $installation->getAttribute('providerInstallationId');
         $vcs = $vcsFactory->fromInstallation($installation);
 
-        $owner = $vcs->getOwnerName($providerInstallationId);
+        $owner = $vcs->getOwnerName($providerInstallationId, (int) $providerRepositoryId);
         try {
             $repositoryName = $vcs->getRepositoryName($providerRepositoryId);
             if (empty($repositoryName)) {
