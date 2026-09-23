@@ -9,7 +9,7 @@ author: atharva
 category: security, best-practices
 faqs:
   - question: "What can Appwrite Firewall protect?"
-    answer: "Appwrite Firewall applies rules to three kinds of traffic: your project API (the `/v1/...` endpoints behind Auth, Databases, Storage, and the other services), public traffic to a single Function, and public traffic to a single Site. Each rule matches requests on conditions such as path, method, header, IP address, or country, and then denies, bypasses, challenges, rate limits, or redirects them. See [Resource scopes](/docs/products/firewall/scopes)."
+    answer: "Appwrite Firewall applies rules to three kinds of traffic: your project API (the requests behind Auth, Databases, Storage, and the other services), public traffic to a single Function, and public traffic to a single Site. Each rule matches requests on conditions such as path, method, header, IP address, or country, and then denies, bypasses, challenges, rate limits, or redirects them. See [Resource scopes](/docs/products/firewall/scopes)."
   - question: "How do I rate limit OTP requests in Appwrite?"
     answer: "Open **Firewall** in your project, choose **Add preset**, and pick **Rate limit OTP**. The preset creates one rate limit rule for each OTP path you select: phone and email, send and verification. Requests over the quota get HTTP `429` with a `Retry-After` header."
   - question: "Can Appwrite Firewall rate limit each user instead of each IP address?"
@@ -24,7 +24,7 @@ This post collects [Appwrite Firewall](/docs/products/firewall) rules for common
 
 All rules below belong to one of three resource types:
 
-- **API** rules apply to your project API, the `/v1/...` traffic behind Auth, Databases, Storage, and the other services.
+- **API** rules apply to your project API, the requests behind Auth, Databases, Storage, and the other services.
 - **Functions** rules apply to public traffic to one function.
 - **Sites** rules apply to public traffic to one site.
 
@@ -34,10 +34,10 @@ All rules below belong to one of three resource types:
 
 Phone and email OTP endpoints send a message every time someone calls them. An attacker who scripts those calls makes your project send SMS messages to numbers the attacker controls. This attack is known as SMS pumping. For email, a flood of OTP messages hurts your sender reputation.
 
-The **Rate limit OTP** preset handles this. On the **Firewall** page, keep the resource selector on **API**, click **Add preset**, and pick **Rate limit OTP**. Select phone, email, or both, select the send step, the verification step, or both, and then set the quota. The preset creates one rate limit rule per path and method:
+The **Rate limit OTP** preset handles this. On the **Firewall** page, keep the resource selector on **API**, click **Add preset**, and pick **Rate limit OTP**. Select phone, email, or both, select the send step, the verification step, or both, and then set the quota. The preset creates one rate limit rule for each channel and step you select:
 
-- `POST /v1/account/tokens/phone` and `POST /v1/account/tokens/email` send codes.
-- `PUT /v1/account/sessions/phone` and `POST /v1/account/sessions/token` verify codes.
+- **Rate limit phone OTP send** and **Rate limit email OTP send** cover requests that send codes.
+- **Rate limit phone OTP verification** and **Rate limit email OTP verification** cover requests that verify codes.
 
 With a limit of 5 requests per hour, a client can request five email codes. The sixth request gets HTTP `429` with a `Retry-After` header. The limit on the verification step also slows down guesses against a code that was already sent.
 
@@ -49,11 +49,11 @@ The preset uses the fixed window strategy, so the window follows the clock. The 
 
 A scraper reads your public tables page by page until it has the full dataset. Table permissions control who can read a row, not how often.
 
-The **Rate limit database API** preset caps reads per IP address. It creates one rate limit rule that matches paths starting with `/v1/tablesdb`, with a default of 120 requests per minute. After 120 requests in a minute, the same IP address gets `429` until the window resets.
+The **Rate limit database API** preset caps reads per IP address. It creates one rate limit rule that matches all TablesDB requests, with a default of 120 requests per minute. After 120 requests in a minute, the same IP address gets `429` until the window resets.
 
 Before you save, check the **Estimated impact** panel. It shows how much of the last 24 hours of traffic the rule would have matched. If your own app reads tables faster than the default on a normal page load, raise the limit until the preview no longer matches ordinary usage.
 
-For a wider cap, the **Rate limit project API** preset applies the same idea to every `/v1` request.
+For a wider cap, the **Rate limit project API** preset applies the same idea to every request to your project API.
 
 # Give each signed-in user a separate quota {% #per-user %}
 
