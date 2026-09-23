@@ -2,6 +2,7 @@ import Markdoc, { type RenderableTreeNode } from '@markdoc/markdoc'
 import { resolveHeadingId } from '@/lib/docs/markdoc-heading'
 import { docsMarkdocConfig } from '@/lib/docs/markdoc-config'
 import { resolveFenceCodeLabel } from '@/lib/code-language'
+import { BLOG_BODY_TEXT_SIZE_CLASS } from '@/lib/blog/prose-typography'
 import { HEADING_LINK_TEXT_CLASS, INLINE_LINK_CLASS } from '@/lib/link-styles'
 import { MARKETING_SITE_ORIGIN, parseBlogPagePath } from '@/lib/marketing/urls'
 
@@ -201,6 +202,35 @@ function renderMultiCode(tag: MarkdocTag): string {
   return `<div class="${CODE_CARD_CLASS}" data-blog-multicode><div class="${CODE_HEADER_CLASS}"><span class="${CODE_LABEL_CLASS}" data-blog-multicode-select="${escapeHtml(JSON.stringify(languages))}">${escapeHtml(languages[0].label)}</span>${renderCopyButton(snippets[0].encoded)}</div>${panels}</div>`
 }
 
+const TAB_BUTTON_CLASS = `shrink-0 cursor-pointer border-b-2 px-3 py-2 transition-colors ${BLOG_BODY_TEXT_SIZE_CLASS}`
+const TAB_ACTIVE_CLASS = 'border-white text-foreground'
+const TAB_INACTIVE_CLASS =
+  'border-transparent text-muted-foreground hover:text-foreground'
+
+/** Tabs switch in the browser through `[data-blog-tab]` clicks in `BlogMarkdownBody`. */
+function renderTabs(tag: MarkdocTag): string {
+  const items = tag.children.filter(
+    (child): child is MarkdocTag => isTag(child) && child.name === 'TabsItem',
+  )
+  if (items.length === 0) return renderChildren(tag.children)
+  if (items.length === 1) return renderChildren(items[0].children)
+
+  const buttons = items
+    .map((item, index) => {
+      const title = String(item.attributes.title ?? item.attributes.id ?? '')
+      return `<button type="button" class="${TAB_BUTTON_CLASS} ${index === 0 ? TAB_ACTIVE_CLASS : TAB_INACTIVE_CLASS}" data-blog-tab="${index}" aria-selected="${index === 0}">${escapeHtml(title)}</button>`
+    })
+    .join('')
+  const panels = items
+    .map(
+      (item, index) =>
+        `<div data-blog-tab-panel="${index}"${attr('hidden', index > 0)}>${renderChildren(item.children)}</div>`,
+    )
+    .join('')
+
+  return `<div class="my-6 overflow-hidden rounded-xl border border-border bg-background" data-blog-tabs><div class="not-prose flex gap-1 overflow-x-auto border-b border-border px-4 pt-3">${buttons}</div><div class="px-4 py-4">${panels}</div></div>`
+}
+
 function renderImage(tag: MarkdocTag): string {
   const src = String(tag.attributes.src ?? '')
   if (!src) return ''
@@ -292,6 +322,7 @@ function renderTag(tag: MarkdocTag): string {
     case 'OnlyDark':
       return `<div class="hidden dark:block">${children}</div>`
     case 'Tabs':
+      return renderTabs(tag)
     case 'TabsItem':
     case 'Accordion':
     case 'AccordionItem':

@@ -59,6 +59,29 @@ function multiCodeMounts(root: HTMLElement): MultiCodeMount[] {
   })
 }
 
+const TAB_ACTIVE_CLASSES = ['border-white', 'text-foreground']
+const TAB_INACTIVE_CLASSES = [
+  'border-transparent',
+  'text-muted-foreground',
+  'hover:text-foreground',
+]
+
+function selectBlogTab(group: HTMLElement, tabId: string) {
+  for (const button of group.querySelectorAll<HTMLElement>('[data-blog-tab]')) {
+    if (button.closest('[data-blog-tabs]') !== group) continue
+    const active = button.getAttribute('data-blog-tab') === tabId
+    button.setAttribute('aria-selected', String(active))
+    button.classList.remove(...TAB_ACTIVE_CLASSES, ...TAB_INACTIVE_CLASSES)
+    button.classList.add(...(active ? TAB_ACTIVE_CLASSES : TAB_INACTIVE_CLASSES))
+  }
+  for (const panel of group.querySelectorAll<HTMLElement>(
+    '[data-blog-tab-panel]',
+  )) {
+    if (panel.closest('[data-blog-tabs]') !== group) continue
+    panel.hidden = panel.getAttribute('data-blog-tab-panel') !== tabId
+  }
+}
+
 export function BlogMarkdownBody({ html, className }: BlogMarkdownBodyProps) {
   const rootRef = useRef<HTMLDivElement>(null)
   const [galleryItems, setGalleryItems] = useState<ImagePreviewGalleryItem[]>(
@@ -98,6 +121,15 @@ export function BlogMarkdownBody({ html, className }: BlogMarkdownBodyProps) {
         event.preventDefault()
         const encoded = copyButton.getAttribute('data-blog-copy') ?? ''
         void copyToClipboard('Code', decodeURIComponent(encoded))
+        return
+      }
+
+      const tabButton = target.closest<HTMLElement>('[data-blog-tab]')
+      if (tabButton) {
+        const group = tabButton.closest<HTMLElement>('[data-blog-tabs]')
+        if (!group) return
+        event.preventDefault()
+        selectBlogTab(group, tabButton.getAttribute('data-blog-tab') ?? '')
         return
       }
 
