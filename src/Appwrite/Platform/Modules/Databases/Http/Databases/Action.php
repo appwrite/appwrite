@@ -6,6 +6,7 @@ use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action as AppwriteAction;
 use Utopia\Database\Adapter;
 use Utopia\Database\Adapter\Feature\Relationships as FeatureRelationships;
+use Utopia\Database\Adapter\Feature\Spatial as FeatureSpatial;
 use Utopia\Database\Capability;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -34,16 +35,9 @@ class Action extends AppwriteAction
         return $adapter->supports(Capability::DefinedAttributes);
     }
 
-    /**
-     * Spatial types are advertised through several adapter-specific capabilities.
-     * Pool's Spatial interface is not a reliable signal.
-     */
     protected function supportsSpatial(Adapter $adapter): bool
     {
-        return $adapter->supports(Capability::SpatialIndexNull)
-            || $adapter->supports(Capability::SpatialIndexOrder)
-            || $adapter->supports(Capability::OptionalSpatial)
-            || $adapter->supports(Capability::SpatialAxisOrder);
+        return $adapter->hasFeature(FeatureSpatial::class);
     }
 
     /**
