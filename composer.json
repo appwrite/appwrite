@@ -28,6 +28,7 @@
             "Executor\\": "src/Executor",
             "Utopia\\Agents\\": "packages/agents/src",
             "Utopia\\Bus\\": "packages/bus/src",
+            "Utopia\\CircuitBreaker\\": "packages/circuit-breaker/src",
             "Utopia\\Client\\": "packages/client/src",
             "Utopia\\Compression\\": "packages/compression/src",
             "Utopia\\Image\\": "packages/image/src",
@@ -52,6 +53,7 @@
             "Appwrite\\Tests\\": "tests/extensions",
             "Utopia\\Agents\\Tests\\": "packages/agents/tests",
             "Utopia\\Bus\\Tests\\": "packages/bus/tests",
+            "Utopia\\CircuitBreaker\\Tests\\": "packages/circuit-breaker/tests",
             "Utopia\\Client\\Tests\\": "packages/client/tests",
             "Utopia\\Compression\\Tests\\": "packages/compression/tests",
             "Utopia\\Image\\Tests\\": "packages/image/tests",
@@ -181,6 +183,7 @@
     "replace": {
         "utopia-php/agents": "*",
         "utopia-php/bus": "*",
+        "utopia-php/circuit-breaker": "*",
         "utopia-php/client": "*",
         "utopia-php/compression": "*",
         "utopia-php/image": "*",
