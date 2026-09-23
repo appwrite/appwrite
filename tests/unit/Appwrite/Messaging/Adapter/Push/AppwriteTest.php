@@ -15,7 +15,6 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
-use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Messaging\Exception\InvalidArgumentException;
 use Utopia\Messaging\Messages\Email;
@@ -158,14 +157,6 @@ final class AppwriteTest extends TestCase
         return $this->database->getAuthorization()->skip(fn () => $this->database->getDocument('topics', $topicId));
     }
 
-    /** An auto-provisioned topic row looked up by name (its id is server-generated). */
-    private function topicByName(string $name): Document
-    {
-        return $this->database->getAuthorization()->skip(fn () => $this->database->findOne('topics', [
-            Query::equal('name', [$name]),
-        ]));
-    }
-
     public function testMetadata(): void
     {
         $adapter = $this->adapter(new FakeBroker());
@@ -296,10 +287,10 @@ final class AppwriteTest extends TestCase
         $this->assertSame(1, $sequenceByTopic['topic-2']);
     }
 
-    public function testUserTopicIsAutoProvisionedAndFansOut(): void
+    public function testUserAddressedPushIsDelivered(): void
     {
-        // A reserved per-user target needs no pre-created topic: the first publish creates the row
-        // (id = the user id), writes the ledger, and fans out on the users/<id> name.
+        // A user target (users/<id>) needs no pre-created topic and is delivered on that channel
+        // with the notification payload intact.
         $broker = new FakeBroker();
 
         $response = $this->adapter($broker)->send(new Push(
@@ -309,31 +300,25 @@ final class AppwriteTest extends TestCase
         ));
 
         $this->assertSame(1, $response['deliveredTo']);
-
-        $topic = $this->topicByName('users/user-1');
-        $this->assertFalse($topic->isEmpty(), 'the user topic was not auto-provisioned');
-        $this->assertSame(1, $topic->getAttribute('sequence'));
-        $this->assertNull($topic->getAttribute('qos'), 'user topic qos stays subscriber-chosen');
-
-        // Ledger is keyed by the topic id; the fan-out carries the users/<id> name.
-        $ledger = $this->ledger();
-        $this->assertCount(1, $ledger);
-        $this->assertSame($topic->getId(), $ledger[0]->getAttribute('topic'));
-        $this->assertCount(1, $broker->published);
-        $this->assertSame(['users/user-1'], $broker->published[0]['channels']);
+        $this->assertSame('success', $response['results'][0]['status']);
+        $this->assertSame('users/user-1', $broker->published[0]['channels'][0]);
+        $payload = \json_decode($broker->published[0]['options']['payload'], true);
+        $this->assertSame('Hello', $payload['notification']['body']);
     }
 
-    public function testUserTopicReusesItsRow(): void
+    public function testRepeatedUserPushesRemainDeliverable(): void
     {
-        // Two publishes to the same user reuse the auto-provisioned row and advance its sequence.
+        // Sending to the same user again still delivers on its channel (the implicit topic persists
+        // across campaigns without being re-created by the caller).
         $broker = new FakeBroker();
 
-        $this->adapter($broker, messageId: 'msg-1')->send(new Push(to: ['users/user-1'], title: 'first'));
-        $this->adapter($broker, messageId: 'msg-2')->send(new Push(to: ['users/user-1'], title: 'second'));
+        $first = $this->adapter($broker, messageId: 'msg-1')->send(new Push(to: ['users/user-1'], title: 'first'));
+        $second = $this->adapter($broker, messageId: 'msg-2')->send(new Push(to: ['users/user-1'], title: 'second'));
 
-        $sequences = \array_map(fn (Document $row): int => (int) $row->getAttribute('sequence'), $this->ledger());
-        $this->assertSame([1, 2], $sequences);
-        $this->assertSame(2, $this->topicByName('users/user-1')->getAttribute('sequence'));
+        $this->assertSame(1, $first['deliveredTo']);
+        $this->assertSame(1, $second['deliveredTo']);
+        $this->assertSame('users/user-1', $broker->published[0]['channels'][0]);
+        $this->assertSame('users/user-1', $broker->published[1]['channels'][0]);
     }
 
     public function testUnknownTopicFailsWithoutSinkingOthers(): void
