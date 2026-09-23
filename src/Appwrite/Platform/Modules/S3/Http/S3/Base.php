@@ -330,13 +330,10 @@ abstract class Base extends Action
 
         $extension = \strtolower(\pathinfo($name, PATHINFO_EXTENSION));
         $formats = Config::getParam('storage-formats');
-
-        if (($contentType === '' || \in_array($contentType, $formats['ambiguous'], true)) && isset($formats['extensions'][$extension])) {
-            return $formats['extensions'][$extension];
-        }
+        $format = $formats['extensions'][$extension] ?? null;
 
         if ($contentType !== '' && $contentType !== 'application/octet-stream') {
-            return $contentType;
+            return $format !== null && \in_array($contentType, $formats['ambiguous'], true) ? $format : $contentType;
         }
 
         $byExtension = [
@@ -373,11 +370,11 @@ abstract class Base extends Action
         if ($body !== '') {
             $detected = (new \finfo(FILEINFO_MIME_TYPE))->buffer($body);
             if (\is_string($detected) && $detected !== '') {
-                return $detected;
+                return $format !== null && \in_array($detected, $formats['ambiguous'], true) ? $format : $detected;
             }
         }
 
-        return 'application/octet-stream';
+        return $format ?? 'application/octet-stream';
     }
 
     protected function validateFileConstraints(Document $bucket, string $name, int $size): void
