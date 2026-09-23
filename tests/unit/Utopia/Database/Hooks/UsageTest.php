@@ -13,6 +13,68 @@ use Utopia\Database\Event;
 
 final class UsageTest extends TestCase
 {
+    public static function deploymentOwners(): \Iterator
+    {
+        yield 'function' => ['functions', 'function'];
+        yield 'site' => ['sites', 'site'];
+    }
+
+    #[DataProvider('deploymentOwners')]
+    public function testDeploymentCreateIsAttributedToItsOwner(string $resourceType, string $owner): void
+    {
+        $context = new Context();
+
+        (new Usage($context))->handle(Event::DocumentCreate, $this->deployment($resourceType, '42'));
+
+        $this->assertSame([
+            [$resourceType . '.deployments', $owner, '42'],
+            [$resourceType . '.deployments.storage', $owner, '42'],
+        ], $this->attribution($context));
+        $this->assertSame(1, $context->getMetrics()[0]['value']);
+    }
+
+    #[DataProvider('deploymentOwners')]
+    public function testDeploymentDeleteIsAttributedToItsOwner(string $resourceType, string $owner): void
+    {
+        $context = new Context();
+
+        (new Usage($context))->handle(Event::DocumentDelete, $this->deployment($resourceType, '42'));
+
+        $this->assertSame([
+            [$resourceType . '.deployments', $owner, '42'],
+            [$resourceType . '.deployments.storage', $owner, '42'],
+        ], $this->attribution($context));
+        $this->assertSame(-1, $context->getMetrics()[0]['value']);
+    }
+
+    public function testDeploymentAttributionSurvivesTheShutdownFill(): void
+    {
+        $context = new Context();
+
+        (new Usage($context))->handle(Event::DocumentCreate, $this->deployment('sites', '9'));
+        $context->fillMissingResource('project', 'project1', '1');
+
+        $this->assertSame([
+            ['sites.deployments', 'site', '9'],
+            ['sites.deployments.storage', 'site', '9'],
+        ], $this->attribution($context));
+    }
+
+    public function testDeploymentAttributionLeavesTheRequestAttributionUntouched(): void
+    {
+        $context = new Context();
+
+        (new Usage($context))->handle(Event::DocumentCreate, $this->deployment('functions', '42'));
+        $context->addMetric(METRIC_NETWORK_REQUESTS, 1);
+        $context->fillMissingResource('project', 'project1', '1');
+
+        $requests = \array_values(\array_filter(
+            $this->attribution($context),
+            static fn (array $row): bool => $row[0] === METRIC_NETWORK_REQUESTS,
+        ));
+        $this->assertSame([[METRIC_NETWORK_REQUESTS, 'project', '1']], $requests);
+    }
+
     public static function documentWrites(): \Iterator
     {
         yield 'create' => [Event::DocumentCreate, []];
@@ -123,6 +185,29 @@ final class UsageTest extends TestCase
         $this->assertSame(
             [['sessions', 1], ['sessions', -1], ['sessions', -3]],
             \array_map(static fn (array $metric): array => [$metric['key'], $metric['value']], $context->getMetrics()),
+        );
+    }
+
+    private function deployment(string $resourceType, string $resourceInternalId): Document
+    {
+        return new Document([
+            '$id' => 'deployment1',
+            '$collection' => 'deployments',
+            'resourceId' => 'owner1',
+            'resourceInternalId' => $resourceInternalId,
+            'resourceType' => $resourceType,
+            'sourceSize' => 2048,
+        ]);
+    }
+
+    /**
+     * @return list<array{0: string, 1: string, 2: string}>
+     */
+    private function attribution(Context $context): array
+    {
+        return \array_map(
+            static fn (array $metric): array => [$metric['key'], $metric['resourceType'], $metric['resourceInternalId']],
+            $context->getMetrics(),
         );
     }
 }

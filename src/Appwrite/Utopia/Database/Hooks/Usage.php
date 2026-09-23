@@ -47,9 +47,11 @@ class Usage implements Lifecycle
     private function trackDeployment(Document $deployment, int $value): void
     {
         $resourceType = (string) $deployment->getAttribute('resourceType', '');
+        $owner = \rtrim($resourceType, 's');
+        $ownerInternalId = (string) $deployment->getAttribute('resourceInternalId', '');
 
         $this->usage
-            ->addMetric(\str_replace('{resourceType}', $resourceType, METRIC_RESOURCE_TYPE_DEPLOYMENTS), $value)
-            ->addMetric(\str_replace('{resourceType}', $resourceType, METRIC_RESOURCE_TYPE_DEPLOYMENTS_STORAGE), (int) $deployment->getAttribute('size', 0) * $value);
+            ->addResourceMetric(\str_replace('{resourceType}', $resourceType, METRIC_RESOURCE_TYPE_DEPLOYMENTS), $value, $owner, $ownerInternalId)
+            ->addResourceMetric(\str_replace('{resourceType}', $resourceType, METRIC_RESOURCE_TYPE_DEPLOYMENTS_STORAGE), (int) $deployment->getAttribute('size', 0) * $value, $owner, $ownerInternalId);
     }
 }
