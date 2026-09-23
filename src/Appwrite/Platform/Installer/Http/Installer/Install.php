@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Installer\Http\Installer;
 
 use Appwrite\Auth\Validator\Password;
+use Appwrite\Installer\Report;
 use Appwrite\Platform\Installer\Runtime\Config;
 use Appwrite\Platform\Installer\Runtime\State;
 use Appwrite\Platform\Installer\Server;
@@ -389,6 +390,7 @@ class Install extends Action
                 $account,
                 $onComplete,
                 $migrate,
+                Report::SOURCE_WEB,
             );
 
             $onComplete();
