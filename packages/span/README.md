@@ -195,7 +195,7 @@ Only exports error spans with full stacktraces. Non-error spans are skipped, eve
 
 Pass any PSR-18 client as `client` to control the HTTP transport. Workers can
 inject a coroutine-safe `Utopia\Client\Pool`. When omitted, the exporter creates
-a `Utopia\Client` using its cURL adapter.
+a `Utopia\Client\Client` using its cURL adapter.
 
 ```php
 Span::setExporters(new Exporter\Sentry(

@@ -4,4 +4,6 @@ declare(strict_types=1);
 
 namespace Utopia\Client\Exception;
 
-final class ProtocolException extends NetworkException {}
+final class ProtocolException extends NetworkException
+{
+}

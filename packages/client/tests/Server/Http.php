@@ -234,7 +234,7 @@ final class Http
     private static function start(int $port): mixed
     {
         $server = proc_open(
-            [\PHP_BINARY, '-d', 'post_max_size=64M', '-d', 'upload_max_filesize=64M', '-d', 'memory_limit=256M', '-S', '127.0.0.1:' . $port, \dirname(__DIR__) . '/server.php'],
+            [\PHP_BINARY, '-d', 'post_max_size=64M', '-d', 'upload_max_filesize=64M', '-d', 'memory_limit=256M', '-S', '127.0.0.1:' . $port, __DIR__ . '/../server.php'],
             [
                 0 => ['pipe', 'r'],
                 1 => ['pipe', 'w'],

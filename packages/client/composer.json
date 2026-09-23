@@ -26,7 +26,7 @@
         }
     },
     "scripts": {
-        "test": "phpunit --configuration phpunit.xml"
+        "test": "phpunit --configuration phpunit.xml --testsuite unit"
     },
     "require": {
         "php": ">=8.5",

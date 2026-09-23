@@ -18,7 +18,8 @@ abstract class Decorator implements Adapter
 {
     public function __construct(
         protected Adapter $adapter,
-    ) {}
+    ) {
+    }
 
     public function withTimeout(float $seconds): static
     {

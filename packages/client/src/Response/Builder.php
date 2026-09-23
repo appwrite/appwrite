@@ -13,7 +13,8 @@ final readonly class Builder
     public function __construct(
         private ResponseFactoryInterface $responseFactory,
         private StreamFactoryInterface $streamFactory,
-    ) {}
+    ) {
+    }
 
     /**
      * @param array<string, array<int, string>> $headers

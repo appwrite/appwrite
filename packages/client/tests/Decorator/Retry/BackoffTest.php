@@ -102,7 +102,7 @@ final class BackoffTest extends TestCase
 
     private function strategy(): Backoff
     {
-        return new Backoff(randomizer: static fn(): float => 1.0);
+        return new Backoff(randomizer: static fn (): float => 1.0);
     }
 
     private function request(string $method): RequestInterface

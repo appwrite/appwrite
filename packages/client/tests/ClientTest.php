@@ -251,7 +251,8 @@ final class RecordingAdapter implements Adapter
         private ?Tls $minTlsVersion = null,
         private ?bool $connectionReuse = null,
         private ?bool $followRedirects = null,
-    ) {}
+    ) {
+    }
 
     public function withTimeout(float $seconds): static
     {

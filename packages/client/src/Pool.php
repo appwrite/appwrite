@@ -26,7 +26,8 @@ final readonly class Pool implements ClientInterface, StreamingClientInterface
      */
     public function __construct(
         private Connections $connections,
-    ) {}
+    ) {
+    }
 
     /**
      * @throws ClientExceptionInterface
@@ -34,7 +35,7 @@ final readonly class Pool implements ClientInterface, StreamingClientInterface
     public function sendRequest(RequestInterface $request): ResponseInterface
     {
         return $this->connections->use(
-            fn(ClientInterface $client): ResponseInterface => $client->sendRequest($request),
+            fn (ClientInterface $client): ResponseInterface => $client->sendRequest($request),
         );
     }
 
@@ -46,7 +47,7 @@ final readonly class Pool implements ClientInterface, StreamingClientInterface
     public function stream(RequestInterface $request, callable $sink): ResponseInterface
     {
         return $this->connections->use(
-            fn(StreamingClientInterface $client): ResponseInterface => $client->stream($request, $sink),
+            fn (StreamingClientInterface $client): ResponseInterface => $client->stream($request, $sink),
         );
     }
 }

@@ -19,14 +19,14 @@ final class PoolTest extends TestCase
 {
     public function testItBorrowsAConnectionToSendARequest(): void
     {
-        $pool = new Pool($this->connections(fn(): \Utopia\Client\Tests\FakeClient => new FakeClient(200)));
+        $pool = new Pool($this->connections(fn (): \Utopia\Client\Tests\FakeClient => new FakeClient(200)));
 
         $this->assertSame(200, $pool->sendRequest($this->request())->getStatusCode());
     }
 
     public function testItBorrowsAConnectionToStreamARequest(): void
     {
-        $pool = new Pool($this->connections(fn(): \Utopia\Client\Tests\FakeClient => new FakeClient(200)));
+        $pool = new Pool($this->connections(fn (): \Utopia\Client\Tests\FakeClient => new FakeClient(200)));
         $received = '';
 
         $response = $pool->stream($this->request(), function (string $chunk) use (&$received): void {
@@ -75,7 +75,9 @@ final class PoolTest extends TestCase
 
 final readonly class FakeClient implements \Psr\Http\Client\ClientInterface, StreamingClientInterface
 {
-    public function __construct(private int $status) {}
+    public function __construct(private int $status)
+    {
+    }
 
     public function sendRequest(RequestInterface $request): ResponseInterface
     {

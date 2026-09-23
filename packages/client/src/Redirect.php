@@ -29,7 +29,9 @@ final class Redirect
         'Proxy-Authorization',
     ];
 
-    private function __construct() {}
+    private function __construct()
+    {
+    }
 
     public static function isRedirect(ResponseInterface $response): bool
     {
@@ -175,9 +177,7 @@ final class Redirect
         $scheme = strtolower($uri->getScheme());
         $port = $uri->getPort();
 
-        if ($port === null) {
-            $port = $scheme === 'https' ? 443 : 80;
-        }
+        $port ??= $scheme === 'https' ? 443 : 80;
 
         return $scheme . '://' . strtolower($uri->getHost()) . ':' . $port;
     }

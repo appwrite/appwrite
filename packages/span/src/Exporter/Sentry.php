@@ -6,7 +6,7 @@ use Closure;
 use Composer\InstalledVersions;
 use Psr\Http\Client\ClientInterface;
 use Utopia\Client\Adapter\Curl\Client as CurlClient;
-use Utopia\Client as HttpClient;
+use Utopia\Client\Client as HttpClient;
 use Utopia\Psr7\Method;
 use Utopia\Psr7\Request\Factory as RequestFactory;
 use Utopia\Span\Exporter\Sentry\Level as SentryLevel;
@@ -104,7 +104,7 @@ class Sentry implements Exporter
         ?Closure $classifier = null,
         ?ClientInterface $client = null,
     ) {
-        $this->classifier = $classifier ?? static fn(string $key): SentryField => SentryField::Context;
+        $this->classifier = $classifier ?? static fn (string $key): SentryField => SentryField::Context;
         $this->client = $client ?? new HttpClient(
             new CurlClient(options: [
                 \CURLOPT_TIMEOUT_MS => 1000,

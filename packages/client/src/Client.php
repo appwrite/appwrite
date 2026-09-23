@@ -26,7 +26,8 @@ final class Client implements Adapter
 
     public function __construct(
         private Adapter $adapter,
-    ) {}
+    ) {
+    }
 
     public function withTimeout(float $seconds): static
     {

@@ -49,7 +49,7 @@ final readonly class Backoff implements Strategy
         private float $multiplier = 2.0,
         ?Closure $randomizer = null,
     ) {
-        $this->randomizer = $randomizer ?? static fn(): float => mt_rand() / mt_getrandmax();
+        $this->randomizer = $randomizer ?? static fn (): float => mt_rand() / mt_getrandmax();
     }
 
     public function delay(RequestInterface $request, int $attempt, ?ResponseInterface $response, ?ClientExceptionInterface $error): ?float

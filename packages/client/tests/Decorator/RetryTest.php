@@ -24,9 +24,9 @@ final class RetryTest extends TestCase
     {
         $request = $this->request(Method::GET);
         $inner = new QueueAdapter([
-            fn() => throw new NetworkException($request, 'reset'),
-            fn() => throw new NetworkException($request, 'reset'),
-            fn(): \Utopia\Psr7\Response => new Response(200),
+            fn () => throw new NetworkException($request, 'reset'),
+            fn () => throw new NetworkException($request, 'reset'),
+            fn (): \Utopia\Psr7\Response => new Response(200),
         ]);
         $delays = [];
 
@@ -40,7 +40,7 @@ final class RetryTest extends TestCase
     public function testItStopsAndRethrowsAfterExhaustingAttempts(): void
     {
         $request = $this->request(Method::GET);
-        $inner = new QueueAdapter(array_fill(0, 3, fn() => throw new NetworkException($request, 'reset')));
+        $inner = new QueueAdapter(array_fill(0, 3, fn () => throw new NetworkException($request, 'reset')));
         $delays = [];
 
         try {
@@ -55,7 +55,7 @@ final class RetryTest extends TestCase
     public function testItDoesNotRetryRequestExceptions(): void
     {
         $request = $this->request(Method::GET);
-        $inner = new QueueAdapter([fn() => throw new InvalidUriException($request, 'bad')]);
+        $inner = new QueueAdapter([fn () => throw new InvalidUriException($request, 'bad')]);
         $delays = [];
 
         $this->expectException(InvalidUriException::class);
@@ -71,7 +71,7 @@ final class RetryTest extends TestCase
     public function testItDoesNotRetryNonIdempotentMethods(): void
     {
         $request = $this->request(Method::POST);
-        $inner = new QueueAdapter([fn() => throw new NetworkException($request, 'reset')]);
+        $inner = new QueueAdapter([fn () => throw new NetworkException($request, 'reset')]);
         $delays = [];
 
         $this->expectException(NetworkException::class);
@@ -87,8 +87,8 @@ final class RetryTest extends TestCase
     {
         $request = $this->request(Method::GET);
         $inner = new QueueAdapter([
-            fn(): \Utopia\Psr7\Response => new Response(503),
-            fn(): \Utopia\Psr7\Response => new Response(200),
+            fn (): \Utopia\Psr7\Response => new Response(503),
+            fn (): \Utopia\Psr7\Response => new Response(200),
         ]);
         $delays = [];
 
@@ -172,7 +172,7 @@ final class RetryTest extends TestCase
     {
         return new Retry(
             $inner,
-            new Backoff(randomizer: static fn(): float => 1.0),
+            new Backoff(randomizer: static fn (): float => 1.0),
             function (float $seconds) use (&$delays): void {
                 $delays[] = $seconds;
             },
@@ -192,7 +192,9 @@ final class QueueAdapter implements Adapter
     /**
      * @param array<int, callable(callable(string): void): ResponseInterface> $outcomes
      */
-    public function __construct(private array $outcomes) {}
+    public function __construct(private array $outcomes)
+    {
+    }
 
     public function withTimeout(float $seconds): static
     {
@@ -236,7 +238,8 @@ final class QueueAdapter implements Adapter
 
     public function sendRequest(RequestInterface $request): ResponseInterface
     {
-        return $this->next(static function (string $chunk): void {});
+        return $this->next(static function (string $chunk): void {
+        });
     }
 
     public function stream(RequestInterface $request, callable $sink): ResponseInterface
