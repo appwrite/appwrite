@@ -1,0 +1,57 @@
+{
+    "name": "utopia-php/client",
+    "description": "A lightweight PSR-18 HTTP client with cURL and Swoole coroutine backends",
+    "type": "library",
+    "keywords": [
+        "php",
+        "http",
+        "client",
+        "psr-18",
+        "curl",
+        "swoole",
+        "utopia"
+    ],
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Utopia\\Client\\": "src/"
+        },
+        "files": [
+            "src/compat.php"
+        ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Utopia\\Client\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit --configuration phpunit.xml"
+    },
+    "require": {
+        "php": ">=8.5",
+        "psr/http-client": "^1.0",
+        "psr/http-factory": "^1.0",
+        "psr/http-message": "^1.1 || ^2.0",
+        "utopia-php/pools": "^2.0",
+        "utopia-php/psr7": "^0.2.1",
+        "utopia-php/span": "^1.1 || ^3.0 || ^4.0"
+    },
+    "suggest": {
+        "ext-curl": "Required to use the cURL HTTP client adapter.",
+        "ext-simplexml": "Required to decode XML responses with Response::xml().",
+        "ext-swoole": "Required to use the Swoole coroutine HTTP client adapter."
+    },
+    "require-dev": {
+        "swoole/ide-helper": "^6.0"
+    },
+    "config": {
+        "platform": {
+            "php": "8.4"
+        },
+        "allow-plugins": {
+            "php-http/discovery": true,
+            "tbachert/spi": true
+        }
+    }
+}
