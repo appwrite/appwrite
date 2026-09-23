@@ -1,7 +1,7 @@
 # Utopia User Agent
 
 > [!IMPORTANT]
-> This repository is a read-only mirror of the [utopia-php monorepo](https://github.com/utopia-php/monorepo). Development happens in [`packages/user-agent`](https://github.com/utopia-php/monorepo/tree/main/packages/user-agent) — please open issues and pull requests there.
+> This repository is a read-only mirror of [`packages/user-agent`](https://github.com/appwrite/appwrite/tree/main/packages/user-agent) in [appwrite/appwrite](https://github.com/appwrite/appwrite). Development happens there — please open issues and pull requests against appwrite/appwrite.
 
 A fast user-agent parser and device detector for PHP.
 
