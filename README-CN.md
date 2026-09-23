@@ -71,7 +71,7 @@ Appwrite 是面向 MCP 与智能体的开源平台，用于构建和扩展应用
 
 ## 自托管
 
-Appwrite 设计为在容器化环境中运行。从终端运行一条命令即可启动服务器。你可以使用 docker-compose 在本地运行 Appwrite，也可以在 [Kubernetes](https://kubernetes.io/docs/home/)、[Docker Swarm](https://docs.docker.com/engine/swarm/) 或 [Rancher](https://ranchermanager.docs.rancher.com/) 等容器编排工具上运行。
+Appwrite 从一开始就为自托管而设计。你可以在任何能运行 [Docker CLI](https://www.docker.com/products/docker-desktop) 的操作系统上安装并运行 Appwrite。从终端运行一条命令即可启动服务器。
 
 运行安装命令之前，请确保机器上已安装 [Docker](https://www.docker.com/products/docker-desktop)。安装向导监听 **20080** 端口；如果在远程主机上安装，请在安装完成前开放该端口。
 
@@ -132,11 +132,11 @@ docker run -it --rm \
 
 ### 从旧版本升级
 
-如果您从旧版本升级 Appwrite 服务器，则应在设置完成后使用 Appwrite 迁移工具。有关这方面的更多信息，请查看 [安装文档](https://appwrite.io/docs/advanced/self-hosting)。
+如果您从旧版本升级 Appwrite 服务器，则应在设置完成后使用 Appwrite 迁移工具。有关这方面的更多信息，请查看 [迁移说明](https://appwrite.io/docs/advanced/self-hosting/production/updates)。
 
 ## 一键配置
 
-除了在本地运行 Appwrite，您还可以使用预配置的设置启动 Appwrite。这样可以让您快速启动并运行 Appwrite，而无需在本地计算机上安装 Docker。
+除了在本地运行 Appwrite，你也可以使用预配置的市场应用一键部署。
 
 请从以下提供商中选择一个：
 
@@ -145,23 +145,31 @@ docker run -it --rm \
     <td align="center" width="100" height="100">
       <a href="https://marketplace.digitalocean.com/apps/appwrite">
         <img width="50" height="39" src="public/images/integrations/digitalocean-logo.svg" alt="DigitalOcean Logo" />
-          <br /><sub><b>DigitalOcean</b></sub></a>
-        </a>
+        <br /><sub><b>DigitalOcean</b></sub>
+      </a>
+    </td>
+    <td align="center" width="100" height="100">
+      <a href="https://gitpod.io/#https://github.com/appwrite/integration-for-gitpod">
+        <img width="50" height="39" src="public/images/integrations/gitpod-logo.svg" alt="Gitpod Logo" />
+        <br /><sub><b>Gitpod</b></sub>
+      </a>
     </td>
     <td align="center" width="100" height="100">
       <a href="https://www.linode.com/marketplace/apps/appwrite/appwrite/">
         <img width="50" height="39" src="public/images/integrations/akamai-logo.svg" alt="Akamai Logo" />
-          <br /><sub><b>Akamai Compute</b></sub></a>
+        <br /><sub><b>Akamai Compute</b></sub>
       </a>
     </td>
     <td align="center" width="100" height="100">
       <a href="https://aws.amazon.com/marketplace/pp/prodview-2hiaeo2px4md6">
         <img width="50" height="39" src="public/images/integrations/aws-logo.svg" alt="AWS Logo" />
-          <br /><sub><b>AWS Marketplace</b></sub></a>
+        <br /><sub><b>AWS Marketplace</b></sub>
       </a>
     </td>
   </tr>
 </table>
+
+如需在云平台或 PaaS 上自定义部署，请参阅 [AWS](https://appwrite.io/docs/advanced/self-hosting/platforms/aws)、[DigitalOcean](https://appwrite.io/docs/advanced/self-hosting/platforms/digitalocean)、[Google Cloud](https://appwrite.io/docs/advanced/self-hosting/platforms/google-cloud)、[Azure](https://appwrite.io/docs/advanced/self-hosting/platforms/azure)、[Coolify](https://appwrite.io/docs/advanced/self-hosting/platforms/coolify) 和 [Dokploy](https://appwrite.io/docs/advanced/self-hosting/platforms/dokploy) 指南。
 
 ## 入门
 

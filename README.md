@@ -71,7 +71,7 @@ The easiest way to get started with Appwrite is by [signing up for Appwrite Clou
 
 ## Self-Hosting
 
-Appwrite is designed to run in a containerized environment. Running your server is as easy as running one command from your terminal. You can either run Appwrite on your localhost using docker-compose or on any other container orchestration tool, such as [Kubernetes](https://kubernetes.io/docs/home/), [Docker Swarm](https://docs.docker.com/engine/swarm/), or [Rancher](https://ranchermanager.docs.rancher.com/).
+Appwrite was designed from the ground up with self-hosting in mind. You can install and run Appwrite on any operating system that can run a [Docker CLI](https://www.docker.com/products/docker-desktop). Running your server is as easy as running one command from your terminal.
 
 Before running the installation command, make sure you have [Docker](https://www.docker.com/products/docker-desktop) installed on your machine. The setup wizard listens on port **20080**; if you are installing on a remote host, open that port until installation is complete.
 
@@ -132,11 +132,11 @@ For advanced production and custom installation, check out our Docker [environme
 
 ### Upgrade from an Older Version
 
-If you are upgrading your Appwrite server from an older version, you should use the Appwrite migration tool once your setup is completed. For more information regarding this, check out the [Installation Docs](https://appwrite.io/docs/advanced/self-hosting).
+If you are upgrading your Appwrite server from an older version, you should use the Appwrite migration tool once your setup is completed. For more information regarding this, check out the [migration instructions](https://appwrite.io/docs/advanced/self-hosting/production/updates).
 
 ## One-Click Setups
 
-In addition to running Appwrite locally, you can also launch Appwrite using a pre-configured setup. This allows you to get up and running quickly with Appwrite without installing Docker on your local machine.
+In addition to running Appwrite locally, you can launch Appwrite using a pre-configured marketplace app for instant setup.
 
 Choose from one of the providers below:
 
@@ -145,23 +145,31 @@ Choose from one of the providers below:
     <td align="center" width="100" height="100">
       <a href="https://marketplace.digitalocean.com/apps/appwrite">
         <img width="50" height="39" src="public/images/integrations/digitalocean-logo.svg" alt="DigitalOcean Logo" />
-          <br /><sub><b>DigitalOcean</b></sub></a>
-        </a>
+        <br /><sub><b>DigitalOcean</b></sub>
+      </a>
+    </td>
+    <td align="center" width="100" height="100">
+      <a href="https://gitpod.io/#https://github.com/appwrite/integration-for-gitpod">
+        <img width="50" height="39" src="public/images/integrations/gitpod-logo.svg" alt="Gitpod Logo" />
+        <br /><sub><b>Gitpod</b></sub>
+      </a>
     </td>
     <td align="center" width="100" height="100">
       <a href="https://www.linode.com/marketplace/apps/appwrite/appwrite/">
         <img width="50" height="39" src="public/images/integrations/akamai-logo.svg" alt="Akamai Logo" />
-          <br /><sub><b>Akamai Compute</b></sub></a>
+        <br /><sub><b>Akamai Compute</b></sub>
       </a>
     </td>
     <td align="center" width="100" height="100">
       <a href="https://aws.amazon.com/marketplace/pp/prodview-2hiaeo2px4md6">
         <img width="50" height="39" src="public/images/integrations/aws-logo.svg" alt="AWS Logo" />
-          <br /><sub><b>AWS Marketplace</b></sub></a>
+        <br /><sub><b>AWS Marketplace</b></sub>
       </a>
     </td>
   </tr>
 </table>
+
+For custom deployments on a cloud provider or PaaS, see the guides for [AWS](https://appwrite.io/docs/advanced/self-hosting/platforms/aws), [DigitalOcean](https://appwrite.io/docs/advanced/self-hosting/platforms/digitalocean), [Google Cloud](https://appwrite.io/docs/advanced/self-hosting/platforms/google-cloud), [Azure](https://appwrite.io/docs/advanced/self-hosting/platforms/azure), [Coolify](https://appwrite.io/docs/advanced/self-hosting/platforms/coolify), and [Dokploy](https://appwrite.io/docs/advanced/self-hosting/platforms/dokploy).
 
 ## Getting Started
 
