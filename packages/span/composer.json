@@ -5,7 +5,7 @@
     "license": "MIT",
     "autoload": {
         "psr-4": {
-            "Utopia\\Span\\": "src/Span/"
+            "Utopia\\Span\\": "src/"
         }
     },
     "autoload-dev": {
@@ -23,7 +23,7 @@
         "swoole/ide-helper": "^5.0"
     },
     "scripts": {
-        "test": "phpunit"
+        "test": "phpunit --configuration phpunit.xml --testsuite unit"
     },
     "suggest": {
         "ext-swoole": "Required for coroutine-based storage"

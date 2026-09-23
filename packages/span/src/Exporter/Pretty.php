@@ -36,7 +36,7 @@ readonly class Pretty implements Exporter
         private int $maxTraceFrames = 3,
         private int $width = 60,
     ) {
-        $this->sampler = $sampler ?? static fn(Span $span): bool => true;
+        $this->sampler = $sampler ?? static fn (Span $span): bool => true;
     }
 
     public function sample(Span $span): bool

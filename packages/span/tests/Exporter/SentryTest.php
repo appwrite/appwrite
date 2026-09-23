@@ -15,7 +15,9 @@ use Utopia\Span\Exporter\SentryField;
 use Utopia\Span\Level;
 use Utopia\Span\Span;
 
-class NamespacedTestException extends \RuntimeException {}
+class NamespacedTestException extends \RuntimeException
+{
+}
 
 class SentryTest extends TestCase
 {
@@ -143,7 +145,7 @@ class SentryTest extends TestCase
 
     public function testExportUsesInjectedPsr18Client(): void
     {
-        $client = new class implements ClientInterface {
+        $client = new class () implements ClientInterface {
             public ?RequestInterface $request = null;
 
             public function sendRequest(RequestInterface $request): ResponseInterface
@@ -248,7 +250,7 @@ class SentryTest extends TestCase
     public function testSampleComposesCustomSamplerWithLevelFilter(): void
     {
         $exporter = new Sentry(
-            sampler: fn(Span $span): bool => $span->getAction() === 'keep',
+            sampler: fn (Span $span): bool => $span->getAction() === 'keep',
             dsn: 'https://key@sentry.io/123',
         );
 
@@ -266,7 +268,7 @@ class SentryTest extends TestCase
     {
         $exporter = new Sentry(
             dsn: 'https://key@sentry.io/123',
-            classifier: fn(string $key): SentryField => match (true) {
+            classifier: fn (string $key): SentryField => match (true) {
                 str_starts_with($key, 'tenant.') => SentryField::Tag,
                 str_starts_with($key, 'user.') => SentryField::Context,
                 default => SentryField::Extra,

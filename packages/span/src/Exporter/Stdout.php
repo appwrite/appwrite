@@ -28,7 +28,7 @@ readonly class Stdout implements Exporter
         ?Closure $sampler = null,
         private int $maxTraceFrames = 3,
     ) {
-        $this->sampler = $sampler ?? static fn(Span $span): bool => true;
+        $this->sampler = $sampler ?? static fn (Span $span): bool => true;
     }
 
     public function sample(Span $span): bool
@@ -58,7 +58,7 @@ readonly class Stdout implements Exporter
 
             $trace = $error->getTrace();
             $limited = \array_slice($trace, 0, $this->maxTraceFrames);
-            $data['error.trace'] = array_map(fn(array $frame): array => [
+            $data['error.trace'] = array_map(fn (array $frame): array => [
                 'file' => $frame['file'] ?? null,
                 'line' => $frame['line'] ?? null,
                 'function' => $frame['function'],

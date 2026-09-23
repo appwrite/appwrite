@@ -104,7 +104,7 @@ class Sentry implements Exporter
         ?Closure $classifier = null,
         ?ClientInterface $client = null,
     ) {
-        $this->classifier = $classifier ?? static fn(string $key): SentryField => SentryField::Context;
+        $this->classifier = $classifier ?? static fn (string $key): SentryField => SentryField::Context;
         $this->client = $client ?? new HttpClient(
             new CurlClient(options: [
                 \CURLOPT_TIMEOUT_MS => 1000,
