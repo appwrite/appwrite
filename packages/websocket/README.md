@@ -1,7 +1,7 @@
 # Utopia WebSocket
 
 > [!IMPORTANT]
-> This repository is a read-only mirror of the [utopia-php monorepo](https://github.com/utopia-php/monorepo). Development happens in [`packages/websocket`](https://github.com/utopia-php/monorepo/tree/main/packages/websocket) — please open issues and pull requests there.
+> This repository is a read-only mirror of [`packages/websocket`](https://github.com/appwrite/appwrite/tree/main/packages/websocket) in [appwrite/appwrite](https://github.com/appwrite/appwrite). Development happens there — please open issues and pull requests against appwrite/appwrite.
 
 [![Build Status](https://travis-ci.com/utopia-php/system.svg?branch=main)](https://travis-ci.com/utopia-php/websocket)
 ![Total Downloads](https://img.shields.io/packagist/dt/utopia-php/websocket.svg)
