@@ -87,13 +87,6 @@ export const docsMarkdocConfig: Config = {
       selfClosing: true,
       render: 'IndexLookupAnimation',
     },
-    docs_todo: {
-      render: 'DocsTodo',
-      attributes: {
-        kind: { type: String, required: true },
-        id: { type: String, required: true },
-      },
-    },
     feature_gate: {
       render: 'FeatureGate',
       attributes: {
