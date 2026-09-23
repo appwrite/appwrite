@@ -231,6 +231,29 @@ trait QueryJoinPermissions
         $this->assertSame(201, $orders['headers']['status-code']);
         $ordersId = $orders['body']['$id'];
 
+        $userOrders = $this->client->call(Client::METHOD_POST, $this->joinContainerUrl($databaseId), $serverHeaders, [
+            $this->joinContainerIdParam() => ID::unique(),
+            'name' => 'jpUserOrders' . $suffix,
+            $this->joinSecurityParam() => true,
+            'permissions' => [
+                Permission::create(Role::any()),
+            ],
+        ]);
+        $this->assertSame(201, $userOrders['headers']['status-code']);
+        $userOrdersId = $userOrders['body']['$id'];
+
+        $profiles = $this->client->call(Client::METHOD_POST, $this->joinContainerUrl($databaseId), $serverHeaders, [
+            $this->joinContainerIdParam() => ID::unique(),
+            'name' => 'jpProfiles' . $suffix,
+            $this->joinSecurityParam() => true,
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+            ],
+        ]);
+        $this->assertSame(201, $profiles['headers']['status-code']);
+        $profilesId = $profiles['body']['$id'];
+
         $private = $this->client->call(Client::METHOD_POST, $this->joinContainerUrl($databaseId), $serverHeaders, [
             $this->joinContainerIdParam() => ID::unique(),
             'name' => 'jpPrivate' . $suffix,
@@ -245,13 +268,25 @@ trait QueryJoinPermissions
             'size' => 64,
             'required' => true,
         ]);
-        $this->createJoinAttribute($databaseId, $ordersId, 'string', [
+        foreach ([$ordersId, $userOrdersId] as $orderContainerId) {
+            $this->createJoinAttribute($databaseId, $orderContainerId, 'string', [
+                'key' => 'customerId',
+                'size' => 36,
+                'required' => false,
+            ]);
+            $this->createJoinAttribute($databaseId, $orderContainerId, 'integer', [
+                'key' => 'amount',
+                'required' => false,
+            ]);
+        }
+        $this->createJoinAttribute($databaseId, $profilesId, 'string', [
             'key' => 'customerId',
             'size' => 36,
             'required' => false,
         ]);
-        $this->createJoinAttribute($databaseId, $ordersId, 'integer', [
-            'key' => 'amount',
+        $this->createJoinAttribute($databaseId, $profilesId, 'string', [
+            'key' => 'tier',
+            'size' => 32,
             'required' => false,
         ]);
         $this->createJoinAttribute($databaseId, $privateId, 'string', [
@@ -266,8 +301,12 @@ trait QueryJoinPermissions
         ]);
 
         $this->waitForJoinAttribute($databaseId, $customersId, 'name');
-        $this->waitForJoinAttribute($databaseId, $ordersId, 'customerId');
-        $this->waitForJoinAttribute($databaseId, $ordersId, 'amount');
+        foreach ([$ordersId, $userOrdersId] as $orderContainerId) {
+            $this->waitForJoinAttribute($databaseId, $orderContainerId, 'customerId');
+            $this->waitForJoinAttribute($databaseId, $orderContainerId, 'amount');
+        }
+        $this->waitForJoinAttribute($databaseId, $profilesId, 'customerId');
+        $this->waitForJoinAttribute($databaseId, $profilesId, 'tier');
         $this->waitForJoinAttribute($databaseId, $privateId, 'customerId');
         $this->waitForJoinAttribute($databaseId, $privateId, 'secret');
 
@@ -290,40 +329,38 @@ trait QueryJoinPermissions
         ]);
         $this->assertSame(201, $carol['headers']['status-code']);
 
-        $publicOrder = $this->client->call(Client::METHOD_POST, $this->joinRecordUrl($databaseId, $ordersId), $serverHeaders, [
+        $dora = $this->client->call(Client::METHOD_POST, $this->joinRecordUrl($databaseId, $customersId), $serverHeaders, [
+            $this->joinRecordIdParam() => ID::unique(),
+            'data' => ['name' => 'Dora'],
+            'permissions' => [],
+        ]);
+        $this->assertSame(201, $dora['headers']['status-code']);
+        $doraId = $dora['body']['$id'];
+
+        foreach ([$ordersId, $userOrdersId] as $orderContainerId) {
+            foreach ([
+                [['customerId' => $aliceId, 'amount' => 100], Permission::read(Role::user($userId))],
+                [['customerId' => $aliceId, 'amount' => 9999], Permission::read(Role::user('other-join-perm-user'))],
+                [['amount' => 8888], Permission::read(Role::user('other-join-perm-user'))],
+            ] as [$order, $permission]) {
+                $created = $this->client->call(Client::METHOD_POST, $this->joinRecordUrl($databaseId, $orderContainerId), $serverHeaders, [
+                    $this->joinRecordIdParam() => ID::unique(),
+                    'data' => $order,
+                    'permissions' => [$permission],
+                ]);
+                $this->assertSame(201, $created['headers']['status-code']);
+            }
+        }
+
+        $profile = $this->client->call(Client::METHOD_POST, $this->joinRecordUrl($databaseId, $profilesId), $serverHeaders, [
             $this->joinRecordIdParam() => ID::unique(),
             'data' => [
                 'customerId' => $aliceId,
-                'amount' => 100,
+                'tier' => 'gold',
             ],
-            'permissions' => [
-                Permission::read(Role::user($userId)),
-            ],
+            'permissions' => [],
         ]);
-        $this->assertSame(201, $publicOrder['headers']['status-code']);
-
-        $secretOrder = $this->client->call(Client::METHOD_POST, $this->joinRecordUrl($databaseId, $ordersId), $serverHeaders, [
-            $this->joinRecordIdParam() => ID::unique(),
-            'data' => [
-                'customerId' => $aliceId,
-                'amount' => 9999,
-            ],
-            'permissions' => [
-                Permission::read(Role::user('other-join-perm-user')),
-            ],
-        ]);
-        $this->assertSame(201, $secretOrder['headers']['status-code']);
-
-        $orphanOrder = $this->client->call(Client::METHOD_POST, $this->joinRecordUrl($databaseId, $ordersId), $serverHeaders, [
-            $this->joinRecordIdParam() => ID::unique(),
-            'data' => [
-                'amount' => 8888,
-            ],
-            'permissions' => [
-                Permission::read(Role::user('other-join-perm-user')),
-            ],
-        ]);
-        $this->assertSame(201, $orphanOrder['headers']['status-code']);
+        $this->assertSame(201, $profile['headers']['status-code']);
 
         $privateRow = $this->client->call(Client::METHOD_POST, $this->joinRecordUrl($databaseId, $privateId), $serverHeaders, [
             $this->joinRecordIdParam() => ID::unique(),
@@ -334,12 +371,23 @@ trait QueryJoinPermissions
         ]);
         $this->assertSame(201, $privateRow['headers']['status-code']);
 
+        $ownedRow = $this->client->call(Client::METHOD_POST, $this->joinRecordUrl($databaseId, $privateId), $serverHeaders, [
+            $this->joinRecordIdParam() => ID::unique(),
+            'data' => [
+                'customerId' => $aliceId,
+                'secret' => 'owned-join-data',
+            ],
+            'permissions' => [
+                Permission::read(Role::user($userId)),
+            ],
+        ]);
+        $this->assertSame(201, $ownedRow['headers']['status-code']);
+
         $selfJoin = $this->client->call(Client::METHOD_POST, $this->joinContainerUrl($databaseId), $serverHeaders, [
             $this->joinContainerIdParam() => ID::unique(),
             'name' => 'jpSelfJoin' . $suffix,
             $this->joinSecurityParam() => true,
             'permissions' => [
-                Permission::read(Role::any()),
                 Permission::create(Role::any()),
             ],
         ]);
@@ -493,8 +541,11 @@ trait QueryJoinPermissions
             'databaseId' => $databaseId,
             'customersId' => $customersId,
             'ordersId' => $ordersId,
+            'userOrdersId' => $userOrdersId,
+            'profilesId' => $profilesId,
             'privateId' => $privateId,
             'aliceId' => $aliceId,
+            'doraId' => $doraId,
             'selfJoinId' => $selfJoinId,
             'dsOffSourceId' => $dsOffSourceId,
             'dsOffJoinedId' => $dsOffJoinedId,
@@ -505,7 +556,70 @@ trait QueryJoinPermissions
         return self::$joinPermissionsCache[$cacheKey];
     }
 
-    public function testListJoinWithoutTableReadDenied(): void
+    /**
+     * @param list<array<string, mixed>> $rows
+     * @return list<mixed> Each row's joined value, without the rows the join left without one.
+     */
+    protected function joinPermissionValues(array $rows, string $alias, string $attribute): array
+    {
+        $values = [];
+        foreach ($rows as $row) {
+            $decoded = $this->decodeJoinData($row);
+            $value = $decoded[$alias . '.' . $attribute] ?? $decoded[$attribute] ?? null;
+            if ($value !== null && $value !== '') {
+                $values[] = $value;
+            }
+        }
+
+        return $values;
+    }
+
+    /**
+     * @param list<mixed> $values
+     * @return list<mixed>
+     */
+    protected function joinPermissionSorted(array $values): array
+    {
+        \sort($values);
+
+        return \array_values($values);
+    }
+
+    protected function joinPermissionTotal(array $result): int
+    {
+        return (int) ($result['body']['data'][$this->joinListField()]['total'] ?? -1);
+    }
+
+    public function testJoinKeepsMainRowsReadableThroughTheCollection(): void
+    {
+        if (!$this->getSupportForJoins()) {
+            $this->markTestSkipped('Adapter does not support join queries');
+        }
+
+        $data = $this->setupJoinPermissionsFixture();
+
+        $plain = $this->graphqlJoin($this->joinListQuery(), $this->joinListVariables($data['databaseId'], $data['customersId'], [
+            Query::select(['name'])->toString(),
+        ]));
+        $joined = $this->graphqlJoin($this->joinListQuery(), $this->joinListVariables($data['databaseId'], $data['customersId'], [
+            Query::leftJoin($data['profilesId'], '$id', 'customerId', '=', 'prof')->toString(),
+            Query::select(['name', 'prof.tier'])->toString(),
+        ]));
+
+        $this->assertArrayNotHasKey('errors', $plain['body']);
+        $this->assertArrayNotHasKey('errors', $joined['body']);
+        $plainRows = $this->joinListRecords($plain);
+        $joinedRows = $this->joinListRecords($joined);
+        $plainIds = \array_column($plainRows, '_id');
+
+        $this->assertContains($data['doraId'], $plainIds, 'a row without document permissions is readable through the collection grant');
+        $this->assertSame($this->joinPermissionSorted($plainIds), $this->joinPermissionSorted(\array_column($joinedRows, '_id')), 'a left join adds columns, it must not change which customers are listed');
+        $this->assertSame($this->joinPermissionTotal($plain), $this->joinPermissionTotal($joined));
+        $this->assertSame(\count($plainRows), $this->joinPermissionTotal($joined));
+        $this->assertSame(['gold'], $this->joinPermissionValues($joinedRows, 'prof', 'tier'), 'the joined profile has no document permissions either and is readable through its collection grant');
+    }
+
+    public function testListJoinPerUserTableReturnsOnlyRowsTheCallerCanRead(): void
     {
         if (!$this->getSupportForJoins()) {
             $this->markTestSkipped('Adapter does not support join queries');
@@ -517,17 +631,26 @@ trait QueryJoinPermissions
             Query::join($data['privateId'], '$id', 'customerId', '=', 'rev')->toString(),
             Query::select(['name', 'rev.secret'])->toString(),
         ]));
+        $direct = $this->graphqlJoin($this->joinListQuery(), $this->joinListVariables($data['databaseId'], $data['privateId'], [
+            Query::equal('customerId', [$data['aliceId']])->toString(),
+        ]));
 
-        $encoded = $this->joinEncodedBody($result);
+        $this->assertArrayNotHasKey('errors', $result['body'], 'a document-security collection without collection-level read is listable, so it is joinable');
+        $this->assertArrayNotHasKey('errors', $direct['body']);
+        $secrets = $this->joinPermissionValues($this->joinListRecords($result), 'rev', 'secret');
+        $directSecrets = \array_column(\array_map($this->decodeJoinData(...), $this->joinListRecords($direct)), 'secret');
+
+        $this->assertSame($this->joinPermissionSorted($directSecrets), $this->joinPermissionSorted($secrets), 'the join returns exactly the rows listing the collection returns');
+
         if ($this->getSide() === 'client') {
-            $this->assertArrayHasKey('errors', $result['body']);
-            $this->assertStringNotContainsString('classified-join-data', $encoded);
+            $this->assertSame(['owned-join-data'], $secrets);
+            $this->assertStringNotContainsString('classified-join-data', $this->joinEncodedBody($result));
         } else {
-            $this->assertArrayNotHasKey('errors', $result['body']);
+            $this->assertSame(['classified-join-data', 'owned-join-data'], $this->joinPermissionSorted($secrets));
         }
     }
 
-    public function testGetJoinWithoutTableReadDenied(): void
+    public function testGetJoinPerUserTableReturnsOnlyTheRowTheCallerCanRead(): void
     {
         if (!$this->getSupportForJoins()) {
             $this->markTestSkipped('Adapter does not support join queries');
@@ -540,12 +663,17 @@ trait QueryJoinPermissions
             Query::select(['name', 'rev.secret'])->toString(),
         ]));
 
-        $encoded = $this->joinEncodedBody($result);
+        $this->assertArrayNotHasKey('errors', $result['body']);
+        $record = $this->joinGetRecord($result);
+        $this->assertSame($data['aliceId'], $record['_id']);
+        $decoded = $this->decodeJoinData($record);
+        $secret = $decoded['rev.secret'] ?? $decoded['secret'] ?? null;
+
         if ($this->getSide() === 'client') {
-            $this->assertArrayHasKey('errors', $result['body']);
-            $this->assertStringNotContainsString('classified-join-data', $encoded);
+            $this->assertSame('owned-join-data', $secret);
+            $this->assertStringNotContainsString('classified-join-data', $this->joinEncodedBody($result));
         } else {
-            $this->assertArrayNotHasKey('errors', $result['body']);
+            $this->assertContains($secret, ['classified-join-data', 'owned-join-data']);
         }
     }
 
@@ -558,7 +686,7 @@ trait QueryJoinPermissions
         $data = $this->setupJoinPermissionsFixture();
 
         $result = $this->graphqlJoin($this->joinListQuery(), $this->joinListVariables($data['databaseId'], $data['customersId'], [
-            Query::fullOuterJoin($data['ordersId'], '$id', 'customerId', '=', 'rev')->toString(),
+            Query::fullOuterJoin($data['userOrdersId'], '$id', 'customerId', '=', 'rev')->toString(),
             Query::select(['name', 'rev.amount'])->toString(),
         ]));
 
@@ -596,7 +724,7 @@ trait QueryJoinPermissions
         $data = $this->setupJoinPermissionsFixture();
 
         $result = $this->graphqlJoin($this->joinListQuery(), $this->joinListVariables($data['databaseId'], $data['customersId'], [
-            Query::leftJoin($data['ordersId'], '$id', 'customerId', '=', 'rev')->toString(),
+            Query::leftJoin($data['userOrdersId'], '$id', 'customerId', '=', 'rev')->toString(),
             Query::select(['name', 'rev.amount'])->toString(),
         ]));
 
@@ -634,7 +762,7 @@ trait QueryJoinPermissions
         $data = $this->setupJoinPermissionsFixture();
 
         $result = $this->graphqlJoin($this->joinGetQuery(), $this->joinGetVariables($data['databaseId'], $data['customersId'], $data['aliceId'], [
-            Query::leftJoin($data['ordersId'], '$id', 'customerId', '=', 'rev')->toString(),
+            Query::leftJoin($data['userOrdersId'], '$id', 'customerId', '=', 'rev')->toString(),
             Query::select(['name', 'rev.amount'])->toString(),
         ]));
 
@@ -691,7 +819,7 @@ trait QueryJoinPermissions
         $data = $this->setupJoinPermissionsFixture();
 
         $result = $this->graphqlJoin($this->joinListQuery(), $this->joinListVariables($data['databaseId'], $data['customersId'], [
-            Query::rightJoin($data['ordersId'], '$id', 'customerId', '=', 'rev')->toString(),
+            Query::rightJoin($data['userOrdersId'], '$id', 'customerId', '=', 'rev')->toString(),
             Query::select(['name', 'rev.amount'])->toString(),
         ]));
 
@@ -729,7 +857,7 @@ trait QueryJoinPermissions
         $data = $this->setupJoinPermissionsFixture();
 
         $result = $this->graphqlJoin($this->joinGetQuery(), $this->joinGetVariables($data['databaseId'], $data['customersId'], $data['aliceId'], [
-            Query::rightJoin($data['ordersId'], '$id', 'customerId', '=', 'rev')->toString(),
+            Query::rightJoin($data['userOrdersId'], '$id', 'customerId', '=', 'rev')->toString(),
             Query::select(['name', 'rev.amount'])->toString(),
         ]));
 
@@ -759,7 +887,7 @@ trait QueryJoinPermissions
         $data = $this->setupJoinPermissionsFixture();
 
         $result = $this->graphqlJoin($this->joinListQuery(), $this->joinListVariables($data['databaseId'], $data['customersId'], [
-            Query::crossJoin($data['ordersId'], 'rev')->toString(),
+            Query::crossJoin($data['userOrdersId'], 'rev')->toString(),
             Query::select(['name', 'rev.amount'])->toString(),
         ]));
 
@@ -827,18 +955,28 @@ trait QueryJoinPermissions
         }
 
         $data = $this->setupJoinPermissionsFixture();
-
-        $result = $this->graphqlJoin($this->joinListQuery(), $this->joinListVariables($data['databaseId'], $data['dsOffSourceId'], [
-            Query::join($data['dsOffDeniedId'], '$id', 'customerId', '=', 'rev')->toString(),
+        $queries = fn (string $joinedId): array => [
+            Query::join($joinedId, '$id', 'customerId', '=', 'rev')->toString(),
             Query::select(['name', 'rev.secret'])->toString(),
-        ]));
+        ];
 
-        $encoded = $this->joinEncodedBody($result);
+        $readable = $this->graphqlJoin($this->joinListQuery(), $this->joinListVariables($data['databaseId'], $data['dsOffSourceId'], $queries($data['dsOffJoinedId'])));
+        $this->assertArrayNotHasKey('errors', $readable['body'], 'the same join to a collection the caller can list must succeed');
+        $this->assertContains('classified-join-data', $this->joinPermissionValues($this->joinListRecords($readable), 'rev', 'secret'));
+
+        $listed = $this->graphqlJoin($this->joinListQuery(), $this->joinListVariables($data['databaseId'], $data['dsOffSourceId'], $queries($data['dsOffDeniedId'])));
+        $got = $this->graphqlJoin($this->joinGetQuery(), $this->joinGetVariables($data['databaseId'], $data['dsOffSourceId'], $data['dsOffRowId'], $queries($data['dsOffDeniedId'])));
+
         if ($this->getSide() === 'client') {
-            $this->assertArrayHasKey('errors', $result['body']);
-            $this->assertStringNotContainsString('classified-join-data', $encoded);
+            foreach ([$listed, $got] as $result) {
+                $this->assertArrayHasKey('errors', $result['body']);
+                $this->assertSame('The current user is not authorized to perform the requested action.', $result['body']['errors'][0]['message'] ?? null, 'a collection without collection-level read and without document security cannot be joined');
+                $this->assertStringNotContainsString('classified-join-data', $this->joinEncodedBody($result));
+            }
         } else {
-            $this->assertArrayNotHasKey('errors', $result['body']);
+            $this->assertArrayNotHasKey('errors', $listed['body']);
+            $this->assertContains('classified-join-data', $this->joinPermissionValues($this->joinListRecords($listed), 'rev', 'secret'));
+            $this->assertArrayNotHasKey('errors', $got['body']);
         }
     }
 
@@ -856,18 +994,21 @@ trait QueryJoinPermissions
         ]));
 
         $this->assertArrayNotHasKey('errors', $result['body']);
-        $encoded = $this->joinEncodedBody($result);
+        $rows = $this->joinListRecords($result);
+        $this->assertNotEmpty($rows);
+        $pairs = \array_map(function (array $row): array {
+            $decoded = $this->decodeJoinData($row);
+
+            return [$decoded['payload'] ?? null, $decoded['peer.payload'] ?? null];
+        }, $rows);
+
         if ($this->getSide() === 'client') {
-            $rows = $this->joinListRecords($result);
-            $this->assertNotEmpty($rows);
-            $this->assertStringNotContainsString('classified-join-data', $encoded);
-            foreach ($rows as $row) {
-                $decoded = $this->decodeJoinData($row);
-                $payload = $decoded['peer.payload'] ?? $decoded['payload'] ?? null;
-                $code = $decoded['peer.code'] ?? $decoded['code'] ?? null;
-                $this->assertNotSame('classified-join-data', $payload);
-                $this->assertNotSame('classified-join-data', $code);
-            }
+            $this->assertSame([['open-payload', 'open-payload']], $pairs, 'the only pair the caller can read is the open row with itself');
+            $this->assertStringNotContainsString('classified-join-data', $this->joinEncodedBody($result));
+        } else {
+            $this->assertContains(['open-payload', 'classified-join-data'], $pairs, 'the self join pairs different rows');
+            $this->assertContains(['classified-join-data', 'open-payload'], $pairs);
+            $this->assertCount(4, $pairs, 'two rows sharing a tag pair with each other and with themselves');
         }
     }
 
@@ -880,7 +1021,7 @@ trait QueryJoinPermissions
         $data = $this->setupJoinPermissionsFixture();
 
         $result = $this->graphqlJoin($this->joinGetQuery(), $this->joinGetVariables($data['databaseId'], $data['customersId'], $data['aliceId'], [
-            Query::fullOuterJoin($data['ordersId'], '$id', 'customerId', '=', 'rev')->toString(),
+            Query::fullOuterJoin($data['userOrdersId'], '$id', 'customerId', '=', 'rev')->toString(),
             Query::select(['name', 'rev.amount'])->toString(),
         ]));
 
@@ -906,7 +1047,7 @@ trait QueryJoinPermissions
         }
     }
 
-    public function testListInnerJoinDoesNotIncludeSecretOrder(): void
+    public function testListInnerJoinShowsEveryOrderListingOrdersShows(): void
     {
         if (!$this->getSupportForJoins()) {
             $this->markTestSkipped('Adapter does not support join queries');
@@ -914,53 +1055,52 @@ trait QueryJoinPermissions
 
         $data = $this->setupJoinPermissionsFixture();
 
-        $result = $this->graphqlJoin($this->joinListQuery(), $this->joinListVariables($data['databaseId'], $data['customersId'], [
+        $joined = $this->graphqlJoin($this->joinListQuery(), $this->joinListVariables($data['databaseId'], $data['customersId'], [
             Query::join($data['ordersId'], '$id', 'customerId', '=', 'rev')->toString(),
             Query::select(['name', 'rev.amount'])->toString(),
         ]));
+        $direct = $this->graphqlJoin($this->joinListQuery(), $this->joinListVariables($data['databaseId'], $data['ordersId'], [
+            Query::equal('customerId', [$data['aliceId']])->toString(),
+        ]));
 
-        $this->assertArrayNotHasKey('errors', $result['body']);
-        $rows = $this->joinListRecords($result);
-        $amounts = [];
-        foreach ($rows as $row) {
-            $decoded = $this->decodeJoinData($row);
-            $amount = $decoded['rev.amount'] ?? $decoded['amount'] ?? null;
-            if ($amount !== null && $amount !== '') {
-                $amounts[] = (int) $amount;
-            }
-        }
+        $this->assertArrayNotHasKey('errors', $joined['body']);
+        $this->assertArrayNotHasKey('errors', $direct['body']);
+        $rows = $this->joinListRecords($joined);
+        $amounts = \array_map('intval', $this->joinPermissionValues($rows, 'rev', 'amount'));
+        $directAmounts = \array_map('intval', \array_column(\array_map($this->decodeJoinData(...), $this->joinListRecords($direct)), 'amount'));
 
-        $encoded = $this->joinEncodedBody($result);
-        if ($this->getSide() === 'client') {
-            $this->assertSame([100], \array_values(\array_unique($amounts)));
-            $this->assertNotContains(9999, $amounts);
-            $this->assertSame(false, $this->encodedJsonContainsScalar($encoded, 9999));
-            $this->assertSame(false, $this->encodedJsonContainsScalar($encoded, 8888));
-            $this->assertStringNotContainsString('classified-join-data', $encoded);
-        } else {
-            $this->assertContains(100, $amounts);
-            $this->assertContains(9999, $amounts);
-        }
+        $this->assertSame([100, 9999], $this->joinPermissionSorted($directAmounts), 'the collection grants read, so listing it shows every order whatever its document permissions');
+        $this->assertSame($this->joinPermissionSorted($directAmounts), $this->joinPermissionSorted($amounts), 'the join shows exactly the orders listing the collection shows');
+        $this->assertSame(\count($rows), $this->joinPermissionTotal($joined));
     }
 
-    public function testLimitedApiKeyCannotJoinOutOfScopeTable(): void
+    public function testApiKeyWithDocumentScopesJoinsAnyTableOfTheProject(): void
     {
         if (!$this->getSupportForJoins()) {
             $this->markTestSkipped('Adapter does not support join queries');
         }
 
         $data = $this->setupJoinPermissionsFixture();
-        $secret = $this->getNewKey([
-            'databases.read',
-            'tables.read',
-            'collections.read',
-        ]);
-
-        $result = $this->graphqlJoinWithKey($this->joinListQuery(), $this->joinListVariables($data['databaseId'], $data['customersId'], [
+        $variables = $this->joinListVariables($data['databaseId'], $data['customersId'], [
             Query::join($data['privateId'], '$id', 'customerId', '=', 'rev')->toString(),
             Query::select(['name', 'rev.secret'])->toString(),
-        ]), $secret);
+        ]);
 
-        $this->assertStringNotContainsString('classified-join-data', $this->joinEncodedBody($result));
+        $reader = $this->getNewKey(['databases.read', 'tables.read', 'collections.read', 'documents.read', 'rows.read']);
+        $joined = $this->graphqlJoinWithKey($this->joinListQuery(), $variables, $reader);
+
+        $this->assertArrayNotHasKey('errors', $joined['body'], 'an API key is privileged across its project, so it joins a table no user may read');
+        $this->assertSame(
+            ['classified-join-data', 'owned-join-data'],
+            $this->joinPermissionSorted($this->joinPermissionValues($this->joinListRecords($joined), 'rev', 'secret')),
+        );
+
+        $unscoped = $this->getNewKey(['databases.read', 'tables.read', 'collections.read']);
+        $refused = $this->graphqlJoinWithKey($this->joinListQuery(), $variables, $unscoped);
+
+        $this->assertArrayHasKey('errors', $refused['body']);
+        $this->assertStringContainsString('missing scopes', (string) ($refused['body']['errors'][0]['message'] ?? ''), 'without the read scope the endpoint refuses the key before it reads the query');
+        $this->assertStringNotContainsString('classified-join-data', $this->joinEncodedBody($refused));
     }
+
 }
