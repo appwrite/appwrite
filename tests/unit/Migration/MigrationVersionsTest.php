@@ -8,8 +8,11 @@ use Appwrite\Migration\Migration;
 use Appwrite\Migration\Version\V24;
 use Appwrite\Migration\Version\V25;
 use PHPUnit\Framework\TestCase;
+use Utopia\Audit\Adapter\Database as AdapterDatabase;
+use Utopia\Audit\Audit;
 use Utopia\Cache\Adapter\None as NoCache;
 use Utopia\Cache\Cache;
+use Utopia\Config\Config;
 use Utopia\Database\Adapter\Memory;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -337,5 +340,109 @@ final class MigrationVersionsTest extends TestCase
             $this->assertContains('providerBranches', $attributes);
             $this->assertContains('providerPaths', $attributes);
         }
+    }
+
+    /**
+     * A legacy install has users without the email metadata columns. That one
+     * collection is a frozen snapshot of the old shape, written out rather than
+     * derived from the current config, so it keeps describing the old install
+     * even as the config moves on. Everything around it is built the way project
+     * provisioning builds it, because execute() walks the whole project.
+     *
+     * Then does the thing the columns exist for: write a user carrying them.
+     * Before the repair this fails with Unknown attribute: "emailCanonical".
+     */
+    public function testV25LetsALegacyInstallWriteAUserCarryingEmailMetadata(): void
+    {
+        require_once __DIR__ . '/../../../app/init.php';
+
+        $authorization = new Authorization();
+        $database = new Database(new Memory(), new Cache(new NoCache()));
+        $database
+            ->setAuthorization($authorization)
+            ->setDatabase('migrationV25EmailMetadata')
+            ->setNamespace('migration_email_metadata_' . \uniqid());
+        $database->create();
+
+        (new Audit(new AdapterDatabase($database)))->setup();
+
+        foreach (Config::getParam('collections', [])['projects'] as $key => $collection) {
+            if ($key === 'users' || ($collection['$collection'] ?? '') !== Database::METADATA) {
+                continue;
+            }
+
+            $database->createCollection(
+                $key,
+                \array_map(fn (array $attribute) => new Document($attribute), $collection['attributes']),
+                \array_map(fn (array $index) => new Document($index), $collection['indexes']),
+            );
+        }
+
+        $string = fn (string $id, int $size): Document => new Document([
+            '$id' => $id,
+            'type' => Database::VAR_STRING,
+            'format' => '',
+            'size' => $size,
+            'signed' => true,
+            'required' => false,
+            'default' => null,
+            'array' => false,
+            'filters' => [],
+        ]);
+
+        $boolean = fn (string $id): Document => new Document([
+            '$id' => $id,
+            'type' => Database::VAR_BOOLEAN,
+            'format' => '',
+            'size' => 0,
+            'signed' => true,
+            'required' => false,
+            'default' => null,
+            'array' => false,
+            'filters' => [],
+        ]);
+
+        $database->createCollection('users', [
+            $string('name', 256),
+            $string('email', 320),
+            $string('phone', 16),
+            $boolean('status'),
+            $boolean('emailVerification'),
+            $boolean('phoneVerification'),
+            $boolean('reset'),
+            $boolean('mfa'),
+        ]);
+
+        $migration = new V25();
+        $migration->setProject(
+            new Document(['$id' => 'project', '$sequence' => '1']),
+            $database,
+            $database,
+            $authorization,
+        );
+
+        \ob_start();
+        try {
+            $migration->execute();
+        } finally {
+            \ob_end_clean();
+        }
+
+        $authorization->skip(fn () => $database->createDocument('users', new Document([
+            '$id' => 'legacy-user',
+            'name' => 'Legacy User',
+            'email' => 'legacy.user@example.com',
+            'status' => true,
+            'emailVerification' => false,
+            'emailCanonical' => 'legacyuser@example.com',
+            'emailIsFree' => true,
+            'emailIsDisposable' => false,
+            'emailIsCorporate' => false,
+            'emailIsCanonical' => false,
+        ])));
+
+        $user = $authorization->skip(fn () => $database->getDocument('users', 'legacy-user'));
+
+        $this->assertSame('legacyuser@example.com', $user->getAttribute('emailCanonical'));
     }
 }
