@@ -100,6 +100,7 @@ class Create extends Action
             'canonicalEmails' => false,
             'freeEmails' => false,
             'corporateEmails' => false,
+            'oauthTrustProviderEmailProviders' => [],
             'mockNumbers' => [],
             'sessionAlerts' => false,
             'membershipsUserName' => false,

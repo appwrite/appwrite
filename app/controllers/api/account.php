@@ -1775,6 +1775,13 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
 
         if ($user->isEmpty()) { // No user logged in or with OAuth2 provider ID, create new one or connect with account with same email
             $isVerified = $oauth2->isEmailVerified($accessToken);
+            // Normalize the stored value to an array so an older boolean on the project
+            // cannot silently trust every provider.
+            $trustedProviders = $project->getAttribute('auths', [])['oauthTrustProviderEmailProviders'] ?? [];
+            if (!is_array($trustedProviders)) {
+                $trustedProviders = [];
+            }
+            $trustProviderEmail = in_array($provider, $trustedProviders, true);
 
             $identity = $dbForProject->findOne('identities', [
                 Query::equal('provider', [$provider]),
@@ -1834,7 +1841,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                     Query::equal('email', $emails),
                 ]);
                 if (!$userWithEmail->isEmpty()) {
-                    if (!$isVerified) {
+                    if (!$isVerified && !$trustProviderEmail) {
                         $failureRedirect(Exception::GENERAL_BAD_REQUEST);
                     }
                     $user->setAttributes($userWithEmail->getArrayCopy());
@@ -1847,7 +1854,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                     Query::equal('providerEmail', [$providerEmail]),
                 ]);
                 if (!$identityWithMatchingEmail->isEmpty()) {
-                    if (!$isVerified) {
+                    if (!$isVerified && !$trustProviderEmail) {
                         $failureRedirect(Exception::GENERAL_BAD_REQUEST);
                     }
                     $user->setAttributes($dbForProject->getDocument('users', $identityWithMatchingEmail->getAttribute('userId'))->getArrayCopy());
