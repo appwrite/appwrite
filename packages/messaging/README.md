@@ -1,7 +1,7 @@
 # Utopia Messaging
 
 > [!IMPORTANT]
-> This repository is a read-only mirror of the [utopia-php monorepo](https://github.com/utopia-php/monorepo). Development happens in [`packages/messaging`](https://github.com/utopia-php/monorepo/tree/main/packages/messaging) — please open issues and pull requests there.
+> This repository is a read-only mirror of [`packages/messaging`](https://github.com/appwrite/appwrite/tree/main/packages/messaging) in [appwrite/appwrite](https://github.com/appwrite/appwrite). Development happens there — please open issues and pull requests against appwrite/appwrite.
 
 [![Build Status](https://travis-ci.org/utopia-php/abuse.svg?branch=master)](https://travis-ci.com/utopia-php/database)
 ![Total Downloads](https://img.shields.io/packagist/dt/utopia-php/messaging.svg)
