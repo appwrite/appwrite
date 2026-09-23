@@ -6,7 +6,7 @@ description: Sign users in with Sign in with Apple or Google on device, then exc
 
 Native sign-in creates an Appwrite session from an OpenID Connect ID token that your app obtained on the device. The app calls the platform's own sign-in API, such as Sign in with Apple on iOS or Credential Manager on Android, and sends the returned ID token to Appwrite. Appwrite verifies the token against the provider's published signing keys and returns a session in the same request.
 
-Compared with [OAuth2 login](/docs/products/auth/oauth2), no redirect passes through Appwrite, and the provider configuration holds no client secret. With Sign in with Apple and with Google on Android, the user picks an account in a system dialog without leaving your app. On iOS, Google's SDK opens its own sign-in sheet and returns to your app through a URL scheme.
+Compared with [OAuth2 login](/docs/products/auth/oauth2), no redirect passes through Appwrite, and the provider configuration holds no client secret. With Sign in with Apple on iOS and Google on Android, the user picks an account in a system dialog without leaving your app.
 
 Native sign-in is available for Apple and Google.
 
@@ -34,11 +34,9 @@ Native sign-in has its own switch on each provider, separate from browser sign-i
 Every ID token names the app it was issued for. Appwrite only accepts tokens issued for a client ID in this list. Each provider needs a different value.
 
 - **Apple.** Enter your app's bundle ID, such as `com.example.fieldnotes`. If you ship more than one app with its own bundle ID, such as an iOS app and a macOS app, add each one.
-- **Google.** Enter the client ID of the **Web application** client from Google Cloud. Do not enter the Android or iOS client ID. [Create the Google Cloud clients](#google-cloud-clients) explains the difference.
+- **Google.** Enter the client ID of the **Web application** client from Google Cloud. Do not enter the Android client ID. [Create the Google Cloud clients](#google-cloud-clients) explains the difference.
 
-Native sign-in needs no client secret, key ID, team ID, or private key. Those fields belong to browser sign-in, and the dialog shows them only after you turn on **Browser sign-in**. If a browser sign-in client ID is saved on the provider, Appwrite also accepts tokens issued for it, even while browser sign-in is off. You do not need to add that ID to the list again.
-
-Appwrite does not let you turn on native sign-in until the provider has at least one client ID. While native sign-in is off, sign-in requests fail with a `project_provider_disabled` error.
+Native sign-in needs no client secret, key ID, team ID, or private key. Those fields belong to browser sign-in, and the dialog shows them only after you turn on **Browser sign-in**.
 
 # Sign in with Apple {% #apple %}
 
@@ -180,24 +178,23 @@ const session = await account.createIdTokenSession({
 
 ![The Google account picker on Android](/images/docs/auth/native-sign-in/android-google-account-picker.avif)
 
-Google's SDKs on Android and iOS return an ID token after the user picks an account. Google issues that token for your web client, not for your Android or iOS client. Appwrite accepts it only if the web client ID is on the Google provider. Create the Google Cloud clients before you write any code.
+On Android, Google returns an ID token after the user picks an account. Google issues that token for your web client, not for your Android client. Appwrite accepts it only if the web client ID is on the Google provider. Create the Google Cloud clients before you write any code.
 
 ## Create the Google Cloud clients {% #google-cloud-clients %}
 
-Google identifies every app that asks for a token by an OAuth client in Google Cloud. Native sign-in needs one web client, plus one client for each platform your app runs on. All of them must be in the same Google Cloud project.
+Google identifies every app that asks for a token by an OAuth client in Google Cloud. Native sign-in needs one web client and one Android client. All of them must be in the same Google Cloud project.
 
 **The web client represents Appwrite.** Your app passes the web client ID to Google's SDK as the server client ID. Google then issues the ID token for that client. It is the only Google client ID you enter in Appwrite. The type is named **Web application**, but it covers any server that receives tokens, not only websites. For native sign-in, it needs no JavaScript origins or redirect URIs, and Appwrite does not use its client secret.
 
-**The Android and iOS clients represent your app.** An Android client ties your package name to the SHA-1 fingerprint of the certificate that signs the app. An iOS client ties your bundle ID to the app. Google checks for a matching client before it shows the account picker. If the installed app has no matching Android client, Credential Manager fails with a developer error and Google issues no token. The Android client's ID never appears in your code or in Appwrite. The iOS client's ID goes in your app's `Info.plist`, never in Appwrite.
+**The Android client represents your app.** It ties your package name to the SHA-1 fingerprint of the certificate that signs the app. Google checks for a matching client before it shows the account picker. If the installed app has no matching Android client, Credential Manager fails with a developer error and Google issues no token. The Android client's ID never appears in your code or in Appwrite.
 
 | Client type | Create one per | Where its ID goes |
 | --- | --- | --- |
 | Web application | Google Cloud project | The server client ID in your app, and **Web client IDs** in Appwrite |
 | Android | Package name and signing certificate | Not used in your code or in Appwrite |
-| iOS | Bundle ID | Your app's iOS configuration, such as `GIDClientID` in `Info.plist` or `iosClientId` in React Native |
 
 {% info title="Passing the Android client ID fails" %}
-If your app passes the Android client ID as the server client ID, Google rejects the request with a developer error before Appwrite receives anything. Pass the web client ID, even in an Android-only app.
+If your app passes the Android client ID as the server client ID, Google rejects the request with a developer error before Appwrite receives anything.
 {% /info %}
 
 ### Create the web client {% #google-web-client %}
@@ -206,8 +203,7 @@ If your app passes the Android client ID as the server client ID, Google rejects
 2. Go to **Clients** and select **Create client**.
 3. Set **Application type** to **Web application** and enter a name, such as `Appwrite`.
 4. Leave **Authorized JavaScript origins** and **Authorized redirect URIs** empty, then select **Create**.
-5. Copy the client ID. It ends in `.apps.googleusercontent.com`.
-6. Add the client ID under **Web client IDs** on the Google provider in Appwrite, as described in [Enable native sign-in](#enable).
+5. Copy the client ID and add it under **Web client IDs** on the Google provider in Appwrite, as described in [Enable native sign-in](#enable).
 
 If you also turn on browser sign-in for Google, you can use the same web client. In that case, add the redirect URI that the Appwrite Console shows under **Browser sign-in** to **Authorized redirect URIs**.
 
@@ -230,14 +226,6 @@ You can also run `./gradlew signingReport` in your Android project, which prints
 5. Select **Create**. You do not need to copy this client ID.
 
 Each signing certificate needs its own Android client with the same package name. That usually means one client for the debug keystore and one for your release key. If you distribute through Google Play with Play App Signing, Google Play re-signs your app, so also create a client for the app signing key. In Play Console, go to **Protected with Play** > **Play Store distribution** > **Go to Play app signing**, and copy the SHA-1 from the **App signing key** section.
-
-### Create the iOS client {% #google-ios-client %}
-
-1. In Google Auth Platform, go to **Clients** and select **Create client**.
-2. Set **Application type** to **iOS**.
-3. Under **Bundle ID**, enter your app's bundle ID. The App Store ID and team ID are optional.
-4. Select **Create**.
-5. Open the new client and copy its client ID and **iOS URL scheme**. Your app needs both, as shown in the Google examples below.
 
 ## Request an ID token {% #google-token %}
 
@@ -291,49 +279,8 @@ val session = account.createIdTokenSession(
 ```
 {% /tabsitem %}
 
-{% tabsitem #google-apple title="Apple" %}
-Add the [Google Sign-In for iOS](https://developers.google.com/identity/sign-in/ios/start-integrating) package. In your app's `Info.plist`, set `GIDClientID` to the iOS client ID, set `GIDServerClientID` to the web client ID, and register the iOS URL scheme. Without `GIDServerClientID`, Google does not issue the ID token to the web client.
-
-```xml
-<key>GIDClientID</key>
-<string><GOOGLE_IOS_CLIENT_ID></string>
-<key>GIDServerClientID</key>
-<string><GOOGLE_WEB_CLIENT_ID></string>
-<key>CFBundleURLTypes</key>
-<array>
-    <dict>
-        <key>CFBundleURLSchemes</key>
-        <array>
-            <string><GOOGLE_IOS_URL_SCHEME></string>
-        </array>
-    </dict>
-</array>
-```
-
-```client-apple
-import GoogleSignIn
-import Appwrite
-import AppwriteEnums
-
-let client = Client()
-    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
-    .setProject("<PROJECT_ID>")                            // Your project ID
-
-let account = Account(client)
-
-// Present the Google account picker
-let result = try await GIDSignIn.sharedInstance.signIn(withPresenting: viewController)
-guard let idToken = result.user.idToken?.tokenString else { return }
-
-let session = try await account.createIdTokenSession(
-    provider: .google,
-    idToken: idToken
-)
-```
-{% /tabsitem %}
-
 {% tabsitem #google-flutter title="Flutter" %}
-Add the [`google_sign_in`](https://pub.dev/packages/google_sign_in) package to your project. On iOS, add `GIDClientID` and the iOS URL scheme to `Info.plist`, as shown in the Apple example. Pass the web client ID as `serverClientId` on both platforms.
+Add the [`google_sign_in`](https://pub.dev/packages/google_sign_in) package to your project. Pass the web client ID as `serverClientId`.
 
 ```client-flutter
 import 'package:appwrite/appwrite.dart';
@@ -359,20 +306,7 @@ final session = await account.createIdTokenSession(
 {% /tabsitem %}
 
 {% tabsitem #google-react-native title="React Native" %}
-Add the [`@react-native-google-signin/google-signin`](https://react-native-google-signin.github.io/docs/install) package to your project. It includes native code, so it needs a development build instead of Expo Go. Pass the web client ID as `webClientId` and the iOS client ID as `iosClientId`. In an Expo project, also add the package's config plugin with the iOS URL scheme.
-
-```json
-{
-    "expo": {
-        "plugins": [
-            [
-                "@react-native-google-signin/google-signin",
-                { "iosUrlScheme": "<GOOGLE_IOS_URL_SCHEME>" }
-            ]
-        ]
-    }
-}
-```
+Add the [`@react-native-google-signin/google-signin`](https://react-native-google-signin.github.io/docs/install) package to your project. It includes native code, so it needs a development build instead of Expo Go. Pass the web client ID as `webClientId`.
 
 ```client-react-native
 import { GoogleSignin, isSuccessResponse } from '@react-native-google-signin/google-signin';
@@ -385,8 +319,7 @@ const client = new Client()
 const account = new Account(client);
 
 GoogleSignin.configure({
-    webClientId: '<GOOGLE_WEB_CLIENT_ID>', // Web application client
-    iosClientId: '<GOOGLE_IOS_CLIENT_ID>', // iOS client, used on iOS only
+    webClientId: '<GOOGLE_WEB_CLIENT_ID>',
 });
 
 // Present the Google account picker
