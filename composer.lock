@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "92cd13382c11d89ba67c9213e8703ddf",
+    "content-hash": "80838a43c16d7b525f5540691bf14c46",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4526,56 +4526,6 @@
                 "issues": "https://github.com/utopia-php/vcs/issues"
             },
             "time": "2026-09-17T08:01:03+00:00"
-        },
-        {
-            "name": "utopia-php/websocket",
-            "version": "2.0.2",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/utopia-php/websocket.git",
-                "reference": "d57635275e6db507adefa32f930f13eeebff5dfd"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/websocket/zipball/d57635275e6db507adefa32f930f13eeebff5dfd",
-                "reference": "d57635275e6db507adefa32f930f13eeebff5dfd",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=8.0"
-            },
-            "require-dev": {
-                "swoole/ide-helper": "5.1.2",
-                "workerman/workerman": "^4.1 || ^5.0"
-            },
-            "suggest": {
-                "ext-pcntl": "Required to run the Workerman server adapter.",
-                "ext-swoole": "Required to use the Swoole client and server adapter.",
-                "workerman/workerman": "Required to use the Workerman server adapter."
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Utopia\\WebSocket\\": "src/WebSocket"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "description": "A simple abstraction for WebSocket servers.",
-            "keywords": [
-                "framework",
-                "php",
-                "upf",
-                "utopia",
-                "websocket"
-            ],
-            "support": {
-                "issues": "https://github.com/utopia-php/websocket/issues",
-                "source": "https://github.com/utopia-php/websocket/tree/2.0.2"
-            },
-            "time": "2026-09-09T12:33:02+00:00"
         },
         {
             "name": "webmozart/assert",
