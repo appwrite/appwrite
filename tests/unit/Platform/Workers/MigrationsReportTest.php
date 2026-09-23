@@ -232,6 +232,10 @@ final class MigrationsReportTest extends TestCase
             ->setNamespace('migration_reports_' . \uniqid());
         $database->create();
         $database->createCollection(new Collection(
+            id: 'databases',
+            attributes: Config::getParam('collections', [])['projects']['databases']['attributes'],
+        ));
+        $database->createCollection(new Collection(
             id: 'migrations',
             attributes: Config::getParam('collections', [])['projects']['migrations']['attributes'],
             permissions: [
