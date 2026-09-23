@@ -295,6 +295,12 @@ class V25 extends Migration
 
                     $this->dbForProject->purgeCachedCollection($id);
                     break;
+
+                case 'pushLedger':
+                    // Added in 2.3.0 for every project; an install upgraded from 2.2.0
+                    // has no table yet, and migrating its documents fails without one.
+                    $this->createCollection($id);
+                    break;
             }
         }
     }
@@ -417,8 +423,8 @@ class V25 extends Migration
      */
     protected function predatesMigration(Document $resource, Document $migration): bool
     {
-        $resourceCreatedAt = \strtotime($resource->getCreatedAt());
-        $migrationCreatedAt = \strtotime($migration->getCreatedAt());
+        $resourceCreatedAt = \strtotime($resource->getCreatedAt() ?? '');
+        $migrationCreatedAt = \strtotime($migration->getCreatedAt() ?? '');
 
         if ($resourceCreatedAt === false || $migrationCreatedAt === false) {
             return false;

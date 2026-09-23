@@ -6,7 +6,13 @@ namespace Tests\Unit\Migration\Version;
 
 use Appwrite\Migration\Version\V25;
 use PHPUnit\Framework\TestCase;
+use Utopia\Cache\Adapter\None as NoCache;
+use Utopia\Cache\Cache;
+use Utopia\Config\Config;
+use Utopia\Database\Adapter\Memory;
+use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Migration\Resource;
 
 final class V25Test extends TestCase
@@ -119,6 +125,41 @@ final class V25Test extends TestCase
         $this->assertSame('database', $document->getAttribute('parentResourceId'));
         $this->assertSame(Resource::TYPE_DATABASE, $document->getAttribute('parentResourceType'));
         $this->assertSame($afterResolution, $document->getArrayCopy());
+    }
+
+    public function testCreatesPushLedgerForProjectFromPreviousRelease(): void
+    {
+        $authorization = new Authorization();
+        $database = new Database(new Memory(), new Cache(new NoCache()));
+        $database
+            ->setAuthorization($authorization)
+            ->setDatabase('migrationTests')
+            ->setNamespace('v25_' . \uniqid());
+        $database->create();
+
+        // A project created on 2.2.0 has every collection except pushLedger.
+        $collections = Config::getParam('collections', [])['projects'];
+        foreach ($collections as $id => $collection) {
+            if ($id === 'pushLedger' || ($collection['$collection'] ?? null) !== Database::METADATA) {
+                continue;
+            }
+            $database->createCollection(
+                $id,
+                \array_map(fn (array $attribute) => new Document($attribute), $collection['attributes']),
+                \array_map(fn (array $index) => new Document($index), $collection['indexes']),
+            );
+        }
+        $database->createCollection('audit');
+
+        $migration = new V25();
+        $migration->setProject(new Document(['$id' => 'project', '$sequence' => '1']), $database, $database, $authorization);
+        $migration->execute();
+
+        $this->assertFalse($database->getCollection('pushLedger')->isEmpty());
+
+        $migration->execute();
+
+        $this->assertFalse($database->getCollection('pushLedger')->isEmpty());
     }
 
     public function testRejectsResourcesCreatedAfterMigration(): void
