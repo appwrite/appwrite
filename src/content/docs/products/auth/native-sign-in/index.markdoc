@@ -229,7 +229,7 @@ Each signing certificate needs its own Android client with the same package name
 
 ## Request an ID token {% #google-token %}
 
-Every Google SDK takes the web client ID as the server client ID. A nonce is optional for Google. If your app sets one, such as with `setNonce` on Credential Manager's `GetGoogleIdOption`, pass the same value to Appwrite as `nonce`. Appwrite rejects a token that carries a nonce if the request does not include one.
+Your app shows Google's account picker, takes the ID token from the account the user picks, and passes it to `createIdTokenSession`. Appwrite returns the session in the same request.
 
 {% tabs %}
 {% tabsitem #google-android title="Android" %}
@@ -240,6 +240,8 @@ implementation("androidx.credentials:credentials:1.5.0")
 implementation("androidx.credentials:credentials-play-services-auth:1.5.0")
 implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
 ```
+
+Then build a Google ID option with your web client ID, ask Credential Manager for a credential, and send the ID token from it to Appwrite.
 
 ```client-android-kotlin
 import androidx.credentials.CredentialManager
@@ -344,11 +346,11 @@ Appwrite resolves the ID token to a user in the same order as OAuth2 login.
 2. Otherwise, if the token carries a verified email that matches an existing user or identity, Appwrite attaches the new identity to that user. If the matching email is unverified, Appwrite rejects the request with a `general_bad_request` error.
 3. Otherwise, Appwrite creates a new user. Appwrite marks the email as verified only when the provider attests it.
 
-When the request already carries a session, Appwrite links the identity to the signed-in user instead, which also converts an [anonymous session](/docs/products/auth/anonymous). The new session replaces the previous one. If the Apple or Google account, or its email, already belongs to a different user, Appwrite returns a `user_already_exists` error and the current session stays valid.
+When the request already carries a session, Appwrite links the identity to the signed-in user instead, which also converts an [anonymous session](/docs/products/auth/anonymous).
 
 # Provider tokens {% #provider-tokens %}
 
-Native sign-in never returns a refresh token, because the platform SDKs hand your app an ID token and, at most, a short-lived access token. You can store that access token on the session by passing `accessToken` and `accessTokenExpiry`, then read it back from the session or the identity to call provider APIs. Appwrite cannot renew it once it expires. If your app needs long-lived access to provider APIs, use [OAuth2 login](/docs/products/auth/oauth2) instead.
+Native sign-in never returns a refresh token, because the platform SDKs hand your app an ID token and, at most, a short-lived access token. You can store that access token on the session by passing `accessToken` and `accessTokenExpiry`, then read it back from the session or the identity to call provider APIs. Appwrite cannot renew it once it expires. If your app needs long-lived access to provider APIs, use [OAuth2 login](/docs/products/auth/oauth2) instead. OAuth2 login opens the provider's sign-in page in a web sheet and redirects back to your app, and it can return a refresh token.
 
 # Errors {% #errors %}
 
