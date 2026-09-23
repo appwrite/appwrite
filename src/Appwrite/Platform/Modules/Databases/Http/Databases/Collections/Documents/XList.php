@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents;
 
+use Appwrite\Databases\CursorLookup;
 use Appwrite\Databases\TransactionState;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
@@ -134,10 +135,9 @@ class XList extends Action
             }
 
             $documentId = $cursor->getValue();
-            $joins = Query::groupByType($queries)->joins;
 
             try {
-                $cursorDocument = $authorization->skip(fn () => $dbForDatabases->getDocument($collectionTableId, $documentId, $joins));
+                $cursorDocument = (new CursorLookup($dbForDatabases, $authorization))->resolve($collectionTableId, $cursor, $queries);
             } catch (NotFoundException) {
                 // The collection metadata document exists but the backing store (e.g. a
                 // dedicated DocumentsDB shard) has no table for it. Treat this as a
