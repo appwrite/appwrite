@@ -5,7 +5,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
   {
     "slug": "appwrite-firewall-use-cases",
     "href": "/blog/post/appwrite-firewall-use-cases",
-    "title": "Appwrite Firewall use cases: rules for common traffic problems",
+    "title": "Twelve Appwrite Firewall rules that stop real attacks",
     "description": "Practical Appwrite Firewall rules for OTP abuse, database scraping, per-user quotas, regional access, trusted networks, webhook Functions, and Sites under attack.",
     "date": "2026-09-23",
     "lastUpdated": "2026-09-23",
