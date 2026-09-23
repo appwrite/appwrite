@@ -1,0 +1,525 @@
+#!/usr/bin/env php
+<?php
+
+/**
+ * Self-hosted release tooling. Runs on the host, not in the container.
+ *
+ * Automates the mechanical steps of docs/releases.md: the version bump, the
+ * console pin, the migration mapping, the release notes draft, the metadata
+ * check, and publishing the GitHub Release on the tested commit. Writing the
+ * notes and deciding whether a release is ready stay with a person.
+ */
+
+chdir(dirname(__DIR__));
+
+const REPOSITORY = 'appwrite/appwrite';
+const CONSOLE_REPOSITORY = 'appwrite/vibes';
+const CONSOLE_IMAGE = 'appwrite/new';
+const CONSOLE_SUFFIX = '-self-hosted';
+const IMAGE = 'appwrite/appwrite';
+const CONSTANTS = 'app/init/constants.php';
+const COMPOSE = 'docker-compose.yml';
+const MIGRATION = 'src/Appwrite/Migration/Migration.php';
+const READMES = ['README.md', 'README-CN.md'];
+
+function out(string $message): void
+{
+    fwrite(STDOUT, $message . PHP_EOL);
+}
+
+function warn(string $message): void
+{
+    fwrite(STDERR, 'warning: ' . $message . PHP_EOL);
+}
+
+function fail(string $message): never
+{
+    fwrite(STDERR, 'error: ' . $message . PHP_EOL);
+    exit(1);
+}
+
+/**
+ * Run a command, return its stdout. Stderr streams through to the terminal.
+ */
+function sh(string $command): string
+{
+    exec($command, $output, $code);
+    if ($code !== 0) {
+        fail("command failed ({$code}): {$command}");
+    }
+
+    return trim(implode(PHP_EOL, $output));
+}
+
+function succeeds(string $command): bool
+{
+    exec($command . ' > /dev/null 2>&1', $_, $code);
+
+    return $code === 0;
+}
+
+/**
+ * @return int[] major, minor, patch
+ */
+function parse(string $version): array
+{
+    $parts = explode('.', $version);
+    if (count($parts) !== 3) {
+        fail("version must be X.Y.Z, got \"{$version}\"");
+    }
+    foreach ($parts as $part) {
+        if (!ctype_digit($part)) {
+            fail("version must be X.Y.Z, got \"{$version}\"");
+        }
+    }
+
+    return array_map(intval(...), $parts);
+}
+
+function line(string $version): string
+{
+    [$major, $minor] = parse($version);
+
+    return "{$major}.{$minor}";
+}
+
+function branch(string $version): string
+{
+    return line($version) . '.x';
+}
+
+/**
+ * Highest stable tag lower than the given version.
+ */
+function previous(string $version): string
+{
+    foreach (explode(PHP_EOL, sh('git tag --list --sort=-v:refname')) as $tag) {
+        $parts = explode('.', $tag);
+        if (count($parts) !== 3 || !ctype_digit(implode('', $parts))) {
+            continue;
+        }
+        if (version_compare($tag, $version, '<')) {
+            return $tag;
+        }
+    }
+    fail("no stable tag lower than {$version}");
+}
+
+/**
+ * Read a file from the working tree, or from a commit when one is given.
+ */
+function read(string $path, ?string $commit = null): string
+{
+    if ($commit !== null) {
+        return sh('git show ' . escapeshellarg("{$commit}:{$path}"));
+    }
+
+    return file_get_contents($path) ?: fail("cannot read {$path}");
+}
+
+/**
+ * The value between the first quote pair that follows $marker.
+ */
+function quoted(string $content, string $marker): ?string
+{
+    $start = strpos($content, $marker);
+    if ($start === false) {
+        return null;
+    }
+    $open = strpos($content, "'", $start + strlen($marker));
+    $close = $open === false ? false : strpos($content, "'", $open + 1);
+    if ($open === false || $close === false) {
+        return null;
+    }
+
+    return substr($content, $open + 1, $close - $open - 1);
+}
+
+function stable(?string $commit = null): string
+{
+    return quoted(read(CONSTANTS, $commit), 'const APP_VERSION_STABLE') ?? fail('APP_VERSION_STABLE not found in ' . CONSTANTS);
+}
+
+/**
+ * The console tag pinned in docker-compose.yml, without the self-hosted suffix.
+ */
+function pinned(?string $commit = null): string
+{
+    $marker = 'image: ' . CONSOLE_IMAGE . ':';
+    foreach (explode("\n", read(COMPOSE, $commit)) as $row) {
+        $row = trim($row);
+        if (str_starts_with($row, $marker) && str_ends_with($row, CONSOLE_SUFFIX)) {
+            return substr($row, strlen($marker), -strlen(CONSOLE_SUFFIX));
+        }
+    }
+    fail('console image ' . CONSOLE_IMAGE . ' not found in ' . COMPOSE);
+}
+
+function latestConsole(): string
+{
+    return sh('gh release list -R ' . CONSOLE_REPOSITORY . " --exclude-drafts --exclude-pre-releases --limit 1 --json tagName --jq '.[0].tagName'");
+}
+
+function published(string $image, string $tag): bool
+{
+    $url = "https://hub.docker.com/v2/repositories/{$image}/tags/{$tag}";
+    $status = sh('curl --silent --output /dev/null --write-out "%{http_code}" --retry 3 --max-time 30 ' . escapeshellarg($url));
+
+    return match ($status) {
+        '200' => true,
+        '404' => false,
+        default => fail("unexpected status {$status} from Docker Hub for {$image}:{$tag}"),
+    };
+}
+
+/**
+ * The migration class a version maps to in Migration::$versions, or null.
+ */
+function migration(string $version, ?string $commit = null): ?string
+{
+    return quoted(read(MIGRATION, $commit), "'{$version}' =>");
+}
+
+/**
+ * Add $version to Migration::$versions, mapped to the same class as $previous.
+ */
+function map(string $version, string $previous): string
+{
+    $class = migration($previous) ?? fail("{$previous} is not in Migration::\$versions");
+    $content = read(MIGRATION);
+    $entry = "'{$previous}' => '{$class}',";
+    $position = strpos($content, $entry) ?: fail("cannot find the {$previous} entry in " . MIGRATION);
+    $start = strrpos(substr($content, 0, $position), "\n") + 1;
+    $end = strpos($content, "\n", $position);
+    $indent = substr($content, $start, $position - $start);
+    file_put_contents(MIGRATION, substr($content, 0, $end + 1) . "{$indent}'{$version}' => '{$class}',\n" . substr($content, $end + 1));
+
+    return $class;
+}
+
+function replace(string $path, string $search, string $replacement): int
+{
+    $content = read($path);
+    $count = substr_count($content, $search);
+    if ($count > 0) {
+        file_put_contents($path, str_replace($search, $replacement, $content));
+    }
+
+    return $count;
+}
+
+/**
+ * Every problem that stops $version from being released from $commit.
+ *
+ * @return string[]
+ */
+function problems(string $version, ?string $commit = null): array
+{
+    $problems = [];
+
+    if (stable($commit) !== $version) {
+        $problems[] = 'APP_VERSION_STABLE is ' . stable($commit) . ", expected {$version}";
+    }
+
+    foreach (READMES as $readme) {
+        $content = read($readme, $commit);
+        $total = substr_count($content, IMAGE . ':');
+        $current = substr_count($content, IMAGE . ":{$version}");
+        if ($current === 0 || $current !== $total) {
+            $problems[] = "{$readme}: {$current} of {$total} install snippets use " . IMAGE . ":{$version}";
+        }
+    }
+
+    if (migration($version, $commit) === null) {
+        $problems[] = "{$version} is not in Migration::\$versions";
+    }
+
+    [, , $patch] = parse($version);
+    if ($patch > 0) {
+        $previous = previous($version);
+        $class = migration($version, $commit);
+        if ($class !== null && $class !== migration($previous, $commit)) {
+            $problems[] = "{$version} maps to {$class} but {$previous} maps to " . migration($previous, $commit) . '; a patch never adds a migration';
+        }
+    }
+
+    $console = pinned($commit);
+    if (!published(CONSOLE_IMAGE, $console . CONSOLE_SUFFIX)) {
+        $problems[] = 'console image ' . CONSOLE_IMAGE . ":{$console}" . CONSOLE_SUFFIX . ' is not on Docker Hub';
+    }
+
+    return $problems;
+}
+
+/**
+ * GitHub handles credited in the generated notes (`* title by @handle in url`).
+ *
+ * @return string[]
+ */
+function contributors(string $generated): array
+{
+    $handles = [];
+    foreach (explode("\n", $generated) as $row) {
+        $start = strpos($row, ' by @');
+        $end = $start === false ? false : strpos($row, ' in ', $start);
+        if ($start === false || $end === false) {
+            continue;
+        }
+        // Co-authored rows read `by @one with @two`; credit the author.
+        $handle = explode(' ', substr($row, $start + 4, $end - $start - 4))[0];
+        if (!str_ends_with($handle, '[bot]')) {
+            $handles[$handle] = true;
+        }
+    }
+
+    return array_keys($handles);
+}
+
+/**
+ * Release notes draft in the shape of the published 2.2.0 release, with
+ * GitHub's generated PR list underneath. A person rewrites it before publishing.
+ */
+function notes(string $version, string $previous, string $target, string $console, string $previousConsole): string
+{
+    $generated = sh('gh api repos/' . REPOSITORY . '/releases/generate-notes'
+        . ' -f tag_name=' . escapeshellarg($version)
+        . ' -f target_commitish=' . escapeshellarg($target)
+        . ' -f previous_tag_name=' . escapeshellarg($previous)
+        . " --jq '.body'");
+    $credits = implode(' ', contributors($generated));
+    $image = IMAGE;
+
+    return <<<MARKDOWN
+    <!-- Draft from bin/release. Rewrite into the sections below, then delete the Generated list. -->
+
+    Appwrite {$version} … It ships with the {$console} self-hosted Console (was {$previousConsole}). Upgrading from {$previous} …
+
+    ### Highlights
+
+    ### Fixes
+
+    ### Under the hood
+
+    ### Removed
+
+    ### Install
+
+    ```bash
+    docker run -it --rm \\
+        --volume /var/run/docker.sock:/var/run/docker.sock \\
+        --volume "$(pwd)"/appwrite:/usr/src/code/appwrite:rw \\
+        --entrypoint="install" \\
+        {$image}:{$version}
+    ```
+
+    ### Upgrade
+
+    Upgrading from {$previous} uses the same command with `--entrypoint="upgrade"`, then run the migration:
+
+    ```bash
+    cd appwrite
+    docker compose exec appwrite migrate
+    ```
+
+    **Back up your data first.**
+
+    ### Contributors
+
+    Thank you to everyone who contributed to {$version}:
+
+    {$credits}
+
+    ## Generated
+
+    {$generated}
+
+    MARKDOWN;
+}
+
+function confirm(string $question, string $expected): void
+{
+    fwrite(STDOUT, "{$question} Type \"{$expected}\" to continue: ");
+    if (trim((string) fgets(STDIN)) !== $expected) {
+        fail('aborted');
+    }
+}
+
+$arguments = array_slice($argv, 1);
+$command = array_shift($arguments) ?? 'help';
+$options = [];
+$arguments = array_values(array_filter($arguments, function (string $argument) use (&$options): bool {
+    if (!str_starts_with($argument, '--')) {
+        return true;
+    }
+    [$key, $value] = array_pad(explode('=', substr($argument, 2), 2), 2, true);
+    $options[$key] = $value;
+
+    return false;
+}));
+
+switch ($command) {
+    case 'prepare':
+        $version = $arguments[0] ?? fail('usage: release prepare <version> [--push]');
+        [, , $patch] = parse($version);
+        $branch = branch($version);
+
+        if (sh('git status --porcelain') !== '') {
+            fail('working tree is dirty; commit or stash first');
+        }
+        sh('git fetch --quiet --tags origin');
+        if (sh('git tag --list ' . escapeshellarg($version)) !== '') {
+            fail("tag {$version} already exists");
+        }
+
+        $previous = previous($version);
+        $exists = succeeds('git ls-remote --exit-code --heads origin ' . escapeshellarg($branch));
+        if (!$exists && $patch > 0) {
+            fail("{$branch} does not exist on origin; a patch is released from its minor's branch");
+        }
+        if (!$exists) {
+            sh('git fetch --quiet origin main');
+            sh('git branch --force ' . escapeshellarg($branch) . ' origin/main');
+            out("cut {$branch} from origin/main (local)");
+        } else {
+            sh('git fetch --quiet origin ' . escapeshellarg($branch));
+            sh('git branch --force ' . escapeshellarg($branch) . ' ' . escapeshellarg("origin/{$branch}"));
+        }
+
+        $work = "release/{$version}";
+        sh('git checkout --quiet -B ' . escapeshellarg($work) . ' ' . escapeshellarg($branch));
+
+        $current = stable();
+        replace(CONSTANTS, "const APP_VERSION_STABLE = '{$current}';", "const APP_VERSION_STABLE = '{$version}';");
+        out("APP_VERSION_STABLE {$current} → {$version}");
+
+        foreach (READMES as $readme) {
+            $count = replace($readme, IMAGE . ":{$current}", IMAGE . ":{$version}");
+            out("{$readme}: {$count} install snippets → {$version}");
+        }
+
+        $previousConsole = pinned();
+        $console = latestConsole();
+        if (!published(CONSOLE_IMAGE, $console . CONSOLE_SUFFIX)) {
+            fail('newest console ' . CONSOLE_IMAGE . ":{$console}" . CONSOLE_SUFFIX . ' is not on Docker Hub yet; wait for its build');
+        }
+        replace(COMPOSE, CONSOLE_IMAGE . ":{$previousConsole}" . CONSOLE_SUFFIX, CONSOLE_IMAGE . ":{$console}" . CONSOLE_SUFFIX);
+        out("console {$previousConsole} → {$console}");
+
+        $class = migration($version);
+        if ($class === null) {
+            $class = map($version, $previous);
+            out("Migration: {$version} => {$class} (same class as {$previous})");
+        } else {
+            out("Migration: {$version} => {$class} (already mapped)");
+        }
+        $changed = sh('git diff --stat ' . escapeshellarg($previous) . ' HEAD -- src/Appwrite/Migration');
+        if ($changed !== '') {
+            warn("migrations changed since {$previous}; confirm {$class} is idempotent for installs that already ran it:\n{$changed}");
+        }
+
+        $problems = problems($version);
+        if ($problems !== []) {
+            fail("prepared tree still fails the check:\n  " . implode("\n  ", $problems));
+        }
+
+        sh('git add ' . implode(' ', array_map(escapeshellarg(...), [CONSTANTS, COMPOSE, MIGRATION, ...READMES])));
+        sh('git commit --quiet -m ' . escapeshellarg("chore: prepare {$version} release"));
+
+        $draft = sys_get_temp_dir() . "/appwrite-{$version}-notes.md";
+        file_put_contents($draft, notes($version, $previous, $exists ? $branch : 'main', $console, $previousConsole));
+        out("committed on {$work}; notes draft: {$draft}");
+
+        if (!isset($options['push'])) {
+            out("next: review the commit, then rerun with --push to push {$branch}, {$work} and open both PRs");
+            break;
+        }
+
+        if (!$exists) {
+            sh('git push --quiet origin ' . escapeshellarg("{$branch}:refs/heads/{$branch}"));
+            out("pushed {$branch}");
+        }
+        sh('git push --quiet --force-with-lease -u origin ' . escapeshellarg($work));
+        out(sh('gh pr create -R ' . REPOSITORY . ' --base ' . escapeshellarg($branch) . ' --head ' . escapeshellarg($work)
+            . ' --title ' . escapeshellarg("chore: prepare {$version} release") . ' --body-file ' . escapeshellarg($draft)));
+
+        $open = sh('gh pr list -R ' . REPOSITORY . ' --base main --head ' . escapeshellarg($branch) . " --json number --jq '.[0].number // empty'");
+        if ($open === '') {
+            out(sh('gh pr create -R ' . REPOSITORY . ' --base main --head ' . escapeshellarg($branch)
+                . ' --title ' . escapeshellarg("chore: merge {$branch} into main after {$version}")
+                . ' --body ' . escapeshellarg("Release test record for {$version}. Gate results and the tested SHA go here; merge after the release is published. See docs/releases.md.")));
+        }
+        break;
+
+    case 'check':
+        $version = $arguments[0] ?? fail('usage: release check <version> [--ref=<commit>]');
+        parse($version);
+        $reference = is_string($options['ref'] ?? null) ? $options['ref'] : null;
+        $problems = problems($version, $reference);
+        if ($problems !== []) {
+            fail("{$version} is not ready:\n  " . implode("\n  ", $problems));
+        }
+        $console = pinned($reference);
+        $latest = latestConsole();
+        if ($latest !== $console) {
+            warn("console pin {$console} is behind the newest release {$latest}");
+        }
+        out("{$version} metadata is consistent");
+        break;
+
+    case 'publish':
+        $usage = 'usage: release publish <version> --sha=<tested-sha> --notes=<file>';
+        $version = $arguments[0] ?? fail($usage);
+        parse($version);
+        $sha = is_string($options['sha'] ?? null) ? $options['sha'] : fail($usage);
+        $file = is_string($options['notes'] ?? null) ? $options['notes'] : fail($usage);
+        is_file($file) || fail("notes file {$file} not found");
+        $branch = branch($version);
+
+        succeeds('git ls-remote --exit-code --heads origin ' . escapeshellarg($branch))
+            || fail("{$branch} does not exist on origin; releases are published from their X.Y.x branch");
+        sh('git fetch --quiet --tags origin ' . escapeshellarg($branch));
+        $sha = sh('git rev-parse --verify ' . escapeshellarg("{$sha}^{commit}"));
+        succeeds('git merge-base --is-ancestor ' . escapeshellarg($sha) . ' ' . escapeshellarg("origin/{$branch}"))
+            || fail("{$sha} is not on origin/{$branch}");
+        $tip = sh('git rev-parse ' . escapeshellarg("origin/{$branch}"));
+        if ($tip !== $sha) {
+            warn("origin/{$branch} has moved past the tested commit ({$tip}); those commits are not in this release");
+        }
+
+        $problems = problems($version, $sha);
+        if ($problems !== []) {
+            fail("{$version} is not ready at {$sha}:\n  " . implode("\n  ", $problems));
+        }
+
+        $tagged = sh('git ls-remote origin ' . escapeshellarg("refs/tags/{$version}"));
+        if ($tagged !== '' && !str_starts_with($tagged, $sha)) {
+            fail("tag {$version} already points at " . substr($tagged, 0, 40) . ", not {$sha}");
+        }
+        if (published(IMAGE, $version)) {
+            fail(IMAGE . ":{$version} is already on Docker Hub; published versions are immutable, ship the next patch");
+        }
+
+        confirm("Publish {$version} on {$sha} as the latest release?", $version);
+        out(sh('gh release create ' . escapeshellarg($version) . ' -R ' . REPOSITORY
+            . ' --target ' . escapeshellarg($sha)
+            . ' --title ' . escapeshellarg($version)
+            . ' --notes-file ' . escapeshellarg($file)
+            . ' --latest'));
+        out('published; watch it with: gh run list -R ' . REPOSITORY . ' --workflow=release.yml --limit 1');
+        break;
+
+    default:
+        out(<<<'HELP'
+        usage: bin/release <command>
+
+          prepare <version> [--push]          cut X.Y.x for a minor, bump the version, READMEs, console
+                                              pin and migration mapping on release/<version>, commit,
+                                              and draft the notes; --push pushes and opens the prep PR
+                                              and the X.Y.x → main PR
+          check <version> [--ref=<commit>]    fail unless the release metadata is consistent
+          publish <version> --sha=<tested-sha> --notes=<file>
+                                              verify the tested commit and publish the GitHub Release
+                                              on it, after typing the version to confirm
+        HELP);
+        break;
+}
