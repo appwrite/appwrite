@@ -4042,16 +4042,16 @@
         },
         {
             "name": "utopia-php/mqtt",
-            "version": "0.0.1",
+            "version": "0.0.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/mqtt.git",
-                "reference": "d43d7e7f4b0c0854c5fd16c7ef085284d84b0d69"
+                "reference": "44684468347b09959cfb64a28dbaf7e5be9cce04"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/mqtt/zipball/d43d7e7f4b0c0854c5fd16c7ef085284d84b0d69",
-                "reference": "d43d7e7f4b0c0854c5fd16c7ef085284d84b0d69",
+                "url": "https://api.github.com/repos/utopia-php/mqtt/zipball/44684468347b09959cfb64a28dbaf7e5be9cce04",
+                "reference": "44684468347b09959cfb64a28dbaf7e5be9cce04",
                 "shasum": ""
             },
             "require": {
@@ -4102,10 +4102,10 @@
                 "utopia"
             ],
             "support": {
-                "source": "https://github.com/utopia-php/mqtt/tree/0.0.1",
+                "source": "https://github.com/utopia-php/mqtt/tree/0.0.2",
                 "issues": "https://github.com/utopia-php/mqtt/issues"
             },
-            "time": "2026-09-18T11:27:21+00:00"
+            "time": "2026-09-23T06:01:44+00:00"
         },
         {
             "name": "utopia-php/openapi",
