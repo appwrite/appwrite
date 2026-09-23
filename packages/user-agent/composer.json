@@ -1,0 +1,31 @@
+{
+    "name": "utopia-php/user-agent",
+    "description": "A fast user-agent parser and device detector for PHP",
+    "type": "library",
+    "keywords": [
+        "user-agent",
+        "parser",
+        "device-detection"
+    ],
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Utopia\\UserAgent\\": "src/UserAgent/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Utopia\\UserAgent\\Tests\\": "tests/"
+        }
+    },
+    "require": {
+        "php": ">=8.4"
+    },
+    "require-dev": {
+        "matomo/device-detector": "6.4.*"
+    },
+    "scripts": {
+        "test": "phpunit",
+        "bench": "php benchmark/benchmark.php"
+    }
+}

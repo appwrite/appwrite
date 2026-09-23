@@ -1,0 +1,17 @@
+name: Mirror
+
+on:
+  pull_request_target:
+    types: [opened]
+  issues:
+    types: [opened]
+
+permissions:
+  issues: write
+  pull-requests: write
+
+jobs:
+  redirect:
+    uses: utopia-php/monorepo/.github/workflows/mirror-redirect.yml@main
+    with:
+      package: user-agent
