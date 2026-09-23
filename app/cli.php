@@ -6,7 +6,6 @@ use Appwrite\Database\Factory as DatabaseFactory;
 use Appwrite\Platform\Appwrite;
 use Appwrite\Runtimes\Runtimes;
 use Appwrite\Usage\Context as UsageContext;
-use Appwrite\Utopia\Database\Documents\User;
 use Swoole\Runtime;
 use Swoole\Timer;
 use Utopia\Cache\Adapter\Pool as CachePool;
@@ -16,10 +15,8 @@ use Utopia\CLI\Adapters\Generic;
 use Utopia\CLI\CLI;
 use Utopia\Config\Config;
 use Utopia\Console;
-use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Hook\Permissions;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Service;
 use Utopia\Registry\Registry;
@@ -75,7 +72,7 @@ $container->set('authorization', function () {
     return $authorization;
 }, []);
 
-$container->set('dbForPlatform', function ($pools, $cache, $authorization) {
+$container->set('dbForPlatform', function (DatabaseFactory $databaseFactory) {
     $sleep = 3;
     $maxAttempts = 5;
     $attempts = 0;
@@ -84,17 +81,10 @@ $container->set('dbForPlatform', function ($pools, $cache, $authorization) {
     do {
         $attempts++;
         try {
-            // Prepare database connection
-            $adapter = new DatabasePool($pools->get('console'));
-            $dbForPlatform = new Database($adapter, $cache);
-
-            $dbForPlatform
-                ->setDatabase(APP_DATABASE)
-                ->setAuthorization($authorization)
-                ->setNamespace('_console')
-                ->setMetadata('host', \gethostname())
-                ->setMetadata('project', 'console');
-            $dbForPlatform->setDocumentType('users', User::class);
+            $dbForPlatform = $databaseFactory->platform(metadata: [
+                'host' => \gethostname(),
+                'project' => 'console',
+            ]);
 
             // Ensure tables exist
             $collections = Config::getParam('collections', [])['console'];
@@ -115,10 +105,8 @@ $container->set('dbForPlatform', function ($pools, $cache, $authorization) {
         throw new Exception('Console is not ready yet. Please try again later.');
     }
 
-    $dbForPlatform->addHook(new Permissions());
-
     return $dbForPlatform;
-}, ['pools', 'cache', 'authorization']);
+}, ['databaseFactory']);
 
 $container->set(
     'getIsResourceBlocked',
