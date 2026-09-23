@@ -109,7 +109,7 @@
         "utopia-php/messaging": "^2.1",
         "utopia-php/migration": "^2.0.0",
         "utopia-php/mqtt": "0.0.*",
-        "utopia-php/platform": "1.0.0-rc24",
+        "utopia-php/platform": "1.0.0-rc25",
         "utopia-php/pools": "2.*",
         "utopia-php/span": "^4.2",
         "utopia-php/queue": "^6.0.0",
