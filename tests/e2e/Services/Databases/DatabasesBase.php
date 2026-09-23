@@ -2208,6 +2208,82 @@ trait DatabasesBase
         $this->assertEquals($this->getSchemaParam() . '_not_found', $response['body']['type']);
     }
 
+    /**
+     * onDelete is optional when updating a relationship, and leaving it out keeps
+     * the action the relationship already has, on both of its sides.
+     */
+    public function testUpdateRelationshipAttributeWithoutOnDelete(): void
+    {
+        if (!$this->getSupportForRelationships()) {
+            $this->markTestSkipped('Relationships are not supported by this database adapter');
+        }
+
+        $data = $this->setupDatabase();
+        $databaseId = $data['databaseId'];
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $books = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => ID::unique(),
+            'name' => 'Books',
+        ]);
+
+        $this->assertEquals(201, $books['headers']['status-code']);
+        $booksId = $books['body']['$id'];
+
+        $authors = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => ID::unique(),
+            'name' => 'Authors',
+        ]);
+
+        $this->assertEquals(201, $authors['headers']['status-code']);
+        $authorsId = $authors['body']['$id'];
+
+        $relationship = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $booksId, 'relationship'), $headers, [
+            $this->getRelatedIdParam() => $authorsId,
+            'type' => RelationType::OneToOne->value,
+            'key' => 'author',
+            'twoWay' => true,
+            'twoWayKey' => 'book',
+            'onDelete' => ForeignKeyAction::Cascade->value,
+        ]);
+
+        $this->assertEquals(202, $relationship['headers']['status-code']);
+
+        $this->waitForAttribute($databaseId, $booksId, 'author');
+        $this->waitForAttribute($databaseId, $authorsId, 'book');
+
+        $renamed = $this->client->call(Client::METHOD_PATCH, $this->getSchemaUrl($databaseId, $booksId, 'relationship', 'author'), $headers, [
+            'newKey' => 'writer',
+        ]);
+
+        $this->assertEquals(200, $renamed['headers']['status-code']);
+        $this->assertSame('writer', $renamed['body']['key']);
+        $this->assertSame(ForeignKeyAction::Cascade->value, $renamed['body']['onDelete']);
+
+        $writer = $this->client->call(Client::METHOD_GET, $this->getSchemaUrl($databaseId, $booksId, '', 'writer'), $headers);
+
+        $this->assertEquals(200, $writer['headers']['status-code']);
+        $this->assertSame('book', $writer['body']['twoWayKey']);
+        $this->assertSame(ForeignKeyAction::Cascade->value, $writer['body']['onDelete']);
+
+        $book = $this->client->call(Client::METHOD_GET, $this->getSchemaUrl($databaseId, $authorsId, '', 'book'), $headers);
+
+        $this->assertEquals(200, $book['headers']['status-code']);
+        $this->assertSame('writer', $book['body']['twoWayKey']);
+        $this->assertSame(ForeignKeyAction::Cascade->value, $book['body']['onDelete']);
+
+        $legacyAliasUrl = $this->getSchemaUrl($databaseId, $booksId) . '/writer/relationship';
+        $emptyUpdate = $this->client->call(Client::METHOD_PATCH, $legacyAliasUrl, $headers);
+
+        $this->assertEquals(200, $emptyUpdate['headers']['status-code']);
+        $this->assertSame('writer', $emptyUpdate['body']['key']);
+        $this->assertSame(ForeignKeyAction::Cascade->value, $emptyUpdate['body']['onDelete']);
+    }
+
     public function testAttributeResponseModels(): void
     {
         if (!$this->getSupportForAttributes()) {

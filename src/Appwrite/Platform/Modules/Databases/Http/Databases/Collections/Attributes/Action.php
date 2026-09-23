@@ -641,6 +641,7 @@ abstract class Action extends DatabasesAction
         }
 
         if ($type === ColumnType::Relationship->value) {
+            $options = \array_filter($options, fn (mixed $option): bool => $option !== null);
             $primaryDocumentOptions = \array_merge($attribute->getAttribute('options', []), $options);
             $attribute->setAttribute('options', $primaryDocumentOptions);
             try {
@@ -648,7 +649,7 @@ abstract class Action extends DatabasesAction
                     collection: $collectionId,
                     id: $key,
                     newKey: $newKey,
-                    onDelete: ForeignKeyAction::from($primaryDocumentOptions['onDelete']),
+                    onDelete: isset($options['onDelete']) ? ForeignKeyAction::from($options['onDelete']) : null,
                 );
             } catch (IndexException) {
                 throw new Exception(Exception::INDEX_INVALID);
