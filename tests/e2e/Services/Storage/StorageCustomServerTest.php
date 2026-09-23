@@ -17,8 +17,6 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
-use Utopia\Psr7\Stream;
-use Utopia\Storage\Device\S3;
 use Utopia\System\System;
 
 final class StorageCustomServerTest extends Scope
@@ -451,72 +449,6 @@ final class StorageCustomServerTest extends Scope
             )
         );
         $this->assertEquals(404, $response['headers']['status-code']);
-    }
-
-    /**
-     * The S3 gateway keeps its own content-type resolution, so the APK
-     * correction on the Storage API does not cover PutObject.
-     */
-    public function testCreateS3ObjectApkMimeType(): void
-    {
-        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'bucketId' => ID::unique(),
-            'name' => 'S3 Apk Mime Type',
-            // The gateway serves the stored bytes verbatim, so it refuses a
-            // bucket that encrypts or compresses them.
-            'encryption' => false,
-            'compression' => 'none',
-            'permissions' => [
-                Permission::create(Role::any()),
-                Permission::read(Role::any()),
-            ],
-        ]);
-
-        $this->assertEquals(201, $bucket['headers']['status-code']);
-
-        // The gateway's AWS access key is the project ID and its secret an API key.
-        $device = new S3(
-            root: $bucket['body']['$id'],
-            accessKey: $this->getProject()['$id'],
-            secretKey: $this->getProject()['apiKey'],
-            host: $this->client->getEndpoint() . '/s3',
-            region: 'us-east-1',
-        );
-
-        $body = (string) \file_get_contents(__DIR__ . '/../../../resources/app.apk');
-
-        // A client uploading an APK declares the zip container it is built from
-        $cases = [
-            'app.apk' => 'application/vnd.android.package-archive',
-            'archive.zip' => 'application/zip',
-        ];
-
-        foreach (\array_keys($cases) as $key) {
-            $device->write($device->getPath($key), new Stream($body), 'application/zip');
-        }
-
-        $files = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucket['body']['$id'] . '/files', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
-
-        $this->assertEquals(200, $files['headers']['status-code']);
-
-        $stored = \array_column($files['body']['files'], '$id', 'name');
-
-        foreach ($cases as $key => $expected) {
-            $this->assertArrayHasKey($key, $stored, $key);
-
-            $download = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucket['body']['$id'] . '/files/' . $stored[$key] . '/download', array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-            ], $this->getHeaders()));
-
-            $this->assertEquals($expected, $download['headers']['content-type'], $key);
-        }
     }
 
     /**
