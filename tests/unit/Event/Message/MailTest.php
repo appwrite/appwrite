@@ -5,22 +5,28 @@ declare(strict_types=1);
 namespace Tests\Unit\Event\Message;
 
 use Appwrite\Event\Message\Mail as MailMessage;
+use Appwrite\Event\Publisher\Mail as MailPublisher;
 use PHPUnit\Framework\TestCase;
+use Tests\Unit\Event\MockPublisher;
+use Utopia\Queue\Queue;
 
 final class MailTest extends TestCase
 {
-    public function testHeadersSurviveTheQueue(): void
+    public function testHeadersReachTheQueuedPayload(): void
     {
-        $message = new MailMessage(
+        $publisher = new MockPublisher();
+        $queue = new Queue('v1-mails');
+
+        (new MailPublisher($publisher, $queue))->enqueue(new MailMessage(
             recipient: 'owner@example.test',
             subject: 'Subject',
             platform: ['name' => 'test-platform'],
             headers: ['List-Unsubscribe' => '<https://example.test/u>'],
-        );
+        ));
 
-        $restored = MailMessage::fromArray($message->toArray());
-
-        $this->assertSame(['List-Unsubscribe' => '<https://example.test/u>'], $restored->headers);
+        // The mails worker reads this raw payload, not a rehydrated message.
+        $payload = $publisher->getEvents('v1-mails')[0];
+        $this->assertSame(['List-Unsubscribe' => '<https://example.test/u>'], $payload['headers']);
     }
 
     public function testPayloadsQueuedBeforeHeadersExistedStillDecode(): void
