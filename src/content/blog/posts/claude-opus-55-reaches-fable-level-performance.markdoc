@@ -118,7 +118,7 @@ On a merger analysis task, Opus 5.5 and Opus 5 both built a financial model and 
 
 One of the most common areas of feedback on Opus 5 was its writing. Opus 5.5 puts the most important information up front and early testers described its output as clearer and easier to follow, with one saying "it writes the way I do."
 
-This is a practical improvement, not a cosmetic one. Work you can skim and verify quickly is work you actually review, and reviewing agent output is the bottleneck in most long-running agentic workflows. Anthropic frames it as a safety benefit for the same reason.
+This is a practical improvement, not just a cosmetic one. Anthropic says clearer output makes the model's work easier to follow and check, which it frames as both a practical and a safety improvement.
 
 # Should you switch to Claude Opus 5.5?
 
