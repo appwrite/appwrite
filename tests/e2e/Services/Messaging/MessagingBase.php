@@ -2227,6 +2227,72 @@ trait MessagingBase
         $this->assertEquals($data, $message['body']['data']['data']);
     }
 
+    public function testCreatePushWithNullOptionalParams(): void
+    {
+        // Explicit nulls must behave like omitted params instead of reaching the action as null
+        $response = $this->client->call(Client::METHOD_POST, '/messaging/messages/push', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'messageId' => ID::unique(),
+            'title' => 'New blog post',
+            'body' => 'Check out the new blog post',
+            'topics' => null,
+            'users' => null,
+            'targets' => null,
+            'data' => null,
+            'action' => null,
+            'image' => null,
+            'icon' => null,
+            'sound' => null,
+            'color' => null,
+            'tag' => null,
+            'badge' => null,
+            'draft' => true,
+            'scheduledAt' => null,
+            'contentAvailable' => null,
+            'critical' => null,
+            'priority' => null,
+        ]);
+
+        $this->assertSame(201, $response['headers']['status-code']);
+
+        $message = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $response['body']['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertSame(200, $message['headers']['status-code']);
+        $this->assertSame(MessageStatus::DRAFT, $message['body']['status']);
+        $this->assertSame([], $message['body']['topics']);
+        $this->assertSame([], $message['body']['users']);
+        $this->assertSame([], $message['body']['targets']);
+        $this->assertSame([
+            'title' => 'New blog post',
+            'body' => 'Check out the new blog post',
+            'priority' => 'high',
+        ], $message['body']['data']);
+
+        // Without draft, null recipients must be rejected as missing rather than crash
+        $response = $this->client->call(Client::METHOD_POST, '/messaging/messages/push', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'messageId' => ID::unique(),
+            'title' => 'New blog post',
+            'topics' => null,
+            'users' => null,
+            'targets' => null,
+            'draft' => null,
+        ]);
+
+        $this->assertSame(400, $response['headers']['status-code']);
+        $this->assertSame('message_missing_target', $response['body']['type']);
+    }
+
     public function testScheduledMessage(): void
     {
         // Create user

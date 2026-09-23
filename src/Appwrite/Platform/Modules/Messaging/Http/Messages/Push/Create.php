@@ -131,8 +131,17 @@ class Create extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $messageId, string $title, string $body, ?array $topics, ?array $users, ?array $targets, null|array|\stdClass $data, string $action, string $image, string $icon, string $sound, string $color, string $tag, int $badge, bool $draft, ?string $scheduledAt, bool $contentAvailable, bool $critical, string $priority, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, MessagingPublisher $publisherForMessaging, Response $response, array $platform)
+    public function action(string $messageId, ?string $title, ?string $body, ?array $topics, ?array $users, ?array $targets, null|array|\stdClass $data, ?string $action, ?string $image, ?string $icon, ?string $sound, ?string $color, ?string $tag, ?int $badge, ?bool $draft, ?string $scheduledAt, ?bool $contentAvailable, ?bool $critical, ?string $priority, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, MessagingPublisher $publisherForMessaging, Response $response, array $platform)
     {
+        // An explicit null skips validation and bypasses the param default, so restore it here
+        $topics ??= [];
+        $users ??= [];
+        $targets ??= [];
+        $badge ??= -1;
+        $draft ??= false;
+        $contentAvailable ??= false;
+        $critical ??= false;
+        $priority ??= 'high';
         $data = $this->normalizeJsonObject($data);
 
         $messageId = $messageId == 'unique()'
