@@ -510,8 +510,8 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
           </div>
         )}
 
-        {/* Content after border separator */}
-        {contentAfterBorder ? (
+        {/* Content after border separator (e.g. mobile nav); hidden with collapsible header */}
+        {contentAfterBorder && !(collapsible && isCollapsed) ? (
           <div className="min-w-0">{contentAfterBorder}</div>
         ) : null}
 

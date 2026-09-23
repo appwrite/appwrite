@@ -830,6 +830,8 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Delete rows': '行の削除',
   'Delete documents': 'ドキュメントの削除',
   'Table not found': 'テーブルが見つかりません',
+  'Row not found': '行が見つかりません',
+  'Document not found': 'ドキュメントが見つかりません',
   'Collection not found': 'コレクションが見つかりません',
   'Failed to create table': 'テーブルの作成に失敗しました',
   'Failed to create collection': 'コレクションの作成に失敗しました',

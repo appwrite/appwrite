@@ -611,13 +611,13 @@ export function OAuth2ConsentCard({
         <div className="space-y-6">
           <div className="flex flex-col items-center gap-4 text-center">
             <OAuth2AppAvatar app={app} />
-          <div className="space-y-1">
-            <AuthFlowTitle>
-              {t('Authorize')} {app.name}
-            </AuthFlowTitle>
-            <AuthFlowDescription>{summary}</AuthFlowDescription>
+            <div className="min-h-[4.5rem] w-full space-y-1">
+              <AuthFlowTitle>
+                {t('Authorize')} {app.name}
+              </AuthFlowTitle>
+              <AuthFlowDescription>{summary}</AuthFlowDescription>
+            </div>
           </div>
-        </div>
 
         {accountSwitchError ? (
           <div
