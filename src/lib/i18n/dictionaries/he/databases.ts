@@ -859,6 +859,8 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Delete rows': 'מחיקת שורות',
   'Delete documents': 'מחיקת מסמכים',
   'Table not found': 'הטבלה לא נמצאה',
+  'Row not found': 'השורה לא נמצאה',
+  'Document not found': 'המסמך לא נמצא',
   'Collection not found': 'האוסף לא נמצא',
   'Failed to create table': 'יצירת הטבלה נכשלה',
   'Failed to create collection': 'יצירת האוסף נכשלה',

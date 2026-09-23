@@ -41,6 +41,7 @@ type StorageMetricBentoCardProps = {
   /** Unified storage rows can name functions/sites or databases, not just buckets. */
   computeLookup?: ComputeBreakdownResourceMap
   databaseLookup?: DatabaseBreakdownResourceMap
+  resourceNamesResolved?: boolean
   onRetry: () => void
   docsHref?: string
 }
@@ -66,6 +67,7 @@ export function StorageMetricBentoCard({
   breakdownLookup,
   computeLookup,
   databaseLookup,
+  resourceNamesResolved = true,
   onRetry,
   docsHref,
 }: StorageMetricBentoCardProps) {
@@ -109,6 +111,7 @@ export function StorageMetricBentoCard({
             storageLookup={breakdownLookup}
             computeLookup={computeLookup}
             databaseLookup={databaseLookup}
+            resourceNamesResolved={resourceNamesResolved}
             errorTitle={STORAGE_USAGE_ERROR.title}
             errorMessage={STORAGE_USAGE_ERROR.message}
             formatValue={formatValue}

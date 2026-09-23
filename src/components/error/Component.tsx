@@ -17,7 +17,10 @@ import {
 import { AuthFlowHeaderIcon } from '@/components/global/auth/AuthFlowHeaderIcon'
 import { captureExceptionWithContext } from '@/components/global/providers/SentryContext'
 import { extractRouteContext } from '@/lib/sentry/report-error'
-import { formatError } from '@/lib/utils/error-formatting'
+import {
+  formatError,
+  formatResourceNotFoundError,
+} from '@/lib/utils/error-formatting'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
@@ -74,8 +77,12 @@ export function ErrorComponent({
   }
   const errorCode = errorWithCode.code
 
+  // A missing user/team/etc. inside a live project is not a missing project.
+  const resourceNotFound = formatResourceNotFoundError(error)
+
   const isProjectNotFound =
     isProjectRoute &&
+    !resourceNotFound &&
     (error.name === 'NotFoundError' ||
       errorCode === 404 ||
       lowerMessage.includes('not found') ||
@@ -105,35 +112,37 @@ export function ErrorComponent({
   }, [])
 
   // Use project-specific messages for project routes
-  const formattedError = isProjectNotFound
-    ? {
-        title: 'Project Not Found',
-        message:
-          'This project could not be found or you do not have access to view it.',
-        isUserFriendly: true,
-      }
-    : isProjectAccessDenied
+  const formattedError = resourceNotFound
+    ? resourceNotFound
+    : isProjectNotFound
       ? {
-          title: 'Access Denied',
+          title: 'Project Not Found',
           message:
-            'You do not have permission to access this project. Please contact your administrator if you believe this is an error.',
+            'This project could not be found or you do not have access to view it.',
           isUserFriendly: true,
         }
-      : isConnectivityError
+      : isProjectAccessDenied
         ? {
-            title: "You're offline",
+            title: 'Access Denied',
             message:
-              'This page needs a connection to Appwrite. Reconnect to the internet, then try again - we can reload automatically when you are back online.',
+              'You do not have permission to access this project. Please contact your administrator if you believe this is an error.',
             isUserFriendly: true,
           }
-        : isStaleChunkError
+        : isConnectivityError
           ? {
-              title: 'Update available',
+              title: "You're offline",
               message:
-                'A newer version of the console was deployed while you had this tab open. Reload the page to continue.',
+                'This page needs a connection to Appwrite. Reconnect to the internet, then try again - we can reload automatically when you are back online.',
               isUserFriendly: true,
             }
-          : formatError(error, 'An unexpected error occurred.')
+          : isStaleChunkError
+            ? {
+                title: 'Update available',
+                message:
+                  'A newer version of the console was deployed while you had this tab open. Reload the page to continue.',
+                isUserFriendly: true,
+              }
+            : formatError(error, 'An unexpected error occurred.')
 
   const message = useMemo(
     () => ({
@@ -261,11 +270,13 @@ export function ErrorComponent({
   }
 
   const showTechnicalDetails =
+    !resourceNotFound &&
     !isProjectNotFound &&
     !isProjectAccessDenied &&
     !isConnectivityError &&
     !isStaleChunkError
   const showSupportBlurb =
+    !resourceNotFound &&
     !isProjectNotFound &&
     !isProjectAccessDenied &&
     !isConnectivityError &&

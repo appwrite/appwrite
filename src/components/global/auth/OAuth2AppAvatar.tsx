@@ -1,10 +1,14 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Package } from 'lucide-react'
 import type { Models } from '@appwrite.io/console'
+import { MarketplaceAppLogo } from '@/components/pages/organizations/$orgId/marketplace/_components/MarketplaceAppLogo'
+import { resolveAppLogoDisplayUrl } from '@/lib/appwrite/apps-logo'
 import { sdk } from '@/lib/appwrite/sdk'
 import { normalizeHostnameForFavicon } from '@/lib/hostname-favicon'
+import { isOfficialMarketplaceApp } from '@/lib/marketplace/map-app'
+import { matchKnownOAuthClient } from '@/lib/oauth-known-clients'
 import { cn } from '@/lib/utils'
 
 function appFaviconUrl(app: Models.App): string | null {
@@ -20,57 +24,92 @@ function appFaviconUrl(app: Models.App): string | null {
   return null
 }
 
+type LogoSource = { src: string; alt: string; monochrome: boolean }
+
+function buildLogoSources(
+  app: Models.App | null | undefined,
+  cimdUrl?: string | null,
+): LogoSource[] {
+  if (!app) return []
+
+  const catalogApp = isOfficialMarketplaceApp(app)
+  const sources: LogoSource[] = []
+  const uploadedLogo = resolveAppLogoDisplayUrl(app.logoUri, {
+    width: 128,
+    height: 128,
+  })
+  if (uploadedLogo) {
+    sources.push({
+      src: uploadedLogo,
+      alt: app.name,
+      monochrome: catalogApp,
+    })
+  }
+
+  const knownClient = matchKnownOAuthClient(app, cimdUrl)
+  if (knownClient) {
+    sources.push({
+      src: knownClient.iconPath,
+      alt: knownClient.name,
+      monochrome: true,
+    })
+  }
+
+  const favicon = appFaviconUrl(app)
+  if (favicon) {
+    sources.push({
+      src: favicon,
+      alt: app.name,
+      monochrome: catalogApp,
+    })
+  }
+
+  return sources
+}
+
 type OAuth2AppAvatarProps = {
   app?: Models.App | null
   className?: string
+  /** CIMD document URL when the client is URL-form; improves known-client matching. */
+  cimdUrl?: string | null
 }
 
 /**
  * App mark for OAuth2 consent / outcome screens.
- * Prefers `logoUri`, then the Avatars favicon for the app domain, then a default icon.
+ * Uses the same muted catalog tile as marketplace listings (uploaded logo,
+ * bundled known-client icon, then domain favicon).
  */
-export function OAuth2AppAvatar({ app, className }: OAuth2AppAvatarProps) {
-  const [logoFailed, setLogoFailed] = useState(false)
-  const [faviconFailed, setFaviconFailed] = useState(false)
-
-  const faviconSrc = useMemo(
-    () => (app ? appFaviconUrl(app) : null),
-    [app],
+export function OAuth2AppAvatar({
+  app,
+  className,
+  cimdUrl,
+}: OAuth2AppAvatarProps) {
+  const sources = useMemo(
+    () => buildLogoSources(app, cimdUrl),
+    [app, cimdUrl],
   )
+  const [sourceIndex, setSourceIndex] = useState(0)
+
+  useEffect(() => {
+    setSourceIndex(0)
+  }, [app?.$id, app?.logoUri])
 
   const frameClassName = cn(
-    'bg-muted text-muted-foreground flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-xl ring-1 ring-border/50',
+    'bg-muted text-muted-foreground flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border/60',
     className,
   )
 
-  if (app?.logoUri && !logoFailed) {
+  const active = sources[sourceIndex]
+  if (active) {
     return (
-      <img
-        src={app.logoUri}
-        alt={app.name}
-        className={cn(
-          'size-16 shrink-0 rounded-xl object-cover ring-1 ring-border/50',
-          className,
-        )}
-        height={64}
-        width={64}
-        onError={() => setLogoFailed(true)}
+      <MarketplaceAppLogo
+        src={active.src}
+        alt={active.alt}
+        size="consent"
+        className={className}
+        monochrome={active.monochrome}
+        onImageError={() => setSourceIndex((current) => current + 1)}
       />
-    )
-  }
-
-  if (faviconSrc && !faviconFailed) {
-    return (
-      <div className={frameClassName}>
-        <img
-          src={faviconSrc}
-          alt={app?.name ?? ''}
-          className="size-full object-contain p-2"
-          height={64}
-          width={64}
-          onError={() => setFaviconFailed(true)}
-        />
-      </div>
     )
   }
 

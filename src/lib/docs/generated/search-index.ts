@@ -5689,8 +5689,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
   {
     "slug": "tooling/ai/agents/codex",
     "title": "Codex",
-    "description": "Learn how to use Codex with Appwrite through the Appwrite plugin, quick start prompts, and the Appwrite MCP server for AI-assisted development.",
-    "excerpt": "The fastest way to get started with Appwrite in Codex is to install the **Appwrite plugin** from the Appwrite marketplace. The plugin includes agent skills for the Appwrite CLI and all major SDKs, giving Codex the context it needs to follow the latest Appwrite code patterns. Add the Appwrite marketplace to Codex by running the following command in your terminal: Then run and open the plugins menu to install the Appwrite plugin: - Run in Codex. - Select the **Appwrite**…",
+    "description": "Use Appwrite's official ChatGPT plugin within Codex, with quick start prompts and the Appwrite MCP server for AI-assisted development.",
+    "excerpt": "The fastest way to get started with Appwrite in Codex is to install **Appwrite's official ChatGPT plugin**, which can also be used within Codex. The plugin includes the hosted Appwrite connection and thirteen agent skills covering the Appwrite CLI, ten SDKs, and deployment workflows for Sites and Functions. Read the ChatGPT plugin announcement for an overview. - Open the ChatGPT desktop app. - Click **Plugins** in the sidebar. - Search for and select the **Appwrite** plugin. - Click **Install plugin**.…",
     "breadcrumbs": [
       "Tooling",
       "IDEs",

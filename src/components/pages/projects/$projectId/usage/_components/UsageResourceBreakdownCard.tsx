@@ -35,6 +35,7 @@ type UsageResourceBreakdownCardProps = {
   computeLookup?: ComputeBreakdownResourceMap | null
   storageLookup?: StorageBreakdownResourceMap | null
   tableLookup?: TableBreakdownResourceMap | null
+  resourceNamesResolved?: boolean
   errorTitle: string
   errorMessage: string
   formatValue: (value: number) => string
@@ -59,6 +60,7 @@ export function UsageResourceBreakdownCard({
   computeLookup,
   storageLookup,
   tableLookup,
+  resourceNamesResolved = true,
   errorTitle,
   errorMessage,
   formatValue,
@@ -134,6 +136,7 @@ export function UsageResourceBreakdownCard({
               computeLookup={computeLookup}
               storageLookup={storageLookup}
               tableLookup={tableLookup}
+              resourceNamesResolved={resourceNamesResolved}
               variant="card"
               formatValue={formatValue}
             />

@@ -17,7 +17,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { ConnectCodePanel } from '@/components/global/shared/ConnectCodeExample'
-import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
+import { OAuth2ProviderLogo } from './OAuth2ProviderLogo'
 import {
   buildOAuth2SignInPrompt,
   fetchOAuth2ProviderIconSvg,
@@ -168,16 +168,7 @@ export function OAuth2ProviderHelpers({
         <div className="border-t border-border" />
         <div className="px-6 py-4 space-y-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted">
-              <img
-                src={iconPath}
-                alt=""
-                className={cn('h-5 w-5', PUBLIC_ICON_MUTED_CLASSES)}
-                onError={(e) => {
-                  e.currentTarget.src = '/icons/empty.svg'
-                }}
-              />
-            </div>
+            <OAuth2ProviderLogo providerId={providerId} size="md" />
             <p className="text-[13px] font-medium text-foreground">
               {providerName}
             </p>

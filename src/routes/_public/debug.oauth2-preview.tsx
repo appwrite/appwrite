@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
+import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { z } from 'zod'
 import { Loader2, MonitorSmartphone, TriangleAlert } from 'lucide-react'
 import type { Models } from '@appwrite.io/console'
@@ -33,6 +34,8 @@ import {
 } from '@/lib/debug-demos/oauth2-preview-screens'
 import { DEBUG_DEMO_MOCK_EMAIL } from '@/lib/debug-demos/constants'
 import { subscribeDebugDemoPreviewControl } from '@/lib/debug-demos/preview-controls'
+import { resolveOAuth2PreviewAppId } from '@/lib/debug-demos/oauth2-preview-app'
+import { organizationAppQueryOptions } from '@/lib/react-query/hooks'
 import { pageTitle } from '@/lib/utils/page-title'
 
 export type { OAuth2PreviewScreen }
@@ -46,6 +49,12 @@ export type OAuth2DeviceCodePreviewStep =
 const oauth2PreviewSearchSchema = z.object({
   screen: z.enum(OAUTH2_PREVIEW_SCREENS).optional(),
   deviceStep: z.enum(OAUTH2_DEVICE_CODE_STEPS).optional(),
+  /** Console app id, or omit / `mock` for the built-in Cursor demo client. */
+  appId: z.string().optional(),
+  /** Marketplace catalog name used until `apps.get` resolves (stable header copy). */
+  appName: z.string().optional(),
+  /** Organization whose apps populate the debug navigator app picker. */
+  orgId: z.string().optional(),
 })
 
 export const Route = createFileRoute('/_public/debug/oauth2-preview')({
@@ -129,7 +138,7 @@ const RESOURCES_GRANT = mockGrant({
   ]),
 })
 
-function mcpGrant(): Models.Oauth2Grant {
+function mcpGrant(overrides?: Partial<Models.Oauth2Grant>): Models.Oauth2Grant {
   return mockGrant({
     scopes: [
       'openid',
@@ -158,6 +167,7 @@ function mcpGrant(): Models.Oauth2Grant {
       { type: PROJECT_RAR_TYPE, identifiers: ['*'] },
       { type: ORGANIZATION_RAR_TYPE, identifiers: ['*'] },
     ]),
+    ...overrides,
   })
 }
 
@@ -254,11 +264,17 @@ function OAuth2PreviewPage() {
   const search = Route.useSearch()
   const screen: OAuth2PreviewScreen = search.screen ?? 'consent'
   const deviceStep: OAuth2DeviceCodePreviewStep = search.deviceStep ?? 'enter'
+  const previewAppId = resolveOAuth2PreviewAppId(search.appId)
   const [outcome, setOutcome] = useState<OAuth2Outcome | null>(null)
+
+  const { data: previewAppFromApi } = useQuery({
+    ...organizationAppQueryOptions(previewAppId),
+    placeholderData: keepPreviousData,
+  })
 
   useEffect(() => {
     setOutcome(null)
-  }, [screen, deviceStep])
+  }, [screen, deviceStep, previewAppId])
 
   useEffect(
     () =>
@@ -270,18 +286,38 @@ function OAuth2PreviewPage() {
     [],
   )
 
-  const app = useMemo(() => mockApp(), [])
-  const mcp = useMemo(() => mcpGrant(), [])
+  const app = useMemo(() => {
+    if (!previewAppId) return mockApp()
+    if (previewAppFromApi?.$id === previewAppId) return previewAppFromApi
+    const hint = search.appName?.trim()
+    return mockApp({
+      $id: previewAppId,
+      name: hint || 'Application',
+      logoUri: '',
+      clientUri: '',
+      redirectUris: ['https://example.com/callback'],
+      description: '',
+    })
+  }, [previewAppId, previewAppFromApi, search.appName])
+
+  const mcp = useMemo(() => mcpGrant({ appId: app.$id }), [app.$id])
 
   const consentFlow: OAuth2Flow =
     screen === 'device-consent' ? 'device' : 'authorization'
 
   const activeGrant = useMemo(() => {
-    if (screen === 'consent-mcp' || screen === 'device-consent') return mcp
-    if (screen === 'consent-resources') return RESOURCES_GRANT
-    if (screen === 'consent') return FULL_ACCESS_GRANT
-    return IDENTITY_GRANT
-  }, [mcp, screen])
+    let grant: Models.Oauth2Grant
+    if (screen === 'consent-mcp' || screen === 'device-consent') grant = mcp
+    else if (screen === 'consent-resources') grant = RESOURCES_GRANT
+    else if (screen === 'consent') grant = FULL_ACCESS_GRANT
+    else grant = IDENTITY_GRANT
+    return {
+      ...grant,
+      appId: app.$id,
+      redirectUri:
+        app.redirectUris?.[0] ?? grant.redirectUri ?? 'https://example.com/callback',
+    }
+  }, [mcp, screen, app.$id, app.redirectUris])
 
   const showConsent =
     !outcome &&
@@ -289,6 +325,10 @@ function OAuth2PreviewPage() {
       screen === 'consent-mcp' ||
       screen === 'consent-resources' ||
       screen === 'device-consent')
+
+  const approvalRedirectUrl =
+    app.redirectUris?.find((uri) => uri.includes('://')) ??
+    app.redirectUris?.[0]
 
   return (
     <AuthFlowShell
@@ -315,8 +355,10 @@ function OAuth2PreviewPage() {
           flow={consentFlow}
           app={app}
           redirectUrl={
-            outcome === 'approved' && consentFlow === 'authorization'
-              ? 'cursor://oauth'
+            outcome === 'approved' &&
+            consentFlow === 'authorization' &&
+            approvalRedirectUrl
+              ? approvalRedirectUrl
               : undefined
           }
         />
@@ -342,7 +384,7 @@ function OAuth2PreviewPage() {
           outcome="approved"
           flow="authorization"
           app={app}
-          redirectUrl="cursor://oauth"
+          redirectUrl={approvalRedirectUrl ?? 'cursor://oauth'}
         />
       ) : null}
 

@@ -75,7 +75,7 @@ export function OAuth2OutcomeCard({
               <StatusIcon className="size-3" />
             </span>
           </div>
-          <div className="space-y-1">
+          <div className="min-h-[4.5rem] w-full space-y-1">
             <AuthFlowTitle>{title}</AuthFlowTitle>
             <AuthFlowDescription>{message}</AuthFlowDescription>
           </div>
