@@ -1,0 +1,79 @@
+services:
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 1s
+      timeout: 1s
+      retries: 30
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.123.0
+    command: ["--config=/etc/otel/config.yaml"]
+    volumes:
+      - ./docker/telemetry/otel/collector.yaml:/etc/otel/config.yaml:ro
+    ports:
+      - "4317:4317"
+      - "4318:4318"
+      - "9464:9464"
+
+  prometheus:
+    image: prom/prometheus:v3.0.0
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+    volumes:
+      - ./docker/telemetry/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    ports:
+      - "9090:9090"
+    depends_on:
+      - otel-collector
+
+  grafana:
+    image: grafana/grafana-oss:11.3.1
+    environment:
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Editor
+      GF_AUTH_DISABLE_LOGIN_FORM: "true"
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./docker/telemetry/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./docker/telemetry/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    ports:
+      - "3030:3000"
+    depends_on:
+      - prometheus
+
+  demo:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    working_dir: /app
+    volumes:
+      - .:/app
+      - demo-vendor:/app/vendor
+    environment:
+      BREAKER_REDIS_HOST: redis
+      BREAKER_REDIS_PORT: "6379"
+      BREAKER_OTEL_ENDPOINT: http://otel-collector:4318/v1/metrics
+      BREAKER_DEMO_THRESHOLD: "3"
+      BREAKER_DEMO_TIMEOUT: "8"
+      BREAKER_DEMO_SUCCESS_THRESHOLD: "2"
+      BREAKER_GRAFANA_URL: http://localhost:3030/d/circuit-breaker/circuit-breaker-telemetry
+      BREAKER_PROMETHEUS_URL: http://localhost:9090
+    ports:
+      - "8080:8080"
+    depends_on:
+      redis:
+        condition: service_healthy
+      otel-collector:
+        condition: service_started
+    command: sh -lc "composer install --no-interaction --prefer-dist && php -S 0.0.0.0:8080 examples/telemetry/server.php"
+
+volumes:
+  demo-vendor:
+  grafana-data:
+  prometheus-data:

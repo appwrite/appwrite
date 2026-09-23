@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Circuit Breaker Telemetry Demo</title>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+    <main class="app">
+        <header class="topbar">
+            <div>
+                <p class="eyebrow">Circuit Breaker</p>
+                <h1>Telemetry Demo</h1>
+            </div>
+            <nav class="links" aria-label="Observability links">
+                <a id="grafanaLink" class="button button-outline" href="http://localhost:3030/d/circuit-breaker/circuit-breaker-telemetry" target="_blank" rel="noreferrer">Grafana</a>
+                <a id="prometheusLink" class="button button-outline" href="http://localhost:9090" target="_blank" rel="noreferrer">Prometheus</a>
+            </nav>
+        </header>
+
+        <section class="status-card" aria-label="Current status">
+            <div>
+                <span id="stateBadge" class="badge" data-state="closed">Closed</span>
+                <p class="muted">key <strong id="activeKey">local-api</strong></p>
+            </div>
+            <dl class="stats">
+                <div>
+                    <dt>Failures</dt>
+                    <dd id="failures">0</dd>
+                </div>
+                <div>
+                    <dt>Successes</dt>
+                    <dd id="successes">0</dd>
+                </div>
+                <div>
+                    <dt>Threshold</dt>
+                    <dd id="threshold">3</dd>
+                </div>
+                <div>
+                    <dt>Retry in</dt>
+                    <dd><span id="nextRetry">0</span>s</dd>
+                </div>
+            </dl>
+        </section>
+
+        <div class="grid">
+            <section class="card" aria-labelledby="trafficTitle">
+                <div class="section-head">
+                    <h2 id="trafficTitle">Traffic</h2>
+                    <span id="lastResult" class="muted">Idle</span>
+                </div>
+
+                <div class="button-row">
+                    <button class="button" data-action="success" type="button">Success</button>
+                    <button class="button button-destructive" data-action="failure" type="button">Failure</button>
+                </div>
+
+                <label class="field" for="latency">
+                    <span>Latency <output id="latencyValue">80ms</output></span>
+                    <input id="latency" type="range" min="0" max="1200" step="20" value="80">
+                </label>
+
+                <div class="inline-fields">
+                    <label class="field" for="burstCalls">
+                        <span>Burst calls</span>
+                        <input id="burstCalls" type="number" min="1" max="50" value="12">
+                    </label>
+                    <label class="field" for="failureRate">
+                        <span>Failure rate</span>
+                        <input id="failureRate" type="number" min="0" max="100" value="40">
+                    </label>
+                </div>
+
+                <div class="button-row">
+                    <button class="button button-outline" id="burst" type="button">Run burst</button>
+                    <button class="button button-outline" id="autoTraffic" type="button" aria-pressed="false">Start auto</button>
+                </div>
+
+                <label class="field" for="autoInterval">
+                    <span>Auto interval</span>
+                    <input id="autoInterval" type="number" min="250" max="5000" step="250" value="1000">
+                </label>
+            </section>
+
+            <section class="card" aria-labelledby="configTitle">
+                <div class="section-head">
+                    <h2 id="configTitle">Config</h2>
+                    <button class="button button-ghost" id="refresh" type="button">Refresh</button>
+                </div>
+
+                <label class="field" for="key">
+                    <span>Key</span>
+                    <input id="key" type="text" value="local-api" maxlength="64">
+                </label>
+
+                <div class="inline-fields">
+                    <label class="field" for="configThreshold">
+                        <span>Threshold</span>
+                        <input id="configThreshold" type="number" min="1" max="20" value="3">
+                    </label>
+                    <label class="field" for="configTimeout">
+                        <span>Timeout</span>
+                        <input id="configTimeout" type="number" min="1" max="120" value="8">
+                    </label>
+                </div>
+
+                <label class="field" for="configSuccessThreshold">
+                    <span>Half-open successes</span>
+                    <input id="configSuccessThreshold" type="number" min="1" max="10" value="2">
+                </label>
+
+                <button class="button button-outline full" id="reset" type="button">Reset breaker</button>
+            </section>
+
+            <section class="card" aria-labelledby="scenarioTitle">
+                <div class="section-head">
+                    <h2 id="scenarioTitle">Scenarios</h2>
+                    <span id="scenarioState" class="muted">Ready</span>
+                </div>
+
+                <label class="field" for="scenario">
+                    <span>Preset</span>
+                    <select id="scenario">
+                        <option value="trip">Trip open</option>
+                        <option value="recover">Trip and recover</option>
+                        <option value="noisy">Noisy dependency</option>
+                    </select>
+                </label>
+
+                <button class="button full" id="runScenario" type="button">Run scenario</button>
+
+                <dl class="mini-stats">
+                    <div>
+                        <dt>Total calls</dt>
+                        <dd id="totalCalls">0</dd>
+                    </div>
+                    <div>
+                        <dt>Dependency</dt>
+                        <dd id="dependencyCalls">0</dd>
+                    </div>
+                    <div>
+                        <dt>Fallback</dt>
+                        <dd id="fallbackCalls">0</dd>
+                    </div>
+                    <div>
+                        <dt>Short circuits</dt>
+                        <dd id="shortCircuits">0</dd>
+                    </div>
+                </dl>
+            </section>
+
+            <section class="card events-card" aria-labelledby="eventsTitle">
+                <div class="section-head">
+                    <h2 id="eventsTitle">Events</h2>
+                    <button class="button button-ghost" id="clearEvents" type="button">Clear</button>
+                </div>
+                <ol id="events" class="events"></ol>
+            </section>
+        </div>
+    </main>
+    <script src="/app.js" defer></script>
+</body>
+</html>
