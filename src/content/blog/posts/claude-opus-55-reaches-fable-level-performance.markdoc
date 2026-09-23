@@ -38,7 +38,7 @@ faqs:
 ---
 Claude Opus 5.5 is the first model in Anthropic's Claude 5.5 family, and the pitch is unusually simple: it performs at the level of Claude Fable 5.1 on most work while costing 40% less to run than Opus 5. Anthropic [announced Claude Opus 5.5](https://www.anthropic.com/news/claude-opus-5-5) on September 22, 2026. You call it through the Claude API with the model id `claude-opus-5-5`.
 
-For most teams, the interesting number is not a benchmark score. It is that the model your agents already run on just got cheaper per token, cheaper per task, and more than 30% faster at generating output. Here is what shipped, how Claude Opus 5.5 compares, and what changes if you build agentic apps on Appwrite.
+For most teams, the interesting number is not a benchmark score. It is that running Opus just got cheaper per token, cheaper per task, and more than 30% faster at generating output. Here is what shipped, how Claude Opus 5.5 compares, and what changes if you build agentic apps on Appwrite.
 
 # What is Claude Opus 5.5?
 
