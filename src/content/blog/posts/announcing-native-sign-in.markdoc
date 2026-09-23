@@ -30,8 +30,6 @@ Both platforms ship a native way to do this. Sign in with Apple and Google's Cre
 
 # Native sign-in creates a session from an ID token
 
-![The Google account picker on Android and the Sign in with Apple sheet on iOS](/images/blog/announcing-native-sign-in/android-and-ios-sign-in.avif)
-
 Appwrite Auth now accepts an OpenID Connect ID token from Apple or Google and returns a session in a single request. Your app collects the token with the platform SDK, then calls `account.createIdTokenSession`. Appwrite checks that the token is signed by Apple or Google, was issued for your app, and has not expired, then creates the user, the identity, and the session.
 
 Nothing about the rest of your auth setup changes. The session behaves like any other, the user gets an [identity](/docs/products/auth/identities) for the provider, and account matching follows the same rules as OAuth2 login, so a user who already signed up with the same verified email lands in their existing account.
@@ -46,7 +44,7 @@ Turn on **Native sign-in**, add your app's IDs in the field below the switch, an
 
 Appwrite verifies a signature rather than redeeming an authorization code, so the provider needs neither a client secret nor a key file, and you do not register a callback URL. Browser sign-in stays off unless you also want the redirect flow.
 
-# Google needs a web client and a client for each app
+# Sign in with Google
 
 Google Cloud asks for two kinds of OAuth client, and they do different jobs. If an app passes the wrong one, Google fails the sign-in on the device and Appwrite never receives a token.
 
@@ -56,10 +54,6 @@ Google Cloud asks for two kinds of OAuth client, and they do different jobs. If 
 To create them, open **Clients** in [Google Auth Platform](https://console.cloud.google.com/auth/clients) and select **Create client** once per client type. Pick **Web application** and leave the origins and redirect URIs empty. Pick **Android** and enter your package name and SHA-1 fingerprint. Create one Android client for each signing key. If you publish on Google Play, include the Play app signing key. Pick **iOS** and enter your bundle ID. The [native sign-in docs](/docs/products/auth/native-sign-in#google-cloud-clients) cover each step.
 
 Passing the Android client ID as the server client ID does not work. Google rejects the request with a developer error, even in an app that only runs on Android.
-
-# Sign in with Google on Android
-
-![The Google account picker on Android](/images/blog/announcing-native-sign-in/android-google-account-picker.avif)
 
 On Android, Credential Manager draws the account picker. Pass your web client ID as the server client ID, take the ID token from the returned credential, and send it to Appwrite.
 
@@ -99,37 +93,7 @@ val session = account.createIdTokenSession(
 )
 ```
 
-# Sign in with Google in React Native
-
-The free Original module of the community `@react-native-google-signin/google-signin` package wraps Google's legacy Sign-In SDK on Android and the Google Sign-In SDK on iOS behind one API. It includes native code, so it needs a development build rather than Expo Go. The web client ID goes in `webClientId` on both platforms, and the iOS client ID goes in `iosClientId`.
-
-```client-react-native
-import { GoogleSignin, isSuccessResponse } from '@react-native-google-signin/google-signin';
-import { Client, Account, IdTokenProvider } from 'react-native-appwrite';
-
-const client = new Client()
-    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
-    .setProject('<PROJECT_ID>');
-
-const account = new Account(client);
-
-GoogleSignin.configure({
-    webClientId: '<GOOGLE_WEB_CLIENT_ID>', // Web application client
-    iosClientId: '<GOOGLE_IOS_CLIENT_ID>', // iOS client, used on iOS only
-});
-
-await GoogleSignin.hasPlayServices();
-const response = await GoogleSignin.signIn();
-
-if (isSuccessResponse(response) && response.data.idToken) {
-    const session = await account.createIdTokenSession({
-        provider: IdTokenProvider.Google,
-        idToken: response.data.idToken,
-    });
-}
-```
-
-# Sign in with Apple on iOS
+# Sign in with Apple
 
 ![The Sign in with Apple sheet on iOS](/images/blog/announcing-native-sign-in/ios-sign-in-with-apple.avif)
 
@@ -172,6 +136,79 @@ let session = try await account.createIdTokenSession(
     nonce: nonce,
     name: name
 )
+```
+
+# Sign in with Google and Apple in React Native
+
+![The Google account picker on Android and the Sign in with Apple sheet on iOS](/images/blog/announcing-native-sign-in/android-and-ios-sign-in.avif)
+
+React Native apps use one package per provider and the same `createIdTokenSession` call for both. The packages include native code, so they need a development build rather than Expo Go.
+
+For Google, use the free Original module of the community `@react-native-google-signin/google-signin` package. It wraps Google's legacy Sign-In SDK on Android and the Google Sign-In SDK on iOS. The web client ID goes in `webClientId` on both platforms, and the iOS client ID goes in `iosClientId`.
+
+```client-react-native
+import { GoogleSignin, isSuccessResponse } from '@react-native-google-signin/google-signin';
+import { Client, Account, IdTokenProvider } from 'react-native-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+const account = new Account(client);
+
+GoogleSignin.configure({
+    webClientId: '<GOOGLE_WEB_CLIENT_ID>', // Web application client
+    iosClientId: '<GOOGLE_IOS_CLIENT_ID>', // iOS client, used on iOS only
+});
+
+await GoogleSignin.hasPlayServices();
+const response = await GoogleSignin.signIn();
+
+if (isSuccessResponse(response) && response.data.idToken) {
+    const session = await account.createIdTokenSession({
+        provider: IdTokenProvider.Google,
+        idToken: response.data.idToken,
+    });
+}
+```
+
+For Apple, `expo-apple-authentication` presents the Sign in with Apple sheet on iOS, and `expo-crypto` hashes the nonce. The nonce and name handling are the same as in Swift.
+
+```client-react-native
+import * as AppleAuthentication from 'expo-apple-authentication';
+import * as Crypto from 'expo-crypto';
+import { Client, Account, IdTokenProvider } from 'react-native-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+const account = new Account(client);
+
+const nonce = Crypto.randomUUID();
+const hashedNonce = await Crypto.digestStringAsync(
+    Crypto.CryptoDigestAlgorithm.SHA256,
+    nonce
+);
+
+const credential = await AppleAuthentication.signInAsync({
+    requestedScopes: [
+        AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+        AppleAuthentication.AppleAuthenticationScope.EMAIL,
+    ],
+    nonce: hashedNonce,
+});
+
+const name = [credential.fullName?.givenName, credential.fullName?.familyName]
+    .filter(Boolean)
+    .join(' ');
+
+const session = await account.createIdTokenSession({
+    provider: IdTokenProvider.Apple,
+    idToken: credential.identityToken!,
+    nonce,
+    name,
+});
 ```
 
 # Verification and account matching
