@@ -101,6 +101,12 @@ trait MessagingBase
                 'authKey' => 'my-authkey',
                 'templateId' => '123456'
             ],
+            'clickatell' => [
+                'providerId' => ID::unique(),
+                'name' => 'Clickatell-1',
+                'apiKey' => 'my-apikey',
+                'from' => '+123456789',
+            ],
             'vonage' => [
                 'providerId' => ID::unique(),
                 'name' => 'Vonage1',
@@ -198,6 +204,10 @@ trait MessagingBase
                 'name' => 'Ms91-2',
                 'senderId' => 'my-senderid',
                 'authKey' => 'my-authkey',
+            ],
+            'clickatell' => [
+                'name' => 'Clickatell-2',
+                'apiKey' => 'my-apikey',
             ],
             'vonage' => [
                 'name' => 'Vonage2',
@@ -814,6 +824,12 @@ trait MessagingBase
                 'authKey' => 'my-authkey',
                 'templateId' => '123456'
             ],
+            'clickatell' => [
+                'providerId' => ID::unique(),
+                'name' => 'Clickatell-1',
+                'apiKey' => 'my-apikey',
+                'from' => '+123456789',
+            ],
             'vonage' => [
                 'providerId' => ID::unique(),
                 'name' => 'Vonage1',
@@ -1114,6 +1130,10 @@ trait MessagingBase
                 'name' => 'Ms91-2',
                 'senderId' => 'my-senderid',
                 'authKey' => 'my-authkey',
+            ],
+            'clickatell' => [
+                'name' => 'Clickatell-2',
+                'apiKey' => 'my-apikey',
             ],
             'vonage' => [
                 'name' => 'Vonage2',

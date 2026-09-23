@@ -1,0 +1,1 @@
+Update a Clickatell provider by its unique ID.
