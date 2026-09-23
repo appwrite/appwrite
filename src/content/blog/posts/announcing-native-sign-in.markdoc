@@ -46,6 +46,8 @@ Appwrite verifies a signature rather than redeeming an authorization code, so th
 
 # Sign in with Google
 
+![The Google account picker on Android](/images/blog/announcing-native-sign-in/android-google-account-picker.avif)
+
 Google Cloud asks for two kinds of OAuth client, and they do different jobs. If an app passes the wrong one, Google fails the sign-in on the device and Appwrite never receives a token.
 
 - **The web client represents Appwrite.** Your app passes its ID to Google's SDK as the server client ID, and Google issues the ID token for it. It is the only Google client ID you enter in Appwrite. The type is named **Web application**, but it covers any server that receives tokens. For native sign-in, it needs no redirect URIs.
