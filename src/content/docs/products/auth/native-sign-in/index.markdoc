@@ -42,6 +42,8 @@ Appwrite does not let you turn on native sign-in until the provider has at least
 
 # Sign in with Apple {% #apple %}
 
+![The Sign in with Apple sheet on iOS](/images/docs/auth/native-sign-in/ios-sign-in-with-apple.avif)
+
 Add the **Sign in with Apple** capability to your app target in Xcode, under **Signing & Capabilities**. Apple issues the ID token for your bundle ID, which is the value you added under **Bundle IDs**.
 
 Sign in with Apple requires a nonce. Generate a random string, hash it with SHA-256, and pass the hash to Apple. Send the original, unhashed value to Appwrite, which compares it against the hashed nonce in the token. If the request to Apple has no nonce, Apple still issues a token. Appwrite rejects that token, because a token without a nonce can be replayed for its full lifetime.
@@ -175,6 +177,8 @@ const session = await account.createIdTokenSession({
 {% /tabs %}
 
 # Sign in with Google {% #google %}
+
+![The Google account picker on Android](/images/docs/auth/native-sign-in/android-google-account-picker.avif)
 
 Google's SDKs on Android and iOS return an ID token after the user picks an account. Google issues that token for your web client, not for your Android or iOS client. Appwrite accepts it only if the web client ID is on the Google provider. Create the Google Cloud clients before you write any code.
 

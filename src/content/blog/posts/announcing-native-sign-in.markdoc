@@ -30,6 +30,8 @@ Both platforms ship a native way to do this. Sign in with Apple and Google's Cre
 
 # Native sign-in creates a session from an ID token
 
+![The Google account picker on Android and the Sign in with Apple sheet on iOS](/images/blog/announcing-native-sign-in/android-and-ios-sign-in.avif)
+
 Appwrite Auth now accepts an OpenID Connect ID token from Apple or Google and returns a session in a single request. Your app collects the token with the platform SDK, then calls `account.createIdTokenSession`. Appwrite checks that the token is signed by Apple or Google, was issued for your app, and has not expired, then creates the user, the identity, and the session.
 
 Nothing about the rest of your auth setup changes. The session behaves like any other, the user gets an [identity](/docs/products/auth/identities) for the provider, and account matching follows the same rules as OAuth2 login, so a user who already signed up with the same verified email lands in their existing account.
@@ -56,6 +58,8 @@ To create them, open **Clients** in [Google Auth Platform](https://console.cloud
 Passing the Android client ID as the server client ID does not work. Google rejects the request with a developer error, even in an app that only runs on Android.
 
 # Sign in with Google on Android
+
+![The Google account picker on Android](/images/blog/announcing-native-sign-in/android-google-account-picker.avif)
 
 On Android, Credential Manager draws the account picker. Pass your web client ID as the server client ID, take the ID token from the returned credential, and send it to Appwrite.
 
@@ -95,8 +99,6 @@ val session = account.createIdTokenSession(
 )
 ```
 
-![Fieldnotes demo app signed in with Google](/images/blog/announcing-native-sign-in/fieldnotes-home.avif)
-
 # Sign in with Google in React Native
 
 The free Original module of the community `@react-native-google-signin/google-signin` package wraps Google's legacy Sign-In SDK on Android and the Google Sign-In SDK on iOS behind one API. It includes native code, so it needs a development build rather than Expo Go. The web client ID goes in `webClientId` on both platforms, and the iOS client ID goes in `iosClientId`.
@@ -128,6 +130,8 @@ if (isSuccessResponse(response) && response.data.idToken) {
 ```
 
 # Sign in with Apple on iOS
+
+![The Sign in with Apple sheet on iOS](/images/blog/announcing-native-sign-in/ios-sign-in-with-apple.avif)
 
 Sign in with Apple adds one step. Apple requires a nonce, and Appwrite rejects an Apple token without one because such a token can be replayed for its full lifetime. Generate a random string, give Apple its SHA-256 hash, and send the original value to Appwrite. Apple also returns the user's name only on the first authorization and never inside the token, so read it from the credential and pass it along.
 
