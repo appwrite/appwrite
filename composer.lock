@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "745e1ab77976c5c349d00f165c19779c",
+    "content-hash": "70a4632a5040ed93e641c16415274d20",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3777,52 +3777,6 @@
                 "source": "https://github.com/utopia-php/http/tree/2.0.0-rc33"
             },
             "time": "2026-09-23T13:19:19+00:00"
-        },
-        {
-            "name": "utopia-php/image",
-            "version": "0.8.12",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/utopia-php/image.git",
-                "reference": "cab2779faf1e02f3bed9bc5cddd6350a69056948"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/image/zipball/cab2779faf1e02f3bed9bc5cddd6350a69056948",
-                "reference": "cab2779faf1e02f3bed9bc5cddd6350a69056948",
-                "shasum": ""
-            },
-            "require": {
-                "ext-gd": "*",
-                "ext-imagick": "*",
-                "php": ">=8.1"
-            },
-            "suggest": {
-                "ext-imagick": "Imagick extension is required for Imagick adapter"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Utopia\\Image\\": "src/Image"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "description": "A simple Image manipulation library",
-            "keywords": [
-                "framework",
-                "image",
-                "php",
-                "upf",
-                "utopia"
-            ],
-            "support": {
-                "issues": "https://github.com/utopia-php/image/issues",
-                "source": "https://github.com/utopia-php/image/tree/0.8.12"
-            },
-            "time": "2026-09-07T10:00:40+00:00"
         },
         {
             "name": "utopia-php/locale",

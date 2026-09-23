@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Appwrite\Tests;
+namespace Utopia\Image\Tests;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -10,9 +10,13 @@ use Utopia\Image\Image;
 
 final class ImageTest extends TestCase
 {
-    protected function setUp(): void {}
+    protected function setUp(): void
+    {
+    }
 
-    protected function tearDown(): void {}
+    protected function tearDown(): void
+    {
+    }
 
     private function requireEncoder(string $format): void
     {
@@ -50,7 +54,7 @@ final class ImageTest extends TestCase
 
     public function testJpeg(): void
     {
-        $image = new Image(file_get_contents(__DIR__ . '/../resources/disk-a/kitten-1.jpg') ?: '');
+        $image = new Image(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
         $target = __DIR__ . '/100x100.jpg';
 
         $image->crop(100, 100);
@@ -71,7 +75,7 @@ final class ImageTest extends TestCase
 
     public function testPng(): void
     {
-        $image = new Image(file_get_contents(__DIR__ . '/../resources/disk-a/kitten-1.jpg') ?: '');
+        $image = new Image(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
         $target = __DIR__ . '/100x100.png';
 
         $image->crop(100, 100);
@@ -92,7 +96,7 @@ final class ImageTest extends TestCase
 
     public function testCrop100x100(): void
     {
-        $image = new Image(file_get_contents(__DIR__ . '/../resources/disk-a/kitten-1.jpg') ?: '');
+        $image = new Image(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
         $target = __DIR__ . '/100x100.jpg';
 
         $image->crop(100, 100);
@@ -135,7 +139,7 @@ final class ImageTest extends TestCase
 
     public function testCropFocalRejectsCoordinatesOutsideTheImage(): void
     {
-        $image = new Image(file_get_contents(__DIR__ . '/../resources/disk-a/kitten-1.jpg') ?: '');
+        $image = new Image(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
 
         $this->expectException(\InvalidArgumentException::class);
         $image->crop(100, 100, x: 1.1, y: 0.5);
@@ -143,7 +147,7 @@ final class ImageTest extends TestCase
 
     public function testCropFocalRejectsNonFiniteCoordinates(): void
     {
-        $image = new Image(file_get_contents(__DIR__ . '/../resources/disk-a/kitten-1.jpg') ?: '');
+        $image = new Image(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
 
         $this->expectException(\InvalidArgumentException::class);
         $image->crop(100, 100, x: NAN, y: 0.5);
@@ -151,7 +155,7 @@ final class ImageTest extends TestCase
 
     public function testCropFocalRequiresBothCoordinates(): void
     {
-        $image = new Image(file_get_contents(__DIR__ . '/../resources/disk-a/kitten-1.jpg') ?: '');
+        $image = new Image(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
 
         $this->expectException(\InvalidArgumentException::class);
         $image->crop(100, 100, x: 0.5);
@@ -196,9 +200,9 @@ final class ImageTest extends TestCase
 
     public function testCropGravityNw(): void
     {
-        $image = new Image(file_get_contents(__DIR__ . '/../resources/disk-a/kitten-1.jpg') ?: '');
+        $image = new Image(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
         $target = __DIR__ . '/NW.jpg';
-        $original = __DIR__ . '/../resources/resize/NW.jpg';
+        $original = __DIR__ . '/resources/resize/NW.jpg';
 
         $image->crop(50, 200, Image::GRAVITY_TOP_LEFT);
 
@@ -223,9 +227,9 @@ final class ImageTest extends TestCase
 
     public function testCropGravityN(): void
     {
-        $image = new Image(file_get_contents(__DIR__ . '/../resources/disk-a/kitten-3.gif') ?: '');
+        $image = new Image(file_get_contents(__DIR__ . '/resources/disk-a/kitten-3.gif') ?: '');
         $target = __DIR__ . '/N.gif';
-        $original = __DIR__ . '/../resources/resize/N.gif';
+        $original = __DIR__ . '/resources/resize/N.gif';
 
         $image->crop(100, 50, Image::GRAVITY_TOP);
 
@@ -250,9 +254,9 @@ final class ImageTest extends TestCase
 
     public function testCropGravityNe(): void
     {
-        $image = new Image(file_get_contents(__DIR__ . '/../resources/disk-a/kitten-1.jpg') ?: '');
+        $image = new Image(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
         $target = __DIR__ . '/NE.jpg';
-        $original = __DIR__ . '/../resources/resize/NE.jpg';
+        $original = __DIR__ . '/resources/resize/NE.jpg';
 
         $image->crop(50, 200, Image::GRAVITY_TOP_RIGHT);
 
@@ -277,9 +281,9 @@ final class ImageTest extends TestCase
 
     public function testCropGravitySw(): void
     {
-        $image = new Image(file_get_contents(__DIR__ . '/../resources/disk-a/kitten-1.jpg') ?: '');
+        $image = new Image(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
         $target = __DIR__ . '/SW.jpg';
-        $original = __DIR__ . '/../resources/resize/SW.jpg';
+        $original = __DIR__ . '/resources/resize/SW.jpg';
 
         $image->crop(50, 200, Image::GRAVITY_BOTTOM_LEFT);
 
@@ -304,9 +308,9 @@ final class ImageTest extends TestCase
 
     public function testCropGravityS(): void
     {
-        $image = new Image(file_get_contents(__DIR__ . '/../resources/disk-a/kitten-3.gif') ?: '');
+        $image = new Image(file_get_contents(__DIR__ . '/resources/disk-a/kitten-3.gif') ?: '');
         $target = __DIR__ . '/S.gif';
-        $original = __DIR__ . '/../resources/resize/S.gif';
+        $original = __DIR__ . '/resources/resize/S.gif';
 
         $image->crop(100, 50, Image::GRAVITY_BOTTOM);
 
@@ -331,9 +335,9 @@ final class ImageTest extends TestCase
 
     public function testCropGravitySe(): void
     {
-        $image = new Image(file_get_contents(__DIR__ . '/../resources/disk-a/kitten-1.jpg') ?: '');
+        $image = new Image(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
         $target = __DIR__ . '/SE.jpg';
-        $original = __DIR__ . '/../resources/resize/SE.jpg';
+        $original = __DIR__ . '/resources/resize/SE.jpg';
 
         $image->crop(50, 200, Image::GRAVITY_BOTTOM_RIGHT);
 
@@ -358,9 +362,9 @@ final class ImageTest extends TestCase
 
     public function testCropGravityC(): void
     {
-        $image = new Image(file_get_contents(__DIR__ . '/../resources/disk-a/kitten-1.jpg') ?: '');
+        $image = new Image(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
         $target = __DIR__ . '/C.jpg';
-        $original = __DIR__ . '/../resources/resize/C.jpg';
+        $original = __DIR__ . '/resources/resize/C.jpg';
 
         $image->crop(150, 200, Image::GRAVITY_CENTER);
 
@@ -385,9 +389,9 @@ final class ImageTest extends TestCase
 
     public function testCropGravityW(): void
     {
-        $image = new Image(file_get_contents(__DIR__ . '/../resources/disk-a/kitten-3.gif') ?: '');
+        $image = new Image(file_get_contents(__DIR__ . '/resources/disk-a/kitten-3.gif') ?: '');
         $target = __DIR__ . '/W.gif';
-        $original = __DIR__ . '/../resources/resize/W.gif';
+        $original = __DIR__ . '/resources/resize/W.gif';
 
         $image->crop(50, 100, Image::GRAVITY_LEFT);
 
@@ -412,9 +416,9 @@ final class ImageTest extends TestCase
 
     public function testCropGravityE(): void
     {
-        $image = new Image(file_get_contents(__DIR__ . '/../resources/disk-a/kitten-1.jpg') ?: '');
+        $image = new Image(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
         $target = __DIR__ . '/E.jpg';
-        $original = __DIR__ . '/../resources/resize/E.jpg';
+        $original = __DIR__ . '/resources/resize/E.jpg';
 
         $image->crop(50, 200, Image::GRAVITY_RIGHT);
 
@@ -516,7 +520,7 @@ final class ImageTest extends TestCase
 
     public function testCrop100x400(): void
     {
-        $image = new Image(file_get_contents(__DIR__ . '/../resources/disk-a/kitten-1.jpg') ?: '');
+        $image = new Image(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
         $target = __DIR__ . '/100x400.jpg';
 
         $image->crop(100, 400);
@@ -537,7 +541,7 @@ final class ImageTest extends TestCase
 
     public function testCrop400x100(): void
     {
-        $image = new Image(file_get_contents(__DIR__ . '/../resources/disk-a/kitten-1.jpg') ?: '');
+        $image = new Image(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
         $target = __DIR__ . '/400x100.jpg';
 
         $image->crop(400, 100);
@@ -558,7 +562,7 @@ final class ImageTest extends TestCase
 
     public function testCrop100x100Webp(): void
     {
-        $image = new Image(file_get_contents(__DIR__ . '/../resources/disk-a/kitten-1.jpg') ?: '');
+        $image = new Image(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
         $target = __DIR__ . '/100x100.webp';
 
         $image->crop(100, 100);
@@ -580,9 +584,9 @@ final class ImageTest extends TestCase
 
     public function testCrop100x100WebpQuality30(): void
     {
-        $image = new Image(file_get_contents(__DIR__ . '/../resources/disk-a/kitten-1.jpg') ?: '');
+        $image = new Image(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
         $target = __DIR__ . '/100x100-q30.webp';
-        $original = __DIR__ . '/../resources/resize/100x100-q30.webp';
+        $original = __DIR__ . '/resources/resize/100x100-q30.webp';
 
         $image->crop(100, 100);
 
@@ -610,7 +614,7 @@ final class ImageTest extends TestCase
 
     public function testWebpBlobOutput(): void
     {
-        $image = new Image(file_get_contents(__DIR__ . '/../resources/disk-a/kitten-1.jpg') ?: '');
+        $image = new Image(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
 
         $image->crop(100, 100);
 
@@ -650,7 +654,7 @@ final class ImageTest extends TestCase
 
     public function testSavePreservesImageForSubsequentExports(): void
     {
-        $image = new Image(file_get_contents(__DIR__ . '/../resources/disk-a/kitten-1.jpg') ?: '');
+        $image = new Image(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
         $target = __DIR__ . '/reusable.jpg';
 
         try {
@@ -680,7 +684,7 @@ final class ImageTest extends TestCase
 
         try {
             $this->assertTrue(chdir($directory));
-            $image = new Image(file_get_contents(__DIR__ . '/../resources/disk-a/kitten-1.jpg') ?: '');
+            $image = new Image(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
             $this->assertNull($image->save('0', 'jpg', 75));
             $this->assertFileExists($target);
             $this->assertNotEmpty(file_get_contents($target));
@@ -695,7 +699,7 @@ final class ImageTest extends TestCase
 
     public function testWebpFromWebpInput(): void
     {
-        $image = new Image(file_get_contents(__DIR__ . '/../resources/resize/100x100.webp') ?: '');
+        $image = new Image(file_get_contents(__DIR__ . '/resources/resize/100x100.webp') ?: '');
         $target = __DIR__ . '/roundtrip.webp';
 
         $image->crop(50, 50);
@@ -717,7 +721,7 @@ final class ImageTest extends TestCase
     {
         $this->requireEncoder('AVIF');
 
-        $image = new Image(file_get_contents(filename: __DIR__ . '/../resources/disk-a/kitten-1.jpg') ?: '');
+        $image = new Image(file_get_contents(filename: __DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
         $target = __DIR__ . '/100x100.avif';
 
         $image->crop(100, 100);
@@ -744,7 +748,7 @@ final class ImageTest extends TestCase
     {
         $this->requireEncoder('AVIF');
 
-        $image = new Image(file_get_contents(filename: __DIR__ . '/../resources/disk-a/kitten-1.jpg') ?: '');
+        $image = new Image(file_get_contents(filename: __DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
         $target = __DIR__ . '/100x100-q30.avif';
 
         $image->crop(100, 100);
@@ -768,9 +772,9 @@ final class ImageTest extends TestCase
     {
         $this->requireEncoder('HEIC');
 
-        $image = new Image(file_get_contents(__DIR__ . '/../resources/disk-a/kitten-1.jpg') ?: '');
+        $image = new Image(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
         $target = __DIR__ . '/100x100.heic';
-        $original = __DIR__ . '/../resources/resize/100x100.heic';
+        $original = __DIR__ . '/resources/resize/100x100.heic';
 
         $image->crop(100, 100);
 
@@ -800,9 +804,9 @@ final class ImageTest extends TestCase
     {
         $this->requireEncoder('HEIC');
 
-        $image = new Image(file_get_contents(__DIR__ . '/../resources/disk-a/kitten-1.jpg') ?: '');
+        $image = new Image(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
         $target = __DIR__ . '/100x100-q30.heic';
-        $original = __DIR__ . '/../resources/resize/100x100.heic';
+        $original = __DIR__ . '/resources/resize/100x100.heic';
 
         $image->crop(100, 100);
 
@@ -830,9 +834,9 @@ final class ImageTest extends TestCase
 
     public function testCrop100x100Png(): void
     {
-        $image = new Image(file_get_contents(__DIR__ . '/../resources/disk-a/kitten-1.jpg') ?: '');
+        $image = new Image(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
         $target = __DIR__ . '/100x100.png';
-        $original = __DIR__ . '/../resources/resize/100x100.png';
+        $original = __DIR__ . '/resources/resize/100x100.png';
 
         $image->crop(100, 100);
 
@@ -855,9 +859,9 @@ final class ImageTest extends TestCase
 
     public function testCrop100x100PngQuality30(): void
     {
-        $image = new Image(file_get_contents(__DIR__ . '/../resources/disk-a/kitten-1.jpg') ?: '');
+        $image = new Image(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
         $target = __DIR__ . '/100x100-q30.jpg';
-        $original = __DIR__ . '/../resources/resize/100x100-q30.jpg';
+        $original = __DIR__ . '/resources/resize/100x100-q30.jpg';
 
         $image->crop(100, 100);
 
@@ -880,9 +884,9 @@ final class ImageTest extends TestCase
 
     public function testCrop100x100Gif(): void
     {
-        $image = new Image(file_get_contents(__DIR__ . '/../resources/disk-a/kitten-3.gif') ?: '');
+        $image = new Image(file_get_contents(__DIR__ . '/resources/disk-a/kitten-3.gif') ?: '');
         $target = __DIR__ . '/100x100.gif';
-        $original = __DIR__ . '/../resources/resize/100x100.gif';
+        $original = __DIR__ . '/resources/resize/100x100.gif';
 
         $image->crop(100, 100);
 
@@ -904,9 +908,9 @@ final class ImageTest extends TestCase
 
     public function testBorder5Red(): void
     {
-        $image = new Image(file_get_contents(__DIR__ . '/../resources/disk-a/kitten-1.jpg') ?: '');
+        $image = new Image(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
         $target = __DIR__ . '/border_5_red.jpg';
-        $original = __DIR__ . '/../resources/resize/border_5_red.jpg';
+        $original = __DIR__ . '/resources/resize/border_5_red.jpg';
 
         $image->setBorder(5, '#ff0000');
 
@@ -924,9 +928,9 @@ final class ImageTest extends TestCase
 
     public function testRotate45(): void
     {
-        $image = new Image(file_get_contents(__DIR__ . '/../resources/disk-a/kitten-1.jpg') ?: '');
+        $image = new Image(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
         $target = __DIR__ . '/rotate_45.jpg';
-        $original = __DIR__ . '/../resources/resize/rotate_45.jpg';
+        $original = __DIR__ . '/resources/resize/rotate_45.jpg';
 
         $image->setRotation(45);
 
@@ -946,9 +950,9 @@ final class ImageTest extends TestCase
 
     public function testOpacity02(): void
     {
-        $image = new Image(file_get_contents(__DIR__ . '/../resources/disk-a/kitten-1.jpg') ?: '');
+        $image = new Image(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
         $target = __DIR__ . '/opacity_0.2.png';
-        $original = __DIR__ . '/../resources/resize/opacity_0.2.png';
+        $original = __DIR__ . '/resources/resize/opacity_0.2.png';
 
         $image->setOpacity(0.2);
 
@@ -966,9 +970,9 @@ final class ImageTest extends TestCase
 
     public function testBorderRadius500(): void
     {
-        $image = new Image(file_get_contents(__DIR__ . '/../resources/disk-a/kitten-1.jpg') ?: '');
+        $image = new Image(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
         $target = __DIR__ . '/border_radius_500.png';
-        $original = __DIR__ . '/../resources/resize/border_radius_500.png';
+        $original = __DIR__ . '/resources/resize/border_radius_500.png';
 
         $image->setBorderRadius(500);
 
@@ -986,9 +990,9 @@ final class ImageTest extends TestCase
 
     public function testCrop100Op05(): void
     {
-        $image = new Image(file_get_contents(__DIR__ . '/../resources/disk-a/kitten-1.jpg') ?: '');
+        $image = new Image(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
         $target = __DIR__ . '/100x100_OP_0.5.png';
-        $original = __DIR__ . '/../resources/resize/100x100_OP_0.5.png';
+        $original = __DIR__ . '/resources/resize/100x100_OP_0.5.png';
 
         $image->crop(100, 100);
         $image->setOpacity(0.5);
@@ -1009,9 +1013,9 @@ final class ImageTest extends TestCase
 
     public function testCrop100BR50(): void
     {
-        $image = new Image(file_get_contents(__DIR__ . '/../resources/disk-a/kitten-1.jpg') ?: '');
+        $image = new Image(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
         $target = __DIR__ . '/100x100_BR_50.png';
-        $original = __DIR__ . '/../resources/resize/100x100_BR_50.png';
+        $original = __DIR__ . '/resources/resize/100x100_BR_50.png';
 
         $image->crop(100, 100);
         $image->setOpacity(0.5);
@@ -1030,7 +1034,7 @@ final class ImageTest extends TestCase
 
     public function testGifSmallLastFrame(): void
     {
-        $image = new Image(file_get_contents(__DIR__ . '/../resources/disk-a/last-frame-1px.gif') ?: '');
+        $image = new Image(file_get_contents(__DIR__ . '/resources/disk-a/last-frame-1px.gif') ?: '');
         $target = __DIR__ . '/last-frame-1px-output.gif';
 
         $image->crop(0, 0);
@@ -1055,7 +1059,7 @@ final class ImageTest extends TestCase
      */
     public function testCropAnimatedWebpPreservesFrames(): void
     {
-        $source = __DIR__ . '/../resources/disk-a/anim-delta.webp';
+        $source = __DIR__ . '/resources/disk-a/anim-delta.webp';
         $image = new Image(file_get_contents($source) ?: '');
         $target = __DIR__ . '/anim-delta-32x32.webp';
 
