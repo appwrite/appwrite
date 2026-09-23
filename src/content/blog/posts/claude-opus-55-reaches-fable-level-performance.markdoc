@@ -44,7 +44,7 @@ For most teams, the interesting number is not a benchmark score. It is that the 
 
 **Claude Opus 5.5 is Anthropic's new leading model and the successor to** [Claude Opus 5](/blog/post/claude-opus-5-nears-fable-5-intelligence-at-half-the-price)**.** It matches Claude Fable 5.1 on most real work, costs 40% less than Opus 5 on typical workloads, and generates output more than 30% faster. It is available on the Claude Platform, Claude Code, AWS, Google Cloud, and Microsoft Azure.
 
-It is also Anthropic's first release since the company called for pacing the frontier, so it was tested before launch by external evaluators including [METR](https://metr.org/) and Frontier Design. Claude Sonnet 5.5 and Claude Haiku 5.5 follow in the coming weeks with the same performance, efficiency, and safety improvements.
+It is also Anthropic's first release since the company called for pacing the frontier, so it was tested before launch by external evaluators including [METR](https://metr.org/) and Frontier Design. Claude Sonnet 5.5 and Claude Haiku 5.5 follow in the coming weeks with many of the same performance, efficiency, and safety improvements.
 
 ## Claude Opus 5.5 benchmarks against Fable 5.1, Opus 5, and GPT-6 Astra
 
