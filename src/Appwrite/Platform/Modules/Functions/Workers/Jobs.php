@@ -69,20 +69,16 @@ class Jobs extends Action
     public const string INTERNAL_ERROR_MESSAGE = 'Internal server error. Please try again.';
 
     /**
-     * Platform-side artifact failures; their messages leak internal URLs and paths.
+     * Artifact failures the user can fix, with a safe message for each. Raw
+     * messages can leak internal URLs and paths, so they are never shown.
      */
-    private const array INTERNAL_ARTIFACT_ERRORS = [
-        ErrorCode::ArtifactPermissionDenied,
-        ErrorCode::ArtifactTimeout,
-        ErrorCode::ArtifactReadFailed,
-        ErrorCode::ArtifactWriteFailed,
-        ErrorCode::ArtifactStatFailed,
-        ErrorCode::ArtifactListFailed,
-        ErrorCode::DownloadFailed,
-        ErrorCode::DownloadHttpError,
-        ErrorCode::UploadFailed,
-        ErrorCode::MountFailed,
-        ErrorCode::ArtifactFailed,
+    private const array USER_ARTIFACT_ERRORS = [
+        ErrorCode::ArchiveEmpty->value => 'The source archive is empty.',
+        ErrorCode::ArchiveUnknownFormat->value => 'The source archive format is not recognized.',
+        ErrorCode::ArchiveCorrupt->value => 'The source archive is corrupt or incomplete. Re-create it and try again.',
+        ErrorCode::ArchivePathInvalid->value => 'The source archive contains a path or link that points outside the archive.',
+        ErrorCode::ArchiveLayoutMismatch->value => 'No files found in the source archive at the configured root directory.',
+        ErrorCode::CloneFailed->value => 'Failed to clone the repository. Check that the repository and branch exist and are accessible.',
     ];
 
     public static function getName(): string
@@ -373,13 +369,13 @@ class Jobs extends Action
     }
 
     /**
-     * Platform failures are reported to Sentry and shown as a generic error.
+     * Anything outside USER_ARTIFACT_ERRORS is reported to Sentry and shown as a generic error.
      */
     protected function artifactFailure(Document $project, Document $deployment, JobArtifact $artifact): string
     {
         $error = $artifact->error;
-        if ($error !== null && !\in_array($error->code, self::INTERNAL_ARTIFACT_ERRORS, true)) {
-            return $error->message;
+        if ($error !== null && isset(self::USER_ARTIFACT_ERRORS[$error->code->value])) {
+            return self::USER_ARTIFACT_ERRORS[$error->code->value];
         }
 
         Span::current()
