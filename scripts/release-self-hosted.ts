@@ -287,15 +287,20 @@ function compatibility(version: string, previous: string): void {
 
 function changelog(version: string, date: string, release: string): void {
   const [major, minor] = parse(version)
-  const path = join(CHANGELOG, `${date}.markdoc`)
-  if (existsSync(path)) fail(`${path} already exists; pass --date`)
+  // A day with an entry already takes the next `-N` suffix, like the other
+  // same-day entries; the front-matter date stays the calendar date.
+  let name = date
+  for (let index = 1; existsSync(join(CHANGELOG, `${name}.markdoc`)); index++) {
+    name = `${date}-${index}`
+  }
+  const path = join(CHANGELOG, `${name}.markdoc`)
   const highlights = section(release, 'Highlights')
   const entry = [
     '---',
     'layout: changelog',
     `title: Announcing Appwrite ${major}.${minor} for self-hosted deployments`,
     `date: ${date}`,
-    `cover: /images/changelog/${date}.avif`,
+    `cover: /images/changelog/${name}.avif`,
     '---',
     '',
     `Appwrite ${major}.${minor} is now available for self-hosting.`,
@@ -310,7 +315,7 @@ function changelog(version: string, date: string, release: string): void {
   ].join('\n')
   stage(path, entry)
   console.log(`${path.slice(ROOT.length + 1)}: created`)
-  const cover = join(ROOT, 'public', 'images', 'changelog', `${date}.avif`)
+  const cover = join(ROOT, 'public', 'images', 'changelog', `${name}.avif`)
   if (!existsSync(cover))
     console.warn(
       `warning: add the cover image at ${cover.slice(ROOT.length + 1)}`,

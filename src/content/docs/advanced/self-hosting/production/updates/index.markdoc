@@ -22,9 +22,9 @@ Before upgrading, be sure to:
 1. review the [changelog](https://github.com/appwrite/appwrite/releases) for any breaking changes
 1. test the migration process on a non-production instance to make sure your application is working well
 
-# Upgrading to 2.2.0 {% #upgrading-to-latest %}
+# Upgrading to 2.3.0 {% #upgrading-to-latest %}
 
-Appwrite 2.2.0 upgrades from `1.9.6` or any later version. Run the upgrade command with the `2.2.0` tag, then run the migration.
+Appwrite 2.3.0 upgrades from `1.9.6` or any later version. Run the upgrade command with the `2.3.0` tag, then run the migration.
 
 ```sh
 docker run -it --rm \
@@ -32,7 +32,7 @@ docker run -it --rm \
     --volume /var/run/docker.sock:/var/run/docker.sock \
     --volume "$(pwd)"/appwrite:/usr/src/code/appwrite:rw \
     --entrypoint="upgrade" \
-    appwrite/appwrite:2.2.0
+    appwrite/appwrite:2.3.0
 ```
 
 Then run the migration from the `appwrite` directory.
@@ -42,9 +42,9 @@ cd appwrite/
 docker compose exec appwrite migrate
 ```
 
-Function and site executions are stored in ClickHouse only from 2.2.0. The upgrade stops writing executions to the project database, and `_APP_EXECUTIONS_DUAL_WRITE` is removed. Remove it from your `.env` if you set it. `_APP_MAINTENANCE_RETENTION_USAGE_HOURLY` is removed as well, because hourly usage metrics are stored in ClickHouse and are governed by `_APP_MAINTENANCE_RETENTION_USAGE_TTL`. See [environment variables](/docs/advanced/self-hosting/configuration/environment-variables).
+The migration drops the `devKeys` collection and project attribute from the console database, removes the dev key scopes from API keys, functions and sites, and in every project adds `providerIdToken` to `identities` and a `passwordPwned` attribute and index to `users`, restoring any missing email metadata attributes on the way. Its run time grows with the number of projects. The upgraded compose file adds an `appwrite-mqtt` container and has Traefik publish ports 8883 and 8084; set `_APP_MQTT_PORT` and `_APP_MQTT_WSS_PORT` in `.env` if those are taken. Remove `_APP_CONSOLE_URL_SCHEME` from your `.env`, and set `_APP_CONSOLE_URL` if your console is served from a different host than the API. To roll back to 2.2.0, stop the workers and let queued jobs drain first, since the older queue client can't recover jobs the new one has reserved. **Back up your data first.**
 
-If you skip releases, also follow the upgrade notes of each release you skip: [`2.0.0`](https://github.com/appwrite/appwrite/releases/tag/2.0.0), [`2.1.0`](https://github.com/appwrite/appwrite/releases/tag/2.1.0).
+If you skip releases, also follow the upgrade notes of each release you skip: [`2.0.0`](https://github.com/appwrite/appwrite/releases/tag/2.0.0), [`2.1.0`](https://github.com/appwrite/appwrite/releases/tag/2.1.0), [`2.2.0`](https://github.com/appwrite/appwrite/releases/tag/2.2.0).
 
 # Installing the next version {% #install-next-version %}
 
@@ -63,7 +63,7 @@ Your Appwrite installation's parent directory name is expected to be `appwrite`.
 {% /info %}
 
 {% info title="Choose an image tag" %}
-Replace `<APPWRITE_VERSION>` below with the specific Appwrite image tag you intend to run (for example, `2.2.0`). Avoid using `latest` in production.
+Replace `<APPWRITE_VERSION>` below with the specific Appwrite image tag you intend to run (for example, `2.3.0`). Avoid using `latest` in production.
 {% /info %}
 
 ## Unix
