@@ -9,16 +9,10 @@
     <testsuites>
         <testsuite name="unit">
             <directory>tests</directory>
-            <exclude>tests/Messaging/Adapter/Email/EmailTest.php</exclude>
-            <exclude>tests/Messaging/Adapter/Email/SMTPTest.php</exclude>
-            <exclude>tests/Messaging/Adapter/SMS/SMSTest.php</exclude>
-            <exclude>tests/Messaging/Adapter/SMS/WhatsAppTest.php</exclude>
+            <exclude>tests/E2E</exclude>
         </testsuite>
         <testsuite name="e2e">
-            <file>tests/Messaging/Adapter/Email/EmailTest.php</file>
-            <file>tests/Messaging/Adapter/Email/SMTPTest.php</file>
-            <file>tests/Messaging/Adapter/SMS/SMSTest.php</file>
-            <file>tests/Messaging/Adapter/SMS/WhatsAppTest.php</file>
+            <directory>tests/E2E</directory>
         </testsuite>
     </testsuites>
     <source>

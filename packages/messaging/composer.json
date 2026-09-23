@@ -14,17 +14,17 @@
     "minimum-stability": "stable",
     "prefer-stable": true,
     "scripts": {
-        "test": "phpunit --testsuite unit",
-        "test:e2e": "phpunit --testsuite e2e"
+        "test": "phpunit --configuration phpunit.xml --testsuite unit",
+        "test:e2e": "phpunit --configuration phpunit.xml --testsuite e2e"
     },
     "autoload": {
         "psr-4": {
-            "Utopia\\Messaging\\": "src/Utopia/Messaging"
+            "Utopia\\Messaging\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Utopia\\Tests\\": "tests/Messaging"
+            "Utopia\\Messaging\\Tests\\": "tests/"
         }
     },
     "require": {
@@ -34,7 +34,7 @@
         "ext-swoole": "*",
         "psr/http-client": "^1.0",
         "psr/http-message": "^1.1 || ^2.0",
-        "utopia-php/client": "^0.4",
+        "utopia-php/client": "^0.5",
         "utopia-php/pools": "^2.0",
         "utopia-php/smtp": "^0.2",
         "utopia-php/telemetry": "^0.4"

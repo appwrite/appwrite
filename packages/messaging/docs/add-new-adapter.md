@@ -12,7 +12,7 @@ This library is developed in the [utopia-php monorepo](https://github.com/utopia
 
 ## 2. Implement a new messaging adapter
 
-In order to start implementing a new messaging adapter, add new file inside `packages/messaging/src/Utopia/Messaging/Adapters/XXX/YYY.php` where `XXX` is the type of adapter (**Email**, **SMS** or **Push**), and `YYY` is the name of the messaging provider in `PascalCase` casing. Inside the file you should create a class that extends the base `Email`, `SMS` or `Push` abstract adapter class.
+In order to start implementing a new messaging adapter, add new file inside `packages/messaging/src/Adapter/XXX/YYY.php` where `XXX` is the type of adapter (**Email**, **SMS** or **Push**), and `YYY` is the name of the messaging provider in `PascalCase` casing. Inside the file you should create a class that extends the base `Email`, `SMS` or `Push` abstract adapter class.
 
 Inside the class, you need to implement four methods:
 
