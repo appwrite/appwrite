@@ -145,7 +145,7 @@ Opus 5.5's lower cache read pricing pairs particularly well with this setup. Age
 
 Spin up the backend your next Opus 5.5 agent needs in minutes. [Create a free Appwrite project](https://cloud.appwrite.io/), install the Claude Code plugin, and point the model id `claude-opus-5-5` at it. Ask it to build an authentication flow and a database schema, and you get back a working backend and a diff instead of a weekend of plumbing.
 
-## Resources
+# Resources
 
 * [Appwrite plugin for Claude Code](/blog/post/announcing-appwrite-claude-code-plugin)
 * [Claude Code integration guide](/docs/tooling/ai/ai-dev-tools/claude-code)
