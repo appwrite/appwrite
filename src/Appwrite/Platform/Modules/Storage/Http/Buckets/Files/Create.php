@@ -19,6 +19,7 @@ use Appwrite\Utopia\Response;
 use Utopia\Compression\Algorithms\GZIP;
 use Utopia\Compression\Algorithms\Zstd;
 use Utopia\Compression\Compression;
+use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
@@ -386,7 +387,16 @@ class Create extends Action
                     }
                 }
 
-                $mimeType = $this->resolveArchiveMimeType($deviceForFiles->getFileMimeType($path), $fileName); // Get mime-type before compression and encryption
+                $mimeType = $deviceForFiles->getFileMimeType($path); // Get mime-type before compression and encryption
+                $formats = Config::getParam('storage-formats');
+
+                // Sniffing reports the container a file is packed in, not the format inside
+                // it, so an APK, a JAR or a TrueType font comes back as a plain zip or a bare
+                // SFNT. Where only the extension can tell them apart, the extension wins.
+                if (\in_array($mimeType, $formats['ambiguous'], true)) {
+                    $mimeType = $formats['extensions'][\strtolower(\pathinfo($fileName, PATHINFO_EXTENSION))] ?? $mimeType;
+                }
+
                 $fileHash = $deviceForFiles->getFileHash($path); // Get file hash before compression and encryption
                 $data = '';
                 $iv = '';
@@ -579,26 +589,5 @@ class Create extends Action
      */
     protected function afterCreateSuccess(Document $file)
     {
-    }
-
-    /**
-     * libmagic recognises a zip container from the entries at its head, so an APK
-     * whose archive starts with res/ is reported as a plain zip. The stored type is
-     * sent back as Content-Type on download, and clients that trust it over the
-     * Content-Disposition filename then save the file under the wrong extension.
-     *
-     * Only a generic container type is overridden, and only ever with another binary
-     * type, so a file can never be promoted to something a browser would render.
-     */
-    private function resolveArchiveMimeType(string $mimeType, string $fileName): string
-    {
-        if (!\in_array($mimeType, ['application/zip', 'application/octet-stream'], true)) {
-            return $mimeType;
-        }
-
-        return match (\strtolower(\pathinfo($fileName, PATHINFO_EXTENSION))) {
-            'apk' => 'application/vnd.android.package-archive',
-            default => $mimeType,
-        };
     }
 }

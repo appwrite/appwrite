@@ -324,16 +324,21 @@ abstract class Base extends Action
     protected function contentType(string $name, string $contentType, string $body = ''): string
     {
         $contentType = \strtolower(\trim(\explode(';', $contentType)[0]));
-        $extension = \strtolower(\pathinfo($name, PATHINFO_EXTENSION));
-
-        // An APK is a zip container, so clients and libmagic alike commonly report one as a
-        // plain zip. The stored type is echoed back as Content-Type on download, and clients
-        // that trust it over the file name then save the APK under the wrong extension.
-        if ($extension === 'apk' && \in_array($contentType, ['', 'application/zip', 'application/octet-stream', 'binary/octet-stream'], true)) {
-            return 'application/vnd.android.package-archive';
+        if ($contentType === 'binary/octet-stream') {
+            $contentType = 'application/octet-stream';
         }
 
-        if ($contentType !== '' && $contentType !== 'application/octet-stream' && $contentType !== 'binary/octet-stream') {
+        $extension = \strtolower(\pathinfo($name, PATHINFO_EXTENSION));
+        $formats = Config::getParam('storage-formats');
+
+        // A client uploading an APK, a JAR or a font commonly declares the zip or SFNT
+        // container it is packed in rather than the format inside. Where only the
+        // extension can tell the two apart, the extension wins.
+        if (($contentType === '' || \in_array($contentType, $formats['ambiguous'], true)) && isset($formats['extensions'][$extension])) {
+            return $formats['extensions'][$extension];
+        }
+
+        if ($contentType !== '' && $contentType !== 'application/octet-stream') {
             return $contentType;
         }
 
