@@ -64,7 +64,7 @@ Claude Opus 5.5 leads on agentic coding, computer use, and knowledge work. Anthr
 
 *Source: Anthropic's* [Claude Opus 5.5 announcement](https://www.anthropic.com/news/claude-opus-5-5). *Results use adaptive thinking at max effort unless noted. Terminal-Bench 4.0 uses xhigh effort for Opus 5.5 and high effort for GPT-6 Astra, each model's highest score.*
 
-Two caveats worth carrying into your own evaluation. Opus 5.5 was benchmarked with production safeguards enabled, so cybersecurity tasks fell back to Opus 4.8 and biology tasks to Opus 5 when classifiers intervened, which likely understates its scores. And [AutomationBench](https://zapier.com/) was run by Zapier without fallback models, so every safeguard intervention counted as a failure.
+Two caveats worth carrying into your own evaluation. Opus 5.5 was benchmarked with production safeguards enabled, so cybersecurity tasks fell back to Opus 4.8, while biology and frontier LLM development tasks fell back to Opus 5 when safeguards intervened. Anthropic says this likely reduces Opus 5.5's performance on these benchmarks. And [AutomationBench](https://zapier.com/) was run by Zapier without fallback models, so every safeguard intervention counted as a failure.
 
 # Claude Opus 5.5 pricing: 40% lower typical workload costs
 
