@@ -884,6 +884,10 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
             href: '/docs/products/auth/oauth2',
           },
           {
+            label: 'Native sign-in',
+            href: '/docs/products/auth/native-sign-in',
+          },
+          {
             label: 'Anonymous login',
             href: '/docs/products/auth/anonymous',
           },

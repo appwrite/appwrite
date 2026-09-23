@@ -3,6 +3,9 @@
  * Keys are the exact English source strings (English is the source of truth).
  */
 export const heAuthStorageDictionary: Record<string, string> = {
+  'Enter the Web application client ID from Google Cloud. Your app sends the same ID to Google as the server client ID. Android and iOS client IDs do not go here.': 'הזינו את מזהה הלקוח מסוג Web application מ-Google Cloud. האפליקציה שלכם שולחת את אותו מזהה ל-Google כ-server client ID. מזהי לקוח של Android ו-iOS לא מוזנים כאן.',
+  "Enter your app's bundle ID, such as com.example.app.": 'הזינו את ה-bundle ID של האפליקציה, לדוגמה com.example.app.',
+  'Learn more about native sign-in': 'מידע נוסף על התחברות נייטיב',
   'Native sign-in': 'התחברות נייטיב',
   'Sessions can be created from ID tokens obtained on device': 'ניתן ליצור סשנים מטוקני ID שהתקבלו במכשיר',
   'Native sign-in is turned off for this project': 'התחברות נייטיב כבויה בפרויקט זה',

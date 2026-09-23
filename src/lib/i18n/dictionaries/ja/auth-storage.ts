@@ -3,6 +3,9 @@
  * Keys are the exact English source strings (English is the source of truth).
  */
 export const jaAuthStorageDictionary: Record<string, string> = {
+  'Enter the Web application client ID from Google Cloud. Your app sends the same ID to Google as the server client ID. Android and iOS client IDs do not go here.': 'Google Cloud の Web application タイプのクライアント ID を入力します。アプリは同じ ID を server client ID として Google に送信します。Android と iOS のクライアント ID はここに入力しません。',
+  "Enter your app's bundle ID, such as com.example.app.": 'アプリの bundle ID を入力します（例: com.example.app）。',
+  'Learn more about native sign-in': 'ネイティブサインインの詳細',
   'Native sign-in': 'ネイティブサインイン',
   'Sessions can be created from ID tokens obtained on device': 'デバイス上で取得した ID トークンからセッションを作成できます',
   'Native sign-in is turned off for this project': 'このプロジェクトではネイティブサインインは無効です',

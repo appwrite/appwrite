@@ -20,6 +20,7 @@ import {
   useUpdateProjectOAuth2Provider,
 } from '@/lib/react-query/hooks'
 import type { AuthOAuth2SettingsInitialData } from '@/lib/react-query/hooks/oauth2-providers'
+import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { InputTags } from '@/components/ui/input-tags'
@@ -461,6 +462,7 @@ function OAuth2ParameterField({
 }
 
 type OAuth2NativeSignInCardProps = {
+  providerId: string
   param: CatalogParameter
   enabled: boolean
   onEnabledChange: (enabled: boolean) => void
@@ -471,10 +473,21 @@ type OAuth2NativeSignInCardProps = {
 }
 
 /**
+ * Which client ID goes in this list differs per provider and is easy to get
+ * wrong, so name it here instead of relying on the generic catalog hint.
+ */
+const NATIVE_CLIENT_IDS_HINTS: Partial<Record<string, string>> = {
+  google:
+    'Enter the Web application client ID from Google Cloud. Your app sends the same ID to Google as the server client ID. Android and iOS client IDs do not go here.',
+  apple: "Enter your app's bundle ID, such as com.example.app.",
+}
+
+/**
  * Native ID token sign-in has its own switch because it needs different
  * things from the browser flow: no secret, only the audiences to accept.
  */
 function OAuth2NativeSignInCard({
+  providerId,
   param,
   enabled,
   onEnabledChange,
@@ -484,6 +497,7 @@ function OAuth2NativeSignInCard({
   disabled,
 }: OAuth2NativeSignInCardProps) {
   const t = useT()
+  const hint = NATIVE_CLIENT_IDS_HINTS[providerId]
 
   return (
     <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-4">
@@ -514,7 +528,13 @@ function OAuth2NativeSignInCard({
           <p className="text-[12px] text-muted-foreground">
             {t(
               'Verifies ID tokens from the native SDK, such as Sign in with Apple or Google Credential Manager, without a client secret.',
-            )}
+            )}{' '}
+            <DocsRouteLink
+              className="link-neutral"
+              href="/docs/products/auth/native-sign-in"
+            >
+              {t('Learn more about native sign-in')}
+            </DocsRouteLink>
           </p>
           <Label
             htmlFor={`oauth2-${param.$id}`}
@@ -533,8 +553,10 @@ function OAuth2NativeSignInCard({
           />
           {error ? (
             <p className="text-[12px] text-destructive">{t(error)}</p>
-          ) : param.hint ? (
-            <p className="text-[11px] text-muted-foreground">{param.hint}</p>
+          ) : hint || param.hint ? (
+            <p className="text-[11px] text-muted-foreground">
+              {hint ? t(hint) : param.hint}
+            </p>
           ) : null}
         </div>
       ) : null}
@@ -1315,6 +1337,7 @@ export function OAuth2ProvidersSection({
 
                 {providerSupportsNative && selectedCatalog ? (
                   <OAuth2NativeSignInCard
+                    providerId={selectedCatalog.$id}
                     param={
                       selectedCatalog.parameters.find(
                         (p) => p.$id === NATIVE_CLIENT_IDS_PARAM_ID,

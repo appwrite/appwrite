@@ -1242,6 +1242,13 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "readingTimeMinutes": 2
   },
   {
+    "slug": "products/auth/native-sign-in",
+    "title": "Native sign-in",
+    "description": "Sign users in with Sign in with Apple or Google on device, then exchange the ID token for an Appwrite session without a redirect through Appwrite.",
+    "layout": "article",
+    "readingTimeMinutes": 11
+  },
+  {
     "slug": "products/auth/oauth-server",
     "title": "OAuth2 server",
     "description": "Turn your Appwrite project into an OAuth 2.1 and OpenID Connect (OIDC) provider so third-party apps can sign in with your product.",

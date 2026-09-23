@@ -1945,6 +1945,16 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     ]
   },
   {
+    "slug": "products/auth/native-sign-in",
+    "title": "Native sign-in",
+    "description": "Sign users in with Sign in with Apple or Google on device, then exchange the ID token for an Appwrite session without a redirect through Appwrite.",
+    "excerpt": "Native sign-in creates an Appwrite session from an OpenID Connect ID token that your app obtained on the device. The app calls the platform's own sign-in API, such as Sign in with Apple on iOS or Credential Manager on Android, and sends the returned ID token to Appwrite. Appwrite verifies the token against the provider's published signing keys and returns a session in the same request. Compared with OAuth2 login, no redirect passes through Appwrite, and the provider configuration holds…",
+    "breadcrumbs": [
+      "Auth",
+      "Native sign-in"
+    ]
+  },
+  {
     "slug": "products/auth/oauth-server",
     "title": "OAuth2 server",
     "description": "Turn your Appwrite project into an OAuth 2.1 and OpenID Connect (OIDC) provider so third-party apps can sign in with your product.",
