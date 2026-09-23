@@ -177,6 +177,24 @@ final class ConnectionTest extends TestCase
         $this->assertSame([], $adapter->sent, 'reason 0 sends no DISCONNECT');
         $this->assertSame([9], $adapter->closed);
     }
+
+    public function testDisconnectClosesEvenWhenSendFails(): void
+    {
+        // The courtesy DISCONNECT is best-effort; a failing transport must not leak the socket.
+        $adapter = new RecordingAdapter();
+        $adapter->failSend = true;
+        $connection = new Connection(9, $adapter);
+        $connection->protocol = 5;
+
+        try {
+            $connection->disconnect(Disconnect::NOT_AUTHORIZED, 'boom');
+            $this->fail('the send failure should propagate');
+        } catch (\RuntimeException) {
+            // expected
+        }
+
+        $this->assertSame([9], $adapter->closed, 'the socket is closed despite the send failure');
+    }
 }
 
 /**
@@ -191,8 +209,15 @@ final class RecordingAdapter extends Adapter
     /** @var array<int, int> */
     public array $closed = [];
 
+    /** When true, send() throws — to prove disconnect() still closes the socket. */
+    public bool $failSend = false;
+
     public function send(int $connection, string $message): void
     {
+        if ($this->failSend) {
+            throw new \RuntimeException('transport gone');
+        }
+
         $this->sent[] = [$connection, $message];
     }
 

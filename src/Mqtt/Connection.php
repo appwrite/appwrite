@@ -112,15 +112,18 @@ class Connection
             return;
         }
 
-        if ($reason !== 0 && $this->protocol >= V5::PROTOCOL_LEVEL) {
-            $properties = null;
-            if ($reasonString !== null && $reasonString !== '') {
-                $properties = (new Properties())->add(new Property(Property::REASON_STRING, $reasonString));
+        try {
+            if ($reason !== 0 && $this->protocol >= V5::PROTOCOL_LEVEL) {
+                $properties = null;
+                if ($reasonString !== null && $reasonString !== '') {
+                    $properties = (new Properties())->add(new Property(Property::REASON_STRING, $reasonString));
+                }
+                $this->adapter->send($this->fd, V5::disconnect($reason, $properties));
             }
-            $this->adapter->send($this->fd, V5::disconnect($reason, $properties));
+        } finally {
+            // Closing is the point of this method: a failed courtesy DISCONNECT must not leak the socket.
+            $this->adapter->close($this->fd);
         }
-
-        $this->adapter->close($this->fd);
     }
 
     /**
