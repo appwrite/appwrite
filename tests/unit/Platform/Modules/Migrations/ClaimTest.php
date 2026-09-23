@@ -310,6 +310,123 @@ final class ClaimTest extends TestCase
         $this->assertSame('processing', $stored->getAttribute('stage'));
     }
 
+    public function testReclaimClaimsAGenerationConsumeAcceptsWithoutPublishing(): void
+    {
+        $terminal = $this->createFailedMigration();
+        $locks = $this->locks();
+        $claims = new Claim($this->database, $locks);
+        $project = new Document(['$id' => 'project-1']);
+
+        $retry = $claims->reclaim($project->getId(), $terminal->getId());
+
+        $this->assertSame(['migration:project-1:migration-1'], $locks->keys);
+        $stored = $this->database->getDocument('migrations', $terminal->getId());
+        $this->assertSame('pending', $stored->getAttribute('status'));
+        $this->assertSame('finished', $stored->getAttribute('stage'));
+        $this->assertNotSame('attempt-terminal', $stored->getAttribute('attemptId'));
+        $this->assertSame($stored->getAttribute('attemptId'), $retry->migration->getAttribute('attemptId'));
+        $this->assertSame($stored->getUpdatedAt(), $retry->migration->getUpdatedAt());
+        $this->assertSame(
+            [],
+            \array_diff(\array_keys($retry->terminal->getArrayCopy()), ['$id', 'attemptId', 'status', 'stage']),
+            'Terminal snapshot must not carry the migration payload onto the queue, credentials included'
+        );
+        $this->assertSame($terminal->getId(), $retry->terminal->getId());
+        $this->assertSame('attempt-terminal', $retry->terminal->getAttribute('attemptId'));
+        $this->assertSame('failed', $retry->terminal->getAttribute('status'));
+        $this->assertSame('finished', $retry->terminal->getAttribute('stage'));
+
+        $message = $retry->message($project, ['name' => 'test-platform']);
+        $this->assertSame($project, $message->project);
+        $this->assertSame($retry->migration, $message->migration);
+        $this->assertSame($retry->terminal, $message->terminal);
+        $this->assertSame(['name' => 'test-platform'], $message->platform);
+
+        $delivery = $claims->consume($project->getId(), MigrationMessage::fromArray($message->toArray()));
+
+        $this->assertInstanceOf(Delivery::class, $delivery);
+        $this->assertSame($retry->migration->getAttribute('attemptId'), $delivery->migration->getAttribute('attemptId'));
+        $this->assertSame('processing', $delivery->migration->getAttribute('status'));
+        $this->assertSame('processing', $delivery->migration->getAttribute('stage'));
+        $this->assertInstanceOf(Document::class, $delivery->terminal);
+        $this->assertSame('attempt-terminal', $delivery->terminal->getAttribute('attemptId'));
+        $this->assertNotInstanceOf(Delivery::class, $claims->consume($project->getId(), new MigrationMessage(
+            project: $project,
+            migration: $terminal,
+        )));
+
+        try {
+            $claims->reclaim($project->getId(), $terminal->getId());
+            $this->fail('Expected the running attempt to be refused');
+        } catch (Exception $error) {
+            $this->assertSame(Exception::MIGRATION_IN_PROGRESS, $error->getType());
+        }
+    }
+
+    /** @return \Iterator<string, array{string, string}> */
+    public static function unfinishedLifecycles(): \Iterator
+    {
+        yield 'queued' => ['pending', 'init'];
+        yield 'queued retry' => ['pending', 'finished'];
+        yield 'processing' => ['processing', 'processing'];
+        yield 'migrating' => ['processing', 'migrating'];
+        yield 'finalizing' => ['processing', 'finalizing'];
+        yield 'completed' => ['completed', 'finished'];
+    }
+
+    #[DataProvider('unfinishedLifecycles')]
+    public function testReclaimRefusesAMigrationThatHasNotFailed(string $status, string $stage): void
+    {
+        $migration = $this->database->createDocument('migrations', new Document([
+            '$id' => 'migration-1',
+            'attemptId' => 'attempt-current',
+            'status' => $status,
+            'stage' => $stage,
+            'resourceData' => [],
+        ]));
+
+        try {
+            (new Claim($this->database, $this->locks()))->reclaim('project-1', $migration->getId());
+            $this->fail('Expected a migration that has not failed to be refused');
+        } catch (Exception $error) {
+            $this->assertSame(Exception::MIGRATION_IN_PROGRESS, $error->getType());
+        }
+
+        $stored = $this->database->getDocument('migrations', $migration->getId());
+        $this->assertSame('attempt-current', $stored->getAttribute('attemptId'));
+        $this->assertSame($status, $stored->getAttribute('status'));
+        $this->assertSame($stage, $stored->getAttribute('stage'));
+        $this->assertSame($migration->getUpdatedAt(), $stored->getUpdatedAt());
+    }
+
+    public function testReclaimRefusesAnUnknownMigration(): void
+    {
+        try {
+            (new Claim($this->database, $this->locks()))->reclaim('project-1', 'migration-unknown');
+            $this->fail('Expected an unknown migration to be refused');
+        } catch (Exception $error) {
+            $this->assertSame(Exception::MIGRATION_NOT_FOUND, $error->getType());
+        }
+    }
+
+    public function testReclaimRefusesIncompleteOwnershipSchemaBeforeMutatingTerminal(): void
+    {
+        $terminal = $this->createFailedMigration();
+        $this->database->deleteAttribute('databases', 'migrationId');
+
+        try {
+            (new Claim($this->database, $this->locks()))->reclaim('project-1', $terminal->getId());
+            $this->fail('Expected incomplete ownership schema to be refused');
+        } catch (Exception $error) {
+            $this->assertSame(Exception::MIGRATION_SCHEMA_NOT_READY, $error->getType());
+        }
+
+        $stored = $this->database->getDocument('migrations', $terminal->getId());
+        $this->assertSame('attempt-terminal', $stored->getAttribute('attemptId'));
+        $this->assertSame('failed', $stored->getAttribute('status'));
+        $this->assertSame($terminal->getUpdatedAt(), $stored->getUpdatedAt());
+    }
+
     public function testRetryRestoresTerminalStateWhenEnqueueFails(): void
     {
         $terminal = $this->createFailedMigration();

@@ -740,6 +740,152 @@ final class MigrationsTest extends TestCase
         $this->assertCount(1, $migrationPublisher->getEvents('migrations'));
     }
 
+    public function testInProcessRetryRunsTheNextAttemptThroughTheClaimProtocol(): void
+    {
+        $database = $this->createClaimDatabase();
+        $project = new Document([
+            '$id' => 'project-1',
+            '$sequence' => 1,
+            'teamId' => 'team-1',
+        ]);
+        $migration = $database->createDocument('migrations', new Document([
+            '$id' => 'migration-1',
+            'attemptId' => 'attempt-1',
+            'status' => 'pending',
+            'stage' => 'init',
+            'resourceData' => [],
+            'errors' => [],
+        ]));
+        $worker = new class () extends Migrations {
+            /** @var array<string> */
+            public array $attempts = [];
+
+            #[\Override]
+            protected function processMigration(
+                Document $migration,
+                Realtime $queueForRealtime,
+                MailPublisher $publisherForMails,
+                Context $usage,
+                UsagePublisher $publisherForUsage,
+                array $platform,
+                Authorization $authorization,
+            ): void {
+                $project = $this->project ?? throw new \LogicException('Project missing');
+                $this->attempts[] = (string) $migration->getAttribute('attemptId');
+                $first = \count($this->attempts) === 1;
+
+                $migration->setAttribute('status', $first ? 'failed' : 'completed');
+                $migration->setAttribute('stage', 'finished');
+                $migration->setAttribute('errors', $first ? ['Dedicated database is still starting'] : []);
+                $this->updateMigrationDocument($migration, $project, $queueForRealtime);
+            }
+        };
+        $queued = $this->migrationDelivery($project, $migration);
+
+        $this->deliverClaim($worker, $database, $project, $queued);
+
+        $failed = $database->getDocument('migrations', $migration->getId());
+        $this->assertSame(['attempt-1'], $worker->attempts);
+        $this->assertSame('failed', $failed->getAttribute('status'));
+        $this->assertSame(['Dedicated database is still starting'], $failed->getAttribute('errors'));
+
+        $retry = (new Claim($database, $this->claimLocks()))->reclaim($project->getId(), $migration->getId());
+        $this->deliverClaim($worker, $database, $project, new Message([
+            'pid' => 'pid-retry',
+            'queue' => 'v1-migrations',
+            'timestamp' => \time(),
+            'payload' => $retry->message($project)->toArray(),
+        ]));
+
+        $completed = $database->getDocument('migrations', $migration->getId());
+        $this->assertSame(['attempt-1', $retry->migration->getAttribute('attemptId')], $worker->attempts);
+        $this->assertSame('completed', $completed->getAttribute('status'));
+        $this->assertSame('finished', $completed->getAttribute('stage'));
+        $this->assertSame([], $completed->getAttribute('errors'));
+        $this->assertSame($retry->migration->getAttribute('attemptId'), $completed->getAttribute('attemptId'));
+
+        $this->deliverClaim($worker, $database, $project, $queued);
+        $this->assertCount(2, $worker->attempts, 'A replay of the first delivery must not run a third attempt');
+    }
+
+    private function createClaimDatabase(): Database
+    {
+        $database = new Database(new Memory(), new Cache(new NoCache()));
+        $database
+            ->setAuthorization(new Authorization())
+            ->setDatabase('migrationWorkerClaims')
+            ->setNamespace('migration_worker_claims_' . \uniqid());
+        $database->create();
+        $database->createCollection(new Collection(
+            id: 'databases',
+            attributes: [
+                new Attribute('migrationId', ColumnType::String, size: Database::LENGTH_KEY),
+                new Attribute('migrationAttemptId', ColumnType::String, size: Database::LENGTH_KEY),
+            ],
+        ));
+        $database->createCollection(new Collection(
+            id: 'migrations',
+            attributes: [
+                new Attribute('status', ColumnType::String, size: 255, required: true),
+                new Attribute('stage', ColumnType::String, size: 255, required: true),
+                new Attribute('attemptId', ColumnType::String, size: Database::LENGTH_KEY),
+                new Attribute('resourceData', ColumnType::String, size: 131_070, required: true, filters: ['json']),
+                new Attribute('errors', ColumnType::String, size: 1_000_000, array: true),
+            ],
+            permissions: [
+                Permission::create(Role::any()),
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+            ],
+            documentSecurity: false,
+        ));
+
+        return $database;
+    }
+
+    private function migrationDelivery(Document $project, Document $migration): Message
+    {
+        return new Message([
+            'pid' => 'pid-' . $migration->getId(),
+            'queue' => 'v1-migrations',
+            'timestamp' => \time(),
+            'payload' => (new MigrationMessage(
+                project: $project,
+                migration: $migration,
+            ))->toArray(),
+        ]);
+    }
+
+    private function claimLocks(): \Closure
+    {
+        return static fn (string $key, int $ttl, callable $callback, float $timeout): mixed => $callback();
+    }
+
+    private function deliverClaim(Migrations $worker, Database $database, Document $project, Message $message): void
+    {
+        $publisher = $this->createStub(Publisher::class);
+        $queue = new Queue('test');
+        $device = $this->createStub(Device::class);
+
+        $worker->action(
+            message: $message,
+            project: $project,
+            dbForProject: $database,
+            dbForPlatform: $database,
+            getDatabasesDB: static fn (Document $document): Database => $database,
+            getProjectDB: static fn (Document $document): Database => $database,
+            queueForRealtime: new Realtime(),
+            deviceForMigrations: $device,
+            deviceForFiles: $device,
+            publisherForMails: new MailPublisher($publisher, $queue),
+            usage: new Context(),
+            publisherForUsage: new UsagePublisher($publisher, $queue),
+            plan: [],
+            authorization: new Authorization(),
+            locks: $this->claimLocks(),
+        );
+    }
+
     private function createSourceMock(): Source&MockObject
     {
         $target = $this->createMock(Source::class);

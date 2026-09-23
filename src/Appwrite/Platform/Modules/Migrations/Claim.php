@@ -172,23 +172,20 @@ final readonly class Claim
     }
 
     /**
-     * Persist a retry claim before publishing it. The terminal document is a
-     * separate immutable queue snapshot; the live document becomes active.
-     *
-     * @param array<string, mixed> $platform
+     * Claim the next generation of a failed migration without publishing it,
+     * for a worker that runs the attempt itself: pass `message()` of the
+     * result to the worker, and consume() accepts it exactly once. The
+     * terminal document is a separate immutable snapshot of the failed
+     * attempt; the live document becomes pending.
      */
-    public function retry(
-        Document $project,
-        string $migrationId,
-        array $platform,
-        MigrationPublisher $publisher,
-    ): Document {
+    public function reclaim(string $projectId, string $migrationId): Retry
+    {
         $this->assertReady();
 
-        [$claimed, $terminal] = $this->guard(
-            $this->key($project->getId(), $migrationId),
-            function () use ($migrationId): array {
-                return $this->database->withTransaction(function () use ($migrationId): array {
+        return $this->guard(
+            $this->key($projectId, $migrationId),
+            function () use ($migrationId): Retry {
+                return $this->database->withTransaction(function () use ($migrationId): Retry {
                     $migration = $this->database->getDocument('migrations', $migrationId, forUpdate: true);
 
                     if ($migration->isEmpty()) {
@@ -205,38 +202,48 @@ final readonly class Claim
                         'status' => $migration->getAttribute('status'),
                         'stage' => $migration->getAttribute('stage'),
                     ]);
-                    $claimed = $this->write($migration, new Document([
-                        'attemptId' => ID::unique(),
-                        'status' => self::STATUS_PENDING,
-                        'stage' => self::STAGE_FINISHED,
-                    ]));
 
-                    return [$claimed, $terminal];
+                    return new Retry(
+                        migration: $this->write($migration, new Document([
+                            'attemptId' => ID::unique(),
+                            'status' => self::STATUS_PENDING,
+                            'stage' => self::STAGE_FINISHED,
+                        ])),
+                        terminal: $terminal,
+                    );
                 });
             },
         );
+    }
+
+    /**
+     * Persist a retry claim before publishing it. If publishing fails, restore
+     * the failed attempt unless a newer claim already moved past this one.
+     *
+     * @param array<string, mixed> $platform
+     */
+    public function retry(
+        Document $project,
+        string $migrationId,
+        array $platform,
+        MigrationPublisher $publisher,
+    ): Document {
+        $retry = $this->reclaim($project->getId(), $migrationId);
 
         try {
-            $published = $publisher->enqueue(new MigrationMessage(
-                project: $project,
-                migration: $claimed,
-                platform: $platform,
-                terminal: $terminal,
-            ));
-
-            if ($published === false) {
+            if ($publisher->enqueue($retry->message($project, $platform)) === false) {
                 throw new \RuntimeException('Failed to enqueue migration');
             }
         } catch (\Throwable $error) {
-            $this->withGeneration($claimed, function (Document $live) use ($terminal): void {
+            $this->withGeneration($retry->migration, function (Document $live) use ($retry): void {
                 if (
                     $live->getAttribute('status') === self::STATUS_PENDING
                     && $live->getAttribute('stage') === self::STAGE_FINISHED
                 ) {
                     $this->write($live, new Document([
-                        'attemptId' => $terminal->getAttribute('attemptId'),
-                        'status' => $terminal->getAttribute('status'),
-                        'stage' => $terminal->getAttribute('stage'),
+                        'attemptId' => $retry->terminal->getAttribute('attemptId'),
+                        'status' => $retry->terminal->getAttribute('status'),
+                        'stage' => $retry->terminal->getAttribute('stage'),
                     ]));
                 }
             });
@@ -244,7 +251,7 @@ final readonly class Claim
             throw $error;
         }
 
-        return $claimed;
+        return $retry->migration;
     }
 
     /**
