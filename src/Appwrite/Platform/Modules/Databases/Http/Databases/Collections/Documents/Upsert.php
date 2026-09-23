@@ -183,6 +183,7 @@ class Upsert extends Action
 
         $data['$id'] = $documentId;
         $data['$permissions'] = $permissions ?? [];
+        $data = $this->prepareRelationships($data, $collection, $database, $dbForProject, $authorization);
         $data = $this->removeReadonlyAttributes($data, $isAPIKey || $isPrivilegedUser);
         $this->validateTimestamps($data);
         $newDocument = new Document($data);

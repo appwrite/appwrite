@@ -289,7 +289,7 @@ class Create extends Action
             $document->setAttribute('$permissions', $permissions);
         };
 
-        $documents = \array_map(function ($document) use ($collection, $permissions, $isBulk, $documentId, $setPermissions, $isAPIKey, $isPrivilegedUser) {
+        $documents = \array_map(function ($document) use ($collection, $permissions, $isBulk, $documentId, $setPermissions, $isAPIKey, $isPrivilegedUser, $database, $dbForProject, $authorization) {
             $document['$collection'] = $collection->getId();
 
             // Determine the source ID depending on whether it's a bulk operation.
@@ -306,7 +306,8 @@ class Create extends Action
             }
 
             // Assign a unique ID if needed, otherwise use the provided ID.
-            $document['$id'] = $sourceId === 'unique()' ? ID::unique() : $sourceId;
+            $document['$id'] = $sourceId === self::UNIQUE_ID ? ID::unique() : $sourceId;
+            $document = $this->prepareRelationships($document, $collection, $database, $dbForProject, $authorization);
             $document = $this->removeReadonlyAttributes($document, $isAPIKey || $isPrivilegedUser);
             $this->validateTimestamps($document);
             $document = new Document($document);

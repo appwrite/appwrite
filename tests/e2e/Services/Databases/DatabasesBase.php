@@ -8726,6 +8726,215 @@ trait DatabasesBase
         $this->assertEquals(200, $update['headers']['status-code']);
     }
 
+    public function testMalformedRelationshipValuesAreRejected(): void
+    {
+        if (!$this->getSupportForRelationships()) {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
+        $fixture = $this->setupAlbumArtistRelationship();
+        $databaseId = $fixture['databaseId'];
+        $albumsId = $fixture['albumsId'];
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+
+        $album = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $albumsId), $headers, [
+            $this->getRecordIdParam() => ID::unique(),
+            'data' => ['name' => 'Album'],
+        ]);
+        $this->assertSame(201, $album['headers']['status-code']);
+
+        $malformed = [
+            'a scalar' => 12345,
+            'a malformed nested ID' => ['$id' => 'bad id!!', 'name' => 'Artist'],
+            'a malformed related document ID' => 'bad id!!',
+        ];
+
+        foreach ($malformed as $shape => $artist) {
+            $created = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $albumsId), $headers, [
+                $this->getRecordIdParam() => ID::unique(),
+                'data' => ['name' => 'Album', 'artist' => $artist],
+            ]);
+            $this->assertSame(400, $created['headers']['status-code'], "create with {$shape}");
+            $this->assertSame(Exception::RELATIONSHIP_VALUE_INVALID, $created['body']['type'], "create with {$shape}");
+
+            $updated = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $albumsId, $album['body']['$id']), $headers, [
+                'data' => ['artist' => $artist],
+            ]);
+            $this->assertSame(400, $updated['headers']['status-code'], "update with {$shape}");
+            $this->assertSame(Exception::RELATIONSHIP_VALUE_INVALID, $updated['body']['type'], "update with {$shape}");
+
+            $upserted = $this->client->call(Client::METHOD_PUT, $this->getRecordUrl($databaseId, $albumsId, ID::unique()), $headers, [
+                'data' => ['name' => 'Album', 'artist' => $artist],
+            ]);
+            $this->assertSame(400, $upserted['headers']['status-code'], "upsert with {$shape}");
+            $this->assertSame(Exception::RELATIONSHIP_VALUE_INVALID, $upserted['body']['type'], "upsert with {$shape}");
+        }
+
+        $artists = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $fixture['artistsId']), [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+        $this->assertSame(200, $artists['headers']['status-code']);
+        $this->assertSame(0, $artists['body']['total'], 'a rejected payload must not create a related document');
+    }
+
+    public function testNestedUniqueIdsCreateDistinctRelatedDocuments(): void
+    {
+        if (!$this->getSupportForRelationships()) {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
+        $fixture = $this->setupAlbumArtistRelationship();
+        $databaseId = $fixture['databaseId'];
+        $albumsId = $fixture['albumsId'];
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+
+        $albumIds = [];
+        foreach (['Artist 1', 'Artist 2'] as $artistName) {
+            $album = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $albumsId), $headers, [
+                $this->getRecordIdParam() => ID::unique(),
+                'data' => [
+                    'name' => 'Album by ' . $artistName,
+                    'artist' => ['$id' => 'unique()', 'name' => $artistName],
+                ],
+            ]);
+            $this->assertSame(201, $album['headers']['status-code']);
+            $albumIds[$artistName] = $album['body']['$id'];
+        }
+
+        $this->assertSame(['Artist 1', 'Artist 2'], $this->nestedArtistNames($fixture), 'each create must get its own related document');
+        $first = $this->nestedAlbumArtist($fixture, $albumIds['Artist 1']);
+        $second = $this->nestedAlbumArtist($fixture, $albumIds['Artist 2']);
+        $this->assertSame('Artist 1', $first['name'], 'a later create must not overwrite an earlier related document');
+        $this->assertSame('Artist 2', $second['name']);
+        $this->assertNotSame($first['$id'], $second['$id']);
+
+        $updated = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $albumsId, $albumIds['Artist 1']), $headers, [
+            'data' => [
+                'artist' => ['$id' => 'unique()', 'name' => 'Artist 3'],
+            ],
+        ]);
+        $this->assertSame(200, $updated['headers']['status-code']);
+
+        $third = $this->nestedAlbumArtist($fixture, $albumIds['Artist 1']);
+        $this->assertSame('Artist 3', $third['name']);
+        $this->assertNotContains($third['$id'], [$first['$id'], $second['$id']], 'an update must add a new related document');
+        $this->assertSame(['Artist 1', 'Artist 2', 'Artist 3'], $this->nestedArtistNames($fixture));
+
+        $upserted = $this->client->call(Client::METHOD_PUT, $this->getRecordUrl($databaseId, $albumsId, ID::unique()), $headers, [
+            'data' => [
+                'name' => 'Album by Artist 4',
+                'artist' => ['$id' => 'unique()', 'name' => 'Artist 4'],
+            ],
+        ]);
+        $this->assertSame(200, $upserted['headers']['status-code']);
+
+        $fourth = $this->nestedAlbumArtist($fixture, $upserted['body']['$id']);
+        $this->assertSame('Artist 4', $fourth['name']);
+        $this->assertNotContains($fourth['$id'], [$first['$id'], $second['$id'], $third['$id']], 'an upsert must add a new related document');
+        $this->assertSame(['Artist 1', 'Artist 2', 'Artist 3', 'Artist 4'], $this->nestedArtistNames($fixture));
+        $this->assertSame('Artist 2', $this->nestedAlbumArtist($fixture, $albumIds['Artist 2'])['name']);
+    }
+
+    /**
+     * @return array{databaseId: string, albumsId: string, artistsId: string}
+     */
+    private function setupAlbumArtistRelationship(): array
+    {
+        $databaseId = $this->setupDatabase()['databaseId'];
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $ids = [];
+        foreach (['albums', 'artists'] as $name) {
+            $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+                $this->getContainerIdParam() => ID::unique(),
+                'name' => $name,
+                $this->getSecurityParam() => true,
+                'permissions' => [
+                    Permission::create(Role::user($this->getUser()['$id'])),
+                    Permission::read(Role::user($this->getUser()['$id'])),
+                    Permission::update(Role::user($this->getUser()['$id'])),
+                ],
+            ]);
+            $this->assertSame(201, $collection['headers']['status-code']);
+            $ids[$name] = $collection['body']['$id'];
+
+            $attribute = $this->createAttribute($databaseId, $ids[$name], 'string', ['key' => 'name', 'size' => 128, 'required' => false]);
+            $this->assertSame(202, $attribute['headers']['status-code']);
+            $this->waitForAttribute($databaseId, $ids[$name], 'name');
+        }
+
+        $relationship = $this->createAttribute($databaseId, $ids['albums'], 'relationship', [
+            $this->getRelatedIdParam() => $ids['artists'],
+            'type' => RelationType::ManyToOne->value,
+            'key' => 'artist',
+            'twoWay' => false,
+            'onDelete' => ForeignKeyAction::SetNull->value,
+        ]);
+        $this->assertSame(202, $relationship['headers']['status-code']);
+        $this->waitForAttribute($databaseId, $ids['albums'], 'artist');
+
+        return ['databaseId' => $databaseId, 'albumsId' => $ids['albums'], 'artistsId' => $ids['artists']];
+    }
+
+    /**
+     * @param array{databaseId: string, albumsId: string, artistsId: string} $fixture
+     * @return list<string>
+     */
+    private function nestedArtistNames(array $fixture): array
+    {
+        $artists = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($fixture['databaseId'], $fixture['artistsId']), [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'queries' => [Query::limit(100)->toString()],
+        ]);
+        $this->assertSame(200, $artists['headers']['status-code']);
+
+        $names = [];
+        foreach ($artists['body'][$this->getRecordResource()] as $artist) {
+            $this->assertNotSame('unique()', $artist['$id'], 'the unique() placeholder must never be stored as an ID');
+            $names[] = $artist['name'];
+        }
+        \sort($names);
+
+        return $names;
+    }
+
+    /**
+     * @param array{databaseId: string, albumsId: string, artistsId: string} $fixture
+     * @return array<string, mixed>
+     */
+    private function nestedAlbumArtist(array $fixture, string $albumId): array
+    {
+        $album = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($fixture['databaseId'], $fixture['albumsId'], $albumId), [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'queries' => [Query::select(['name', 'artist.*'])->toString()],
+        ]);
+        $this->assertSame(200, $album['headers']['status-code']);
+        $this->assertIsArray($album['body']['artist'] ?? null);
+        $this->assertNotSame('unique()', $album['body']['artist']['$id']);
+
+        return $album['body']['artist'];
+    }
+
     public function testTimeout(): void
     {
         $data = $this->setupDatabase();
