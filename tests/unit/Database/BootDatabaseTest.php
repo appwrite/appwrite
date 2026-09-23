@@ -13,7 +13,9 @@ use Utopia\Database\Adapter\SQLite;
 use Utopia\Database\Attribute;
 use Utopia\Database\Capability;
 use Utopia\Database\Collection;
+use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Storage;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Pools\Adapter\Stack;
 use Utopia\Pools\Group;
@@ -34,6 +36,8 @@ final class BootDatabaseTest extends TestCase
     /** @var array<string, string|false> */
     private array $variables = [];
 
+    private PDO $connection;
+
     private Factory $factory;
 
     protected function setUp(): void
@@ -45,11 +49,11 @@ final class BootDatabaseTest extends TestCase
         \putenv('_APP_DATABASE_SHARED_NAMESPACE=' . self::NAMESPACE);
         \putenv('_APP_DATABASE_SHARED_TABLES=' . self::HOSTNAME);
 
-        $connection = new PDO('sqlite::memory:', options: [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+        $this->connection = new PDO('sqlite::memory:', options: [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
 
         // Reports the host it dialled, as a pooled MariaDB, MySQL, PostgreSQL or
         // MongoDB connection does; plain SQLite keys its cache by no host at all.
-        $adapter = new class ($connection) extends SQLite {
+        $adapter = new class ($this->connection) extends SQLite {
             public function supports(Capability $feature): bool
             {
                 return $feature === Capability::Hostname || parent::supports($feature);
@@ -91,6 +95,31 @@ final class BootDatabaseTest extends TestCase
         );
     }
 
+    public function testSetupRegistersThePermissionHookAProjectDatabaseHas(): void
+    {
+        $this->assertTrue($this->factory->project($this->project())->getAdapter()->hasPermissionHook());
+        $this->assertTrue(
+            $this->factory->setup(self::HOSTNAME)->getAdapter()->hasPermissionHook(),
+            'The database the boot creates project collections with must maintain the permission side table like every other database the factory builds'
+        );
+    }
+
+    public function testAProjectCollectionCreatedAtBootKeepsItsPermissionRows(): void
+    {
+        $setup = $this->factory->setup(self::HOSTNAME);
+        $setup->create();
+        $setup->createCollection($this->collection('booted'));
+
+        $this->factory->project($this->project())->createCollection($this->collection('created'));
+
+        $this->assertSame([['create', 'any']], $this->permissionRows('created'));
+        $this->assertSame(
+            $this->permissionRows('created'),
+            $this->permissionRows('booted'),
+            'A project collection the boot creates must store the same permission rows as one a project database creates'
+        );
+    }
+
     private function project(): Document
     {
         return new Document([
@@ -106,5 +135,20 @@ final class BootDatabaseTest extends TestCase
             id: $id,
             attributes: [new Attribute('name', ColumnType::String, size: 255)],
         );
+    }
+
+    /**
+     * @return list<array{0: string, 1: string}>
+     */
+    private function permissionRows(string $collection): array
+    {
+        $table = self::NAMESPACE . '_' . Storage::permissionsTable(Database::METADATA);
+        $statement = $this->connection->prepare("SELECT _type, _permission FROM `{$table}` WHERE _document = :document ORDER BY _id");
+        $statement->execute(['document' => $collection]);
+
+        /** @var list<array{0: string, 1: string}> $rows */
+        $rows = $statement->fetchAll(PDO::FETCH_NUM);
+
+        return $rows;
     }
 }
