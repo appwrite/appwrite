@@ -4,4 +4,6 @@ declare(strict_types=1);
 
 namespace Utopia\OpenAPI\Exception;
 
-class CircularReference extends ParseException {}
+class CircularReference extends ParseException
+{
+}

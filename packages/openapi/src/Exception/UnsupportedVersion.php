@@ -4,4 +4,6 @@ declare(strict_types=1);
 
 namespace Utopia\OpenAPI\Exception;
 
-class UnsupportedVersion extends ParseException {}
+class UnsupportedVersion extends ParseException
+{
+}

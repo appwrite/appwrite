@@ -103,7 +103,7 @@ final class Value
     {
         return array_filter(
             $data,
-            static fn(string|int $key): bool => \is_string($key) && str_starts_with(strtolower($key), 'x-'),
+            static fn (string|int $key): bool => \is_string($key) && str_starts_with(strtolower($key), 'x-'),
             ARRAY_FILTER_USE_KEY,
         );
     }

@@ -15,5 +15,6 @@ final readonly class Server
         public string $description = '',
         public array $variables = [],
         public array $extensions = [],
-    ) {}
+    ) {
+    }
 }

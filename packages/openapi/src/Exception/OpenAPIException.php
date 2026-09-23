@@ -6,4 +6,6 @@ namespace Utopia\OpenAPI\Exception;
 
 use Throwable;
 
-interface OpenAPIException extends Throwable {}
+interface OpenAPIException extends Throwable
+{
+}

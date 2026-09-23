@@ -35,7 +35,9 @@ final readonly class Reader
         'maxItems', 'minItems', 'uniqueItems', 'multipleOf', 'description',
     ];
 
-    public function __construct(private Dialect $dialect) {}
+    public function __construct(private Dialect $dialect)
+    {
+    }
 
     public function read(mixed $raw, string $location): Schema
     {
@@ -60,7 +62,7 @@ final readonly class Reader
                     $this->read($constraint, $location),
                 ], null, $this->discriminator($data), ...$this->common($data), location: $location);
             }
-            $matches = array_filter($enum, static fn(mixed $value): bool => $value === $constant
+            $matches = array_filter($enum, static fn (mixed $value): bool => $value === $constant
                 || ((\is_int($value) || \is_float($value)) && (\is_int($constant) || \is_float($constant)) && $value == $constant));
             if ($matches === []) {
                 return new NeverSchema(...$this->common($data));
@@ -82,7 +84,7 @@ final readonly class Reader
             if (! $this->dialect->typeArrays || ! array_is_list($type)) {
                 throw new InvalidSpecification("Invalid schema type at {$location}/type");
             }
-            $types = array_values(array_filter($type, static fn(mixed $item): bool => $item !== 'null'));
+            $types = array_values(array_filter($type, static fn (mixed $item): bool => $item !== 'null'));
             $nullable = \count($types) !== \count($type);
             $common['nullable'] = $nullable;
             if (\count($types) > 1) {

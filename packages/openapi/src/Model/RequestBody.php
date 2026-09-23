@@ -15,5 +15,6 @@ final readonly class RequestBody
         public bool $required = false,
         public array $content = [],
         public array $extensions = [],
-    ) {}
+    ) {
+    }
 }

@@ -16,7 +16,8 @@ final readonly class Dialect
         public bool $booleanSchemas,
         public bool $typeArrays,
         public bool $constKeyword,
-    ) {}
+    ) {
+    }
 
     public static function for(Version $version): self
     {

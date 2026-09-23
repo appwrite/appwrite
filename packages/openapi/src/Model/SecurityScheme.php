@@ -20,5 +20,6 @@ final readonly class SecurityScheme
         public array $flows = [],
         public ?string $openIdConnectUrl = null,
         public array $extensions = [],
-    ) {}
+    ) {
+    }
 }

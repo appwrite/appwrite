@@ -16,5 +16,6 @@ final readonly class Response
         public array $headers = [],
         public array $content = [],
         public array $extensions = [],
-    ) {}
+    ) {
+    }
 }

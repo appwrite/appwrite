@@ -12,5 +12,6 @@ final readonly class Tag
         public string $description = '',
         public ?ExternalDocumentation $externalDocumentation = null,
         public array $extensions = [],
-    ) {}
+    ) {
+    }
 }

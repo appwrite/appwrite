@@ -650,7 +650,7 @@ final class ReaderTest extends TestCase
             [
                 'type' => 'object',
                 'required' => array_keys($conditions),
-                'properties' => array_map(static fn(mixed $value): array => ['enum' => [$value]], $conditions),
+                'properties' => array_map(static fn (mixed $value): array => ['enum' => [$value]], $conditions),
             ],
         ]];
     }

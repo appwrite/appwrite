@@ -39,7 +39,8 @@ final readonly class Specification
         public string $sourceVersion = '',
         public ?string $jsonSchemaDialect = null,
         public ?ExternalDocumentation $externalDocumentation = null,
-    ) {}
+    ) {
+    }
 
     /**
      * Resolve chained local component references without expanding recursive schema graphs.
@@ -87,7 +88,7 @@ final readonly class Specification
     {
         return array_values(array_filter(
             $this->operations(),
-            static fn(Operation $operation): bool => \in_array($tag, $operation->tags, true),
+            static fn (Operation $operation): bool => \in_array($tag, $operation->tags, true),
         ));
     }
 }

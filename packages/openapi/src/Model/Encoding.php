@@ -17,5 +17,6 @@ final readonly class Encoding
         public ?bool $explode = null,
         public bool $allowReserved = false,
         public array $extensions = [],
-    ) {}
+    ) {
+    }
 }

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "85120f8f34bad1007c14f6eeaa987cae",
+    "content-hash": "745e1ab77976c5c349d00f165c19779c",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4106,41 +4106,6 @@
                 "issues": "https://github.com/utopia-php/mqtt/issues"
             },
             "time": "2026-09-23T06:01:44+00:00"
-        },
-        {
-            "name": "utopia-php/openapi",
-            "version": "0.2.4",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/utopia-php/openapi.git",
-                "reference": "a988ff180b973743339509d040a774ffe48aa906"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/openapi/zipball/a988ff180b973743339509d040a774ffe48aa906",
-                "reference": "a988ff180b973743339509d040a774ffe48aa906",
-                "shasum": ""
-            },
-            "require": {
-                "ext-json": "*",
-                "php": ">=8.5"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Utopia\\OpenAPI\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "description": "Framework-independent OpenAPI 2.0, 3.0, and 3.1 parser with an immutable canonical model",
-            "support": {
-                "issues": "https://github.com/utopia-php/openapi/issues",
-                "source": "https://github.com/utopia-php/openapi/tree/0.2.4"
-            },
-            "time": "2026-09-09T11:17:58+00:00"
         },
         {
             "name": "utopia-php/platform",

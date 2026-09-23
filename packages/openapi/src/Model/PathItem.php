@@ -20,7 +20,8 @@ final readonly class PathItem
         public string $description = '',
         public array $servers = [],
         public array $extensions = [],
-    ) {}
+    ) {
+    }
 
     public function operation(HttpMethod $method): ?Operation
     {

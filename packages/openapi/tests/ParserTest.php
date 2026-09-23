@@ -44,13 +44,13 @@ final class ParserTest extends TestCase
     #[DataProvider('securityAlternatives')]
     public function testSecuritySchemeNames(array $alternatives, array $accepted, array $required): void
     {
-        $security = array_map(static fn(array $schemes): SecurityRequirement => new SecurityRequirement($schemes), $alternatives);
+        $security = array_map(static fn (array $schemes): SecurityRequirement => new SecurityRequirement($schemes), $alternatives);
         $operation = new Operation(id: 'test', method: HttpMethod::GET, path: '/test', security: $security);
 
         self::assertSame($accepted, $operation->acceptedSecuritySchemeNames());
         self::assertSame($required, $operation->requiredSecuritySchemeNames());
         self::assertSame($security, $operation->security);
-        self::assertSame($alternatives, array_map(static fn(SecurityRequirement $requirement): array => $requirement->schemes, $operation->security));
+        self::assertSame($alternatives, array_map(static fn (SecurityRequirement $requirement): array => $requirement->schemes, $operation->security));
     }
 
     public function testParsesOpenApi31IntoCanonicalModel(): void

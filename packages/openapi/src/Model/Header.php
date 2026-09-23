@@ -19,5 +19,6 @@ final readonly class Header
         public ?string $style = null,
         public ?bool $explode = null,
         public array $extensions = [],
-    ) {}
+    ) {
+    }
 }

@@ -10,5 +10,6 @@ final readonly class ResolutionContext
     public function __construct(
         public array $trail = [],
         public ?string $baseUri = null,
-    ) {}
+    ) {
+    }
 }

@@ -12,5 +12,6 @@ final readonly class OAuthFlow
         public ?string $tokenUrl = null,
         public ?string $refreshUrl = null,
         public array $scopes = [],
-    ) {}
+    ) {
+    }
 }

@@ -70,7 +70,7 @@ final class OpenAPI2 extends AbstractReader
         }
 
         return array_map(
-            static fn(string $scheme): Server => new Server(rtrim($scheme . '://' . $host, '/') . ($basePath === '/' ? '' : $basePath)),
+            static fn (string $scheme): Server => new Server(rtrim($scheme . '://' . $host, '/') . ($basePath === '/' ? '' : $basePath)),
             $schemes,
         );
     }

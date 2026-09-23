@@ -17,5 +17,6 @@ final readonly class MediaType
         public array $examples = [],
         public array $encoding = [],
         public array $extensions = [],
-    ) {}
+    ) {
+    }
 }

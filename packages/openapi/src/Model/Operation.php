@@ -29,7 +29,8 @@ final readonly class Operation
         public array $servers = [],
         public ?ExternalDocumentation $externalDocumentation = null,
         public array $extensions = [],
-    ) {}
+    ) {
+    }
 
     /**
      * Names present in any security alternative, in first-seen order.
@@ -64,7 +65,7 @@ final readonly class Operation
      */
     public function requiredSecuritySchemeNames(): array
     {
-        $names = array_map(static fn(string|int $name): string => (string) $name, array_keys($this->security[0]->schemes ?? []));
+        $names = array_map(static fn (string|int $name): string => (string) $name, array_keys($this->security[0]->schemes ?? []));
         foreach ($this->security as $requirement) {
             $names = array_values(array_intersect($names, array_keys($requirement->schemes)));
         }

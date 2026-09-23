@@ -10,7 +10,9 @@ use Utopia\OpenAPI\Exception\ReferenceNotFound;
 final readonly class LocalResolver implements Resolver
 {
     /** @param array<string, mixed> $document */
-    public function __construct(private array $document) {}
+    public function __construct(private array $document)
+    {
+    }
 
     #[\Override]
     public function resolve(Reference $reference, ResolutionContext $context = new ResolutionContext()): mixed

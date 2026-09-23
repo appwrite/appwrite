@@ -14,5 +14,6 @@ final readonly class Discriminator
         public string $propertyName,
         public array $mapping = [],
         public array $extensions = [],
-    ) {}
+    ) {
+    }
 }

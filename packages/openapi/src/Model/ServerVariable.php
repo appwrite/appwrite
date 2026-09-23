@@ -15,5 +15,6 @@ final readonly class ServerVariable
         public array $enum = [],
         public string $description = '',
         public array $extensions = [],
-    ) {}
+    ) {
+    }
 }

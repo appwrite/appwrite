@@ -22,5 +22,6 @@ abstract readonly class Schema
         public bool $deprecated = false,
         public mixed $example = null,
         public array $extensions = [],
-    ) {}
+    ) {
+    }
 }

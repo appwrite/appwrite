@@ -23,7 +23,8 @@ final readonly class Parameter
         public ?bool $explode = null,
         public bool $allowReserved = false,
         public array $extensions = [],
-    ) {}
+    ) {
+    }
 
     public function identity(): string
     {

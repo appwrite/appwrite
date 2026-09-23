@@ -143,7 +143,7 @@ abstract class AbstractReader implements Reader
             $schemes = [];
             foreach ($data as $name => $scopes) {
                 $schemes[(string) $name] = array_map(
-                    static fn(mixed $scope): string => (string) $scope,
+                    static fn (mixed $scope): string => (string) $scope,
                     Value::list($scopes, "{$location}/{$index}/{$name}"),
                 );
             }
