@@ -74,13 +74,13 @@ A **minor** (`2.2.0` → `2.3.0`) is anything with new public API, a schema chan
 
 ## Publish
 
-The agent running the release does the steps below with the `gh` CLI (and `aws` for oss.appwrite.org), but asks the admin running the release (a maintainer) for explicit approval before each outward-facing one: merging a PR, publishing the GitHub Release, dispatching the specs workflow, merging `appwrite/specs` or `appwrite/vibes` PRs, and touching oss.appwrite.org. One approval covers one step, not the rest of the list.
+The agent running the release does the steps below with the `gh` CLI (and `aws` for oss.appwrite.org), but asks the admin running the release (a maintainer) for explicit approval before each outward-facing one: merging a PR, publishing the GitHub Release, merging the cloud specs PR, dispatching the specs workflow, merging `appwrite/specs` or `appwrite/vibes` PRs, and touching oss.appwrite.org. One approval covers one step, not the rest of the list.
 
 1. Merge the prep PR into `X.Y.x` once CI is green, then pass both [gates](#self-hosted-rc--final) locally and record them, with the tested SHA (`git rev-parse origin/X.Y.x`), in the `X.Y.x` → `main` PR. Anything merged into `X.Y.x` after that needs the gates again and a new SHA.
 2. Publish the GitHub Release on the tested commit, not the branch, with the reviewed notes as the body: `bin/release publish X.Y.Z --sha=<tested-sha> --notes=notes.md`. It fails unless the commit is on `origin/X.Y.x` and passes `check`, the tag is absent or already on that commit, and the image is not on Docker Hub yet. It warns when `X.Y.x` has moved past the tested commit, then asks you to type the version before running `gh release create`. [`release.yml`](../.github/workflows/release.yml) builds amd64+arm64 and pushes `X.Y.Z`, `X.Y`, `X` and `latest` (metadata-action adds `latest` for semver tags). It refuses a version already on Docker Hub, because published tags are immutable. Never re-tag: ship the next patch instead.
 3. Watch the `Release` workflow run through to a pushed image.
 4. Merge the `X.Y.x` → `main` PR.
-5. Publish the specs (below).
+5. Open and merge the cloud specs PR ([Cloud PR](#cloud-pr)), then generate and merge the specs ([Generate](#generate)).
 6. Merge the vibes PR ([Website and docs](#website-and-docs)) with the changelog entry and the new API reference version.
 7. Upgrade [oss.appwrite.org](https://oss.appwrite.org/) to `X.Y.Z`. It runs on EC2 in the Appwrite AWS account (`eu-central-1`, instance named `oss-production`). Log in with `aws sso login --profile <admin-profile>`, then open a shell over SSM (`aws ssm start-session --target <instance-id>`) and upgrade the self-hosted install as usual.
 
@@ -88,12 +88,38 @@ The agent running the release does the steps below with the `gh` CLI (and `aws` 
 
 Versioned API specs and SDK examples live in [`appwrite/specs`](https://github.com/appwrite/specs) (`specs/X.Y.x/open-api3-X.Y.x.json`, `examples/X.Y.x/`). They are published by the **Generate Specs** workflow (`.github/workflows/specs.yml`) in `appwrite-labs/cloud`, which pulls this repo in as `appwrite/server-ce` (`dev-main`). Both runs go from cloud `main`, never from a one-off branch. `X.Y.x` must describe exactly the released code, so that run pins `server-ce` to the release tag inside the job instead of using the locked `dev-main`, which may lack release-only fixes and carry unreleased work from `main`. `latest` describes `main` and keeps the locked `dev-main`.
 
-1. After the `X.Y.x` → `main` merge, sync cloud `main` with this repo: a cloud PR that runs `composer update appwrite/server-ce` and adds `X.Y.x` to the `version` choices in `specs.yml`. `specs.yml` needs a `server-ce-ref` input that, when set, runs `composer require appwrite/server-ce:"dev-main#<sha>"` in the job before generating (not committed); add it in this PR if it is missing. Merge it once CI is green.
-2. `gh workflow run specs.yml -R appwrite-labs/cloud --ref main -f version=X.Y.x -f server-ce-ref=$(git rev-list -n1 X.Y.Z)`. Check the `Installing appwrite/server-ce` line in the job log shows that SHA. It generates the spec and SDK examples and opens `feat: API specs update for version X.Y.x` on `appwrite/specs` from `feat-X.Y.x-specs`.
-3. `gh workflow run specs.yml -R appwrite-labs/cloud --ref main -f version=latest` to refresh `specs/latest`.
-4. Review and merge both `appwrite/specs` PRs, then add the `X.Y.x` row to the **Available Versions** table in its README (#117 did this for 2.1.x and 2.2.x).
+### Cloud PR
 
-`latest` is regenerated whenever the API changes. `X.Y.x` is regenerated for each `X.Y` patch until the next minor ships, then it is frozen.
+The workflow cannot generate `X.Y.x` until cloud `main` knows about it, so every release starts with a cloud PR, `chore(specs): prepare X.Y.x`, opened after the `X.Y.x` → `main` merge and merged before any workflow run. It must contain:
+
+- [ ] `composer update appwrite/server-ce`, so the locked `dev-main` includes the release for the `latest` run.
+- [ ] `X.Y.x` added to the `version` choices in `specs.yml`, directly under `latest`.
+- [ ] The `server-ce-ref` input, if `specs.yml` does not have it yet (`grep -n server-ce-ref .github/workflows/specs.yml`). It is a one-time addition; later releases only need the two items above:
+
+  ```yaml
+  # under on.workflow_dispatch.inputs
+  server-ce-ref:
+    type: string
+    description: "appwrite/server-ce commit to generate from (the release tag's SHA); empty uses the locked dev-main"
+    required: false
+
+  # step after "Install dependencies"
+  - name: Pin server-ce
+    if: inputs.server-ce-ref != ''
+    env:
+      REF: ${{ inputs.server-ce-ref }}
+    run: composer require --no-interaction --no-progress --ignore-platform-reqs "appwrite/server-ce:dev-main#${REF}"
+  ```
+
+Merge it once cloud CI is green. The `composer update` also moves what Cloud builds from, so treat it like any other cloud dependency bump.
+
+### Generate
+
+1. `gh workflow run specs.yml -R appwrite-labs/cloud --ref main -f version=X.Y.x -f server-ce-ref=$(git rev-list -n1 X.Y.Z)`. Check the `Installing appwrite/server-ce` line in the job log shows that SHA. It generates the spec and SDK examples and opens `feat: API specs update for version X.Y.x` on `appwrite/specs` from `feat-X.Y.x-specs`.
+2. `gh workflow run specs.yml -R appwrite-labs/cloud --ref main -f version=latest` to refresh `specs/latest`.
+3. Review and merge both `appwrite/specs` PRs, then add the `X.Y.x` row to the **Available Versions** table in its README (#117 did this for 2.1.x and 2.2.x).
+
+`latest` is regenerated whenever the API changes. `X.Y.x` is regenerated for each `X.Y` patch until the next minor ships, then it is frozen; a patch skips the cloud PR's version choice, since `X.Y.x` is already listed.
 
 ## Website and docs
 
