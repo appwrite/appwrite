@@ -74,14 +74,15 @@ class Metadata implements Decorator
 
     public static function resolvePublicId(Database $dbForProject, string $internalId): string
     {
-        $parts = \explode('_', $internalId);
-        if (count($parts) !== 4 || $parts[0] !== 'database' || $parts[2] !== 'collection' || $parts[1] === '' || $parts[3] === '') {
+        $parsed = self::parse($internalId);
+        if ($parsed === null) {
             return $internalId;
         }
+        [$catalogId, $sequence] = $parsed;
         $document = $dbForProject->silent(
             fn () => $dbForProject->getAuthorization()->skip(
-                fn () => $dbForProject->findOne('database_'.$parts[1], [
-                    Query::equal('$sequence', [$parts[3]]),
+                fn () => $dbForProject->findOne($catalogId, [
+                    Query::equal('$sequence', [$sequence]),
                 ])
             )
         );
@@ -94,11 +95,21 @@ class Metadata implements Decorator
 
     /**
      * @param  array<string, string>  $publicIds
-     * @return \Closure(string): string
+     * @return Closure(string): string
      */
-    public static function resolver(Database $tenant, ?Database $catalog = null, array $publicIds = []): \Closure
+    public static function resolver(Database $tenant, ?Database $catalog = null, array $publicIds = []): Closure
     {
-        return function (string $internalId) use ($tenant, $catalog, $publicIds): string {
+        $pending = [];
+        $seen = [];
+        foreach ($publicIds as $internalId => $publicId) {
+            $catalogId = self::parse($internalId)[0] ?? null;
+            if ($catalogId !== null && !isset($seen[$catalogId][$publicId])) {
+                $seen[$catalogId][$publicId] = true;
+                $pending[$catalogId][] = $publicId;
+            }
+        }
+
+        return function (string $internalId) use ($tenant, $catalog, &$publicIds, &$pending, &$seen): string {
             if (isset($publicIds[$internalId])) {
                 return $publicIds[$internalId];
             }
@@ -110,8 +121,65 @@ class Metadata implements Decorator
                 ? $catalog
                 : $tenant;
 
-            return self::resolvePublicId($database, $internalId);
+            if (! $database->getAdapter()->inTransaction()) {
+                self::discover($database, $internalId, $publicIds, $pending, $seen);
+            }
+
+            return $publicIds[$internalId] ?? self::resolvePublicId($database, $internalId);
         };
+    }
+
+    /**
+     * @param  array<string, string>  $publicIds
+     * @param  array<string, list<string>>  $pending
+     * @param  array<string, array<string, true>>  $seen
+     */
+    private static function discover(Database $database, string $internalId, array &$publicIds, array &$pending, array &$seen): void
+    {
+        $catalogId = self::parse($internalId)[0] ?? null;
+        if ($catalogId === null) {
+            return;
+        }
+
+        while (!isset($publicIds[$internalId]) && ($pending[$catalogId] ?? []) !== []) {
+            $publicId = \array_shift($pending[$catalogId]);
+            $collection = $database->silent(
+                fn () => $database->getAuthorization()->skip(
+                    fn () => $database->getDocument($catalogId, $publicId)
+                )
+            );
+            $sequence = $collection->getSequence();
+            if ($collection->isEmpty() || $sequence === null || $sequence === '') {
+                continue;
+            }
+            $publicIds[$catalogId . '_collection_' . $sequence] = $publicId;
+
+            $attributes = $collection->getAttribute('attributes', []);
+            foreach (\is_array($attributes) ? $attributes : [] as $attribute) {
+                if (!$attribute instanceof Document || $attribute->getAttribute('type') !== ColumnType::Relationship->value) {
+                    continue;
+                }
+                $related = $attribute->getAttribute('relatedCollection', '');
+                if (!\is_string($related) || $related === '' || isset($seen[$catalogId][$related])) {
+                    continue;
+                }
+                $seen[$catalogId][$related] = true;
+                $pending[$catalogId][] = $related;
+            }
+        }
+    }
+
+    /**
+     * @return array{string, string}|null the catalog collection and the sequence of a `database_<n>_collection_<m>` ID
+     */
+    private static function parse(string $internalId): ?array
+    {
+        $parts = \explode('_', $internalId);
+        if (\count($parts) !== 4 || $parts[0] !== 'database' || $parts[2] !== 'collection' || $parts[1] === '' || $parts[3] === '') {
+            return null;
+        }
+
+        return ['database_' . $parts[1], $parts[3]];
     }
 
     private static function sharesPool(Database $tenant, Database $catalog): bool
