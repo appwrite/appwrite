@@ -4,6 +4,10 @@ import {
   mapDedicatedDatabaseSpecifications,
   type SpecOption,
 } from '@/lib/database-specs'
+import {
+  getBillingStorageBreakdownFromResources,
+  type BillingStorageBreakdownSegment,
+} from '@/lib/billing/billing-storage-breakdown'
 
 export type BillingProjectResourceFormat = 'bytes' | 'number' | 'sms'
 
@@ -42,6 +46,8 @@ export type BillingProjectResourceItem = {
   /** Override default usage formatting (e.g. dedicated DB units). */
   usageLabel?: string
   usageDescription?: string
+  /** Product-level storage segments when `resourceId` is `storage`. */
+  storageBreakdown?: BillingStorageBreakdownSegment[]
 }
 
 export type BillingProjectResourceCategoryGroup = {
@@ -924,7 +930,7 @@ export function buildOrganizationUsageCategoriesFromAggregation(
       ? null
       : getBillingPlanResourceLimit(plan, mapping.planKey)
 
-    items.push({
+    const item: BillingProjectResourceItem = {
       resourceId,
       name: mapping.name,
       usage: values.usage,
@@ -934,7 +940,16 @@ export function buildOrganizationUsageCategoriesFromAggregation(
       showLimit: requiresUpgrade ? false : mapping.showLimit !== false,
       requiresUpgrade,
       category: mapping.category,
-    })
+    }
+    if (resourceId === 'storage') {
+      const storageBreakdown = getBillingStorageBreakdownFromResources(
+        aggregationResources,
+      )
+      if (storageBreakdown.length > 0) {
+        item.storageBreakdown = storageBreakdown
+      }
+    }
+    items.push(item)
   }
 
   return groupBillingProjectResources(items)

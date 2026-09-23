@@ -3,9 +3,6 @@
  * the project auth settings grid. The grid hides providers that have no typed
  * `project.updateOAuth2*` handler, so a silent SDK bump that adds a provider
  * would otherwise drop it from the UI without any error.
- *
- * The one documented exception is the mock provider below, which the server
- * offers to its own end-to-end tests rather than to projects.
  */
 
 import { describe, expect, test } from 'bun:test'
@@ -25,18 +22,8 @@ const PROVIDERS_WITHOUT_UPDATE_ENDPOINT = new Set<string>([
   ProjectOAuthProviderId.Yammer,
 ])
 
-/**
- * `OAuthProvider` covers everything the account API accepts, which includes the
- * provider Appwrite's own end-to-end tests sign in through. It has no project
- * settings, no `updateOAuth2*` method, no catalog entry and no brand icon, so
- * it is account-only and rightly absent from `ProjectOAuthProviderId`.
- */
-const ACCOUNT_ONLY_PROVIDER_IDS = new Set<string>([OAuthProvider.Mocknoemail])
-
-/** The providers a project can actually be configured to use. */
-const CONFIGURABLE_PROVIDER_IDS = (
-  Object.values(OAuthProvider) as string[]
-).filter((id) => !ACCOUNT_ONLY_PROVIDER_IDS.has(id))
+/** An account provider with no project counterpart is dropped by the grid, so it should fail here. */
+const CONFIGURABLE_PROVIDER_IDS = Object.values(OAuthProvider) as string[]
 
 describe('OAuth2 provider coverage', () => {
   test('OAuthProvider and ProjectOAuthProviderId enums agree', () => {

@@ -151,7 +151,7 @@ function isSignedByMeta(req) {
 }
 ```
 
-A request that fails this check gets a 403 and nothing is stored. With the signature verified, the function picks the first text message out of Meta's nested payload, stores it, and triggers the agent. The Appwrite client here uses the dynamic API key that Appwrite injects into every execution as the `x-appwrite-key` header. There is no API key to create or store:
+A request that fails this check gets a 403 and nothing is stored. With the signature verified, the function picks the first text message out of Meta's nested payload, stores it, and triggers the agent. The Appwrite client here uses the ephemeral API key that Appwrite injects into every execution as the `x-appwrite-key` header. There is no API key to create or store:
 
 ```javascript
 if (!isSignedByMeta(req)) {
@@ -374,7 +374,7 @@ appwrite push functions
 
 The CLI creates both functions, uploads the code, builds it, and prints each function's domain. The webhook function's domain is the URL Meta will call.
 
-Two settings in the config are worth knowing about. The webhook function has `execute` set to `any`, because Meta calls it without an Appwrite session. Both functions list `scopes`, which control what the dynamic API key can do. The webhook can write rows and create executions, and the agent can read and write rows. Neither function needs an API key from the **API Keys** page.
+Two settings in the config are worth knowing about. The webhook function has `execute` set to `any`, because Meta calls it without an Appwrite session. Both functions list `scopes`, which control what the ephemeral API key can do. The webhook can write rows and create executions, and the agent can read and write rows. Neither function needs an API key from the **API Keys** page.
 
 ![The variables tab of the agent function in the Appwrite Console](/images/blog/whatsapp-ai-agent-appwrite-functions/console-function-variables.avif)
 

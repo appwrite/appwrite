@@ -835,7 +835,7 @@ export function View({ projectId, databaseId }: MonitorProps) {
                     }
                     description={t(DEDICATED_DATABASE_IOPS_DESCRIPTION)}
                   />
-                  <MonitorKpiCard
+                  <MysqlMetricKpiCard
                     label={t('Network')}
                     value={
                       networkChartLoading &&

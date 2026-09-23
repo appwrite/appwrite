@@ -140,6 +140,11 @@ async function recoverIfNativeServerError(page: Page): Promise<boolean> {
       .catch(() => false))
   )
     return false
+  const details = await page
+    .locator('h1 + p, .font-mono')
+    .allInnerTexts()
+    .catch(() => [] as string[])
+  console.warn(`[e2e] console error boundary: ${details.join(' | ')}`)
   const tryAgain = page.getByRole('button', { name: 'Try again' })
   if (await tryAgain.isVisible().catch(() => false)) {
     await tryAgain.click()
@@ -300,7 +305,10 @@ export async function expectNativeTabRenders(
     }
   }
 
-  if (lastError) throw lastError
+  throw (
+    lastError ??
+    new Error(`${path} kept showing the console error boundary`)
+  )
 }
 
 /**
@@ -420,7 +428,19 @@ export async function typeNativeSql(page: Page, sql: string): Promise<void> {
     await page.keyboard.press(`${modifier}+KeyA`)
     await page.keyboard.press('Backspace')
     await page.keyboard.insertText(sql)
+
+    // Monaco auto-closes the statement's `(`, leaving a stray `)` past the
+    // caret that the API rejects as a second statement. Delete to end of file.
+    await page.keyboard.press(
+      modifier === 'Meta' ? 'Meta+Shift+ArrowDown' : 'Control+Shift+End',
+    )
+    await page.keyboard.press('Delete')
     await page.keyboard.press('Escape')
+
+    // Monaco virtualises `.view-lines`; scroll line 1 back into view first.
+    await page.keyboard.press(
+      modifier === 'Meta' ? 'Meta+ArrowUp' : 'Control+Home',
+    )
 
     const firstLine = sql.trim().split('\n')[0]!.trim()
     const lines = page.locator('.monaco-editor .view-lines').first()
@@ -485,11 +505,8 @@ async function submitNativeDdlForm(
   successToast: string,
   columnName: string,
 ): Promise<void> {
-  // A previous column's toast can outlive the next drawer opening. Wait for
-  // it to leave before submitting so success belongs to this operation.
-  await expect(page.getByText(successToast, { exact: true })).toHaveCount(0, {
-    timeout: 30_000,
-  })
+  // Success belongs to this operation because the matched execution response
+  // carries this column's DDL; a previous column's toast may still be showing.
   await expect(submit).toBeEnabled({ timeout: 15_000 })
   const deadline = Date.now() + 90_000
   let lastError = 'Create did not reach the SQL API'

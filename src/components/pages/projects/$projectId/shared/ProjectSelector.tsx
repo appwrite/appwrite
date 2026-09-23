@@ -35,6 +35,7 @@ import {
   isHttpProjectAccessError,
 } from '@/lib/utils/error-formatting'
 import { FailedInvoiceWarningIcon } from '@/components/global/shared/FailedInvoiceWarningIcon'
+import { ProjectBlockedBadge } from '@/components/global/shared/ProjectBlockedBadge'
 import { ProjectSelectorPlanBadge } from '@/components/pages/projects/$projectId/shared/ProjectSelectorPlanBadge'
 import { parsePinnedProjectIds } from '@/lib/team-prefs-keys'
 import {
@@ -1335,14 +1336,20 @@ function ProjectSelectorContent({
                               {t('Current')}
                             </Badge>
                           )}
-                          {project.paused && (
+                          {project.blocked ? (
+                            <ProjectBlockedBadge
+                              show
+                              compact
+                              className="ms-1.5"
+                            />
+                          ) : project.paused ? (
                             <Badge
                               variant="outline"
                               className="ms-1.5 shrink-0 text-[10px] font-normal text-muted-foreground"
                             >
                               {t('Paused')}
                             </Badge>
-                          )}
+                          ) : null}
                         </span>
                         <FailedInvoiceWarningIcon
                           show={
@@ -1690,14 +1697,20 @@ function MobileProjectSelectorContent({
                                 {t('Current')}
                               </Badge>
                             )}
-                            {project.paused && (
+                            {project.blocked ? (
+                              <ProjectBlockedBadge
+                                show
+                                compact
+                                className="ms-1.5"
+                              />
+                            ) : project.paused ? (
                               <Badge
                                 variant="outline"
                                 className="ms-1.5 shrink-0 text-[10px] font-normal text-muted-foreground"
                               >
                                 {t('Paused')}
                               </Badge>
-                            )}
+                            ) : null}
                           </span>
                           <FailedInvoiceWarningIcon
                             show={

@@ -3,8 +3,11 @@ import { isStartPlanEligibleCountry, normalizeCountryCode } from '@/lib/pricing/
 export type VisitorCountryQueryState = {
   visitorFetched: boolean
   visitorError: boolean
-  localeFetched: boolean
+  visitorFetching: boolean
+  localeSuccess: boolean
   localeError: boolean
+  localeFetching: boolean
+  mockCountry?: string | null
 }
 
 export function mergeVisitorCountryCode(sources: {
@@ -16,40 +19,42 @@ export function mergeVisitorCountryCode(sources: {
 }): string | null {
   return (
     normalizeCountryCode(sources.mockCountry) ??
-    normalizeCountryCode(sources.requestCountry) ??
+    normalizeCountryCode(sources.localeCountry) ??
     normalizeCountryCode(
       typeof sources.visitorQueryCountry === 'string'
         ? sources.visitorQueryCountry
         : null,
     ) ??
-    normalizeCountryCode(sources.localeCountry) ??
+    normalizeCountryCode(sources.requestCountry) ??
     normalizeCountryCode(sources.storedCountry)
   )
 }
 
 /**
- * True once every async country source has finished and no sync request geo remains
- * pending. Sync SSR/cookie/mock signals resolve immediately.
+ * Pricing waits for a successful locale.get(). `isFetched` / `isError` are not
+ * enough: retry is off globally, so an aborted or failed locale call would
+ * paint the 3-plan grid from CDN/cookie geo, then the parallel visitor-country
+ * locale.get() would swap in the Indian 4-plan grid.
  */
 export function isVisitorCountryResolutionComplete(
-  countryCode: string | null,
-  requestCountry: string | null,
+  _countryCode: string | null,
+  _requestCountry: string | null,
   queries: VisitorCountryQueryState,
 ): boolean {
-  if (countryCode !== null) return true
-  if (requestCountry !== null) return true
-
-  const visitorDone = queries.visitorFetched || queries.visitorError
-  const localeDone = queries.localeFetched || queries.localeError
-  return visitorDone && localeDone
+  if (normalizeCountryCode(queries.mockCountry)) return true
+  if (queries.localeSuccess) return true
+  if (queries.localeFetching) return false
+  if (!queries.localeError) return false
+  if (queries.visitorFetching) return false
+  return queries.visitorFetched || queries.visitorError
 }
 
-/** Pricing grids stay in the reserved shell until country is known or all sources fail. */
+/** Empty reserved shell until locale.get() (or debug mock) has settled. */
 export function isPricingPlanGridReady(
-  countryCode: string | null,
+  _countryCode: string | null,
   resolutionComplete: boolean,
 ): boolean {
-  return countryCode !== null || resolutionComplete
+  return resolutionComplete
 }
 
 export function shouldShowStartPlan(

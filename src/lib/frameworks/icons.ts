@@ -141,6 +141,7 @@ export const FRAMEWORK_ICON_MAP: Record<string, string> = {
   frog: 'dart.svg',
   'dart-frog': 'dart.svg',
   dartfrog: 'dart.svg',
+  jaspr: 'jaspr.svg',
 
   aspnet: 'dotnet.svg',
   'aspnet-core': 'dotnet.svg',

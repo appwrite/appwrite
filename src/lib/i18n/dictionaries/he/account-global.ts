@@ -5,6 +5,11 @@
 export const heAccountGlobalDictionary: Record<string, string> = {
   // Account pages
   'Join an organization': 'הצטרפו לארגון',
+  'No organizations for this account': 'אין ארגונים לחשבון הזה',
+  'This account is not a member of any organization. Exit impersonation to return to your operator session, or ask an organization owner to invite this user.':
+    'החשבון הזה לא חבר באף ארגון. צאו ממצב התחזות כדי לחזור לסשן המפעיל, או בקשו מבעלי ארגון להזמין את המשתמש.',
+  'This account is not a member of any organization. Ask an organization owner to invite you, or use Account in the menu to manage your profile.':
+    'החשבון הזה לא חבר באף ארגון. בקשו מבעלי ארגון להזמין אתכם, או פתחו את Account בתפריט כדי לנהל את הפרופיל.',
   'Your account is ready. Ask an organization owner to invite you, then accept the invitation in your email to access existing projects.':
     'החשבון שלכם מוכן. בקשו מבעלי הארגון להזמין אתכם, ואז אשרו את ההזמנה באימייל כדי לקבל גישה לפרויקטים הקיימים.',
   '123 Main St': 'הרצל 1',
@@ -426,7 +431,6 @@ export const heAccountGlobalDictionary: Record<string, string> = {
   'Reset password': 'איפוס סיסמה',
   'Reset your password': 'איפוס הסיסמה שלכם',
   'Send recovery link': 'שליחת קישור שחזור',
-  'Sending…': 'שולח…',
   'Sign in': 'התחברות',
   'Sign up': 'הירשמו',
   'Sign up with Bitbucket': 'הרשמה עם Bitbucket',
@@ -434,6 +438,7 @@ export const heAccountGlobalDictionary: Record<string, string> = {
   'Sign up with GitLab': 'הרשמה עם GitLab',
   'Sign up with Google': 'הרשמה עם Google',
   'Signed in as': 'מחוברים בתור',
+  "You're signed in as": 'אתם מחוברים בתור',
   'Terms of Service': 'תנאי השימוש',
   'This will allow': 'פעולה זו תאפשר ל-',
   'to:': 'לבצע את הפעולות הבאות:',
@@ -1126,8 +1131,6 @@ export const heAccountGlobalDictionary: Record<string, string> = {
   'Accept the invitation to get started.': 'אשרו את ההזמנה כדי להתחיל.',
   'You\'ve been invited to join an organization. Accept the invitation to get started.':
     'הוזמנתם להצטרף לארגון. אשרו את ההזמנה כדי להתחיל.',
-  'By accepting this invitation, you agree to our':
-    'באישור הזמנה זו, אתם מקבלים את',
   'By clicking continue, you agree to our':
     'בלחיצה על המשך, אתם מקבלים את',
   'By continuing, you agree to our': 'בהמשך התהליך, אתם מקבלים את',
@@ -1203,6 +1206,12 @@ export const heAccountGlobalDictionary: Record<string, string> = {
     'הפעלת הפרויקט מחדש נכשלה. נסו שוב.',
   'Failed to resume project.': 'הפעלת הפרויקט מחדש נכשלה.',
   'Project paused': 'הפרויקט מושהה',
+  'Project blocked': 'הפרויקט חסום',
+  'This project is temporarily unavailable. Access has been restricted, which may include a Terms of Service violation. For questions about this restriction or to request a review, contact support.':
+    'הפרויקט הזה אינו זמין זמנית. הגישה אליו הוגבלה, ייתכן בגלל הפרת תנאי שימוש. לשאלות על ההגבלה או לבקשת בדיקה מחדש, פנו לתמיכה.',
+  'This project is temporarily unavailable. Access has been restricted.':
+    'הפרויקט הזה אינו זמין זמנית. הגישה אליו הוגבלה.',
+  '(Blocked)': '(חסום)',
   'This project has been paused due to inactivity. Your data is safe and will remain intact.':
     'הפרויקט הזה הושהה עקב חוסר פעילות. הנתונים שלכם בטוחים ויישארו ללא פגע.',
   'Upgrade your plan to avoid pausing, or restore the project to continue using it now.':
@@ -1252,6 +1261,7 @@ export const heAccountGlobalDictionary: Record<string, string> = {
   'Use system theme': 'שימוש בערכת הנושא של המערכת',
 
   // GitHub Education program sign-up flow (/education/join)
+  'GitHub and Appwrite': 'GitHub ו-Appwrite',
   'Join the Appwrite Education Program': 'הצטרפות ל-Appwrite Education Program',
   'Enjoy Appwrite Cloud for free throughout your student journey as part of the GitHub Student Developer Pack.':
     'תיהנו מ-Appwrite Cloud בחינם לאורך כל תקופת הלימודים, כחלק מ-GitHub Student Developer Pack.',
@@ -1276,4 +1286,30 @@ export const heAccountGlobalDictionary: Record<string, string> = {
   'We could not reach GitHub': 'לא הצלחנו להתחבר ל-GitHub',
   'Try again in a moment, or sign in and explore Appwrite.':
     'נסו שוב בעוד רגע, או התחברו והתנסו ב-Appwrite.',
+  'Signing you in': 'מחברים אתכם',
+  'Please wait while we confirm your magic URL.':
+    'המתינו בזמן שאנחנו מאמתים את ה-Magic URL שלכם.',
+  'Unable to sign you in': 'לא ניתן לחבר אתכם',
+  'Go to sign in': 'מעבר להתחברות',
+  'Access granted': 'הגישה אושרה',
+  'You can close this tab.': 'אפשר לסגור את הכרטיסייה הזו.',
+  "It's safe to close this tab.": 'אפשר לסגור את הכרטיסייה הזו בבטחה.',
+  'Return to your device - it will continue automatically.':
+    'חזרו למכשיר שלכם, הוא ימשיך באופן אוטומטי.',
+  'You can revoke access anytime in your account settings':
+    'ניתן לבטל את הגישה בכל עת בהגדרות החשבון',
+  'You will be automatically redirected back to your app shortly.':
+    'בקרוב תועברו אוטומטית חזרה לאפליקציה שלכם.',
+  'Login failed': 'ההתחברות נכשלה',
+  'An error occurred during the OAuth login flow.':
+    'אירעה שגיאה במהלך תהליך ההתחברות דרך OAuth.',
+  'Error type:': 'סוג השגיאה:',
+  'Missing redirect URL': 'חסרה כתובת URL להפניה',
+  'Preview only': 'תצוגה מקדימה בלבד',
+  'Demo credentials filled in. Submit does not sign in here.':
+    'פרטי הדמו מולאו. שליחה לא מבצעת התחברות כאן.',
+  'Creating demo user': 'יוצרים משתמש דמו',
+  'Failed to create demo user': 'יצירת משתמש הדמו נכשלה',
+  'MFA verification is disabled on this preview route.':
+    'אימות MFA מושבת בנתיב התצוגה המקדימה הזה.',
 }

@@ -19,6 +19,8 @@ export type MysqlTableHeaderSlotProps = {
   onRefresh?: () => void
   isRefreshing?: boolean
   filterTrigger?: ReactNode
+  beforeRefreshButtons?: ReactNode
+  afterRefreshButtons?: ReactNode
 }
 
 type MysqlTableHeaderSlotContextValue = {
@@ -67,6 +69,8 @@ function headerSlotEffectDeps(slot: MysqlTableHeaderSlotProps) {
     slot.onRefresh,
     slot.isRefreshing,
     slot.filterTrigger,
+    slot.beforeRefreshButtons,
+    slot.afterRefreshButtons,
   ] as const
 }
 

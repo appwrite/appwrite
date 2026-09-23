@@ -3,6 +3,7 @@ import { ArrowRight, XCircle } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
+  DOMAIN_SEARCH_VISIBLE_ROOT_MARGIN,
   formatDomainPricePeriod,
   type DomainSuggestion,
 } from '@/lib/domains/search'
@@ -62,7 +63,7 @@ export function DomainSuggestionCard({
           onVisible()
         }
       },
-      { rootMargin: '100px', threshold: 0 },
+      { rootMargin: DOMAIN_SEARCH_VISIBLE_ROOT_MARGIN, threshold: 0 },
     )
     observer.observe(el)
     return () => observer.disconnect()

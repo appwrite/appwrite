@@ -35,7 +35,7 @@ export const Route = createFileRoute('/_public/')({
     // Localhost guests: skip account.get. Production guests 301 to `/home`.
     if (shouldSkipRootAccountProbe()) {
       throw redirect({
-        to: resolveRootGuestRedirectPathname(),
+        href: `${resolveRootGuestRedirectPathname()}${window.location.search}`,
         replace: true,
         reloadDocument: true,
       })
@@ -52,7 +52,7 @@ export const Route = createFileRoute('/_public/')({
         !!queryError && isHttpForbiddenError(queryError)
       if (!isMfaRequired && !isAccountBlocked) {
         throw redirect({
-          to: resolveRootGuestRedirectPathname(),
+          href: `${resolveRootGuestRedirectPathname()}${window.location.search}`,
           replace: true,
           reloadDocument: true,
         })

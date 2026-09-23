@@ -134,7 +134,7 @@ export function StorageSection({
     [imageTransformationsQuery.isError, imageTransformationsQuery.data?.topConsumers],
   )
 
-  const breakdownItems = useMemo(() => {
+  const allBreakdownItems = useMemo(() => {
     if (!showBreakdown) return []
 
     return [
@@ -143,12 +143,16 @@ export function StorageSection({
     ]
   }, [showBreakdown, storageCards, imageTransformationsBreakdownItems])
 
-  const { storageLookup, computeLookup, databaseLookup } =
-    useUsageResourceBreakdownLookups(
-      projectId,
-      breakdownItems,
-      showBreakdown && breakdownItems.length > 0,
-    )
+  const {
+    storageLookup,
+    computeLookup,
+    databaseLookup,
+    resourceNamesResolved,
+  } = useUsageResourceBreakdownLookups(
+    projectId,
+    allBreakdownItems,
+    showBreakdown && allBreakdownItems.length > 0,
+  )
 
   useEffect(() => {
     registerRefreshHandler(
@@ -192,6 +196,7 @@ export function StorageSection({
           breakdownLookup={storageLookup}
           computeLookup={computeLookup}
           databaseLookup={databaseLookup}
+          resourceNamesResolved={resourceNamesResolved}
           onRetry={handleRetryAll}
           docsHref={STORAGE_DOCS_HREF}
         />
@@ -216,6 +221,7 @@ export function StorageSection({
         showBreakdown={showBreakdown}
         breakdownItems={imageTransformationsBreakdownItems}
         breakdownLookup={storageLookup}
+        resourceNamesResolved={resourceNamesResolved}
         onRetry={handleRetryAll}
         docsHref={IMAGE_TRANSFORMATIONS_DOCS_HREF}
       />

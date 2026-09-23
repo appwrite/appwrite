@@ -28,7 +28,7 @@ import {
   canShowProjectSettings,
 } from '@/lib/console-access-checks'
 import { CommandCenter } from '@/components/global/shared/CommandCenter'
-import { useCliShellOptional } from '@/components/global/cli-shell/CliShellProvider'
+import { useCliShellOptional } from '@/components/global/cli-shell/cli-shell-context'
 import { useProjectConnectDialog } from '@/components/pages/projects/$projectId/shared/ProjectConnectDialogContext'
 import {
   registerCommandCenterOpener,

@@ -3,8 +3,8 @@ import { docsTocLinkClassName } from '@/lib/docs/nav-styles'
 import { DOCS_TOC_SECTION_TITLE_CLASS } from '@/lib/docs/prose-typography'
 import { cn } from '@/lib/utils'
 import {
-  BELOW_APP_HEADER_STICKY_MAX_HEIGHT_CLASS,
-  BELOW_APP_HEADER_STICKY_TOP_CLASS,
+  BELOW_ARTICLE_TOOLBAR_STICKY_MAX_HEIGHT_CLASS,
+  BELOW_ARTICLE_TOOLBAR_STICKY_TOP_CLASS,
 } from '@/lib/layout/app-header-height'
 import type { DocsTocItem } from '@/lib/docs/types'
 
@@ -46,9 +46,9 @@ export function DocsToc({ items }: DocsTocProps) {
     <aside
       aria-hidden={items.length === 0 ? true : undefined}
       className={cn(
-        BELOW_APP_HEADER_STICKY_TOP_CLASS,
-        BELOW_APP_HEADER_STICKY_MAX_HEIGHT_CLASS,
-        'z-10 hidden w-full min-w-0 max-w-[208px] shrink-0 self-start overflow-y-auto overscroll-y-contain pt-8 @[900px]:block',
+        BELOW_ARTICLE_TOOLBAR_STICKY_TOP_CLASS,
+        BELOW_ARTICLE_TOOLBAR_STICKY_MAX_HEIGHT_CLASS,
+        'z-10 hidden w-full min-w-0 max-w-[208px] shrink-0 self-start overflow-y-auto overscroll-y-contain pt-6 @[900px]:block',
       )}
     >
       {items.length > 0 ? (

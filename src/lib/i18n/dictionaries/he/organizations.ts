@@ -443,6 +443,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Enterprise': 'אנטרפרייז',
   'Estimate, subject to change based on usage':
     'הערכה, עשויה להשתנות בהתאם לשימוש',
+  'Usage-based estimate; updates may take up to 4 hours.':
+    'הערכה על בסיס שימוש; העדכון עשוי לקחת עד 4 שעות.',
   'Estimated fees from the registry before you pay.':
     'עמלות משוערות מהמרשם לפני התשלום.',
   'Estimated total': 'סכום משוער',

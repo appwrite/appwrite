@@ -9,7 +9,10 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
-import { DOCS_BODY_TEXT_CLASS } from '@/lib/docs/prose-typography'
+import {
+  BLOG_FAQ_ANSWER_CLASS,
+  BLOG_FAQ_QUESTION_CLASS,
+} from '@/lib/blog/prose-typography'
 import { cn } from '@/lib/utils'
 import { ChevronDownIcon } from 'lucide-react'
 import { BlogMarkdown } from './BlogMarkdown'
@@ -45,12 +48,15 @@ export function BlogFaqSection({ faqs }: BlogFaqSectionProps) {
                       'rounded-none px-4 py-4 text-start transition-colors duration-150 hover:bg-muted/40 hover:no-underline',
                     )}
                   >
-                    <span className="pe-4 text-[14px] font-medium text-foreground">
+                    <span className={cn('pe-4', BLOG_FAQ_QUESTION_CLASS)}>
                       {faq.question}
                     </span>
                   </AccordionTrigger>
-                  <AccordionContent className={cn(DOCS_BODY_TEXT_CLASS, 'px-4 pb-4')}>
-                    <BlogMarkdown html={faq.html} />
+                  <AccordionContent className="px-4 pt-3 pb-4">
+                    <BlogMarkdown
+                      html={faq.html}
+                      className={BLOG_FAQ_ANSWER_CLASS}
+                    />
                   </AccordionContent>
                 </AccordionItem>
               ))}

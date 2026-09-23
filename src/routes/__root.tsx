@@ -17,6 +17,7 @@ import {
 } from '@/lib/runtime-config'
 import { getSsrClientIpScript } from '@/lib/ssr-client-ip'
 import { getSsrVisitorCountryScript } from '@/lib/ssr-visitor-country'
+import { getLocalePrefetchScript } from '@/lib/locale/prefetch-locale'
 
 import type { QueryClient } from '@tanstack/react-query'
 import { useQueryClient } from '@tanstack/react-query'
@@ -40,6 +41,7 @@ import {
   ConsoleRightPane,
   ConsoleRightPaneProvider,
 } from '@/components/global/providers/ConsoleRightPane'
+import { DebugDemoNavigatorMount } from '@/components/global/providers/DebugDemoNavigatorMount'
 import { DebugMenuMount } from '@/components/global/providers/DebugMenuMount'
 import { PromoBannerProvider } from '@/components/global/providers/PromoBanner'
 import { CookieConsentProvider } from '@/components/global/providers/CookieConsent'
@@ -517,6 +519,7 @@ function RootAppProviders({ children }: { children: React.ReactNode }) {
     <>
       <RootAppShell>{children}</RootAppShell>
       <ClientOnly>
+        <DebugDemoNavigatorMount />
         <DebugMenuMount />
       </ClientOnly>
     </>
@@ -552,6 +555,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <ScriptOnce>{getRuntimeConfigScript()}</ScriptOnce>
         <ScriptOnce>{getSsrClientIpScript()}</ScriptOnce>
         <ScriptOnce>{getSsrVisitorCountryScript()}</ScriptOnce>
+        <ScriptOnce>{getLocalePrefetchScript()}</ScriptOnce>
         <ScriptOnce>{THEME_SCRIPT}</ScriptOnce>
         <ScriptOnce>{PRE_LAUNCH_BOOT_SCRIPT}</ScriptOnce>
         {/* Must run before <Scripts /> so entry/main chunk 404s after deploy can

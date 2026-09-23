@@ -68,7 +68,10 @@ export { sitesFilterColumns } from './filter-configs/sites'
 export { domainsFilterColumns } from './filter-configs/domains'
 export { dnsRecordsFilterColumns } from './filter-configs/dns-records'
 export { deploymentsFilterColumns } from './filter-configs/deployments'
-export { executionsFilterColumns } from './filter-configs/executions'
+export {
+  executionsFilterColumns,
+  siteLogsFilterColumns,
+} from './filter-configs/executions'
 export {
   getActivitiesFilterColumns,
   activitiesFilterColumns,

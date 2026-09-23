@@ -5,18 +5,25 @@ import { Loader2, MonitorSmartphone } from 'lucide-react'
 import { AppwriteException } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
-import { Card } from '@/components/ui/card'
+import { AuthFlowAccountSwitcher } from '@/components/global/auth/AuthFlowAccountSwitcher'
+import {
+  AuthFlowNarrowCard,
+  authFlowOAuthNarrowCardContentClassName,
+} from '@/components/global/auth/AuthFlowCard'
+import { AuthFlowHeaderIcon } from '@/components/global/auth/AuthFlowHeaderIcon'
+import { AuthFlowShell } from '@/components/global/auth/AuthFlowShell'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import {
   OAuth2ConsentCard,
   type OAuth2Flow,
 } from '@/components/global/auth/OAuth2ConsentCard'
+import { OAuth2OutcomeCard } from '@/components/global/auth/OAuth2OutcomeCard'
 import {
+  OAUTH2_DEVICE_CODE_MIN_LENGTH,
   OAuth2DeviceCodeInput,
   normalizeUserCode,
 } from '@/components/global/auth/OAuth2DeviceCodeInput'
-import { OAuth2OutcomeCard } from '@/components/global/auth/OAuth2OutcomeCard'
 import { getOAuth2App } from '@/lib/oauth2/cimd'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { useT } from '@/lib/i18n/translate'
@@ -152,30 +159,41 @@ function OAuth2DevicePage() {
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     const normalized = normalizeUserCode(code)
-    if (!normalized) return
+    if (normalized.length < OAUTH2_DEVICE_CODE_MIN_LENGTH) return
     setError(null)
     // Mark this as the active submission so onSuccess accepts its result.
     activeCodeRef.current = normalized
     submitMutation.mutate(normalized)
   }
 
-  return (
-    <div className="bg-background h-full overflow-y-auto">
-      <div className="flex min-h-full flex-col items-center p-6 md:p-10">
-        <div className="my-auto w-full max-w-xl">
-          {phase === 'loading' && (
-            <div className="flex min-h-64 items-center justify-center">
-              <Loader2 className="text-muted-foreground size-8 animate-spin" />
-            </div>
-          )}
+  const accountLabel = account?.email || account?.name || undefined
+  const accountSwitcher = accountLabel ? (
+    <AuthFlowAccountSwitcher accountLabel={accountLabel} />
+  ) : null
 
-          {phase === 'enter-code' && (
-            <Card className="overflow-hidden p-6 md:p-8">
-              <form onSubmit={handleSubmit} className="space-y-6">
+  return (
+    <AuthFlowShell
+      width="narrow"
+      showLegal={false}
+      accountSwitcher={accountSwitcher}
+    >
+      {phase === 'loading' && (
+        <AuthFlowNarrowCard
+          contentClassName={authFlowOAuthNarrowCardContentClassName}
+        >
+          <div className="flex flex-col items-center py-8 text-center">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground motion-reduce:animate-none" />
+          </div>
+        </AuthFlowNarrowCard>
+      )}
+
+      {phase === 'enter-code' && (
+        <AuthFlowNarrowCard
+          contentClassName={authFlowOAuthNarrowCardContentClassName}
+        >
+          <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="flex flex-col items-center gap-4 text-center">
-                  <div className="bg-muted text-muted-foreground flex size-10 items-center justify-center rounded-xl ring-1 ring-border/50">
-                    <MonitorSmartphone className="size-4" />
-                  </div>
+                  <AuthFlowHeaderIcon icon={MonitorSmartphone} />
                   <div className="space-y-1">
                     <h1 className="text-2xl font-semibold tracking-tight">
                       {hasPrefilledCode
@@ -215,47 +233,36 @@ function OAuth2DevicePage() {
                     type="submit"
                     variant="brandCta"
                     className="w-full"
-                    disabled={code.length === 0 || submitMutation.isPending}
+                    disabled={
+                      code.length < OAUTH2_DEVICE_CODE_MIN_LENGTH ||
+                      submitMutation.isPending
+                    }
                   >
                     {t('Continue')}
                   </Button>
                 </div>
-
-                {account && (
-                  <p className="text-muted-foreground text-center text-[12px]">
-                    {t('Signed in as')}{' '}
-                    <span className="text-foreground font-medium">
-                      {account.email || account.name}
-                    </span>
-                    .
-                  </p>
-                )}
               </form>
-            </Card>
-          )}
+        </AuthFlowNarrowCard>
+      )}
 
-          {phase === 'consent' && grant && app && (
-            <OAuth2ConsentCard
-              grant={grant}
-              app={app}
-              accountLabel={account?.email || account?.name || undefined}
-              flow={DEVICE_FLOW}
-              onDone={(outcome) =>
-                setPhase(outcome === 'approved' ? 'approved' : 'denied')
-              }
-            />
-          )}
+      {phase === 'consent' && grant && app && (
+        <OAuth2ConsentCard
+          grant={grant}
+          app={app}
+          flow={DEVICE_FLOW}
+          onDone={(outcome) =>
+            setPhase(outcome === 'approved' ? 'approved' : 'denied')
+          }
+        />
+      )}
 
-          {(phase === 'approved' || phase === 'denied') && (
-            <OAuth2OutcomeCard
-              outcome={phase}
-              flow={DEVICE_FLOW}
-              app={app}
-              accountLabel={account?.email || account?.name || undefined}
-            />
-          )}
-        </div>
-      </div>
-    </div>
+      {(phase === 'approved' || phase === 'denied') && (
+        <OAuth2OutcomeCard
+          outcome={phase}
+          flow={DEVICE_FLOW}
+          app={app}
+        />
+      )}
+    </AuthFlowShell>
   )
 }

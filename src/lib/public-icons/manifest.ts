@@ -90,6 +90,7 @@ export const PUBLIC_ICON_FILENAMES = [
   'instagram.svg',
   'ionic.svg',
   'ios.svg',
+  'jaspr.svg',
   'java.svg',
   'js.svg',
   'jsr.svg',

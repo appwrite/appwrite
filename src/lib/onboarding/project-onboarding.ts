@@ -108,29 +108,28 @@ export interface OnboardingSubStepDef {
   countsTowardProgress?: boolean
 }
 
+export type OnboardingConnectDialogTab = 'cli' | 'mcp'
+
 export interface OnboardingConnectStepDef {
-  id: 'app' | 'apiKey'
+  id: 'app' | 'apiKey' | 'cli' | 'mcp'
   label: string
   hint: string
   cta: string
   ctaDone?: string
-  to: string
+  /** Console route for in-app navigation (omit when using `connectTab`). */
+  to?: string
+  /** Opens Connect dialog on this tab instead of navigating. */
+  connectTab?: OnboardingConnectDialogTab
   debug: string
   /** SDK method keys; step is done when any key is completed or skipped. */
   sdkKeys: readonly string[]
-}
-
-/**
- * Optional Connect checklist row: install Appwrite MCP in a coding agent.
- * Completion is client-local (localStorage), not an API stage.
- */
-export const ONBOARDING_AGENT_STEP = {
-  id: 'agent' as const,
-  label: 'Connect your coding agent',
-  hint: 'Install Appwrite MCP in Cursor, Claude Code, Codex, or VS Code so your agent can manage this project.',
-  cta: 'Install MCP',
-  ctaDone: 'Open MCP',
-  debug: 'Done when an MCP client other than Appwrite Agent is authorized on the account, or when skipped locally.',
+  /**
+   * When false, Build/Deploy sections stay locked until other Connect steps finish.
+   * Default true.
+   */
+  gatesProductSections?: boolean
+  /** When false, excluded from global % / sidebar ring. Default true. */
+  countsTowardProgress?: boolean
 }
 
 export interface OnboardingProductGroupDef {
@@ -150,6 +149,18 @@ export interface OnboardingProductCategoryDef {
 
 export const ONBOARDING_CONNECT: OnboardingConnectStepDef[] = [
   {
+    id: 'mcp',
+    label: 'Connect your coding agent',
+    hint: 'Install Appwrite MCP in Cursor, Claude Code, Codex, or VS Code so your agent can manage this project.',
+    cta: 'Install MCP',
+    ctaDone: 'Open MCP',
+    connectTab: 'mcp',
+    debug:
+      'Done when `mcp.install` is completed (first successful MCP API request) or skipped.',
+    sdkKeys: ['mcp.install'],
+    gatesProductSections: false,
+  },
+  {
     id: 'app',
     label: 'Register your app platform',
     hint: "Map your app's hostname or bundle ID so the SDK can reach this project.",
@@ -168,6 +179,18 @@ export const ONBOARDING_CONNECT: OnboardingConnectStepDef[] = [
     to: '/projects/$projectId/api-keys',
     debug: 'Done when `project.createKey` is completed or skipped.',
     sdkKeys: ['project.createKey'],
+  },
+  {
+    id: 'cli',
+    label: 'Install the Appwrite CLI',
+    hint: 'Use the CLI from your terminal to manage this project, deploy functions, and automate workflows.',
+    cta: 'Install CLI',
+    ctaDone: 'Open CLI',
+    connectTab: 'cli',
+    debug:
+      'Done when `cli.install` is completed (first successful CLI API request) or skipped.',
+    sdkKeys: ['cli.install'],
+    gatesProductSections: false,
   },
 ]
 
@@ -372,6 +395,18 @@ export function subStepCountsTowardProgress(sub: OnboardingSubStepDef): boolean 
   return sub.countsTowardProgress !== false
 }
 
+export function connectStepCountsTowardProgress(
+  step: OnboardingConnectStepDef,
+): boolean {
+  return step.countsTowardProgress !== false
+}
+
+export function connectStepGatesProductSections(
+  step: OnboardingConnectStepDef,
+): boolean {
+  return step.gatesProductSections !== false
+}
+
 export function forEachTrackedProductSubStep(
   fn: (sub: OnboardingSubStepDef) => void,
 ): void {
@@ -387,7 +422,10 @@ export function forEachTrackedProductSubStep(
 }
 
 export function getAtomicOnboardingStepCount(): number {
-  let n = ONBOARDING_CONNECT.length
+  let n = 0
+  for (const step of ONBOARDING_CONNECT) {
+    if (connectStepCountsTowardProgress(step)) n += 1
+  }
   forEachTrackedProductSubStep(() => {
     n += 1
   })
@@ -559,6 +597,7 @@ export function computeOnboardingProgress(snapshot: ProjectOnboardingSnapshot): 
   let total = 0
 
   for (const step of ONBOARDING_CONNECT) {
+    if (!connectStepCountsTowardProgress(step)) continue
     total += 1
     if (isOnboardingStepDone(snapshot, step.sdkKeys)) completed += 1
   }

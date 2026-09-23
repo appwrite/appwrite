@@ -15,6 +15,7 @@ const CONSOLE_AREA_PREFIXES = new Set([
   'generator',
   'assistant',
   'agent',
+  'upgrade',
 ])
 
 const CONSOLE_AUTH_EXACT_PATHS = new Set([
@@ -59,6 +60,9 @@ export function isExcludedMarketingSiteLayoutPath(pathname: string): boolean {
   const normalized = normalizeShellPath(pathname)
   if (isConsoleAuthPath(normalized)) return true
   if (normalized === '/generator' || normalized.startsWith('/generator/')) {
+    return true
+  }
+  if (normalized === '/upgrade' || normalized.startsWith('/upgrade/')) {
     return true
   }
   if (normalized === '/debug' || normalized.startsWith('/debug/')) return true

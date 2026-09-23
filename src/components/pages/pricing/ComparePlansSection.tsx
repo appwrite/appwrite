@@ -18,6 +18,7 @@ import {
   ComparisonRowLabel,
   getPlanCtaLabel,
   outlineTierButtonClassName,
+  pricingPlanCardsFadeClassName,
 } from './_components/PricingShared'
 import { PricingSectionHeading } from './_components/PricingSectionHeading'
 import { CompareToc } from './CompareToc'
@@ -195,7 +196,7 @@ export function ComparePlansSection() {
 
       <div className="mx-auto w-full max-w-7xl overflow-visible px-4 sm:px-6">
         {ready ? (
-          <div className="animate-in fade-in-0 duration-300 ease-out motion-reduce:animate-none">
+          <div className={pricingPlanCardsFadeClassName}>
         <div className="mt-8 lg:hidden">
               <MobilePlanTabs
                 activePlan={mobilePlan}

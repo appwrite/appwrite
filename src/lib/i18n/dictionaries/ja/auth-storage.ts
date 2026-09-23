@@ -957,6 +957,8 @@ export const jaAuthStorageDictionary: Record<string, string> = {
   'Team name': 'チーム名',
   'Team name is required': 'チーム名は必須です',
   'Team not found': 'チームが見つかりません',
+  'Membership not found': 'メンバーシップが見つかりません',
+  'Target not found': 'ターゲットが見つかりません',
   'Team presets are available when the project belongs to an organization.': 'プロジェクトが組織に属している場合、チームプリセットを利用できます。',
   'Teams': 'チーム',
   'Templates': 'テンプレート',

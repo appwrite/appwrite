@@ -6,17 +6,21 @@ import {
 } from '@tanstack/react-router'
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import {
-  AlertTriangle,
   ArrowLeft,
   RefreshCw,
   Home,
   Copy,
   Check,
+  TriangleAlert,
   WifiOff,
 } from 'lucide-react'
+import { AuthFlowHeaderIcon } from '@/components/global/auth/AuthFlowHeaderIcon'
 import { captureExceptionWithContext } from '@/components/global/providers/SentryContext'
 import { extractRouteContext } from '@/lib/sentry/report-error'
-import { formatError } from '@/lib/utils/error-formatting'
+import {
+  formatError,
+  formatResourceNotFoundError,
+} from '@/lib/utils/error-formatting'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
@@ -45,7 +49,10 @@ export function ErrorComponent({
   preview?: boolean
 }) {
   const error = useMemo(
-    () => caughtError instanceof Error ? caughtError : new Error(String(caughtError)),
+    () =>
+      caughtError instanceof Error
+        ? caughtError
+        : new Error(String(caughtError)),
     [caughtError],
   )
   const t = useT()
@@ -70,8 +77,12 @@ export function ErrorComponent({
   }
   const errorCode = errorWithCode.code
 
+  // A missing user/team/etc. inside a live project is not a missing project.
+  const resourceNotFound = formatResourceNotFoundError(error)
+
   const isProjectNotFound =
     isProjectRoute &&
+    !resourceNotFound &&
     (error.name === 'NotFoundError' ||
       errorCode === 404 ||
       lowerMessage.includes('not found') ||
@@ -101,35 +112,37 @@ export function ErrorComponent({
   }, [])
 
   // Use project-specific messages for project routes
-  const formattedError = isProjectNotFound
-    ? {
-        title: 'Project Not Found',
-        message:
-          'This project could not be found or you do not have access to view it.',
-        isUserFriendly: true,
-      }
-    : isProjectAccessDenied
+  const formattedError = resourceNotFound
+    ? resourceNotFound
+    : isProjectNotFound
       ? {
-          title: 'Access Denied',
+          title: 'Project Not Found',
           message:
-            'You do not have permission to access this project. Please contact your administrator if you believe this is an error.',
+            'This project could not be found or you do not have access to view it.',
           isUserFriendly: true,
         }
-      : isConnectivityError
+      : isProjectAccessDenied
         ? {
-            title: "You're offline",
+            title: 'Access Denied',
             message:
-              'This page needs a connection to Appwrite. Reconnect to the internet, then try again - we can reload automatically when you are back online.',
+              'You do not have permission to access this project. Please contact your administrator if you believe this is an error.',
             isUserFriendly: true,
           }
-        : isStaleChunkError
+        : isConnectivityError
           ? {
-              title: 'Update available',
+              title: "You're offline",
               message:
-                'A newer version of the console was deployed while you had this tab open. Reload the page to continue.',
+                'This page needs a connection to Appwrite. Reconnect to the internet, then try again - we can reload automatically when you are back online.',
               isUserFriendly: true,
             }
-          : formatError(error, 'An unexpected error occurred.')
+          : isStaleChunkError
+            ? {
+                title: 'Update available',
+                message:
+                  'A newer version of the console was deployed while you had this tab open. Reload the page to continue.',
+                isUserFriendly: true,
+              }
+            : formatError(error, 'An unexpected error occurred.')
 
   const message = useMemo(
     () => ({
@@ -257,11 +270,13 @@ export function ErrorComponent({
   }
 
   const showTechnicalDetails =
+    !resourceNotFound &&
     !isProjectNotFound &&
     !isProjectAccessDenied &&
     !isConnectivityError &&
     !isStaleChunkError
   const showSupportBlurb =
+    !resourceNotFound &&
     !isProjectNotFound &&
     !isProjectAccessDenied &&
     !isConnectivityError &&
@@ -301,20 +316,15 @@ export function ErrorComponent({
   return (
     <div className="relative z-[10000] flex min-h-full w-full flex-col items-center justify-center gap-8 px-4 py-8">
       <div className="flex flex-col items-center max-w-md w-full gap-8">
-        <div
-          className={cn(
-            'rounded-full p-3',
-            isConnectivityError
-              ? 'bg-amber-500/15'
-              : 'bg-destructive/10',
-          )}
-        >
-          {isConnectivityError ? (
-            <WifiOff className="h-8 w-8 text-amber-600 dark:text-amber-400" />
-          ) : (
-            <AlertTriangle className="h-8 w-8 text-destructive" />
-          )}
-        </div>
+        {isConnectivityError ? (
+          <AuthFlowHeaderIcon
+            icon={WifiOff}
+            className="bg-amber-500/15 ring-0"
+            iconClassName="text-amber-600 dark:text-amber-400"
+          />
+        ) : (
+          <AuthFlowHeaderIcon icon={TriangleAlert} variant="destructive" />
+        )}
 
         <div className="space-y-3 text-center">
           <h1 className="text-2xl font-semibold">{t(formattedError.title)}</h1>
@@ -341,7 +351,7 @@ export function ErrorComponent({
         {showTechnicalDetails ? (
           <div className="relative w-full max-w-full rounded-lg border bg-card px-4 py-3">
             <div className="flex items-start gap-2 pe-8 min-w-0 w-full">
-              <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5 text-destructive" />
+              <TriangleAlert className="h-4 w-4 shrink-0 mt-0.5 text-destructive" />
               <div
                 className="text-xs font-mono text-muted-foreground flex-1 min-w-0 overflow-hidden text-start"
                 style={{ wordBreak: 'break-all', overflowWrap: 'break-word' }}
