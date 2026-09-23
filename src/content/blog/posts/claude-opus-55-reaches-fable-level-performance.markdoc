@@ -133,7 +133,7 @@ Benchmark leads at this level are narrow enough that your own evaluation suite i
 
 # What Claude Opus 5.5 means if you build on Appwrite
 
-Opus 5.5's strength is long-horizon autonomous work: migrations, audits, and agents that run for hours without supervision. Every one of those agents needs somewhere to authenticate users, store state, persist files between steps, and run server-side logic. Assembling that backend by hand is usually the slow part of shipping an agentic app, and it is where a 40% model cost saving quietly disappears.
+Opus 5.5's strength is long-horizon autonomous work: migrations, audits, and agents that run for hours without supervision. Production agents often need backend services for things like user authentication, state, file storage, and server-side logic.
 
 [Appwrite](/) is an open source backend that gives an agent all of it in one project: [Auth](/docs/products/auth), [Databases](/docs/products/databases), [Storage](/docs/products/storage), [Functions](/docs/products/functions), [Messaging](/docs/products/messaging), and [Sites](/docs/products/sites) for deploying the frontend next to them. Run it on managed Cloud or self-host it.
 
