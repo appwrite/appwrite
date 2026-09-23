@@ -13,44 +13,53 @@ use Utopia\Mqtt\Property;
 
 final class DisconnectTest extends TestCase
 {
-    public function testRefuseWithoutAReasonCarriesNoProperties(): void
+    public function testRefuseWithoutAReasonEncodesJustTheCode(): void
     {
-        $disconnect = Disconnect::refuse(Disconnect::NOT_AUTHORIZED);
+        $wire = $this->onWire(Disconnect::refuse(Disconnect::NOT_AUTHORIZED));
 
-        $this->assertSame(Disconnect::NOT_AUTHORIZED, $disconnect->reasonCode);
-        $this->assertNull($disconnect->properties);
+        $this->assertSame(Disconnect::NOT_AUTHORIZED, $wire['code']);
+        $this->assertNull($wire['reason'], 'no Reason String reaches the client');
     }
 
-    public function testRefuseCarriesTheReasonStringAsAProperty(): void
+    public function testRefuseEncodesTheReasonString(): void
     {
-        $disconnect = Disconnect::refuse(Disconnect::NOT_AUTHORIZED, 'Re-auth changed the resolved user');
+        $wire = $this->onWire(Disconnect::refuse(Disconnect::NOT_AUTHORIZED, 'Re-auth changed the resolved user'));
 
-        $this->assertSame(Disconnect::NOT_AUTHORIZED, $disconnect->reasonCode);
-        $this->assertNotNull($disconnect->properties);
-        $this->assertSame('Re-auth changed the resolved user', $disconnect->properties->get(Property::REASON_STRING));
+        $this->assertSame(Disconnect::NOT_AUTHORIZED, $wire['code']);
+        $this->assertSame('Re-auth changed the resolved user', $wire['reason']);
     }
 
-    public function testNormalCarriesTheReasonStringWhenGiven(): void
+    public function testNormalEncodesReasonCodeZeroWithAnOptionalString(): void
     {
-        $this->assertNull(Disconnect::normal()->properties);
-        $this->assertSame('Server shutting down', Disconnect::normal('Server shutting down')->properties?->get(Property::REASON_STRING));
+        $this->assertNull($this->onWire(Disconnect::normal())['reason']);
+
+        $wire = $this->onWire(Disconnect::normal('Server shutting down'));
+        $this->assertSame(Disconnect::NORMAL, $wire['code']);
+        $this->assertSame('Server shutting down', $wire['reason']);
     }
 
-    public function testEmptyReasonStringIsTreatedAsAbsent(): void
+    public function testEmptyReasonStringIsNotEmittedOnTheWire(): void
     {
-        // An empty string is not a diagnostic, so it must not add an (empty) Reason String property.
-        $this->assertNull(Disconnect::refuse(Disconnect::NOT_AUTHORIZED, '')->properties);
+        // An empty string is not a diagnostic, so no (blank) Reason String must appear on the wire.
+        $this->assertNull($this->onWire(Disconnect::refuse(Disconnect::NOT_AUTHORIZED, ''))['reason']);
     }
 
-    public function testReasonStringSurvivesEncodingOnTheWire(): void
+    /**
+     * Encode a Disconnect the way the server does for a 5.0 client, then parse it back — so the
+     * assertions are on the bytes a client actually receives, not on the object's internal shape.
+     *
+     * @return array{code: int, reason: string|null}
+     */
+    private function onWire(Disconnect $disconnect): array
     {
-        $disconnect = Disconnect::refuse(Disconnect::NOT_AUTHORIZED, 'quota exceeded');
         $packet = Packet::parse(V5::disconnect($disconnect->reasonCode, $disconnect->properties));
-
         $this->assertSame(Packet::DISCONNECT, $packet->type);
-        $this->assertSame(Disconnect::NOT_AUTHORIZED, ord($packet->body[0])); // reason code
 
-        [$parsed] = Properties::parse($packet->body, 1);
-        $this->assertSame('quota exceeded', $parsed->get(Property::REASON_STRING));
+        [$properties] = Properties::parse($packet->body, 1); // past the reason code byte
+
+        return [
+            'code' => ord($packet->body[0]),
+            'reason' => $properties->get(Property::REASON_STRING),
+        ];
     }
 }
