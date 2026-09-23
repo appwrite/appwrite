@@ -358,6 +358,18 @@ function linked_versions(string $package): array
 }
 
 /**
+ * Composer environment for installing a package on its own. When a sibling
+ * requires the package back (span and client require each other), the
+ * checkout has to claim a release line or the solver rejects the cycle.
+ */
+function root_environment(string $package): string
+{
+    $version = linked_versions($package)[ORG . "/{$package}"] ?? null;
+
+    return $version === null ? '' : "COMPOSER_ROOT_VERSION={$version} ";
+}
+
+/**
  * Pick the newest release line named by a constraint and reserve its .999
  * patch for the linked checkout (e.g. "^0.1 || ^0.3" → "0.3.999").
  */
@@ -767,7 +779,7 @@ switch ($command) {
             // above all) are what its phpstan.neon scans, so resolve them the
             // way `test` does before analysing a fresh checkout.
             if (!is_dir("{$directory}/vendor")) {
-                passthru("cd {$directory} && composer update --no-interaction --prefer-dist --no-progress --ignore-platform-reqs", $code);
+                passthru("cd {$directory} && " . root_environment($package) . 'composer update --no-interaction --prefer-dist --no-progress --ignore-platform-reqs', $code);
                 if ($code !== 0) {
                     $failed[] = "{$package} (composer)";
                     continue;
@@ -842,7 +854,7 @@ switch ($command) {
             // --linked: resolve siblings from the local checkout instead of
             // Packagist, via a generated manifest (COMPOSER env) with a path
             // repository claiming constraint-satisfying versions.
-            $environment = '';
+            $environment = root_environment($package);
             if (isset($options['linked'])) {
                 $versions = linked_versions($package);
                 $rootVersion = $versions[ORG . "/{$package}"] ?? null;
