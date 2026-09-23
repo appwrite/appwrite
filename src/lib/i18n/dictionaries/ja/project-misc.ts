@@ -1004,6 +1004,13 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Open MCP': 'MCP を開く',
   'Register where your app runs, add API credentials, and connect a coding agent with MCP.':
     'アプリの実行環境を登録し、API 認証情報を追加して、MCP でコーディングエージェントを接続します。',
+  'Register where your app runs, add API credentials, and install the CLI or MCP when you are ready.':
+    'アプリの実行環境を登録し、API 認証情報を追加します。準備ができたら CLI または MCP をインストールしてください。',
+  'Install the Appwrite CLI': 'Appwrite CLI をインストール',
+  'Use the CLI from your terminal to manage this project, deploy functions, and automate workflows.':
+    'ターミナルから CLI を使い、このプロジェクトの管理、Functions のデプロイ、ワークフローの自動化を行います。',
+  'Install CLI': 'CLI をインストール',
+  'Open CLI': 'CLI を開く',
   "You've reached the limit of": '上限に達しました:',
   'Approaching the limit for': '上限に近づいています:',
   'Your plan': 'お使いのプラン',
