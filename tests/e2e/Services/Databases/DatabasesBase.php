@@ -1724,6 +1724,60 @@ trait DatabasesBase
         $this->assertEquals(0, $schema['body']['total']);
     }
 
+    /**
+     * The dedicated float endpoint takes no size and stores a double with size 0,
+     * so an inline double has to be stored the same way whatever size it was sent
+     * with. The size is not part of the response model, only of the stored
+     * attribute, so it is read back through a query on it.
+     */
+    public function testCreateCollectionInlineDoubleIgnoresSize(): void
+    {
+        if (!$this->getSupportForAttributes()) {
+            $this->markTestSkipped('Attributes are not supported by this database adapter');
+        }
+
+        $data = $this->setupDatabase();
+        $databaseId = $data['databaseId'];
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $schemaResource = $this->getSchemaResource();
+
+        $container = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => ID::unique(),
+            'name' => 'Scores',
+            $schemaResource => [
+                ['key' => 'score', 'type' => ColumnType::Double->value, 'size' => 5],
+            ],
+        ]);
+
+        $this->assertEquals(201, $container['headers']['status-code']);
+        $containerId = $container['body']['$id'];
+
+        $dedicated = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $containerId, 'float'), $headers, [
+            'key' => 'ratio',
+            'required' => false,
+        ]);
+
+        $this->assertEquals(202, $dedicated['headers']['status-code']);
+
+        $unsized = $this->client->call(Client::METHOD_GET, $this->getSchemaUrl($databaseId, $containerId), $headers, [
+            'queries' => [
+                Query::equal('size', [0])->toString(),
+            ],
+        ]);
+
+        $this->assertEquals(200, $unsized['headers']['status-code']);
+        $this->assertSame(2, $unsized['body']['total']);
+
+        $keys = \array_column($unsized['body'][$schemaResource], 'key');
+        \sort($keys);
+
+        $this->assertSame(['ratio', 'score'], $keys);
+    }
+
     public function testListAttributes(): void
     {
         if (!$this->getSupportForAttributes()) {

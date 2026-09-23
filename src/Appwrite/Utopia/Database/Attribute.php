@@ -27,7 +27,7 @@ class Attribute
         // Every adapter maps these two types without consulting the size.
         ColumnType::BigInteger->value => 8,
         'bigint' => 8,
-        ColumnType::Float->value => 0,
+        ColumnType::Double->value => 0,
     ];
 
     /**

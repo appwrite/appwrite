@@ -172,8 +172,8 @@ final class AttributesTest extends TestCase
         );
 
         $this->assertEquals(
-            ['type' => ColumnType::Float->value, 'format' => '', 'size' => 0],
-            Attribute::resolve(['key' => 'ratio', 'type' => ColumnType::Float->value])
+            ['type' => ColumnType::Double->value, 'format' => '', 'size' => 0],
+            Attribute::resolve(['key' => 'ratio', 'type' => ColumnType::Double->value])
         );
 
         // None of the numeric endpoints takes a size. A size sent inline must not
@@ -194,8 +194,8 @@ final class AttributesTest extends TestCase
         );
 
         $this->assertEquals(
-            ['type' => ColumnType::Float->value, 'format' => '', 'size' => 0],
-            Attribute::resolve(['key' => 'ratio', 'type' => ColumnType::Float->value, 'size' => 4])
+            ['type' => ColumnType::Double->value, 'format' => '', 'size' => 0],
+            Attribute::resolve(['key' => 'ratio', 'type' => ColumnType::Double->value, 'size' => 4])
         );
     }
 
