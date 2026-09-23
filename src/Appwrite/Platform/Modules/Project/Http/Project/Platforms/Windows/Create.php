@@ -9,7 +9,6 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\CustomId;
-use Appwrite\Utopia\Request\Validator\NonBlank;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -56,8 +55,8 @@ class Create extends Action
                 ],
             ))
             ->param('platformId', '', fn (Database $dbForPlatform) => new CustomId(false, $dbForPlatform->getAdapter()->getMaxUIDLength()), 'Platform ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForPlatform'])
-            ->param('name', null, new NonBlank(new Text(128)), 'Platform name. Max length: 128 chars.')
-            ->param('packageIdentifierName', '', new NonBlank(new Text(256)), 'Windows package identifier name. Max length: 256 chars.')
+            ->param('name', null, new Text(128, requireNonBlank: true), 'Platform name. Max length: 128 chars.')
+            ->param('packageIdentifierName', '', new Text(256, requireNonBlank: true), 'Windows package identifier name. Max length: 256 chars.')
             ->inject('response')
             ->inject('queueForEvents')
             ->inject('project')
