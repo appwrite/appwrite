@@ -295,6 +295,28 @@ class V25 extends Migration
 
                     $this->dbForProject->purgeCachedCollection($id);
                     break;
+
+                case 'pushLedger':
+                    // Added in 2.3.0 for every project; an install upgraded from 2.2.0
+                    // has no table yet, and migrating its documents fails without one.
+                    $this->createCollection($id);
+                    break;
+
+                case 'topics':
+                    // Added in 2.3.0 for the push broker, which increments sequence on publish.
+                    $attributes = [
+                        'sequence',
+                        'qos',
+                        'expiry',
+                    ];
+                    try {
+                        $this->createAttributesFromCollection($this->dbForProject, $id, $attributes);
+                    } catch (Throwable $th) {
+                        Console::warning('Failed to create attributes "' . \implode(', ', $attributes) . "\" in collection {$id}: {$th->getMessage()}");
+                    }
+
+                    $this->dbForProject->purgeCachedCollection($id);
+                    break;
             }
         }
     }
@@ -417,8 +439,8 @@ class V25 extends Migration
      */
     protected function predatesMigration(Document $resource, Document $migration): bool
     {
-        $resourceCreatedAt = \strtotime($resource->getCreatedAt());
-        $migrationCreatedAt = \strtotime($migration->getCreatedAt());
+        $resourceCreatedAt = \strtotime($resource->getCreatedAt() ?? '');
+        $migrationCreatedAt = \strtotime($migration->getCreatedAt() ?? '');
 
         if ($resourceCreatedAt === false || $migrationCreatedAt === false) {
             return false;
