@@ -32,6 +32,7 @@ use Utopia\Messaging\Adapter\SMS as SMSAdapter;
 use Utopia\Messaging\Adapter\SMS\GEOSMS\CallingCode;
 use Utopia\Messaging\Adapter\SMS\Mock;
 use Utopia\Messaging\Adapter\SMS\Msg91\MetadataParameter;
+use Utopia\Messaging\Exception\InvalidArgumentException;
 use Utopia\Messaging\Messages\Email;
 use Utopia\Messaging\Messages\Email\Attachment;
 use Utopia\Messaging\Messages\Push;
@@ -435,7 +436,7 @@ class Messaging extends Action
                         fn () => $dbForProject->getAuthorization()->skip(
                             fn () => $dbForProject->find('targets', [
                                 Query::equal('$sequence', $targetInternalIds),
-                                Query::select(['providerId', 'identifier', 'userId']),
+                                Query::select(['providerId', 'identifier', 'userId', 'expired']),
                                 Query::limit(\count($targetInternalIds)),
                             ])
                         )
@@ -453,7 +454,7 @@ class Messaging extends Action
                 $queries = [
                     Query::equal('userId', $userIds),
                     Query::equal('providerType', [$providerType]),
-                    Query::select(['$sequence', 'providerId', 'identifier', 'userId']),
+                    Query::select(['$sequence', 'providerId', 'identifier', 'userId', 'expired']),
                     Query::orderAsc('$sequence'),
                     Query::limit(MESSAGE_RECIPIENTS_PAGE_SIZE),
                 ];
@@ -482,7 +483,7 @@ class Messaging extends Action
                 $queries = [
                     Query::equal('$id', $targetIds),
                     Query::equal('providerType', [$providerType]),
-                    Query::select(['$sequence', 'providerId', 'identifier', 'userId']),
+                    Query::select(['$sequence', 'providerId', 'identifier', 'userId', 'expired']),
                     Query::orderAsc('$sequence'),
                     Query::limit(MESSAGE_RECIPIENTS_PAGE_SIZE),
                 ];
@@ -506,9 +507,10 @@ class Messaging extends Action
     }
 
     /**
-     * Group a page of target documents by provider id, deduplicating identifiers within the page.
-     * Each identifier maps to its target's user id, which the Appwrite push provider uses to deliver
-     * on the reserved per-user topic (see the send loop); other providers only read the keys.
+     * Group a page of target documents by provider id, deduplicating identifiers within the page and
+     * dropping targets already known to be unreachable. Each identifier maps to its target's user id,
+     * which the Appwrite push provider uses to deliver on the reserved per-user topic (see the send
+     * loop); other providers only read the keys.
      *
      * @param array<Document> $targets
      * @return array<string, array<string, string>>
@@ -521,6 +523,13 @@ class Messaging extends Action
         $identifiers = [];
 
         foreach ($targets as $target) {
+            // sendBatch() flags a target when a provider reports its token as dead, but the row only goes
+            // away on the next maintenance sweep. Rows predating the attribute read null, so anything
+            // but a positive flag counts as reachable.
+            if ($target->getAttribute('expired')) {
+                continue;
+            }
+
             $providerId = $target->getAttribute('providerId') ?: $default->getId();
 
             if (!\array_key_exists($providerId, $identifiers)) {
@@ -659,11 +668,33 @@ class Messaging extends Action
         for ($attempt = 1; $attempt <= MESSAGE_SEND_MAX_RETRIES; $attempt++) {
             $hasRetriesLeft = $attempt < MESSAGE_SEND_MAX_RETRIES;
 
-            // Rebuild the provider message scoped to only the still-pending recipients so a partially-delivered
-            // batch never re-sends to recipients that already succeeded on an earlier attempt.
-            $data = $this->buildMessage($pending, $message, $provider, $providerType, $dbForProject, $attachments);
-
             $retry = [];
+
+            // Rebuild the provider message scoped to only the still-pending recipients so a partially-delivered
+            // batch never re-sends to recipients that already succeeded on an earlier attempt. A recipient no
+            // provider can deliver to is recorded as terminal and dropped, so it never costs the rest their send.
+            $data = null;
+            while ($pending !== []) {
+                try {
+                    $data = $this->buildMessage($pending, $message, $provider, $providerType, $dbForProject, $attachments);
+                    break;
+                } catch (InvalidArgumentException $e) {
+                    $recipient = $e->getValue();
+
+                    if ($recipient === null || !\in_array($recipient, $pending, true)) {
+                        $this->recordError($errors, 'Failed sending to targets with error: ' . $e->getMessage());
+                        $pending = [];
+                        break;
+                    }
+
+                    $this->recordError($errors, "Failed sending to target {$recipient} with error: {$e->getMessage()}");
+                    $pending = \array_values(\array_diff($pending, [$recipient]));
+                }
+            }
+
+            if ($data === null) {
+                break;
+            }
 
             // The try/catch wraps ONLY the provider send. A whole-batch throw is retryable when transient,
             // otherwise it records one representative terminal error. The previous behaviour of resetting
@@ -673,7 +704,7 @@ class Messaging extends Action
             try {
                 $response = $adapter->send($data);
             } catch (\Throwable $e) {
-                if ($hasRetriesLeft && $this->isRetryableError($e->getMessage())) {
+                if ($hasRetriesLeft && !$e instanceof InvalidArgumentException && $this->isRetryableError($e->getMessage())) {
                     $retry = $pending;
                 } else {
                     $this->recordError($errors, 'Failed sending to targets with error: ' . $e->getMessage());
