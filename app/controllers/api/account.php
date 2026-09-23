@@ -5279,21 +5279,39 @@ Http::post('/v1/account/targets/push')
         $session = $dbForProject->getDocument('sessions', $sessionId);
         $name = "{$device['deviceBrand']} {$device['deviceModel']}";
 
-        // A session is one device install holding one push token. Clients that re-register after the
-        // token rotates, rather than updating, used to leave the superseded token live: both targets
-        // resolved to the same device, so every message arrived there twice.
-        $existing = $session->isEmpty()
-            ? new Document()
-            : $authorization->skip(fn () => $dbForProject->findOne('targets', [
+        // A session is one device install holding one push token per provider. Clients that re-register
+        // after the token rotates, rather than updating, used to leave the superseded token live: both
+        // targets resolved to the same device, so every message arrived there twice.
+        $siblings = $session->isEmpty()
+            ? []
+            : $authorization->skip(fn () => $dbForProject->find('targets', [
+                Query::equal('userInternalId', [$user->getSequence()]),
                 Query::equal('sessionInternalId', [$session->getSequence()]),
                 Query::equal('providerType', [MESSAGE_TYPE_PUSH]),
                 empty($providerId)
                     ? Query::isNull('providerId')
                     : Query::equal('providerId', [$providerId]),
+                Query::orderAsc('$sequence'),
+                Query::limit(APP_LIMIT_SUBQUERY),
             ]));
 
+        // A sibling already holding this token has to be the one reused, or the update below would
+        // collide with it on the unique identifier index. Otherwise the oldest is reused: a client that
+        // subscribes to topics only on first registration left its subscriptions there.
+        $current = null;
+
+        foreach ($siblings as $key => $sibling) {
+            if ($sibling->getAttribute('identifier') === $identifier) {
+                $current = $sibling;
+                unset($siblings[$key]);
+                break;
+            }
+        }
+
+        $current ??= \array_shift($siblings);
+
         try {
-            $target = $existing->isEmpty()
+            $target = $current === null
                 ? $dbForProject->createDocument('targets', new Document([
                     '$id' => $targetId,
                     '$permissions' => [
@@ -5311,13 +5329,22 @@ Http::post('/v1/account/targets/push')
                     'identifier' => $identifier,
                     'name' => $name
                 ]))
-                : $dbForProject->updateDocument('targets', $existing->getId(), new Document([
+                : $dbForProject->updateDocument('targets', $current->getId(), new Document([
                     'identifier' => $identifier,
                     'expired' => false,
                     'name' => $name,
                 ]));
         } catch (Duplicate) {
             throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
+        }
+
+        // Anything still here holds a token the client has just told us it no longer uses, so it can only
+        // duplicate deliveries. Expiring rather than deleting hands them to the maintenance sweep, which
+        // also releases their topic subscriptions and the counters those subscriptions hold.
+        foreach ($siblings as $sibling) {
+            $dbForProject->updateDocument('targets', $sibling->getId(), new Document([
+                'expired' => true,
+            ]));
         }
 
         $dbForProject->purgeCachedDocument('users', $user->getId());
