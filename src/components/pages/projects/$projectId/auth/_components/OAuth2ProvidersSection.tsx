@@ -30,7 +30,7 @@ import { Badge } from '@/components/ui/badge'
 import { Textarea } from '@/components/ui/textarea'
 import { BaseDrawer } from '@/components/global/shared/BaseDrawer'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
+import { OAuth2ProviderLogo } from './OAuth2ProviderLogo'
 import {
   RESOURCE_CARD_GRID_CLASSNAME,
   RESOURCE_CARD_INTERACTIVE_CLASSNAME,
@@ -67,7 +67,6 @@ import {
 } from '@/lib/oauth2/sign-in-status'
 import {
   getOAuth2ProviderDisplayName,
-  getOAuth2ProviderIconPath,
   isOAuth2ProviderNew,
   OAUTH2_POPULAR_PROVIDER_IDS,
 } from '@/lib/oauth2/provider-display'
@@ -1189,17 +1188,7 @@ export function OAuth2ProvidersSection({
             )}
           >
             <div className="flex min-w-0 items-center gap-2">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted">
-                <img
-                  src={getOAuth2ProviderIconPath(row.$id)}
-                  alt=""
-                  className={`h-5 w-5 ${PUBLIC_ICON_MUTED_CLASSES}`}
-                  onError={(e) => {
-                    const t = e.currentTarget
-                    t.src = '/icons/empty.svg'
-                  }}
-                />
-              </div>
+              <OAuth2ProviderLogo providerId={row.$id} size="sm" />
               <span className="text-[13px] font-medium text-foreground truncate">
                 {getOAuth2ProviderDisplayName(row.$id)}
               </span>

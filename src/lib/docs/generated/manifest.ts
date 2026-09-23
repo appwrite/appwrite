@@ -199,13 +199,6 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "readingTimeMinutes": 2
   },
   {
-    "slug": "advanced/security/dev-keys",
-    "title": "Dev keys",
-    "description": "Bypass Appwrite rate limits and CORS errors in your development environment with Appwrite Dev keys.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
     "slug": "advanced/security/encryption",
     "title": "Encryption",
     "description": "Learn about Appwrite's use of encryption across Appwrite's databases and storage buckets to protect user data.",
@@ -266,7 +259,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Rate-limits",
     "description": "Optimize application performance with Appwrite rate limits. Explore rate limiting strategies, configurations, and how to prevent abuse of your services.",
     "layout": "article",
-    "readingTimeMinutes": 3
+    "readingTimeMinutes": 2
   },
   {
     "slug": "advanced/security/roles",
@@ -749,7 +742,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "API keys",
     "description": "Secure your application with Appwrite API Keys. Discover how to create and manage API keys to control access and enhance your application's security.",
     "layout": "article",
-    "readingTimeMinutes": 7
+    "readingTimeMinutes": 6
   },
   {
     "slug": "partners/project/auth-methods",
@@ -1869,6 +1862,20 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "readingTimeMinutes": 4
   },
   {
+    "slug": "products/databases/mysql/integrations/knex",
+    "title": "Knex",
+    "description": "Use Knex.js with an Appwrite native MySQL database. Configure the mysql2 client, run migrations against the direct connection, and pool runtime traffic from serverless environments.",
+    "layout": "article",
+    "readingTimeMinutes": 4
+  },
+  {
+    "slug": "products/databases/mysql/integrations/kysely",
+    "title": "Kysely",
+    "description": "Use Kysely with an Appwrite native MySQL database. Configure MysqlDialect with mysql2, run migrations against the direct connection, and pool runtime traffic from serverless environments.",
+    "layout": "article",
+    "readingTimeMinutes": 4
+  },
+  {
     "slug": "products/databases/mysql/integrations/laravel",
     "title": "Laravel",
     "description": "Use Laravel and Eloquent with an Appwrite native MySQL database. Configure the connection, run migrations against the direct port, and pool serverless traffic through the connection pooler.",
@@ -1911,9 +1918,23 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "readingTimeMinutes": 4
   },
   {
+    "slug": "products/databases/mysql/integrations/sequelize",
+    "title": "Sequelize",
+    "description": "Use Sequelize with an Appwrite native MySQL database. Configure the mysql dialect, run migrations against the direct connection, and pool runtime traffic from serverless environments.",
+    "layout": "article",
+    "readingTimeMinutes": 4
+  },
+  {
     "slug": "products/databases/mysql/integrations/spring-boot",
     "title": "Spring Boot",
     "description": "Connect a Spring Boot application to an Appwrite native MySQL database with Spring Data JPA and Hibernate. Configure the JDBC datasource and HikariCP pool, map entities, and run Flyway or Liquibase migrations against MySQL.",
+    "layout": "article",
+    "readingTimeMinutes": 4
+  },
+  {
+    "slug": "products/databases/mysql/integrations/typeorm",
+    "title": "TypeORM",
+    "description": "Use TypeORM with an Appwrite native MySQL database. Configure the DataSource, run migrations against the direct connection, and pool runtime traffic from serverless environments.",
     "layout": "article",
     "readingTimeMinutes": 4
   },
@@ -2121,6 +2142,20 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "readingTimeMinutes": 4
   },
   {
+    "slug": "products/databases/postgresql/integrations/knex",
+    "title": "Knex",
+    "description": "Use Knex.js with an Appwrite native PostgreSQL database. Configure the pg client, run migrations against the direct connection, and pool runtime traffic from serverless environments.",
+    "layout": "article",
+    "readingTimeMinutes": 4
+  },
+  {
+    "slug": "products/databases/postgresql/integrations/kysely",
+    "title": "Kysely",
+    "description": "Use Kysely with an Appwrite native PostgreSQL database. Configure PostgresDialect with node-postgres, run migrations against the direct connection, and pool runtime traffic from serverless environments.",
+    "layout": "article",
+    "readingTimeMinutes": 4
+  },
+  {
     "slug": "products/databases/postgresql/integrations/laravel",
     "title": "Laravel",
     "description": "Use Laravel and Eloquent with an Appwrite native PostgreSQL database. Configure the connection, run migrations against the direct port, and pool serverless traffic through the connection pooler.",
@@ -2163,11 +2198,25 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "readingTimeMinutes": 4
   },
   {
+    "slug": "products/databases/postgresql/integrations/sequelize",
+    "title": "Sequelize",
+    "description": "Use Sequelize with an Appwrite native PostgreSQL database. Configure the postgres dialect, run migrations against the direct connection, and pool runtime traffic from serverless environments.",
+    "layout": "article",
+    "readingTimeMinutes": 4
+  },
+  {
     "slug": "products/databases/postgresql/integrations/spring-boot",
     "title": "Spring Boot",
     "description": "Connect a Spring Boot application to an Appwrite native PostgreSQL database with Spring Data JPA and Hibernate. Configure the JDBC datasource and HikariCP pool, map entities, and run Flyway or Liquibase migrations against PostgreSQL.",
     "layout": "article",
     "readingTimeMinutes": 5
+  },
+  {
+    "slug": "products/databases/postgresql/integrations/typeorm",
+    "title": "TypeORM",
+    "description": "Use TypeORM with an Appwrite native PostgreSQL database. Configure the DataSource, run migrations against the direct connection, and pool runtime traffic from serverless environments.",
+    "layout": "article",
+    "readingTimeMinutes": 4
   },
   {
     "slug": "products/databases/postgresql/maintenance",
@@ -3175,7 +3224,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Previews",
     "description": "Preview site deployments to test changes before promoting to production.",
     "layout": "article",
-    "readingTimeMinutes": 1
+    "readingTimeMinutes": 2
   },
   {
     "slug": "products/sites/quick-start",

@@ -14,7 +14,7 @@ Create it from the Console under **Functions** > **Templates**, and your functio
 claude mcp add --transport http my-mcp https://<your-function>.appwrite.run
 ```
 
-Register your own tools in `src/app.py` with the `@server.tool` decorator, and use the [dynamic API key](/docs/products/functions/develop#dynamic-api-key) to build tools that read and write your Appwrite project's data.
+Register your own tools in `src/app.py` with the `@server.tool` decorator, and use the [ephemeral API key](/docs/products/functions/develop#ephemeral-api-key) to build tools that read and write your Appwrite project's data.
 
 Two trade-offs to know: the server is stateless JSON only, so there is no SSE streaming or server-initiated messages, and tool calls are synchronous with a **30-second execution cap** (25-second soft deadline by default). The announcement covers both in more detail.
 

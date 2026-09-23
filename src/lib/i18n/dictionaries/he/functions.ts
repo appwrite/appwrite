@@ -35,6 +35,8 @@ export const heFunctionsDictionary: Record<string, string> = {
   'Are you sure you want to delete': 'האם אתם בטוחים שברצונכם למחוק את',
   'Are you sure you want to delete this deployment? This action cannot be undone.':
     'האם אתם בטוחים שברצונכם למחוק את הפריסה הזו? פעולה זו אינה ניתנת לביטול.',
+  'Are you sure you want to delete this execution? This action cannot be undone.':
+    'האם אתם בטוחים שברצונכם למחוק את ההרצה הזו? פעולה זו אינה ניתנת לביטול.',
   'Are you sure you want to delete this function? This action cannot be undone.':
     'האם אתם בטוחים שברצונכם למחוק את הפונקציה הזו? פעולה זו אינה ניתנת לביטול.',
   'Are you sure you want to disconnect': 'האם אתם בטוחים שברצונכם לנתק את',
@@ -163,6 +165,8 @@ export const heFunctionsDictionary: Record<string, string> = {
   Delete: 'מחיקה',
   'Delete deployment': 'מחיקת פריסה',
   'Delete Deployments': 'מחיקת פריסות',
+  'Delete execution': 'מחיקת הרצה',
+  'Delete executions': 'מחיקת הרצות',
   'Delete function': 'מחיקת פונקציה',
   'Delete functions': 'מחיקת פונקציות',
   'deploy from URL': 'לפרוס מכתובת URL',
@@ -243,7 +247,10 @@ export const heFunctionsDictionary: Record<string, string> = {
     'סביבת ההרצה של הפונקציה הזו והקובץ ש-Appwrite טוען כ-handler. מעבד וזיכרון לכל הרצה מוגדרים תחת מפרט.', // pragma: allowlist secret
   'Execution finished with status': 'ההרצה הסתיימה עם סטטוס',
   'Execution ID': 'מזהה הרצה',
+  'Execution deleted': 'ההרצה נמחקה',
   'Execution logging': 'רישום לוגים של הרצות',
+  execution: 'הרצה',
+  executions: 'הרצות',
   Executions: 'הרצות',
   'Executions will appear here when your function runs.':
     'הרצות יופיעו כאן כאשר הפונקציה שלכם תרוץ.',
@@ -260,6 +267,8 @@ export const heFunctionsDictionary: Record<string, string> = {
   'Failed to create gzip file': 'יצירת קובץ ה-gzip נכשלה',
   'Failed to delete deployment': 'מחיקת הפריסה נכשלה',
   'Failed to delete deployments': 'מחיקת הפריסות נכשלה',
+  'Failed to delete execution': 'מחיקת ההרצה נכשלה',
+  'Failed to delete executions': 'מחיקת ההרצות נכשלה',
   'Failed to delete function': 'מחיקת הפונקציה נכשלה',
   'Failed to delete functions': 'מחיקת הפונקציות נכשלה',
   'Failed to disconnect repository': 'ניתוק ה-repo נכשל',
@@ -536,8 +545,8 @@ export const heFunctionsDictionary: Record<string, string> = {
   'Select branch': 'בחירת Branch',
   'Select organization': 'בחרו ארגון',
   'Select runtime': 'בחרו סביבת ריצה',
-  'Select scopes to grant the dynamic key generated temporarily for your function. It is best practice to allow only necessary permissions.':
-    'בחרו הרשאות גישה להענקה למפתח הדינמי שנוצר זמנית עבור הפונקציה שלכם. מומלץ לאפשר רק את ההרשאות הנחוצות.',
+  'Select scopes to grant the ephemeral key generated for your function. It is best practice to allow only necessary permissions.':
+    'בחרו הרשאות גישה להענקה למפתח הזמני שנוצר עבור הפונקציה שלכם. מומלץ לאפשר רק את ההרשאות הנחוצות.',
   'Select specification': 'בחרו מפרט',
   'Select the runtime specification for your function':
     'בחרו את מפרט סביבת הריצה של הפונקציה שלכם',

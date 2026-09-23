@@ -292,7 +292,6 @@ export function RepositoryConfigView({
       await projectSdk.proxy.createFunctionRule({
         domain: domainTrimmed,
         functionId: finalFunctionId,
-        branch,
       })
 
       for (const v of variables) {

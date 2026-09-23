@@ -10,14 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import {
-  OAUTH2_CONSENT_PREVIEW_SCREEN_OPTIONS,
-  OAUTH2_DEVICE_FLOW_PREVIEW_SCREEN_OPTIONS,
-  OAUTH2_OUTCOME_PREVIEW_SCREEN_OPTIONS,
-  isOAuth2PreviewScreen,
-  type OAuth2PreviewScreen,
-} from '@/lib/debug-demos/oauth2-preview-screens'
-import { dispatchDebugDemoPreviewControl } from '@/lib/debug-demos/preview-controls'
+import { DebugOAuth2PreviewOptions } from '@/components/global/providers/DebugOAuth2PreviewOptions'
 import {
   loadDebugOverrides,
   setDebugOverride,
@@ -41,13 +34,6 @@ const ORG_SETUP_PHASES: { value: OrgSetupPreviewPhase; label: string }[] = [
   { value: 'activating', label: 'Activating' },
   { value: 'complete', label: 'Finishing' },
 ]
-
-const OAUTH2_INTERACTIVE_CONSENT_SCREENS = new Set<OAuth2PreviewScreen>([
-  'consent',
-  'consent-mcp',
-  'consent-resources',
-  'device-consent',
-])
 
 function parseSearchParams(searchStr: string) {
   return new URLSearchParams(
@@ -444,110 +430,7 @@ export function DebugDemoNavigatorOptions({
   }
 
   if (pathname === '/debug/oauth2-preview') {
-    const screenParam = params.get('screen') ?? 'consent'
-    const screen: OAuth2PreviewScreen = isOAuth2PreviewScreen(screenParam)
-      ? screenParam
-      : 'consent'
-    const deviceStepRaw = params.get('deviceStep')
-    const deviceStep: 'enter' | 'confirm' =
-      deviceStepRaw === 'confirm' ? 'confirm' : 'enter'
-    const isInteractiveConsent = OAUTH2_INTERACTIVE_CONSENT_SCREENS.has(screen)
-
-    const goToOAuth2Screen = (
-      nextScreen: OAuth2PreviewScreen,
-      nextDeviceStep?: 'enter' | 'confirm',
-    ) => {
-      if (nextScreen === 'device-code') {
-        navigate({
-          to: '/debug/oauth2-preview',
-          search: {
-            screen: nextScreen,
-            deviceStep: nextDeviceStep ?? deviceStep,
-          },
-          replace: true,
-        })
-        return
-      }
-      navigate({
-        to: '/debug/oauth2-preview',
-        search: { screen: nextScreen },
-        replace: true,
-      })
-    }
-
-    return (
-      <>
-        <OptionsSection label="OAuth2 consent">
-          <OptionButtonRow>
-            {OAUTH2_CONSENT_PREVIEW_SCREEN_OPTIONS.map((option) => (
-              <OptionChip
-                key={option.value}
-                active={screen === option.value}
-                onClick={() => goToOAuth2Screen(option.value)}
-              >
-                {option.label}
-              </OptionChip>
-            ))}
-          </OptionButtonRow>
-        </OptionsSection>
-        <OptionsSection label="OAuth2 device flow">
-          <OptionButtonRow>
-            {OAUTH2_DEVICE_FLOW_PREVIEW_SCREEN_OPTIONS.map((option) => (
-              <OptionChip
-                key={option.value}
-                active={screen === option.value}
-                onClick={() => goToOAuth2Screen(option.value)}
-              >
-                {option.label}
-              </OptionChip>
-            ))}
-          </OptionButtonRow>
-          {screen === 'device-code' ? (
-            <OptionButtonRow>
-              {(['enter', 'confirm'] as const).map((value) => (
-                <OptionChip
-                  key={value}
-                  active={deviceStep === value}
-                  onClick={() => goToOAuth2Screen('device-code', value)}
-                >
-                  {value === 'enter' ? 'Enter code' : 'Confirm code'}
-                </OptionChip>
-              ))}
-            </OptionButtonRow>
-          ) : null}
-        </OptionsSection>
-        <OptionsSection label="OAuth2 outcomes">
-          <OptionButtonRow>
-            {OAUTH2_OUTCOME_PREVIEW_SCREEN_OPTIONS.map((option) => (
-              <OptionChip
-                key={option.value}
-                active={screen === option.value}
-                onClick={() => goToOAuth2Screen(option.value)}
-              >
-                {option.label}
-              </OptionChip>
-            ))}
-          </OptionButtonRow>
-        </OptionsSection>
-        {isInteractiveConsent ? (
-          <OptionsSection label="OAuth2 consent actions">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="h-8 w-full text-[12px]"
-              onClick={() =>
-                dispatchDebugDemoPreviewControl({
-                  type: 'oauth2-reset-outcome',
-                })
-              }
-            >
-              Reset consent outcome
-            </Button>
-          </OptionsSection>
-        ) : null}
-      </>
-    )
+    return <DebugOAuth2PreviewOptions params={params} />
   }
 
   return null

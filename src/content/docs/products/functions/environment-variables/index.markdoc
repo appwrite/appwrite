@@ -1299,7 +1299,7 @@ Appwrite passes the following environment variables into every function deployme
 
 {% partial file="functions-env-vars.md" /%}
 
-During the build process, dynamic API keys are automatically provided as the environment variable `APPWRITE_FUNCTION_API_KEY`. This environment variable does not need to be initialized.
+During the build process, ephemeral API keys are automatically provided as the environment variable `APPWRITE_FUNCTION_API_KEY`. This environment variable does not need to be initialized.
 
 # Secret variables {% #secret-variables %}
 

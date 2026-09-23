@@ -2,43 +2,42 @@
 # pinned build that the image workflow prunes leaves jobs queued forever.
 runners:
   checks:
-    family: n2d
+    family: c3d
     cpu: 4
     ram: 16
     disk: 80gb
 
   e2e:
-    family: n2d
+    family: c3d
     cpu: 4
     ram: 16
     disk: 80gb
 
-  # Database lanes hold a dedicated database open; a preempted spot VM has no
-  # retry and leaks that database until the stale sweep.
+  # A preempted database lane leaks its dedicated database.
   e2e-long:
-    family: n2d
+    family: c3d
     cpu: 4
     ram: 16
     disk: 80gb
     spot: false
 
-  # A preempted build leaves a half-pushed digest behind.
+  # A preempted build leaves a half-pushed digest.
   build:
-    family: n2d
+    family: c3d
     cpu: 4
     ram: 16
     disk: 80gb
     spot: false
 
   deploy:
-    family: n2d
-    cpu: 2
+    family: c3d
+    cpu: 4
     ram: 8
     disk: 80gb
     spot: false
 
   snippets-qa:
-    family: n2d
+    family: c3d
     cpu: 4
     ram: 16
     disk: 80gb

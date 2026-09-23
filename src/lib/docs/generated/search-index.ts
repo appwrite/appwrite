@@ -311,17 +311,6 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     ]
   },
   {
-    "slug": "advanced/security/dev-keys",
-    "title": "Dev keys",
-    "description": "Bypass Appwrite rate limits and CORS errors in your development environment with Appwrite Dev keys.",
-    "excerpt": "The creation of new dev keys is paused, and dev keys will be deprecated on September 1, 2026. Appwrite's login rate limit has changed so that a successful login now resets it, which means you no longer need a dev key to test authentication flows during development. We recommend planning your migration away from dev keys ahead of time. Learn more in the changelog. Dev keys are secrets used by Appwrite Client SDKs to avoid abuse limits in testing. They…",
-    "breadcrumbs": [
-      "Security",
-      "Access control",
-      "Dev keys"
-    ]
-  },
-  {
     "slug": "advanced/security/encryption",
     "title": "Encryption",
     "description": "Learn about Appwrite's use of encryption across Appwrite's databases and storage buckets to protect user data.",
@@ -1170,7 +1159,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "partners/project/api-keys",
     "title": "API keys",
     "description": "Secure your application with Appwrite API Keys. Discover how to create and manage API keys to control access and enhance your application's security.",
-    "excerpt": "API keys are secrets used by Appwrite Server SDKs and the Appwrite CLI to prove their identity. What can be accessed each API key is restricted by scopes instead of permissions. It is a best practice to grant only the scopes you need to meet your project's goals to an API key. API keys should be treated as a secret. Never share the API key and keep API keys out of client applications. API keys vs Dev keys API keys…",
+    "excerpt": "API keys are secrets used by Appwrite Server SDKs and the Appwrite CLI to prove their identity. What can be accessed each API key is restricted by scopes instead of permissions. It is a best practice to grant only the scopes you need to meet your project's goals to an API key. API keys should be treated as a secret. Never share the API key and keep API keys out of client applications. Create API key To create a new…",
     "breadcrumbs": [
       "Project",
       "Concepts",
@@ -2899,6 +2888,28 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     ]
   },
   {
+    "slug": "products/databases/mysql/integrations/knex",
+    "title": "Knex",
+    "description": "Use Knex.js with an Appwrite native MySQL database. Configure the mysql2 client, run migrations against the direct connection, and pool runtime traffic from serverless environments.",
+    "excerpt": "Appwrite's native MySQL database is a standard MySQL engine (default **8.4**), so Knex works against it with no Appwrite-specific configuration. Point Knex's client at the connection string from the Connections page and use the query builder and migration CLI as you would against any MySQL server. You'll need a native MySQL database in a state and its credentials. See native MySQL databases to create one and Connections to retrieve the connection string. The username is , and the database name…",
+    "breadcrumbs": [
+      "MySQL",
+      "Integrations",
+      "Knex"
+    ]
+  },
+  {
+    "slug": "products/databases/mysql/integrations/kysely",
+    "title": "Kysely",
+    "description": "Use Kysely with an Appwrite native MySQL database. Configure MysqlDialect with mysql2, run migrations against the direct connection, and pool runtime traffic from serverless environments.",
+    "excerpt": "Appwrite's native MySQL database is a standard MySQL engine (default **8.4**), so Kysely works against it with no Appwrite-specific dialect or driver. Point and a pool at the connection string from the Connections page and use the type-safe query builder as you would against any MySQL server. You'll need a native MySQL database in a state and its credentials. See native MySQL databases to create one and Connections to retrieve the connection string. The username is , and the database…",
+    "breadcrumbs": [
+      "MySQL",
+      "Integrations",
+      "Kysely"
+    ]
+  },
+  {
     "slug": "products/databases/mysql/integrations/laravel",
     "title": "Laravel",
     "description": "Use Laravel and Eloquent with an Appwrite native MySQL database. Configure the connection, run migrations against the direct port, and pool serverless traffic through the connection pooler.",
@@ -2965,6 +2976,17 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     ]
   },
   {
+    "slug": "products/databases/mysql/integrations/sequelize",
+    "title": "Sequelize",
+    "description": "Use Sequelize with an Appwrite native MySQL database. Configure the mysql dialect, run migrations against the direct connection, and pool runtime traffic from serverless environments.",
+    "excerpt": "Appwrite's native MySQL database is a standard MySQL engine (default **8.4**), so Sequelize works against it with no Appwrite-specific configuration. Point Sequelize's dialect and the driver at the connection string from the Connections page and use models, the query interface, and migrations as you would against any MySQL server. You'll need a native MySQL database in a state and its credentials. See native MySQL databases to create one and Connections to retrieve the connection string. The username is , and…",
+    "breadcrumbs": [
+      "MySQL",
+      "Integrations",
+      "Sequelize"
+    ]
+  },
+  {
     "slug": "products/databases/mysql/integrations/spring-boot",
     "title": "Spring Boot",
     "description": "Connect a Spring Boot application to an Appwrite native MySQL database with Spring Data JPA and Hibernate. Configure the JDBC datasource and HikariCP pool, map entities, and run Flyway or Liquibase migrations against MySQL.",
@@ -2973,6 +2995,17 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
       "MySQL",
       "Integrations",
       "Spring Boot"
+    ]
+  },
+  {
+    "slug": "products/databases/mysql/integrations/typeorm",
+    "title": "TypeORM",
+    "description": "Use TypeORM with an Appwrite native MySQL database. Configure the DataSource, run migrations against the direct connection, and pool runtime traffic from serverless environments.",
+    "excerpt": "Appwrite's native MySQL database is a standard MySQL engine (default **8.4**), so TypeORM works against it with no Appwrite-specific configuration. Point TypeORM's driver at the connection string from the Connections page and use entities, the query builder, and migrations as you would against any MySQL server. TypeORM 1.x (current) requires Node 20+ and mysql2 only; remains on the tag. You'll need a native MySQL database in a state and its credentials. See native MySQL databases to create one and Connections…",
+    "breadcrumbs": [
+      "MySQL",
+      "Integrations",
+      "TypeORM"
     ]
   },
   {
@@ -3295,6 +3328,28 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     ]
   },
   {
+    "slug": "products/databases/postgresql/integrations/knex",
+    "title": "Knex",
+    "description": "Use Knex.js with an Appwrite native PostgreSQL database. Configure the pg client, run migrations against the direct connection, and pool runtime traffic from serverless environments.",
+    "excerpt": "Appwrite's native PostgreSQL database is a standard PostgreSQL engine, so Knex works against it with no Appwrite-specific configuration. Point Knex's client at the connection string from the Connections page and use the query builder and migration CLI as you would against any PostgreSQL server. You'll need a native PostgreSQL database in a state and its credentials. See native PostgreSQL databases to create one and Connections to retrieve the connection string. The primary user is , and the database name is…",
+    "breadcrumbs": [
+      "PostgreSQL",
+      "Integrations",
+      "Knex"
+    ]
+  },
+  {
+    "slug": "products/databases/postgresql/integrations/kysely",
+    "title": "Kysely",
+    "description": "Use Kysely with an Appwrite native PostgreSQL database. Configure PostgresDialect with node-postgres, run migrations against the direct connection, and pool runtime traffic from serverless environments.",
+    "excerpt": "Appwrite's native PostgreSQL database is a standard PostgreSQL engine, so Kysely works against it with no Appwrite-specific dialect or driver. Point and a pool at the connection string from the Connections page and use the type-safe query builder as you would against any PostgreSQL server. You'll need a native PostgreSQL database in a state and its credentials. See native PostgreSQL databases to create one and Connections to retrieve the connection string. The primary user is , and the database name…",
+    "breadcrumbs": [
+      "PostgreSQL",
+      "Integrations",
+      "Kysely"
+    ]
+  },
+  {
     "slug": "products/databases/postgresql/integrations/laravel",
     "title": "Laravel",
     "description": "Use Laravel and Eloquent with an Appwrite native PostgreSQL database. Configure the connection, run migrations against the direct port, and pool serverless traffic through the connection pooler.",
@@ -3361,6 +3416,17 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     ]
   },
   {
+    "slug": "products/databases/postgresql/integrations/sequelize",
+    "title": "Sequelize",
+    "description": "Use Sequelize with an Appwrite native PostgreSQL database. Configure the postgres dialect, run migrations against the direct connection, and pool runtime traffic from serverless environments.",
+    "excerpt": "Appwrite's native PostgreSQL database is a standard PostgreSQL engine, so Sequelize works against it with no Appwrite-specific configuration. Point Sequelize's dialect and the driver at the connection string from the Connections page and use models, the query interface, and migrations as you would against any PostgreSQL server. You'll need a native PostgreSQL database in a state and its credentials. See native PostgreSQL databases to create one and Connections to retrieve the connection string. The primary user is , and the…",
+    "breadcrumbs": [
+      "PostgreSQL",
+      "Integrations",
+      "Sequelize"
+    ]
+  },
+  {
     "slug": "products/databases/postgresql/integrations/spring-boot",
     "title": "Spring Boot",
     "description": "Connect a Spring Boot application to an Appwrite native PostgreSQL database with Spring Data JPA and Hibernate. Configure the JDBC datasource and HikariCP pool, map entities, and run Flyway or Liquibase migrations against PostgreSQL.",
@@ -3369,6 +3435,17 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
       "PostgreSQL",
       "Integrations",
       "Spring Boot"
+    ]
+  },
+  {
+    "slug": "products/databases/postgresql/integrations/typeorm",
+    "title": "TypeORM",
+    "description": "Use TypeORM with an Appwrite native PostgreSQL database. Configure the DataSource, run migrations against the direct connection, and pool runtime traffic from serverless environments.",
+    "excerpt": "Appwrite's native PostgreSQL database is a standard PostgreSQL engine, so TypeORM works against it with no Appwrite-specific configuration. Point TypeORM's driver at the connection string from the Connections page and use entities, the query builder, and migrations as you would against any PostgreSQL server. You'll need a native PostgreSQL database in a state and its credentials. See native PostgreSQL databases to create one and Connections to retrieve the connection string. The primary user is , and the database name is…",
+    "breadcrumbs": [
+      "PostgreSQL",
+      "Integrations",
+      "TypeORM"
     ]
   },
   {
@@ -4891,7 +4968,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/sites/environment-variables",
     "title": "Environment variables",
     "description": "Set environment variables for your Appwrite Sites to pass constants and secrets at build and runtime.",
-    "excerpt": "Appwrite Sites can read environment variables at build and runtime. Use them to pass constants and secrets such as third-party API keys, connection strings, and feature flags without hardcoding them in your source. To call your own Appwrite project, you do not need to store an API key at all: Appwrite provides a dynamic API key to every build and SSR request. A site reads from three sources, in this order of precedence: 1. **Project variables** are shared across every…",
+    "excerpt": "Appwrite Sites can read environment variables at build and runtime. Use them to pass constants and secrets such as third-party API keys, connection strings, and feature flags without hardcoding them in your source. To call your own Appwrite project, you do not need to store an API key at all: Appwrite provides an ephemeral API key to every build and SSR request. A site reads from three sources, in this order of precedence: 1. **Project variables** are shared across every…",
     "breadcrumbs": [
       "Sites",
       "Concepts",
@@ -4946,7 +5023,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/sites/previews",
     "title": "Previews",
     "description": "Preview site deployments to test changes before promoting to production.",
-    "excerpt": "If you create a new Pull Request on the GitHub repo for your site, Appwrite Sites will create a preview deployment that you can view and test before promoting to production. Visit preview deployments To access a preview deployment, follow these steps: 1. Navigate to your site on Appwrite Console. 2. Under the **Deployments** tab, click on a ready deployment. 3. Click on the **Visit** button. This preview URL is also visible under the **Domains** section. Appwrite Sites will then…",
+    "excerpt": "If you create a new Pull Request on the Git repo for your site, Appwrite Sites will create a preview deployment that you can view and test before promoting to production. Preview deployments are private. Opening one requires an Appwrite account that belongs to the organization the site belongs to, so a preview link only works for people you have invited to that organization. Visit preview deployments To access a preview deployment, follow these steps: 1. Navigate to your site…",
     "breadcrumbs": [
       "Sites",
       "Concepts",

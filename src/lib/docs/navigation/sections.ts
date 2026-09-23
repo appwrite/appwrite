@@ -246,10 +246,6 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
             label: 'Rate limits',
             href: '/docs/advanced/security/rate-limits',
           },
-          {
-            label: 'Dev keys',
-            href: '/docs/advanced/security/dev-keys',
-          },
         ],
       },
     ],
