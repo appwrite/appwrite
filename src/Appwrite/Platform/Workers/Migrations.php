@@ -19,6 +19,7 @@ use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception as DatabaseException;
 use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\Conflict;
 use Utopia\Database\Exception\Restricted;
@@ -734,7 +735,7 @@ class Migrations extends Action
                 }
 
                 try {
-                    $this->updateMigrationDocument($migration, $project, $queueForRealtime);
+                    $this->persistTerminal($migration, $project, $queueForRealtime);
                 } catch (Superseded $error) {
                     Console::warning($error->getMessage());
                     return;
@@ -748,6 +749,23 @@ class Migrations extends Action
                 $source = null;
                 $destination = null;
             }
+        }
+    }
+
+    /**
+     * @throws Superseded
+     * @throws DatabaseException
+     */
+    private function persistTerminal(Document $migration, Document $project, Realtime $queueForRealtime): void
+    {
+        try {
+            $this->updateMigrationDocument($migration, $project, $queueForRealtime);
+        } catch (DatabaseException $error) {
+            Console::warning('Failed to store migration ' . $migration->getId() . ' with its report, retrying without it: ' . $error->getMessage());
+
+            $migration->removeAttribute('resourceData');
+            $migration->removeAttribute('statusCounters');
+            $this->updateMigrationDocument($migration, $project, $queueForRealtime);
         }
     }
 

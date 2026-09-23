@@ -18,6 +18,7 @@ use Utopia\Database\Adapter\Memory;
 use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Structure;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
@@ -141,6 +142,64 @@ final class MigrationsReportTest extends TestCase
                 'message' => self::DENIED,
             ],
         ], $stored->getAttribute('resourceData'));
+    }
+
+    public function testTerminalWriteThatCannotStoreTheReportIsRetriedWithoutIt(): void
+    {
+        $writes = [];
+        $database = $this->createDatabase([Resource::TYPE_USER]);
+
+        $this->migrate(
+            $database,
+            $this->createSource(users: 5, batch: 2),
+            $this->createDestination([self::userId(3)], new \ArrayObject()),
+            static function (Document $migration) use (&$writes): void {
+                $writes[] = $migration->getArrayCopy();
+
+                if (
+                    \array_key_exists('resourceData', $migration->getArrayCopy())
+                    || \array_key_exists('statusCounters', $migration->getArrayCopy())
+                ) {
+                    throw new Structure('Invalid document structure: Attribute "resourceData" has invalid type.');
+                }
+            },
+        );
+
+        $stored = $database->getDocument('migrations', self::MIGRATION_ID);
+        $this->assertSame('failed', $stored->getAttribute('status'));
+        $this->assertSame('finished', $stored->getAttribute('stage'));
+        $this->assertCount(1, $stored->getAttribute('errors'));
+        $this->assertStringContainsString(self::FAILURE, (string) $stored->getAttribute('errors')[0]);
+        $this->assertCount(2, $writes, 'The terminal write must be retried once');
+        $this->assertArrayNotHasKey('resourceData', $writes[1]);
+        $this->assertArrayNotHasKey('statusCounters', $writes[1]);
+        $this->assertCount(5, $stored->getAttribute('resourceData'), 'The last stored report is kept');
+        $this->assertSame(4, $stored->getAttribute('statusCounters')[Resource::TYPE_USER][Resource::STATUS_SUCCESS]);
+    }
+
+    public function testTerminalWriteIsRetriedOnlyOnce(): void
+    {
+        $writes = 0;
+        $database = $this->createDatabase([Resource::TYPE_USER]);
+
+        try {
+            $this->migrate(
+                $database,
+                $this->createSource(users: 5, batch: 2),
+                $this->createDestination([], new \ArrayObject()),
+                static function () use (&$writes): void {
+                    $writes++;
+
+                    throw new Structure('Invalid document structure: Attribute "errors" has invalid type.');
+                },
+            );
+            $this->fail('A terminal write that keeps failing must surface its error');
+        } catch (Structure $error) {
+            $this->assertStringContainsString('"errors"', $error->getMessage());
+        }
+
+        $this->assertSame(2, $writes);
+        $this->assertSame('processing', $database->getDocument('migrations', self::MIGRATION_ID)->getAttribute('status'));
     }
 
     private static function userId(int $index): string
@@ -351,12 +410,16 @@ final class MigrationsReportTest extends TestCase
         };
     }
 
-    private function migrate(Database $database, Source $source, Destination $destination): void
+    /**
+     * @param (\Closure(Document): void)|null $intercept Runs before each terminal write reaches the claim.
+     */
+    private function migrate(Database $database, Source $source, Destination $destination, ?\Closure $intercept = null): void
     {
-        $worker = new class ($source, $destination) extends Migrations {
+        $worker = new class ($source, $destination, $intercept) extends Migrations {
             public function __construct(
                 private readonly Source $migrationSource,
                 private readonly Destination $migrationDestination,
+                private readonly ?\Closure $intercept,
             ) {
             }
 
@@ -376,6 +439,16 @@ final class MigrationsReportTest extends TestCase
             protected function processDestination(Document $migration): Destination
             {
                 return $this->migrationDestination;
+            }
+
+            #[\Override]
+            protected function updateMigrationDocument(Document $migration, Document $project, Realtime $queueForRealtime): Document
+            {
+                if ($this->intercept !== null && $migration->getAttribute('stage') === 'finished') {
+                    ($this->intercept)($migration);
+                }
+
+                return parent::updateMigrationDocument($migration, $project, $queueForRealtime);
             }
         };
 
