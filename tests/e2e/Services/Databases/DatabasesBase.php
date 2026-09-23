@@ -5410,6 +5410,81 @@ trait DatabasesBase
         $this->assertCount(1, $documents['body'][$this->getRecordResource()]);
     }
 
+    public function testListDocumentsWithJoinPagesPastAnUnreadableCursor(): void
+    {
+        if (!$this->getSupportForJoins()) {
+            $this->markTestSkipped('Adapter does not support join queries');
+        }
+
+        $databaseId = $this->setupDatabase()['databaseId'];
+        $userId = $this->getUser()['$id'];
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $posts = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => ID::unique(),
+            'name' => 'Cursor posts',
+            $this->getSecurityParam() => true,
+            'permissions' => [Permission::create(Role::user($userId))],
+        ]);
+        $this->assertSame(201, $posts['headers']['status-code']);
+        $postsId = $posts['body']['$id'];
+
+        $authors = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => ID::unique(),
+            'name' => 'Cursor authors',
+            $this->getSecurityParam() => false,
+            'permissions' => [Permission::read(Role::user($userId))],
+        ]);
+        $this->assertSame(201, $authors['headers']['status-code']);
+        $authorsId = $authors['body']['$id'];
+
+        $this->createAttribute($databaseId, $postsId, 'string', ['key' => 'title', 'size' => 128, 'required' => false]);
+        $this->createAttribute($databaseId, $postsId, 'string', ['key' => 'authorId', 'size' => 36, 'required' => false]);
+        $this->createAttribute($databaseId, $authorsId, 'string', ['key' => 'name', 'size' => 128, 'required' => false]);
+        $this->waitForAttribute($databaseId, $postsId, 'title');
+        $this->waitForAttribute($databaseId, $postsId, 'authorId');
+        $this->waitForAttribute($databaseId, $authorsId, 'name');
+
+        $author = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $authorsId), $headers, [
+            $this->getRecordIdParam() => ID::unique(),
+            'data' => ['name' => 'Author'],
+        ]);
+        $this->assertSame(201, $author['headers']['status-code']);
+
+        $postIds = [];
+        foreach (['Post 1' => $userId, 'Post 2' => 'someone-else', 'Post 3' => $userId, 'Post 4' => $userId] as $title => $reader) {
+            $post = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $postsId), $headers, [
+                $this->getRecordIdParam() => ID::unique(),
+                'data' => ['title' => $title, 'authorId' => $author['body']['$id']],
+                'permissions' => [Permission::read(Role::user($reader))],
+            ]);
+            $this->assertSame(201, $post['headers']['status-code']);
+            $postIds[$title] = $post['body']['$id'];
+        }
+
+        $page = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $postsId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::join($authorsId, 'authorId', '$id')->toString(),
+                Query::select(['authorId'])->toString(),
+                Query::orderAsc('title')->toString(),
+                Query::cursorAfter(new Document(['$id' => $postIds['Post 2']]))->toString(),
+            ],
+        ]);
+
+        $this->assertSame(200, $page['headers']['status-code'], 'a cursor the caller cannot read, or a select without the order attribute, must not break the next page');
+        $this->assertSame(
+            [$postIds['Post 3'], $postIds['Post 4']],
+            \array_column($page['body'][$this->getRecordResource()], '$id'),
+        );
+    }
+
     public function testListDocumentsLimitAndOffset(): void
     {
         $data = $this->setupDocuments();

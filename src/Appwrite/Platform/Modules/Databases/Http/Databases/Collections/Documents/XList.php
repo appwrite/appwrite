@@ -28,7 +28,6 @@ use Utopia\Http\Http;
 use Utopia\Query\Exception as QueryLibException;
 use Utopia\Query\Exception\UnsupportedException;
 use Utopia\Query\Exception\ValidationException;
-use Utopia\Query\Method as QueryMethod;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Nullable;
@@ -135,30 +134,17 @@ class XList extends Action
             }
 
             $documentId = $cursor->getValue();
+            $joins = Query::groupByType($queries)->joins;
 
             try {
-                $hasJoins = false;
-                $cursorQueries = [];
-                foreach ($queries as $query) {
-                    $method = $query->getMethod();
-                    if ($method->isJoin()) {
-                        $hasJoins = true;
-                        $cursorQueries[] = $query;
-                    } elseif ($method === QueryMethod::Select) {
-                        $cursorQueries[] = $query;
-                    }
-                }
-
-                if ($hasJoins) {
-                    $cursorDocument = $dbForDatabases->getDocument($collectionTableId, $documentId, $cursorQueries);
-                } else {
-                    $cursorDocument = $authorization->skip(fn () => $dbForDatabases->getDocument($collectionTableId, $documentId));
-                }
+                $cursorDocument = $authorization->skip(fn () => $dbForDatabases->getDocument($collectionTableId, $documentId, $joins));
             } catch (NotFoundException) {
                 // The collection metadata document exists but the backing store (e.g. a
                 // dedicated DocumentsDB shard) has no table for it. Treat this as a
                 // not-found on the collection so the caller sees a 404 instead of a 500.
                 throw new Exception($this->getParentNotFoundException(), params: [$collectionId]);
+            } catch (QueryException|ValidationException $e) {
+                $this->mapQueryFailure($e);
             }
 
             if ($cursorDocument->isEmpty()) {
