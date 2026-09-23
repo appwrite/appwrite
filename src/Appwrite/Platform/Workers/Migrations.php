@@ -10,6 +10,7 @@ use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Migrations\Claim;
+use Appwrite\Platform\Modules\Migrations\Report;
 use Appwrite\Platform\Modules\Migrations\Superseded;
 use Appwrite\Template\Template;
 use Appwrite\Usage\Context;
@@ -525,6 +526,7 @@ class Migrations extends Action
     ): void {
         $project = $this->project;
         $transfer = $source = $destination = null;
+        $report = new Report();
         $caughtError = null;
         $superseded = false;
 
@@ -578,8 +580,9 @@ class Migrations extends Action
                 $context = $this->resolveResourceContext($migration);
                 $transfer->runWithResourceSelector(
                     $migration->getAttribute('resources'),
-                    function ($resources) use (&$migration, $transfer, $project, $queueForRealtime) {
-                        $migration->setAttribute('resourceData', json_encode($transfer->getReport()));
+                    function (array $resources) use (&$migration, $transfer, $report, $project, $queueForRealtime) {
+                        $report->track($resources, $transfer->getCache());
+                        $migration->setAttribute('resourceData', $report->encode());
                         $migration->setAttribute('statusCounters', json_encode($transfer->getStatusCounters()));
                         $migration = $this->updateMigrationDocument($migration, $project, $queueForRealtime);
                     },
@@ -723,6 +726,11 @@ class Migrations extends Action
                     } catch (\Throwable $error) {
                         Console::error('Destination failure hook threw: ' . $error->getMessage());
                     }
+                }
+
+                if ($transfer !== null) {
+                    $report->reconcile($transfer->getCache());
+                    $migration->setAttribute('resourceData', $report->encode());
                 }
 
                 try {
