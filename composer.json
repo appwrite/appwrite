@@ -37,7 +37,8 @@
             "Utopia\\SMTP\\": "packages/smtp/src",
             "Utopia\\Span\\": "packages/span/src",
             "Utopia\\System\\": "packages/system/src",
-            "Utopia\\Telemetry\\": "packages/telemetry/src"
+            "Utopia\\Telemetry\\": "packages/telemetry/src",
+            "Utopia\\UserAgent\\": "packages/user-agent/src"
         },
         "files": [
             "packages/client/src/compat.php"
@@ -59,7 +60,8 @@
             "Utopia\\SMTP\\Tests\\": "packages/smtp/tests",
             "Utopia\\Span\\Tests\\": "packages/span/tests",
             "Utopia\\System\\Tests\\": "packages/system/tests",
-            "Utopia\\Telemetry\\Tests\\": "packages/telemetry/tests"
+            "Utopia\\Telemetry\\Tests\\": "packages/telemetry/tests",
+            "Utopia\\UserAgent\\Tests\\": "packages/user-agent/tests"
         }
     },
     "minimum-stability": "dev",
@@ -126,7 +128,6 @@
         "utopia-php/servers": "0.4.*",
         "utopia-php/registry": "0.5.*",
         "utopia-php/storage": "^4.0",
-        "utopia-php/user-agent": "0.1.*",
         "mustangostang/spyc": "0.6.*",
         "utopia-php/vcs": "5.5.*",
         "utopia-php/websocket": "2.0.2",
@@ -188,6 +189,7 @@
         "utopia-php/smtp": "*",
         "utopia-php/span": "*",
         "utopia-php/system": "*",
-        "utopia-php/telemetry": "*"
+        "utopia-php/telemetry": "*",
+        "utopia-php/user-agent": "*"
     }
 }

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "406e8768d0a82fbcf4d210ed794450de",
+    "content-hash": "4fd40964f565194758ceda127813f702",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4513,48 +4513,6 @@
                 "source": "https://github.com/utopia-php/usage/tree/0.16.5"
             },
             "time": "2026-09-18T07:06:18+00:00"
-        },
-        {
-            "name": "utopia-php/user-agent",
-            "version": "0.1.2",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/utopia-php/user-agent.git",
-                "reference": "0396bd6187fbc00b5a61f8876ff822f3428fe8c5"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/user-agent/zipball/0396bd6187fbc00b5a61f8876ff822f3428fe8c5",
-                "reference": "0396bd6187fbc00b5a61f8876ff822f3428fe8c5",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=8.4"
-            },
-            "require-dev": {
-                "matomo/device-detector": "6.4.*"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Utopia\\UserAgent\\": "src/UserAgent/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "description": "A fast user-agent parser and device detector for PHP",
-            "keywords": [
-                "device-detection",
-                "parser",
-                "user-agent"
-            ],
-            "support": {
-                "issues": "https://github.com/utopia-php/user-agent/issues",
-                "source": "https://github.com/utopia-php/user-agent/tree/0.1.2"
-            },
-            "time": "2026-09-17T08:48:33+00:00"
         },
         {
             "name": "utopia-php/validators",
