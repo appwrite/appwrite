@@ -11,7 +11,7 @@ You'll need a native PostgreSQL database in a `ready` state and its credentials.
 {% /info %}
 
 {% info title="Sequelize 7" %}
-Sequelize 7 (`@sequelize/core` + `@sequelize/postgres`) is still alpha. These examples use Sequelize 6 (`sequelize` + `pg`), the current stable line. Appwrite connection URLs and ports are unchanged on v7. Stay on v6 unless you are deliberately adopting the alpha: v7 uses a different dialect API, and its CLI is not ready yet.
+Most Sequelize projects still run on v6 (`sequelize` + `pg`), and these examples stay on that line. Sequelize 7 alphas (`@sequelize/core` + `@sequelize/postgres`) are usable in projects today, but they bring breaking package and dialect API changes, and the CLI is not ready yet. Appwrite connection URLs and ports are the same on either major.
 {% /info %}
 
 # Set the connection string {% #connection-string %}
@@ -31,7 +31,7 @@ Install Sequelize and the PostgreSQL driver:
 
 ```bash
 npm install sequelize pg pg-hstore
-npm install -D sequelize-cli typescript @types/node
+npm install -D sequelize-cli typescript @types/node dotenv
 ```
 
 Create a Sequelize instance for runtime traffic. Prefer the URL form and set SSL with verification when you need to control TLS explicitly:
@@ -100,6 +100,12 @@ module.exports = {
   'seeders-path': path.resolve('seeders'),
   'migrations-path': path.resolve('migrations')
 };
+```
+
+Create the CLI directories. This guide does not run `sequelize-cli init`:
+
+```bash
+mkdir -p config models migrations seeders
 ```
 
 Create `config/config.js` so every CLI environment uses `DIRECT_URL`:
@@ -199,7 +205,7 @@ Keep the Sequelize `pool.max` small on serverless. If your application depends o
 [Branches](/docs/products/databases/postgresql/branches) are isolated copies of a database with their own hostname and connection string. They're ideal for running migrations against throwaway data in a pull-request preview or an integration-test job:
 
 1. Create a branch from the API and read its `connectionString`.
-2. Export it as `DIRECT_URL` (and the pooled variant as `DATABASE_URL`).
+2. Export it as both `DIRECT_URL` and `DATABASE_URL`. Branches have no pooler.
 3. Run `sequelize-cli db:migrate` and your test suite against the branch.
 4. Delete the branch when the job finishes.
 
