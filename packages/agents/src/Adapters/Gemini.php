@@ -2,10 +2,10 @@
 
 namespace Utopia\Agents\Adapters;
 
+use Psr\Http\Client\ClientInterface;
 use Utopia\Agents\Adapter;
 use Utopia\Agents\Message;
-use Utopia\Fetch\Chunk;
-use Utopia\Fetch\Client;
+use Utopia\Client\Psr18\StreamingClientInterface;
 
 class Gemini extends Adapter
 {
@@ -74,13 +74,15 @@ class Gemini extends Adapter
         int $maxTokens = 1024,
         float $temperature = 1.0,
         ?string $endpoint = null,
-        int $timeout = 90000
+        int $timeout = 90000,
+        (ClientInterface&StreamingClientInterface)|null $client = null
     ) {
         $this->apiKey = $apiKey;
         $this->maxTokens = $maxTokens;
         $this->temperature = $temperature;
         $this->endpoint = $endpoint ?? 'https://generativelanguage.googleapis.com/v1beta/models/'.$model.':streamGenerateContent?alt=sse&key='.$apiKey;
         $this->timeout = $timeout;
+        $this->client = $client;
         $this->setModel($model);
     }
 
@@ -104,11 +106,6 @@ class Gemini extends Adapter
         if ($this->getAgent() === null) {
             throw new \Exception('Agent not set');
         }
-
-        $client = new Client();
-        $client
-            ->setTimeout($this->timeout)
-            ->addHeader('content-type', Client::CONTENT_TYPE_APPLICATION_JSON);
 
         $systemParts = [];
         $systemParts[] = [
@@ -144,13 +141,10 @@ class Gemini extends Adapter
         $content = '';
         $this->beginStreamProcessing();
         try {
-            $response = $client->fetch(
+            $response = $this->post(
                 $this->endpoint,
-                Client::METHOD_POST,
                 $payload,
-                [],
-                function ($chunk) use (&$content, $listener) {
-                    /** @var Chunk $chunk */
+                sink: function (string $chunk) use (&$content, $listener): void {
                     $content .= $this->process($chunk, $listener);
                 }
             );
@@ -222,11 +216,11 @@ class Gemini extends Adapter
      *
      * @throws \Exception
      */
-    protected function process(Chunk $chunk, ?callable $listener): string
+    protected function process(string $chunk, ?callable $listener): string
     {
         [$data, $lines] = $this->prepareStreamLines($chunk);
 
-        $json = $this->decodeJsonObject(trim($chunk->getData())) ?? $this->decodeJsonObject($data);
+        $json = $this->decodeJsonObject(trim($chunk)) ?? $this->decodeJsonObject($data);
         if (is_array($json) && isset($json['error'])) {
             return $this->formatErrorMessage($json);
         }

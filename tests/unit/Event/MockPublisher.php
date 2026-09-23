@@ -9,7 +9,7 @@ class MockPublisher implements Publisher
 {
     private array $events = [];
 
-    public function publish(Queue $queue, array $payload, bool $priority = false): bool
+    public function publish(Queue $queue, array $payload): bool
     {
         if (!isset($this->events[$queue->name])) {
             $this->events[$queue->name] = [];
@@ -18,10 +18,10 @@ class MockPublisher implements Publisher
         return true;
     }
 
-    public function enqueueMany(Queue $queue, array $payloads, bool $priority = false): bool
+    public function publishMany(Queue $queue, array $payloads): bool
     {
         foreach ($payloads as $payload) {
-            $this->publish($queue, $payload, $priority);
+            $this->publish($queue, $payload);
         }
 
         return true;
