@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "dee44fa877dfa3be31347a3b03619e29",
+    "content-hash": "806bd86e0d18636aeb7b4aae111cc140",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3930,16 +3930,16 @@
         },
         {
             "name": "utopia-php/messaging",
-            "version": "2.3.0",
+            "version": "2.4.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/messaging.git",
-                "reference": "827915ffc6ea3bc698ead43feb2ee36ee2e3807d"
+                "reference": "0b6431b5d39c23ebb3b11eb0bf17d7f4acb6422f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/messaging/zipball/827915ffc6ea3bc698ead43feb2ee36ee2e3807d",
-                "reference": "827915ffc6ea3bc698ead43feb2ee36ee2e3807d",
+                "url": "https://api.github.com/repos/utopia-php/messaging/zipball/0b6431b5d39c23ebb3b11eb0bf17d7f4acb6422f",
+                "reference": "0b6431b5d39c23ebb3b11eb0bf17d7f4acb6422f",
                 "shasum": ""
             },
             "require": {
@@ -3978,9 +3978,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/messaging/issues",
-                "source": "https://github.com/utopia-php/messaging/tree/2.3.0"
+                "source": "https://github.com/utopia-php/messaging/tree/2.4.0"
             },
-            "time": "2026-09-16T10:58:06+00:00"
+            "time": "2026-09-22T11:38:29+00:00"
         },
         {
             "name": "utopia-php/migration",
@@ -4099,16 +4099,16 @@
         },
         {
             "name": "utopia-php/mqtt",
-            "version": "0.0.1",
+            "version": "0.0.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/mqtt.git",
-                "reference": "d43d7e7f4b0c0854c5fd16c7ef085284d84b0d69"
+                "reference": "44684468347b09959cfb64a28dbaf7e5be9cce04"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/mqtt/zipball/d43d7e7f4b0c0854c5fd16c7ef085284d84b0d69",
-                "reference": "d43d7e7f4b0c0854c5fd16c7ef085284d84b0d69",
+                "url": "https://api.github.com/repos/utopia-php/mqtt/zipball/44684468347b09959cfb64a28dbaf7e5be9cce04",
+                "reference": "44684468347b09959cfb64a28dbaf7e5be9cce04",
                 "shasum": ""
             },
             "require": {
@@ -4159,10 +4159,10 @@
                 "utopia"
             ],
             "support": {
-                "source": "https://github.com/utopia-php/mqtt/tree/0.0.1",
+                "source": "https://github.com/utopia-php/mqtt/tree/0.0.2",
                 "issues": "https://github.com/utopia-php/mqtt/issues"
             },
-            "time": "2026-09-18T11:27:21+00:00"
+            "time": "2026-09-23T06:01:44+00:00"
         },
         {
             "name": "utopia-php/openapi",
@@ -4245,62 +4245,6 @@
                 "source": "https://github.com/utopia-php/platform/tree/1.0.0-rc24"
             },
             "time": "2026-09-21T22:46:56+00:00"
-        },
-        {
-            "name": "utopia-php/pools",
-            "version": "2.1.2",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/utopia-php/pools.git",
-                "reference": "a45d867e56de82a2eb6e1eb3ea78d4c2f6059f4a"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/pools/zipball/a45d867e56de82a2eb6e1eb3ea78d4c2f6059f4a",
-                "reference": "a45d867e56de82a2eb6e1eb3ea78d4c2f6059f4a",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=8.4",
-                "utopia-php/telemetry": "^0.4.6"
-            },
-            "require-dev": {
-                "swoole/ide-helper": "6.*"
-            },
-            "suggest": {
-                "ext-mongodb": "Needed to support MongoDB database pools",
-                "ext-pdo": "Needed to support MariaDB, MySQL or SQLite database pools",
-                "ext-redis": "Needed to support Redis cache pools",
-                "ext-swoole": "Needed to support Swoole based pool adapter"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Utopia\\Pools\\": "src/Pools"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Team Appwrite",
-                    "email": "team@appwrite.io"
-                }
-            ],
-            "description": "A simple library to manage connection pools",
-            "keywords": [
-                "framework",
-                "php",
-                "pools",
-                "utopia"
-            ],
-            "support": {
-                "issues": "https://github.com/utopia-php/pools/issues",
-                "source": "https://github.com/utopia-php/pools/tree/2.1.2"
-            },
-            "time": "2026-09-07T07:02:57+00:00"
         },
         {
             "name": "utopia-php/query",
@@ -4670,57 +4614,6 @@
                 "source": "https://github.com/utopia-php/storage/tree/4.1.0"
             },
             "time": "2026-09-07T07:52:07+00:00"
-        },
-        {
-            "name": "utopia-php/telemetry",
-            "version": "0.4.11",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/utopia-php/telemetry.git",
-                "reference": "852e76c89d0c20fc6560ac9687b15457a97b3704"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/telemetry/zipball/852e76c89d0c20fc6560ac9687b15457a97b3704",
-                "reference": "852e76c89d0c20fc6560ac9687b15457a97b3704",
-                "shasum": ""
-            },
-            "require": {
-                "nyholm/psr7": "1.*",
-                "open-telemetry/exporter-otlp": "1.*",
-                "open-telemetry/sdk": "1.*",
-                "php": ">=8.0",
-                "symfony/http-client": "7.*"
-            },
-            "require-dev": {
-                "swoole/ide-helper": "6.*"
-            },
-            "suggest": {
-                "ext-protobuf": "For better performance, when dealing with the protobuf format",
-                "ext-sockets": "Required for the Swoole transport implementation",
-                "ext-swoole": "Required for the Swoole transport implementation"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Utopia\\Telemetry\\": "src/Telemetry"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "description": "A lite & fast telemetry library, with adapters for OpenTelemetry",
-            "keywords": [
-                "framework",
-                "php",
-                "upf"
-            ],
-            "support": {
-                "issues": "https://github.com/utopia-php/telemetry/issues",
-                "source": "https://github.com/utopia-php/telemetry/tree/0.4.11"
-            },
-            "time": "2026-09-16T10:12:28+00:00"
         },
         {
             "name": "utopia-php/usage",

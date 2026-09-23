@@ -30,9 +30,11 @@
             "Utopia\\Bus\\": "packages/bus/src",
             "Utopia\\Compression\\": "packages/compression/src",
             "Utopia\\Lock\\": "packages/lock/src",
+            "Utopia\\Pools\\": "packages/pools/src",
             "Utopia\\Psr7\\": "packages/psr7/src",
             "Utopia\\SMTP\\": "packages/smtp/src",
-            "Utopia\\System\\": "packages/system/src"
+            "Utopia\\System\\": "packages/system/src",
+            "Utopia\\Telemetry\\": "packages/telemetry/src"
         }
     },
     "autoload-dev": {
@@ -44,9 +46,11 @@
             "Utopia\\Bus\\Tests\\": "packages/bus/tests",
             "Utopia\\Compression\\Tests\\": "packages/compression/tests",
             "Utopia\\Lock\\Tests\\": "packages/lock/tests",
+            "Utopia\\Pools\\Tests\\": "packages/pools/tests",
             "Utopia\\Psr7\\Tests\\": "packages/psr7/tests",
             "Utopia\\SMTP\\Tests\\": "packages/smtp/tests",
-            "Utopia\\System\\Tests\\": "packages/system/tests"
+            "Utopia\\System\\Tests\\": "packages/system/tests",
+            "Utopia\\Telemetry\\Tests\\": "packages/telemetry/tests"
         }
     },
     "minimum-stability": "dev",
@@ -110,13 +114,11 @@
         "utopia-php/migration": "^2.0.0",
         "utopia-php/mqtt": "0.0.*",
         "utopia-php/platform": "1.0.0-rc24",
-        "utopia-php/pools": "2.*",
         "utopia-php/span": "^4.2",
         "utopia-php/queue": "^5.0.1",
         "utopia-php/servers": "0.4.*",
         "utopia-php/registry": "0.5.*",
         "utopia-php/storage": "^4.0",
-        "utopia-php/telemetry": "^0.4",
         "utopia-php/user-agent": "0.1.*",
         "mustangostang/spyc": "0.6.*",
         "utopia-php/vcs": "5.5.*",
@@ -128,6 +130,10 @@
         "webonyx/graphql-php": "15.32.*",
         "league/csv": "9.14.*",
         "enshrined/svg-sanitize": "0.22.*",
+        "nyholm/psr7": "1.*",
+        "open-telemetry/exporter-otlp": "1.*",
+        "open-telemetry/sdk": "1.*",
+        "symfony/http-client": "7.*",
         "utopia-php/client": "^0.4.4",
         "open-runtimes/sdk-for-php": "^2.0",
         "utopia-php/schedule": "^0.3.0",
@@ -169,8 +175,10 @@
         "utopia-php/bus": "*",
         "utopia-php/compression": "*",
         "utopia-php/lock": "*",
+        "utopia-php/pools": "*",
         "utopia-php/psr7": "*",
         "utopia-php/smtp": "*",
-        "utopia-php/system": "*"
+        "utopia-php/system": "*",
+        "utopia-php/telemetry": "*"
     }
 }

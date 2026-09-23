@@ -763,6 +763,17 @@ switch ($command) {
             $directory = "packages/{$package}";
             is_file("{$directory}/phpstan.neon") || fail("{$directory}/phpstan.neon is missing (see bin/monorepo validate)");
 
+            // A package's own dependencies (stubs such as swoole/ide-helper
+            // above all) are what its phpstan.neon scans, so resolve them the
+            // way `test` does before analysing a fresh checkout.
+            if (!is_dir("{$directory}/vendor")) {
+                passthru("cd {$directory} && composer update --no-interaction --prefer-dist --no-progress --ignore-platform-reqs", $code);
+                if ($code !== 0) {
+                    $failed[] = "{$package} (composer)";
+                    continue;
+                }
+            }
+
             // Style comes from the root pint.json; analysis runs at the
             // package's own level, against the root autoloader.
             $fix = isset($options['fix']);
