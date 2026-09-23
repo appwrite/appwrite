@@ -422,7 +422,7 @@ class Messaging extends Action
                         fn () => $dbForProject->getAuthorization()->skip(
                             fn () => $dbForProject->find('targets', [
                                 Query::equal('$sequence', $targetInternalIds),
-                                Query::select(['providerId', 'identifier']),
+                                Query::select(['providerId', 'identifier', 'expired']),
                                 Query::limit(\count($targetInternalIds)),
                             ])
                         )
@@ -440,7 +440,7 @@ class Messaging extends Action
                 $queries = [
                     Query::equal('userId', $userIds),
                     Query::equal('providerType', [$providerType]),
-                    Query::select(['$sequence', 'providerId', 'identifier']),
+                    Query::select(['$sequence', 'providerId', 'identifier', 'expired']),
                     Query::orderAsc('$sequence'),
                     Query::limit(MESSAGE_RECIPIENTS_PAGE_SIZE),
                 ];
@@ -469,7 +469,7 @@ class Messaging extends Action
                 $queries = [
                     Query::equal('$id', $targetIds),
                     Query::equal('providerType', [$providerType]),
-                    Query::select(['$sequence', 'providerId', 'identifier']),
+                    Query::select(['$sequence', 'providerId', 'identifier', 'expired']),
                     Query::orderAsc('$sequence'),
                     Query::limit(MESSAGE_RECIPIENTS_PAGE_SIZE),
                 ];
@@ -493,7 +493,8 @@ class Messaging extends Action
     }
 
     /**
-     * Group a page of target documents by provider id, deduplicating identifiers within the page.
+     * Group a page of target documents by provider id, deduplicating identifiers within the page and
+     * dropping targets already known to be unreachable.
      *
      * @param array<Document> $targets
      * @return array<string, array<string, null>>
@@ -506,6 +507,13 @@ class Messaging extends Action
         $identifiers = [];
 
         foreach ($targets as $target) {
+            // sendBatch() flags a target when a provider reports its token as dead, but the row only goes
+            // away on the next maintenance sweep. Rows predating the attribute read null, so anything
+            // but a positive flag counts as reachable.
+            if ($target->getAttribute('expired')) {
+                continue;
+            }
+
             $providerId = $target->getAttribute('providerId') ?: $default->getId();
 
             if (!\array_key_exists($providerId, $identifiers)) {

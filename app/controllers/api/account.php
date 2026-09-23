@@ -5277,27 +5277,73 @@ Http::post('/v1/account/targets/push')
 
         $sessionId = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken);
         $session = $dbForProject->getDocument('sessions', $sessionId);
+        $name = "{$device['deviceBrand']} {$device['deviceModel']}";
+
+        // A session is one device install holding one push token per provider. Re-registering a rotated
+        // token instead of updating used to leave the superseded one live, so messages arrived twice.
+        $siblings = $session->isEmpty()
+            ? []
+            : $authorization->skip(fn () => $dbForProject->find('targets', [
+                Query::equal('userInternalId', [$user->getSequence()]),
+                Query::equal('sessionInternalId', [$session->getSequence()]),
+                Query::equal('providerType', [MESSAGE_TYPE_PUSH]),
+                empty($providerId)
+                    ? Query::isNull('providerId')
+                    : Query::equal('providerId', [$providerId]),
+                Query::orderAsc('$sequence'),
+                Query::limit(APP_LIMIT_SUBQUERY),
+            ]));
+
+        // A sibling already holding this token has to be the one reused, or the update below collides
+        // with it on the unique identifier index. Otherwise the oldest wins, since a client that
+        // subscribes to topics only on first registration left its subscriptions there.
+        $current = null;
+
+        foreach ($siblings as $key => $sibling) {
+            if ($sibling->getAttribute('identifier') === $identifier) {
+                $current = $sibling;
+                unset($siblings[$key]);
+                break;
+            }
+        }
+
+        $current ??= \array_shift($siblings);
 
         try {
-            $target = $dbForProject->createDocument('targets', new Document([
-                '$id' => $targetId,
-                '$permissions' => [
-                    Permission::read(Role::user($user->getId())),
-                    Permission::update(Role::user($user->getId())),
-                    Permission::delete(Role::user($user->getId())),
-                ],
-                'providerId' => !empty($providerId) ? $providerId : null,
-                'providerInternalId' => !empty($providerId) ? $provider->getSequence() : null,
-                'providerType' => MESSAGE_TYPE_PUSH,
-                'userId' => $user->getId(),
-                'userInternalId' => $user->getSequence(),
-                'sessionId' => $session->getId(),
-                'sessionInternalId' => $session->getSequence(),
-                'identifier' => $identifier,
-                'name' => "{$device['deviceBrand']} {$device['deviceModel']}"
-            ]));
+            $target = $current === null
+                ? $dbForProject->createDocument('targets', new Document([
+                    '$id' => $targetId,
+                    '$permissions' => [
+                        Permission::read(Role::user($user->getId())),
+                        Permission::update(Role::user($user->getId())),
+                        Permission::delete(Role::user($user->getId())),
+                    ],
+                    'providerId' => !empty($providerId) ? $providerId : null,
+                    'providerInternalId' => !empty($providerId) ? $provider->getSequence() : null,
+                    'providerType' => MESSAGE_TYPE_PUSH,
+                    'userId' => $user->getId(),
+                    'userInternalId' => $user->getSequence(),
+                    'sessionId' => $session->getId(),
+                    'sessionInternalId' => $session->getSequence(),
+                    'identifier' => $identifier,
+                    'name' => $name
+                ]))
+                : $dbForProject->updateDocument('targets', $current->getId(), new Document([
+                    'identifier' => $identifier,
+                    'expired' => false,
+                    'name' => $name,
+                ]));
         } catch (Duplicate) {
             throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
+        }
+
+        // Anything left holds a token the client just told us it no longer uses. Expiring rather than
+        // deleting hands it to the maintenance sweep, which also releases its subscriptions and the
+        // topic counters those hold.
+        foreach ($siblings as $sibling) {
+            $dbForProject->updateDocument('targets', $sibling->getId(), new Document([
+                'expired' => true,
+            ]));
         }
 
         $dbForProject->purgeCachedDocument('users', $user->getId());
