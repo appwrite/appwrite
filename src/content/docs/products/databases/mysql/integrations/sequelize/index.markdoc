@@ -19,8 +19,8 @@ Sequelize 7 (`@sequelize/core` + `@sequelize/mysql`) is still alpha. These examp
 Fetch the connection details with [`mysql.get()`](/docs/products/databases/mysql/connections#credentials). That call returns one `connectionString` on the engine port (`3306`). Use it as `DIRECT_URL`, copy it to `DATABASE_URL`, and change only the port to `6033` for the [connection pooler](/docs/products/databases/mysql/connection-pooling). Never commit them:
 
 ```env
-DATABASE_URL="mysql://admin.{hash}:<password>@db-{hash}.{region}.appwrite.center:6033/default"
-DIRECT_URL="mysql://admin.{hash}:<password>@db-{hash}.{region}.appwrite.center:3306/default"
+DATABASE_URL="mysql://admin.{hash}:{password}@db-{hash}.{region}.appwrite.center:6033/default"
+DIRECT_URL="mysql://admin.{hash}:{password}@db-{hash}.{region}.appwrite.center:3306/default"
 ```
 
 Use the pooled `DATABASE_URL` (port `6033`) for runtime traffic and `DIRECT_URL` (port `3306`) for Sequelize CLI migrations. Connections on Appwrite Cloud are encrypted with TLS. Configure `dialectOptions.ssl` when Sequelize or `mysql2` does not infer TLS from the URL, and keep certificate verification enabled against Node's standard trust store. See [Network security](/docs/products/databases/mysql/network-security) for TLS and network controls.
