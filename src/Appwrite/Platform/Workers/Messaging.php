@@ -258,8 +258,22 @@ class Messaging extends Action
                     default => throw new \Exception('Provider with the requested ID is of the incorrect type')
                 };
 
+                // The Appwrite push provider delivers on the reserved per-user topic users/<userId>,
+                // so a user's targets collapse to one implicit topic; every other provider sends to
+                // the target identifiers as before.
+                $recipients = \array_keys($identifiers);
+                if ($resolvedProviderType === MESSAGE_TYPE_PUSH && $provider->getAttribute('provider') === 'appwrite') {
+                    $userTopics = [];
+                    foreach ($identifiers as $userId) {
+                        if (!empty($userId)) {
+                            $userTopics['users/' . $userId] = null;
+                        }
+                    }
+                    $recipients = \array_keys($userTopics);
+                }
+
                 $batches = \array_chunk(
-                    \array_keys($identifiers),
+                    $recipients,
                     $adapter->getMaxMessagesPerRequest()
                 );
 
@@ -363,7 +377,7 @@ class Messaging extends Action
      * @param array<string> $topicIds
      * @param array<string> $userIds
      * @param array<string> $targetIds
-     * @return \Generator<array<string, array<string, null>>>
+     * @return \Generator<array<string, array<string, string>>>
      * @throws \Exception
      */
     private function streamRecipients(
@@ -421,7 +435,7 @@ class Messaging extends Action
                         fn () => $dbForProject->getAuthorization()->skip(
                             fn () => $dbForProject->find('targets', [
                                 Query::equal('$sequence', $targetInternalIds),
-                                Query::select(['providerId', 'identifier']),
+                                Query::select(['providerId', 'identifier', 'userId']),
                                 Query::limit(\count($targetInternalIds)),
                             ])
                         )
@@ -439,7 +453,7 @@ class Messaging extends Action
                 $queries = [
                     Query::equal('userId', $userIds),
                     Query::equal('providerType', [$providerType]),
-                    Query::select(['$sequence', 'providerId', 'identifier']),
+                    Query::select(['$sequence', 'providerId', 'identifier', 'userId']),
                     Query::orderAsc('$sequence'),
                     Query::limit(MESSAGE_RECIPIENTS_PAGE_SIZE),
                 ];
@@ -468,7 +482,7 @@ class Messaging extends Action
                 $queries = [
                     Query::equal('$id', $targetIds),
                     Query::equal('providerType', [$providerType]),
-                    Query::select(['$sequence', 'providerId', 'identifier']),
+                    Query::select(['$sequence', 'providerId', 'identifier', 'userId']),
                     Query::orderAsc('$sequence'),
                     Query::limit(MESSAGE_RECIPIENTS_PAGE_SIZE),
                 ];
@@ -493,14 +507,16 @@ class Messaging extends Action
 
     /**
      * Group a page of target documents by provider id, deduplicating identifiers within the page.
+     * Each identifier maps to its target's user id, which the Appwrite push provider uses to deliver
+     * on the reserved per-user topic (see the send loop); other providers only read the keys.
      *
      * @param array<Document> $targets
-     * @return array<string, array<string, null>>
+     * @return array<string, array<string, string>>
      */
     private function groupTargetsByProvider(array $targets, Document $default): array
     {
         /**
-         * @var array<string, array<string, null>> $identifiers
+         * @var array<string, array<string, string>> $identifiers
          */
         $identifiers = [];
 
@@ -511,8 +527,9 @@ class Messaging extends Action
                 $identifiers[$providerId] = [];
             }
 
-            // Null values keep identifiers unique without a second lookup structure.
-            $identifiers[$providerId][$target->getAttribute('identifier')] = null;
+            // identifier => userId: the key dedupes recipients; the value lets the Appwrite push
+            // provider collapse a user's targets to one users/<userId> topic.
+            $identifiers[$providerId][$target->getAttribute('identifier')] = $target->getAttribute('userId');
         }
 
         return $identifiers;
