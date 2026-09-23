@@ -124,7 +124,7 @@ This is a practical improvement, not a cosmetic one. Work you can skim and verif
 
 The honest answer is that for most agentic and coding workloads, yes, and the decision is mostly about cost rather than capability.
 
-* **Switch from Opus 5** if you run agents at any volume. You get better results, roughly 40% lower cost, and more than 30% faster output for a one-line model id change.
+* **Switch from Opus 5** if the lower pricing, faster output, and stronger performance on several evaluations make sense for your workload. Review Anthropic's migration guide before moving production workloads, as Opus 5.5 introduces several breaking changes.
 * **Switch from Fable 5.1** if you were paying a premium for frontier quality on coding and knowledge work. Opus 5.5 matches it on most tasks at a fraction of the price.
 * **Stay on Fable 5.1 or Mythos 5.1** if your workload sits in the narrow band where they still lead, or if you have already tuned prompts and evaluations around them and the switching cost outweighs the savings.
 * **Tune effort before you tune models.** Opus 5.5 at default effort beats several competitors at max effort. Run routine agent steps low and reserve high or max for genuinely hard work.
