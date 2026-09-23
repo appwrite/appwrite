@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "dee44fa877dfa3be31347a3b03619e29",
+    "content-hash": "94427ab8b2976a365ccda4c0dcc4041b",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3930,16 +3930,16 @@
         },
         {
             "name": "utopia-php/messaging",
-            "version": "2.3.0",
+            "version": "2.4.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/messaging.git",
-                "reference": "827915ffc6ea3bc698ead43feb2ee36ee2e3807d"
+                "reference": "0b6431b5d39c23ebb3b11eb0bf17d7f4acb6422f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/messaging/zipball/827915ffc6ea3bc698ead43feb2ee36ee2e3807d",
-                "reference": "827915ffc6ea3bc698ead43feb2ee36ee2e3807d",
+                "url": "https://api.github.com/repos/utopia-php/messaging/zipball/0b6431b5d39c23ebb3b11eb0bf17d7f4acb6422f",
+                "reference": "0b6431b5d39c23ebb3b11eb0bf17d7f4acb6422f",
                 "shasum": ""
             },
             "require": {
@@ -3978,9 +3978,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/messaging/issues",
-                "source": "https://github.com/utopia-php/messaging/tree/2.3.0"
+                "source": "https://github.com/utopia-php/messaging/tree/2.4.0"
             },
-            "time": "2026-09-16T10:58:06+00:00"
+            "time": "2026-09-22T11:38:29+00:00"
         },
         {
             "name": "utopia-php/migration",
@@ -4670,57 +4670,6 @@
                 "source": "https://github.com/utopia-php/storage/tree/4.1.0"
             },
             "time": "2026-09-07T07:52:07+00:00"
-        },
-        {
-            "name": "utopia-php/telemetry",
-            "version": "0.4.11",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/utopia-php/telemetry.git",
-                "reference": "852e76c89d0c20fc6560ac9687b15457a97b3704"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/telemetry/zipball/852e76c89d0c20fc6560ac9687b15457a97b3704",
-                "reference": "852e76c89d0c20fc6560ac9687b15457a97b3704",
-                "shasum": ""
-            },
-            "require": {
-                "nyholm/psr7": "1.*",
-                "open-telemetry/exporter-otlp": "1.*",
-                "open-telemetry/sdk": "1.*",
-                "php": ">=8.0",
-                "symfony/http-client": "7.*"
-            },
-            "require-dev": {
-                "swoole/ide-helper": "6.*"
-            },
-            "suggest": {
-                "ext-protobuf": "For better performance, when dealing with the protobuf format",
-                "ext-sockets": "Required for the Swoole transport implementation",
-                "ext-swoole": "Required for the Swoole transport implementation"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Utopia\\Telemetry\\": "src/Telemetry"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "description": "A lite & fast telemetry library, with adapters for OpenTelemetry",
-            "keywords": [
-                "framework",
-                "php",
-                "upf"
-            ],
-            "support": {
-                "issues": "https://github.com/utopia-php/telemetry/issues",
-                "source": "https://github.com/utopia-php/telemetry/tree/0.4.11"
-            },
-            "time": "2026-09-16T10:12:28+00:00"
         },
         {
             "name": "utopia-php/usage",
