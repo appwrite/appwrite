@@ -10,6 +10,7 @@ use Appwrite\Network\Validator\PublicHostname;
 use Appwrite\Template\Template;
 use Appwrite\Usage\Context as UsageContext;
 use Exception;
+use InvalidArgumentException;
 use Utopia\Client;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Database\Database;
@@ -20,6 +21,7 @@ use Utopia\Psr7\ContentType;
 use Utopia\Psr7\Header;
 use Utopia\Psr7\Method;
 use Utopia\Psr7\Request\Factory as RequestFactory;
+use Utopia\Psr7\Uri;
 use Utopia\Queue\Message;
 use Utopia\Span\Span;
 use Utopia\System\System;
@@ -27,6 +29,9 @@ use Utopia\System\System;
 class Webhooks extends Action
 {
     private const MAX_FILE_SIZE = 5242880; // 5 MB
+
+    /** @var array<string, true> */
+    private array $trustedOrigins = [];
 
     public static function getName(): string
     {
@@ -38,6 +43,28 @@ class Webhooks extends Action
      */
     public function __construct()
     {
+        // Operators can trust specific internal receivers. Empty by default;
+        // this does not relax URL validation or trust other ports or subdomains.
+        foreach (\explode(',', System::getEnv('_APP_WEBHOOK_TRUSTED_ORIGINS', '')) as $origin) {
+            try {
+                $trusted = Uri::parse(\trim($origin));
+            } catch (InvalidArgumentException) {
+                continue;
+            }
+
+            if (!\in_array($trusted->getScheme(), ['http', 'https'], true)
+                || $trusted->getHost() === ''
+                || $trusted->getUserInfo() !== ''
+                || !\in_array($trusted->getPath(), ['', '/'], true)
+                || $trusted->getQuery() !== ''
+                || $trusted->getFragment() !== ''
+            ) {
+                continue;
+            }
+
+            $this->trustedOrigins[$trusted->getScheme() . '://' . $trusted->getAuthority()] = true;
+        }
+
         $this
             ->desc('Webhooks worker')
             ->inject('message')
@@ -111,14 +138,6 @@ class Webhooks extends Action
 
         $rawUrl = $webhook->getAttribute('url');
 
-        if (System::getEnv('_APP_ENV', 'development') === 'production') {
-            $host = \parse_url($rawUrl, PHP_URL_HOST) ?? '';
-            $hostnameValidator = new PublicHostname();
-            if (!$hostnameValidator->isValid($host)) {
-                return 'Webhook target ' . $host . ' rejected: ' . $hostnameValidator->getDescription();
-            }
-        }
-
         $signatureKey = $webhook->getAttribute('signatureKey');
         $signature = base64_encode(hash_hmac('sha1', $rawUrl . $payload, $signatureKey, true));
         $httpUser = $webhook->getAttribute('httpUser');
@@ -138,9 +157,16 @@ class Webhooks extends Action
         $statusCode = 0;
 
         try {
+            $uri = Uri::parse($rawUrl);
+            $origin = $uri->getScheme() . '://' . $uri->withUserInfo('')->getAuthority();
+            $hostnameValidator = new PublicHostname();
+            if (!isset($this->trustedOrigins[$origin]) && !$hostnameValidator->isValid($uri->getHost())) {
+                throw new Exception('Webhook target ' . $uri->getHost() . ' rejected: ' . $hostnameValidator->getDescription());
+            }
+
             $request = (new RequestFactory())->body(
                 method: Method::POST,
-                uri: $rawUrl,
+                uri: $uri,
                 body: $payload,
                 contentType: ContentType::JSON,
                 headers: [
@@ -318,7 +344,9 @@ class Webhooks extends Action
             $template->setParam('{{webhook}}', $webhook->getAttribute('name'));
             $template->setParam('{{project}}', $project->getAttribute('name'));
             $template->setParam('{{url}}', $webhook->getAttribute('url'));
-            $template->setParam('{{error}}', 'The server returned ' . $statusCode . ' status code');
+            $template->setParam('{{error}}', $statusCode === 0
+                ? 'No HTTP response was received. Check the webhook logs for the delivery error.'
+                : 'The server returned ' . $statusCode . ' status code');
             $template->setParam('{{host}}', $platform['consoleUrl'] ?? '');
             $template->setParam('{{path}}', "/projects/{$projectId}/settings/webhooks");
             $template->setParam('{{attempts}}', $attempts);
