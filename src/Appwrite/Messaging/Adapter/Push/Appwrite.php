@@ -107,9 +107,11 @@ class Appwrite extends PushAdapter
      * Resolve a reserved users/<id> topic to [id, name], creating its topics row on first publish so
      * per-user pushes need no pre-created topic. The id is a deterministic hash of the reserved name
      * (as domain rules key on md5 of the domain): the primary key makes the row a singleton and needs
-     * no name index, and it is length-safe and namespaced so it can't collide with a normal topic id.
-     * A concurrent first publish that already created it throws Duplicate and is re-read rather than
-     * duplicated. `qos` is left null (subscriber chosen), matching a normal topic.
+     * no name index. A concurrent first publish that already created it throws Duplicate and is re-read.
+     * `qos` is left null (subscriber chosen), matching a normal topic.
+     *
+     * The id space is shared with developer-created topics, so the resolved row's name is verified to
+     * be the reserved one: a normal topic squatting the hash must never carry another user's pushes.
      *
      * @return array{0: string, 1: string} [topic id, topic name]
      */
@@ -121,14 +123,19 @@ class Appwrite extends PushAdapter
         $topic = $authorization->skip(fn () => $this->dbForProject->getDocument('topics', $id));
         if ($topic->isEmpty()) {
             try {
-                $authorization->skip(fn () => $this->dbForProject->createDocument('topics', new Document([
+                $topic = $authorization->skip(fn () => $this->dbForProject->createDocument('topics', new Document([
                     '$id' => $id,
                     'name' => $name,
                     'sequence' => 0,
                 ])));
             } catch (Duplicate) {
-                // A concurrent first publish created it; the row now exists for persist().
+                // A concurrent first publish created it; re-read it to verify below.
+                $topic = $authorization->skip(fn () => $this->dbForProject->getDocument('topics', $id));
             }
+        }
+
+        if ($topic->getAttribute('name') !== $name) {
+            throw new \RuntimeException("Reserved topic id for {$name} collides with an existing topic");
         }
 
         return [$id, $name];
