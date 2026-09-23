@@ -199,7 +199,7 @@ class CallingCode
 
     public const LIBYA = '218';
 
-    public const LIECHTENSTEIN = '417';
+    public const LIECHTENSTEIN = '423';
 
     public const LITHUANIA = '370';
 
