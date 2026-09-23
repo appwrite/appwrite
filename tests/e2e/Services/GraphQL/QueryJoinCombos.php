@@ -62,7 +62,6 @@ trait QueryJoinCombos
             'name' => 'jcSecret' . $suffix,
             $this->joinSecurityParam() => true,
             'permissions' => [
-                Permission::read(Role::any()),
                 Permission::create(Role::any()),
             ],
         ]);
@@ -375,12 +374,23 @@ trait QueryJoinCombos
         $this->assertArrayNotHasKey('errors', $result['body']);
         $rows = $this->joinListRecords($result);
         $amounts = $this->joinComboAmounts($rows);
+        $decodedRows = \array_map($this->decodeJoinData(...), $rows);
+        $publicRows = \array_values(\array_filter($decodedRows, static fn (array $row): bool => (int) ($row['pub.amount'] ?? 0) === 313));
+
+        $this->assertNotEmpty($publicRows);
+        foreach ($publicRows as $row) {
+            $this->assertArrayHasKey('pub.$permissions', $row);
+            $this->assertSame([Permission::read(Role::user($this->getUser()['$id']))], $row['pub.$permissions'], 'a joined row exposes exactly the permissions a direct read of it exposes');
+        }
+        $secretPermissions = \array_merge(...\array_map(static fn (array $row): array => (array) ($row['sec.$permissions'] ?? []), $decodedRows));
 
         if ($this->getSide() === 'client') {
             $this->assertSame(true, \in_array(313, $amounts, true));
+            $this->assertSame([], $secretPermissions, 'the unreadable row is left out of the join, its permissions included');
             $this->assertJoinComboClientHidden($result, $rows, $amounts);
         } else {
             $this->assertSame(true, \in_array(313, $amounts, true));
+            $this->assertContains(Permission::read(Role::user('combo-hidden')), $secretPermissions);
         }
     }
 
@@ -397,6 +407,7 @@ trait QueryJoinCombos
             Permission::read(Role::any()),
             Permission::create(Role::any()),
         ];
+        $createOnly = [Permission::create(Role::any())];
         $readAny = [Permission::read(Role::any())];
         $hidden = [Permission::read(Role::user('combo-hard-hidden'))];
         $midHidden = [Permission::read(Role::user('jh-mid-hidden'))];
@@ -409,9 +420,9 @@ trait QueryJoinCombos
         $databaseId = $database['body']['$id'];
 
         $customersId = $this->createJoinHardcoreContainer($databaseId, 'jhCustomers' . $suffix, true, $any);
-        $ordersId = $this->createJoinHardcoreContainer($databaseId, 'jhOrders' . $suffix, true, $any);
+        $ordersId = $this->createJoinHardcoreContainer($databaseId, 'jhOrders' . $suffix, true, $createOnly);
         $midId = $this->createJoinHardcoreContainer($databaseId, 'jhMid' . $suffix, false, $any);
-        $secretsId = $this->createJoinHardcoreContainer($databaseId, 'jhSecrets' . $suffix, true, $any);
+        $secretsId = $this->createJoinHardcoreContainer($databaseId, 'jhSecrets' . $suffix, true, $createOnly);
         $rightId = $this->createJoinHardcoreContainer($databaseId, 'jhRight' . $suffix, true, $any);
 
         $this->createJoinAttribute($databaseId, $customersId, 'string', [
@@ -754,13 +765,9 @@ trait QueryJoinCombos
         return $this->jsonContainsExactString($decoded, $needle);
     }
 
-    protected function jsonContainsExactString(mixed $value, string $needle, string|int|null $key = null): bool
+    protected function jsonContainsExactString(mixed $value, string $needle): bool
     {
         if (\is_string($value)) {
-            if ($this->isIgnoredJoinSecretKey($key)) {
-                return false;
-            }
-
             $decoded = \json_decode($value, true);
             if (\is_array($decoded)) {
                 return $this->jsonContainsExactString($decoded, $needle);
@@ -773,8 +780,8 @@ trait QueryJoinCombos
             return false;
         }
 
-        foreach ($value as $childKey => $child) {
-            if ($this->jsonContainsExactString($child, $needle, $childKey)) {
+        foreach ($value as $child) {
+            if ($this->jsonContainsExactString($child, $needle)) {
                 return true;
             }
         }
@@ -1847,42 +1854,83 @@ trait QueryJoinCombos
         $decoded = $this->decodeJoinData($record);
         $this->assertSame($data['aliceId'], $record['_id']);
         $this->assertSame('Alice', $decoded['name'] ?? null);
-        $this->assertNotSame($data['order8686Id'], $record['_id']);
-        $this->assertNotSame($data['order5151Id'], $record['_id']);
-        if (\array_key_exists('$id', $decoded)) {
-            $this->assertSame($data['aliceId'], $decoded['$id']);
-            $this->assertSame(false, \in_array($decoded['$id'], $data['orderIds'], true));
-        }
-        $this->assertSame(false, \in_array($record['_id'] ?? null, $data['orderIds'], true));
+        $this->assertArrayHasKey('ord.$id', $decoded);
+        $this->assertArrayHasKey('ord.$permissions', $decoded);
 
-        $orderId = $decoded['ord.$id'] ?? null;
-        if (\is_string($orderId) && $orderId !== '') {
-            $this->assertSame(true, \in_array($orderId, $data['orderIds'], true));
-            $this->assertNotSame($data['aliceId'], $orderId);
-        }
-
-        $amounts = $this->joinComboAmounts([$record]);
+        $orderId = $decoded['ord.$id'];
+        $this->assertContains($orderId, [$data['order200Id'], $data['order313Id'], $data['order8686Id']], 'the joined order is one of Alice\'s');
+        $order = $this->joinHardcoreGet($data['databaseId'], $data['ordersId'], $orderId, []);
+        $this->assertArrayNotHasKey('errors', $order['body'], 'the joined order is one the caller can read directly');
+        $this->assertSame($this->joinGetRecord($order)['_permissions'] ?? null, $decoded['ord.$permissions'], 'a joined row exposes exactly the permissions a direct read of it exposes');
 
         if ($this->getSide() === 'client') {
-            $permissions = $decoded['ord.$permissions'] ?? [];
-            if (\is_string($permissions)) {
-                $decodedPermissions = \json_decode($permissions, true);
-                $permissions = \is_array($decodedPermissions) ? $decodedPermissions : [$permissions];
+            $this->assertContains($orderId, [$data['order200Id'], $data['order313Id']]);
+            $this->assertJoinHardcoreClientHidden($got, [$record], $this->joinComboAmounts([$record]));
+        }
+
+        $listed = $this->joinHardcoreList($data['databaseId'], $data['customersId'], [
+            Query::join($data['midId'], '$id', 'customerId', '=', 'mid')->toString(),
+            Query::select(['name', 'mid.$id', 'mid.note', 'mid.$permissions'])->toString(),
+        ]);
+
+        $this->assertArrayNotHasKey('errors', $listed['body']);
+        $rows = \array_map($this->decodeJoinData(...), $this->joinHardcoreRows($listed));
+        $this->assertCount(3, $rows, 'the collection has no document security, so every customer\'s row is joined whatever its document permissions');
+        foreach ($rows as $row) {
+            $this->assertSame([Permission::read(Role::user('jh-mid-hidden'))], $row['mid.$permissions'] ?? null);
+            $mid = $this->joinHardcoreGet($data['databaseId'], $data['midId'], $row['mid.$id'], []);
+            $this->assertArrayNotHasKey('errors', $mid['body']);
+            $this->assertSame($this->joinGetRecord($mid)['_permissions'] ?? null, $row['mid.$permissions'], 'the join exposes no more than a direct read of the same row');
+        }
+    }
+
+    public function testJoinHardcoreSelectedJoinSequencesBelongToReadableRows(): void
+    {
+        if (!$this->getSupportForJoins()) {
+            $this->markTestSkipped('Adapter does not support join queries');
+        }
+
+        $data = $this->setupJoinHardcoreFixture();
+
+        $joined = $this->joinHardcoreList($data['databaseId'], $data['customersId'], [
+            Query::leftJoin($data['ordersId'], '$id', 'customerId', '=', 'ord')->toString(),
+            Query::select(['name', 'ord.$id', 'ord.$sequence'])->toString(),
+        ]);
+        $direct = $this->client->call(Client::METHOD_GET, $this->joinRecordUrl($data['databaseId'], $data['ordersId']), \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [Query::limit(100)->toString()],
+        ]);
+
+        $this->assertArrayNotHasKey('errors', $joined['body']);
+        $this->assertSame(200, $direct['headers']['status-code']);
+        $readable = [];
+        foreach ($direct['body'][$this->joinItemsKey()] as $order) {
+            $readable[$order['$id']] = (string) $order['$sequence'];
+        }
+
+        $joinedSequences = [];
+        foreach ($this->joinHardcoreRows($joined) as $row) {
+            $decoded = $this->decodeJoinData($row);
+            $this->assertArrayNotHasKey('ord.$tenant', $decoded);
+            $orderId = $decoded['ord.$id'] ?? null;
+            if ($orderId === null || $orderId === '') {
+                continue;
             }
-            if (\is_array($permissions)) {
-                $this->assertSame(false, \in_array('user:combo-hard-hidden', $permissions, true));
-            }
-            if (\is_string($orderId) && $orderId !== '') {
-                $this->assertNotSame($data['order8686Id'], $orderId);
-                $this->assertNotSame($data['order5151Id'], $orderId);
-            }
-            $this->assertJoinHardcoreClientHidden($got, [$record], $amounts);
-            $dataString = $record['data'] ?? '';
-            if (\is_string($dataString) && $dataString !== '') {
-                $this->assertStringNotContainsString('user:combo-hard-hidden', $dataString);
-                $this->assertSame(false, $this->encodedJsonContainsScalar($dataString, 8686));
-                $this->assertSame(false, $this->encodedJsonContainsExactString($dataString, '8686'));
-            }
+            $this->assertArrayHasKey($orderId, $readable, 'every joined order is one the caller can list directly');
+            $this->assertSame($readable[$orderId], (string) $decoded['ord.$sequence'], 'a joined sequence belongs to the joined row it came with');
+            $joinedSequences[] = (string) $decoded['ord.$sequence'];
+        }
+
+        $this->assertNotEmpty($joinedSequences);
+
+        if ($this->getSide() === 'client') {
+            $this->assertArrayNotHasKey($data['order8686Id'], $readable, 'the caller cannot list the hidden order, so no joined sequence can be its');
+            $this->assertArrayNotHasKey($data['order5151Id'], $readable);
+        } else {
+            $this->assertArrayHasKey($data['order8686Id'], $readable);
+            $this->assertContains($readable[$data['order8686Id']], $joinedSequences, 'a privileged caller joins the hidden order too');
         }
     }
 
