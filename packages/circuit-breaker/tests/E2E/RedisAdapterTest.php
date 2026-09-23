@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Utopia\Tests\e2e;
+namespace Utopia\CircuitBreaker\Tests\E2E;
 
 use PHPUnit\Framework\TestCase;
 use Utopia\CircuitBreaker\Adapter\Redis as RedisAdapter;
@@ -74,7 +74,7 @@ final class RedisAdapterTest extends TestCase
         $second = new CircuitBreaker(timeout: 0, successThreshold: 2, cache: $cache, key: 'users-api', minimumThroughput: 1);
 
         $first->call(
-            open: static fn(): string => 'fallback',
+            open: static fn (): string => 'fallback',
             close: static function (): never {
                 throw new \RuntimeException('failed');
             },
@@ -84,16 +84,16 @@ final class RedisAdapterTest extends TestCase
         $this->assertSame(0, $second->getFailureCount());
 
         $this->assertSame('probe-1', $second->call(
-            open: static fn(): string => 'fallback',
-            close: static fn(): string => 'closed',
-            halfOpen: static fn(): string => 'probe-1',
+            open: static fn (): string => 'fallback',
+            close: static fn (): string => 'closed',
+            halfOpen: static fn (): string => 'probe-1',
         ));
         $this->assertSame(1, $first->getSuccessCount());
 
         $this->assertSame('probe-2', $first->call(
-            open: static fn(): string => 'fallback',
-            close: static fn(): string => 'closed',
-            halfOpen: static fn(): string => 'probe-2',
+            open: static fn (): string => 'fallback',
+            close: static fn (): string => 'closed',
+            halfOpen: static fn (): string => 'probe-2',
         ));
 
         $this->assertTrue($second->isClosed());

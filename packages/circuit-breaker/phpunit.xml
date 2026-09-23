@@ -6,10 +6,11 @@
 >
     <testsuites>
         <testsuite name="unit">
-            <directory>tests/unit</directory>
+            <directory>tests</directory>
+            <exclude>tests/E2E</exclude>
         </testsuite>
         <testsuite name="e2e">
-            <directory>tests/e2e</directory>
+            <directory>tests/E2E</directory>
         </testsuite>
     </testsuites>
     <source>

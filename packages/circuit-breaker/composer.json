@@ -25,7 +25,7 @@
         "utopia-php/telemetry": "^0.4.6"
     },
     "suggest": {
-        "utopia-php/telemetry": "Required when passing telemetry adapters or running the local telemetry demo.",
+        "utopia-php/telemetry": "Required when passing telemetry adapters.",
         "ext-opentelemetry": "Required by utopia-php/telemetry when using OpenTelemetry metrics.",
         "ext-protobuf": "Required by utopia-php/telemetry when using OpenTelemetry metrics.",
         "ext-redis": "Required when using Utopia\\CircuitBreaker\\Adapter\\Redis with the phpredis extension.",
@@ -33,23 +33,17 @@
     },
     "autoload": {
         "psr-4": {
-            "Utopia\\CircuitBreaker\\": "src/CircuitBreaker/"
+            "Utopia\\CircuitBreaker\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Utopia\\Tests\\": "tests/"
+            "Utopia\\CircuitBreaker\\Tests\\": "tests/"
         }
     },
     "scripts": {
         "test": "phpunit --testsuite unit",
-        "test:e2e": "phpunit --testsuite e2e",
-        "telemetry:up": "docker compose -p breaker-telemetry -f docker-compose.telemetry.yml up -d --build",
-        "telemetry:scenario": [
-            "Composer\\Config::disableProcessTimeout",
-            "docker compose -p breaker-telemetry -f docker-compose.telemetry.yml exec -T demo php examples/telemetry/scenario.php"
-        ],
-        "telemetry:down": "docker compose -p breaker-telemetry -f docker-compose.telemetry.yml down -v --remove-orphans"
+        "test:e2e": "phpunit --testsuite e2e"
     },
     "minimum-stability": "stable",
     "config": {

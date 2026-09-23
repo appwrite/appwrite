@@ -249,7 +249,7 @@ $breaker->getSuccessCount();
 ## System requirements
 
 - PHP 8.2 or later
-- Optional: `utopia-php/telemetry`, `ext-opentelemetry`, and `ext-protobuf` for OpenTelemetry metrics and the local telemetry demo
+- Optional: `utopia-php/telemetry`, `ext-opentelemetry`, and `ext-protobuf` for OpenTelemetry metrics
 - Optional: `ext-redis` for `Utopia\CircuitBreaker\Adapter\Redis`
 - Optional: `ext-swoole` for `Utopia\CircuitBreaker\Adapter\SwooleTable`
 
@@ -261,38 +261,11 @@ Unit tests avoid Redis and Swoole runtime dependencies:
 composer test
 ```
 
-E2E tests run Redis and a PHP runtime with the Redis/Swoole extensions through Docker:
+E2E tests need the Redis and Swoole extensions, and Redis from `docker-compose.yml`:
 
 ```bash
-composer test:e2e:docker
-```
-
-### Local telemetry demo
-
-Start Redis, an instrumented PHP demo server, OpenTelemetry Collector, Prometheus, and Grafana:
-
-```bash
-composer telemetry:up
-```
-
-- Demo UI: http://localhost:8080
-- Grafana: http://localhost:3030/d/circuit-breaker/circuit-breaker-telemetry
-- Prometheus: http://localhost:9090
-
-Preview from a five-minute `checkout-api` scenario:
-
-![Circuit breaker telemetry dashboard](docs/images/telemetry-dashboard.png)
-
-Populate the dashboard with the same scenario:
-
-```bash
-composer telemetry:scenario
-```
-
-Stop the stack and remove local volumes:
-
-```bash
-composer telemetry:down
+docker compose up -d --wait
+composer test:e2e
 ```
 
 ## Copyright and license

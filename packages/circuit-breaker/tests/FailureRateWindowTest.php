@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Utopia\Tests\unit;
+namespace Utopia\CircuitBreaker\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Utopia\CircuitBreaker\Adapter;
@@ -23,7 +23,7 @@ final class FailureRateWindowTest extends TestCase
     private function failOnce(CircuitBreaker $breaker): mixed
     {
         return $breaker->call(
-            open: static fn(): string => 'fallback',
+            open: static fn (): string => 'fallback',
             close: static function (): never {
                 throw new \RuntimeException('failed');
             },
@@ -33,8 +33,8 @@ final class FailureRateWindowTest extends TestCase
     private function succeedOnce(CircuitBreaker $breaker): mixed
     {
         return $breaker->call(
-            open: static fn(): string => 'fallback',
-            close: static fn(): string => 'ok',
+            open: static fn (): string => 'fallback',
+            close: static fn (): string => 'ok',
         );
     }
 
@@ -230,7 +230,7 @@ final class FailureRateWindowTest extends TestCase
 
     private function createArrayAdapter(): Adapter
     {
-        return new class implements Adapter {
+        return new class () implements Adapter {
             /** @var array<string, int|string> */
             private array $values = [];
 

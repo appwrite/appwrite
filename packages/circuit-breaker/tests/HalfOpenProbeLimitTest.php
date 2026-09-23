@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Utopia\Tests\unit;
+namespace Utopia\CircuitBreaker\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Utopia\CircuitBreaker\CircuitBreaker;
@@ -45,13 +45,13 @@ final class HalfOpenProbeLimitTest extends TestCase
         $nested = null;
 
         $result = $breaker->call(
-            open: static fn(): string => 'fallback',
+            open: static fn (): string => 'fallback',
             close: function () use ($breaker, &$nested): string {
                 $this->assertSame(CircuitState::HALF_OPEN, $breaker->getState());
 
                 $nested = $breaker->call(
-                    open: static fn(): string => 'fallback',
-                    close: static fn(): string => 'reached dependency',
+                    open: static fn (): string => 'fallback',
+                    close: static fn (): string => 'reached dependency',
                 );
 
                 return 'probe ran';
@@ -70,8 +70,8 @@ final class HalfOpenProbeLimitTest extends TestCase
         // finished before the next begins.
         for ($i = 0; $i < 3; $i++) {
             $result = $breaker->call(
-                open: static fn(): string => 'fallback',
-                close: static fn(): string => 'reached dependency',
+                open: static fn (): string => 'fallback',
+                close: static fn (): string => 'reached dependency',
             );
 
             $this->assertSame('reached dependency', $result);
@@ -85,14 +85,14 @@ final class HalfOpenProbeLimitTest extends TestCase
         $third = null;
 
         $breaker->call(
-            open: static fn(): string => 'fallback',
+            open: static fn (): string => 'fallback',
             close: function () use ($breaker, &$second, &$third): string {
                 $second = $breaker->call(
-                    open: static fn(): string => 'fallback',
+                    open: static fn (): string => 'fallback',
                     close: function () use ($breaker, &$third): string {
                         $third = $breaker->call(
-                            open: static fn(): string => 'fallback',
-                            close: static fn(): string => 'reached dependency',
+                            open: static fn (): string => 'fallback',
+                            close: static fn (): string => 'reached dependency',
                         );
 
                         return 'reached dependency';
@@ -117,11 +117,11 @@ final class HalfOpenProbeLimitTest extends TestCase
         $nested = null;
 
         $breaker->call(
-            open: static fn(): string => 'fallback',
+            open: static fn (): string => 'fallback',
             close: function () use ($breaker, &$nested): string {
                 $nested = $breaker->call(
-                    open: static fn(): string => 'fallback',
-                    close: static fn(): string => 'reached dependency',
+                    open: static fn (): string => 'fallback',
+                    close: static fn (): string => 'reached dependency',
                 );
 
                 return 'reached dependency';
@@ -136,11 +136,11 @@ final class HalfOpenProbeLimitTest extends TestCase
         $breaker = $this->halfOpen(permitted: 1);
 
         $breaker->call(
-            open: static fn(): string => 'fallback',
+            open: static fn (): string => 'fallback',
             close: function () use ($breaker): string {
                 $breaker->call(
-                    open: static fn(): string => 'fallback',
-                    close: static fn(): string => 'reached dependency',
+                    open: static fn (): string => 'fallback',
+                    close: static fn (): string => 'reached dependency',
                 );
 
                 return 'probe ran';

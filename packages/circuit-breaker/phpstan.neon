@@ -1,7 +1,11 @@
 includes:
-    - ../../phpstan.neon
+    - phpstan-baseline.neon
 
 parameters:
+    level: max
+    paths:
+        - src
+        - tests
     ignoreErrors:
         # Utopia\Telemetry\Adapter\Test creates anonymous subclasses of
         # Counter/Gauge/Histogram/UpDownCounter that expose a public $values
@@ -16,4 +20,4 @@ parameters:
         # is injected.
         -
             message: "#Call to function method_exists\\(\\) with Redis and 'getLastError' will always evaluate to true\\.#"
-            path: tests/e2e/RedisAdapterTest.php
+            path: tests/E2E/RedisAdapterTest.php

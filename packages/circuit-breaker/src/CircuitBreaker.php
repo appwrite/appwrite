@@ -558,7 +558,7 @@ class CircuitBreaker
                 });
         };
 
-        $gauge('breaker.active_calls', '{call}', static fn(self $breaker): int => $breaker->activeCalls);
+        $gauge('breaker.active_calls', '{call}', static fn (self $breaker): int => $breaker->activeCalls);
         $gauge('breaker.state', null, static function (self $breaker): int {
             $breaker->syncFromCache();
 
