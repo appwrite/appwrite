@@ -26,6 +26,9 @@ final class MqttSubscriber
     /** @var Packet[] PUBLISH packets read before the SUBACK (replay), drained by consume(). */
     private array $pending = [];
 
+    /** The Reason String (property 0x1F) from the last CONNACK, or null when absent. */
+    private ?string $connackReason = null;
+
     public function __construct(
         private readonly string $host,
         private readonly int $port,
@@ -60,7 +63,20 @@ final class MqttSubscriber
         }
 
         // CONNACK body: [acknowledge flags][reason code][properties].
+        $this->connackReason = null;
+        if (\strlen($packet->body) > 2) {
+            [$properties] = Properties::parse($packet->body, 2);
+            $reason = $properties->get(Property::REASON_STRING);
+            $this->connackReason = \is_string($reason) ? $reason : null;
+        }
+
         return \ord($packet->body[1] ?? "\x80");
+    }
+
+    /** The Reason String (MQTT 5.0 property 0x1F) from the last CONNACK, or null when absent. */
+    public function connackReason(): ?string
+    {
+        return $this->connackReason;
     }
 
     /**

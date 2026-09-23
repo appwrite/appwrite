@@ -2,6 +2,7 @@
 
 namespace Appwrite\Mqtt;
 
+use Appwrite\Extend\Exception;
 use Appwrite\Messaging\Adapter\Mqtt;
 use Appwrite\Utopia\Database\Documents\User;
 use Utopia\Abuse\Abuse;
@@ -25,6 +26,8 @@ use Utopia\Mqtt\Packet\Suback;
 use Utopia\Mqtt\Packet\Subscribe;
 use Utopia\Mqtt\Packet\Unsuback;
 use Utopia\Mqtt\Packet\Unsubscribe;
+use Utopia\Mqtt\Properties;
+use Utopia\Mqtt\Property;
 use Utopia\Mqtt\Server;
 use Utopia\Span\Span;
 use Utopia\System\System;
@@ -58,7 +61,7 @@ class Handler implements MqttHandler
 
         if ($identity === []) {
             Span::add('mqtt.result', 'rejected');
-            return Connack::refuse(Connack::NOT_AUTHORIZED);
+            return $this->refuseConnect(Connack::NOT_AUTHORIZED, Exception::USER_UNAUTHORIZED);
         }
 
         $connection->identity = $identity;
@@ -72,7 +75,7 @@ class Handler implements MqttHandler
 
             if ((new Abuse($timeLimit))->check()) {
                 Span::add('mqtt.result', 'abuse');
-                return Connack::refuse(Connack::QUOTA_EXCEEDED);
+                return $this->refuseConnect(Connack::QUOTA_EXCEEDED, Exception::GENERAL_RATE_LIMIT_EXCEEDED);
             }
         }
 
@@ -86,6 +89,19 @@ class Handler implements MqttHandler
         Span::add('mqtt.client_id', $connection->getClientId());
 
         return Connack::accept();
+    }
+
+    /**
+     * Refuse a CONNECT with an MQTT reason code and, on MQTT 5.0, the matching Appwrite error
+     * message as the Reason String (property 0x1F) so clients learn why — the same messages the
+     * realtime endpoint returns. 3.1.1 clients only get the reason code; the string is dropped.
+     */
+    private function refuseConnect(int $reasonCode, string $error): Connack
+    {
+        $properties = new Properties();
+        $properties->add(new Property(Property::REASON_STRING, (new Exception($error))->getMessage()));
+
+        return Connack::refuse($reasonCode, $properties);
     }
 
     public function onAuthenticate(Auth $auth, Connection $connection): Connack|Auth|Disconnect
@@ -105,7 +121,7 @@ class Handler implements MqttHandler
         if ($identity === [] || ($identity['userId'] ?? '') !== ($connection->identity['userId'] ?? '')) {
             $this->mqtt->reauth->add(1, ['result' => 'rejected']);
             Span::add('mqtt.result', 'rejected');
-            return Disconnect::refuse(Disconnect::NOT_AUTHORIZED);
+            return Disconnect::refuse(Disconnect::NOT_AUTHORIZED, (new Exception(Exception::USER_UNAUTHORIZED))->getMessage());
         }
 
         $connection->identity = $identity;
