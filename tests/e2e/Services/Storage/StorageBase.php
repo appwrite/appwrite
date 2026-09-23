@@ -522,6 +522,8 @@ trait StorageBase
             // HTML is not in the storage-mimes allowlist on purpose: rendering
             // user uploads as HTML on the API origin would allow stored XSS.
             ['source' => 'page.html', 'mimeType' => 'text/html', 'contentType' => 'text/plain', 'disposition' => 'inline'],
+            // A Gradle-built JAR sniffs as a plain zip, so its type comes from the extension.
+            ['source' => 'hello.jar', 'mimeType' => 'application/java-archive', 'contentType' => 'text/plain', 'disposition' => 'inline'],
         ];
 
         foreach ($cases as $case) {
