@@ -258,7 +258,8 @@ class Client implements Adapter
      */
     private function releaseSink(): void
     {
-        $this->streamConnection?->set(['write_func' => static function (): void {}]);
+        $this->streamConnection?->set(['write_func' => static function (): void {
+        }]);
     }
 
     /**
@@ -413,10 +414,11 @@ class Client implements Adapter
             $headers = $this->decoded($headers);
         }
 
-        $responseBody = $streaming ? '' : $client->body;
+        // A streamed body already went to the sink through write_func.
+        $responseBody = '';
 
-        if (!\is_string($responseBody)) {
-            $responseBody = '';
+        if (!$streaming && \is_string($client->body)) {
+            $responseBody = $client->body;
         }
 
         // Swoole keeps or closes the socket itself; never close it here.
@@ -487,7 +489,7 @@ class Client implements Adapter
             return false;
         }
 
-        return array_any($client->headers, fn($value, $name): bool => \is_string($name) && strcasecmp($name, Header::LOCATION) === 0 && \is_string($value) && $value !== '');
+        return array_any($client->headers, fn ($value, $name): bool => \is_string($name) && strcasecmp($name, Header::LOCATION) === 0 && \is_string($value) && $value !== '');
     }
 
     /**
