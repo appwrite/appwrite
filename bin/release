@@ -76,6 +76,24 @@ function parse(string $version): array
     return array_map(intval(...), $parts);
 }
 
+function work(string $version): string
+{
+    return "release/{$version}";
+}
+
+function title(string $version): string
+{
+    return "chore: prepare {$version} release";
+}
+
+/**
+ * The notes draft lives in the git directory: untracked, and kept until push.
+ */
+function draft(string $version): string
+{
+    return sh('git rev-parse --absolute-git-dir') . "/appwrite-{$version}-notes.md";
+}
+
 function line(string $version): string
 {
     [$major, $minor] = parse($version);
@@ -155,9 +173,19 @@ function pinned(?string $commit = null): string
     fail('console image ' . CONSOLE_IMAGE . ' not found in ' . COMPOSE);
 }
 
+/**
+ * The newest console release whose self-hosted image is on Docker Hub. The
+ * image trails the GitHub release by a few minutes, so an older one may win.
+ */
 function latestConsole(): string
 {
-    return sh('gh release list -R ' . CONSOLE_REPOSITORY . " --exclude-drafts --exclude-pre-releases --limit 1 --json tagName --jq '.[0].tagName'");
+    $tags = sh('gh release list -R ' . CONSOLE_REPOSITORY . " --exclude-drafts --exclude-pre-releases --limit 10 --json tagName --jq '.[].tagName'");
+    foreach (explode("\n", $tags) as $tag) {
+        if ($tag !== '' && published(CONSOLE_IMAGE, $tag . CONSOLE_SUFFIX)) {
+            return $tag;
+        }
+    }
+    fail('none of the last 10 ' . CONSOLE_REPOSITORY . ' releases has a ' . CONSOLE_IMAGE . ' image with the ' . CONSOLE_SUFFIX . ' suffix');
 }
 
 function published(string $image, string $tag): bool
@@ -359,34 +387,34 @@ $arguments = array_values(array_filter($arguments, function (string $argument) u
 
 switch ($command) {
     case 'prepare':
-        $version = $arguments[0] ?? fail('usage: release prepare <version> [--push]');
+        $version = $arguments[0] ?? fail('usage: release prepare <version>');
         [, , $patch] = parse($version);
         $branch = branch($version);
+        $work = work($version);
 
         if (sh('git status --porcelain') !== '') {
             fail('working tree is dirty; commit or stash first');
+        }
+        if (succeeds('git rev-parse --verify --quiet ' . escapeshellarg("refs/heads/{$work}"))) {
+            fail("{$work} already exists; push it with `bin/release push {$version}`, or delete it to start over");
         }
         sh('git fetch --quiet --tags origin');
         if (sh('git tag --list ' . escapeshellarg($version)) !== '') {
             fail("tag {$version} already exists");
         }
 
+        // The work branch starts from the remote ref directly, so a checked-out
+        // local X.Y.x is never touched. A minor's X.Y.x is created on push, at
+        // the parent of the prepare commit.
         $previous = previous($version);
         $exists = succeeds('git ls-remote --exit-code --heads origin ' . escapeshellarg($branch));
         if (!$exists && $patch > 0) {
             fail("{$branch} does not exist on origin; a patch is released from its minor's branch");
         }
-        if (!$exists) {
-            sh('git fetch --quiet origin main');
-            sh('git branch --force ' . escapeshellarg($branch) . ' origin/main');
-            out("cut {$branch} from origin/main (local)");
-        } else {
-            sh('git fetch --quiet origin ' . escapeshellarg($branch));
-            sh('git branch --force ' . escapeshellarg($branch) . ' ' . escapeshellarg("origin/{$branch}"));
-        }
-
-        $work = "release/{$version}";
-        sh('git checkout --quiet -B ' . escapeshellarg($work) . ' ' . escapeshellarg($branch));
+        $base = $exists ? "origin/{$branch}" : 'origin/main';
+        sh('git fetch --quiet origin ' . escapeshellarg($exists ? $branch : 'main'));
+        sh('git checkout --quiet -b ' . escapeshellarg($work) . ' ' . escapeshellarg($base));
+        out("{$work} from {$base}" . ($exists ? '' : "; {$branch} is created at the same commit on push"));
 
         $current = stable();
         replace(CONSTANTS, "const APP_VERSION_STABLE = '{$current}';", "const APP_VERSION_STABLE = '{$version}';");
@@ -399,9 +427,6 @@ switch ($command) {
 
         $previousConsole = pinned();
         $console = latestConsole();
-        if (!published(CONSOLE_IMAGE, $console . CONSOLE_SUFFIX)) {
-            fail('newest console ' . CONSOLE_IMAGE . ":{$console}" . CONSOLE_SUFFIX . ' is not on Docker Hub yet; wait for its build');
-        }
         replace(COMPOSE, CONSOLE_IMAGE . ":{$previousConsole}" . CONSOLE_SUFFIX, CONSOLE_IMAGE . ":{$console}" . CONSOLE_SUFFIX);
         out("console {$previousConsole} → {$console}");
 
@@ -423,24 +448,42 @@ switch ($command) {
         }
 
         sh('git add ' . implode(' ', array_map(escapeshellarg(...), [CONSTANTS, COMPOSE, MIGRATION, ...READMES])));
-        sh('git commit --quiet -m ' . escapeshellarg("chore: prepare {$version} release"));
+        sh('git commit --quiet -m ' . escapeshellarg(title($version)));
 
-        $draft = sys_get_temp_dir() . "/appwrite-{$version}-notes.md";
+        $draft = draft($version);
         file_put_contents($draft, notes($version, $previous, $exists ? $branch : 'main', $console, $previousConsole));
         out("committed on {$work}; notes draft: {$draft}");
+        out("next: review and amend the commit and the draft, then `bin/release push {$version}`");
+        break;
 
-        if (!isset($options['push'])) {
-            out("next: review the commit, then rerun with --push to push {$branch}, {$work} and open both PRs");
-            break;
+    case 'push':
+        $version = $arguments[0] ?? fail('usage: release push <version>');
+        parse($version);
+        $branch = branch($version);
+        $work = work($version);
+        $draft = draft($version);
+
+        succeeds('git rev-parse --verify --quiet ' . escapeshellarg("refs/heads/{$work}"))
+            || fail("{$work} does not exist; run `bin/release prepare {$version}` first");
+        is_file($draft) || fail("notes draft {$draft} not found");
+        $problems = problems($version, $work);
+        if ($problems !== []) {
+            fail("{$work} fails the check:\n  " . implode("\n  ", $problems));
         }
 
-        if (!$exists) {
-            sh('git push --quiet origin ' . escapeshellarg("{$branch}:refs/heads/{$branch}"));
-            out("pushed {$branch}");
+        // Pushes exactly what was prepared and reviewed: the branch as it is
+        // and the draft as edited. Nothing is regenerated.
+        sh('git fetch --quiet origin main');
+        if (!succeeds('git ls-remote --exit-code --heads origin ' . escapeshellarg($branch))) {
+            $base = sh('git rev-parse ' . escapeshellarg("{$work}^"));
+            succeeds('git merge-base --is-ancestor ' . escapeshellarg($base) . ' origin/main')
+                || fail("the parent of {$work} ({$base}) is not on origin/main");
+            sh('git push --quiet origin ' . escapeshellarg("{$base}:refs/heads/{$branch}"));
+            out("pushed {$branch} at {$base}");
         }
-        sh('git push --quiet --force-with-lease -u origin ' . escapeshellarg($work));
+        sh('git push --quiet -u origin ' . escapeshellarg($work));
         out(sh('gh pr create -R ' . REPOSITORY . ' --base ' . escapeshellarg($branch) . ' --head ' . escapeshellarg($work)
-            . ' --title ' . escapeshellarg("chore: prepare {$version} release") . ' --body-file ' . escapeshellarg($draft)));
+            . ' --title ' . escapeshellarg(title($version)) . ' --body-file ' . escapeshellarg($draft)));
 
         $open = sh('gh pr list -R ' . REPOSITORY . ' --base main --head ' . escapeshellarg($branch) . " --json number --jq '.[0].number // empty'");
         if ($open === '') {
@@ -453,6 +496,7 @@ switch ($command) {
     case 'check':
         $version = $arguments[0] ?? fail('usage: release check <version> [--ref=<commit>]');
         parse($version);
+        sh('git fetch --quiet --tags origin');
         $reference = is_string($options['ref'] ?? null) ? $options['ref'] : null;
         $problems = problems($version, $reference);
         if ($problems !== []) {
@@ -512,10 +556,11 @@ switch ($command) {
         out(<<<'HELP'
         usage: bin/release <command>
 
-          prepare <version> [--push]          cut X.Y.x for a minor, bump the version, READMEs, console
-                                              pin and migration mapping on release/<version>, commit,
-                                              and draft the notes; --push pushes and opens the prep PR
-                                              and the X.Y.x → main PR
+          prepare <version>                   branch release/<version> off X.Y.x (off main for a minor),
+                                              bump the version, READMEs, console pin and migration
+                                              mapping, commit, and draft the notes
+          push <version>                      push release/<version> as prepared (and X.Y.x for a minor),
+                                              open the prep PR with the draft and the X.Y.x → main PR
           check <version> [--ref=<commit>]    fail unless the release metadata is consistent
           publish <version> --sha=<tested-sha> --notes=<file>
                                               verify the tested commit and publish the GitHub Release

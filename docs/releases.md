@@ -46,21 +46,21 @@ Every release is tagged from its `X.Y.x` branch, never from `main`. The branch g
 [`bin/release`](../bin/release) runs on the host and does the mechanical part:
 
 ```
-bin/release prepare X.Y.Z           # branch release/X.Y.Z off X.Y.x (cut from main for a minor), bump, commit, draft notes
-bin/release prepare X.Y.Z --push    # also push X.Y.x and release/X.Y.Z, open the prep PR and the X.Y.x → main PR
+bin/release prepare X.Y.Z   # branch release/X.Y.Z off origin/X.Y.x (origin/main for a minor), bump, commit, draft notes
+bin/release push X.Y.Z      # push release/X.Y.Z as reviewed (and X.Y.x for a minor), open the prep PR and the X.Y.x → main PR
 bin/release check X.Y.Z [--ref=<commit>]
 ```
 
-`prepare` refuses a dirty tree or an existing tag, and fails if the result does not pass `check`. It changes:
+`prepare` refuses a dirty tree, an existing tag or an existing `release/X.Y.Z`, never touches a local `X.Y.x`, and fails if the result does not pass `check`. Review and amend its commit and draft before `push`, which pushes them as they are and regenerates nothing. It changes:
 
 - [`app/init/constants.php`](../app/init/constants.php): `APP_VERSION_STABLE`.
 - [`README.md`](../README.md) and [`README-CN.md`](../README-CN.md): every `appwrite/appwrite:X.Y.Z` install snippet.
-- [`docker-compose.yml`](../docker-compose.yml): the `appwrite-console` image, set to the newest [`appwrite/vibes` release](https://github.com/appwrite/vibes/releases) whose `appwrite/new:<console>-self-hosted` image is on Docker Hub. Vibes publishes several releases a day, so a pin already bumped on `main` is usually stale.
+- [`docker-compose.yml`](../docker-compose.yml): the `appwrite-console` image, set to the newest of the last 10 [`appwrite/vibes` releases](https://github.com/appwrite/vibes/releases) whose `appwrite/new:<console>-self-hosted` image is on Docker Hub (the image trails the release by a few minutes). Vibes publishes several releases a day, so a pin already bumped on `main` is usually stale.
 - [`src/Appwrite/Migration/Migration.php`](../src/Appwrite/Migration/Migration.php): maps the version to the previous version's class unless it is already mapped. It warns when migrations changed since the last tag; then confirm the class stays idempotent for installs that already ran it. A minor that needs a new class gets it by hand. `check` fails a patch that maps to a different class than the previous version (rule 1).
 
 A **minor** (`2.2.0` → `2.3.0`) is anything with new public API, a schema change or removed env vars. A **patch** is fixes only (see rule 1).
 
-`prepare` also writes a release-notes draft (its path is printed, and `--push` uses it as the prep PR body): the section skeleton of the published [2.2.0 release](https://github.com/appwrite/appwrite/releases/tag/2.2.0) with the install and upgrade commands and contributors filled in, followed by GitHub's generated PR list. Rewrite it in the prep PR body so it is reviewed with the bump, listing only what a self-hosted user can reach through the API and the pinned console. Leave out API additions that have no console screen yet, and say so in the PR. The sections:
+`prepare` also writes a release-notes draft to the git directory (its path is printed, and `push` uses it as the prep PR body): the section skeleton of the published [2.2.0 release](https://github.com/appwrite/appwrite/releases/tag/2.2.0) with the install and upgrade commands and contributors filled in, followed by GitHub's generated PR list. Rewrite it in the prep PR body so it is reviewed with the bump, listing only what a self-hosted user can reach through the API and the pinned console. Leave out API additions that have no console screen yet, and say so in the PR. The sections:
 
 - one intro paragraph: themes, console version, upgrade effort
 - `### Highlights`, including the console bump
