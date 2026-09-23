@@ -27,8 +27,9 @@ use Utopia\DI\Container;
 
 /**
  * The HTTP `getDatabasesDB` resource wires the Metadata hook of every tenant database it hands out: the hook must
- * know the public ID of the collection the caller passed without querying the catalog for it. Cloud keeps its own
- * copy of the resource, so the closure contract stays as it is.
+ * know the public ID of the collection the caller passed without querying the catalog for it, and must record
+ * what it decorates on the request's operations counter. Cloud keeps its own copy of the resource, so the closure
+ * contract stays as it is.
  */
 final class MetadataResourceTest extends TestCase
 {
@@ -83,6 +84,26 @@ final class MetadataResourceTest extends TestCase
 
         $this->assertSame('movies', $film->getAttribute('$collectionId'), 'the public ID comes from the collection the caller passed');
         $this->assertSame('cinema', $film->getAttribute('$databaseId'));
+    }
+
+    public function testRequestResourceRecordsReadsOnTheRequestCounter(): void
+    {
+        $catalog = $this->createStub(Database::class);
+        $catalog->method('getAuthorization')->willReturn($this->authorization);
+        $catalog->method('silent')->willReturnCallback(static fn (callable $callback): mixed => $callback());
+        $catalog->method('findOne')->willReturn(new Document(['$id' => 'actors']));
+
+        $container = $this->requestContainer($catalog);
+        $getDatabasesDB = $container->get('getDatabasesDB');
+        $cinema = new Document(['$id' => 'cinema', '$sequence' => '4']);
+        $movies = new Document(['$id' => 'movies', '$sequence' => '9']);
+
+        $film = $getDatabasesDB($cinema, $movies)->getDocument(self::MOVIES, 'film');
+        $again = $getDatabasesDB($cinema, $movies)->getDocument(self::MOVIES, 'film');
+
+        $this->assertInstanceOf(Document::class, $film->getAttribute('lead'));
+        $this->assertSame(2, $container->get('operations')->reads([$film]), 'the film and its lead actor');
+        $this->assertSame(4, $container->get('operations')->reads([$film, $again]), 'every tenant database of the request records on one counter');
     }
 
     public function testRequestResourceKeepsItsClosureContract(): void

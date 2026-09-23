@@ -10,6 +10,7 @@ use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Usage\Context;
+use Appwrite\Usage\Operations;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
@@ -77,10 +78,11 @@ class Get extends Action
             ->inject('transactionState')
             ->inject('authorization')
             ->inject('user')
+            ->inject('operations')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $documentId, array $queries, ?string $transactionId, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, Context $usage, TransactionState $transactionState, Authorization $authorization, User $user): void
+    public function action(string $databaseId, string $collectionId, string $documentId, array $queries, ?string $transactionId, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, Context $usage, TransactionState $transactionState, Authorization $authorization, User $user, Operations $operations = new Operations()): void
     {
         $isAPIKey = $user->isKey($authorization->getRoles());
         $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
@@ -134,14 +136,14 @@ class Get extends Action
             throw new Exception($this->getNotFoundException(), params: [$documentId]);
         }
 
-        $operations = 1;
+        $reads = $operations->reads([$document]);
         $usage
             ->setResource('database')
             ->setResourceId($database->getId())
             ->setResourceInternalId((string) $database->getSequence())
-            ->addMetric($this->getDatabasesOperationReadMetric(), max($operations, 1));
+            ->addMetric($this->getDatabasesOperationReadMetric(), $reads);
 
-        $response->addHeader('X-Debug-Operations', $operations);
+        $response->addHeader('X-Debug-Operations', $reads);
 
         $response->dynamic($document, $this->getResponseModel());
     }

@@ -13,6 +13,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Parameter;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Usage\Context;
+use Appwrite\Usage\Operations;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response as UtopiaResponse;
@@ -386,6 +387,9 @@ class Create extends Action
 
         $dbForDatabases = $getDatabasesDB($database, $collection);
         $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
+        $writes = Operations::writes($collection, $documents, fn (string $id): Document => $authorization->skip(
+            fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $id)
+        ));
         try {
             $created = [];
             $dbForDatabases->withPreserveDates(
@@ -418,12 +422,11 @@ class Create extends Action
             ->setParam('tableId', $collection->getId())
             ->setContext($this->getCollectionsEventsContext(), $collection);
 
-        $operations = \count($isBulk ? $created : $documents);
         $usage
             ->setResource('database')
             ->setResourceId($database->getId())
             ->setResourceInternalId((string) $database->getSequence())
-            ->addMetric($this->getDatabasesOperationWriteMetric(), \max(1, $operations));
+            ->addMetric($this->getDatabasesOperationWriteMetric(), \max(1, $writes));
 
         $response->setStatusCode(SwooleResponse::STATUS_CODE_CREATED);
 

@@ -27,6 +27,7 @@ use Appwrite\Network\Validator\Origin;
 use Appwrite\Network\Validator\Redirect;
 use Appwrite\Usage\Connection as UsageConnection;
 use Appwrite\Usage\Context as UsageContext;
+use Appwrite\Usage\Operations;
 use Appwrite\Usage\Policy as UsagePolicy;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Database\Hooks\FunctionCache;
@@ -1024,9 +1025,11 @@ return function (Container $context): void {
         return new Document([]);
     }, ['project', 'dbForProject', 'request', 'authorization']);
 
-    $context->set('getDatabasesDB', function (DatabaseFactory $databaseFactory, Document $project, Request $request, Database $dbForProject, UsageContext $usage) {
+    $context->set('operations', fn (): Operations => new Operations(), []);
 
-        return function (Document $database, ?Document $collection = null) use ($databaseFactory, $project, $request, $dbForProject, $usage): Database {
+    $context->set('getDatabasesDB', function (DatabaseFactory $databaseFactory, Document $project, Request $request, Database $dbForProject, UsageContext $usage, Operations $operations) {
+
+        return function (Document $database, ?Document $collection = null) use ($databaseFactory, $project, $request, $dbForProject, $usage, $operations): Database {
             $originalDatabase = $database;
             $context = str_contains($request->getURI(), '/tablesdb/') ? 'table' : 'collection';
             $publicIds = $collection === null || $collection->isEmpty()
@@ -1052,13 +1055,14 @@ return function (Container $context): void {
                     context: $context,
                     resolvePublicId: Metadata::resolver($database, $dbForProject, $publicIds),
                     tenant: $database,
+                    operations: $operations,
                 ))
                 ->addHook(new Usage($usage, $originalDatabase->getAttribute('type', '')));
 
             return $database;
         };
 
-    }, ['databaseFactory', 'project', 'request', 'dbForProject', 'usage']);
+    }, ['databaseFactory', 'project', 'request', 'dbForProject', 'usage', 'operations']);
 
     $context->set(
         'transactionState',

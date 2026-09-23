@@ -11,6 +11,7 @@ use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Usage\Context;
+use Appwrite\Usage\Operations;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
@@ -266,11 +267,14 @@ class Update extends Action
             throw new Exception($this->getStructureException(), $e->getMessage());
         }
 
+        $writes = Operations::writes($collection, [$data], fn (string $id): Document => $authorization->skip(
+            fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $id)
+        ));
         $usage
             ->setResource('database')
             ->setResourceId($database->getId())
             ->setResourceInternalId((string) $database->getSequence())
-            ->addMetric($this->getDatabasesOperationWriteMetric(), 1);
+            ->addMetric($this->getDatabasesOperationWriteMetric(), $writes);
 
         $response->dynamic($document, $this->getResponseModel());
 

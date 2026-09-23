@@ -2,6 +2,7 @@
 
 namespace Appwrite\Utopia\Database\Hooks;
 
+use Appwrite\Usage\Operations;
 use Appwrite\Utopia\Database\Adapter\Pool;
 use Closure;
 use Override;
@@ -24,7 +25,7 @@ class Metadata implements Decorator
     /** @var array<string, string> */
     private array $publicIds = [];
 
-    private int $operations = 0;
+    private int $total = 0;
 
     /** @var Closure(string): string|null */
     private readonly ?Closure $resolvePublicId;
@@ -37,6 +38,7 @@ class Metadata implements Decorator
         private readonly string $context = 'collection',
         ?callable $resolvePublicId = null,
         private readonly ?Database $tenant = null,
+        private readonly ?Operations $operations = null,
     ) {
         $this->resolvePublicId = $resolvePublicId === null ? null : $resolvePublicId(...);
     }
@@ -48,26 +50,26 @@ class Metadata implements Decorator
             return $document;
         }
 
-        $this->operations++;
-
         $collectionId = $this->publicId($collection->getId());
         $document->setAttribute('$databaseId', $this->database->getId());
         $document->setAttribute('$' . $this->context . 'Id', $collectionId);
 
         $this->getRelationships($collection->getId(), $collection);
-        $this->decorateRelationships($collection->getId(), $document);
+        $operations = 1 + $this->decorateRelationships($collection->getId(), $document);
+        $this->total += $operations;
+        $this->operations?->record($document, $operations);
 
         return $document;
     }
 
     public function getOperations(): int
     {
-        return $this->operations;
+        return $this->total;
     }
 
     public function resetOperations(): void
     {
-        $this->operations = 0;
+        $this->total = 0;
     }
 
     public static function resolvePublicId(Database $dbForProject, string $internalId): string
@@ -125,12 +127,13 @@ class Metadata implements Decorator
     }
 
     /** @param array<int, true> $path */
-    private function decorateRelationships(string $collectionId, Document $document, int $depth = 0, array $path = []): void
+    private function decorateRelationships(string $collectionId, Document $document, int $depth = 0, array $path = []): int
     {
         if ($depth >= Database::RELATION_MAX_DEPTH - 1) {
-            return;
+            return 0;
         }
 
+        $operations = 0;
         $path[\spl_object_id($document)] = true;
         $parentPublicId = $this->publicId($collectionId);
         $relationships = $this->getRelationships($collectionId);
@@ -141,7 +144,7 @@ class Metadata implements Decorator
 
             if (empty($related)) {
                 if (\in_array(\gettype($related), ['array', 'object'])) {
-                    $this->operations++;
+                    $operations++;
                 }
                 continue;
             }
@@ -150,7 +153,7 @@ class Metadata implements Decorator
 
             foreach ($relations as $relation) {
                 if ($relation instanceof Document && !isset($path[\spl_object_id($relation)])) {
-                    $this->operations++;
+                    $operations++;
                     $relation->setAttribute('$databaseId', $this->database->getId());
                     $relatedInternalId = $relation->getCollection();
                     $relation->setAttribute(
@@ -162,11 +165,13 @@ class Metadata implements Decorator
 
                     $relatedCollectionId = $relationship->getAttribute('options', [])['relatedCollection'] ?? '';
                     if ($relatedCollectionId !== '') {
-                        $this->decorateRelationships($relatedCollectionId, $relation, $depth + 1, $path);
+                        $operations += $this->decorateRelationships($relatedCollectionId, $relation, $depth + 1, $path);
                     }
                 }
             }
         }
+
+        return $operations;
     }
 
     /**

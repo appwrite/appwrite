@@ -10,6 +10,7 @@ use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Usage\Context;
+use Appwrite\Usage\Operations;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
@@ -88,10 +89,11 @@ class XList extends Action
             ->inject('transactionState')
             ->inject('authorization')
             ->inject('utopia')
+            ->inject('operations')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, array $queries, ?string $transactionId, bool $includeTotal, int $ttl, UtopiaResponse $response, Database $dbForProject, User $user, callable $getDatabasesDB, Context $usage, TransactionState $transactionState, Authorization $authorization, ?Http $utopia = null): void
+    public function action(string $databaseId, string $collectionId, array $queries, ?string $transactionId, bool $includeTotal, int $ttl, UtopiaResponse $response, Database $dbForProject, User $user, callable $getDatabasesDB, Context $usage, TransactionState $transactionState, Authorization $authorization, ?Http $utopia = null, Operations $operations = new Operations()): void
     {
         $isAPIKey = $user->isKey($authorization->getRoles());
         $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
@@ -255,12 +257,11 @@ class XList extends Action
 
         $dbDurationMs = (\microtime(true) - $dbStart) * 1000;
 
-        $operations = \count($documents);
         $usage
             ->setResource('database')
             ->setResourceId($database->getId())
             ->setResourceInternalId((string) $database->getSequence())
-            ->addMetric($this->getDatabasesOperationReadMetric(), max($operations, 1));
+            ->addMetric($this->getDatabasesOperationReadMetric(), \max($operations->reads($documents), 1));
 
         $response->dynamic(new Document([
             'total' => $total,

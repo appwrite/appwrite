@@ -11,6 +11,7 @@ use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Usage\Context;
+use Appwrite\Usage\Operations;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response as UtopiaResponse;
@@ -280,11 +281,14 @@ class Upsert extends Action
 
         $document = $upserted[0];
 
+        $writes = Operations::writes($collection, [$data], fn (string $id): Document => $authorization->skip(
+            fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $id)
+        ));
         $usage
             ->setResource('database')
             ->setResourceId($database->getId())
             ->setResourceInternalId((string) $database->getSequence())
-            ->addMetric($this->getDatabasesOperationWriteMetric(), 1);
+            ->addMetric($this->getDatabasesOperationWriteMetric(), $writes);
 
         $relationships = \array_map(
             fn ($document) => $document->getAttribute('key'),
