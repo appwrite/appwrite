@@ -100,17 +100,30 @@ class Connection
         $this->adapter->send($this->fd, $this->protocol >= V5::PROTOCOL_LEVEL ? V5::puback($id) : V3::puback($id));
     }
 
-    public function disconnect(int $reason = 0): void
+    /**
+     * Close this connection, first sending a DISCONNECT to the client. A non-zero reason code
+     * (and, on 5.0, an optional human-readable Reason String) is only carried on the wire for
+     * 5.0 clients; 3.1.1 has no server-initiated DISCONNECT, so the socket is just closed. The
+     * close always happens — the caller does not close separately.
+     */
+    public function disconnect(int $reason = 0, ?string $reasonString = null): void
     {
         if ($this->adapter === null) {
             return;
         }
 
-        if ($reason !== 0 && $this->protocol >= V5::PROTOCOL_LEVEL) {
-            $this->adapter->send($this->fd, V5::disconnect($reason));
+        try {
+            if ($reason !== 0 && $this->protocol >= V5::PROTOCOL_LEVEL) {
+                $properties = null;
+                if ($reasonString !== null && $reasonString !== '') {
+                    $properties = (new Properties())->add(new Property(Property::REASON_STRING, $reasonString));
+                }
+                $this->adapter->send($this->fd, V5::disconnect($reason, $properties));
+            }
+        } finally {
+            // Closing is the point of this method: a failed courtesy DISCONNECT must not leak the socket.
+            $this->adapter->close($this->fd);
         }
-
-        $this->adapter->close($this->fd);
     }
 
     /**
