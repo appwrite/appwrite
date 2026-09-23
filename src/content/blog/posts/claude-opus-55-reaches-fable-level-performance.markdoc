@@ -66,7 +66,7 @@ Claude Opus 5.5 leads on agentic coding, computer use, and knowledge work. Anthr
 
 Two caveats worth carrying into your own evaluation. Opus 5.5 was benchmarked with production safeguards enabled, so cybersecurity tasks fell back to Opus 4.8 and biology tasks to Opus 5 when classifiers intervened, which likely understates its scores. And [AutomationBench](https://zapier.com/) was run by Zapier without fallback models, so every safeguard intervention counted as a failure.
 
-# Claude Opus 5.5 pricing: 40% cheaper than Opus 5
+# Claude Opus 5.5 pricing: 40% lower typical workload costs
 
 **Claude Opus 5.5 costs $4 per million input tokens and $20 per million output tokens, 20% less than Opus 5.** Cache reads drop 60% to $0.20 per million tokens, which matters most because cache reads make up the majority of agentic and coding costs.
 
