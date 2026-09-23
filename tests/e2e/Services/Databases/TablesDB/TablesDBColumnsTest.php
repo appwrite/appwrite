@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\E2E\Services\Databases\TablesDB;
 
+use Appwrite\Extend\Exception;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -153,5 +154,57 @@ final class TablesDBColumnsTest extends Scope
 
         $this->assertEquals(400, $table['headers']['status-code']);
         $this->assertStringContainsString("Invalid type for attribute 'unknown': blob", (string) $table['body']['message']);
+    }
+
+    /**
+     * A column created inline carries only the filters its per-column endpoint
+     * sets, so an internal filter such as subQueryAttributes is refused.
+     */
+    public function testCreateTableColumnFiltersAreLimited(): void
+    {
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $database = $this->client->call(Client::METHOD_POST, '/tablesdb', $headers, [
+            'databaseId' => ID::unique(),
+            'name' => 'Inline Column Filters',
+        ]);
+
+        $this->assertSame(201, $database['headers']['status-code']);
+        $databaseId = $database['body']['$id'];
+        $tableId = ID::unique();
+
+        $table = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', $headers, [
+            'tableId' => $tableId,
+            'name' => 'Internal Filters',
+            'columns' => [
+                ['key' => 'name', 'type' => 'string', 'size' => 128, 'filters' => ['subQueryAttributes']],
+            ],
+        ]);
+
+        $this->assertSame(400, $table['headers']['status-code']);
+        $this->assertSame(Exception::GENERAL_ARGUMENT_INVALID, $table['body']['type']);
+        $this->assertSame("Invalid filter for attribute 'name': subQueryAttributes", $table['body']['message']);
+
+        $missing = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId, $headers);
+        $this->assertSame(404, $missing['headers']['status-code']);
+
+        $encrypted = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', $headers, [
+            'tableId' => ID::unique(),
+            'name' => 'Encrypted',
+            'columns' => [
+                ['key' => 'secret', 'type' => 'string', 'size' => APP_DATABASE_ENCRYPT_SIZE_MIN, 'filters' => ['encrypt']],
+            ],
+        ]);
+
+        $this->assertSame(201, $encrypted['headers']['status-code']);
+
+        $column = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $encrypted['body']['$id'] . '/columns/secret', $headers);
+
+        $this->assertSame(200, $column['headers']['status-code']);
+        $this->assertTrue($column['body']['encrypt']);
     }
 }

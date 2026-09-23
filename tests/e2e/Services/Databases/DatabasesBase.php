@@ -1778,6 +1778,117 @@ trait DatabasesBase
         $this->assertSame(['ratio', 'score'], $keys);
     }
 
+    public function testCreateCollectionInlineFiltersAreLimited(): void
+    {
+        if (!$this->getSupportForAttributes()) {
+            $this->markTestSkipped('Attributes are not supported by this database adapter');
+        }
+
+        $databaseId = $this->setupDatabase()['databaseId'];
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $schemaResource = $this->getSchemaResource();
+        $containerId = ID::unique();
+
+        $internal = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => $containerId,
+            'name' => 'Internal Filters',
+            $schemaResource => [
+                ['key' => 'name', 'type' => ColumnType::String->value, 'size' => 128, 'filters' => ['subQueryAttributes']],
+            ],
+        ]);
+
+        $this->assertSame(400, $internal['headers']['status-code']);
+        $this->assertSame(Exception::GENERAL_ARGUMENT_INVALID, $internal['body']['type']);
+        $this->assertSame("Invalid filter for attribute 'name': subQueryAttributes", $internal['body']['message']);
+
+        $missing = $this->client->call(Client::METHOD_GET, $this->getContainerUrl($databaseId, $containerId), $headers);
+        $this->assertSame(404, $missing['headers']['status-code']);
+
+        foreach ([
+            'encrypt off a string' => ['key' => 'count', 'type' => ColumnType::Integer->value, 'filters' => ['encrypt']],
+            'encrypt below the minimum size' => ['key' => 'secret', 'type' => ColumnType::String->value, 'size' => APP_DATABASE_ENCRYPT_SIZE_MIN - 1, 'filters' => ['encrypt']],
+            'encrypt on a format' => ['key' => 'email', 'type' => APP_DATABASE_ATTRIBUTE_EMAIL, 'filters' => ['encrypt']],
+            'range on a datetime' => ['key' => 'published', 'type' => ColumnType::Datetime->value, 'filters' => ['range']],
+            'filters not a list' => ['key' => 'label', 'type' => ColumnType::String->value, 'size' => 128, 'filters' => 'encrypt'],
+        ] as $case => $attribute) {
+            $rejected = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+                $this->getContainerIdParam() => ID::unique(),
+                'name' => 'Rejected Filters',
+                $schemaResource => [$attribute],
+            ]);
+
+            $this->assertSame(400, $rejected['headers']['status-code'], $case);
+            $this->assertSame(Exception::GENERAL_ARGUMENT_INVALID, $rejected['body']['type'], $case);
+            $this->assertStringContainsString("attribute '" . $attribute['key'] . "'", $rejected['body']['message'], $case);
+        }
+    }
+
+    /**
+     * The filters the endpoints set still work inline: an encrypted string reads
+     * back in plain text and cannot be queried, like one the string endpoint made.
+     */
+    public function testCreateCollectionInlineEncryptedString(): void
+    {
+        if (!$this->getSupportForAttributes()) {
+            $this->markTestSkipped('Attributes are not supported by this database adapter');
+        }
+
+        $databaseId = $this->setupDatabase()['databaseId'];
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $schemaResource = $this->getSchemaResource();
+
+        $container = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => ID::unique(),
+            'name' => 'Inline Encrypted',
+            'permissions' => [
+                Permission::create(Role::any()),
+                Permission::read(Role::any()),
+            ],
+            $schemaResource => [
+                ['key' => 'secret', 'type' => ColumnType::String->value, 'size' => APP_DATABASE_ENCRYPT_SIZE_MIN, 'filters' => ['encrypt']],
+                ['key' => 'published', 'type' => ColumnType::Datetime->value, 'filters' => ['datetime']],
+            ],
+        ]);
+
+        $this->assertSame(201, $container['headers']['status-code']);
+        $containerId = $container['body']['$id'];
+
+        $secret = $this->client->call(Client::METHOD_GET, $this->getSchemaUrl($databaseId, $containerId, '', 'secret'), $headers);
+
+        $this->assertSame(200, $secret['headers']['status-code']);
+        $this->assertTrue($secret['body']['encrypt']);
+
+        $record = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $containerId), $headers, [
+            $this->getRecordIdParam() => ID::unique(),
+            'data' => ['secret' => 'hunter2'],
+        ]);
+
+        $this->assertSame(201, $record['headers']['status-code']);
+        $this->assertSame('hunter2', $record['body']['secret']);
+
+        $read = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $containerId, $record['body']['$id']), $headers);
+
+        $this->assertSame(200, $read['headers']['status-code']);
+        $this->assertSame('hunter2', $read['body']['secret']);
+
+        $queried = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $containerId), $headers, [
+            'queries' => [
+                Query::equal('secret', ['hunter2'])->toString(),
+            ],
+        ]);
+
+        $this->assertSame(400, $queried['headers']['status-code']);
+        $this->assertStringContainsString('Cannot query encrypted attribute', $queried['body']['message']);
+    }
+
     public function testListAttributes(): void
     {
         if (!$this->getSupportForAttributes()) {
