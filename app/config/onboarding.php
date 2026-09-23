@@ -4,7 +4,7 @@
  * Project onboarding stages keyed by SDK method (namespace + method name, same as Appwrite\SDK\Method).
  * Values are `true` for O(1) isset() lookup in the API shutdown hook. Each key is persisted under
  * project.onboarding when the matching API call succeeds. CLI and MCP install
- * stages are also completed from x-sdk-name / x-sdk-language on any successful request.
+ * stages are also completed from x-sdk-name (and x-sdk-language for CLI) on success.
  */
 return [
     // Connect — register platform
@@ -16,8 +16,7 @@ return [
     // Connect — API key
     'project.createKey' => true, // TODO: Remove with the project-scoped keys endpoints
     'organization.createProjectKey' => true,
-    // Connect — CLI / MCP. Completed when a successful request sends a matching
-    // x-sdk-name (mcp, cli) or x-sdk-language (cli), not a dedicated SDK method.
+    // Connect — CLI / MCP (x-sdk-name mcp | cli | Command Line, or x-sdk-language cli).
     'cli.install' => true,
     'mcp.install' => true,
 

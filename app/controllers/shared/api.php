@@ -1197,6 +1197,15 @@ Http::shutdown()
             return;
         }
 
+        $sdkLabel = $route->getLabel('sdk', false);
+        $sdkName = $request->getHeaderLine('x-sdk-name', '');
+        $sdkLanguage = $request->getHeaderLine('x-sdk-language', '');
+        if (($sdkLabel === false || $sdkLabel === null)
+            && ! \in_array($sdkName, ['mcp', 'cli', 'Command Line'], true)
+            && $sdkLanguage !== 'cli') {
+            return;
+        }
+
         /** @var array<string, true> $onboarding */
         $onboarding = Config::getParam('onboarding', []);
         if ($onboarding === []) {
@@ -1204,7 +1213,6 @@ Http::shutdown()
         }
 
         $methods = [];
-        $sdkLabel = $route->getLabel('sdk', false);
         if ($sdkLabel instanceof Method) {
             $key = $sdkLabel->getNamespace() . '.' . $sdkLabel->getMethodName();
             if (isset($onboarding[$key])) {
@@ -1223,23 +1231,14 @@ Http::shutdown()
             }
         }
 
-        // CLI/MCP install stages are not SDK methods. Detect them from headers,
-        // but skip the lookup entirely when those headers are absent (almost every request).
-        $sdkName = $request->getHeaderLine('x-sdk-name', '');
-        $sdkLanguage = $request->getHeaderLine('x-sdk-language', '');
-        if ($sdkName !== '' || $sdkLanguage !== '') {
-            $installKey = match (\strtolower($sdkName)) {
-                'mcp' => 'mcp.install',
-                'cli', 'command line' => 'cli.install',
-                default => match (\strtolower($sdkLanguage)) {
-                    'mcp' => 'mcp.install',
-                    'cli' => 'cli.install',
-                    default => null,
-                },
-            };
-            if ($installKey !== null && isset($onboarding[$installKey])) {
-                $methods[$installKey] = true;
-            }
+        // CLI/MCP install stages are not SDK methods; match the client x-sdk-name header.
+        $installKey = match ($sdkName) {
+            'mcp' => 'mcp.install',
+            'cli', 'Command Line' => 'cli.install',
+            default => $sdkLanguage === 'cli' ? 'cli.install' : null,
+        };
+        if ($installKey !== null && isset($onboarding[$installKey])) {
+            $methods[$installKey] = true;
         }
 
         if ($methods === []) {
@@ -1264,20 +1263,6 @@ Http::shutdown()
             $byMethod = [];
         }
 
-        $pending = [];
-        foreach (\array_keys($methods) as $method) {
-            $row = $byMethod[$method] ?? null;
-            $status = \is_array($row) ? ($row['status'] ?? null) : null;
-            if ($status !== ONBOARDING_STATUS_COMPLETED && $status !== ONBOARDING_STATUS_SKIPPED) {
-                $pending[] = $method;
-            }
-        }
-
-        // Already recorded on the cached project document: no lock, no write.
-        if ($pending === []) {
-            return;
-        }
-
         $actorType = ($apiKey !== null && $apiKey->getRole() === User::ROLE_KEYS)
             ? match ($apiKey->getType()) {
                 API_KEY_ACCOUNT => ACTOR_TYPE_KEY_ACCOUNT,
@@ -1290,44 +1275,38 @@ Http::shutdown()
             : ACTOR_TYPE_GUEST);
 
         $now = DateTime::now();
+        $dirty = false;
+        foreach (\array_keys($methods) as $method) {
+            $row = $byMethod[$method] ?? null;
+            $status = \is_array($row) ? ($row['status'] ?? null) : null;
+            if ($status === ONBOARDING_STATUS_COMPLETED || $status === ONBOARDING_STATUS_SKIPPED) {
+                continue;
+            }
+            $byMethod[$method] = [
+                'status' => ONBOARDING_STATUS_COMPLETED,
+                'at' => $now,
+                'actorType' => $actorType,
+            ];
+            $dirty = true;
+        }
+
+        if (! $dirty) {
+            return;
+        }
 
         try {
-            // Re-read under the lock so a later request never rewrites a completed
-            // stage and so concurrent first-hits merge instead of overwriting JSON.
+            // last write overwriting the other's stage on multiple request
+            // onboarding is not a native array attribute, it is a string with json filter.
+            // we do not have a query operator for array merge keys
             $lock->tryWithKey(
                 'lock:platform:' . $project->getSequence() . ':onboarding',
-                function () use ($authorization, $dbForPlatform, $project, $pending, $actorType, $now) {
-                    $fresh = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $project->getId()));
-                    $byMethod = $fresh->getAttribute('onboarding', []);
-                    if (! \is_array($byMethod)) {
-                        $byMethod = [];
-                    }
-
-                    $write = [];
-                    foreach ($pending as $method) {
-                        $row = $byMethod[$method] ?? null;
-                        $status = \is_array($row) ? ($row['status'] ?? null) : null;
-                        if ($status === ONBOARDING_STATUS_COMPLETED || $status === ONBOARDING_STATUS_SKIPPED) {
-                            continue;
-                        }
-                        $write[$method] = [
-                            'status' => ONBOARDING_STATUS_COMPLETED,
-                            'at' => $now,
-                            'actorType' => $actorType,
-                        ];
-                    }
-
-                    if ($write === []) {
-                        return;
-                    }
-
-                    return $authorization->skip(fn () => $dbForPlatform->skipFilters(
-                        fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
-                            'onboarding' => \array_merge($byMethod, $write),
-                        ])),
-                        APP_PROJECTS_SUBQUERIES
-                    ));
-                },
+                // updateDocument never uses cache, so skip the subqueries.
+                fn () => $authorization->skip(fn () => $dbForPlatform->skipFilters(
+                    fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
+                        'onboarding' => $byMethod,
+                    ])),
+                    APP_PROJECTS_SUBQUERIES
+                )),
                 target: 'projects',
             );
         } catch (\Throwable) {
