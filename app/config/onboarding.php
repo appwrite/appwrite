@@ -63,6 +63,7 @@ return [
     'messaging.createMsg91Provider' => true,
     'messaging.createTelesignProvider' => true,
     'messaging.createTextmagicProvider' => true,
+    'messaging.createTelnyxProvider' => true,
     'messaging.createTwilioProvider' => true,
     'messaging.createVonageProvider' => true,
     'messaging.createFcmProvider' => true,

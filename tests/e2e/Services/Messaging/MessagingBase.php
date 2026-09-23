@@ -94,6 +94,12 @@ trait MessagingBase
                 'apiKey' => 'my-apikey',
                 'from' => '+123456789',
             ],
+            'telnyx' => [
+                'providerId' => ID::unique(),
+                'name' => 'Telnyx1',
+                'apiKey' => 'my-apikey',
+                'from' => '+123456789',
+            ],
             'msg91' => [
                 'providerId' => ID::unique(),
                 'name' => 'Ms91-1',
@@ -192,6 +198,10 @@ trait MessagingBase
             'textmagic' => [
                 'name' => 'Textmagic2',
                 'username' => 'my-username',
+                'apiKey' => 'my-apikey',
+            ],
+            'telnyx' => [
+                'name' => 'Telnyx2',
                 'apiKey' => 'my-apikey',
             ],
             'msg91' => [
@@ -807,6 +817,12 @@ trait MessagingBase
                 'apiKey' => 'my-apikey',
                 'from' => '+123456789',
             ],
+            'telnyx' => [
+                'providerId' => ID::unique(),
+                'name' => 'Telnyx1',
+                'apiKey' => 'my-apikey',
+                'from' => '+123456789',
+            ],
             'msg91' => [
                 'providerId' => ID::unique(),
                 'name' => 'Ms91-1',
@@ -1108,6 +1124,10 @@ trait MessagingBase
             'textmagic' => [
                 'name' => 'Textmagic2',
                 'username' => 'my-username',
+                'apiKey' => 'my-apikey',
+            ],
+            'telnyx' => [
+                'name' => 'Telnyx2',
                 'apiKey' => 'my-apikey',
             ],
             'msg91' => [

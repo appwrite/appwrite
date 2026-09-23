@@ -18,6 +18,7 @@ use Utopia\Messaging\Adapter\SMS\Inforu;
 use Utopia\Messaging\Adapter\SMS\Mock;
 use Utopia\Messaging\Adapter\SMS\Msg91;
 use Utopia\Messaging\Adapter\SMS\Telesign;
+use Utopia\Messaging\Adapter\SMS\Telnyx;
 use Utopia\Messaging\Adapter\SMS\TextMagic;
 use Utopia\Messaging\Adapter\SMS\Twilio;
 use Utopia\Messaging\Adapter\SMS\Vonage;
@@ -54,6 +55,9 @@ class Provider
             ),
             'textmagic' => new TextMagic(
                 $credentials['username'] ?? '',
+                $credentials['apiKey'] ?? ''
+            ),
+            'telnyx' => new Telnyx(
                 $credentials['apiKey'] ?? ''
             ),
             'telesign' => new Telesign(
