@@ -36,9 +36,9 @@ Nothing about the rest of your auth setup changes. The session behaves like any 
 
 # Enable native sign-in in the Console
 
-Native sign-in has its own switch on each provider, separate from the browser flow. Open your project in the Appwrite Console, go to **Auth**, open the **Social providers** tab, and select **Apple** or **Google**.
-
 ![Google provider settings with native sign-in enabled](/images/blog/announcing-native-sign-in/google-provider-native.avif)
+
+Native sign-in has its own switch on each provider, separate from the browser flow. Open your project in the Appwrite Console, go to **Auth**, open the **Social providers** tab, and select **Apple** or **Google**.
 
 Turn on **Native sign-in**, add your app's IDs in the field below the switch, and select **Update**. Appwrite only accepts tokens issued for these IDs. For Apple, the field is **Bundle IDs** and takes your app's bundle ID. For Google, the field is **Web client IDs** and takes the client ID of the **Web application** client in Google Cloud, not the Android or iOS client. The next section explains why.
 

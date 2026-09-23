@@ -16,6 +16,13 @@ Native sign-in creates an [identity](/docs/products/auth/identities) for the use
 
 # Enable native sign-in {% #enable %}
 
+{% only_dark %}
+![Google provider settings with native sign-in turned on and a web client ID added](/images/docs/auth/native-sign-in/dark/google-provider-native.avif)
+{% /only_dark %}
+{% only_light %}
+![Google provider settings with native sign-in turned on and a web client ID added](/images/docs/auth/native-sign-in/google-provider-native.avif)
+{% /only_light %}
+
 Native sign-in has its own switch on each provider, separate from browser sign-in. You can turn on either one, or both.
 
 1. In the Appwrite Console, open your project and go to **Auth**, then the **Social providers** tab.
