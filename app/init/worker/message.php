@@ -9,7 +9,6 @@ use Appwrite\Event\Publisher\Notification as NotificationPublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\Webhook;
 use Appwrite\Usage\Context;
-use Appwrite\Utopia\Database\Hooks\Usage;
 use OpenRuntimes\Orchestrator\Jobs;
 use Utopia\Audit\Adapter\Database as AdapterDatabase;
 use Utopia\Audit\Audit as UtopiaAudit;
@@ -93,8 +92,8 @@ return function (Container $container): void {
         };
     }, ['databaseFactory', 'dbForPlatform']);
 
-    $container->set('getDatabasesDB', function (DatabaseFactory $databaseFactory, Document $messageProject, Context $usage) {
-        return function (Document $database, ?Document $project = null) use ($databaseFactory, $messageProject, $usage): Database {
+    $container->set('getDatabasesDB', function (DatabaseFactory $databaseFactory, Document $messageProject) {
+        return function (Document $database, ?Document $project = null) use ($databaseFactory, $messageProject): Database {
             $project ??= $messageProject;
 
             // Backwards-compatibility: older or seeded legacy databases may not have a DSN stored
@@ -103,17 +102,13 @@ return function (Container $container): void {
                 ? new Document(\array_merge($database->getArrayCopy(), ['database' => $project->getAttribute('database', '')]))
                 : $database;
 
-            $dbForDatabases = $databaseFactory->tenant(
+            return $databaseFactory->tenant(
                 $databaseConfig,
                 $project,
                 APP_DATABASE_TIMEOUT_MILLISECONDS_WORKER,
             );
-
-            $dbForDatabases->addHook(new Usage($usage, $databaseConfig->getAttribute('type', '')));
-
-            return $dbForDatabases;
         };
-    }, ['databaseFactory', 'project', 'usage']);
+    }, ['databaseFactory', 'project']);
 
     $container->set('abuseRetention', function () {
         return \time() - (int) System::getEnv('_APP_MAINTENANCE_RETENTION_ABUSE', 86400); // 1 day

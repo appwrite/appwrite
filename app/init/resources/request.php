@@ -707,19 +707,12 @@ return function (Container $context): void {
             ['host' => \gethostname(), 'project' => $project->getId()]
         );
 
-        $path = $request->getURI();
-        $databaseType = match (true) {
-            str_contains($path, '/documentsdb') => DATABASE_TYPE_DOCUMENTSDB,
-            str_contains($path, '/vectorsdb') => DATABASE_TYPE_VECTORSDB,
-            default => '',
-        };
-
         $queueForEventsClone = new Event($publisher);
         $queueForWebhooksClone = clone $queueForWebhooks;
         $queueForRealtime = new Realtime();
 
         $database
-            ->addHook(new Usage($usage, $databaseType))
+            ->addHook(new Usage($usage))
             ->addHook(new UserEvents(
                 $project,
                 $response,
@@ -1027,9 +1020,9 @@ return function (Container $context): void {
 
     $context->set('operations', fn (): Operations => new Operations(), []);
 
-    $context->set('getDatabasesDB', function (DatabaseFactory $databaseFactory, Document $project, Request $request, Database $dbForProject, UsageContext $usage, Operations $operations) {
+    $context->set('getDatabasesDB', function (DatabaseFactory $databaseFactory, Document $project, Request $request, Database $dbForProject, Operations $operations) {
 
-        return function (Document $database, ?Document $collection = null) use ($databaseFactory, $project, $request, $dbForProject, $usage, $operations): Database {
+        return function (Document $database, ?Document $collection = null) use ($databaseFactory, $project, $request, $dbForProject, $operations): Database {
             $originalDatabase = $database;
             $context = str_contains($request->getURI(), '/tablesdb/') ? 'table' : 'collection';
             $publicIds = $collection === null || $collection->isEmpty()
@@ -1056,13 +1049,16 @@ return function (Container $context): void {
                     resolvePublicId: Metadata::resolver($database, $dbForProject, $publicIds),
                     tenant: $database,
                     operations: $operations,
-                ))
-                ->addHook(new Usage($usage, $originalDatabase->getAttribute('type', '')));
+                ));
+
+            // Document counts and per-collection storage are produced by the
+            // StatsResources full-count as ClickHouse gauges (broken down by
+            // resourceId/resourceType), so no per-event usage emission here.
 
             return $database;
         };
 
-    }, ['databaseFactory', 'project', 'request', 'dbForProject', 'usage', 'operations']);
+    }, ['databaseFactory', 'project', 'request', 'dbForProject', 'operations']);
 
     $context->set(
         'transactionState',
