@@ -401,7 +401,7 @@ abstract class Action extends DatabasesAction
                     throw new Exception($this->getParentNotFoundException(), params: [$externalId]);
                 }
 
-                if (!$privileged && !$authorization->isValid(new Input(PermissionType::Read, $related->getRead()))) {
+                if (!$privileged && !$this->isListable($related, $authorization)) {
                     throw new Exception(Exception::USER_UNAUTHORIZED);
                 }
 
@@ -412,6 +412,12 @@ abstract class Action extends DatabasesAction
         }
 
         return $queries;
+    }
+
+    private function isListable(Document $collection, Authorization $authorization): bool
+    {
+        return (bool) $collection->getAttribute('documentSecurity', false)
+            || $authorization->isValid(new Input(PermissionType::Read, $collection->getRead()));
     }
 
     private function joinCollection(
