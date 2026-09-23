@@ -3,6 +3,10 @@
 namespace Tests\E2E\Services\Databases\Queries;
 
 use Tests\E2E\Client;
+use Tests\E2E\Services\Databases\Queries\Oracle\Customer;
+use Tests\E2E\Services\Databases\Queries\Oracle\Join;
+use Tests\E2E\Services\Databases\Queries\Oracle\Order;
+use Tests\E2E\Services\Databases\Queries\Oracle\Summary;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
@@ -1504,8 +1508,7 @@ trait JoinCombos
         $this->assertSame(200, $listed['headers']['status-code']);
         $rows = $this->joinHardcoreRows($listed);
         $this->assertNotEmpty($rows);
-        $this->assertSame(true, \is_int($listed['body']['total'] ?? null) || \is_numeric($listed['body']['total'] ?? null));
-        $this->assertGreaterThanOrEqual(1, (int) ($listed['body']['total'] ?? 0));
+        $this->assertSame(\count($rows), $listed['body']['total']);
         $encoded = (string) \json_encode($listed['body']);
         $amounts = $this->joinComboAmounts($rows);
 
@@ -1895,8 +1898,7 @@ trait JoinCombos
         $this->assertSame(200, $listed['headers']['status-code']);
         $rows = $this->joinHardcoreRows($listed);
         $this->assertNotEmpty($rows);
-        $this->assertSame(true, \is_int($listed['body']['total'] ?? null) || \is_numeric($listed['body']['total'] ?? null));
-        $this->assertGreaterThanOrEqual(1, (int) ($listed['body']['total'] ?? 0));
+        $this->assertSame(\count($rows), $listed['body']['total']);
         $encoded = (string) \json_encode($listed['body']);
         $amounts = $this->joinComboAmounts($rows);
 
@@ -1929,6 +1931,38 @@ trait JoinCombos
             $this->assertSame(0, (int) ($hidden['body']['total'] ?? 0));
             $this->assertJoinHardcoreClientHidden($hiddenEncoded, $this->joinComboAmounts($hiddenRows));
         }
+
+        $readableOrders = $this->joinHardcoreRows($this->joinHardcoreList($data['databaseId'], $data['ordersId'], [Query::limit(100)->toString()]));
+        if ($this->getSide() === 'client') {
+            $this->assertNotContains($data['order8686Id'], \array_column($readableOrders, '$id'), 'Order 8686 is readable only by combo-hard-hidden');
+            $this->assertNotContains($data['order5151Id'], \array_column($readableOrders, '$id'), 'Order 5151 is readable only by combo-hard-hidden');
+        }
+
+        $pairs = Join::FullOuter->pairs(
+            \array_map(
+                static fn (array $customer): Customer => new Customer($customer['$id'], $customer['name'], false),
+                $this->joinHardcoreRows($this->joinHardcoreList($data['databaseId'], $data['customersId'], [Query::limit(100)->toString()])),
+            ),
+            \array_map(
+                static fn (array $order): Order => new Order($order['$id'], $order['customerId'] ?? null, $order['amount'], $order['label'], 0, false),
+                $readableOrders,
+            ),
+        );
+        $expected = Summary::of($pairs);
+
+        $aggregated = $this->joinHardcoreList($data['databaseId'], $data['customersId'], [
+            Query::fullOuterJoin($data['ordersId'], '$id', 'customerId', '=', 'ord')->toString(),
+            Query::count('*', 'rowCount')->toString(),
+            Query::count('ord.$id', 'orderCount')->toString(),
+            Query::sum('ord.amount', 'amountSum')->toString(),
+        ]);
+
+        $this->assertSame(200, $aggregated['headers']['status-code']);
+        $this->assertCount(1, $this->joinHardcoreRows($aggregated));
+        $aggregate = $this->joinHardcoreRows($aggregated)[0];
+        $this->assertSame($expected->rows, $this->aggregateInteger($aggregate, 'rowCount'));
+        $this->assertSame($expected->orders, $this->aggregateInteger($aggregate, 'orderCount'));
+        $this->assertSame($expected->sum, $this->aggregateInteger($aggregate, 'amountSum'));
     }
 
     public function testJoinHardcoreIsNotNullNotEqualSecretDoesNotLeak(): void

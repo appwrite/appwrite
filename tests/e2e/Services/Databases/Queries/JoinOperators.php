@@ -29,6 +29,8 @@ trait JoinOperators
         $this->assertSame(200, $result['headers']['status-code']);
         $rows = $result['body'][$this->getRecordResource()];
         $this->assertCount(6, $rows);
+        $this->assertSame(6, $result['body']['total']);
+        $this->assertJoinedValuesStayAliased($rows, ['customerId', 'amount', 'status']);
     }
 
     public function testJoinOperatorGreaterThan(): void
@@ -53,6 +55,8 @@ trait JoinOperators
         $this->assertSame(200, $result['headers']['status-code']);
         $rows = $result['body'][$this->getRecordResource()];
         $this->assertCount(1, $rows);
+        $this->assertSame(1, $result['body']['total']);
+        $this->assertJoinedValuesStayAliased($rows, ['orderId']);
     }
 
     public function testJoinOperatorLessThan(): void
@@ -77,6 +81,8 @@ trait JoinOperators
         $this->assertSame(200, $result['headers']['status-code']);
         $rows = $result['body'][$this->getRecordResource()];
         $this->assertCount(5, $rows);
+        $this->assertSame(5, $result['body']['total']);
+        $this->assertJoinedValuesStayAliased($rows, ['orderId']);
     }
 
     public function testJoinOperatorGreaterThanEqual(): void
@@ -101,6 +107,8 @@ trait JoinOperators
         $this->assertSame(200, $result['headers']['status-code']);
         $rows = $result['body'][$this->getRecordResource()];
         $this->assertCount(3, $rows);
+        $this->assertSame(3, $result['body']['total']);
+        $this->assertJoinedValuesStayAliased($rows, ['orderId']);
     }
 
     public function testJoinOperatorLessThanEqual(): void
@@ -125,6 +133,8 @@ trait JoinOperators
         $this->assertSame(200, $result['headers']['status-code']);
         $rows = $result['body'][$this->getRecordResource()];
         $this->assertCount(7, $rows);
+        $this->assertSame(7, $result['body']['total']);
+        $this->assertJoinedValuesStayAliased($rows, ['orderId']);
     }
 
     public function testJoinInvalidOperatorRejected(): void
@@ -170,11 +180,14 @@ trait JoinOperators
             ],
         ]);
 
-        $rows = $result['body'][$this->getRecordResource()] ?? [];
         $this->assertSame(200, $result['headers']['status-code']);
+        $rows = $result['body'][$this->getRecordResource()];
+        $this->assertCount(3, $rows);
+        $this->assertSame(3, $result['body']['total']);
         foreach ($rows as $row) {
             $this->assertArrayHasKey('name', $row);
-            $this->assertTrue(isset($row['ord.amount']) || isset($row['amount']));
+            $this->assertArrayHasKey('ord.amount', $row);
+            $this->assertArrayNotHasKey('amount', $row);
         }
     }
 
@@ -203,5 +216,6 @@ trait JoinOperators
         $this->assertSame(200, $result['headers']['status-code']);
         $rows = $result['body'][$this->getRecordResource()];
         $this->assertCount(2, $rows);
+        $this->assertSame(2, $result['body']['total']);
     }
 }
