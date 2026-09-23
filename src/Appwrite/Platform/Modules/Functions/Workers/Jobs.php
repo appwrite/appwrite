@@ -31,6 +31,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
+use Utopia\Span\Span;
 use Utopia\Storage\Device;
 use Utopia\Storage\DeviceType;
 use Utopia\System\System;
@@ -64,6 +65,33 @@ class Jobs extends Action
     private const DEDUPE_TTL = 3600;
     private const LOCK_TTL = 30;
     private const LOCK_TIMEOUT = 10.0;
+
+    /**
+     * Shown in the build logs in place of an artifact failure that is ours to
+     * fix, not the user's. The raw error goes to Sentry instead.
+     */
+    public const string INTERNAL_ERROR_MESSAGE = 'Internal server error. Please try again.';
+
+    /**
+     * Artifact failures caused by the platform rather than the build: object
+     * storage transport, sidecar I/O and mounts. Their messages carry bucket
+     * URLs, internal addresses and workspace paths, so they must not reach
+     * the build logs. Failures the user can act on (an empty or corrupt
+     * archive, a repository that cannot be cloned) keep their own message.
+     */
+    private const array INTERNAL_ARTIFACT_ERRORS = [
+        ErrorCode::ArtifactPermissionDenied,
+        ErrorCode::ArtifactTimeout,
+        ErrorCode::ArtifactReadFailed,
+        ErrorCode::ArtifactWriteFailed,
+        ErrorCode::ArtifactStatFailed,
+        ErrorCode::ArtifactListFailed,
+        ErrorCode::DownloadFailed,
+        ErrorCode::DownloadHttpError,
+        ErrorCode::UploadFailed,
+        ErrorCode::MountFailed,
+        ErrorCode::ArtifactFailed,
+    ];
 
     public static function getName(): string
     {
@@ -315,7 +343,7 @@ class Jobs extends Action
             if ($failed) {
                 // Fail immediately even if exit delivery is lost. Leave duration
                 // unknown until exit arrives, rather than billing callback wait.
-                return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, 'Build output upload failed: ' . ($artifact->error->message ?? 'unknown error'), $publisherForScreenshots, $vcsFactory, $platform, $bus);
+                return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, $this->artifactFailure($project, $deployment, $artifact), $publisherForScreenshots, $vcsFactory, $platform, $bus);
             }
 
             if ($artifact->status !== 'success') {
@@ -329,12 +357,12 @@ class Jobs extends Action
 
         // Any other artifact failing dooms the build — the orchestrator aborts
         // the job on a pre-job failure, and a lost output has nothing to serve
-        // — so fail it now with the artifact's own message (which file, which
-        // status) rather than waiting for the bare exit code. The build cache
-        // upload is the one best-effort artifact: losing it costs the next
-        // build time, not this one.
+        // — so fail it now rather than waiting for the bare exit code, with
+        // the artifact's own message when the user can act on it (see
+        // artifactFailure()). The build cache upload is the one best-effort
+        // artifact: losing it costs the next build time, not this one.
         if ($failed && $artifact->artifactId !== 'cache') {
-            return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, $artifact->error->message ?? 'Build failed.', $publisherForScreenshots, $vcsFactory, $platform, $bus);
+            return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, $this->artifactFailure($project, $deployment, $artifact), $publisherForScreenshots, $vcsFactory, $platform, $bus);
         }
 
         if ($artifact->artifactId !== 'sourceSize' || $artifact->status !== 'success') {
@@ -351,6 +379,29 @@ class Jobs extends Action
             'sourceSize' => $size,
             'totalSize' => $size + (int) $deployment->getAttribute('buildSize', 0),
         ]));
+    }
+
+    /**
+     * The build log line for a failed artifact. A platform failure is reported
+     * to Sentry as a 500 on the worker's span and shown to the user as a
+     * generic internal error; a failure the user caused keeps its message.
+     */
+    protected function artifactFailure(Document $project, Document $deployment, JobArtifact $artifact): string
+    {
+        $error = $artifact->error;
+        if ($error !== null && !\in_array($error->code, self::INTERNAL_ARTIFACT_ERRORS, true)) {
+            return $error->message;
+        }
+
+        Span::current()
+            ?->setError(new \RuntimeException("Build artifact '{$artifact->artifactId}' failed: " . ($error->message ?? 'no error reported'), 500))
+            ->set('project.id', $project->getId())
+            ->set('deployment.id', $deployment->getId())
+            ->set('artifact.id', $artifact->artifactId)
+            ->set('artifact.type', $artifact->artifactType)
+            ->set('artifact.error.code', $error?->code->value);
+
+        return self::INTERNAL_ERROR_MESSAGE;
     }
 
     /**
