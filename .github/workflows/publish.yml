@@ -42,11 +42,8 @@ jobs:
       with:
         context: .
         platforms: linux/amd64,linux/arm64
-        target: production
+        target: runtime
         build-args: |
           VERSION=${{ steps.meta.outputs.version }}
-          VITE_APPWRITE_GROWTH_ENDPOINT=https://growth.appwrite.io/v1
-          VITE_GA_PROJECT=G-L7G2B6PLDS
-          VITE_CONSOLE_MODE=cloud
         push: true
         tags: ${{ steps.meta.outputs.tags }}

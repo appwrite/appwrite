@@ -12,7 +12,10 @@ RUN composer install --ignore-platform-reqs --optimize-autoloader \
     --no-plugins --no-scripts --prefer-dist \
     `if [ "$TESTING" != "true" ]; then echo "--no-dev"; fi`
 
-FROM appwrite/base:2.1.0 AS base
+# Everything but the code. Cloud builds on this stage (publish.yml) and ships
+# its own vendor/, app/ and src/; inheriting ours put ~190 MB of shadowed
+# layers into every Cloud image.
+FROM appwrite/base:2.1.0 AS runtime
 
 LABEL maintainer="team@appwrite.io"
 
@@ -29,24 +32,8 @@ RUN if [ "$DEBUG" == "true" ]; then \
 
 WORKDIR /usr/src/code
 
-COPY --from=composer /usr/local/src/vendor /usr/src/code/vendor
-
-# Add Source Code
-COPY ./app /usr/src/code/app
-COPY ./public /usr/src/code/public
 COPY ./bin /usr/local/bin
-COPY ./src /usr/src/code/src
-COPY ./packages /usr/src/code/packages
-COPY ./dev /usr/src/code/dev
 COPY ./docker/opcache.ini /usr/local/etc/php/conf.d/zz-opcache.ini
-COPY ./mongo-init.js /usr/src/code/mongo-init.js
-COPY ./mongo-entrypoint.sh /usr/src/code/mongo-entrypoint.sh
-
-# Add Installer Templates
-COPY ./app/views/install /usr/local/share/appwrite/app/views/install
-COPY ./docker-compose.yml /usr/local/share/appwrite/docker-compose.yml
-COPY ./mongo-init.js /usr/local/share/appwrite/mongo-init.js
-COPY ./mongo-entrypoint.sh /usr/local/share/appwrite/mongo-entrypoint.sh
 
 # Set Volumes
 RUN mkdir -p /storage/uploads && \
@@ -108,6 +95,25 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/worker-webhooks
 
 RUN mkdir -p /etc/letsencrypt/live/ && chmod -Rf 755 /etc/letsencrypt/live/
+
+FROM runtime AS base
+
+COPY --from=composer /usr/local/src/vendor /usr/src/code/vendor
+
+# Add Source Code
+COPY ./app /usr/src/code/app
+COPY ./public /usr/src/code/public
+COPY ./src /usr/src/code/src
+COPY ./packages /usr/src/code/packages
+COPY ./dev /usr/src/code/dev
+COPY ./mongo-init.js /usr/src/code/mongo-init.js
+COPY ./mongo-entrypoint.sh /usr/src/code/mongo-entrypoint.sh
+
+# Add Installer Templates
+COPY ./app/views/install /usr/local/share/appwrite/app/views/install
+COPY ./docker-compose.yml /usr/local/share/appwrite/docker-compose.yml
+COPY ./mongo-init.js /usr/local/share/appwrite/mongo-init.js
+COPY ./mongo-entrypoint.sh /usr/local/share/appwrite/mongo-entrypoint.sh
 
 FROM base AS production
 
