@@ -473,13 +473,22 @@ type OAuth2NativeSignInCardProps = {
 }
 
 /**
- * Which client ID goes in this list differs per provider and is easy to get
- * wrong, so name it here instead of relying on the generic catalog hint.
+ * Which ID goes in this list differs per provider and is easy to get wrong,
+ * so name it here instead of relying on the generic catalog label and hint.
  */
-const NATIVE_CLIENT_IDS_HINTS: Partial<Record<string, string>> = {
-  google:
-    'Enter the Web application client ID from Google Cloud. Your app sends the same ID to Google as the server client ID. Android and iOS client IDs do not go here.',
-  apple: "Enter your app's bundle ID, such as com.example.app.",
+const NATIVE_CLIENT_IDS_COPY: Partial<
+  Record<string, { label: string; placeholder: string; hint: string }>
+> = {
+  google: {
+    label: 'Web client IDs',
+    placeholder: 'Add a web client ID and press Enter',
+    hint: 'Enter the Web application client ID from Google Cloud. Your app sends the same ID to Google as the server client ID. Android and iOS client IDs do not go here.',
+  },
+  apple: {
+    label: 'Bundle IDs',
+    placeholder: 'Add a bundle ID and press Enter',
+    hint: "Enter your app's bundle ID, such as com.example.app.",
+  },
 }
 
 /**
@@ -497,7 +506,7 @@ function OAuth2NativeSignInCard({
   disabled,
 }: OAuth2NativeSignInCardProps) {
   const t = useT()
-  const hint = NATIVE_CLIENT_IDS_HINTS[providerId]
+  const copy = NATIVE_CLIENT_IDS_COPY[providerId]
 
   return (
     <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-4">
@@ -540,22 +549,22 @@ function OAuth2NativeSignInCard({
             htmlFor={`oauth2-${param.$id}`}
             className="text-[12px] font-medium"
           >
-            {param.name}
+            {copy ? t(copy.label) : param.name}
           </Label>
           <InputTags
             id={`oauth2-${param.$id}`}
             value={clientIds}
             onChange={onClientIdsChange}
             splitOnComma
-            placeholder={t('Add a client ID and press Enter')}
+            placeholder={t(copy?.placeholder ?? 'Add a client ID and press Enter')}
             className={cn('text-[13px]', error && 'border-destructive')}
             disabled={disabled}
           />
           {error ? (
             <p className="text-[12px] text-destructive">{t(error)}</p>
-          ) : hint || param.hint ? (
+          ) : copy || param.hint ? (
             <p className="text-[11px] text-muted-foreground">
-              {hint ? t(hint) : param.hint}
+              {copy ? t(copy.hint) : param.hint}
             </p>
           ) : null}
         </div>
