@@ -72,6 +72,7 @@ import {
 import {
   type OverviewStorageBreakdownType,
 } from '@/lib/usage/storage-usage'
+import { isUsageBreakdownResourceLookupPending } from '@/lib/usage/usage-resource-filters'
 import { formatApiEndpointDisplay, getApiEndpoint } from '@/lib/appwrite/sdk'
 import { Button } from '@/components/ui/button'
 import {
@@ -550,43 +551,109 @@ export function View({ projectId, initialData }: ViewProps) {
     [gbHoursUsage?.topConsumers],
   )
 
-  const { data: executionBreakdownResources } = useComputeBreakdownResources(
-    projectId,
-    executionBreakdownIds,
-    usageStatsEnabled && executionBreakdownIds.length > 0,
-  )
-
-  const { data: storageBreakdownResources } = useStorageBreakdownResources(
-    projectId,
-    storageBreakdownIds,
-    usageStatsEnabled &&
-      activeTab === 'storage' &&
-      storageBreakdownIds.length > 0,
-  )
-
-  const { data: storageComputeBreakdownResources } =
+  const executionBreakdownLookupEnabled =
+    usageStatsEnabled && executionBreakdownIds.length > 0
+  const { data: executionBreakdownResources, isPending: executionBreakdownPending } =
     useComputeBreakdownResources(
       projectId,
-      storageComputeBreakdownIds,
-      usageStatsEnabled &&
-        activeTab === 'storage' &&
-        storageComputeBreakdownIds.length > 0,
+      executionBreakdownIds,
+      executionBreakdownLookupEnabled,
     )
 
-  const { data: storageDatabaseBreakdownResources } =
-    useDatabaseBreakdownResources(
-      projectId,
-      storageDatabaseBreakdownIds,
-      usageStatsEnabled &&
-        activeTab === 'storage' &&
-        storageDatabaseBreakdownIds.length > 0,
-    )
-
-  const { data: gbHoursBreakdownResources } = useComputeBreakdownResources(
+  const storageBucketBreakdownLookupEnabled =
+    usageStatsEnabled &&
+    activeTab === 'storage' &&
+    storageBreakdownIds.length > 0
+  const {
+    data: storageBreakdownResources,
+    isPending: storageBreakdownResourcesPending,
+  } = useStorageBreakdownResources(
     projectId,
-    gbHoursBreakdownIds,
-    usageStatsEnabled && gbHoursBreakdownIds.length > 0,
+    storageBreakdownIds,
+    storageBucketBreakdownLookupEnabled,
   )
+
+  const storageComputeBreakdownLookupEnabled =
+    usageStatsEnabled &&
+    activeTab === 'storage' &&
+    storageComputeBreakdownIds.length > 0
+  const {
+    data: storageComputeBreakdownResources,
+    isPending: storageComputeBreakdownPending,
+  } = useComputeBreakdownResources(
+    projectId,
+    storageComputeBreakdownIds,
+    storageComputeBreakdownLookupEnabled,
+  )
+
+  const storageDatabaseBreakdownLookupEnabled =
+    usageStatsEnabled &&
+    activeTab === 'storage' &&
+    storageDatabaseBreakdownIds.length > 0
+  const {
+    data: storageDatabaseBreakdownResources,
+    isPending: storageDatabaseBreakdownPending,
+  } = useDatabaseBreakdownResources(
+    projectId,
+    storageDatabaseBreakdownIds,
+    storageDatabaseBreakdownLookupEnabled,
+  )
+
+  const gbHoursBreakdownLookupEnabled =
+    usageStatsEnabled && gbHoursBreakdownIds.length > 0
+  const { data: gbHoursBreakdownResources, isPending: gbHoursBreakdownPending } =
+    useComputeBreakdownResources(
+      projectId,
+      gbHoursBreakdownIds,
+      gbHoursBreakdownLookupEnabled,
+    )
+
+  const storageBreakdownResourceNamesResolved = useMemo(() => {
+    if (storageBreakdownType === 'buckets') {
+      return !isUsageBreakdownResourceLookupPending(
+        storageBucketBreakdownLookupEnabled,
+        storageBreakdownIds,
+        storageBreakdownResourcesPending,
+      )
+    }
+    if (storageBreakdownType === 'databases') {
+      return !isUsageBreakdownResourceLookupPending(
+        storageDatabaseBreakdownLookupEnabled,
+        storageDatabaseBreakdownIds,
+        storageDatabaseBreakdownPending,
+      )
+    }
+    return !isUsageBreakdownResourceLookupPending(
+      storageComputeBreakdownLookupEnabled,
+      storageComputeBreakdownIds,
+      storageComputeBreakdownPending,
+    )
+  }, [
+    storageBreakdownType,
+    storageBucketBreakdownLookupEnabled,
+    storageBreakdownIds,
+    storageBreakdownResourcesPending,
+    storageDatabaseBreakdownLookupEnabled,
+    storageDatabaseBreakdownIds,
+    storageDatabaseBreakdownPending,
+    storageComputeBreakdownLookupEnabled,
+    storageComputeBreakdownIds,
+    storageComputeBreakdownPending,
+  ])
+
+  const executionBreakdownResourceNamesResolved =
+    !isUsageBreakdownResourceLookupPending(
+      executionBreakdownLookupEnabled,
+      executionBreakdownIds,
+      executionBreakdownPending,
+    )
+
+  const gbHoursBreakdownResourceNamesResolved =
+    !isUsageBreakdownResourceLookupPending(
+      gbHoursBreakdownLookupEnabled,
+      gbHoursBreakdownIds,
+      gbHoursBreakdownPending,
+    )
 
   const overviewTabs = useMemo(() => {
     const bandwidthTab: OverviewTab = isBandwidthError
@@ -1255,6 +1322,7 @@ export function View({ projectId, initialData }: ViewProps) {
                       storageLookup={storageBreakdownResources?.resources}
                       resourceLookup={storageComputeBreakdownResources?.resources}
                       databaseLookup={storageDatabaseBreakdownResources?.resources}
+                      resourceNamesResolved={storageBreakdownResourceNamesResolved}
                       headerAddon={
                         <OverviewStorageBreakdownToggle
                           value={storageBreakdownType}
@@ -1317,6 +1385,7 @@ export function View({ projectId, initialData }: ViewProps) {
                       breakdownVariant="resource"
                       projectId={projectId}
                       resourceLookup={executionBreakdownResources?.resources}
+                      resourceNamesResolved={executionBreakdownResourceNamesResolved}
                       itemCount={OVERVIEW_COMPUTE_BREAKDOWN_ITEM_COUNT}
                       items={
                         isExecutionsError ? [] : executionsUsage?.topConsumers
@@ -1377,6 +1446,7 @@ export function View({ projectId, initialData }: ViewProps) {
                       breakdownVariant="resource"
                       projectId={projectId}
                       resourceLookup={gbHoursBreakdownResources?.resources}
+                      resourceNamesResolved={gbHoursBreakdownResourceNamesResolved}
                       itemCount={OVERVIEW_COMPUTE_BREAKDOWN_ITEM_COUNT}
                       items={
                         isGbHoursError ? [] : gbHoursUsage?.topConsumers

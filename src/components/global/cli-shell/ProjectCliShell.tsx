@@ -45,7 +45,7 @@ import { CliSessionSidebar } from './CliSessionSidebar'
 import { CliTerminalResizableLayout } from './CliTerminalResizableLayout'
 import { CliTerminalSearch } from './CliTerminalSearch'
 import { CliTerminalSessionsLayout } from './CliTerminalSessionsLayout'
-import { useCliShell } from './CliShellProvider'
+import { useCliShell } from './cli-shell-context'
 
 export function ProjectCliShell() {
   const { open, fullscreen, height, panelEverOpened } = useCliShell()
