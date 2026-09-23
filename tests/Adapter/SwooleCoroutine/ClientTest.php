@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Utopia\Tests\Client\Adapter\SwooleCoroutine;
+namespace Utopia\Client\Tests\Adapter\SwooleCoroutine;
 
 use Swoole\Coroutine;
 use Throwable;
@@ -11,12 +11,12 @@ use Utopia\Client\Adapter\SwooleCoroutine\Client;
 use Utopia\Client\Exception\AdapterPreconditionException;
 use Utopia\Client\Exception\NetworkException;
 use Utopia\Client\Exception\TlsException;
+use Utopia\Client\Tests\Adapter\AdapterContract;
+use Utopia\Client\Tests\Server\Http;
 use Utopia\Psr7\Method;
 use Utopia\Psr7\Request;
 use Utopia\Psr7\Response;
 use Utopia\Psr7\Stream;
-use Utopia\Tests\Client\Adapter\AdapterContract;
-use Utopia\Tests\Server\Http;
 
 final class ClientTest extends AdapterContract
 {

@@ -15,7 +15,7 @@ Source specs:
 
 ## Timeout coverage
 
-- `Utopia\Client` timeout helpers are immutable.
+- `Utopia\Client\Client` timeout helpers are immutable.
 - cURL adapter maps timeout seconds to `CURLOPT_TIMEOUT_MS`.
 - cURL adapter maps connect timeout seconds to `CURLOPT_CONNECTTIMEOUT_MS`.
 - Swoole adapter maps timeout seconds to `timeout`.
@@ -30,4 +30,4 @@ Source specs:
 - Same-origin redirects keep `Authorization`; cross-origin and HTTPS to HTTP hops strip sensitive headers.
 - Streaming after a redirect delivers the final body to the sink without buffering it first.
 - Fifty hops succeed; the fifty-first throws `ProtocolException`.
-- `Utopia\Client::withFollowRedirects()` forwards onto the adapter.
+- `Utopia\Client\Client::withFollowRedirects()` forwards onto the adapter.

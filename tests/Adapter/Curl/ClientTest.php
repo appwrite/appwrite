@@ -2,19 +2,19 @@
 
 declare(strict_types=1);
 
-namespace Utopia\Tests\Client\Adapter\Curl;
+namespace Utopia\Client\Tests\Adapter\Curl;
 
 use Psr\Http\Message\RequestInterface;
 use Utopia\Client\Adapter;
 use Utopia\Client\Adapter\Curl\Client;
+use Utopia\Client\Tests\Adapter\AdapterContract;
+use Utopia\Client\Tests\Server\Http;
 use Utopia\Psr7\ContentType;
 use Utopia\Psr7\Method;
 use Utopia\Psr7\Request;
 use Utopia\Psr7\Request\Multipart\Part;
 use Utopia\Psr7\Response;
 use Utopia\Psr7\Stream;
-use Utopia\Tests\Client\Adapter\AdapterContract;
-use Utopia\Tests\Server\Http;
 
 final class ClientTest extends AdapterContract
 {

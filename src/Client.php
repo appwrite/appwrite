@@ -2,16 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Utopia;
+namespace Utopia\Client;
 
 use InvalidArgumentException;
 use Psr\Http\Client\ClientExceptionInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\UriInterface;
-use Utopia\Client\Adapter;
-use Utopia\Client\Redirect;
-use Utopia\Client\Tls;
 use Utopia\Psr7\Header;
 use Utopia\Psr7\Uri;
 use Utopia\Span\Span;

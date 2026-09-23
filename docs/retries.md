@@ -7,7 +7,7 @@ retries failed requests. Because it is itself an `Adapter`, it composes — wrap
 ```php
 <?php
 
-use Utopia\Client;
+use Utopia\Client\Client;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Client\Decorator\Retry;
 

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Utopia\Tests\Client\Adapter;
+namespace Utopia\Client\Tests\Adapter;
 
 use PHPUnit\Framework\TestCase;
 use Utopia\Client\Adapter\Curl\Client as CurlClient;

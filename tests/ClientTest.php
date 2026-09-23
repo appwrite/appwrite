@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace Utopia\Tests;
+namespace Utopia\Client\Tests;
 
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Client\ClientExceptionInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
-use Utopia\Client;
 use Utopia\Client\Adapter;
+use Utopia\Client\Client;
 use Utopia\Client\Tls;
 use Utopia\Psr7\Request;
 use Utopia\Psr7\Response;

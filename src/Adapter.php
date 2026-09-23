@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Utopia\Client;
 
 use Psr\Http\Client\ClientInterface;
-use Utopia\Psr18\StreamingClientInterface;
+use Utopia\Client\Psr18\StreamingClientInterface;
 
 /**
  * A transport that can both buffer (PSR-18) and stream responses, configured

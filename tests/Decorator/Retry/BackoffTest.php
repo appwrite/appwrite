@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Utopia\Tests\Client\Decorator\Retry;
+namespace Utopia\Client\Tests\Decorator\Retry;
 
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\RequestInterface;

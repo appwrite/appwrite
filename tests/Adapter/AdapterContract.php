@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Utopia\Tests\Client\Adapter;
+namespace Utopia\Client\Tests\Adapter;
 
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
@@ -18,6 +18,7 @@ use Utopia\Client\Exception\ProtocolException;
 use Utopia\Client\Exception\ProxyException;
 use Utopia\Client\Exception\TimeoutException;
 use Utopia\Client\Exception\TlsException;
+use Utopia\Client\Tests\Server\Http;
 use Utopia\Client\Tls;
 use Utopia\Psr7\ContentType;
 use Utopia\Psr7\Header;
@@ -25,7 +26,6 @@ use Utopia\Psr7\Method;
 use Utopia\Psr7\Request;
 use Utopia\Psr7\Request\Multipart\Part;
 use Utopia\Psr7\Stream;
-use Utopia\Tests\Server\Http;
 use ValueError;
 
 abstract class AdapterContract extends TestCase

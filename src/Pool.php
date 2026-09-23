@@ -8,8 +8,8 @@ use Psr\Http\Client\ClientExceptionInterface;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
+use Utopia\Client\Psr18\StreamingClientInterface;
 use Utopia\Pools\Pool as Connections;
-use Utopia\Psr18\StreamingClientInterface;
 
 /**
  * A client that borrows a pooled client for the duration of each request and

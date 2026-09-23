@@ -14,12 +14,15 @@
     "license": "MIT",
     "autoload": {
         "psr-4": {
-            "Utopia\\": "src/"
-        }
+            "Utopia\\Client\\": "src/"
+        },
+        "files": [
+            "src/compat.php"
+        ]
     },
     "autoload-dev": {
         "psr-4": {
-            "Utopia\\Tests\\": "tests/"
+            "Utopia\\Client\\Tests\\": "tests/"
         }
     },
     "scripts": {

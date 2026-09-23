@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Utopia\Tests\Server;
+namespace Utopia\Client\Tests\Server;
 
 use RuntimeException;
 

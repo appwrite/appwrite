@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Utopia\Tests\Client\Decorator;
+namespace Utopia\Client\Tests\Decorator;
 
 use LogicException;
 use PHPUnit\Framework\TestCase;

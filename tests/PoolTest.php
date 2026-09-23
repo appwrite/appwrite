@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace Utopia\Tests\Client;
+namespace Utopia\Client\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Utopia\Client\Pool;
+use Utopia\Client\Psr18\StreamingClientInterface;
 use Utopia\Pools\Adapter\Stack;
 use Utopia\Pools\Pool as Connections;
-use Utopia\Psr18\StreamingClientInterface;
 use Utopia\Psr7\Method;
 use Utopia\Psr7\Request;
 use Utopia\Psr7\Response;
@@ -19,14 +19,14 @@ final class PoolTest extends TestCase
 {
     public function testItBorrowsAConnectionToSendARequest(): void
     {
-        $pool = new Pool($this->connections(fn(): \Utopia\Tests\Client\FakeClient => new FakeClient(200)));
+        $pool = new Pool($this->connections(fn(): \Utopia\Client\Tests\FakeClient => new FakeClient(200)));
 
         $this->assertSame(200, $pool->sendRequest($this->request())->getStatusCode());
     }
 
     public function testItBorrowsAConnectionToStreamARequest(): void
     {
-        $pool = new Pool($this->connections(fn(): \Utopia\Tests\Client\FakeClient => new FakeClient(200)));
+        $pool = new Pool($this->connections(fn(): \Utopia\Client\Tests\FakeClient => new FakeClient(200)));
         $received = '';
 
         $response = $pool->stream($this->request(), function (string $chunk) use (&$received): void {
