@@ -1,7 +1,7 @@
 # Utopia Circuit Breaker
 
 > [!IMPORTANT]
-> This repository is a read-only mirror of the [utopia-php monorepo](https://github.com/utopia-php/monorepo). Development happens in [`packages/circuit-breaker`](https://github.com/utopia-php/monorepo/tree/main/packages/circuit-breaker) — please open issues and pull requests there.
+> This repository is a read-only mirror of [`packages/circuit-breaker`](https://github.com/appwrite/appwrite/tree/main/packages/circuit-breaker) in [appwrite/appwrite](https://github.com/appwrite/appwrite). Development happens there — please open issues and pull requests against appwrite/appwrite.
 
 [![Build Status](https://github.com/utopia-php/circuit-breaker/actions/workflows/tests.yml/badge.svg)](https://github.com/utopia-php/circuit-breaker/actions/workflows/tests.yml)
 ![Total Downloads](https://img.shields.io/packagist/dt/utopia-php/circuit-breaker.svg)
