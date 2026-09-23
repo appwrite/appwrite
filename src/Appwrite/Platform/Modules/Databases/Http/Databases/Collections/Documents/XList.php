@@ -37,8 +37,6 @@ use Utopia\Validator\Text;
 
 class XList extends Action
 {
-    public const string LIST_CACHE_FIELD_OPERATIONS = 'operations';
-
     public static function getName(): string
     {
         return 'listDocuments';

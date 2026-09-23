@@ -18,6 +18,7 @@ class Action extends AppwriteAction
 {
     public const LIST_CACHE_FIELD_DOCUMENTS = 'documents';
     public const LIST_CACHE_FIELD_TOTAL = 'total';
+    public const string LIST_CACHE_FIELD_OPERATIONS = 'operations';
 
     private string $context = DATABASE_TYPE_LEGACY;
 
@@ -200,7 +201,7 @@ class Action extends AppwriteAction
      * @param Document $collection Collection document (for schema hash)
      * @param array<mixed> $roles Caller authorization roles
      * @param array<Query|string> $queries Queries for this list call
-     * @param string $type LIST_CACHE_FIELD_DOCUMENTS or LIST_CACHE_FIELD_TOTAL
+     * @param string $type LIST_CACHE_FIELD_DOCUMENTS, LIST_CACHE_FIELD_TOTAL or LIST_CACHE_FIELD_OPERATIONS
      */
     protected function getListCacheField(Document $collection, array $roles, array $queries, string $type): string
     {
