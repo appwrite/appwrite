@@ -3,7 +3,7 @@
 <br />
 <p align="center">
     <h1>Appwrite</h1>
-    <b>Appwrite is an open-source, all-in-one development platform. Use built-in backend infrastructure and web hosting, all from a single place.</b>
+    <b>The open-source cloud for agents and developers. Appwrite is an MCP and agent-first platform for building and scaling apps. Give your agents Auth, Databases, Storage, Functions, Messaging, Realtime, and Hosting, all in one place.</b>
     <br />
     <br />
 </p>
@@ -14,9 +14,9 @@
 
 English | [简体中文](README-CN.md)
 
-Appwrite is an open-source development platform for building web, mobile, and AI applications. It brings together backend infrastructure and web hosting in one place, so teams can build, ship, and scale without stitching together a fragmented stack. Appwrite is available as a managed cloud platform and can also be self-hosted on infrastructure you control.
+Appwrite is an MCP and agent-first, open-source platform for building and scaling apps. MCP is included, so coding agents can operate on a live Appwrite project. Appwrite is available as a managed cloud platform and can also be self-hosted on infrastructure you control.
 
-With Appwrite, you can add authentication, databases, storage, functions, messaging, realtime capabilities, and integrated web app hosting through Sites. It is designed to reduce the repetitive backend work required to launch modern products while giving developers secure primitives and flexible APIs to build production-ready applications faster.
+It is designed for the AI agents in your workflow as well as for developers. Connect Cursor, Claude Code, Codex, and other agents through the hosted MCP server, or integrate an SDK into your app. Modular products stay unified from the first prototype to production scale.
 
 Find out more at [https://appwrite.io](https://appwrite.io).
 
@@ -33,6 +33,7 @@ Table of Contents:
   - [Upgrade from an Older Version](#upgrade-from-an-older-version)
 - [One-Click Setups](#one-click-setups)
 - [Getting Started](#getting-started)
+  - [Agents](#agents)
   - [SDKs](#sdks)
     - [Client](#client)
     - [Server](#server)
@@ -45,28 +46,34 @@ Table of Contents:
 
 ## Products
 
-- **[Appwrite Auth](https://appwrite.io/docs/products/auth)** - Secure user authentication with multiple login methods including email/password, SMS, OAuth, anonymous sessions, and magic links. Includes session management, multi-factor authentication, and user verification flows.
+- **[Appwrite Auth](https://appwrite.io/docs/products/auth)** - Authenticate users securely with email, SMS, OAuth, anonymous sessions, and magic URLs.
 
-- **[Appwrite Databases](https://appwrite.io/docs/products/databases)** - Scalable structured data storage with support for databases, tables, and rows. Includes querying, pagination, indexing, and relationships to model complex application data.
+- **[Appwrite Databases](https://appwrite.io/docs/products/databases)** - Model, query, and scale with Appwrite databases or managed PostgreSQL and MySQL, so you can match your use case and team needs.
 
-- **[Appwrite Storage](https://appwrite.io/docs/products/storage)** - Secure file storage with support for uploads, downloads, encryption, compression, and file transformations for media and assets.
+- **[Appwrite Storage](https://appwrite.io/docs/products/storage)** - Store files with compression, encryption, image transformations, and access control.
 
-- **[Appwrite Functions](https://appwrite.io/docs/products/functions)** - Serverless compute platform to run custom backend logic in isolated runtimes, triggered by events or scheduled jobs.15 runtimes supported.
+- **[Appwrite Functions](https://appwrite.io/docs/products/functions)** - Deploy serverless functions with secure isolated runtimes and event-driven execution.
 
-- **[Appwrite Messaging](https://appwrite.io/docs/products/messaging)** - Multi-channel messaging system for sending emails, SMS, and push notifications to users for engagement, alerts, and transactional workflows.
+- **[Appwrite Sites](https://appwrite.io/docs/products/sites)** - Deploy static, SSR, and CSR frontends from Git with instant previews and Appwrite behind them.
 
-- **[Appwrite Sites](https://appwrite.io/docs/products/sites)** - Integrated hosting platform to deploy and scale web applications with support for custom domains, SSR, and seamless backend integration. Git integration and previews are supported.
+- **[Appwrite Messaging](https://appwrite.io/docs/products/messaging)** - Send email, SMS, and push notifications through a unified messaging service.
+
+- **[Appwrite Firewall](https://appwrite.io/docs/products/network)** - Protect apps with traffic rules, abuse controls, and edge security for every project.
+
+- **[Appwrite Realtime](https://appwrite.io/docs/apis/realtime)** - Subscribe and react to events across your project as they happen.
+
+- **[Appwrite MCP](https://appwrite.io/docs/tooling/ai/mcp-servers/api)** - Connect agents to your Appwrite project, APIs, and docs. MCP is included on Cloud, with no local install required.
 
 
 ## Installation & Setup
 
-The easiest way to get started with Appwrite is by [signing up for Appwrite Cloud](https://cloud.appwrite.io/). While Appwrite Cloud is in public beta, you can build with Appwrite completely free, and we won't collect your credit card information.
+The easiest way to get started with Appwrite is by [signing up for Appwrite Cloud](https://cloud.appwrite.io/). Cloud includes a [Free plan](https://appwrite.io/pricing) so you can start building immediately, with paid plans when you need to scale.
 
 ## Self-Hosting
 
-Appwrite is designed to run in a containerized environment. Running your server is as easy as running one command from your terminal. You can either run Appwrite on your localhost using docker-compose or on any other container orchestration tool, such as [Kubernetes](https://kubernetes.io/docs/home/), [Docker Swarm](https://docs.docker.com/engine/swarm/), or [Rancher](https://rancher.com/docs/).
+Appwrite was designed from the ground up with self-hosting in mind. You can install and run Appwrite on any operating system that can run a [Docker CLI](https://www.docker.com/products/docker-desktop). Running your server is as easy as running one command from your terminal.
 
-Before running the installation command, make sure you have [Docker](https://www.docker.com/products/docker-desktop) installed on your machine:
+Before running the installation command, make sure you have [Docker](https://www.docker.com/products/docker-desktop) installed on your machine. The setup wizard listens on port **20080**; if you are installing on a remote host, open that port until installation is complete.
 
 ### Unix
 
@@ -103,7 +110,7 @@ docker run -it --rm `
     appwrite/appwrite:2.3.0
 ```
 
-Once the Docker installation is complete, go to http://localhost to access the Appwrite console from your browser. Please note that on non-Linux native hosts, the server might take a few minutes to start after completing the installation.
+Once the installer is running, open http://localhost:20080 to complete the setup wizard. After installation, go to http://localhost to access the Appwrite console from your browser. Please note that on non-Linux native hosts, the server might take a few minutes to start after completing the installation.
 
 ### Docker API version mismatch
 
@@ -121,15 +128,15 @@ docker run -it --rm \
 
 Use the same `--env DOCKER_API_VERSION=...` flag with `--entrypoint="upgrade"` when upgrading.
 
-For advanced production and custom installation, check out our Docker [environment variables](https://appwrite.io/docs/environment-variables) docs. You can also use our public [docker-compose.yml](https://appwrite.io/install/compose) and [.env](https://appwrite.io/install/env) files to manually set up an environment.
+For advanced production and custom installation, check out our Docker [environment variables](https://appwrite.io/docs/advanced/self-hosting/configuration/environment-variables) docs. You can also use our public [docker-compose.yml](https://appwrite.io/install/compose) and [.env](https://appwrite.io/install/env) files to manually set up an environment.
 
 ### Upgrade from an Older Version
 
-If you are upgrading your Appwrite server from an older version, you should use the Appwrite migration tool once your setup is completed. For more information regarding this, check out the [Installation Docs](https://appwrite.io/docs/self-hosting).
+If you are upgrading your Appwrite server from an older version, you should use the Appwrite migration tool once your setup is completed. For more information regarding this, check out the [migration instructions](https://appwrite.io/docs/advanced/self-hosting/production/updates).
 
 ## One-Click Setups
 
-In addition to running Appwrite locally, you can also launch Appwrite using a pre-configured setup. This allows you to get up and running quickly with Appwrite without installing Docker on your local machine.
+In addition to running Appwrite locally, you can launch Appwrite using a pre-configured marketplace app for instant setup.
 
 Choose from one of the providers below:
 
@@ -138,27 +145,63 @@ Choose from one of the providers below:
     <td align="center" width="100" height="100">
       <a href="https://marketplace.digitalocean.com/apps/appwrite">
         <img width="50" height="39" src="public/images/integrations/digitalocean-logo.svg" alt="DigitalOcean Logo" />
-          <br /><sub><b>DigitalOcean</b></sub></a>
-        </a>
+        <br /><sub><b>DigitalOcean</b></sub>
+      </a>
+    </td>
+    <td align="center" width="100" height="100">
+      <a href="https://gitpod.io/#https://github.com/appwrite/integration-for-gitpod">
+        <img width="50" height="39" src="public/images/integrations/gitpod-logo.svg" alt="Gitpod Logo" />
+        <br /><sub><b>Gitpod</b></sub>
+      </a>
     </td>
     <td align="center" width="100" height="100">
       <a href="https://www.linode.com/marketplace/apps/appwrite/appwrite/">
         <img width="50" height="39" src="public/images/integrations/akamai-logo.svg" alt="Akamai Logo" />
-          <br /><sub><b>Akamai Compute</b></sub></a>
+        <br /><sub><b>Akamai Compute</b></sub>
       </a>
     </td>
     <td align="center" width="100" height="100">
       <a href="https://aws.amazon.com/marketplace/pp/prodview-2hiaeo2px4md6">
         <img width="50" height="39" src="public/images/integrations/aws-logo.svg" alt="AWS Logo" />
-          <br /><sub><b>AWS Marketplace</b></sub></a>
+        <br /><sub><b>AWS Marketplace</b></sub>
       </a>
     </td>
   </tr>
 </table>
 
+For custom deployments on a cloud provider or PaaS, see the guides for [AWS](https://appwrite.io/docs/advanced/self-hosting/platforms/aws), [DigitalOcean](https://appwrite.io/docs/advanced/self-hosting/platforms/digitalocean), [Google Cloud](https://appwrite.io/docs/advanced/self-hosting/platforms/google-cloud), [Azure](https://appwrite.io/docs/advanced/self-hosting/platforms/azure), [Coolify](https://appwrite.io/docs/advanced/self-hosting/platforms/coolify), and [Dokploy](https://appwrite.io/docs/advanced/self-hosting/platforms/dokploy).
+
 ## Getting Started
 
-Getting started with Appwrite is as easy as creating a new project, choosing your platform, and integrating its SDK into your code. You can easily get started with your platform of choice by reading one of our Getting Started tutorials.
+Getting started with Appwrite is as easy as creating a new project, connecting an agent, or integrating an SDK into your code. You can start from a prompt, a quick start tutorial, or the hosted MCP server.
+
+### Agents
+
+Designed for the AI agents in your workflow. Query a database, chart traffic, or ship a change: your agent does it on a live Appwrite project. The hosted MCP server uses OAuth, so you do not need to create or manage API keys. For a self-hosted instance, use the [local MCP server](https://appwrite.io/docs/advanced/self-hosting/mcp) instead.
+
+Add the remote server to Cursor, Claude Code, Codex, VS Code, and other MCP clients:
+
+```json
+{
+    "mcpServers": {
+        "appwrite": {
+            "url": "https://mcp.appwrite.io/"
+        }
+    }
+}
+```
+
+You can also [add the MCP server to Cursor](https://cursor.com/install-mcp?name=appwrite&config=eyJ1cmwiOiJodHRwczovL21jcC5hcHB3cml0ZS5pby8ifQ==) in one click.
+
+Install language-specific [agent skills](https://appwrite.io/docs/tooling/ai/skills) so models generate correct SDK calls:
+
+```bash
+npx skills add appwrite/agent-skills
+```
+
+Browse [quick start prompts](https://appwrite.io/docs/tooling/ai/quickstart-prompts), generate an [AGENTS.md](https://appwrite.io/docs/tooling/ai/agents-md) file for your repo, or see the [AI tooling docs](https://appwrite.io/docs/tooling/ai) for IDE and vibe coding setup.
+
+Getting started with your platform of choice is also covered in the tutorials below.
 
 | Platform              | Technology                                                                         |
 | --------------------- | ---------------------------------------------------------------------------------- |
@@ -168,6 +211,8 @@ Getting started with Appwrite is as easy as creating a new project, choosing you
 |                       | [Quick start for Vue.js](https://appwrite.io/docs/quick-starts/vue)                |
 |                       | [Quick start for Nuxt](https://appwrite.io/docs/quick-starts/nuxt)                 |
 |                       | [Quick start for SvelteKit](https://appwrite.io/docs/quick-starts/sveltekit)       |
+|                       | [Quick start for Astro](https://appwrite.io/docs/quick-starts/astro)               |
+|                       | [Quick start for TanStack Start](https://appwrite.io/docs/quick-starts/tanstack-start) |
 |                       | [Quick start for Refine](https://appwrite.io/docs/quick-starts/refine)             |
 |                       | [Quick start for Angular](https://appwrite.io/docs/quick-starts/angular)           |
 | **Mobile and Native** | [Quick start for React Native](https://appwrite.io/docs/quick-starts/react-native) |
@@ -237,7 +282,7 @@ flowchart TB
   Executor --> openRuntimes[Open Runtimes]
 ```
 
-Appwrite uses a microservices architecture that was designed for easy scaling and delegation of responsibilities. In addition, Appwrite supports multiple APIs, such as REST, WebSocket, and GraphQL to allow you to interact with your resources by leveraging your existing knowledge and protocols of choice.
+Appwrite uses a hybrid monolithic-microservice architecture that was designed for easy scaling and delegation of responsibilities. In addition, Appwrite supports multiple APIs, such as REST, WebSocket, and GraphQL to allow you to interact with your resources by leveraging your existing knowledge and protocols of choice.
 
 The Appwrite API layer was designed to be extremely fast by leveraging in-memory caching and delegating any heavy-lifting tasks to the Appwrite background workers. The background workers also allow you to precisely control your compute capacity and costs using a message queue to handle the load. You can learn more about our architecture in [AGENTS.md](AGENTS.md).
 
