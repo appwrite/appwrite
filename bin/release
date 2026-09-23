@@ -502,9 +502,12 @@ switch ($command) {
         if ($problems !== []) {
             fail("{$version} is not ready:\n  " . implode("\n  ", $problems));
         }
+        // Advisory only: a newer console release, or a failed lookup, never
+        // makes a consistent release fail the check.
         $console = pinned($reference);
-        $latest = latestConsole();
-        if ($latest !== $console) {
+        exec('gh release list -R ' . CONSOLE_REPOSITORY . " --exclude-drafts --exclude-pre-releases --limit 1 --json tagName --jq '.[0].tagName' 2> /dev/null", $latest, $code);
+        $latest = trim(implode('', $latest));
+        if ($code === 0 && $latest !== '' && $latest !== $console) {
             warn("console pin {$console} is behind the newest release {$latest}");
         }
         out("{$version} metadata is consistent");
