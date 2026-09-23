@@ -43,6 +43,29 @@ final class SMTPTest extends Base
         $this->assertSame($content, trim((string) $lastEmail['text']));
     }
 
+    public function testSendEmailWithHeaders(): void
+    {
+        $sender = new SMTP(host: '127.0.0.1', port: 11025);
+
+        $response = $sender->send(new Email(
+            to: ['tester@localhost.test'],
+            subject: 'Header Subject',
+            content: 'Test Content',
+            fromName: 'Test Sender',
+            fromEmail: 'sender@localhost.test',
+            headers: [
+                'List-Unsubscribe' => '<https://example.test/u?token=abc>',
+                'List-Unsubscribe-Post' => 'List-Unsubscribe=One-Click',
+            ],
+        ));
+
+        $lastEmail = $this->getLastEmail();
+
+        $this->assertResponse($response);
+        $this->assertSame('<https://example.test/u?token=abc>', $lastEmail['headers']['list-unsubscribe']);
+        $this->assertSame('List-Unsubscribe=One-Click', $lastEmail['headers']['list-unsubscribe-post']);
+    }
+
     public function testSendEmailWithAttachment(): void
     {
         $sender = new SMTP(

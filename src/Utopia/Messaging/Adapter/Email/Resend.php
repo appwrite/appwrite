@@ -114,6 +114,10 @@ class Resend extends EmailAdapter
                 );
             }
 
+            if ($message->getHeaders() !== []) {
+                $email['headers'] = $message->getHeaders();
+            }
+
             $emails[] = $email;
         }
 

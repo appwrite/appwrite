@@ -68,6 +68,10 @@ class Mailgun extends EmailAdapter
             'h:Reply-To' => $this->formatAddress($message->getReplyToEmail(), $message->getReplyToName()),
         ];
 
+        foreach ($message->getHeaders() as $name => $value) {
+            $body['h:' . $name] = $value;
+        }
+
         if (\count($recipients) > 1) {
             $body['recipient-variables'] = json_encode(array_fill_keys($toEmails, []));
         }

@@ -21,6 +21,7 @@ final class MimeTest extends TestCase
     /**
      * @param  list<Attachment>  $attachments
      * @param  array<array<string, string>>  $cc
+     * @param  array<string, string>  $headers
      */
     private function email(
         string $content = 'Plain body',
@@ -28,6 +29,7 @@ final class MimeTest extends TestCase
         array $attachments = [],
         array $cc = [],
         string $subject = 'Test Subject',
+        array $headers = [],
     ): Email {
         return new Email(
             to: [['email' => 'john@example.test', 'name' => 'John Doe']],
@@ -38,6 +40,7 @@ final class MimeTest extends TestCase
             cc: $cc === [] ? null : $cc,
             attachments: $attachments === [] ? null : $attachments,
             html: $html,
+            headers: $headers,
         );
     }
 
@@ -139,5 +142,28 @@ final class MimeTest extends TestCase
         $this->assertSame(9, Mime::size($this->email(
             attachments: [new Attachment(name: 'notes.txt', path: '', type: 'text/plain', content: 'the notes')],
         )));
+    }
+
+    public function testCarriesTheMessageHeaders(): void
+    {
+        $rendered = $this->render($this->email(headers: [
+            'List-Unsubscribe' => '<https://example.test/u?token=abc>',
+            'List-Unsubscribe-Post' => 'List-Unsubscribe=One-Click',
+        ]));
+
+        $this->assertStringContainsString("List-Unsubscribe: <https://example.test/u?token=abc>\r\n", $rendered);
+        $this->assertStringContainsString("List-Unsubscribe-Post: List-Unsubscribe=One-Click\r\n", $rendered);
+    }
+
+    public function testAdapterHeadersWinOverMessageHeadersInAnyCase(): void
+    {
+        $rendered = (string) Mime::message(
+            $this->email(headers: ['x-mailer' => 'Caller']),
+            [['email' => 'john@example.test']],
+            headers: ['X-Mailer' => 'Adapter'],
+        );
+
+        $this->assertStringContainsString("X-Mailer: Adapter\r\n", $rendered);
+        $this->assertStringNotContainsString('Caller', $rendered);
     }
 }

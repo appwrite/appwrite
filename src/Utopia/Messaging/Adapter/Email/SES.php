@@ -185,6 +185,14 @@ class SES extends EmailAdapter
             'BulkEmailEntries' => $entries,
         ];
 
+        if ($message->getHeaders() !== []) {
+            $body['DefaultContent']['Template']['Headers'] = array_map(
+                static fn(string $name, string $value): array => ['Name' => $name, 'Value' => $value],
+                array_keys($message->getHeaders()),
+                array_values($message->getHeaders()),
+            );
+        }
+
         if (!\in_array($message->getReplyToEmail(), ['', '0'], true)) {
             $body['ReplyToAddresses'] = [
                 $this->formatAddress($message->getReplyToEmail(), $message->getReplyToName()),

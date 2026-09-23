@@ -95,11 +95,100 @@ final class EmailTest extends TestCase
         $this->message(to: ['nope']);
     }
 
+    public function testHeadersAreKept(): void
+    {
+        $message = $this->message(to: ['john@appwrite.io'], headers: [
+            'List-Unsubscribe' => '<https://example.test/u?token=abc>',
+            'List-Unsubscribe-Post' => 'List-Unsubscribe=One-Click',
+        ]);
+
+        $this->assertSame([
+            'List-Unsubscribe' => '<https://example.test/u?token=abc>',
+            'List-Unsubscribe-Post' => 'List-Unsubscribe=One-Click',
+        ], $message->getHeaders());
+    }
+
+    public function testHeaderValueWithLineBreakIsRefused(): void
+    {
+        try {
+            $this->message(to: ['john@appwrite.io'], headers: ['X-Tag' => "a\r\nBcc: victim@example.com"]);
+            $this->fail('Expected header failure');
+        } catch (InvalidArgumentException $exception) {
+            $this->assertSame(InvalidArgumentException::HEADER_MALFORMED, $exception->getType());
+            $this->assertSame('X-Tag', $exception->getValue());
+        }
+    }
+
+    public function testHeaderNameWithColonIsRefused(): void
+    {
+        try {
+            $this->message(to: ['john@appwrite.io'], headers: ['X-Tag: forged' => 'value']);
+            $this->fail('Expected header failure');
+        } catch (InvalidArgumentException $exception) {
+            $this->assertSame(InvalidArgumentException::HEADER_MALFORMED, $exception->getType());
+        }
+    }
+
+    /**
+     * @return \Iterator<string, array{string}>
+     */
+    public static function reservedHeaderNames(): \Iterator
+    {
+        yield 'sender-owned header' => ['From'];
+        yield 'reserved name in another case' => ['subject'];
+    }
+
+    #[DataProvider('reservedHeaderNames')]
+    public function testReservedHeaderNameIsRefused(string $name): void
+    {
+        try {
+            $this->message(to: ['john@appwrite.io'], headers: [$name => 'value']);
+            $this->fail('Expected header failure');
+        } catch (InvalidArgumentException $exception) {
+            $this->assertSame(InvalidArgumentException::HEADER_MALFORMED, $exception->getType());
+        }
+    }
+
+    #[DataProvider('emptyHeaderValues')]
+    public function testEmptyHeaderValueIsRefused(string $value): void
+    {
+        try {
+            $this->message(to: ['john@appwrite.io'], headers: ['X-Tag' => $value]);
+            $this->fail('Expected header failure');
+        } catch (InvalidArgumentException $exception) {
+            $this->assertSame(InvalidArgumentException::HEADER_MALFORMED, $exception->getType());
+            $this->assertSame('X-Tag', $exception->getValue());
+        }
+    }
+
+    /**
+     * @return \Iterator<string, array{string}>
+     */
+    public static function emptyHeaderValues(): \Iterator
+    {
+        yield 'empty' => [''];
+        yield 'whitespace only' => ['  '];
+    }
+
+    public function testDuplicateHeaderNameByCaseIsRefused(): void
+    {
+        try {
+            $this->message(to: ['john@appwrite.io'], headers: [
+                'List-Unsubscribe' => '<https://example.test/u?token=abc>',
+                'list-unsubscribe' => '<https://example.test/u?token=def>',
+            ]);
+            $this->fail('Expected header failure');
+        } catch (InvalidArgumentException $exception) {
+            $this->assertSame(InvalidArgumentException::HEADER_MALFORMED, $exception->getType());
+        }
+    }
+
     /**
      * @param  array<string|array<string, string>>  $to
      * @param  array<string|array<string, string>>|null  $bcc
+     * @param  array<string, string>  $headers
      */
-    private function message(array $to, ?array $bcc = null, string $fromEmail = 'noreply@appwrite.io'): Email
+    private function message(array $to, ?array $bcc = null, string $fromEmail = 'noreply@appwrite.io', array $headers = []): Email
     {
         return new Email(
             to: $to,
@@ -108,6 +197,7 @@ final class EmailTest extends TestCase
             fromName: 'Sender',
             fromEmail: $fromEmail,
             bcc: $bcc,
+            headers: $headers,
         );
     }
 }

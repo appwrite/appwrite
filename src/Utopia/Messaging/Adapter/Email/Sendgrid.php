@@ -124,6 +124,10 @@ class Sendgrid extends EmailAdapter
             $body['attachments'] = $attachments;
         }
 
+        if ($message->getHeaders() !== []) {
+            $body['headers'] = $message->getHeaders();
+        }
+
         $response = new Response($this->getType());
         $result = $this->request(
             method: 'POST',

@@ -638,6 +638,61 @@ final class SESRoutingTest extends TestCase
 
         $stub->send($message);
     }
+
+    public function testBulkSendCarriesTheMessageHeaders(): void
+    {
+        $stub = new SESStub('key', 'secret', 'us-east-1');
+        $stub->stubResponses[] = ['statusCode' => 200, 'response' => ['BulkEmailEntryResults' => [['Status' => 'SUCCESS']]]];
+
+        $stub->send(new Email(
+            to: [['email' => 'a@example.com']],
+            subject: 'Subject',
+            content: 'Body',
+            fromName: 'Sender',
+            fromEmail: 'from@example.com',
+            headers: ['List-Unsubscribe' => '<https://example.test/u>'],
+        ));
+
+        $this->assertSame(
+            [['Name' => 'List-Unsubscribe', 'Value' => '<https://example.test/u>']],
+            $stub->capturedRequests[0]['body']['DefaultContent']['Template']['Headers'],
+        );
+    }
+
+    public function testRawSendCarriesTheMessageHeaders(): void
+    {
+        $stub = new SESStub('key', 'secret', 'us-east-1');
+        $stub->stubResponses[] = ['statusCode' => 200, 'response' => ['MessageId' => 'a']];
+
+        $stub->send(new Email(
+            to: [['email' => 'a@example.com']],
+            subject: 'Subject',
+            content: 'Body',
+            fromName: 'Sender',
+            fromEmail: 'from@example.com',
+            attachments: [new Attachment(name: 'note.txt', path: '', type: 'text/plain', content: 'hello')],
+            headers: ['List-Unsubscribe' => '<https://example.test/u>'],
+        ));
+
+        $raw = base64_decode((string) $stub->capturedRequests[0]['body']['Content']['Raw']['Data']);
+        $this->assertStringContainsString("List-Unsubscribe: <https://example.test/u>\r\n", $raw);
+    }
+
+    public function testBulkSendWithoutHeadersOmitsTheField(): void
+    {
+        $stub = new SESStub('key', 'secret', 'us-east-1');
+        $stub->stubResponses[] = ['statusCode' => 200, 'response' => ['BulkEmailEntryResults' => [['Status' => 'SUCCESS']]]];
+
+        $stub->send(new Email(
+            to: [['email' => 'a@example.com']],
+            subject: 'Subject',
+            content: 'Body',
+            fromName: 'Sender',
+            fromEmail: 'from@example.com',
+        ));
+
+        $this->assertArrayNotHasKey('Headers', $stub->capturedRequests[0]['body']['DefaultContent']['Template']);
+    }
 }
 
 /**

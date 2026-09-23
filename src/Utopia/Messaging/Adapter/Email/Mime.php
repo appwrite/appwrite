@@ -42,7 +42,11 @@ final class Mime
                 ? []
                 : [new Address($email->getReplyToEmail(), $email->getReplyToName())],
             attachments: self::attachments($email),
-            headers: $headers,
+            // The adapter's own headers, such as X-Mailer, win over the message's in any case.
+            headers: [
+                ...array_diff_ukey($email->getHeaders(), $headers, strcasecmp(...)),
+                ...$headers,
+            ],
         );
     }
 

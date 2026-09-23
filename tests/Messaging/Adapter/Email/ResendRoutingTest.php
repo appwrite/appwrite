@@ -191,6 +191,39 @@ final class ResendRoutingTest extends TestCase
 
         $stub->send($message);
     }
+
+    public function testMessageHeadersAreSentPerEmail(): void
+    {
+        $stub = new ResendStub('test-key');
+
+        $stub->send(new Email(
+            to: [['email' => 'a@example.com'], ['email' => 'b@example.com']],
+            subject: 'Subject',
+            content: 'Body',
+            fromName: 'Sender',
+            fromEmail: 'from@example.com',
+            headers: ['List-Unsubscribe' => '<https://example.test/u>'],
+        ));
+
+        foreach ($stub->capturedRequests[0]['body'] as $email) {
+            $this->assertSame(['List-Unsubscribe' => '<https://example.test/u>'], $email['headers']);
+        }
+    }
+
+    public function testWithoutMessageHeadersOmitsTheField(): void
+    {
+        $stub = new ResendStub('test-key');
+
+        $stub->send(new Email(
+            to: ['a@example.com'],
+            subject: 'Subject',
+            content: 'Body',
+            fromName: 'Sender',
+            fromEmail: 'from@example.com',
+        ));
+
+        $this->assertArrayNotHasKey('headers', $stub->capturedRequests[0]['body'][0]);
+    }
 }
 
 class ResendStub extends Resend

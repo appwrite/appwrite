@@ -28,6 +28,8 @@ class InvalidArgumentException extends \InvalidArgumentException
 
     public const string SENDER_MALFORMED = 'sender_malformed';
 
+    public const string HEADER_MALFORMED = 'header_malformed';
+
     public function __construct(
         public readonly string $type,
         string $message,
