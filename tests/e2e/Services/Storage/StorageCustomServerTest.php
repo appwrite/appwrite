@@ -11,6 +11,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
+use Utopia\Compression\Compression;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
@@ -404,6 +405,40 @@ final class StorageCustomServerTest extends Scope
             'enabled' => 'false',
         ]);
         $this->assertEquals(400, $bucket['headers']['status-code']);
+    }
+
+    public function testUpdateBucketKeepsSettingsOnNull(): void
+    {
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', $headers, [
+            'bucketId' => ID::unique(),
+            'name' => 'Test Bucket Null Update',
+            'maximumFileSize' => 1000000,
+            'compression' => Compression::GZIP,
+            'encryption' => false,
+        ]);
+        $this->assertSame(201, $bucket['headers']['status-code']);
+
+        // An explicit null keeps the bucket's current value rather than resetting it to the param default
+        $bucket = $this->client->call(Client::METHOD_PUT, '/storage/buckets/' . $bucket['body']['$id'], $headers, [
+            'name' => 'Test Bucket Null Update',
+            'maximumFileSize' => null,
+            'compression' => null,
+            'encryption' => null,
+        ]);
+        $this->assertSame(200, $bucket['headers']['status-code']);
+
+        $bucket = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucket['body']['$id'], $headers);
+        $this->assertSame(200, $bucket['headers']['status-code']);
+        $this->assertSame(1000000, $bucket['body']['maximumFileSize']);
+        $this->assertSame(Compression::GZIP, $bucket['body']['compression']);
+        $this->assertFalse($bucket['body']['encryption']);
+
+        $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $bucket['body']['$id'], $headers);
     }
 
     public function testDeleteBucket(): void

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "806bd86e0d18636aeb7b4aae111cc140",
+    "content-hash": "3db4073323bda20abfa44d4b116b990e",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3784,16 +3784,16 @@
         },
         {
             "name": "utopia-php/http",
-            "version": "2.0.0-rc32",
+            "version": "dev-fix/http-null-optional-default",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/http.git",
-                "reference": "9aebc9810d8f47ab644ac68ad2e592d0e00d2f16"
+                "reference": "99feea9b75ee6ebb46a9fac14288ec4e0b95f8e3"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/http/zipball/9aebc9810d8f47ab644ac68ad2e592d0e00d2f16",
-                "reference": "9aebc9810d8f47ab644ac68ad2e592d0e00d2f16",
+                "url": "https://api.github.com/repos/utopia-php/http/zipball/99feea9b75ee6ebb46a9fac14288ec4e0b95f8e3",
+                "reference": "99feea9b75ee6ebb46a9fac14288ec4e0b95f8e3",
                 "shasum": ""
             },
             "require": {
@@ -3831,9 +3831,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/http/issues",
-                "source": "https://github.com/utopia-php/http/tree/2.0.0-rc32"
+                "source": "https://github.com/utopia-php/http/tree/fix/http-null-optional-default"
             },
-            "time": "2026-09-14T14:53:22+00:00"
+            "time": "2026-09-23T09:36:38+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -8160,10 +8160,17 @@
             "time": "2026-07-03T20:44:34+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/http",
+            "version": "dev-fix/http-null-optional-default",
+            "alias": "2.0.0-rc33",
+            "alias_normalized": "2.0.0.0-RC33"
+        }
+    ],
     "minimum-stability": "dev",
     "stability-flags": {
-        "utopia-php/http": 5
+        "utopia-php/http": 20
     },
     "prefer-stable": true,
     "prefer-lowest": false,
