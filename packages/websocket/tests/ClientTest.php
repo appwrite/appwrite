@@ -41,7 +41,8 @@ final class ClientTest extends TestCase
 
     public function testEventHandlers(): void
     {
-        $callback = static function (): void {};
+        $callback = static function (): void {
+        };
 
         $this->assertSame($this->client, $this->client->onMessage($callback));
         $this->assertSame($this->client, $this->client->onClose($callback));

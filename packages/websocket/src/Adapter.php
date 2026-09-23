@@ -12,7 +12,9 @@ abstract class Adapter
 
     protected array $config = [];
 
-    public function __construct(protected string $host = '0.0.0.0', protected int $port = 80) {}
+    public function __construct(protected string $host = '0.0.0.0', protected int $port = 80)
+    {
+    }
 
     /**
      * Starts the Server.

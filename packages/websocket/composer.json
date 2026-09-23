@@ -17,7 +17,7 @@
     "minimum-stability": "stable",
     "autoload": {
         "psr-4": {
-            "Utopia\\WebSocket\\": "src/WebSocket"
+            "Utopia\\WebSocket\\": "src/"
         }
     },
     "autoload-dev": {

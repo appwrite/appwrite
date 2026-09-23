@@ -2,17 +2,16 @@
 
 declare(strict_types=1);
 
-namespace Utopia\WebSocket\Tests;
+namespace Utopia\WebSocket\Tests\E2E;
 
 use PHPUnit\Framework\TestCase;
 use Swoole\Coroutine;
 use Swoole\Coroutine\Http\Client as HttpClient;
-
-use function Swoole\Coroutine\run;
-
 use Swoole\Coroutine\Socket;
 use Swoole\WebSocket\Server as NativeServer;
 use Utopia\WebSocket\Client;
+
+use function Swoole\Coroutine\run;
 
 final class AdapterTest extends TestCase
 {

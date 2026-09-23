@@ -40,7 +40,8 @@
             "Utopia\\Span\\": "packages/span/src",
             "Utopia\\System\\": "packages/system/src",
             "Utopia\\Telemetry\\": "packages/telemetry/src",
-            "Utopia\\UserAgent\\": "packages/user-agent/src"
+            "Utopia\\UserAgent\\": "packages/user-agent/src",
+            "Utopia\\WebSocket\\": "packages/websocket/src"
         },
         "files": [
             "packages/client/src/compat.php"
@@ -65,7 +66,8 @@
             "Utopia\\Span\\Tests\\": "packages/span/tests",
             "Utopia\\System\\Tests\\": "packages/system/tests",
             "Utopia\\Telemetry\\Tests\\": "packages/telemetry/tests",
-            "Utopia\\UserAgent\\Tests\\": "packages/user-agent/tests"
+            "Utopia\\UserAgent\\Tests\\": "packages/user-agent/tests",
+            "Utopia\\WebSocket\\Tests\\": "packages/websocket/tests"
         }
     },
     "minimum-stability": "dev",
@@ -134,7 +136,6 @@
         "utopia-php/storage": "^4.0",
         "mustangostang/spyc": "0.6.*",
         "utopia-php/vcs": "5.5.*",
-        "utopia-php/websocket": "2.0.2",
         "dragonmantank/cron-expression": "3.4.*",
         "chillerlan/php-qrcode": "4.3.*",
         "adhocore/jwt": "1.1.*",
@@ -195,6 +196,7 @@
         "utopia-php/span": "*",
         "utopia-php/system": "*",
         "utopia-php/telemetry": "*",
-        "utopia-php/user-agent": "*"
+        "utopia-php/user-agent": "*",
+        "utopia-php/websocket": "*"
     }
 }

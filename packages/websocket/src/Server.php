@@ -15,7 +15,9 @@ class Server
     /**
      * Creates an instance of a WebSocket server.
      */
-    public function __construct(protected Adapter $adapter) {}
+    public function __construct(protected Adapter $adapter)
+    {
+    }
 
     /**
      * Starts the WebSocket server.
