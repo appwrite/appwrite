@@ -301,6 +301,22 @@ class V25 extends Migration
                     // has no table yet, and migrating its documents fails without one.
                     $this->createCollection($id);
                     break;
+
+                case 'topics':
+                    // Added in 2.3.0 for the push broker, which increments sequence on publish.
+                    $attributes = [
+                        'sequence',
+                        'qos',
+                        'expiry',
+                    ];
+                    try {
+                        $this->createAttributesFromCollection($this->dbForProject, $id, $attributes);
+                    } catch (Throwable $th) {
+                        Console::warning('Failed to create attributes "' . \implode(', ', $attributes) . "\" in collection {$id}: {$th->getMessage()}");
+                    }
+
+                    $this->dbForProject->purgeCachedCollection($id);
+                    break;
             }
         }
     }
