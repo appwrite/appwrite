@@ -109,7 +109,7 @@ return function (Container $container): void {
     }, []);
 
     $container->set('authorizer', function () use ($getProject, $container): callable {
-        return function (array $identity, string $topic) use ($getProject, $container): bool {
+        return function (array $identity) use ($getProject, $container): bool {
             $userId = $identity['userId'] ?? '';
             $projectId = $identity['projectId'] ?? '';
             if ($userId === '' || $projectId === '') {
