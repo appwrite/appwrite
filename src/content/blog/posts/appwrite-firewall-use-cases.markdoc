@@ -154,7 +154,7 @@ During a flood of traffic, precise rules take too long to write. **Attack mode**
 
 Attack mode creates a challenge rule that matches every path and runs at priority `0`, before the rules at the default priority of `100`. While it is on, every page of the site returns the challenge first.
 
-Your own automation also gets the challenge, and an uptime monitor then reports the site as down. A bypass rule must run before the attack mode rule, so it needs a **negative** priority. In the example above, the bypass rule matches **User agent** **Starts with** `UptimeRobot` at priority `-10`. Use the user agent of your own monitor or automation. Requests from that tool pass, and every other visitor still gets the challenge. To stop attack mode, click **Turn off** in the banner.
+Your own automation also gets the challenge, and an uptime monitor then reports the site as down. A bypass rule must run before the attack mode rule, so it needs a **negative** priority. In the example above, the bypass rule matches **User agent** **Starts with** `UptimeRobot` at priority `-10`. Use the user agent of your own monitor or automation. Requests from that tool pass, and every other visitor still gets the challenge. Any client can send any user agent, so an attacker who copies it also skips the challenge. If your monitor publishes its IP addresses, match on **IP address** instead. To stop attack mode, click **Turn off** in the banner.
 
 # Find out which rule acted on a request {% #which-rule %}
 
@@ -173,7 +173,7 @@ Firewall rules do not apply to the Console. A rule that is too strict cannot loc
 
 Each problem in this post takes one or two rules to fix. The OTP preset stops SMS pumping, and one rate limit protects your tables from scrapers. Rules by country, IP address, and header control who reaches your API, your Functions, and your Sites. Attack mode protects a site during a flood with one click, and the response headers name the rule for every blocked request.
 
-All of this runs before a request reaches your project. Blocked traffic never starts a function execution, reads a row, or sends a message, and your code stays the same. New rules apply as soon as you save them, so a new attack takes minutes to stop, not a deploy.
+Appwrite checks the rules before your code or your data. Blocked traffic never starts a function execution, reads a row, or sends a message, and your code stays the same. A saved rule applies to new requests within moments, so you stop a new attack without a deploy.
 
 Start with the presets, check the **Estimated impact** panel before you save, and add your own rules as your traffic changes.
 
