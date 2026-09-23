@@ -291,6 +291,21 @@ function root_manifest(): string
         $root->{$section}->{'psr-4'} = (object) $entries;
     }
 
+    // Packages here are not installed by Composer, so a package's `files`
+    // (such as a class_alias shim for renamed classes) load only through the
+    // root autoload.
+    $files = array_values(array_filter((array) ($root->autoload->files ?? []), fn (string $file) => !str_starts_with($file, 'packages/')));
+    foreach (packages() as $package) {
+        foreach (manifest($package)['autoload']['files'] ?? [] as $file) {
+            $files[] = "packages/{$package}/{$file}";
+        }
+    }
+    if ($files !== []) {
+        $root->autoload->files = $files;
+    } else {
+        unset($root->autoload->files);
+    }
+
     // Composer must not install a package this repository provides, even when
     // another vendored package requires it: `replace` tells the solver the
     // root satisfies that requirement and the vendored copy is skipped.
