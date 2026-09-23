@@ -2284,6 +2284,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Topic name': 'トピック名',
   'Topic name updated successfully': 'トピック名を更新しました',
   'Topic not found': 'トピックが見つかりません',
+  'Subscriber not found': 'サブスクライバーが見つかりません',
   'Topics group subscribers for email, SMS, or push.':
     'トピックはメール、SMS、プッシュ用にサブスクライバーをグループ化します。',
   'Type:': 'タイプ:',

@@ -110,6 +110,8 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Deployment activated successfully': 'デプロイを有効化しました',
   'Deployment deleted successfully': 'デプロイを削除しました',
   'Deployment not found': 'デプロイが見つかりません',
+  'Site not found': 'サイトが見つかりません',
+  'Execution not found': '実行が見つかりません',
   'Deployment rebuild started': 'デプロイの再ビルドを開始しました',
   'Deployment screenshot': 'デプロイのスクリーンショット',
   'Deselect all': 'すべての選択を解除',

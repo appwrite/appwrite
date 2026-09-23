@@ -2757,6 +2757,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Topic name': 'שם הנושא',
   'Topic name updated successfully': 'שם הנושא עודכן בהצלחה',
   'Topic not found': 'הנושא לא נמצא',
+  'Subscriber not found': 'המנוי לא נמצא',
   'Topics group subscribers for email, SMS, or push.':
     'נושאים מקבצים מנויים לאימייל, SMS או Push.',
   'Type:': 'סוג:',

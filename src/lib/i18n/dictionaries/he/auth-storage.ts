@@ -982,6 +982,8 @@ export const heAuthStorageDictionary: Record<string, string> = {
   'Team name': 'שם צוות',
   'Team name is required': 'שם צוות הוא שדה חובה',
   'Team not found': 'הצוות לא נמצא',
+  'Membership not found': 'החברות לא נמצאה',
+  'Target not found': 'היעד לא נמצא',
   'Team presets are available when the project belongs to an organization.': 'ערכות צוות זמינות כאשר הפרויקט שייך לארגון.',
   'Teams': 'צוותים',
   'Templates': 'תבניות',

@@ -187,6 +187,8 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Deployment activated successfully': 'הפריסה הופעלה בהצלחה',
   'Deployment deleted successfully': 'הפריסה נמחקה בהצלחה',
   'Deployment not found': 'הפריסה לא נמצאה',
+  'Site not found': 'האתר לא נמצא',
+  'Execution not found': 'ההרצה לא נמצאה',
   'Deployment rebuild started': 'הבנייה מחדש של הפריסה החלה',
   'Deployment screenshot': 'צילום מסך של הפריסה',
   Deprecated: 'הוצא משימוש',
