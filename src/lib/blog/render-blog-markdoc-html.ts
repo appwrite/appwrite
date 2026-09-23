@@ -207,7 +207,9 @@ const TAB_ACTIVE_CLASS = 'border-white text-foreground'
 const TAB_INACTIVE_CLASS =
   'border-transparent text-muted-foreground hover:text-foreground'
 
-/** Tabs switch in the browser through `[data-blog-tab]` clicks in `BlogMarkdownBody`. */
+let tabGroupCount = 0
+
+/** Tabs switch in the browser through `[data-blog-tab]` clicks and arrow keys in `BlogMarkdownBody`. */
 function renderTabs(tag: MarkdocTag): string {
   const items = tag.children.filter(
     (child): child is MarkdocTag => isTag(child) && child.name === 'TabsItem',
@@ -215,20 +217,21 @@ function renderTabs(tag: MarkdocTag): string {
   if (items.length === 0) return renderChildren(tag.children)
   if (items.length === 1) return renderChildren(items[0].children)
 
+  const group = `blog-tabs-${++tabGroupCount}`
   const buttons = items
     .map((item, index) => {
       const title = String(item.attributes.title ?? item.attributes.id ?? '')
-      return `<button type="button" class="${TAB_BUTTON_CLASS} ${index === 0 ? TAB_ACTIVE_CLASS : TAB_INACTIVE_CLASS}" data-blog-tab="${index}" aria-selected="${index === 0}">${escapeHtml(title)}</button>`
+      return `<button type="button" role="tab" id="${group}-tab-${index}" aria-controls="${group}-panel-${index}" aria-selected="${index === 0}" tabindex="${index === 0 ? 0 : -1}" class="${TAB_BUTTON_CLASS} ${index === 0 ? TAB_ACTIVE_CLASS : TAB_INACTIVE_CLASS}" data-blog-tab="${index}">${escapeHtml(title)}</button>`
     })
     .join('')
   const panels = items
     .map(
       (item, index) =>
-        `<div data-blog-tab-panel="${index}"${attr('hidden', index > 0)}>${renderChildren(item.children)}</div>`,
+        `<div role="tabpanel" id="${group}-panel-${index}" aria-labelledby="${group}-tab-${index}" tabindex="0" data-blog-tab-panel="${index}"${attr('hidden', index > 0)}>${renderChildren(item.children)}</div>`,
     )
     .join('')
 
-  return `<div class="my-6 overflow-hidden rounded-xl border border-border bg-background" data-blog-tabs><div class="not-prose flex gap-1 overflow-x-auto border-b border-border px-4 pt-3">${buttons}</div><div class="px-4 py-4">${panels}</div></div>`
+  return `<div class="my-6 overflow-hidden rounded-xl border border-border bg-background" data-blog-tabs><div role="tablist" class="not-prose flex gap-1 overflow-x-auto border-b border-border px-4 pt-3">${buttons}</div><div class="px-4 py-4">${panels}</div></div>`
 }
 
 function renderImage(tag: MarkdocTag): string {
@@ -372,6 +375,7 @@ export function renderBlogMarkdocHtml(
 ): string {
   const previous = activeHighlighter
   activeHighlighter = options?.highlight ?? null
+  tabGroupCount = 0
   try {
     const ast = Markdoc.parse(content)
     const transformed = Markdoc.transform(ast, docsMarkdocConfig)

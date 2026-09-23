@@ -71,6 +71,7 @@ function selectBlogTab(group: HTMLElement, tabId: string) {
     if (button.closest('[data-blog-tabs]') !== group) continue
     const active = button.getAttribute('data-blog-tab') === tabId
     button.setAttribute('aria-selected', String(active))
+    button.tabIndex = active ? 0 : -1
     button.classList.remove(...TAB_ACTIVE_CLASSES, ...TAB_INACTIVE_CLASSES)
     button.classList.add(...(active ? TAB_ACTIVE_CLASSES : TAB_INACTIVE_CLASSES))
   }
@@ -181,8 +182,38 @@ export function BlogMarkdownBody({ html, className }: BlogMarkdownBodyProps) {
       }
     }
 
+    const onKeyDown = (event: KeyboardEvent) => {
+      const target = event.target
+      if (!(target instanceof HTMLElement)) return
+      if (!target.matches('[data-blog-tab]')) return
+      const group = target.closest<HTMLElement>('[data-blog-tabs]')
+      if (!group) return
+      const tabs = [
+        ...group.querySelectorAll<HTMLElement>('[data-blog-tab]'),
+      ].filter((tab) => tab.closest('[data-blog-tabs]') === group)
+      const current = tabs.indexOf(target)
+      const next =
+        event.key === 'ArrowRight'
+          ? (current + 1) % tabs.length
+          : event.key === 'ArrowLeft'
+            ? (current - 1 + tabs.length) % tabs.length
+            : event.key === 'Home'
+              ? 0
+              : event.key === 'End'
+                ? tabs.length - 1
+                : -1
+      if (next < 0) return
+      event.preventDefault()
+      selectBlogTab(group, tabs[next].getAttribute('data-blog-tab') ?? '')
+      tabs[next].focus()
+    }
+
     root.addEventListener('click', onClick)
-    return () => root.removeEventListener('click', onClick)
+    root.addEventListener('keydown', onKeyDown)
+    return () => {
+      root.removeEventListener('click', onClick)
+      root.removeEventListener('keydown', onKeyDown)
+    }
   }, [html])
 
   return (
