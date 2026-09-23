@@ -8,7 +8,7 @@ readtime: 3
 
 
 Appwrite Functions can be executed in several ways.
-Executions can be invoked through the Appwrite SDK and visiting its REST endpoint. Functions can also be triggered by events and scheduled executions.
+Executions can be invoked through the Appwrite SDK and visiting its REST endpoint. Functions can also be triggered by events, schedules, and incoming email.
 Here are all the different ways to consume your Appwrite Functions.
 
 # Execution modes {% #execution-modes %}
@@ -36,6 +36,7 @@ Asynchronous executions are created via:
 - The [Create execution](/docs/references/cloud/client-web/functions#createExecution) endpoint where the `async` parameter is `true`
 - Event triggers (when functions are triggered by [platform events](/docs/apis/events))
 - Scheduled executions (cron jobs or delayed executions)
+- [Email triggers](/docs/products/functions/email) (when an email arrives at an address of the function)
 
 Asynchronous executions:
 - Have no timeout limitations beyond your function's configured timeout
@@ -547,6 +548,15 @@ You can use one of the following events.
 {% partial file="messaging-events.md" /%}
 {% /accordion_item %}
 {% /accordion %}
+
+# Email {% #email %}
+
+Functions can execute when an email arrives at the built-in address of the function or at a custom domain that you connect to it.
+The execution receives the parsed email as JSON in `request.body`, and the `x-appwrite-trigger` header is `email`.
+
+{% arrow_link href="/docs/products/functions/email" %}
+Learn about email triggers
+{% /arrow_link %}
 
 # Schedule {% #schedule %}
 
