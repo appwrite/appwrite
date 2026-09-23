@@ -69,10 +69,6 @@ class Jobs extends Action
 
     private const string INTERNAL_ERROR_MESSAGE = 'Internal server error. Please try again.';
 
-    /**
-     * Artifact failures the user can fix, with a safe message for each. Raw
-     * messages can leak internal URLs and paths, so they are never shown.
-     */
     private const array USER_ARTIFACT_ERRORS = [
         ErrorCode::ArchiveEmpty->value => 'The source archive is empty.',
         ErrorCode::ArchiveUnknownFormat->value => 'The source archive format is not recognized.',
@@ -200,8 +196,6 @@ class Jobs extends Action
                 $this->dispatchUpdate($queueForEvents, $queueForWebhooks, $publisherForFunctions, $project, $deployment);
             }
 
-            // A platform-side artifact failure that failed the build. The cache
-            // upload and manifest never fail a build.
             if ($artifact?->status === 'failed'
                 && !\in_array($artifact->artifactId, ['cache', 'manifest'], true)
                 && !isset(self::USER_ARTIFACT_ERRORS[$artifact->error?->code->value ?? ''])) {
@@ -213,9 +207,6 @@ class Jobs extends Action
             }
         }, self::LOCK_TIMEOUT);
 
-        // Thrown only once the callback is fully applied and the lock released,
-        // so the error reaches Sentry without skipping realtime or webhooks.
-        // Permanent: the event is deduplicated, so a redelivery would be a no-op.
         if ($failure !== null) {
             throw $failure;
         }
@@ -371,9 +362,9 @@ class Jobs extends Action
 
         // Any other artifact failing dooms the build — the orchestrator aborts
         // the job on a pre-job failure, and a lost output has nothing to serve
-        // — so fail it now rather than waiting for the bare exit code. The
-        // build cache upload is the one best-effort artifact: losing it costs
-        // the next build time, not this one.
+        // — so fail it now rather than waiting for the bare exit code. The build cache
+        // upload is the one best-effort artifact: losing it costs the next
+        // build time, not this one.
         if ($failed && $artifact->artifactId !== 'cache') {
             return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, $message, $publisherForScreenshots, $vcsFactory, $platform, $bus);
         }
