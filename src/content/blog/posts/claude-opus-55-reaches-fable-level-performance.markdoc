@@ -122,7 +122,7 @@ This is a practical improvement, not a cosmetic one. Work you can skim and verif
 
 # Should you switch to Claude Opus 5.5?
 
-The honest answer is that for most agentic and coding workloads, yes, and the decision is mostly about cost rather than capability.
+Whether you should switch depends on your workload and integration. Anthropic reports lower pricing, faster output, and stronger results across several evaluations, but existing Opus 5 integrations should also account for the model's breaking changes.
 
 * **Switch from Opus 5** if the lower pricing, faster output, and stronger performance on several evaluations make sense for your workload. Review Anthropic's migration guide before moving production workloads, as Opus 5.5 introduces several breaking changes.
 * **Switch from Fable 5.1** if you were paying a premium for frontier quality on coding and knowledge work. Opus 5.5 matches it on most tasks at a fraction of the price.
