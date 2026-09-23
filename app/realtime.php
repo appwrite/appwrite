@@ -1,5 +1,6 @@
 <?php
 
+use Appwrite\Database\Factory as DatabaseFactory;
 use Appwrite\Event\Event as QueueEvent;
 use Appwrite\Event\Message\Usage as UsageMessage;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
@@ -35,7 +36,6 @@ use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
 use Utopia\Console;
-use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -47,7 +47,6 @@ use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Container;
-use Utopia\DSN\DSN;
 use Utopia\Pools\Group;
 use Utopia\Queue\Broker\Pool as BrokerPool;
 use Utopia\Queue\Queue;
@@ -127,15 +126,10 @@ if (!function_exists('getConsoleDB')) {
         /** @var Group $pools */
         $pools = $register->get('pools');
 
-        $adapter = new DatabasePool($pools->get('console'));
-        $database = new Database($adapter, getCache());
-        $database
-            ->setDatabase(APP_DATABASE)
-            ->setNamespace('_console')
-            ->setMetadata('host', \gethostname())
-            ->setMetadata('project', '_console');
-        $database->setDocumentType('users', User::class);
-        return $ctx['dbForPlatform'] = $database;
+        return $ctx['dbForPlatform'] = (new DatabaseFactory($pools, getCache(), new Authorization()))->platform(metadata: [
+            'host' => \gethostname(),
+            'project' => '_console',
+        ]);
     }
 }
 
@@ -162,44 +156,10 @@ if (!function_exists('getProjectDB')) {
             return getConsoleDB();
         }
 
-        try {
-            $dsn = new DSN($project->getAttribute('database'));
-        } catch (\InvalidArgumentException) {
-            // TODO: Temporary until all projects are using shared tables
-            $dsn = new DSN('mysql://' . $project->getAttribute('database'));
-        }
-
-        $adapter = new DatabasePool($pools->get($dsn->getHost()));
-        $database = new Database($adapter, getCache());
-
-        $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
-
-        if (\in_array($dsn->getHost(), $sharedTables)) {
-            $collections = Config::getParam('collections', []);
-            $projectCollections = $collections['projects'] ?? [];
-            $projectsGlobalCollections = array_keys($projectCollections);
-            $projectsGlobalCollections[] = 'audit';
-
-            $database
-                ->setSharedTables(true)
-                ->setGlobalCollections($projectsGlobalCollections)
-                ->setTenant($project->getSequence())
-                ->setNamespace($dsn->getParam('namespace'));
-        } else {
-            $database
-                ->setSharedTables(false)
-                ->setTenant(null)
-                ->setNamespace('_' . $project->getSequence());
-        }
-
-        $database
-            ->setDatabase(APP_DATABASE)
-            ->setMetadata('host', \gethostname())
-            ->setMetadata('project', $project->getId());
-
-        $database->setDocumentType('users', User::class);
-
-        return $ctx['dbForProject'][$project->getSequence()] = $database;
+        return $ctx['dbForProject'][$project->getSequence()] = (new DatabaseFactory($pools, getCache(), new Authorization()))->project($project, metadata: [
+            'host' => \gethostname(),
+            'project' => $project->getId(),
+        ]);
     }
 }
 

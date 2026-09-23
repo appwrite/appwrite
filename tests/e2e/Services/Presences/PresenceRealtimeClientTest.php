@@ -754,4 +754,110 @@ final class PresenceRealtimeClientTest extends Scope
             $listener->close();
         }
     }
+
+    public function testPresenceSetOverRealtimeIsListedToItsOwner(): void
+    {
+        [$project, $user, $headers] = $this->bootstrapIsolatedProject();
+        $presenceId = ID::unique();
+
+        $publisher = $this->connectRealtimeAndSubscribe($project, $headers, timeout: 2);
+
+        try {
+            $this->sendPresenceMessage(
+                $publisher,
+                $presenceId,
+                'online',
+                ['testRunId' => ID::unique(), 'case' => 'owner-list'],
+                $this->getPresencePermissions(Role::user($user['$id']))
+            );
+            $this->receivePresenceResponse($publisher, $presenceId, 'online');
+
+            $this->assertSame(
+                [$presenceId],
+                $this->listPresenceIds($project, $user, $user['$id']),
+                'The owner of a presence set over realtime must find it when listing presences with their session'
+            );
+        } finally {
+            $publisher->close();
+        }
+    }
+
+    public function testPresenceMadePrivateOverRealtimeIsNoLongerListedToOtherUsers(): void
+    {
+        [$project, $owner, $headers] = $this->bootstrapIsolatedProject();
+        $other = $this->getUser(true);
+        $presenceId = ID::unique();
+
+        $create = $this->client->call(
+            Client::METHOD_PUT,
+            '/presences/' . $presenceId,
+            $this->getServerHeaders($project),
+            [
+                'userId' => $owner['$id'],
+                'status' => 'online',
+                'permissions' => $this->getPresencePermissions(Role::any()),
+            ]
+        );
+        $this->assertSame(200, $create['headers']['status-code']);
+        $this->assertSame([$presenceId], $this->listPresenceIds($project, $other, $owner['$id']));
+
+        $publisher = $this->connectRealtimeAndSubscribe($project, $headers, timeout: 2);
+
+        try {
+            $this->sendPresenceMessage(
+                $publisher,
+                $presenceId,
+                'busy',
+                ['testRunId' => ID::unique(), 'case' => 'made-private'],
+                $this->getPresencePermissions(Role::user($owner['$id']))
+            );
+            $this->receivePresenceResponse($publisher, $presenceId, 'busy');
+
+            $this->assertSame(
+                [],
+                $this->listPresenceIds($project, $other, $owner['$id']),
+                'A presence its owner made private over realtime must no longer be listed to other users'
+            );
+        } finally {
+            $publisher->close();
+        }
+    }
+
+    private function receivePresenceResponse(WebSocketClient $client, string $presenceId, string $status): void
+    {
+        $this->receiveUntil(
+            $client,
+            fn (array $message): bool => ($message['type'] ?? null) === 'response'
+                && ($message['data']['to'] ?? null) === 'presence'
+                && ($message['data']['presence']['$id'] ?? null) === $presenceId
+                && ($message['data']['presence']['status'] ?? null) === $status,
+            10_000
+        );
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function listPresenceIds(array $project, array $user, string $ownerId): array
+    {
+        $list = $this->client->call(
+            Client::METHOD_GET,
+            '/presences',
+            [
+                'content-type' => 'application/json',
+                'origin' => 'http://localhost',
+                'x-appwrite-project' => $project['$id'],
+                'cookie' => 'a_session_' . $project['$id'] . '=' . $user['session'],
+            ],
+            [
+                'queries' => [
+                    Query::equal('userId', [$ownerId])->toString(),
+                ],
+            ]
+        );
+
+        $this->assertSame(200, $list['headers']['status-code']);
+
+        return \array_column($list['body']['presences'], '$id');
+    }
 }
