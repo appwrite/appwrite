@@ -5279,9 +5279,8 @@ Http::post('/v1/account/targets/push')
         $session = $dbForProject->getDocument('sessions', $sessionId);
         $name = "{$device['deviceBrand']} {$device['deviceModel']}";
 
-        // A session is one device install holding one push token per provider. Clients that re-register
-        // after the token rotates, rather than updating, used to leave the superseded token live: both
-        // targets resolved to the same device, so every message arrived there twice.
+        // A session is one device install holding one push token per provider. Re-registering a rotated
+        // token instead of updating used to leave the superseded one live, so messages arrived twice.
         $siblings = $session->isEmpty()
             ? []
             : $authorization->skip(fn () => $dbForProject->find('targets', [
@@ -5295,8 +5294,8 @@ Http::post('/v1/account/targets/push')
                 Query::limit(APP_LIMIT_SUBQUERY),
             ]));
 
-        // A sibling already holding this token has to be the one reused, or the update below would
-        // collide with it on the unique identifier index. Otherwise the oldest is reused: a client that
+        // A sibling already holding this token has to be the one reused, or the update below collides
+        // with it on the unique identifier index. Otherwise the oldest wins, since a client that
         // subscribes to topics only on first registration left its subscriptions there.
         $current = null;
 
@@ -5338,9 +5337,9 @@ Http::post('/v1/account/targets/push')
             throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
         }
 
-        // Anything still here holds a token the client has just told us it no longer uses, so it can only
-        // duplicate deliveries. Expiring rather than deleting hands them to the maintenance sweep, which
-        // also releases their topic subscriptions and the counters those subscriptions hold.
+        // Anything left holds a token the client just told us it no longer uses. Expiring rather than
+        // deleting hands it to the maintenance sweep, which also releases its subscriptions and the
+        // topic counters those hold.
         foreach ($siblings as $sibling) {
             $dbForProject->updateDocument('targets', $sibling->getId(), new Document([
                 'expired' => true,

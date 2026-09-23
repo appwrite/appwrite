@@ -507,9 +507,9 @@ class Messaging extends Action
         $identifiers = [];
 
         foreach ($targets as $target) {
-            // Providers report dead tokens back to us and sendBatch() flags the target, but the row only
-            // goes away on the next maintenance sweep. Rows predating the attribute read null, so the
-            // check has to treat anything but a positive flag as reachable.
+            // sendBatch() flags a target when a provider reports its token as dead, but the row only goes
+            // away on the next maintenance sweep. Rows predating the attribute read null, so anything
+            // but a positive flag counts as reachable.
             if ($target->getAttribute('expired')) {
                 continue;
             }
