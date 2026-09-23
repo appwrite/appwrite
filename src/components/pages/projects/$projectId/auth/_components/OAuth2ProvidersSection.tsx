@@ -481,7 +481,7 @@ const NATIVE_CLIENT_IDS_COPY: Partial<
   google: {
     label: 'Web client IDs',
     placeholder: 'Add a web client ID and press Enter',
-    hint: 'Enter the Web application client ID from Google Cloud. Your app sends the same ID to Google as the server client ID. Android and iOS client IDs do not go here.',
+    hint: 'Enter the Web application client ID from Google Cloud. Your app sends the same ID to Google as the server client ID. Android client IDs do not go here.',
   },
   apple: {
     label: 'Bundle IDs',
