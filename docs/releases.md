@@ -99,17 +99,17 @@ Versioned API specs and SDK examples live in [`appwrite/specs`](https://github.c
 
 appwrite.io, its docs, the API reference and the [changelog](https://appwrite.io/changelog) are all served from [`appwrite/vibes`](https://github.com/appwrite/vibes). Prepare one vibes PR per release, named `docs: Appwrite X.Y.Z release`, while the `X.Y.x` → `main` PR is under review, so it can be approved and merged shortly after the tag. [vibes#368](https://github.com/appwrite/vibes/pull/368) and [vibes#402](https://github.com/appwrite/vibes/pull/402) are the 2.2.0 examples.
 
-`scripts/release.ts` in vibes makes the edits. Run it on a branch off vibes `main`, with this repo checked out at the release commit:
+`scripts/release-self-hosted.ts` in vibes makes the edits. Run it on a branch off vibes `main`, with this repo checked out at the release commit:
 
 ```
-bun run release X.Y.Z --notes=<reviewed-notes.md> --appwrite=<appwrite checkout>
-bun run release X.Y.Z --specs      # after the appwrite/specs PR for X.Y.x merged
+bun run release:self-hosted X.Y.Z --notes=<reviewed-notes.md> --appwrite=<appwrite checkout>
+bun run release:self-hosted X.Y.Z --specs  # after the appwrite/specs PR for X.Y.x merged
 ```
 
 `--notes` defaults to the published GitHub Release, `--appwrite` to `APPWRITE_REPO` or the sibling `appwrite` checkout, and the changelog date to today (`--date`). The first run:
 
 - bumps `appwrite/appwrite:X.Y.Z` in the install snippets on the installation and databases pages
-- adds `# Upgrading to X.Y.Z` to the updates page, with the upgrade and `migrate` commands and the prose from the notes' Upgrade section, and moves the example tag
+- replaces the updates page's single upgrade section (anchor `#upgrading-to-latest`) with `# Upgrading to X.Y.Z`: the oldest version that upgrades in one step, read from `Migration::$versions`, the upgrade and `migrate` commands, the prose from the notes' Upgrade section, and the moved example tag
 - copies the previous version's rows in both SDK compatibility tables to `X.Y.Z`
 - creates the changelog entry `src/content/changelog/entries/YYYY-MM-DD.markdoc` from the notes' Highlights, linking to the GitHub Release
 - regenerates the compose generator data (`composeData.ts`) from the appwrite checkout, after checking that its `APP_VERSION_STABLE` is `X.Y.Z`
