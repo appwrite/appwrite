@@ -63,6 +63,7 @@ class Update extends Action
             ->param('topics', null, fn (Database $dbForProject) => new Nullable(new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength()))), 'List of Topic IDs.', true, ['dbForProject'])
             ->param('users', null, fn (Database $dbForProject) => new Nullable(new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength()))), 'List of User IDs.', true, ['dbForProject'])
             ->param('targets', null, fn (Database $dbForProject) => new Nullable(new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength()))), 'List of Targets IDs.', true, ['dbForProject'])
+            ->param('emails', null, new Nullable(new ArrayList(new Email())), 'List of email addresses to send the message to. Use this to deliver to recipients that are not backed by an Appwrite user, target, or topic.', true)
             ->param('subject', null, new Nullable(new Text(998)), 'Email Subject.', true)
             ->param('content', null, new Nullable(new Text(64230)), 'Email Content.', true)
             ->param('draft', null, new Nullable(new Boolean()), 'Is message a draft', true)
@@ -82,7 +83,7 @@ class Update extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $messageId, ?array $topics, ?array $users, ?array $targets, ?string $subject, ?string $content, ?bool $draft, ?bool $html, ?array $cc, ?array $bcc, ?string $replyToEmail, ?string $replyToName, ?string $scheduledAt, ?array $attachments, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, MessagingPublisher $publisherForMessaging, Response $response)
+    public function action(string $messageId, ?array $topics, ?array $users, ?array $targets, ?array $emails, ?string $subject, ?string $content, ?bool $draft, ?bool $html, ?array $cc, ?array $bcc, ?string $replyToEmail, ?string $replyToName, ?string $scheduledAt, ?array $attachments, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, MessagingPublisher $publisherForMessaging, Response $response)
     {
         $message = $dbForProject->getDocument('messages', $messageId);
 
@@ -107,6 +108,7 @@ class Update extends Action
             && \count($topics ?? $message->getAttribute('topics', [])) === 0
             && \count($users ?? $message->getAttribute('users', [])) === 0
             && \count($targets ?? $message->getAttribute('targets', [])) === 0
+            && \count($emails ?? $message->getAttribute('data', [])['emails'] ?? []) === 0
         ) {
             throw new Exception(Exception::MESSAGE_MISSING_TARGET);
         }
@@ -230,6 +232,10 @@ class Update extends Action
 
         if (!\is_null($bcc)) {
             $data['bcc'] = $bcc;
+        }
+
+        if (!\is_null($emails)) {
+            $data['emails'] = $emails;
         }
 
         if (!\is_null($replyToEmail)) {
