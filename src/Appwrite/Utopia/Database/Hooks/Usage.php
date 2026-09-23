@@ -46,31 +46,31 @@ class Usage implements Lifecycle
                 => $this->usage->addMetric(METRIC_TEAMS, $value),
 
             $collection === 'users'
-                => $this->trackUsers($event, $data, $value),
+                => $this->usage->addMetric(METRIC_USERS, $value),
 
             $collection === 'sessions'
                 => $this->usage->addMetric(METRIC_SESSIONS, $value),
 
             $collection === 'databases'
-                => $this->trackDatabases($event, $data, $value),
+                => $this->usage->addMetric($this->metric(METRIC_DATABASES), $value),
 
             str_starts_with($collection, 'database_') && !str_contains($collection, 'collection')
-                => $this->trackCollections($event, $data, $value),
+                => $this->usage->addMetric($this->metric(METRIC_COLLECTIONS), $value),
 
             str_starts_with($collection, 'database_') && str_contains($collection, '_collection_')
                 => $this->trackDocuments($data, $value),
 
             $collection === 'buckets'
-                => $this->trackBuckets($event, $data, $value),
+                => $this->usage->addMetric(METRIC_BUCKETS, $value),
 
             str_starts_with($collection, 'bucket_')
                 => $this->trackFiles($data, $value),
 
             $collection === 'functions'
-                => $this->trackFunctions($event, $data, $value),
+                => $this->usage->addMetric(METRIC_FUNCTIONS, $value),
 
             $collection === 'sites'
-                => $this->trackSites($event, $data, $value),
+                => $this->usage->addMetric(METRIC_SITES, $value),
 
             $collection === 'deployments'
                 => $this->trackDeployments($data, $value),
@@ -92,31 +92,6 @@ class Usage implements Lifecycle
         return $this->databaseType . '.' . $metric;
     }
 
-    private function trackUsers(Event $event, Document $document, int $value): void
-    {
-        $this->usage->addMetric(METRIC_USERS, $value);
-        if ($event === Event::DocumentDelete) {
-            $this->usage->addReduce($document);
-        }
-    }
-
-    private function trackDatabases(Event $event, Document $document, int $value): void
-    {
-        $this->usage->addMetric($this->metric(METRIC_DATABASES), $value);
-        if ($event === Event::DocumentDelete) {
-            $this->usage->addReduce($document);
-        }
-    }
-
-    private function trackCollections(Event $event, Document $document, int $value): void
-    {
-        $this->usage->addMetric($this->metric(METRIC_COLLECTIONS), $value);
-
-        if ($event === Event::DocumentDelete) {
-            $this->usage->addReduce($document);
-        }
-    }
-
     private function trackDocuments(Document $document, int $value): void
     {
         $parts = explode('_', $document->getCollection());
@@ -129,35 +104,11 @@ class Usage implements Lifecycle
             ->addMetric($databaseInternalId . '.' . $collectionInternalId . '.documents', $value);
     }
 
-    private function trackBuckets(Event $event, Document $document, int $value): void
-    {
-        $this->usage->addMetric(METRIC_BUCKETS, $value);
-        if ($event === Event::DocumentDelete) {
-            $this->usage->addReduce($document);
-        }
-    }
-
     private function trackFiles(Document $document, int $value): void
     {
         $this->usage
             ->addMetric(METRIC_FILES, $value)
             ->addMetric(METRIC_FILES_STORAGE, $document->getAttribute('sizeOriginal') * $value);
-    }
-
-    private function trackFunctions(Event $event, Document $document, int $value): void
-    {
-        $this->usage->addMetric(METRIC_FUNCTIONS, $value);
-        if ($event === Event::DocumentDelete) {
-            $this->usage->addReduce($document);
-        }
-    }
-
-    private function trackSites(Event $event, Document $document, int $value): void
-    {
-        $this->usage->addMetric(METRIC_SITES, $value);
-        if ($event === Event::DocumentDelete) {
-            $this->usage->addReduce($document);
-        }
     }
 
     private function trackDeployments(Document $document, int $value): void
