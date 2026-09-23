@@ -1516,60 +1516,162 @@ final class ClaimTest extends TestCase
         );
     }
 
-    public function testRecoveryRequiresExactAuthoritativeOwnerLifecycle(): void
+    /** @return \Iterator<string, array{string, string, string, string}> */
+    public static function ownersThatCanNoLongerRun(): \Iterator
     {
-        $claims = new Claim($this->database, $this->locks());
-        $failed = $this->createFailedMigration();
-        $completed = $this->database->createDocument('migrations', new Document([
-            '$id' => 'migration-completed',
-            'attemptId' => 'attempt-completed',
-            'status' => 'completed',
-            'stage' => 'finished',
-            'resourceData' => [],
-        ]));
-        $active = $this->database->createDocument('migrations', new Document([
-            '$id' => 'migration-active',
-            'attemptId' => 'attempt-active',
-            'status' => 'processing',
-            'stage' => 'migrating',
+        yield 'last attempt of a failed migration' => ['failed', 'finished', 'attempt-a', 'attempt-a'];
+        yield 'last attempt of a migration failed while migrating' => ['failed', 'migrating', 'attempt-a', 'attempt-a'];
+        yield 'last attempt of a completed migration' => ['completed', 'finished', 'attempt-a', 'attempt-a'];
+        yield 'earlier attempt of a failed migration' => ['failed', 'finished', 'attempt-b', 'attempt-a'];
+        yield 'earlier attempt of a queued retry' => ['pending', 'finished', 'attempt-b', 'attempt-a'];
+        yield 'earlier attempt of a running migration' => ['processing', 'migrating', 'attempt-b', 'attempt-a'];
+    }
+
+    #[DataProvider('ownersThatCanNoLongerRun')]
+    public function testRecoveryTakesOverAnOwnerThatCanNoLongerRun(string $status, string $stage, string $current, string $owner): void
+    {
+        $this->database->createDocument('migrations', new Document([
+            '$id' => 'migration-owner',
+            'attemptId' => $current,
+            'status' => $status,
+            'stage' => $stage,
             'resourceData' => [],
         ]));
 
-        $this->assertNotInstanceOf(ProvisioningOwner::class, $claims->recoverable(new Document([
-            'migrationId' => $failed->getId(),
-            'migrationAttemptId' => 'attempt-terminal',
-        ])));
-        $this->assertNotInstanceOf(ProvisioningOwner::class, $claims->recoverable(new Document([
-            'migrationId' => $completed->getId(),
-            'migrationAttemptId' => 'attempt-completed',
-        ])));
-        $this->assertNotInstanceOf(ProvisioningOwner::class, $claims->recoverable(
-            new Document([
-                'migrationId' => $active->getId(),
-                'migrationAttemptId' => 'attempt-active',
-            ]),
-        ));
-        $this->assertNotInstanceOf(ProvisioningOwner::class, $claims->recoverable(
-            new Document(['migrationId' => 'migration-unknown']),
-        ));
-        $this->assertNotInstanceOf(ProvisioningOwner::class, $claims->recoverable(new Document()));
-        $this->assertNotInstanceOf(ProvisioningOwner::class, $claims->recoverable(new Document(['migrationId' => ['malformed']])));
-        $this->assertNotInstanceOf(ProvisioningOwner::class, $claims->recoverable(new Document([
-            'migrationId' => $failed->getId(),
-            'migrationAttemptId' => 'attempt-mismatch',
-        ])));
-        $this->assertNotInstanceOf(ProvisioningOwner::class, $claims->recoverable(
-            new Document([
-                'migrationId' => $active->getId(),
-                'migrationAttemptId' => 'attempt-active',
-            ]),
-            new Document([
-                '$id' => $failed->getId(),
-                'attemptId' => 'attempt-terminal',
-                'status' => 'failed',
-                'stage' => 'finished',
-            ]),
-        ));
+        $recovered = (new Claim($this->database, $this->locks()))->recoverable(new Document([
+            'migrationId' => 'migration-owner',
+            'migrationAttemptId' => $owner,
+        ]));
+
+        $this->assertInstanceOf(ProvisioningOwner::class, $recovered);
+        $this->assertSame('migration-owner', $recovered->migrationId);
+        $this->assertSame($owner, $recovered->attemptId);
+    }
+
+    /** @return \Iterator<string, array{string, string}> */
+    public static function unfinishedOwners(): \Iterator
+    {
+        yield 'queued' => ['pending', 'init'];
+        yield 'queued retry' => ['pending', 'finished'];
+        yield 'processing' => ['processing', 'processing'];
+        yield 'migrating' => ['processing', 'migrating'];
+        yield 'finalizing' => ['processing', 'finalizing'];
+    }
+
+    #[DataProvider('unfinishedOwners')]
+    public function testRecoveryRefusesTheOwningMigrationsCurrentUnfinishedAttempt(string $status, string $stage): void
+    {
+        $failed = $this->createFailedMigration();
+        $this->database->createDocument('migrations', new Document([
+            '$id' => 'migration-owner',
+            'attemptId' => 'attempt-a',
+            'status' => $status,
+            'stage' => $stage,
+            'resourceData' => [],
+        ]));
+        $database = new Document([
+            'migrationId' => 'migration-owner',
+            'migrationAttemptId' => 'attempt-a',
+        ]);
+        $claims = new Claim($this->database, $this->locks());
+
+        $this->assertNotInstanceOf(ProvisioningOwner::class, $claims->recoverable($database));
+        $this->assertNotInstanceOf(ProvisioningOwner::class, $claims->recoverable($database, new Document([
+            '$id' => $failed->getId(),
+            'attemptId' => 'attempt-terminal',
+            'status' => 'failed',
+            'stage' => 'finished',
+        ])), 'Another migration\'s terminal snapshot cannot vouch for a running owner');
+    }
+
+    public function testRecoveryTakesOverDatabasesOfADeletedMigration(): void
+    {
+        $recovered = (new Claim($this->database, $this->locks()))->recoverable(new Document([
+            'migrationId' => 'migration-deleted',
+            'migrationAttemptId' => 'attempt-a',
+        ]));
+
+        $this->assertInstanceOf(ProvisioningOwner::class, $recovered);
+        $this->assertSame('migration-deleted', $recovered->migrationId);
+        $this->assertSame('attempt-a', $recovered->attemptId);
+    }
+
+    /** @return \Iterator<string, array{array<string, mixed>}> */
+    public static function incompleteOwners(): \Iterator
+    {
+        yield 'no owner' => [[]];
+        yield 'no attempt' => [['migrationId' => 'migration-1']];
+        yield 'empty attempt' => [['migrationId' => 'migration-1', 'migrationAttemptId' => '']];
+        yield 'empty migration' => [['migrationId' => '', 'migrationAttemptId' => 'attempt-a']];
+        yield 'malformed migration' => [['migrationId' => ['malformed'], 'migrationAttemptId' => 'attempt-a']];
+    }
+
+    /** @param array<string, mixed> $owner */
+    #[DataProvider('incompleteOwners')]
+    public function testRecoveryRefusesADatabaseWithoutACompleteOwner(array $owner): void
+    {
+        $this->createFailedMigration();
+
+        $this->assertNotInstanceOf(
+            ProvisioningOwner::class,
+            (new Claim($this->database, $this->locks()))->recoverable(new Document($owner)),
+        );
+    }
+
+    public function testANewMigrationRecoversADatabaseAFailedMigrationLeftBehind(): void
+    {
+        $claims = new Claim($this->database, $this->locks());
+        $first = $this->startAttempt($claims, 'migration-first');
+        $database = $this->provisionedBy($first);
+        $this->failAttempt($claims, $first);
+        $second = $this->startAttempt($claims, 'migration-second');
+
+        $recovered = $claims->recoverable($database, $second->terminal);
+
+        $this->assertInstanceOf(ProvisioningOwner::class, $recovered);
+        $this->assertSame('migration-first', $recovered->migrationId);
+        $this->assertSame($first->migration->getAttribute('attemptId'), $recovered->attemptId);
+    }
+
+    public function testDeletingTheFailedMigrationKeepsItsDatabaseRecoverable(): void
+    {
+        $claims = new Claim($this->database, $this->locks());
+        $first = $this->startAttempt($claims, 'migration-first');
+        $database = $this->provisionedBy($first);
+        $this->failAttempt($claims, $first);
+        $this->database->deleteDocument('migrations', 'migration-first');
+        $second = $this->startAttempt($claims, 'migration-second');
+
+        $recovered = $claims->recoverable($database, $second->terminal);
+
+        $this->assertInstanceOf(ProvisioningOwner::class, $recovered);
+        $this->assertSame('migration-first', $recovered->migrationId);
+        $this->assertSame($first->migration->getAttribute('attemptId'), $recovered->attemptId);
+    }
+
+    public function testARetryRecoversADatabaseAnEarlierAttemptLeftBehind(): void
+    {
+        $claims = new Claim($this->database, $this->locks());
+        $first = $this->startAttempt($claims, 'migration-1');
+        $database = $this->provisionedBy($first);
+        $this->failAttempt($claims, $first);
+        $second = $this->retryAttempt($claims, 'migration-1');
+        $this->failAttempt($claims, $second);
+        $third = $this->retryAttempt($claims, 'migration-1');
+
+        $this->assertInstanceOf(Document::class, $third->terminal);
+        $this->assertSame($second->migration->getAttribute('attemptId'), $third->terminal->getAttribute('attemptId'));
+
+        $recovered = $claims->recoverable($database, $third->terminal);
+
+        $this->assertInstanceOf(ProvisioningOwner::class, $recovered);
+        $this->assertSame('migration-1', $recovered->migrationId);
+        $this->assertSame($first->migration->getAttribute('attemptId'), $recovered->attemptId);
+        $this->assertNotInstanceOf(
+            ProvisioningOwner::class,
+            $claims->recoverable($this->provisionedBy($third), $third->terminal),
+            'The attempt that is running keeps the databases it provisions',
+        );
     }
 
     private function createFailedMigration(string $id = 'migration-1'): Document
@@ -1588,6 +1690,55 @@ final class ClaimTest extends TestCase
                 ],
             ],
         ]));
+    }
+
+    private function startAttempt(Claim $claims, string $migrationId): Delivery
+    {
+        $queued = $this->database->createDocument('migrations', new Document([
+            '$id' => $migrationId,
+            'attemptId' => 'attempt-' . $migrationId,
+            'status' => 'pending',
+            'stage' => 'init',
+            'resourceData' => [],
+        ]));
+
+        return $claims->consume('project-1', new MigrationMessage(
+            project: new Document(['$id' => 'project-1']),
+            migration: $queued,
+        )) ?? throw new \LogicException('Expected the initial delivery to be claimed');
+    }
+
+    private function retryAttempt(Claim $claims, string $migrationId): Delivery
+    {
+        $publisher = new MockPublisher();
+        $claims->retry(
+            project: new Document(['$id' => 'project-1']),
+            migrationId: $migrationId,
+            platform: [],
+            publisher: new MigrationPublisher($publisher, new Queue('migrations')),
+        );
+
+        return $claims->consume('project-1', MigrationMessage::fromArray($publisher->getEvents('migrations')[0]))
+            ?? throw new \LogicException('Expected the retry delivery to be claimed');
+    }
+
+    private function failAttempt(Claim $claims, Delivery $delivery): void
+    {
+        $failed = new Document($delivery->migration->getArrayCopy());
+        $failed->setAttribute('status', 'failed');
+        $failed->setAttribute('stage', 'finished');
+
+        $claims->persist($failed) ?? throw new \LogicException('Expected the attempt to still own its migration');
+    }
+
+    private function provisionedBy(Delivery $delivery): Document
+    {
+        return new Document([
+            '$id' => 'database-x',
+            'status' => 'provisioning',
+            'migrationId' => $delivery->migration->getId(),
+            'migrationAttemptId' => $delivery->migration->getAttribute('attemptId'),
+        ]);
     }
 
     private function createStaleMigration(string $id, string $attemptId, string $status, string $stage, int $age): Document

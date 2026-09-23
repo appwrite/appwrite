@@ -42,6 +42,7 @@ final readonly class Claim
     public const string STAGE_INIT = 'init';
     public const string STAGE_MIGRATING = 'migrating';
     public const string STAGE_PROCESSING = 'processing';
+    public const string STATUS_COMPLETED = 'completed';
     public const string STATUS_FAILED = 'failed';
     public const string STATUS_PENDING = 'pending';
     public const string STATUS_PROCESSING = 'processing';
@@ -413,8 +414,16 @@ final readonly class Claim
     }
 
     /**
-     * Resolve the terminal migration that owns an incomplete destination
-     * database. Active or unverifiable ownership always fails closed.
+     * Name the owner of an incomplete destination database when that owner can
+     * no longer be running: an attempt its migration has moved past, the last
+     * attempt of a migration that failed or completed, or an attempt of a
+     * migration that no longer exists. Only the owning migration's current,
+     * unfinished attempt keeps its databases. An owner that is malformed or
+     * missing fails closed.
+     *
+     * @param Document|null $terminal Accepted from workers that pass their
+     *        delivery's terminal snapshot; the owning migration's live state
+     *        decides on its own.
      */
     public function recoverable(Document $database, ?Document $terminal = null): ?ProvisioningOwner
     {
@@ -430,27 +439,11 @@ final readonly class Claim
         }
 
         $migration = $this->database->getDocument('migrations', $migrationId);
-        if ($migration->isEmpty()) {
-            return null;
-        }
+        $running = !$migration->isEmpty()
+            && $migration->getAttribute('attemptId') === $attemptId
+            && !\in_array($migration->getAttribute('status'), [self::STATUS_FAILED, self::STATUS_COMPLETED], true);
 
-        $status = $migration->getAttribute('status');
-        $stage = $migration->getAttribute('stage');
-        $currentAttemptId = $migration->getAttribute('attemptId');
-        $terminalAttemptId = $terminal?->getAttribute('attemptId');
-        $terminalOwner = $terminal !== null
-            && $terminal->getId() === $migrationId
-            && \is_string($terminalAttemptId)
-            && $terminalAttemptId === $attemptId
-            && $terminal->getAttribute('status') === self::STATUS_FAILED
-            && $terminal->getAttribute('stage') === self::STAGE_FINISHED
-            && \is_string($currentAttemptId)
-            && $currentAttemptId !== ''
-            && $currentAttemptId !== $terminalAttemptId
-            && \in_array($status, [self::STATUS_PENDING, self::STATUS_PROCESSING], true)
-            && \in_array($stage, [self::STAGE_FINISHED, self::STAGE_PROCESSING, self::STAGE_MIGRATING], true);
-
-        return $terminalOwner ? new ProvisioningOwner($migrationId, $attemptId) : null;
+        return $running ? null : new ProvisioningOwner($migrationId, $attemptId);
     }
 
     private function abandoned(Document $live, Document $queued): bool
