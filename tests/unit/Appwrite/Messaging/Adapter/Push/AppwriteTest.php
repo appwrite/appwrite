@@ -103,9 +103,11 @@ final class AppwriteTest extends TestCase
             Permission::delete(Role::any()),
         ];
 
-        // The topic counter: only the monotonic `sequence` the adapter increments.
+        // The topic counter (`sequence`, incremented per publish) plus the `name` the adapter
+        // resolves from the id and fans out under (subscribers match on the name, not the id).
         $this->database->createCollection('topics', [], [], $any, false);
         $this->database->createAttribute('topics', 'sequence', Database::VAR_INTEGER, 0, false, 0);
+        $this->database->createAttribute('topics', 'name', Database::VAR_STRING, 255, false);
 
         // The append-only ledger. `data` is a plain string here (the adapter passes an
         // already-encoded JSON envelope); the production collection's json filter is a
@@ -118,12 +120,13 @@ final class AppwriteTest extends TestCase
         $this->database->createAttribute('pushLedger', 'sequence', Database::VAR_INTEGER, 0, true);
     }
 
-    /** Seed a topic row with a starting sequence (the current tail). */
-    private function seedTopic(string $topicId, int $sequence = 0): void
+    /** Seed a topic row with a starting sequence (the current tail) and its subscriber-facing name. */
+    private function seedTopic(string $topicId, int $sequence = 0, ?string $name = null): void
     {
         $this->database->createDocument('topics', new Document([
             '$id' => $topicId,
             'sequence' => $sequence,
+            'name' => $name ?? $topicId . '-name',
         ]));
     }
 
@@ -198,7 +201,8 @@ final class AppwriteTest extends TestCase
         $this->assertCount(1, $broker->published);
         $publish = $broker->published[0];
         $this->assertSame(self::PROJECT_ID, $publish['projectId']);
-        $this->assertSame(['topic-1'], $publish['channels']);
+        // The fan-out carries the topic name subscribers match on, not the id.
+        $this->assertSame(['topic-1-name'], $publish['channels']);
         $this->assertSame(1, $publish['options']['qos']);
         // The ledger stores exactly what was published.
         $this->assertSame($row->getAttribute('data'), $publish['options']['payload']);
@@ -310,7 +314,7 @@ final class AppwriteTest extends TestCase
         $this->assertCount(1, $ledger);
         $this->assertSame('topic-1', $ledger[0]->getAttribute('topic'));
         $this->assertCount(1, $broker->published);
-        $this->assertSame(['topic-1'], $broker->published[0]['channels']);
+        $this->assertSame(['topic-1-name'], $broker->published[0]['channels']);
     }
 
     public function testFanOutFailureIsRecordedPerTopic(): void
@@ -319,7 +323,8 @@ final class AppwriteTest extends TestCase
         // failure, yet the durable row is already written for later replay.
         $this->seedTopic('topic-1', 0);
         $broker = new FakeBroker();
-        $broker->failTopics = ['topic-1'];
+        // The broker rejects by the fanned-out channel, which is the topic name.
+        $broker->failTopics = ['topic-1-name'];
 
         $response = $this->adapter($broker)->send(new Push(
             to: ['topic-1'],
