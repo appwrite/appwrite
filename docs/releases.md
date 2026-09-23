@@ -38,7 +38,7 @@ Patches leave on a schedule so that "is this worth a release?" stops being a per
 Every release is tagged from its `X.Y.x` branch, never from `main`. The branch gives a stable target to test before tagging, and it is what nightly and backports follow.
 
 1. **Minor:** cut `X.Y.x` from `main`. **Patch:** reuse the existing `X.Y.x`. `bin/release prepare` does this.
-2. Open the prep PR (below) against `X.Y.x`.
+2. Open the prep PR against `X.Y.x`, with the [version bump](#version-bump) and the [environment variable sync](#environment-variables).
 3. Open a PR from `X.Y.x` into `main`. Run both [gates](#self-hosted-rc--final) locally against `X.Y.x` and record the results, with the exact commit SHA tested, in this PR, so it is the release's test record. Tag that SHA, then merge this PR after the release is published so the version bump and any release-only fixes land back on `main`.
 
 ## Version bump
@@ -71,6 +71,17 @@ A **minor** (`2.2.0` → `2.3.0`) is anything with new public API, a schema chan
 - `### Contributors`
 
 `APP_CACHE_BUSTER` is not a version number and does not track releases. It salts the response cache key in [`Request::cacheIdentifier()`](../src/Appwrite/Utopia/Request.php) for the routes labelled `cache` (file preview, avatars). Bump it only when cached output would now be wrong — a changed image pipeline or new bundled avatar assets — since every bump orphans every entry and regenerates them.
+
+## Environment variables
+
+Every `_APP_` variable a user can set needs a definition in [`app/config/variables.php`](../app/config/variables.php). The installer builds `.env` from it and the [environment variables docs page](https://appwrite.io/docs/advanced/self-hosting/configuration/environment-variables) follows it, so a variable without a definition exists only in `docker-compose.yml` and in whatever the release notes say. Before pushing the prep PR, sync the two for everything that changed since the previous release:
+
+- A variable added to `docker-compose.yml` gets a definition in the right category, with `introduction` set to `X.Y.Z` and a real default. If users should not set it, add it to `INTERNAL` in `bin/release` with the reason instead.
+- A variable that no code reads is removed from `docker-compose.yml`, `.env` and `variables.php`, not documented.
+- A definition added since the previous release has `introduction` set to `X.Y.Z`, not a placeholder such as `TBD`.
+- Every variable the release notes tell users to set, rename or remove matches `variables.php`.
+
+`bin/release prepare` warns about the first three, and `push`, `check` and `publish` fail on them. The fourth needs a read of the notes. The vibes environment variables page gets the same rows (see [Website and docs](#website-and-docs)).
 
 ## Publish
 

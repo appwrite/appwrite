@@ -21,6 +21,15 @@ const CONSTANTS = 'app/init/constants.php';
 const COMPOSE = 'docker-compose.yml';
 const MIGRATION = 'src/Appwrite/Migration/Migration.php';
 const READMES = ['README.md', 'README-CN.md'];
+const VARIABLES = 'app/config/variables.php';
+
+/**
+ * Compose variables that are deliberately not user-configurable, so they have
+ * no definition in app/config/variables.php.
+ */
+const INTERNAL = [
+    '_APP_MQTT_WS_PORT', // broker's internal listener; Traefik routes to it by number
+];
 
 function out(string $message): void
 {
@@ -223,6 +232,76 @@ function map(string $version, string $previous): string
     file_put_contents(MIGRATION, substr($content, 0, $end + 1) . "{$indent}'{$version}' => '{$class}',\n" . substr($content, $end + 1));
 
     return $class;
+}
+
+/**
+ * Every `_APP_*` name that appears in the content.
+ *
+ * @return string[]
+ */
+function names(string $content): array
+{
+    $names = [];
+    $position = 0;
+    while (($position = strpos($content, '_APP_', $position)) !== false) {
+        $end = $position + strlen('_APP_');
+        while ($end < strlen($content) && (ctype_upper($content[$end]) || ctype_digit($content[$end]) || $content[$end] === '_')) {
+            $end++;
+        }
+        $names[substr($content, $position, $end - $position)] = true;
+        $position = $end;
+    }
+
+    return array_keys($names);
+}
+
+/**
+ * Variables defined in app/config/variables.php, mapped to their introduction.
+ *
+ * @return array<string, string>
+ */
+function definitions(?string $commit = null): array
+{
+    $content = read(VARIABLES, $commit);
+    $definitions = [];
+    $position = 0;
+    while (($position = strpos($content, "'name' => '", $position)) !== false) {
+        $name = quoted(substr($content, $position), "'name' =>");
+        $definitions[$name] = quoted(substr($content, $position), "'introduction' =>") ?? '';
+        $position += strlen("'name' => '");
+    }
+
+    return $definitions;
+}
+
+/**
+ * Variable definitions out of sync with docker-compose.yml since the previous
+ * release: new compose variables without a definition, and new definitions
+ * whose introduction is not this version.
+ *
+ * @return string[]
+ */
+function variables(string $version, ?string $commit = null): array
+{
+    $previous = previous($version);
+    $definitions = definitions($commit);
+    $before = definitions($previous);
+    $problems = [];
+
+    $added = array_diff(names(read(COMPOSE, $commit)), names(read(COMPOSE, $previous)), INTERNAL);
+    foreach ($added as $name) {
+        if (!isset($definitions[$name])) {
+            $problems[] = "{$name} was added to " . COMPOSE . " since {$previous} but has no definition in " . VARIABLES;
+        }
+    }
+
+    foreach (array_diff_key($definitions, $before) as $name => $introduction) {
+        if ($introduction !== $version) {
+            $problems[] = "{$name} is new since {$previous}; set its introduction to {$version}, not '{$introduction}'";
+        }
+    }
+
+    return $problems;
 }
 
 function replace(string $path, string $search, string $replacement): int
@@ -446,6 +525,10 @@ switch ($command) {
         if ($problems !== []) {
             fail("prepared tree still fails the check:\n  " . implode("\n  ", $problems));
         }
+        // Definitions are written by hand in the prep PR, so they only block push.
+        foreach (variables($version) as $problem) {
+            warn($problem);
+        }
 
         sh('git add ' . implode(' ', array_map(escapeshellarg(...), [CONSTANTS, COMPOSE, MIGRATION, ...READMES])));
         sh('git commit --quiet -m ' . escapeshellarg(title($version)));
@@ -466,7 +549,7 @@ switch ($command) {
         succeeds('git rev-parse --verify --quiet ' . escapeshellarg("refs/heads/{$work}"))
             || fail("{$work} does not exist; run `bin/release prepare {$version}` first");
         is_file($draft) || fail("notes draft {$draft} not found");
-        $problems = problems($version, $work);
+        $problems = [...problems($version, $work), ...variables($version, $work)];
         if ($problems !== []) {
             fail("{$work} fails the check:\n  " . implode("\n  ", $problems));
         }
@@ -498,7 +581,7 @@ switch ($command) {
         parse($version);
         sh('git fetch --quiet --tags origin');
         $reference = is_string($options['ref'] ?? null) ? $options['ref'] : null;
-        $problems = problems($version, $reference);
+        $problems = [...problems($version, $reference), ...variables($version, $reference)];
         if ($problems !== []) {
             fail("{$version} is not ready:\n  " . implode("\n  ", $problems));
         }
@@ -533,7 +616,7 @@ switch ($command) {
             warn("origin/{$branch} has moved past the tested commit ({$tip}); those commits are not in this release");
         }
 
-        $problems = problems($version, $sha);
+        $problems = [...problems($version, $sha), ...variables($version, $sha)];
         if ($problems !== []) {
             fail("{$version} is not ready at {$sha}:\n  " . implode("\n  ", $problems));
         }
