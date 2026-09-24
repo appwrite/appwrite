@@ -740,14 +740,10 @@ class Install extends Action
             }
 
             if (!$useExistingConfig && $startIndex <= 1) {
-                $files = ['clickhouse-config.xml'];
-
-                if ($database === 'mongodb') {
-                    $files[] = 'mongo-entrypoint.sh';
-                    $files[] = 'mongo-init.js';
-                }
-
-                $this->copyConfigFiles($files);
+                $this->copyConfigFiles(match ($database) {
+                    'mongodb' => ['clickhouse-config.xml', 'mongo-entrypoint.sh', 'mongo-init.js'],
+                    default => ['clickhouse-config.xml'],
+                });
             }
 
             // Changes to what the containers run on, rather than to what is inside the
