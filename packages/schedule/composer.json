@@ -23,9 +23,6 @@
         "php": ">=8.3",
         "utopia-php/telemetry": "^0.4"
     },
-    "require-dev": {
-        "phpunit/phpunit": "^12"
-    },
     "suggest": {
         "ext-opentelemetry": "Required by utopia-php/telemetry when using OpenTelemetry metrics",
         "ext-protobuf": "Required by utopia-php/telemetry when using OpenTelemetry metrics",

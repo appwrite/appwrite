@@ -1,5 +1,8 @@
 # Utopia Schedule
 
+> [!IMPORTANT]
+> This repository is a read-only mirror of [`packages/schedule`](https://github.com/appwrite/appwrite/tree/main/packages/schedule) in [appwrite/appwrite](https://github.com/appwrite/appwrite). Development happens there — please open issues and pull requests against appwrite/appwrite.
+
 An opinionated scheduler for PHP. One running loop with two duties: reconcile schedules into memory from a source of truth (usually a database), and dispatch their occurrences at the right time — cron, fixed interval, delayed, or at a fixed moment. Built so a run can be late, but never silently lost.
 
 This library is part of the [Utopia PHP Framework](https://github.com/utopia-php).
