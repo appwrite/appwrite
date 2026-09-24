@@ -8,7 +8,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
-use Utopia\Psr18\StreamingClientInterface;
+use Utopia\Client\Psr18\StreamingClientInterface;
 use Utopia\Psr7\Response;
 use Utopia\Psr7\Stream;
 use Utopia\Storage\Device\S3;

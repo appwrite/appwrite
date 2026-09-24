@@ -298,7 +298,7 @@ The S3-family adapters send requests through any [PSR-18](https://www.php-fig.or
 Inject your own client to change the transport or the retry policy — for example the Swoole coroutine adapter with more aggressive retries:
 
 ```php
-use Utopia\Client;
+use Utopia\Client\Client;
 use Utopia\Client\Adapter\SwooleCoroutine\Client as SwooleAdapter;
 use Utopia\Client\Decorator\Retry;
 use Utopia\Storage\Device\S3;
