@@ -18,12 +18,12 @@
     ],
     "autoload": {
         "psr-4": {
-            "Utopia\\Auth\\": "src/Auth"
+            "Utopia\\Auth\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Utopia\\Tests\\Auth\\": "tests/Auth"
+            "Utopia\\Auth\\Tests\\": "tests/"
         }
     },
     "scripts": {

@@ -69,6 +69,7 @@ final class StoreTest extends TestCase
         foreach ($data as $key => $value) {
             $store->setProperty($key, $value);
         }
+
         $store->setKey('test-key');
 
         // Encode the store
