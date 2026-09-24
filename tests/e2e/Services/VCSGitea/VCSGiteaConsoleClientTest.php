@@ -640,9 +640,11 @@ final class VCSGiteaConsoleClientTest extends Scope
         // createInstallationHelper() reads listInstallations, so this covers both routes
         $installation = $this->createInstallationHelper();
 
-        // The link is opened by the browser, which may reach Gitea on another host
-        $endpoint = System::getEnv('_APP_VCS_GITEA_BROWSER_ENDPOINT', System::getEnv('_APP_VCS_GITEA_ENDPOINT', 'http://gitea:3000'));
-        $expected = \rtrim($endpoint, '/') . '/' . $installation['organization'];
+        // Gitea's own answer for the owner page, so the expectation does not
+        // rebuild the URL the same way the endpoint being tested does
+        $owner = $this->giteaApiHelper(Client::METHOD_GET, '/api/v1/user');
+        $this->assertEquals(200, $owner['headers']['status-code']);
+        $expected = $owner['body']['html_url'];
 
         $this->assertEquals($expected, $installation['organizationUrl']);
 
