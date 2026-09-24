@@ -8,6 +8,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Appwrite\Vcs\Factory as VcsFactory;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Platform\Scope\HTTP;
@@ -45,6 +46,7 @@ class Get extends Action
                 ]
             ))
             ->param('installationId', '', new Text(256), 'Installation Id')
+            ->inject('vcsFactory')
             ->inject('response')
             ->inject('project')
             ->inject('dbForPlatform')
@@ -53,6 +55,7 @@ class Get extends Action
 
     public function action(
         string $installationId,
+        VcsFactory $vcsFactory,
         Response $response,
         Document $project,
         Database $dbForPlatform
@@ -65,6 +68,11 @@ class Get extends Action
 
         if ($installation->getAttribute('projectInternalId') !== $project->getSequence()) {
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
+        }
+
+        $provider = $installation->getAttribute('provider', '');
+        if ($vcsFactory->isConfigured($provider)) {
+            $installation->setAttribute('organizationUrl', $vcsFactory->fromProvider($provider)->getOrganizationUrl($installation->getAttribute('organization', '')));
         }
 
         $response->dynamic($installation, Response::MODEL_INSTALLATION);
