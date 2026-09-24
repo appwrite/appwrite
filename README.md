@@ -101,7 +101,7 @@ Use `https://rr-n1-tor.opensrs.net:55443` as the OpenSRS production endpoint.
 ### Name.com
 
 ```php
-use Utopia\Client;
+use Utopia\Client\Client;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Domains\Registrar;
 use Utopia\Domains\Registrar\Adapter\NameCom;

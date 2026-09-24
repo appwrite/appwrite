@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Utopia\Domains\Registrar;
 
 use Psr\Http\Client\ClientInterface;
-use Utopia\Client;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
+use Utopia\Client\Client;
 use Utopia\Domains\Adapter as DomainsAdapter;
 use Utopia\Domains\Cache;
 use Utopia\Domains\Registrar;
