@@ -2750,7 +2750,10 @@ trait QueryJoinCombos
             Permission::read(Role::any()),
             Permission::create(Role::any()),
         ]);
-        $this->createSeedRecord($databaseId, $probesId, 'probe', new \stdClass(), [Permission::read(Role::any())]);
+        $created = $this->createJoinAttribute($databaseId, $probesId, 'string', ['key' => 'name', 'size' => 32, 'required' => false]);
+        $this->assertSame(202, $created['headers']['status-code']);
+        $this->waitForJoinAttribute($databaseId, $probesId, 'name');
+        $this->createSeedRecord($databaseId, $probesId, 'probe', ['name' => 'probe'], [Permission::read(Role::any())]);
 
         return $probesId;
     }
