@@ -1,6 +1,19 @@
 import { coerceTrimmedString } from '@/lib/databases/dedicated-database-status'
-/** Regions where dedicated database compute and native SQL engines are available. */
-export const DEDICATED_DATABASE_SUPPORTED_REGIONS = ['fra', 'nyc'] as const
+/**
+ * Regions where dedicated database compute and native SQL engines are available.
+ * Every Appwrite Cloud region is supported; plan gating is handled separately by
+ * `planSupportsDedicatedDatabases`. Regions that are not yet live on Cloud (for
+ * example `blr`, `ams`, `lon`) are intentionally absent so the unavailable copy
+ * still applies to them once projects can be created there.
+ */
+export const DEDICATED_DATABASE_SUPPORTED_REGIONS = [
+  'fra',
+  'nyc',
+  'sfo',
+  'sgp',
+  'syd',
+  'tor',
+] as const
 
 export type DedicatedDatabaseSupportedRegion =
   (typeof DEDICATED_DATABASE_SUPPORTED_REGIONS)[number]
@@ -11,6 +24,10 @@ export const DEDICATED_DATABASE_REGION_DISPLAY_NAMES: Record<
 > = {
   fra: 'Frankfurt (FRA)',
   nyc: 'New York (NYC)',
+  sfo: 'San Francisco (SFO)',
+  sgp: 'Singapore (SGP)',
+  syd: 'Sydney (SYD)',
+  tor: 'Toronto (TOR)',
 }
 
 export function normalizeProjectRegion(
@@ -30,9 +47,11 @@ export function projectSupportsDedicatedDatabaseCompute(
 }
 
 export function getDedicatedDatabaseSupportedRegionsLabel(): string {
-  return DEDICATED_DATABASE_SUPPORTED_REGIONS.map(
+  const names = DEDICATED_DATABASE_SUPPORTED_REGIONS.map(
     (region) => DEDICATED_DATABASE_REGION_DISPLAY_NAMES[region],
-  ).join(' and ')
+  )
+  if (names.length <= 2) return names.join(' and ')
+  return `${names.slice(0, -1).join(', ')}, and ${names[names.length - 1]}`
 }
 
 export function getDedicatedDatabaseRegionUnavailableDescription(): string {
