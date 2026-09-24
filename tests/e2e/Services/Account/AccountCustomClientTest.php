@@ -4882,11 +4882,13 @@ final class AccountCustomClientTest extends Scope
 
         $targetId = $response['body']['$id'];
 
-        $other = $this->client->call(Client::METHOD_POST, '/account/targets/push', \array_merge([
+        $other = $this->client->call(Client::METHOD_POST, '/users/' . $this->getUser()['$id'] . '/targets', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
             'targetId' => ID::unique(),
+            'providerType' => 'push',
             'identifier' => 'test-identifier-taken',
         ]);
 
@@ -4910,6 +4912,59 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $identifiers = \array_column(\array_filter($response['body']['targets'], fn ($target) => $target['$id'] === $targetId), 'identifier');
         $this->assertSame(['test-identifier-updated'], $identifiers);
+    }
+
+    public function testCreatePushTargetReplacesRotatedToken(): void
+    {
+        // A rotated token must replace the session's target rather than stack a second live
+        // token onto the same device.
+        $response = $this->client->call(Client::METHOD_POST, '/account/targets/push', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'targetId' => ID::unique(),
+            'identifier' => 'test-identifier-before-rotation',
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        $targetId = $response['body']['$id'];
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/targets/push', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'targetId' => ID::unique(),
+            'identifier' => 'test-identifier-after-rotation',
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEquals($targetId, $response['body']['$id']);
+        $this->assertEquals(false, $response['body']['expired']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/account', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $identifiers = \array_column($response['body']['targets'], 'identifier');
+        $this->assertContains('test-identifier-after-rotation', $identifiers);
+        $this->assertNotContains('test-identifier-before-rotation', $identifiers);
+
+        // Re-registering an unchanged token resolves to the same target instead of colliding with it
+        // on the unique identifier index.
+        $response = $this->client->call(Client::METHOD_POST, '/account/targets/push', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'targetId' => ID::unique(),
+            'identifier' => 'test-identifier-after-rotation',
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEquals($targetId, $response['body']['$id']);
     }
 
     public function testMFARecoveryCodeChallenge(): void

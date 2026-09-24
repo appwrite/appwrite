@@ -285,6 +285,18 @@ final class DatabasesCustomServerTest extends Scope
         $this->assertEquals(200, $disable['headers']['status-code']);
         $this->assertFalse($disable['body']['enabled']);
 
+        // An explicit null keeps the collection disabled rather than resetting it to the param default
+        $keep = $this->client->call(Client::METHOD_PUT, '/vectorsdb/' . $databaseId . '/collections/' . $collectionId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'name' => 'Updated',
+            'enabled' => null,
+        ]);
+        $this->assertSame(200, $keep['headers']['status-code']);
+        $this->assertFalse($keep['body']['enabled']);
+
         // Re-enable collection
         $enable = $this->client->call(Client::METHOD_PUT, '/vectorsdb/' . $databaseId . '/collections/' . $collectionId, [
             'content-type' => 'application/json',

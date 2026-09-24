@@ -254,6 +254,22 @@ class V25 extends Migration
                     break;
 
                 case 'users':
+                    // Added in V23. An install whose V23 users step failed, or one that
+                    // upgraded straight from 1.8.x, arrives here without them and every
+                    // user write fails with Unknown attribute: "emailCanonical".
+                    $attributes = [
+                        'emailCanonical',
+                        'emailIsFree',
+                        'emailIsDisposable',
+                        'emailIsCorporate',
+                        'emailIsCanonical',
+                    ];
+                    try {
+                        $this->createAttributesFromCollection($this->dbForProject, $id, $attributes);
+                    } catch (Throwable $th) {
+                        Console::warning('Failed to create attributes "' . \implode(', ', $attributes) . "\" in collection {$id}: {$th->getMessage()}");
+                    }
+
                     try {
                         $this->createAttributeFromCollection($this->dbForProject, $id, 'passwordPwned');
                     } catch (Throwable $th) {
@@ -276,6 +292,28 @@ class V25 extends Migration
                         } catch (Throwable $th) {
                             Console::warning("Failed to create attribute \"{$attribute}\" in collection {$id}: {$th->getMessage()}");
                         }
+                    }
+
+                    $this->dbForProject->purgeCachedCollection($id);
+                    break;
+
+                case 'pushLedger':
+                    // Added in 2.3.0 for every project; an install upgraded from 2.2.0
+                    // has no table yet, and migrating its documents fails without one.
+                    $this->createCollection($id);
+                    break;
+
+                case 'topics':
+                    // Added in 2.3.0 for the push broker, which increments sequence on publish.
+                    $attributes = [
+                        'sequence',
+                        'qos',
+                        'expiry',
+                    ];
+                    try {
+                        $this->createAttributesFromCollection($this->dbForProject, $id, $attributes);
+                    } catch (Throwable $th) {
+                        Console::warning('Failed to create attributes "' . \implode(', ', $attributes) . "\" in collection {$id}: {$th->getMessage()}");
                     }
 
                     $this->dbForProject->purgeCachedCollection($id);
