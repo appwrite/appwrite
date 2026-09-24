@@ -449,11 +449,27 @@ class Messaging extends Action
         }
 
         if (\count($userIds) > 0) {
+            // Only address users that actually exist, so a bogus id can't create a phantom users/
+            // topic or be counted as delivered.
+            $existingUserIds = \array_map(
+                fn (Document $user) => $user->getId(),
+                $dbForProject->getAuthorization()->skip(
+                    fn () => $dbForProject->find('users', [
+                        Query::equal('$id', \array_values(\array_unique($userIds))),
+                        Query::select(['$id']),
+                        Query::limit(\count($userIds)),
+                    ])
+                )
+            );
+
+            // Resolve each user's registered device targets first, so FCM/APNS (and any explicit
+            // Appwrite target) still receive — the reserved topic is additive, not a replacement.
+            $reachedViaTarget = [];
             $cursor = null;
 
             do {
                 $queries = [
-                    Query::equal('userId', $userIds),
+                    Query::equal('userId', $existingUserIds),
                     Query::equal('providerType', [$providerType]),
                     Query::select(['$sequence', 'providerId', 'identifier', 'userId', 'expired']),
                     Query::orderAsc('$sequence'),
@@ -464,7 +480,7 @@ class Messaging extends Action
                     $queries[] = Query::cursorAfter($cursor);
                 }
 
-                $targets = $dbForProject->find('targets', $queries);
+                $targets = $existingUserIds === [] ? [] : $dbForProject->find('targets', $queries);
                 $count = \count($targets);
 
                 if ($count === 0) {
@@ -473,9 +489,35 @@ class Messaging extends Action
 
                 $cursor = $targets[$count - 1];
 
-                // User- or target-addressed: deliver on the reserved per-user topic (Appwrite push).
+                foreach ($targets as $target) {
+                    // groupTargetsByProvider drops expired targets, so an expired-only user is not
+                    // actually reached and must still get the direct MQTT fallback below.
+                    if (!$target->getAttribute('expired')) {
+                        $reachedViaTarget[$target->getAttribute('userId')] = true;
+                    }
+                }
+
+                // User-addressed: deliver on the reserved per-user topic (Appwrite push).
                 yield [$this->groupTargetsByProvider($targets, $default), true];
             } while ($count === MESSAGE_RECIPIENTS_PAGE_SIZE);
+
+            // Appwrite push needs no device target: reach existing users with no registered target on
+            // their reserved MQTT topic (users/<userId>), which they subscribe to with their session.
+            if ($default->getAttribute('provider') === 'appwrite') {
+                $targetless = \array_values(\array_filter(
+                    $existingUserIds,
+                    fn (string $userId) => !isset($reachedViaTarget[$userId]),
+                ));
+
+                foreach (\array_chunk($targetless, MESSAGE_RECIPIENTS_PAGE_SIZE) as $chunk) {
+                    $identifiers = [];
+                    foreach ($chunk as $userId) {
+                        $identifiers[$userId] = $userId;
+                    }
+
+                    yield [[$default->getId() => $identifiers], true];
+                }
+            }
         }
 
         if (\count($targetIds) > 0) {

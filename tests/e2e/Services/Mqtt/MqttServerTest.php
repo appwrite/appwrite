@@ -259,9 +259,9 @@ final class MqttServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ];
 
-        // The user has an appwrite push target with an arbitrary device identifier; delivery lands on
-        // users/<userId>, derived from the target's user, not from that identifier — no topic needed.
-        $this->setupUserPushTarget($server, $userId);
+        // Only an enabled Appwrite push provider exists — the user registers NO push target. The
+        // broker subscription (session-owned) is the whole delivery path.
+        $this->setupAppwriteProvider($server);
 
         $subscriber = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
         $this->assertSame(0, $subscriber->connect($projectId, $jwt, 'e2e-usertopic-recv-' . $userId, cleanStart: true));
@@ -274,8 +274,8 @@ final class MqttServerTest extends Scope
             $subscriber->disconnect();
         }
 
-        // Test for SUCCESS: the user-targeted campaign auto-provisioned users/<userId> and reached
-        // the owner on that topic.
+        // Test for SUCCESS: a users[]-addressed campaign reached the owner on users/<userId> without
+        // any push target being registered — the campaign auto-provisioned the topic and fanned out.
         $this->assertCount(1, $received, 'the user did not receive the user-targeted push');
         $this->assertSame('users/' . $userId, $received[0]['topic']);
         $payload = \json_decode($received[0]['payload'], true);
@@ -424,7 +424,7 @@ final class MqttServerTest extends Scope
      *
      * @param  array<string, string>  $server server-key headers
      */
-    private function setupUserPushTarget(array $server, string $userId): void
+    private function setupAppwriteProvider(array $server): void
     {
         $provider = $this->client->call(Client::METHOD_POST, '/messaging/providers/appwrite', $server, [
             'providerId' => ID::unique(),
@@ -432,14 +432,6 @@ final class MqttServerTest extends Scope
             'enabled' => true,
         ]);
         $this->assertEquals(201, $provider['headers']['status-code']);
-
-        $target = $this->client->call(Client::METHOD_POST, '/users/' . $userId . '/targets', $server, [
-            'targetId' => ID::unique(),
-            'providerType' => 'push',
-            'providerId' => $provider['body']['$id'],
-            'identifier' => 'device-' . $userId,
-        ]);
-        $this->assertEquals(201, $target['headers']['status-code']);
     }
 
     /**
