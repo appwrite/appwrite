@@ -3,6 +3,22 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "native-databases-all-appwrite-cloud-regions",
+    "href": "/blog/post/native-databases-all-appwrite-cloud-regions",
+    "title": "PostgreSQL, MySQL, and dedicated databases are now available across all regions",
+    "description": "Native PostgreSQL, native MySQL, and dedicated TablesDB, DocumentsDB, and VectorsDB databases now run in all six Appwrite Cloud regions, with data kept in region.",
+    "date": "2026-09-24",
+    "lastUpdated": "2026-09-24",
+    "timeToRead": 6,
+    "author": "eldad-fux",
+    "category": "announcements",
+    "featured": true,
+    "unlisted": false,
+    "metaTitle": "Native and dedicated databases in every Appwrite Cloud region",
+    "cover": "/images/blog/native-databases-all-appwrite-cloud-regions/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-appwrite-chatgpt-plugin",
     "href": "/blog/post/announcing-appwrite-chatgpt-plugin",
     "title": "Introducing the official Appwrite plugin for ChatGPT",
