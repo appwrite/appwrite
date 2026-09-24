@@ -1,0 +1,39 @@
+{
+    "name": "utopia-php/auth",
+    "description": "A simple PHP authentication library",
+    "type": "library",
+    "keywords": [
+        "php",
+        "auth",
+        "authentication",
+        "security"
+    ],
+    "license": "MIT",
+    "minimum-stability": "stable",
+    "authors": [
+        {
+            "name": "Utopia PHP",
+            "email": "team@appwrite.io"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "Utopia\\Auth\\": "src/Auth"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Utopia\\Tests\\Auth\\": "tests/Auth"
+        }
+    },
+    "scripts": {
+        "test": "phpunit --configuration phpunit.xml"
+    },
+    "require": {
+        "php": ">=8.3",
+        "ext-hash": "*",
+        "ext-openssl": "*",
+        "ext-scrypt": "*",
+        "ext-sodium": "*"
+    }
+}

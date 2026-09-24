@@ -1,0 +1,17 @@
+services:
+  tests:
+    container_name: tests
+    image: auth-dev
+    build:
+      context: .
+    volumes:
+      - ./src:/usr/src/code/src
+      - ./tests:/usr/src/code/tests
+      - ./phpunit.xml:/usr/src/code/phpunit.xml
+    environment:
+      - TESTING=true
+    networks:
+      - utopia
+
+networks:
+  utopia: 
