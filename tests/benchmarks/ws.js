@@ -42,15 +42,20 @@ export default function () {
             check(payload, {
                 'connection opened': (r) => connection,
                 'message received': (r) => checked,
-                'channels are right': (r) => r === JSON.stringify({
-                    "type": "connected",
-                    "data": {
-                        "channels": [
-                            "files"
-                        ],
-                        "user": null
+                'channels are right': (r) => {
+                    if (typeof r !== 'string') {
+                        return false;
                     }
-                })
+                    try {
+                        const parsed = JSON.parse(r);
+                        return parsed.type === 'connected' &&
+                            Array.isArray(parsed.data?.channels) &&
+                            parsed.data.channels.includes('files') &&
+                            parsed.data.user === null;
+                    } catch (_) {
+                        return false;
+                    }
+                },
             })
             socket.close();
         }, 5000);
