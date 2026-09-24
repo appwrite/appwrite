@@ -17,6 +17,7 @@ use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Validator\Boolean;
+use Utopia\Validator\Nullable;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 
@@ -65,7 +66,7 @@ class Update extends CollectionAction
             ->param('dimension', null, new Range(MIN_VECTOR_DIMENSION, MAX_VECTOR_DIMENSION), 'Embedding dimensions.', true)
             ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of permission strings. By default, the current permissions are inherited. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->param('documentSecurity', false, new Boolean(true), 'Enables configuring permissions for individual documents. A user needs one of document or collection level permissions to access a document. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
-            ->param('enabled', true, new Boolean(), 'Is collection enabled? When set to \'disabled\', users cannot access the collection but Server SDKs with and API key can still read and write to the collection. No data is lost when this is toggled.', true)
+            ->param('enabled', true, new Nullable(new Boolean()), 'Is collection enabled? When set to \'disabled\', users cannot access the collection but Server SDKs with and API key can still read and write to the collection. No data is lost when this is toggled.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('getDatabasesDB')
