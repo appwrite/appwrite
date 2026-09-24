@@ -12,6 +12,7 @@ import {
   useQueryClient,
   queryOptions,
   keepPreviousData,
+  type QueryClient,
 } from '@tanstack/react-query'
 import { useEffect, useMemo, useRef } from 'react'
 import { Query, DomainRegistrationType } from '@appwrite.io/console'
@@ -800,6 +801,15 @@ function domainPriceQueryKey(domain: string) {
   return ['domain-price', domain] as const
 }
 
+function writeDomainPriceQuotesToCache(
+  queryClient: QueryClient,
+  quotes: Map<string, DomainPriceQuote>,
+) {
+  quotes.forEach((quote, domain) => {
+    queryClient.setQueryData(domainPriceQueryKey(domain), quote)
+  })
+}
+
 /**
  * Query options for fetching DNS records for a domain
  */
@@ -922,6 +932,24 @@ export function useDomainPrices(
 ) {
   const queryClient = useQueryClient()
   const inFlight = useRef(new Map<string, Promise<DomainPriceQuotesResult>>())
+  const resolvedPricesRef = useRef(
+    new Map<
+      string,
+      {
+        price?: number
+        available: boolean
+        periodYears?: number
+        premium?: boolean
+        renewalPrice?: number
+        renewalPeriodYears?: number
+      }
+    >(),
+  )
+  const resolvedForBaseRef = useRef<string | null>(null)
+  if (resolvedForBaseRef.current !== (baseName ?? null)) {
+    resolvedPricesRef.current.clear()
+    resolvedForBaseRef.current = baseName ?? null
+  }
   const domains = useMemo(
     () =>
       baseName
@@ -992,11 +1020,13 @@ export function useDomainPrices(
           })
         }
         if (quotes.size === 0 && firstError) throw firstError
+        writeDomainPriceQuotesToCache(queryClient, quotes)
         return { quotes, failed: batch.filter((domain) => !quotes.has(domain)) }
       },
       enabled: batch.length > 0,
       staleTime: (query) =>
         query.state.data?.failed.length ? 0 : DOMAIN_PRICE_STALE_TIME,
+      placeholderData: keepPreviousData,
       retry: false,
     })
 
@@ -1012,29 +1042,16 @@ export function useDomainPrices(
   })
   const queries = [priority, ...remaining]
 
-  const pricesByDomain = new Map<
-    string,
-    {
-      price?: number
-      available: boolean
-      periodYears?: number
-      premium?: boolean
-      renewalPrice?: number
-      renewalPeriodYears?: number
-    }
-  >()
-  // Preserve already loaded cards when scrolling changes a viewport batch.
+  // Preserve already loaded cards when scrolling grows or reshapes viewport batches.
   for (const domain of domains) {
-    const cached = queryClient.getQueryState<DomainPriceQuote>(
+    const cached = queryClient.getQueryData<DomainPriceQuote>(
       domainPriceQueryKey(domain),
     )
     const quote =
       queries.map((query) => query.data?.quotes.get(domain)).find(Boolean) ??
-      (cached && Date.now() - cached.dataUpdatedAt < DOMAIN_PRICE_STALE_TIME
-        ? cached.data
-        : undefined)
+      cached
     if (!quote) continue
-    pricesByDomain.set(domain, {
+    resolvedPricesRef.current.set(domain, {
       price: quote.price,
       available: quote.available,
       periodYears:
@@ -1044,6 +1061,7 @@ export function useDomainPrices(
       renewalPeriodYears: quote.renewalPeriodYears,
     })
   }
+  const pricesByDomain = new Map(resolvedPricesRef.current)
 
   // Keep successful cards usable, but expose failures even when other batches
   // succeeded. Retrying only failed batches preserves prices already on screen.

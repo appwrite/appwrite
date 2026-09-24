@@ -180,6 +180,9 @@ import {
   type WorkspaceProps,
 } from '../workspace-types'
 import { useT } from '@/lib/i18n/translate'
+import { useDatabaseRowsFullscreen } from '@/hooks/use-database-rows-fullscreen'
+import { DatabaseRowsFullscreenToggle } from '../_components/DatabaseRowsFullscreenToggle'
+import { DatabaseRowsFullscreenShell } from '../_components/DatabaseRowsFullscreenShell'
 
 const DB_KIND = 'documentsdb' as const satisfies DatabaseRouteKind
 const sidebarTableListScrollTopByKey = new Map<string, number>()
@@ -200,6 +203,10 @@ export function Workspace({
     | Record<string, unknown>
     | undefined
   const isDatabaseLevelView = tableId === '-' || databaseTab != null
+  const canUseRowsFullscreen =
+    !isDatabaseLevelView && activeTab === 'rows' && tableId !== '-'
+  const { rowsFullscreen, toggleRowsFullscreen } =
+    useDatabaseRowsFullscreen(canUseRowsFullscreen)
   const { features } = useConsoleProfile()
   const showDesktopTableSidebar = useMediaMinWidth(1024)
 
@@ -1385,8 +1392,40 @@ export function Workspace({
     </div>
   )
 
+  const tableRowsSpreadsheet =
+    activeTab === 'rows' && selectedTable ? (
+      <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+        <RowsSpreadsheet
+          key={selectedTable.$id}
+          table={selectedTable}
+          canWriteRows={!noCreateRowPermission}
+          canWriteTables={!noCreateTablePermission}
+          onRefetchReady={(refetchFn) => {
+            rowsRefetchRef.current = refetchFn
+          }}
+          onCreateRowReady={(openCreateDrawer) => {
+            openCreateRowDrawerRef.current = openCreateDrawer
+          }}
+          onRowsCountChange={handleRowsCountChange}
+          rowsUrlSearch={rowsUrlSearch}
+          rowsUrlPage={rowsUrlPage}
+          rowsUrlLimit={rowsUrlLimit}
+          rowsFilterQueries={rowsFilterQueries}
+          rowsFilterQueryString={rowsFilterQueryString}
+          rowsSortBy={rowsSortBy}
+          rowsSortOrder={rowsSortOrder}
+          onNavigateToRowsList={navigateToRowsList}
+        />
+      </div>
+    ) : null
+
   const tableViewMain = (
-    <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+    <DatabaseRowsFullscreenShell
+      active={rowsFullscreen}
+      onExit={toggleRowsFullscreen}
+      className="h-full min-w-0 flex-1"
+    >
+      {!rowsFullscreen ? (
       <ServiceHeader
         title={
           isDatabaseLevelView ? (
@@ -1565,6 +1604,14 @@ export function Workspace({
         exportTooltip="Export CSV"
         exportDisabled={
           !isDatabaseLevelView && activeTab === 'rows' && !hasRows
+        }
+        afterRefreshButtons={
+          canUseRowsFullscreen ? (
+            <DatabaseRowsFullscreenToggle
+              active={rowsFullscreen}
+              onToggle={toggleRowsFullscreen}
+            />
+          ) : undefined
         }
         beforeCreateButtons={undefined}
         collapsible={!isDatabaseLevelView && isSpreadsheetLikeTableTab(activeTab)}
@@ -1747,13 +1794,14 @@ export function Workspace({
           </>
         }
       />
+      ) : null}
 
       <div
         className={cn(
           'flex-1 min-h-0',
           databaseTab === 'settings' && children
             ? 'flex flex-col overflow-hidden'
-            : activeTab === 'rows'
+            : rowsFullscreen || activeTab === 'rows'
               ? 'flex min-h-0 flex-col overflow-hidden'
               : 'overflow-y-auto',
         )}
@@ -1782,31 +1830,7 @@ export function Workspace({
           )
         ) : (
           <>
-            {activeTab === 'rows' && selectedTable ? (
-              <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-                <RowsSpreadsheet
-                  key={selectedTable.$id}
-                  table={selectedTable}
-                  canWriteRows={!noCreateRowPermission}
-                  canWriteTables={!noCreateTablePermission}
-                  onRefetchReady={(refetchFn) => {
-                    rowsRefetchRef.current = refetchFn
-                  }}
-                  onCreateRowReady={(openCreateDrawer) => {
-                    openCreateRowDrawerRef.current = openCreateDrawer
-                  }}
-                  onRowsCountChange={handleRowsCountChange}
-                  rowsUrlSearch={rowsUrlSearch}
-                  rowsUrlPage={rowsUrlPage}
-                  rowsUrlLimit={rowsUrlLimit}
-                  rowsFilterQueries={rowsFilterQueries}
-                  rowsFilterQueryString={rowsFilterQueryString}
-                  rowsSortBy={rowsSortBy}
-                  rowsSortOrder={rowsSortOrder}
-                  onNavigateToRowsList={navigateToRowsList}
-                />
-              </div>
-            ) : null}
+            {tableRowsSpreadsheet}
             {selectedTable && activeTab === 'documents' && (
               <>
                 <DocumentsJsonSpreadsheet
@@ -1855,12 +1879,12 @@ export function Workspace({
           </>
         )}
       </div>
-    </div>
+    </DatabaseRowsFullscreenShell>
   )
 
   return (
     <div className="@container flex h-full min-h-0 min-w-0">
-      {showDesktopTableSidebar ? (
+      {showDesktopTableSidebar && !rowsFullscreen ? (
         <TableViewResizableLayout sidebar={tableViewSidebar}>
           {tableViewMain}
         </TableViewResizableLayout>

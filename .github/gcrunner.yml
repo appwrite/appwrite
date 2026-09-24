@@ -31,7 +31,7 @@ runners:
 
   deploy:
     family: c3d
-    cpu: 2
+    cpu: 4
     ram: 8
     disk: 80gb
     spot: false

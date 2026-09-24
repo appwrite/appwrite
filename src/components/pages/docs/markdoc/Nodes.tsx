@@ -1,6 +1,6 @@
 import { useTheme } from 'next-themes'
-import type { CSSProperties, ReactNode } from 'react'
-import { useMemo } from 'react'
+import type { CSSProperties, ReactNode, RefObject } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   Table,
   TableBody,
@@ -239,6 +239,35 @@ function buildMarkdocTableColStyles(
   })
 }
 
+/**
+ * Whether the table is wider than its container. The container stays
+ * `overflow-visible` so the header can stick below the app header; a scroll
+ * container would pin it to the table box instead. Tables that cannot shrink to
+ * fit (many columns, long unbreakable values) switch to horizontal scrolling so
+ * they do not widen the page on small screens.
+ */
+function useTableOverflow(containerRef: RefObject<HTMLDivElement | null>) {
+  const [isOverflowing, setIsOverflowing] = useState(false)
+
+  useEffect(() => {
+    const container = containerRef.current
+    const table = container?.querySelector('table')
+    if (!container || !table) return
+
+    const update = () => {
+      setIsOverflowing(table.offsetWidth > container.clientWidth)
+    }
+    update()
+
+    const observer = new ResizeObserver(update)
+    observer.observe(container)
+    observer.observe(table)
+    return () => observer.disconnect()
+  }, [containerRef])
+
+  return isOverflowing
+}
+
 export function MarkdocTableRoot({
   children,
   columnWidths: columnWidthsProp = [],
@@ -253,8 +282,17 @@ export function MarkdocTableRoot({
     [columnWidths, hasColumnWidths],
   )
 
+  const containerRef = useRef<HTMLDivElement>(null)
+  const isOverflowing = useTableOverflow(containerRef)
+
   return (
-    <div className="not-prose my-6 w-full overflow-visible rounded-lg border border-border bg-card/50">
+    <div
+      ref={containerRef}
+      className={cn(
+        'not-prose my-6 w-full rounded-lg border border-border bg-card/50',
+        isOverflowing ? 'overflow-x-auto' : 'overflow-visible',
+      )}
+    >
       <Table
         withScrollContainer={false}
         className={hasColumnWidths ? 'table-fixed' : undefined}
@@ -328,6 +366,7 @@ export function MarkdocTableCell({
         'px-4 py-3 align-top whitespace-normal',
         cellTextClass,
         '[&_strong]:font-semibold [&_strong]:text-foreground',
+        '[&_code]:[overflow-wrap:anywhere]',
       )}
     >
       <DocsMarkdocInTableProvider>{children}</DocsMarkdocInTableProvider>

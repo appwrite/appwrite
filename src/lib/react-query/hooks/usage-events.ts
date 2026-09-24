@@ -1777,32 +1777,36 @@ export function useUsageResourceBreakdownLookups(
   )
 
   const shouldFetch = enabled && !!projectId && items.length > 0
-  const { data: computeData } = useComputeBreakdownResources(
-    projectId,
-    computeIds,
-    shouldFetch && computeIds.length > 0,
-  )
-  const { data: databaseData } = useDatabaseBreakdownResources(
-    projectId,
-    databaseIds,
-    shouldFetch && databaseIds.length > 0,
-  )
-  const { data: storageData } = useStorageBreakdownResources(
-    projectId,
-    bucketIds,
-    shouldFetch && bucketIds.length > 0,
-  )
-  const { data: tableData } = useTableBreakdownResources(
+  const computeEnabled = shouldFetch && computeIds.length > 0
+  const databaseEnabled = shouldFetch && databaseIds.length > 0
+  const storageEnabled = shouldFetch && bucketIds.length > 0
+  const tableEnabled = shouldFetch && tableIds.length > 0
+
+  const { data: computeData, isPending: computePending } =
+    useComputeBreakdownResources(projectId, computeIds, computeEnabled)
+  const { data: databaseData, isPending: databasePending } =
+    useDatabaseBreakdownResources(projectId, databaseIds, databaseEnabled)
+  const { data: storageData, isPending: storagePending } =
+    useStorageBreakdownResources(projectId, bucketIds, storageEnabled)
+  const { data: tableData, isPending: tablePending } = useTableBreakdownResources(
     projectId,
     tableIds,
-    shouldFetch && tableIds.length > 0,
+    tableEnabled,
   )
+
+  const isResolvingResourceNames =
+    (computeEnabled && computePending) ||
+    (databaseEnabled && databasePending) ||
+    (storageEnabled && storagePending) ||
+    (tableEnabled && tablePending)
 
   return {
     computeLookup: computeData?.resources,
     databaseLookup: databaseData?.resources,
     storageLookup: storageData?.resources,
     tableLookup: tableData?.resources,
+    isResolvingResourceNames,
+    resourceNamesResolved: !isResolvingResourceNames,
   }
 }
 

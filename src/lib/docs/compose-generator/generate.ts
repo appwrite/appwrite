@@ -85,20 +85,25 @@ export function generateEnv({
   assistant,
   autogravity,
 }: Omit<ComposeOptions, 'topology'> & { topology?: ComposeTopology }): string {
-  return ENV_TEMPLATE.replace(
-    /^_APP_DB_ADAPTER=.*$/m,
-    `_APP_DB_ADAPTER=${database}`,
+  return (
+    ENV_TEMPLATE.replace(/^_APP_DB_ADAPTER=.*$/m, `_APP_DB_ADAPTER=${database}`)
+      .replace(/^_APP_DB_HOST=.*$/m, `_APP_DB_HOST=${database}`)
+      .replace(/^_APP_DB_PORT=.*$/m, `_APP_DB_PORT=${DATABASE_PORTS[database]}`)
+      .replace(
+        /^_APP_ASSISTANT_OPENAI_API_KEY=.*$/m,
+        `_APP_ASSISTANT_OPENAI_API_KEY=${assistant ? 'your-openai-api-key' : ''}`,
+      )
+      .replace(
+        /^_APP_AUTOGRAVITY_HOST=.*$/m,
+        `_APP_AUTOGRAVITY_HOST=${autogravity ? AUTOGRAVITY_HOST : ''}`,
+      )
+      // The template is Appwrite's development .env, whose mock breach checker
+      // is refused once _APP_ENV is production; ship the installer's default.
+      .replace(
+        /^_APP_PWNED_PASSWORDS_DSN=.*$/m,
+        '_APP_PWNED_PASSWORDS_DSN=none://localhost',
+      )
   )
-    .replace(/^_APP_DB_HOST=.*$/m, `_APP_DB_HOST=${database}`)
-    .replace(/^_APP_DB_PORT=.*$/m, `_APP_DB_PORT=${DATABASE_PORTS[database]}`)
-    .replace(
-      /^_APP_ASSISTANT_OPENAI_API_KEY=.*$/m,
-      `_APP_ASSISTANT_OPENAI_API_KEY=${assistant ? 'your-openai-api-key' : ''}`,
-    )
-    .replace(
-      /^_APP_AUTOGRAVITY_HOST=.*$/m,
-      `_APP_AUTOGRAVITY_HOST=${autogravity ? AUTOGRAVITY_HOST : ''}`,
-    )
 }
 
 export type GeneratedFile = {

@@ -112,10 +112,6 @@ Appwrite has rate limits on some endpoints to prevent abuse.
 {% cards_item href="/docs/partners/project/api-keys" title="API keys" %}
 Create and manage API keys used by Server SDKs.
 {% /cards_item %}
-
-{% cards_item href="/docs/advanced/security/dev-keys" title="Dev keys" %}
-Create and manage dev keys used by Client SDKs in dev environments.
-{% /cards_item %}
 {% /cards %}
 
 # Configuration {% #configuration %}

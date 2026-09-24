@@ -46,7 +46,7 @@ import {
   queryParamToMap,
   mapToQueryParam,
   deploymentsFilterColumns,
-  executionsFilterColumns,
+  siteLogsFilterColumns,
   proxyRulesFilterColumns,
 } from '@/lib/table-filters'
 import type { CompactFilterKey } from '@/lib/table-filters'
@@ -247,7 +247,7 @@ function SiteLayoutContent() {
 
   const siteFilterColumns = useMemo(() => {
     if (activeTab === 'deployments') return deploymentsFilterColumns
-    if (activeTab === 'logs') return executionsFilterColumns
+    if (activeTab === 'logs') return siteLogsFilterColumns
     if (activeTab === 'domains') return proxyRulesFilterColumns
     return deploymentsFilterColumns
   }, [activeTab])

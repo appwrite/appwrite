@@ -149,6 +149,31 @@ export async function fetchMarketplaceCatalogPageRaw(
   }
 }
 
+/**
+ * Same filters and sort as marketplace Explore / Catalog browse
+ * ({@link fetchMarketplaceCatalogPageRaw} without category or search), capped
+ * at {@link MARKETPLACE_APPS_LIMIT} for debug pickers and other compact lists.
+ */
+export async function fetchMarketplaceCatalogPickerRaw(organizationId: string) {
+  if (!organizationId) {
+    return { apps: [], total: 0 }
+  }
+
+  const response = await sdk.forConsole.apps.list({
+    queries: [
+      ...marketplaceBaseQueries(),
+      Query.orderDesc('$createdAt'),
+      Query.limit(MARKETPLACE_APPS_LIMIT),
+    ],
+    total: true,
+  })
+
+  return {
+    apps: response.apps ?? [],
+    total: response.total ?? 0,
+  }
+}
+
 export async function fetchMarketplaceLabeledAppsRaw(
   organizationId: string,
   label: MarketplaceCurationLabel,
@@ -357,6 +382,22 @@ export function marketplaceLabeledAppsQueryOptions(
     ],
     queryFn: () =>
       fetchMarketplaceLabeledAppsRaw(organizationId!, label, category),
+    enabled: !!organizationId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: organizationId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+export function marketplaceCatalogPickerQueryOptions(
+  organizationId: string | null | undefined,
+) {
+  return queryOptions({
+    queryKey: ['apps', 'marketplace', 'catalog-picker', organizationId],
+    queryFn: () => fetchMarketplaceCatalogPickerRaw(organizationId!),
     enabled: !!organizationId,
     staleTime: DEFAULT_STALE_TIME,
     retry: false,

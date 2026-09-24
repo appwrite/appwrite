@@ -41,7 +41,7 @@ import type { CliShellSession } from '@/lib/cli-shell/cli-shell-sessions'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
 import { MAX_CLI_SHELL_SESSION_NAME_LENGTH } from '@/lib/user-prefs-keys'
-import { useCliShell } from './CliShellProvider'
+import { useCliShell } from './cli-shell-context'
 import { useCliTerminalSessionsLayoutMode } from './CliTerminalLayoutContext'
 
 type SessionRowProps = {

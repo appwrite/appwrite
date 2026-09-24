@@ -29,6 +29,7 @@
     "lint:content": "bun run scripts/lint-hidden-chars.ts",
     "lint:native-dialogs": "bun run scripts/lint-native-dialogs.ts",
     "lint:sdk-pins": "bun run scripts/lint-sdk-pins.ts",
+    "release:self-hosted": "bun run scripts/release-self-hosted.ts",
     "serve": "vite preview",
     "start": "bun --preload ./src/lib/sentry/init-server.ts ./server.ts",
     "test": "playwright test",
@@ -52,8 +53,8 @@
     "benchmark:init-memory": "bun run scripts/benchmark-init-memory.ts"
   },
   "dependencies": {
-    "@appwrite.io/console": "https://pkg.vc/-/@appwrite/@appwrite.io/console@4190fc7",
-    "@appwrite.io/specs": "github:appwrite/specs#7e01c1623a807ffcd86c5e7e8eab49d4c355fb96",
+    "@appwrite.io/console": "^17.0.0",
+    "@appwrite.io/specs": "github:appwrite/specs#af4c27c8f30e492e592a7c9ab6e83641851732d7",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",

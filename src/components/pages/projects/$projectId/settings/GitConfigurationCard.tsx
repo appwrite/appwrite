@@ -232,10 +232,6 @@ export function GitConfigurationCard({
     })
   }
 
-  const getProviderUrl = (provider: string, organization: string) => {
-    return getProviderOwnerUrl(provider, organization)
-  }
-
   // Empty State: total === 0 AND (!isSelfHosted OR isVcsEnabled === true)
   if (total === 0 && (!isSelfHosted || isVcsEnabled)) {
     return (
@@ -376,10 +372,7 @@ export function GitConfigurationCard({
                     </TableHeader>
                     <TableBody>
                       {installations.map((installation) => {
-                        const providerUrl = getProviderUrl(
-                          installation.provider,
-                          installation.organization,
-                        )
+                        const providerUrl = getProviderOwnerUrl(installation)
                         const knownProvider = getKnownVcsProvider(
                           installation.provider,
                         )

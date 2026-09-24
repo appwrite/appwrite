@@ -7,7 +7,7 @@ description: Use Sequelize with an Appwrite native MySQL database. Configure the
 Appwrite's native MySQL database is a standard MySQL engine (default **8.4**), so [Sequelize](https://sequelize.org/) works against it with no Appwrite-specific configuration. Point Sequelize's `mysql` dialect and the `mysql2` driver at the connection string from the [Connections](/docs/products/databases/mysql/connections) page and use models, the query interface, and migrations as you would against any MySQL server.
 
 {% info title="Before you start" %}
-You'll need a native MySQL database in a `ready` state and its credentials. See [native MySQL databases](/docs/products/databases/mysql) to create one and [Connections](/docs/products/databases/mysql/connections) to retrieve the connection string. The username is `admin.<hash>`, and the database name is `default`.
+You'll need a native MySQL database in a `ready` state and its credentials. See [native MySQL databases](/docs/products/databases/mysql) to create one and [Connections](/docs/products/databases/mysql/connections) to retrieve the connection string. The username is `admin.{hash}`, and the database name is `default`.
 {% /info %}
 
 {% info title="Sequelize 7" %}
@@ -19,8 +19,8 @@ Sequelize 7 (`@sequelize/core` + `@sequelize/mysql`) is still alpha. These examp
 Fetch the connection details with [`mysql.get()`](/docs/products/databases/mysql/connections#credentials). That call returns one `connectionString` on the engine port (`3306`). Use it as `DIRECT_URL`, copy it to `DATABASE_URL`, and change only the port to `6033` for the [connection pooler](/docs/products/databases/mysql/connection-pooling). Never commit them:
 
 ```env
-DATABASE_URL="mysql://admin.<hash>:<password>@db-<hash>.<region>.appwrite.center:6033/default"
-DIRECT_URL="mysql://admin.<hash>:<password>@db-<hash>.<region>.appwrite.center:3306/default"
+DATABASE_URL="mysql://admin.{hash}:{password}@db-{hash}.{region}.appwrite.center:6033/default"
+DIRECT_URL="mysql://admin.{hash}:{password}@db-{hash}.{region}.appwrite.center:3306/default"
 ```
 
 Use the pooled `DATABASE_URL` (port `6033`) for runtime traffic and `DIRECT_URL` (port `3306`) for Sequelize CLI migrations. Connections on Appwrite Cloud are encrypted with TLS. Configure `dialectOptions.ssl` when Sequelize or `mysql2` does not infer TLS from the URL, and keep certificate verification enabled against Node's standard trust store. See [Network security](/docs/products/databases/mysql/network-security) for TLS and network controls.
@@ -165,7 +165,7 @@ module.exports = {
 };
 ```
 
-Prefer migrations over `sync({ alter: true })` in shared and production environments. The `admin.<hash>` user owns the `default` database and can run schema changes.
+Prefer migrations over `sync({ alter: true })` in shared and production environments. The `admin.{hash}` user owns the `default` database and can run schema changes.
 
 # Query with Sequelize {% #query %}
 

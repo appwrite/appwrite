@@ -105,6 +105,7 @@ export function AppLogoFilePicker({
             src={previewUrl}
             size="xl"
             alt={t('App logo preview')}
+            monochrome={false}
           />
         ) : (
           <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-xl border border-border/60 bg-muted">

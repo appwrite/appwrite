@@ -4,7 +4,7 @@
 | `APPWRITE_VERSION`                   | The Appwrite version used to run the site                     | Both                               |
 | `APPWRITE_REGION`                    | The region where the site will run from                       | Both                               |
 | `APPWRITE_DEPLOYMENT_TYPE`           | The deployment source type, such as `manual`, `cli`, or `vcs` | Both                               |
-| `APPWRITE_SITE_API_KEY`              | The dynamic API key for the build, scoped to the site         | Build time                         |
+| `APPWRITE_SITE_API_KEY`              | The ephemeral API key for the build, scoped to the site       | Build time                         |
 | `APPWRITE_SITE_ID`                   | The ID of the running site                                    | Both                               |
 | `APPWRITE_SITE_NAME`                 | The name of the running site                                  | Both                               |
 | `APPWRITE_SITE_DEPLOYMENT`           | The deployment ID of the running site                         | Both                               |
@@ -28,4 +28,4 @@
 
 VCS metadata variables are populated for Git deployments. For manual and CLI deployments, VCS fields may be empty.
 
-At run time, Appwrite delivers the [dynamic API key](/docs/products/sites/develop#dynamic-api-key) on the `x-appwrite-key` request header of every SSR request instead of an environment variable.
+At run time, Appwrite delivers the [ephemeral API key](/docs/products/sites/develop#ephemeral-api-key) on the `x-appwrite-key` request header of every SSR request instead of an environment variable.

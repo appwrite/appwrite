@@ -3,7 +3,7 @@ import { useNavigate } from '@tanstack/react-router'
 import { useQueryClient } from '@tanstack/react-query'
 import { useTheme } from 'next-themes'
 import { useConsoleRightPane } from '@/components/global/providers/ConsoleRightPaneContext'
-import { useCliShellOptional } from '@/components/global/cli-shell/CliShellProvider'
+import { useCliShellOptional } from '@/components/global/cli-shell/cli-shell-context'
 import { useProjectConnectDialog } from '@/components/pages/projects/$projectId/shared/ProjectConnectDialogContext'
 import {
   applyConsoleEnvelope,
