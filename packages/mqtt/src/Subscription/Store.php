@@ -28,7 +28,7 @@ class Store
      */
     private array $connections = [];
 
-    private readonly Node $root;
+    private Node $root;
 
     public function __construct()
     {
@@ -62,11 +62,13 @@ class Store
             }
         }
 
-        $this->connections[$fd] ??= [
-            'prefix' => $prefix,
-            'userId' => $userId,
-            'subs' => [],
-        ];
+        if (!isset($this->connections[$fd])) {
+            $this->connections[$fd] = [
+                'prefix' => $prefix,
+                'userId' => $userId,
+                'subs' => [],
+            ];
+        }
         $this->connections[$fd]['subs'][$topic] = $qos;
     }
 

@@ -21,7 +21,7 @@ class Swoole extends Adapter
 
     protected Server $server;
 
-    private readonly Timer $timer;
+    private Timer $timer;
 
     /** Cap for a WebSocket connection's reassembly buffer; a larger remainder can never complete. */
     private int $maxPacketLength = 0;
@@ -45,7 +45,7 @@ class Swoole extends Adapter
     private $onClose = null;
 
     /** @param list<Transport> $transports */
-    public function __construct(array $transports, private readonly int $workers = 1, ?Timer $timer = null)
+    public function __construct(array $transports, private int $workers = 1, ?Timer $timer = null)
     {
         if ($transports === []) {
             throw new \InvalidArgumentException('At least one transport is required.');

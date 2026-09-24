@@ -316,7 +316,7 @@ class Server
         $codes = $suback->codes();
 
         if ($protocol >= V5::PROTOCOL_LEVEL) {
-            return V5::suback($id, \implode('', \array_map(chr(...), $codes)));
+            return V5::suback($id, \implode('', \array_map('chr', $codes)));
         }
 
         $returnCodes = '';

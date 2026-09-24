@@ -103,7 +103,7 @@ parameters:
 			path: src/Property.php
 
 		-
-			message: '#^Parameter \#1 \$callback of function array_map expects \(callable\(int\)\: mixed\)\|null, Closure\(int\<0, 255\>\)\: non\-empty\-string given\.$#'
+			message: '#^Parameter \#1 \$callback of function array_map expects \(callable\(int\)\: mixed\)\|null, ''chr'' given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Server.php
