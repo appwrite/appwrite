@@ -149,6 +149,16 @@ export function DebugMenuConsoleBannersPanel() {
                     {banner.placement}
                   </Badge>
                 ) : null}
+                {banner.cardSize === 'large' ? (
+                  <Badge variant="info" className="text-[10px] shrink-0">
+                    Large card
+                  </Badge>
+                ) : null}
+                {banner.cardAspectRatio === 'square' ? (
+                  <Badge variant="info" className="text-[10px] shrink-0">
+                    1:1 card
+                  </Badge>
+                ) : null}
               </div>
 
               <p className="text-[11px] text-[var(--network-globe-edge)]/80">

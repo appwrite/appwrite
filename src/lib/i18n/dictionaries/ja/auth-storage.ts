@@ -3,6 +3,11 @@
  * Keys are the exact English source strings (English is the source of truth).
  */
 export const jaAuthStorageDictionary: Record<string, string> = {
+  'Add native OAuth to your app': 'アプリに Native OAuth を追加',
+  'Configure OAuth': 'OAuth を設定',
+  'Read announcement': '告知を読む',
+  'Ship native sign-in dialogs for Apple, Google, and more. Your users never leave the app, and you never ship client secrets.':
+    'Apple、Google などのネイティブサインインダイアログをそのまま組み込めます。ユーザーはアプリから離れず、クライアントシークレットも配布しません。',
   'Native sign-in': 'ネイティブサインイン',
   'Sessions can be created from ID tokens obtained on device': 'デバイス上で取得した ID トークンからセッションを作成できます',
   'Native sign-in is turned off for this project': 'このプロジェクトではネイティブサインインは無効です',

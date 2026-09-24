@@ -4,6 +4,7 @@ import { KeyboardShortcutsProvider } from '@/components/global/providers/Keyboar
 import { ProjectConnectDialogProvider } from '@/components/pages/projects/$projectId/shared/ProjectConnectDialogContext'
 import { CsvExportBox, CsvImportBox } from '@/components/global/csv-migrations'
 import { GlobalUploadProgress } from '@/components/global/shared/GlobalUploadProgress'
+import { NativeOAuthPromoBanner } from '@/components/global/shared/NativeOAuthPromoBanner'
 import { canShowProjectTerminal } from '@/lib/console-access-checks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useOrganizationScopes, useProject } from '@/lib/react-query/hooks'
@@ -50,6 +51,7 @@ export function ProjectCliShellLayout({
         >
           {children}
         </ConsoleLayout>
+        <NativeOAuthPromoBanner />
         <div className="fixed bottom-4 end-4 z-50 flex flex-col gap-2 max-w-sm w-full">
           <GlobalUploadProgress embedded />
           <CsvImportBox projectId={projectId} />

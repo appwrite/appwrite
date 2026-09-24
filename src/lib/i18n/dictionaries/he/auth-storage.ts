@@ -3,6 +3,11 @@
  * Keys are the exact English source strings (English is the source of truth).
  */
 export const heAuthStorageDictionary: Record<string, string> = {
+  'Add native OAuth to your app': 'הוסיפו Native OAuth לאפליקציה',
+  'Configure OAuth': 'הגדרת OAuth',
+  'Read announcement': 'קריאת ההכרזה',
+  'Ship native sign-in dialogs for Apple, Google, and more. Your users never leave the app, and you never ship client secrets.':
+    'הוסיפו דיאלוגי התחברות נייטיב ל-Apple, Google ועוד. המשתמשים נשארים באפליקציה, בלי סודות לקוח בקוד.',
   'Native sign-in': 'התחברות נייטיב',
   'Sessions can be created from ID tokens obtained on device': 'ניתן ליצור סשנים מטוקני ID שהתקבלו במכשיר',
   'Native sign-in is turned off for this project': 'התחברות נייטיב כבויה בפרויקט זה',
