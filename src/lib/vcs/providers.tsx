@@ -179,17 +179,30 @@ export function getKnownVcsProvider(provider?: string): VcsProviderMeta | null {
   return (id && VCS_PROVIDERS[id]) || null
 }
 
+/** Older servers and the SDK types don't have `organizationUrl` yet. */
+type InstallationWithOrganizationUrl = Models.Installation & {
+  organizationUrl?: string
+}
+
 /**
- * Build the "open in provider" owner/org URL, or null if the provider isn't
- * recognized -- callers should hide the link entirely rather than point it
- * at a fabricated github.com URL for an unknown provider.
+ * Build the "open in provider" owner/org URL, or null if there is none --
+ * callers should hide the link entirely rather than point it at a fabricated
+ * github.com URL for an unknown provider.
+ *
+ * Prefers `organizationUrl`, which the server builds from its configured host,
+ * so it is the only correct link for a self-hosted GitLab or Gitea. The server
+ * sends it empty when that provider is no longer configured there, which hides
+ * the link; only a server that predates the field falls back to the provider's
+ * public host.
  */
 export function getProviderOwnerUrl(
-  provider: string | undefined,
-  organization: string,
+  installation: Models.Installation,
 ): string | null {
-  const meta = getKnownVcsProvider(provider)
-  return meta ? meta.baseUrl(organization) : null
+  const { organizationUrl } = installation as InstallationWithOrganizationUrl
+  if (organizationUrl !== undefined) return organizationUrl || null
+
+  const meta = getKnownVcsProvider(installation.provider)
+  return meta ? meta.baseUrl(installation.organization) : null
 }
 
 function encodeVcsPath(value: string): string {
