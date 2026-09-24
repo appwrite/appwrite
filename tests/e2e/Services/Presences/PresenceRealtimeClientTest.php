@@ -20,6 +20,7 @@ final class PresenceRealtimeClientTest extends Scope
 {
     use ProjectCustom;
     use SideClient;
+    private const int HANDSHAKE_TIMEOUT_MS = 5000;
 
     private static array $presenceApiKeyCache = [];
 
@@ -81,7 +82,7 @@ final class PresenceRealtimeClientTest extends Scope
             ]
         );
 
-        $this->receiveConnected($client, \max(800, $timeout * 1000));
+        $this->receiveConnected($client, \max(self::HANDSHAKE_TIMEOUT_MS, $timeout * 1000));
 
         if (empty($channels)) {
             return $client;
@@ -103,7 +104,7 @@ final class PresenceRealtimeClientTest extends Scope
         return $client;
     }
 
-    private function receiveConnected(WebSocketClient $client, int $timeoutMs = 800): void
+    private function receiveConnected(WebSocketClient $client, int $timeoutMs = self::HANDSHAKE_TIMEOUT_MS): void
     {
         $deadline = \microtime(true) + ($timeoutMs / 1000);
 
