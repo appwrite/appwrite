@@ -75,8 +75,6 @@ export const heCatalog: EnCatalog = {
         twoFactorEnabled: 'אימות דו-שלבי מופעל',
         twoFactorDisabled: 'אימות דו-שלבי כבוי',
         passwordBreached: 'הסיסמה דלפה',
-        passwordNotBreached: 'הסיסמה לא דלפה',
-        passwordNotChecked: 'הסיסמה לא נבדקה',
         console: 'קונסול',
         home: 'בית',
         docs: 'דוקומנטציה',

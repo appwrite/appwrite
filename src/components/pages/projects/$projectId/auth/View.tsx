@@ -1481,9 +1481,7 @@ export function View({
                           <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-center w-[80px]">
                             {t('MFA')}
                           </TableHead>
-                          <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-center w-[100px]">
-                            {t('Password')}
-                          </TableHead>
+                          <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-center w-[100px]" />
                           <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end">
                             {t('Joined')}
                           </TableHead>

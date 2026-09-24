@@ -66,8 +66,6 @@ export const enCatalog = {
         twoFactorEnabled: '2FA enabled',
         twoFactorDisabled: '2FA disabled',
         passwordBreached: 'Password breached',
-        passwordNotBreached: 'Password not breached',
-        passwordNotChecked: 'Password not checked',
         console: 'Console',
         home: 'Home',
         docs: 'Docs',

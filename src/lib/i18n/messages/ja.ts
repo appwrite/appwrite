@@ -76,8 +76,6 @@ export const jaCatalog: EnCatalog = {
         twoFactorEnabled: '2FA 有効',
         twoFactorDisabled: '2FA 無効',
         passwordBreached: 'パスワード漏洩あり',
-        passwordNotBreached: 'パスワード漏洩なし',
-        passwordNotChecked: 'パスワード未確認',
         console: 'コンソール',
         home: 'ホーム',
         docs: 'ドキュメント',

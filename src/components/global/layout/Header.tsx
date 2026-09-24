@@ -30,7 +30,7 @@ import {
   ArrowLeft,
   DatabaseZap,
   ShieldAlert,
-  KeyRound,
+  TriangleAlert,
   Sparkles,
   Eye,
   Home,
@@ -565,26 +565,7 @@ export function ConsoleHeader({
     headerAccount?.mfa === true ||
     headerAccount?.twoFactorAuthenticatorEnabled === true
 
-  // Result of the last breached-password check; null when never checked.
-  const passwordPwned = headerAccount?.passwordPwned
-  const passwordStatus =
-    passwordPwned === true
-      ? {
-          label: headerCopy.accountMenu.passwordBreached,
-          iconClass: 'text-red-500',
-          textClass: 'text-red-500',
-        }
-      : passwordPwned === false
-        ? {
-            label: headerCopy.accountMenu.passwordNotBreached,
-            iconClass: 'text-emerald-500',
-            textClass: 'text-foreground',
-          }
-        : {
-            label: headerCopy.accountMenu.passwordNotChecked,
-            iconClass: 'text-muted-foreground',
-            textClass: 'text-muted-foreground',
-          }
+  const isPasswordPwned = headerAccount?.passwordPwned === true
 
   const hasSidebar = !isOrgOverview
   const showBackToOrganization =
@@ -1680,8 +1661,25 @@ export function ConsoleHeader({
                   className="w-64 border-border bg-popover p-1"
                 >
                   <div className="px-3 py-3 text-start">
-                    <p className="text-[13px] font-medium text-foreground">
-                      {displayName}
+                    <p className="flex items-center gap-1.5 text-[13px] font-medium text-foreground">
+                      <span className="truncate">{displayName}</span>
+                      {isPasswordPwned && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <TriangleAlert
+                              aria-label={
+                                headerCopy.accountMenu.passwordBreached
+                              }
+                              className="h-3.5 w-3.5 shrink-0 text-red-500"
+                            />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p className="text-xs">
+                              {headerCopy.accountMenu.passwordBreached}
+                            </p>
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
                     </p>
                     {userEmail && (
                       <p className="text-[12px] text-muted-foreground">
@@ -1747,7 +1745,7 @@ export function ConsoleHeader({
                       </div>
                     )}
 
-                    {/* Account status: activity, 2FA and password breach check in one list */}
+                    {/* Account status: activity and 2FA in one list */}
                     <div>
                       <p className="text-[11px] text-muted-foreground mb-1.5">
                         {headerCopy.accountMenu.accountStatus}
@@ -1792,22 +1790,6 @@ export function ConsoleHeader({
                             </p>
                           </li>
                         )}
-                        <li className="flex items-center gap-2">
-                          <KeyRound
-                            className={cn(
-                              'h-3.5 w-3.5',
-                              passwordStatus.iconClass,
-                            )}
-                          />
-                          <p
-                            className={cn(
-                              'text-[14px]',
-                              passwordStatus.textClass,
-                            )}
-                          >
-                            {passwordStatus.label}
-                          </p>
-                        </li>
                       </ul>
                     </div>
 
