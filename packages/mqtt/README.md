@@ -1,5 +1,8 @@
 # Utopia MQTT
 
+> [!IMPORTANT]
+> This repository is a read-only mirror of [`packages/mqtt`](https://github.com/appwrite/appwrite/tree/main/packages/mqtt) in [appwrite/appwrite](https://github.com/appwrite/appwrite). Development happens there — please open issues and pull requests against appwrite/appwrite.
+
 [![Discord](https://img.shields.io/discord/564160730845151244?label=discord)](https://appwrite.io/discord)
 
 Utopia MQTT is a PHP toolkit for building MQTT brokers (3.1.1 and 5.0). You implement one interface of typed control packets and the library owns the wire — framing, decoding, per-version encoding, packet ids, the QoS handshake, keep-alive reaping, and subscription matching. This library is maintained by the [Appwrite team](https://appwrite.io) and is framework-agnostic.

@@ -2,29 +2,34 @@
     "name": "utopia-php/mqtt",
     "description": "A simple abstraction for building MQTT 5.0 brokers.",
     "type": "library",
-    "keywords": ["php", "framework", "upf", "utopia", "mqtt", "broker"],
+    "keywords": [
+        "php",
+        "framework",
+        "upf",
+        "utopia",
+        "mqtt",
+        "broker"
+    ],
     "license": "MIT",
     "scripts": {
-        "test": "./vendor/bin/phpunit",
-        "lint": "./vendor/bin/pint --test --preset=psr12 src tests",
-        "format": "./vendor/bin/pint --preset=psr12 src tests",
-        "check": "./vendor/bin/phpstan analyse --level max src tests"
+        "test": "phpunit"
     },
     "minimum-stability": "stable",
     "autoload": {
-        "psr-4": {"Utopia\\Mqtt\\": "src/Mqtt"}
+        "psr-4": {
+            "Utopia\\Mqtt\\": "src/Mqtt"
+        }
     },
     "autoload-dev": {
-        "psr-4": {"Utopia\\Mqtt\\Tests\\": "tests"}
+        "psr-4": {
+            "Utopia\\Mqtt\\Tests\\": "tests"
+        }
     },
     "require": {
         "php": ">=8.2",
         "utopia-php/telemetry": "^0.4"
     },
     "require-dev": {
-        "swoole/ide-helper": "5.1.2",
-        "phpunit/phpunit": "^10.5",
-        "phpstan/phpstan": "^1.12",
-        "laravel/pint": "^1.15 <1.21"
+        "swoole/ide-helper": "5.1.2"
     }
 }
