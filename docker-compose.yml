@@ -35,8 +35,16 @@ services:
     depends_on:
       - appwrite
     networks:
-      - gateway
-      - appwrite
+      gateway: null
+      appwrite: null
+      # Compute runtimes get _APP_DOMAIN as their API endpoint, but they only share
+      # this network. Without the alias the name resolves through public DNS alone,
+      # so every call a function makes to Appwrite leaves the host and has to hairpin
+      # back in through the proxy — which breaks on split-horizon DNS and on NAT
+      # without loopback, surfacing inside the runtime as a bare "fetch failed".
+      runtimes:
+        aliases:
+          - ${_APP_DOMAIN:-localhost}
   appwrite:
     container_name: appwrite
     logging:
