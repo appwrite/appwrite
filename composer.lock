@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "382334a69b2815777fb9a47d87e1e67f",
+    "content-hash": "f06c56c6f19c31ee3ae2d474bbaacc73",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3252,53 +3252,6 @@
                 "source": "https://github.com/utopia-php/database/tree/7.3.11"
             },
             "time": "2026-09-17T08:18:45+00:00"
-        },
-        {
-            "name": "utopia-php/detector",
-            "version": "0.2.8",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/utopia-php/detector.git",
-                "reference": "22171ed5e1cd056ed035d9734ce155530f933aae"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/detector/zipball/22171ed5e1cd056ed035d9734ce155530f933aae",
-                "reference": "22171ed5e1cd056ed035d9734ce155530f933aae",
-                "shasum": ""
-            },
-            "require": {
-                "ext-json": "*",
-                "ext-yaml": "*",
-                "php": ">=8.0"
-            },
-            "require-dev": {
-                "laravel/pint": "1.2.*",
-                "phpstan/phpstan": "1.8.*",
-                "phpunit/phpunit": "^9.4"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Utopia\\Detector\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "description": "A simple library for fast and reliable environment identification.",
-            "keywords": [
-                "detector",
-                "framework",
-                "php",
-                "utopia"
-            ],
-            "support": {
-                "issues": "https://github.com/utopia-php/detector/issues",
-                "source": "https://github.com/utopia-php/detector/tree/0.2.8"
-            },
-            "time": "2026-09-19T21:45:00+00:00"
         },
         {
             "name": "utopia-php/di",
