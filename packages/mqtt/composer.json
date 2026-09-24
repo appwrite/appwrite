@@ -32,5 +32,8 @@
     },
     "require-dev": {
         "swoole/ide-helper": "5.1.2"
+    },
+    "suggest": {
+        "ext-swoole": "Required to use the Swoole server adapter and the client."
     }
 }
