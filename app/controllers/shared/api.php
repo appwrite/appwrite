@@ -462,15 +462,15 @@ Http::init()
         if (! empty($method)) {
             $namespace = \strtolower($method->getNamespace());
 
-            // Impersonation shows an operator the target's account without letting them change it,
-            // so account writes are refused; MFA-group routes act on the operator's own session and
-            // stay open. The `impersonation` route label overrides this: 'deny' refuses a route on
-            // any method (credentials), 'allow' keeps an account write open (JWTs for the operator).
+            // Impersonation shows the target's account without letting the impersonator change it,
+            // so account writes are refused. The `impersonation` label decides per route:
+            // 'allow' keeps a write open because it acts on the impersonator's own session --
+            // their JWT, their logout, the MFA challenge that finishes their own login --
+            // and 'deny' refuses a route on any method, which is how a GET of the target's
+            // recovery codes stays closed.
             if (! $impersonatorUser->isEmpty()) {
                 $impersonation = $route->getLabel('impersonation', null);
-                $isAccountWrite = $namespace === 'account'
-                    && $request->getMethod() !== Request::METHOD_GET
-                    && ! \in_array('mfa', $route->getGroups());
+                $isAccountWrite = $namespace === 'account' && $request->getMethod() !== Request::METHOD_GET;
 
                 if ($impersonation === 'deny' || ($isAccountWrite && $impersonation !== 'allow')) {
                     throw new Exception(Exception::USER_IMPERSONATION_READ_ONLY);

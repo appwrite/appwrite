@@ -606,8 +606,8 @@ Http::get('/v1/account/sessions')
 
 
         $sessions = $targetUser->getAttribute('sessions', []);
-        // While impersonating, the request runs on the operator's session, so none of the
-        // impersonated user's sessions is marked current.
+        // While impersonating, the request runs on the impersonator's session, so none of
+        // the target's sessions is marked current.
         $current = $targetUser->sessionVerify($store->getProperty('secret', ''), $proofForToken);
 
         foreach ($sessions as $key => $session) {
@@ -732,19 +732,18 @@ Http::get('/v1/account/sessions/:sessionId')
     ))
     ->param('sessionId', 'current', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Session ID. Use the string \'current\' to get the current device session.', true, ['dbForProject'])
     ->inject('response')
-    ->inject('user')
     ->inject('targetUser')
     ->inject('locale')
     ->inject('store')
     ->inject('proofForToken')
-    ->action(function (?string $sessionId, Response $response, User $user, User $targetUser, Locale $locale, Store $store, ProofsToken $proofForToken) {
+    ->action(function (?string $sessionId, Response $response, User $targetUser, Locale $locale, Store $store, ProofsToken $proofForToken) {
 
-        // 'current' is the session making the request, which is the operator's own while
-        // impersonating. Other session IDs are looked up on the impersonated user.
-        $owner = $sessionId === 'current' ? $user : $targetUser;
-        $sessions = $owner->getAttribute('sessions', []);
+        $sessions = $targetUser->getAttribute('sessions', []);
+        // While impersonating, the request runs on the impersonator's session, so 'current'
+        // resolves against none of the target's sessions and this throws. That matches the
+        // sessions list, which marks none of them current for the same reason.
         $sessionId = ($sessionId === 'current')
-            ? $owner->sessionVerify($store->getProperty('secret', ''), $proofForToken)
+            ? $targetUser->sessionVerify($store->getProperty('secret', ''), $proofForToken)
             : $sessionId;
 
         foreach ($sessions as $session) {
@@ -770,6 +769,7 @@ Http::delete('/v1/account/sessions/:sessionId')
     ->desc('Delete session')
     ->groups(['api', 'account', 'mfa'])
     ->label('scope', 'account')
+    ->label('impersonation', 'allow')
     ->label('event', 'users.[userId].sessions.[sessionId].delete')
     ->label('audits.event', 'session.delete')
     ->label('audits.resource', 'user/{user.$id}')
