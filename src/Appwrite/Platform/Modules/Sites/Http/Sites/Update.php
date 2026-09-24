@@ -86,7 +86,7 @@ class Update extends Base
             ->param('adapter', '', new WhiteList(['static', 'ssr']), 'Framework adapter defining rendering strategy. Allowed values are: static, ssr', true, enum: new Enum(name: 'Adapter'))
             ->param('fallbackFile', '', new Text(255, 0), 'Fallback file for single page application sites.', true)
             ->param('installationId', '', new Text(128, 0), 'Appwrite Installation ID for VCS (Version Control System) deployment.', true)
-            ->param('providerRepositoryId', '', new Text(128, 0), 'Repository ID of the repo linked to the site.', true)
+            ->param('providerRepositoryId', '', new Nullable(new Text(128, 0)), 'Repository ID of the repo linked to the site.', true)
             ->param('providerBranch', '', new Text(128, 0), 'Production branch for the repo linked to the site.', true)
             ->param('providerSilentMode', false, new Boolean(), 'Is the VCS (Version Control System) connection in silent mode for the repo linked to the site? In silent mode, comments will not be made on commits and pull requests.', true)
             ->param('providerRootDirectory', '', new Text(128, 0), 'Path to site code in the linked repo.', true)
@@ -217,7 +217,7 @@ class Update extends Base
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
         }
 
-        // Omitted providerRepositoryId (null) on a connected site — preserve existing VCS values
+        // Explicit null providerRepositoryId on a connected site — preserve existing VCS values
         if ($isConnected && $providerRepositoryId === null) {
             $providerRepositoryId = $site->getAttribute('providerRepositoryId', '');
             $installationId = $site->getAttribute('installationId', '');

@@ -57,6 +57,10 @@ class Appwrite extends PushAdapter
         $payload = $this->buildPayload($message);
         $response = new Response($this->getType());
 
+        // Publish identifies topics by id (persist/sequence/ledger), but subscribers match on the
+        // topic name, so resolve every id to its name once and fan out under the name.
+        $names = $this->topicNames($message->getTo());
+
         foreach ($message->getTo() as $topic) {
             try {
                 $sequence = $this->persist($topic, $payload);
@@ -64,7 +68,7 @@ class Appwrite extends PushAdapter
                     $this->projectId,
                     [],
                     [],
-                    [$topic],
+                    [$names[$topic] ?? $topic],
                     [],
                     ['payload' => $payload, 'qos' => $this->qos, 'sequence' => $sequence],
                 );
@@ -115,7 +119,7 @@ class Appwrite extends PushAdapter
                     ->increaseDocumentAttribute('topics', $topic, 'sequence', 1)
                     ->getAttribute('sequence');
 
-                $this->dbForProject->createDocument('appwritePushLedger', new Document([
+                $this->dbForProject->createDocument('pushLedger', new Document([
                     '$id' => ID::unique(),
                     'topic' => $topic,
                     'data' => $payload,
@@ -129,11 +133,39 @@ class Appwrite extends PushAdapter
         );
     }
 
+    /**
+     * Resolve topic ids to the names subscribers match on, in one query.
+     *
+     * @param  array<int, string>  $topicIds
+     * @return array<string, string> id => name
+     */
+    private function topicNames(array $topicIds): array
+    {
+        if ($topicIds === []) {
+            return [];
+        }
+
+        $topics = $this->dbForProject->getAuthorization()->skip(
+            fn () => $this->dbForProject->find('topics', [
+                Query::equal('$id', $topicIds),
+                Query::select(['$id', 'name']),
+                Query::limit(\count($topicIds)),
+            ])
+        );
+
+        $names = [];
+        foreach ($topics as $topic) {
+            $names[$topic->getId()] = $topic->getAttribute('name');
+        }
+
+        return $names;
+    }
+
     /** The existing ledger row for this campaign message on a topic, or an empty document. */
     private function findLedger(Authorization $authorization, string $topic): Document
     {
         return $authorization->skip(
-            fn () => $this->dbForProject->findOne('appwritePushLedger', [
+            fn () => $this->dbForProject->findOne('pushLedger', [
                 Query::equal('messageId', [$this->messageId]),
                 Query::equal('topic', [$topic]),
             ])
