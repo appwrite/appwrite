@@ -739,8 +739,15 @@ class Install extends Action
                 $this->updateProgress($progress, InstallerServer::STEP_CONFIG_FILES, InstallerServer::STATUS_COMPLETED, $messages);
             }
 
-            if ($database === 'mongodb' && !$useExistingConfig && $startIndex <= 1) {
-                $this->copyMongoFilesIfNeeded();
+            if (!$useExistingConfig && $startIndex <= 1) {
+                $files = ['clickhouse-config.xml'];
+
+                if ($database === 'mongodb') {
+                    $files[] = 'mongo-entrypoint.sh';
+                    $files[] = 'mongo-init.js';
+                }
+
+                $this->copyConfigFiles($files);
             }
 
             // Changes to what the containers run on, rather than to what is inside the
@@ -1272,13 +1279,13 @@ class Install extends Action
         }
     }
 
-    private function copyMongoFilesIfNeeded(): void
+    /**
+     * Copy the files the compose file bind-mounts next to itself.
+     *
+     * @param array<string> $files
+     */
+    private function copyConfigFiles(array $files): void
     {
-        $files = [
-            'mongo-entrypoint.sh',
-            'mongo-init.js',
-        ];
-
         foreach ($files as $file) {
             $source = $this->buildFromProjectPath('/' . $file);
             if (file_exists($source)) {

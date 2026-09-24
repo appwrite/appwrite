@@ -105,6 +105,13 @@ final class GeneratorTest extends TestCase
         $this->assertContains('./mongo-entrypoint.sh:/mongo-entrypoint.sh:ro', $compose['services']['mongodb']['volumes']);
     }
 
+    public function testKeepsClickHouseConfigFile(): void
+    {
+        $compose = $this->render();
+
+        $this->assertContains('./clickhouse-config.xml:/etc/clickhouse-server/config.d/appwrite.xml:ro', $compose['services']['clickhouse']['volumes']);
+    }
+
     public function testAddsLocalHostPathMount(): void
     {
         $compose = $this->render([
@@ -127,6 +134,7 @@ final class GeneratorTest extends TestCase
         $this->assertContains('/tmp/appwrite/mongo-entrypoint.sh:/mongo-entrypoint.sh:ro', $compose['services']['mongodb']['volumes']);
         $this->assertNotContains('./mongo-init.js:/mongo-init.js:ro', $compose['services']['mongodb']['volumes']);
         $this->assertNotContains('./mongo-entrypoint.sh:/mongo-entrypoint.sh:ro', $compose['services']['mongodb']['volumes']);
+        $this->assertContains('/tmp/appwrite/clickhouse-config.xml:/etc/clickhouse-server/config.d/appwrite.xml:ro', $compose['services']['clickhouse']['volumes']);
     }
 
     public function testLeavesNoRelativeBindMountOnPublishedVersions(): void
