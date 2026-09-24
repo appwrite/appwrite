@@ -1149,6 +1149,39 @@ trait StorageBase
         $this->assertEquals('image/png', $file6['headers']['content-type']);
         $this->assertNotEmpty($file6['body']);
 
+        // Test ranged view - the same guard as download
+        $file61 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $data['fileId'] . '/view', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'Range' => 'bytes=0-0',
+        ], $this->getHeaders()));
+
+        $this->assertEquals(206, $file61['headers']['status-code']);
+        $this->assertEquals('bytes 0-0/' . $size, $file61['headers']['content-range']);
+        $this->assertEquals('1', $file61['headers']['content-length']);
+        $this->assertEquals(\file_get_contents($path, false, null, 0, 1), $file61['body']);
+
+        // Test ranged view - the final byte, with an end past it
+        $file62 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $data['fileId'] . '/view', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'Range' => 'bytes=' . ($size - 1) . '-' . ($size + 500),
+        ], $this->getHeaders()));
+
+        $this->assertEquals(206, $file62['headers']['status-code']);
+        $this->assertEquals('bytes ' . ($size - 1) . '-' . ($size - 1) . '/' . $size, $file62['headers']['content-range']);
+        $this->assertEquals('1', $file62['headers']['content-length']);
+        $this->assertEquals(\file_get_contents($path, false, null, $size - 1, 1), $file62['body']);
+
+        // Test ranged view - with a start at the end of the file
+        $file63 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $data['fileId'] . '/view', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'Range' => 'bytes=' . $size . '-',
+        ], $this->getHeaders()));
+
+        $this->assertEquals(416, $file63['headers']['status-code']);
+
         // Test for negative angle values in fileGetPreview
         $file7 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $data['fileId'] . '/preview', array_merge([
             'content-type' => 'application/json',
