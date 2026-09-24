@@ -242,7 +242,7 @@ class Messaging extends Action
         $deliveryErrors = [];
         $hasRecipients = false;
 
-        foreach ($this->streamRecipients($dbForProject, $topicIds, $userIds, $targetIds, $providerType, $default) as $page) {
+        foreach ($this->streamRecipients($dbForProject, $topicIds, $userIds, $targetIds, $providerType, $default) as [$page, $perUser]) {
             /**
              * @var array<callable> $tasks
              */
@@ -259,11 +259,11 @@ class Messaging extends Action
                     default => throw new \Exception('Provider with the requested ID is of the incorrect type')
                 };
 
-                // The Appwrite push provider delivers on the reserved per-user topic users/<userId>,
-                // so a user's targets collapse to one implicit topic; every other provider sends to
-                // the target identifiers as before.
+                // A user- or target-addressed Appwrite push is delivered on the reserved per-user
+                // topic users/<userId>, so a user's targets collapse to one implicit topic. Topic
+                // campaigns (and every other provider) keep sending to the resolved identifiers.
                 $recipients = \array_keys($identifiers);
-                if ($resolvedProviderType === MESSAGE_TYPE_PUSH && $provider->getAttribute('provider') === 'appwrite') {
+                if ($perUser && $resolvedProviderType === MESSAGE_TYPE_PUSH && $provider->getAttribute('provider') === 'appwrite') {
                     $userTopics = [];
                     foreach ($identifiers as $userId) {
                         if (!empty($userId)) {
@@ -378,7 +378,7 @@ class Messaging extends Action
      * @param array<string> $topicIds
      * @param array<string> $userIds
      * @param array<string> $targetIds
-     * @return \Generator<array<string, array<string, string>>>
+     * @return \Generator<array{0: array<string, array<string, string>>, 1: bool}>
      * @throws \Exception
      */
     private function streamRecipients(
@@ -442,7 +442,8 @@ class Messaging extends Action
                         )
                     );
 
-                    yield $this->groupTargetsByProvider($targets, $default);
+                    // Topic campaign: deliver on the topic's own channel, not a per-user topic.
+                    yield [$this->groupTargetsByProvider($targets, $default), false];
                 } while ($count === MESSAGE_RECIPIENTS_PAGE_SIZE);
             }
         }
@@ -472,7 +473,8 @@ class Messaging extends Action
 
                 $cursor = $targets[$count - 1];
 
-                yield $this->groupTargetsByProvider($targets, $default);
+                // User- or target-addressed: deliver on the reserved per-user topic (Appwrite push).
+                yield [$this->groupTargetsByProvider($targets, $default), true];
             } while ($count === MESSAGE_RECIPIENTS_PAGE_SIZE);
         }
 
@@ -501,7 +503,8 @@ class Messaging extends Action
 
                 $cursor = $targets[$count - 1];
 
-                yield $this->groupTargetsByProvider($targets, $default);
+                // User- or target-addressed: deliver on the reserved per-user topic (Appwrite push).
+                yield [$this->groupTargetsByProvider($targets, $default), true];
             } while ($count === MESSAGE_RECIPIENTS_PAGE_SIZE);
         }
     }
