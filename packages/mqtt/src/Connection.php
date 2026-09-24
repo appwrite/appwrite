@@ -166,9 +166,7 @@ class Connection
     {
         $this->inflight[$packetId] = ['topic' => $topic, 'sequence' => $sequence];
 
-        if (!isset($this->cursors[$topic])) {
-            $this->cursors[$topic] = $sequence - 1;
-        }
+        $this->cursors[$topic] ??= $sequence - 1;
     }
 
     /**

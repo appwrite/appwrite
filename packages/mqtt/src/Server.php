@@ -7,14 +7,14 @@ use Utopia\Mqtt\Packet\Auth;
 use Utopia\Mqtt\Packet\Connack;
 use Utopia\Mqtt\Packet\Connect;
 use Utopia\Mqtt\Packet\Disconnect;
-use Utopia\Mqtt\Packet\Publish;
 use Utopia\Mqtt\Packet\Puback;
+use Utopia\Mqtt\Packet\Publish;
 use Utopia\Mqtt\Packet\Specs\V3;
 use Utopia\Mqtt\Packet\Specs\V5;
 use Utopia\Mqtt\Packet\Suback;
 use Utopia\Mqtt\Packet\Subscribe;
-use Utopia\Mqtt\Packet\Unsubscribe;
 use Utopia\Mqtt\Packet\Unsuback;
+use Utopia\Mqtt\Packet\Unsubscribe;
 use Utopia\Mqtt\Subscription\Store;
 use Utopia\Telemetry\Adapter as Telemetry;
 use Utopia\Telemetry\Adapter\None as NoTelemetry;
@@ -316,7 +316,7 @@ class Server
         $codes = $suback->codes();
 
         if ($protocol >= V5::PROTOCOL_LEVEL) {
-            return V5::suback($id, \implode('', \array_map('chr', $codes)));
+            return V5::suback($id, \implode('', \array_map(chr(...), $codes)));
         }
 
         $returnCodes = '';

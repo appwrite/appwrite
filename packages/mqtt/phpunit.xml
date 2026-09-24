@@ -1,16 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/12.0/phpunit.xsd"
          bootstrap="vendor/autoload.php"
          colors="true"
          cacheDirectory=".phpunit.cache"
          failOnWarning="true"
          failOnRisky="true">
     <testsuites>
-        <testsuite name="Unit">
-            <directory>tests/unit</directory>
+        <testsuite name="unit">
+            <directory>tests</directory>
+            <exclude>tests/E2E</exclude>
         </testsuite>
-        <testsuite name="E2E">
-            <directory>tests/e2e</directory>
+        <testsuite name="e2e">
+            <directory>tests/E2E</directory>
         </testsuite>
     </testsuites>
     <source>

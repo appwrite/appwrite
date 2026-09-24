@@ -12,17 +12,18 @@
     ],
     "license": "MIT",
     "scripts": {
-        "test": "phpunit"
+        "test": "phpunit --testsuite unit",
+        "test:e2e": "tests/e2e.sh"
     },
     "minimum-stability": "stable",
     "autoload": {
         "psr-4": {
-            "Utopia\\Mqtt\\": "src/Mqtt"
+            "Utopia\\Mqtt\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Utopia\\Mqtt\\Tests\\": "tests"
+            "Utopia\\Mqtt\\Tests\\": "tests/"
         }
     },
     "require": {

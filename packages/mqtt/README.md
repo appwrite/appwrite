@@ -230,8 +230,11 @@ The bundled `Client` talks to a broker over TCP/TLS (`mqtt://` / `mqtts://`): `c
 
 ## Tests
 
+The unit tier needs no services. The e2e tier starts the Swoole fixture broker in `tests/Fixtures/Swoole` on ports 18830 (TCP) and 18831 (WebSocket) and runs against it.
+
 ```bash
 composer test
+composer test:e2e
 ```
 
 ## Copyright and license

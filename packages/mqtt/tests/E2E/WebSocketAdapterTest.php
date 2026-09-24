@@ -16,7 +16,7 @@ use function Swoole\Coroutine\run;
 
 /**
  * End-to-end coverage of the MQTT-over-WebSocket carrier against the real Swoole broker
- * (tests/servers/Swoole, WebSocket port 9001): the same CONNECT/CONNACK, SUBSCRIBE/SUBACK
+ * (tests/Fixtures/Swoole, WebSocket port 18831): the same CONNECT/CONNACK, SUBSCRIBE/SUBACK
  * and PING exchange as the raw-TCP AdapterTest, but each MQTT packet rides in a WebSocket
  * binary frame, proving the adapter's WebSocket listener, packet reassembly, and framed send.
  */
@@ -35,8 +35,8 @@ class WebSocketAdapterTest extends TestCase
 
     public function testV5SessionOverWebSocket(): void
     {
-        run(function () {
-            $this->client = new Client('swoole', 9001);
+        run(function (): void {
+            $this->client = new Client('127.0.0.1', 18831);
             $this->client->set(['timeout' => 10]);
             $this->assertTrue($this->client->upgrade('/mqtt'), 'websocket upgrade failed');
 

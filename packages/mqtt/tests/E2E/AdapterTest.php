@@ -16,7 +16,7 @@ use function Swoole\Coroutine\run;
 
 /**
  * End-to-end coverage of the whole codec against the real Swoole broker
- * (tests/servers/Swoole): full 3.1.1 and 5.0 sessions — CONNECT/CONNACK with
+ * (tests/Fixtures/Swoole): full 3.1.1 and 5.0 sessions — CONNECT/CONNACK with
  * authentication, SUBSCRIBE/SUBACK, PUBLISH/PUBACK, wildcard fan-out to another
  * connection, PINGREQ/PINGRESP, v5 re-auth, UNSUBSCRIBE, and DISCONNECT.
  */
@@ -24,7 +24,7 @@ class AdapterTest extends TestCase
 {
     private function client(float $timeout = 10): Client
     {
-        return new Client('mqtt://swoole:1883', ['timeout' => $timeout]);
+        return new Client('mqtt://127.0.0.1:18830', ['timeout' => $timeout]);
     }
 
     private function v5Auth(string $credential = 'ok'): Properties
@@ -37,7 +37,7 @@ class AdapterTest extends TestCase
 
     public function testV5FullSession(): void
     {
-        run(function () {
+        run(function (): void {
             $client = $this->client();
             $client->connect();
 
@@ -79,7 +79,7 @@ class AdapterTest extends TestCase
 
     public function testV5PublishFanOutWithWildcard(): void
     {
-        run(function () {
+        run(function (): void {
             $subscriber = $this->client();
             $subscriber->connect();
             $subscriber->send(V5::connect('v5-sub', 60, true, $this->v5Auth()));
@@ -113,7 +113,7 @@ class AdapterTest extends TestCase
 
     public function testV3FullSession(): void
     {
-        run(function () {
+        run(function (): void {
             $client = $this->client();
             $client->connect();
 
@@ -145,7 +145,7 @@ class AdapterTest extends TestCase
 
     public function testAuthRejectionClosesConnection(): void
     {
-        run(function () {
+        run(function (): void {
             // v5: a "deny" credential is refused with reason Not Authorized, then closed.
             $v5 = $this->client();
             $v5->connect();
@@ -170,7 +170,7 @@ class AdapterTest extends TestCase
 
     public function testUnsubscribeStopsDelivery(): void
     {
-        run(function () {
+        run(function (): void {
             $client = $this->client(timeout: 2);
             $client->connect();
             $client->send(V5::connect('v5-unsub', 60, true, $this->v5Auth()));

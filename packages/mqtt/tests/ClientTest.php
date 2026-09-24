@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Utopia\Mqtt\Tests\Unit;
+namespace Utopia\Mqtt\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Utopia\Mqtt\Client;
@@ -50,7 +50,7 @@ final class ClientTest extends TestCase
     {
         $client = new Client('mqtt://broker.local');
 
-        $noop = fn () => null;
+        $noop = fn (): null => null;
         $returned = $client
             ->onOpen($noop)
             ->onReceive($noop)

@@ -45,13 +45,13 @@ $matches = function (string $filter, string $topic): bool {
 };
 
 $adapter = new Adapter\Swoole([
-    new Adapter\Swoole\WebSocket('0.0.0.0', 9001),
-    new Adapter\Swoole\Tcp('0.0.0.0', 1883),
+    new Adapter\Swoole\WebSocket('127.0.0.1', 18831),
+    new Adapter\Swoole\Tcp('127.0.0.1', 18830),
 ], workers: 1);
 
 $adapter
-    ->onStart(fn () => print("mqtt broker started\n"))
-    ->onReceive(function (int $fd, string $data) use ($adapter, $matches, &$protocol, &$subscriptions) {
+    ->onStart(fn (): int => print("mqtt broker started\n"))
+    ->onReceive(function (int $fd, string $data) use ($adapter, $matches, &$protocol, &$subscriptions): void {
         $packet = Packet::parse($data);
 
         switch ($packet->type) {
@@ -129,7 +129,7 @@ $adapter
                     [$filter, $offset] = Packet::readString($body, $offset);
                     $subscriptions[$fd] = array_values(array_filter(
                         $subscriptions[$fd] ?? [],
-                        fn (string $f) => $f !== $filter
+                        fn (string $f): bool => $f !== $filter
                     ));
                     $count++;
                 }
@@ -184,7 +184,7 @@ $adapter
                 break;
         }
     })
-    ->onClose(function (int $fd) use (&$protocol, &$subscriptions) {
+    ->onClose(function (int $fd) use (&$protocol, &$subscriptions): void {
         unset($protocol[$fd], $subscriptions[$fd]);
     })
     ->start();

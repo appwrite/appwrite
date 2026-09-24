@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Utopia\Mqtt\Tests\Unit;
+namespace Utopia\Mqtt\Tests;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;

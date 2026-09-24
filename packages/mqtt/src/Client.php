@@ -10,13 +10,13 @@ class Client
 
     private bool $connected = false;
 
-    private string $host;
+    private readonly string $host;
 
-    private int $port;
+    private readonly int $port;
 
-    private bool $ssl;
+    private readonly bool $ssl;
 
-    private float $timeout;
+    private readonly float $timeout;
 
     private ?\Closure $onOpen = null;
 
