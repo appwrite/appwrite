@@ -8,8 +8,8 @@ use Utopia\Cdn\Certificates\Challenge;
 use Utopia\Cdn\Certificates\Provider;
 use Utopia\Cdn\Certificates\Status;
 use Utopia\Cdn\Exception\Certificate;
-use Utopia\Client;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
+use Utopia\Client\Client;
 use Utopia\Psr7\Header;
 use Utopia\Psr7\Request\Factory as RequestFactory;
 
