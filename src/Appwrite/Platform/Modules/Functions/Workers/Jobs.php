@@ -78,20 +78,18 @@ class Jobs extends Action
         ErrorCode::CloneFailed->value => 'Failed to clone the repository. Check that the repository and branch exist and are accessible.',
     ];
 
-    // Repository sources only: an uploaded source is downloaded from Appwrite.
-    private const array USER_SOURCE_ERRORS = [
-        401 => 'Access to the repository was denied. Check that it is still accessible to your Git installation.',
-        403 => 'Access to the repository was denied. Check that it is still accessible to your Git installation.',
-        404 => 'The repository, branch or commit could not be found. Check that it still exists.',
-    ];
-
     private static function userMessage(Document $deployment, JobArtifact $artifact): ?string
     {
         $code = $artifact->error?->code;
+        // Repository sources only: an uploaded source is downloaded from Appwrite.
         if ($code === ErrorCode::DownloadHttpError
             && $deployment->getAttribute('type') === 'vcs'
             && \preg_match('/status (\d{3})/', $artifact->error->message, $matches) === 1) {
-            return self::USER_SOURCE_ERRORS[(int) $matches[1]] ?? null;
+            return match ((int) $matches[1]) {
+                401, 403 => 'Access to the repository was denied. Check that it is still accessible to your Git installation.',
+                404 => 'The repository, branch or commit could not be found. Check that it still exists.',
+                default => null,
+            };
         }
 
         return self::USER_ARTIFACT_ERRORS[$code->value ?? ''] ?? null;
