@@ -66,7 +66,6 @@ use Utopia\Telemetry\Histogram;
  * the leader election.
  *
  * @phpstan-type Registered array{trigger: Trigger, payload: mixed, version: string, coverFrom: \DateTimeImmutable|null}
- * @see \Utopia\Schedule\Tests\SchedulerTest
  */
 final class Scheduler
 {

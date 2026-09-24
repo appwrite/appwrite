@@ -15,6 +15,4 @@ return RectorConfig::configure()
         earlyReturn: true,
         privatization: true,
         instanceOf: true,
-        phpunitCodeQuality: true,
-        rectorPreset: true,
     );
