@@ -1459,9 +1459,19 @@ return [
             ],
             [
                 'name' => '_APP_COMPUTE_RUNTIMES_NETWORK',
-                'description' => 'The docker network used for communication between the executor and runtimes for sites and functions.',
+                'description' => 'The docker network used for communication between the executor and runtimes for sites and functions. Overwritten on install so it keeps matching the network the API is attached to.',
                 'introduction' => '1.7.0',
-                'default' => 'runtimes',
+                'default' => 'compute',
+                'required' => false,
+                'overwrite' => true,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_COMPUTE_ENDPOINT',
+                'description' => 'Internal Appwrite endpoint runtimes use to reach the API over the Docker network, the way builds already reach it through _APP_JOBS_ENDPOINT. Traffic stays on plain HTTP because TLS terminates at the public proxy, not on the internal network. Leave empty to hand runtimes the public endpoint built from _APP_DOMAIN instead, which requires that hostname to resolve and route from inside the runtimes network.',
+                'introduction' => '2.0.0',
+                'default' => 'http://appwrite/v1',
                 'required' => false,
                 'question' => '',
                 'filter' => ''

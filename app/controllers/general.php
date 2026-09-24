@@ -480,7 +480,10 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
         }
 
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
-        $endpoint = "$protocol://{$platform['apiHostname']}/v1";
+        // Runtimes reach the API over the internal network, the way builds already do
+        // through _APP_JOBS_ENDPOINT. The public endpoint stays the fallback for anyone
+        // who clears the variable.
+        $endpoint = System::getEnv('_APP_COMPUTE_ENDPOINT') ?: "$protocol://{$platform['apiHostname']}/v1";
 
         // Appwrite vars
         if ($type === 'function') {
@@ -989,6 +992,15 @@ Http::init()
             // CI traffic may use it before a public domain is configured.
             $localHosts[] = $migrationHost;
             $localHosts[] = $migrationHost.':'.$request->getPort();
+        }
+
+        $computeHost = \parse_url(System::getEnv('_APP_COMPUTE_ENDPOINT', ''), PHP_URL_HOST);
+        if (!empty($computeHost)) {
+            // Runtimes call this host over plain HTTP on the internal network, where no
+            // certificate is presented, so forcing HTTPS would fail every function POST.
+            $computePort = \parse_url(System::getEnv('_APP_COMPUTE_ENDPOINT', ''), PHP_URL_PORT);
+            $localHosts[] = $computeHost;
+            $localHosts[] = $computeHost.':'.($computePort ?: $request->getPort());
         }
 
         $warnings = [];
