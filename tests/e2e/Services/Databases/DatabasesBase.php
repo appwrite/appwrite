@@ -13729,11 +13729,14 @@ trait DatabasesBase
             ],
         ]);
 
+        $this->assertEquals(200, $result['headers']['status-code']);
         if ($this->getSide() === 'client') {
-            $this->assertContains($result['headers']['status-code'], [401, 403]);
+            // The target has document security, so it is joined like it is listed: only the rows
+            // the caller holds read on pair, and the classified document is not one of them.
+            $this->assertCount(0, $result['body'][$this->getRecordResource()]);
             $this->assertStringNotContainsString('classified-data', json_encode($result['body'] ?? []));
         } else {
-            $this->assertEquals(200, $result['headers']['status-code']);
+            $this->assertCount(1, $result['body'][$this->getRecordResource()]);
         }
     }
 
@@ -13750,7 +13753,8 @@ trait DatabasesBase
         $data = $this->setupDatabase();
         $databaseId = $data['databaseId'];
 
-        // Create two collections with documentSecurity enabled, user has collection-level read
+        // Two collections with document security. The user holds collection-level read on orders only,
+        // so payments are joined the way the user lists them: by their document permissions.
         $orders = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -13776,7 +13780,6 @@ trait DatabasesBase
             'name' => 'Payments',
             $this->getSecurityParam() => true,
             'permissions' => [
-                Permission::read(Role::user($this->getUser()['$id'])),
                 Permission::create(Role::users()),
             ],
         ]);
