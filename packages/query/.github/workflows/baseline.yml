@@ -1,0 +1,108 @@
+name: "Coverage baseline"
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  baseline:
+    name: Compute baseline coverage
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.4
+        ports:
+          - 13306:3306
+        env:
+          MYSQL_ROOT_PASSWORD: test
+          MYSQL_DATABASE: query_test
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+      mariadb:
+        image: mariadb:11
+        ports:
+          - 13307:3306
+        env:
+          MARIADB_ROOT_PASSWORD: test
+          MARIADB_DATABASE: query_test
+        options: >-
+          --health-cmd="mariadb-admin ping -h localhost"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+      postgres:
+        image: pgvector/pgvector:pg16
+        ports:
+          - 15432:5432
+        env:
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: query_test
+        options: >-
+          --health-cmd="pg_isready"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+      clickhouse:
+        image: clickhouse/clickhouse-server:24
+        ports:
+          - 18123:8123
+          - 19000:9000
+        env:
+          CLICKHOUSE_DB: query_test
+        options: >-
+          --health-cmd="wget --spider -q http://localhost:8123/ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+      mongodb:
+        image: mongo:7
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd="mongosh --eval 'db.runCommand({ping:1})'"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@accd6127cb78bee3e8082180cb391013d204ef9f # 2.37.0
+        with:
+          php-version: '8.4'
+          extensions: pdo, pdo_mysql, pdo_pgsql, mongodb
+          coverage: pcov
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist
+
+      - name: Create coverage directory
+        run: mkdir -p coverage
+
+      - name: Run unit tests with coverage
+        run: composer test:coverage
+
+      - name: Run integration tests with coverage
+        run: composer test:integration:coverage
+
+      - name: Merge baseline coverage
+        run: ./vendor/bin/phpcov merge --clover coverage/baseline.xml coverage
+
+      - name: Save baseline to cache
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: coverage/baseline.xml
+          key: coverage-baseline-${{ github.sha }}

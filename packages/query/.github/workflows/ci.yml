@@ -1,0 +1,335 @@
+name: "CI"
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+on: [pull_request]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  unit:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@accd6127cb78bee3e8082180cb391013d204ef9f # 2.37.0
+        with:
+          php-version: "8.4"
+          coverage: pcov
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist
+
+      - name: Create coverage directory
+        run: mkdir -p coverage
+
+      - name: Run unit tests with coverage
+        run: composer test:coverage
+
+      - name: Upload unit coverage
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: coverage-unit
+          path: coverage/unit.cov
+          retention-days: 1
+
+  integration:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.4
+        ports:
+          - 13306:3306
+        env:
+          MYSQL_ROOT_PASSWORD: test
+          MYSQL_DATABASE: query_test
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+      mariadb:
+        image: mariadb:11
+        ports:
+          - 13307:3306
+        env:
+          MARIADB_ROOT_PASSWORD: test
+          MARIADB_DATABASE: query_test
+        options: >-
+          --health-cmd="mariadb-admin ping -h localhost"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+      postgres:
+        image: pgvector/pgvector:pg16
+        ports:
+          - 15432:5432
+        env:
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: query_test
+        options: >-
+          --health-cmd="pg_isready"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+      clickhouse:
+        image: clickhouse/clickhouse-server:24
+        ports:
+          - 18123:8123
+          - 19000:9000
+        env:
+          CLICKHOUSE_DB: query_test
+        options: >-
+          --health-cmd="wget --spider -q http://localhost:8123/ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+      mongodb:
+        image: mongo:7
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd="mongosh --eval 'db.runCommand({ping:1})'"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@accd6127cb78bee3e8082180cb391013d204ef9f # 2.37.0
+        with:
+          php-version: '8.4'
+          extensions: pdo, pdo_mysql, pdo_pgsql, mongodb
+          coverage: pcov
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist
+
+      - name: Create coverage directory
+        run: mkdir -p coverage
+
+      - name: Run integration tests with coverage
+        run: composer test:integration:coverage
+
+      - name: Upload integration coverage
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: coverage-integration
+          path: coverage/integration.cov
+          retention-days: 1
+
+  baseline:
+    name: Fetch Baseline Coverage
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Restore baseline cache
+        id: baseline_cache
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: coverage/baseline.xml
+          key: coverage-baseline-${{ github.event.pull_request.base.sha }}
+
+      - name: Upload baseline artifact
+        if: steps.baseline_cache.outputs.cache-hit == 'true'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: coverage-baseline
+          path: coverage/baseline.xml
+          retention-days: 1
+
+  coverage:
+    name: Coverage Report
+    runs-on: ubuntu-latest
+    needs: [unit, integration, baseline]
+    # Run even when baseline failed (continue-on-error) — we still want PR-only coverage posted.
+    if: always() && needs.unit.result == 'success' && needs.integration.result == 'success'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@accd6127cb78bee3e8082180cb391013d204ef9f # 2.37.0
+        with:
+          php-version: "8.4"
+          coverage: none
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist
+
+      - name: Download unit coverage
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: coverage-unit
+          path: coverage
+
+      - name: Download integration coverage
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: coverage-integration
+          path: coverage
+
+      - name: Download baseline coverage
+        id: baseline
+        continue-on-error: true
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: coverage-baseline
+          path: coverage-baseline
+
+      - name: Merge PR coverage
+        run: |
+          ./vendor/bin/phpcov merge \
+            --clover coverage/combined.xml \
+            --text coverage/combined.txt \
+            coverage
+
+      - name: Parse coverage summary
+        id: coverage
+        env:
+          HAS_BASELINE: ${{ steps.baseline.outcome == 'success' }}
+        run: |
+          php -r '
+            function summarise(string $path): array {
+                $xml = simplexml_load_file($path);
+                $metrics = $xml->project->metrics;
+                $lines = (int) $metrics["statements"];
+                $coveredLines = (int) $metrics["coveredstatements"];
+                $methods = (int) $metrics["methods"];
+                $coveredMethods = (int) $metrics["coveredmethods"];
+                // Clover does not emit coveredclasses at the project level.
+                // A class counts as covered when every method is covered.
+                $classes = 0;
+                $coveredClasses = 0;
+                foreach ($xml->xpath("//class") as $class) {
+                    $classes++;
+                    $classMethods = (int) $class->metrics["methods"];
+                    $classCoveredMethods = (int) $class->metrics["coveredmethods"];
+                    if ($classMethods > 0 && $classCoveredMethods === $classMethods) {
+                        $coveredClasses++;
+                    }
+                }
+                return [
+                    "lineRate" => $lines > 0 ? 100 * $coveredLines / $lines : 0,
+                    "methodRate" => $methods > 0 ? 100 * $coveredMethods / $methods : 0,
+                    "classRate" => $classes > 0 ? 100 * $coveredClasses / $classes : 0,
+                    "lines" => $lines,
+                    "coveredLines" => $coveredLines,
+                    "methods" => $methods,
+                    "coveredMethods" => $coveredMethods,
+                    "classes" => $classes,
+                    "coveredClasses" => $coveredClasses,
+                ];
+            }
+            $pr = summarise("coverage/combined.xml");
+            $out = sprintf(
+                "lines=%.2f\nmethods=%.2f\nclasses=%.2f\nlines_covered=%d\nlines_total=%d\nmethods_covered=%d\nmethods_total=%d\nclasses_covered=%d\nclasses_total=%d\n",
+                $pr["lineRate"], $pr["methodRate"], $pr["classRate"],
+                $pr["coveredLines"], $pr["lines"],
+                $pr["coveredMethods"], $pr["methods"],
+                $pr["coveredClasses"], $pr["classes"]
+            );
+            $hasBaseline = getenv("HAS_BASELINE") === "true" && is_file("coverage-baseline/baseline.xml");
+            if ($hasBaseline) {
+                $base = summarise("coverage-baseline/baseline.xml");
+                $out .= sprintf(
+                    "has_baseline=1\nbase_lines=%.2f\nbase_methods=%.2f\nbase_classes=%.2f\ndelta_lines=%+.2f\ndelta_methods=%+.2f\ndelta_classes=%+.2f\n",
+                    $base["lineRate"], $base["methodRate"], $base["classRate"],
+                    $pr["lineRate"] - $base["lineRate"],
+                    $pr["methodRate"] - $base["methodRate"],
+                    $pr["classRate"] - $base["classRate"]
+                );
+            } else {
+                $out .= "has_baseline=0\n";
+            }
+            file_put_contents(getenv("GITHUB_OUTPUT"), $out, FILE_APPEND);
+          '
+
+      - name: Render tables
+        id: render
+        env:
+          LINES: ${{ steps.coverage.outputs.lines }}
+          METHODS: ${{ steps.coverage.outputs.methods }}
+          CLASSES: ${{ steps.coverage.outputs.classes }}
+          LINES_COVERED: ${{ steps.coverage.outputs.lines_covered }}
+          LINES_TOTAL: ${{ steps.coverage.outputs.lines_total }}
+          METHODS_COVERED: ${{ steps.coverage.outputs.methods_covered }}
+          METHODS_TOTAL: ${{ steps.coverage.outputs.methods_total }}
+          CLASSES_COVERED: ${{ steps.coverage.outputs.classes_covered }}
+          CLASSES_TOTAL: ${{ steps.coverage.outputs.classes_total }}
+          HAS_BASELINE: ${{ steps.coverage.outputs.has_baseline }}
+          BASE_LINES: ${{ steps.coverage.outputs.base_lines }}
+          BASE_METHODS: ${{ steps.coverage.outputs.base_methods }}
+          BASE_CLASSES: ${{ steps.coverage.outputs.base_classes }}
+          DELTA_LINES: ${{ steps.coverage.outputs.delta_lines }}
+          DELTA_METHODS: ${{ steps.coverage.outputs.delta_methods }}
+          DELTA_CLASSES: ${{ steps.coverage.outputs.delta_classes }}
+        run: |
+          if [ "$HAS_BASELINE" = "1" ]; then
+            {
+              echo "table<<EOF"
+              echo "| Metric | PR | Baseline | Δ |"
+              echo "|---|---|---|---|"
+              echo "| Lines | ${LINES}% (${LINES_COVERED}/${LINES_TOTAL}) | ${BASE_LINES}% | ${DELTA_LINES}% |"
+              echo "| Methods | ${METHODS}% (${METHODS_COVERED}/${METHODS_TOTAL}) | ${BASE_METHODS}% | ${DELTA_METHODS}% |"
+              echo "| Classes | ${CLASSES}% (${CLASSES_COVERED}/${CLASSES_TOTAL}) | ${BASE_CLASSES}% | ${DELTA_CLASSES}% |"
+              echo "EOF"
+            } >> "$GITHUB_OUTPUT"
+          else
+            {
+              echo "table<<EOF"
+              echo "| Metric | Covered | Ratio |"
+              echo "|---|---|---|"
+              echo "| Lines | ${LINES}% | ${LINES_COVERED} / ${LINES_TOTAL} |"
+              echo "| Methods | ${METHODS}% | ${METHODS_COVERED} / ${METHODS_TOTAL} |"
+              echo "| Classes | ${CLASSES}% | ${CLASSES_COVERED} / ${CLASSES_TOTAL} |"
+              echo "EOF"
+            } >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Write coverage to job summary
+        env:
+          TABLE: ${{ steps.render.outputs.table }}
+        run: |
+          {
+            echo "## Coverage"
+            echo ""
+            echo "$TABLE"
+            echo ""
+            echo "<details><summary>Per-file coverage</summary>"
+            echo ""
+            echo '```'
+            head -200 coverage/combined.txt
+            echo '```'
+            echo ""
+            echo "</details>"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Post coverage comment
+        uses: marocchino/sticky-pull-request-comment@0ea0beb66eb9baf113663a64ec522f60e49231c0 # v3.0.4
+        with:
+          header: coverage
+          message: |
+            ## 📊 Coverage
+
+            ${{ steps.render.outputs.table }}
+
+            Full per-file breakdown in the [job summary](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}).
