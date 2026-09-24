@@ -56,7 +56,7 @@ class DSN
         $parts = \parse_url($dsn);
 
         if (!$parts) {
-            throw new \InvalidArgumentException("Unable to parse DSN: $dsn");
+            throw new \InvalidArgumentException('Unable to parse DSN: malformed');
         }
 
         if (empty($parts['scheme'])) {

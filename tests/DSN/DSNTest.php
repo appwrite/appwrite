@@ -7,6 +7,10 @@ use Utopia\DSN\DSN;
 
 class DSNTest extends TestCase
 {
+    private const USER = 'AKIAKEY';
+
+    private const PASSWORD = 'SECRETKEY';
+
     public function testSuccess(): void
     {
         $dsn = new DSN('mariadb://user:password@localhost:3306/database?charset=utf8&timezone=UTC');
@@ -152,5 +156,36 @@ class DSNTest extends TestCase
     {
         $this->expectException(\InvalidArgumentException::class);
         new DSN('mariadb://');
+    }
+
+    /**
+     * @return array<string, array{string}>
+     */
+    public static function provideRefusedDSNs(): array
+    {
+        $credentials = self::USER . ':' . self::PASSWORD;
+
+        return [
+            'unparseable' => ["s3://{$credentials}@/backups?region=us-east-1"],
+            'no scheme' => ["//{$credentials}@localhost/database"],
+            'no host' => ["{$credentials}@localhost/database"],
+        ];
+    }
+
+    /**
+     * @dataProvider provideRefusedDSNs
+     */
+    public function testRefusalMessageOmitsCredentials(string $dsn): void
+    {
+        try {
+            new DSN($dsn);
+        } catch (\InvalidArgumentException $exception) {
+            $this->assertStringNotContainsString(self::USER, $exception->getMessage());
+            $this->assertStringNotContainsString(self::PASSWORD, $exception->getMessage());
+
+            return;
+        }
+
+        $this->fail('The DSN was accepted');
     }
 }
