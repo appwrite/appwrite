@@ -1,5 +1,8 @@
 # Utopia Registry
 
+> [!IMPORTANT]
+> This repository is a read-only mirror of [`packages/registry`](https://github.com/appwrite/appwrite/tree/main/packages/registry) in [appwrite/appwrite](https://github.com/appwrite/appwrite). Development happens there — please open issues and pull requests against appwrite/appwrite.
+
 [![Build Status](https://travis-ci.org/utopia-php/registry.svg?branch=master)](https://travis-ci.com/utopia-php/registry)
 ![Total Downloads](https://img.shields.io/packagist/dt/utopia-php/registry.svg)
 [![Discord](https://img.shields.io/discord/564160730845151244?label=discord)](https://appwrite.io/discord)
