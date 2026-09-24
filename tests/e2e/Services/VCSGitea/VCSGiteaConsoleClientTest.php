@@ -640,20 +640,22 @@ final class VCSGiteaConsoleClientTest extends Scope
         // createInstallationHelper() reads listInstallations, so this covers both routes
         $installation = $this->createInstallationHelper();
 
-        // Gitea's own answer for the owner page, so the expectation does not
-        // rebuild the URL the same way the endpoint being tested does
-        $owner = $this->giteaApiHelper(Client::METHOD_GET, '/api/v1/user');
-        $this->assertEquals(200, $owner['headers']['status-code']);
-        $expected = $owner['body']['html_url'];
+        $organizationUrl = $installation['organizationUrl'];
 
-        $this->assertEquals($expected, $installation['organizationUrl']);
+        // The host depends on how this deployment is reached, so assert what
+        // holds either way: the link addresses the owner, and it resolves.
+        $this->assertSame('/' . $installation['organization'], \parse_url($organizationUrl, PHP_URL_PATH));
+
+        $page = new Client();
+        $page->setEndpoint($organizationUrl);
+        $this->assertEquals(200, $page->call(Client::METHOD_GET, '')['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_GET, '/vcs/installations/' . $installation['$id'], \array_merge([
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals($expected, $response['body']['organizationUrl']);
+        $this->assertEquals($organizationUrl, $response['body']['organizationUrl']);
     }
 
     public function testCreateInstallationWithoutState(): void
