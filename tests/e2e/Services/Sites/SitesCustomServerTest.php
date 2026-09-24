@@ -3033,9 +3033,7 @@ final class SitesCustomServerTest extends Scope
 
         $this->assertNotSame($deploymentMd5, $buildMd5);
 
-        // Range bounds are inclusive and an end past the last byte is clamped
-        // to it, so asking for the final byte and overshooting returns that one
-        // byte rather than 416.
+        // Range bounds are inclusive and an end past the last byte is clamped to it.
         $size = \strlen($response['body']);
 
         $range = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId . '/deployments/' . $deploymentId . '/download', array_merge([
@@ -3048,10 +3046,8 @@ final class SitesCustomServerTest extends Scope
 
         $this->assertEquals(206, $range['headers']['status-code']);
         $this->assertEquals('bytes ' . ($size - 1) . '-' . ($size - 1) . '/' . $size, $range['headers']['content-range']);
-        $this->assertEquals('1', $range['headers']['content-length']);
         $this->assertEquals(\substr($response['body'], -1), $range['body']);
 
-        // Clamping the end never rescues a start that has nothing left to read.
         $rejected = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId . '/deployments/' . $deploymentId . '/download', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],

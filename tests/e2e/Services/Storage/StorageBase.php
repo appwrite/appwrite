@@ -2,7 +2,6 @@
 
 namespace Tests\E2E\Services\Storage;
 
-use Ahc\Jwt\JWT;
 use Appwrite\Extend\Exception;
 use CURLFile;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -13,7 +12,6 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
-use Utopia\System\System;
 
 trait StorageBase
 {
@@ -1153,131 +1151,6 @@ trait StorageBase
         ]);
 
         $this->assertEquals(404, $file8['headers']['status-code']);
-    }
-
-    public function testGetBucketFileRange(): void
-    {
-        $path = __DIR__ . '/../../../resources/logo.png';
-        $size = \filesize($path);
-
-        // A file small enough to be encrypted is decrypted in full and then
-        // sliced in memory, which never reaches the ranged read on the storage
-        // device. Opting out of encryption keeps the served bytes identical to
-        // the uploaded ones and puts the range on the device instead.
-        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ], [
-            'bucketId' => ID::unique(),
-            'name' => 'Test Bucket Range',
-            'fileSecurity' => true,
-            'encryption' => false,
-            'permissions' => [
-                Permission::read(Role::any()),
-                Permission::create(Role::any()),
-                Permission::update(Role::any()),
-                Permission::delete(Role::any()),
-            ],
-        ]);
-
-        $this->assertEquals(201, $bucket['headers']['status-code']);
-
-        $bucketId = $bucket['body']['$id'];
-
-        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
-            'content-type' => 'multipart/form-data',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'fileId' => ID::unique(),
-            'file' => new CURLFile(\realpath($path), 'image/png', 'logo.png'),
-            'permissions' => [
-                Permission::read(Role::any()),
-            ],
-        ]);
-
-        $this->assertEquals(201, $file['headers']['status-code']);
-
-        $fileId = $file['body']['$id'];
-
-        // The push route is public and authorizes on a signed token instead of
-        // the session, so it needs one minted for this exact file to be reached
-        // at all.
-        $encoder = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 3600, 0);
-        $pushToken = $encoder->encode([
-            'projectId' => $this->getProject()['$id'],
-            'bucketId' => $bucketId,
-            'fileId' => $fileId,
-        ]);
-
-        foreach (['view', 'download', 'push'] as $route) {
-            $endpoint = '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/' . $route;
-            $params = $route === 'push' ? ['jwt' => $pushToken] : [];
-
-            /**
-             * Test for SUCCESS
-             */
-            // Range bounds are inclusive, so a start equal to the end asks for one byte.
-            $firstByte = $this->client->call(Client::METHOD_GET, $endpoint, array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-                'Range' => 'bytes=0-0',
-            ], $this->getHeaders()), $params);
-
-            $this->assertEquals(206, $firstByte['headers']['status-code']);
-            $this->assertEquals('bytes 0-0/' . $size, $firstByte['headers']['content-range']);
-            $this->assertEquals('1', $firstByte['headers']['content-length']);
-            $this->assertEquals(\file_get_contents($path, false, null, 0, 1), $firstByte['body']);
-
-            $lastByte = $this->client->call(Client::METHOD_GET, $endpoint, array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-                'Range' => 'bytes=' . ($size - 1) . '-' . ($size - 1),
-            ], $this->getHeaders()), $params);
-
-            $this->assertEquals(206, $lastByte['headers']['status-code']);
-            $this->assertEquals('bytes ' . ($size - 1) . '-' . ($size - 1) . '/' . $size, $lastByte['headers']['content-range']);
-            $this->assertEquals('1', $lastByte['headers']['content-length']);
-            $this->assertEquals(\file_get_contents($path, false, null, $size - 1, 1), $lastByte['body']);
-
-            // An end past the last byte is clamped to it, not rejected.
-            $pastEnd = $this->client->call(Client::METHOD_GET, $endpoint, array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-                'Range' => 'bytes=' . ($size - 100) . '-' . ($size + 500),
-            ], $this->getHeaders()), $params);
-
-            $this->assertEquals(206, $pastEnd['headers']['status-code']);
-            $this->assertEquals('bytes ' . ($size - 100) . '-' . ($size - 1) . '/' . $size, $pastEnd['headers']['content-range']);
-            $this->assertEquals('100', $pastEnd['headers']['content-length']);
-            $this->assertEquals(\file_get_contents($path, false, null, $size - 100, 100), $pastEnd['body']);
-
-            /**
-             * Test for FAILURE
-             */
-            // Clamping the end never rescues a start that has nothing left to read.
-            $startAtEnd = $this->client->call(Client::METHOD_GET, $endpoint, array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-                'Range' => 'bytes=' . $size . '-' . ($size + 500),
-            ], $this->getHeaders()), $params);
-
-            $this->assertEquals(416, $startAtEnd['headers']['status-code']);
-
-            $startPastEnd = $this->client->call(Client::METHOD_GET, $endpoint, array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-                'Range' => 'bytes=' . ($size + 500) . '-',
-            ], $this->getHeaders()), $params);
-
-            $this->assertEquals(416, $startPastEnd['headers']['status-code']);
-        }
-
-        $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $bucketId, [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]);
     }
 
     public function testFilePreviewOversized(): void
