@@ -78,8 +78,7 @@ class Jobs extends Action
         ErrorCode::CloneFailed->value => 'Failed to clone the repository. Check that the repository and branch exist and are accessible.',
     ];
 
-    // Keyed by HTTP status; only for repository sources, since an uploaded one
-    // is downloaded from Appwrite itself.
+    // Repository sources only: an uploaded source is downloaded from Appwrite.
     private const array USER_SOURCE_ERRORS = [
         401 => 'Access to the repository was denied. Check that it is still accessible to your Git installation.',
         403 => 'Access to the repository was denied. Check that it is still accessible to your Git installation.',
@@ -216,9 +215,7 @@ class Jobs extends Action
                 $this->dispatchUpdate($queueForEvents, $queueForWebhooks, $publisherForFunctions, $project, $deployment);
             }
 
-            // A deployment already failed (by its build's exit, or an earlier
-            // artifact) leaves nothing new to report: artifacts after a failed
-            // build fail for want of output.
+            // Artifacts after a failed build fail for want of output.
             if ($artifact?->status === 'failed'
                 && $statusBefore !== 'failed'
                 && !\in_array($artifact->artifactId, ['cache', 'manifest'], true)
