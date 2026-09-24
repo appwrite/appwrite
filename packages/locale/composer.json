@@ -1,0 +1,26 @@
+{
+    "name": "utopia-php/locale",
+    "description": "A simple locale library to manage application translations",
+    "type": "library",
+    "keywords": ["php","framework", "upf", "utopia", "locale"],
+    "license": "MIT",
+    "minimum-stability": "stable",
+    "autoload": {
+        "psr-4": {"Utopia\\Locale\\": "src/Locale"}
+    },
+    "require": {
+        "php": ">=7.4"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.3",
+        "vimeo/psalm": "4.0.1",
+        "laravel/pint": "1.2.*",
+        "phpstan/phpstan": "1.*"
+    },
+    "scripts": {
+        "lint": "./vendor/bin/pint --test",
+        "format": "./vendor/bin/pint",
+        "check": "./vendor/bin/phpstan analyse --level max src tests",
+        "test": "vendor/bin/phpunit --configuration phpunit.xml"
+    }
+}
