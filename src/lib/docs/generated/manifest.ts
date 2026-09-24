@@ -308,7 +308,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Environment variables",
     "description": "Customize the behavior of your self-hosted Appwrite instance to your unique needs. Customize SMTP, SMS, functions, S3 adaptor, database, and other behaiors.",
     "layout": "article",
-    "readingTimeMinutes": 20
+    "readingTimeMinutes": 21
   },
   {
     "slug": "advanced/self-hosting/configuration/functions",
@@ -476,7 +476,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Updates and migrations",
     "description": "Keep your self-hosted Appwrite instance up-to-date. Learn how to perform updates, manage versions, and ensure your self-hosted Appwrite stays current.",
     "layout": "article",
-    "readingTimeMinutes": 4
+    "readingTimeMinutes": 3
   },
   {
     "slug": "apis",
@@ -1218,7 +1218,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Message templates",
     "description": "Communicate using your brand and voice by customizing email and SMS message templates, localized to your user's language.",
     "layout": "article",
-    "readingTimeMinutes": 4
+    "readingTimeMinutes": 5
   },
   {
     "slug": "products/auth/mfa",
@@ -2965,7 +2965,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Resend",
     "description": "Send emails to your Appwrite users using Resend and Appwrite Messaging.",
     "layout": "article",
-    "readingTimeMinutes": 2
+    "readingTimeMinutes": 4
   },
   {
     "slug": "products/messaging/send-email-messages",
@@ -3656,7 +3656,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
   {
     "slug": "tooling/ai/agents/codex",
     "title": "Codex",
-    "description": "Learn how to use Codex with Appwrite through the Appwrite plugin, quick start prompts, and the Appwrite MCP server for AI-assisted development.",
+    "description": "Use Appwrite's official ChatGPT plugin within Codex, with quick start prompts and the Appwrite MCP server for AI-assisted development.",
     "layout": "article",
     "readingTimeMinutes": 2
   },
