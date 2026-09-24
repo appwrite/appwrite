@@ -1,7 +1,7 @@
 ---
 layout: changelog
 title: "Connect Resend in one click for custom SMTP and Messaging"
-date: 2026-09-22
+date: 2026-09-24
 cover: /images/blog/announcing-resend-one-click-setup/cover.avif
 tags: auth, messaging, console, integrations
 ---

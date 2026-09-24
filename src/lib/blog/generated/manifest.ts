@@ -3,6 +3,20 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "announcing-resend-one-click-setup",
+    "href": "/blog/post/announcing-resend-one-click-setup",
+    "title": "Announcing one-click Resend setup in the Appwrite Console",
+    "description": "Connect Resend once and Appwrite creates a sending-only API key, fills in your project SMTP settings or Messaging provider, and enables it in one click.",
+    "date": "2026-09-24",
+    "lastUpdated": "2026-09-24",
+    "timeToRead": 5,
+    "author": "aditya-oberai",
+    "category": "announcements",
+    "featured": false,
+    "cover": "/images/blog/announcing-resend-one-click-setup/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-appwrite-chatgpt-plugin",
     "href": "/blog/post/announcing-appwrite-chatgpt-plugin",
     "title": "Introducing the official Appwrite plugin for ChatGPT",
@@ -56,20 +70,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "category": "announcements",
     "featured": false,
     "cover": "/images/blog/appwrite-plugins-claude-code-codex/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "announcing-resend-one-click-setup",
-    "href": "/blog/post/announcing-resend-one-click-setup",
-    "title": "Announcing one-click Resend setup in the Appwrite Console",
-    "description": "Connect Resend once and Appwrite creates a sending-only API key, fills in your project SMTP settings or Messaging provider, and enables it in one click.",
-    "date": "2026-09-22",
-    "lastUpdated": "2026-09-22",
-    "timeToRead": 5,
-    "author": "aditya-oberai",
-    "category": "announcements",
-    "featured": false,
-    "cover": "/images/blog/announcing-resend-one-click-setup/cover.avif",
     "hasCover": true
   },
   {
