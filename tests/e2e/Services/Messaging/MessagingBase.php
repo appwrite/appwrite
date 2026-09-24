@@ -2186,6 +2186,27 @@ trait MessagingBase
         $image = $client->call(Client::METHOD_GET, $imageUrl);
 
         $this->assertEquals(200, $image['headers']['status-code']);
+
+        // Push serves ranged reads on the same guard as file view and download.
+        $path = __DIR__ . '/../../../resources/logo.png';
+        $size = \filesize($path);
+
+        $firstByte = $client->call(Client::METHOD_GET, $imageUrl, ['Range' => 'bytes=0-0']);
+
+        $this->assertEquals(206, $firstByte['headers']['status-code']);
+        $this->assertEquals('bytes 0-0/' . $size, $firstByte['headers']['content-range']);
+        $this->assertEquals('1', $firstByte['headers']['content-length']);
+        $this->assertEquals(\file_get_contents($path, false, null, 0, 1), $firstByte['body']);
+
+        $pastEnd = $client->call(Client::METHOD_GET, $imageUrl, ['Range' => 'bytes=' . ($size - 1) . '-' . ($size + 500)]);
+
+        $this->assertEquals(206, $pastEnd['headers']['status-code']);
+        $this->assertEquals('bytes ' . ($size - 1) . '-' . ($size - 1) . '/' . $size, $pastEnd['headers']['content-range']);
+        $this->assertEquals('1', $pastEnd['headers']['content-length']);
+
+        $rejected = $client->call(Client::METHOD_GET, $imageUrl, ['Range' => 'bytes=' . $size . '-']);
+
+        $this->assertEquals(416, $rejected['headers']['status-code']);
     }
 
     public function testCreateDraftPushWithData(): void
