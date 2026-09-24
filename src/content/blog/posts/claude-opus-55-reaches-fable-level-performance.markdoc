@@ -55,7 +55,7 @@ Claude Opus 5.5 leads on agentic coding, computer use, and knowledge work. Anthr
 | Agentic coding (Terminal-Bench 4.0)          | 66.4%    | 55.8%     | 52.3%  | 57.9%        | 37.3%        |
 | Agentic coding (FrontierCode v1.1 Main)      | 54.4%    | 50.3%     | 48.0%  | 53.3%        | 47.5%        |
 | Agentic coding (CursorBench 4.0)             | 57.8%    | 51.8%     | 46.6%  | Not reported | 41.7%        |
-| Knowledge work (GDPval-AA v2.1, Elo)         | 1846     | 1735      | 1708   | 1542         | 1588         |
+| Knowledge work (GDPval-AA v2.1)         | 1846     | 1735      | 1708   | 1542         | 1588         |
 | Business workflows (AutomationBench)         | 40.0%    | 31.4%     | 26.9%  | 41.4%        | 28.8%        |
 | Reasoning with tools (Humanity's Last Exam)  | 67.7%    | 65.6%     | 63.6%  | 57.2%        | Not reported |
 | Scientific research (Terminal-Bench-Science) | 58.7%    | 52.6%     | 29.0%  | 64.6%        | 22.4%        |
