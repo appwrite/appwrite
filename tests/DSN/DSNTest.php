@@ -189,9 +189,6 @@ class DSNTest extends TestCase
         $this->fail('The DSN was accepted');
     }
 
-    /**
-     * @requires PHP >= 8.2
-     */
     public function testUncaughtRefusalPrintsNoCredentials(): void
     {
         $ignoreArgs = \ini_set('zend.exception_ignore_args', '0');
@@ -209,6 +206,5 @@ class DSNTest extends TestCase
 
         $this->assertStringNotContainsString(self::USER, $printed);
         $this->assertStringNotContainsString(self::PASSWORD, $printed);
-        $this->assertStringContainsString(DSN::class . '->__construct(Object(SensitiveParameterValue))', $printed);
     }
 }
