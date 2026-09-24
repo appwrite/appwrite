@@ -11,10 +11,12 @@ use Appwrite\Messaging\Status as MessageStatus;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\PubSub\Adapter\Pool as PubSubPool;
 use Appwrite\Usage\Context as UsageContext;
+use Utopia\Cache\Cache;
 use Utopia\Compression\Algorithms\GZIP;
 use Utopia\Compression\Algorithms\Zstd;
 use Utopia\Compression\Compression;
 use Utopia\Config\Config;
+use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -32,6 +34,8 @@ use Utopia\Messaging\Adapter\SMS as SMSAdapter;
 use Utopia\Messaging\Adapter\SMS\GEOSMS\CallingCode;
 use Utopia\Messaging\Adapter\SMS\Mock;
 use Utopia\Messaging\Adapter\SMS\Msg91\MetadataParameter;
+use Utopia\Messaging\Adapter\SMS\WhatsApp;
+use Utopia\Messaging\Adapter\SMS\WhatsApp\MetadataParameter as WhatsAppMetadataParameter;
 use Utopia\Messaging\Exception\InvalidArgumentException;
 use Utopia\Messaging\Messages\Email;
 use Utopia\Messaging\Messages\Email\Attachment;
@@ -80,6 +84,8 @@ class Messaging extends Action
             ->inject('telemetry')
             ->inject('pools')
             ->inject('adapterForSMS')
+            ->inject('adapterForWhatsApp')
+            ->inject('cache')
             ->callback($this->action(...));
     }
 
@@ -90,8 +96,10 @@ class Messaging extends Action
      * @param Device $deviceForFiles
      * @param UsagePublisher $publisherForUsage
      * @param Telemetry $telemetry
-     * @param SMSAdapter|null $adapterForSMS
      * @param Group $pools
+     * @param SMSAdapter|null $adapterForSMS
+     * @param SMSAdapter|null $adapterForWhatsApp
+     * @param Cache $cache
      * @return void
      * @throws \Exception
      */
@@ -103,7 +111,9 @@ class Messaging extends Action
         UsagePublisher $publisherForUsage,
         Telemetry $telemetry,
         Group $pools,
-        ?SMSAdapter $adapterForSMS
+        ?SMSAdapter $adapterForSMS,
+        ?SMSAdapter $adapterForWhatsApp,
+        Cache $cache
     ): void {
         $this->telemetry = $telemetry;
         $this->pools = $pools;
@@ -123,7 +133,17 @@ class Messaging extends Action
                 $message = new Document($payload['message'] ?? []);
                 $recipients = $payload['recipients'] ?? [];
 
-                $this->sendInternalSMSMessage($message, $project, $recipients, $adapterForSMS);
+                $this->sendInternalMessage(
+                    $message,
+                    $project,
+                    $recipients,
+                    $publisherForUsage,
+                    $adapterForSMS,
+                    $adapterForWhatsApp,
+                    $cache,
+                    $payload['channel'] ?? null,
+                    (bool)($payload['fallback'] ?? false)
+                );
                 break;
             case MESSAGE_SEND_TYPE_EXTERNAL:
                 $messageId = $payload['messageId'];
@@ -910,9 +930,26 @@ class Messaging extends Action
         return $data;
     }
 
-    private function sendInternalSMSMessage(Document $message, Document $project, array $recipients, ?SMSAdapter $adapterForSMS): void
-    {
-        if ($adapterForSMS === null) {
+    /**
+     * Deliver an internal message (OTP or invite) over the requested channel. A missing channel means SMS.
+     *
+     * @param array<string> $recipients
+     * @throws \Exception
+     */
+    private function sendInternalMessage(
+        Document $message,
+        Document $project,
+        array $recipients,
+        UsagePublisher $publisherForUsage,
+        ?SMSAdapter $adapterForSMS,
+        ?SMSAdapter $adapterForWhatsApp,
+        Cache $cache,
+        ?string $channel = null,
+        bool $fallback = false
+    ): void {
+        $whatsapp = \in_array($channel, [PHONE_OTP_CHANNEL_WHATSAPP, PHONE_OTP_CHANNEL_WHATSAPP_SMS], true);
+
+        if (!$whatsapp && $adapterForSMS === null) {
             throw new \Exception('SMS adapter is not set.');
         }
 
@@ -930,22 +967,152 @@ class Messaging extends Action
         $from = System::getEnv('_APP_SMS_FROM', '');
         Span::add('message.from', $from);
 
-        Span::add('message.country_code', CallingCode::fromPhoneNumber($recipients[0] ?? '') ?? 'unknown');
+        $countryCode = CallingCode::fromPhoneNumber($recipients[0] ?? '');
+        Span::add('message.country_code', $countryCode ?? 'unknown');
 
-        $sms = new SMS(
-            $recipients,
-            $message->getAttribute('data')['content'],
-            $from
-        );
-        $sms->setOrigin(MESSAGE_SEND_TYPE_INTERNAL);
+        $data = $message->getAttribute('data');
 
-        // Attach the project ID so the SMS provider's delivery logs and
-        // webhooks can be attributed back to the originating project.
-        $sms->setMetadata([MetadataParameter::UUID->value => $project->getId()]);
+        if (!$whatsapp) {
+            $sms = new SMS($recipients, $data['content'], $from);
+            $sms->setOrigin(MESSAGE_SEND_TYPE_INTERNAL);
 
-        $adapterForSMS->send($sms);
+            // Attach the project ID so the provider's delivery logs can be attributed back to the project.
+            $sms->setMetadata([MetadataParameter::UUID->value => $project->getId()]);
+
+            $adapterForSMS->send($sms);
+
+            return;
+        }
+
+        // WhatsApp authentication templates carry the bare code, never rendered copy.
+        $code = $data['code'] ?? $data['content'] ?? null;
+        $code = \is_string($code) ? $code : null;
+
+        // Adapter throws and failure results both end up in $errors so either can fall back.
+        try {
+            if ($adapterForWhatsApp === null) {
+                throw new \Exception('WhatsApp adapter is not set.');
+            }
+
+            $sms = new SMS($recipients, $code, $from);
+            $sms->setOrigin(MESSAGE_SEND_TYPE_INTERNAL);
+
+            // Callback data is the only attribution Meta echoes back.
+            $sms->setMetadata([WhatsAppMetadataParameter::CALLBACK_DATA->value => $project->getId() . ':' . $message->getId()]);
+
+            $errors = $this->getSendErrors($adapterForWhatsApp->send($sms));
+        } catch (\Throwable $error) {
+            $errors = [$error->getMessage()];
+        }
+
+        if ($errors === []) {
+            // The controller books auth.method.phone for every OTP; this records which of them WhatsApp carried, so Cloud can price the channels apart.
+            $usage = new UsageContext();
+            $usage->addMetric(METRIC_AUTH_METHOD_PHONE_WHATSAPP, 1);
+
+            if (!empty($countryCode)) {
+                $usage->addMetric(\str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_WHATSAPP_COUNTRY_CODE), 1);
+            }
+
+            $publisherForUsage->enqueue(new Usage(
+                project: $project,
+                metrics: $usage->getMetrics(),
+            ));
+
+            // Meta accepted the message, which is not the same as delivering it: an unreachable
+            // recipient is reported minutes later on the status webhook, long after this job is
+            // gone. Leave that handler the SMS to send, for as long as the code stays redeemable.
+            if ($fallback) {
+                $cache->save(
+                    PHONE_OTP_WHATSAPP_FALLBACK_KEY . ':' . $project->getId() . ':' . $message->getId(),
+                    [
+                        'message' => $message->getArrayCopy(),
+                        'recipients' => $recipients,
+                        // Carried rather than inferred from the entry's own age, because the
+                        // handler may put the entry back and must not extend the code's life.
+                        'expire' => \time() + TOKEN_EXPIRATION_OTP,
+                    ],
+                    ttl: TOKEN_EXPIRATION_OTP,
+                );
+            }
+
+            return;
+        }
+
+        $reason = \implode(', ', \array_map(fn (string $error): string => $this->redactPasscode($error, $code), $errors));
+
+        Span::add('message.error', $reason);
+
+        if (!$fallback) {
+            // Re-throwing would re-send the WhatsApp message on retry, so only log.
+            Console::error('WhatsApp OTP delivery failed for project ' . $project->getId() . ' with no SMS fallback configured: ' . $reason);
+            return;
+        }
+
+        // The fallback absorbs its own failures for the same reason.
+        try {
+            if ($adapterForSMS === null) {
+                Span::add('message.fallback', 'sms_provider_not_configured');
+                Console::error('WhatsApp OTP delivery failed for project ' . $project->getId() . ' and no SMS provider is configured to fall back to: ' . $reason);
+                return;
+            }
+
+            $sms = new SMS($recipients, $data['content'], $from);
+            $sms->setOrigin(MESSAGE_SEND_TYPE_INTERNAL);
+            $sms->setMetadata([MetadataParameter::UUID->value => $project->getId()]);
+
+            $fallbackErrors = $this->getSendErrors($adapterForSMS->send($sms));
+        } catch (\Throwable $error) {
+            $fallbackErrors = [$error->getMessage()];
+        }
+
+        if ($fallbackErrors !== []) {
+            $fallbackReason = \implode(', ', \array_map(fn (string $error): string => $this->redactPasscode($error, $code), $fallbackErrors));
+
+            Span::add('message.fallback_error', $fallbackReason);
+            Console::error('WhatsApp OTP delivery failed for project ' . $project->getId() . ' and the SMS fallback failed too: ' . $reason . ' | fallback: ' . $fallbackReason);
+        }
     }
 
+    /**
+     * Scrub the passcode out of a provider error before it reaches a span or the log,
+     * since a template rejection can quote the rejected parameter.
+     */
+    private function redactPasscode(string $error, ?string $code): string
+    {
+        if ($code === null || $code === '') {
+            return $error;
+        }
+
+        return \str_replace($code, '[redacted]', $error);
+    }
+
+    /**
+     * Collect the error of every recipient the provider failed to deliver to.
+     *
+     * @param array<mixed> $response
+     * @return array<string>
+     */
+    private function getSendErrors(array $response): array
+    {
+        $errors = [];
+        $results = $response['results'] ?? [];
+
+        if (!\is_array($results)) {
+            return $errors;
+        }
+
+        foreach ($results as $result) {
+            if (!\is_array($result) || ($result['status'] ?? '') !== 'failure') {
+                continue;
+            }
+
+            $error = $result['error'] ?? '';
+            $errors[] = \is_string($error) && $error !== '' ? $error : 'Unknown error';
+        }
+
+        return $errors;
+    }
 
     protected function getPushAdapter(Document $provider, Database $dbForProject, Document $project, Document $message): ?PushAdapter
     {
@@ -1214,5 +1381,4 @@ class Messaging extends Action
         // messages from many projects (and coroutines run them concurrently).
         return new Local(APP_STORAGE_UPLOADS . '/app-' . $project->getId());
     }
-
 }

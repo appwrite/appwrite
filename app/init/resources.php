@@ -120,14 +120,29 @@ $container->set('autogravity', function (Cache $cache) {
 $container->set('telemetry', fn () => new NoTelemetry(), []);
 
 /**
- * A malformed DSN is reported and read as unset rather than thrown: this resolves for every
- * messaging job, so one bad platform variable must not stop a project's push and email.
+ * The platform's own sending adapters, built from _APP_SMS_PROVIDER and
+ * _APP_WHATSAPP_PROVIDER for the one-time passcodes and invites Appwrite sends on a
+ * project's behalf. Null when the variable is unset, which is how an instance says it
+ * cannot deliver on that channel.
+ *
+ * A malformed DSN is reported and read as unset rather than thrown, because these are
+ * injected into every messaging job: letting one bad platform variable escape would
+ * stop a project's push and email messages, which it has nothing to do with.
  */
 $container->set('adapterForSMS', function (Telemetry $telemetry): ?SMSAdapter {
     try {
         return (new MessagingProvider($telemetry))->internalSMS();
     } catch (\Throwable $error) {
         Console::error('Ignoring _APP_SMS_PROVIDER: ' . $error->getMessage());
+        return null;
+    }
+}, ['telemetry']);
+
+$container->set('adapterForWhatsApp', function (Telemetry $telemetry): ?SMSAdapter {
+    try {
+        return (new MessagingProvider($telemetry))->internalWhatsApp();
+    } catch (\Throwable $error) {
+        Console::error('Ignoring _APP_WHATSAPP_PROVIDER: ' . $error->getMessage());
         return null;
     }
 }, ['telemetry']);

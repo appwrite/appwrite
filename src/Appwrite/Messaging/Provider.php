@@ -21,15 +21,18 @@ use Utopia\Messaging\Adapter\SMS\Telesign;
 use Utopia\Messaging\Adapter\SMS\TextMagic;
 use Utopia\Messaging\Adapter\SMS\Twilio;
 use Utopia\Messaging\Adapter\SMS\Vonage;
+use Utopia\Messaging\Adapter\SMS\WhatsApp;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
 
 /**
- * Builds the adapter a messaging provider sends through.
+ * Builds the sending adapter a messaging provider needs.
  *
- * A provider is either one a project stored as a document or the platform's own, described
- * by _APP_SMS_PROVIDER. Both reach the same adapter, so the DSN becomes a provider document
- * and takes the same path.
+ * A provider is either one a project configured and stored as a document, or the
+ * platform's own, described by the _APP_SMS_PROVIDER and _APP_WHATSAPP_PROVIDER
+ * environment variables and used for the one-time passcodes and invites Appwrite
+ * sends on a project's behalf. Both end up as the same adapter, so the DSN is
+ * turned into a provider document and takes the same path.
  *
  * Push is absent on purpose: its Appwrite provider needs the message and the project
  * database, so a provider document alone does not describe it.
@@ -78,6 +81,12 @@ class Provider
             'inforu' => new Inforu(
                 $credentials['senderId'] ?? '',
                 $credentials['apiKey'] ?? '',
+            ),
+            'whatsapp' => new WhatsApp(
+                $credentials['accessToken'] ?? '',
+                $credentials['phoneNumberId'] ?? '',
+                $credentials['template'] ?? '',
+                $credentials['language'] ?? WhatsApp::DEFAULT_LANGUAGE,
             ),
             default => null
         };
@@ -191,12 +200,37 @@ class Provider
         return $geosms;
     }
 
+    /**
+     * Build the adapter that carries internal OTPs over WhatsApp. A single DSN, since one business number reaches every country.
+     */
+    public function internalWhatsApp(): ?SMSAdapter
+    {
+        $provider = System::getEnv('_APP_WHATSAPP_PROVIDER', '');
+
+        if (empty($provider)) {
+            return null;
+        }
+
+        $dsn = new DSN($provider);
+
+        // The mock username lets e2e tests tell the two channels apart at the request catcher.
+        $adapter = $dsn->getHost() === 'mock'
+            ? (new Mock($dsn->getUser() ?? '', $dsn->getPassword() ?? ''))->setEndpoint('http://request-catcher-sms:5000/')
+            : $this->sms($this->fromDSN($dsn));
+
+        $adapter?->setTelemetry($this->telemetry);
+
+        return $adapter;
+    }
+
     private function fromDSN(DSN $dsn): Document
     {
         $host = $dsn->getHost();
         $password = $dsn->getPassword();
         $user = $dsn->getUser();
-        $from = System::getEnv('_APP_SMS_FROM');
+        // WhatsApp sends from the phone number behind the DSN's phone number ID, so a
+        // deployment that only configures WhatsApp never sets a sender.
+        $from = System::getEnv('_APP_SMS_FROM', '');
 
         $provider = new Document([
             '$id' => ID::unique(),
@@ -238,6 +272,12 @@ class Provider
                 'inforu' => [
                     'senderId' => $user,
                     'apiKey' => $password,
+                ],
+                'whatsapp' => [
+                    'phoneNumberId' => $user,
+                    'accessToken' => $password,
+                    'template' => $dsn->getParam('template'),
+                    'language' => $dsn->getParam('language', WhatsApp::DEFAULT_LANGUAGE),
                 ],
                 default => null
             },
