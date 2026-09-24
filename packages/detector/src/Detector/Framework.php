@@ -25,9 +25,12 @@ class Framework extends Detector
      */
     protected array $options = [];
 
-    public function __construct(protected string $packager = 'pnpm')
+    protected string $packager = 'pnpm';
+
+    public function __construct(string $packager = 'pnpm')
     {
         parent::__construct();
+        $this->packager = $packager;
     }
 
     public function addInput(string $content, string $type = ''): self
@@ -48,11 +51,11 @@ class Framework extends Detector
      */
     public function detect(): ?FrameworkDetection
     {
-        $files = array_filter($this->inputs, fn (array $input): bool => $input['type'] === self::INPUT_FILE);
-        $files = array_map(fn (array $input): string => $input['content'], $files);
+        $files = array_filter($this->inputs, fn ($input) => $input['type'] === self::INPUT_FILE);
+        $files = array_map(fn ($input) => $input['content'], $files);
 
-        $packages = array_filter($this->inputs, fn (array $input): bool => $input['type'] === self::INPUT_PACKAGES);
-        $packages = array_map(fn (array $input): array => $this->dependencies($input['content']), $packages);
+        $packages = array_filter($this->inputs, fn ($input) => $input['type'] === self::INPUT_PACKAGES);
+        $packages = array_map(fn ($input) => $this->dependencies($input['content']), $packages);
 
         // List of frameworks with count of matches
         $frameworkMatches = [];
@@ -90,7 +93,7 @@ class Framework extends Detector
         }
 
         // Filter out frameworks with 0 matches
-        $frameworkMatches = array_filter($frameworkMatches, fn (int $count): bool => $count > 0);
+        $frameworkMatches = array_filter($frameworkMatches, fn ($count) => $count > 0);
 
         if (\count($frameworkMatches) <= 0) {
             return null;
@@ -101,13 +104,13 @@ class Framework extends Detector
 
         // Filter out non-max matches
         $highestMatch = $frameworkMatches[\array_key_first($frameworkMatches)];
-        $frameworkMatches = array_filter($frameworkMatches, fn ($count): bool => $count == $highestMatch);
+        $frameworkMatches = array_filter($frameworkMatches, fn ($count) => $count == $highestMatch);
 
         if (\count($frameworkMatches) === 1) {
             $bestFramework = \array_key_first($frameworkMatches);
         } else {
             $bestFrameworks = \array_keys($frameworkMatches);
-            usort($bestFrameworks, fn ($a, $b): int => $fameworkParents[$a] <=> $fameworkParents[$b]);
+            usort($bestFrameworks, fn ($a, $b) => $fameworkParents[$a] <=> $fameworkParents[$b]);
 
             $bestFramework = $bestFrameworks[0];
 

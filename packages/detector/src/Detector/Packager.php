@@ -19,7 +19,7 @@ class Packager extends Detector
 
     public function detect(): ?PackagerDetection
     {
-        $files = array_map(fn (array $input): string => $input['content'], $this->inputs);
+        $files = array_map(fn ($input) => $input['content'], $this->inputs);
 
         foreach ($this->options as $packager) {
             $matches = array_intersect($packager->getFiles(), $files);
