@@ -229,6 +229,56 @@ export function getAppwriteErrorInfo(error: unknown): AppwriteErrorInfo {
   return { message, type, code }
 }
 
+/** Static, translatable titles for Appwrite `<resource>_not_found` types. */
+const RESOURCE_NOT_FOUND_TITLES: Record<string, string> = {
+  user_not_found: 'User not found',
+  team_not_found: 'Team not found',
+  membership_not_found: 'Membership not found',
+  user_target_not_found: 'Target not found',
+  function_not_found: 'Function not found',
+  deployment_not_found: 'Deployment not found',
+  execution_not_found: 'Execution not found',
+  site_not_found: 'Site not found',
+  storage_bucket_not_found: 'Bucket not found',
+  storage_file_not_found: 'File not found',
+  database_not_found: 'Database not found',
+  collection_not_found: 'Collection not found',
+  document_not_found: 'Document not found',
+  table_not_found: 'Table not found',
+  row_not_found: 'Row not found',
+  message_not_found: 'Message not found',
+  provider_not_found: 'Provider not found',
+  topic_not_found: 'Topic not found',
+  subscriber_not_found: 'Subscriber not found',
+}
+
+/**
+ * A 404 for a resource inside a project (user, team, function, ...), identified
+ * by its Appwrite `<resource>_not_found` type. Returns null for the project
+ * itself and for generic types, so project routes only blame the project when
+ * the project is what is missing. Titles are English keys, translated at render.
+ */
+export function formatResourceNotFoundError(
+  error: unknown,
+): FormattedError | null {
+  const { type, message } = getAppwriteErrorInfo(error)
+  if (
+    !type?.endsWith('_not_found') ||
+    type === 'project_not_found' ||
+    type.startsWith('general_')
+  ) {
+    return null
+  }
+  return {
+    title: RESOURCE_NOT_FOUND_TITLES[type] ?? 'Not Found',
+    // The SDK sends the active locale, so the API message is already localized.
+    message:
+      message ??
+      'The requested resource could not be found. It may have been deleted or you may not have permission to access it.',
+    isUserFriendly: true,
+  }
+}
+
 /** True when the API responded with HTTP 402 (payment / budget limit required). */
 export function isHttpPaymentRequiredError(error: unknown): boolean {
   if (!error || typeof error !== 'object') return false

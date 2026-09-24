@@ -604,7 +604,7 @@ function CreateMembershipDialog({
               </div>
               <div className="px-6 py-3 border-t border-border bg-muted/30">
                 <Link
-                  to="/projects/$projectId/auth/users"
+                  to="/projects/$projectId/auth"
                   params={{ projectId }}
                   onClick={() => handleOpenChange(false)}
                 >

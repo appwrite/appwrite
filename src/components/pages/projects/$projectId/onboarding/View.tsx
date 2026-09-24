@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link, useParams } from '@tanstack/react-router'
 import {
   Check,
@@ -35,9 +35,9 @@ import {
   computeOnboardingProductBreakdown,
   getOnboardingGroupState,
   isOnboardingStepDone,
-  ONBOARDING_AGENT_STEP,
   ONBOARDING_CONNECT,
   ONBOARDING_PRODUCT_CATEGORIES,
+  connectStepGatesProductSections,
   subStepCountsTowardProgress,
   type OnboardingStepState,
   type OnboardingProductBreakdownRow,
@@ -50,23 +50,21 @@ import {
   getEncouragementBand,
   pickEncouragementForBand,
 } from '@/lib/onboarding/progress-encouragement'
-import {
-  getOnboardingAgentStepState,
-  markOnboardingAgentStepDone,
-  markOnboardingAgentStepSkipped,
-} from '@/lib/mcp-adoption'
 import { useProjectConnectDialog } from '@/components/pages/projects/$projectId/shared/ProjectConnectDialogContext'
+import type { ConnectProjectTab } from '@/components/pages/projects/$projectId/shared/ConnectProject'
 import { cn } from '@/lib/utils'
 import { useI18n } from '@/lib/i18n'
 import { useT } from '@/lib/i18n/translate'
 import { MARKETING_SOCIAL_STATS } from '@/lib/marketing/social-stats'
 
-type OnboardingStepRow = OnboardingConnectStepDef | OnboardingSubStepDef
+type OnboardingNavStepRow =
+  | OnboardingSubStepDef
+  | (OnboardingConnectStepDef & { to: string })
 
 const CONNECT_SECTION = {
   title: 'Connect',
   description:
-    'Register where your app runs, add API credentials, and connect a coding agent with MCP.',
+    'Register where your app runs, add API credentials, and install the CLI or MCP when you are ready.',
 }
 
 const CARD_SHELL =
@@ -479,7 +477,7 @@ function SubStepRow({
   onSkip,
   skipPending,
 }: {
-  step: OnboardingStepRow
+  step: OnboardingNavStepRow
   projectId: string
   state: OnboardingStepState
   countsTowardProgress: boolean
@@ -577,38 +575,24 @@ function SubStepRow({
   )
 }
 
-function AgentConnectStepRow({
-  projectId,
+function ConnectDialogStepRow({
+  step,
+  state,
   isDebugModeOpen,
+  onSkip,
+  skipPending,
 }: {
-  projectId: string
+  step: OnboardingConnectStepDef
+  state: OnboardingStepState
   isDebugModeOpen: boolean
+  onSkip?: () => void
+  skipPending?: boolean
 }) {
   const t = useT()
   const projectConnect = useProjectConnectDialog()
-  const [state, setState] = useState<OnboardingStepState>(() =>
-    getOnboardingAgentStepState(projectId),
-  )
-
-  useEffect(() => {
-    setState(getOnboardingAgentStepState(projectId))
-  }, [projectId])
-
   const fulfilled = state !== 'pending'
-  const ctaLabel = t(
-    fulfilled ? ONBOARDING_AGENT_STEP.ctaDone : ONBOARDING_AGENT_STEP.cta,
-  )
-
-  const handleSkip = () => {
-    markOnboardingAgentStepSkipped(projectId)
-    setState('skipped')
-  }
-
-  const handleOpen = () => {
-    markOnboardingAgentStepDone(projectId)
-    setState('completed')
-    projectConnect?.openConnect('mcp')
-  }
+  const ctaLabel = t(fulfilled ? (step.ctaDone ?? 'Open') : step.cta)
+  const connectTab = step.connectTab as ConnectProjectTab | undefined
 
   return (
     <div
@@ -624,7 +608,7 @@ function AgentConnectStepRow({
             'items-start pt-0.5 sm:items-center sm:self-stretch sm:pt-0',
           )}
         >
-          <StepStatusNotTrackedIcon />
+          <StepStatusIcon state={state} />
         </div>
         <div className="min-w-0 flex-1 space-y-0.5">
           <span
@@ -635,29 +619,30 @@ function AgentConnectStepRow({
                 : 'text-foreground',
             )}
           >
-            {t(ONBOARDING_AGENT_STEP.label)}
+            {t(step.label)}
             {state === 'skipped' ? (
               <span className="sr-only"> ({t('skipped')})</span>
             ) : null}
           </span>
           <p className="text-[12px] text-muted-foreground leading-relaxed">
-            {t(ONBOARDING_AGENT_STEP.hint)}
+            {t(step.hint)}
           </p>
           {isDebugModeOpen && (
             <p className="text-[10px] text-amber-700/90 dark:text-amber-400/90 font-mono leading-snug pt-1">
-              {ONBOARDING_AGENT_STEP.debug}
+              {step.debug}
             </p>
           )}
         </div>
       </div>
       <div className="flex w-full shrink-0 items-center justify-end gap-1.5 sm:w-auto sm:self-center sm:ps-0">
-        {!fulfilled ? (
+        {!fulfilled && onSkip ? (
           <Button
             type="button"
             variant="ghost"
             size="sm"
             className="h-8 shrink-0 px-2 text-[12px] font-normal text-muted-foreground hover:text-foreground"
-            onClick={handleSkip}
+            disabled={skipPending}
+            onClick={onSkip}
           >
             {t('Skip')}
           </Button>
@@ -672,7 +657,9 @@ function AgentConnectStepRow({
               ? 'text-muted-foreground'
               : 'border-[color-mix(in_srgb,var(--brand-cta)_40%,var(--border))] bg-background text-[var(--brand-cta)] hover:bg-[color-mix(in_srgb,var(--brand-cta)_10%,transparent)] hover:text-[var(--brand-cta)]',
           )}
-          onClick={handleOpen}
+          onClick={() => {
+            if (connectTab) projectConnect?.openConnect(connectTab)
+          }}
           title={ctaLabel}
         >
           <span className="truncate">{ctaLabel}</span>
@@ -702,8 +689,8 @@ export function View({ initialData }: ViewProps = {}) {
   const connectComplete =
     unlockOnboardingLocks ||
     (!!snapshot &&
-      ONBOARDING_CONNECT.every((step) =>
-        isOnboardingStepDone(snapshot, step.sdkKeys),
+      ONBOARDING_CONNECT.filter(connectStepGatesProductSections).every(
+        (step) => isOnboardingStepDone(snapshot, step.sdkKeys),
       ))
 
   const showSkeleton = isLoading && !snapshot
@@ -754,24 +741,28 @@ export function View({ initialData }: ViewProps = {}) {
               const state = stepStates.get(step.id) ?? 'pending'
               return (
                 <li key={step.id}>
-                  <SubStepRow
-                    step={step}
-                    projectId={projectId}
-                    state={state}
-                    countsTowardProgress
-                    isDebugModeOpen={isDebugModeOpen}
-                    onSkip={() => skipStepMutation.mutate(step.sdkKeys)}
-                    skipPending={skipStepMutation.isPending}
-                  />
+                  {step.connectTab ? (
+                    <ConnectDialogStepRow
+                      step={step}
+                      state={state}
+                      isDebugModeOpen={isDebugModeOpen}
+                      onSkip={() => skipStepMutation.mutate(step.sdkKeys)}
+                      skipPending={skipStepMutation.isPending}
+                    />
+                  ) : (
+                    <SubStepRow
+                      step={step as OnboardingNavStepRow}
+                      projectId={projectId}
+                      state={state}
+                      countsTowardProgress
+                      isDebugModeOpen={isDebugModeOpen}
+                      onSkip={() => skipStepMutation.mutate(step.sdkKeys)}
+                      skipPending={skipStepMutation.isPending}
+                    />
+                  )}
                 </li>
               )
             })}
-            <li key={ONBOARDING_AGENT_STEP.id}>
-              <AgentConnectStepRow
-                projectId={projectId}
-                isDebugModeOpen={isDebugModeOpen}
-              />
-            </li>
           </ul>
           </div>
 

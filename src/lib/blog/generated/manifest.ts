@@ -3,6 +3,62 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "announcing-appwrite-chatgpt-plugin",
+    "href": "/blog/post/announcing-appwrite-chatgpt-plugin",
+    "title": "Introducing the official Appwrite plugin for ChatGPT",
+    "description": "Appwrite is now an official ChatGPT plugin. Connect your account to explore projects, manage resources, and use the same plugin within Codex to build apps.",
+    "date": "2026-09-23",
+    "lastUpdated": "2026-09-23",
+    "timeToRead": 4,
+    "author": "aditya-oberai",
+    "category": "announcement",
+    "featured": true,
+    "unlisted": false,
+    "cover": "/images/blog/announcing-appwrite-chatgpt-plugin/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "appwrite-codex-plugin-hosted-mcp",
+    "href": "/blog/post/appwrite-codex-plugin-hosted-mcp",
+    "title": "The new Appwrite plugin for Codex: Skills and hosted MCP",
+    "description": "The Appwrite plugin for Codex now bundles the hosted Appwrite MCP server and thirteen agent skills. Install it from the ChatGPT desktop app or the Codex CLI.",
+    "date": "2026-09-23",
+    "lastUpdated": "2026-09-23",
+    "timeToRead": 3,
+    "author": "atharva",
+    "category": "announcements",
+    "featured": false,
+    "cover": "/images/blog/appwrite-codex-plugin-hosted-mcp/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "appwrite-firewall-use-cases",
+    "href": "/blog/post/appwrite-firewall-use-cases",
+    "title": "Twelve Appwrite Firewall rules that stop real attacks",
+    "description": "Practical Appwrite Firewall rules for OTP abuse, database scraping, per-user quotas, regional access, trusted networks, webhook Functions, and Sites under attack.",
+    "date": "2026-09-23",
+    "lastUpdated": "2026-09-23",
+    "timeToRead": 12,
+    "author": "atharva",
+    "category": "security, best-practices",
+    "cover": "/images/blog/appwrite-firewall-use-cases/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "appwrite-plugins-claude-code-codex",
+    "href": "/blog/post/appwrite-plugins-claude-code-codex",
+    "title": "Updated Appwrite plugins for Claude Code and Codex are live",
+    "description": "The Appwrite plugins for Claude Code and Codex now include the hosted Appwrite MCP server, so your agent can work with your Appwrite project after one OAuth sign-in.",
+    "date": "2026-09-23",
+    "lastUpdated": "2026-09-23",
+    "timeToRead": 4,
+    "author": "atharva",
+    "category": "announcements",
+    "featured": false,
+    "cover": "/images/blog/appwrite-plugins-claude-code-codex/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "claude-opus-55-reaches-fable-level-performance",
     "href": "/blog/post/claude-opus-55-reaches-fable-level-performance",
     "title": "Claude Opus 5.5 reaches Fable-level performance",

@@ -15,7 +15,7 @@ This release includes:
 - Function and site executions stored in ClickHouse only. The `_APP_EXECUTIONS_DUAL_WRITE` variable is removed
 - A batch of fixes to Appwrite Console, including manual deployments from `.tar.gz` files on macOS and activity and realtime pages that work on mobile
 
-Head over to our [migration guide](/docs/advanced/self-hosting/production/updates#upgrading-to-2-2) to upgrade your instance. Upgrade to 2.1.0 first if you are still on 2.0.0.
+Head over to our [migration guide](/docs/advanced/self-hosting/production/updates#upgrading-to-latest) to upgrade your instance.
 
 For the complete list of updates and fixes, check out the [release notes](https://github.com/appwrite/appwrite/releases/tag/2.2.0) on GitHub.
 
@@ -23,7 +23,7 @@ For the complete list of updates and fixes, check out the [release notes](https:
 Install Appwrite 2.2
 {% /arrow_link %}
 
-{% arrow_link href="/docs/advanced/self-hosting/production/updates#upgrading-to-2-2" %}
+{% arrow_link href="/docs/advanced/self-hosting/production/updates#upgrading-to-latest" %}
 Upgrade your self-hosted instance
 {% /arrow_link %}
 

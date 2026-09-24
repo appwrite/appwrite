@@ -9,6 +9,50 @@ import {
   PostgresTableHeaderSlotProvider,
   type PostgresTableHeaderSlotProps,
 } from './_components/PostgresTableHeaderSlotContext'
+import {
+  DatabaseTableRowsFullscreenProvider,
+  useOptionalDatabaseTableRowsFullscreen,
+} from '../_components/DatabaseTableRowsFullscreenContext'
+
+function PostgresTableLayoutContent({
+  projectId,
+  databaseId,
+  normalizedTableId,
+  activeTab,
+  headerSlot,
+  setHeaderSlot,
+}: {
+  projectId: string
+  databaseId: string
+  normalizedTableId: string
+  activeTab: ReturnType<typeof parsePostgresTableTabFromPathname>
+  headerSlot: PostgresTableHeaderSlotProps
+  setHeaderSlot: (next: PostgresTableHeaderSlotProps) => void
+}) {
+  const rowsFullscreen =
+    useOptionalDatabaseTableRowsFullscreen()?.rowsFullscreen ?? false
+
+  return (
+    <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+      {!rowsFullscreen ? (
+        <div className="shrink-0 bg-background">
+          <PostgresTableHeader
+            projectId={projectId}
+            databaseId={databaseId}
+            tableId={normalizedTableId}
+            activeTab={activeTab ?? 'rows'}
+            {...headerSlot}
+          />
+        </div>
+      ) : null}
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+        <PostgresTableHeaderSlotProvider setSlot={setHeaderSlot}>
+          <Outlet />
+        </PostgresTableHeaderSlotProvider>
+      </div>
+    </div>
+  )
+}
 
 export function PostgresTableLayout() {
   const { projectId, databaseId, tableId } = useParams({
@@ -39,7 +83,9 @@ export function PostgresTableLayout() {
         prev.showRefresh === next.showRefresh &&
         prev.onRefresh === next.onRefresh &&
         prev.isRefreshing === next.isRefreshing &&
-        prev.filterTrigger === next.filterTrigger
+        prev.filterTrigger === next.filterTrigger &&
+        prev.beforeRefreshButtons === next.beforeRefreshButtons &&
+        prev.afterRefreshButtons === next.afterRefreshButtons
       ) {
         return prev
       }
@@ -48,21 +94,15 @@ export function PostgresTableLayout() {
   }, [])
 
   return (
-    <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-      <div className="shrink-0 bg-background">
-        <PostgresTableHeader
-          projectId={projectId}
-          databaseId={databaseId}
-          tableId={normalizedTableId}
-          activeTab={activeTab}
-          {...headerSlot}
-        />
-      </div>
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-        <PostgresTableHeaderSlotProvider setSlot={setHeaderSlot}>
-          <Outlet />
-        </PostgresTableHeaderSlotProvider>
-      </div>
-    </div>
+    <DatabaseTableRowsFullscreenProvider enabled={activeTab === 'rows'}>
+      <PostgresTableLayoutContent
+        projectId={projectId}
+        databaseId={databaseId}
+        normalizedTableId={normalizedTableId}
+        activeTab={activeTab}
+        headerSlot={headerSlot}
+        setHeaderSlot={setHeaderSlot}
+      />
+    </DatabaseTableRowsFullscreenProvider>
   )
 }

@@ -109,7 +109,10 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Deployment actions': 'デプロイの操作',
   'Deployment activated successfully': 'デプロイを有効化しました',
   'Deployment deleted successfully': 'デプロイを削除しました',
+  'Deployment view': 'デプロイの表示',
   'Deployment not found': 'デプロイが見つかりません',
+  'Site not found': 'サイトが見つかりません',
+  'Execution not found': '実行が見つかりません',
   'Deployment rebuild started': 'デプロイの再ビルドを開始しました',
   'Deployment screenshot': 'デプロイのスクリーンショット',
   'Deselect all': 'すべての選択を解除',
@@ -373,7 +376,8 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Select shown': '表示分を選択',
   'Send feedback': 'フィードバックを送信',
   'Share your feedback...': 'フィードバックを共有...',
-  'How is your experience with the console?': 'コンソールの使い心地はいかがですか?',
+  'How is your experience with the console?':
+    'コンソールの使い心地はいかがですか?',
   'How is the console working for you?': 'コンソールは問題なく使えていますか?',
   'Feedback sentiment': 'フィードバックの種類',
   'Works well': '問題ない',
@@ -386,14 +390,16 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'For issues in Appwrite with steps to reproduce':
     'Appwrite 本体の再現手順付きの不具合',
   'Tell us what you build': '作っているものを教えてください',
-  'Request received. We will be in touch.': '依頼を受け付けました。追って連絡します。',
+  'Request received. We will be in touch.':
+    '依頼を受け付けました。追って連絡します。',
   'What you build and results you have seen. We may reach out for a short interview.':
     '構築内容と得られた成果。短いインタビューのためご連絡することがあります。',
   'What you ship and the results you have seen': 'リリース内容と得られた成果',
   'Request interview': 'インタビューを依頼',
   'What could we improve?': '改善してほしい点は?',
   'What is working well? (optional)': 'うまくいっている点 (任意)',
-  'Tell us what was confusing or missing': '分かりにくかった点や不足していた点を教えてください',
+  'Tell us what was confusing or missing':
+    '分かりにくかった点や不足していた点を教えてください',
   'Share what you liked (optional)': '良かった点を共有 (任意)',
   'Report a bug': 'バグを報告',
   'For reproducible defects in Appwrite itself, open a GitHub issue with steps to reproduce.':
