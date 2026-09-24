@@ -490,7 +490,11 @@ class Messaging extends Action
                 $cursor = $targets[$count - 1];
 
                 foreach ($targets as $target) {
-                    $reachedViaTarget[$target->getAttribute('userId')] = true;
+                    // groupTargetsByProvider drops expired targets, so an expired-only user is not
+                    // actually reached and must still get the direct MQTT fallback below.
+                    if (!$target->getAttribute('expired')) {
+                        $reachedViaTarget[$target->getAttribute('userId')] = true;
+                    }
                 }
 
                 // User-addressed: deliver on the reserved per-user topic (Appwrite push).
