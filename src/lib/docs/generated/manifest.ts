@@ -1239,7 +1239,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Native sign-in",
     "description": "Sign users in with Sign in with Apple or Google on device, then exchange the ID token for an Appwrite session without a redirect through Appwrite.",
     "layout": "article",
-    "readingTimeMinutes": 11
+    "readingTimeMinutes": 10
   },
   {
     "slug": "products/auth/oauth-server",

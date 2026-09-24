@@ -1940,6 +1940,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "Native sign-in creates an Appwrite session from an OpenID Connect ID token that your app obtained on the device. The app calls the platform's own sign-in API, such as Sign in with Apple on iOS or Credential Manager on Android, and sends the returned ID token to Appwrite. Appwrite verifies the token against the provider's published signing keys and returns a session in the same request. Compared with OAuth2 login, no redirect passes through Appwrite, and the provider configuration holds…",
     "breadcrumbs": [
       "Auth",
+      "Guides",
       "Native sign-in"
     ]
   },
@@ -3485,7 +3486,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/databases/postgresql/quick-start",
     "title": "Quick start",
     "description": "Create a managed PostgreSQL database in the Appwrite Console, run SQL in the editor, and connect with psql, Prisma, or Drizzle over TLS.",
-    "excerpt": "You can create a PostgreSQL database and run your first query in a few minutes. Create a database Native databases are rolling out region by region, starting with Frankfurt () and New York (), and more regions are on the way. A database takes the region of the project that owns it and there is no per-database region selector, so create your project in a supported region before you start. 1. In your project, go to **Databases**. 2. Click **Create…",
+    "excerpt": "You can create a PostgreSQL database and run your first query in a few minutes. Create a database Native databases are available in every Appwrite Cloud region. A database takes the region of the project that owns it and there is no per-database region selector, so create your project in the region closest to your users before you start. 1. In your project, go to **Databases**. 2. Click **Create database**. 3. Under **Choose database type**, select **PostgreSQL** from the **Native…",
     "breadcrumbs": [
       "PostgreSQL",
       "Getting started",
