@@ -13,16 +13,18 @@
     "minimum-stability": "stable",
     "autoload": {
         "psr-4": {
-            "Utopia\\DSN\\": "src/DSN"
+            "Utopia\\DSN\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Utopia\\DSN\\Tests\\": "tests/"
         }
     },
     "scripts": {
-        "test": "phpunit --configuration phpunit.xml tests"
+        "test": "phpunit"
     },
     "require": {
         "php": ">=8.0"
-    },
-    "require-dev": {
-        "vimeo/psalm": "4.0.1"
     }
 }

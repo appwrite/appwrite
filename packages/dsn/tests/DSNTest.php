@@ -1,7 +1,8 @@
 <?php
 
-namespace Tests\Unit\DSN;
+namespace Utopia\DSN\Tests;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Utopia\DSN\DSN;
 
@@ -172,9 +173,7 @@ class DSNTest extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider provideRefusedDSNs
-     */
+    #[DataProvider('provideRefusedDSNs')]
     public function testRefusalMessageOmitsCredentials(string $dsn): void
     {
         try {

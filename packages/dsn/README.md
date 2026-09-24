@@ -36,28 +36,8 @@ $timezone = $dsn->getParam('timezone') // UTC
 
 ## Tests
 
-To run all unit tests, use the following Docker command:
-
 ```bash
-docker run --rm -v $(pwd):$(pwd):rw -w $(pwd) php:8.0-cli-alpine sh -c "vendor/bin/phpunit --configuration phpunit.xml tests"
-```
-
-To run the linter, use the following composer command:
-
-```bash
-composer lint
-
-# Or if you do not have composer installed
-docker run --rm -v $(pwd):$(pwd):rw -w $(pwd) composer  sh -c "composer lint"
-```
-
-To fix the errors raised by the linter, use the following command:
-
-```php
-composer format
-
-# Or if you do not have composer installed
-docker run --rm -v $(pwd):$(pwd):rw -w $(pwd) composer  sh -c "composer format"
+composer test
 ```
 
 ## System Requirements
