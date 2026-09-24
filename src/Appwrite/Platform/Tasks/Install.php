@@ -1290,6 +1290,8 @@ class Install extends Action
                     $errorMsg = $lastError ? $lastError['message'] : 'Unknown error';
                     throw new \RuntimeException('Failed to copy ' . $file . ' to ' . $target . ': ' . $errorMsg);
                 }
+                // copy() drops the executable bit, which decides how the ClickHouse entrypoint runs its init script.
+                @chmod($target, fileperms($source) & 0777);
             }
         }
     }
