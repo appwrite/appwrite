@@ -1,0 +1,28 @@
+name: "Tests"
+
+on: [pull_request]
+jobs:
+  lint:
+    name: Tests ${{ matrix.php-versions }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        php-versions: ['8.0', '8.1', '8.2', '8.3', 'nightly']
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Setup PHP ${{ matrix.php-versions }}
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: ${{ matrix.php-versions }}
+
+    - name: Validate composer.json and composer.lock
+      run: composer validate --strict
+    
+    - name: Compose install
+      run: composer install --ignore-platform-reqs
+
+    - name: Run tests
+      run: composer test

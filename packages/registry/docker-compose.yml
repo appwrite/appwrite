@@ -1,0 +1,10 @@
+version: '3'
+
+services:
+  test:
+    build:
+      context: .
+    volumes:
+      - ./:/app
+    working_dir: /app
+    command: vendor/bin/phpunit --configuration phpunit.xml
