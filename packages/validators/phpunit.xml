@@ -1,0 +1,13 @@
+<phpunit
+    backupGlobals="false"
+    bootstrap="vendor/autoload.php"
+    colors="true"
+    processIsolation="false"
+    stopOnFailure="false"
+>
+    <testsuites>
+        <testsuite name="unit">
+            <directory>./tests/Validator/</directory>
+        </testsuite>
+    </testsuites>
+</phpunit>

@@ -1,0 +1,8 @@
+includes:
+    - ../../phpstan.neon
+
+services:
+    -
+        class: Utopia\PHPStan\DisallowAssertEqualsExtension
+        tags:
+            - phpstan.restrictedMethodUsageExtension

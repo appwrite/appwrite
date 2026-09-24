@@ -1,0 +1,23 @@
+{
+    "name": "utopia-php/validators",
+    "description": "A lightweight collection of reusable validators for Utopia projects",
+    "type": "library",
+    "keywords": [
+        "php",
+        "validation",
+        "validator",
+        "utopia"
+    ],
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Utopia\\": "src/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit --configuration phpunit.xml"
+    },
+    "require": {
+        "php": ">=8.5"
+    }
+}
