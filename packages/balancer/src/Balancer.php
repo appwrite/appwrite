@@ -4,6 +4,8 @@ namespace Utopia\Balancer;
 
 class Balancer
 {
+    private Algorithm $algo;
+
     /**
      * @var callable[]
      */
@@ -14,8 +16,9 @@ class Balancer
      */
     private array $options = [];
 
-    public function __construct(private readonly Algorithm $algo)
+    public function __construct(Algorithm $algo)
     {
+        $this->algo = $algo;
     }
 
     public function getAlgo(): Algorithm

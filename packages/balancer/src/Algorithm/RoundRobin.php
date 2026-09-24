@@ -12,8 +12,11 @@ class RoundRobin extends Algorithm
         return "RoundRobin";
     }
 
-    public function __construct(private int $index)
+    private int $index;
+
+    public function __construct(int $lastIndex)
     {
+        $this->index = $lastIndex;
     }
 
     public function getIndex(): int
