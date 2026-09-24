@@ -342,9 +342,18 @@ Http::init()
         $scopes = \array_unique($scopes);
 
         // Intentional: impersonators get users.read so they can discover a target user
-        // before impersonation starts, and keep that access while impersonating.
+        // before impersonation starts, and keep that access while impersonating. Discovery
+        // is all it covers -- listing users and reading one user document -- because
+        // users.read also reaches another user's MFA recovery codes and challenge secrets,
+        // which are enough to pass that user's second factor. An impersonator holds the
+        // flag on their own account, not a role on the project, so they get the browse
+        // they need and nothing that reads someone else's credentials.
+        $isUserDiscovery = $request->getMethod() === Request::METHOD_GET
+            && \in_array($route->getPath(), ['/v1/users', '/v1/users/:userId'], true);
+
         if (
-            !$user->isEmpty()
+            $isUserDiscovery
+            && !$user->isEmpty()
             && (
                 $user->getAttribute('impersonator', false)
                 || !$impersonatorUser->isEmpty()
