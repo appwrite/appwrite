@@ -8,23 +8,19 @@ use Utopia\Detector\Detector;
 
 class Rendering extends Detector
 {
-    protected string $framework;
-
     /**
      * @var array<RenderingDetection>
      */
     protected array $options = [];
 
-    public function __construct(string $framework)
+    public function __construct(protected string $framework)
     {
         parent::__construct();
-
-        $this->framework = $framework;
     }
 
     public function detect(): RenderingDetection
     {
-        $files = array_map(fn ($input) => $input['content'], $this->inputs);
+        $files = array_map(fn (array $input): string => $input['content'], $this->inputs);
 
         foreach ($this->options as $strategy) {
             $matches = array_intersect($strategy->getFiles($this->framework), $files);

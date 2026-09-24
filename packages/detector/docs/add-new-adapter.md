@@ -28,7 +28,7 @@ Below are outlined the most useful files for adding a new detector and detection
 │       ├── Runtime/ # Runtime detections
 │       └── Rendering/ # Rendering detections
 └── tests
-    └── unit/ # Where tests for your new detector/detection go!
+    └── DetectorTest.php # Where tests for your new detector/detection go!
 ```
 
 ### Extend the Detector 💻
@@ -105,7 +105,7 @@ class YourDetection extends YourParentType
 
 ### Testing 🧪
 
-Add tests for your new detector and detection class in `tests/unit/DetectorTest.php`. Here's an example:
+Add tests for your new detector and detection class in `tests/DetectorTest.php`. Here's an example:
 
 ```php
 public function testYourDetector(array $files, ?string $expectedName): void
@@ -212,4 +212,4 @@ Only include dependencies strictly necessary for the adapter, preferably officia
 
 ### Testing with Docker 🛠️
 
-The existing test suite is helpful when developing a new Detector/ Detection adapter. Use official Docker images from trusted sources. Add new tests for your new Detector/ Detection adapter in `tests/unit/DetectorTest.php` test class. The specific `docker-compose` command for testing can be found in the [README](/README.md#tests).
+The existing test suite is helpful when developing a new Detector/ Detection adapter. Use official Docker images from trusted sources. Add new tests for your new Detector/ Detection adapter in `tests/DetectorTest.php` test class. The specific `docker-compose` command for testing can be found in the [README](/README.md#tests).

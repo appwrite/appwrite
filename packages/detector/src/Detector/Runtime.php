@@ -12,20 +12,14 @@ class Runtime extends Detector
      */
     protected array $options = [];
 
-    protected Strategy $strategy;
-
-    protected string $packager = 'pnpm';
-
-    public function __construct(Strategy $strategy, string $packager = 'pnpm')
+    public function __construct(protected Strategy $strategy, protected string $packager = 'pnpm')
     {
         parent::__construct();
-        $this->strategy = $strategy;
-        $this->packager = $packager;
     }
 
     public function detect(): ?RuntimeDetection
     {
-        $inputs = array_map(fn ($input) => $input['content'], $this->inputs);
+        $inputs = array_map(fn (array $input): string => $input['content'], $this->inputs);
 
         switch ($this->strategy->getValue()) {
             case Strategy::FILEMATCH:
@@ -43,9 +37,7 @@ class Runtime extends Detector
             case Strategy::EXTENSION:
                 foreach ($this->options as $detector) {
                     $detectorExtensions = $detector->getFileExtensions();
-                    $inputExtensions = array_map(function ($file) {
-                        return pathinfo($file, PATHINFO_EXTENSION);
-                    }, $inputs);
+                    $inputExtensions = array_map(fn (string $file): string => pathinfo($file, PATHINFO_EXTENSION), $inputs);
                     $matches = array_intersect($detectorExtensions, $inputExtensions);
                     if (count($matches) > 0) {
                         $detector->setPackager($this->packager);

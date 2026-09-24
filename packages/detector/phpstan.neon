@@ -1,3 +1,5 @@
 parameters:
-  excludePaths:
-    - tests/resources
+    level: max
+    paths:
+        - src
+        - tests

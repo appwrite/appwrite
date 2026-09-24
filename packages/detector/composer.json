@@ -11,7 +11,7 @@
     ],
     "minimum-stability": "stable",
     "scripts": {
-        "test": "phpunit --configuration phpunit.xml --debug"
+        "test": "phpunit"
     },
     "autoload": {
         "psr-4": {
@@ -20,7 +20,7 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "Utopia\\Tests\\": "tests/Detector/"
+            "Utopia\\Detector\\Tests\\": "tests/"
         }
     },
     "require": {

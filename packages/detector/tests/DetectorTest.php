@@ -1,6 +1,6 @@
 <?php
 
-namespace Utopia\Tests;
+namespace Utopia\Detector\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Utopia\Detector\Detection\Framework\Analog;
@@ -21,8 +21,8 @@ use Utopia\Detector\Detection\Framework\Vue;
 use Utopia\Detector\Detection\Packager\NPM;
 use Utopia\Detector\Detection\Packager\PNPM;
 use Utopia\Detector\Detection\Packager\Yarn;
-use Utopia\Detector\Detection\Rendering\XStatic;
 use Utopia\Detector\Detection\Rendering\SSR;
+use Utopia\Detector\Detection\Rendering\XStatic;
 use Utopia\Detector\Detection\Runtime\Bun;
 use Utopia\Detector\Detection\Runtime\CPP;
 use Utopia\Detector\Detection\Runtime\Dart;
@@ -117,9 +117,9 @@ class DetectorTest extends TestCase
 
         if ($runtime) {
             $this->assertNotNull($detectedRuntime);
-            $this->assertSame($runtime, $detectedRuntime?->getName());
-            $this->assertSame($commands, $detectedRuntime?->getCommands());
-            $this->assertSame($entrypoint, $detectedRuntime?->getEntrypoint());
+            $this->assertSame($runtime, $detectedRuntime->getName());
+            $this->assertSame($commands, $detectedRuntime->getCommands());
+            $this->assertSame($entrypoint, $detectedRuntime->getEntrypoint());
         } else {
             $this->assertNull($detectedRuntime);
         }
@@ -176,8 +176,8 @@ class DetectorTest extends TestCase
 
         if ($runtime) {
             $this->assertNotNull($detectedRuntime);
-            $this->assertSame($runtime, $detectedRuntime?->getName());
-            $this->assertSame($commands, $detectedRuntime?->getCommands());
+            $this->assertSame($runtime, $detectedRuntime->getName());
+            $this->assertSame($commands, $detectedRuntime->getCommands());
         } else {
             $this->assertNull($detectedRuntime);
         }
@@ -247,8 +247,8 @@ class DetectorTest extends TestCase
 
         if ($runtime) {
             $this->assertNotNull($detectedRuntime);
-            $this->assertSame($runtime, $detectedRuntime?->getName());
-            $this->assertSame($commands, $detectedRuntime?->getCommands());
+            $this->assertSame($runtime, $detectedRuntime->getName());
+            $this->assertSame($commands, $detectedRuntime->getCommands());
         } else {
             $this->assertNull($detectedRuntime);
         }
@@ -295,10 +295,10 @@ class DetectorTest extends TestCase
 
         if ($framework) {
             $this->assertNotNull($detectedFramework);
-            $this->assertSame($framework, $detectedFramework?->getName());
-            $this->assertSame($installCommand, $detectedFramework?->getInstallCommand());
-            $this->assertSame($buildCommand, $detectedFramework?->getBuildCommand());
-            $this->assertSame($outputDirectory, $detectedFramework?->getOutputDirectory());
+            $this->assertSame($framework, $detectedFramework->getName());
+            $this->assertSame($installCommand, $detectedFramework->getInstallCommand());
+            $this->assertSame($buildCommand, $detectedFramework->getBuildCommand());
+            $this->assertSame($outputDirectory, $detectedFramework->getOutputDirectory());
         } else {
             $this->assertNull($detectedFramework);
         }
@@ -342,7 +342,6 @@ class DetectorTest extends TestCase
 
         $detectedRendering = $detector->detect();
 
-        $this->assertNotNull($detectedRendering);
         $this->assertSame($rendering, $detectedRendering->getName());
         $this->assertSame($fallbackFile, $detectedRendering->getFallbackFile());
     }
@@ -417,10 +416,6 @@ class DetectorTest extends TestCase
         $detectedFramework = $detector->detect();
 
         $this->assertNotNull($detectedFramework);
-        // Makes static code analyser smarter
-        if (is_null($detectedFramework)) {
-            throw new \Exception('Framework not detected');
-        }
         $this->assertSame('tanstack-start', $detectedFramework->getName());
         $this->assertSame('npm install', $detectedFramework->getInstallCommand());
         $this->assertSame('npm run build', $detectedFramework->getBuildCommand());
@@ -448,10 +443,6 @@ class DetectorTest extends TestCase
         $detectedFramework = $detector->detect();
 
         $this->assertNotNull($detectedFramework);
-        // Makes static code analyser smarter
-        if (is_null($detectedFramework)) {
-            throw new \Exception('Framework not detected');
-        }
 
         $this->assertSame('tanstack-start', $detectedFramework->getName());
         $this->assertSame('pnpm install', $detectedFramework->getInstallCommand());
@@ -794,10 +785,6 @@ class DetectorTest extends TestCase
         $detection = $detector->detect();
 
         $this->assertNotNull($detection, $assertion);
-        // Makes static code analyser smarter
-        if (is_null($detection)) {
-            throw new \Exception('Framework not detected');
-        }
 
         $this->assertSame($framework, $detection->getName(), $assertion);
     }
@@ -878,7 +865,7 @@ class DetectorTest extends TestCase
             $detectedFramework = $detector->detect();
 
             $this->assertNotNull($detectedFramework);
-            $this->assertSame($framework, $detectedFramework?->getName());
+            $this->assertSame($framework, $detectedFramework->getName());
         }
     }
 
@@ -1067,10 +1054,6 @@ class DetectorTest extends TestCase
         $detectedFramework = $detector->detect();
 
         $this->assertNotNull($detectedFramework);
-        // Makes static code analyser smarter
-        if (is_null($detectedFramework)) {
-            throw new \Exception('Framework not detected');
-        }
 
         // Must stay in sync with the jaspr adapter in Appwrite's frameworks config
         $this->assertSame('dart pub get', $detectedFramework->getInstallCommand());
