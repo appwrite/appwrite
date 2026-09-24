@@ -45,7 +45,8 @@ final readonly class Redis implements Store
     public function __construct(
         private Client $redis,
         private string $key = 'utopia-schedule-claim',
-    ) {}
+    ) {
+    }
 
     #[\Override]
     public function load(): ?Claim

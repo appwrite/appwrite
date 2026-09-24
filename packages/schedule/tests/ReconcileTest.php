@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Utopia\Tests;
+namespace Utopia\Schedule\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Utopia\Schedule\Clock\Test as TestClock;
@@ -24,7 +24,7 @@ final class ReconcileTest extends TestCase
      */
     private function dues(array $occurrences): array
     {
-        return array_map(fn(Occurrence $occurrence): string => $occurrence->due->format('H:i:s'), $occurrences);
+        return array_map(fn (Occurrence $occurrence): string => $occurrence->due->format('H:i:s'), $occurrences);
     }
 
     public function testFullSnapshotDiffAddsUpdatesAndRemoves(): void
@@ -35,7 +35,7 @@ final class ReconcileTest extends TestCase
             new Row('a', 'v1', '* * * * *'),
             new Row('b', 'v1', 'interval'),
         ]);
-        $made = new class {
+        $made = new class () {
             public int $count = 0;
         };
         $scheduler = new Scheduler(
@@ -77,7 +77,7 @@ final class ReconcileTest extends TestCase
         $this->assertSame(
             [['a', '03:02:00', 'a']],
             array_map(
-                fn(Occurrence $occurrence): array => [$occurrence->id, $occurrence->due->format('H:i:s'), $occurrence->payload],
+                fn (Occurrence $occurrence): array => [$occurrence->id, $occurrence->due->format('H:i:s'), $occurrence->payload],
                 $scheduler->tick(),
             ),
             'removed rows stop firing; payload rides along',
@@ -93,8 +93,8 @@ final class ReconcileTest extends TestCase
         $scheduler = new Scheduler(
             source: new IncrementalSource(
                 snapshot: $full->list(...),
-                make: fn(Row $row): Entry => new Entry(new Interval(60), $row->id),
-                since: fn(\DateTimeImmutable $moment): array => $changed->list(),
+                make: fn (Row $row): Entry => new Entry(new Interval(60), $row->id),
+                since: fn (\DateTimeImmutable $moment): array => $changed->list(),
             ),
             store: new MemoryStore(),
             clock: $clock,
@@ -109,13 +109,13 @@ final class ReconcileTest extends TestCase
         $scheduler->reconcile();
         $clock->advance(60.0);
 
-        $ids = array_map(fn(Occurrence $occurrence): string => $occurrence->id, $scheduler->tick());
+        $ids = array_map(fn (Occurrence $occurrence): string => $occurrence->id, $scheduler->tick());
         $this->assertSame(['a', 'b'], $ids, 'a change feed cannot converge a hard delete');
         $scheduler->commit();
 
         $scheduler->reconcile(full: true);
         $clock->advance(60.0);
-        $ids = array_map(fn(Occurrence $occurrence): string => $occurrence->id, $scheduler->tick());
+        $ids = array_map(fn (Occurrence $occurrence): string => $occurrence->id, $scheduler->tick());
         $this->assertSame(['a'], $ids, 'the relist converges the hard delete');
         $scheduler->commit();
 
@@ -190,7 +190,7 @@ final class ReconcileTest extends TestCase
         $scheduler = new Scheduler(
             source: new SnapshotSource(
                 snapshot: $set->list(...),
-                make: fn(Row $row): Entry => new Entry(new Cron('* * * * *')),
+                make: fn (Row $row): Entry => new Entry(new Cron('* * * * *')),
             ),
             store: new MemoryStore(),
             clock: $clock,
@@ -205,7 +205,7 @@ final class ReconcileTest extends TestCase
 
         $this->assertSame(
             ['03:01:00'],
-            array_map(fn(Occurrence $occurrence): string => $occurrence->due->format('H:i:s'), $scheduler->tick()),
+            array_map(fn (Occurrence $occurrence): string => $occurrence->due->format('H:i:s'), $scheduler->tick()),
             'occurrences from before the schedule (last) changed are never delivered',
         );
     }
@@ -214,7 +214,7 @@ final class ReconcileTest extends TestCase
     {
         $clock = new TestClock(new \DateTimeImmutable('2026-08-18 03:00:30.000000'));
 
-        $link = new class {
+        $link = new class () {
             public bool $broken = false;
         };
         $scheduler = new Scheduler(
@@ -226,7 +226,7 @@ final class ReconcileTest extends TestCase
                     }
                     yield new Row('b', 'v1');
                 },
-                make: fn(Row $row): Entry => new Entry(new Interval(60), $row->id),
+                make: fn (Row $row): Entry => new Entry(new Interval(60), $row->id),
             ),
             store: new MemoryStore(),
             clock: $clock,
@@ -244,7 +244,7 @@ final class ReconcileTest extends TestCase
         }
 
         $clock->advance(60.0);
-        $ids = array_map(fn(Occurrence $occurrence): string => $occurrence->id, $scheduler->tick());
+        $ids = array_map(fn (Occurrence $occurrence): string => $occurrence->id, $scheduler->tick());
 
         $this->assertSame(['a', 'b'], $ids, 'a failed listing must not look like a mass removal');
     }
@@ -255,7 +255,7 @@ final class ReconcileTest extends TestCase
         $seen = null;
         $scheduler = new Scheduler(
             source: new SnapshotSource(
-                snapshot: fn(): array => [new Row('bad', 'v1', 'the row payload')],
+                snapshot: fn (): array => [new Row('bad', 'v1', 'the row payload')],
                 make: function (Row $row): Entry {
                     throw new \InvalidArgumentException('poison row');
                 },
@@ -279,13 +279,13 @@ final class ReconcileTest extends TestCase
     {
         $clock = new TestClock(new \DateTimeImmutable('2026-08-18 03:00:30.000000'));
         $telemetry = new TestTelemetry();
-        $errors = new class {
+        $errors = new class () {
             /** @var list<string> */
             public array $messages = [];
         };
         $scheduler = new Scheduler(
             source: new SnapshotSource(
-                snapshot: fn(): array => [new Row('a', 'v1'), new Row('bad', 'v1'), new Row('c', 'v1')],
+                snapshot: fn (): array => [new Row('a', 'v1'), new Row('bad', 'v1'), new Row('c', 'v1')],
                 make: function (Row $row): Entry {
                     if ($row->id === 'bad') {
                         throw new \InvalidArgumentException('poison row');
@@ -307,7 +307,7 @@ final class ReconcileTest extends TestCase
         $scheduler->commit();
         $clock->advance(60.0);
 
-        $ids = array_map(fn(Occurrence $occurrence): string => $occurrence->id, $scheduler->tick());
+        $ids = array_map(fn (Occurrence $occurrence): string => $occurrence->id, $scheduler->tick());
 
         $this->assertSame(['a', 'c'], $ids);
         $this->assertSame(['poison row'], $errors->messages);
@@ -327,7 +327,7 @@ final class ReconcileTest extends TestCase
         $scheduler = new Scheduler(
             source: new SnapshotSource(
                 snapshot: $set->list(...),
-                make: fn(Row $row): Entry => new Entry(new At(new \DateTimeImmutable('2026-08-18 03:00:04'))),
+                make: fn (Row $row): Entry => new Entry(new At(new \DateTimeImmutable('2026-08-18 03:00:04'))),
             ),
             store: new MemoryStore(),
             clock: $clock,
@@ -351,7 +351,7 @@ final class ReconcileTest extends TestCase
 
         $this->assertSame(
             ['03:00:04'],
-            array_map(fn(Occurrence $occurrence): string => $occurrence->due->format('H:i:s'), $delivered),
+            array_map(fn (Occurrence $occurrence): string => $occurrence->due->format('H:i:s'), $delivered),
         );
 
         // Covered exactly once: nothing re-delivers on later ticks.
@@ -376,7 +376,8 @@ final class ReconcileTest extends TestCase
             ),
             store: new MemoryStore(),
             clock: $clock,
-            onError: function (\Throwable $error): void {},
+            onError: function (\Throwable $error): void {
+            },
         );
 
         $this->assertSame(0, $scheduler->count(), 'nothing is loaded before the first sync');
@@ -396,7 +397,7 @@ final class ReconcileTest extends TestCase
         $scheduler = new Scheduler(
             source: new SnapshotSource(
                 snapshot: $set->list(...),
-                make: fn(Row $row): Entry => new Entry(new Cron('* * * * *')),
+                make: fn (Row $row): Entry => new Entry(new Cron('* * * * *')),
             ),
             store: new MemoryStore(),
             clock: $clock,
@@ -415,7 +416,7 @@ final class ReconcileTest extends TestCase
 
         $this->assertSame(
             ['03:06:00'],
-            array_map(fn(Occurrence $occurrence): string => $occurrence->due->format('H:i:s'), $scheduler->tick()),
+            array_map(fn (Occurrence $occurrence): string => $occurrence->due->format('H:i:s'), $scheduler->tick()),
             'coverage reaches back to activeFrom, past the watermark it missed',
         );
         $scheduler->commit();
@@ -423,7 +424,7 @@ final class ReconcileTest extends TestCase
         $clock->advance(60.0); // 03:07:15
         $this->assertSame(
             ['03:07:00'],
-            array_map(fn(Occurrence $occurrence): string => $occurrence->due->format('H:i:s'), $scheduler->tick()),
+            array_map(fn (Occurrence $occurrence): string => $occurrence->due->format('H:i:s'), $scheduler->tick()),
             'after commit the entry rides the watermark: no re-delivery',
         );
     }
@@ -438,10 +439,10 @@ final class ReconcileTest extends TestCase
         $clock = new TestClock(new \DateTimeImmutable('2026-08-18 03:05:00.000000'));
         $store = new MemoryStore();
         $set = new RowSet([new Row('a', 'v1', activeFrom: new \DateTimeImmutable('2026-08-18 03:00:00'))]);
-        $build = fn(string $token): Scheduler => new Scheduler(
+        $build = fn (string $token): Scheduler => new Scheduler(
             source: new SnapshotSource(
                 snapshot: $set->list(...),
-                make: fn(Row $row): Entry => new Entry(new Cron('* * * * *')),
+                make: fn (Row $row): Entry => new Entry(new Cron('* * * * *')),
             ),
             store: $store,
             tickSeconds: 60,
@@ -468,7 +469,7 @@ final class ReconcileTest extends TestCase
         $this->assertContains(
             '03:06:00',
             array_map(
-                fn(Occurrence $occurrence): string => $occurrence->due->format('H:i:s'),
+                fn (Occurrence $occurrence): string => $occurrence->due->format('H:i:s'),
                 $successor->tick(),
             ),
             'the replacement is owed the runs inside a window that was chosen before it existed',
@@ -484,10 +485,10 @@ final class ReconcileTest extends TestCase
         $clock = new TestClock(new \DateTimeImmutable('2026-08-18 03:05:00.000000'));
         $store = new MemoryStore();
         $set = new RowSet([new Row('known', 'v1', activeFrom: new \DateTimeImmutable('2026-08-18 03:01:00'))]);
-        $build = fn(string $token): Scheduler => new Scheduler(
+        $build = fn (string $token): Scheduler => new Scheduler(
             source: new SnapshotSource(
                 snapshot: $set->list(...),
-                make: fn(Row $row): Entry => new Entry(new Cron('* * * * *')),
+                make: fn (Row $row): Entry => new Entry(new Cron('* * * * *')),
             ),
             store: $store,
             tickSeconds: 60,
@@ -511,7 +512,7 @@ final class ReconcileTest extends TestCase
             // predecessor's ended just before it.
             ['known@03:07:00', 'known@03:08:00', 'known@03:09:00'],
             array_map(
-                fn(Occurrence $occurrence): string => $occurrence->id . '@' . $occurrence->due->format('H:i:s'),
+                fn (Occurrence $occurrence): string => $occurrence->id . '@' . $occurrence->due->format('H:i:s'),
                 $successor->tick(),
             ),
             'a schedule the predecessor held resumes at the watermark, not at its last read',
@@ -528,10 +529,10 @@ final class ReconcileTest extends TestCase
         $clock = new TestClock(new \DateTimeImmutable('2026-08-18 03:05:00.000000'));
         $store = new MemoryStore();
         $set = new RowSet();
-        $build = fn(string $token): Scheduler => new Scheduler(
+        $build = fn (string $token): Scheduler => new Scheduler(
             source: new SnapshotSource(
                 snapshot: $set->list(...),
-                make: fn(Row $row): Entry => new Entry(new Cron('* * * * *')),
+                make: fn (Row $row): Entry => new Entry(new Cron('* * * * *')),
             ),
             store: $store,
             tickSeconds: 60,
@@ -556,7 +557,7 @@ final class ReconcileTest extends TestCase
         $this->assertSame(
             ['late@03:06:00', 'late@03:07:00', 'late@03:08:00', 'late@03:09:00'],
             array_map(
-                fn(Occurrence $occurrence): string => $occurrence->id . '@' . $occurrence->due->format('H:i:s'),
+                fn (Occurrence $occurrence): string => $occurrence->id . '@' . $occurrence->due->format('H:i:s'),
                 $successor->tick(),
             ),
             'the successor owes every run since the row appeared, starting inside the committed window',
@@ -572,10 +573,10 @@ final class ReconcileTest extends TestCase
         $clock = new TestClock(new \DateTimeImmutable('2026-08-18 03:05:10.000000'));
         $store = new MemoryStore();
         $set = new RowSet();
-        $build = fn(): Scheduler => new Scheduler(
+        $build = fn (): Scheduler => new Scheduler(
             source: new SnapshotSource(
                 snapshot: $set->list(...),
-                make: fn(Row $row): Entry => new Entry(new Cron('* * * * *')),
+                make: fn (Row $row): Entry => new Entry(new Cron('* * * * *')),
             ),
             store: $store,
             token: 'replacement',
@@ -600,7 +601,7 @@ final class ReconcileTest extends TestCase
         $this->assertSame(
             ['a@03:06:00', 'b@03:06:00'],
             array_map(
-                fn(Occurrence $occurrence): string => $occurrence->id . '@' . $occurrence->due->format('H:i:s'),
+                fn (Occurrence $occurrence): string => $occurrence->id . '@' . $occurrence->due->format('H:i:s'),
                 $replacement->tick(),
             ),
             'each schedule is covered from the watermark, not from its own last edit',
@@ -623,7 +624,7 @@ final class ReconcileTest extends TestCase
         $scheduler = new Scheduler(
             source: new SnapshotSource(
                 snapshot: $set->list(...),
-                make: fn(Row $row): Entry => new Entry(new Cron('* * * * *')),
+                make: fn (Row $row): Entry => new Entry(new Cron('* * * * *')),
             ),
             store: new MemoryStore(),
             clock: $clock,
@@ -706,7 +707,7 @@ final class ReconcileTest extends TestCase
 
         $this->assertSame(
             ['03:01:30'],
-            array_map(fn(Occurrence $occurrence): string => $occurrence->due->format('H:i:s'), $delivered),
+            array_map(fn (Occurrence $occurrence): string => $occurrence->due->format('H:i:s'), $delivered),
             'a one-shot replaced mid-tick is not deleted by the stale commit',
         );
     }

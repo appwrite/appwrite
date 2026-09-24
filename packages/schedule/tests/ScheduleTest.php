@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Utopia\Tests;
+namespace Utopia\Schedule\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Utopia\Schedule\Trigger\At;
@@ -147,7 +147,7 @@ final class ScheduleTest extends TestCase
 
         $this->assertSame(
             ['2026-08-17 09:30:00'],
-            array_map(fn(\DateTimeImmutable $occurrence): string => $occurrence->format('Y-m-d H:i:s'), $occurrences),
+            array_map(fn (\DateTimeImmutable $occurrence): string => $occurrence->format('Y-m-d H:i:s'), $occurrences),
         );
     }
 
@@ -162,7 +162,7 @@ final class ScheduleTest extends TestCase
         $this->assertEquals($sundayViaZero->occurrencesBetween($start, $end), $sundayViaSeven->occurrencesBetween($start, $end));
         $this->assertSame(
             ['2026-08-23', '2026-08-30'],
-            array_map(fn(\DateTimeImmutable $occurrence): string => $occurrence->format('Y-m-d'), $sundayViaSeven->occurrencesBetween($start, $end)),
+            array_map(fn (\DateTimeImmutable $occurrence): string => $occurrence->format('Y-m-d'), $sundayViaSeven->occurrencesBetween($start, $end)),
         );
     }
 
@@ -172,7 +172,7 @@ final class ScheduleTest extends TestCase
 
         $this->assertSame(
             ['2026-08-18 00:00:00'],
-            array_map(fn(\DateTimeImmutable $occurrence): string => $occurrence->format('Y-m-d H:i:s'), $daily->occurrencesBetween(
+            array_map(fn (\DateTimeImmutable $occurrence): string => $occurrence->format('Y-m-d H:i:s'), $daily->occurrencesBetween(
                 new \DateTimeImmutable('2026-08-17 00:00:01.000000'),
                 new \DateTimeImmutable('2026-08-19 00:00:00.000000'),
             )),
@@ -186,7 +186,7 @@ final class ScheduleTest extends TestCase
 
         $this->assertSame(
             ['2026-08-07', '2026-08-13', '2026-08-14'],
-            array_map(fn(\DateTimeImmutable $occurrence): string => $occurrence->format('Y-m-d'), $cron->occurrencesBetween(
+            array_map(fn (\DateTimeImmutable $occurrence): string => $occurrence->format('Y-m-d'), $cron->occurrencesBetween(
                 new \DateTimeImmutable('2026-08-01 00:00:01.000000'),
                 new \DateTimeImmutable('2026-08-15 00:00:00.000000'),
             )),
@@ -199,7 +199,7 @@ final class ScheduleTest extends TestCase
 
         $this->assertSame(
             ['2028-02-29 12:00:00'],
-            array_map(fn(\DateTimeImmutable $occurrence): string => $occurrence->format('Y-m-d H:i:s'), $cron->occurrencesBetween(
+            array_map(fn (\DateTimeImmutable $occurrence): string => $occurrence->format('Y-m-d H:i:s'), $cron->occurrencesBetween(
                 new \DateTimeImmutable('2026-03-01 00:00:00.000000'),
                 new \DateTimeImmutable('2029-01-01 00:00:00.000000'),
             )),
@@ -236,7 +236,7 @@ final class ScheduleTest extends TestCase
 
         $this->assertSame(
             $expected,
-            array_map(fn(\DateTimeImmutable $occurrence): string => $occurrence->format('Y-m-d'), $cron->occurrencesBetween(
+            array_map(fn (\DateTimeImmutable $occurrence): string => $occurrence->format('Y-m-d'), $cron->occurrencesBetween(
                 new \DateTimeImmutable('2026-01-01 00:00:00.000000'),
                 new \DateTimeImmutable('2026-04-01 00:00:00.000000'),
             )),
@@ -334,7 +334,7 @@ final class ScheduleTest extends TestCase
 
         $this->assertSame(
             ['2026-03-09 02:30:00 EDT'],
-            array_map(fn(\DateTimeImmutable $occurrence): string => $occurrence->format('Y-m-d H:i:s T'), $occurrences),
+            array_map(fn (\DateTimeImmutable $occurrence): string => $occurrence->format('Y-m-d H:i:s T'), $occurrences),
         );
     }
 
@@ -352,7 +352,7 @@ final class ScheduleTest extends TestCase
 
         $this->assertSame(
             ['2026-11-01 01:30:00 EDT'],
-            array_map(fn(\DateTimeImmutable $occurrence): string => $occurrence->format('Y-m-d H:i:s T'), $occurrences),
+            array_map(fn (\DateTimeImmutable $occurrence): string => $occurrence->format('Y-m-d H:i:s T'), $occurrences),
         );
     }
 
@@ -446,6 +446,6 @@ final class ScheduleTest extends TestCase
      */
     private function format(array $occurrences): array
     {
-        return array_map(fn(\DateTimeImmutable $occurrence): string => $occurrence->format('H:i:s'), $occurrences);
+        return array_map(fn (\DateTimeImmutable $occurrence): string => $occurrence->format('H:i:s'), $occurrences);
     }
 }

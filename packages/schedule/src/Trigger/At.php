@@ -16,7 +16,9 @@ use Utopia\Schedule\Trigger;
  */
 final readonly class At implements Trigger
 {
-    public function __construct(private \DateTimeImmutable $time) {}
+    public function __construct(private \DateTimeImmutable $time)
+    {
+    }
 
     /**
      * Delayed semantics: one occurrence $seconds after $from

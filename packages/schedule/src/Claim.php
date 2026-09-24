@@ -40,5 +40,6 @@ final readonly class Claim
         public float $expiresAt,
         public ?float $coveredUntil,
         public ?float $syncedUntil = null,
-    ) {}
+    ) {
+    }
 }

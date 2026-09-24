@@ -15,5 +15,6 @@ final readonly class Entry
     public function __construct(
         public Trigger $trigger,
         public mixed $payload = null,
-    ) {}
+    ) {
+    }
 }

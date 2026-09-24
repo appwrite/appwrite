@@ -9,10 +9,11 @@
     <testsuites>
         <testsuite name="unit">
             <directory>tests</directory>
-            <exclude>tests/RedisStoreTest.php</exclude>
+            <exclude>tests/E2E</exclude>
+            <exclude>tests/bench</exclude>
         </testsuite>
         <testsuite name="e2e">
-            <file>tests/RedisStoreTest.php</file>
+            <directory>tests/E2E</directory>
         </testsuite>
     </testsuites>
     <source>

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Utopia\Tests;
+namespace Utopia\Schedule\Tests;
 
 use Utopia\Schedule\Changes;
 use Utopia\Schedule\Source\Entry;

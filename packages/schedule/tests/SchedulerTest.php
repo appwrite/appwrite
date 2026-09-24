@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Utopia\Tests;
+namespace Utopia\Schedule\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Utopia\Schedule\Claim;
@@ -64,7 +64,7 @@ final class SchedulerTest extends TestCase
 
         $this->assertSame(
             ['03:01:00', '03:02:00', '03:03:00'],
-            array_map(fn(Occurrence $occurrence): string => $occurrence->due->format('H:i:s'), $replacement->tick()),
+            array_map(fn (Occurrence $occurrence): string => $occurrence->due->format('H:i:s'), $replacement->tick()),
         );
     }
 
@@ -79,7 +79,7 @@ final class SchedulerTest extends TestCase
 
         $this->assertSame(
             ['03:59:00', '04:00:00'],
-            array_map(fn(Occurrence $occurrence): string => $occurrence->due->format('H:i:s'), $scheduler->tick()),
+            array_map(fn (Occurrence $occurrence): string => $occurrence->due->format('H:i:s'), $scheduler->tick()),
         );
     }
 
@@ -112,7 +112,7 @@ final class SchedulerTest extends TestCase
         $delivered = $scheduler->tick();
         $scheduler->commit();
 
-        $this->assertSame(['delayed'], array_map(fn(Occurrence $occurrence): string => $occurrence->id, $delivered));
+        $this->assertSame(['delayed'], array_map(fn (Occurrence $occurrence): string => $occurrence->id, $delivered));
 
         $clock->advance(600.0);
         $this->assertSame([], $scheduler->tick());
@@ -138,7 +138,7 @@ final class SchedulerTest extends TestCase
                 ['a-half-minute', '03:01:30'],
             ],
             array_map(
-                fn(Occurrence $occurrence): array => [$occurrence->id, $occurrence->due->format('H:i:s')],
+                fn (Occurrence $occurrence): array => [$occurrence->id, $occurrence->due->format('H:i:s')],
                 $scheduler->tick(),
             ),
         );
@@ -166,7 +166,7 @@ final class SchedulerTest extends TestCase
         $recovered = $scheduler->tick();
         $this->assertSame(
             ['03:04:00'],
-            array_map(fn(Occurrence $occurrence): string => $occurrence->due->format('H:i:s'), $recovered),
+            array_map(fn (Occurrence $occurrence): string => $occurrence->due->format('H:i:s'), $recovered),
         );
     }
 
@@ -258,7 +258,7 @@ final class SchedulerTest extends TestCase
         $standby = $this->scheduler($clock, ['fn' => new Cron('* * * * *')], store: $store, token: 'standby');
         $this->assertSame(
             ['03:01:00', '03:02:00'], // the handover re-covers the in-flight window: duplicates, never losses
-            array_map(fn(Occurrence $occurrence): string => $occurrence->due->format('H:i:s'), $standby->tick()),
+            array_map(fn (Occurrence $occurrence): string => $occurrence->due->format('H:i:s'), $standby->tick()),
         );
         $standby->commit();
         $watermark = $store->load()?->coveredUntil;
@@ -336,7 +336,7 @@ final class SchedulerTest extends TestCase
         $batches = [];
         $scheduler->run(function (array $occurrences) use (&$batches, $scheduler): void {
             $batches[] = array_map(
-                fn(Occurrence $occurrence): string => $occurrence->id . '@' . $occurrence->due->format('H:i:s'),
+                fn (Occurrence $occurrence): string => $occurrence->id . '@' . $occurrence->due->format('H:i:s'),
                 $occurrences,
             );
             if (\count($batches) === 3) {
@@ -387,10 +387,10 @@ final class SchedulerTest extends TestCase
         $offsets = ['a' => 0, 'b' => 20, 'c' => 40];
         $scheduler = new Scheduler(
             source: new SnapshotSource(
-                snapshot: fn(): array => [new Row('a', '1'), new Row('b', '1'), new Row('c', '1')],
+                snapshot: fn (): array => [new Row('a', '1'), new Row('b', '1'), new Row('c', '1')],
                 // What a caller with thousands of schedules on `* * * * *`
                 // writes: a stable position per id, so each keeps its slot.
-                make: fn(Row $row): Entry => new Entry(new Shifted(new Cron('* * * * *'), $offsets[$row->id])),
+                make: fn (Row $row): Entry => new Entry(new Shifted(new Cron('* * * * *'), $offsets[$row->id])),
             ),
             tickSeconds: 60,
             leadSeconds: 60,
@@ -423,8 +423,8 @@ final class SchedulerTest extends TestCase
         $store = new MemoryStore();
         $scheduler = new Scheduler(
             source: new SnapshotSource(
-                snapshot: fn(): array => [new Row('held', '1')],
-                make: fn(Row $row): Entry => new Entry(new Shifted(new Cron('* * * * *'), 30)),
+                snapshot: fn (): array => [new Row('held', '1')],
+                make: fn (Row $row): Entry => new Entry(new Shifted(new Cron('* * * * *'), 30)),
             ),
             store: $store,
             tickSeconds: 60,
@@ -471,10 +471,10 @@ final class SchedulerTest extends TestCase
         $cancelledAt = new \DateTimeImmutable('2026-08-18 03:00:10.000000');
         $scheduler = new Scheduler(
             source: new SnapshotSource(
-                snapshot: fn(): array => $clock->now() >= $cancelledAt
+                snapshot: fn (): array => $clock->now() >= $cancelledAt
                     ? [new Row('kept', '1')]
                     : [new Row('doomed', '1'), new Row('kept', '1')],
-                make: fn(Row $row): Entry => new Entry(new Shifted(new Cron('* * * * *'), 30), $row->id),
+                make: fn (Row $row): Entry => new Entry(new Shifted(new Cron('* * * * *'), 30), $row->id),
             ),
             tickSeconds: 60,
             syncSeconds: 5,
@@ -525,7 +525,7 @@ final class SchedulerTest extends TestCase
         $scheduler = new Scheduler(
             source: new SnapshotSource(
                 snapshot: $snapshot,
-                make: fn(Row $row): Entry => new Entry(new Shifted(new Cron('* * * * *'), 30)),
+                make: fn (Row $row): Entry => new Entry(new Shifted(new Cron('* * * * *'), 30)),
             ),
             store: $store,
             tickSeconds: 60,
@@ -590,8 +590,8 @@ final class SchedulerTest extends TestCase
 
         // An uncommitted tick is re-delivered; the key of each run must not
         // move, or a consumer keyed on it would treat the retry as new work.
-        $first = array_map(fn(Occurrence $occurrence): string => $occurrence->key(), $scheduler->tick());
-        $again = array_map(fn(Occurrence $occurrence): string => $occurrence->key(), $scheduler->tick());
+        $first = array_map(fn (Occurrence $occurrence): string => $occurrence->key(), $scheduler->tick());
+        $again = array_map(fn (Occurrence $occurrence): string => $occurrence->key(), $scheduler->tick());
 
         $this->assertCount(2, $first);
         $this->assertSame($first, $again, 'a re-delivered run keeps its key');
@@ -715,8 +715,8 @@ final class SchedulerTest extends TestCase
 
         $scheduler = new Scheduler(
             source: new SnapshotSource(
-                snapshot: fn(): array => $rows,
-                make: fn(Row $row): Entry => new Entry($triggers[$row->id]),
+                snapshot: fn (): array => $rows,
+                make: fn (Row $row): Entry => new Entry($triggers[$row->id]),
             ),
             store: $store ?? new MemoryStore(),
             tickSeconds: $tickSeconds,
@@ -734,6 +734,6 @@ final class SchedulerTest extends TestCase
 
     private function emptySource(): Source
     {
-        return new SnapshotSource(snapshot: fn(): array => [], make: fn(Row $row): Entry => new Entry(new Interval(60)));
+        return new SnapshotSource(snapshot: fn (): array => [], make: fn (Row $row): Entry => new Entry(new Interval(60)));
     }
 }

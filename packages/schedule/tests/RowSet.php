@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Utopia\Tests;
+namespace Utopia\Schedule\Tests;
 
 use Utopia\Schedule\Source\Row;
 
@@ -16,7 +16,9 @@ final class RowSet
     /**
      * @param list<Row> $rows
      */
-    public function __construct(public array $rows = []) {}
+    public function __construct(public array $rows = [])
+    {
+    }
 
     /**
      * @return list<Row>

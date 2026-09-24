@@ -29,7 +29,8 @@ final readonly class Shifted implements Trigger
     public function __construct(
         private Trigger $trigger,
         private int $seconds,
-    ) {}
+    ) {
+    }
 
     #[\Override]
     public function occurrencesBetween(\DateTimeImmutable $start, \DateTimeImmutable $end): array
@@ -39,7 +40,7 @@ final readonly class Shifted implements Trigger
         }
 
         return array_map(
-            fn(\DateTimeImmutable $due): \DateTimeImmutable => $due->modify("{$this->seconds} seconds"),
+            fn (\DateTimeImmutable $due): \DateTimeImmutable => $due->modify("{$this->seconds} seconds"),
             $this->trigger->occurrencesBetween(
                 $start->modify(\sprintf('%d seconds', -$this->seconds)),
                 $end->modify(\sprintf('%d seconds', -$this->seconds)),

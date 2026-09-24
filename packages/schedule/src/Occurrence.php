@@ -15,7 +15,8 @@ final readonly class Occurrence
         public mixed $payload = null,
         /** The definition this run was selected against; see {@see Scheduler::isCurrent()}. */
         public string $version = '',
-    ) {}
+    ) {
+    }
 
     /**
      * Stable identity of this run: the schedule and the moment it was due.

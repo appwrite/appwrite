@@ -34,5 +34,6 @@ final readonly class Row
         public mixed $data = null,
         public bool $active = true,
         public ?\DateTimeImmutable $activeFrom = null,
-    ) {}
+    ) {
+    }
 }

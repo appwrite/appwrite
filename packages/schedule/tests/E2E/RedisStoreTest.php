@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Utopia\Tests;
+namespace Utopia\Schedule\Tests\E2E;
 
 use PHPUnit\Framework\TestCase;
 use Utopia\Schedule\Claim;
@@ -12,6 +12,7 @@ use Utopia\Schedule\Scheduler;
 use Utopia\Schedule\Source\Entry;
 use Utopia\Schedule\Source\Row;
 use Utopia\Schedule\Store\Redis as RedisStore;
+use Utopia\Schedule\Tests\SnapshotSource;
 use Utopia\Schedule\Trigger\Cron;
 
 final class RedisStoreTest extends TestCase
@@ -182,10 +183,10 @@ final class RedisStoreTest extends TestCase
         $clock = new TestClock(new \DateTimeImmutable('2026-08-18 03:00:30.000000'));
         $store = $this->store();
 
-        $build = fn(string $token): Scheduler => new Scheduler(
+        $build = fn (string $token): Scheduler => new Scheduler(
             source: new SnapshotSource(
-                snapshot: fn(): array => [new Row('fn', 'v1')],
-                make: fn(Row $row): Entry => new Entry(new Cron('* * * * *')),
+                snapshot: fn (): array => [new Row('fn', 'v1')],
+                make: fn (Row $row): Entry => new Entry(new Cron('* * * * *')),
             ),
             store: $store,
             tickSeconds: 60,
@@ -209,14 +210,14 @@ final class RedisStoreTest extends TestCase
         $this->assertSame([], $followerSaw, 'the follower gets nothing while the claim is live');
 
         $clock->advance(60.0);
-        $delivered = array_map(fn(Occurrence $occurrence): string => $occurrence->due->format('H:i:s'), $a->tick());
+        $delivered = array_map(fn (Occurrence $occurrence): string => $occurrence->due->format('H:i:s'), $a->tick());
         $a->commit();
         $this->assertSame(['03:01:00'], $delivered);
 
         // The leader stalls past its lease; the follower takes over through
         // Redis and resumes from the watermark its predecessor committed.
         $clock->advance(300.0);
-        $recovered = array_map(fn(Occurrence $occurrence): string => $occurrence->due->format('H:i:s'), $b->tick());
+        $recovered = array_map(fn (Occurrence $occurrence): string => $occurrence->due->format('H:i:s'), $b->tick());
         $b->commit();
 
         $takenOver = $store->load();

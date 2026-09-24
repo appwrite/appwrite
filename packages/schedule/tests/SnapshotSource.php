@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Utopia\Tests;
+namespace Utopia\Schedule\Tests;
 
 use Utopia\Schedule\Source;
 use Utopia\Schedule\Source\Entry;
@@ -25,7 +25,8 @@ class SnapshotSource implements Source
     public function __construct(
         private readonly \Closure $snapshot,
         private readonly \Closure $make,
-    ) {}
+    ) {
+    }
 
     #[\Override]
     public function snapshot(): iterable

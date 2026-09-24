@@ -42,7 +42,8 @@ $source = new readonly class ($rows, $expressions, $intervals) implements Source
         private array $rows,
         private array $expressions,
         private array $intervals,
-    ) {}
+    ) {
+    }
 
     public function snapshot(): iterable
     {
@@ -84,8 +85,8 @@ $measure = function (string $label, string $scale, callable $work, int $times = 
     $results[] = [$label, $scale, $durations[(int) floor(count($durations) * 0.50)], $durations[count($durations) - 1]];
 };
 
-$measure('reconcile: full snapshot, cold (every row made)', SCHEDULES . ' rows', fn() => $scheduler->reconcile());
-$measure('reconcile: full snapshot, warm (version diff)', SCHEDULES . ' rows', fn() => $scheduler->reconcile(full: true), 5);
+$measure('reconcile: full snapshot, cold (every row made)', SCHEDULES . ' rows', fn () => $scheduler->reconcile());
+$measure('reconcile: full snapshot, warm (version diff)', SCHEDULES . ' rows', fn () => $scheduler->reconcile(full: true), 5);
 
 $occurrences = 0;
 $measure('tick + commit (one minute of coverage)', SCHEDULES . ' schedules', function () use ($scheduler, $clock, &$occurrences): void {

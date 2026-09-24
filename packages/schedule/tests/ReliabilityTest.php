@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Utopia\Tests;
+namespace Utopia\Schedule\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Utopia\Schedule\Clock\Test as TestClock;
@@ -26,14 +26,14 @@ final class ReliabilityTest extends TestCase
         // 10,000 schedules whose slots all reduce to "timestamp ≡ r (mod m)".
         $classes = [
             // [count, modulus, remainder, schedule factory]
-            [2000, 60, 0, fn(): Interval => new Interval(60)],
-            [2000, 120, 0, fn(): Interval => new Interval(120)],
-            [2000, 300, 0, fn(): Interval => new Interval(300)],
-            [2000, 900, 0, fn(): Interval => new Interval(900)],
-            [500, 300, 0, fn(): Cron => new Cron('*/5 * * * *')],
-            [500, 900, 0, fn(): Cron => new Cron('*/15 * * * *')],
-            [500, 3600, 0, fn(): Cron => new Cron('0 * * * *')],
-            [500, 3600, 1800, fn(): Cron => new Cron('30 * * * *')],
+            [2000, 60, 0, fn (): Interval => new Interval(60)],
+            [2000, 120, 0, fn (): Interval => new Interval(120)],
+            [2000, 300, 0, fn (): Interval => new Interval(300)],
+            [2000, 900, 0, fn (): Interval => new Interval(900)],
+            [500, 300, 0, fn (): Cron => new Cron('*/5 * * * *')],
+            [500, 900, 0, fn (): Cron => new Cron('*/15 * * * *')],
+            [500, 3600, 0, fn (): Cron => new Cron('0 * * * *')],
+            [500, 3600, 1800, fn (): Cron => new Cron('30 * * * *')],
         ];
 
         $rows = [];
@@ -52,8 +52,8 @@ final class ReliabilityTest extends TestCase
         $clock = new TestClock(new \DateTimeImmutable('2026-08-18 13:20:30.250000'));
         $scheduler = new Scheduler(
             source: new SnapshotSource(
-                snapshot: fn(): array => $rows,
-                make: fn(Row $row): Entry => new Entry($triggers[$row->id]),
+                snapshot: fn (): array => $rows,
+                make: fn (Row $row): Entry => new Entry($triggers[$row->id]),
             ),
             store: new MemoryStore(),
             tickSeconds: 60,
@@ -119,7 +119,7 @@ final class ReliabilityTest extends TestCase
         }
 
         $set = new RowSet(array_values($rows));
-        $made = new class {
+        $made = new class () {
             public int $count = 0;
         };
 
@@ -185,10 +185,10 @@ final class ReliabilityTest extends TestCase
         for ($i = 0; $i < 50; ++$i) {
             $rows[] = new Row("s{$i}", 'v1');
         }
-        $build = fn(string $token): Scheduler => new Scheduler(
+        $build = fn (string $token): Scheduler => new Scheduler(
             source: new SnapshotSource(
-                snapshot: fn(): array => $rows,
-                make: fn(Row $row): Entry => new Entry(new Interval(60)),
+                snapshot: fn (): array => $rows,
+                make: fn (Row $row): Entry => new Entry(new Interval(60)),
             ),
             store: $store,
             tickSeconds: 60,
