@@ -78,25 +78,25 @@ class Jobs extends Action
         ErrorCode::CloneFailed->value => 'Failed to clone the repository. Check that the repository and branch exist and are accessible.',
     ];
 
-    /**
-     * Download statuses for a repository source (VCS or template), keyed by
-     * HTTP status. An uploaded source is fetched from Appwrite itself, so the
-     * same status there is ours to fix.
-     */
+    // Keyed by HTTP status; only for repository sources, since an uploaded one
+    // is downloaded from Appwrite itself.
     private const array USER_SOURCE_ERRORS = [
         401 => 'Access to the repository was denied. Check that it is still accessible to your Git installation.',
         403 => 'Access to the repository was denied. Check that it is still accessible to your Git installation.',
         404 => 'The repository, branch or commit could not be found. Check that it still exists.',
     ];
 
-    /**
-     * Exits where the build command ran and failed. Artifacts that fail after
-     * one (no output to pack or upload) follow from the user's build.
-     */
-    private const array BUILD_FAILURES = [
-        ErrorCode::JobExitNonzero->value,
-        ErrorCode::JobOom->value,
-    ];
+    private static function userMessage(Document $deployment, JobArtifact $artifact): ?string
+    {
+        $code = $artifact->error?->code;
+        if ($code === ErrorCode::DownloadHttpError
+            && $deployment->getAttribute('type') === 'vcs'
+            && \preg_match('/status (\d{3})/', $artifact->error->message, $matches) === 1) {
+            return self::USER_SOURCE_ERRORS[(int) $matches[1]] ?? null;
+        }
+
+        return self::USER_ARTIFACT_ERRORS[$code->value ?? ''] ?? null;
+    }
 
     public static function getName(): string
     {
@@ -177,13 +177,11 @@ class Jobs extends Action
 
             $callback = CallbackEvent::tryFrom($event->event);
             $artifact = $callback === CallbackEvent::Artifact ? JobArtifact::fromArray($event->data) : null;
-            $exit = $callback === CallbackEvent::Exit ? JobExit::fromArray($event->data) : null;
-            $failure = $this->report($deployment, $artifact, $exit, $cache);
 
             $deployment = match ($callback) {
                 CallbackEvent::Log => $this->onLog($dbForProject, $dbForPlatform, $project, $deployment, JobLog::fromArray($event->data), $vcsFactory, $platform),
                 CallbackEvent::Artifact => $this->onArtifact($dbForProject, $dbForPlatform, $project, $deployment, $artifact, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
-                CallbackEvent::Exit => $this->onExit($dbForProject, $dbForPlatform, $project, $deployment, $exit, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
+                CallbackEvent::Exit => $this->onExit($dbForProject, $dbForPlatform, $project, $deployment, JobExit::fromArray($event->data), $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
                 CallbackEvent::Complete => $this->onComplete($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
                 default => $this->onCallback($event->event, $dbForProject, $dbForPlatform, $project, $deployment, $event->data, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
             };
@@ -217,89 +215,25 @@ class Jobs extends Action
             if ($statusBefore !== $deployment->getAttribute('status') && \in_array($deployment->getAttribute('status'), ['ready', 'failed'], true)) {
                 $this->dispatchUpdate($queueForEvents, $queueForWebhooks, $publisherForFunctions, $project, $deployment);
             }
+
+            // A deployment already failed (by its build's exit, or an earlier
+            // artifact) leaves nothing new to report: artifacts after a failed
+            // build fail for want of output.
+            if ($artifact?->status === 'failed'
+                && $statusBefore !== 'failed'
+                && !\in_array($artifact->artifactId, ['cache', 'manifest'], true)
+                && self::userMessage($deployment, $artifact) === null) {
+                Span::add('deployment.id', $deploymentId);
+                Span::add('artifact.id', $artifact->artifactId);
+                Span::add('artifact.type', $artifact->artifactType);
+                Span::add('artifact.error.code', $artifact->error?->code->value);
+                $failure = new PermanentFailure("Build artifact '{$artifact->artifactId}' failed: " . ($artifact->error->message ?? 'no error reported'), 500);
+            }
         }, self::LOCK_TIMEOUT);
 
         if ($failure !== null) {
-            Span::add('deployment.id', $deploymentId);
-            Span::add('artifact.id', $failure['id']);
-            Span::add('artifact.type', $failure['type']);
-            Span::add('artifact.error.code', $failure['code']);
-
-            throw new PermanentFailure("Build artifact '{$failure['id']}' failed: {$failure['message']}", 500);
+            throw $failure;
         }
-    }
-
-    /**
-     * Decide whether an artifact failure is ours to report. One the user can fix
-     * never is. Any other is held until the exit arrives, since callbacks come
-     * in either order: an artifact that fails after the build command itself
-     * failed (no output to pack or upload) follows from the user's build, while
-     * one after a clean exit, or before a job that never started, is ours.
-     *
-     * @return array{id: string, type: string, code: ?string, message: string}|null
-     */
-    private function report(Document $deployment, ?JobArtifact $artifact, ?JobExit $exit, Cache $cache): ?array
-    {
-        $exitKey = 'jobs-exit-error-' . $deployment->getId();
-        $heldKey = 'jobs-artifact-failure-' . $deployment->getId();
-
-        if ($exit !== null) {
-            // Cache adapters drop empty values, so a clean exit needs a marker.
-            $code = $exit->error?->code->value ?? 'success';
-            $cache->save($exitKey, $code);
-            $held = $cache->load($heldKey, self::DEDUPE_TTL);
-
-            return $held === false || \in_array($code, self::BUILD_FAILURES, true) ? null : $held;
-        }
-
-        if ($artifact?->status !== 'failed'
-            || \in_array($artifact->artifactId, ['cache', 'manifest'], true)
-            || self::userMessage($deployment, $artifact) !== null) {
-            return null;
-        }
-
-        $failure = [
-            'id' => $artifact->artifactId,
-            'type' => $artifact->artifactType,
-            'code' => $artifact->error?->code->value,
-            'message' => $artifact->error->message ?? 'no error reported',
-        ];
-
-        $code = $cache->load($exitKey, self::DEDUPE_TTL);
-        if ($code === false) {
-            if ($cache->load($heldKey, self::DEDUPE_TTL) === false) {
-                $cache->save($heldKey, $failure);
-            }
-
-            return null;
-        }
-
-        return \in_array($code, self::BUILD_FAILURES, true) ? null : $failure;
-    }
-
-    /**
-     * The reason to show for an artifact failure the user can fix, or null when
-     * it is ours and the deployment gets the generic internal error instead.
-     */
-    private static function userMessage(Document $deployment, JobArtifact $artifact): ?string
-    {
-        $code = $artifact->error?->code;
-        if ($code === null) {
-            return null;
-        }
-
-        if (isset(self::USER_ARTIFACT_ERRORS[$code->value])) {
-            return self::USER_ARTIFACT_ERRORS[$code->value];
-        }
-
-        if ($code === ErrorCode::DownloadHttpError
-            && $artifact->artifactId === 'source'
-            && $deployment->getAttribute('type') === 'vcs'
-            && \preg_match('/status (\d{3})/', $artifact->error->message, $matches) === 1) {
-            return self::USER_SOURCE_ERRORS[(int) $matches[1]] ?? null;
-        }
-
-        return null;
     }
 
     protected function onLog(Database $dbForProject, Database $dbForPlatform, Document $project, Document $deployment, JobLog $log, VcsFactory $vcsFactory, array $platform): Document
