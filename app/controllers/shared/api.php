@@ -471,11 +471,11 @@ Http::init()
         if (! empty($method)) {
             $namespace = \strtolower($method->getNamespace());
 
-            // Impersonation shows the target's account without letting the impersonator change it,
-            // so account writes are refused. The `impersonation` label decides per route:
-            // 'allow' keeps a write open because it acts on the impersonator's own session --
-            // their JWT, their logout, the MFA challenge that finishes their own login --
-            // and 'deny' refuses a route on any method, which is how a GET of the target's
+            // Impersonation shows the target's account without letting the impersonator change
+            // it, so account writes are refused. The `impersonation` label decides per route:
+            // 'allow' for a write aimed at the impersonator's own session rather than the
+            // target's account -- their JWT, their MFA challenge, deleting their own session --
+            // and 'deny' to refuse a route on any method, which is how a GET of the target's
             // recovery codes stays closed.
             if (! $impersonatorUser->isEmpty()) {
                 $impersonation = $route->getLabel('impersonation', null);

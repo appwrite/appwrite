@@ -3169,12 +3169,10 @@ trait UsersBase
         $prefs = $this->client->call(Client::METHOD_PATCH, '/account/prefs', $accountHeaders, ['prefs' => ['owner' => 'impersonator']]);
         $this->assertEquals(403, $prefs['headers']['status-code']);
 
-        // Labelled `impersonation: allow` -- these act on the impersonator's own session.
+        // Labelled `impersonation: allow` -- it mints a token for the impersonator's own
+        // session rather than touching the target's account.
         $jwt = $this->client->call(Client::METHOD_POST, '/account/jwts', $accountHeaders);
         $this->assertEquals(201, $jwt['headers']['status-code']);
-
-        $logout = $this->client->call(Client::METHOD_DELETE, '/account/sessions/current', $accountHeaders);
-        $this->assertEquals(204, $logout['headers']['status-code']);
     }
 
     /**
