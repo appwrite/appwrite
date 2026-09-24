@@ -11,16 +11,17 @@
   client --query 'SYSTEM FLUSH LOGS'
 
   # Old tables never expire, so give each one the TTL of the log that replaced it.
-  # Patterns rather than fixed substrings: the <N> suffix differs per table, and the
-  # TTL expression sits between two markers inside engine_full.
   client --format TSVRaw <<'SQL' | client --multiquery
-SELECT concat('ALTER TABLE system.', retired.name, ' MODIFY TTL ', extract(active.engine_full, ' TTL (.+) SETTINGS '), ';')
-FROM system.tables AS retired
-INNER JOIN system.tables AS active ON active.name = replaceRegexpOne(retired.name, '_[0-9]+$', '')
-WHERE retired.database = 'system'
-  AND active.database = 'system'
-  AND match(retired.name, '_log_[0-9]+$')
-  AND position(retired.engine_full, ' TTL ') = 0
+SELECT concat('ALTER TABLE system.', retired.name, ' MODIFY TTL ', splitByString(' SETTINGS ', splitByString(' TTL ', active.engine_full)[2])[1], ';')
+FROM (
+  SELECT name, splitByChar('_', name)[-1] AS suffix, arrayStringConcat(arrayPopBack(splitByChar('_', name)), '_') AS log
+  FROM system.tables
+  WHERE database = 'system' AND position(engine_full, ' TTL ') = 0
+) AS retired
+INNER JOIN system.tables AS active ON active.name = retired.log
+WHERE active.database = 'system'
+  AND endsWith(retired.log, '_log')
+  AND toUInt64OrNull(retired.suffix) IS NOT NULL
   AND position(active.engine_full, ' TTL ') > 0
 SQL
 )
