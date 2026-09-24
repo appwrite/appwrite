@@ -3,10 +3,19 @@
  * Keys are the exact English source strings (English is the source of truth).
  */
 export const heAuthStorageDictionary: Record<string, string> = {
+  'Enter the Web application client ID from Google Cloud. Your app sends the same ID to Google as the server client ID. Android client IDs do not go here.': 'הזינו את מזהה הלקוח מסוג Web application מ-Google Cloud. האפליקציה שלכם שולחת את אותו מזהה ל-Google כ-server client ID. מזהי לקוח של Android לא מוזנים כאן.',
+  "Enter your app's bundle ID, such as com.example.app.": 'הזינו את ה-bundle ID של האפליקציה, לדוגמה com.example.app.',
+  'Learn more about native sign-in': 'מידע נוסף על התחברות נייטיב',
+  'Web client IDs': 'מזהי לקוח מסוג Web',
+  'Add a web client ID and press Enter': 'הוסיפו מזהה לקוח מסוג Web ולחצו Enter',
+  'Bundle IDs': 'Bundle IDs',
+  'Add a bundle ID and press Enter': 'הוסיפו bundle ID ולחצו Enter',
   'Native sign-in': 'התחברות נייטיב',
   'Sessions can be created from ID tokens obtained on device': 'ניתן ליצור סשנים מטוקני ID שהתקבלו במכשיר',
   'Native sign-in is turned off for this project': 'התחברות נייטיב כבויה בפרויקט זה',
-  'Verifies ID tokens from the native SDK, such as Sign in with Apple or Google Credential Manager, without a client secret.': 'מאמת טוקני ID מה-SDK הנייטיב, כגון Sign in with Apple או Google Credential Manager, ללא client secret.',
+  'Verifies ID tokens from Credential Manager on Android, without a client secret.': 'מאמת טוקני ID מ-Credential Manager ב-Android, ללא client secret.',
+  'Verifies ID tokens from Sign in with Apple on iOS, without a client secret.': 'מאמת טוקני ID מ-Sign in with Apple ב-iOS, ללא client secret.',
+  'Verifies ID tokens from the native SDK, without a client secret.': 'מאמת טוקני ID מה-SDK הנייטיב, ללא client secret.',
   'Add a client ID and press Enter': 'הוסיפו client ID ולחצו Enter',
   'Add at least one native client ID, or set the client ID, so tokens can be matched to your app.': 'הוסיפו לפחות client ID נייטיב אחד, או הגדירו את ה-client ID, כדי שניתן יהיה להתאים טוקנים לאפליקציה שלכם.',
   'native': 'נייטיב',
