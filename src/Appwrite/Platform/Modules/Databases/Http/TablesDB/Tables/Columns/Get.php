@@ -23,8 +23,6 @@ class Get extends AttributesGet
     {
         return [
             UtopiaResponse::MODEL_COLUMN_BOOLEAN,
-            // BigInt must come before Integer: response model dispatch is "first match wins",
-            // and Integer matches all int types (including bigint), while BigInt is more specific (size=8).
             UtopiaResponse::MODEL_COLUMN_BIGINT,
             UtopiaResponse::MODEL_COLUMN_INTEGER,
             UtopiaResponse::MODEL_COLUMN_FLOAT,
@@ -41,7 +39,7 @@ class Get extends AttributesGet
             UtopiaResponse::MODEL_COLUMN_TEXT,
             UtopiaResponse::MODEL_COLUMN_MEDIUMTEXT,
             UtopiaResponse::MODEL_COLUMN_LONGTEXT,
-            UtopiaResponse::MODEL_COLUMN_STRING, // needs to be last, since its condition would dominate any other string attribute
+            UtopiaResponse::MODEL_COLUMN_STRING,
         ];
     }
 
