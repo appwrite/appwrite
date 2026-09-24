@@ -1,8 +1,0 @@
-{
-    "name": "PHP preparations",
-    "onCreateCommand": "composer install --ignore-platform-reqs",
-    "extensions": [
-        "ms-azuretools.vscode-docker",
-        "zobo.php-intellisense"
-    ]
-}

@@ -15,7 +15,7 @@ class Group
 
     private Histogram $runHistogram;
 
-    public function __construct(private ?string $name = null)
+    public function __construct(private readonly ?string $name = null)
     {
         $this->setTelemetry(new NoTelemetry());
     }

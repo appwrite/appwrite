@@ -17,6 +17,8 @@ class Last extends Algorithm
      */
     public function run(array $options): ?Option
     {
-        return $options[\array_key_last($options)] ?? null;
+        $key = \array_key_last($options);
+
+        return $key === null ? null : $options[$key];
     }
 }

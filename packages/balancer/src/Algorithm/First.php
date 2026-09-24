@@ -17,6 +17,8 @@ class First extends Algorithm
      */
     public function run(array $options): ?Option
     {
-        return $options[\array_key_first($options)] ?? null;
+        $key = \array_key_first($options);
+
+        return $key === null ? null : $options[$key];
     }
 }

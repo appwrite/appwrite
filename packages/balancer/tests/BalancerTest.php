@@ -1,6 +1,6 @@
 <?php
 
-namespace Utopia\Tests;
+namespace Utopia\Balancer\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Utopia\Balancer\Algorithm\First;
@@ -27,7 +27,7 @@ class BalancerTest extends TestCase
         $option = $balancer->run() ?? new Option([]);
         $this->assertEquals('worker-1', $option->getState('hostname'));
 
-        $balancer->addFilter(fn ($option) => $option->getState('isOnline') === true);
+        $balancer->addFilter(fn (Option $option): bool => $option->getState('isOnline') === true);
 
         $option = $balancer->run() ?? new Option([]);
         $this->assertEquals('worker-3', $option->getState('hostname'));
@@ -35,7 +35,7 @@ class BalancerTest extends TestCase
         $option = $balancer->run() ?? new Option([]);
         $this->assertEquals('worker-1', $option->getState('hostname'));
 
-        $balancer->addFilter(fn ($option) => $option->getState('cpu') < 50);
+        $balancer->addFilter(fn (Option $option): bool => $option->getState('cpu') < 50);
 
         $option = $balancer->run() ?? new Option([]);
         $this->assertEquals('worker-3', $option->getState('hostname'));
@@ -111,7 +111,6 @@ class BalancerTest extends TestCase
     {
         $option = new Option([]);
 
-        $this->assertIsArray($option->getStates());
         $this->assertCount(0, $option->getStates());
 
         $this->assertFalse($option->getState("isOnline", false));
@@ -159,12 +158,12 @@ class BalancerTest extends TestCase
 
         // Allow only online and low-cpu options
         $balancer1 = new Balancer(new First());
-        $balancer1->addFilter(fn ($option) => $option->getState('cpu') < 80);
-        $balancer1->addFilter(fn ($option) => $option->getState('online') === true);
+        $balancer1->addFilter(fn (Option $option): bool => $option->getState('cpu') < 80);
+        $balancer1->addFilter(fn (Option $option): bool => $option->getState('online') === true);
 
         // Allow only online
         $balancer2 = new Balancer(new First());
-        $balancer2->addFilter(fn ($option) => $option->getState('online') === true);
+        $balancer2->addFilter(fn (Option $option): bool => $option->getState('online') === true);
 
         // Allow anything
         $balancer3 = new Balancer(new First());
@@ -257,7 +256,7 @@ class BalancerTest extends TestCase
         // Unfiltered, every option qualifies
         $this->assertCount(3, $balancer->getFilteredOptions());
 
-        $balancer->addFilter(fn ($option) => $option->getState('isOnline') === true);
+        $balancer->addFilter(fn (Option $option): bool => $option->getState('isOnline') === true);
 
         $filtered = $balancer->getFilteredOptions();
 
@@ -267,7 +266,7 @@ class BalancerTest extends TestCase
         $this->assertEquals('worker-3', $filtered[1]->getState('hostname'));
         $this->assertEquals('worker-1', ($balancer->run() ?? new Option([]))->getState('hostname'));
 
-        $balancer->addFilter(fn ($option) => $option->getState('cpu') < 50);
+        $balancer->addFilter(fn (Option $option): bool => $option->getState('cpu') < 50);
 
         $filtered = $balancer->getFilteredOptions();
 
@@ -275,7 +274,7 @@ class BalancerTest extends TestCase
         $this->assertCount(1, $filtered);
         $this->assertEquals('worker-3', $filtered[0]->getState('hostname'));
 
-        $balancer->addFilter(fn ($option) => false);
+        $balancer->addFilter(fn (Option $option): bool => false);
 
         $this->assertSame([], $balancer->getFilteredOptions());
         $this->assertNull($balancer->run());

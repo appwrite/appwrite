@@ -14,7 +14,12 @@
     "license": "MIT",
     "autoload": {
         "psr-4": {
-            "Utopia\\Balancer\\": "src/Balancer"
+            "Utopia\\Balancer\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Utopia\\Balancer\\Tests\\": "tests/"
         }
     },
     "scripts": {
