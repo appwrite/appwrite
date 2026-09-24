@@ -4,6 +4,9 @@ use Utopia\Config\Config;
 use Utopia\System\System;
 
 $templateRuntimes = Config::getParam('template-runtimes');
+// The templates' SDKs need Node 18.17+ (node-appwrite 29) and Python 3.9+ (appwrite 23)
+$templateRuntimes['NODE'] = \array_values(\array_diff($templateRuntimes['NODE'], ['node-14.5', 'node-16.0']));
+$templateRuntimes['PYTHON'] = \array_values(\array_diff($templateRuntimes['PYTHON'], ['python-3.8']));
 $allowList = \array_map('trim', \explode(',', System::getEnv('_APP_FUNCTIONS_RUNTIMES', '')));
 
 function getRuntimes($runtimes, $commands, $entrypoint, $providerRootDirectory, $allowList)
@@ -85,7 +88,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.0.1',
+        'providerVersion' => '1.2.0',
         'variables' => [],
         'scopes' => ['users.read']
     ],
@@ -113,7 +116,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.0.1',
+        'providerVersion' => '1.2.0',
         'variables' => [
             [
                 'name' => 'UPSTASH_URL',
@@ -159,7 +162,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.0.1',
+        'providerVersion' => '1.2.0',
         'variables' => [
             [
                 'name' => 'REDIS_HOST',
@@ -204,7 +207,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.0.1',
+        'providerVersion' => '1.2.0',
         'variables' => [
             [
                 'name' => 'NEO4J_URI',
@@ -258,7 +261,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.0.1',
+        'providerVersion' => '1.2.0',
         'variables' => [
             [
                 'name' => 'MONGO_URI',
@@ -297,7 +300,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.0.1',
+        'providerVersion' => '1.2.0',
         'variables' => [
             [
                 'name' => 'PGHOST',
@@ -387,7 +390,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.0.1',
+        'providerVersion' => '1.2.0',
         'variables' => [
             [
                 'name' => 'OPENAI_API_KEY',
@@ -432,7 +435,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.1.0',
+        'providerVersion' => '1.2.0',
         'variables' => [
             [
                 'name' => 'MCP_SERVER_NAME',
@@ -507,7 +510,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.0.1',
+        'providerVersion' => '1.2.0',
         'variables' => [
             [
                 'name' => 'DISCORD_PUBLIC_KEY',
@@ -560,7 +563,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.0.1',
+        'providerVersion' => '1.2.0',
         'variables' => [
             [
                 'name' => 'PERSPECTIVE_API_KEY',
@@ -612,7 +615,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.0.1',
+        'providerVersion' => '1.2.0',
         'variables' => [
             [
                 'name' => 'PANGEA_REDACT_TOKEN',
@@ -643,7 +646,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.0.1',
+        'providerVersion' => '1.2.0',
         'variables' => [],
         'scopes' => []
     ],
@@ -672,7 +675,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.0.1',
+        'providerVersion' => '1.2.0',
         'variables' => [
             [
                 'name' => 'GITHUB_TOKEN',
@@ -717,7 +720,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.0.1',
+        'providerVersion' => '1.2.0',
         'variables' => [
             [
                 'name' => 'APPWRITE_DATABASE_ID',
@@ -784,7 +787,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.0.1',
+        'providerVersion' => '1.2.0',
         'variables' => [
             [
                 'name' => 'APPWRITE_DATABASE_ID',
@@ -883,7 +886,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.0.1',
+        'providerVersion' => '1.2.0',
         'variables' => [
             [
                 'name' => 'APPWRITE_DATABASE_ID',
@@ -989,7 +992,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.0.1',
+        'providerVersion' => '1.2.0',
         'variables' => [
             [
                 'name' => 'VONAGE_API_KEY',
@@ -1047,7 +1050,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.0.1',
+        'providerVersion' => '1.2.0',
         'variables' => [
             [
                 'name' => 'FCM_PROJECT_ID',
@@ -1119,7 +1122,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.0.1',
+        'providerVersion' => '1.2.0',
         'variables' => [
             [
                 'name' => 'SMTP_HOST',
@@ -1192,7 +1195,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.0.1',
+        'providerVersion' => '1.2.0',
         'variables' => [
             [
                 'name' => 'STRIPE_SECRET_KEY',
@@ -1235,7 +1238,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.0.1',
+        'providerVersion' => '1.2.0',
         'variables' => [
             [
                 'name' => 'STRIPE_SECRET_KEY',
@@ -1294,7 +1297,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.0.1',
+        'providerVersion' => '1.2.0',
         'variables' => [
             [
                 'name' => 'HUGGINGFACE_ACCESS_TOKEN',
@@ -1330,7 +1333,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.0.1',
+        'providerVersion' => '1.2.0',
         'variables' => [
             [
                 'name' => 'HUGGINGFACE_ACCESS_TOKEN',
@@ -1366,7 +1369,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.0.1',
+        'providerVersion' => '1.2.0',
         'variables' => [
             [
                 'name' => 'APPWRITE_DATABASE_ID',
@@ -1426,7 +1429,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.0.1',
+        'providerVersion' => '1.2.0',
         'variables' => [
             [
                 'name' => 'APPWRITE_DATABASE_ID',
@@ -1486,7 +1489,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.0.1',
+        'providerVersion' => '1.2.0',
         'variables' => [
             [
                 'name' => 'APPWRITE_DATABASE_ID',
@@ -1549,7 +1552,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.0.1',
+        'providerVersion' => '1.2.0',
         'variables' => [
             [
                 'name' => 'APPWRITE_DATABASE_ID',
@@ -1609,7 +1612,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.0.1',
+        'providerVersion' => '1.2.0',
         'variables' => [
             [
                 'name' => 'REPLICATE_API_KEY',
@@ -1646,7 +1649,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.0.1',
+        'providerVersion' => '1.2.0',
         'variables' => [
             [
                 'name' => 'TOGETHER_API_KEY',
@@ -1690,7 +1693,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.0.1',
+        'providerVersion' => '1.2.0',
         'variables' => [
             [
                 'name' => 'PERPLEXITY_API_KEY',
@@ -1733,7 +1736,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.0.1',
+        'providerVersion' => '1.2.0',
         'variables' => [
             [
                 'name' => 'REPLICATE_API_KEY',
@@ -1770,7 +1773,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.0.1',
+        'providerVersion' => '1.2.0',
         'variables' => [
             [
                 'name' => 'OPENAI_API_KEY',
@@ -1835,7 +1838,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.0.1',
+        'providerVersion' => '1.2.0',
         'variables' => [
             [
                 'name' => 'OPENAI_API_KEY',
@@ -1900,7 +1903,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.0.1',
+        'providerVersion' => '1.2.0',
         'variables' => [
             [
                 'name' => 'ELEVENLABS_API_KEY',
@@ -1957,7 +1960,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.0.1',
+        'providerVersion' => '1.2.0',
         'variables' => [
             [
                 'name' => 'LMNT_API_KEY',
@@ -2000,7 +2003,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.0.1',
+        'providerVersion' => '1.2.0',
         'variables' => [
             [
                 'name' => 'ANYSCALE_API_KEY',
@@ -2043,7 +2046,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.0.1',
+        'providerVersion' => '1.2.0',
         'variables' => [
             [
                 'name' => 'APPWRITE_BUCKET_ID',
@@ -2087,7 +2090,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.0.1',
+        'providerVersion' => '1.2.0',
         'variables' => [
             [
                 'name' => 'FAL_API_KEY',
@@ -2124,7 +2127,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.0.1',
+        'providerVersion' => '1.2.0',
         'variables' => [
             [
                 'name' => 'LEMON_SQUEEZY_API_KEY',
@@ -2181,7 +2184,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.0.1',
+        'providerVersion' => '1.2.0',
         'variables' => [
             [
                 'name' => 'APPWRITE_DATABASE_ID',
@@ -2248,7 +2251,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.0.1',
+        'providerVersion' => '1.2.0',
         'variables' => [
             [
                 'name' => 'BUNDLE_ID',
