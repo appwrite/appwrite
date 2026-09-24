@@ -2,7 +2,8 @@
 
 namespace Utopia\Agents\Adapters;
 
-use Utopia\Fetch\Chunk;
+use Psr\Http\Client\ClientInterface;
+use Utopia\Client\Psr18\StreamingClientInterface;
 
 class XAI extends OpenAI
 {
@@ -38,7 +39,8 @@ class XAI extends OpenAI
         int $maxTokens = 1024,
         float $temperature = 1.0,
         ?string $endpoint = null,
-        int $timeout = 90000
+        int $timeout = 90000,
+        (ClientInterface&StreamingClientInterface)|null $client = null
     ) {
         parent::__construct(
             $apiKey,
@@ -46,7 +48,8 @@ class XAI extends OpenAI
             $maxTokens,
             $temperature,
             $endpoint ?? self::ENDPOINT,
-            $timeout
+            $timeout,
+            $client
         );
     }
 
@@ -94,12 +97,12 @@ class XAI extends OpenAI
      *
      * @throws \Exception
      */
-    protected function process(Chunk $chunk, ?callable $listener): string
+    protected function process(string $chunk, ?callable $listener): string
     {
         $block = '';
         [$data, $lines] = $this->prepareStreamLines($chunk);
 
-        $json = $this->decodeJsonObject(trim($chunk->getData())) ?? $this->decodeJsonObject($data);
+        $json = $this->decodeJsonObject(trim($chunk)) ?? $this->decodeJsonObject($data);
         if (is_array($json) && isset($json['error'])) {
             return $this->formatErrorMessage($json);
         }

@@ -244,7 +244,7 @@ return [
             [
                 'name' => '_APP_CONSOLE_URL',
                 'description' => 'Origin of the Appwrite console web app, such as https://console.example.com, used when the backend generates links to the console (OAuth callbacks, emails, error page CTAs, VCS comments and commit statuses). Set it when the console is served on a different host than the API. When empty, links use _APP_CONSOLE_DOMAIN (or _APP_DOMAIN) over https, or over http when _APP_OPTIONS_FORCE_HTTPS is disabled.',
-                'introduction' => '2.2.1',
+                'introduction' => '2.3.0',
                 'default' => '',
                 'required' => false,
                 'question' => '',
@@ -469,7 +469,7 @@ return [
             [
                 'name' => '_APP_GEO_ENDPOINT',
                 'description' => 'Internal endpoint of the geo service used to resolve IP geolocation for locale and session enrichment. Leave empty to disable geolocation lookups. Defaults to the bundled `appwrite-geo` container.',
-                'introduction' => 'TBD',
+                'introduction' => '2.0.0',
                 'default' => 'http://appwrite-geo/v1',
                 'required' => false,
                 'question' => '',
@@ -478,11 +478,20 @@ return [
             [
                 'name' => '_APP_GEO_SECRET',
                 'description' => 'Bearer token used to authenticate requests from the Appwrite server to the geo service. Must match the `GEO_SECRET` configured on the `appwrite-geo` container. Change it from the default value before running in production.',
-                'introduction' => 'TBD',
+                'introduction' => '2.0.0',
                 'default' => 'your-secret-key',
                 'required' => false,
                 'question' => '',
                 'filter' => 'token'
+            ],
+            [
+                'name' => '_APP_PWNED_PASSWORDS_DSN',
+                'description' => "DSN of the service the password pwned project policy asks whether a password has been breached. The scheme picks the adapter. Nothing is asked until you set it: the default, `none://localhost`, reports every password as safe, so the policy protects nothing until this points at a service.\n\nOptions:\n- None: `none://localhost` — the default. Reports every password as safe without asking anyone, for a server that must not or cannot reach a breach service\n- Have I Been Pwned: `hibp://localhost` — the public range API, which only ever receives the first five characters of the password SHA-1 hash. No other detail is read from the DSN\n- [Appwrite Pwned](https://github.com/appwrite-labs/pwned): `appwrite://SECRET@appwrite-pwned/v1/detection` — a service you run yourself, which answers from its own copy of the Have I Been Pwned corpus, so nothing about the password leaves your network. It receives only the SHA-1 hash of the password, never the password itself, authenticated with `SECRET` as a Bearer token, which must match the service's `APPWRITE_PWNED_SECRET`. That hash is unsalted, so only point it at a service on your own network or behind TLS. The path defaults to `v1/detection` and the connection is plain HTTP unless you add `?tls=true`\n- Testing: `mock://localhost` — reports a fixed list of passwords as breached without leaving the process. Refused on a production server, since it would report every real password as safe",
+                'introduction' => '2.3.0',
+                'default' => 'none://localhost',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
             ]
         ],
     ],
@@ -753,6 +762,48 @@ return [
                 'description' => 'Redis server password. This is an optional variable. Default value is an empty string.',
                 'introduction' => '0.7',
                 'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+        ],
+    ],
+    [
+        'category' => 'MQTT',
+        'description' => 'Appwrite runs an MQTT broker that delivers push notifications to devices. Traefik terminates TLS for MQTT (mqtts) and MQTT over WebSocket (wss) and forwards both to the appwrite-mqtt container.',
+        'variables' => [
+            [
+                'name' => '_APP_MQTT_PORT',
+                'description' => 'Host port Traefik publishes for MQTT over TLS (mqtts). Change it when the port is already taken on the host. Default value is: \'8883\'.',
+                'introduction' => '2.3.0',
+                'default' => '8883',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_MQTT_WSS_PORT',
+                'description' => 'Host port Traefik publishes for MQTT over secure WebSocket (wss), used by browser clients. Change it when the port is already taken on the host. Default value is: \'8084\'.',
+                'introduction' => '2.3.0',
+                'default' => '8084',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_MQTT_REPLAY_DEPTH',
+                'description' => 'Maximum number of missed QoS 1 messages the broker replays per topic when a device resubscribes after being offline. Minimum 1. Default value is: \'5\'.',
+                'introduction' => '2.3.0',
+                'default' => '5',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_MQTT_MAX_PACKET_SIZE',
+                'description' => 'Maximum size in bytes of a single MQTT packet the broker accepts. Default value is: \'64000\'.',
+                'introduction' => '2.3.0',
+                'default' => '64000',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
@@ -1771,7 +1822,7 @@ return [
             [
                 'name' => '_APP_MAINTENANCE_RETENTION_SCHEDULES',
                 'description' => 'Schedules deletion interval ( in seconds ) ',
-                'introduction' => 'TBD',
+                'introduction' => '2.0.0',
                 'default' => '86400',
                 'required' => false,
                 'question' => '',

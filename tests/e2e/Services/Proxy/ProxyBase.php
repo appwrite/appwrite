@@ -225,6 +225,61 @@ trait ProxyBase
         $this->cleanupRule($rule['body']['$id']);
     }
 
+    public function testDeleteAPIRule(): void
+    {
+        $domain = \uniqid() . '-delete-api.custom.localhost';
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://appwrite.test');
+        $proxyClient->addHeader('x-appwrite-hostname', $domain);
+
+        /**
+         * Test for SUCCESS
+         */
+        $ruleId = $this->setupAPIRule($domain);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/versions');
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(APP_VERSION_STABLE, $response['body']['server']);
+
+        $rule = $this->deleteRule($ruleId);
+        $this->assertEquals(204, $rule['headers']['status-code']);
+
+        $this->assertEventually(function () use ($proxyClient) {
+            $response = $proxyClient->call(Client::METHOD_GET, '/versions');
+            $this->assertEquals(401, $response['headers']['status-code']);
+        });
+
+        /**
+         * Test for FAILURE
+         */
+        $rule = $this->getRule($ruleId);
+        $this->assertEquals(404, $rule['headers']['status-code']);
+        $this->assertEquals('rule_not_found', $rule['body']['type']);
+
+        $rule = $this->deleteRule($ruleId);
+        $this->assertEquals(404, $rule['headers']['status-code']);
+        $this->assertEquals('rule_not_found', $rule['body']['type']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $ruleId = $this->setupAPIRule($domain);
+
+        $rules = $this->listRules([
+            'queries' => [Query::equal('domain', [$domain])->toString()],
+        ]);
+        $this->assertEquals(1, $rules['body']['total']);
+        $this->assertEquals($ruleId, $rules['body']['rules'][0]['$id']);
+
+        $this->assertEventually(function () use ($proxyClient) {
+            $response = $proxyClient->call(Client::METHOD_GET, '/versions');
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertEquals(APP_VERSION_STABLE, $response['body']['server']);
+        });
+
+        $this->cleanupRule($ruleId);
+    }
+
     public function testCreateRedirectRule(): void
     {
         $domain = \uniqid() . '-redirect.custom.localhost';
@@ -437,8 +492,39 @@ trait ProxyBase
 
         $rule = $this->getRule($ruleId);
         $this->assertEquals(200, $rule['headers']['status-code']);
+        $this->assertEmpty($rule['body']['deploymentId'], 'a branch-pinned rule must not adopt the resource\'s manually uploaded deployment');
 
         $this->cleanupRule($ruleId);
+    }
+
+    public function testCreateSiteRuleWithNullBranch(): void
+    {
+        $setup = $this->setupSite();
+        $siteId = $setup['siteId'];
+        $this->assertNotEmpty($setup['deploymentId']);
+
+        $omitted = $this->getRule($this->setupSiteRule(\uniqid() . '-site-omitted-branch.custom.localhost', $siteId));
+        $this->assertSame(200, $omitted['headers']['status-code']);
+
+        // A null branch behaves like an omitted one instead of failing the deployment lookup
+        $rule = $this->client->call(Client::METHOD_POST, '/proxy/rules/site', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'domain' => \uniqid() . '-site-null-branch.custom.localhost',
+            'siteId' => $siteId,
+            'branch' => null,
+        ]);
+        $this->assertSame(201, $rule['headers']['status-code']);
+
+        $rule = $this->getRule($rule['body']['$id']);
+        $this->assertSame(200, $rule['headers']['status-code']);
+        $this->assertSame($omitted['body']['deploymentId'], $rule['body']['deploymentId']);
+        $this->assertSame($omitted['body']['deploymentVcsProviderBranch'], $rule['body']['deploymentVcsProviderBranch']);
+
+        $this->cleanupRule($omitted['body']['$id']);
+        $this->cleanupRule($rule['body']['$id']);
+        $this->cleanupSite($siteId);
     }
 
     public function testCreateFunctionBranchRule(): void
@@ -457,6 +543,7 @@ trait ProxyBase
 
         $rule = $this->getRule($ruleId);
         $this->assertEquals(200, $rule['headers']['status-code']);
+        $this->assertEmpty($rule['body']['deploymentId'], 'a branch-pinned rule must not adopt the resource\'s manually uploaded deployment');
 
         $this->cleanupRule($ruleId);
 

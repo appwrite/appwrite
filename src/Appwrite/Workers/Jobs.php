@@ -8,7 +8,7 @@ namespace Appwrite\Workers;
  * Resolves per-queue worker jobs for {@see app/worker.php}.
  *
  * Combined mode (`all` / many queues) keeps each queue's configured
- * `maxCoroutines` so `databases` stays at 1. Dedicated mode still allows
+ * `coroutines` so `databases` stays at 1. Dedicated mode still allows
  * `_APP_WORKER_MAX_COROUTINES` to override — except for `databases`, where
  * parallelism risks adapter deadlocks on schema mutations.
  */
@@ -16,9 +16,9 @@ final class Jobs
 {
     /**
      * @param list<string> $workers Worker action names already selected to run
-     * @param array<string, array{queue: string, queueEnv?: string, maxCoroutines?: int}> $config
+     * @param array<string, array{queue: string, queueEnv?: string, coroutines?: int}> $config
      * @param callable(string, mixed=): mixed $env Compatible with {@see \Utopia\System\System::getEnv}
-     * @return array<string, array{queue: string, maxCoroutines: int}>
+     * @return array<string, array{queue: string, coroutines: int}>
      */
     public static function resolve(array $workers, array $config, callable $env): array
     {
@@ -36,7 +36,7 @@ final class Jobs
                 $queue = $spec['queue'];
             }
 
-            $maxCoroutines = max(1, (int) ($spec['maxCoroutines'] ?? 1));
+            $coroutines = max(1, (int) ($spec['coroutines'] ?? 1));
 
             // Combined: never apply the global override — databases must stay at 1
             // while other queues keep their own caps. Dedicated: override is allowed
@@ -44,13 +44,13 @@ final class Jobs
             if ($single && $name !== 'databases') {
                 $override = $env('_APP_WORKER_MAX_COROUTINES');
                 if ($override !== false && $override !== null && $override !== '') {
-                    $maxCoroutines = max(1, (int) $override);
+                    $coroutines = max(1, (int) $override);
                 }
             }
 
             $jobs[$name] = [
                 'queue' => (string) $queue,
-                'maxCoroutines' => $maxCoroutines,
+                'coroutines' => $coroutines,
             ];
         }
 

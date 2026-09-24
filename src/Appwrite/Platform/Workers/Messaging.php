@@ -4,8 +4,12 @@ namespace Appwrite\Platform\Workers;
 
 use Appwrite\Event\Message\Usage;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
+use Appwrite\Messaging\Adapter\Mqtt;
+use Appwrite\Messaging\Adapter\Push\Appwrite as AppwritePush;
+use Appwrite\Messaging\Provider;
 use Appwrite\Messaging\Status as MessageStatus;
 use Appwrite\OpenSSL\OpenSSL;
+use Appwrite\PubSub\Adapter\Pool as PubSubPool;
 use Appwrite\Usage\Context as UsageContext;
 use Utopia\Compression\Algorithms\GZIP;
 use Utopia\Compression\Algorithms\Zstd;
@@ -16,35 +20,27 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
-use Utopia\DSN\DSN;
 use Utopia\Lock\Semaphore;
 use Utopia\Messaging\Adapter\Email as EmailAdapter;
 use Utopia\Messaging\Adapter\Email\Mailgun;
-use Utopia\Messaging\Adapter\Email\Resend;
 use Utopia\Messaging\Adapter\Email\Sendgrid;
-use Utopia\Messaging\Adapter\Email\SES;
 use Utopia\Messaging\Adapter\Email\SMTP;
 use Utopia\Messaging\Adapter\Push\APNS;
 use Utopia\Messaging\Adapter\Push as PushAdapter;
 use Utopia\Messaging\Adapter\Push\FCM;
 use Utopia\Messaging\Adapter\SMS as SMSAdapter;
-use Utopia\Messaging\Adapter\SMS\Fast2SMS;
-use Utopia\Messaging\Adapter\SMS\GEOSMS;
 use Utopia\Messaging\Adapter\SMS\GEOSMS\CallingCode;
-use Utopia\Messaging\Adapter\SMS\Inforu;
 use Utopia\Messaging\Adapter\SMS\Mock;
-use Utopia\Messaging\Adapter\SMS\Msg91;
 use Utopia\Messaging\Adapter\SMS\Msg91\MetadataParameter;
-use Utopia\Messaging\Adapter\SMS\Telesign;
-use Utopia\Messaging\Adapter\SMS\TextMagic;
-use Utopia\Messaging\Adapter\SMS\Twilio;
-use Utopia\Messaging\Adapter\SMS\Vonage;
+use Utopia\Messaging\Exception\InvalidArgumentException;
 use Utopia\Messaging\Messages\Email;
 use Utopia\Messaging\Messages\Email\Attachment;
 use Utopia\Messaging\Messages\Push;
 use Utopia\Messaging\Messages\SMS;
 use Utopia\Messaging\Priority;
+use Utopia\Mqtt\Packet;
 use Utopia\Platform\Action;
+use Utopia\Pools\Group;
 use Utopia\Psr7\Stream;
 use Utopia\Queue\Message;
 use Utopia\Span\Span;
@@ -58,9 +54,11 @@ use function Swoole\Coroutine\batch;
 
 class Messaging extends Action
 {
-    private ?SMSAdapter $adapter = null;
-
     private Telemetry $telemetry;
+
+    private Provider $provider;
+
+    private Group $pools;
 
     public static function getName(): string
     {
@@ -80,6 +78,8 @@ class Messaging extends Action
             ->inject('deviceForFiles')
             ->inject('publisherForUsage')
             ->inject('telemetry')
+            ->inject('pools')
+            ->inject('adapterForSMS')
             ->callback($this->action(...));
     }
 
@@ -90,6 +90,8 @@ class Messaging extends Action
      * @param Device $deviceForFiles
      * @param UsagePublisher $publisherForUsage
      * @param Telemetry $telemetry
+     * @param SMSAdapter|null $adapterForSMS
+     * @param Group $pools
      * @return void
      * @throws \Exception
      */
@@ -99,9 +101,13 @@ class Messaging extends Action
         Database $dbForProject,
         Device $deviceForFiles,
         UsagePublisher $publisherForUsage,
-        Telemetry $telemetry
+        Telemetry $telemetry,
+        Group $pools,
+        ?SMSAdapter $adapterForSMS
     ): void {
         $this->telemetry = $telemetry;
+        $this->pools = $pools;
+        $this->provider = new Provider($telemetry);
         $payload = $message->getPayload();
 
         if (empty($payload)) {
@@ -117,7 +123,7 @@ class Messaging extends Action
                 $message = new Document($payload['message'] ?? []);
                 $recipients = $payload['recipients'] ?? [];
 
-                $this->sendInternalSMSMessage($message, $project, $recipients);
+                $this->sendInternalSMSMessage($message, $project, $recipients, $adapterForSMS);
                 break;
             case MESSAGE_SEND_TYPE_EXTERNAL:
                 $messageId = $payload['messageId'];
@@ -247,9 +253,9 @@ class Messaging extends Action
                 $resolvedProviderType = $provider->getAttribute('type');
 
                 $adapter = match ($resolvedProviderType) {
-                    MESSAGE_TYPE_SMS => $this->getSmsAdapter($provider),
-                    MESSAGE_TYPE_PUSH => $this->getPushAdapter($provider),
-                    MESSAGE_TYPE_EMAIL => $this->getEmailAdapter($provider),
+                    MESSAGE_TYPE_SMS => $this->provider->sms($provider),
+                    MESSAGE_TYPE_PUSH => $this->getPushAdapter($provider, $dbForProject, $project, $message),
+                    MESSAGE_TYPE_EMAIL => $this->provider->email($provider),
                     default => throw new \Exception('Provider with the requested ID is of the incorrect type')
                 };
 
@@ -416,7 +422,7 @@ class Messaging extends Action
                         fn () => $dbForProject->getAuthorization()->skip(
                             fn () => $dbForProject->find('targets', [
                                 Query::equal('$sequence', $targetInternalIds),
-                                Query::select(['providerId', 'identifier']),
+                                Query::select(['providerId', 'identifier', 'expired']),
                                 Query::limit(\count($targetInternalIds)),
                             ])
                         )
@@ -434,7 +440,7 @@ class Messaging extends Action
                 $queries = [
                     Query::equal('userId', $userIds),
                     Query::equal('providerType', [$providerType]),
-                    Query::select(['$sequence', 'providerId', 'identifier']),
+                    Query::select(['$sequence', 'providerId', 'identifier', 'expired']),
                     Query::orderAsc('$sequence'),
                     Query::limit(MESSAGE_RECIPIENTS_PAGE_SIZE),
                 ];
@@ -463,7 +469,7 @@ class Messaging extends Action
                 $queries = [
                     Query::equal('$id', $targetIds),
                     Query::equal('providerType', [$providerType]),
-                    Query::select(['$sequence', 'providerId', 'identifier']),
+                    Query::select(['$sequence', 'providerId', 'identifier', 'expired']),
                     Query::orderAsc('$sequence'),
                     Query::limit(MESSAGE_RECIPIENTS_PAGE_SIZE),
                 ];
@@ -487,7 +493,8 @@ class Messaging extends Action
     }
 
     /**
-     * Group a page of target documents by provider id, deduplicating identifiers within the page.
+     * Group a page of target documents by provider id, deduplicating identifiers within the page and
+     * dropping targets already known to be unreachable.
      *
      * @param array<Document> $targets
      * @return array<string, array<string, null>>
@@ -500,6 +507,13 @@ class Messaging extends Action
         $identifiers = [];
 
         foreach ($targets as $target) {
+            // sendBatch() flags a target when a provider reports its token as dead, but the row only goes
+            // away on the next maintenance sweep. Rows predating the attribute read null, so anything
+            // but a positive flag counts as reachable.
+            if ($target->getAttribute('expired')) {
+                continue;
+            }
+
             $providerId = $target->getAttribute('providerId') ?: $default->getId();
 
             if (!\array_key_exists($providerId, $identifiers)) {
@@ -637,11 +651,33 @@ class Messaging extends Action
         for ($attempt = 1; $attempt <= MESSAGE_SEND_MAX_RETRIES; $attempt++) {
             $hasRetriesLeft = $attempt < MESSAGE_SEND_MAX_RETRIES;
 
-            // Rebuild the provider message scoped to only the still-pending recipients so a partially-delivered
-            // batch never re-sends to recipients that already succeeded on an earlier attempt.
-            $data = $this->buildMessage($pending, $message, $provider, $providerType, $dbForProject, $attachments);
-
             $retry = [];
+
+            // Rebuild the provider message scoped to only the still-pending recipients so a partially-delivered
+            // batch never re-sends to recipients that already succeeded on an earlier attempt. A recipient no
+            // provider can deliver to is recorded as terminal and dropped, so it never costs the rest their send.
+            $data = null;
+            while ($pending !== []) {
+                try {
+                    $data = $this->buildMessage($pending, $message, $provider, $providerType, $dbForProject, $attachments);
+                    break;
+                } catch (InvalidArgumentException $e) {
+                    $recipient = $e->getValue();
+
+                    if ($recipient === null || !\in_array($recipient, $pending, true)) {
+                        $this->recordError($errors, 'Failed sending to targets with error: ' . $e->getMessage());
+                        $pending = [];
+                        break;
+                    }
+
+                    $this->recordError($errors, "Failed sending to target {$recipient} with error: {$e->getMessage()}");
+                    $pending = \array_values(\array_diff($pending, [$recipient]));
+                }
+            }
+
+            if ($data === null) {
+                break;
+            }
 
             // The try/catch wraps ONLY the provider send. A whole-batch throw is retryable when transient,
             // otherwise it records one representative terminal error. The previous behaviour of resetting
@@ -651,7 +687,7 @@ class Messaging extends Action
             try {
                 $response = $adapter->send($data);
             } catch (\Throwable $e) {
-                if ($hasRetriesLeft && $this->isRetryableError($e->getMessage())) {
+                if ($hasRetriesLeft && !$e instanceof InvalidArgumentException && $this->isRetryableError($e->getMessage())) {
                     $retry = $pending;
                 } else {
                     $this->recordError($errors, 'Failed sending to targets with error: ' . $e->getMessage());
@@ -812,13 +848,9 @@ class Messaging extends Action
         return $data;
     }
 
-    private function sendInternalSMSMessage(Document $message, Document $project, array $recipients): void
+    private function sendInternalSMSMessage(Document $message, Document $project, array $recipients, ?SMSAdapter $adapterForSMS): void
     {
-        if ($this->adapter === null) {
-            $this->adapter = $this->createInternalSMSAdapter();
-        }
-
-        if ($this->adapter === null) {
+        if ($adapterForSMS === null) {
             throw new \Exception('SMS adapter is not set.');
         }
 
@@ -849,60 +881,11 @@ class Messaging extends Action
         // webhooks can be attributed back to the originating project.
         $sms->setMetadata([MetadataParameter::UUID->value => $project->getId()]);
 
-        $this->adapter->send($sms);
+        $adapterForSMS->send($sms);
     }
 
 
-    protected function getSmsAdapter(Document $provider): ?SMSAdapter
-    {
-        $credentials = $provider->getAttribute('credentials');
-
-        $adapter = match ($provider->getAttribute('provider')) {
-            'mock' => (new Mock('username', 'password'))->setEndpoint('http://request-catcher-sms:5000/'),
-            'twilio' => new Twilio(
-                $credentials['accountSid'] ?? '',
-                $credentials['authToken'] ?? '',
-                null,
-                $credentials['messagingServiceSid'] ?? null
-            ),
-            'textmagic' => new TextMagic(
-                $credentials['username'] ?? '',
-                $credentials['apiKey'] ?? ''
-            ),
-            'telesign' => new Telesign(
-                $credentials['customerId'] ?? '',
-                $credentials['apiKey'] ?? ''
-            ),
-            'msg91' => new Msg91(
-                $credentials['senderId'] ?? '',
-                $credentials['authKey'] ?? '',
-                $credentials['templateId'] ?? ''
-            ),
-            'vonage' => new Vonage(
-                $credentials['apiKey'] ?? '',
-                $credentials['apiSecret'] ??  ''
-            ),
-            'fast2sms' => new Fast2SMS(
-                $credentials['apiKey'] ?? '',
-                $credentials['senderId'] ?? '',
-                $credentials['messageId'] ?? '',
-                $credentials['useDLT'] ?? true
-            ),
-            'inforu' => new Inforu(
-                $credentials['senderId'] ?? '',
-                $credentials['apiKey'] ?? '',
-            ),
-            default => null
-        };
-
-        if ($adapter !== null) {
-            $adapter->setTelemetry($this->telemetry);
-        }
-
-        return $adapter;
-    }
-
-    protected function getPushAdapter(Document $provider): ?PushAdapter
+    protected function getPushAdapter(Document $provider, Database $dbForProject, Document $project, Document $message): ?PushAdapter
     {
         $credentials = $provider->getAttribute('credentials');
         $options = $provider->getAttribute('options');
@@ -917,45 +900,13 @@ class Messaging extends Action
                 $options['sandbox'] ?? false
             ),
             'fcm' => new FCM(\json_encode($credentials['serviceAccountJSON'])),
-            default => null
-        };
-
-        if ($adapter !== null) {
-            $adapter->setTelemetry($this->telemetry);
-        }
-
-        return $adapter;
-    }
-
-    protected function getEmailAdapter(Document $provider): ?EmailAdapter
-    {
-        $credentials = $provider->getAttribute('credentials', []);
-        $options = $provider->getAttribute('options', []);
-        $apiKey = $credentials['apiKey'] ?? '';
-
-        $adapter = match ($provider->getAttribute('provider')) {
-            'mock' => new Mock('username', 'password'),
-            'smtp' => new SMTP(
-                $credentials['host'] ??  '',
-                $credentials['port'] ?? 25,
-                $credentials['username'] ?? '',
-                $credentials['password'] ?? '',
-                $options['encryption'] ?? '',
-                $options['autoTLS'] ??  false,
-                $options['mailer'] ??  '',
-            ),
-            'mailgun' => new Mailgun(
-                $apiKey,
-                $credentials['domain'] ?? '',
-                $credentials['isEuRegion'] ?? false
-            ),
-            'sendgrid' => new Sendgrid($apiKey),
-            'resend' => new Resend($apiKey),
-            'ses' => new SES(
-                $credentials['accessKey'] ?? '',
-                $credentials['secretKey'] ?? '',
-                $credentials['region'] ?? '',
-                $credentials['sessionToken'] ?? null,
+            'appwrite' => new AppwritePush(
+                new Mqtt($this->telemetry, new PubSubPool($this->pools->get('pubsub'))),
+                $dbForProject,
+                $project->getId(),
+                $message->getId(),
+                $message->getSequence(),
+                $options['qos'] ?? Packet::QOS_1,
             ),
             default => null
         };
@@ -1076,9 +1027,9 @@ class Messaging extends Action
     ): Email {
         $fromName = $provider['options']['fromName'] ?? null;
         $fromEmail = $provider['options']['fromEmail'] ?? null;
-        $replyToEmail = $provider['options']['replyToEmail'] ?? null;
-        $replyToName = $provider['options']['replyToName'] ?? null;
         $data = $message['data'] ?? [];
+        $replyToEmail = !empty($data['replyToEmail']) ? $data['replyToEmail'] : ($provider['options']['replyToEmail'] ?? null);
+        $replyToName = !empty($data['replyToName']) ? $data['replyToName'] : ($provider['options']['replyToName'] ?? null);
         $ccTargets = $data['cc'] ?? [];
         $bccTargets = $data['bcc'] ?? [];
         $cc = [];
@@ -1109,11 +1060,14 @@ class Messaging extends Action
         $content = $data['content'];
         $html = $data['html'] ?? false;
 
-        // For SMTP, move all recipients to BCC and use default recipient in TO field
-        if ($provider->getAttribute('provider') === 'smtp') {
+        // An SMTP batch is one message, so a visible To header is readable by every other address on
+        // it. Only a lone recipient with nobody else on the envelope keeps theirs; the rest move to
+        // BCC, which leaves the message with no To header at all.
+        if ($provider->getAttribute('provider') === 'smtp' && (\count($to) > 1 || !empty($cc) || !empty($bcc))) {
             foreach ($to as $recipient) {
                 $bcc[] = ['email' => $recipient];
             }
+
             $to = [];
         }
 
@@ -1199,128 +1153,4 @@ class Messaging extends Action
         return new Local(APP_STORAGE_UPLOADS . '/app-' . $project->getId());
     }
 
-    private function createInternalSMSAdapter(): ?SMSAdapter
-    {
-        if (empty(System::getEnv('_APP_SMS_PROVIDER')) || empty(System::getEnv('_APP_SMS_FROM'))) {
-            return null;
-        }
-
-        $providers = System::getEnv('_APP_SMS_PROVIDER', '');
-
-        $dsns = [];
-        if (!empty($providers)) {
-            $providers = explode(',', $providers);
-            foreach ($providers as $provider) {
-                $dsns[] = new DSN($provider);
-            }
-        }
-
-        if (count($dsns) === 1) {
-            $provider = $this->createProviderFromDSN($dsns[0]);
-            $adapter = $this->getSmsAdapter($provider);
-            return $adapter;
-        }
-
-        $defaultDSN = null;
-        $localDSNs = [];
-
-        /** @var DSN $dsn */
-        foreach ($dsns as $dsn) {
-            if ($dsn->getParam('local', '') === 'default') {
-                $defaultDSN = $dsn;
-            } else {
-                $localDSNs[] = $dsn;
-            }
-        }
-
-        if ($defaultDSN === null) {
-            throw new \Exception('No default SMS provider found');
-        }
-
-        $defaultProvider = $this->createProviderFromDSN($defaultDSN);
-        $adapter = $this->getSmsAdapter($defaultProvider);
-        $geosms = new GEOSMS($adapter);
-        $geosms->setTelemetry($this->telemetry);
-
-        /** @var DSN $localDSN */
-        foreach ($localDSNs as $localDSN) {
-            try {
-                $provider = $this->createProviderFromDSN($localDSN);
-                $adapter = $this->getSmsAdapter($provider);
-            } catch (\Exception) {
-                continue;
-            }
-
-            $callingCode = $localDSN->getParam('local', '');
-            if (empty($callingCode)) {
-                continue;
-            }
-
-            $geosms->setLocal($callingCode, $adapter);
-        }
-        return $geosms;
-    }
-
-    private function createProviderFromDSN(DSN $dsn): Document
-    {
-        $host = $dsn->getHost();
-        $password = $dsn->getPassword();
-        $user = $dsn->getUser();
-        $from = System::getEnv('_APP_SMS_FROM');
-
-        $provider = new Document([
-            '$id' => ID::unique(),
-            'provider' => $host,
-            'type' => MESSAGE_TYPE_SMS,
-            'name' => 'Internal SMS',
-            'enabled' => true,
-            'credentials' => match ($host) {
-                'twilio' => [
-                    'accountSid' => $user,
-                    'authToken' => $password,
-                    // Messaging Service SIDs are always 34 characters; alphanumeric sender IDs, at most 11, can also start with MG
-                    // https://www.twilio.com/docs/messaging/api/service-resource
-                    'messagingServiceSid' => \str_starts_with($from, 'MG') && \strlen($from) === 34 ? $from : null
-                ],
-                'textmagic' => [
-                    'username' => $user,
-                    'apiKey' => $password
-                ],
-                'telesign' => [
-                    'customerId' => $user,
-                    'apiKey' => $password
-                ],
-                'msg91' => [
-                    'senderId' => $user,
-                    'authKey' => $password,
-                    'templateId' => $dsn->getParam('templateId', $from),
-                ],
-                'vonage' => [
-                    'apiKey' => $user,
-                    'apiSecret' => $password
-                ],
-                'fast2sms' => [
-                    'senderId' => $user,
-                    'apiKey' => $password,
-                    'messageId' => $dsn->getParam('messageId'),
-                    'useDLT' => $dsn->getParam('useDLT'),
-                ],
-                'inforu' => [
-                    'senderId' => $user,
-                    'apiKey' => $password,
-                ],
-                default => null
-            },
-            'options' => match ($host) {
-                'twilio' => [
-                    'from' => \str_starts_with($from, 'MG') && \strlen($from) === 34 ? null : $from
-                ],
-                default => [
-                    'from' => $from
-                ]
-            }
-        ]);
-
-        return $provider;
-    }
 }

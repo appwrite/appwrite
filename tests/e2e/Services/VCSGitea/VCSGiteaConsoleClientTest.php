@@ -108,6 +108,168 @@ final class VCSGiteaConsoleClientTest extends Scope
         $webhookDeploymentId = $this->waitForNewDeploymentReadyHelper($functionId, $knownIds);
         $this->assertNotContains($webhookDeploymentId, $knownIds);
         $this->assertEventually(fn () => $this->assertExecutionOutputHelper($functionId, 'gitea-v2'), 30000, 1000);
+
+        $headers = \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders());
+
+        // A rule pinned to a branch starts on that branch's newest ready build.
+        $rule = $this->client->call(Client::METHOD_POST, '/proxy/rules/function', $headers, [
+            'domain' => \uniqid() . '-gitea-branch.custom.localhost',
+            'functionId' => $functionId,
+            'branch' => 'main',
+        ]);
+        $this->assertEquals(201, $rule['headers']['status-code'], \json_encode($rule['body']));
+        $this->assertEquals($webhookDeploymentId, $rule['body']['deploymentId']);
+        $ruleId = $rule['body']['$id'];
+
+        // A build that is never activated does not reach activate(), so only the
+        // branch rebind in finalize() can move the rule to it.
+        $unactivated = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments/vcs', $headers, [
+            'type' => 'branch',
+            'reference' => 'main',
+            'activate' => false,
+        ]);
+        $this->assertEquals(202, $unactivated['headers']['status-code'], \json_encode($unactivated['body']));
+        $unactivatedId = $unactivated['body']['$id'];
+        $this->waitForDeploymentReadyHelper($functionId, $unactivatedId);
+
+        $this->assertEventually(function () use ($ruleId, $headers, $unactivatedId) {
+            $rule = $this->client->call(Client::METHOD_GET, '/proxy/rules/' . $ruleId, $headers);
+            $this->assertEquals($unactivatedId, $rule['body']['deploymentId'], \json_encode($rule['body']));
+        }, 30000, 1000);
+
+        $function = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId, $headers);
+        $this->assertEquals($webhookDeploymentId, $function['body']['deploymentId'], 'an unactivated build must not become the function\'s own deployment');
+
+        // Activating a build of the branch repoints the rule too, which the
+        // manual route used to skip for anything pinned to a branch.
+        $activated = $this->client->call(Client::METHOD_PATCH, '/functions/' . $functionId . '/deployment', $headers, [
+            'deploymentId' => $webhookDeploymentId,
+        ]);
+        $this->assertEquals(200, $activated['headers']['status-code'], \json_encode($activated['body']));
+
+        $this->assertEventually(function () use ($ruleId, $headers, $webhookDeploymentId) {
+            $rule = $this->client->call(Client::METHOD_GET, '/proxy/rules/' . $ruleId, $headers);
+            $this->assertEquals($webhookDeploymentId, $rule['body']['deploymentId'], \json_encode($rule['body']));
+        }, 30000, 1000);
+    }
+
+    public function testCreateDuplicateDeploymentWithRootDirectory(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $headers = \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders());
+        $installationId = $this->createInstallationHelper()['$id'];
+
+        $repository = $this->giteaApiHelper(Client::METHOD_POST, '/api/v1/user/repos', [
+            'name' => 'function-' . \uniqid(),
+            'auto_init' => true,
+            'default_branch' => 'main',
+            'private' => false,
+        ]);
+        $this->assertEquals(201, $repository['headers']['status-code'], \json_encode($repository['body']));
+
+        $workdir = \sys_get_temp_dir() . '/vcs-gitea-' . \uniqid();
+        $endpoint = System::getEnv('_APP_VCS_GITEA_ENDPOINT', 'http://gitea:3000');
+        $remote = \str_replace('://', '://' . self::GITEA_USERNAME . ':' . self::GITEA_PASSWORD . '@', $endpoint)
+            . '/' . self::GITEA_USERNAME . '/' . $repository['body']['name'] . '.git';
+
+        $this->gitHelper("git clone {$remote} {$workdir}", \sys_get_temp_dir());
+        foreach (['api', 'web'] as $directory) {
+            \mkdir($workdir . '/functions/' . $directory, 0o777, true);
+            \file_put_contents($workdir . '/functions/' . $directory . '/index.js', "module.exports = async (context) => context.res.send('{$directory}:' + process.env.APPWRITE_VCS_ROOT_DIRECTORY);\n");
+        }
+        $this->gitHelper('git add functions && git commit -m "Add functions"', $workdir);
+        $this->gitHelper('git push origin main', $workdir);
+
+        $function = $this->client->call(Client::METHOD_POST, '/functions', $headers, [
+            'functionId' => ID::unique(),
+            'name' => 'Gitea root directory',
+            'execute' => [Role::any()->toString()],
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'timeout' => 15,
+            'installationId' => $installationId,
+            'providerRepositoryId' => (string) $repository['body']['id'],
+            'providerBranch' => 'main',
+            'providerRootDirectory' => 'functions/api',
+        ]);
+        $this->assertEquals(201, $function['headers']['status-code'], \json_encode($function['body']));
+        $functionId = $function['body']['$id'];
+
+        $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments/vcs', $headers, [
+            'type' => 'branch',
+            'reference' => 'main',
+            'activate' => true,
+        ]);
+        $this->assertEquals(202, $deployment['headers']['status-code'], \json_encode($deployment['body']));
+        $this->waitForDeploymentReadyHelper($functionId, $deployment['body']['$id']);
+
+        $function = $this->client->call(Client::METHOD_PUT, '/functions/' . $functionId, $headers, [
+            'name' => 'Gitea root directory',
+            'execute' => [Role::any()->toString()],
+            'providerRootDirectory' => 'functions/web',
+        ]);
+        $this->assertEquals(200, $function['headers']['status-code'], \json_encode($function['body']));
+
+        $duplicate = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments/duplicate', $headers, [
+            'deploymentId' => $deployment['body']['$id'],
+        ]);
+        $this->assertEquals(202, $duplicate['headers']['status-code'], \json_encode($duplicate['body']));
+        $this->waitForDeploymentReadyHelper($functionId, $duplicate['body']['$id']);
+
+        $this->assertEventually(fn () => $this->assertExecutionOutputHelper($functionId, 'web:functions/web'), 30000, 1000);
+    }
+
+    public function testUpdateSiteKeepsRepositoryOnNull(): void
+    {
+        $headers = \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+        $installationId = $this->createInstallationHelper()['$id'];
+
+        $repository = $this->giteaApiHelper(Client::METHOD_POST, '/api/v1/user/repos', [
+            'name' => 'site-' . \uniqid(),
+            'auto_init' => true,
+            'default_branch' => 'main',
+            'private' => false,
+        ]);
+        $this->assertEquals(201, $repository['headers']['status-code'], \json_encode($repository['body']));
+        $providerRepositoryId = (string) $repository['body']['id'];
+
+        $site = $this->client->call(Client::METHOD_POST, '/sites', $headers, [
+            'siteId' => ID::unique(),
+            'name' => 'Gitea site',
+            'framework' => 'other',
+            'buildRuntime' => 'node-22',
+            'installationId' => $installationId,
+            'providerRepositoryId' => $providerRepositoryId,
+            'providerBranch' => 'main',
+        ]);
+        $this->assertSame(201, $site['headers']['status-code'], \json_encode($site['body']));
+        $siteId = $site['body']['$id'];
+
+        // An explicit null keeps the site connected rather than resetting it to the empty default, which disconnects
+        $site = $this->client->call(Client::METHOD_PUT, '/sites/' . $siteId, $headers, [
+            'name' => 'Gitea site renamed',
+            'framework' => 'other',
+            'providerRepositoryId' => null,
+        ]);
+        $this->assertSame(200, $site['headers']['status-code'], \json_encode($site['body']));
+
+        $site = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId, $headers);
+        $this->assertSame(200, $site['headers']['status-code']);
+        $this->assertSame('Gitea site renamed', $site['body']['name']);
+        $this->assertSame($installationId, $site['body']['installationId']);
+        $this->assertSame($providerRepositoryId, $site['body']['providerRepositoryId']);
+        $this->assertSame('main', $site['body']['providerBranch']);
+
+        $this->client->call(Client::METHOD_DELETE, '/sites/' . $siteId, $headers);
     }
 
     public function testClosePullRequestRemovesAuthorization(): void
