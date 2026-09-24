@@ -188,4 +188,27 @@ class DSNTest extends TestCase
 
         $this->fail('The DSN was accepted');
     }
+
+    /**
+     * @requires PHP >= 8.2
+     */
+    public function testUncaughtRefusalPrintsNoCredentials(): void
+    {
+        $ignoreArgs = \ini_set('zend.exception_ignore_args', '0');
+        $maxLength = \ini_set('zend.exception_string_param_max_len', '1000000');
+
+        try {
+            new DSN('s3://' . self::USER . ':' . self::PASSWORD . '@/backups?region=us-east-1');
+            $this->fail('The DSN was accepted');
+        } catch (\InvalidArgumentException $exception) {
+            $printed = (string) $exception;
+        } finally {
+            \ini_set('zend.exception_ignore_args', $ignoreArgs);
+            \ini_set('zend.exception_string_param_max_len', $maxLength);
+        }
+
+        $this->assertStringNotContainsString(self::USER, $printed);
+        $this->assertStringNotContainsString(self::PASSWORD, $printed);
+        $this->assertStringContainsString(DSN::class . '->__construct(Object(SensitiveParameterValue))', $printed);
+    }
 }

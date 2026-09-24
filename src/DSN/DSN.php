@@ -51,7 +51,7 @@ class DSN
      *
      * @param  string  $dsn
      */
-    public function __construct(string $dsn)
+    public function __construct(#[\SensitiveParameter] string $dsn)
     {
         $parts = \parse_url($dsn);
 
