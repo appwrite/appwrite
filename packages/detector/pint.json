@@ -1,6 +1,0 @@
-{
-    "preset": "psr12",
-    "exclude": [
-        "tests/resources"
-    ]
-}

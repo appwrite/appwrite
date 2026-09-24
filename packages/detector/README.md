@@ -1,5 +1,8 @@
 # Utopia Detector
 
+> [!IMPORTANT]
+> This repository is a read-only mirror of [`packages/detector`](https://github.com/appwrite/appwrite/tree/main/packages/detector) in [appwrite/appwrite](https://github.com/appwrite/appwrite). Development happens there — please open issues and pull requests against appwrite/appwrite.
+
 [![Build Status](https://travis-ci.org/utopia-php/detector.svg?branch=master)](https://travis-ci.com/utopia-php/detector)
 ![Total Downloads](https://img.shields.io/packagist/dt/utopia-php/detector.svg)
 [![Discord](https://img.shields.io/discord/564160730845151244?label=discord)](https://appwrite.io/discord)
