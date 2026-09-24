@@ -3,7 +3,7 @@
 namespace Utopia\Agents\Adapters;
 
 use Psr\Http\Client\ClientInterface;
-use Utopia\Psr18\StreamingClientInterface;
+use Utopia\Client\Psr18\StreamingClientInterface;
 
 class XAI extends OpenAI
 {

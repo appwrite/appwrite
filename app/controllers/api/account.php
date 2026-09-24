@@ -598,15 +598,17 @@ Http::get('/v1/account/sessions')
         contentType: ContentType::JSON,
     ))
     ->inject('response')
-    ->inject('user')
+    ->inject('targetUser')
     ->inject('locale')
     ->inject('store')
     ->inject('proofForToken')
-    ->action(function (Response $response, User $user, Locale $locale, Store $store, ProofsToken $proofForToken) {
+    ->action(function (Response $response, User $targetUser, Locale $locale, Store $store, ProofsToken $proofForToken) {
 
 
-        $sessions = $user->getAttribute('sessions', []);
-        $current = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken);
+        $sessions = $targetUser->getAttribute('sessions', []);
+        // While impersonating, the request runs on the impersonator's session, so none of
+        // the target's sessions is marked current.
+        $current = $targetUser->sessionVerify($store->getProperty('secret', ''), $proofForToken);
 
         foreach ($sessions as $key => $session) {
             /** @var Document $session */
@@ -730,15 +732,18 @@ Http::get('/v1/account/sessions/:sessionId')
     ))
     ->param('sessionId', 'current', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Session ID. Use the string \'current\' to get the current device session.', true, ['dbForProject'])
     ->inject('response')
-    ->inject('user')
+    ->inject('targetUser')
     ->inject('locale')
     ->inject('store')
     ->inject('proofForToken')
-    ->action(function (?string $sessionId, Response $response, User $user, Locale $locale, Store $store, ProofsToken $proofForToken) {
+    ->action(function (?string $sessionId, Response $response, User $targetUser, Locale $locale, Store $store, ProofsToken $proofForToken) {
 
-        $sessions = $user->getAttribute('sessions', []);
+        $sessions = $targetUser->getAttribute('sessions', []);
+        // While impersonating, the request runs on the impersonator's session, so 'current'
+        // resolves against none of the target's sessions and this throws. That matches the
+        // sessions list, which marks none of them current for the same reason.
         $sessionId = ($sessionId === 'current')
-            ? $user->sessionVerify($store->getProperty('secret', ''), $proofForToken)
+            ? $targetUser->sessionVerify($store->getProperty('secret', ''), $proofForToken)
             : $sessionId;
 
         foreach ($sessions as $session) {
@@ -764,6 +769,7 @@ Http::delete('/v1/account/sessions/:sessionId')
     ->desc('Delete session')
     ->groups(['api', 'account', 'mfa'])
     ->label('scope', 'account')
+    ->label('impersonation', 'allow')
     ->label('event', 'users.[userId].sessions.[sessionId].delete')
     ->label('audits.event', 'session.delete')
     ->label('audits.resource', 'user/{user.$id}')
@@ -3358,6 +3364,7 @@ Http::post('/v1/account/jwts')
     ->groups(['api', 'account', 'auth'])
     ->label('scope', 'account')
     ->label('auth.type', 'jwt')
+    ->label('impersonation', 'allow')
     ->label('sdk', new Method(
         namespace: 'account',
         group: 'tokens',
@@ -3423,10 +3430,10 @@ Http::get('/v1/account/prefs')
         contentType: ContentType::JSON
     ))
     ->inject('response')
-    ->inject('user')
-    ->action(function (Response $response, Document $user) {
+    ->inject('targetUser')
+    ->action(function (Response $response, Document $targetUser) {
 
-        $prefs = $user->getAttribute('prefs', []);
+        $prefs = $targetUser->getAttribute('prefs', []);
 
         $response->dynamic(new Document($prefs), Response::MODEL_PREFERENCES);
     });
@@ -5277,27 +5284,73 @@ Http::post('/v1/account/targets/push')
 
         $sessionId = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken);
         $session = $dbForProject->getDocument('sessions', $sessionId);
+        $name = "{$device['deviceBrand']} {$device['deviceModel']}";
+
+        // A session is one device install holding one push token per provider. Re-registering a rotated
+        // token instead of updating used to leave the superseded one live, so messages arrived twice.
+        $siblings = $session->isEmpty()
+            ? []
+            : $authorization->skip(fn () => $dbForProject->find('targets', [
+                Query::equal('userInternalId', [$user->getSequence()]),
+                Query::equal('sessionInternalId', [$session->getSequence()]),
+                Query::equal('providerType', [MESSAGE_TYPE_PUSH]),
+                empty($providerId)
+                    ? Query::isNull('providerId')
+                    : Query::equal('providerId', [$providerId]),
+                Query::orderAsc('$sequence'),
+                Query::limit(APP_LIMIT_SUBQUERY),
+            ]));
+
+        // A sibling already holding this token has to be the one reused, or the update below collides
+        // with it on the unique identifier index. Otherwise the oldest wins, since a client that
+        // subscribes to topics only on first registration left its subscriptions there.
+        $current = null;
+
+        foreach ($siblings as $key => $sibling) {
+            if ($sibling->getAttribute('identifier') === $identifier) {
+                $current = $sibling;
+                unset($siblings[$key]);
+                break;
+            }
+        }
+
+        $current ??= \array_shift($siblings);
 
         try {
-            $target = $dbForProject->createDocument('targets', new Document([
-                '$id' => $targetId,
-                '$permissions' => [
-                    Permission::read(Role::user($user->getId())),
-                    Permission::update(Role::user($user->getId())),
-                    Permission::delete(Role::user($user->getId())),
-                ],
-                'providerId' => !empty($providerId) ? $providerId : null,
-                'providerInternalId' => !empty($providerId) ? $provider->getSequence() : null,
-                'providerType' => MESSAGE_TYPE_PUSH,
-                'userId' => $user->getId(),
-                'userInternalId' => $user->getSequence(),
-                'sessionId' => $session->getId(),
-                'sessionInternalId' => $session->getSequence(),
-                'identifier' => $identifier,
-                'name' => "{$device['deviceBrand']} {$device['deviceModel']}"
-            ]));
+            $target = $current === null
+                ? $dbForProject->createDocument('targets', new Document([
+                    '$id' => $targetId,
+                    '$permissions' => [
+                        Permission::read(Role::user($user->getId())),
+                        Permission::update(Role::user($user->getId())),
+                        Permission::delete(Role::user($user->getId())),
+                    ],
+                    'providerId' => !empty($providerId) ? $providerId : null,
+                    'providerInternalId' => !empty($providerId) ? $provider->getSequence() : null,
+                    'providerType' => MESSAGE_TYPE_PUSH,
+                    'userId' => $user->getId(),
+                    'userInternalId' => $user->getSequence(),
+                    'sessionId' => $session->getId(),
+                    'sessionInternalId' => $session->getSequence(),
+                    'identifier' => $identifier,
+                    'name' => $name
+                ]))
+                : $dbForProject->updateDocument('targets', $current->getId(), new Document([
+                    'identifier' => $identifier,
+                    'expired' => false,
+                    'name' => $name,
+                ]));
         } catch (Duplicate) {
             throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
+        }
+
+        // Anything left holds a token the client just told us it no longer uses. Expiring rather than
+        // deleting hands it to the maintenance sweep, which also releases its subscriptions and the
+        // topic counters those hold.
+        foreach ($siblings as $sibling) {
+            $dbForProject->updateDocument('targets', $sibling->getId(), new Document([
+                'expired' => true,
+            ]));
         }
 
         $dbForProject->purgeCachedDocument('users', $user->getId());
@@ -5463,9 +5516,9 @@ Http::get('/v1/account/identities')
     ->param('queries', [], new Identities(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Identities::ALLOWED_ATTRIBUTES), true)
     ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
-    ->inject('user')
+    ->inject('targetUser')
     ->inject('dbForProject')
-    ->action(function (array $queries, bool $includeTotal, Response $response, User $user, Database $dbForProject) {
+    ->action(function (array $queries, bool $includeTotal, Response $response, User $targetUser, Database $dbForProject) {
 
         try {
             $queries = Query::parseQueries($queries);
@@ -5473,7 +5526,7 @@ Http::get('/v1/account/identities')
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
-        $queries[] = Query::equal('userInternalId', [$user->getSequence()]);
+        $queries[] = Query::equal('userInternalId', [$targetUser->getSequence()]);
 
         $cursor = Query::getCursorQueries($queries, false);
         $cursor = \reset($cursor);

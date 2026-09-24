@@ -2,13 +2,12 @@
 
 namespace Appwrite\Mqtt;
 
+use Appwrite\Extend\Exception;
 use Appwrite\Messaging\Adapter\Mqtt;
-use Appwrite\Utopia\Database\Documents\User;
 use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Container;
@@ -25,6 +24,8 @@ use Utopia\Mqtt\Packet\Suback;
 use Utopia\Mqtt\Packet\Subscribe;
 use Utopia\Mqtt\Packet\Unsuback;
 use Utopia\Mqtt\Packet\Unsubscribe;
+use Utopia\Mqtt\Properties;
+use Utopia\Mqtt\Property;
 use Utopia\Mqtt\Server;
 use Utopia\Span\Span;
 use Utopia\System\System;
@@ -32,6 +33,11 @@ use Utopia\System\System;
 class Handler implements MqttHandler
 {
     private const REPLAY_TTL = 3600;
+
+    // The reserved per-user topic namespace. `users/<userId>` is an implicit topic owned by that
+    // user alone: it needs no topics document (the publisher auto-provisions one) and a client may
+    // subscribe only to its own. Wildcards under it are refused so they can't span other users.
+    private const USER_TOPIC_PREFIX = 'users';
 
     public function __construct(
         private readonly Container $container,
@@ -58,7 +64,7 @@ class Handler implements MqttHandler
 
         if ($identity === []) {
             Span::add('mqtt.result', 'rejected');
-            return Connack::refuse(Connack::NOT_AUTHORIZED);
+            return $this->refuseConnect(Connack::NOT_AUTHORIZED, Exception::USER_UNAUTHORIZED);
         }
 
         $connection->identity = $identity;
@@ -72,7 +78,7 @@ class Handler implements MqttHandler
 
             if ((new Abuse($timeLimit))->check()) {
                 Span::add('mqtt.result', 'abuse');
-                return Connack::refuse(Connack::QUOTA_EXCEEDED);
+                return $this->refuseConnect(Connack::QUOTA_EXCEEDED, Exception::GENERAL_RATE_LIMIT_EXCEEDED);
             }
         }
 
@@ -86,6 +92,19 @@ class Handler implements MqttHandler
         Span::add('mqtt.client_id', $connection->getClientId());
 
         return Connack::accept();
+    }
+
+    /**
+     * Refuse a CONNECT with an MQTT reason code and, on MQTT 5.0, the matching Appwrite error
+     * message as the Reason String (property 0x1F) so clients learn why — the same messages the
+     * realtime endpoint returns. 3.1.1 clients only get the reason code; the string is dropped.
+     */
+    private function refuseConnect(int $reasonCode, string $error): Connack
+    {
+        $properties = new Properties();
+        $properties->add(new Property(Property::REASON_STRING, (new Exception($error))->getMessage()));
+
+        return Connack::refuse($reasonCode, $properties);
     }
 
     public function onAuthenticate(Auth $auth, Connection $connection): Connack|Auth|Disconnect
@@ -105,7 +124,7 @@ class Handler implements MqttHandler
         if ($identity === [] || ($identity['userId'] ?? '') !== ($connection->identity['userId'] ?? '')) {
             $this->mqtt->reauth->add(1, ['result' => 'rejected']);
             Span::add('mqtt.result', 'rejected');
-            return Disconnect::refuse(Disconnect::NOT_AUTHORIZED);
+            return Disconnect::refuse(Disconnect::NOT_AUTHORIZED, (new Exception(Exception::USER_UNAUTHORIZED))->getMessage());
         }
 
         $connection->identity = $identity;
@@ -117,58 +136,70 @@ class Handler implements MqttHandler
 
     public function onSubscribe(Subscribe $subscribe, Connection $connection): Suback
     {
+        $suback = new Suback();
+
+        // Topic selection is open, but the connection's user must still be valid: re-check that it
+        // was not blocked or removed since CONNECT. If it is no longer permitted, refuse every filter.
         $authorizer = $this->container->get('authorizer');
-        $identity = $connection->identity;
+        if ($authorizer !== null && !$authorizer($connection->identity)) {
+            foreach ($subscribe->filters() as $filter) {
+                $suback->deny();
+            }
+
+            return $suback;
+        }
 
         $projectDB = $this->getProjectDB($connection->prefix);
+        $userId = $connection->identity['userId'] ?? '';
 
-        $allowed = [];
+        // Subscription is open: a permitted connection may subscribe to any topic or wildcard, except
+        // the reserved users/ namespace which is ownership-gated (see deniesUserTopic). The topic
+        // document is consulted only to cap the QoS and to enable offline replay for an exact name.
+        $names = [];
         foreach ($subscribe->filters() as $filter) {
-            if (!isset($allowed[$filter->topic]) && ($authorizer === null || $authorizer($identity, $filter->topic))) {
-                $allowed[$filter->topic] = true;
+            if ($this->isWildcard($filter->topic) || $this->deniesUserTopic($filter->topic, $userId)) {
+                continue;
             }
+            $names[$filter->topic] = true;
         }
 
         $authorization = new Authorization();
         $projectDB->setAuthorization($authorization);
 
-        /** @var User $user */
-        $user = $authorization->skip(fn () => $projectDB->getDocument('users', $identity['userId'] ?? ''));
-        $roles = $user->getRoles($authorization);
-
-        $topicsById = [];
-        if ($allowed !== []) {
+        $topicsByName = [];
+        if ($names !== []) {
             $documents = $authorization->skip(fn () => $projectDB->find('topics', [
-                Query::equal('$id', array_keys($allowed)),
-                Query::limit(\count($allowed)),
+                Query::equal('name', array_keys($names)),
+                Query::limit(\count($names)),
             ]));
             foreach ($documents as $document) {
-                $topicsById[$document->getId()] = $document;
+                $topicsByName[$document->getAttribute('name')] ??= $document;
             }
         }
 
-        $suback = new Suback();
         $grantedTopics = [];
 
         foreach ($subscribe->filters() as $filter) {
             Span::add('mqtt.topic', $filter->topic);
 
-            $document = $topicsById[$filter->topic] ?? null;
-            if (!isset($allowed[$filter->topic]) || $document === null) {
+            // The reserved users/ namespace: refuse wildcards and other users' topics; an owned
+            // users/<id> falls through and is served like any exact topic name below.
+            if ($this->deniesUserTopic($filter->topic, $userId)) {
                 $suback->deny();
                 continue;
             }
 
-            if (!$this->authorizedForTopic($document->getAttribute('subscribe', []) ?? [], $roles)) {
-                $suback->deny();
-                continue;
-            }
+            $document = $this->isWildcard($filter->topic) ? null : ($topicsByName[$filter->topic] ?? null);
 
-            $topicQos = $document->getAttribute('qos');
+            $topicQos = $document?->getAttribute('qos');
             $grantedQos = min($filter->qos, $topicQos === null ? Packet::QOS_1 : (int) $topicQos);
-
             $suback->grant($grantedQos);
-            $grantedTopics[$filter->topic] = [$document, $grantedQos];
+
+            // Offline replay needs an exact topic (its ledger and cursor); a wildcard or an unknown
+            // topic is delivered live only.
+            if ($document !== null) {
+                $grantedTopics[$filter->topic] = [$document, $grantedQos];
+            }
         }
 
         if ($grantedTopics !== []) {
@@ -250,20 +281,31 @@ class Handler implements MqttHandler
         }
     }
 
-    /**
-     * Whether the subscriber's roles satisfy a topic's subscribe roles. No configured roles (or an
-     * explicit `any`) means the topic is open to everyone.
-     *
-     * @param array<int, string> $topicRoles
-     * @param array<int, string> $userRoles
-     */
-    private function authorizedForTopic(array $topicRoles, array $userRoles): bool
+    /** Whether a subscription filter is an MQTT wildcard (single-level + or multi-level #). */
+    private function isWildcard(string $topic): bool
     {
-        if ($topicRoles === [] || \in_array(Role::any()->toString(), $topicRoles, true)) {
+        return \str_contains($topic, '+') || \str_contains($topic, '#');
+    }
+
+    /**
+     * Whether a filter in the reserved users/ namespace must be refused: any wildcard under users/
+     * (so it can't span other users), or an exact users/<id> that is not the caller's own. An owned
+     * users/<id> is allowed (served like any exact topic), and a deeper users/<id>/… path is an
+     * ordinary topic, not a reserved one.
+     */
+    private function deniesUserTopic(string $topic, string $userId): bool
+    {
+        if (!\str_starts_with($topic, self::USER_TOPIC_PREFIX . '/')) {
+            return false;
+        }
+
+        if ($this->isWildcard($topic)) {
             return true;
         }
 
-        return \array_intersect($topicRoles, $userRoles) !== [];
+        $segments = \explode('/', $topic);
+
+        return \count($segments) === 2 && $segments[1] !== $userId;
     }
 
     /**
@@ -307,7 +349,7 @@ class Handler implements MqttHandler
 
             $start = max($from + 1, $tail - $maxDepth + 1);
             $messages = $projectDB->getAuthorization()->skip(fn () => $projectDB->find('pushLedger', [
-                Query::equal('topic', [$filter]),
+                Query::equal('topic', [$document->getId()]),
                 Query::greaterThanEqual('sequence', $start),
                 Query::orderAsc('sequence'),
                 Query::limit($maxDepth),
