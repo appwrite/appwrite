@@ -43,10 +43,7 @@
             "Utopia\\Telemetry\\": "packages/telemetry/src",
             "Utopia\\UserAgent\\": "packages/user-agent/src",
             "Utopia\\WebSocket\\": "packages/websocket/src"
-        },
-        "files": [
-            "packages/client/src/compat.php"
-        ]
+        }
     },
     "autoload-dev": {
         "psr-4": {

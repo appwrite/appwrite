@@ -6,6 +6,10 @@ This project follows semantic versioning.
 
 ## [Unreleased]
 
+### Removed
+
+- Remove the `Utopia\Client` and `Utopia\Psr18\StreamingClientInterface` aliases that 0.5 kept for the old names. Use `Utopia\Client\Client` and `Utopia\Client\Psr18\StreamingClientInterface`.
+
 ### Changed
 
 - Move `Utopia\Client` to `Utopia\Client\Client` and `Utopia\Psr18\StreamingClientInterface` to `Utopia\Client\Psr18\StreamingClientInterface`, so the package declares a single `Utopia\Client\` prefix. The old names remain as aliases until the next major release.
