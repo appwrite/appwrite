@@ -1,14 +1,20 @@
 <clickhouse>
-  <text_log><ttl>event_date + INTERVAL 3 DAY DELETE</ttl></text_log>
-  <trace_log><ttl>event_date + INTERVAL 3 DAY DELETE</ttl></trace_log>
-  <asynchronous_metric_log><ttl>event_date + INTERVAL 7 DAY DELETE</ttl></asynchronous_metric_log>
-  <metric_log><ttl>event_date + INTERVAL 7 DAY DELETE</ttl></metric_log>
+  <!-- The metric, trace and profile logs sample the server every second whether
+       or not Appwrite serves traffic, and nothing reads them back, so their
+       writes and the merges behind them are pure overhead. -->
+  <asynchronous_metric_log remove="1"/>
+  <metric_log remove="1"/>
+  <histogram_metric_log remove="1"/>
+  <query_metric_log remove="1"/>
+  <processors_profile_log remove="1"/>
+  <trace_log remove="1"/>
+  <!-- text_log repeats the server log the container already writes. -->
+  <text_log remove="1"/>
+
+  <!-- Kept for debugging, capped so they cannot fill the volume. -->
   <part_log><ttl>event_date + INTERVAL 7 DAY DELETE</ttl></part_log>
-  <processors_profile_log><ttl>event_date + INTERVAL 7 DAY DELETE</ttl></processors_profile_log>
   <query_log><ttl>event_date + INTERVAL 7 DAY DELETE</ttl></query_log>
-  <histogram_metric_log><ttl>event_date + INTERVAL 7 DAY DELETE</ttl></histogram_metric_log>
   <query_views_log><ttl>event_date + INTERVAL 7 DAY DELETE</ttl></query_views_log>
-  <query_metric_log><ttl>event_date + INTERVAL 7 DAY DELETE</ttl></query_metric_log>
   <background_schedule_pool_log><ttl>event_date + INTERVAL 7 DAY DELETE</ttl></background_schedule_pool_log>
   <asynchronous_insert_log><ttl>event_date + INTERVAL 3 DAY DELETE</ttl></asynchronous_insert_log>
   <error_log><ttl>event_date + INTERVAL 14 DAY DELETE</ttl></error_log>
