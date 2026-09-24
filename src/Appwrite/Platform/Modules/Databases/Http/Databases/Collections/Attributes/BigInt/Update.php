@@ -10,6 +10,7 @@ use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
+use Utopia\Database\Attribute;
 use Utopia\Database\Database;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Key;
@@ -87,7 +88,7 @@ class Update extends Action
             dbForProject: $dbForProject,
             queueForEvents: $queueForEvents,
             authorization: $authorization,
-            type: ColumnType::BigInteger->value,
+            type: Attribute::persistedType(ColumnType::BigInteger),
             default: $default,
             required: $required,
             min: $min,

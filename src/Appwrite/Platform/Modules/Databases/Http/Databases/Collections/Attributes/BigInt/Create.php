@@ -11,6 +11,7 @@ use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
+use Utopia\Database\Attribute;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
@@ -97,7 +98,7 @@ class Create extends Action
 
         $attribute = $this->createAttribute($databaseId, $collectionId, new Document([
             'key' => $key,
-            'type' => ColumnType::BigInteger->value,
+            'type' => Attribute::persistedType(ColumnType::BigInteger),
             'size' => 8,
             'required' => $required,
             'default' => $default,

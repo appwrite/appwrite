@@ -305,8 +305,7 @@ class Create extends Action
         // the same document rather than one with no range at all.
         if (\in_array($type, [
             ColumnType::Integer->value,
-            ColumnType::BigInteger->value,
-            'bigint',
+            Attribute::persistedType(ColumnType::BigInteger),
             ColumnType::Float->value,
             ColumnType::Double->value,
         ], true)) {
@@ -314,7 +313,7 @@ class Create extends Action
 
             $format = match ($type) {
                 ColumnType::Integer->value => APP_DATABASE_ATTRIBUTE_INT_RANGE,
-                ColumnType::BigInteger->value, 'bigint' => APP_DATABASE_ATTRIBUTE_BIGINT_RANGE,
+                Attribute::persistedType(ColumnType::BigInteger) => APP_DATABASE_ATTRIBUTE_BIGINT_RANGE,
                 default => APP_DATABASE_ATTRIBUTE_FLOAT_RANGE,
             };
 

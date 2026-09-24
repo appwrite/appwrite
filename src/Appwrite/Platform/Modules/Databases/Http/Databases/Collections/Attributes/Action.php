@@ -240,62 +240,61 @@ abstract class Action extends DatabasesAction
     {
         $isCollections = $this->isCollectionsAPI();
 
-        return match ($type) {
-            ColumnType::Boolean->value => $isCollections
+        return match (Attribute::tryNormalizeType($type)) {
+            ColumnType::Boolean => $isCollections
                 ? UtopiaResponse::MODEL_ATTRIBUTE_BOOLEAN
                 : UtopiaResponse::MODEL_COLUMN_BOOLEAN,
 
-            ColumnType::Integer->value => $isCollections
+            ColumnType::Integer => $isCollections
                 ? UtopiaResponse::MODEL_ATTRIBUTE_INTEGER
                 : UtopiaResponse::MODEL_COLUMN_INTEGER,
 
-            ColumnType::BigInteger->value,
-            'bigint' => $isCollections
+            ColumnType::BigInteger => $isCollections
                 ? UtopiaResponse::MODEL_ATTRIBUTE_BIGINT
                 : UtopiaResponse::MODEL_COLUMN_BIGINT,
 
-            ColumnType::Float->value,
-            ColumnType::Double->value => $isCollections
+            ColumnType::Float,
+            ColumnType::Double => $isCollections
                 ? UtopiaResponse::MODEL_ATTRIBUTE_FLOAT
                 : UtopiaResponse::MODEL_COLUMN_FLOAT,
 
-            ColumnType::Datetime->value => $isCollections
+            ColumnType::Datetime => $isCollections
                 ? UtopiaResponse::MODEL_ATTRIBUTE_DATETIME
                 : UtopiaResponse::MODEL_COLUMN_DATETIME,
 
-            ColumnType::Relationship->value => $isCollections
+            ColumnType::Relationship => $isCollections
                 ? UtopiaResponse::MODEL_ATTRIBUTE_RELATIONSHIP
                 : UtopiaResponse::MODEL_COLUMN_RELATIONSHIP,
 
-            ColumnType::Point->value => $isCollections
+            ColumnType::Point => $isCollections
                 ? UtopiaResponse::MODEL_ATTRIBUTE_POINT
                 : UtopiaResponse::MODEL_COLUMN_POINT,
 
-            ColumnType::Linestring->value => $isCollections
+            ColumnType::Linestring => $isCollections
                 ? UtopiaResponse::MODEL_ATTRIBUTE_LINE
                 : UtopiaResponse::MODEL_COLUMN_LINE,
 
-            ColumnType::Polygon->value => $isCollections
+            ColumnType::Polygon => $isCollections
                 ? UtopiaResponse::MODEL_ATTRIBUTE_POLYGON
                 : UtopiaResponse::MODEL_COLUMN_POLYGON,
 
-            ColumnType::Varchar->value => $isCollections
+            ColumnType::Varchar => $isCollections
                 ? UtopiaResponse::MODEL_ATTRIBUTE_VARCHAR
                 : UtopiaResponse::MODEL_COLUMN_VARCHAR,
 
-            ColumnType::Text->value => $isCollections
+            ColumnType::Text => $isCollections
                 ? UtopiaResponse::MODEL_ATTRIBUTE_TEXT
                 : UtopiaResponse::MODEL_COLUMN_TEXT,
 
-            ColumnType::MediumText->value => $isCollections
+            ColumnType::MediumText => $isCollections
                 ? UtopiaResponse::MODEL_ATTRIBUTE_MEDIUMTEXT
                 : UtopiaResponse::MODEL_COLUMN_MEDIUMTEXT,
 
-            ColumnType::LongText->value => $isCollections
+            ColumnType::LongText => $isCollections
                 ? UtopiaResponse::MODEL_ATTRIBUTE_LONGTEXT
                 : UtopiaResponse::MODEL_COLUMN_LONGTEXT,
 
-            ColumnType::String->value => match ($format) {
+            ColumnType::String => match ($format) {
                 APP_DATABASE_ATTRIBUTE_EMAIL => $isCollections
                     ? UtopiaResponse::MODEL_ATTRIBUTE_EMAIL
                     : UtopiaResponse::MODEL_COLUMN_EMAIL,
@@ -548,7 +547,9 @@ abstract class Action extends DatabasesAction
             throw new Exception($this->getNotAvailableException());
         }
 
-        if ($attribute->getAttribute('type') !== $type) {
+        $storedType = Attribute::tryNormalizeType($attribute->getAttribute('type', ''));
+
+        if ($storedType === null || $storedType !== Attribute::tryNormalizeType($type)) {
             throw new Exception($this->getTypeInvalidException());
         }
 

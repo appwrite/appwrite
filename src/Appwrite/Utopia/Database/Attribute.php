@@ -2,6 +2,7 @@
 
 namespace Appwrite\Utopia\Database;
 
+use Utopia\Database\Attribute as DatabaseAttribute;
 use Utopia\Database\Database;
 use Utopia\Query\Schema\ColumnType;
 
@@ -59,7 +60,7 @@ class Attribute
             ColumnType::LongText->value,
             ColumnType::Integer->value,
             ColumnType::BigInteger->value,
-            'bigint',
+            DatabaseAttribute::persistedType(ColumnType::BigInteger),
             ColumnType::Double->value,
             ColumnType::Boolean->value,
             ColumnType::Datetime->value,
@@ -83,8 +84,8 @@ class Attribute
         $type = $attribute['type'] ?? '';
         $format = $attribute['format'] ?? '';
 
-        if ($type === ColumnType::BigInteger->value) {
-            $type = 'bigint';
+        if (\is_string($type) && DatabaseAttribute::tryNormalizeType($type) === ColumnType::BigInteger) {
+            $type = DatabaseAttribute::persistedType(ColumnType::BigInteger);
         }
 
         if (isset(self::FORMAT_SIZES[$type])) {

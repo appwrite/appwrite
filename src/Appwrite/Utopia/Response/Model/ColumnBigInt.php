@@ -3,6 +3,7 @@
 namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
+use Utopia\Database\Attribute as DatabaseAttribute;
 use Utopia\Database\Document;
 use Utopia\Query\Schema\ColumnType;
 
@@ -59,11 +60,9 @@ class ColumnBigInt extends Column
     public function filter(Document $document): Document
     {
         $type = $document->getAttribute('type');
-        if ($type instanceof ColumnType) {
-            $type = $type->value;
-        }
-        if ($type === ColumnType::BigInteger->value) {
-            $document->setAttribute('type', 'bigint');
+
+        if (($type instanceof ColumnType || \is_string($type)) && DatabaseAttribute::tryNormalizeType($type) === ColumnType::BigInteger) {
+            $document->setAttribute('type', DatabaseAttribute::persistedType(ColumnType::BigInteger));
         }
 
         return $document;

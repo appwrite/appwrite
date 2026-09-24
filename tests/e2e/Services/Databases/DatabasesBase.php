@@ -1889,6 +1889,74 @@ trait DatabasesBase
         $this->assertStringContainsString('Cannot query encrypted attribute', $queried['body']['message']);
     }
 
+    /**
+     * A bigint carries one stored type whichever path created it, so it is
+     * updatable and listed by a type filter from either one.
+     */
+    public function testUpdateBigIntFromEveryCreationPath(): void
+    {
+        if (!$this->getSupportForAttributes()) {
+            $this->markTestSkipped('Attributes are not supported by this database adapter');
+        }
+
+        $databaseId = $this->setupDatabase()['databaseId'];
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $schemaResource = $this->getSchemaResource();
+
+        $container = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => ID::unique(),
+            'name' => 'Totals',
+            $schemaResource => [
+                ['key' => 'inline', 'type' => ColumnType::BigInteger->value],
+            ],
+        ]);
+
+        $this->assertSame(201, $container['headers']['status-code']);
+        $containerId = $container['body']['$id'];
+
+        $dedicated = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $containerId, 'bigint'), $headers, [
+            'key' => 'dedicated',
+            'required' => false,
+        ]);
+
+        $this->assertSame(202, $dedicated['headers']['status-code']);
+
+        $this->waitForAttribute($databaseId, $containerId, 'inline');
+        $this->waitForAttribute($databaseId, $containerId, 'dedicated');
+
+        foreach (['inline', 'dedicated'] as $key) {
+            $updated = $this->client->call(Client::METHOD_PATCH, $this->getSchemaUrl($databaseId, $containerId, 'bigint', $key), $headers, [
+                'required' => false,
+                'min' => 10,
+                'max' => 5000,
+                'default' => 20,
+            ]);
+
+            $this->assertSame(200, $updated['headers']['status-code'], "Updating the '{$key}' bigint failed: " . ($updated['body']['message'] ?? ''));
+            $this->assertSame('bigint', $updated['body']['type']);
+            $this->assertSame(10, $updated['body']['min']);
+            $this->assertSame(5000, $updated['body']['max']);
+            $this->assertSame(20, $updated['body']['default']);
+        }
+
+        $listed = $this->client->call(Client::METHOD_GET, $this->getSchemaUrl($databaseId, $containerId), $headers, [
+            'queries' => [
+                Query::equal('type', ['bigint'])->toString(),
+            ],
+        ]);
+
+        $this->assertSame(200, $listed['headers']['status-code']);
+
+        $keys = \array_column($listed['body'][$schemaResource], 'key');
+        \sort($keys);
+
+        $this->assertSame(['dedicated', 'inline'], $keys);
+    }
+
     public function testListAttributes(): void
     {
         if (!$this->getSupportForAttributes()) {
