@@ -1269,6 +1269,11 @@ class GitHub extends Git
         return "https://github.com/{$owner}/{$repositoryName}";
     }
 
+    public function getOrganizationUrl(string $owner): string
+    {
+        return "https://github.com/{$owner}";
+    }
+
     public function getBranchUrl(string $owner, string $repositoryName, string $branch): string
     {
         return $this->getRepositoryUrl($owner, $repositoryName) . "/tree/{$branch}";

@@ -1211,6 +1211,11 @@ class Origin extends Git
         return "{$this->webEndpoint}/{$owner}/{$repositoryName}";
     }
 
+    public function getOrganizationUrl(string $owner): string
+    {
+        return "{$this->webEndpoint}/{$owner}";
+    }
+
     public function getBranchUrl(string $owner, string $repositoryName, string $branch): string
     {
         return $this->getRepositoryUrl($owner, $repositoryName) . "/tree/{$branch}";

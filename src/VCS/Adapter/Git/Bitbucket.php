@@ -138,6 +138,11 @@ class Bitbucket extends Git
         return "{$this->bitbucketUrl}/{$owner}/{$repositoryName}";
     }
 
+    public function getOrganizationUrl(string $owner): string
+    {
+        return "{$this->bitbucketUrl}/{$owner}";
+    }
+
     public function getBranchUrl(string $owner, string $repositoryName, string $branch): string
     {
         return $this->getRepositoryUrl($owner, $repositoryName) . "/branch/{$branch}";

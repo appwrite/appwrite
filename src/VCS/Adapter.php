@@ -245,6 +245,17 @@ abstract class Adapter
     abstract public function getRepositoryUrl(string $owner, string $repositoryName): string;
 
     /**
+     * Browser-facing URL for an owner's home page: a user, organization or group.
+     *
+     * Concrete rather than abstract so an adapter defined outside this package
+     * keeps loading; every adapter here overrides it.
+     */
+    public function getOrganizationUrl(string $owner): string
+    {
+        throw new Exception('getOrganizationUrl() is not supported by ' . $this->getName());
+    }
+
+    /**
      * Browser-facing URL for a branch within a repository.
      */
     abstract public function getBranchUrl(string $owner, string $repositoryName, string $branch): string;

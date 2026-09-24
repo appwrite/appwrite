@@ -700,6 +700,11 @@ class Gitea extends Git
         return "{$this->giteaUrl}/{$owner}/{$repositoryName}";
     }
 
+    public function getOrganizationUrl(string $owner): string
+    {
+        return "{$this->giteaUrl}/{$owner}";
+    }
+
     public function getBranchUrl(string $owner, string $repositoryName, string $branch): string
     {
         return $this->getRepositoryUrl($owner, $repositoryName) . "/src/branch/{$branch}";
