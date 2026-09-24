@@ -54,7 +54,7 @@ final class SpatialSupportTest extends TestCase
         yield 'SQLite' => [new SQLite(new PDO('sqlite::memory:')), false];
         yield 'MongoDB' => [self::withoutConnecting(Mongo::class), false];
         yield 'Memory' => [new Memory(), false];
-        yield 'pooled MariaDB' => [self::pooled(new MariaDB(new \stdClass())), true];
+        yield 'pooled MariaDB' => [self::pooled(new MariaDB(new PDO('sqlite::memory:'))), true];
         yield 'pooled SQLite' => [self::pooled(new SQLite(new PDO('sqlite::memory:'))), false];
         yield 'spatial adapter without the spatial quirk capabilities' => [
             new class (new \stdClass()) extends MySQL {
