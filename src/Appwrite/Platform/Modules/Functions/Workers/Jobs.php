@@ -80,18 +80,16 @@ class Jobs extends Action
 
     // Repository sources only: an uploaded source is downloaded from Appwrite.
     private const array USER_SOURCE_ERRORS = [
-        401 => 'Access to the repository was denied. Check that it is still accessible to your Git installation.',
-        403 => 'Access to the repository was denied. Check that it is still accessible to your Git installation.',
-        404 => 'The repository, branch or commit could not be found. Check that it still exists.',
+        'Download failed with status 401' => 'Access to the repository was denied. Check that it is still accessible to your Git installation.',
+        'Download failed with status 403' => 'Access to the repository was denied. Check that it is still accessible to your Git installation.',
+        'Download failed with status 404' => 'The repository, branch or commit could not be found. Check that it still exists.',
     ];
 
     private static function userMessage(Document $deployment, JobArtifact $artifact): ?string
     {
         $code = $artifact->error?->code;
-        if ($code === ErrorCode::DownloadHttpError
-            && $deployment->getAttribute('type') === 'vcs'
-            && \preg_match('/status (\d{3})/', $artifact->error->message, $matches) === 1) {
-            return self::USER_SOURCE_ERRORS[(int) $matches[1]] ?? null;
+        if ($code === ErrorCode::DownloadHttpError && $deployment->getAttribute('type') === 'vcs') {
+            return self::USER_SOURCE_ERRORS[$artifact->error->message] ?? null;
         }
 
         return self::USER_ARTIFACT_ERRORS[$code->value ?? ''] ?? null;
