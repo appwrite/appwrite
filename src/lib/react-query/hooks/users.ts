@@ -366,6 +366,8 @@ export function useProjectUsers(
     if (!usersData?.users) return []
 
     return usersData.users.map((user: unknown) => {
+      // Result of the last breached-password check; null when never checked.
+      const { passwordPwned } = user as { passwordPwned?: boolean | null }
       return {
         $id: user.$id,
         name: user.name || '',
@@ -381,7 +383,14 @@ export function useProjectUsers(
           user.twoFactorAuthenticatorEnabled === true ||
           false,
         accessedAt: user.accessedAt || undefined,
-      } as User & { phone?: string; mfaEnabled?: boolean; accessedAt?: string }
+        passwordPwned:
+          typeof passwordPwned === 'boolean' ? passwordPwned : null,
+      } as User & {
+        phone?: string
+        mfaEnabled?: boolean
+        accessedAt?: string
+        passwordPwned?: boolean | null
+      }
     })
   }, [usersData])
 

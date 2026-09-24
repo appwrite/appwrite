@@ -30,6 +30,7 @@ import {
   ArrowLeft,
   DatabaseZap,
   ShieldAlert,
+  TriangleAlert,
   Sparkles,
   Eye,
   Home,
@@ -563,6 +564,8 @@ export function ConsoleHeader({
   const is2FAEnabled =
     headerAccount?.mfa === true ||
     headerAccount?.twoFactorAuthenticatorEnabled === true
+
+  const isPasswordPwned = headerAccount?.passwordPwned === true
 
   const hasSidebar = !isOrgOverview
   const showBackToOrganization =
@@ -1658,8 +1661,25 @@ export function ConsoleHeader({
                   className="w-64 border-border bg-popover p-1"
                 >
                   <div className="px-3 py-3 text-start">
-                    <p className="text-[13px] font-medium text-foreground">
-                      {displayName}
+                    <p className="flex items-center gap-1.5 text-[13px] font-medium text-foreground">
+                      <span className="truncate">{displayName}</span>
+                      {isPasswordPwned && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <TriangleAlert
+                              aria-label={
+                                headerCopy.accountMenu.passwordBreached
+                              }
+                              className="h-3.5 w-3.5 shrink-0 text-red-500"
+                            />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p className="text-xs">
+                              {headerCopy.accountMenu.passwordBreached}
+                            </p>
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
                     </p>
                     {userEmail && (
                       <p className="text-[12px] text-muted-foreground">
@@ -1725,43 +1745,53 @@ export function ConsoleHeader({
                       </div>
                     )}
 
-                    {/* Account Status */}
+                    {/* Account status: activity and 2FA in one list */}
                     <div>
                       <p className="text-[11px] text-muted-foreground mb-1.5">
                         {headerCopy.accountMenu.accountStatus}
                       </p>
-                      <div className="flex items-center gap-2">
-                        <div className="h-2 w-2 rounded-full bg-emerald-500" />
-                        <p className="text-[14px] text-foreground">
-                          {accountStatus}
-                        </p>
-                      </div>
+                      <ul className="space-y-1.5">
+                        <li className="flex items-center gap-2">
+                          <span className="flex h-3.5 w-3.5 items-center justify-center">
+                            <span
+                              className={cn(
+                                'h-2 w-2 rounded-full',
+                                headerAccount
+                                  ? 'bg-emerald-500'
+                                  : 'bg-muted-foreground',
+                              )}
+                            />
+                          </span>
+                          <p className="text-[14px] text-foreground">
+                            {accountStatus}
+                          </p>
+                        </li>
+                        {features.accountMfa && (
+                          <li className="flex items-center gap-2">
+                            <Shield
+                              className={cn(
+                                'h-3.5 w-3.5',
+                                is2FAEnabled
+                                  ? 'text-emerald-500'
+                                  : 'text-muted-foreground',
+                              )}
+                            />
+                            <p
+                              className={cn(
+                                'text-[14px]',
+                                is2FAEnabled
+                                  ? 'text-foreground'
+                                  : 'text-muted-foreground',
+                              )}
+                            >
+                              {is2FAEnabled
+                                ? headerCopy.accountMenu.twoFactorEnabled
+                                : headerCopy.accountMenu.twoFactorDisabled}
+                            </p>
+                          </li>
+                        )}
+                      </ul>
                     </div>
-
-                    {features.accountMfa && (
-                      <div>
-                        <p className="text-[11px] text-muted-foreground mb-1.5">
-                          {headerCopy.accountMenu.twoFactor}
-                        </p>
-                        <div className="flex items-center gap-2">
-                          {is2FAEnabled ? (
-                            <>
-                              <Shield className="h-3.5 w-3.5 text-emerald-500" />
-                              <p className="text-[14px] text-foreground">
-                                {headerCopy.accountMenu.enabled}
-                              </p>
-                            </>
-                          ) : (
-                            <>
-                              <Shield className="h-3.5 w-3.5 text-muted-foreground" />
-                              <p className="text-[14px] text-muted-foreground">
-                                {headerCopy.accountMenu.disabled}
-                              </p>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    )}
 
                     {/* Account ID */}
                     {accountId && (
