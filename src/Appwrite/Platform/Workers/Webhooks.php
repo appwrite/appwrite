@@ -10,6 +10,7 @@ use Appwrite\Network\Validator\PublicHostname;
 use Appwrite\Template\Template;
 use Appwrite\Usage\Context as UsageContext;
 use Exception;
+use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Client\Client;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -46,7 +47,6 @@ class Webhooks extends Action
             ->inject('publisherForUsage')
             ->inject('platform')
             ->inject('plan')
-            ->inject('client')
             ->callback($this->action(...));
     }
 
@@ -58,11 +58,10 @@ class Webhooks extends Action
      * @param UsagePublisher $publisherForUsage
      * @param array $platform
      * @param array $plan
-     * @param Client $client
      * @return void
      * @throws Exception
      */
-    public function action(Message $message, Document $project, Database $dbForPlatform, NotificationPublisher $publisherForNotifications, UsagePublisher $publisherForUsage, array $platform, array $plan, Client $client): void
+    public function action(Message $message, Document $project, Database $dbForPlatform, NotificationPublisher $publisherForNotifications, UsagePublisher $publisherForUsage, array $platform, array $plan): void
     {
         $payload = $message->getPayload();
 
@@ -79,7 +78,7 @@ class Webhooks extends Action
         $errors = [];
         foreach ($project->getAttribute('webhooks', []) as $webhook) {
             if (array_intersect($webhook->getAttribute('events', []), $events)) {
-                $error = $this->execute($events, $webhookPayload, $webhook, $user, $project, $dbForPlatform, $publisherForNotifications, $publisherForUsage, $platform, $plan, $client);
+                $error = $this->execute($events, $webhookPayload, $webhook, $user, $project, $dbForPlatform, $publisherForNotifications, $publisherForUsage, $platform, $plan);
                 if ($error !== null) {
                     $errors[] = $error;
                 }
@@ -102,10 +101,9 @@ class Webhooks extends Action
      * @param UsagePublisher $publisherForUsage
      * @param array $platform
      * @param array $plan
-     * @param Client $client
      * @return string|null The error log if the delivery failed, otherwise null
      */
-    private function execute(array $events, string $payload, Document $webhook, Document $user, Document $project, Database $dbForPlatform, NotificationPublisher $publisherForNotifications, UsagePublisher $publisherForUsage, array $platform, array $plan, Client $client): ?string
+    private function execute(array $events, string $payload, Document $webhook, Document $user, Document $project, Database $dbForPlatform, NotificationPublisher $publisherForNotifications, UsagePublisher $publisherForUsage, array $platform, array $plan): ?string
     {
         if ($webhook->getAttribute('enabled') !== true) {
             return null;
@@ -126,7 +124,7 @@ class Webhooks extends Action
         $httpUser = $webhook->getAttribute('httpUser');
         $httpPass = $webhook->getAttribute('httpPass');
 
-        $client = $client
+        $client = (new Client(new CurlAdapter()))
             ->withTimeout(15)
             ->withConnectTimeout(15)
             ->withSslVerification($webhook->getAttribute('security', true));

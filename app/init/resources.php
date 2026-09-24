@@ -83,8 +83,6 @@ $container->set('localeCodes', fn () => array_map(fn ($locale) => $locale['code'
 
 $container->set('executor', fn () => new Executor(), []);
 
-$container->set('client', fn () => new Client(new CurlAdapter()), []);
-
 $container->set('jobs', function () {
     $client = (new Client(new CurlAdapter()))
         ->withBearerAuth(System::getEnv('_APP_JOBS_SECRET', ''))

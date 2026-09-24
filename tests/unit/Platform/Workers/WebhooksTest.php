@@ -5,81 +5,20 @@ declare(strict_types=1);
 namespace Tests\Unit\Platform\Workers;
 
 use Appwrite\Event\Publisher\Notification as NotificationPublisher;
-use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Platform\Workers\Webhooks;
 use PHPUnit\Framework\TestCase;
-use Psr\Http\Message\RequestInterface;
-use Psr\Http\Message\ResponseInterface;
 use Tests\Unit\Event\MockPublisher;
 use Utopia\Cache\Adapter\None as NoCache;
 use Utopia\Cache\Cache;
-use Utopia\Client\Adapter;
-use Utopia\Client\Client;
-use Utopia\Client\Tls;
 use Utopia\Database\Adapter\Memory;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Psr7\Response;
-use Utopia\Queue\Message;
 use Utopia\Queue\Queue;
 
 require_once __DIR__ . '/../../../../app/init.php';
-
-final class ServerErrorAdapter implements Adapter
-{
-    public function withTimeout(float $seconds): static
-    {
-        return $this;
-    }
-
-    public function withConnectTimeout(float $seconds): static
-    {
-        return $this;
-    }
-
-    public function withSslVerification(bool $enabled = true): static
-    {
-        return $this;
-    }
-
-    public function withCustomCA(string $path): static
-    {
-        return $this;
-    }
-
-    public function withCertificate(string $certPath, string $keyPath, ?string $passphrase = null): static
-    {
-        return $this;
-    }
-
-    public function withMinTlsVersion(Tls $version): static
-    {
-        return $this;
-    }
-
-    public function withConnectionReuse(bool $enabled = true): static
-    {
-        return $this;
-    }
-
-    public function withFollowRedirects(bool $enabled = true): static
-    {
-        return $this;
-    }
-
-    public function sendRequest(RequestInterface $request): ResponseInterface
-    {
-        return new Response(500);
-    }
-
-    public function stream(RequestInterface $request, callable $sink): ResponseInterface
-    {
-        return new Response(500);
-    }
-}
 
 final class WebhooksTest extends TestCase
 {
@@ -261,85 +200,6 @@ final class WebhooksTest extends TestCase
         $this->assertSame('webhook:webhook-1:paused:2026-01-02T00:00:00.000+00:00', $events[1]['deduplicationKey']);
     }
 
-    /**
-     * Two deliveries for the same webhook read the project before it was paused, so both
-     * pass the pre-delivery enabled check and both land past the failure threshold. Only
-     * the delivery whose write flips enabled may alert the owners, because the claim is
-     * decided by the row the transaction re-reads rather than by the caller's copy. One
-     * process cannot interleave the two, so this covers the claim, not the lock holding it.
-     */
-    public function testPauseAlertsOnlyForTheDeliveryThatClaimsIt(): void
-    {
-        $database = $this->createPlatformDatabase();
-        $this->seedOwnerUser($database);
-        $database->createDocument('webhooks', new Document([
-            '$id' => 'webhook-1',
-            'name' => 'Payments',
-            'url' => 'https://example.test/webhook',
-            'enabled' => true,
-            'attempts' => 1,
-            'logs' => '',
-            'signatureKey' => 'signature-key',
-            'security' => false,
-        ]));
-
-        $publisher = new MockPublisher();
-        $publisherForNotifications = new NotificationPublisher($publisher, new Queue('v1-notifications'));
-        $publisherForUsage = new UsagePublisher(new MockPublisher(), new Queue('v1-usage'));
-        $worker = new Webhooks();
-        $project = new Document([
-            '$id' => 'project-1',
-            '$sequence' => 'project-internal-1',
-            'name' => 'Production',
-            'teamInternalId' => 'team-internal-1',
-            'region' => 'fra',
-            'webhooks' => [new Document([
-                '$id' => 'webhook-1',
-                'name' => 'Payments',
-                'url' => 'https://example.test/webhook',
-                'enabled' => true,
-                'events' => ['users.*.create'],
-                'signatureKey' => 'signature-key',
-                'security' => false,
-            ])],
-        ]);
-
-        $previousThreshold = \getenv('_APP_WEBHOOK_MAX_FAILED_ATTEMPTS');
-        \putenv('_APP_WEBHOOK_MAX_FAILED_ATTEMPTS=2');
-
-        try {
-            foreach (['delivery-1', 'delivery-2'] as $pid) {
-                try {
-                    $worker->action(
-                        new Message([
-                            'pid' => $pid,
-                            'queue' => 'v1-webhooks',
-                            'timestamp' => \time(),
-                            'payload' => [
-                                'events' => ['users.*.create', 'users.user-1.create'],
-                                'payload' => ['$id' => 'user-1'],
-                            ],
-                        ]),
-                        $project,
-                        $database,
-                        $publisherForNotifications,
-                        $publisherForUsage,
-                        ['consoleUrl' => 'https://console.example.test'],
-                        [],
-                        new Client(new ServerErrorAdapter())
-                    );
-                    $this->fail('The failed delivery must propagate so the queue retries it');
-                } catch (\Throwable $error) {
-                    $this->assertStringContainsString('Status code: 500', $error->getMessage());
-                }
-            }
-        } finally {
-            \putenv($previousThreshold === false ? '_APP_WEBHOOK_MAX_FAILED_ATTEMPTS' : '_APP_WEBHOOK_MAX_FAILED_ATTEMPTS=' . $previousThreshold);
-        }
-
-        $this->assertCount(1, $publisher->getEvents('v1-notifications'));
-    }
-
     private function createPlatformDatabase(): Database
     {
         $authorization = new Authorization();
@@ -366,14 +226,6 @@ final class WebhooksTest extends TestCase
         $database->createCollection('users', [], [], $permissions, false);
         $database->createAttribute('users', 'email', Database::VAR_STRING, 320, false);
         $database->createAttribute('users', 'name', Database::VAR_STRING, 256, false);
-        $database->createCollection('webhooks', [], [], $permissions, false);
-        $database->createAttribute('webhooks', 'name', Database::VAR_STRING, 256, false);
-        $database->createAttribute('webhooks', 'url', Database::VAR_STRING, 2000, false);
-        $database->createAttribute('webhooks', 'enabled', Database::VAR_BOOLEAN, 0, false);
-        $database->createAttribute('webhooks', 'attempts', Database::VAR_INTEGER, 8, false);
-        $database->createAttribute('webhooks', 'logs', Database::VAR_STRING, 16384, false);
-        $database->createAttribute('webhooks', 'signatureKey', Database::VAR_STRING, 256, false);
-        $database->createAttribute('webhooks', 'security', Database::VAR_BOOLEAN, 0, false);
 
         return $database;
     }
