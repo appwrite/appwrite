@@ -26,7 +26,7 @@ faqs:
 
 The [TTL cache for list queries](/blog/post/announcing-list-cache-ttl) lets Appwrite answer a repeated `listRows` call from Redis instead of the database. On a cache hit, Appwrite reads the stored entry from Redis and converts it back into rows, then builds the response.
 
-Appwrite now stores that cache in a binary format instead of JSON. Each cached page is smaller, and Appwrite reads it faster. In benchmarks, cached list queries used up to **69% less memory** and served up to **28% more requests per second**.
+Appwrite now stores that cache in a binary format instead of JSON. Each cached page is smaller, and Appwrite reads it faster. In benchmarks, cached list queries used up to **69% less memory** and served up to **29% more requests per second**.
 
 # The cache now uses a binary format instead of JSON
 
