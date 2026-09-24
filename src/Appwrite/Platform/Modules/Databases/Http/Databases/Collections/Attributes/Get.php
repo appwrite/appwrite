@@ -25,6 +25,9 @@ class Get extends Action
     {
         return [
             UtopiaResponse::MODEL_ATTRIBUTE_BOOLEAN,
+            // BigInt must come before Integer: response model dispatch is "first match wins",
+            // and Integer matches all int types (including bigint), while BigInt is more specific (size=8).
+            UtopiaResponse::MODEL_ATTRIBUTE_BIGINT,
             UtopiaResponse::MODEL_ATTRIBUTE_INTEGER,
             UtopiaResponse::MODEL_ATTRIBUTE_FLOAT,
             UtopiaResponse::MODEL_ATTRIBUTE_EMAIL,
@@ -33,7 +36,14 @@ class Get extends Action
             UtopiaResponse::MODEL_ATTRIBUTE_IP,
             UtopiaResponse::MODEL_ATTRIBUTE_DATETIME,
             UtopiaResponse::MODEL_ATTRIBUTE_RELATIONSHIP,
-            UtopiaResponse::MODEL_ATTRIBUTE_STRING,
+            UtopiaResponse::MODEL_ATTRIBUTE_POINT,
+            UtopiaResponse::MODEL_ATTRIBUTE_LINE,
+            UtopiaResponse::MODEL_ATTRIBUTE_POLYGON,
+            UtopiaResponse::MODEL_ATTRIBUTE_VARCHAR,
+            UtopiaResponse::MODEL_ATTRIBUTE_TEXT,
+            UtopiaResponse::MODEL_ATTRIBUTE_MEDIUMTEXT,
+            UtopiaResponse::MODEL_ATTRIBUTE_LONGTEXT,
+            UtopiaResponse::MODEL_ATTRIBUTE_STRING, // needs to be last, since its condition would dominate any other string attribute
         ];
     }
 
