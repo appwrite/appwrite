@@ -29,7 +29,11 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Migration\Destination;
+use Utopia\Migration\Exception\Aborted;
+use Utopia\Migration\Exception as MigrationException;
 use Utopia\Migration\Resource;
+use Utopia\Migration\Resources\Auth\User;
+use Utopia\Migration\Resources\Database\Database as ResourceDatabase;
 use Utopia\Migration\Source;
 use Utopia\Migration\Transfer;
 use Utopia\Query\Schema\ColumnType;
@@ -1023,6 +1027,235 @@ final class MigrationsTest extends TestCase
             authorization: new Authorization(),
             locks: $this->claimLocks(),
         );
+    }
+
+    public function testSupersededProgressCallbackStopsTransferBeforeTheNextGroup(): void
+    {
+        $events = [];
+        $exported = [];
+        $imported = [];
+
+        $source = $this->createGroupedSource(
+            true,
+            static function (string $group) use (&$exported): void {
+                $exported[] = $group;
+            },
+        );
+        $destination = $this->createGroupedDestination(
+            static function (string $group) use (&$imported): void {
+                $imported[] = $group;
+            },
+        );
+
+        $migration = $this->createMigration();
+        $migration->setAttribute('resources', [Resource::TYPE_USER, Resource::TYPE_DATABASE]);
+
+        $processor = $this->createProcessor(
+            $source,
+            $destination,
+            $events,
+            static function (Document $migration) use (&$events): Document {
+                if (\count(\array_keys($events, 'persist:processing:migrating', true)) > 1) {
+                    throw new Superseded('Migration attempt was superseded');
+                }
+
+                return $migration;
+            },
+        );
+
+        $this->process($processor, $migration);
+
+        $this->assertSame([Transfer::GROUP_AUTH], $exported, 'The transfer exported a group after the superseded progress write.');
+        $this->assertSame([Transfer::GROUP_AUTH], $imported);
+        $this->assertSame([], $source->getErrors(), 'The superseded progress write was recorded as a resource error.');
+        $this->assertSame([
+            'persist:processing:processing',
+            'persist:processing:migrating',
+            'persist:processing:migrating',
+        ], $events);
+        $this->assertSame('processing', $migration->getAttribute('status'));
+        $this->assertSame('migrating', $migration->getAttribute('stage'));
+    }
+
+    public function testSupersededProgressCallbackEndsTransferEvenWhenSourceRecordsIt(): void
+    {
+        $events = [];
+        $exported = [];
+
+        $source = $this->createGroupedSource(
+            false,
+            static function (string $group) use (&$exported): void {
+                $exported[] = $group;
+            },
+        );
+        $destination = $this->createGroupedDestination(static function (string $group): void {
+        });
+
+        $migration = $this->createMigration();
+        $migration->setAttribute('resources', [Resource::TYPE_USER, Resource::TYPE_DATABASE]);
+
+        $processor = $this->createProcessor(
+            $source,
+            $destination,
+            $events,
+            static function (Document $migration) use (&$events): Document {
+                if (\count(\array_keys($events, 'persist:processing:migrating', true)) > 1) {
+                    throw new Superseded('Migration attempt was superseded');
+                }
+
+                return $migration;
+            },
+        );
+
+        $this->process($processor, $migration);
+
+        $this->assertSame([Transfer::GROUP_AUTH, Transfer::GROUP_DATABASES], $exported);
+        $this->assertNotContains('persist:processing:finalizing', $events);
+        $this->assertNotContains('persist:failed:finished', $events);
+        $this->assertSame('processing', $migration->getAttribute('status'), 'The transfer did not end with the superseded attempt.');
+        $this->assertSame('migrating', $migration->getAttribute('stage'));
+    }
+
+    private function createGroupedSource(bool $rethrowsAbort, \Closure $record): Source
+    {
+        return new class ($rethrowsAbort, $record) extends Source {
+            public function __construct(
+                private readonly bool $rethrowsAbort,
+                private readonly \Closure $record,
+            ) {
+            }
+
+            public static function getName(): string
+            {
+                return 'TestSource';
+            }
+
+            public static function getSupportedResources(): array
+            {
+                return [Resource::TYPE_USER, Resource::TYPE_DATABASE];
+            }
+
+            public function report(array $resources = [], array $resourceIds = []): array
+            {
+                return [];
+            }
+
+            #[\Override]
+            protected function exportGroupAuth(int $batchSize, array $resources): void
+            {
+                $this->export(Resource::TYPE_USER, Transfer::GROUP_AUTH, new User('user', 'user@example.test'));
+            }
+
+            #[\Override]
+            protected function exportGroupDatabases(int $batchSize, array $resources): void
+            {
+                $this->export(Resource::TYPE_DATABASE, Transfer::GROUP_DATABASES, new ResourceDatabase('database', 'database'));
+            }
+
+            #[\Override]
+            protected function exportGroupStorage(int $batchSize, array $resources): void
+            {
+            }
+
+            #[\Override]
+            protected function exportGroupFunctions(int $batchSize, array $resources): void
+            {
+            }
+
+            #[\Override]
+            protected function exportGroupMessaging(int $batchSize, array $resources): void
+            {
+            }
+
+            #[\Override]
+            protected function exportGroupSites(int $batchSize, array $resources): void
+            {
+            }
+
+            #[\Override]
+            protected function exportGroupIntegrations(int $batchSize, array $resources): void
+            {
+            }
+
+            #[\Override]
+            protected function exportGroupBackups(int $batchSize, array $resources): void
+            {
+            }
+
+            #[\Override]
+            protected function exportGroupProjects(int $batchSize, array $resources): void
+            {
+            }
+
+            #[\Override]
+            protected function exportGroupDomains(int $batchSize, array $resources): void
+            {
+            }
+
+            private function export(string $type, string $group, Resource $resource): void
+            {
+                ($this->record)($group);
+
+                try {
+                    $this->callback([$resource]);
+                } catch (Aborted $abort) {
+                    if ($this->rethrowsAbort) {
+                        throw $abort;
+                    }
+
+                    $this->addError(new MigrationException(
+                        resourceName: $type,
+                        resourceGroup: $group,
+                        message: $abort->getMessage(),
+                        code: MigrationException::CODE_INTERNAL,
+                        previous: $abort,
+                    ));
+                } catch (\Throwable $error) {
+                    $this->addError(new MigrationException(
+                        resourceName: $type,
+                        resourceGroup: $group,
+                        message: $error->getMessage(),
+                        code: MigrationException::CODE_INTERNAL,
+                        previous: $error,
+                    ));
+                }
+            }
+        };
+    }
+
+    private function createGroupedDestination(\Closure $record): Destination
+    {
+        return new class ($record) extends Destination {
+            public function __construct(private readonly \Closure $record)
+            {
+            }
+
+            public static function getName(): string
+            {
+                return 'TestDestination';
+            }
+
+            public static function getSupportedResources(): array
+            {
+                return [Resource::TYPE_USER, Resource::TYPE_DATABASE];
+            }
+
+            public function report(array $resources = [], array $resourceIds = []): array
+            {
+                return [];
+            }
+
+            #[\Override]
+            protected function import(array $resources, callable $callback): void
+            {
+                foreach ($resources as $resource) {
+                    $resource->setStatus(Resource::STATUS_SUCCESS);
+                    ($this->record)($resource->getGroup());
+                }
+
+                $callback($resources);
+            }
+        };
     }
 
     private function createSourceMock(): Source&MockObject
