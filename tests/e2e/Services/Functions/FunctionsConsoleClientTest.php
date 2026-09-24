@@ -946,6 +946,7 @@ final class FunctionsConsoleClientTest extends Scope
 
         $this->assertEquals(206, $range['headers']['status-code']);
         $this->assertEquals('bytes ' . ($size - 1) . '-' . ($size - 1) . '/' . $size, $range['headers']['content-range']);
+        $this->assertEquals('1', $range['headers']['content-length']);
         $this->assertEquals(\substr($response['body'], -1), $range['body']);
 
         $rejected = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/deployments/' . $deploymentId . '/download', array_merge([

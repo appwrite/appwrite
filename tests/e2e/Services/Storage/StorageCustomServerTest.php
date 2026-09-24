@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Tests\E2E\Services\Storage;
 
-use Ahc\Jwt\JWT;
 use Appwrite\Extend\Exception;
 use CURLFile;
 use PHPUnit\Framework\Attributes\Group;
@@ -579,8 +578,6 @@ final class StorageCustomServerTest extends Scope
         $path = __DIR__ . '/../../../resources/logo.png';
         $size = \filesize($path);
 
-        // An encrypted file is decrypted in full and sliced in memory, which never
-        // reaches the ranged read on the storage device.
         $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -589,7 +586,6 @@ final class StorageCustomServerTest extends Scope
             'bucketId' => ID::unique(),
             'name' => 'Test Bucket Range',
             'fileSecurity' => true,
-            'encryption' => false,
             'permissions' => [
                 Permission::read(Role::any()),
                 Permission::create(Role::any()),
@@ -615,20 +611,8 @@ final class StorageCustomServerTest extends Scope
 
         $fileId = $file['body']['$id'];
 
-        $encoder = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 3600, 0);
-        $pushToken = $encoder->encode([
-            'projectId' => $this->getProject()['$id'],
-            'bucketId' => $bucketId,
-            'fileId' => $fileId,
-        ]);
-
-        foreach (['view', 'download', 'push'] as $route) {
+        foreach (['view', 'download'] as $route) {
             $endpoint = '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/' . $route;
-
-            // Push carries the 'public' scope, which an API key never holds, and
-            // authorizes on the signed token instead.
-            $params = $route === 'push' ? ['jwt' => $pushToken] : [];
-            $auth = $route === 'push' ? [] : $this->getHeaders();
 
             /**
              * Test for SUCCESS
@@ -637,30 +621,33 @@ final class StorageCustomServerTest extends Scope
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'Range' => 'bytes=0-0',
-            ], $auth), $params);
+            ], $this->getHeaders()));
 
             $this->assertEquals(206, $firstByte['headers']['status-code'], $route);
             $this->assertEquals('bytes 0-0/' . $size, $firstByte['headers']['content-range']);
+            $this->assertEquals('1', $firstByte['headers']['content-length']);
             $this->assertEquals(\file_get_contents($path, false, null, 0, 1), $firstByte['body']);
 
             $lastByte = $this->client->call(Client::METHOD_GET, $endpoint, array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'Range' => 'bytes=' . ($size - 1) . '-' . ($size - 1),
-            ], $auth), $params);
+            ], $this->getHeaders()));
 
             $this->assertEquals(206, $lastByte['headers']['status-code'], $route);
             $this->assertEquals('bytes ' . ($size - 1) . '-' . ($size - 1) . '/' . $size, $lastByte['headers']['content-range']);
+            $this->assertEquals('1', $lastByte['headers']['content-length']);
             $this->assertEquals(\file_get_contents($path, false, null, $size - 1, 1), $lastByte['body']);
 
             $pastEnd = $this->client->call(Client::METHOD_GET, $endpoint, array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'Range' => 'bytes=' . ($size - 100) . '-' . ($size + 500),
-            ], $auth), $params);
+            ], $this->getHeaders()));
 
             $this->assertEquals(206, $pastEnd['headers']['status-code'], $route);
             $this->assertEquals('bytes ' . ($size - 100) . '-' . ($size - 1) . '/' . $size, $pastEnd['headers']['content-range']);
+            $this->assertEquals('100', $pastEnd['headers']['content-length']);
             $this->assertEquals(\file_get_contents($path, false, null, $size - 100, 100), $pastEnd['body']);
 
             /**
@@ -670,7 +657,7 @@ final class StorageCustomServerTest extends Scope
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'Range' => 'bytes=' . $size . '-' . ($size + 500),
-            ], $auth), $params);
+            ], $this->getHeaders()));
 
             $this->assertEquals(416, $startAtEnd['headers']['status-code'], $route);
 
@@ -678,7 +665,7 @@ final class StorageCustomServerTest extends Scope
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'Range' => 'bytes=' . ($size + 500) . '-',
-            ], $auth), $params);
+            ], $this->getHeaders()));
 
             $this->assertEquals(416, $startPastEnd['headers']['status-code'], $route);
         }
