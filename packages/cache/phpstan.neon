@@ -1,0 +1,7 @@
+includes:
+    - ../../phpstan.neon
+
+parameters:
+    treatPhpDocTypesAsCertain: false
+    scanDirectories:
+        - vendor/swoole/ide-helper
