@@ -1,7 +1,7 @@
 ---
 layout: post
-title: "Cached list queries now use up to 69% less memory and serve up to 28% more requests"
-description: Appwrite now stores its Redis cache in a binary format instead of JSON. Cached list responses take up to 69% less memory and serve up to 28% more requests per second, with no change to your code.
+title: "Cached list queries now use up to 69% less memory and serve up to 29% more requests"
+description: Appwrite now stores its Redis cache in a binary format instead of JSON. Cached list responses take up to 69% less memory and serve up to 29% more requests per second, with no change to your code.
 date: 2026-09-25
 cover: /images/blog/faster-list-caching-binary-format/cover.avif
 timeToRead: 5
@@ -15,7 +15,7 @@ faqs:
   - question: "How much less memory does a cached list response use?"
     answer: "A cached page of 25 rows is 37% smaller, a page of 100 rows is 50% smaller, and a page of 1,000 rows or more is 67% to 69% smaller. A cached page of 5,000 rows drops from 3.38 MB to 1.06 MB."
   - question: "How much faster are cached list queries?"
-    answer: "In benchmarks on self-hosted Appwrite 2.3, a server handled 5% more cached requests per second for pages of 25 rows and 24% to 29% more for pages of 250 rows or more. A single request for a cached page of 1,000 rows took 32.6 ms instead of 42.0 ms."
+    answer: "In benchmarks on self-hosted Appwrite 2.3, a server handled 5% more cached requests per second for pages of 25 rows and 20% to 29% more for pages of 250 rows or more. A single request for a cached page of 1,000 rows took 32.6 ms instead of 42.0 ms."
   - question: "Why does the speedup stop growing at larger page sizes?"
     answer: "The binary format only speeds up the cache read. Appwrite still converts every response to JSON before it sends it to the client, and that work also grows with the page size. Cache memory has no such conversion step, so the memory saving keeps growing up to 69%."
   - question: "Do self-hosted instances need a migration to use the new format?"
@@ -54,7 +54,7 @@ The same Redis memory now holds about **three times** as many cached pages of 1,
 
 The saving applies to the whole cache. After a mixed workload of 200 cached queries, 500 single-row reads, and the table schemas, the full cache used **2.65 MB** instead of **5.66 MB**.
 
-# Cached list queries serve up to 28% more requests
+# Cached list queries serve up to 29% more requests
 
 ![Cached listRows requests per second for each page size](/images/blog/faster-list-caching-binary-format/throughput.avif)
 
