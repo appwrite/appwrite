@@ -1,8 +1,0 @@
-tasks:
-  - name: PHP preparations
-    init: |
-      composer install --ignore-platform-reqs
-vscode:
-  extensions:
-    - ms-azuretools.vscode-docker
-    - zobo.php-intellisense
