@@ -2,10 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Utopia\Validator\JSON;
+namespace Utopia\Validator\Tests\JSON;
 
 use PHPUnit\Framework\TestCase;
 use Utopia\Validator;
+use Utopia\Validator\JSON\ObjectValidator;
 
 final class ObjectValidatorTest extends TestCase
 {

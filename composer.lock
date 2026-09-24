@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "0739a7783996bd7766fce3baa48a0de6",
+    "content-hash": "5581b3c0f5a1141f16d8cd903893048b",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4373,46 +4373,6 @@
                 "source": "https://github.com/utopia-php/usage/tree/0.16.6"
             },
             "time": "2026-09-24T12:26:53+00:00"
-        },
-        {
-            "name": "utopia-php/validators",
-            "version": "1.0.1",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/utopia-php/validators.git",
-                "reference": "f0a08bd888d035b68c463d22b47ef385984da73d"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/validators/zipball/f0a08bd888d035b68c463d22b47ef385984da73d",
-                "reference": "f0a08bd888d035b68c463d22b47ef385984da73d",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=8.5"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Utopia\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "description": "A lightweight collection of reusable validators for Utopia projects",
-            "keywords": [
-                "php",
-                "utopia",
-                "validation",
-                "validator"
-            ],
-            "support": {
-                "issues": "https://github.com/utopia-php/validators/issues",
-                "source": "https://github.com/utopia-php/validators/tree/1.0.1"
-            },
-            "time": "2026-09-02T15:57:19+00:00"
         },
         {
             "name": "utopia-php/vcs",

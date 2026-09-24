@@ -18,7 +18,9 @@ class ArrayList extends Validator
      *
      * Pass a validator that must be applied to each element in this array
      */
-    public function __construct(protected Validator $validator, protected int $length = 0) {}
+    public function __construct(protected Validator $validator, protected int $length = 0)
+    {
+    }
 
     /**
      * Get Description

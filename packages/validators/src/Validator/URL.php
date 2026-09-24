@@ -15,7 +15,9 @@ use Utopia\Validator;
  */
 class URL extends Validator
 {
-    public function __construct(protected array $allowedSchemes = [], protected bool $allowEmpty = false, protected bool $allowFragments = true, protected bool $allowPrivateUseSchemes = false, protected bool $httpsOrLoopback = false) {}
+    public function __construct(protected array $allowedSchemes = [], protected bool $allowEmpty = false, protected bool $allowFragments = true, protected bool $allowPrivateUseSchemes = false, protected bool $httpsOrLoopback = false)
+    {
+    }
 
     /**
      * Get Description

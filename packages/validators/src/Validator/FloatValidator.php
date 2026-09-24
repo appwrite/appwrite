@@ -17,7 +17,9 @@ class FloatValidator extends Validator
      * Pass true to accept float strings as valid float values
      * This option is good for validating query string params.
      */
-    public function __construct(protected bool $loose = false) {}
+    public function __construct(protected bool $loose = false)
+    {
+    }
 
     /**
      * Get Description

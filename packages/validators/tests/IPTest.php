@@ -13,9 +13,10 @@ declare(strict_types=1);
  * @license The MIT License (MIT) <http://www.opensource.org/licenses/mit-license.php>
  */
 
-namespace Utopia\Validator;
+namespace Utopia\Validator\Tests;
 
 use PHPUnit\Framework\TestCase;
+use Utopia\Validator\IP;
 
 final class IPTest extends TestCase
 {

@@ -13,7 +13,9 @@ use Utopia\Validator;
  */
 class Phone extends Validator
 {
-    public function __construct(protected bool $allowEmpty = false, protected bool $normalize = false) {}
+    public function __construct(protected bool $allowEmpty = false, protected bool $normalize = false)
+    {
+    }
 
     /**
      * Recover E.164 phone numbers from URL/path transport damage.

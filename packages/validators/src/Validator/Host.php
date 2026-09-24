@@ -15,7 +15,9 @@ use Utopia\Validator;
  */
 class Host extends Validator
 {
-    public function __construct(protected array $whitelist) {}
+    public function __construct(protected array $whitelist)
+    {
+    }
 
     /**
      * Get Description

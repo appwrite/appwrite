@@ -18,7 +18,9 @@ class ObjectValidator extends Validator
     /**
      * Pass an encoded length to cap the size of accepted objects, 0 to allow any size
      */
-    public function __construct(protected int $length = 0) {}
+    public function __construct(protected int $length = 0)
+    {
+    }
 
     /**
      * Get Description

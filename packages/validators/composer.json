@@ -14,8 +14,13 @@
             "Utopia\\": "src/"
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "Utopia\\Validator\\Tests\\": "tests/"
+        }
+    },
     "scripts": {
-        "test": "phpunit --configuration phpunit.xml"
+        "test": "phpunit --configuration phpunit.xml --testsuite unit"
     },
     "require": {
         "php": ">=8.5"

@@ -13,7 +13,9 @@ use Utopia\Validator;
  */
 class Range extends Numeric
 {
-    public function __construct(protected int|float $min, protected int|float $max, protected string $format = self::TYPE_INTEGER) {}
+    public function __construct(protected int|float $min, protected int|float $max, protected string $format = self::TYPE_INTEGER)
+    {
+    }
 
     /**
      * Get Range Minimum Value

@@ -33,7 +33,8 @@ class Text extends Validator
         protected int $min = 1,
         protected array $allowList = [],
         protected bool $requireNonBlank = false,
-    ) {}
+    ) {
+    }
 
     /**
      * Get Description

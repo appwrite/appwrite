@@ -2,10 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Utopia\Validator;
+namespace Utopia\Validator\Tests;
 
 use PHPUnit\Framework\TestCase;
 use stdClass;
+use Utopia\Validator\Contains;
 
 final class ContainsTest extends TestCase
 {

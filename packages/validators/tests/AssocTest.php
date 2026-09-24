@@ -2,9 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Utopia\Validator;
+namespace Utopia\Validator\Tests;
 
 use PHPUnit\Framework\TestCase;
+use Utopia\Validator\Assoc;
 
 final class AssocTest extends TestCase
 {

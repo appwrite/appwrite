@@ -17,7 +17,9 @@ class Boolean extends Validator
      * Pass true to accept true and false strings and integers 0 and 1 as valid boolean values
      * This option is good for validating query string params.
      */
-    public function __construct(protected bool $loose = false) {}
+    public function __construct(protected bool $loose = false)
+    {
+    }
 
     /**
      * Get Description

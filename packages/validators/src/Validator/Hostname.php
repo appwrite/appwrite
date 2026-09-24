@@ -13,7 +13,9 @@ class Hostname extends Validator
      *
      * @param  string[]  $allowList
      */
-    public function __construct(protected array $allowList = []) {}
+    public function __construct(protected array $allowList = [])
+    {
+    }
 
     public function getDescription(): string
     {

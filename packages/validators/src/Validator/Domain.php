@@ -22,7 +22,8 @@ class Domain extends Validator
         protected array $restrictions = [],
         protected bool $hostnames = true,
         protected bool $allowEmpty = false,
-    ) {}
+    ) {
+    }
 
     /**
      * Helper for creating domain restriction rule.

@@ -2,9 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Utopia\Validator;
+namespace Utopia\Validator\Tests;
 
 use PHPUnit\Framework\TestCase;
+use Utopia\Validator\ArrayList;
+use Utopia\Validator\Integer;
+use Utopia\Validator\Numeric;
+use Utopia\Validator\Text;
 
 final class ArrayListTest extends TestCase
 {
