@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "f06c56c6f19c31ee3ae2d474bbaacc73",
+    "content-hash": "8b75056307547a384f615d7aa91b10e4",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2934,66 +2934,6 @@
                 "issues": "https://github.com/utopia-php/auth/issues"
             },
             "time": "2026-09-10T18:16:47+00:00"
-        },
-        {
-            "name": "utopia-php/cache",
-            "version": "5.1.1",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/utopia-php/cache.git",
-                "reference": "35fee421ef64d6079abcf97b149b2413d71276c3"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/cache/zipball/35fee421ef64d6079abcf97b149b2413d71276c3",
-                "reference": "35fee421ef64d6079abcf97b149b2413d71276c3",
-                "shasum": ""
-            },
-            "require": {
-                "ext-json": "*",
-                "php": ">=8.4",
-                "utopia-php/circuit-breaker": "^0.4",
-                "utopia-php/pools": "^2.0",
-                "utopia-php/telemetry": "^0.4"
-            },
-            "require-dev": {
-                "swoole/ide-helper": "^6.0"
-            },
-            "suggest": {
-                "ext-igbinary": "Required for the Igbinary codec.",
-                "ext-memcached": "Required for the Memcached and Hazelcast adapters.",
-                "ext-redis": "Required for the Redis, RedisCluster and Sharding adapters.",
-                "ext-swoole": "Required for the multiplexing Redis adapter (>=6.0)."
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Utopia\\Cache\\": "src/Cache"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Team Appwrite",
-                    "email": "team@appwrite.io"
-                }
-            ],
-            "description": "A simple cache library to manage application cache storing, loading and purging",
-            "keywords": [
-                "cache",
-                "framework",
-                "php",
-                "upf",
-                "utopia"
-            ],
-            "support": {
-                "issues": "https://github.com/utopia-php/cache/issues",
-                "source": "https://github.com/utopia-php/cache/tree/5.1.1"
-            },
-            "time": "2026-09-16T20:55:55+00:00"
         },
         {
             "name": "utopia-php/cdn",
