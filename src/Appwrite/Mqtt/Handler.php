@@ -34,6 +34,11 @@ class Handler implements MqttHandler
 {
     private const REPLAY_TTL = 3600;
 
+    // The reserved per-user topic namespace. `users/<userId>` is an implicit topic owned by that
+    // user alone: it needs no topics document (the publisher auto-provisions one) and a client may
+    // subscribe only to its own. Wildcards under it are refused so they can't span other users.
+    private const USER_TOPIC_PREFIX = 'users';
+
     public function __construct(
         private readonly Container $container,
         private readonly Mqtt $mqtt,
@@ -145,15 +150,17 @@ class Handler implements MqttHandler
         }
 
         $projectDB = $this->getProjectDB($connection->prefix);
+        $userId = $connection->identity['userId'] ?? '';
 
-        // Subscription is open: a permitted connection may subscribe to any topic or wildcard. The
-        // topic document is consulted only to cap the QoS and to enable offline replay for an exact
-        // topic name — never to allow or deny the subscription.
+        // Subscription is open: a permitted connection may subscribe to any topic or wildcard, except
+        // the reserved users/ namespace which is ownership-gated (see deniesUserTopic). The topic
+        // document is consulted only to cap the QoS and to enable offline replay for an exact name.
         $names = [];
         foreach ($subscribe->filters() as $filter) {
-            if (!$this->isWildcard($filter->topic)) {
-                $names[$filter->topic] = true;
+            if ($this->isWildcard($filter->topic) || $this->deniesUserTopic($filter->topic, $userId)) {
+                continue;
             }
+            $names[$filter->topic] = true;
         }
 
         $authorization = new Authorization();
@@ -174,6 +181,13 @@ class Handler implements MqttHandler
 
         foreach ($subscribe->filters() as $filter) {
             Span::add('mqtt.topic', $filter->topic);
+
+            // The reserved users/ namespace: refuse wildcards and other users' topics; an owned
+            // users/<id> falls through and is served like any exact topic name below.
+            if ($this->deniesUserTopic($filter->topic, $userId)) {
+                $suback->deny();
+                continue;
+            }
 
             $document = $this->isWildcard($filter->topic) ? null : ($topicsByName[$filter->topic] ?? null);
 
@@ -271,6 +285,27 @@ class Handler implements MqttHandler
     private function isWildcard(string $topic): bool
     {
         return \str_contains($topic, '+') || \str_contains($topic, '#');
+    }
+
+    /**
+     * Whether a filter in the reserved users/ namespace must be refused: any wildcard under users/
+     * (so it can't span other users), or an exact users/<id> that is not the caller's own. An owned
+     * users/<id> is allowed (served like any exact topic), and a deeper users/<id>/… path is an
+     * ordinary topic, not a reserved one.
+     */
+    private function deniesUserTopic(string $topic, string $userId): bool
+    {
+        if (!\str_starts_with($topic, self::USER_TOPIC_PREFIX . '/')) {
+            return false;
+        }
+
+        if ($this->isWildcard($topic)) {
+            return true;
+        }
+
+        $segments = \explode('/', $topic);
+
+        return \count($segments) === 2 && $segments[1] !== $userId;
     }
 
     /**

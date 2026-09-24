@@ -635,6 +635,25 @@ final class VCSGiteaConsoleClientTest extends Scope
         ], $this->getHeaders()), $params, true, false);
     }
 
+    public function testInstallationOrganizationUrl(): void
+    {
+        // createInstallationHelper() reads listInstallations, so this covers both routes
+        $installation = $this->createInstallationHelper();
+
+        $organizationUrl = $installation['organizationUrl'];
+
+        // The browser-facing host need not be reachable from here, so assert
+        // only what holds either way; FactoryTest covers which host is chosen.
+        $this->assertSame('/' . $installation['organization'], \parse_url($organizationUrl, PHP_URL_PATH));
+
+        $response = $this->client->call(Client::METHOD_GET, '/vcs/installations/' . $installation['$id'], \array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($organizationUrl, $response['body']['organizationUrl']);
+    }
+
     public function testCreateInstallationWithoutState(): void
     {
         $response = $this->callGiteaCallbackHelper(['code' => 'unused']);

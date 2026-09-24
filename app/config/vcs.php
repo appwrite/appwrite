@@ -33,6 +33,9 @@ return [
     ],
     'gitea' => [
         'adapter' => Gitea::class,
+        // The browser may reach Gitea on a different host than the server-side
+        // API does (e.g. both on a Docker network, Gitea published elsewhere).
+        'browserEndpoint' => System::getEnv('_APP_VCS_GITEA_BROWSER_ENDPOINT', System::getEnv('_APP_VCS_GITEA_ENDPOINT', '')),
         'oauth2' => function (string $clientId, string $clientSecret, string $endpoint) {
             $oauth2 = new OAuth2Gitea($clientId, $clientSecret, '');
             $oauth2->setEndpoint($endpoint);
