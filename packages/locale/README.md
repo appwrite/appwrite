@@ -3,7 +3,6 @@
 > [!IMPORTANT]
 > This repository is a read-only mirror of [`packages/locale`](https://github.com/appwrite/appwrite/tree/main/packages/locale) in [appwrite/appwrite](https://github.com/appwrite/appwrite). Development happens there — please open issues and pull requests against appwrite/appwrite.
 
-[![Build Status](https://travis-ci.org/utopia-php/locale.svg?branch=master)](https://travis-ci.com/utopia-php/locale)
 ![Total Downloads](https://img.shields.io/packagist/dt/utopia-php/locale.svg)
 [![Discord](https://img.shields.io/discord/564160730845151244?label=discord)](https://appwrite.io/discord)
 
@@ -82,22 +81,12 @@ When using `setLanguageFromJSON($code, $path)` for the `en-US` locale you need t
 
 ## System Requirements
 
-Utopia Framework requires PHP 7.4 or later. We recommend using the latest PHP version whenever possible.
+Utopia Framework requires PHP 8.3 or later. We recommend using the latest PHP version whenever possible.
 
 ## Tests
 
-To run the tests, first you need to install libraries:
-
-```shell
-docker run --rm --interactive --tty \
-  --volume $PWD:/app \
-  composer update --ignore-platform-reqs --optimize-autoloader --no-plugins --no-scripts --prefer-dist
-```
-
-Finally, you can run the tests:
-
-```shell
-docker run --rm -v $(pwd):$(pwd):rw -w $(pwd) php:7.4-cli-alpine sh -c "vendor/bin/phpunit tests/Locale/LocaleTest.php"
+```sh
+composer test
 ```
 
 ## Copyright and license

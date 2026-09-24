@@ -6,7 +6,7 @@ use Exception;
 
 class Locale
 {
-    const string DEFAULT_DYNAMIC_KEY = '[[defaultDynamicKey]]'; // Replaced at runime by $key wrapped in {{ and }}
+    public const string DEFAULT_DYNAMIC_KEY = '[[defaultDynamicKey]]'; // Replaced at runime by $key wrapped in {{ and }}
 
     /**
      * @var array<string, array<string, string>>
@@ -148,7 +148,7 @@ class Locale
         }
 
         if (\is_null($translation)) {
-            return null;
+            return;
         }
 
         foreach ($placeholders as $placeholderKey => $placeholderValue) {

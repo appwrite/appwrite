@@ -13,16 +13,18 @@
     "minimum-stability": "stable",
     "autoload": {
         "psr-4": {
-            "Utopia\\Locale\\": "src/Locale"
+            "Utopia\\Locale\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Utopia\\Locale\\Tests\\": "tests/"
         }
     },
     "require": {
-        "php": ">=7.4"
-    },
-    "require-dev": {
-        "vimeo/psalm": "4.0.1"
+        "php": ">=8.3"
     },
     "scripts": {
-        "test": "phpunit --configuration phpunit.xml"
+        "test": "phpunit"
     }
 }

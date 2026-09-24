@@ -1,6 +1,6 @@
 <?php
 
-namespace Utopia\Tests;
+namespace Utopia\Locale\Tests;
 
 use Exception;
 use PHPUnit\Framework\TestCase;
@@ -13,8 +13,16 @@ class LocaleTest extends TestCase
      */
     protected $locale = null;
 
+    /**
+     * Locale keeps its languages and exception mode in static state, which a
+     * host process (such as Appwrite's test bootstrap) may already have set.
+     */
+    private bool $exceptions;
+
     public function setUp(): void
     {
+        $this->exceptions = Locale::$exceptions;
+
         Locale::$exceptions = false; // Disable exceptions
 
         // Set English
@@ -28,13 +36,17 @@ class LocaleTest extends TestCase
 
         Locale::setLanguageFromArray('he-IL', ['hello' => 'שלום']); // Set Hebrew
 
-        Locale::setLanguageFromJSON('hi-IN', realpath(__DIR__.'/../hi-IN.json') ?: ''); // Set Hindi
+        Locale::setLanguageFromJSON('hi-IN', realpath(__DIR__.'/hi-IN.json') ?: ''); // Set Hindi
 
-        $this->assertCount(3, Locale::getLanguages());
+        $languages = Locale::getLanguages();
+        $this->assertContains('en-US', $languages);
+        $this->assertContains('he-IL', $languages);
+        $this->assertContains('hi-IN', $languages);
     }
 
     public function tearDown(): void
     {
+        Locale::$exceptions = $this->exceptions;
     }
 
     public function testTexts(): void
