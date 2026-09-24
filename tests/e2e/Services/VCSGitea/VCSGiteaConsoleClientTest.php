@@ -635,6 +635,25 @@ final class VCSGiteaConsoleClientTest extends Scope
         ], $this->getHeaders()), $params, true, false);
     }
 
+    public function testInstallationOrganizationUrl(): void
+    {
+        // createInstallationHelper() reads listInstallations, so this covers both routes
+        $installation = $this->createInstallationHelper();
+
+        // The link is opened by the browser, which may reach Gitea on another host
+        $endpoint = System::getEnv('_APP_VCS_GITEA_BROWSER_ENDPOINT', System::getEnv('_APP_VCS_GITEA_ENDPOINT', 'http://gitea:3000'));
+        $expected = \rtrim($endpoint, '/') . '/' . $installation['organization'];
+
+        $this->assertEquals($expected, $installation['organizationUrl']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/vcs/installations/' . $installation['$id'], \array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($expected, $response['body']['organizationUrl']);
+    }
+
     public function testCreateInstallationWithoutState(): void
     {
         $response = $this->callGiteaCallbackHelper(['code' => 'unused']);

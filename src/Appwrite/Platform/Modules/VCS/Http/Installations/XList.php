@@ -118,7 +118,7 @@ class XList extends Action
         foreach ($results as $installation) {
             $provider = $installation->getAttribute('provider', '');
             if ($vcsFactory->isConfigured($provider)) {
-                $installation->setAttribute('organizationUrl', $vcsFactory->fromProvider($provider)->getOrganizationUrl($installation->getAttribute('organization', '')));
+                $installation->setAttribute('organizationUrl', $vcsFactory->fromProviderForBrowser($provider)->getOrganizationUrl($installation->getAttribute('organization', '')));
             }
         }
 

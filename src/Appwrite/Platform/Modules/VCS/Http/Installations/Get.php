@@ -72,7 +72,7 @@ class Get extends Action
 
         $provider = $installation->getAttribute('provider', '');
         if ($vcsFactory->isConfigured($provider)) {
-            $installation->setAttribute('organizationUrl', $vcsFactory->fromProvider($provider)->getOrganizationUrl($installation->getAttribute('organization', '')));
+            $installation->setAttribute('organizationUrl', $vcsFactory->fromProviderForBrowser($provider)->getOrganizationUrl($installation->getAttribute('organization', '')));
         }
 
         $response->dynamic($installation, Response::MODEL_INSTALLATION);
