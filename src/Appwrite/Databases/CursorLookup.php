@@ -56,7 +56,7 @@ final readonly class CursorLookup
         }
 
         foreach ($orders as $alias => $aliasOrders) {
-            foreach ($this->storedValues($joins[$alias], $rows[$alias], $aliasOrders) as $attribute => $value) {
+            foreach ($this->values($rows[$alias], $aliasOrders) as $attribute => $value) {
                 $document->setAttribute($alias . '.' . $attribute, $value);
             }
         }
@@ -286,31 +286,20 @@ final readonly class CursorLookup
     }
 
     /**
-     * The row's order values as the joined collection stores them, which is what the list compares.
+     * The row's order values, which the library encodes as it does the cursor document's own attributes.
      *
      * @param list<Query> $orders
      * @return array<string, mixed>
      */
-    private function storedValues(Query $join, Document $row, array $orders): array
+    private function values(Document $row, array $orders): array
     {
         if ($row->isEmpty()) {
             return [];
         }
 
-        $values = new Document();
-        foreach ($orders as $order) {
-            $values->setAttribute($order->getAttribute(), $row->getAttribute($order->getAttribute()));
-        }
-
-        $stored = $this->database->encode(
-            $this->database->getCollection($join->getAttribute()),
-            $values,
-            applyDefaults: false,
-        );
-
         $result = [];
         foreach ($orders as $order) {
-            $result[$order->getAttribute()] = $stored->getAttribute($order->getAttribute());
+            $result[$order->getAttribute()] = $row->getAttribute($order->getAttribute());
         }
 
         return $result;

@@ -243,7 +243,7 @@ final class CursorLookupTest extends TestCase
         $this->assertSame(10, $this->orderValue($before, 'ord.amount'), 'the page before a document ends ahead of its first row');
     }
 
-    public function testCursorWithJoinOrderComparesJoinedDatetimesInStoredForm(): void
+    public function testCursorWithJoinOrderPassesJoinedDatetimesForTheLibraryToEncode(): void
     {
         $store = $this->store();
         $this->customer($store, 'alice', readable: true);
@@ -251,7 +251,7 @@ final class CursorLookupTest extends TestCase
 
         $cursor = $this->page($store, [Query::orderAsc('ord.placedAt')], Query::cursorAfter('alice'));
 
-        $this->assertSame('2024-05-01 10:00:00.000', $cursor->getAttribute('ord.placedAt'), 'the list compares the stored value, as it does for the cursor document\'s own attributes');
+        $this->assertSame('2024-05-01T10:00:00.000+00:00', $cursor->getAttribute('ord.placedAt'), 'the library encodes joined cursor values, as it does the cursor document\'s own attributes');
     }
 
     public function testCursorWithJoinOrderFollowsAChainOfJoins(): void
