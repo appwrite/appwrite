@@ -106,10 +106,10 @@ class Get extends Action
 
         $response
             ->addCookie(
-                COOKIE_NAME_VCS_STATE,
+                COOKIE_NAME_GITHUB_STATE,
                 $state,
-                \time() + COOKIE_EXPIRY_VCS_STATE,
-                COOKIE_PATH_VCS_STATE,
+                \time() + COOKIE_EXPIRY_GITHUB_STATE,
+                COOKIE_PATH_GITHUB_STATE,
                 $domain,
                 $protocol === 'https',
                 true,

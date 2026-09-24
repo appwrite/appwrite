@@ -62,32 +62,32 @@ class Get extends Action
         Database $dbForPlatform,
         array $platform
     ) {
-        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
-        $cookie = $request->getCookie(COOKIE_NAME_VCS_STATE, '');
+        $cookie = $request->getCookie(COOKIE_NAME_GITHUB_STATE, '');
 
-        if (!empty($cookie)) {
+        // GitHub drops state when the flow ends on an existing installation's
+        // settings page (setup_action=update), so fall back to the copy
+        // Authorize left in the cookie. The signature below still applies.
+        $fromCookie = empty($state) && $setupAction === 'update' && !empty($cookie);
+
+        if ($fromCookie) {
+            $state = $cookie;
+
             // One shot: a leftover cookie must never carry a later flow into
             // the project this browser happened to start from.
+            $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
             $host = \parse_url('//' . ($platform['consoleHostname'] ?? ''), PHP_URL_HOST) ?: '';
             $domain = (\in_array($host, ['', 'localhost'], true) || \filter_var($host, FILTER_VALIDATE_IP) !== false) ? null : '.' . $host;
 
             $response->addCookie(
-                COOKIE_NAME_VCS_STATE,
+                COOKIE_NAME_GITHUB_STATE,
                 '',
                 \time() - 3600,
-                COOKIE_PATH_VCS_STATE,
+                COOKIE_PATH_GITHUB_STATE,
                 $domain,
                 $protocol === 'https',
                 true,
                 Response::COOKIE_SAMESITE_LAX
             );
-        }
-
-        // GitHub drops state when the flow ends on an existing installation's
-        // settings page (setup_action=update), so fall back to the copy
-        // Authorize left in the cookie. The signature below still applies.
-        if (empty($state)) {
-            $state = $cookie;
         }
 
         if (empty($state)) {
@@ -153,6 +153,23 @@ class Get extends Action
                 return;
             }
 
+            // The cookie is sent on any top-level navigation to this URL, so it
+            // cannot vouch for the installation_id and code beside it. From the
+            // cookie, only relink an installation this user already connected
+            // to another project.
+            if ($fromCookie && $dbForPlatform->findOne('installations', [
+                Query::equal('providerInstallationId', [$providerInstallationId]),
+                Query::equal('provider', ['github']),
+            ])->isEmpty()) {
+                $error = 'This GitHub installation is not connected to any project you can access, so it could not be linked. Uninstall the Appwrite app from the account\'s GitHub settings, then connect GitHub again from the Appwrite Console.';
+                $separator = \str_contains($redirectFailure, '?') ? '&' : '?';
+                $response
+                    ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+                    ->addHeader('Pragma', 'no-cache')
+                    ->redirect($redirectFailure . $separator . \http_build_query(['error' => $error]));
+                return;
+            }
+
             $oauth2 = new OAuth2Github(System::getEnv('_APP_VCS_GITHUB_CLIENT_ID', ''), System::getEnv('_APP_VCS_GITHUB_CLIENT_SECRET', ''), "");
 
             $accessToken = $oauth2->getAccessToken($code);
@@ -160,7 +177,7 @@ class Get extends Action
             $accessTokenExpiry = DateTime::addSeconds(new \DateTime(), \intval($oauth2->getAccessTokenExpiry($code)));
 
             if (!\in_array($providerInstallationId, $oauth2->getInstallationIds($accessToken), true)) {
-                $error = 'Your GitHub account does not have access to this installation. Please restart the installation from the Appwrite Console.';
+                $error = 'Your GitHub account does not have access to this installation. If the organization uses SAML single sign-on, sign in to it on GitHub first, then restart the installation from the Appwrite Console.';
                 $separator = \str_contains($redirectFailure, '?') ? '&' : '?';
                 $response
                     ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
