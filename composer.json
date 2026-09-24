@@ -31,6 +31,7 @@
             "Utopia\\CircuitBreaker\\": "packages/circuit-breaker/src",
             "Utopia\\Client\\": "packages/client/src",
             "Utopia\\Compression\\": "packages/compression/src",
+            "Utopia\\DI\\": "packages/di/src",
             "Utopia\\Image\\": "packages/image/src",
             "Utopia\\Lock\\": "packages/lock/src",
             "Utopia\\Messaging\\": "packages/messaging/src",
@@ -55,6 +56,7 @@
             "Utopia\\CircuitBreaker\\Tests\\": "packages/circuit-breaker/tests",
             "Utopia\\Client\\Tests\\": "packages/client/tests",
             "Utopia\\Compression\\Tests\\": "packages/compression/tests",
+            "Utopia\\DI\\Tests\\": "packages/di/tests",
             "Utopia\\Image\\Tests\\": "packages/image/tests",
             "Utopia\\Lock\\Tests\\": "packages/lock/tests",
             "Utopia\\Messaging\\Tests\\": "packages/messaging/tests",
@@ -151,7 +153,8 @@
         "utopia-php/query": "0.6.*",
         "psr/http-factory": "^1.0",
         "psr/http-client": "^1.0",
-        "psr/http-message": "^1.1 || ^2.0"
+        "psr/http-message": "^1.1 || ^2.0",
+        "psr/container": "^2.0"
     },
     "require-dev": {
         "ext-fileinfo": "*",
@@ -185,6 +188,7 @@
         "utopia-php/circuit-breaker": "*",
         "utopia-php/client": "*",
         "utopia-php/compression": "*",
+        "utopia-php/di": "*",
         "utopia-php/image": "*",
         "utopia-php/lock": "*",
         "utopia-php/messaging": "*",

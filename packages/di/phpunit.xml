@@ -1,12 +1,20 @@
-<phpunit backupGlobals="false"
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/11.5/phpunit.xsd"
          bootstrap="vendor/autoload.php"
          colors="true"
-         processIsolation="false"
-         stopOnFailure="false"
-        >
+         cacheDirectory=".phpunit.cache"
+         failOnWarning="true"
+         failOnNotice="true">
     <testsuites>
-        <testsuite name="Application Test Suite">
-            <directory>./tests/</directory>
+        <testsuite name="unit">
+            <directory>tests</directory>
+            <exclude>tests/E2E</exclude>
         </testsuite>
     </testsuites>
+    <source>
+        <include>
+            <directory>src</directory>
+        </include>
+    </source>
 </phpunit>

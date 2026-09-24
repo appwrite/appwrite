@@ -35,7 +35,8 @@ class Container implements ContainerInterface
      */
     public function __construct(
         private readonly ?ContainerInterface $parent = null,
-    ) {}
+    ) {
+    }
 
     /**
      * Register a dependency factory on the current container.

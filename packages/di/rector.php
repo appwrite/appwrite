@@ -3,7 +3,20 @@
 declare(strict_types=1);
 
 use Rector\CodeQuality\Rector\Catch_\ThrowWithPreviousExceptionRector;
+use Rector\Config\RectorConfig;
 
-return (require __DIR__ . '/../../rector.php')->withSkip([
-    ThrowWithPreviousExceptionRector::class,
-]);
+return RectorConfig::configure()
+    ->withPaths([__DIR__ . '/src', __DIR__ . '/tests'])
+    ->withPhpSets()
+    ->withPreparedSets(
+        deadCode: true,
+        codeQuality: true,
+        typeDeclarations: true,
+        earlyReturn: true,
+        codingStyle: true,
+        instanceOf: true,
+        privatization: true,
+    )
+    ->withSkip([
+        ThrowWithPreviousExceptionRector::class,
+    ]);

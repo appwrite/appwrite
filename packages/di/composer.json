@@ -15,14 +15,14 @@
         "php": ">=8.2",
         "psr/container": "^2.0"
     },
-    "require-dev": {
-        "phpbench/phpbench": "^1.2",
-        "swoole/ide-helper": "4.8.3"
-    },
     "autoload": {
         "psr-4": {
-            "Utopia\\": "src/",
-            "Tests\\E2E\\": "tests/e2e"
+            "Utopia\\DI\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Utopia\\DI\\Tests\\": "tests/"
         }
     },
     "config": {
@@ -31,6 +31,6 @@
         }
     },
     "scripts": {
-        "test": "phpunit --configuration phpunit.xml"
+        "test": "phpunit --configuration phpunit.xml --testsuite unit"
     }
 }
