@@ -72,10 +72,8 @@ const NOT_FOUND = {
   version: '1.0',
 }
 
-type MockState = {
-  payments: { path: string; paymentMethodId: string }[]
-  stripeRequests: string[]
-}
+/** The API's side of the invoice: its status only moves when a charge settles. */
+type MockState = { invoiceStatus: string }
 
 function corsHeaders(route: Route): Record<string, string> {
   const request = route.request()
@@ -92,11 +90,6 @@ function corsHeaders(route: Route): Record<string, string> {
 }
 
 async function mockApis(page: Page, state: MockState) {
-  await page.route('https://api.stripe.com/**', async (route) => {
-    state.stripeRequests.push(route.request().url())
-    await route.abort()
-  })
-
   await page.route(`${env.VITE_APPWRITE_ENDPOINT}/**`, async (route) => {
     const request = route.request()
     const method = request.method()
@@ -121,9 +114,20 @@ async function mockApis(page: Page, state: MockState) {
       method === 'POST' &&
       path === `/organizations/${ORG_ID}/invoices/${INVOICE_ID}/payments`
     ) {
-      const body = request.postDataJSON() as { paymentMethodId: string }
-      state.payments.push({ path, paymentMethodId: body.paymentMethodId })
-      // The new card needs no challenge, so the payment settles immediately.
+      const { paymentMethodId } = request.postDataJSON() as {
+        paymentMethodId: string
+      }
+      // The bank keeps declining the old card; the new one settles without a
+      // challenge.
+      if (paymentMethodId !== NEW_CARD.$id) {
+        return json(400, {
+          message: 'Your card was declined.',
+          code: 400,
+          type: 'billing_payment_failed',
+          version: '1.0',
+        })
+      }
+      state.invoiceStatus = 'succeeded'
       return json(200, { ...INVOICE, status: 'succeeded', clientSecret: '' })
     }
 
@@ -158,7 +162,10 @@ async function mockApis(page: Page, state: MockState) {
     }
     if (path === `/organizations/${ORG_ID}`) return json(200, ORGANIZATION)
     if (path === `/organizations/${ORG_ID}/invoices`) {
-      return json(200, { total: 1, invoices: [INVOICE] })
+      return json(200, {
+        total: 1,
+        invoices: [{ ...INVOICE, status: state.invoiceStatus }],
+      })
     }
     if (path === `/organizations/${ORG_ID}/payment-methods/${OLD_CARD.$id}`) {
       return json(200, OLD_CARD)
@@ -172,10 +179,10 @@ async function mockApis(page: Page, state: MockState) {
 }
 
 test.describe('invoice awaiting authentication (mocked API)', () => {
-  test('authorizing pays with the card the owner picks, not the stored intent', async ({
+  test('authorizing pays the invoice with the card the owner picks', async ({
     page,
   }) => {
-    const state: MockState = { payments: [], stripeRequests: [] }
+    const state: MockState = { invoiceStatus: INVOICE.status }
     await mockApis(page, state)
     await page.goto(
       `/organizations/${ORG_ID}/settings/billing#payment-history`,
@@ -198,16 +205,12 @@ test.describe('invoice awaiting authentication (mocked API)', () => {
     await page.getByRole('option').filter({ hasText: NEW_CARD.last4 }).click()
     await dialog.getByRole('button', { name: 'Retry', exact: true }).click()
 
-    await expect
-      .poll(() => state.payments)
-      .toEqual([
-        {
-          path: `/organizations/${ORG_ID}/invoices/${INVOICE_ID}/payments`,
-          paymentMethodId: NEW_CARD.$id,
-        },
-      ])
     await expect(dialog).toBeHidden()
-    // Nothing tried to confirm the stored, already-declined intent.
-    expect(state.stripeRequests).toEqual([])
+    const history = page.locator('#payment-history')
+    await expect(history.getByText('paid', { exact: true })).toBeVisible()
+    await expect(history.getByText('Action required')).toHaveCount(0)
+    await expect(
+      history.getByRole('button', { name: /^Authorize/ }),
+    ).toHaveCount(0)
   })
 })
