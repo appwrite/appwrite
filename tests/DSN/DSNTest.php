@@ -7,6 +7,10 @@ use Utopia\DSN\DSN;
 
 class DSNTest extends TestCase
 {
+    private const USER = 'AKIAKEY';
+
+    private const PASSWORD = 'SECRETKEY';
+
     public function testSuccess(): void
     {
         $dsn = new DSN('mariadb://user:password@localhost:3306/database?charset=utf8&timezone=UTC');
@@ -152,5 +156,55 @@ class DSNTest extends TestCase
     {
         $this->expectException(\InvalidArgumentException::class);
         new DSN('mariadb://');
+    }
+
+    /**
+     * @return array<string, array{string}>
+     */
+    public static function provideRefusedDSNs(): array
+    {
+        $credentials = self::USER . ':' . self::PASSWORD;
+
+        return [
+            'unparseable' => ["s3://{$credentials}@/backups?region=us-east-1"],
+            'no scheme' => ["//{$credentials}@localhost/database"],
+            'no host' => ["{$credentials}@localhost/database"],
+        ];
+    }
+
+    /**
+     * @dataProvider provideRefusedDSNs
+     */
+    public function testRefusalMessageOmitsCredentials(string $dsn): void
+    {
+        try {
+            new DSN($dsn);
+        } catch (\InvalidArgumentException $exception) {
+            $this->assertStringNotContainsString(self::USER, $exception->getMessage());
+            $this->assertStringNotContainsString(self::PASSWORD, $exception->getMessage());
+
+            return;
+        }
+
+        $this->fail('The DSN was accepted');
+    }
+
+    public function testUncaughtRefusalPrintsNoCredentials(): void
+    {
+        $ignoreArgs = \ini_set('zend.exception_ignore_args', '0');
+        $maxLength = \ini_set('zend.exception_string_param_max_len', '1000000');
+
+        try {
+            new DSN('s3://' . self::USER . ':' . self::PASSWORD . '@/backups?region=us-east-1');
+            $this->fail('The DSN was accepted');
+        } catch (\InvalidArgumentException $exception) {
+            $printed = (string) $exception;
+        } finally {
+            \ini_set('zend.exception_ignore_args', $ignoreArgs);
+            \ini_set('zend.exception_string_param_max_len', $maxLength);
+        }
+
+        $this->assertStringNotContainsString(self::USER, $printed);
+        $this->assertStringNotContainsString(self::PASSWORD, $printed);
     }
 }

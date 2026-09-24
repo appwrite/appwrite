@@ -51,12 +51,14 @@ class DSN
      *
      * @param  string  $dsn
      */
-    public function __construct(string $dsn)
+    public function __construct(#[\SensitiveParameter] string $dsn)
     {
         $parts = \parse_url($dsn);
+        // PHP before 8.2 ignores SensitiveParameter, and stack traces print a parameter's current value
+        unset($dsn);
 
         if (!$parts) {
-            throw new \InvalidArgumentException("Unable to parse DSN: $dsn");
+            throw new \InvalidArgumentException('Unable to parse DSN: malformed');
         }
 
         if (empty($parts['scheme'])) {
