@@ -1,6 +1,6 @@
 <?php
 
-namespace Utopia\Tests;
+namespace Utopia\Registry\Tests;
 
 use ArrayObject;
 use PHPUnit\Framework\TestCase;
@@ -8,16 +8,22 @@ use Utopia\Registry\Registry;
 
 class RegistryTest extends TestCase
 {
-    protected ?Registry $registry = null;
+    private Registry $registry;
 
     public function setUp(): void
     {
         $this->registry = new Registry();
     }
 
-    public function tearDown(): void
+    /**
+     * @return ArrayObject<array-key, mixed>
+     */
+    private function array(bool $fresh = false): ArrayObject
     {
-        $this->registry = null;
+        $array = $this->registry->get('array', $fresh);
+        $this->assertInstanceOf(ArrayObject::class, $array);
+
+        return $array;
     }
 
     /**
@@ -25,12 +31,10 @@ class RegistryTest extends TestCase
      */
     public function testGet(): void
     {
-        $this->registry->set('array', function () {
-            return new ArrayObject(['test']);
-        });
-        $this->registry->get('array')[] = 'Hello World';
+        $this->registry->set('array', fn (): ArrayObject => new ArrayObject(['test']));
+        $this->array()[] = 'Hello World';
 
-        $this->assertCount(2, $this->registry->get('array'));
+        $this->assertCount(2, $this->array());
     }
 
     /**
@@ -38,10 +42,8 @@ class RegistryTest extends TestCase
      */
     public function testSet(): void
     {
-        $this->registry->set('array', function () {
-            return new ArrayObject(['test']);
-        });
-        $this->assertCount(1, $this->registry->get('array'));
+        $this->registry->set('array', fn (): ArrayObject => new ArrayObject(['test']));
+        $this->assertCount(1, $this->array());
     }
 
     /**
@@ -49,9 +51,7 @@ class RegistryTest extends TestCase
      */
     public function testHas(): void
     {
-        $this->registry->set('item', function () {
-            return ['test'];
-        });
+        $this->registry->set('item', fn (): array => ['test']);
         $this->assertTrue($this->registry->has('item'));
     }
 
@@ -60,10 +60,8 @@ class RegistryTest extends TestCase
      */
     public function testGetFresh(): void
     {
-        $this->registry->set('array', function () {
-            return new ArrayObject(['test']);
-        });
-        $this->assertCount(1, $this->registry->get('array', true));
+        $this->registry->set('array', fn (): ArrayObject => new ArrayObject(['test']));
+        $this->assertCount(1, $this->array(true));
     }
 
     /**
@@ -71,9 +69,7 @@ class RegistryTest extends TestCase
      */
     public function testSetFresh(): void
     {
-        $this->registry->set('fresh', function () {
-            return microtime();
-        }, true);
+        $this->registry->set('fresh', fn (): string => microtime(), true);
 
         // Added usleep because some runs were so fast that the microtime was the same
         $copy1 = $this->registry->get('fresh');
@@ -92,9 +88,7 @@ class RegistryTest extends TestCase
      */
     public function testGetCaching(): void
     {
-        $this->registry->set('time', function () {
-            return microtime();
-        });
+        $this->registry->set('time', fn (): string => microtime());
 
         $timeX = $this->registry->get('time');
         $timeY = $this->registry->get('time');
@@ -107,9 +101,7 @@ class RegistryTest extends TestCase
      */
     public function testContextSwitching(): void
     {
-        $this->registry->set('time', function () {
-            return microtime();
-        });
+        $this->registry->set('time', fn (): string => microtime());
 
         $timeX = $this->registry->get('time');
         $timeY = $this->registry->get('time');

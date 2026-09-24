@@ -13,7 +13,12 @@
     "license": "MIT",
     "autoload": {
         "psr-4": {
-            "Utopia\\Registry\\": "src/Registry"
+            "Utopia\\Registry\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Utopia\\Registry\\Tests\\": "tests/"
         }
     },
     "scripts": {
@@ -22,8 +27,5 @@
     "require": {
         "php": ">=8.0"
     },
-    "require-dev": {
-        "vimeo/psalm": "4.0.1"
-    },
-    "minimum-stability": "dev"
+    "minimum-stability": "stable"
 }

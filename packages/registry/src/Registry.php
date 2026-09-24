@@ -9,7 +9,7 @@ class Registry
     /**
      * List of all callbacks
      *
-     * @var callable[]
+     * @var array<string, callable>
      */
     protected array $callbacks = [];
 
@@ -21,9 +21,9 @@ class Registry
     protected array $fresh = [];
 
     /**
-     * List of all connections
+     * List of all connections, keyed by context and then by name
      *
-     * @var array<string, mixed>
+     * @var array<string, array<string, mixed>>
      */
     protected array $registry = [
         'default' => [],
