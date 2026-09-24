@@ -69,7 +69,7 @@ private async UniTask ExampleWithDirectClient()
 }
 ```
 
-You can also create authenticated clients with `Client.FromSession`, `Client.FromDevKey`, or `Client.FromImpersonation` when those authentication flows are needed.
+You can also create authenticated clients with `Client.FromSession` or `Client.FromImpersonation` when those authentication flows are needed.
 
 ### Error handling
 
