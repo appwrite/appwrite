@@ -43,10 +43,7 @@
             "Utopia\\Telemetry\\": "packages/telemetry/src",
             "Utopia\\UserAgent\\": "packages/user-agent/src",
             "Utopia\\WebSocket\\": "packages/websocket/src"
-        },
-        "files": [
-            "packages/client/src/compat.php"
-        ]
+        }
     },
     "autoload-dev": {
         "psr-4": {
@@ -114,13 +111,13 @@
         "utopia-php/auth": "^0.12",
         "utopia-php/balancer": "0.4.*",
         "utopia-php/cache": "^5.1.0",
-        "utopia-php/cdn": "^0.0.12",
+        "utopia-php/cdn": "^0.0.13",
         "utopia-php/cli": "^0.24",
         "utopia-php/config": "1.*",
         "utopia-php/console": "^0.2",
         "utopia-php/database": "^7.3.11",
         "utopia-php/detector": "0.2.*",
-        "utopia-php/domains": "^4.2.1",
+        "utopia-php/domains": "^4.3",
         "utopia-php/emails": "0.8.*",
         "utopia-php/dns": "^3.0.7",
         "utopia-php/dsn": "0.2.1",
@@ -134,7 +131,7 @@
         "utopia-php/queue": "^6.0.0",
         "utopia-php/servers": "0.4.*",
         "utopia-php/registry": "0.5.*",
-        "utopia-php/storage": "^4.0",
+        "utopia-php/storage": "^4.3",
         "mustangostang/spyc": "0.6.*",
         "utopia-php/vcs": "5.5.*",
         "dragonmantank/cron-expression": "3.4.*",
@@ -148,9 +145,9 @@
         "open-telemetry/exporter-otlp": "1.*",
         "open-telemetry/sdk": "1.*",
         "symfony/http-client": "7.*",
-        "open-runtimes/sdk-for-php": "^2.0",
+        "open-runtimes/sdk-for-php": "^2.1",
         "utopia-php/schedule": "^0.3.0",
-        "utopia-php/usage": "^0.16.4",
+        "utopia-php/usage": "^0.16.6",
         "utopia-php/query": "0.6.*",
         "psr/http-factory": "^1.0",
         "psr/http-client": "^1.0",
