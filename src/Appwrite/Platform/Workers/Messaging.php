@@ -449,33 +449,48 @@ class Messaging extends Action
         }
 
         if (\count($userIds) > 0) {
-            $cursor = null;
+            // Appwrite push delivers to a user's reserved MQTT topic (users/<userId>), which the user
+            // subscribes to with their session — no device target is registered. So address each user
+            // directly instead of walking the targets collection, and let the row auto-provision on
+            // publish. Other push providers still need a device token, so they resolve via targets.
+            if ($default->getAttribute('provider') === 'appwrite') {
+                foreach (\array_chunk(\array_values(\array_unique($userIds)), MESSAGE_RECIPIENTS_PAGE_SIZE) as $chunk) {
+                    $identifiers = [];
+                    foreach ($chunk as $userId) {
+                        $identifiers[$userId] = $userId;
+                    }
 
-            do {
-                $queries = [
-                    Query::equal('userId', $userIds),
-                    Query::equal('providerType', [$providerType]),
-                    Query::select(['$sequence', 'providerId', 'identifier', 'userId', 'expired']),
-                    Query::orderAsc('$sequence'),
-                    Query::limit(MESSAGE_RECIPIENTS_PAGE_SIZE),
-                ];
-
-                if ($cursor !== null) {
-                    $queries[] = Query::cursorAfter($cursor);
+                    yield [[$default->getId() => $identifiers], true];
                 }
+            } else {
+                $cursor = null;
 
-                $targets = $dbForProject->find('targets', $queries);
-                $count = \count($targets);
+                do {
+                    $queries = [
+                        Query::equal('userId', $userIds),
+                        Query::equal('providerType', [$providerType]),
+                        Query::select(['$sequence', 'providerId', 'identifier', 'userId', 'expired']),
+                        Query::orderAsc('$sequence'),
+                        Query::limit(MESSAGE_RECIPIENTS_PAGE_SIZE),
+                    ];
 
-                if ($count === 0) {
-                    break;
-                }
+                    if ($cursor !== null) {
+                        $queries[] = Query::cursorAfter($cursor);
+                    }
 
-                $cursor = $targets[$count - 1];
+                    $targets = $dbForProject->find('targets', $queries);
+                    $count = \count($targets);
 
-                // User- or target-addressed: deliver on the reserved per-user topic (Appwrite push).
-                yield [$this->groupTargetsByProvider($targets, $default), true];
-            } while ($count === MESSAGE_RECIPIENTS_PAGE_SIZE);
+                    if ($count === 0) {
+                        break;
+                    }
+
+                    $cursor = $targets[$count - 1];
+
+                    // User-addressed: deliver on the reserved per-user topic (Appwrite push).
+                    yield [$this->groupTargetsByProvider($targets, $default), true];
+                } while ($count === MESSAGE_RECIPIENTS_PAGE_SIZE);
+            }
         }
 
         if (\count($targetIds) > 0) {
