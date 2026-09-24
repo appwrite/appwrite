@@ -1,0 +1,15 @@
+name: "Linter"
+
+on: [pull_request]
+jobs:
+  lint:
+    name: Linter
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check out the repo
+      uses: actions/checkout@v2
+
+    - name: Run Linter
+      run: |
+        composer install --profile --ignore-platform-reqs && composer lint
