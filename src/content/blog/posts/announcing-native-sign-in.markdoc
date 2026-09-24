@@ -241,6 +241,8 @@ Sign-in is often where people drop off on mobile, and a one-tap account picker m
 
 The session is an ordinary Appwrite session, so the rest of the project does not need to know how the user signed in. Database permissions, Storage access, Functions that read the user, and team membership all work with it. Web apps can keep the browser-based OAuth2 flow on the same provider while the mobile app uses native sign-in.
 
+Thanks to [Shivam Raj](https://github.com/shivam-raj12) from the Appwrite quality team, who requested native sign-in, helped shape how it should work, tested it, and shared the feedback that got it shipped faster and with more confidence.
+
 # Resources
 
 - [Native sign-in](/docs/products/auth/native-sign-in)
