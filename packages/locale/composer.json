@@ -1,0 +1,30 @@
+{
+    "name": "utopia-php/locale",
+    "description": "A simple locale library to manage application translations",
+    "type": "library",
+    "keywords": [
+        "php",
+        "framework",
+        "upf",
+        "utopia",
+        "locale"
+    ],
+    "license": "MIT",
+    "minimum-stability": "stable",
+    "autoload": {
+        "psr-4": {
+            "Utopia\\Locale\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Utopia\\Locale\\Tests\\": "tests/"
+        }
+    },
+    "require": {
+        "php": ">=8.3"
+    },
+    "scripts": {
+        "test": "phpunit"
+    }
+}
