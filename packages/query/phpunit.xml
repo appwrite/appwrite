@@ -6,11 +6,12 @@
          bootstrap="vendor/autoload.php"
          cacheDirectory=".phpunit.cache">
     <testsuites>
-        <testsuite name="Query">
-            <directory>tests/Query</directory>
+        <testsuite name="unit">
+            <directory>tests</directory>
+            <exclude>tests/E2E</exclude>
         </testsuite>
-        <testsuite name="Integration">
-            <directory>tests/Integration</directory>
+        <testsuite name="e2e">
+            <directory>tests/E2E</directory>
         </testsuite>
     </testsuites>
     <source>

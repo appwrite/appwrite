@@ -3,10 +3,6 @@
 > [!IMPORTANT]
 > This repository is a read-only mirror of [`packages/query`](https://github.com/appwrite/appwrite/tree/main/packages/query) in [appwrite/appwrite](https://github.com/appwrite/appwrite). Development happens there — please open issues and pull requests against appwrite/appwrite.
 
-[![CI](https://github.com/utopia-php/query/actions/workflows/ci.yml/badge.svg)](https://github.com/utopia-php/query/actions/workflows/ci.yml)
-[![Linter](https://github.com/utopia-php/query/actions/workflows/linter.yml/badge.svg)](https://github.com/utopia-php/query/actions/workflows/linter.yml)
-[![Static Analysis](https://github.com/utopia-php/query/actions/workflows/static-analysis.yml/badge.svg)](https://github.com/utopia-php/query/actions/workflows/static-analysis.yml)
-
 A PHP library for building type-safe, dialect-aware queries and DDL statements. Provides a fluent builder API with parameterized output for MySQL, MariaDB, PostgreSQL, SQLite, ClickHouse, and MongoDB, plus a SQL tokenizer and AST for inspecting and rewriting existing SQL, wire protocol parsers, and a serializable `Query` value object for passing query definitions between services.
 
 ## Installation
@@ -2858,23 +2854,26 @@ This is the pattern used by [utopia-php/database](https://github.com/utopia-php/
 
 ## Contributing
 
-All code contributions should go through a pull request and be approved by a core developer before being merged.
+Development happens in [`packages/query`](https://github.com/appwrite/appwrite/tree/main/packages/query) in appwrite/appwrite. From the root of that repository:
 
 ```bash
-composer install           # Install dependencies
-composer test              # Run unit tests in parallel (excludes the performance group)
-composer test:performance  # Run the performance group
-composer lint              # Check formatting
-composer format            # Auto-format code
-composer check             # Run static analysis (PHPStan level max)
+bin/monorepo check query       # Pint, PHPStan (level max) and Rector
+bin/monorepo test query        # Unit tier, then the e2e tier against docker-compose.yml
 ```
 
-**Integration tests** require Docker. The compose file brings up MySQL, MariaDB, PostgreSQL (pgvector), ClickHouse, and MongoDB; SQLite runs in-memory with no container. Connection details are fixed in `tests/Integration/IntegrationTestCase.php`, so the containers must be up or the suite fails rather than skips:
+Inside the package directory:
 
 ```bash
-docker compose -f docker-compose.test.yml up -d   # Start the database containers
-composer test:integration                          # Run integration tests
-docker compose -f docker-compose.test.yml down     # Stop containers
+composer test              # Unit tests (excludes the performance group)
+composer test:performance  # Run the performance group
+```
+
+**E2E tests** require Docker. The compose file brings up MySQL, MariaDB, PostgreSQL (pgvector), ClickHouse, and MongoDB; SQLite runs in-memory with no container. Connection details are fixed in `tests/E2E/IntegrationTestCase.php`, so the containers must be up or the suite fails rather than skips:
+
+```bash
+docker compose up -d --wait   # Start the database containers
+composer test:e2e             # Run the e2e tests
+docker compose down -v        # Stop containers
 ```
 
 ## License

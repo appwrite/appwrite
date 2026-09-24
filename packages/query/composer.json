@@ -13,28 +13,23 @@
     "minimum-stability": "stable",
     "autoload": {
         "psr-4": {
-            "Utopia\\Query\\": "src/Query"
+            "Utopia\\Query\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Tests\\Query\\": "tests/Query",
-            "Tests\\Integration\\": "tests/Integration"
+            "Utopia\\Query\\Tests\\": "tests/"
         }
     },
     "scripts": {
-        "test": "vendor/bin/paratest --testsuite Query --processes=auto --exclude-group=performance",
-        "test:coverage": "vendor/bin/paratest --testsuite Query --processes=auto --exclude-group=performance --coverage-php coverage/unit.cov",
-        "test:performance": "phpunit --testsuite Query --group=performance",
-        "test:integration": "phpunit --testsuite Integration",
-        "test:integration:coverage": "phpunit --testsuite Integration --coverage-php coverage/integration.cov"
+        "test": "phpunit --testsuite unit --exclude-group=performance",
+        "test:performance": "phpunit --testsuite unit --group=performance",
+        "test:e2e": "phpunit --testsuite e2e"
     },
     "require": {
         "php": ">=8.4"
     },
     "require-dev": {
-        "mongodb/mongodb": "^2.0",
-        "brianium/paratest": "*",
-        "phpunit/phpcov": "*"
+        "mongodb/mongodb": "^2.0"
     }
 }

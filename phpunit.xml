@@ -55,4 +55,9 @@
             <directory>./tests/e2e/Services/Mqtt</directory>
         </testsuite>
     </testsuites>
+    <groups>
+        <exclude>
+            <group>performance</group>
+        </exclude>
+    </groups>
 </phpunit>
