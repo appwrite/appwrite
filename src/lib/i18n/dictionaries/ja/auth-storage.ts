@@ -10,6 +10,11 @@ export const jaAuthStorageDictionary: Record<string, string> = {
   'Add a web client ID and press Enter': 'Web クライアント ID を追加して Enter を押します',
   'Bundle IDs': 'Bundle ID',
   'Add a bundle ID and press Enter': 'bundle ID を追加して Enter を押します',
+  'Add native OAuth to your app': 'アプリに Native OAuth を追加',
+  'Configure OAuth': 'OAuth を設定',
+  'Read announcement': '告知を読む',
+  'Ship native sign-in dialogs for Apple, Google, and more. Your users never leave the app, and you never ship client secrets.':
+    'Apple、Google などのネイティブサインインダイアログをそのまま組み込めます。ユーザーはアプリから離れず、クライアントシークレットも配布しません。',
   'Native sign-in': 'ネイティブサインイン',
   'Sessions can be created from ID tokens obtained on device': 'デバイス上で取得した ID トークンからセッションを作成できます',
   'Native sign-in is turned off for this project': 'このプロジェクトではネイティブサインインは無効です',

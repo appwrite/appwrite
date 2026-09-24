@@ -10,6 +10,11 @@ export const heAuthStorageDictionary: Record<string, string> = {
   'Add a web client ID and press Enter': 'הוסיפו מזהה לקוח מסוג Web ולחצו Enter',
   'Bundle IDs': 'Bundle IDs',
   'Add a bundle ID and press Enter': 'הוסיפו bundle ID ולחצו Enter',
+  'Add native OAuth to your app': 'הוסיפו Native OAuth לאפליקציה',
+  'Configure OAuth': 'הגדרת OAuth',
+  'Read announcement': 'קריאת ההכרזה',
+  'Ship native sign-in dialogs for Apple, Google, and more. Your users never leave the app, and you never ship client secrets.':
+    'הוסיפו דיאלוגי התחברות נייטיב ל-Apple, Google ועוד. המשתמשים נשארים באפליקציה, בלי סודות לקוח בקוד.',
   'Native sign-in': 'התחברות נייטיב',
   'Sessions can be created from ID tokens obtained on device': 'ניתן ליצור סשנים מטוקני ID שהתקבלו במכשיר',
   'Native sign-in is turned off for this project': 'התחברות נייטיב כבויה בפרויקט זה',

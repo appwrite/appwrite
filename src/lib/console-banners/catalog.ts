@@ -1,4 +1,8 @@
 import type { AnalyticsActionId } from '@/lib/analytics-actions'
+import type {
+  ConsoleBannerCardAspectRatio,
+  ConsoleBannerCardSize,
+} from '@/lib/console-banners/floating-card-layout'
 
 export type ConsoleBannerScope = 'project' | 'console'
 export type ConsoleBannerPlacement = 'header' | 'bottom-left'
@@ -8,6 +12,10 @@ export type ConsoleBannerDefinition = {
   title: string
   scope: ConsoleBannerScope
   placement?: ConsoleBannerPlacement
+  /** Bottom-left floating card width variant (`large` = 300px max width). */
+  cardSize?: ConsoleBannerCardSize
+  /** When `square`, fixed 1:1 card (prefer explicit layout on one-off promos). */
+  cardAspectRatio?: ConsoleBannerCardAspectRatio
   /** Inclusive start (UTC ms). */
   startMs: number
   /** Inclusive end (UTC ms). */
@@ -23,6 +31,7 @@ export const PRODUCT_HUNT_BANNER_ID = 'product-hunt-2026-09-16'
 export const POSTGRES_PROMO_BANNER_ID = 'postgres-promo-2026'
 export const START_PROMO_BANNER_ID = 'start-promo-india-2026-09'
 export const INIT_RECAP_PROMO_BANNER_ID = 'init-recap-promo-2026-09'
+export const NATIVE_OAUTH_PROMO_BANNER_ID = 'native-oauth-promo-2026-09'
 
 /** Appwrite Start India promo: 14 days from launch (inclusive, UTC). */
 export const START_PROMO_BANNER_START_MS = Date.UTC(2026, 8, 21, 0, 0, 0, 0)
@@ -73,6 +82,20 @@ export const INIT_RECAP_PROMO_BANNER_END_MS = Date.UTC(
   999,
 )
 
+/**
+ * Native OAuth project promo: seven days from launch (inclusive, UTC).
+ */
+export const NATIVE_OAUTH_PROMO_BANNER_START_MS = Date.UTC(2026, 8, 24, 0, 0, 0, 0)
+export const NATIVE_OAUTH_PROMO_BANNER_END_MS = Date.UTC(
+  2026,
+  8,
+  30,
+  23,
+  59,
+  59,
+  999,
+)
+
 /** Registered console promo banners (header strips and floating cards). */
 export const CONSOLE_BANNERS: readonly ConsoleBannerDefinition[] = [
   {
@@ -114,6 +137,16 @@ export const CONSOLE_BANNERS: readonly ConsoleBannerDefinition[] = [
     endMs: START_PROMO_BANNER_END_MS,
     cloudOnly: true,
     event: 'start-promo-banner-learn-more',
+  },
+  {
+    id: NATIVE_OAUTH_PROMO_BANNER_ID,
+    title: 'Add native OAuth to your app',
+    scope: 'project',
+    placement: 'bottom-left',
+    startMs: NATIVE_OAUTH_PROMO_BANNER_START_MS,
+    endMs: NATIVE_OAUTH_PROMO_BANNER_END_MS,
+    cloudOnly: true,
+    event: 'native-oauth-promo-banner-open-settings',
   },
 ] as const
 
