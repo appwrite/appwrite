@@ -39,7 +39,7 @@ $repeat = (int) (getenv('REPEAT') ?: 3);
  *
  * @return array<string, mixed>
  */
-$document = static fn(int $i): array => [
+$document = static fn (int $i): array => [
     '$id' => str_pad((string) $i, 20, '0', STR_PAD_LEFT),
     '$createdAt' => '2026-09-16T10:00:00.000+00:00',
     '$updatedAt' => '2026-09-16T10:00:00.000+00:00',

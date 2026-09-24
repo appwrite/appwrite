@@ -6,10 +6,12 @@
          cacheDirectory=".phpunit.cache">
     <testsuites>
         <testsuite name="unit">
-            <directory>tests/Cache/Unit</directory>
+            <directory>tests</directory>
+            <exclude>tests/E2E</exclude>
+            <exclude>tests/bench</exclude>
         </testsuite>
         <testsuite name="e2e">
-            <directory>tests/Cache/E2E</directory>
+            <directory>tests/E2E</directory>
         </testsuite>
     </testsuites>
     <source>

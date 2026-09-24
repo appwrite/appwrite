@@ -18,12 +18,12 @@
     ],
     "autoload": {
         "psr-4": {
-            "Utopia\\Cache\\": "src/Cache"
+            "Utopia\\Cache\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Utopia\\Tests\\": "tests/Cache"
+            "Utopia\\Cache\\Tests\\": "tests/"
         }
     },
     "require": {

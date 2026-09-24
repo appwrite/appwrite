@@ -35,7 +35,7 @@ $data   = $cache->load($key, 60 * 60 * 24 * 30 * 3 /* 3 months */);
 
 if(!$data) {
     $data = file_get_contents('https://example.com');
-    
+
     $cache->save($key, $data);
 }
 
