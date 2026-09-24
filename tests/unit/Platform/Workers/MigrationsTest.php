@@ -31,6 +31,7 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Migration\Destination;
 use Utopia\Migration\Exception\Aborted;
 use Utopia\Migration\Exception as MigrationException;
+use Utopia\Migration\Exception\Finalization;
 use Utopia\Migration\Resource;
 use Utopia\Migration\Resources\Auth\User;
 use Utopia\Migration\Resources\Database\Database as ResourceDatabase;
@@ -1114,6 +1115,60 @@ final class MigrationsTest extends TestCase
         $this->assertNotContains('persist:failed:finished', $events);
         $this->assertSame('processing', $migration->getAttribute('status'), 'The transfer did not end with the superseded attempt.');
         $this->assertSame('migrating', $migration->getAttribute('stage'));
+    }
+
+    public function testFinalizationFailureStoresOneErrorPerRecordedFailure(): void
+    {
+        $events = [];
+        $failures = [
+            new MigrationException(
+                resourceName: Resource::TYPE_DATABASE,
+                resourceGroup: Transfer::GROUP_DATABASES,
+                resourceId: 'first',
+                message: 'Database status could not be updated',
+                code: MigrationException::CODE_INTERNAL,
+            ),
+            new MigrationException(
+                resourceName: Resource::TYPE_TABLE,
+                resourceGroup: Transfer::GROUP_DATABASES,
+                resourceId: 'second',
+                message: 'Table could not be swept',
+                code: MigrationException::CODE_INTERNAL,
+            ),
+        ];
+
+        $recorded = [];
+        $source = $this->createSourceMock();
+        $destination = $this->createMock(Destination::class);
+        $destination->expects($this->once())->method('shutdown');
+        $destination->expects($this->once())->method('cleanUp');
+        $destination->method('getErrors')->willReturnCallback(static function () use (&$recorded): array {
+            return $recorded;
+        });
+        $destination
+            ->expects($this->once())
+            ->method('success')
+            ->willReturnCallback(static function () use (&$recorded, $failures): void {
+                $recorded = $failures;
+
+                throw new Finalization($failures);
+            });
+        $source->expects($this->never())->method('success');
+
+        $migration = $this->createMigration();
+        $processor = $this->createProcessor($source, $destination, $events);
+
+        $this->process($processor, $migration);
+
+        $this->assertSame('failed', $migration->getAttribute('status'));
+        $this->assertSame('finished', $migration->getAttribute('stage'));
+
+        $stored = $migration->getAttribute('errors');
+        $this->assertCount(2, $stored, 'A failed finalization is listed more than once per recorded failure.');
+        $this->assertSame(
+            ['first', 'second'],
+            \array_map(static fn (string $error): string => \json_decode($error, true)['resourceId'], $stored),
+        );
     }
 
     private function createGroupedSource(bool $rethrowsAbort, \Closure $record): Source

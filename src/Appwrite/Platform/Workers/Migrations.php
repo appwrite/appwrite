@@ -37,6 +37,7 @@ use Utopia\Migration\Destinations\CSV as DestinationCSV;
 use Utopia\Migration\Destinations\JSON as DestinationJSON;
 use Utopia\Migration\Destinations\OnDuplicate;
 use Utopia\Migration\Exception as MigrationException;
+use Utopia\Migration\Exception\Finalization;
 use Utopia\Migration\Resource;
 use Utopia\Migration\Resources\Database\Database as ResourceDatabase;
 use Utopia\Migration\Source;
@@ -680,7 +681,8 @@ class Migrations extends Action
                 $sourceErrors = $source?->getErrors() ?? [];
                 $destinationErrors = $destination?->getErrors() ?? [];
 
-                if ($caughtError !== null) {
+                // A Finalization's failures are already recorded on the destination.
+                if ($caughtError !== null && ! $caughtError instanceof Finalization) {
                     if ($caughtError instanceof MigrationException) {
                         // library-thrown, message constructed by us
                         $bubbled = $caughtError;
