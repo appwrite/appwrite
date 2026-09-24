@@ -186,7 +186,10 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Deployment actions': 'פעולות פריסה',
   'Deployment activated successfully': 'הפריסה הופעלה בהצלחה',
   'Deployment deleted successfully': 'הפריסה נמחקה בהצלחה',
+  'Deployment view': 'תצוגת פריסה',
   'Deployment not found': 'הפריסה לא נמצאה',
+  'Site not found': 'האתר לא נמצא',
+  'Execution not found': 'ההרצה לא נמצאה',
   'Deployment rebuild started': 'הבנייה מחדש של הפריסה החלה',
   'Deployment screenshot': 'צילום מסך של הפריסה',
   Deprecated: 'הוצא משימוש',
@@ -590,7 +593,8 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Request received. We will be in touch.': 'הבקשה התקבלה. ניצור קשר.',
   'What you build and results you have seen. We may reach out for a short interview.':
     'מה אתם בונים והתוצאות שראיתם. ייתכן שניצור קשר לראיון קצר.',
-  'What you ship and the results you have seen': 'מה אתם משחררים והתוצאות שראיתם',
+  'What you ship and the results you have seen':
+    'מה אתם משחררים והתוצאות שראיתם',
   'Request interview': 'בקשת ראיון',
   'What could we improve?': 'מה נוכל לשפר?',
   'What is working well? (optional)': 'מה עובד טוב? (אופציונלי)',

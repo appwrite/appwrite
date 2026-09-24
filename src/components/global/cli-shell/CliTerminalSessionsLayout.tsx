@@ -19,7 +19,7 @@ import {
 } from '@/lib/layout/horizontal-resize'
 import { cn } from '@/lib/utils'
 import type { CliShellSession } from '@/lib/cli-shell/cli-shell-sessions'
-import { useCliShell } from './CliShellProvider'
+import { useCliShell } from './cli-shell-context'
 import { CliTerminalSession } from './CliTerminalSession'
 
 const SPLIT_HANDLE_CLASS = cn(

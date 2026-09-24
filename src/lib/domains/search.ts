@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useDomainPrices } from '@/lib/react-query/hooks/domains'
 import { DOMAIN_SEARCH_TLDS } from '@/lib/domains/tlds'
 
@@ -24,6 +24,12 @@ export type DomainSelectionQuote = {
 }
 
 export const DOMAIN_SEARCH_DEBOUNCE_MS = 200
+/** Non-priority TLDs to fetch as soon as a search is ready (about four grid rows). */
+export const DOMAIN_SEARCH_INITIAL_PRELOAD = 16
+/** Extra TLDs in display order to fetch ahead of the scroll position. */
+export const DOMAIN_SEARCH_PRELOAD_AHEAD = 20
+/** IntersectionObserver margin so prices load before cards enter the viewport. */
+export const DOMAIN_SEARCH_VISIBLE_ROOT_MARGIN = '480px'
 
 export function normalizeDomainSearchInput(value: string): string {
   return value
@@ -156,28 +162,6 @@ export function useDomainSearch(
     [normalizedSearch],
   )
 
-  const addRequestedTld = useCallback(
-    (tld: string) => {
-      setRequested((prev) => {
-        const tlds = prev.baseName === baseName ? prev.tlds : []
-        return tlds.includes(tld) ? prev : { baseName, tlds: [...tlds, tld] }
-      })
-    },
-    [baseName],
-  )
-
-  useEffect(() => {
-    const timer = setTimeout(
-      () => setDebouncedSearch(normalizedSearch),
-      DOMAIN_SEARCH_DEBOUNCE_MS,
-    )
-    return () => clearTimeout(timer)
-  }, [normalizedSearch])
-
-  const submitSearch = useCallback(() => {
-    setDebouncedSearch(normalizedSearch)
-  }, [normalizedSearch])
-
   const priorityTlds = useMemo(
     () =>
       DOMAIN_SEARCH_TLDS.some((tld) => tld === typedTld) &&
@@ -190,6 +174,110 @@ export function useDomainSearch(
   const showSuggestions =
     baseName.length >= 2 ||
     (baseName.length === 1 && normalizedSearch.includes('.'))
+
+  const displayOrderTlds = useMemo(() => {
+    if (!baseName || !showSuggestions) return []
+    return buildDomainSuggestions({
+      baseName,
+      normalizedSearch,
+      apiDataByDomain: new Map(),
+      typedTld,
+      showSuggestions: true,
+    }).map((suggestion) => suggestion.tld)
+  }, [baseName, normalizedSearch, typedTld, showSuggestions])
+
+  const priorityTldSet = useMemo(
+    () => new Set(priorityTlds),
+    [priorityTlds],
+  )
+
+  const mergeRequestedThroughIndex = useCallback(
+    (throughIndex: number) => {
+      if (throughIndex < 0 || displayOrderTlds.length === 0) return
+      const capped = Math.min(throughIndex, displayOrderTlds.length - 1)
+      const tldsToAdd = displayOrderTlds
+        .slice(0, capped + 1)
+        .filter((tld) => !priorityTldSet.has(tld))
+      if (tldsToAdd.length === 0) return
+      setRequested((prev) => {
+        const existing =
+          prev.baseName === baseName ? new Set(prev.tlds) : new Set<string>()
+        let changed = prev.baseName !== baseName
+        for (const tld of tldsToAdd) {
+          if (!existing.has(tld)) {
+            existing.add(tld)
+            changed = true
+          }
+        }
+        if (!changed) return prev
+        return { baseName, tlds: [...existing] }
+      })
+    },
+    [baseName, displayOrderTlds, priorityTldSet],
+  )
+
+  const indexThroughNonPriorityPreload = useCallback(
+    (nonPriorityCount: number) => {
+      if (nonPriorityCount <= 0) return -1
+      let seen = 0
+      for (let i = 0; i < displayOrderTlds.length; i++) {
+        if (!priorityTldSet.has(displayOrderTlds[i])) seen++
+        if (seen >= nonPriorityCount) return i
+      }
+      return displayOrderTlds.length - 1
+    },
+    [displayOrderTlds, priorityTldSet],
+  )
+
+  const addRequestedTld = useCallback(
+    (tld: string) => {
+      const index = displayOrderTlds.indexOf(tld)
+      const through =
+        index >= 0
+          ? Math.min(
+              displayOrderTlds.length - 1,
+              index + DOMAIN_SEARCH_PRELOAD_AHEAD,
+            )
+          : index
+      mergeRequestedThroughIndex(through)
+    },
+    [displayOrderTlds, mergeRequestedThroughIndex],
+  )
+
+  useEffect(() => {
+    const timer = setTimeout(
+      () => setDebouncedSearch(normalizedSearch),
+      DOMAIN_SEARCH_DEBOUNCE_MS,
+    )
+    return () => clearTimeout(timer)
+  }, [normalizedSearch])
+
+  useEffect(() => {
+    setRequested({ baseName, tlds: [] })
+  }, [baseName])
+
+  const searchReady =
+    showSuggestions &&
+    debouncedSearch === normalizedSearch &&
+    baseName.length > 0
+
+  useEffect(() => {
+    if (!searchReady) return
+    const through = indexThroughNonPriorityPreload(
+      DOMAIN_SEARCH_INITIAL_PRELOAD + DOMAIN_SEARCH_PRELOAD_AHEAD,
+    )
+    mergeRequestedThroughIndex(through)
+  }, [
+    searchReady,
+    baseName,
+    displayOrderTlds,
+    indexThroughNonPriorityPreload,
+    mergeRequestedThroughIndex,
+  ])
+
+  const submitSearch = useCallback(() => {
+    setDebouncedSearch(normalizedSearch)
+  }, [normalizedSearch])
 
   const { pricesByDomain, error, retry, isRetrying } = useDomainPrices(
     showSuggestions && debouncedSearch === normalizedSearch ? baseName : '',

@@ -1498,6 +1498,13 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Open MCP': 'פתיחת MCP',
   'Register where your app runs, add API credentials, and connect a coding agent with MCP.':
     'רשמו היכן האפליקציה פועלת, הוסיפו פרטי גישה ל-API וחברו סוכן פיתוח עם MCP.',
+  'Register where your app runs, add API credentials, and install the CLI or MCP when you are ready.':
+    'רשמו היכן האפליקציה פועלת, הוסיפו פרטי גישה ל-API, והתקינו CLI או MCP כשאתם מוכנים.',
+  'Install the Appwrite CLI': 'התקנת Appwrite CLI',
+  'Use the CLI from your terminal to manage this project, deploy functions, and automate workflows.':
+    'השתמשו ב-CLI מהטרמינל כדי לנהל את הפרויקט, לפרוס פונקציות ולהריץ אוטומציה.',
+  'Install CLI': 'התקנת CLI',
+  'Open CLI': 'פתיחת CLI',
   "You've reached the limit of": 'הגעתם למגבלה של',
   'Approaching the limit for': 'מתקרבים למגבלה של',
   'Your plan': 'התוכנית שלכם',
@@ -2757,6 +2764,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Topic name': 'שם הנושא',
   'Topic name updated successfully': 'שם הנושא עודכן בהצלחה',
   'Topic not found': 'הנושא לא נמצא',
+  'Subscriber not found': 'המנוי לא נמצא',
   'Topics group subscribers for email, SMS, or push.':
     'נושאים מקבצים מנויים לאימייל, SMS או Push.',
   'Type:': 'סוג:',
