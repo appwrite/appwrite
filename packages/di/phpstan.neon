@@ -1,0 +1,6 @@
+includes:
+    - ../../phpstan.neon
+
+parameters:
+    scanDirectories:
+        - vendor/swoole/ide-helper
