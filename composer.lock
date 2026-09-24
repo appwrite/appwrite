@@ -4470,16 +4470,16 @@
         },
         {
             "name": "utopia-php/vcs",
-            "version": "5.5.0",
+            "version": "5.5.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/vcs.git",
-                "reference": "de3d3dafe019f8cffd97480a9f2bf15d7514678c"
+                "reference": "f8b0c717de0340d7980a1c077b12ec550462cfe4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/de3d3dafe019f8cffd97480a9f2bf15d7514678c",
-                "reference": "de3d3dafe019f8cffd97480a9f2bf15d7514678c",
+                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/f8b0c717de0340d7980a1c077b12ec550462cfe4",
+                "reference": "f8b0c717de0340d7980a1c077b12ec550462cfe4",
                 "shasum": ""
             },
             "require": {
@@ -4522,10 +4522,10 @@
                 "vcs"
             ],
             "support": {
-                "source": "https://github.com/utopia-php/vcs/tree/5.5.0",
+                "source": "https://github.com/utopia-php/vcs/tree/5.5.1",
                 "issues": "https://github.com/utopia-php/vcs/issues"
             },
-            "time": "2026-09-17T08:01:03+00:00"
+            "time": "2026-09-24T08:28:23+00:00"
         },
         {
             "name": "webmozart/assert",
