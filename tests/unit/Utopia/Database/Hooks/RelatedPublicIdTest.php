@@ -269,11 +269,15 @@ final class RelatedPublicIdTest extends TestCase
 
         $this->authorization->skip(function () use ($catalog, $collections): void {
             $catalog->create();
-            foreach (['databases', 'attributes', 'indexes'] as $id) {
+            foreach ($collections['projects'] as $id => $collection) {
+                if (($collection['$collection'] ?? '') !== Database::METADATA) {
+                    continue;
+                }
+
                 $catalog->createCollection(new Collection(
                     id: $id,
-                    attributes: $collections['projects'][$id]['attributes'],
-                    indexes: $collections['projects'][$id]['indexes'],
+                    attributes: $collection['attributes'],
+                    indexes: $collection['indexes'],
                 ));
             }
 
