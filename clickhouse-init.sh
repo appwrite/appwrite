@@ -11,6 +11,8 @@
   client --query 'SYSTEM FLUSH LOGS'
 
   # Old tables never expire, so give each one the TTL of the log that replaced it.
+  # Patterns rather than fixed substrings: the <N> suffix differs per table, and the
+  # TTL expression sits between two markers inside engine_full.
   client --format TSVRaw <<'SQL' | client --multiquery
 SELECT concat('ALTER TABLE system.', retired.name, ' MODIFY TTL ', extract(active.engine_full, ' TTL (.+) SETTINGS '), ';')
 FROM system.tables AS retired
