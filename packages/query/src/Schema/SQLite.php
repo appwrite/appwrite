@@ -87,9 +87,16 @@ class SQLite extends SQL implements Views
      * base compiler would otherwise add.
      */
     #[\Override]
-    public function compileCreate(Table $table, bool $ifNotExists = false): Statement
+    public function compileCreate(\Utopia\Query\Schema\Table $table, bool $ifNotExists = false): Statement
     {
-        $hasInlinePrimary = array_any($table->columns, fn (Column $column): bool => $column->isAutoIncrement && $column->isPrimary);
+        $hasInlinePrimary = false;
+        foreach ($table->columns as $column) {
+            if ($column->isAutoIncrement && $column->isPrimary) {
+                $hasInlinePrimary = true;
+                break;
+            }
+        }
+
         if (! $hasInlinePrimary) {
             return parent::compileCreate($table, $ifNotExists);
         }

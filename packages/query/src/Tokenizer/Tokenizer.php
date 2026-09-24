@@ -6,7 +6,7 @@ use Utopia\Query\Exception\ValidationException;
 
 class Tokenizer
 {
-    private const array KEYWORD_MAP = [
+    private const KEYWORD_MAP = [
         'SELECT' => true, 'FROM' => true, 'WHERE' => true, 'AND' => true,
         'OR' => true, 'NOT' => true, 'JOIN' => true, 'LEFT' => true,
         'RIGHT' => true, 'INNER' => true, 'OUTER' => true, 'FULL' => true,
@@ -32,7 +32,7 @@ class Tokenizer
      * Single-character operator lookup table. Used by tryReadOperator to
      * avoid allocating a haystack array on every character.
      */
-    private const array SINGLE_OPERATORS = [
+    private const SINGLE_OPERATORS = [
         '=' => true,
         '<' => true,
         '>' => true,

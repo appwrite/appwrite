@@ -2,7 +2,6 @@
 
 namespace Utopia\Query\Builder\Feature;
 
-use Utopia\Query\Builder\JoinBuilder;
 use Utopia\Query\Builder\JoinType;
 
 interface Joins
@@ -14,7 +13,7 @@ interface Joins
     public function rightJoin(string $table, string $left, string $right, string $operator = '=', string $alias = ''): static;
 
     /**
-     * @param \Closure(JoinBuilder):void $callback
+     * @param  \Closure(\Utopia\Query\Builder\JoinBuilder): void  $callback
      */
     public function joinWhere(string $table, \Closure $callback, JoinType $type = JoinType::Inner, string $alias = ''): static;
 }

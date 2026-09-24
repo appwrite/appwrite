@@ -3,12 +3,6 @@
 namespace Utopia\Query\Schema\Column;
 
 use Utopia\Query\Schema\Column;
-use Utopia\Query\Schema\Column\Trait\AutoIncrement;
-use Utopia\Query\Schema\Column\Trait\Collation;
-use Utopia\Query\Schema\Column\Trait\Comment;
-use Utopia\Query\Schema\Column\Trait\Generated;
-use Utopia\Query\Schema\Column\Trait\Unique;
-use Utopia\Query\Schema\Column\Trait\VirtualGenerated;
 use Utopia\Query\Schema\Forwarder;
 use Utopia\Query\Schema\Table;
 
@@ -17,12 +11,12 @@ use Utopia\Query\Schema\Table;
  */
 class SQLite extends Column
 {
-    use AutoIncrement;
-    use Collation;
-    use Comment;
-    use Unique;
-    use Generated;
-    use VirtualGenerated;
+    use Trait\AutoIncrement;
+    use Trait\Collation;
+    use Trait\Comment;
+    use Trait\Unique;
+    use Trait\Generated;
+    use Trait\VirtualGenerated;
     use Forwarder\SQLite;
 
     /**

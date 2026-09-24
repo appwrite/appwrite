@@ -6,7 +6,6 @@ use Utopia\Query\Schema\Column;
 use Utopia\Query\Schema\ColumnType;
 use Utopia\Query\Schema\ForeignKey;
 use Utopia\Query\Schema\Table;
-use Utopia\Query\Schema\Table\Trait\Serial;
 
 /**
  * @extends Table<Column\MongoDB, ForeignKey>
@@ -14,7 +13,7 @@ use Utopia\Query\Schema\Table\Trait\Serial;
 class MongoDB extends Table
 {
     /** @use Trait\Serial<Column\MongoDB> */
-    use Serial;
+    use Trait\Serial;
     #[\Override]
     protected function newColumn(string $name, ColumnType $type, ?int $length = null, ?int $precision = null, ?int $scale = null, ?int $srid = null, ?int $dimensions = null, bool $autoIncrement = false): Column\MongoDB
     {

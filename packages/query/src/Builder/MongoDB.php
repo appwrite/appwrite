@@ -1171,7 +1171,9 @@ class MongoDB extends BaseBuilder implements
             $projection[$resolved] = 1;
         }
 
-        $projection['_id'] ??= 0;
+        if (! isset($projection['_id'])) {
+            $projection['_id'] = 0;
+        }
 
         return $projection;
     }
@@ -1556,7 +1558,15 @@ class MongoDB extends BaseBuilder implements
 
         $subCollection = $subOp['collection'] ?? '';
         $subPipeline = $this->operationToPipeline($subOp);
-        $hasLimit = array_any($subPipeline, fn (array $stage): bool => isset($stage[PipelineStage::Limit->value]));
+
+        // Ensure limit 1 for exists checks
+        $hasLimit = false;
+        foreach ($subPipeline as $stage) {
+            if (isset($stage[PipelineStage::Limit->value])) {
+                $hasLimit = true;
+                break;
+            }
+        }
         if (! $hasLimit) {
             $subPipeline[] = [PipelineStage::Limit->value => 1];
         }

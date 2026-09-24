@@ -6,7 +6,6 @@ use Utopia\Query\Builder\Statement;
 use Utopia\Query\Exception\ValidationException;
 use Utopia\Query\Schema;
 use Utopia\Query\Schema\ClickHouse\Engine;
-use Utopia\Query\Schema\ClickHouse\IndexAlgorithm;
 
 /**
  * @template TColumn of Column = Column
@@ -395,7 +394,7 @@ class Table
         array $lengths = [],
         array $orders = [],
         array $collations = [],
-        ?IndexAlgorithm $algorithm = null,
+        ?ClickHouse\IndexAlgorithm $algorithm = null,
         array $algorithmArgs = [],
         ?int $granularity = null,
     ): static {

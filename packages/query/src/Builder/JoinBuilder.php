@@ -6,7 +6,7 @@ use Utopia\Query\Exception\ValidationException;
 
 class JoinBuilder
 {
-    private const array ALLOWED_OPERATORS = ['=', '!=', '<', '>', '<=', '>=', '<>'];
+    private const ALLOWED_OPERATORS = ['=', '!=', '<', '>', '<=', '>=', '<>'];
 
     /** @var list<JoinOn> */
     public private(set) array $ons = [];

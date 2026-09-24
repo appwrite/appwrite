@@ -30,12 +30,18 @@ class Column
 
     public protected(set) bool $isPrimary = false;
 
+    public protected(set) bool $isAutoIncrement = false;
+
     public protected(set) ?string $after = null;
 
     public protected(set) ?string $comment = null;
 
     /** @var string[] */
     public protected(set) array $enumValues = [];
+
+    public protected(set) ?int $srid = null;
+
+    public protected(set) ?int $dimensions = null;
 
     public protected(set) bool $isModify = false;
 
@@ -64,8 +70,20 @@ class Column
      *
      * @param  TTable  $table
      */
-    public function __construct(public Table $table, public string $name, public ColumnType $type, public ?int $length = null, public ?int $precision = null, public ?int $scale = null, public protected(set) ?int $srid = null, public protected(set) ?int $dimensions = null, public protected(set) bool $isAutoIncrement = false)
-    {
+    public function __construct(
+        public Table $table,
+        public string $name,
+        public ColumnType $type,
+        public ?int $length = null,
+        public ?int $precision = null,
+        public ?int $scale = null,
+        ?int $srid = null,
+        ?int $dimensions = null,
+        bool $autoIncrement = false,
+    ) {
+        $this->srid = $srid;
+        $this->dimensions = $dimensions;
+        $this->isAutoIncrement = $autoIncrement;
     }
 
     public function nullable(): static

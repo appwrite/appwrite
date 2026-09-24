@@ -6,7 +6,6 @@ use Closure;
 use Utopia\Query\Builder\Statement;
 use Utopia\Query\Exception\ValidationException;
 use Utopia\Query\Schema\Column;
-use Utopia\Query\Schema\Index;
 use Utopia\Query\Schema\IndexType;
 use Utopia\Query\Schema\Order;
 use Utopia\Query\Schema\Table;
@@ -76,7 +75,7 @@ abstract class Schema
             $columnDefs[] = 'PRIMARY KEY (' . \implode(', ', $primaryKeys) . ')';
         } elseif (! empty($table->compositePrimaryKey)) {
             $columnDefs[] = 'PRIMARY KEY ('
-                . \implode(', ', \array_map($this->quoteLiteral(...), $table->compositePrimaryKey))
+                . \implode(', ', \array_map(fn (string $c): string => $this->quoteLiteral($c), $table->compositePrimaryKey))
                 . ')';
         }
 
@@ -243,7 +242,7 @@ abstract class Schema
         };
 
         $indexType = $unique ? IndexType::Unique : ($type !== '' ? IndexType::from($type) : IndexType::Index);
-        $index = new Index($name, $columns, $indexType, $lengths, $orders, $method, $operatorClass, $collations, $rawColumns);
+        $index = new Schema\Index($name, $columns, $indexType, $lengths, $orders, $method, $operatorClass, $collations, $rawColumns);
 
         $sql = $keyword . ' ' . $this->quote($name)
             . ' ON ' . $this->quote($table);
@@ -391,7 +390,7 @@ abstract class Schema
      *
      * @throws ValidationException if a collation or order value is not safe to emit inline.
      */
-    protected function compileIndexColumns(Index $index): string
+    protected function compileIndexColumns(Schema\Index $index): string
     {
         $parts = [];
 

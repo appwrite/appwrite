@@ -1108,7 +1108,12 @@ class Parser
             return false;
         }
         $upper = strtoupper($token->value);
-        return array_any($keywords, fn (string $keyword): bool => $upper === strtoupper($keyword));
+        foreach ($keywords as $keyword) {
+            if ($upper === strtoupper($keyword)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private function peekKeyword(int $offset, string $keyword): bool

@@ -2,8 +2,6 @@
 
 namespace Utopia\Query\Builder\Feature;
 
-use Utopia\Query\Query;
-
 interface Aggregates
 {
     public function count(string $attribute = '*', string $alias = ''): static;
@@ -34,7 +32,7 @@ interface Aggregates
     public function groupByTimeBucket(string $attribute, string $interval): static;
 
     /**
-     * @param array<Query> $queries
+     * @param  array<\Utopia\Query\Query>  $queries
      */
     public function having(array $queries): static;
 }

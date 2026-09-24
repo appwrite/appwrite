@@ -65,7 +65,7 @@ class MySQL extends SQL implements
             ColumnType::Timestamp => $column->precision ? 'TIMESTAMP(' . $column->precision . ')' : 'TIMESTAMP',
             ColumnType::Json, ColumnType::Object => 'JSON',
             ColumnType::Binary => 'BLOB',
-            ColumnType::Enum => "ENUM('" . \implode("','", \array_map(fn (string $v): string => \str_replace(['\\', "'"], ['\\\\', "''"], $v), $column->enumValues)) . "')",
+            ColumnType::Enum => "ENUM('" . \implode("','", \array_map(fn ($v) => \str_replace(['\\', "'"], ['\\\\', "''"], $v), $column->enumValues)) . "')",
             ColumnType::Point => 'POINT' . ($column->srid !== null ? ' SRID ' . $column->srid : ''),
             ColumnType::Linestring => 'LINESTRING' . ($column->srid !== null ? ' SRID ' . $column->srid : ''),
             ColumnType::Polygon => 'POLYGON' . ($column->srid !== null ? ' SRID ' . $column->srid : ''),

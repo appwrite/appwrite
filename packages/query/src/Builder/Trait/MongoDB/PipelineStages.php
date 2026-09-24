@@ -2,7 +2,6 @@
 
 namespace Utopia\Query\Builder\Trait\MongoDB;
 
-use Utopia\Query\Builder;
 use Utopia\Query\Exception\ValidationException;
 
 trait PipelineStages
@@ -48,7 +47,7 @@ trait PipelineStages
     }
 
     /**
-     * @param array<string, Builder> $facets
+     * @param  array<string, \Utopia\Query\Builder>  $facets
      */
     #[\Override]
     public function facet(array $facets): static

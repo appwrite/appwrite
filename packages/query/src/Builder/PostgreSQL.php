@@ -29,7 +29,6 @@ use Utopia\Query\Builder\Feature\UpsertSelect;
 use Utopia\Query\Builder\PostgreSQL\DeleteUsing;
 use Utopia\Query\Builder\PostgreSQL\MergeTarget;
 use Utopia\Query\Builder\PostgreSQL\UpdateFrom;
-use Utopia\Query\Builder\Trait\GroupByModifiers;
 use Utopia\Query\Exception\ValidationException;
 use Utopia\Query\Method;
 use Utopia\Query\Query;
@@ -62,7 +61,7 @@ class PostgreSQL extends SQL implements
     use Trait\FullOuterJoins;
     use Trait\FullTextSearch;
     use Trait\NegatedFullTextSearch;
-    use GroupByModifiers;
+    use Trait\GroupByModifiers;
     use Trait\LateralJoins;
     use Trait\PostgreSQL\AggregateFilter;
     use Trait\PostgreSQL\DistinctOn;
@@ -160,7 +159,7 @@ class PostgreSQL extends SQL implements
     protected function compileConflictHeader(): string
     {
         $wrappedKeys = \array_map(
-            $this->resolveAndWrap(...),
+            fn (string $key): string => $this->resolveAndWrap($key),
             $this->conflictKeys
         );
 
@@ -735,7 +734,7 @@ class PostgreSQL extends SQL implements
 
         if (! empty($this->distinctOnColumns)) {
             $cols = \array_map(
-                $this->resolveAndWrap(...),
+                fn (string $col): string => $this->resolveAndWrap($col),
                 $this->distinctOnColumns
             );
             $distinctOnClause = 'SELECT DISTINCT ON (' . \implode(', ', $cols) . ')';

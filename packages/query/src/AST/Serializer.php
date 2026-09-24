@@ -112,7 +112,7 @@ class Serializer
             $expression instanceof Conditional => $this->serializeConditional($expression),
             $expression instanceof Cast => $this->serializeCast($expression),
             $expression instanceof Subquery => '(' . $this->serialize($expression->query) . ')',
-            default => throw new Exception('Unsupported expression type: ' . $expression::class),
+            default => throw new Exception('Unsupported expression type: ' . get_class($expression)),
         };
     }
 

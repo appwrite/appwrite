@@ -3,7 +3,6 @@
 namespace Utopia\Query\Schema\Column;
 
 use Utopia\Query\Schema\Column;
-use Utopia\Query\Schema\Column\Trait\Comment;
 use Utopia\Query\Schema\Forwarder;
 use Utopia\Query\Schema\Table;
 
@@ -12,6 +11,6 @@ use Utopia\Query\Schema\Table;
  */
 class MongoDB extends Column
 {
-    use Comment;
+    use Trait\Comment;
     use Forwarder\MongoDB;
 }

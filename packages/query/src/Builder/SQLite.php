@@ -58,7 +58,7 @@ class SQLite extends SQL implements Json, ConditionalAggregates, StringAggregate
     protected function compileConflictHeader(): string
     {
         $wrappedKeys = \array_map(
-            $this->resolveAndWrap(...),
+            fn (string $key): string => $this->resolveAndWrap($key),
             $this->conflictKeys
         );
 
@@ -227,7 +227,7 @@ class SQLite extends SQL implements Json, ConditionalAggregates, StringAggregate
         }
 
         $conditions = \array_map(
-            fn (string $p): string => 'EXISTS (SELECT 1 FROM json_each(' . $attribute . ') WHERE json_each.value = json(' . $p . '))',
+            fn (string $p) => 'EXISTS (SELECT 1 FROM json_each(' . $attribute . ') WHERE json_each.value = json(' . $p . '))',
             $placeholders
         );
 
@@ -251,7 +251,7 @@ class SQLite extends SQL implements Json, ConditionalAggregates, StringAggregate
         }
 
         $conditions = \array_map(
-            fn (string $p): string => 'EXISTS (SELECT 1 FROM json_each(' . $attribute . ') WHERE json_each.value = json(' . $p . '))',
+            fn (string $p) => 'EXISTS (SELECT 1 FROM json_each(' . $attribute . ') WHERE json_each.value = json(' . $p . '))',
             $placeholders
         );
 

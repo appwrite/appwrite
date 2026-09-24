@@ -4,7 +4,6 @@ namespace Utopia\Query\Schema\Column;
 
 use Utopia\Query\Exception\ValidationException;
 use Utopia\Query\Schema\Column;
-use Utopia\Query\Schema\Column\Trait\Comment;
 use Utopia\Query\Schema\ColumnType;
 use Utopia\Query\Schema\Forwarder;
 use Utopia\Query\Schema\Table;
@@ -14,7 +13,7 @@ use Utopia\Query\Schema\Table;
  */
 class ClickHouse extends Column
 {
-    use Comment;
+    use Trait\Comment;
     use Forwarder\ClickHouse;
 
     public protected(set) bool $isLowCardinality = false;

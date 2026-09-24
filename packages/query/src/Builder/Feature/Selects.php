@@ -5,7 +5,6 @@ namespace Utopia\Query\Builder\Feature;
 use Closure;
 use Utopia\Query\Builder\Statement;
 use Utopia\Query\NullsPosition;
-use Utopia\Query\Query;
 
 interface Selects
 {
@@ -20,12 +19,12 @@ interface Selects
     public function distinct(): static;
 
     /**
-     * @param array<Query> $queries
+     * @param  array<\Utopia\Query\Query>  $queries
      */
     public function filter(array $queries): static;
 
     /**
-     * @param array<Query> $queries
+     * @param  array<\Utopia\Query\Query>  $queries
      */
     public function queries(array $queries): static;
 

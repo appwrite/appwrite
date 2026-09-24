@@ -4,7 +4,6 @@ namespace Utopia\Query\Schema\Table\Trait;
 
 use Utopia\Query\Schema\Column;
 use Utopia\Query\Schema\ColumnType;
-use Utopia\Query\Schema\Table;
 
 /**
  * Auto-incrementing SERIAL column factories.
@@ -14,7 +13,7 @@ use Utopia\Query\Schema\Table;
  *
  * @template TColumn of Column
  *
- * @phpstan-require-extends Table
+ * @phpstan-require-extends \Utopia\Query\Schema\Table
  */
 trait Serial
 {

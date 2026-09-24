@@ -14,7 +14,6 @@ use Utopia\Query\Builder\Feature\Spatial;
 use Utopia\Query\Builder\Feature\StringAggregates;
 use Utopia\Query\Builder\Feature\Upsert;
 use Utopia\Query\Builder\Feature\UpsertSelect;
-use Utopia\Query\Builder\Trait\GroupByModifiers;
 use Utopia\Query\Exception\ValidationException;
 use Utopia\Query\Method;
 
@@ -35,7 +34,7 @@ class MySQL extends SQL implements
     use Trait\ConditionalAggregates;
     use Trait\FullTextSearch;
     use Trait\NegatedFullTextSearch;
-    use GroupByModifiers;
+    use Trait\GroupByModifiers;
     use Trait\Hints;
     use Trait\LateralJoins;
     use Trait\Spatial;
@@ -255,7 +254,7 @@ class MySQL extends SQL implements
                         $endPos = $pos;
                     }
                 }
-                $insertAt = $endPos ?? \strlen($query);
+                $insertAt = $endPos !== null ? $endPos : \strlen($query);
                 $query = \rtrim(\substr($query, 0, $insertAt)) . ' ' . $this->groupByModifier . ($endPos !== null ? ' ' . \substr($query, $endPos) : '');
             }
         }

@@ -4,12 +4,6 @@ namespace Utopia\Query\Schema\Column;
 
 use Utopia\Query\Exception\ValidationException;
 use Utopia\Query\Schema\Column;
-use Utopia\Query\Schema\Column\Trait\AutoIncrement;
-use Utopia\Query\Schema\Column\Trait\Collation;
-use Utopia\Query\Schema\Column\Trait\Dimensions;
-use Utopia\Query\Schema\Column\Trait\Generated;
-use Utopia\Query\Schema\Column\Trait\Srid;
-use Utopia\Query\Schema\Column\Trait\Unique;
 use Utopia\Query\Schema\Forwarder;
 use Utopia\Query\Schema\Table;
 
@@ -18,12 +12,12 @@ use Utopia\Query\Schema\Table;
  */
 class PostgreSQL extends Column
 {
-    use Srid;
-    use Dimensions;
-    use AutoIncrement;
-    use Collation;
-    use Unique;
-    use Generated;
+    use Trait\Srid;
+    use Trait\Dimensions;
+    use Trait\AutoIncrement;
+    use Trait\Collation;
+    use Trait\Unique;
+    use Trait\Generated;
     use Forwarder\PostgreSQL;
 
     /**

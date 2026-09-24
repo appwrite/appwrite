@@ -33,7 +33,7 @@ class MongoDB implements Classifier
      *
      * @var array<string, true>
      */
-    private const array READ_COMMANDS = [
+    private const READ_COMMANDS = [
         'find' => true,
         'aggregate' => true,
         'count' => true,
@@ -59,7 +59,7 @@ class MongoDB implements Classifier
      *
      * @var array<string, true>
      */
-    private const array WRITE_COMMANDS = [
+    private const WRITE_COMMANDS = [
         'insert' => true,
         'update' => true,
         'delete' => true,
@@ -80,7 +80,7 @@ class MongoDB implements Classifier
      *
      * @var array<string, true>
      */
-    private const array TRANSACTION_ELIGIBLE_COMMANDS = [
+    private const TRANSACTION_ELIGIBLE_COMMANDS = [
         'find' => true,
         'insert' => true,
         'update' => true,
@@ -92,12 +92,12 @@ class MongoDB implements Classifier
     /**
      * MongoDB OP_MSG opcode
      */
-    private const int OP_MSG = 2013;
+    private const OP_MSG = 2013;
 
     /**
      * Minimum OP_MSG size: header (16) + flags (4) + section kind (1) + min BSON doc (5)
      */
-    private const int MIN_MSG_SIZE = 26;
+    private const MIN_MSG_SIZE = 26;
 
     public function classify(string $data): Type
     {

@@ -25,17 +25,17 @@ use Utopia\Query\Type;
  */
 class MySQL extends SQL
 {
-    private const int COM_QUERY = 0x03;
+    private const COM_QUERY = 0x03;
 
-    private const int COM_STMT_PREPARE = 0x16;
+    private const COM_STMT_PREPARE = 0x16;
 
-    private const int COM_STMT_EXECUTE = 0x17;
+    private const COM_STMT_EXECUTE = 0x17;
 
-    private const int COM_STMT_SEND_LONG_DATA = 0x18;
+    private const COM_STMT_SEND_LONG_DATA = 0x18;
 
-    private const int COM_STMT_CLOSE = 0x19;
+    private const COM_STMT_CLOSE = 0x19;
 
-    private const int COM_STMT_RESET = 0x1A;
+    private const COM_STMT_RESET = 0x1A;
 
     public function classify(string $data): Type
     {

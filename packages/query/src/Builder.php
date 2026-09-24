@@ -29,16 +29,7 @@ use Utopia\Query\Builder\ColumnPredicate;
 use Utopia\Query\Builder\Condition;
 use Utopia\Query\Builder\CteClause;
 use Utopia\Query\Builder\ExistsSubquery;
-use Utopia\Query\Builder\Feature\Aggregates;
-use Utopia\Query\Builder\Feature\CTEs;
-use Utopia\Query\Builder\Feature\Deletes;
-use Utopia\Query\Builder\Feature\Hooks;
-use Utopia\Query\Builder\Feature\Inserts;
-use Utopia\Query\Builder\Feature\Joins;
-use Utopia\Query\Builder\Feature\Selects;
-use Utopia\Query\Builder\Feature\Unions;
-use Utopia\Query\Builder\Feature\Updates;
-use Utopia\Query\Builder\Feature\Windows;
+use Utopia\Query\Builder\Feature;
 use Utopia\Query\Builder\JoinBuilder;
 use Utopia\Query\Builder\JoinType;
 use Utopia\Query\Builder\LateralJoin;
@@ -60,16 +51,16 @@ use Utopia\Query\Tokenizer\Tokenizer;
 
 abstract class Builder implements
     Compiler,
-    Selects,
-    Aggregates,
-    Joins,
-    Unions,
-    CTEs,
-    Inserts,
-    Updates,
-    Deletes,
-    Hooks,
-    Windows
+    Feature\Selects,
+    Feature\Aggregates,
+    Feature\Joins,
+    Feature\Unions,
+    Feature\CTEs,
+    Feature\Inserts,
+    Feature\Updates,
+    Feature\Deletes,
+    Feature\Hooks,
+    Feature\Windows
 {
     use Builder\Trait\Aggregates;
     use Builder\Trait\CTEs;
@@ -491,7 +482,7 @@ abstract class Builder implements
             $this->addBindings($cte->bindings);
             $cteName = $this->quote($cte->name);
             if (! empty($cte->columns)) {
-                $cteName .= '(' . \implode(', ', \array_map($this->quote(...), $cte->columns)) . ')';
+                $cteName .= '(' . \implode(', ', \array_map(fn (string $col): string => $this->quote($col), $cte->columns)) . ')';
             }
             $cteParts[] = $cteName . ' AS (' . $cte->query . ')';
         }
@@ -582,7 +573,7 @@ abstract class Builder implements
 
         if ($win->partitionBy !== null && $win->partitionBy !== []) {
             $partCols = \array_map(
-                $this->resolveAndWrap(...),
+                fn (string $col): string => $this->resolveAndWrap($col),
                 $win->partitionBy
             );
             $overParts[] = 'PARTITION BY ' . \implode(', ', $partCols);
@@ -886,7 +877,7 @@ abstract class Builder implements
         foreach ($this->windowDefinitions as $winDef) {
             $overParts = [];
             if ($winDef->partitionBy !== null && $winDef->partitionBy !== []) {
-                $partCols = \array_map($this->resolveAndWrap(...), $winDef->partitionBy);
+                $partCols = \array_map(fn (string $col): string => $this->resolveAndWrap($col), $winDef->partitionBy);
                 $overParts[] = 'PARTITION BY ' . \implode(', ', $partCols);
             }
             if ($winDef->orderBy !== null && $winDef->orderBy !== []) {
@@ -1024,7 +1015,7 @@ abstract class Builder implements
         $this->validateRows('insert');
         $columns = $this->validateAndGetColumns();
 
-        $wrappedColumns = \array_map($this->resolveAndWrap(...), $columns);
+        $wrappedColumns = \array_map(fn (string $col): string => $this->resolveAndWrap($col), $columns);
 
         $bindings = [];
         $rowPlaceholders = [];
@@ -1257,12 +1248,12 @@ abstract class Builder implements
         if ($this->fromSubquery !== null) {
             $this->fromSubquery = new SubSelect(clone $this->fromSubquery->subquery, $this->fromSubquery->alias);
         }
-        $this->subSelects = \array_map(fn (SubSelect $s): SubSelect => new SubSelect(clone $s->subquery, $s->alias), $this->subSelects);
-        $this->whereInSubqueries = \array_map(fn (WhereInSubquery $s): WhereInSubquery => new WhereInSubquery($s->column, clone $s->subquery, $s->not), $this->whereInSubqueries);
-        $this->existsSubqueries = \array_map(fn (ExistsSubquery $s): ExistsSubquery => new ExistsSubquery(clone $s->subquery, $s->not), $this->existsSubqueries);
-        $this->joins = \array_map(fn (JoinBuilder $j): JoinBuilder => clone $j, $this->joins);
-        $this->pendingQueries = \array_map(fn (Query $q): Query => clone $q, $this->pendingQueries);
-        $this->lateralJoins = \array_map(fn (LateralJoin $l): LateralJoin => new LateralJoin(clone $l->subquery, $l->alias, $l->type), $this->lateralJoins);
+        $this->subSelects = \array_map(fn (SubSelect $s) => new SubSelect(clone $s->subquery, $s->alias), $this->subSelects);
+        $this->whereInSubqueries = \array_map(fn (WhereInSubquery $s) => new WhereInSubquery($s->column, clone $s->subquery, $s->not), $this->whereInSubqueries);
+        $this->existsSubqueries = \array_map(fn (ExistsSubquery $s) => new ExistsSubquery(clone $s->subquery, $s->not), $this->existsSubqueries);
+        $this->joins = \array_map(fn (JoinBuilder $j) => clone $j, $this->joins);
+        $this->pendingQueries = \array_map(fn (Query $q) => clone $q, $this->pendingQueries);
+        $this->lateralJoins = \array_map(fn (LateralJoin $l) => new LateralJoin(clone $l->subquery, $l->alias, $l->type), $this->lateralJoins);
     }
 
     #[\Override]
@@ -1367,7 +1358,7 @@ abstract class Builder implements
         /** @var array<string> $values */
         $values = $query->getValues();
         $columns = \array_map(
-            $this->resolveAndWrap(...),
+            fn (string $col): string => $this->resolveAndWrap($col),
             $values
         );
 
@@ -1435,7 +1426,7 @@ abstract class Builder implements
         /** @var array<string> $values */
         $values = $query->getValues();
         $columns = \array_map(
-            $this->resolveAndWrap(...),
+            fn (string $col): string => $this->resolveAndWrap($col),
             $values
         );
 
@@ -2294,7 +2285,7 @@ abstract class Builder implements
             return new Binary(new Column($attr), '=', $this->toLiteral($values[0]));
         }
 
-        $literals = \array_map($this->toLiteral(...), $values);
+        $literals = \array_map(fn ($v) => $this->toLiteral($v), $values);
         return new In(new Column($attr), $literals);
     }
 
@@ -2310,7 +2301,7 @@ abstract class Builder implements
             return new Binary(new Column($attr), '!=', $this->toLiteral($values[0]));
         }
 
-        $literals = \array_map($this->toLiteral(...), $values);
+        $literals = \array_map(fn ($v) => $this->toLiteral($v), $values);
         return new In(new Column($attr), $literals, true);
     }
 
@@ -2782,7 +2773,7 @@ abstract class Builder implements
 
         if ($expression instanceof In && $expression->expression instanceof Column && \is_array($expression->list)) {
             $attr = $this->astColumnReferenceToString($expression->expression);
-            $values = \array_map(fn (Expression $item): string|int|float|bool|null => $item instanceof Literal ? $item->value : null, $expression->list);
+            $values = \array_map(fn (Expression $item) => $item instanceof Literal ? $item->value : null, $expression->list);
             if ($expression->negated) {
                 return Query::notEqual($attr, $values);
             }

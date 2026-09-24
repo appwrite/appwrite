@@ -21,7 +21,7 @@ abstract class SQL implements Classifier
      *
      * @var array<string, true>
      */
-    private const array READ_KEYWORDS = [
+    private const READ_KEYWORDS = [
         'SELECT' => true,
         'SHOW' => true,
         'DESCRIBE' => true,
@@ -36,7 +36,7 @@ abstract class SQL implements Classifier
      *
      * @var array<string, true>
      */
-    private const array WRITE_KEYWORDS = [
+    private const WRITE_KEYWORDS = [
         'INSERT' => true,
         'UPDATE' => true,
         'DELETE' => true,
@@ -56,7 +56,7 @@ abstract class SQL implements Classifier
      *
      * @var array<string, true>
      */
-    private const array TRANSACTION_BEGIN_KEYWORDS = [
+    private const TRANSACTION_BEGIN_KEYWORDS = [
         'BEGIN' => true,
         'START' => true,
     ];
@@ -66,7 +66,7 @@ abstract class SQL implements Classifier
      *
      * @var array<string, true>
      */
-    private const array TRANSACTION_END_KEYWORDS = [
+    private const TRANSACTION_END_KEYWORDS = [
         'COMMIT' => true,
         'ROLLBACK' => true,
     ];
@@ -76,7 +76,7 @@ abstract class SQL implements Classifier
      *
      * @var array<string, true>
      */
-    private const array TRANSACTION_KEYWORDS = [
+    private const TRANSACTION_KEYWORDS = [
         'SAVEPOINT' => true,
         'RELEASE' => true,
         'SET' => true,

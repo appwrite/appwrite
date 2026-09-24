@@ -9,7 +9,6 @@ use Utopia\Query\Builder\Feature\Locking;
 use Utopia\Query\Builder\Feature\RawSql;
 use Utopia\Query\Builder\Feature\StatisticalAggregates;
 use Utopia\Query\Builder\Feature\Transactions;
-use Utopia\Query\Builder\Trait\Json;
 use Utopia\Query\Method;
 use Utopia\Query\Query;
 use Utopia\Query\QuotesIdentifiers;
@@ -19,7 +18,7 @@ abstract class SQL extends BaseBuilder implements Locking, Transactions, Statist
 {
     use QuotesIdentifiers;
     use Trait\BitwiseAggregates;
-    use Json;
+    use Trait\Json;
     use Trait\CrossJoins;
     use Trait\Locking;
     use Trait\RawSql;

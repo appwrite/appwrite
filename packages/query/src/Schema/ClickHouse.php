@@ -235,7 +235,7 @@ class ClickHouse extends Schema implements TableComments, ColumnComments, DropPa
         }
 
         if (empty($primaryKeys) && ! empty($table->compositePrimaryKey)) {
-            $primaryKeys = \array_map($this->quoteLiteral(...), $table->compositePrimaryKey);
+            $primaryKeys = \array_map(fn (string $c): string => $this->quoteLiteral($c), $table->compositePrimaryKey);
         }
 
         foreach ($table->rawColumnDefs as $rawDef) {
@@ -266,7 +266,7 @@ class ClickHouse extends Schema implements TableComments, ColumnComments, DropPa
                 $sql .= ' ORDER BY ' . $table->orderByRaw;
             } else {
                 $orderBy = ! empty($table->orderBy)
-                    ? \array_map($this->quoteLiteral(...), $table->orderBy)
+                    ? \array_map(fn (string $c): string => $this->quoteLiteral($c), $table->orderBy)
                     : $primaryKeys;
 
                 $sql .= ! empty($orderBy)
@@ -309,7 +309,7 @@ class ClickHouse extends Schema implements TableComments, ColumnComments, DropPa
      */
     private function compileSkipIndex(Index $index): string
     {
-        $cols = \array_map($this->quoteLiteral(...), $index->columns);
+        $cols = \array_map(fn (string $c): string => $this->quoteLiteral($c), $index->columns);
         $expr = \count($cols) === 1 ? $cols[0] : '(' . \implode(', ', $cols) . ')';
 
         if ($index->algorithm === null) {
@@ -361,7 +361,7 @@ class ClickHouse extends Schema implements TableComments, ColumnComments, DropPa
             Engine::SummingMergeTree => $engine->value . '('
                 . (empty($args)
                     ? ''
-                    : \implode(', ', \array_map($this->quoteLiteral(...), $args)))
+                    : \implode(', ', \array_map(fn (string $c): string => $this->quoteLiteral($c), $args)))
                 . ')',
 
             Engine::CollapsingMergeTree => $engine->value . '(' . $this->quoteLiteral($args[0]) . ')',

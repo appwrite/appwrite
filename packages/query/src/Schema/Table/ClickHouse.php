@@ -8,16 +8,14 @@ use Utopia\Query\Schema\Column;
 use Utopia\Query\Schema\ColumnType;
 use Utopia\Query\Schema\ForeignKey;
 use Utopia\Query\Schema\Table;
-use Utopia\Query\Schema\Table\Trait\ColumnAlterations;
-use Utopia\Query\Schema\Table\Trait\CompositePrimary;
 
 /**
  * @extends Table<Column\ClickHouse, ForeignKey>
  */
 class ClickHouse extends Table
 {
-    use ColumnAlterations;
-    use CompositePrimary;
+    use Trait\ColumnAlterations;
+    use Trait\CompositePrimary;
 
     /** ClickHouse SAMPLE BY expression. Emitted after ORDER BY when set. */
     public protected(set) ?string $sampleBy = null;

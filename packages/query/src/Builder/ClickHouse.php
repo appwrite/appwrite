@@ -22,7 +22,6 @@ use Utopia\Query\Builder\Feature\StatisticalAggregates;
 use Utopia\Query\Builder\Feature\StringAggregates;
 use Utopia\Query\Builder\Feature\TableSampling;
 use Utopia\Query\Builder\Feature\Totals;
-use Utopia\Query\Builder\Trait\GroupByModifiers;
 use Utopia\Query\Exception\ValidationException;
 use Utopia\Query\Hook\Join\Placement;
 use Utopia\Query\Query;
@@ -39,7 +38,7 @@ class ClickHouse extends BaseBuilder implements Hints, ConditionalAggregates, Ta
     use Trait\ClickHouse\WithFill;
     use Trait\FullOuterJoins;
     use Trait\CrossJoins;
-    use GroupByModifiers;
+    use Trait\GroupByModifiers;
     use Trait\RawSql;
     use Trait\StatisticalAggregates;
     use Trait\StringAggregates;
@@ -241,7 +240,7 @@ class ClickHouse extends BaseBuilder implements Hints, ConditionalAggregates, Ta
         $wrappedColumns = empty($columns)
             ? ''
             : ' (' . \implode(', ', \array_map(
-                $this->resolveAndWrap(...),
+                fn (string $col): string => $this->resolveAndWrap($col),
                 $columns
             )) . ')';
 
@@ -897,7 +896,7 @@ class ClickHouse extends BaseBuilder implements Hints, ConditionalAggregates, Ta
         }
 
         $cols = \array_map(
-            $this->resolveAndWrap(...),
+            fn (string $col): string => $this->resolveAndWrap($col),
             $this->limitByClause['columns']
         );
 

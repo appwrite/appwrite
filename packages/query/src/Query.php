@@ -23,18 +23,27 @@ class Query
 
     protected Method $method;
 
+    protected string $attribute = '';
+
     protected string $attributeType = '';
 
     protected bool $onArray = false;
+
+    /**
+     * @var array<mixed>
+     */
+    protected array $values = [];
 
     /**
      * Construct a new query object
      *
      * @param  array<mixed>  $values
      */
-    public function __construct(Method|string $method, protected string $attribute = '', protected array $values = [])
+    public function __construct(Method|string $method, string $attribute = '', array $values = [])
     {
         $this->method = $method instanceof Method ? $method : Method::from($method);
+        $this->attribute = $attribute;
+        $this->values = $values;
     }
 
     public function __clone(): void
@@ -74,7 +83,14 @@ class Query
         if (! $this->method->isJoin()) {
             return false;
         }
-        return array_any($this->values, fn ($value): bool => $value instanceof self);
+
+        foreach ($this->values as $value) {
+            if ($value instanceof self) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public function getJoinAlias(): string
