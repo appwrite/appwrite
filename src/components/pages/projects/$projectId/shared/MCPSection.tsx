@@ -335,27 +335,30 @@ export function MCPSection({
       <ul className={parts === 'try' ? 'space-y-2 text-start' : 'space-y-2'}>
         {MCP_TRY_IT_PROMPT_TEMPLATES.map((template, index) => {
           const prompt = tryItPrompts[index]!
+          const copied = copiedPrompt === prompt
           return (
-            <li
-              key={template}
-              className="flex items-center gap-2 rounded-lg border border-border bg-muted/20 px-3 py-2"
-            >
-              <span className="min-w-0 flex-1 text-[13px] font-medium text-foreground">
-                {t(template).replaceAll('{projectName}', projectName)}
-              </span>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-7 gap-1 text-[12px] text-muted-foreground shrink-0"
+            <li key={template}>
+              <button
+                type="button"
+                className="flex w-full cursor-pointer items-center gap-2 rounded-lg border border-border bg-muted/20 px-3 py-2 text-start transition-colors hover:bg-muted/35"
                 onClick={() => handleCopyPrompt(prompt)}
+                aria-label={`${t('Copy')}: ${t(template).replaceAll('{projectName}', projectName)}`}
               >
-                {copiedPrompt === prompt ? (
-                  <Check className="h-3.5 w-3.5" />
-                ) : (
-                  <Copy className="h-3.5 w-3.5" />
-                )}
-                {t('Copy')}
-              </Button>
+                <span className="min-w-0 flex-1 text-[13px] font-medium text-foreground">
+                  {t(template).replaceAll('{projectName}', projectName)}
+                </span>
+                <span
+                  className="inline-flex h-7 shrink-0 items-center gap-1 px-3 text-[12px] font-medium text-muted-foreground"
+                  aria-hidden
+                >
+                  {copied ? (
+                    <Check className="h-3.5 w-3.5" />
+                  ) : (
+                    <Copy className="h-3.5 w-3.5" />
+                  )}
+                  {t('Copy')}
+                </span>
+              </button>
             </li>
           )
         })}

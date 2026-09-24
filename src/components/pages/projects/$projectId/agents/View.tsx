@@ -181,8 +181,8 @@ export function View() {
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col">
-      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
+    <div className="relative flex h-full min-h-0 flex-col">
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto pb-12 sm:pb-14">
         <div className="mx-auto my-auto flex w-full max-w-3xl flex-col items-center px-4 py-12 sm:px-6 sm:py-20">
           <AgentMarks size="lg" />
           <div className="mt-6">
@@ -224,24 +224,6 @@ export function View() {
           >
             {t('Or install Appwrite MCP manually')}
           </button>
-          <AgentsLandingSkip
-            canSavePrefs={Boolean(account)}
-            isPending={dismissLanding.isPending}
-            onSkip={() => {
-              dismissLanding.mutate(projectId, {
-                onSuccess: () => {
-                  navigate({
-                    to: '/projects/$projectId/overview',
-                    params: { projectId },
-                    replace: true,
-                  })
-                },
-                onError: () => {
-                  toast.error(t('Failed to update preferences'))
-                },
-              })
-            }}
-          />
           <div className="mt-16 w-full">
             <MCPSection
               compact
@@ -255,6 +237,24 @@ export function View() {
           </div>
         </div>
       </div>
+      <AgentsLandingSkip
+        canSavePrefs={Boolean(account)}
+        isPending={dismissLanding.isPending}
+        onSkip={() => {
+          dismissLanding.mutate(projectId, {
+            onSuccess: () => {
+              navigate({
+                to: '/projects/$projectId/overview',
+                params: { projectId },
+                replace: true,
+              })
+            },
+            onError: () => {
+              toast.error(t('Failed to update preferences'))
+            },
+          })
+        }}
+      />
     </div>
   )
 }
@@ -271,33 +271,34 @@ function AgentsLandingSkip({
   const t = useT()
   const skipDisabled = !canSavePrefs || isPending
   const skipControl = (
-    <button
+    <Button
       type="button"
-      className="cursor-pointer text-[11px] text-muted-foreground/80 underline-offset-2 hover:text-muted-foreground hover:underline disabled:cursor-not-allowed disabled:opacity-50"
+      variant="outline"
+      size="sm"
+      className="h-8 border-border/70 bg-background/90 px-3 text-[12px] font-normal text-muted-foreground shadow-sm backdrop-blur-sm hover:bg-muted/50 hover:text-foreground"
       disabled={skipDisabled}
-      onClick={() => {
-        if (skipDisabled) return
-        onSkip()
-      }}
+      onClick={onSkip}
     >
       {t('Skip for this project')}
-    </button>
+    </Button>
   )
 
-  if (canSavePrefs) {
-    return <div className="mt-3">{skipControl}</div>
-  }
-
   return (
-    <div className="mt-3">
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <span className="inline-flex">{skipControl}</span>
-        </TooltipTrigger>
-        <TooltipContent>
-          <p className="text-[13px]">{t('Preferences are unavailable.')}</p>
-        </TooltipContent>
-      </Tooltip>
+    <div className="pointer-events-none absolute bottom-4 end-4 z-10 text-end sm:bottom-6 sm:end-6">
+      <div className="pointer-events-auto">
+        {canSavePrefs ? (
+          skipControl
+        ) : (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="inline-flex">{skipControl}</span>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p className="text-[13px]">{t('Preferences are unavailable.')}</p>
+            </TooltipContent>
+          </Tooltip>
+        )}
+      </div>
     </div>
   )
 }
