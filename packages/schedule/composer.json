@@ -1,0 +1,50 @@
+{
+    "name": "utopia-php/schedule",
+    "description": "An opinionated scheduler that reconciles schedules from a source of truth and dispatches cron, interval, delayed and fixed-time occurrences without silently skipping a run",
+    "type": "library",
+    "keywords": [
+        "php",
+        "framework",
+        "upf",
+        "utopia",
+        "schedule",
+        "scheduler",
+        "cron",
+        "interval"
+    ],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Team Appwrite",
+            "email": "team@appwrite.io"
+        }
+    ],
+    "require": {
+        "php": ">=8.3",
+        "utopia-php/telemetry": "^0.4"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^12"
+    },
+    "suggest": {
+        "ext-opentelemetry": "Required by utopia-php/telemetry when using OpenTelemetry metrics",
+        "ext-protobuf": "Required by utopia-php/telemetry when using OpenTelemetry metrics",
+        "ext-redis": "Required when using Store\\Redis to share the claim across replicas"
+    },
+    "autoload": {
+        "psr-4": {
+            "Utopia\\Schedule\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Utopia\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit --testsuite unit",
+        "bench": "php tests/bench/run.php",
+        "test:e2e": "phpunit --testsuite e2e"
+    },
+    "minimum-stability": "stable"
+}
