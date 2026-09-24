@@ -642,13 +642,9 @@ final class VCSGiteaConsoleClientTest extends Scope
 
         $organizationUrl = $installation['organizationUrl'];
 
-        // The host depends on how this deployment is reached, so assert what
-        // holds either way: the link addresses the owner, and it resolves.
+        // The browser-facing host need not be reachable from here, so assert
+        // only what holds either way; FactoryTest covers which host is chosen.
         $this->assertSame('/' . $installation['organization'], \parse_url($organizationUrl, PHP_URL_PATH));
-
-        $page = new Client();
-        $page->setEndpoint($organizationUrl);
-        $this->assertEquals(200, $page->call(Client::METHOD_GET, '')['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_GET, '/vcs/installations/' . $installation['$id'], \array_merge([
             'x-appwrite-project' => $this->getProject()['$id'],
