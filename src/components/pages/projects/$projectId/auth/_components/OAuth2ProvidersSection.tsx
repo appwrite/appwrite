@@ -476,14 +476,21 @@ type OAuth2NativeSignInCardProps = {
  * so name it here instead of relying on the generic catalog label and hint.
  */
 const NATIVE_CLIENT_IDS_COPY: Partial<
-  Record<string, { label: string; placeholder: string; hint: string }>
+  Record<
+    string,
+    { description: string; label: string; placeholder: string; hint: string }
+  >
 > = {
   google: {
+    description:
+      'Verifies ID tokens from Credential Manager on Android, without a client secret.',
     label: 'Web client IDs',
     placeholder: 'Add a web client ID and press Enter',
     hint: 'Enter the Web application client ID from Google Cloud. Your app sends the same ID to Google as the server client ID. Android client IDs do not go here.',
   },
   apple: {
+    description:
+      'Verifies ID tokens from Sign in with Apple on iOS, without a client secret.',
     label: 'Bundle IDs',
     placeholder: 'Add a bundle ID and press Enter',
     hint: "Enter your app's bundle ID, such as com.example.app.",
@@ -535,7 +542,8 @@ function OAuth2NativeSignInCard({
         <div className="space-y-2">
           <p className="text-[12px] text-muted-foreground">
             {t(
-              'Verifies ID tokens from the native SDK, such as Sign in with Apple or Google Credential Manager, without a client secret.',
+              copy?.description ??
+                'Verifies ID tokens from the native SDK, without a client secret.',
             )}{' '}
             <DocsRouteLink
               className="link-neutral"
