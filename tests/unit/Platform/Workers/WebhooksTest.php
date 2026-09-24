@@ -228,16 +228,32 @@ final class WebhooksTest extends TestCase
         $publisherForNotifications = new NotificationPublisher($publisher, new Queue('v1-notifications'));
         $publisherForUsage = new UsagePublisher(new MockPublisher(), new Queue('v1-usage'));
         $worker = new Webhooks();
+        $project = new Document([
+            '$id' => 'project-1',
+            '$sequence' => 'project-internal-1',
+            'name' => 'Production',
+            'teamInternalId' => 'team-internal-1',
+            'region' => 'fra',
+            'webhooks' => [new Document([
+                '$id' => 'webhook-1',
+                'name' => 'Payments',
+                'url' => 'http://127.0.0.1:1/webhook',
+                'enabled' => true,
+                'events' => ['users.*.create'],
+                'signatureKey' => 'signature-key',
+                'security' => false,
+            ])],
+        ]);
 
         $previousThreshold = \getenv('_APP_WEBHOOK_MAX_FAILED_ATTEMPTS');
         \putenv('_APP_WEBHOOK_MAX_FAILED_ATTEMPTS=2');
 
         try {
-            foreach ([1, 2] as $delivery) {
+            foreach (['delivery-1', 'delivery-2'] as $pid) {
                 try {
                     $worker->action(
                         new Message([
-                            'pid' => 'pid-' . $delivery,
+                            'pid' => $pid,
                             'queue' => 'v1-webhooks',
                             'timestamp' => \time(),
                             'payload' => [
@@ -245,22 +261,7 @@ final class WebhooksTest extends TestCase
                                 'payload' => ['$id' => 'user-1'],
                             ],
                         ]),
-                        new Document([
-                            '$id' => 'project-1',
-                            '$sequence' => 'project-internal-1',
-                            'name' => 'Production',
-                            'teamInternalId' => 'team-internal-1',
-                            'region' => 'fra',
-                            'webhooks' => [new Document([
-                                '$id' => 'webhook-1',
-                                'name' => 'Payments',
-                                'url' => 'http://127.0.0.1:1/webhook',
-                                'enabled' => true,
-                                'events' => ['users.*.create'],
-                                'signatureKey' => 'signature-key',
-                                'security' => false,
-                            ])],
-                        ]),
+                        $project,
                         $database,
                         $publisherForNotifications,
                         $publisherForUsage,
