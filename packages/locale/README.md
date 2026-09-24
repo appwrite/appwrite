@@ -1,5 +1,8 @@
 # Utopia Locale
 
+> [!IMPORTANT]
+> This repository is a read-only mirror of [`packages/locale`](https://github.com/appwrite/appwrite/tree/main/packages/locale) in [appwrite/appwrite](https://github.com/appwrite/appwrite). Development happens there — please open issues and pull requests against appwrite/appwrite.
+
 [![Build Status](https://travis-ci.org/utopia-php/locale.svg?branch=master)](https://travis-ci.com/utopia-php/locale)
 ![Total Downloads](https://img.shields.io/packagist/dt/utopia-php/locale.svg)
 [![Discord](https://img.shields.io/discord/564160730845151244?label=discord)](https://appwrite.io/discord)
