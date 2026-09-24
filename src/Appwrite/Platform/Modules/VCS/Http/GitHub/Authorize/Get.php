@@ -96,7 +96,25 @@ class Get extends Action
             'redirect_uri' => $protocol . '://' . $hostname . "/v1/vcs/github/callback"
         ]);
 
+        // When the app is already installed on the chosen account, GitHub sends
+        // the user to that installation's settings, and saving there returns
+        // setup_action=update without state. Mirror state into a cookie the
+        // callback can fall back to. The callback lands on the console host
+        // while this request may come through a regional one, hence the domain.
+        $host = \parse_url('//' . $hostname, PHP_URL_HOST) ?: '';
+        $domain = (\in_array($host, ['', 'localhost'], true) || \filter_var($host, FILTER_VALIDATE_IP) !== false) ? null : '.' . $host;
+
         $response
+            ->addCookie(
+                COOKIE_NAME_VCS_STATE,
+                $state,
+                \time() + COOKIE_EXPIRY_VCS_STATE,
+                COOKIE_PATH_VCS_STATE,
+                $domain,
+                $protocol === 'https',
+                true,
+                Response::COOKIE_SAMESITE_LAX
+            )
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->addHeader('Pragma', 'no-cache')
             ->redirect($url);

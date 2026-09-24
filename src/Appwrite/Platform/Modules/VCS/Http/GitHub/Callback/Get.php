@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Modules\VCS\Http\GitHub\Callback;
 use Appwrite\Auth\OAuth2\Github as OAuth2Github;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Permission as AppwritePermission;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Utopia\Database\Database;
@@ -42,6 +43,7 @@ class Get extends Action
             ->param('code', '', new Text(2048, 0), 'OAuth2 code. This is a temporary code that the will be later exchanged for an access token.', true)
             ->inject('vcsFactory')
             ->inject('project')
+            ->inject('request')
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('platform')
@@ -55,10 +57,39 @@ class Get extends Action
         string $code,
         VcsFactory $vcsFactory,
         Document $project,
+        Request $request,
         Response $response,
         Database $dbForPlatform,
         array $platform
     ) {
+        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
+        $cookie = $request->getCookie(COOKIE_NAME_VCS_STATE, '');
+
+        if (!empty($cookie)) {
+            // One shot: a leftover cookie must never carry a later flow into
+            // the project this browser happened to start from.
+            $host = \parse_url('//' . ($platform['consoleHostname'] ?? ''), PHP_URL_HOST) ?: '';
+            $domain = (\in_array($host, ['', 'localhost'], true) || \filter_var($host, FILTER_VALIDATE_IP) !== false) ? null : '.' . $host;
+
+            $response->addCookie(
+                COOKIE_NAME_VCS_STATE,
+                '',
+                \time() - 3600,
+                COOKIE_PATH_VCS_STATE,
+                $domain,
+                $protocol === 'https',
+                true,
+                Response::COOKIE_SAMESITE_LAX
+            );
+        }
+
+        // GitHub drops state when the flow ends on an existing installation's
+        // settings page (setup_action=update), so fall back to the copy
+        // Authorize left in the cookie. The signature below still applies.
+        if (empty($state)) {
+            $state = $cookie;
+        }
+
         if (empty($state)) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'This installation was completed on GitHub, so it could not be connected to a project. Open your project\'s settings in the Appwrite Console and connect GitHub from there.');
         }
