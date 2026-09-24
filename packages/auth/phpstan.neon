@@ -6,3 +6,5 @@ parameters:
     paths:
         - src
         - tests
+    scanFiles:
+        - stubs/scrypt.stub

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Utopia\Auth\Tests\Proofs;
 
+use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use PHPUnit\Framework\TestCase;
 use Utopia\Auth\Hashes\Argon2;
 use Utopia\Auth\Hashes\Bcrypt;
@@ -140,6 +141,7 @@ final class PasswordTest extends TestCase
         $this->password->getHashByName('non-existent-hash');
     }
 
+    #[RequiresPhpExtension('scrypt')]
     public function testAllHashesWork(): void
     {
         $proof = $this->password->generate();

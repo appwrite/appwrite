@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Utopia\Auth\Tests\Algorithms;
 
+use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use PHPUnit\Framework\TestCase;
 use Utopia\Auth\Hashes\ScryptModified;
 
+#[RequiresPhpExtension('scrypt')]
 final class ScryptModifiedTest extends TestCase
 {
     private ScryptModified $scryptModified;
