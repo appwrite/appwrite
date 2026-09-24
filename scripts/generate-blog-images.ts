@@ -215,6 +215,7 @@ const IMAGE_GENERATORS: Record<string, (outputDir: string) => Promise<void>> = {
   'announcing-appwrite-2': generateAnnouncingAppwrite2Cover,
   'announcing-console-iv': convertCoverSourceToAvif,
   'build-support-chatbot-vectorsdb': convertCoverSourceToAvif,
+  'announcing-user-photos': convertCoverSourceToAvif,
 }
 
 async function main() {

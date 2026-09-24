@@ -1582,6 +1582,13 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "readingTimeMinutes": 6
   },
   {
+    "slug": "products/avatars/user-photos",
+    "title": "User photos",
+    "description": "Show a profile photo for any user with one Avatars call. Appwrite resolves OAuth2 identity photos, Gravatar, Libravatar, and initials, with a built-in placeholder as a fallback.",
+    "layout": "article",
+    "readingTimeMinutes": 5
+  },
+  {
     "slug": "products/databases",
     "title": "Databases",
     "description": "Store and query app data with Appwrite Databases. Use TablesDB, DocumentsDB, and VectorsDB, or host managed PostgreSQL and MySQL with direct SQL access.",

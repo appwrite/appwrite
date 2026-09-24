@@ -3,6 +3,20 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "announcing-user-photos",
+    "href": "/blog/post/announcing-user-photos",
+    "title": "Announcing user photos: A profile picture for every user",
+    "description": "Appwrite Avatars now returns a profile photo for any user with one getPhoto call, resolving OAuth2 photos, Gravatar, Libravatar, and initials in order.",
+    "date": "2026-09-25",
+    "lastUpdated": "2026-09-25",
+    "timeToRead": 7,
+    "author": "aditya-oberai",
+    "category": "announcements",
+    "featured": false,
+    "cover": "/images/blog/announcing-user-photos/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-native-sign-in",
     "href": "/blog/post/announcing-native-sign-in",
     "title": "Announcing native sign-in: Create Appwrite sessions from Apple and Google ID tokens",
