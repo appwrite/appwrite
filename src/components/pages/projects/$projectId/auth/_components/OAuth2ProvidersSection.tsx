@@ -20,6 +20,7 @@ import {
   useUpdateProjectOAuth2Provider,
 } from '@/lib/react-query/hooks'
 import type { AuthOAuth2SettingsInitialData } from '@/lib/react-query/hooks/oauth2-providers'
+import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { InputTags } from '@/components/ui/input-tags'
@@ -460,6 +461,7 @@ function OAuth2ParameterField({
 }
 
 type OAuth2NativeSignInCardProps = {
+  providerId: string
   param: CatalogParameter
   enabled: boolean
   onEnabledChange: (enabled: boolean) => void
@@ -470,10 +472,37 @@ type OAuth2NativeSignInCardProps = {
 }
 
 /**
+ * Which ID goes in this list differs per provider and is easy to get wrong,
+ * so name it here instead of relying on the generic catalog label and hint.
+ */
+const NATIVE_CLIENT_IDS_COPY: Partial<
+  Record<
+    string,
+    { description: string; label: string; placeholder: string; hint: string }
+  >
+> = {
+  google: {
+    description:
+      'Verifies ID tokens from Credential Manager on Android, without a client secret.',
+    label: 'Web client IDs',
+    placeholder: 'Add a web client ID and press Enter',
+    hint: 'Enter the Web application client ID from Google Cloud. Your app sends the same ID to Google as the server client ID. Android client IDs do not go here.',
+  },
+  apple: {
+    description:
+      'Verifies ID tokens from Sign in with Apple on iOS, without a client secret.',
+    label: 'Bundle IDs',
+    placeholder: 'Add a bundle ID and press Enter',
+    hint: "Enter your app's bundle ID, such as com.example.app.",
+  },
+}
+
+/**
  * Native ID token sign-in has its own switch because it needs different
  * things from the browser flow: no secret, only the audiences to accept.
  */
 function OAuth2NativeSignInCard({
+  providerId,
   param,
   enabled,
   onEnabledChange,
@@ -483,6 +512,7 @@ function OAuth2NativeSignInCard({
   disabled,
 }: OAuth2NativeSignInCardProps) {
   const t = useT()
+  const copy = NATIVE_CLIENT_IDS_COPY[providerId]
 
   return (
     <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-4">
@@ -512,28 +542,37 @@ function OAuth2NativeSignInCard({
         <div className="space-y-2">
           <p className="text-[12px] text-muted-foreground">
             {t(
-              'Verifies ID tokens from the native SDK, such as Sign in with Apple or Google Credential Manager, without a client secret.',
-            )}
+              copy?.description ??
+                'Verifies ID tokens from the native SDK, without a client secret.',
+            )}{' '}
+            <DocsRouteLink
+              className="link-neutral"
+              href="/docs/products/auth/native-sign-in"
+            >
+              {t('Learn more about native sign-in')}
+            </DocsRouteLink>
           </p>
           <Label
             htmlFor={`oauth2-${param.$id}`}
             className="text-[12px] font-medium"
           >
-            {param.name}
+            {copy ? t(copy.label) : param.name}
           </Label>
           <InputTags
             id={`oauth2-${param.$id}`}
             value={clientIds}
             onChange={onClientIdsChange}
             splitOnComma
-            placeholder={t('Add a client ID and press Enter')}
+            placeholder={t(copy?.placeholder ?? 'Add a client ID and press Enter')}
             className={cn('text-[13px]', error && 'border-destructive')}
             disabled={disabled}
           />
           {error ? (
             <p className="text-[12px] text-destructive">{t(error)}</p>
-          ) : param.hint ? (
-            <p className="text-[11px] text-muted-foreground">{param.hint}</p>
+          ) : copy || param.hint ? (
+            <p className="text-[11px] text-muted-foreground">
+              {copy ? t(copy.hint) : param.hint}
+            </p>
           ) : null}
         </div>
       ) : null}
@@ -1304,6 +1343,7 @@ export function OAuth2ProvidersSection({
 
                 {providerSupportsNative && selectedCatalog ? (
                   <OAuth2NativeSignInCard
+                    providerId={selectedCatalog.$id}
                     param={
                       selectedCatalog.parameters.find(
                         (p) => p.$id === NATIVE_CLIENT_IDS_PARAM_ID,
