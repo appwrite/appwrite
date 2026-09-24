@@ -62,7 +62,7 @@ class YourDetector extends Detector
         foreach ($this->options as $detector) {
             $detectorFiles = $detector->getFiles();
             $matches = array_intersect($detectorFiles, $this->inputs);
-            
+
             if (count($matches) > 0) {
                 return $detector;
             }
