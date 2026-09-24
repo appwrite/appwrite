@@ -3059,6 +3059,58 @@ trait UsersBase
     /**
      * Test PATCH /users/:userId/impersonator for non-existent user returns 404
      */
+    /**
+     * Test that the implicit users.read grant an impersonator gets does not reach another
+     * user's MFA recovery codes
+     */
+    public function testImpersonatorUsersReadCoversDiscoveryOnly(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders());
+
+        $suffix = ID::unique();
+
+        $impersonator = $this->client->call(Client::METHOD_POST, '/users', $headers, [
+            'userId' => ID::unique(),
+            'email' => 'discovery-impersonator-' . $suffix . '@appwrite.io',
+            'password' => 'password',
+            'name' => 'Discovery Impersonator',
+        ]);
+        $this->assertEquals(201, $impersonator['headers']['status-code']);
+        $impersonatorId = $impersonator['body']['$id'];
+
+        $other = $this->client->call(Client::METHOD_POST, '/users', $headers, [
+            'userId' => ID::unique(),
+            'email' => 'discovery-other-' . $suffix . '@appwrite.io',
+            'password' => 'password',
+            'name' => 'Discovery Other',
+        ]);
+        $this->assertEquals(201, $other['headers']['status-code']);
+        $otherId = $other['body']['$id'];
+
+        $this->client->call(Client::METHOD_PATCH, '/users/' . $impersonatorId . '/impersonator', $headers, ['impersonator' => true]);
+        $this->client->call(Client::METHOD_PATCH, '/users/' . $otherId . '/mfa/recovery-codes', $headers);
+
+        $session = $this->client->call(Client::METHOD_POST, '/users/' . $impersonatorId . '/sessions', $headers);
+        $this->assertEquals(201, $session['headers']['status-code']);
+
+        $sessionHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-session' => $session['body']['secret'],
+        ];
+
+        $recoveryCodes = $this->client->call(Client::METHOD_GET, '/users/' . $otherId . '/mfa/recovery-codes', $sessionHeaders);
+        $this->assertEquals(401, $recoveryCodes['headers']['status-code']);
+
+        // Discovery, which the grant exists for, still works.
+        $get = $this->client->call(Client::METHOD_GET, '/users/' . $otherId, $sessionHeaders);
+        $this->assertEquals(200, $get['headers']['status-code']);
+    }
+
     public function testUpdateUserImpersonatorNotFound(): void
     {
         $projectId = $this->getProject()['$id'];
