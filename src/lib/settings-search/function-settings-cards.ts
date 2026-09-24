@@ -84,4 +84,16 @@ export const FUNCTION_SETTINGS_CARD_INDEX: SettingsCardIndexEntry[] = [
     title: 'Events',
     keywords: ['webhook', 'trigger', 'invoke', 'async'],
   },
+  {
+    sectionId: 'executions',
+    title: 'Scopes',
+    keywords: [
+      'scope',
+      'permission',
+      'api key',
+      'ephemeral key',
+      'execution',
+      'access',
+    ],
+  },
 ]
