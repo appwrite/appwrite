@@ -524,6 +524,8 @@ trait StorageBase
             // HTML is not in the storage-mimes allowlist on purpose: rendering
             // user uploads as HTML on the API origin would allow stored XSS.
             ['source' => 'page.html', 'mimeType' => 'text/html', 'contentType' => 'text/plain', 'disposition' => 'inline'],
+            // A TrueType font sniffs as a bare SFNT, so its type comes from the extension.
+            ['source' => '../../public/fonts/Poppins-Bold.ttf', 'mimeType' => 'font/ttf', 'contentType' => 'text/plain', 'disposition' => 'inline'],
         ];
 
         foreach ($cases as $case) {
@@ -533,7 +535,7 @@ trait StorageBase
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()), [
                 'fileId' => ID::unique(),
-                'file' => new CURLFile($source, $case['mimeType'], $case['source']),
+                'file' => new CURLFile($source, $case['mimeType'], \basename($source)),
                 'permissions' => [
                     Permission::read(Role::any()),
                 ],

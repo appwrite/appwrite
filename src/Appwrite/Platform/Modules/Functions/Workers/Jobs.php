@@ -31,6 +31,8 @@ use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
+use Utopia\Queue\PermanentFailure;
+use Utopia\Span\Span;
 use Utopia\Storage\Device;
 use Utopia\Storage\DeviceType;
 use Utopia\System\System;
@@ -64,6 +66,17 @@ class Jobs extends Action
     private const DEDUPE_TTL = 3600;
     private const LOCK_TTL = 30;
     private const LOCK_TIMEOUT = 10.0;
+
+    private const string INTERNAL_ERROR_MESSAGE = 'Internal server error. Please try again.';
+
+    private const array USER_ARTIFACT_ERRORS = [
+        ErrorCode::ArchiveEmpty->value => 'The source archive is empty.',
+        ErrorCode::ArchiveUnknownFormat->value => 'The source archive format is not recognized.',
+        ErrorCode::ArchiveCorrupt->value => 'The source archive is corrupt or incomplete. Re-create it and try again.',
+        ErrorCode::ArchivePathInvalid->value => 'The source archive contains a path or link that points outside the archive.',
+        ErrorCode::ArchiveLayoutMismatch->value => 'No files found in the source archive at the configured root directory.',
+        ErrorCode::CloneFailed->value => 'Failed to clone the repository. Check that the repository and branch exist and are accessible.',
+    ];
 
     public static function getName(): string
     {
@@ -123,7 +136,9 @@ class Jobs extends Action
             return;
         }
 
-        $locks('jobs-deployment:' . $deploymentId, self::LOCK_TTL, function () use ($event, $project, $dbForProject, $dbForPlatform, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $publisherForScreenshots, $publisherForUsage, $usage, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $deploymentId, $bus): void {
+        $failure = null;
+
+        $locks('jobs-deployment:' . $deploymentId, self::LOCK_TTL, function () use ($event, $project, $dbForProject, $dbForPlatform, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $publisherForScreenshots, $publisherForUsage, $usage, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $deploymentId, $bus, &$failure): void {
             if ($event->id !== '') {
                 $key = 'jobs-event-' . $event->id;
                 if ($cache->load($key, self::DEDUPE_TTL) !== false) {
@@ -140,9 +155,12 @@ class Jobs extends Action
             $statusBefore = $deployment->getAttribute('status');
             $durationBefore = $deployment->getAttribute('buildDuration');
 
-            $deployment = match (CallbackEvent::tryFrom($event->event)) {
+            $callback = CallbackEvent::tryFrom($event->event);
+            $artifact = $callback === CallbackEvent::Artifact ? JobArtifact::fromArray($event->data) : null;
+
+            $deployment = match ($callback) {
                 CallbackEvent::Log => $this->onLog($dbForProject, $dbForPlatform, $project, $deployment, JobLog::fromArray($event->data), $vcsFactory, $platform),
-                CallbackEvent::Artifact => $this->onArtifact($dbForProject, $dbForPlatform, $project, $deployment, JobArtifact::fromArray($event->data), $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
+                CallbackEvent::Artifact => $this->onArtifact($dbForProject, $dbForPlatform, $project, $deployment, $artifact, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
                 CallbackEvent::Exit => $this->onExit($dbForProject, $dbForPlatform, $project, $deployment, JobExit::fromArray($event->data), $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
                 CallbackEvent::Complete => $this->onComplete($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
                 default => $this->onCallback($event->event, $dbForProject, $dbForPlatform, $project, $deployment, $event->data, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
@@ -177,7 +195,21 @@ class Jobs extends Action
             if ($statusBefore !== $deployment->getAttribute('status') && \in_array($deployment->getAttribute('status'), ['ready', 'failed'], true)) {
                 $this->dispatchUpdate($queueForEvents, $queueForWebhooks, $publisherForFunctions, $project, $deployment);
             }
+
+            if ($artifact?->status === 'failed'
+                && !\in_array($artifact->artifactId, ['cache', 'manifest'], true)
+                && !isset(self::USER_ARTIFACT_ERRORS[$artifact->error?->code->value ?? ''])) {
+                Span::add('deployment.id', $deploymentId);
+                Span::add('artifact.id', $artifact->artifactId);
+                Span::add('artifact.type', $artifact->artifactType);
+                Span::add('artifact.error.code', $artifact->error?->code->value);
+                $failure = new PermanentFailure("Build artifact '{$artifact->artifactId}' failed: " . ($artifact->error->message ?? 'no error reported'), 500);
+            }
         }, self::LOCK_TIMEOUT);
+
+        if ($failure !== null) {
+            throw $failure;
+        }
     }
 
     protected function onLog(Database $dbForProject, Database $dbForPlatform, Document $project, Document $deployment, JobLog $log, VcsFactory $vcsFactory, array $platform): Document
@@ -295,6 +327,7 @@ class Jobs extends Action
         Bus $bus,
     ): Document {
         $failed = $artifact->status === 'failed';
+        $message = self::USER_ARTIFACT_ERRORS[$artifact->error?->code->value ?? ''] ?? self::INTERNAL_ERROR_MESSAGE;
         if ($artifact->artifactId === 'manifest') {
             // A failed manifest degrades to an empty listing (detection
             // skipped), never a failed build.
@@ -315,7 +348,7 @@ class Jobs extends Action
             if ($failed) {
                 // Fail immediately even if exit delivery is lost. Leave duration
                 // unknown until exit arrives, rather than billing callback wait.
-                return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, 'Build output upload failed: ' . ($artifact->error->message ?? 'unknown error'), $publisherForScreenshots, $vcsFactory, $platform, $bus);
+                return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, $message, $publisherForScreenshots, $vcsFactory, $platform, $bus);
             }
 
             if ($artifact->status !== 'success') {
@@ -329,12 +362,11 @@ class Jobs extends Action
 
         // Any other artifact failing dooms the build — the orchestrator aborts
         // the job on a pre-job failure, and a lost output has nothing to serve
-        // — so fail it now with the artifact's own message (which file, which
-        // status) rather than waiting for the bare exit code. The build cache
+        // — so fail it now rather than waiting for the bare exit code. The build cache
         // upload is the one best-effort artifact: losing it costs the next
         // build time, not this one.
         if ($failed && $artifact->artifactId !== 'cache') {
-            return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, $artifact->error->message ?? 'Build failed.', $publisherForScreenshots, $vcsFactory, $platform, $bus);
+            return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, $message, $publisherForScreenshots, $vcsFactory, $platform, $bus);
         }
 
         if ($artifact->artifactId !== 'sourceSize' || $artifact->status !== 'success') {
@@ -636,6 +668,13 @@ class Jobs extends Action
             ));
         }
 
+        // A build that is not activated never reaches activate() above, and a
+        // push to a non-production branch never produces an activated one.
+        // Sites get this from activateBranchPreviewRule; functions have none.
+        if ($applied > 0 && $success && $collection !== 'sites' && $deployment->getAttribute('activate') !== true && ! $resource->isEmpty()) {
+            $this->activateBranchRule($dbForPlatform, $project, $resource, $deployment, $bus);
+        }
+
         // (Re)activate its schedule so the scheduler enqueues cron executions
         // (sites have no scheduleId, so schedule() no-ops for them).
         if (! $resource->isEmpty()) {
@@ -723,8 +762,11 @@ class Jobs extends Action
      */
     protected function activate(Database $dbForProject, Database $dbForPlatform, Document $project, Document $resource, Document $deployment, Bus $bus): void
     {
+        // Template deployments reuse providerBranch for their resolved ref (tags
+        // included), which must not repoint a rule pinned to a real branch.
         $branch = $deployment->getAttribute('providerBranch', '');
-        $branches = $branch === '' ? [''] : ['', $branch];
+        $isBranchBuild = $branch !== '' && ! empty($deployment->getAttribute('installationId'));
+        $branches = $isBranchBuild ? ['', $branch] : [''];
 
         $dbForPlatform->forEach('rules', function (Document $rule) use ($dbForPlatform, $deployment, $bus) {
             $rule = $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
@@ -747,6 +789,34 @@ class Jobs extends Action
             'deploymentInternalId' => $deployment->getSequence(),
             'deploymentCreatedAt' => $deployment->getCreatedAt(),
         ]));
+    }
+
+    /**
+     * Repoint the function's branch-pinned rules at this deployment.
+     */
+    protected function activateBranchRule(Database $dbForPlatform, Document $project, Document $resource, Document $deployment, Bus $bus): void
+    {
+        // Template deployments reuse providerBranch for their resolved ref
+        // (tags included), which must not repoint a branch rule.
+        $branch = $deployment->getAttribute('providerBranch', '');
+        if ($branch === '' || empty($deployment->getAttribute('installationId'))) {
+            return;
+        }
+
+        $dbForPlatform->forEach('rules', function (Document $rule) use ($dbForPlatform, $deployment, $bus) {
+            $rule = $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
+                'deploymentId' => $deployment->getId(),
+                'deploymentInternalId' => $deployment->getSequence(),
+            ]));
+            $bus->dispatch(new RuleUpdated($rule->getArrayCopy()));
+        }, [
+            Query::equal('projectInternalId', [$project->getSequence()]),
+            Query::equal('type', ['deployment']),
+            Query::equal('deploymentResourceInternalId', [$resource->getSequence()]),
+            Query::equal('deploymentResourceType', ['function']),
+            Query::equal('trigger', ['manual']),
+            Query::equal('deploymentVcsProviderBranch', [$branch]),
+        ]);
     }
 
     /**
