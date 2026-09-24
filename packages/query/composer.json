@@ -2,7 +2,13 @@
     "name": "utopia-php/query",
     "description": "A simple library providing a query abstraction for filtering, ordering, and pagination",
     "type": "library",
-    "keywords": ["php", "framework", "upf", "utopia", "query"],
+    "keywords": [
+        "php",
+        "framework",
+        "upf",
+        "utopia",
+        "query"
+    ],
     "license": "MIT",
     "minimum-stability": "stable",
     "autoload": {
@@ -19,20 +25,14 @@
     "scripts": {
         "test": "vendor/bin/paratest --testsuite Query --processes=auto --exclude-group=performance",
         "test:coverage": "vendor/bin/paratest --testsuite Query --processes=auto --exclude-group=performance --coverage-php coverage/unit.cov",
-        "test:performance": "vendor/bin/phpunit --testsuite Query --group=performance",
-        "test:integration": "vendor/bin/phpunit --testsuite Integration",
-        "test:integration:coverage": "vendor/bin/phpunit --testsuite Integration --coverage-php coverage/integration.cov",
-        "lint": "php -d memory_limit=2G ./vendor/bin/pint --test",
-        "format": "php -d memory_limit=2G ./vendor/bin/pint",
-        "check": "./vendor/bin/phpstan analyse --level max src tests --memory-limit 2G"
+        "test:performance": "phpunit --testsuite Query --group=performance",
+        "test:integration": "phpunit --testsuite Integration",
+        "test:integration:coverage": "phpunit --testsuite Integration --coverage-php coverage/integration.cov"
     },
     "require": {
         "php": ">=8.4"
     },
     "require-dev": {
-        "phpunit/phpunit": "^12.0",
-        "laravel/pint": "*",
-        "phpstan/phpstan": "*",
         "mongodb/mongodb": "^2.0",
         "brianium/paratest": "*",
         "phpunit/phpcov": "*"

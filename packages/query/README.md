@@ -1,5 +1,8 @@
 # Utopia Query
 
+> [!IMPORTANT]
+> This repository is a read-only mirror of [`packages/query`](https://github.com/appwrite/appwrite/tree/main/packages/query) in [appwrite/appwrite](https://github.com/appwrite/appwrite). Development happens there — please open issues and pull requests against appwrite/appwrite.
+
 [![CI](https://github.com/utopia-php/query/actions/workflows/ci.yml/badge.svg)](https://github.com/utopia-php/query/actions/workflows/ci.yml)
 [![Linter](https://github.com/utopia-php/query/actions/workflows/linter.yml/badge.svg)](https://github.com/utopia-php/query/actions/workflows/linter.yml)
 [![Static Analysis](https://github.com/utopia-php/query/actions/workflows/static-analysis.yml/badge.svg)](https://github.com/utopia-php/query/actions/workflows/static-analysis.yml)

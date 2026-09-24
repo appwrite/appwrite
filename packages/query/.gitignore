@@ -8,3 +8,4 @@ coverage.xml
 .claude/
 .phpunit.cache/
 coverage/
+composer.lock
