@@ -1312,4 +1312,10 @@ export const heAccountGlobalDictionary: Record<string, string> = {
   'Failed to create demo user': 'יצירת משתמש הדמו נכשלה',
   'MFA verification is disabled on this preview route.':
     'אימות MFA מושבת בנתיב התצוגה המקדימה הזה.',
+
+  // Console account password breach check result
+  breached: 'דלפה',
+  'no known breach': 'ללא דליפה ידועה',
+  'This password was found in a known data breach. Change it as soon as possible.':
+    'הסיסמה הזו נמצאה בדליפת מידע ידועה. שנו אותה בהקדם האפשרי.',
 }

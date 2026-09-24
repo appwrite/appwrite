@@ -1197,4 +1197,10 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
   'Failed to create demo user': 'デモユーザーを作成できませんでした',
   'MFA verification is disabled on this preview route.':
     'このプレビュールートでは MFA 認証は無効です。',
+
+  // Console account password breach check result
+  breached: '漏洩',
+  'no known breach': '既知の漏洩なし',
+  'This password was found in a known data breach. Change it as soon as possible.':
+    'このパスワードは既知のデータ漏洩で見つかりました。できるだけ早く変更してください。',
 }

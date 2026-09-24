@@ -1934,6 +1934,16 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     ]
   },
   {
+    "slug": "products/auth/native-sign-in",
+    "title": "Native sign-in",
+    "description": "Sign users in with Sign in with Apple or Google on device, then exchange the ID token for an Appwrite session without a redirect through Appwrite.",
+    "excerpt": "Native sign-in creates an Appwrite session from an OpenID Connect ID token that your app obtained on the device. The app calls the platform's own sign-in API, such as Sign in with Apple on iOS or Credential Manager on Android, and sends the returned ID token to Appwrite. Appwrite verifies the token against the provider's published signing keys and returns a session in the same request. Compared with OAuth2 login, no redirect passes through Appwrite, and the provider configuration holds…",
+    "breadcrumbs": [
+      "Auth",
+      "Native sign-in"
+    ]
+  },
+  {
     "slug": "products/auth/oauth-server",
     "title": "OAuth2 server",
     "description": "Turn your Appwrite project into an OAuth 2.1 and OpenID Connect (OIDC) provider so third-party apps can sign in with your product.",
@@ -5689,8 +5699,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
   {
     "slug": "tooling/ai/agents/codex",
     "title": "Codex",
-    "description": "Learn how to use Codex with Appwrite through the Appwrite plugin, quick start prompts, and the Appwrite MCP server for AI-assisted development.",
-    "excerpt": "The fastest way to get started with Appwrite in Codex is to install the **Appwrite plugin** from the Appwrite marketplace. The plugin includes agent skills for the Appwrite CLI and all major SDKs, giving Codex the context it needs to follow the latest Appwrite code patterns. Add the Appwrite marketplace to Codex by running the following command in your terminal: Then run and open the plugins menu to install the Appwrite plugin: - Run in Codex. - Select the **Appwrite**…",
+    "description": "Use Appwrite's official ChatGPT plugin within Codex, with quick start prompts and the Appwrite MCP server for AI-assisted development.",
+    "excerpt": "The fastest way to get started with Appwrite in Codex is to install **Appwrite's official ChatGPT plugin**, which can also be used within Codex. The plugin includes the hosted Appwrite connection and thirteen agent skills covering the Appwrite CLI, ten SDKs, and deployment workflows for Sites and Functions. Read the ChatGPT plugin announcement for an overview. - Open the ChatGPT desktop app. - Click **Plugins** in the sidebar. - Search for and select the **Appwrite** plugin. - Click **Install plugin**.…",
     "breadcrumbs": [
       "Tooling",
       "IDEs",

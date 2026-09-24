@@ -140,7 +140,6 @@ export interface Invoice {
   amount: number
   currency: string
   downloadUrl?: string
-  clientSecret?: string
   lastError?: string
 }
 

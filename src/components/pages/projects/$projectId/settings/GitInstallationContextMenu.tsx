@@ -29,10 +29,7 @@ export function GitInstallationContextMenu({
   children,
 }: GitInstallationContextMenuProps) {
   const t = useT()
-  const providerUrl = getProviderOwnerUrl(
-    installation.provider,
-    installation.organization,
-  )
+  const providerUrl = getProviderOwnerUrl(installation)
 
   return (
     <ContextMenu>
