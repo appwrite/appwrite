@@ -1465,7 +1465,8 @@ trait JoinCombos
             Query::select(['name', 'sec.amount', 'sec.secret', 'sec.payload'])->toString(),
         ]);
 
-        $this->assertSame(200, $result['headers']['status-code']);
+        $this->assertSame(400, $result['headers']['status-code']);
+        $this->assertSame('general_query_invalid', $result['body']['type']);
         $rows = $this->joinHardcoreRows($result);
         $encoded = (string) \json_encode($result['body']);
         $amounts = $this->joinComboAmounts($rows);

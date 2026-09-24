@@ -1519,7 +1519,7 @@ trait QueryJoinCombos
         $encoded = $this->joinEncodedBody($result);
 
         if ($this->getSide() === 'client') {
-            $this->assertArrayNotHasKey('errors', $result['body']);
+            $this->assertArrayHasKey('errors', $result['body']);
             $this->assertSame(0, \count($rows));
             $this->assertSame(0, $this->joinHardcoreTotal($result));
             $this->assertJoinHardcoreClientHidden($result, $rows, $amounts);
