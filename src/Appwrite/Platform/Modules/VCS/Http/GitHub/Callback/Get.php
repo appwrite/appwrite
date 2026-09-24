@@ -108,11 +108,42 @@ class Get extends Action
 
         // Create / Update installation
         if (!empty($providerInstallationId)) {
+            // State proves which project started the flow, not which
+            // installation it ended on: installation_id is a plain query
+            // parameter. Only link an installation the GitHub user who just
+            // authorized can access.
+            if (empty($code)) {
+                $error = 'GitHub did not return an authorization code, so access to this installation could not be verified. Please restart the installation from the Appwrite Console.';
+                $separator = \str_contains($redirectFailure, '?') ? '&' : '?';
+                $response
+                    ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+                    ->addHeader('Pragma', 'no-cache')
+                    ->redirect($redirectFailure . $separator . \http_build_query(['error' => $error]));
+                return;
+            }
+
+            $oauth2 = new OAuth2Github(System::getEnv('_APP_VCS_GITHUB_CLIENT_ID', ''), System::getEnv('_APP_VCS_GITHUB_CLIENT_SECRET', ''), "");
+
+            $accessToken = $oauth2->getAccessToken($code);
+            $refreshToken = $oauth2->getRefreshToken($code);
+            $accessTokenExpiry = DateTime::addSeconds(new \DateTime(), \intval($oauth2->getAccessTokenExpiry($code)));
+
+            if (!\in_array($providerInstallationId, $oauth2->getInstallationIds($accessToken), true)) {
+                $error = 'Your GitHub account does not have access to this installation. Please restart the installation from the Appwrite Console.';
+                $separator = \str_contains($redirectFailure, '?') ? '&' : '?';
+                $response
+                    ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+                    ->addHeader('Pragma', 'no-cache')
+                    ->redirect($redirectFailure . $separator . \http_build_query(['error' => $error]));
+                return;
+            }
+
             $vcs = $vcsFactory->fromInstallation(new Document([
                 'provider' => 'github',
                 'providerInstallationId' => $providerInstallationId,
             ]));
             $owner = $vcs->getOwnerName($providerInstallationId);
+            $personal = $oauth2->getUserSlug($accessToken) === $owner;
 
             $projectInternalId = $project->getSequence();
 
@@ -121,22 +152,6 @@ class Get extends Action
                 Query::equal('projectInternalId', [$projectInternalId]),
                 Query::equal('provider', ['github'])
             ]);
-
-            $personal = false;
-            $refreshToken = null;
-            $accessToken = null;
-            $accessTokenExpiry = null;
-
-            if (!empty($code)) {
-                $oauth2 = new OAuth2Github(System::getEnv('_APP_VCS_GITHUB_CLIENT_ID', ''), System::getEnv('_APP_VCS_GITHUB_CLIENT_SECRET', ''), "");
-
-                $accessToken = $oauth2->getAccessToken($code);
-                $refreshToken = $oauth2->getRefreshToken($code);
-                $accessTokenExpiry = DateTime::addSeconds(new \DateTime(), \intval($oauth2->getAccessTokenExpiry($code)));
-
-                $personalSlug = $oauth2->getUserSlug($accessToken);
-                $personal = $personalSlug === $owner;
-            }
 
             if ($installation->isEmpty()) {
                 $teamId = $project->getAttribute('teamId', '');
