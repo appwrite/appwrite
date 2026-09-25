@@ -21,7 +21,7 @@ faqs:
   - question: "Do self-hosted instances need a migration to use the new format?"
     answer: "No. After the upgrade to Appwrite 2.3, Appwrite reads an old JSON cache entry as a cache miss, loads the data from the database, and writes the entry again in the binary format. Cache misses rise for a short time after the upgrade."
   - question: "Do requests without a TTL get faster too?"
-    answer: "Yes, by a smaller margin. Appwrite also caches documents such as sessions, API keys, and table schemas in Redis, and all of them now use the binary format. Uncached requests in the benchmark were about 5% faster, which is smaller than the gain for TTL-cached lists."
+    answer: "Yes, by a smaller margin. Appwrite also caches data such as sessions, API keys, and table schemas in Redis, and all of them now use the binary format. Uncached requests in the benchmark were about 5% faster, which is smaller than the gain for TTL-cached lists."
 ---
 
 The [TTL cache for list queries](/blog/post/announcing-list-cache-ttl) lets Appwrite answer a repeated `listRows` call from Redis instead of the database. On a cache hit, Appwrite reads the stored entry from Redis and converts it back into rows, then builds the response.
@@ -81,7 +81,7 @@ With one request at a time, a cached page of 1,000 rows took **32.6 ms** instead
 
 # Requests without a TTL are slightly faster
 
-Appwrite also uses Redis to cache documents it reads on almost every request, such as sessions, API keys, and table schemas. These entries now use the binary format too. Requests that don't use a TTL, such as a single `getRow` call or a call for the signed-in account, were about **5%** faster in the benchmark.
+Appwrite also uses Redis to cache data it reads on almost every request, such as sessions, API keys, and table schemas. These entries now use the binary format too. Requests that don't use a TTL, such as a single `getRow` call or a call for the signed-in account, were about **5%** faster in the benchmark.
 
 # How the benchmark ran
 
