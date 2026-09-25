@@ -1073,6 +1073,10 @@ Http::init()
     ->action(function (Request $request, Response $response, Cors $cors, Validator $originValidator) {
         // CORS headers
         foreach ($cors->headers($request->getOrigin()) as $name => $value) {
+            $value = (string) $value;
+            if ($name === Cors::HEADER_ALLOW_ORIGIN && $value === '') {
+                continue;
+            }
             $response->addHeader($name, $value);
         }
 
@@ -1243,6 +1247,10 @@ Http::options()
         }
 
         foreach ($cors->headers($request->getOrigin()) as $name => $value) {
+            $value = (string) $value;
+            if ($name === Cors::HEADER_ALLOW_ORIGIN && $value === '') {
+                continue;
+            }
             $response->addHeader($name, $value);
         }
 
@@ -1407,6 +1415,10 @@ Http::error()
         try {
             $cors = $utopia->context()->get('cors');
             foreach ($cors->headers($request->getOrigin()) as $name => $value) {
+                $value = (string) $value;
+                if ($name === Cors::HEADER_ALLOW_ORIGIN && $value === '') {
+                    continue;
+                }
                 $response
                     ->removeHeader($name)
                     ->addHeader($name, $value);

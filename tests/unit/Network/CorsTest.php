@@ -36,6 +36,24 @@ final class CorsTest extends TestCase
         $result = $cors->headers('https://foo.com');
 
         $this->assertSame('https://foo.com', $result[Cors::HEADER_ALLOW_ORIGIN]);
+        $this->assertSame('Origin', $result[Cors::HEADER_VARY]);
+    }
+
+    public function testWildcardWithEmptyOriginOmitsAllowOrigin(): void
+    {
+        $cors = new Cors(
+            allowedHosts: ['*'],
+            allowedMethods: ['GET'],
+            allowedHeaders: ['X-Test'],
+            exposedHeaders: [],
+            allowCredentials: false
+        );
+
+        $result = $cors->headers('');
+
+        $this->assertArrayNotHasKey(Cors::HEADER_ALLOW_ORIGIN, $result);
+        $this->assertSame('Origin', $result[Cors::HEADER_VARY]);
+        $this->assertSame('GET', $result[Cors::HEADER_ALLOW_METHODS]);
     }
 
     public function testSubdomainWildcardAllowsAnySubdomain(): void
@@ -68,6 +86,7 @@ final class CorsTest extends TestCase
         $this->assertArrayNotHasKey(Cors::HEADER_ALLOW_ORIGIN, $result);
         $this->assertSame('false', $result[Cors::HEADER_ALLOW_CREDENTIALS]);
         $this->assertSame('GET', $result[Cors::HEADER_ALLOW_METHODS]);
+        $this->assertSame('Origin', $result[Cors::HEADER_VARY]);
     }
 
     public function testInvalidOriginReturnsStaticHeadersOnly(): void
@@ -269,6 +288,7 @@ final class CorsTest extends TestCase
         $this->assertSame('X-A, X-B', $result[Cors::HEADER_ALLOW_HEADERS]);
         $this->assertSame('E1, E2', $result[Cors::HEADER_EXPOSE_HEADERS]);
         $this->assertSame('true', $result[Cors::HEADER_ALLOW_CREDENTIALS]);
+        $this->assertSame('Origin', $result[Cors::HEADER_VARY]);
     }
 
     public function testMaxAgeIncluded(): void
