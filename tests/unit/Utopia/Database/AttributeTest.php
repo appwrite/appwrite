@@ -35,4 +35,60 @@ final class AttributeTest extends TestCase
             Attribute::resolve($definition)
         );
     }
+
+    /**
+     * @return \Iterator<string, array{string}>
+     */
+    public static function bigintSpellings(): \Iterator
+    {
+        yield 'biginteger' => ['biginteger'];
+        yield 'bigint' => ['bigint'];
+    }
+
+    #[DataProvider('bigintSpellings')]
+    public function testBigIntIsStoredAsBigintWhicheverSpellingItIsSentIn(string $spelling): void
+    {
+        $this->assertSame('bigint', Attribute::storedType($spelling));
+        $this->assertSame('bigint', Attribute::resolve(['key' => 'pages', 'type' => $spelling])['type']);
+    }
+
+    /**
+     * @return \Iterator<string, array{string}>
+     */
+    public static function otherTypes(): \Iterator
+    {
+        yield 'integer' => [ColumnType::Integer->value];
+        yield 'string' => [ColumnType::String->value];
+        yield 'double' => [ColumnType::Double->value];
+        yield 'relationship' => [ColumnType::Relationship->value];
+        yield 'unrecognised' => ['unknown'];
+    }
+
+    #[DataProvider('otherTypes')]
+    public function testOtherTypesAreStoredAsSent(string $type): void
+    {
+        $this->assertSame($type, Attribute::storedType($type));
+    }
+
+    /**
+     * @return \Iterator<string, array{string, string, bool}>
+     */
+    public static function storedTypes(): \Iterator
+    {
+        yield 'stored bigint, updated as bigint' => ['bigint', 'bigint', true];
+        yield 'stored biginteger, updated as bigint' => ['biginteger', 'bigint', true];
+        yield 'stored bigint, updated as biginteger' => ['bigint', 'biginteger', true];
+        yield 'stored biginteger, updated as biginteger' => ['biginteger', 'biginteger', true];
+        yield 'stored string, updated as string' => [ColumnType::String->value, ColumnType::String->value, true];
+        yield 'stored integer, updated as bigint' => [ColumnType::Integer->value, 'bigint', false];
+        yield 'stored unrecognised, updated as bigint' => ['unknown', 'bigint', false];
+        yield 'stored unrecognised, updated as itself' => ['unknown', 'unknown', false];
+        yield 'stored empty, updated as bigint' => ['', 'bigint', false];
+    }
+
+    #[DataProvider('storedTypes')]
+    public function testAStoredTypeMatchesOnlyItsOwnTypeWhicheverSpellingEitherSideCarries(string $stored, string $type, bool $expected): void
+    {
+        $this->assertSame($expected, Attribute::sameType($stored, $type));
+    }
 }
