@@ -14,14 +14,11 @@ use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Platform\Enum;
-use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\URL;
-use Utopia\Validator\WhiteList;
 
 class Update extends Base
 {
@@ -70,6 +67,16 @@ class Update extends Base
         return 'Ah68ed000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003qpcHV';
     }
 
+    public static function getPromptValues(): array
+    {
+        return ['none', 'login', 'consent', 'select_account'];
+    }
+
+    public static function getPromptDescription(): string
+    {
+        return 'Array of OpenID Connect prompt values controlling the authentication and consent screens. If "none" is included, it must be the only element. "none" means: don\'t display any authentication or consent screens. "login" means: prompt the user to re-authenticate. "consent" means: prompt the user for consent. "select_account" means: prompt the user to select an account.';
+    }
+
     public static function getParameters(): array
     {
         return \array_merge(parent::getParameters(), [
@@ -95,12 +102,6 @@ class Update extends Base
                 '$id' => 'userInfoURL',
                 'name' => 'User Info URL',
                 'example' => 'https://myoauth.com/oauth2/userinfo',
-                'hint' => '',
-            ],
-            [
-                '$id' => 'prompt',
-                'name' => 'Prompt',
-                'example' => '["consent"]',
                 'hint' => '',
             ],
             [
@@ -145,7 +146,7 @@ class Update extends Base
             ->param('authorizationURL', null, new Nullable(new URL(allowEmpty: true)), 'OpenID Connect authorization endpoint URL. Required when wellKnownURL is not provided. For example: https://myoauth.com/oauth2/authorize', optional: true)
             ->param('tokenURL', null, new Nullable(new URL(allowEmpty: true)), 'OpenID Connect token endpoint URL. Required when wellKnownURL is not provided. For example: https://myoauth.com/oauth2/token', optional: true, aliases: ['tokenUrl'])
             ->param('userInfoURL', null, new Nullable(new URL(allowEmpty: true)), 'OpenID Connect user info endpoint URL. Required when wellKnownURL is not provided. For example: https://myoauth.com/oauth2/userinfo', optional: true, aliases: ['userInfoUrl'])
-            ->param('prompt', null, new Nullable(new ArrayList(new WhiteList(['none', 'login', 'consent', 'select_account'], true), 4)), 'Array of OpenID Connect prompt values controlling the authentication and consent screens. If "none" is included, it must be the only element. "none" means: don\'t display any authentication or consent screens. "login" means: prompt the user to re-authenticate. "consent" means: prompt the user for consent. "select_account" means: prompt the user to select an account.', optional: true, enum: new Enum(name: 'ProjectOAuth2OidcPrompt'))
+            ->param('prompt', null, static::getPromptValidator(), static::getPromptDescription(), optional: true, enum: static::getPromptEnum())
             ->param('maxAge', null, new Nullable(new Range(0, PHP_INT_MAX, Range::TYPE_INTEGER)), 'Maximum authentication age in seconds. When set, the user must have authenticated within this many seconds, otherwise they are prompted to re-authenticate.', optional: true)
             ->param('enabled', null, new Nullable(new Boolean()), 'OAuth2 sign-in method status. Set to true to enable new session creation. Setting to true will trigger end-to-end credentials validation, and will throw if the credentials are invalid.', true)
             ->inject('response')
@@ -208,9 +209,7 @@ class Update extends Base
         $providerId = static::getProviderId();
         $queueForEvents->setParam('providerId', $providerId);
 
-        if ($prompt !== null && \in_array('none', $prompt) && \count($prompt) > 1) {
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'When "none" is used as a prompt value, it must be the only element in the array.');
-        }
+        $this->validatePrompt($prompt);
 
         // The secret is stored as JSON
         // `{"clientSecret": "...", "wellKnownEndpoint": "...", "authorizationEndpoint": "...", "tokenEndpoint": "...", "userInfoEndpoint": "...", "prompt": [...], "maxAge": ...}`
