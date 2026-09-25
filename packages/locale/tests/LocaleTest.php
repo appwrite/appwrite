@@ -38,6 +38,29 @@ class LocaleTest extends TestCase
 
         Locale::setLanguageFromJSON('hi-IN', realpath(__DIR__.'/hi-IN.json') ?: ''); // Set Hindi
 
+        // Plural translations are ICU MessageFormat patterns with a `count` argument
+        Locale::setLanguageFromArray('en-GB', [
+            'minutes' => '{count, plural, one {in # minute} other {in # minutes}}',
+            'categories' => '{count, plural, zero {zero} one {one} two {two} few {few} many {many} other {other}}',
+            'broken' => '{count, plural, one {in # minute} other {in # minutes}}',
+            'expires' => 'This code expires {{expire}}.',
+            'invites' => '{count, plural, one {# invite left for {team}} other {# invites left for {team}}}',
+        ]);
+
+        Locale::setLanguageFromArray('ru-RU', [
+            'minutes' => '{count, plural, one {через # минуту} few {через # минуты} many {через # минут} other {через # минуты}}',
+            'expires' => 'Код истекает {{expire}}.',
+            'broken' => '{count, plural, one {через # минуту}',
+        ]);
+
+        Locale::setLanguageFromArray('cs-CZ', ['minutes' => '{count, plural, one {# minuta} few {# minuty} other {# minut}}']);
+        Locale::setLanguageFromArray('ja-JP', ['minutes' => '{count, plural, other {#分}}']);
+        Locale::setLanguageFromArray('ar-AE', ['categories' => '{count, plural, zero {zero} one {one} two {two} few {few} many {many} other {other}}']);
+
+        // Serbian reading English translations, with and without English plural rules
+        Locale::setLanguageFromJSON('sr-RS', realpath(__DIR__.'/en-plurals.json') ?: '', 'en');
+        Locale::setLanguageFromJSON('sr-Latn-RS', realpath(__DIR__.'/en-plurals.json') ?: '');
+
         $languages = Locale::getLanguages();
         $this->assertContains('en-US', $languages);
         $this->assertContains('he-IL', $languages);
@@ -130,6 +153,95 @@ class LocaleTest extends TestCase
             $this->fail('Failed to throw exception when translation is missing');
         } catch (Exception $e) {
             $this->assertInstanceOf(Exception::class, $e);
+        }
+    }
+
+    public function testPlurals(): void
+    {
+        $locale = new Locale('ru-RU');
+
+        $this->assertEquals('через 1 минуту', $locale->getPlural('minutes', 1));
+        $this->assertEquals('через 2 минуты', $locale->getPlural('minutes', 2));
+        $this->assertEquals('через 5 минут', $locale->getPlural('minutes', 5));
+        $this->assertEquals('через 21 минуту', $locale->getPlural('minutes', 21));
+
+        $locale->setDefault('cs-CZ');
+
+        $this->assertEquals('1 minuta', $locale->getPlural('minutes', 1));
+        $this->assertEquals('3 minuty', $locale->getPlural('minutes', 3));
+        $this->assertEquals('5 minut', $locale->getPlural('minutes', 5));
+
+        $locale->setDefault('ja-JP');
+
+        $this->assertEquals('1分', $locale->getPlural('minutes', 1));
+        $this->assertEquals('5分', $locale->getPlural('minutes', 5));
+
+        // Arabic uses every plural category
+        $locale->setDefault('ar-AE');
+
+        $this->assertEquals('zero', $locale->getPlural('categories', 0));
+        $this->assertEquals('one', $locale->getPlural('categories', 1));
+        $this->assertEquals('two', $locale->getPlural('categories', 2));
+        $this->assertEquals('few', $locale->getPlural('categories', 3));
+        $this->assertEquals('many', $locale->getPlural('categories', 11));
+        $this->assertEquals('other', $locale->getPlural('categories', 100));
+
+        // Fractions have their own category
+        $locale->setDefault('en-GB');
+
+        $this->assertEquals('one', $locale->getPlural('categories', 1));
+        $this->assertEquals('other', $locale->getPlural('categories', 1.5));
+
+        $this->assertEquals('2 invites left for Appwrite', $locale->getPlural('invites', 2, arguments: ['team' => 'Appwrite']));
+    }
+
+    public function testPluralRules(): void
+    {
+        // Serbian puts 21 in the `one` category, English does not
+        $this->assertEquals('in 21 minutes', (new Locale('sr-RS'))->getPlural('minutes', 21));
+        $this->assertEquals('in 21 minute', (new Locale('sr-Latn-RS'))->getPlural('minutes', 21));
+    }
+
+    public function testPluralFallback(): void
+    {
+        $locale = new Locale('ru-RU');
+        $locale->setFallback('en-GB');
+
+        $this->assertEquals('Код истекает через 21 минуту.', $locale->getText('expires', plurals: ['expire' => ['minutes', 21]]));
+
+        // A pattern that does not compile falls back to the fallback language and its rules
+        $this->assertEquals('in 21 minutes', $locale->getPlural('broken', 21));
+
+        // A translation served by the fallback language is filled with that language's plural
+        $locale->setDefault('cs-CZ');
+
+        $this->assertEquals('This code expires in 21 minutes.', $locale->getText('expires', plurals: ['expire' => ['minutes', 21]]));
+    }
+
+    public function testGetPluralDefault(): void
+    {
+        $locale = new Locale('en-GB');
+
+        $this->assertEquals('in 5 minutes', $locale->getPlural('minutes', 5));
+        $this->assertEquals('{{missing}}', $locale->getPlural('missing', 5));
+        $this->assertEquals('soon', $locale->getPlural('missing', 5, default: 'soon'));
+        $this->assertEquals(null, $locale->getPlural('missing', 5, default: null));
+        $this->assertEquals('This code expires {{missing}}.', $locale->getText('expires', plurals: ['expire' => ['missing', 5]]));
+
+        Locale::$exceptions = true;
+
+        try {
+            $locale->getPlural('missing', 5);
+            $this->fail('Failed to throw exception when translation is missing');
+        } catch (Exception $e) {
+            $this->assertEquals('Key named "missing" not found', $e->getMessage());
+        }
+
+        try {
+            (new Locale('ru-RU'))->getPlural('broken', 5);
+            $this->fail('Failed to throw exception when the pattern is invalid');
+        } catch (Exception $e) {
+            $this->assertStringContainsString('could not be formatted', $e->getMessage());
         }
     }
 

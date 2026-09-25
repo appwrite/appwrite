@@ -1,0 +1,3 @@
+{
+    "minutes": "{count, plural, one {in # minute} other {in # minutes}}"
+}
