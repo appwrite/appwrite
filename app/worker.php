@@ -78,8 +78,8 @@ if ($requested === [] || \in_array('all', $requested, true)) {
 }
 
 // Same as a single worker: resolve queue + concurrency from config/env.
-// For one worker, `_APP_WORKER_MAX_COROUTINES` still overrides (except databases).
-// For many, each queue keeps its own cap so databases stays at 1.
+// For one worker, `_APP_WORKER_MAX_COROUTINES` overrides the configured cap.
+// For many, each queue keeps its own cap.
 $jobs = Jobs::resolve($workers, $workersConfig, System::getEnv(...));
 
 // Keep commands available for heartbeats and recovery while receive blocks.
