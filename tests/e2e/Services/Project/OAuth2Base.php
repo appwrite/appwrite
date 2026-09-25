@@ -265,6 +265,43 @@ trait OAuth2Base
         $this->assertTrue($update['body']['enabled']);
     }
 
+    public function testUpdateOAuth2OidcResubmitFromReadAliasesKeepsEndpoints(): void
+    {
+        $update = $this->updateOAuth2('oidc', [
+            'clientId' => 'oidc-alias-client',
+            'clientSecret' => 'oidc-alias-secret',
+            'authorizationURL' => 'https://idp.example/oauth2/authorize',
+            'tokenURL' => 'https://idp.example/oauth2/token',
+            'userInfoURL' => 'https://idp.example/oauth2/userinfo',
+            'enabled' => false,
+        ]);
+
+        $this->assertSame(200, $update['headers']['status-code']);
+        $this->assertSame('https://idp.example/oauth2/token', $update['body']['tokenUrl'] ?? null);
+        $this->assertSame('https://idp.example/oauth2/userinfo', $update['body']['userInfoUrl'] ?? null);
+
+        // Resubmit the form the way the console does: prefill from the read response's
+        // tokenUrl / userInfoUrl keys (blank when missing) and send them back.
+        $read = $this->getOAuth2Provider('oidc');
+        $this->assertSame(200, $read['headers']['status-code']);
+
+        $resubmit = $this->updateOAuth2('oidc', [
+            'clientId' => 'oidc-alias-client',
+            'authorizationURL' => $read['body']['authorizationURL'],
+            'tokenUrl' => $read['body']['tokenUrl'] ?? '',
+            'userInfoUrl' => $read['body']['userInfoUrl'] ?? '',
+            'enabled' => false,
+        ]);
+        $this->assertSame(200, $resubmit['headers']['status-code']);
+
+        $get = $this->getOAuth2Provider('oidc');
+        $this->assertSame(200, $get['headers']['status-code']);
+        $this->assertSame('https://idp.example/oauth2/token', $get['body']['tokenURL']);
+        $this->assertSame('https://idp.example/oauth2/userinfo', $get['body']['userInfoURL']);
+        $this->assertSame('https://idp.example/oauth2/token', $get['body']['tokenUrl'] ?? null);
+        $this->assertSame('https://idp.example/oauth2/userinfo', $get['body']['userInfoUrl'] ?? null);
+    }
+
     public function testUpdateOAuth2OidcRejectsIncompleteDiscoveryConfig(): void
     {
         $response = $this->updateOAuth2('oidc', [
