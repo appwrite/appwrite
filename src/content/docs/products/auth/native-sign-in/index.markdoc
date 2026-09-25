@@ -4,7 +4,7 @@ title: Native sign-in
 description: Sign users in with Sign in with Apple or Google on device, then exchange the ID token for an Appwrite session without a redirect through Appwrite.
 ---
 
-Native sign-in creates an Appwrite session from an OpenID Connect ID token that your app obtained on the device. The app calls the platform's own sign-in API, such as Sign in with Apple on iOS or Credential Manager on Android, and sends the returned ID token to Appwrite. Appwrite verifies the token against the provider's published signing keys and returns a session in the same request.
+Native sign-in creates an Appwrite session from an ID token that Apple or Google issues to your app on the device. An ID token is a signed record of who the user is, defined by the OpenID Connect standard. The app calls the platform's own sign-in API, such as Sign in with Apple on iOS or Credential Manager on Android, and sends the returned ID token to Appwrite. Appwrite verifies the token against the provider's published signing keys and returns a session in the same request.
 
 Compared with [OAuth2 login](/docs/products/auth/oauth2), no redirect passes through Appwrite, and the provider configuration holds no client secret. With Sign in with Apple on iOS and Google on Android, the user picks an account in a system dialog without leaving your app.
 
@@ -225,7 +225,15 @@ You can also run `./gradlew signingReport` in your Android project, which prints
 4. Under **SHA-1 certificate fingerprint**, paste the fingerprint.
 5. Select **Create**. You do not need to copy this client ID.
 
-Each signing certificate needs its own Android client with the same package name. That usually means one client for the debug keystore and one for your release key. If you distribute through Google Play with Play App Signing, Google Play re-signs your app, so also create a client for the app signing key. In Play Console, go to **Protected with Play** > **Play Store distribution** > **Go to Play app signing**, and copy the SHA-1 from the **App signing key** section.
+Each signing certificate needs its own Android client with the same package name. That usually means one client for the debug keystore and one for your release key.
+
+If you distribute through Google Play with Play App Signing, Play Console shows two keys. You sign each release with the **upload key**, and Google Play re-signs the app with the **app signing key** before it reaches users. Apps installed from Google Play carry the app signing key, so create an Android client for its SHA-1:
+
+1. In Play Console, select your app and go to **Protected with Play** > **Play Store protection** > **Manage Play app signing**.
+2. In the **App signing key** section, copy the SHA-1 certificate fingerprint.
+3. Create an Android client with that fingerprint and your package name.
+
+A build that you install yourself, outside Google Play, carries the certificate that signed it. If you sign such a build with the upload key, also create a client for the upload key's SHA-1, which is shown in the **Upload key certificate** section.
 
 ## Request an ID token {% #google-token %}
 

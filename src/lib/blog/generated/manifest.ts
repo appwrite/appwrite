@@ -3,6 +3,19 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "add-google-one-tap-to-your-web-app",
+    "href": "/blog/post/add-google-one-tap-to-your-web-app",
+    "title": "Add Google One Tap sign-in to your web app with Appwrite",
+    "description": "Show Google's One Tap prompt on your site and exchange its ID token for an Appwrite session. One web client ID covers the site and Android.",
+    "date": "2026-09-25",
+    "lastUpdated": "2026-09-25",
+    "timeToRead": 7,
+    "author": "atharva",
+    "category": "tutorials",
+    "cover": "/images/blog/add-google-one-tap-to-your-web-app/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-user-photos",
     "href": "/blog/post/announcing-user-photos",
     "title": "Announcing user photos: A profile picture for every user",
@@ -14,6 +27,20 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "category": "announcements",
     "featured": false,
     "cover": "/images/blog/announcing-user-photos/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "faster-list-caching-binary-format",
+    "href": "/blog/post/faster-list-caching-binary-format",
+    "title": "Cached list queries now use up to 69% less memory and serve up to 29% more requests",
+    "description": "Appwrite now stores its Redis cache in a binary format instead of JSON. Cached list responses take up to 69% less memory and serve up to 29% more requests per second, with no change to your code.",
+    "date": "2026-09-25",
+    "lastUpdated": "2026-09-25",
+    "timeToRead": 5,
+    "author": "luke-silver",
+    "category": "announcements, performance",
+    "featured": false,
+    "cover": "/images/blog/faster-list-caching-binary-format/cover.avif",
     "hasCover": true
   },
   {
@@ -42,6 +69,21 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "category": "announcements",
     "featured": false,
     "cover": "/images/blog/announcing-resend-one-click-setup/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "gpt-6-sol-and-luna-launch-at-50-lower-api-prices",
+    "href": "/blog/post/gpt-6-sol-and-luna-launch-at-50-lower-api-prices",
+    "title": "GPT-6 Sol and Luna launch at 50% lower API prices",
+    "description": "OpenAI launches GPT-6 Sol and Luna with stronger coding, factuality, and agent performance, plus 50% lower API prices than GPT-5.6.",
+    "date": "2026-09-24",
+    "lastUpdated": "2026-09-24",
+    "timeToRead": 5,
+    "author": "aishwari",
+    "category": "news",
+    "featured": false,
+    "unlisted": true,
+    "cover": "/images/blog/gpt-6-sol-and-luna-launch-at-50-lower-api-prices/cover.avif",
     "hasCover": true
   },
   {

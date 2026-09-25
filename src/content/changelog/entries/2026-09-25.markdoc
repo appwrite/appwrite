@@ -1,19 +1,14 @@
 ---
 layout: changelog
-title: "Show every user's profile photo with Avatars getPhoto"
+title: Cached list queries use up to 69% less memory
 date: 2026-09-25
-cover: /images/blog/announcing-user-photos/cover.avif
-tags: auth, api, sdk
+cover: /images/blog/faster-list-caching-binary-format/cover.avif
 ---
 
-Appwrite Avatars can now return a profile photo for any user. [`avatars.getPhoto`](/docs/products/avatars/user-photos) tries the user's OAuth2 identity photo, then Gravatar and Libravatar, then their initials, and returns a neutral placeholder when none of them has an image, so every user gets an avatar.
+Appwrite now stores its Redis cache in igbinary, a compact binary format, instead of JSON. The change covers list queries cached with a `ttl` and the data Appwrite caches on most requests, such as sessions, API keys, and table schemas.
 
-Pass `current()` for the signed-in user, any user's ID for comment authors and member lists, or an `emailHash` and `name` for people who don't have an account yet. Appwrite stores photos from 33 OAuth2 providers, including Google, GitHub, Discord, and LinkedIn, and refreshes them when the user signs in again or refreshes their session.
+In benchmarks, a cached page of 1,000 rows or more took 67% to 69% less memory, and one server handled up to 29% more cached `listRows` requests per second. The change is live on Appwrite Cloud and ships in self-hosted Appwrite 2.3. Self-hosted instances need no migration, because Appwrite reads an old JSON entry as a cache miss and writes it again in the new format.
 
-{% arrow_link href="/blog/post/announcing-user-photos" %}
+{% arrow_link href="/blog/post/faster-list-caching-binary-format" %}
 Read the announcement
-{% /arrow_link %}
-
-{% arrow_link href="/docs/products/avatars/user-photos" %}
-Show user photos in your app
 {% /arrow_link %}
