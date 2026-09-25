@@ -13,7 +13,6 @@ use Appwrite\Utopia\Response;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Utopia\Database\Adapter;
-use Utopia\Database\Attribute;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
@@ -50,8 +49,8 @@ final class BigIntCreateTest extends TestCase
     {
         $inline = AttributeDefinition::resolve(['key' => self::KEY, 'type' => ColumnType::BigInteger->value]);
 
-        $this->assertSame(Attribute::persistedType(ColumnType::BigInteger), $inline['type']);
-        $this->assertSame($inline['type'], $this->create(new $endpoint())->getAttribute('type'));
+        $this->assertSame('bigint', $inline['type']);
+        $this->assertSame('bigint', $this->create(new $endpoint())->getAttribute('type'));
     }
 
     private function create(AttributeCreate $endpoint): Document
