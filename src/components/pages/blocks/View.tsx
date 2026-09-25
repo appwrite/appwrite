@@ -63,20 +63,21 @@ export function BlocksConsoleView() {
         <div className="border-b border-border" />
 
         <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6">
-          <div className="space-y-6">
-            <TargetBar
-              draft={draft}
-              onDraftChange={setDraft}
-              onSubmit={handleSubmit}
-              focusedProjectId={focusedProjectId}
-              onClear={handleClear}
-            />
-
-            <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
+          <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
+            <div className="space-y-6">
+              <TargetBar
+                draft={draft}
+                onDraftChange={setDraft}
+                onSubmit={handleSubmit}
+                focusedProjectId={focusedProjectId}
+                onClear={handleClear}
+              />
               <BlocksList projectId={focusedProjectId} />
-              <ComposeBlock projectId={focusedProjectId} />
             </div>
+            <ComposeBlock />
+          </div>
 
+          <div className="mt-6">
             <UserStatusPanel />
           </div>
         </div>
