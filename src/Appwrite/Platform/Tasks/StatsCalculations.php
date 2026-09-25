@@ -16,13 +16,13 @@ use Utopia\Span\Span;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
 
-class StatsResources extends Action
+class StatsCalculations extends Action
 {
     private Concurrency $concurrency;
 
     public static function getName(): string
     {
-        return 'stats-resources';
+        return 'stats-calculations';
     }
 
     public function __construct()
@@ -30,7 +30,7 @@ class StatsResources extends Action
         $this->concurrency = new Concurrency();
 
         $this
-            ->desc('Schedule active projects for usage resource counts')
+            ->desc('Schedule active projects for usage resource-count calculations')
             ->inject('dbForPlatform')
             ->inject('publisherForStatsResources')
             ->inject('usageConnection')
@@ -89,7 +89,7 @@ class StatsResources extends Action
     private function dispatch(array $occurrences, StatsResourcesPublisher $publisherForStatsResources, Connection $usageConnection): null
     {
         if (!$usageConnection->isReady()) {
-            Console::error('stats resources: usage schema is not ready, skipping ' . \count($occurrences) . ' occurrences');
+            Console::error('stats calculations: usage schema is not ready, skipping ' . \count($occurrences) . ' occurrences');
             return null;
         }
 
@@ -116,7 +116,7 @@ class StatsResources extends Action
                 }
             } catch (\Throwable $th) {
                 $error = $th;
-                Console::error('stats resources: ' . $occurrence->id . ' failed: ' . $th->getMessage());
+                Console::error('stats calculations: ' . $occurrence->id . ' failed: ' . $th->getMessage());
             } finally {
                 Span::current()?->finish(error: $error);
             }

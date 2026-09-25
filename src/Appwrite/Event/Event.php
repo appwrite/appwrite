@@ -23,6 +23,9 @@ class Event
     public const FUNCTIONS_QUEUE_NAME = 'v1-functions';
     public const FUNCTIONS_QUEUE_TTL = 60 * 60 * 24 * 7; // 7 days
 
+    public const STATS_CALCULATIONS_QUEUE_NAME = 'v1-stats-calculations';
+    public const STATS_EVENTS_QUEUE_NAME = 'v1-stats-events';
+    /** @deprecated Use STATS_CALCULATIONS_QUEUE_NAME */
     public const STATS_RESOURCES_QUEUE_NAME = 'v1-stats-resources';
 
     public const STATS_USAGE_QUEUE_NAME = 'v1-stats-usage';
