@@ -94,7 +94,7 @@ class Presence extends Action
             $database,
             $presenceDocument,
             $presenceId,
-            (string) $user->getSequence(),
+            $user->getId(),
             function () use ($presenceState, $publisherForUsage, $project): void {
                 $presenceState->triggerUsage($publisherForUsage, $project, 1);
             },
