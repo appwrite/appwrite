@@ -1451,7 +1451,7 @@ trait JoinCombos
         }
     }
 
-    public function testJoinHardcoreCoerceSecret8686AbsentWhenUnauthorized(): void
+    public function testJoinHardcoreCoerceSecret8686IsRejectedAsInvalidQuery(): void
     {
         if (!$this->getSupportForJoins()) {
             $this->markTestSkipped('Adapter does not support join queries');
@@ -1467,15 +1467,14 @@ trait JoinCombos
 
         $this->assertSame(400, $result['headers']['status-code']);
         $this->assertSame('general_query_invalid', $result['body']['type']);
+
         $rows = $this->joinHardcoreRows($result);
         $encoded = (string) \json_encode($result['body']);
         $amounts = $this->joinComboAmounts($rows);
 
-        if ($this->getSide() === 'client') {
-            $this->assertSame(0, \count($rows));
-            $this->assertSame(0, (int) ($result['body']['total'] ?? 0));
-            $this->assertJoinHardcoreClientHidden($encoded, $amounts);
-        }
+        $this->assertSame(0, \count($rows));
+        $this->assertSame(0, (int) ($result['body']['total'] ?? 0));
+        $this->assertJoinHardcoreClientHidden($encoded, $amounts);
     }
 
     public function testJoinHardcoreSkipAuthMixedDocSecStillHidesSecrets(): void

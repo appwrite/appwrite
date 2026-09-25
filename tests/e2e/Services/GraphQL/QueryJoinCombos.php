@@ -1499,7 +1499,7 @@ trait QueryJoinCombos
         }
     }
 
-    public function testJoinHardcoreCoerceSecret8686AbsentWhenUnauthorized(): void
+    public function testJoinHardcoreCoerceSecret8686IsRejectedAsInvalidQuery(): void
     {
         if (!$this->getSupportForJoins()) {
             $this->markTestSkipped('Adapter does not support join queries');
