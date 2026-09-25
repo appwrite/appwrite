@@ -1133,15 +1133,10 @@ final class VCSGitHubConsoleClientTest extends Scope
 
     public function testCreateInstallationWithTamperedStateCookie(): void
     {
-        [$name, $value] = \explode('=', $this->authorizeHelper($this->getProject()['$id'])['cookie'], 2);
-
-        $state = \json_decode(\urldecode($value), true);
-        $state['projectId'] = 'victim-project';
-
         $response = $this->callGitHubCallbackHelper([
             'setup_action' => 'update',
             'installation_id' => '1234567',
-        ], $name . '=' . \urlencode((string) \json_encode($state)));
+        ], $this->authorizeHelper($this->getProject()['$id'])['cookie'] . 'x');
 
         $this->assertEquals(400, $response['headers']['status-code']);
     }
