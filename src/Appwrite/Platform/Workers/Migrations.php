@@ -681,7 +681,6 @@ class Migrations extends Action
                 $sourceErrors = $source?->getErrors() ?? [];
                 $destinationErrors = $destination?->getErrors() ?? [];
 
-                // A Finalization's failures are already recorded on the destination.
                 if ($caughtError !== null && ! $caughtError instanceof Finalization) {
                     if ($caughtError instanceof MigrationException) {
                         // library-thrown, message constructed by us
