@@ -66,49 +66,60 @@ class Get extends Action
         Authorization $authorization,
         array $platform
     ) {
-        $cookie = $request->getCookie(COOKIE_NAME_GITHUB_STATE, '');
+        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
+        $host = \parse_url('//' . ($platform['consoleHostname'] ?? ''), PHP_URL_HOST) ?: '';
+        $domain = match (true) {
+            \in_array($host, ['', 'localhost'], true), \filter_var($host, FILTER_VALIDATE_IP) !== false => null,
+            System::getEnv('_APP_CONSOLE_ROOT_SESSION', 'disabled') === 'enabled' => '.' . ((new Domain($host))->getRegisterable() ?: $host),
+            default => '.' . $host,
+        };
+
+        $pending = \array_filter(
+            $request->getCookieParams(),
+            fn (string $name) => \str_starts_with($name, COOKIE_NAME_GITHUB_STATE . '_'),
+            ARRAY_FILTER_USE_KEY
+        );
 
         // GitHub drops state when the flow ends on an existing installation's
         // settings page (setup_action=update), so fall back to the copy
-        // Authorize left in the cookie. The signature below still applies.
-        $fromCookie = empty($state) && $setupAction === 'update' && !empty($cookie);
+        // Authorize left in a cookie. GitHub returns nothing to tell pending
+        // connections apart by, so only a lone one is used. The signature
+        // below still applies.
+        $fromCookie = empty($state) && $setupAction === 'update' && \count($pending) === 1;
 
         if ($fromCookie) {
-            $state = $cookie;
+            $state = \reset($pending);
         }
 
         if (empty($state)) {
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $setupAction === 'request'
-                ? 'Your request was sent to the organization owners. An owner must complete the installation from the Appwrite Console; approving the request on GitHub is not enough.'
-                : 'GitHub did not say which project this installation is for, so it could not be connected. Open your project\'s settings in the Appwrite Console and connect GitHub again.');
+            $ambiguous = $setupAction === 'update' && \count($pending) > 1;
+
+            // Clear them so the next attempt finds a single pending connection
+            if ($ambiguous) {
+                foreach (\array_keys($pending) as $name) {
+                    $response->addCookie(
+                        $name,
+                        '',
+                        \time() - 3600,
+                        COOKIE_PATH_GITHUB_STATE,
+                        $domain,
+                        $protocol === 'https',
+                        true,
+                        Response::COOKIE_SAMESITE_LAX
+                    );
+                }
+            }
+
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, match (true) {
+                $setupAction === 'request' => 'Your request was sent to the organization owners. An owner must complete the installation from the Appwrite Console; approving the request on GitHub is not enough.',
+                $ambiguous => 'GitHub connections were started for more than one project in this browser, so this one could not be matched to a project. Connect GitHub again from the project you want.',
+                default => 'GitHub did not say which project this installation is for, so it could not be connected. Open your project\'s settings in the Appwrite Console and connect GitHub again.',
+            });
         }
 
         $state = \json_decode($state, true) ?? [];
         $redirectFailure = $state['failure'] ?? '';
         $projectId = $state['projectId'] ?? '';
-
-        // One shot: once this project's flow ends, its cookie must not carry a
-        // later one. Another project's pending cookie is left alone.
-        if ((\json_decode($cookie, true)['projectId'] ?? null) === $projectId) {
-            $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
-            $host = \parse_url('//' . ($platform['consoleHostname'] ?? ''), PHP_URL_HOST) ?: '';
-            $domain = match (true) {
-                \in_array($host, ['', 'localhost'], true), \filter_var($host, FILTER_VALIDATE_IP) !== false => null,
-                System::getEnv('_APP_CONSOLE_ROOT_SESSION', 'disabled') === 'enabled' => '.' . ((new Domain($host))->getRegisterable() ?: $host),
-                default => '.' . $host,
-            };
-
-            $response->addCookie(
-                COOKIE_NAME_GITHUB_STATE,
-                '',
-                \time() - 3600,
-                COOKIE_PATH_GITHUB_STATE,
-                $domain,
-                $protocol === 'https',
-                true,
-                Response::COOKIE_SAMESITE_LAX
-            );
-        }
 
         // This endpoint is public -- without verifying the signature the
         // Authorize action put in state, anyone could pass an arbitrary
@@ -139,6 +150,23 @@ class Get extends Action
             }
 
             throw new Exception(Exception::PROJECT_NOT_FOUND, $error);
+        }
+
+        // One shot: once this project's flow ends, its cookie must not carry a
+        // later one. Other projects' pending cookies are left alone.
+        $name = COOKIE_NAME_GITHUB_STATE . '_' . $project->getSequence();
+
+        if (isset($pending[$name])) {
+            $response->addCookie(
+                $name,
+                '',
+                \time() - 3600,
+                COOKIE_PATH_GITHUB_STATE,
+                $domain,
+                $protocol === 'https',
+                true,
+                Response::COOKIE_SAMESITE_LAX
+            );
         }
 
         $defaultState = [

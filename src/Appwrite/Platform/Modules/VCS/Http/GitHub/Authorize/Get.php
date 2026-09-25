@@ -111,12 +111,11 @@ class Get extends Action
             default => '.' . $host,
         };
 
-        // A later connection replaces a pending one: GitHub returns nothing the
-        // callback could tell two flows apart by, and dropping both would fail
-        // the connection the user started last.
+        // One cookie per project, so starting a connection for another project
+        // leaves this one pending instead of replacing it.
         $response
             ->addCookie(
-                COOKIE_NAME_GITHUB_STATE,
+                COOKIE_NAME_GITHUB_STATE . '_' . $project->getSequence(),
                 $state,
                 \time() + COOKIE_EXPIRY_GITHUB_STATE,
                 COOKIE_PATH_GITHUB_STATE,
