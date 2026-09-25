@@ -72,6 +72,8 @@ import { useDebugOverrides } from '@/lib/debug-overrides'
 import {
   applyScreenshotModeOrganizationName,
   isScreenshotModeActive,
+  readScreenshotModeOpen,
+  subscribeScreenshotMode,
 } from '@/lib/screenshot-mode'
 import { PageDirectionProvider } from '@/lib/layout/page-direction'
 import { isOperatorAccount, type OperatorAccount } from '@/lib/operator-account'
@@ -443,14 +445,20 @@ function RootFullscreenLoader() {
   const { data: statusData, isSuccess: isStatusSuccess } =
     useAppwriteCloudStatus(cloudStatusEnabled && showCloudStatusToOperator)
   const { showFullscreenLoader } = useDebugOverrides()
+  const [screenshotModeOpen, setScreenshotModeOpen] = useState(() =>
+    readScreenshotModeOpen(),
+  )
 
   useEffect(() => {
     setClientMounted(true)
   }, [])
 
+  useEffect(() => subscribeScreenshotMode(setScreenshotModeOpen), [])
+
   const isLoaderVisible = isLoading || showFullscreenLoader
   const statusBanner =
     cloudStatusEnabled &&
+    !screenshotModeOpen &&
     showCloudStatusToOperator &&
     isLoaderVisible &&
     isStatusSuccess &&

@@ -4,7 +4,7 @@ import {
 } from '@/lib/public-icon-classes'
 import { cn } from '@/lib/utils'
 
-const SIZE_CLASSNAMES = {
+export const MARKETPLACE_APP_LOGO_SIZE_CLASSNAMES = {
   sm: 'h-8 w-8 rounded-lg p-1.5',
   md: 'h-10 w-10 rounded-lg p-2',
   lg: 'h-12 w-12 rounded-xl p-2.5',
@@ -12,9 +12,13 @@ const SIZE_CLASSNAMES = {
   xl: 'h-20 w-20 rounded-xl p-4',
 } as const
 
+export type MarketplaceAppLogoSize = keyof typeof MARKETPLACE_APP_LOGO_SIZE_CLASSNAMES
+
+const SIZE_CLASSNAMES = MARKETPLACE_APP_LOGO_SIZE_CLASSNAMES
+
 type MarketplaceAppLogoProps = {
   src: string
-  size?: keyof typeof SIZE_CLASSNAMES
+  size?: MarketplaceAppLogoSize
   className?: string
   alt?: string
   /** When the primary `src` fails to load (e.g. missing OAuth provider icon). */

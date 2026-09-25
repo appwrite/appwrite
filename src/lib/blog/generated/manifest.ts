@@ -3,6 +3,19 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "add-google-one-tap-to-your-web-app",
+    "href": "/blog/post/add-google-one-tap-to-your-web-app",
+    "title": "Add Google One Tap sign-in to your web app with Appwrite",
+    "description": "Show Google's One Tap prompt on your site and exchange its ID token for an Appwrite session. One web client ID covers the site and Android.",
+    "date": "2026-09-25",
+    "lastUpdated": "2026-09-25",
+    "timeToRead": 7,
+    "author": "atharva",
+    "category": "tutorials",
+    "cover": "/images/blog/add-google-one-tap-to-your-web-app/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "faster-list-caching-binary-format",
     "href": "/blog/post/faster-list-caching-binary-format",
     "title": "Cached list queries now use up to 69% less memory and serve up to 29% more requests",
@@ -14,6 +27,65 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "category": "announcements, performance",
     "featured": false,
     "cover": "/images/blog/faster-list-caching-binary-format/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "announcing-native-sign-in",
+    "href": "/blog/post/announcing-native-sign-in",
+    "title": "Announcing native sign-in: Create Appwrite sessions from Apple and Google ID tokens",
+    "description": "Your mobile app can now use the platform's own Sign in with Apple or Google account picker and exchange the ID token for an Appwrite session in one request, with no redirect through Appwrite.",
+    "date": "2026-09-24",
+    "lastUpdated": "2026-09-24",
+    "timeToRead": 6,
+    "author": "atharva",
+    "category": "announcements",
+    "featured": false,
+    "cover": "/images/blog/announcing-native-sign-in/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "announcing-resend-one-click-setup",
+    "href": "/blog/post/announcing-resend-one-click-setup",
+    "title": "Announcing one-click Resend setup in the Appwrite Console",
+    "description": "Connect Resend once and Appwrite creates a sending-only API key, fills in your project SMTP settings or Messaging provider, and enables it in one click.",
+    "date": "2026-09-24",
+    "lastUpdated": "2026-09-24",
+    "timeToRead": 5,
+    "author": "aditya-oberai",
+    "category": "announcements",
+    "featured": false,
+    "cover": "/images/blog/announcing-resend-one-click-setup/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "gpt-6-sol-and-luna-launch-at-50-lower-api-prices",
+    "href": "/blog/post/gpt-6-sol-and-luna-launch-at-50-lower-api-prices",
+    "title": "GPT-6 Sol and Luna launch at 50% lower API prices",
+    "description": "OpenAI launches GPT-6 Sol and Luna with stronger coding, factuality, and agent performance, plus 50% lower API prices than GPT-5.6.",
+    "date": "2026-09-24",
+    "lastUpdated": "2026-09-24",
+    "timeToRead": 5,
+    "author": "aishwari",
+    "category": "news",
+    "featured": false,
+    "unlisted": true,
+    "cover": "/images/blog/gpt-6-sol-and-luna-launch-at-50-lower-api-prices/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "native-databases-all-appwrite-cloud-regions",
+    "href": "/blog/post/native-databases-all-appwrite-cloud-regions",
+    "title": "PostgreSQL, MySQL, and dedicated databases are now available across all regions",
+    "description": "Native PostgreSQL, native MySQL, and dedicated TablesDB, DocumentsDB, and VectorsDB databases now run in all six Appwrite Cloud regions, with data kept in region.",
+    "date": "2026-09-24",
+    "lastUpdated": "2026-09-24",
+    "timeToRead": 6,
+    "author": "eldad-fux",
+    "category": "announcements",
+    "featured": true,
+    "unlisted": false,
+    "metaTitle": "Native and dedicated databases in every Appwrite Cloud region",
+    "cover": "/images/blog/native-databases-all-appwrite-cloud-regions/cover.avif",
     "hasCover": true
   },
   {
@@ -70,6 +142,21 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "category": "announcements",
     "featured": false,
     "cover": "/images/blog/appwrite-plugins-claude-code-codex/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "claude-opus-55-reaches-fable-level-performance",
+    "href": "/blog/post/claude-opus-55-reaches-fable-level-performance",
+    "title": "Claude Opus 5.5 reaches Fable-level performance",
+    "description": "Claude Opus 5.5 brings Fable 5.1-level performance, 40% lower typical workload costs, faster output, and stronger agentic coding.",
+    "date": "2026-09-23",
+    "lastUpdated": "2026-09-23",
+    "timeToRead": 5,
+    "author": "aishwari",
+    "category": "news",
+    "featured": false,
+    "unlisted": true,
+    "cover": "/images/blog/claude-opus-55-reaches-fable-level-performance/cover.avif",
     "hasCover": true
   },
   {

@@ -297,6 +297,10 @@ export const DOCS_LOCAL_SECTION_NAVS: DocsSectionNavConfig[] = [
             href: '/docs/products/auth/oauth2',
           },
           {
+            label: 'Native sign-in',
+            href: '/docs/products/auth/native-sign-in',
+          },
+          {
             label: 'Sign in with Appwrite',
             href: '/docs/products/auth/sign-in-with-appwrite',
           },

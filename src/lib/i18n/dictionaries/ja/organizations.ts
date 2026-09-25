@@ -897,6 +897,7 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'This invoice is missing authentication details.': 'この請求書には認証情報がありません。',
   'This name is listed as premium. Final transfer pricing is confirmed when you submit payment.': 'この名前はプレミアムとして登録されています。最終的な移管料金は支払いを送信した時点で確定します。',
   'This usually takes a few seconds. Please keep this window open.': '通常は数秒で完了します。このウィンドウを開いたままにしてください。',
+  'This usually takes a few seconds to a couple of minutes. Please keep this window open.': '通常は数秒から数分で完了します。このウィンドウを開いたままにしてください。',
   'This will generate a transfer authorization code for your domain. Keep it private until you use it at the receiving registrar.': 'ドメインの移管認可コードを生成します。移管先のレジストラで使用するまで、他人に知られないようにしてください。',
   'Tickets can be submitted anytime; we reply during support hours.': 'チケットはいつでも送信できます。返信はサポート時間内に行います。',
   'Time to live in seconds (default: 3600)': 'TTL (秒単位、デフォルト: 3600)',
