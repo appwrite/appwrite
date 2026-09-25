@@ -47,7 +47,8 @@ class Okta extends OAuth2
             'redirect_uri' => $this->callback,
             'state' => \json_encode($this->state),
             'scope' => \implode(' ', $this->getScopes()),
-            'response_type' => 'code'
+            'response_type' => 'code',
+            'prompt' => $this->getPrompt() ?: null,
         ]);
     }
 
@@ -227,5 +228,17 @@ class Okta extends OAuth2
             throw new \Exception('Invalid secret');
         }
         return $secret;
+    }
+
+    /**
+     * Extracts the prompt values from the JSON stored in appSecret
+     *
+     * @return string
+     */
+    protected function getPrompt(): string
+    {
+        $secret = $this->getAppSecret();
+
+        return \implode(' ', $secret['prompt'] ?? []);
     }
 }
