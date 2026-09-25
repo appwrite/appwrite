@@ -2525,7 +2525,6 @@ Http::post('/v1/account/tokens/magic-url')
         $proofForToken->setHash(new Sha());
 
         $tokenSecret = $proofForToken->generate();
-        // Whole hours read as hours, anything else as minutes rounded down
         $plurals = ['expire' => $expire % 3600 === 0 ? ['emails.expire.hours', \intdiv($expire, 3600)] : ['emails.expire.minutes', \intdiv($expire, 60)]];
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $expire));
 
@@ -2877,7 +2876,6 @@ Http::post('/v1/account/tokens/email')
         }
 
         $tokenSecret = $proofForCode->generate();
-        // Whole hours read as hours, anything else as minutes rounded down
         $plurals = ['expire' => $expire % 3600 === 0 ? ['emails.expire.hours', \intdiv($expire, 3600)] : ['emails.expire.minutes', \intdiv($expire, 60)]];
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $expire));
 
@@ -5683,7 +5681,6 @@ Http::post('/v1/account/verifications/email/otp')
         }
 
         $secret = $proofForCode->generate();
-        // Whole hours read as hours, anything else as minutes rounded down
         $plurals = ['expire' => $expire % 3600 === 0 ? ['emails.expire.hours', \intdiv($expire, 3600)] : ['emails.expire.minutes', \intdiv($expire, 60)]];
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $expire));
 

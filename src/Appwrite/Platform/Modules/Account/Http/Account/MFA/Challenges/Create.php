@@ -148,7 +148,6 @@ class Create extends Action
             throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'The requested factor is disabled by the MFA factors policy');
         }
 
-        // Whole hours read as hours, anything else as minutes rounded down
         $plurals = ['expire' => $expire % 3600 === 0 ? ['emails.expire.hours', \intdiv($expire, 3600)] : ['emails.expire.minutes', \intdiv($expire, 60)]];
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $expire));
 
