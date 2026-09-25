@@ -10,6 +10,7 @@ use Utopia\Cache\Adapter\Redis\Leasable;
 use Utopia\Cache\Adapter\Redis\NoScript;
 use Utopia\Cache\Codec;
 use Utopia\Cache\Codec\Json;
+use Utopia\Cache\DecodedEnvelopes;
 use Utopia\Cache\Feature\Batchable;
 use Utopia\Cache\Feature\Retryable;
 
@@ -45,6 +46,8 @@ class Redis extends Leasable implements Adapter, Batchable, Retryable
     private bool $persistent = false;
 
     private int $dbIndex = 0;
+
+    private ?DecodedEnvelopes $decoded = null;
 
     /**
      * @param  Codec  $codec how values are stored; Json is the wire format every release so far has written
@@ -113,7 +116,7 @@ class Redis extends Leasable implements Adapter, Batchable, Retryable
             return false;
         }
 
-        return $this->envelope->decode($redis_string, $ttl, time());
+        return ($this->decoded ??= new DecodedEnvelopes($this->envelope))->decode($key . ' ' . $hash, $redis_string, $ttl, time());
     }
 
     /**
