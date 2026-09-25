@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Functions\Workers;
 
 use Appwrite\Bus\Events\RuleUpdated;
+use Appwrite\Deployment\Deployments;
 use Appwrite\Deployment\Detection;
 use Appwrite\Deployment\GitAction;
 use Appwrite\Event\Event;
@@ -117,6 +118,8 @@ class Jobs extends Action
             ->inject('publisherForUsage')
             ->inject('usage')
             ->inject('deviceForBuilds')
+            ->inject('deviceForFunctions')
+            ->inject('deviceForSites')
             ->inject('vcsFactory')
             ->inject('cache')
             ->inject('locks')
@@ -139,6 +142,8 @@ class Jobs extends Action
         UsagePublisher $publisherForUsage,
         UsageContext $usage,
         Device $deviceForBuilds,
+        Device $deviceForFunctions,
+        Device $deviceForSites,
         VcsFactory $vcsFactory,
         Cache $cache,
         callable $locks,
@@ -155,7 +160,7 @@ class Jobs extends Action
 
         $failure = null;
 
-        $locks('jobs-deployment:' . $deploymentId, self::LOCK_TTL, function () use ($event, $project, $dbForProject, $dbForPlatform, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $publisherForScreenshots, $publisherForUsage, $usage, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $deploymentId, $bus, &$failure): void {
+        $locks('jobs-deployment:' . $deploymentId, self::LOCK_TTL, function () use ($event, $project, $dbForProject, $dbForPlatform, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $publisherForScreenshots, $publisherForUsage, $usage, $deviceForBuilds, $deviceForFunctions, $deviceForSites, $vcsFactory, $cache, $platform, $plan, $deploymentId, $bus, &$failure): void {
             if ($event->id !== '') {
                 $key = 'jobs-event-' . $event->id;
                 if ($cache->load($key, self::DEDUPE_TTL) !== false) {
@@ -179,7 +184,7 @@ class Jobs extends Action
                 CallbackEvent::Log => $this->onLog($dbForProject, $dbForPlatform, $project, $deployment, JobLog::fromArray($event->data), $vcsFactory, $platform),
                 CallbackEvent::Artifact => $this->onArtifact($dbForProject, $dbForPlatform, $project, $deployment, $artifact, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
                 CallbackEvent::Exit => $this->onExit($dbForProject, $dbForPlatform, $project, $deployment, JobExit::fromArray($event->data), $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
-                CallbackEvent::Complete => $this->onComplete($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
+                CallbackEvent::Complete => $this->onComplete($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $deviceForFunctions, $deviceForSites, $vcsFactory, $cache, $platform, $plan, $bus),
                 default => $this->onCallback($event->event, $dbForProject, $dbForPlatform, $project, $deployment, $event->data, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
             };
 
@@ -216,7 +221,7 @@ class Jobs extends Action
             // Artifacts after a failed build fail for want of output.
             if ($artifact?->status === 'failed'
                 && $statusBefore !== 'failed'
-                && !\in_array($artifact->artifactId, ['cache', 'manifest'], true)
+                && !\in_array($artifact->artifactId, ['cache', 'manifest', 'sourceUpload'], true)
                 && self::userMessage($deployment, $artifact) === null) {
                 Span::add('deployment.id', $deploymentId);
                 Span::add('artifact.id', $artifact->artifactId);
@@ -325,7 +330,8 @@ class Jobs extends Action
 
     /**
      * Record a reported artifact: 'sourceSize' (remote-source builds) becomes
-     * the deployment's sourceSize; 'manifest' (site builds) is the output file
+     * the deployment's sourceSize, and a delivered 'sourceUpload' its
+     * sourcePath; 'manifest' (site builds) is the output file
      * listing for adapter detection; and 'output' confirms remote delivery.
      * Manifest and output callbacks save markers that join readiness.
      */
@@ -381,11 +387,17 @@ class Jobs extends Action
 
         // Any other artifact failing dooms the build — the orchestrator aborts
         // the job on a pre-job failure, and a lost output has nothing to serve
-        // — so fail it now rather than waiting for the bare exit code. The build cache
-        // upload is the one best-effort artifact: losing it costs the next
-        // build time, not this one.
-        if ($failed && $artifact->artifactId !== 'cache') {
+        // — so fail it now rather than waiting for the bare exit code. The build
+        // cache and source uploads are best-effort: losing them costs the next
+        // build time, or the source download, not this build.
+        if ($failed && !\in_array($artifact->artifactId, ['cache', 'sourceUpload'], true)) {
             return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, $message, $publisherForScreenshots, $vcsFactory, $platform, $bus);
+        }
+
+        if ($artifact->artifactId === 'sourceUpload' && $artifact->status === 'success') {
+            return $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
+                'sourcePath' => Deployments::sourcePath($project->getId(), $deployment->getAttribute('resourceType', 'functions'), $deployment->getId()),
+            ]));
         }
 
         if ($artifact->artifactId !== 'sourceSize' || $artifact->status !== 'success') {
@@ -480,6 +492,8 @@ class Jobs extends Action
         UsagePublisher $publisherForUsage,
         ScreenshotPublisher $publisherForScreenshots,
         Device $deviceForBuilds,
+        Device $deviceForFunctions,
+        Device $deviceForSites,
         VcsFactory $vcsFactory,
         Cache $cache,
         array $platform,
@@ -487,6 +501,21 @@ class Jobs extends Action
         Bus $bus,
     ): Document {
         $cache->save('jobs-complete-' . $deployment->getId(), true);
+
+        // On the local device a remote-source build leaves its source on the
+        // builds volume (see Deployments::payload()); move it where manual
+        // uploads keep theirs.
+        $staged = Deployments::stagedSourcePath($project->getId(), $deployment->getId());
+        if ($deviceForBuilds->getType() === DeviceType::Local && $deviceForBuilds->exists($staged)) {
+            $resourceType = $deployment->getAttribute('resourceType', 'functions');
+            $sourcePath = Deployments::sourcePath($project->getId(), $resourceType, $deployment->getId());
+            if ($deviceForBuilds->copy($staged, $sourcePath, $resourceType === 'sites' ? $deviceForSites : $deviceForFunctions)) {
+                $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
+                    'sourcePath' => $sourcePath,
+                ]));
+            }
+            $deviceForBuilds->delete($staged);
+        }
 
         return $this->ready($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus);
     }
