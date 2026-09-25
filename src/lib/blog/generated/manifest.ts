@@ -33,7 +33,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "slug": "faster-list-caching-binary-format",
     "href": "/blog/post/faster-list-caching-binary-format",
     "title": "Cached list queries now use up to 69% less memory and serve up to 29% more requests",
-    "description": "Appwrite now stores its Redis cache in a binary format instead of JSON. Cached list responses take up to 69% less memory and serve up to 29% more requests per second, with no change to your code.",
+    "description": "Appwrite now serializes key-value cache entries in a binary format instead of JSON. Cached list responses consume up to 69% less memory, and cached list throughput increases by up to 29%.",
     "date": "2026-09-25",
     "lastUpdated": "2026-09-25",
     "timeToRead": 5,
