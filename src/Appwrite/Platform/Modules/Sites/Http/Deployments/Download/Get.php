@@ -123,7 +123,9 @@ class Get extends Action
             default => throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid deployment download type.'),
         };
 
-        if (!$device->exists($path)) {
+        // An empty path would address the storage root itself, which an S3
+        // device reports as existing and lists instead of reading a file.
+        if ($path === '' || !$device->exists($path)) {
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
