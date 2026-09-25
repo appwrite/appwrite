@@ -27,6 +27,22 @@ trait RejectedMethods
         $this->assertSame('general_query_invalid', $result['body']['type']);
     }
 
+    public function testGetRejectsAnUnparsableQuery(): void
+    {
+        $data = $this->setupDocuments();
+        $databaseId = $data['databaseId'];
+
+        $result = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $data['moviesId'], $data['documentIds'][0]), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => ['{"method":"missing"}'],
+        ]);
+
+        $this->assertSame(400, $result['headers']['status-code']);
+        $this->assertSame('general_query_invalid', $result['body']['type']);
+    }
+
     public function testGroupByTimeBucketRejected(): void
     {
         if (!$this->getSupportForJoins()) {
