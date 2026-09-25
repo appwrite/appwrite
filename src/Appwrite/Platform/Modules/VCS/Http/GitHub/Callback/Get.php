@@ -13,6 +13,7 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
@@ -46,6 +47,7 @@ class Get extends Action
             ->inject('request')
             ->inject('response')
             ->inject('dbForPlatform')
+            ->inject('authorization')
             ->inject('platform')
             ->callback($this->action(...));
     }
@@ -60,6 +62,7 @@ class Get extends Action
         Request $request,
         Response $response,
         Database $dbForPlatform,
+        Authorization $authorization,
         array $platform
     ) {
         $cookie = $request->getCookie(COOKIE_NAME_GITHUB_STATE, '');
@@ -91,7 +94,9 @@ class Get extends Action
         }
 
         if (empty($state)) {
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'This installation was completed on GitHub, so it could not be connected to a project. Open your project\'s settings in the Appwrite Console and connect GitHub from there.');
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $setupAction === 'request'
+                ? 'Your request was sent to the organization owners. An owner must complete the installation from the Appwrite Console; approving the request on GitHub is not enough.'
+                : 'This installation was completed on GitHub, so it could not be connected to a project. Open your project\'s settings in the Appwrite Console and connect GitHub from there.');
         }
 
         $state = \json_decode($state, true) ?? [];
@@ -155,19 +160,40 @@ class Get extends Action
 
             // The cookie is sent on any top-level navigation to this URL, so it
             // cannot vouch for the installation_id and code beside it. From the
-            // cookie, only relink an installation this user already connected
-            // to another project.
-            if ($fromCookie && $dbForPlatform->findOne('installations', [
-                Query::equal('providerInstallationId', [$providerInstallationId]),
-                Query::equal('provider', ['github']),
-            ])->isEmpty()) {
-                $error = 'This GitHub installation is not connected to any project you can access, so it could not be linked. Uninstall the Appwrite app from the account\'s GitHub settings, then connect GitHub again from the Appwrite Console.';
-                $separator = \str_contains($redirectFailure, '?') ? '&' : '?';
-                $response
-                    ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
-                    ->addHeader('Pragma', 'no-cache')
-                    ->redirect($redirectFailure . $separator . \http_build_query(['error' => $error]));
-                return;
+            // cookie, only relink an installation already linked to a project
+            // this user can read, or to one in this project's organization.
+            // Members scoped to one project cannot read its siblings, hence the
+            // skip.
+            if ($fromCookie) {
+                $projectIds = \array_map(
+                    fn (Document $installation) => $installation->getAttribute('projectId'),
+                    $authorization->skip(fn () => $dbForPlatform->find('installations', [
+                        Query::equal('providerInstallationId', [$providerInstallationId]),
+                        Query::equal('provider', ['github']),
+                        Query::select(['projectId']),
+                        Query::limit(APP_DATABASE_QUERY_MAX_VALUES),
+                    ]))
+                );
+
+                $linked = !empty($projectIds) && (
+                    !$dbForPlatform->findOne('projects', [
+                        Query::equal('$id', $projectIds),
+                    ])->isEmpty()
+                    || !$authorization->skip(fn () => $dbForPlatform->findOne('projects', [
+                        Query::equal('$id', $projectIds),
+                        Query::equal('teamInternalId', [$project->getAttribute('teamInternalId')]),
+                    ]))->isEmpty()
+                );
+
+                if (!$linked) {
+                    $error = 'This GitHub installation is not connected to any project you can access, so it could not be linked. Ask someone who already uses it in one of their projects to connect GitHub for this project.';
+                    $separator = \str_contains($redirectFailure, '?') ? '&' : '?';
+                    $response
+                        ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+                        ->addHeader('Pragma', 'no-cache')
+                        ->redirect($redirectFailure . $separator . \http_build_query(['error' => $error]));
+                    return;
+                }
             }
 
             $oauth2 = new OAuth2Github(System::getEnv('_APP_VCS_GITHUB_CLIENT_ID', ''), System::getEnv('_APP_VCS_GITHUB_CLIENT_SECRET', ''), "");
