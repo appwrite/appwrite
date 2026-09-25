@@ -101,6 +101,8 @@ final class MqttServerTest extends Scope
         $this->assertSame(0x87, $subscriber->connect($projectId, 'not.a.valid.jwt', 'e2e-reject', cleanStart: true));
         // The CONNACK carries a human-readable reason so clients learn why they were refused.
         $this->assertNotEmpty($subscriber->connackReason());
+        // A refusal must still echo the enhanced-auth method (MQTT 5.0 §3.2.2.3.10).
+        $this->assertSame('appwrite-jwt', $subscriber->connackAuthMethod());
         $subscriber->disconnect();
     }
 
