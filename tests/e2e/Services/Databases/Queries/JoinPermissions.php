@@ -1175,4 +1175,117 @@ trait JoinPermissions
         }
         $this->assertSame(\array_slice($expected, 0, -1), $backward, 'paging back from the last row returns every earlier row once, in order');
     }
+
+    public function testJoinOfADisabledCollectionIsNotFound(): void
+    {
+        if (!$this->getSupportForJoins()) {
+            $this->markTestSkipped('Adapter does not support join queries');
+        }
+
+        $data = $this->createCustomerWithOrder();
+        $queries = [
+            Query::join($data['ordersId'], '$id', 'customerId', '=', 'ord')->toString(),
+            Query::select(['name', 'ord.item'])->toString(),
+        ];
+
+        $enabled = $this->joinPermissionList($data['databaseId'], $data['customersId'], $queries);
+        $this->assertSame(200, $enabled['headers']['status-code'], 'the join succeeds while the joined collection is enabled');
+        $this->assertSame(['Lamp'], $this->joinPermissionValues($enabled['body'][$this->getRecordResource()], 'ord', 'item'));
+
+        $disabled = $this->client->call(Client::METHOD_PUT, $this->getContainerUrl($data['databaseId'], $data['ordersId']), [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'name' => 'jpDisabledOrders',
+            'enabled' => false,
+            $this->getSecurityParam() => true,
+        ]);
+        $this->assertSame(200, $disabled['headers']['status-code']);
+        $this->assertFalse($disabled['body']['enabled']);
+
+        $listed = $this->joinPermissionList($data['databaseId'], $data['customersId'], $queries);
+        $got = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($data['databaseId'], $data['customersId'], $data['customerId']), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => $queries,
+        ]);
+
+        if ($this->getSide() === 'client') {
+            $type = $this->getDatabaseType() === 'tablesdb' ? Exception::TABLE_NOT_FOUND : Exception::COLLECTION_NOT_FOUND;
+            foreach ([$listed, $got] as $result) {
+                $this->assertSame(404, $result['headers']['status-code']);
+                $this->assertSame($type, $result['body']['type'], 'a disabled collection cannot be listed directly, so it cannot be joined either');
+                $this->assertStringContainsString($data['ordersId'], $result['body']['message'], 'the refusal names the joined collection, not the listed one');
+            }
+        } else {
+            $this->assertSame(200, $listed['headers']['status-code'], 'API keys and privileged users still read a disabled collection');
+            $this->assertSame(['Lamp'], $this->joinPermissionValues($listed['body'][$this->getRecordResource()], 'ord', 'item'));
+            $this->assertSame(200, $got['headers']['status-code']);
+            $this->assertSame('Lamp', $got['body']['ord.item'] ?? $got['body']['item'] ?? null);
+        }
+    }
+
+    /**
+     * @return array{databaseId: string, customersId: string, ordersId: string, customerId: string}
+     */
+    private function createCustomerWithOrder(): array
+    {
+        $serverHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $database = $this->client->call(Client::METHOD_POST, $this->getDatabaseUrl(), $serverHeaders, [
+            'databaseId' => ID::unique(),
+            'name' => 'jpDisabledJoin',
+        ]);
+        $this->assertSame(201, $database['headers']['status-code']);
+        $databaseId = $database['body']['$id'];
+
+        $containerIds = [];
+        foreach (['customers' => 'jpDisabledCustomers', 'orders' => 'jpDisabledOrders'] as $key => $name) {
+            $container = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $serverHeaders, [
+                $this->getContainerIdParam() => ID::unique(),
+                'name' => $name,
+                $this->getSecurityParam() => true,
+                'permissions' => [
+                    Permission::read(Role::any()),
+                    Permission::create(Role::any()),
+                ],
+            ]);
+            $this->assertSame(201, $container['headers']['status-code']);
+            $containerIds[$key] = $container['body']['$id'];
+        }
+
+        $this->createAttribute($databaseId, $containerIds['customers'], 'string', ['key' => 'name', 'size' => 64, 'required' => true]);
+        $this->createAttribute($databaseId, $containerIds['orders'], 'string', ['key' => 'customerId', 'size' => 36, 'required' => true]);
+        $this->createAttribute($databaseId, $containerIds['orders'], 'string', ['key' => 'item', 'size' => 64, 'required' => true]);
+        $this->waitForAttribute($databaseId, $containerIds['customers'], 'name');
+        $this->waitForAttribute($databaseId, $containerIds['orders'], 'customerId');
+        $this->waitForAttribute($databaseId, $containerIds['orders'], 'item');
+
+        $customer = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $containerIds['customers']), $serverHeaders, [
+            $this->getRecordIdParam() => ID::unique(),
+            'data' => ['name' => 'Alice'],
+            'permissions' => [Permission::read(Role::any())],
+        ]);
+        $this->assertSame(201, $customer['headers']['status-code']);
+
+        $order = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $containerIds['orders']), $serverHeaders, [
+            $this->getRecordIdParam() => ID::unique(),
+            'data' => ['customerId' => $customer['body']['$id'], 'item' => 'Lamp'],
+            'permissions' => [Permission::read(Role::any())],
+        ]);
+        $this->assertSame(201, $order['headers']['status-code']);
+
+        return [
+            'databaseId' => $databaseId,
+            'customersId' => $containerIds['customers'],
+            'ordersId' => $containerIds['orders'],
+            'customerId' => $customer['body']['$id'],
+        ];
+    }
 }
