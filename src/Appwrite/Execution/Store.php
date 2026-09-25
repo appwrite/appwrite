@@ -3,6 +3,8 @@
 namespace Appwrite\Execution;
 
 use Psr\Http\Client\ClientInterface;
+use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ResponseInterface;
 use Throwable;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -31,6 +33,16 @@ class Store
     private const int VERSION_SHIFT = 60;
 
     private const int VERSION_DELETE_RANK = 7;
+
+    private const int SEND_ATTEMPTS = 3;
+
+    private const int SEND_RETRY_DELAY_MICROSECONDS = 100_000;
+
+    /**
+     * Availability codes only. ClickHouse answers its own query errors with
+     * 500, and replaying a rejected statement just fails again.
+     */
+    private const array SEND_RETRY_STATUS_CODES = [429, 502, 503, 504];
 
     private const array VERSION_STATUS_RANKS = [
         'scheduled' => 1,
@@ -437,14 +449,50 @@ class Store
         $body = $statement->body;
         $request = $this->requestFactory->body(Method::POST, $url, $body, 'application/x-ndjson', $this->headers());
 
-        try {
-            $response = $this->client()->sendRequest($request);
-        } catch (Throwable $th) {
-            throw new \RuntimeException('ClickHouse execution insert failed: ' . $th->getMessage(), previous: $th);
-        }
+        $this->send($request, 'insert');
+    }
 
-        if ($response->getStatusCode() !== 200) {
-            throw new \RuntimeException('ClickHouse execution insert failed with HTTP ' . $response->getStatusCode() . ': ' . (string) $response->getBody());
+    /**
+     * A ClickHouse cluster behind a load balancer answers 503 while it has no
+     * healthy backend, and refuses connections outright while a node restarts.
+     * Both clear within milliseconds during a failover or a rolling restart,
+     * so a bounded retry keeps the blip from failing the job. Replaying is
+     * safe: every row carries its own version, and ReplacingMergeTree collapses
+     * a duplicate snapshot.
+     */
+    private function send(RequestInterface $request, string $action): ResponseInterface
+    {
+        $client = $this->client();
+        $attempt = 0;
+
+        while (true) {
+            $attempt++;
+            $body = $request->getBody();
+            if ($body->isSeekable()) {
+                $body->rewind();
+            }
+
+            try {
+                $response = $client->sendRequest($request);
+            } catch (Throwable $th) {
+                if ($attempt >= self::SEND_ATTEMPTS) {
+                    throw new \RuntimeException("ClickHouse execution {$action} failed: " . $th->getMessage(), previous: $th);
+                }
+
+                \usleep(self::SEND_RETRY_DELAY_MICROSECONDS * $attempt);
+                continue;
+            }
+
+            $status = $response->getStatusCode();
+            if ($status === 200) {
+                return $response;
+            }
+
+            if ($attempt >= self::SEND_ATTEMPTS || !\in_array($status, self::SEND_RETRY_STATUS_CODES, true)) {
+                throw new \RuntimeException("ClickHouse execution {$action} failed with HTTP {$status}: " . (string) $response->getBody());
+            }
+
+            \usleep(self::SEND_RETRY_DELAY_MICROSECONDS * $attempt);
         }
     }
 
@@ -905,18 +953,7 @@ class Store
         }
         $request = $this->requestFactory->multipart(Method::POST, $this->url(), $parts, $this->headers());
 
-        try {
-            $response = $this->client()->sendRequest($request);
-        } catch (Throwable $th) {
-            throw new \RuntimeException('ClickHouse execution query failed: ' . $th->getMessage(), previous: $th);
-        }
-
-        $body = (string) $response->getBody();
-        if ($response->getStatusCode() !== 200) {
-            throw new \RuntimeException('ClickHouse execution query failed with HTTP ' . $response->getStatusCode() . ': ' . $body);
-        }
-
-        return $body;
+        return (string) $this->send($request, 'query')->getBody();
     }
 
     /** @return list<array<string, mixed>> */

@@ -373,6 +373,110 @@ final class StoreTest extends TestCase
         $this->assertSame('2026-09-14T21:27:33.884+00:00', $execution->getAttribute('scheduledAt'));
     }
 
+    public function testRetriesInsertWhileClickHouseHasNoAvailableServer(): void
+    {
+        $client = new RecordingClient([
+            new Response(503, body: new Stream('no available server')),
+            new Response(200),
+        ]);
+
+        $this->store($client)->create('project', new Document([
+            '$id' => 'execution',
+            '$createdAt' => '2026-08-25T10:00:00.000+00:00',
+            'resourceType' => 'functions',
+            'status' => 'completed',
+        ]));
+
+        $this->assertCount(2, $client->bodies);
+        $this->assertStringContainsString('"id":"execution"', $client->bodies[0]);
+        $this->assertSame($client->bodies[0], $client->bodies[1]);
+    }
+
+    public function testRetriesInsertWhenTheConnectionFails(): void
+    {
+        $client = new RecordingClient([
+            new \RuntimeException('Connection refused'),
+            new Response(200),
+        ]);
+
+        $this->store($client)->create('project', new Document([
+            '$id' => 'execution',
+            '$createdAt' => '2026-08-25T10:00:00.000+00:00',
+            'resourceType' => 'functions',
+            'status' => 'completed',
+        ]));
+
+        $this->assertCount(2, $client->bodies);
+    }
+
+    public function testStopsRetryingInsertWhenClickHouseStaysUnavailable(): void
+    {
+        $client = new RecordingClient([
+            new Response(503, body: new Stream('no available server')),
+            new Response(503, body: new Stream('no available server')),
+            new Response(503, body: new Stream('no available server')),
+        ]);
+        $store = $this->store($client);
+
+        try {
+            $store->create('project', new Document([
+                '$id' => 'execution',
+                '$createdAt' => '2026-08-25T10:00:00.000+00:00',
+                'resourceType' => 'functions',
+                'status' => 'completed',
+            ]));
+            $this->fail('Expected the insert to fail');
+        } catch (\RuntimeException $exception) {
+            $this->assertSame(
+                'ClickHouse execution insert failed with HTTP 503: no available server',
+                $exception->getMessage()
+            );
+        }
+
+        $this->assertCount(3, $client->bodies);
+    }
+
+    public function testDoesNotRetryInsertRejectedByClickHouse(): void
+    {
+        $client = new RecordingClient([
+            new Response(500, body: new Stream('Code: 60. DB::Exception: Table appwrite.executions does not exist')),
+        ]);
+        $store = $this->store($client);
+
+        try {
+            $store->create('project', new Document([
+                '$id' => 'execution',
+                '$createdAt' => '2026-08-25T10:00:00.000+00:00',
+                'resourceType' => 'functions',
+                'status' => 'completed',
+            ]));
+            $this->fail('Expected the insert to fail');
+        } catch (\RuntimeException $exception) {
+            $this->assertStringContainsString('ClickHouse execution insert failed with HTTP 500', $exception->getMessage());
+        }
+
+        $this->assertCount(1, $client->bodies);
+    }
+
+    public function testRetriesQueryWhileClickHouseHasNoAvailableServer(): void
+    {
+        $client = new RecordingClient([
+            new Response(503, body: new Stream('no available server')),
+            $this->jsonResponse([['document' => \json_encode([
+                '$id' => 'execution',
+                '$createdAt' => '2026-08-25T10:00:00.000+00:00',
+                'resourceType' => 'functions',
+                'status' => 'completed',
+            ], JSON_THROW_ON_ERROR)]]),
+        ]);
+
+        $execution = $this->store($client)->get('project', 'execution');
+
+        $this->assertSame('execution', $execution->getId());
+        $this->assertCount(2, $client->bodies);
+        $this->assertSame($client->bodies[0], $client->bodies[1]);
+    }
+
     public function testWriteFailuresPropagate(): void
     {
         $store = $this->store(new FailingClient());
@@ -449,5 +553,32 @@ final class FailingClient implements ClientInterface
     public function sendRequest(RequestInterface $request): ResponseInterface
     {
         throw new \RuntimeException('ClickHouse unavailable');
+    }
+}
+
+/**
+ * Reads each request body at send time, the way a real HTTP client does, so a
+ * retry that forgets to rewind the stream shows up as an empty second body.
+ */
+final class RecordingClient implements ClientInterface
+{
+    /** @var list<string> */
+    public array $bodies = [];
+
+    /** @param list<ResponseInterface|\Throwable> $responses */
+    public function __construct(private array $responses = [])
+    {
+    }
+
+    public function sendRequest(RequestInterface $request): ResponseInterface
+    {
+        $this->bodies[] = $request->getBody()->getContents();
+        $response = \array_shift($this->responses) ?? new Response(200);
+
+        if ($response instanceof \Throwable) {
+            throw $response;
+        }
+
+        return $response;
     }
 }
