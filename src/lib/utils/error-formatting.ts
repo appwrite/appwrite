@@ -123,6 +123,13 @@ export function getVcsInstallationErrorKind(
   return message.includes('reconnect') ? 'reconnect' : 'provider'
 }
 
+/** True when an Appwrite API error used an exact HTTP status (ignores message heuristics). */
+export function isAppwriteHttpStatus(error: unknown, status: number): boolean {
+  if (!error || typeof error !== 'object') return false
+  const e = error as { code?: number; status?: number }
+  return e.code === status || e.status === status
+}
+
 /** True when the API responded with HTTP 404 (resource missing or inaccessible). */
 export function isHttpNotFoundError(error: unknown): boolean {
   if (!error || typeof error !== 'object') return false
@@ -169,12 +176,125 @@ export function isHttpRequestTimeoutError(error: unknown): boolean {
   )
 }
 
+export type AppwriteErrorInfo = {
+  message: string | null
+  type: string | null
+  code: number | null
+}
+
+function readString(value: unknown): string | null {
+  if (typeof value !== 'string') return null
+  const trimmed = value.trim()
+  return trimmed.length > 0 ? trimmed : null
+}
+
+function readNumber(value: unknown): number | null {
+  return typeof value === 'number' && Number.isFinite(value) ? value : null
+}
+
+/**
+ * Message, type, and code from an AppwriteException or a similar API error object.
+ * Falls back to JSON in `response` when the SDK leaves `message` empty.
+ */
+export function getAppwriteErrorInfo(error: unknown): AppwriteErrorInfo {
+  if (!error || typeof error !== 'object') {
+    return { message: null, type: null, code: null }
+  }
+  const e = error as {
+    message?: unknown
+    type?: unknown
+    code?: unknown
+    status?: unknown
+    response?: unknown
+  }
+  let message = readString(e.message)
+  let type = readString(e.type)
+  let code = readNumber(e.code) ?? readNumber(e.status)
+
+  const response = e.response
+  let parsed: { message?: unknown; type?: unknown; code?: unknown } | null =
+    null
+  if (typeof response === 'string') {
+    try {
+      parsed = JSON.parse(response) as {
+        message?: unknown
+        type?: unknown
+        code?: unknown
+      }
+    } catch {
+      parsed = null
+    }
+  } else if (response && typeof response === 'object') {
+    parsed = response as { message?: unknown; type?: unknown; code?: unknown }
+  }
+  if (parsed) {
+    message = message ?? readString(parsed.message)
+    type = type ?? readString(parsed.type)
+    code = code ?? readNumber(parsed.code)
+  }
+
+  return { message, type, code }
+}
+
+/** Static, translatable titles for Appwrite `<resource>_not_found` types. */
+const RESOURCE_NOT_FOUND_TITLES: Record<string, string> = {
+  user_not_found: 'User not found',
+  team_not_found: 'Team not found',
+  membership_not_found: 'Membership not found',
+  user_target_not_found: 'Target not found',
+  function_not_found: 'Function not found',
+  deployment_not_found: 'Deployment not found',
+  execution_not_found: 'Execution not found',
+  site_not_found: 'Site not found',
+  storage_bucket_not_found: 'Bucket not found',
+  storage_file_not_found: 'File not found',
+  database_not_found: 'Database not found',
+  collection_not_found: 'Collection not found',
+  document_not_found: 'Document not found',
+  table_not_found: 'Table not found',
+  row_not_found: 'Row not found',
+  message_not_found: 'Message not found',
+  provider_not_found: 'Provider not found',
+  topic_not_found: 'Topic not found',
+  subscriber_not_found: 'Subscriber not found',
+}
+
+/**
+ * A 404 for a resource inside a project (user, team, function, ...), identified
+ * by its Appwrite `<resource>_not_found` type. Returns null for the project
+ * itself and for generic types, so project routes only blame the project when
+ * the project is what is missing. Titles are English keys, translated at render.
+ */
+export function formatResourceNotFoundError(
+  error: unknown,
+): FormattedError | null {
+  const { type, message } = getAppwriteErrorInfo(error)
+  if (
+    !type?.endsWith('_not_found') ||
+    type === 'project_not_found' ||
+    type.startsWith('general_')
+  ) {
+    return null
+  }
+  return {
+    title: RESOURCE_NOT_FOUND_TITLES[type] ?? 'Not Found',
+    // The SDK sends the active locale, so the API message is already localized.
+    message:
+      message ??
+      'The requested resource could not be found. It may have been deleted or you may not have permission to access it.',
+    isUserFriendly: true,
+  }
+}
+
 /** True when the API responded with HTTP 402 (payment / budget limit required). */
 export function isHttpPaymentRequiredError(error: unknown): boolean {
   if (!error || typeof error !== 'object') return false
-  const e = error as { code?: number; status?: number; message?: string }
-  if (e.code === 402 || e.status === 402) return true
-  const message = typeof e.message === 'string' ? e.message.toLowerCase() : ''
+  const info = getAppwriteErrorInfo(error)
+  if (info.code === 402) return true
+  if (info.type === 'outstanding_invoice' || info.type === 'budget_limit') {
+    return true
+  }
+  const message = info.message?.toLowerCase() ?? ''
   return (
     message.includes('payment required') ||
     message.includes('budget limit') ||

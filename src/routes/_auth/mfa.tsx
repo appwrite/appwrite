@@ -1,10 +1,12 @@
 import { createFileRoute, redirect, isRedirect } from '@tanstack/react-router'
 import { z } from 'zod'
+import { AuthFlowShell } from '@/components/global/auth/AuthFlowShell'
 import { MFAChallenge } from '@/components/global/auth/MFAChallenge'
 import { sdk } from '@/lib/appwrite/sdk'
 import { AppwriteException } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import {
+  isValidRelativeRedirect,
   prefetchPostAuthDestination,
   requiresConsoleEmailVerification,
   resolvePostAuthRedirect,
@@ -17,14 +19,6 @@ import {
 } from '@/lib/react-query/hooks/auth'
 import { pageTitle } from '@/lib/utils/page-title'
 
-function isValidRelativeRedirect(url: string): boolean {
-  try {
-    return url.startsWith('/') && !url.includes('://')
-  } catch {
-    return false
-  }
-}
-
 const searchSchema = z.object({
   redirect: z
     .string()
@@ -34,7 +28,9 @@ const searchSchema = z.object({
     }),
 })
 
-export type MfaFactorsWithRecovery = Models.MfaFactors & { recoveryCode: boolean }
+export type MfaFactorsWithRecovery = Models.MfaFactors & {
+  recoveryCode: boolean
+}
 
 export const Route = createFileRoute('/_auth/mfa')({
   validateSearch: searchSchema,
@@ -117,7 +113,7 @@ export const Route = createFileRoute('/_auth/mfa')({
 })
 
 function MFAPage() {
-  const search = Route.useSearch({ from: '/_auth/mfa' })
+  const search = Route.useSearch()
   const loaderData = Route.useLoaderData()
 
   if (!loaderData?.factors) {
@@ -125,12 +121,8 @@ function MFAPage() {
   }
 
   return (
-    <div className="bg-background relative h-full overflow-y-auto">
-      <div className="flex min-h-full flex-col items-center p-6 md:p-10">
-        <div className="my-auto w-full max-w-sm md:max-w-4xl">
-          <MFAChallenge factors={loaderData.factors} redirect={search.redirect} />
-        </div>
-      </div>
-    </div>
+    <AuthFlowShell width="illustration">
+      <MFAChallenge factors={loaderData.factors} redirect={search.redirect} />
+    </AuthFlowShell>
   )
 }

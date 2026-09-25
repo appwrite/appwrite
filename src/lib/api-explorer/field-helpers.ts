@@ -8,6 +8,7 @@ import {
   executionsFilterColumns,
   filesFilterColumns,
   functionsFilterColumns,
+  siteLogsFilterColumns,
   sitesFilterColumns,
   teamsFilterColumns,
   usersFilterColumns,
@@ -223,6 +224,9 @@ export function getQueryFilterColumnsForMethod(
   if (path.includes('/functions')) return functionsFilterColumns
   if (path.includes('/sites') && path.includes('/deployments')) {
     return deploymentsFilterColumns
+  }
+  if (path.includes('/sites') && path.includes('/logs')) {
+    return siteLogsFilterColumns
   }
   if (path.includes('/sites')) return sitesFilterColumns
   if (path.includes('/activities')) return activitiesFilterColumns

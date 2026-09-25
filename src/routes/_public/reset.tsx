@@ -7,9 +7,8 @@ import {
   useSearch,
 } from '@tanstack/react-router'
 import { z } from 'zod'
+import { AuthFlowShell } from '@/components/global/auth/AuthFlowShell'
 import { Reset } from '@/components/global/auth/Reset'
-import { AppwriteLogo } from '@/components/global/auth/AppwriteLogo'
-import { MarketingSiteLink } from '@/components/global/shared/MarketingSiteLink'
 import { toast } from 'sonner'
 import { sdk } from '@/lib/appwrite/sdk'
 import { AppwriteException } from '@appwrite.io/console'
@@ -129,75 +128,45 @@ function ResetPage() {
   // If missing required params, show error state
   if (!search.userId || !search.secret) {
     return (
-      <div className="bg-background relative h-full overflow-y-auto">
-        <div className="flex min-h-full flex-col items-center p-6 md:p-10">
-          <div className="my-auto w-full max-w-sm md:max-w-4xl">
-            <div className="rounded-lg border bg-card p-6 text-center">
-              <h1 className="text-2xl font-semibold tracking-tight mb-2">
-                {t('Invalid reset link')}
-              </h1>
-              <p className="text-sm text-muted-foreground mb-4">
-                {t(
-                  'This password reset link is invalid or has expired. Please request a new one.',
-                )}
-              </p>
-              <div className="flex gap-2 justify-center">
-                <Link
-                  to="/recovery"
-                  className="link-neutral text-sm"
-                >
-                  {t('Request new reset link')}
-                </Link>
-              </div>
-            </div>
-            <div className="mt-6 flex justify-center">
-              <AppwriteLogo className="h-6 w-auto" />
-            </div>
-          </div>
+      <AuthFlowShell width="narrow" showLegal={false}>
+        <div className="rounded-lg border bg-card p-6 text-center">
+          <h1 className="mb-2 text-2xl font-semibold tracking-tight">
+            {t('Invalid reset link')}
+          </h1>
+          <p className="mb-4 text-sm text-muted-foreground">
+            {t(
+              'This password reset link is invalid or has expired. Please request a new one.',
+            )}
+          </p>
+          <Link to="/recovery" className="link-neutral text-sm">
+            {t('Request new reset link')}
+          </Link>
         </div>
-      </div>
+      </AuthFlowShell>
     )
   }
 
   return (
-    <div className="bg-background relative h-full overflow-y-auto">
-      <div className="flex min-h-full flex-col items-center p-6 md:p-10">
-        <div className="my-auto w-full max-w-sm md:max-w-4xl">
-          <Reset
-            onSubmit={(data) => resetMutation.mutate(data)}
-            isLoading={resetMutation.isPending || isOpeningMfa}
-            isSuccess={isSuccess}
-          />
-          {isSuccess ? (
-            <p className="mt-4 text-center">
-              <button
-                type="button"
-                className="link-neutral text-sm"
-                onClick={() => {
-                  purgeConsoleAccountCaches(queryClient)
-                  navigate({ to: '/sign-in', replace: true })
-                }}
-              >
-                {t('Continue to sign in')}
-              </button>
-            </p>
-          ) : null}
-          <p className="mt-6 text-center text-xs text-muted-foreground">
-            {t('By clicking continue, you agree to our')}{' '}
-            <MarketingSiteLink className="link-neutral" href="/terms">
-              {t('Terms of Service')}
-            </MarketingSiteLink>{' '}
-            {t('and')}{' '}
-            <MarketingSiteLink className="link-neutral" href="/privacy">
-              {t('Privacy Policy')}
-            </MarketingSiteLink>
-            .
-          </p>
-          <div className="mt-6 flex justify-center">
-            <AppwriteLogo className="h-6 w-auto" />
-          </div>
-        </div>
-      </div>
-    </div>
+    <AuthFlowShell width="illustration">
+      <Reset
+        onSubmit={(data) => resetMutation.mutate(data)}
+        isLoading={resetMutation.isPending || isOpeningMfa}
+        isSuccess={isSuccess}
+      />
+      {isSuccess ? (
+        <p className="mt-4 text-center">
+          <button
+            type="button"
+            className="link-neutral text-sm"
+            onClick={() => {
+              purgeConsoleAccountCaches(queryClient)
+              navigate({ to: '/sign-in', replace: true })
+            }}
+          >
+            {t('Continue to sign in')}
+          </button>
+        </p>
+      ) : null}
+    </AuthFlowShell>
   )
 }

@@ -6,7 +6,7 @@ date: 2026-06-26
 cover: /images/blog/announcing-appwrite-react-library/cover.avif
 timeToRead: 5
 author: atharva
-category: announcement, authentication
+category: announcements, authentication
 faqs:
     - question: 'What is an authentication library?'
       answer: 'An authentication library is a package that handles the common pieces of user sign-up, sign-in, sign-out, session management, and OAuth on your behalf, so you do not have to wire each one up from scratch in every project.'

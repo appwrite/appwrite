@@ -1,3 +1,5 @@
+import { resolveCategorySlug } from '@/lib/blog/category-slugs'
+
 /**
  * Legacy URL redirects ported from the old website (appwrite/website
  * src/redirects.json) so inbound links and search engine results keep working.
@@ -7,7 +9,7 @@
  *   straight at the final target instead of another redirecting path).
  * - Targets that do not exist in this app are remapped to the closest
  *   equivalent (`/contact-us` -> `/enterprise`, `/customer-stories` ->
- *   `/blog/category/customer-stories`, legacy generic databases docs ->
+ *   `/blog/categories/customer-stories`, legacy generic databases docs ->
  *   their TablesDB equivalents, `/products/sites/offer-300` ->
  *   `/products/sites`).
  * - Query-string source variants (e.g. `?sdk=web-default`) are dropped;
@@ -166,8 +168,8 @@ const LEGACY_REDIRECTS: Record<string, string> = {
   '/keyboard': '/docs/tooling/appwriter',
   '/policy/terms': '/terms',
   '/policy/privacy': '/privacy',
-  '/case-studies': '/blog/category/customer-stories',
-  '/blog/category/case-studies': '/blog/category/customer-stories',
+  '/case-studies': '/blog/categories/customer-stories',
+  '/blog/category/case-studies': '/blog/categories/customer-stories',
   '/blog/post/case-study-smartbee': '/blog/post/customer-stories-smartbee',
   '/blog/post/case-study-kcollect': '/blog/post/customer-stories-kcollect',
   '/blog/post/case-study-majik-kids': '/blog/post/customer-stories-majik-kids',
@@ -257,7 +259,8 @@ const LEGACY_REDIRECTS: Record<string, string> = {
   '/docs/advanced/platform/rate-limits': '/docs/advanced/security/rate-limits',
   '/docs/advanced/platform/api-keys': '/docs/partners/project/api-keys',
   '/docs/advanced/security/api-keys': '/docs/partners/project/api-keys',
-  '/docs/advanced/platform/dev-keys': '/docs/advanced/security/dev-keys',
+  '/docs/advanced/platform/dev-keys': '/docs/advanced/security/rate-limits',
+  '/docs/advanced/security/dev-keys': '/docs/advanced/security/rate-limits',
   '/docs/advanced/platform/roles': '/docs/advanced/security/roles',
   '/docs/advanced/platform/message-templates': '/docs/products/auth/message-templates',
   '/docs/advanced/platform/custom-domains': '/docs/products/network/custom-domains',
@@ -274,5 +277,21 @@ const LEGACY_REDIRECTS: Record<string, string> = {
  */
 export function getLegacyRedirectTarget(pathname: string): string | null {
   const normalized = pathname.replace(/\/+$/, '') || '/'
-  return LEGACY_REDIRECTS[normalized] ?? null
+  const exact = LEGACY_REDIRECTS[normalized]
+  if (exact) return exact
+
+  const legacyCategoryMatch = normalized.match(/^\/blog\/category\/(.+)$/)
+  if (legacyCategoryMatch) {
+    return `/blog/categories/${resolveCategorySlug(legacyCategoryMatch[1])}`
+  }
+
+  const singularCategorySlugMatch = normalized.match(/^\/blog\/categories\/(.+)$/)
+  if (singularCategorySlugMatch) {
+    const resolved = resolveCategorySlug(singularCategorySlugMatch[1])
+    if (resolved !== singularCategorySlugMatch[1]) {
+      return `/blog/categories/${resolved}`
+    }
+  }
+
+  return null
 }

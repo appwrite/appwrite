@@ -14,7 +14,8 @@ import {
   type DocsPreviewView,
 } from '@/lib/docs/docs-preview-menu'
 import { isDocsNavGroup } from '@/lib/docs/navigation'
-import { DOCS_SECTION_NAVS } from '@/lib/docs/navigation/sections'
+import { getAllDocsSectionNavs } from '@/lib/docs/navigation/section-navs'
+import type { DocsSectionNavConfig } from '@/lib/docs/navigation/sections'
 import { QUICK_STARTS_HUB_CATEGORIES } from '@/lib/docs/quick-starts-hub'
 import { getTutorialsHubCategories } from '@/lib/docs/tutorials-hub'
 import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
@@ -161,7 +162,7 @@ function SectionPreviewMenu({
   slug: string
   scrollContainerRef?: RefObject<HTMLElement | null>
 }) {
-  const config = DOCS_SECTION_NAVS.find((entry) => entry.prefix === slug)
+  const config = getAllDocsSectionNavs().find((entry) => entry.prefix === slug)
   if (!config) return null
 
   const meta = getDocsPreviewMenuMeta(slug)
@@ -209,7 +210,7 @@ function SectionPreviewNav({
   config,
   slug,
 }: {
-  config: (typeof DOCS_SECTION_NAVS)[number]
+  config: DocsSectionNavConfig
   slug: string
 }) {
   return (

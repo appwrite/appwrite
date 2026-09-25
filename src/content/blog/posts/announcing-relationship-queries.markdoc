@@ -6,7 +6,7 @@ date: 2026-02-06
 cover: /images/blog/announcing-relationship-queries/cover.avif
 timeToRead: 5
 author: jake-barnby
-category: announcement
+category: announcements
 featured: false
 faqs:
   - question: "How do I query across relationships in Appwrite Databases?"

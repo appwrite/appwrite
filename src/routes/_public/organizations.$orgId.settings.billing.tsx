@@ -76,22 +76,19 @@ export const Route = createFileRoute(
       ),
       queryClient.ensureQueryData(paymentMethodsQueryOptions()),
       queryClient.ensureQueryData(billingAddressesQueryOptions()),
+      ...(orgData?.billingAggregationId
+        ? [
+            queryClient.ensureQueryData(
+              organizationBillingAggregationQueryOptions(
+                orgId,
+                orgData.billingAggregationId,
+                DEFAULT_BILLING_PROJECTS_LIMIT,
+                0,
+              ),
+            ),
+          ]
+        : []),
     ])
-
-    // Usage/aggregation is non-critical: PlanSummary shows its own skeleton while
-    // this loads, so a slow usage API must not block the rest of billing.
-    if (orgData?.billingAggregationId) {
-      void queryClient
-        .prefetchQuery(
-          organizationBillingAggregationQueryOptions(
-            orgId,
-            orgData.billingAggregationId,
-            DEFAULT_BILLING_PROJECTS_LIMIT,
-            0,
-          ),
-        )
-        .catch(() => undefined)
-    }
 
     const optionalPrefetches = []
     if (orgData?.paymentMethodId) {

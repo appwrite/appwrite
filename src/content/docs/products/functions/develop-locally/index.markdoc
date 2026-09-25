@@ -70,12 +70,12 @@ This command helps you efficiently develop your Appwrite functions on your local
 Learn more about developing a function
 {% /arrow_link %}
 
-# Dynamic API keys {% #dynamic-api-keys %}
+# Ephemeral API keys {% #ephemeral-api-keys %}
 
-You can use headers like dynamic API keys in your function, which give you access to your project services and allow you to operate without sessions. To configure your dynamic API key scopes, modify the scopes in the `appwrite.config.json` file.
+You can use headers like ephemeral API keys in your function, which give you access to your project services and allow you to operate without sessions. To configure your ephemeral API key scopes, modify the scopes in the `appwrite.config.json` file.
   
-{% arrow_link href="/docs/products/functions/develop#dynamic-api-key" %}
-Learn more about dynamic API keys
+{% arrow_link href="/docs/products/functions/develop#ephemeral-api-key" %}
+Learn more about ephemeral API keys
 {% /arrow_link %}
 
 # Hot reload {% #hot-reload %}

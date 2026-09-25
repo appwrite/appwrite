@@ -16,8 +16,15 @@ import {
   InputOTPSlot,
 } from '@/components/ui/input-otp'
 import { Label } from '@/components/ui/label'
-import { Card } from '@/components/ui/card'
-import { ArrowLeft, Smartphone, Mail } from 'lucide-react'
+import {
+  AuthFlowDescription,
+  AuthFlowIllustrationCard,
+  AuthFlowNarrowCard,
+  AuthFlowTitle,
+} from '@/components/global/auth/AuthFlowCard'
+import { AuthFlowHeaderIcon } from '@/components/global/auth/AuthFlowHeaderIcon'
+import { AuthFlowIllustrationColumn } from '@/components/global/auth/AuthFlowShell'
+import { ArrowLeft, Mail, ShieldCheck, Smartphone } from 'lucide-react'
 import { useQueryClient } from '@tanstack/react-query'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { resolvePostAuthOrganizationId } from '@/lib/ensure-personal-org'
@@ -33,6 +40,7 @@ import { useT } from '@/lib/i18n/translate'
 interface MFAChallengeProps {
   factors: Models.MfaFactors & { recoveryCode?: boolean }
   redirect?: string
+  preview?: boolean
 }
 
 function getDefaultChallengeType(
@@ -73,7 +81,7 @@ export async function verifyMFAChallenge(
   factors?: Models.MfaFactors & { recoveryCode?: boolean },
 ) {
   if (factors) {
-    const factorMap = {
+    const factorMap: Partial<Record<AuthenticationFactor, boolean>> = {
       [AuthenticationFactor.Totp]: factors.totp,
       [AuthenticationFactor.Email]: factors.email,
       [AuthenticationFactor.Phone]: factors.phone,
@@ -111,7 +119,11 @@ export async function verifyMFAChallenge(
   })
 }
 
-export function MFAChallenge({ factors, redirect }: MFAChallengeProps) {
+export function MFAChallenge({
+  factors,
+  redirect,
+  preview = false,
+}: MFAChallengeProps) {
   const t = useT()
   const navigate = useNavigate()
   const router = useRouter()
@@ -170,6 +182,13 @@ export function MFAChallenge({ factors, redirect }: MFAChallengeProps) {
     }
 
     setIsChallengeReady(false)
+
+    if (preview) {
+      setChallengeValue({ $id: 'preview-challenge' } as Models.MfaChallenge)
+      setIsChallengeReady(true)
+      setDisabled(false)
+      return
+    }
 
     try {
       const newChallenge = await sdk.forConsole.account.createMFAChallenge({
@@ -237,6 +256,13 @@ export function MFAChallenge({ factors, redirect }: MFAChallengeProps) {
       const activeChallengeType = challengeTypeRef.current
       if (!activeChallengeType) {
         throw new Error('Please select an authentication factor')
+      }
+
+      if (preview) {
+        toast.message(t('Preview only'), {
+          description: t('MFA verification is disabled on this preview route.'),
+        })
+        return
       }
 
       await verifyMFAChallenge(
@@ -307,6 +333,10 @@ export function MFAChallenge({ factors, redirect }: MFAChallengeProps) {
   }
 
   const handleBack = async () => {
+    if (preview) {
+      navigate({ to: '/debug/sign-in-preview' })
+      return
+    }
     try {
       await sdk.forConsole.account.deleteSession({ sessionId: 'current' })
     } catch {
@@ -349,41 +379,38 @@ export function MFAChallenge({ factors, redirect }: MFAChallengeProps) {
 
   if (!hasAnyMfaFactor(factors)) {
     return (
-      <Card className="overflow-hidden p-6 md:p-10">
-        <div className="space-y-4 text-center">
-          <h1 className="text-2xl font-semibold tracking-tight">
-            {t('Two-factor authentication')}
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            {t(
-              'No verification methods are available for this account. Contact support if you need help signing in.',
-            )}
-          </p>
-          <Button variant="outline" onClick={() => void handleBack()}>
-            {t('Back to sign in')}
-          </Button>
+      <AuthFlowNarrowCard>
+        <div className="flex flex-col items-center gap-4 text-center">
+          <AuthFlowHeaderIcon icon={ShieldCheck} />
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <AuthFlowTitle>{t('Two-factor authentication')}</AuthFlowTitle>
+              <AuthFlowDescription>
+                {t(
+                  'No verification methods are available for this account. Contact support if you need help signing in.',
+                )}
+              </AuthFlowDescription>
+            </div>
+            <Button variant="outline" onClick={() => void handleBack()}>
+              {t('Back to sign in')}
+            </Button>
+          </div>
         </div>
-      </Card>
+      </AuthFlowNarrowCard>
     )
   }
 
   return (
-    <Card className="overflow-hidden py-0">
-      <div className="grid md:grid-cols-2">
-        <div className="p-6 md:p-10 min-h-[600px] flex flex-col justify-center">
-          <div className="space-y-6">
-            <div>
-              <h1 className="text-2xl font-semibold tracking-tight">
-                {t('Two-factor authentication')}
-              </h1>
-            </div>
+    <AuthFlowIllustrationCard illustration={<AuthFlowIllustrationColumn />}>
+      <div className="space-y-6">
+        <AuthFlowTitle>{t('Two-factor authentication')}</AuthFlowTitle>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {!isChallengeReady && (
-                <p className="text-sm text-muted-foreground">
-                  {t('Preparing verification...')}
-                </p>
-              )}
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {!isChallengeReady && (
+            <AuthFlowDescription>
+              {t('Preparing verification...')}
+            </AuthFlowDescription>
+          )}
 
               {enabledMainFactors.length > 1 && (
                 <div className="space-y-3">
@@ -448,9 +475,7 @@ export function MFAChallenge({ factors, redirect }: MFAChallengeProps) {
                       ? t('Recovery code')
                       : t('Verification code')}
                   </Label>
-                  <p className="text-sm text-muted-foreground">
-                    {getFactorDescription()}
-                  </p>
+                  <AuthFlowDescription>{getFactorDescription()}</AuthFlowDescription>
                   {challengeType === AuthenticationFactor.Recoverycode ? (
                     <Input
                       id="mfa-code"
@@ -541,6 +566,7 @@ export function MFAChallenge({ factors, redirect }: MFAChallengeProps) {
               <div className="flex flex-col gap-2">
                 <Button
                   type="submit"
+                  variant="brandCta"
                   className="w-full"
                   disabled={
                     !challengeType ||
@@ -565,18 +591,7 @@ export function MFAChallenge({ factors, redirect }: MFAChallengeProps) {
                 </div>
               </div>
             </form>
-          </div>
-        </div>
-        <div className="hidden bg-background md:block min-h-[600px]">
-          <img
-            alt="Image"
-            className="h-full w-full object-cover"
-            height="600"
-            src="/cover.avif"
-            width="600"
-          />
-        </div>
       </div>
-    </Card>
+    </AuthFlowIllustrationCard>
   )
 }

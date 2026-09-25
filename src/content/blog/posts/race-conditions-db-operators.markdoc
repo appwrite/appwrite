@@ -6,7 +6,7 @@ date: 2025-11-06
 cover: /images/blog/race-conditions-db-operators/cover.avif
 timeToRead: 5
 author: atharva
-category: tutorial
+category: tutorials
 featured: false
 faqs:
   - question: "What causes a race condition in a database update?"

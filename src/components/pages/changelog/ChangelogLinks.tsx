@@ -104,11 +104,24 @@ export function ChangelogLink({
     )
   }
 
+  if (href.startsWith('/blog/categories/')) {
+    const category = href.slice('/blog/categories/'.length).replace(/\/+$/, '')
+    return (
+      <Link
+        to="/blog/categories/$category"
+        params={{ category }}
+        className={linkClassName}
+      >
+        {children}
+      </Link>
+    )
+  }
+
   if (href.startsWith('/blog/category/')) {
     const category = href.slice('/blog/category/'.length).replace(/\/+$/, '')
     return (
       <Link
-        to="/blog/category/$category"
+        to="/blog/categories/$category"
         params={{ category }}
         className={linkClassName}
       >

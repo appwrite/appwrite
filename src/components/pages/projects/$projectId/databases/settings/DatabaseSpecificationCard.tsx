@@ -35,11 +35,13 @@ import {
   invalidateDatabaseModel,
   refetchProjectDatabaseLists,
   seedDatabaseProductRouteKind,
+  tablesDatabaseMigrationsQueryKey,
   updateProductDatabaseSpecification,
   useDatabaseSpecifications,
   useOrganizationPlan,
   useProject,
 } from '@/lib/react-query/hooks'
+import type { Models } from '@appwrite.io/console'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
@@ -123,14 +125,35 @@ export function DatabaseSpecificationCard({
         database.specification,
         database.name,
       ),
-    onSuccess: async () => {
+    onSuccess: async (result) => {
       seedDatabaseProductRouteKind(projectId, databaseId, dbKind)
       invalidateDatabaseModel(projectId, databaseId)
+      if (
+        dbKind === 'tablesdb' &&
+        currentIsServerless &&
+        result &&
+        typeof result === 'object' &&
+        '$id' in result &&
+        'phase' in result
+      ) {
+        queryClient.setQueryData(
+          tablesDatabaseMigrationsQueryKey(projectId, databaseId),
+          [result as Models.DatabaseMigration],
+        )
+      }
       await Promise.all([
         queryClient.invalidateQueries({
           queryKey: ['database', 'project', projectId, databaseId],
         }),
         refetchProjectDatabaseLists(queryClient, projectId),
+        dbKind === 'tablesdb' && currentIsServerless
+          ? queryClient.refetchQueries({
+              queryKey: tablesDatabaseMigrationsQueryKey(
+                projectId,
+                databaseId,
+              ),
+            })
+          : Promise.resolve(),
       ])
       toast.success(
         currentIsServerless
@@ -220,13 +243,27 @@ export function DatabaseSpecificationCard({
         <p className="mt-2 text-[13px] text-muted-foreground">
           {currentIsServerless
             ? t(
-                'Upgrade from serverless to a dedicated tier to reserve CPU, memory, and connection limits. Migrating applies with a brief read-only window during cutover.',
+                'Upgrade from serverless to a dedicated tier to reserve CPU, memory, and connection limits.',
               )
             : t(
                 'Change the compute tier for this database. Upgrades apply with zero downtime via rolling cutover.',
               )}
         </p>
       </div>
+      {currentIsServerless ? (
+        <>
+          <div className="border-t border-border" />
+          <div className="px-6 py-3">
+            <div className="rounded-lg border border-border bg-muted/30 px-3 py-2.5">
+              <p className="text-[12px] text-muted-foreground">
+                {t(
+                  'Your database stays available while data is copied. During cutover, writes pause briefly while routing switches and replay automatically.',
+                )}
+              </p>
+            </div>
+          </div>
+        </>
+      ) : null}
       <div className="border-t border-border" />
       <Table>
         <TableHeader>

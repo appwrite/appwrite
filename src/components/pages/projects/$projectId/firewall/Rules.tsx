@@ -89,6 +89,7 @@ import {
   type FirewallResourceSelection,
 } from './_components/FirewallResourceSelector'
 import { AttackModeButton } from './_components/AttackMode'
+import { AddFirewallPresets } from './_components/AddFirewallPresets'
 import { PriorityHint } from './_components/PriorityHint'
 import { UpdateRule } from './_components/UpdateRule'
 import { DeleteRule } from './_components/DeleteRule'
@@ -288,6 +289,13 @@ export function RulesList({
           resourceSelection={resourceSelection}
           canWrite={canWrite}
           createDisabled={resolvedCreateDisabled}
+          createDisabledTooltip={resolvedCreateDisabledTooltip}
+        />
+        <AddFirewallPresets
+          projectId={projectId}
+          resourceSelection={resourceSelection}
+          canWrite={canWrite}
+          createDisabled={createDisabled}
           createDisabledTooltip={resolvedCreateDisabledTooltip}
         />
         {createButton}

@@ -4,6 +4,7 @@ import {
   type UsageBreakdownItem,
   type UsageEventBreakdownDimension,
 } from '@/lib/usage/usage-events-common'
+import { DEFAULT_USAGE_LOG_RETENTION_HOURS } from '@/lib/usage/usage-log-retention'
 import { OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT } from '@/lib/usage/breakdown-limits'
 import { REQUESTS_EVENT_METRICS } from '@/lib/usage/requests-events'
 
@@ -183,6 +184,7 @@ export async function fetchProjectRequestsBreakdown(
   dimension: UsageEventBreakdownDimension,
   limit = OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT,
   queries?: string[],
+  logRetentionHours: number = DEFAULT_USAGE_LOG_RETENTION_HOURS,
 ): Promise<UsageBreakdownItem[]> {
   return fetchProjectUsageEventBreakdown(
     projectId,
@@ -191,6 +193,9 @@ export async function fetchProjectRequestsBreakdown(
     dimension,
     limit,
     queries,
+    undefined,
+    undefined,
+    logRetentionHours,
   )
 }
 

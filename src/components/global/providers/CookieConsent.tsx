@@ -21,6 +21,7 @@ import {
   writeStoredCookieConsent,
 } from '@/lib/cookie-consent/storage'
 import type { CookieConsentPreferences } from '@/lib/cookie-consent/types'
+import { deferAfterPaint } from '@/lib/defer-after-paint'
 import { localeQueryOptions } from '@/lib/react-query/hooks/locale'
 
 type CookieConsentContextValue = {
@@ -64,7 +65,7 @@ export function CookieConsentProvider({ children }: { children: ReactNode }) {
     isError: localeError,
   } = useQuery({
     ...localeQueryOptions(),
-    enabled: cookieBannerEnabled,
+    enabled: cookieBannerEnabled && typeof window !== 'undefined',
   })
   const bannerRequired = !cookieBannerEnabled
     ? false
@@ -123,11 +124,13 @@ export function CookieConsentProvider({ children }: { children: ReactNode }) {
     (preferences: CookieConsentPreferences) => {
       writeStoredCookieConsent(preferences.analytics)
       setDraftAnalytics(preferences.analytics)
-      applyAnalyticsConsent(preferences.analytics)
       setShowBanner(false)
       setPreferencesOpen(false)
       setIsReopening(false)
       setCustomizeOpen(false)
+      deferAfterPaint(() => {
+        applyAnalyticsConsent(preferences.analytics)
+      })
     },
     [],
   )
@@ -196,8 +199,9 @@ export function CookieConsentProvider({ children }: { children: ReactNode }) {
   return (
     <CookieConsentContext.Provider value={contextValue}>
       {children}
-      {cookieBannerEnabled && showBanner ? (
+      {cookieBannerEnabled ? (
         <CookieConsentBanner
+          open={showBanner}
           customizeOpen={customizeOpen}
           draftAnalytics={draftAnalytics}
           onAcceptAll={acceptAll}

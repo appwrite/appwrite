@@ -8,6 +8,7 @@ export type CommandCenterPage =
   | 'feedback'
   | 'support'
   | 'docs'
+  | 'blog'
 
 type CommandCenterOpener = (page: CommandCenterPage | null) => void
 

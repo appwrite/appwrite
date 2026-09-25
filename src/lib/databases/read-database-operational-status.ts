@@ -1,13 +1,11 @@
 import type { QueryClient } from '@tanstack/react-query'
 import type { Models } from '@appwrite.io/console'
+import { resolveDatabaseLifecycleStatus } from '@/lib/databases/dedicated-database-status'
 
 const postgresDatabaseQueryKey = (
   projectId: string,
   databaseId: string,
 ) => ['postgres-database', 'project', projectId, databaseId] as const
-
-const productDatabaseQueryKey = (projectId: string, databaseId: string) =>
-  ['database', 'project', projectId, databaseId] as const
 
 const dedicatedDatabasesQueryKey = (projectId: string) =>
   ['dedicated-databases', 'project', projectId] as const
@@ -25,16 +23,30 @@ export function readDatabaseOperationalStatus(
   const postgres = queryClient.getQueryData<Models.DedicatedDatabase>(
     postgresDatabaseQueryKey(projectId, databaseId),
   )
-  if (postgres?.status) return postgres.status
 
-  const product = queryClient.getQueryData<{ status?: string | null }>(
-    productDatabaseQueryKey(projectId, databaseId),
+  let productStatus: string | null | undefined
+  const productEntries = queryClient.getQueriesData<{ status?: string | null }>(
+    { queryKey: ['database', 'project', projectId, databaseId] },
   )
-  if (product?.status) return product.status
+  for (const [, data] of productEntries) {
+    if (data?.status) {
+      productStatus = data.status
+      break
+    }
+  }
 
   const dedicatedList = queryClient.getQueryData<{
     databases: Models.DedicatedDatabase[]
   }>(dedicatedDatabasesQueryKey(projectId))
 
-  return dedicatedList?.databases?.find((db) => db.$id === databaseId)?.status
+  const dedicatedStatus = dedicatedList?.databases?.find(
+    (db) => db.$id === databaseId,
+  )?.status
+
+  const resolved = resolveDatabaseLifecycleStatus(
+    productStatus,
+    dedicatedStatus,
+  )
+  if (resolved) return resolved
+  return postgres?.status ?? undefined
 }

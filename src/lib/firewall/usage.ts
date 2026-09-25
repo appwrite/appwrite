@@ -615,3 +615,46 @@ export async function fetchFirewallRuleImpact(
     activity,
   }
 }
+
+/**
+ * Combine impact estimates for separate rules (e.g. one deny rule per country).
+ * Request country and OTP path conditions are mutually exclusive across rules in
+ * a preset, so matched counts and series are summed then capped by total traffic.
+ */
+export function mergeFirewallRuleImpactUnion(
+  impacts: FirewallRuleImpactData[],
+): FirewallRuleImpactData | null {
+  if (impacts.length === 0) return null
+  const base = impacts[0]!
+  if (impacts.length === 1) return base
+
+  const total = base.total
+  const matched = Math.min(
+    total,
+    impacts.reduce((sum, impact) => sum + impact.matched, 0),
+  )
+
+  const matchedByTime = new Map<number, number>()
+  for (const impact of impacts) {
+    for (const point of impact.series) {
+      const time = point.day.getTime()
+      matchedByTime.set(time, (matchedByTime.get(time) ?? 0) + point.matched)
+    }
+  }
+
+  const series: FirewallImpactPoint[] = base.series.map((point) => {
+    const summed = matchedByTime.get(point.day.getTime()) ?? 0
+    return {
+      ...point,
+      matched: Math.min(point.total, summed),
+    }
+  })
+
+  return {
+    series,
+    total,
+    matched,
+    rate: total > 0 ? matched / total : 0,
+    dateRange: base.dateRange,
+  }
+}

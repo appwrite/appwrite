@@ -23,7 +23,13 @@ import {
 } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
-import { migrationMatchesDatabaseTables } from '@/lib/migrations/csv-resource'
+import {
+  APPWRITE_RESOURCES,
+  FIREBASE_RESOURCES,
+  NHOST_RESOURCES,
+  SUPABASE_NHOST_RESOURCES,
+} from '@/lib/migrations/resource-selection'
+import { getMigrationTableRef } from '@/lib/migrations/csv-resource'
 import { DEFAULT_STALE_TIME } from './constants'
 
 /** Query options for project migrations list (for route loader prefetch). */
@@ -119,12 +125,11 @@ export async function fetchCsvImportMigrations(projectId: string) {
   }
 }
 
-/** Limit for list view; we filter by database/table client-side so fetch more. */
+/** Most recent CSV jobs listed for one database. */
 const MIGRATIONS_LIST_LIMIT = 100
 
 /**
- * Fetch CSV export/import migrations in one API call, then filter client-side
- * to tables in the given database.
+ * Fetch a database's CSV export/import migrations in one API call.
  *
  * Matches both the current migration shape (`parentResourceId` + `resourceId`)
  * and legacy composite `resourceId` values (`databaseId:tableId`).
@@ -132,30 +137,35 @@ const MIGRATIONS_LIST_LIMIT = 100
 export async function fetchDatabaseCsvMigrations(
   projectId: string,
   databaseId: string,
-  tableIds: string[],
 ) {
   if (!projectId || !databaseId) {
     return { migrations: [] as Models.Migration[] }
   }
   const projectSdk = sdk.forProject(projectId)
-  const response = await projectSdk.migrations.list({
-    queries: [
-      Query.or([
-        Query.equal('destination', 'CSV'),
-        Query.equal('source', 'CSV'),
-      ]),
-      Query.orderDesc('$updatedAt'),
-      Query.limit(MIGRATIONS_LIST_LIMIT),
-    ],
-  })
-  const all = (response.migrations || []) as Models.Migration[]
-  const tableIdSet = new Set(tableIds)
-  const migrations =
-    tableIdSet.size > 0
-      ? all.filter((m) =>
-          migrationMatchesDatabaseTables(m, databaseId, tableIdSet),
-        )
-      : []
+  const listCsvMigrations = (filter: string) =>
+    projectSdk.migrations.list({
+      queries: [
+        Query.or([
+          Query.equal('destination', 'CSV'),
+          Query.equal('source', 'CSV'),
+        ]),
+        filter,
+        Query.orderDesc('$updatedAt'),
+        Query.limit(MIGRATIONS_LIST_LIMIT),
+      ],
+    })
+  // Separate requests, so legacy rows from other databases can never use up
+  // the limit for current rows.
+  const [current, legacy] = await Promise.all([
+    listCsvMigrations(Query.equal('parentResourceId', databaseId)),
+    listCsvMigrations(Query.startsWith('resourceId', `${databaseId}:`)),
+  ])
+  // MongoDB's startsWith is unanchored, so the legacy request can match another
+  // database whose id ends with this one.
+  const migrations = [...current.migrations, ...legacy.migrations]
+    .filter((m) => getMigrationTableRef(m)?.databaseId === databaseId)
+    .sort((a, b) => b.$updatedAt.localeCompare(a.$updatedAt))
+    .slice(0, MIGRATIONS_LIST_LIMIT)
   return { migrations }
 }
 
@@ -357,9 +367,7 @@ export function useCsvImportMigrations(
 export function databaseCsvMigrationsQueryOptions(
   projectId: string | null | undefined,
   databaseId: string | null | undefined,
-  tableIds: string[],
 ) {
-  const sortedTableIds = tableIds.slice().sort()
   return queryOptions({
     queryKey: [
       'migrations',
@@ -368,11 +376,9 @@ export function databaseCsvMigrationsQueryOptions(
       'database',
       databaseId,
       'csv',
-      sortedTableIds,
     ],
-    queryFn: () =>
-      fetchDatabaseCsvMigrations(projectId!, databaseId!, sortedTableIds),
-    enabled: !!projectId && !!databaseId && sortedTableIds.length > 0,
+    queryFn: () => fetchDatabaseCsvMigrations(projectId!, databaseId!),
+    enabled: !!projectId && !!databaseId,
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
     refetchOnMount: false,
@@ -384,15 +390,13 @@ export function databaseCsvMigrationsQueryOptions(
 
 /**
  * Hook to fetch CSV export/import migrations for a database in one API call.
- * Pass table IDs from useProjectTables.
  */
 export function useDatabaseCsvMigrations(
   projectId: string | null | undefined,
   databaseId: string | null | undefined,
-  tableIds: string[],
 ) {
   const { data, isLoading, refetch } = useQuery(
-    databaseCsvMigrationsQueryOptions(projectId, databaseId, tableIds),
+    databaseCsvMigrationsQueryOptions(projectId, databaseId),
   )
   return {
     migrations: data?.migrations ?? [],
@@ -479,55 +483,12 @@ export function useCreateCSVImport(projectId: string | null | undefined) {
 // PROVIDER MIGRATIONS (Appwrite, Supabase, Firebase, NHost)
 // ============================================================================
 
-/** All Appwrite resources for report and migration. */
-export const APPWRITE_RESOURCES: AppwriteMigrationResource[] = [
-  AppwriteMigrationResource.User,
-  AppwriteMigrationResource.Database,
-  AppwriteMigrationResource.Table,
-  AppwriteMigrationResource.Column,
-  AppwriteMigrationResource.Index,
-  AppwriteMigrationResource.Row,
-  AppwriteMigrationResource.Document,
-  AppwriteMigrationResource.Attribute,
-  AppwriteMigrationResource.Collection,
-  AppwriteMigrationResource.Bucket,
-  AppwriteMigrationResource.File,
-]
-
-/** Resources supported by Supabase migrations (Document/Attribute/Collection). */
-export const SUPABASE_NHOST_RESOURCES: SupabaseMigrationResource[] = [
-  SupabaseMigrationResource.User,
-  SupabaseMigrationResource.Database,
-  SupabaseMigrationResource.Collection,
-  SupabaseMigrationResource.Attribute,
-  SupabaseMigrationResource.Index,
-  SupabaseMigrationResource.Document,
-  SupabaseMigrationResource.Bucket,
-  SupabaseMigrationResource.File,
-]
-
-/** Resources supported by NHost migrations (same shape as Supabase report). */
-export const NHOST_RESOURCES: NHostMigrationResource[] = [
-  NHostMigrationResource.User,
-  NHostMigrationResource.Database,
-  NHostMigrationResource.Collection,
-  NHostMigrationResource.Attribute,
-  NHostMigrationResource.Index,
-  NHostMigrationResource.Document,
-  NHostMigrationResource.Bucket,
-  NHostMigrationResource.File,
-]
-
-/** Resources supported by Firebase (same as Supabase but no Index per prompt). */
-export const FIREBASE_RESOURCES: FirebaseMigrationResource[] = [
-  FirebaseMigrationResource.User,
-  FirebaseMigrationResource.Database,
-  FirebaseMigrationResource.Collection,
-  FirebaseMigrationResource.Attribute,
-  FirebaseMigrationResource.Document,
-  FirebaseMigrationResource.Bucket,
-  FirebaseMigrationResource.File,
-]
+export {
+  APPWRITE_RESOURCES,
+  SUPABASE_NHOST_RESOURCES,
+  NHOST_RESOURCES,
+  FIREBASE_RESOURCES,
+}
 
 export interface AppwriteReportParams {
   endpoint: string

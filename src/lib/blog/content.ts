@@ -4,11 +4,14 @@ import { markdocToMarkdown } from '@/lib/seo/markdoc-to-markdown'
 import {
   BLOG_CATEGORY_SPOTLIGHT_POST_COUNT,
   BLOG_FEATURED_SLUG_ORDER,
+  BLOG_INDEX_SPOTLIGHT_EXCLUDED_SLUGS,
   BLOG_POSTS_PER_PAGE,
   BLOG_SECONDARY_FEATURED_COUNT,
+  BLOG_SECONDARY_LATEST_COUNT,
   BLOG_SPOTLIGHT_CATEGORY_SLUGS,
 } from './constants'
 import { BLOG_POST_MAP, BLOG_POSTS } from './generated/manifest'
+import { normalizeCategorySlug, resolveCategorySlug } from './category-slugs'
 import { preprocessBlogMarkdocContent } from './preprocess'
 import {
   getFrontmatterAuthor,
@@ -30,17 +33,10 @@ import type {
  * Lazy glob keeps the full blog corpus out of the server bundle until a post
  * body is requested. Metadata comes from the build-time manifest.
  */
-const importedPostLoaders = import.meta.glob('/src/content/blog/posts/*.markdoc', {
+const postLoaders = import.meta.glob('/src/content/blog/posts/*.markdoc', {
   query: '?raw',
   import: 'default',
 }) as Record<string, () => Promise<string>>
-
-const localPostLoaders = import.meta.glob('/src/content/blog-local/posts/*.markdoc', {
-  query: '?raw',
-  import: 'default',
-}) as Record<string, () => Promise<string>>
-
-const postLoaders = { ...importedPostLoaders, ...localPostLoaders }
 
 const categoryLoaders = import.meta.glob('/src/content/blog/categories/*.markdoc', {
   query: '?raw',
@@ -66,13 +62,22 @@ const FULL_POST_CACHE_MAX = 32
 
 function slugFromModulePath(modulePath: string, segment: string): string {
   const match = modulePath.match(
-    new RegExp(`/src/content/blog(?:-local)?/${segment}/(.+)\\.markdoc$`),
+    new RegExp(`/src/content/blog/${segment}/(.+)\\.markdoc$`),
   )
   return match?.[1] ?? ''
 }
 
 export function normalizeCategory(value: string): string {
-  return value.replace(/\s+/g, '-').toLowerCase()
+  return normalizeCategorySlug(value)
+}
+
+export { resolveCategorySlug } from './category-slugs'
+
+function getPostCategorySlugs(post: BlogPostMeta): string[] {
+  return post.category
+    .split(',')
+    .map((part) => resolveCategorySlug(part.trim()))
+    .filter(Boolean)
 }
 
 function parseBoolean(value: unknown): boolean | undefined {
@@ -146,14 +151,14 @@ function buildBlogPost(slug: string, raw: string): BlogPost {
 }
 
 function buildBlogCategory(modulePath: string, raw: string): BlogCategory {
-  const slug = slugFromModulePath(modulePath, 'categories')
+  const slug = resolveCategorySlug(slugFromModulePath(modulePath, 'categories'))
   const { frontmatter } = parseBlogFrontmatter(raw)
 
   return {
     slug,
     name: getFrontmatterString(frontmatter, 'name') ?? slug,
     description: getFrontmatterString(frontmatter, 'description') ?? '',
-    href: `/blog/category/${slug}`,
+    href: `/blog/categories/${slug}`,
   }
 }
 
@@ -192,6 +197,12 @@ function isPublicPost(post: BlogPostMeta): boolean {
 
 export function getPublicBlogPosts(): BlogPostMeta[] {
   return BLOG_POSTS.filter(isPublicPost)
+}
+
+// Unlisted posts stay out of the index, categories, search, and sitemap,
+// but remain visible on their author's profile.
+function getNonDraftBlogPosts(): BlogPostMeta[] {
+  return BLOG_POSTS.filter((post) => !post.draft)
 }
 
 /** Draft posts, newest first. Only surfaced when the blogDrafts flag is on. */
@@ -238,7 +249,8 @@ export function getBlogAuthor(slug: string): BlogAuthor | null {
 }
 
 export function getBlogCategory(slug: string): BlogCategory | null {
-  return allCategories.find((category) => category.slug === slug) ?? null
+  const resolvedSlug = resolveCategorySlug(slug)
+  return allCategories.find((category) => category.slug === resolvedSlug) ?? null
 }
 
 export function getAllBlogAuthors(): BlogAuthor[] {
@@ -277,12 +289,13 @@ export function toBlogPostMeta(post: BlogPost | BlogPostMeta): BlogPostMeta {
 }
 
 export function postMatchesCategory(post: BlogPostMeta, categorySlug: string): boolean {
-  return normalizeCategory(post.category).includes(categorySlug)
+  const resolvedSlug = resolveCategorySlug(categorySlug)
+  return getPostCategorySlugs(post).some((slug) => slug === resolvedSlug)
 }
 
 export function getPrimaryPostCategorySlug(post: BlogPostMeta): string {
   const firstCategory = post.category.split(',')[0]?.trim() ?? ''
-  return normalizeCategory(firstCategory)
+  return resolveCategorySlug(firstCategory)
 }
 
 export function getPostCategoryLabel(post: BlogPostMeta): string {
@@ -303,7 +316,7 @@ export function postMatchesAuthor(post: BlogPostMeta, authorSlug: string): boole
 }
 
 export function getPostsForAuthor(authorSlug: string): BlogPostMeta[] {
-  return getPublicBlogPosts().filter((post) => postMatchesAuthor(post, authorSlug))
+  return getNonDraftBlogPosts().filter((post) => postMatchesAuthor(post, authorSlug))
 }
 
 export function getPostsForCategory(categorySlug: string): BlogPostMeta[] {
@@ -360,10 +373,13 @@ function buildBlogIndexSpotlights(posts: BlogPostMeta[]): {
   categorySpotlights: BlogCategorySpotlight[]
   excludedSlugs: Set<string>
 } {
+  const spotlightPosts = posts.filter(
+    (post) => !BLOG_INDEX_SPOTLIGHT_EXCLUDED_SLUGS.has(post.slug),
+  )
   const featuredRank = new Map<string, number>(
     BLOG_FEATURED_SLUG_ORDER.map((slug, index) => [slug, index]),
   )
-  const featuredPosts = posts
+  const featuredPosts = spotlightPosts
     .filter((post) => post.featured)
     .sort((a, b) => {
       const aRank = featuredRank.get(a.slug) ?? Number.MAX_SAFE_INTEGER
@@ -384,7 +400,7 @@ function buildBlogIndexSpotlights(posts: BlogPostMeta[]): {
   }
 
   if (secondaryFeatured.length < BLOG_SECONDARY_FEATURED_COUNT) {
-    const fillers = posts
+    const fillers = spotlightPosts
       .filter((post) => !excludedSlugs.has(post.slug))
       .slice(0, BLOG_SECONDARY_FEATURED_COUNT - secondaryFeatured.length)
 
@@ -392,6 +408,15 @@ function buildBlogIndexSpotlights(posts: BlogPostMeta[]): {
       excludedSlugs.add(post.slug)
       secondaryFeatured.push(post)
     }
+  }
+
+  const latestSecondary = spotlightPosts
+    .filter((post) => !excludedSlugs.has(post.slug))
+    .slice(0, BLOG_SECONDARY_LATEST_COUNT)
+
+  for (const post of latestSecondary) {
+    excludedSlugs.add(post.slug)
+    secondaryFeatured.push(post)
   }
 
   const categorySpotlights: BlogCategorySpotlight[] = []
@@ -402,6 +427,7 @@ function buildBlogIndexSpotlights(posts: BlogPostMeta[]): {
 
     const categoryPosts = getPostsForCategory(slug)
       .filter((post) => !excludedSlugs.has(post.slug))
+      .filter((post) => !BLOG_INDEX_SPOTLIGHT_EXCLUDED_SLUGS.has(post.slug))
       .slice(0, BLOG_CATEGORY_SPOTLIGHT_POST_COUNT)
 
     if (categoryPosts.length === 0) continue
@@ -431,17 +457,27 @@ export function getBlogPostsPage(options: {
   const categoryQuery = options.category ? normalizeCategory(options.category) : ''
 
   let posts = getPublicBlogPosts()
-  const showSpotlights = currentPage === 1 && !searchQuery && !categoryQuery
+  const isDefaultIndex = !searchQuery && !categoryQuery
+  const showSpotlights = currentPage === 1 && isDefaultIndex
 
   let featured: BlogPostMeta | null = null
   let secondaryFeatured: BlogPostMeta[] = []
   let categorySpotlights: BlogCategorySpotlight[] = []
+  let featuredListSlugs = new Set<string>()
 
-  if (showSpotlights) {
+  if (isDefaultIndex) {
     const spotlights = buildBlogIndexSpotlights(posts)
-    featured = spotlights.featured
-    secondaryFeatured = spotlights.secondaryFeatured
-    categorySpotlights = spotlights.categorySpotlights
+    if (spotlights.featured) {
+      featuredListSlugs.add(spotlights.featured.slug)
+    }
+    for (const post of spotlights.secondaryFeatured) {
+      featuredListSlugs.add(post.slug)
+    }
+    if (showSpotlights) {
+      featured = spotlights.featured
+      secondaryFeatured = spotlights.secondaryFeatured
+      categorySpotlights = spotlights.categorySpotlights
+    }
   }
 
   if (searchQuery || categoryQuery) {
@@ -454,9 +490,11 @@ export function getBlogPostsPage(options: {
     })
   }
 
-  // "All articles" is the full archive: posts already shown in the hero,
-  // secondary featured row, or a category spotlight still list here.
-  const listPosts = posts
+  // Keep hero and secondary featured posts out of "All articles" so they
+  // are not listed twice on the index. Search and category views stay complete.
+  const listPosts = isDefaultIndex
+    ? posts.filter((post) => !featuredListSlugs.has(post.slug))
+    : posts
 
   const totalPages = Math.max(1, Math.ceil(listPosts.length / BLOG_POSTS_PER_PAGE))
   const safePage = Math.min(currentPage, totalPages)

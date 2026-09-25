@@ -41,6 +41,41 @@ const syntaxHover: Record<keyof typeof syntax, string> = {
   sqlAlias: 'group-hover:text-orange-600 dark:group-hover:text-orange-400',
 }
 
+/** Brand supporting palette for mock visual hover lights. */
+export const productBentoBrand = {
+  orange: '#FE9567',
+  mint: '#85DBD8',
+  purple: '#7C67FE',
+  pink: 'var(--brand-cta)',
+} as const
+
+const PRODUCT_BENTO_LIGHT_ANGLES = [
+  '135deg',
+  '45deg',
+  '225deg',
+  '315deg',
+] as const
+
+export function productBentoLightAngle(index: number) {
+  return PRODUCT_BENTO_LIGHT_ANGLES[index % PRODUCT_BENTO_LIGHT_ANGLES.length]
+}
+
+export function productBentoLightStyle(
+  color: string,
+  angle: string,
+  extra?: CSSProperties,
+): CSSProperties {
+  return {
+    '--bento-light-color': color,
+    '--bento-light-at': angle,
+    ...extra,
+  } as CSSProperties
+}
+
+/** Soft branded wash on mock cards/buttons instead of swapping fill color. */
+export const productBentoSoftFillHover =
+  'relative overflow-hidden before:pointer-events-none before:absolute before:inset-0 before:rounded-[inherit] before:opacity-0 before:transition-opacity before:duration-300 group-hover:before:opacity-100 motion-reduce:group-hover:before:opacity-0 before:bg-[linear-gradient(var(--bento-light-at,135deg),color-mix(in_srgb,var(--bento-light-color,var(--foreground))_4%,transparent)_0%,transparent_68%)]'
+
 /** Shared muted-until-hover classes for product bento visuals. */
 export const productBentoIdle = {
   text: 'text-muted-foreground transition-colors duration-300 group-hover:text-foreground',
@@ -59,7 +94,9 @@ export const productBentoIdle = {
   buildBar:
     'bg-muted-foreground/30 transition-colors duration-300 group-hover:bg-[var(--brand-cta)]',
   ctaBlock:
-    'bg-muted-foreground/25 transition-colors duration-300 group-hover:bg-[var(--brand-cta)]/85',
+    'bg-muted-foreground/25 text-muted-foreground transition-colors duration-300 group-hover:bg-[var(--brand-cta)] group-hover:text-white motion-reduce:group-hover:bg-muted-foreground/25 motion-reduce:group-hover:text-muted-foreground',
+  pinkButton:
+    'border-transparent bg-[var(--brand-cta)] text-white [&_svg]:text-white',
   providerIcon:
     'opacity-45 transition-opacity duration-300 group-hover:opacity-100 motion-reduce:group-hover:opacity-45',
 } as const

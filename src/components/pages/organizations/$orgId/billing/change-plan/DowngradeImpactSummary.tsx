@@ -1,4 +1,3 @@
-import type { Models } from '@appwrite.io/console'
 import type { ReactNode } from 'react'
 import {
   DOWNGRADE_RESOURCE_TYPES,
@@ -11,14 +10,16 @@ import { useT } from '@/lib/i18n/translate'
 
 interface DowngradeImpactSummaryProps {
   keptOrganizationName?: string
-  allProjects: Models.Project[]
-  keptProjects: Models.Project[]
-  allMemberships?: Models.Membership[]
-  keptMemberships?: Models.Membership[]
-  allDomains?: Models.Domain[]
-  keptDomains?: Models.Domain[]
+  projectsOverage?: number
+  membersOverage?: number
+  domainsOverage?: number
+  projectsStaged?: number
+  membersStaged?: number
+  domainsStaged?: number
   resourceImpact: DowngradeResourceImpact
+  stagedResourceImpact?: DowngradeResourceImpact
   keptProjectResourceImpacts?: ProjectResourceImpact[]
+  keptProjectStagedImpacts?: ProjectResourceImpact[]
   resourcesLoading?: boolean
   deletedOrganizationImpact?: DeletedOrganizationImpact | null
   deletedOrganizationLoading?: boolean
@@ -33,37 +34,44 @@ export type ProjectResourceImpact = {
   resourceImpact: DowngradeResourceImpact
 }
 
-function ImpactListSection({
-  title,
-  items,
-  getLabel,
+/** Staged deletions read muted; only what is left over the limit reads red. */
+function ImpactCounts({
+  staged,
+  overage,
 }: {
-  title: string
-  items: { $id: string }[]
-  getLabel: (item: { $id: string }) => string
+  staged: number
+  overage: number
 }) {
-  if (items.length === 0) return null
+  const t = useT()
 
   return (
-    <div className="space-y-2">
-      <p className="text-[13px] font-medium text-foreground">{title}</p>
-      <p className="text-[13px] leading-normal text-red-600 dark:text-red-400">
-        {items.map((item) => getLabel(item)).join(', ')}
-      </p>
-    </div>
+    <span className="flex shrink-0 flex-wrap justify-end gap-x-2">
+      {staged > 0 ? (
+        <span className="text-muted-foreground">
+          {staged} {t('will be deleted')}
+        </span>
+      ) : null}
+      {overage > 0 ? (
+        <span className="text-red-600 dark:text-red-400">
+          {overage} {t('still over limit')}
+        </span>
+      ) : null}
+    </span>
   )
 }
 
 function ResourceImpactSection({
   title,
   resourceImpact,
+  stagedImpact,
 }: {
   title: string
   resourceImpact: DowngradeResourceImpact
+  stagedImpact?: DowngradeResourceImpact
 }) {
   const t = useT()
   const resourceLines = DOWNGRADE_RESOURCE_TYPES.filter(
-    ({ id }) => (resourceImpact[id] ?? 0) > 0,
+    ({ id }) => (resourceImpact[id] ?? 0) > 0 || (stagedImpact?.[id] ?? 0) > 0,
   )
 
   if (resourceLines.length === 0) return null
@@ -78,9 +86,10 @@ function ResourceImpactSection({
             className="flex items-start justify-between gap-3 text-[13px] leading-normal"
           >
             <span className="text-foreground">{t(label)}</span>
-            <span className="text-red-600 dark:text-red-400 shrink-0">
-              {resourceImpact[id]} {t('to delete')}
-            </span>
+            <ImpactCounts
+              staged={stagedImpact?.[id] ?? 0}
+              overage={resourceImpact[id] ?? 0}
+            />
           </li>
         ))}
       </ul>
@@ -90,12 +99,22 @@ function ResourceImpactSection({
 
 function ProjectResourceImpactSection({
   projects,
+  stagedProjects = [],
 }: {
   projects: ProjectResourceImpact[]
+  stagedProjects?: ProjectResourceImpact[]
 }) {
   const t = useT()
+  const stagedByProjectId = new Map(
+    stagedProjects.map(({ projectId, resourceImpact }) => [
+      projectId,
+      resourceImpact,
+    ]),
+  )
   const projectsWithResources = projects.filter(
-    ({ resourceImpact }) => getTotalResourceDeletions(resourceImpact) > 0,
+    ({ projectId, resourceImpact }) =>
+      getTotalResourceDeletions(resourceImpact) > 0 ||
+      getTotalResourceDeletions(stagedByProjectId.get(projectId) ?? {}) > 0,
   )
 
   if (projectsWithResources.length === 0) return null
@@ -108,8 +127,10 @@ function ProjectResourceImpactSection({
       <div className="space-y-2">
         {projectsWithResources.map(
           ({ projectId, projectName, resourceImpact }) => {
+            const stagedImpact = stagedByProjectId.get(projectId) ?? {}
             const resourceLines = DOWNGRADE_RESOURCE_TYPES.filter(
-              ({ id }) => (resourceImpact[id] ?? 0) > 0,
+              ({ id }) =>
+                (resourceImpact[id] ?? 0) > 0 || (stagedImpact[id] ?? 0) > 0,
             )
 
             return (
@@ -130,9 +151,10 @@ function ProjectResourceImpactSection({
                       className="flex items-start justify-between gap-3 text-[13px] leading-normal"
                     >
                       <span className="text-foreground">{t(label)}</span>
-                      <span className="shrink-0 text-red-600 dark:text-red-400">
-                        {resourceImpact[id]} {t('to delete')}
-                      </span>
+                      <ImpactCounts
+                        staged={stagedImpact[id] ?? 0}
+                        overage={resourceImpact[id] ?? 0}
+                      />
                     </li>
                   ))}
                 </ul>
@@ -169,16 +191,46 @@ function OrganizationImpactSection({
   )
 }
 
+function ImpactLine({
+  label,
+  overage,
+  staged = 0,
+}: {
+  label: string
+  overage: number
+  staged?: number
+}) {
+  const t = useT()
+  if (overage <= 0 && staged <= 0) return null
+
+  return (
+    <div className="space-y-1">
+      {staged > 0 ? (
+        <p className="text-[13px] leading-normal text-muted-foreground">
+          {staged} {t(label)} {t('will be deleted')}
+        </p>
+      ) : null}
+      {overage > 0 ? (
+        <p className="text-[13px] leading-normal text-red-600 dark:text-red-400">
+          {overage} {t(label)} {t('still over limit')}
+        </p>
+      ) : null}
+    </div>
+  )
+}
+
 export function DowngradeImpactSummary({
   keptOrganizationName,
-  allProjects,
-  keptProjects,
-  allMemberships = [],
-  keptMemberships = [],
-  allDomains = [],
-  keptDomains = [],
+  projectsOverage = 0,
+  membersOverage = 0,
+  domainsOverage = 0,
+  projectsStaged = 0,
+  membersStaged = 0,
+  domainsStaged = 0,
   resourceImpact,
+  stagedResourceImpact = {},
   keptProjectResourceImpacts = [],
+  keptProjectStagedImpacts = [],
   resourcesLoading = false,
   deletedOrganizationImpact = null,
   deletedOrganizationLoading = false,
@@ -186,34 +238,26 @@ export function DowngradeImpactSummary({
   keptOrganizationImpactReady = true,
 }: DowngradeImpactSummaryProps) {
   const t = useT()
-  const keptProjectIds = new Set(keptProjects.map((project) => project.$id))
-  const projectsToDelete = allProjects.filter(
-    (project) => !keptProjectIds.has(project.$id),
-  )
-
-  const keptMembershipIds = new Set(
-    keptMemberships.map((membership) => membership.$id),
-  )
-  const membersToDelete = allMemberships.filter(
-    (membership) => !keptMembershipIds.has(membership.$id),
-  )
-
-  const keptDomainIds = new Set(keptDomains.map((domain) => domain.$id))
-  const domainsToDelete = allDomains.filter(
-    (domain) => !keptDomainIds.has(domain.$id),
-  )
-
   const keptResourceDeletions = getTotalResourceDeletions(resourceImpact)
+  const stagedResourceDeletions =
+    getTotalResourceDeletions(stagedResourceImpact)
   const deletedResourceDeletions = deletedOrganizationImpact
     ? getTotalResourceDeletions(deletedOrganizationImpact.resourceImpact)
     : 0
 
+  const hasKeptOverage =
+    projectsOverage > 0 ||
+    membersOverage > 0 ||
+    domainsOverage > 0 ||
+    keptResourceDeletions > 0
+  const hasKeptStaged =
+    projectsStaged > 0 ||
+    membersStaged > 0 ||
+    domainsStaged > 0 ||
+    stagedResourceDeletions > 0
+
   const hasKeptOrgImpact =
-    keptOrganizationImpactReady &&
-    (projectsToDelete.length > 0 ||
-      membersToDelete.length > 0 ||
-      domainsToDelete.length > 0 ||
-      keptResourceDeletions > 0)
+    keptOrganizationImpactReady && (hasKeptOverage || hasKeptStaged)
 
   const hasDeletedOrgImpact = !!deletedOrganizationImpact
   const deletedSectionLoading =
@@ -235,7 +279,9 @@ export function DowngradeImpactSummary({
           {t('Downgrade impact')}
         </h3>
         <p className="text-[13px] text-muted-foreground mt-2">
-          {t('Summary of everything that will be deleted when you change plan.')}
+          {t(
+            'Remaining extras that still exceed the selected plan. Nothing else is deleted.',
+          )}
         </p>
       </div>
 
@@ -244,44 +290,38 @@ export function DowngradeImpactSummary({
       <div className="px-6 py-4 space-y-4">
         {showEmptyState ? (
           <p className="text-[13px] text-muted-foreground">
-            {t('No projects, members, domains, or resources will be deleted.')}
+            {t('Usage fits the selected plan. No further deletions are required.')}
           </p>
         ) : (
           <>
             {showDeletedSection ? (
               deletedSectionLoading && !hasDeletedOrgImpact ? (
                 <p className="text-[13px] text-muted-foreground">
-                  {t('Calculating impact for the organization that will be removed...')}
+                  {t(
+                    'Calculating impact for the organization that will be removed...',
+                  )}
                 </p>
               ) : hasDeletedOrgImpact && deletedOrganizationImpact ? (
                 <OrganizationImpactSection
                   name={deletedOrganizationImpact.organizationName}
-                  description={t('This entire organization will be deleted, including all of its projects and resources.')}
+                  description={t(
+                    'This entire organization will be deleted, including all of its projects and resources.',
+                  )}
                 >
-                  <ImpactListSection
-                    title={`${t('Projects')} (${deletedOrganizationImpact.projects.length})`}
-                    items={deletedOrganizationImpact.projects}
-                    getLabel={(project) =>
-                      (project as Models.Project).name || project.$id
-                    }
-                  />
-
-                  <ImpactListSection
-                    title={`${t('Members')} (${deletedOrganizationImpact.memberships.length})`}
-                    items={deletedOrganizationImpact.memberships}
-                    getLabel={(membership) => {
-                      const member = membership as Models.Membership
-                      return member.userName || member.userEmail || member.$id
-                    }}
-                  />
-
-                  <ImpactListSection
-                    title={`${t('Domains')} (${deletedOrganizationImpact.domains.length})`}
-                    items={deletedOrganizationImpact.domains}
-                    getLabel={(domain) =>
-                      (domain as Models.Domain).domain || domain.$id
-                    }
-                  />
+                  <p className="text-[13px] leading-normal text-red-600 dark:text-red-400">
+                    {deletedOrganizationImpact.projects.length}{' '}
+                    {deletedOrganizationImpact.projects.length === 1
+                      ? t('project')
+                      : t('projects')}
+                    , {deletedOrganizationImpact.memberships.length}{' '}
+                    {deletedOrganizationImpact.memberships.length === 1
+                      ? t('member')
+                      : t('members')}
+                    , {deletedOrganizationImpact.domains.length}{' '}
+                    {deletedOrganizationImpact.domains.length === 1
+                      ? t('domain')
+                      : t('domains')}
+                  </p>
 
                   <ResourceImpactSection
                     title={t('Resources in all projects')}
@@ -304,105 +344,106 @@ export function DowngradeImpactSummary({
             {showKeptSection ? (
               keptSectionLoading && !hasKeptOrgImpact ? (
                 <p className="text-[13px] text-muted-foreground">
-                  {t('Calculating impact for resources to remove...')}
+                  {t('Calculating remaining extras...')}
                 </p>
               ) : hasKeptOrgImpact ? (
                 <OrganizationImpactSection
                   name={keptOrgLabel}
-                  description={t('Resources removed to fit the target plan limits.')}
+                  description={t(
+                    'Extras still over the selected plan. Delete only the items you mark.',
+                  )}
                 >
-                  <ImpactListSection
-                    title={`${t('Projects')} (${projectsToDelete.length})`}
-                    items={projectsToDelete}
-                    getLabel={(project) =>
-                      (project as Models.Project).name || project.$id
-                    }
+                  <ImpactLine
+                    label="projects"
+                    overage={projectsOverage}
+                    staged={projectsStaged}
                   />
-
-                  <ImpactListSection
-                    title={`${t('Members')} (${membersToDelete.length})`}
-                    items={membersToDelete}
-                    getLabel={(membership) => {
-                      const member = membership as Models.Membership
-                      return member.userName || member.userEmail || member.$id
-                    }}
+                  <ImpactLine
+                    label="members"
+                    overage={membersOverage}
+                    staged={membersStaged}
                   />
-
-                  <ImpactListSection
-                    title={`${t('Domains')} (${domainsToDelete.length})`}
-                    items={domainsToDelete}
-                    getLabel={(domain) =>
-                      (domain as Models.Domain).domain || domain.$id
-                    }
+                  <ImpactLine
+                    label="domains"
+                    overage={domainsOverage}
+                    staged={domainsStaged}
                   />
 
                   <ResourceImpactSection
-                    title={t('Resources in kept projects')}
+                    title={t('Project resources')}
                     resourceImpact={resourceImpact}
+                    stagedImpact={stagedResourceImpact}
                   />
 
                   <ProjectResourceImpactSection
                     projects={keptProjectResourceImpacts}
+                    stagedProjects={keptProjectStagedImpacts}
                   />
                 </OrganizationImpactSection>
               ) : null
             ) : null}
 
             {hasImpact ? (
-            <div className="border-t border-border pt-4">
-              <p className="text-[13px] font-medium text-foreground">
-                {t('Total impact')}
-              </p>
-              <ul className="mt-2 space-y-1.5 text-[13px] text-muted-foreground">
-                {hasDeletedOrgImpact && deletedOrganizationImpact ? (
-                  <li>
-                    <span className="font-medium text-foreground">
-                      {deletedOrganizationImpact.organizationName}
-                    </span>
-                    : {t('entire organization deleted')} (
-                    {deletedOrganizationImpact.projects.length}{' '}
-                    {deletedOrganizationImpact.projects.length === 1
-                      ? t('project')
-                      : t('projects')}
-                    , {deletedOrganizationImpact.memberships.length}{' '}
-                    {deletedOrganizationImpact.memberships.length === 1
-                      ? t('member')
-                      : t('members')}
-                    , {deletedOrganizationImpact.domains.length}{' '}
-                    {deletedOrganizationImpact.domains.length === 1
-                      ? t('domain')
-                      : t('domains')}
-                    , {deletedResourceDeletions}{' '}
-                    {deletedResourceDeletions === 1
-                      ? t('resource')
-                      : t('resources')})
-                  </li>
-                ) : null}
-                {hasKeptOrgImpact ? (
-                  <li>
-                    <span className="font-medium text-foreground">
-                      {keptOrgLabel}
-                    </span>
-                    : {projectsToDelete.length}{' '}
-                    {projectsToDelete.length === 1
-                      ? t('project')
-                      : t('projects')}
-                    ,{' '}
-                    {membersToDelete.length}{' '}
-                    {membersToDelete.length === 1 ? t('member') : t('members')}
-                    ,{' '}
-                    {domainsToDelete.length}{' '}
-                    {domainsToDelete.length === 1 ? t('domain') : t('domains')}
-                    ,{' '}
-                    {keptResourceDeletions}{' '}
-                    {keptResourceDeletions === 1
-                      ? t('resource')
-                      : t('resources')}{' '}
-                    {t('removed')}
-                  </li>
-                ) : null}
-              </ul>
-            </div>
+              <div className="border-t border-border pt-4">
+                <p className="text-[13px] font-medium text-foreground">
+                  {t('Total impact')}
+                </p>
+                <ul className="mt-2 space-y-1.5 text-[13px] text-muted-foreground">
+                  {hasDeletedOrgImpact && deletedOrganizationImpact ? (
+                    <li>
+                      <span className="font-medium text-foreground">
+                        {deletedOrganizationImpact.organizationName}
+                      </span>
+                      : {t('entire organization deleted')} (
+                      {deletedOrganizationImpact.projects.length}{' '}
+                      {deletedOrganizationImpact.projects.length === 1
+                        ? t('project')
+                        : t('projects')}
+                      , {deletedOrganizationImpact.memberships.length}{' '}
+                      {deletedOrganizationImpact.memberships.length === 1
+                        ? t('member')
+                        : t('members')}
+                      , {deletedOrganizationImpact.domains.length}{' '}
+                      {deletedOrganizationImpact.domains.length === 1
+                        ? t('domain')
+                        : t('domains')}
+                      , {deletedResourceDeletions}{' '}
+                      {deletedResourceDeletions === 1
+                        ? t('resource')
+                        : t('resources')}
+                      )
+                    </li>
+                  ) : null}
+                  {hasKeptStaged ? (
+                    <li>
+                      <span className="font-medium text-foreground">
+                        {keptOrgLabel}
+                      </span>
+                      : {projectsStaged} {t('projects')}, {membersStaged}{' '}
+                      {t('members')}, {domainsStaged} {t('domains')},{' '}
+                      {stagedResourceDeletions}{' '}
+                      {stagedResourceDeletions === 1
+                        ? t('resource')
+                        : t('resources')}{' '}
+                      {t('will be deleted')}
+                    </li>
+                  ) : null}
+                  {hasKeptOverage ? (
+                    <li>
+                      <span className="font-medium text-foreground">
+                        {keptOrgLabel}
+                      </span>
+                      : {projectsOverage} {t('projects')}, {membersOverage}{' '}
+                      {t('members')}, {domainsOverage} {t('domains')},{' '}
+                      {keptResourceDeletions}{' '}
+                      {keptResourceDeletions === 1
+                        ? t('resource')
+                        : t('resources')}{' '}
+                      {t('still over limit')}
+                    </li>
+                  ) : null}
+                </ul>
+              </div>
             ) : null}
           </>
         )}

@@ -5,6 +5,9 @@
 export const heSharedUiDictionary: Record<string, string> = {
   // Error formatting (toast titles and static messages) // pragma: allowlist secret
   Error: 'שגיאה',
+  'Error reporting': 'דיווח שגיאות',
+  'Crash and performance diagnostics to help us fix issues in Appwrite.':
+    'שולחים נתוני קריסות וביצועים כדי שנוכל לתקן תקלות ב-Appwrite.',
   'Not Found': 'לא נמצא',
   'Access Denied': 'הגישה נדחתה',
   Forbidden: 'אין הרשאה',
@@ -145,6 +148,8 @@ export const heSharedUiDictionary: Record<string, string> = {
   Content: 'תוכן',
   'Cookie preferences': 'העדפות עוגיות',
   'Cookies Policy': 'מדיניות העוגיות',
+  'We use cookies to improve Appwrite.':
+    'אנחנו משתמשים בעוגיות כדי לשפר את Appwrite.',
   'Copied line': 'השורה הועתקה',
   'Copied to clipboard': 'הועתק ללוח',
   Copy: 'העתקה',
@@ -181,7 +186,10 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Deployment actions': 'פעולות פריסה',
   'Deployment activated successfully': 'הפריסה הופעלה בהצלחה',
   'Deployment deleted successfully': 'הפריסה נמחקה בהצלחה',
+  'Deployment view': 'תצוגת פריסה',
   'Deployment not found': 'הפריסה לא נמצאה',
+  'Site not found': 'האתר לא נמצא',
+  'Execution not found': 'ההרצה לא נמצאה',
   'Deployment rebuild started': 'הבנייה מחדש של הפריסה החלה',
   'Deployment screenshot': 'צילום מסך של הפריסה',
   Deprecated: 'הוצא משימוש',
@@ -257,6 +265,7 @@ export const heSharedUiDictionary: Record<string, string> = {
   Filters: 'סינונים',
   'Find a branch...': 'חיפוש ענף...',
   'Fix payment': 'הסדרת התשלום',
+  'Authorize payment': 'אישור תשלום',
   'Fix with an Agent': 'תיקון עם סוכן',
   'For me': 'עבורי',
   'For team': 'עבור הצוות',
@@ -444,6 +453,8 @@ export const heSharedUiDictionary: Record<string, string> = {
   Path: 'נתיב',
   'Payment failed - act now. Unresolved billing may interrupt your projects and services.':
     'התשלום נכשל - פעלו עכשיו. בעיית חיוב שלא נפתרה עלולה לשבש את הפרויקטים והשירותים שלכם.',
+  'Payment authorization required. Complete authentication now. Unresolved billing may interrupt your projects and services.':
+    'נדרש אישור תשלום. השלימו את האימות עכשיו. בעיית חיוב שלא נפתרה עלולה לשבש את הפרויקטים והשירותים שלכם.',
   'Payment failed - your organization has restricted access due to an unresolved billing issue. Changes to projects and services are restricted until payment succeeds. Update billing to restore full access.':
     'התשלום נכשל - לארגון שלכם יש גישה מוגבלת עקב בעיית חיוב שלא נפתרה. שינויים בפרויקטים ובשירותים מוגבלים עד להשלמת התשלום. עדכנו את פרטי החיוב כדי לשחזר גישה מלאה.',
   Preview: 'תצוגה מקדימה',
@@ -566,6 +577,47 @@ export const heSharedUiDictionary: Record<string, string> = {
   Selected: 'נבחר',
   'Send feedback': 'שליחת משוב',
   'Share your feedback...': 'שתפו את המשוב שלכם...',
+  'How is your experience with the console?': 'איך החוויה שלכם בקונסול?',
+  'How is the console working for you?': 'איך הקונסול עובד עבורכם?',
+  'Feedback sentiment': 'סנטימנט משוב',
+  'Works well': 'עובד טוב',
+  'Needs improvement': 'דורש שיפור',
+  Positive: 'חיובי',
+  Negative: 'שלילי',
+  'Add details (optional)': 'פרטים נוספים (אופציונלי)',
+  'Submit feedback': 'שליחת משוב',
+  'Report a bug on GitHub': 'דיווח על באג ב-GitHub',
+  'For issues in Appwrite with steps to reproduce':
+    'לבעיות ב-Appwrite עם שלבי שחזור',
+  'Tell us what you build': 'ספרו לנו מה אתם בונים',
+  'Request received. We will be in touch.': 'הבקשה התקבלה. ניצור קשר.',
+  'What you build and results you have seen. We may reach out for a short interview.':
+    'מה אתם בונים והתוצאות שראיתם. ייתכן שניצור קשר לראיון קצר.',
+  'What you ship and the results you have seen':
+    'מה אתם משחררים והתוצאות שראיתם',
+  'Request interview': 'בקשת ראיון',
+  'What could we improve?': 'מה נוכל לשפר?',
+  'What is working well? (optional)': 'מה עובד טוב? (אופציונלי)',
+  'Tell us what was confusing or missing': 'ספרו לנו מה היה מבלבל או חסר',
+  'Share what you liked (optional)': 'שתפו מה אהבתם (אופציונלי)',
+  'Report a bug': 'דיווח על באג',
+  'For reproducible defects in Appwrite itself, open a GitHub issue with steps to reproduce.':
+    'לתקלות שניתן לשחזר ב-Appwrite עצמו, פתחו issue ב-GitHub עם שלבי שחזור.',
+  'Open GitHub issue': 'פתיחת issue ב-GitHub',
+  'Share your customer story': 'שתפו את סיפור הלקוח שלכם',
+  'Story request received': 'בקשת הסיפור התקבלה',
+  'Our team will review your note and contact you if we move forward with a customer story.':
+    'הצוות שלנו יעבור על ההודעה ויצור קשר אם נתקדם לסיפור לקוח.',
+  'What would you like to share?': 'מה תרצו לשתף?',
+  'Product, results, and how Appwrite fits your stack':
+    'המוצר, התוצאות, ואיך Appwrite משתלב בסטק שלכם',
+  'Request customer story interview': 'בקשה לראיון לסיפור לקוח',
+  'Story requests are not configured. Set VITE_GROWTH_ENDPOINT in .env to enable submission.':
+    'בקשות לסיפורים אינן מוגדרות. הגדירו VITE_GROWTH_ENDPOINT בקובץ ‎.env כדי לאפשר שליחה.',
+  'Failed to submit story request': 'שליחת בקשת הסיפור נכשלה',
+  'Too many requests. Try again in a few minutes.':
+    'יותר מדי בקשות. נסו שוב בעוד כמה דקות.',
+  'Internal server error.': 'שגיאת שרת פנימית.',
   Show: 'הצגה',
   Showing: 'מציג',
   Size: 'גודל',
@@ -599,14 +651,20 @@ export const heSharedUiDictionary: Record<string, string> = {
   'This feature is coming soon': "הפיצ'ר הזה יגיע בקרוב",
   'This organization has reached its budget limit and is now blocked. To continue using Appwrite services, update the budget limit.':
     'הארגון הגיע למגבלת התקציב והוא חסום כעת. כדי להמשיך להשתמש בשירותי Appwrite, עדכנו את מגבלת התקציב.',
+  'This project is in readonly mode. Please contact the organization admin for details.':
+    'הפרויקט במצב קריאה בלבד. פנו למנהל הארגון לפרטים.',
   'This organization has reached its budget limit and is now blocked. Increase the budget cap below to restore access to billable services.':
     'הארגון הגיע למגבלת התקציב והוא חסום כעת. העלו את תקרת התקציב למטה כדי לשחזר גישה לשירותים החייבים בחיוב.',
   'This organization has reached its plan limit for':
     'הארגון הגיע למגבלת התוכנית עבור',
-  '. Upgrade your plan or wait until the end of the billing cycle to restore access.':
-    '. שדרגו את התוכנית או המתינו עד סוף מחזור החיוב כדי לשחזר גישה.',
-  'This organization has reached its plan usage limit and is now blocked. Upgrade your plan or wait until the end of the billing cycle to restore access.':
-    'הארגון הגיע למגבלת השימוש של התוכנית והוא חסום כעת. שדרגו את התוכנית או המתינו עד סוף מחזור החיוב כדי לשחזר גישה.',
+  '. API access to this project is suspended. Upgrade your plan or wait until the end of the billing cycle to restore service.':
+    '. גישת API לפרויקט זה מושהית. שדרגו את התוכנית או המתינו עד סוף מחזור החיוב כדי להחזיר את גישת ה-API.',
+  '. API access to this project is suspended. Delete files or other stored data to free capacity, or upgrade your plan.':
+    '. גישת API לפרויקט זה מושהית. מחקו קבצים או נתונים מאוחסנים אחרים כדי לפנות מקום, או שדרגו את התוכנית.',
+  '. API access to this project is suspended. Delete unused users to free capacity, or upgrade your plan.':
+    '. גישת API לפרויקט זה מושהית. מחקו משתמשים שאינם בשימוש כדי לפנות מקום, או שדרגו את התוכנית.',
+  'This organization has reached its plan usage limit. API access to this project is suspended. Upgrade your plan or wait until the end of the billing cycle to restore service.':
+    'הארגון הגיע למגבלת השימוש של התוכנית. גישת API לפרויקט זה מושהית. שדרגו את התוכנית או המתינו עד סוף מחזור החיוב כדי להחזיר את גישת ה-API.',
   'Plan limit reached': 'מגבלת התוכנית הושגה',
   'Phone auth': 'אימות טלפון',
   'View current cycle usage': 'צפייה בשימוש במחזור הנוכחי',
@@ -1263,4 +1321,11 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Operator account': 'חשבון אופרטור',
   'After you confirm, the Console will open this page.':
     'אחרי שתאשרו, המסוף ייפתח בעמוד הזה.',
+  'Not set': 'לא הוגדר',
+  'Browser timezone': 'אזור הזמן של הדפדפן',
+  'Stored in UTC': 'נשמר ב-UTC',
+  'Appwrite 2.0 is launching on Product Hunt today':
+    'Appwrite 2.0 מושק היום ב-Product Hunt',
+  'Appwrite 2.0 on Product Hunt': 'Appwrite 2.0 ב-Product Hunt',
+  'Share your take': 'שתפו את דעתכם',
 }

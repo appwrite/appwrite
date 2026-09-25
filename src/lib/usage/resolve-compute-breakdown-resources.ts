@@ -1,6 +1,6 @@
 import { fetchProjectFunctionsByIds } from '@/lib/react-query/hooks/functions'
 import { fetchProjectSitesByIds } from '@/lib/react-query/hooks/sites'
-import { COMPUTE_BREAKDOWN_RESOURCE_LIMIT } from '@/lib/usage/breakdown-limits'
+import { normalizeIds } from '@/lib/appwrite-id'
 
 export type ComputeBreakdownResourceType = 'function' | 'site'
 
@@ -18,9 +18,7 @@ export type ComputeBreakdownResourceMap = Record<
 export function normalizeComputeBreakdownResourceIds(
   resourceIds: string[],
 ): string[] {
-  return [
-    ...new Set(resourceIds.filter((id) => typeof id === 'string' && id.trim())),
-  ].slice(0, COMPUTE_BREAKDOWN_RESOURCE_LIMIT)
+  return normalizeIds(resourceIds)
 }
 
 /**
@@ -73,8 +71,12 @@ export function getComputeBreakdownResourceRoute(
   projectId: string,
   resource: ComputeBreakdownResource,
 ): {
-  to: '/projects/$projectId/functions/$functionId' | '/projects/$projectId/sites/$siteId'
-  params: { projectId: string; functionId: string } | { projectId: string; siteId: string }
+  to:
+    | '/projects/$projectId/functions/$functionId'
+    | '/projects/$projectId/sites/$siteId'
+  params:
+    | { projectId: string; functionId: string }
+    | { projectId: string; siteId: string }
 } {
   if (resource.type === 'function') {
     return {

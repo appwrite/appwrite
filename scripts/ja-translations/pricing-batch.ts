@@ -38,8 +38,8 @@ export const jaPricingBatch: Record<string, string> = {
   'Reserved CPU, RAM, and connection limits': '予約 CPU、RAM、接続制限',
   'Separate subscriptions, invoices, and renewal cycles':
     '別々のサブスクリプション、請求書、更新サイクル',
-  'Success manager and 24/7 support on Slack':
-    'サクセスマネージャーと Slack での 24/7 サポート',
+  '24/7 support on Slack': 'Slack での 24/7 サポート',
+  'Success manager': 'サクセスマネージャー',
   'Support for brotli, zstd, and gzip for text compression and webp for image compression':
     'テキスト圧縮向け brotli、zstd、gzip と画像圧縮向け webp をサポート',
   'Unlimited Databases, Buckets, and Functions':

@@ -47,8 +47,8 @@ Public clients send only their `client_id`. The response carries everything both
 {
   "device_code": "6015241e3d2023091dcabf86d5ab85c3f16c985c49d418f37f0c446e1d2c2a9c",
   "user_code": "MDF2TN39",
-  "verification_uri": "https://cloud.appwrite.io/console/oauth2/device",
-  "verification_uri_complete": "https://cloud.appwrite.io/console/oauth2/device?user_code=MDF2TN39",
+  "verification_uri": "https://appwrite.io/oauth2/device",
+  "verification_uri_complete": "https://appwrite.io/oauth2/device?user_code=MDF2TN39",
   "expires_in": 600,
   "interval": 1
 }

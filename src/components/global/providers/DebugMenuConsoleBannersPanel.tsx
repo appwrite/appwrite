@@ -13,6 +13,7 @@ import {
   getConsoleBannerScheduleStatus,
   type ConsoleBannerScheduleStatus,
 } from '@/lib/console-banners/catalog'
+import { clearGuestConsoleBannerDismiss } from '@/lib/console-banners/guest-dismissed-banners'
 import {
   clearAllDebugConsoleBannerPreviews,
   useDebugConsoleBannerPreviews,
@@ -71,10 +72,13 @@ export function DebugMenuConsoleBannersPanel() {
   )
 
   const handleResetDismiss = async (bannerId: string) => {
+    clearGuestConsoleBannerDismiss(bannerId)
     try {
-      await clearDismissal.mutateAsync(bannerId)
+      if (account) {
+        await clearDismissal.mutateAsync(bannerId)
+        await refetchAccount()
+      }
       toast.success('Banner dismiss reset')
-      await refetchAccount()
     } catch {
       toast.error('Failed to reset banner dismiss')
     }
@@ -143,6 +147,16 @@ export function DebugMenuConsoleBannersPanel() {
                 {banner.placement ? (
                   <Badge variant="info" className="text-[10px] shrink-0">
                     {banner.placement}
+                  </Badge>
+                ) : null}
+                {banner.cardSize === 'large' ? (
+                  <Badge variant="info" className="text-[10px] shrink-0">
+                    Large card
+                  </Badge>
+                ) : null}
+                {banner.cardAspectRatio === 'square' ? (
+                  <Badge variant="info" className="text-[10px] shrink-0">
+                    1:1 card
                   </Badge>
                 ) : null}
               </div>

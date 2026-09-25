@@ -3,6 +3,7 @@ import { Area, AreaChart, ResponsiveContainer } from 'recharts'
 import { CHART_ANIMATION_DISABLED } from '@/lib/usage/chart-animation'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
+import { FORCE_LTR_CLASS } from '@/lib/layout/force-ltr'
 import {
   useDatabaseReadsForDatabaseChart,
   useDatabaseWritesForDatabaseChart,
@@ -62,7 +63,16 @@ export function DatabaseOperationsChartPreview({
     enabled,
   )
 
+  const usageReady =
+    !enabled ||
+    ((readsQuery.isFetched || readsQuery.isError) &&
+      (writesQuery.isFetched || writesQuery.isError))
+
   const chartData = useMemo((): OperationsPoint[] => {
+    if (!usageReady) {
+      return buildEmptyOperationsSeries()
+    }
+
     const readsPoints = readsQuery.data?.chartPoints ?? []
     const writesPoints = writesQuery.data?.chartPoints ?? []
     if (readsPoints.length === 0 && writesPoints.length === 0) {
@@ -87,23 +97,39 @@ export function DatabaseOperationsChartPreview({
       reads: readsByTime.get(timestamp) ?? 0,
       writes: writesByTime.get(timestamp) ?? 0,
     }))
-  }, [readsQuery.data?.chartPoints, writesQuery.data?.chartPoints])
+  }, [
+    readsQuery.data?.chartPoints,
+    usageReady,
+    writesQuery.data?.chartPoints,
+  ])
 
   const totals = useMemo(() => {
+    if (!usageReady) {
+      return { reads: 0, writes: 0 }
+    }
     return {
       reads: sumUsageChartPoints(readsQuery.data?.chartPoints ?? []),
       writes: sumUsageChartPoints(writesQuery.data?.chartPoints ?? []),
     }
-  }, [readsQuery.data?.chartPoints, writesQuery.data?.chartPoints])
+  }, [
+    readsQuery.data?.chartPoints,
+    usageReady,
+    writesQuery.data?.chartPoints,
+  ])
 
   return (
-    <div className={cn('flex h-full min-h-0 min-w-0 flex-col', className)}>
-      <div className="shrink-0 px-4 pt-2.5 pb-16">
-        <div className="flex h-5 min-w-0 items-center justify-between gap-3">
-          <div className="flex min-w-0 items-center gap-3">
-            <span className="inline-flex items-center gap-1.5 text-[12px] font-medium leading-none text-muted-foreground">
+    <div
+      className={cn(
+        'flex h-full min-h-0 min-w-0 flex-col overflow-hidden',
+        className,
+      )}
+    >
+      <div className="shrink-0 overflow-hidden px-4 pt-2.5">
+        <div className="flex h-5 min-w-0 items-center justify-between gap-3 overflow-hidden whitespace-nowrap">
+          <div className="flex min-w-0 items-center gap-3 overflow-hidden">
+            <span className="inline-flex min-w-0 items-center gap-1.5 text-[12px] font-medium leading-none text-muted-foreground">
               <span
-                className="h-1.5 w-1.5 rounded-full"
+                className="h-1.5 w-1.5 shrink-0 rounded-full"
                 style={{ backgroundColor: READ_COLOR }}
                 aria-hidden
               />
@@ -112,9 +138,9 @@ export function DatabaseOperationsChartPreview({
                 {totals.reads.toLocaleString()}
               </span>
             </span>
-            <span className="inline-flex items-center gap-1.5 text-[12px] font-medium leading-none text-muted-foreground">
+            <span className="inline-flex min-w-0 items-center gap-1.5 text-[12px] font-medium leading-none text-muted-foreground">
               <span
-                className="h-1.5 w-1.5 rounded-full"
+                className="h-1.5 w-1.5 shrink-0 rounded-full"
                 style={{ backgroundColor: WRITE_COLOR }}
                 aria-hidden
               />
@@ -131,14 +157,17 @@ export function DatabaseOperationsChartPreview({
       </div>
 
       <div
-        className="relative min-h-0 w-full min-w-0 flex-1 overflow-hidden"
+        className={cn(
+          'relative min-h-0 w-full min-w-0 flex-1 overflow-hidden',
+          FORCE_LTR_CLASS,
+        )}
         role="img"
         aria-label={`${t('Read and write operations')}. ${t('Last 24 hours')}`}
       >
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height="100%" minWidth={0}>
           <AreaChart
             data={chartData}
-            margin={{ top: 0, right: 0, left: 0, bottom: 0 }}
+            margin={{ top: 4, right: 0, left: 0, bottom: 4 }}
           >
             <defs>
               <linearGradient
@@ -184,9 +213,9 @@ export function DatabaseOperationsChartPreview({
               stroke={READ_COLOR}
               strokeWidth={1.5}
               fill={`url(#reads-${gradientId})`}
-              isAnimationActive={!CHART_ANIMATION_DISABLED}
               dot={false}
               activeDot={false}
+              {...CHART_ANIMATION_DISABLED}
             />
             <Area
               type="monotone"
@@ -194,9 +223,9 @@ export function DatabaseOperationsChartPreview({
               stroke={WRITE_COLOR}
               strokeWidth={1.5}
               fill={`url(#writes-${gradientId})`}
-              isAnimationActive={!CHART_ANIMATION_DISABLED}
               dot={false}
               activeDot={false}
+              {...CHART_ANIMATION_DISABLED}
             />
           </AreaChart>
         </ResponsiveContainer>

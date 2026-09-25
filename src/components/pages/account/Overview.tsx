@@ -43,11 +43,14 @@ import {
   Loader2,
   AlertTriangle,
   Download,
+  ShieldAlert,
+  ShieldCheck,
 } from 'lucide-react'
 import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { InitialsAvatar } from '@/components/global/shared/Avatar'
 import { CopyableId } from '@/components/global/shared/CopyableId'
+import { ConfirmActionDialog } from '@/components/global/shared/ConfirmActionDialog'
 import { AuthenticatorType, AuthenticationFactor } from '@appwrite.io/console'
 import { Link } from '@tanstack/react-router'
 import type { Models } from '@appwrite.io/console'
@@ -320,6 +323,10 @@ export function UpdateEmailSection() {
 
 export function UpdatePasswordSection() {
   const t = useT()
+  const { account } = useAuth()
+  // Result of the last breached-password check on the console account.
+  // Undefined or null means the password has never been checked.
+  const passwordPwned = (account as Models.User | undefined)?.passwordPwned
   const [oldPassword, setOldPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const queryClient = useQueryClient()
@@ -366,24 +373,52 @@ export function UpdatePasswordSection() {
       className="rounded-xl border border-border bg-card/50 overflow-hidden"
     >
       <div className="px-6 py-4">
-        <h3 className="text-[15px] font-semibold text-foreground">
-          {t('Update password')}
-        </h3>
+        <div className="flex items-center gap-2">
+          <h3 className="text-[15px] font-semibold text-foreground">
+            {t('Update password')}
+          </h3>
+          {passwordPwned === true && (
+            <Badge variant="error" className="text-[10px] shrink-0 gap-1">
+              <ShieldAlert className="h-3 w-3" />
+              {t('breached')}
+            </Badge>
+          )}
+          {passwordPwned === false && (
+            <Badge variant="success" className="text-[10px] shrink-0 gap-1">
+              <ShieldCheck className="h-3 w-3" />
+              {t('no known breach')}
+            </Badge>
+          )}
+        </div>
       </div>
       <form onSubmit={handleSubmit}>
         <div className="border-t border-border" />
         <div className="px-6 py-4">
+          {passwordPwned === true && (
+            <p className="text-[13px] text-red-600 dark:text-red-400 mb-3">
+              {t(
+                'This password was found in a known data breach. Change it as soon as possible.',
+              )}
+            </p>
+          )}
           <p className="text-[13px] text-muted-foreground mb-3">
             {t(
               'Change your account password. Includes link to password recovery if forgotten.',
             )}
           </p>
+          {typeof passwordPwned !== 'boolean' && (
+            <p className="text-[13px] text-muted-foreground mb-3">
+              {t('Password not checked against known data breaches')}
+            </p>
+          )}
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="old-password">{t('Old password')}</Label>
               <Input
                 id="old-password"
+                name="current-password"
                 type="password"
+                autoComplete="current-password"
                 placeholder={t('Enter password')}
                 value={oldPassword}
                 onChange={(e) => setOldPassword(e.target.value)}
@@ -396,7 +431,9 @@ export function UpdatePasswordSection() {
               <Label htmlFor="new-password">{t('New password')}</Label>
               <Input
                 id="new-password"
+                name="new-password"
                 type="password"
+                autoComplete="new-password"
                 placeholder={t('Enter password')}
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
@@ -444,6 +481,10 @@ export function IdentitiesSection({
   const queryClient = useQueryClient()
   const identities = data?.identities ?? initialData?.identities ?? []
   const hasResolvedData = isFetched || initialData !== undefined
+  // The identity stays set while the dialog animates closed.
+  const [identityToDelete, setIdentityToDelete] =
+    useState<Models.Identity | null>(null)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
 
   const deleteIdentityMutation = useMutation({
     mutationFn: async (identityId: string) => {
@@ -452,16 +493,16 @@ export function IdentitiesSection({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: Dependencies.IDENTITIES })
       toast.success(t('Identity has been deleted'))
+      setDeleteDialogOpen(false)
     },
     onError: (error: Error) => {
       toast.error(error.message || t('Failed to delete identity'))
     },
   })
 
-  const handleDelete = (identityId: string) => {
-    if (confirm(t('Are you sure you want to delete this identity?'))) {
-      deleteIdentityMutation.mutate(identityId)
-    }
+  const requestDelete = (identity: Models.Identity) => {
+    setIdentityToDelete(identity)
+    setDeleteDialogOpen(true)
   }
 
   const getProviderIcon = (provider: string) => {
@@ -474,6 +515,7 @@ export function IdentitiesSection({
       cursor: 'cursor-ai.svg',
       gitlab: 'gitlab.svg',
       bitbucket: 'bitbucket.svg',
+      resend: 'resend.svg',
     }
     return providerMap[provider.toLowerCase()] || 'empty.svg'
   }
@@ -487,6 +529,7 @@ export function IdentitiesSection({
       cursor: 'Cursor',
       gitlab: 'GitLab',
       bitbucket: 'Bitbucket',
+      resend: 'Resend',
     }
     return nameMap[provider.toLowerCase()] || provider
   }
@@ -592,8 +635,9 @@ export function IdentitiesSection({
                   variant="ghost"
                   size="sm"
                   className="h-7 w-7 p-0"
-                  onClick={() => handleDelete(identity.$id)}
+                  onClick={() => requestDelete(identity)}
                   disabled={deleteIdentityMutation.isPending}
+                  aria-label={t('Delete identity')}
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
@@ -602,6 +646,45 @@ export function IdentitiesSection({
           ))}
         </TableBody>
       </Table>
+      <ConfirmActionDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        title="Delete identity"
+        description={
+          <>
+            {t('Are you sure you want to delete this identity?')}{' '}
+            {t('This action cannot be undone.')}
+            {identityToDelete ? (
+              <span className="mt-3 flex items-center gap-2 text-foreground">
+                <img
+                  src={`/icons/${getProviderIcon(identityToDelete.provider)}`}
+                  alt=""
+                  className={`h-4 w-4 ${PUBLIC_ICON_MUTED_CLASSES}`}
+                  onError={(e) => {
+                    e.currentTarget.src = '/icons/empty.svg'
+                  }}
+                />
+                <span className="font-medium">
+                  {getProviderName(identityToDelete.provider)}
+                </span>
+                {identityToDelete.providerEmail ? (
+                  <span className="truncate text-muted-foreground">
+                    {identityToDelete.providerEmail}
+                  </span>
+                ) : null}
+              </span>
+            ) : null}
+          </>
+        }
+        confirmLabel="Delete"
+        confirmVariant="destructive"
+        onConfirm={() => {
+          if (identityToDelete) {
+            deleteIdentityMutation.mutate(identityToDelete.$id)
+          }
+        }}
+        isConfirming={deleteIdentityMutation.isPending}
+      />
     </div>
   )
 }

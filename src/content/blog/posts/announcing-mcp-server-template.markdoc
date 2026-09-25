@@ -6,7 +6,7 @@ date: 2026-08-06
 cover: /images/blog/announcing-mcp-server-template/cover.avif
 timeToRead: 6
 author: chirag-aggarwal
-category: announcement, ai
+category: announcements, ai
 featured: false
 faqs:
   - question: "What is the MCP server template for Appwrite Functions?"
@@ -100,7 +100,7 @@ def my_tool(query: str) -> str:
 
 Type hints become the tool's `inputSchema`, so clients know exactly what arguments to send. Push the change to your connected repository, and Appwrite builds and activates the new deployment automatically.
 
-Because the server runs inside your Appwrite project, every request carries a [dynamic API key](/docs/products/functions/develop#dynamic-api-key) in its headers. A tool that needs your data can initialize the Appwrite SDK with that key and query your databases, storage, or users, without you creating, scoping, or rotating any credentials.
+Because the server runs inside your Appwrite project, every request carries a [ephemeral API key](/docs/products/functions/develop#ephemeral-api-key) in its headers. A tool that needs your data can initialize the Appwrite SDK with that key and query your databases, storage, or users, without you creating, scoping, or rotating any credentials.
 
 # Secure the endpoint
 
@@ -133,7 +133,7 @@ The template is the right starting point when you want AI agents to call tools t
 
 - **Internal team tools**: look up orders, query a product database, check the status of a job, or trigger a workflow, all from a chat in your editor.
 - **A controlled wrapper around an existing API**: instead of handing an agent raw API credentials, expose three or four specific operations with your validation in the middle.
-- **Tools over your Appwrite data**: with the dynamic API key, tools can read and write your project's databases and storage without extra configuration.
+- **Tools over your Appwrite data**: with the ephemeral API key, tools can read and write your project's databases and storage without extra configuration.
 
 ## What it does not do
 

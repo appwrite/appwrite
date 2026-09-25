@@ -17,6 +17,30 @@ import type { StorageBreakdownResourceMap } from '@/lib/usage/resolve-storage-br
 import type { TableBreakdownResourceMap } from '@/lib/usage/resolve-table-breakdown-resources'
 import { translate } from '@/lib/i18n/translate'
 
+/** English key for `t()` / `translate()` when a usage breakdown ID cannot be resolved. */
+export const USAGE_BREAKDOWN_RESOURCE_NOT_FOUND_LABEL = 'Not found'
+
+export function getUsageBreakdownUnresolvedResourceName(): string {
+  return translate(USAGE_BREAKDOWN_RESOURCE_NOT_FOUND_LABEL)
+}
+
+export type ResolveUsageResourceBreakdownOptions = {
+  /** When false, unresolved IDs use an empty name instead of "Not found". */
+  resourceNamesResolved?: boolean
+}
+
+export function isUsageBreakdownResourceLookupPending(
+  queryEnabled: boolean,
+  resourceIds: readonly string[],
+  isPending: boolean,
+): boolean {
+  return queryEnabled && resourceIds.length > 0 && isPending
+}
+
+function breakdownUnresolvedName(resourceNamesResolved: boolean): string {
+  return resourceNamesResolved ? getUsageBreakdownUnresolvedResourceName() : ''
+}
+
 export type UsageBreakdownFilterEntry = {
   dimension: string
   value: string
@@ -83,7 +107,9 @@ type UsageResourceBreakdownLookups = {
 export function resolveUsageResourceBreakdownItem(
   item: UsageBreakdownItem,
   lookups: UsageResourceBreakdownLookups,
+  options?: ResolveUsageResourceBreakdownOptions,
 ): ResolvedUsageResourceBreakdown {
+  const resourceNamesResolved = options?.resourceNamesResolved === true
   const resourceId = (item.resourceId ?? item.label).trim()
   const resourceType = item.resourceType?.trim() ?? ''
 
@@ -106,6 +132,11 @@ export function resolveUsageResourceBreakdownItem(
         computeResource,
       }
     }
+
+    return {
+      typeLabel: getComputeBreakdownResourceTypeLabel(resourceType),
+      name: breakdownUnresolvedName(resourceNamesResolved),
+    }
   }
 
   if (resourceType === 'bucket') {
@@ -119,6 +150,11 @@ export function resolveUsageResourceBreakdownItem(
         name: storageResource.name,
         storageResource,
       }
+    }
+
+    return {
+      typeLabel: getStorageBreakdownResourceTypeLabel(),
+      name: breakdownUnresolvedName(resourceNamesResolved),
     }
   }
 
@@ -137,6 +173,11 @@ export function resolveUsageResourceBreakdownItem(
         databaseResource,
       }
     }
+
+    return {
+      typeLabel: formatUsageResourceTypeLabel(resourceType),
+      name: breakdownUnresolvedName(resourceNamesResolved),
+    }
   }
 
   const tableDatabaseId = parseTableUsageResourceType(resourceType)
@@ -151,6 +192,11 @@ export function resolveUsageResourceBreakdownItem(
         name: tableResource.name,
         tableResource,
       }
+    }
+
+    return {
+      typeLabel: formatUsageResourceTypeLabel(resourceType),
+      name: breakdownUnresolvedName(resourceNamesResolved),
     }
   }
 
@@ -206,7 +252,7 @@ export function resolveUsageResourceBreakdownItem(
 
   return {
     typeLabel: formatUsageResourceTypeLabel(resourceType || 'Unknown'),
-    name: resourceId,
+    name: resourceId ? breakdownUnresolvedName(resourceNamesResolved) : '',
   }
 }
 

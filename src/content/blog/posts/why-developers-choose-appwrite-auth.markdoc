@@ -8,7 +8,7 @@ date: 2025-09-25
 author: veeresh-mulge
 callToAction: true
 unlisted: true
-category: product
+category: products
 faqs:
   - question: "What is an authentication service?"
     answer: "At its core, an authentication service is what makes sure the person (or system) trying to access your app really is who they claim to be. It handles the basics like signups, logins, and password resets, but also the more advanced pieces like session management, tokens, and role-based access. Think of it as the front door to your application. Without it, anyone could walk in. With the right authentication service, only the right users get through, whether that's your customers, your team, or even other services in a microservices setup."

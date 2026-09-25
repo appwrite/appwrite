@@ -107,7 +107,16 @@ import {
   buildMcpServerCard,
   serializeDiscoveryJson,
 } from './src/lib/seo/agent-discovery.ts'
+import {
+  CHANGE_PASSWORD_WELL_KNOWN_PATH,
+  HTTP_STATUS_RELIABILITY_WELL_KNOWN_PATH,
+  wellKnownChangePasswordResponse,
+} from './src/lib/seo/change-password-url.ts'
 import { trackServerPageview } from './src/lib/server-analytics.ts'
+import {
+  injectSsrVisitorCountryIntoHtml,
+  resolveVisitorCountryFromRequest,
+} from './src/lib/visitor-country-shared.ts'
 
 // Configuration
 const SERVER_PORT = Number(process.env.PORT ?? 3000)
@@ -122,6 +131,13 @@ const RUNTIME_CONFIG_JSON = serializeRuntimeConfig(RUNTIME_CONFIG)
 
 function injectRuntimeConfig(html: string): string {
   return injectRuntimeConfigIntoHtml(html, RUNTIME_CONFIG_JSON)
+}
+
+function injectDocumentHtml(req: Request, html: string): string {
+  return injectSsrVisitorCountryIntoHtml(
+    injectRuntimeConfig(html),
+    resolveVisitorCountryFromRequest(req),
+  )
 }
 
 function isIndexableRequest(req: Request): boolean {
@@ -174,16 +190,26 @@ async function readClientExportOrFallback(
 function htmlResponse(
   req: Request,
   html: string,
-  headers: Record<string, string>,
+  headers: HeadersInit,
+  status: number = 200,
+  statusText?: string,
 ): Response {
   // Prerendered HTML (/init, marketing pages) is served from Bun routes and
   // never reaches TanStack host-canonical middleware.
   const canonicalRedirect = getCanonicalHostRedirectResponse(req)
   if (canonicalRedirect) return canonicalRedirect
 
+  const responseHeaders = new Headers(headers)
+  // Runtime config injection changes the body length.
+  responseHeaders.delete('content-length')
+
   return withSeoIndexingHeaders(
     req,
-    new Response(injectRuntimeConfig(html), { headers }),
+    new Response(injectDocumentHtml(req, html), {
+      headers: responseHeaders,
+      status,
+      statusText,
+    }),
   )
 }
 
@@ -763,7 +789,8 @@ async function initializeStaticRoutes(
 /** Redirect pre-2.0 `/console/...` and typed-resource deep links to vibes routes. */
 function redirectLegacyConsolePath(req: Request): Response {
   const url = new URL(req.url)
-  const location = rewriteLegacyConsolePath(url.pathname) + url.search
+  const location =
+    rewriteLegacyConsolePath(url.pathname, url.search) + url.search
   return new Response(null, {
     status: 302,
     headers: {
@@ -867,6 +894,14 @@ async function initializeServer() {
           'application/json; charset=utf-8',
         ),
 
+      // W3C change-password well-known URL (password managers).
+      [CHANGE_PASSWORD_WELL_KNOWN_PATH]: (req: Request) =>
+        wellKnownChangePasswordResponse(req) ??
+        new Response('Not Found', { status: 404 }),
+      [HTTP_STATUS_RELIABILITY_WELL_KNOWN_PATH]: (req: Request) =>
+        wellKnownChangePasswordResponse(req) ??
+        new Response('Not Found', { status: 404 }),
+
       // Serve static assets (preloaded or on-demand). robots.txt, sitemap.xml,
       // llms exports, and discovery documents are excluded so they use tracked
       // handlers above or fall through to TanStack.
@@ -905,10 +940,11 @@ async function initializeServer() {
             return withSeoIndexingHeaders(req, res)
           }
           const html = await res.text()
-          return htmlResponse(req, html, {
-            'Content-Type': contentType,
-            'Cache-Control': res.headers.get('cache-control') ?? 'no-store',
-          })
+          const headers = new Headers(res.headers)
+          if (!headers.has('cache-control')) {
+            headers.set('Cache-Control', 'no-store')
+          }
+          return htmlResponse(req, html, headers, res.status, res.statusText)
         } catch (error) {
           log.error(`Server handler error: ${String(error)}`)
           captureServerException(error, {

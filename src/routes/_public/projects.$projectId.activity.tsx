@@ -68,10 +68,19 @@ export const Route = createFileRoute('/_public/projects/$projectId/activity')({
       filterQueryKey,
     })
 
-    const [activities] = await Promise.all([
-      queryClient.ensureQueryData(activitiesOptions),
-      queryClient.ensureQueryData(countriesQueryOptions()).catch(() => undefined),
+    // Activity events come from ClickHouse. Never block or fail this route if
+    // that store is down, slow, or returns a retention/history error. The View
+    // still fetches and shows a retryable error state.
+    const activities = await Promise.race([
+      queryClient.ensureQueryData(activitiesOptions).catch(() => undefined),
+      new Promise<undefined>((resolve) => {
+        window.setTimeout(() => resolve(undefined), 4000)
+      }),
     ])
+
+    void queryClient
+      .ensureQueryData(countriesQueryOptions())
+      .catch(() => undefined)
 
     return { activities }
   },

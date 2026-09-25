@@ -138,8 +138,8 @@ const DOCS_TOOLING_SECTION_NAV: DocsNavTree = [
 ]
 
 /**
- * Docs section navigation maintained in vibes (not imported from the website repo).
- * Survives `bun run import:docs` without being overwritten.
+ * Additional docs section navigation maintained in vibes.
+ * Merged with DOCS_SECTION_NAVS from ./sections.ts.
  */
 export const DOCS_LOCAL_SECTION_NAVS: DocsSectionNavConfig[] = [
   {
@@ -295,6 +295,10 @@ export const DOCS_LOCAL_SECTION_NAVS: DocsSectionNavConfig[] = [
           {
             label: 'OAuth2 login',
             href: '/docs/products/auth/oauth2',
+          },
+          {
+            label: 'Native sign-in',
+            href: '/docs/products/auth/native-sign-in',
           },
           {
             label: 'Sign in with Appwrite',

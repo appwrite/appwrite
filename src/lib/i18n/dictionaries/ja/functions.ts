@@ -33,7 +33,6 @@ export const jaFunctionsDictionary: Record<string, string> = {
   'Cancel deployment': 'デプロイをキャンセル',
   'Certificate generation failed': '証明書の生成に失敗しました',
   'Check your permissions': '権限を確認してください',
-  'Choose .tar.gz file': '.tar.gz ファイルを選択',
   'Choose who can execute this function': 'この関数を実行できるユーザーを選択',
   'Clear filters and search': 'フィルターと検索をクリア',
   'Clone template': 'テンプレートをクローン',
@@ -76,6 +75,8 @@ export const jaFunctionsDictionary: Record<string, string> = {
   'DDoS protection': 'DDoS 保護',
   'Delete deployment': 'デプロイを削除',
   'Delete Deployments': 'デプロイを削除',
+  'Delete execution': '実行を削除',
+  'Delete executions': '実行を削除',
   'Delete function': '関数を削除',
   'Delete functions': '関数を削除',
   'deploy from URL': 'URL からデプロイ',
@@ -113,6 +114,9 @@ export const jaFunctionsDictionary: Record<string, string> = {
   'Execution creation coming soon': '実行作成機能は近日公開予定',
   'Execution finished with status': '実行が次のステータスで終了しました',
   'Execution ID': '実行 ID',
+  'Execution deleted': '実行を削除しました',
+  execution: '実行',
+  executions: '実行',
   'Execution logging': '実行ログ',
   'Failed to activate deployment': 'デプロイの有効化に失敗しました',
   'Failed to add domain': 'ドメインの追加に失敗しました',
@@ -125,6 +129,8 @@ export const jaFunctionsDictionary: Record<string, string> = {
   'Failed to create gzip file': 'gzip ファイルの作成に失敗しました',
   'Failed to delete deployment': 'デプロイの削除に失敗しました',
   'Failed to delete deployments': 'デプロイの削除に失敗しました',
+  'Failed to delete execution': '実行の削除に失敗しました',
+  'Failed to delete executions': '実行の削除に失敗しました',
   'Failed to delete function': '関数の削除に失敗しました',
   'Failed to delete functions': '関数の削除に失敗しました',
   'Failed to disconnect repository': 'リポジトリの切断に失敗しました',
@@ -368,6 +374,8 @@ export const jaFunctionsDictionary: Record<string, string> = {
     'Appwrite のネットワークには DDoS 対策が標準搭載されており、分散型サービス拒否攻撃から保護します。トラフィックが多い状況でも、関数への継続的なアクセスと高い可用性を維持します。',
   'Are you sure you want to delete this deployment? This action cannot be undone.':
     'このデプロイを削除してもよろしいですか? この操作は元に戻せません。',
+  'Are you sure you want to delete this execution? This action cannot be undone.':
+    'この実行を削除してもよろしいですか? この操作は元に戻せません。',
   'Are you sure you want to delete this function? This action cannot be undone.':
     'この関数を削除してもよろしいですか? この操作は元に戻せません。',
   'Build must be ready before activating':
@@ -492,8 +500,8 @@ export const jaFunctionsDictionary: Record<string, string> = {
   'Runtime specification for your function': '関数のランタイム仕様',
   'Select a Git installation and repository to connect to this function':
     'この関数に接続する Git インストールとリポジトリを選択してください',
-  'Select scopes to grant the dynamic key generated temporarily for your function. It is best practice to allow only necessary permissions.':
-    '関数のために一時的に生成される動的キーに付与するスコープを選択してください。必要な権限のみを許可することを推奨します。',
+  'Select scopes to grant the ephemeral key generated for your function. It is best practice to allow only necessary permissions.':
+    '関数のために生成される一時的なキーに付与するスコープを選択してください。必要な権限のみを許可することを推奨します。',
   'Select the runtime specification for your function':
     '関数のランタイム仕様を選択してください',
   'Configure environment variables for your function. Function-specific variables override global project variables. Set the environment variables or secret keys that will be passed to this function.':

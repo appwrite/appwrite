@@ -325,6 +325,126 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Path:': 'パス:',
   'Country:': '国:',
   'Rate limit:': 'レート制限:',
+  'Rate limiting': 'レート制限',
+  'OTP abuse protection': 'OTP の不正利用対策',
+  'Regional compliance': '地域コンプライアンス',
+  'Scraping prevention': 'スクレイピング対策',
+  'Block API from countries': '国別に API をブロック',
+  'Deny all project API traffic from selected countries.':
+    '選択した国からのプロジェクト API トラフィックをすべて拒否します。',
+  'Allow API only from countries': '選択した国からのみ API を許可',
+  'Deny project API traffic outside selected countries.':
+    '選択した国以外からのプロジェクト API トラフィックを拒否します。',
+  'Rate limit project API': 'プロジェクト API のレート制限',
+  'Cap total REST API requests per IP to slow bulk scraping.':
+    'IP ごとの REST API リクエスト上限で大量スクレイピングを抑えます。',
+  'Rate limit database API': 'データベース API のレート制限',
+  'Cap TablesDB list and read traffic per IP to protect against data scraping.':
+    'IP ごとに TablesDB の list/read トラフィックを上限設定し、データスクレイピングから保護します。',
+  'Block hosting provider traffic': 'ホスティング事業者トラフィックをブロック',
+  'Deny API requests from hosting provider networks.':
+    'ホスティング事業者ネットワークからの API リクエストを拒否します。',
+  'Block datacenter connection traffic': 'データセンター接続トラフィックをブロック',
+  'Deny API requests from datacenter connection types.':
+    'データセンター接続タイプからの API リクエストを拒否します。',
+  'Add-on required': 'アドオンが必要',
+  'Premium Geo DB': 'Premium Geo DB',
+  'Set a per-IP request quota for matching API traffic. Review the impact preview before tightening limits.':
+    '一致する API トラフィックに IP ごとのリクエスト上限を設定します。制限を厳しくする前に影響プレビューを確認してください。',
+  'Created from a scraping prevention preset. Review traffic in the impact preview before tightening limits.':
+    'スクレイピング対策プリセットから作成されました。制限を厳しくする前に影響プレビューでトラフィックを確認してください。',
+  'Creates one deny rule. Denies traffic when the country is not in your allow list. Unresolved geo is allowed.':
+    '拒否ルールを 1 件作成します。許可リストにない国からのトラフィックを拒否します。未解決の geo は許可されます。',
+  'Creates one deny rule per country. Matching API requests receive a 403 response.':
+    '国ごとに拒否ルールを 1 件作成します。一致する API リクエストは 403 を返します。',
+  'Block API': 'API をブロック',
+  'Enable the Premium Geo DB addon for this project to use connection and ISP conditions in firewall rules.':
+    '接続および ISP 条件を Firewall ルールで使うには、このプロジェクトで Premium Geo DB アドオンを有効にしてください。',
+  'Created from a scraping prevention preset. Requires Premium Geo DB.':
+    'スクレイピング対策プリセットから作成されました。Premium Geo DB が必要です。',
+  'Block network traffic': 'ネットワークトラフィックをブロック',
+  'Last 24 hours of project API traffic that matches these conditions.':
+    'これらの条件に一致するプロジェクト API トラフィックの直近 24 時間です。',
+  'Last 24 hours. Combined estimate for every rule this preset will create.':
+    '直近 24 時間。このプリセットが作成するすべてのルールの合算見積もりです。',
+  'Select options above to preview matched traffic.':
+    '一致するトラフィックをプレビューするには、上でオプションを選択してください。',
+  'Preview is approximate when multiple rules will be created. Total impact may be higher.':
+    '複数ルールが作成される場合、プレビューは概算です。合計への影響はこれより大きい場合があります。',
+  'This preset uses conditions that cannot be estimated from usage logs.':
+    'このプリセットは使用ログから推定できない条件を使います。',
+  'Too many conditions to estimate from usage logs for this preview.':
+    'このプレビューでは使用ログから推定できる条件数を超えています。',
+  'Cap SMS OTP token requests per IP address.':
+    'IP アドレスごとに SMS OTP トークンリクエストを上限設定します。',
+  'Cap email OTP token requests per IP address.':
+    'IP アドレスごとに Email OTP トークンリクエストを上限設定します。',
+  'Slow brute-force attempts on phone OTP verification.':
+    'Phone OTP 検証への総当たり攻撃を遅らせます。',
+  'Slow brute-force attempts on email OTP verification.':
+    'Email OTP 検証への総当たり攻撃を遅らせます。',
+  'Deny OTP traffic from selected countries.':
+    '選択した国からの OTP トラフィックを拒否します。',
+  'Deny OTP traffic outside selected countries.':
+    '選択した国以外からの OTP トラフィックを拒否します。',
+  'Rate limit phone OTP send': 'Phone OTP 送信のレート制限',
+  'Rate limit email OTP send': 'Email OTP 送信のレート制限',
+  'Rate limit phone OTP verification': 'Phone OTP 検証のレート制限',
+  'Rate limit email OTP verification': 'Email OTP 検証のレート制限',
+  'Block OTP from countries': '国別に OTP をブロック',
+  'Allow OTP only from countries': '選択した国からのみ OTP を許可',
+  'Rate limit OTP': 'OTP のレート制限',
+  'Set a per-IP request quota for matching OTP traffic. Review traffic after creating the rule.':
+    '一致する OTP トラフィックに IP ごとのリクエスト上限を設定します。ルール作成後にトラフィックを確認してください。',
+  'Request limit and interval must be greater than zero.':
+    'リクエスト上限と間隔は 0 より大きくしてください。',
+  Interval: '間隔',
+  'Maximum window is 24 hours.': 'ウィンドウの最大は 24 時間です。',
+  'Interval must be between 1 second and 24 hours.':
+    '間隔は 1 秒から 24 時間の範囲で指定してください。',
+  'Created from an OTP protection preset. Adjust limits using the impact preview on future edits.':
+    'OTP 保護プリセットから作成されました。今後の編集では影響プレビューで上限を調整してください。',
+  'Rate limit OTP send': 'OTP 送信のレート制限',
+  'Rate limit OTP verification': 'OTP 検証のレート制限',
+  'Cap phone and email OTP token requests per IP address.':
+    'IP アドレスごとに Phone/Email OTP トークンリクエストを上限設定します。',
+  'Slow brute-force attempts on phone and email OTP verification.':
+    'Phone/Email OTP 検証への総当たり攻撃を遅らせます。',
+  'OTP send (phone and email)': 'OTP 送信 (Phone/Email)',
+  'OTP verification (phone and email)': 'OTP 検証 (Phone/Email)',
+  'Select at least one channel (phone or email).':
+    'Phone または Email のいずれか 1 つ以上を選択してください。',
+  'Select at least one OTP step (send or verification).':
+    'OTP の送信または検証のいずれか 1 つ以上を選択してください。',
+  'Cap phone and email OTP send and verification per IP address.':
+    'IP アドレスごとに Phone/Email の OTP 送信と検証を上限設定します。',
+  Steps: 'ステップ',
+  'OTP send': 'OTP 送信',
+  'OTP verification': 'OTP 検証',
+  'Select at least one channel and step (phone, email, send, or verification).':
+    'Phone、Email、送信、検証のいずれか 1 つ以上を選択してください。',
+  'Select at least one OTP flow.': 'OTP フローを 1 つ以上選択してください。',
+  'Select at least one country.': '国を 1 つ以上選択してください。',
+  'Apply to': '適用先',
+  'Phone OTP send': 'Phone OTP 送信',
+  'Email OTP send': 'Email OTP 送信',
+  'Phone OTP verification': 'Phone OTP 検証',
+  'Email OTP verification': 'Email OTP 検証',
+  Countries: '国',
+  'Add a country': '国を追加',
+  'Country OTP restriction': 'OTP の国別制限',
+  'Creates one deny rule per selected flow. Denies traffic when the country is not in your allow list. Unresolved geo is allowed.':
+    '選択したフローごとに拒否ルールを 1 つ作成します。許可リストにない国からのトラフィックを拒否します。未解決の geo は許可されます。',
+  'Last 24 hours of API traffic that would be denied because it is not from an allowed country.':
+    '許可国以外からの、拒否される API トラフィックの直近 24 時間です。',
+  'Last 24 hours of API traffic from selected countries that would be denied.':
+    '選択した国からの、拒否される API トラフィックの直近 24 時間です。',
+  'Requests that would be denied': '拒否されるリクエスト',
+  'Creates one deny rule per country and flow. Matching OTP requests receive a 403 response.':
+    '国とフローの組み合わせごとに拒否ルールを 1 つ作成します。一致する OTP リクエストは 403 を返します。',
+  'Allow only selected countries': '選択した国のみ許可',
+  'firewall rules created': 'ファイアウォールルールを作成しました',
+  'Create rules': 'ルールを作成',
   'Create firewall rule': 'ファイアウォールルールの作成',
   'Rule name': 'ルール名',
   'e.g., Block suspicious IPs': '例: 不審な IP をブロック',
@@ -399,6 +519,9 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Account API key': 'アカウント API キー',
   'Partners API key': 'パートナー API キー',
   'No activities yet': 'アクティビティがまだありません',
+  'Failed to load activity': 'アクティビティの読み込みに失敗しました',
+  "We couldn't retrieve activity logs. This might be a temporary issue. Please try again.":
+    'アクティビティログを取得できませんでした。一時的な問題の可能性があります。再試行してください。',
   'Activity log': 'アクティビティログ',
   'Details for activity': 'アクティビティの詳細',
   'Copy link to this activity': 'このアクティビティへのリンクをコピー',
@@ -881,6 +1004,13 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Open MCP': 'MCP を開く',
   'Register where your app runs, add API credentials, and connect a coding agent with MCP.':
     'アプリの実行環境を登録し、API 認証情報を追加して、MCP でコーディングエージェントを接続します。',
+  'Register where your app runs, add API credentials, and install the CLI or MCP when you are ready.':
+    'アプリの実行環境を登録し、API 認証情報を追加します。準備ができたら CLI または MCP をインストールしてください。',
+  'Install the Appwrite CLI': 'Appwrite CLI をインストール',
+  'Use the CLI from your terminal to manage this project, deploy functions, and automate workflows.':
+    'ターミナルから CLI を使い、このプロジェクトの管理、Functions のデプロイ、ワークフローの自動化を行います。',
+  'Install CLI': 'CLI をインストール',
+  'Open CLI': 'CLI を開く',
   "You've reached the limit of": '上限に達しました:',
   'Approaching the limit for': '上限に近づいています:',
   'Your plan': 'お使いのプラン',
@@ -1003,6 +1133,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   "Couldn't load executions": '実行を読み込めませんでした',
   "Couldn't load requests": 'リクエストを読み込めませんでした',
   "Couldn't load storage": 'ストレージを読み込めませんでした',
+  "Couldn't load firewall traffic": 'Firewall のトラフィックを読み込めませんでした',
+  "Couldn't load impact estimate": '影響の見積もりを読み込めませんでした',
   Deployments: 'デプロイ',
   Executions: '実行',
   'Executions over time': '経時的な実行',
@@ -1901,8 +2033,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'このメッセージのユーザーターゲットを選択してください。各ユーザーはチャンネルごとに複数のターゲットを持てます。',
   'Choose users using Add to target every matching channel target for each user.':
     '追加を使用してユーザーを選択し、各ユーザーの一致するすべてのチャンネルターゲットを対象にします。',
-  'Choose when this message should be delivered. Time uses your local timezone.':
-    'このメッセージの配信時刻を選択してください。時刻はローカルタイムゾーンを使用します。',
+  'Choose when this message should be delivered.':
+    'このメッセージの配信時刻を選択してください。',
   Color: '色',
   Compose: '作成',
   'Confirm sending message': 'メッセージ送信の確認',
@@ -1942,6 +2074,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Draft updated': '下書きを更新しました',
   'EU region': 'EU リージョン',
   'Email content': 'メールコンテンツ',
+  'Email preview': 'メールプレビュー',
   'Email subject': 'メール件名',
   'Enable for development builds, disable for production.':
     '開発ビルドでは有効、本番では無効にしてください。',
@@ -2031,6 +2164,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'このメッセージを完全に削除します。この操作は元に戻せません。',
   'Permanently delete this topic and all its subscribers. This action cannot be undone.':
     'このトピックとすべてのサブスクライバーを完全に削除します。この操作は元に戻せません。',
+  'Phone number with the leading + and country code, or an alphanumeric sender ID.':
+    '先頭の + と国コードを含む電話番号、または英数字の Sender ID。',
   'Pick a bucket and file from Storage. It will be referenced as bucketId:fileId on the message.':
     'ストレージからバケットとファイルを選択してください。メッセージでは bucketId:fileId として参照されます。',
   'Pick specific channel targets for this message. Targets must match the message provider (email, SMS, or push).':
@@ -2099,6 +2234,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'Resend 経由でトランザクションメールを送信します。',
   'Send transactional email through SendGrid.':
     'SendGrid 経由でトランザクションメールを送信します。',
+  Sender: '送信元',
   'Sender ID': 'Sender ID',
   'Sender Name': '送信者名',
   'Sender phone': '送信元電話番号',
@@ -2155,6 +2291,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Topic name': 'トピック名',
   'Topic name updated successfully': 'トピック名を更新しました',
   'Topic not found': 'トピックが見つかりません',
+  'Subscriber not found': 'サブスクライバーが見つかりません',
   'Topics group subscribers for email, SMS, or push.':
     'トピックはメール、SMS、プッシュ用にサブスクライバーをグループ化します。',
   'Type:': 'タイプ:',
@@ -2667,6 +2804,90 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   avatars: 'アバター',
   Organizations: '組織',
   Install: 'インストール',
+  // SMTP quick setup (universal card: Resend today, Mailgun and SendGrid next)
+  'Connect an email provider and Appwrite fills in your SMTP settings automatically.':
+    'メールプロバイダーを接続すると、Appwrite が SMTP 設定を自動で入力します。',
+  'Set up': 'セットアップ',
+  'Creates a sending-only API key for a verified domain.':
+    '検証済みドメイン用の送信専用 API キーを作成します。',
+  'Creates a domain sending key for a verified domain.':
+    '検証済みドメイン用のドメイン送信キーを作成します。',
+  'Creates a restricted API key with mail send access.':
+    'メール送信権限を持つ制限付き API キーを作成します。',
+  'Failed to connect the email provider':
+    'メールプロバイダーへの接続に失敗しました',
+  'The provider was authorized for a different Appwrite account. Try again while signed in to this account.':
+    'プロバイダーは別の Appwrite アカウントに対して認可されました。このアカウントにサインインした状態でもう一度お試しください。',
+  'Loading domains…': 'ドメインを読み込み中…',
+  'Failed to load domains from the email provider':
+    'メールプロバイダーからドメインを読み込めませんでした',
+  'No verified domains': '検証済みのドメインがありません',
+  'Add and verify a sending domain, then check again.':
+    '送信ドメインを追加して検証し、もう一度確認してください。',
+  'Manage domains': 'ドメインを管理',
+  'Check again': '再確認',
+  'The credential is restricted to this domain and can only send email.':
+    'この認証情報はこのドメインに制限され、メール送信のみ行えます。',
+  'Must use the selected domain.': '選択したドメインを使用する必要があります。',
+  'Enter a sender name.': '送信者名を入力してください。',
+  'Enter a sender email on the selected domain.':
+    '選択したドメインの送信者メールアドレスを入力してください。',
+  'Authorization expired': '認可の有効期限が切れました',
+  'Reconnect your provider account to continue.':
+    '続行するにはプロバイダーアカウントを再接続してください。',
+  'Failed to set up SMTP with the email provider':
+    'メールプロバイダーでの SMTP セットアップに失敗しました',
+  'Let Appwrite create the API key for a verified domain and fill these fields.':
+    'Appwrite が検証済みドメイン用の API キーを作成し、これらの項目を入力します。',
+  'Generate API key': 'API キーを生成',
+  'One-click Resend sender': 'ワンクリック Resend 送信者',
+  'Creating the sending credential…': '送信用の認証情報を作成中…',
+  'Failed to create the API key with the email provider':
+    'メールプロバイダーでの API キーの作成に失敗しました',
+  'API key created and filled in below. Review and create the provider.':
+    'API キーを作成し、以下に入力しました。内容を確認してプロバイダーを作成してください。',
+  'One-click setup': 'ワンクリックセットアップ',
+  'Notify me': '通知を受け取る',
+  'You will be notified': '通知されます',
+  "You'll no longer be notified about this provider.":
+    'このプロバイダーについては今後通知しません。',
+  'Failed to update notification preferences': '通知設定を更新できませんでした',
+  "You'll be notified when this provider is available.":
+    'このプロバイダーが利用可能になったらお知らせします。',
+  'Sending domain': '送信ドメイン',
+  Sender: '送信者',
+  'Disconnect Resend': 'Resend を切断',
+  'Disconnect Mailgun': 'Mailgun を切断',
+  'Disconnect SendGrid': 'SendGrid を切断',
+  'Provider actions': 'プロバイダーの操作',
+  'Set up SMTP with Resend': 'Resend で SMTP をセットアップ',
+  'Set up SMTP with Mailgun': 'Mailgun で SMTP をセットアップ',
+  'Set up SMTP with SendGrid': 'SendGrid で SMTP をセットアップ',
+  'Creating credential and saving SMTP settings…':
+    '認証情報を作成して SMTP 設定を保存中…',
+  'Custom SMTP is enabled and your project now sends emails through this provider.':
+    'カスタム SMTP が有効になり、プロジェクトはこのプロバイダー経由でメールを送信するようになりました。',
+  'Connect with Resend': 'Resend に接続',
+  'Connect with Mailgun': 'Mailgun に接続',
+  'Connect with SendGrid': 'SendGrid に接続',
+  'Appwrite will no longer be able to create sending credentials for this provider. Credentials already saved in your SMTP settings keep working.':
+    'Appwrite はこのプロバイダーの送信用認証情報を作成できなくなります。SMTP 設定に保存済みの認証情報は引き続き動作します。',
+  'Provider disconnected': 'プロバイダーを切断しました',
+  'Failed to disconnect the provider': 'プロバイダーの切断に失敗しました',
+  'Confirm setup': 'セットアップの確認',
+  'This browser has no record of starting this authorization, so we will not sign you in automatically.':
+    'このブラウザーにはこの認可を開始した記録がないため、自動的にはサインインしません。',
+  'Continuing signs you in to the Appwrite account that authorized this provider.':
+    '続行すると、このプロバイダーを認可した Appwrite アカウントにサインインします。',
+  'This authorization link was already used or has expired. Start the setup again from the console.':
+    'この認可リンクは既に使用されたか、有効期限が切れています。コンソールからもう一度セットアップを開始してください。',
+  'Back to setup': 'セットアップに戻る',
+  'Unable to finish setup': 'セットアップを完了できません',
+  'Finishing setup': 'セットアップを完了しています',
+  'Restoring your session and returning to the setup.':
+    'セッションを復元してセットアップに戻ります。',
+  'This link is missing required parameters.':
+    'このリンクには必要なパラメーターがありません。',
   // Usage log retention
   'Usage history limit reached': '利用履歴の上限に達しました',
   'Your plan includes': 'ご利用中のプランには',

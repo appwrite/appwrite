@@ -9,7 +9,10 @@ export const heDatabasesDictionary: Record<string, string> = {
   '1 backup deleted': 'גיבוי אחד נמחק',
   'About this algorithm': 'על האלגוריתם הזה',
   'Appwrite now speaks PostgreSQL': 'Appwrite מדבר PostgreSQL',
+  'Appwrite Start, a plan built for Indian developers.':
+    'Appwrite Start, תוכנית שנבנתה למפתחים בהודו.',
   'Dismiss banner': 'סגירת באנר',
+  'Namaste India': 'Namaste India',
   'New': 'חדש',
   'PostgreSQL announcement banner': 'באנר הודעה על PostgreSQL',
   'Read more': 'למידע נוסף',
@@ -338,8 +341,8 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Current': 'נוכחי',
   'Current database': 'מסד הנתונים הנוכחי',
   'Current session states from pg_stat_activity.': 'מצבי הסשנים הנוכחיים מתוך pg_stat_activity.',
-  'Upgrade from serverless to a dedicated tier to reserve CPU, memory, and connection limits. Migrating applies with a brief read-only window during cutover.':
-    'שדרגו מ-Serverless לרמה ייעודית כדי לשריין CPU, זיכרון ומגבלות חיבורים. המיגרציה כוללת חלון קצר לקריאה בלבד בזמן המעבר.',
+  'Upgrade from serverless to a dedicated tier to reserve CPU, memory, and connection limits.':
+    'שדרגו מ-Serverless לרמה ייעודית כדי לשריין CPU, זיכרון ומגבלות חיבורים.',
   'Migration to dedicated compute started': 'מיגרציה למחשוב ייעודי התחילה',
   'Compute and connection limits for this database.':
     'מגבלות מחשוב וחיבורים עבור מסד הנתונים הזה.',
@@ -856,6 +859,8 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Delete rows': 'מחיקת שורות',
   'Delete documents': 'מחיקת מסמכים',
   'Table not found': 'הטבלה לא נמצאה',
+  'Row not found': 'השורה לא נמצאה',
+  'Document not found': 'המסמך לא נמצא',
   'Collection not found': 'האוסף לא נמצא',
   'Failed to create table': 'יצירת הטבלה נכשלה',
   'Failed to create collection': 'יצירת האוסף נכשלה',
@@ -1644,6 +1649,29 @@ export const heDatabasesDictionary: Record<string, string> = {
     'שדרוג מסד נתונים בתהליך. חלק מהפעולות עשויות להיות זמנית לא זמינות.',
   'A database migration is in progress. Some operations may be temporarily unavailable.':
     'מיגרציית מסד נתונים בתהליך. חלק מהפעולות עשויות להיות זמנית לא זמינות.',
+  'Starting dedicated migration': 'מתחילים מיגרציה ל-compute ייעודי',
+  'Dedicated compute provisioned': 'Compute ייעודי הוקצה',
+  'Capturing live changes': 'לוכדים שינויים בזמן אמת',
+  'Copying data to dedicated compute': 'מעתיקים נתונים ל-compute ייעודי',
+  'Catching up on changes': 'מסנכרנים שינויים',
+  'Verifying migrated data': 'מאמתים נתונים לאחר המיגרציה',
+  'Ready to cut over': 'מוכן ל-cutover',
+  'Cutting over to dedicated compute': 'מבצעים cutover ל-compute ייעודי',
+  'Finishing migration': 'מסיימים מיגרציה',
+  'Migration completed': 'המיגרציה הושלמה',
+  'Migration failed': 'המיגרציה נכשלה',
+  'Migration rolled back': 'המיגרציה בוטלה',
+  'Migrating to dedicated compute': 'מעבירים ל-compute ייעודי',
+  'Your database stays available while data is copied. During cutover, writes pause briefly while routing switches and replay automatically.':
+    'מסד הנתונים נשאר זמין בזמן העתקת הנתונים. ב-cutover כתיבות מושהות לרגע בזמן החלפת הניתוב ומופעלות מחדש אוטומטית.',
+  'rows pending replication': 'שורות ממתינות לשכפול',
+  'Abort migration': 'ביטול מיגרציה',
+  'Migration aborted': 'המיגרציה בוטלה',
+  'Failed to abort migration': 'ביטול המיגרציה נכשל',
+  'This migration did not finish. Abort it to try upgrading again.':
+    'המיגרציה לא הושלמה. בטלו אותה כדי לנסות שדרוג מחדש.',
+  'A migration is in progress past cutover and cannot be aborted from the Console. Contact support if it is stuck.':
+    'מיגרציה שעברה cutover בתהליך ולא ניתן לבטל אותה מה-Console. פנו לתמיכה אם היא תקועה.',
   'This database is being paused. Some operations may be temporarily unavailable.':
     'מסד הנתונים מושהה. חלק מהפעולות עשויות להיות זמנית לא זמינות.',
   'This database is resuming. Some operations may be temporarily unavailable.':

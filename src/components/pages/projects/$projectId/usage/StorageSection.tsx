@@ -25,7 +25,7 @@ import {
 } from '@/lib/react-query/hooks'
 import { useRefresh } from '@/components/global/shared/RefreshContext'
 import { StorageMetricBentoCard } from './_components/StorageMetricBentoCard'
-import { shouldShowUsageChartSkeleton } from '@/lib/usage/usage-chart-loading'
+import { getUsageChartLoadingProps } from '@/lib/usage/usage-chart-loading'
 
 const STORAGE_CHART_GRADIENT_IDS: Record<OverviewStorageBreakdownType, string> =
   {
@@ -102,11 +102,13 @@ export function StorageSection({
       OVERVIEW_STORAGE_BREAKDOWN_OPTIONS.map((option) => {
         const query = storageQueries[option.value]
         const chartPoints = query.isError ? [] : (query.data?.chartPoints ?? [])
+        const loading = getUsageChartLoadingProps(query, chartPoints)
 
         return {
           option,
           query,
           chartPoints,
+          loading,
           breakdownItems: query.isError
             ? []
             : topConsumersToBreakdownItems(query.data?.topConsumers ?? []),
@@ -118,6 +120,10 @@ export function StorageSection({
   const imageTransformationsPoints = imageTransformationsQuery.isError
     ? []
     : (imageTransformationsQuery.data?.chartPoints ?? [])
+  const imageTransformationsLoading = getUsageChartLoadingProps(
+    imageTransformationsQuery,
+    imageTransformationsPoints,
+  )
   const imageTransformationsBreakdownItems = useMemo(
     () =>
       imageTransformationsQuery.isError
@@ -128,7 +134,7 @@ export function StorageSection({
     [imageTransformationsQuery.isError, imageTransformationsQuery.data?.topConsumers],
   )
 
-  const breakdownItems = useMemo(() => {
+  const allBreakdownItems = useMemo(() => {
     if (!showBreakdown) return []
 
     return [
@@ -137,12 +143,16 @@ export function StorageSection({
     ]
   }, [showBreakdown, storageCards, imageTransformationsBreakdownItems])
 
-  const { storageLookup, computeLookup, databaseLookup } =
-    useUsageResourceBreakdownLookups(
-      projectId,
-      breakdownItems,
-      showBreakdown && breakdownItems.length > 0,
-    )
+  const {
+    storageLookup,
+    computeLookup,
+    databaseLookup,
+    resourceNamesResolved,
+  } = useUsageResourceBreakdownLookups(
+    projectId,
+    allBreakdownItems,
+    showBreakdown && allBreakdownItems.length > 0,
+  )
 
   useEffect(() => {
     registerRefreshHandler(
@@ -163,7 +173,7 @@ export function StorageSection({
 
   return (
     <div className="space-y-6">
-      {storageCards.map(({ option, query, chartPoints, breakdownItems }) => (
+      {storageCards.map(({ option, query, chartPoints, loading, breakdownItems }) => (
         <StorageMetricBentoCard
           key={option.value}
           projectId={projectId}
@@ -174,11 +184,8 @@ export function StorageSection({
           chartPoints={chartPoints}
           total={getStorageGaugeDisplayTotal(chartPoints)}
           changePercent={query.data?.changePercent ?? 0}
-          isLoading={shouldShowUsageChartSkeleton(
-            query.isError,
-            query.isLoading,
-            query.isPlaceholderData,
-          )}
+          isLoading={loading.isLoading}
+          isRefreshing={loading.isRefreshing}
           isError={query.isError}
           queryError={query.error}
           formatTotal={formatStorageBytesTotal}
@@ -189,6 +196,7 @@ export function StorageSection({
           breakdownLookup={storageLookup}
           computeLookup={computeLookup}
           databaseLookup={databaseLookup}
+          resourceNamesResolved={resourceNamesResolved}
           onRetry={handleRetryAll}
           docsHref={STORAGE_DOCS_HREF}
         />
@@ -203,11 +211,8 @@ export function StorageSection({
         chartPoints={imageTransformationsPoints}
         total={getStorageGaugeDisplayTotal(imageTransformationsPoints)}
         changePercent={imageTransformationsQuery.data?.changePercent ?? 0}
-        isLoading={shouldShowUsageChartSkeleton(
-          imageTransformationsQuery.isError,
-          imageTransformationsQuery.isLoading,
-          imageTransformationsQuery.isPlaceholderData,
-        )}
+        isLoading={imageTransformationsLoading.isLoading}
+        isRefreshing={imageTransformationsLoading.isRefreshing}
         isError={imageTransformationsQuery.isError}
         queryError={imageTransformationsQuery.error}
         formatTotal={formatImageTransformationsTotal}
@@ -216,6 +221,7 @@ export function StorageSection({
         showBreakdown={showBreakdown}
         breakdownItems={imageTransformationsBreakdownItems}
         breakdownLookup={storageLookup}
+        resourceNamesResolved={resourceNamesResolved}
         onRetry={handleRetryAll}
         docsHref={IMAGE_TRANSFORMATIONS_DOCS_HREF}
       />

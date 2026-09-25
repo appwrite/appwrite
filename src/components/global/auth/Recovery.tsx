@@ -15,7 +15,12 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Link } from '@tanstack/react-router'
-import { Card } from '@/components/ui/card'
+import {
+  AuthFlowDescription,
+  AuthFlowIllustrationCard,
+  AuthFlowTitle,
+} from '@/components/global/auth/AuthFlowCard'
+import { AuthFlowIllustrationColumn } from '@/components/global/auth/AuthFlowShell'
 import { useT, type Translator } from '@/lib/i18n/translate'
 
 const createRecoverySchema = (t: Translator) =>
@@ -30,14 +35,19 @@ interface RecoveryProps {
   isLoading?: boolean
   isSuccess?: boolean
   initialEmail?: string
+  preview?: boolean
 }
+
+const illustration = <AuthFlowIllustrationColumn />
 
 export function Recovery({
   onSubmit,
   isLoading,
   isSuccess,
   initialEmail,
+  preview = false,
 }: RecoveryProps) {
+  const signInTo = preview ? '/debug/sign-in-preview' : '/sign-in'
   const t = useT()
   const form = useForm<RecoveryValues>({
     resolver: zodResolver(createRecoverySchema(t)),
@@ -52,105 +62,80 @@ export function Recovery({
 
   if (isSuccess) {
     return (
-      <Card className="overflow-hidden py-0">
-        <div className="grid md:grid-cols-2">
-          <div className="p-6 md:p-10 min-h-[600px] flex flex-col justify-center">
-            <div className="space-y-6">
-              <div className="space-y-2">
-                <h1 className="text-2xl font-semibold tracking-tight">
-                  {t('Check your email')}
-                </h1>
-                <p className="text-sm text-muted-foreground">
-                  {t("We've sent a password recovery link to your email address.")}
-                </p>
-              </div>
-              <Link to="/sign-in">
-                <Button variant="outline" className="w-full">
-                  {t('Back to sign in')}
-                </Button>
-              </Link>
-            </div>
+      <AuthFlowIllustrationCard illustration={illustration}>
+        <div className="space-y-6">
+          <div className="space-y-2">
+            <AuthFlowTitle>{t('Check your email')}</AuthFlowTitle>
+            <AuthFlowDescription>
+              {t("We've sent a password recovery link to your email address.")}
+            </AuthFlowDescription>
           </div>
-          <div className="hidden bg-background md:block min-h-[600px]">
-            <img
-              alt="Image"
-              className="h-full w-full object-cover"
-              height="600"
-              src="/cover.avif"
-              width="600"
-            />
-          </div>
+          <Link to={signInTo}>
+            <Button variant="outline" className="w-full">
+              {t('Back to sign in')}
+            </Button>
+          </Link>
         </div>
-      </Card>
+      </AuthFlowIllustrationCard>
     )
   }
 
   return (
-    <Card className="overflow-hidden py-0">
-      <div className="grid md:grid-cols-2">
-        <div className="p-6 md:p-10 min-h-[600px] flex flex-col justify-center">
-          <Form {...form}>
-            <form
-              onSubmit={form.handleSubmit(handleSubmit)}
-              className="space-y-6"
-            >
-              <div className="space-y-2">
-                <h1 className="text-2xl font-semibold tracking-tight">
-                  {t('Reset your password')}
-                </h1>
-                <p className="text-sm text-muted-foreground">
-                  {t(
-                    "Enter your email address and we'll send you a link to reset your password.",
-                  )}
-                </p>
-              </div>
+    <AuthFlowIllustrationCard illustration={illustration}>
+      <Form {...form}>
+        <form
+          onSubmit={form.handleSubmit(handleSubmit)}
+          className="space-y-6"
+        >
+          <div className="space-y-2">
+            <AuthFlowTitle>{t('Reset your password')}</AuthFlowTitle>
+            <AuthFlowDescription>
+              {t(
+                "Enter your email address and we'll send you a link to reset your password.",
+              )}
+            </AuthFlowDescription>
+          </div>
 
-              <div className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t('Email')}</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="email"
-                          placeholder="m@example.com"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        {t("We'll send a recovery link to this email address.")}
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+          <div className="space-y-4">
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('Email')}</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="email"
+                      placeholder="m@example.com"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    {t("We'll send a recovery link to this email address.")}
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
 
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {t('Send recovery link')}
-              </Button>
+          <Button
+            type="submit"
+            variant="brandCta"
+            className="w-full"
+            disabled={isLoading}
+          >
+            {t('Send recovery link')}
+          </Button>
 
-              <p className="text-center text-sm text-muted-foreground">
-                {t('Remember your password?')}{' '}
-                <Link to="/sign-in" className="link-neutral">
-                  {t('Sign in')}
-                </Link>
-              </p>
-            </form>
-          </Form>
-        </div>
-        <div className="hidden bg-background md:block">
-          <img
-            alt="Image"
-            className="h-full w-full object-cover"
-            height="600"
-            src="/cover.avif"
-            width="600"
-          />
-        </div>
-      </div>
-    </Card>
+          <AuthFlowDescription className="text-center">
+            {t('Remember your password?')}{' '}
+            <Link to={signInTo} className="link-neutral">
+              {t('Sign in')}
+            </Link>
+          </AuthFlowDescription>
+        </form>
+      </Form>
+    </AuthFlowIllustrationCard>
   )
 }

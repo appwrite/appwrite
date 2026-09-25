@@ -20,6 +20,23 @@ the image, deletes old chunks, or overwrites unversioned public files. Different
 staging and production builds safely coexist; rollback retains the old URLs.
 The existing build workflows remain independent, with identical CDN settings.
 
+## Self-hosted releases
+
+Production publishes both `appwrite/new` variants to Docker Hub and GHCR for
+Linux amd64 and arm64:
+
+| Tag | Asset origin |
+| --- | --- |
+| `<version>` | `https://cdn.appwrite.io` |
+| `<version>-self-hosted` | Installation's own origin (empty `CDN_ORIGIN`) |
+
+Staging keeps using the CDN. Manual runs use the commit SHA instead of the version.
+
+CDN URLs are baked in at build time; changing the runtime profile cannot remove
+them. Use the self-hosted tag with `VITE_CONSOLE_PROFILE=self-hosted`. Update
+installer and Compose image pins only after that tag exists, and manually verify
+asset loading with CDN access blocked before adopting the first release.
+
 ## Setup
 
 1. Apply the infrastructure through CI and wait for `cdn.appwrite.io` to become Active.

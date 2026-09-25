@@ -11,7 +11,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover'
-import { useKeyboardShortcutsContext } from '@/components/global/providers/KeyboardShortcuts'
+import { useKeyboardShortcutsContext } from '@/components/global/providers/keyboard-shortcuts-context'
 import { useNavigationHistorySafe } from '@/components/global/providers/NavigationHistoryProvider'
 import { useNavigate } from '@tanstack/react-router'
 import { useI18n } from '@/lib/i18n'

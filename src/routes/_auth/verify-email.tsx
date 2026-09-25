@@ -2,8 +2,9 @@ import { useEffect } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute, redirect, useNavigate, useSearch } from '@tanstack/react-router'
 import { z } from 'zod'
+import { AuthFlowAccountSwitcher } from '@/components/global/auth/AuthFlowAccountSwitcher'
+import { AuthFlowShell } from '@/components/global/auth/AuthFlowShell'
 import { VerifyEmail } from '@/components/global/auth/VerifyEmail'
-import { AppwriteLogo } from '@/components/global/auth/AppwriteLogo'
 import { sdk } from '@/lib/appwrite/sdk'
 import { AppwriteException } from '@appwrite.io/console'
 import { toast } from 'sonner'
@@ -14,22 +15,15 @@ import {
   ensureConsoleAccountQueryData,
   refreshConsoleAccountAfterAuth,
 } from '@/lib/react-query/hooks/auth'
+import { CONSOLE_ENTRY_PATH } from '@/lib/root-guest-redirect'
 import {
+  isValidRelativeRedirect,
   prefetchPostAuthDestination,
   requiresConsoleEmailVerification,
   resolvePostAuthRedirect,
   toRedirectNavigateOptions,
 } from '@/lib/post-auth-navigation'
 import { useRouter } from '@tanstack/react-router'
-import { MarketingSiteLink } from '@/components/global/shared/MarketingSiteLink'
-
-function isValidRelativeRedirect(url: string): boolean {
-  try {
-    return url.startsWith('/') && !url.includes('://')
-  } catch {
-    return false
-  }
-}
 
 const searchSchema = z.object({
   redirect: z
@@ -104,7 +98,7 @@ export const Route = createFileRoute('/_auth/verify-email')({
           replace: true,
         })
       }
-      throw redirect({ to: '/', replace: true })
+      throw redirect({ to: CONSOLE_ENTRY_PATH, replace: true })
     }
   },
   head: () => ({ meta: [{ title: pageTitle('Verify your email') }] }),
@@ -148,7 +142,7 @@ function VerifyEmailPage() {
           replace: true,
         })
       } catch {
-        navigate({ to: '/' })
+        navigate({ to: CONSOLE_ENTRY_PATH })
       }
     },
     onError: async (error: unknown) => {
@@ -170,7 +164,7 @@ function VerifyEmailPage() {
               })
               return
             }
-            navigate({ to: '/' })
+            navigate({ to: CONSOLE_ENTRY_PATH })
             return
           }
         } catch {
@@ -225,55 +219,25 @@ function VerifyEmailPage() {
 
   if (isConfirming) {
     return (
-      <div className="bg-background relative h-full overflow-y-auto">
-        <div className="flex min-h-full flex-col items-center p-6 md:p-10">
-          <div className="my-auto w-full max-w-sm md:max-w-4xl">
-            <VerifyEmail status="confirming" />
-            <p className="mt-6 text-center text-xs text-muted-foreground">
-              {t('By continuing, you agree to our')}{' '}
-              <MarketingSiteLink className="link-neutral" href="/terms">
-                {t('Terms of Service')}
-              </MarketingSiteLink>{' '}
-              {t('and')}{' '}
-              <MarketingSiteLink className="link-neutral" href="/privacy">
-                {t('Privacy Policy')}
-              </MarketingSiteLink>
-              .
-            </p>
-            <div className="mt-10 md:mt-16 flex justify-center">
-              <AppwriteLogo className="h-6 w-auto" />
-            </div>
-          </div>
-        </div>
-      </div>
+      <AuthFlowShell
+        width="illustration"
+        accountSwitcher={<AuthFlowAccountSwitcher />}
+      >
+        <VerifyEmail status="confirming" />
+      </AuthFlowShell>
     )
   }
 
   return (
-    <div className="bg-background relative h-full overflow-y-auto">
-      <div className="flex min-h-full flex-col items-center p-6 md:p-10">
-        <div className="my-auto w-full max-w-sm md:max-w-4xl">
-          <VerifyEmail
-            onResend={() => resendMutation.mutate()}
-            isResendLoading={resendMutation.isPending}
-            redirect={search.redirect}
-          />
-          <p className="mt-6 text-center text-xs text-muted-foreground">
-            {t('By continuing, you agree to our')}{' '}
-            <MarketingSiteLink className="link-neutral" href="/terms">
-              {t('Terms of Service')}
-            </MarketingSiteLink>{' '}
-            {t('and')}{' '}
-            <MarketingSiteLink className="link-neutral" href="/privacy">
-              {t('Privacy Policy')}
-            </MarketingSiteLink>
-            .
-          </p>
-          <div className="mt-10 md:mt-16 flex justify-center">
-            <AppwriteLogo className="h-6 w-auto" />
-          </div>
-        </div>
-      </div>
-    </div>
+    <AuthFlowShell
+      width="illustration"
+      accountSwitcher={<AuthFlowAccountSwitcher />}
+    >
+      <VerifyEmail
+        onResend={() => resendMutation.mutate()}
+        isResendLoading={resendMutation.isPending}
+        redirect={search.redirect}
+      />
+    </AuthFlowShell>
   )
 }

@@ -232,6 +232,7 @@ console.log(result); // Resource URL
 
 Now that you've generated your first avatars, explore more advanced features:
 
+- Show profile pictures with [user photos](/docs/products/avatars/user-photos)
 - Learn about [user initials](/docs/products/avatars/initials) customization
 - Discover [QR code](/docs/products/avatars/qr-codes) options
 - Explore [image manipulation](/docs/products/avatars/image-manipulation) capabilities

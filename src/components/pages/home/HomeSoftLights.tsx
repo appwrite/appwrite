@@ -290,9 +290,11 @@ export function AiChatSoftLight() {
 export function ProductBentoSoftLights({
   blend = false,
   expanded = false,
+  placement = 'center',
 }: {
   blend?: boolean
   expanded?: boolean
+  placement?: 'center' | 'bottom'
 }) {
   return (
     <div
@@ -301,9 +303,11 @@ export function ProductBentoSoftLights({
         blend
           ? cn(
               'overflow-visible',
-              expanded
-                ? 'bg-[radial-gradient(ellipse_120%_100%_at_50%_50%,color-mix(in_srgb,var(--foreground)_6%,transparent)_0%,transparent_75%)]'
-                : 'bg-[radial-gradient(ellipse_at_50%_42%,color-mix(in_srgb,var(--foreground)_6%,transparent)_0%,transparent_70%)]',
+              placement === 'bottom'
+                ? 'bg-[radial-gradient(ellipse_90%_70%_at_50%_92%,color-mix(in_srgb,var(--foreground)_3.5%,transparent)_0%,transparent_78%)]'
+                : expanded
+                  ? 'bg-[radial-gradient(ellipse_120%_100%_at_50%_50%,color-mix(in_srgb,var(--foreground)_6%,transparent)_0%,transparent_75%)]'
+                  : 'bg-[radial-gradient(ellipse_at_50%_42%,color-mix(in_srgb,var(--foreground)_6%,transparent)_0%,transparent_70%)]',
             )
           : 'overflow-hidden rounded-lg bg-[radial-gradient(ellipse_at_0%_0%,color-mix(in_srgb,var(--foreground)_4%,transparent)_0%,transparent_62%)]',
       )}

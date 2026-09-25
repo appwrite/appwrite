@@ -6,7 +6,7 @@ date: 2024-05-24
 cover: /images/blog/integrate-sql-nosql-vector-graph-or-any-database-into-your-appwrite-project/cover.avif
 timeToRead: 9
 author: matej-baco
-category: product
+category: products
 featured: false
 faqs:
   - question: "Can I use an external database with Appwrite?"

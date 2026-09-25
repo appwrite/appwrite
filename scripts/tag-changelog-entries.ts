@@ -121,8 +121,6 @@ function processDirectory(dirPath: string): void {
   }
 }
 
-// Process both directories
 console.log('Tagging changelog entries...\n')
 processDirectory('./src/content/changelog/entries')
-processDirectory('./src/content/changelog-local/entries')
 console.log('\nDone!')

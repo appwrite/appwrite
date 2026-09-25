@@ -1,5 +1,5 @@
 /**
- * Generates docs manifest from imported markdoc content.
+ * Generates docs manifest from markdoc content in src/content/docs.
  * Invoked by generate:docs (scripts/generate-docs.ts).
  */
 import { readdir, readFile, writeFile, mkdir } from 'node:fs/promises'
@@ -11,7 +11,6 @@ import { getDocsPageBreadcrumbs } from '../../src/lib/docs/breadcrumbs.ts'
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const VIBES_ROOT = join(__dirname, '../..')
 const DOCS_DIR = join(VIBES_ROOT, 'src', 'content', 'docs')
-const DOCS_LOCAL_DIR = join(VIBES_ROOT, 'src', 'content', 'docs-local')
 const OUTPUT_DIR = join(VIBES_ROOT, 'src', 'lib', 'docs', 'generated')
 
 const WORDS_PER_MINUTE = 200
@@ -88,33 +87,15 @@ function getReadingTimeMinutes(text: string): number {
 }
 
 async function main() {
-  const importedFiles = await walkMarkdocFiles(DOCS_DIR)
-  let localFiles: string[] = []
-  try {
-    localFiles = await walkMarkdocFiles(DOCS_LOCAL_DIR)
-  } catch {
-    localFiles = []
-  }
-
-  const filesBySlug = new Map<string, string>()
-  for (const filePath of importedFiles) {
-    filesBySlug.set(slugFromPath(filePath, DOCS_DIR), filePath)
-  }
-  for (const filePath of localFiles) {
-    filesBySlug.set(slugFromPath(filePath, DOCS_LOCAL_DIR), filePath)
-  }
+  const files = await walkMarkdocFiles(DOCS_DIR)
 
   const pages: DocsPageEntry[] = []
   const searchIndex: DocsSearchEntry[] = []
 
-  for (const filePath of filesBySlug.values()) {
+  for (const filePath of files) {
     const raw = await readFile(filePath, 'utf-8')
     const { data, content } = matter(raw)
-    const relToRoot = relative(VIBES_ROOT, filePath).replace(/\\/g, '/')
-    const baseDir = relToRoot.startsWith('src/content/docs-local/')
-      ? DOCS_LOCAL_DIR
-      : DOCS_DIR
-    const slug = slugFromPath(filePath, baseDir)
+    const slug = slugFromPath(filePath, DOCS_DIR)
 
     const title =
       (typeof data.title === 'string' && data.title) ||

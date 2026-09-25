@@ -6,7 +6,7 @@ date: 2026-05-04
 cover: /images/blog/announcing-rust-runtime/cover.avif
 timeToRead: 6
 author: chirag-aggarwal
-category: announcement
+category: announcements
 featured: false
 callToAction: true
 faqs:
@@ -15,13 +15,13 @@ faqs:
   - question: "Why use Rust for serverless functions?"
     answer: "Rust compiles to native machine code, which delivers low latency, predictable throughput, and tight memory usage. Memory safety is enforced at compile time without a garbage collector, so there are no GC pauses to worry about during high-traffic workloads. This makes Rust a strong choice for hot-path business logic, image transforms, and signature verification."
   - question: "Does Appwrite provide a Rust SDK?"
-    answer: "Yes. The Appwrite Rust SDK is published on [crates.io](https://crates.io/crates/appwrite) and provides async, type-safe access to every server API. Pair it with the dynamic API key Appwrite injects into each execution and you can call Appwrite from inside your function without managing credentials manually."
+    answer: "Yes. The Appwrite Rust SDK is published on [crates.io](https://crates.io/crates/appwrite) and provides async, type-safe access to every server API. Pair it with the ephemeral API key Appwrite injects into each execution and you can call Appwrite from inside your function without managing credentials manually."
   - question: "How does memory safety work in Rust without garbage collection?"
     answer: "Rust uses ownership rules and a borrow checker enforced at compile time. The compiler tracks which part of the program owns each value and rejects code that could create dangling references or data races. This means no runtime GC overhead and entire classes of bugs are caught before the binary ships."
   - question: "What is Tokio in Rust?"
     answer: "Tokio is the most widely used async runtime in the Rust ecosystem. It provides a multi-threaded scheduler, async I/O primitives, and integrations with libraries for HTTP, databases, and timers. Most Rust serverless code uses Tokio under the hood to handle concurrent work without blocking the request."
   - question: "Can I call other Appwrite services from a Rust function?"
-    answer: "Yes. Use the Appwrite Rust SDK along with the dynamic API key Appwrite passes into each execution to call databases, storage, messaging, or any other [Appwrite product](/docs/products/functions). The same pattern works on Appwrite Cloud and self-hosted deployments."
+    answer: "Yes. Use the Appwrite Rust SDK along with the ephemeral API key Appwrite passes into each execution to call databases, storage, messaging, or any other [Appwrite product](/docs/products/functions). The same pattern works on Appwrite Cloud and self-hosted deployments."
 ---
 
 When you build a function that runs on every request, every millisecond and every megabyte matters, and cold starts and memory ceilings start to add up quickly. That is exactly the kind of workload Rust was made for.
@@ -84,7 +84,7 @@ The runtime gives you a `Context` with everything you need: `context.req` for th
 
 # Calling Appwrite from inside your function
 
-The Rust runtime pairs naturally with the [Appwrite Rust SDK](https://crates.io/crates/appwrite), which gives you async, type-safe access to every server API. Combine it with the dynamic API key Appwrite injects into each execution, and you can read or mutate project data without ever managing credentials yourself.
+The Rust runtime pairs naturally with the [Appwrite Rust SDK](https://crates.io/crates/appwrite), which gives you async, type-safe access to every server API. Combine it with the ephemeral API key Appwrite injects into each execution, and you can read or mutate project data without ever managing credentials yourself.
 
 ```rust
 use appwrite::id::ID;

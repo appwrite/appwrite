@@ -27,14 +27,16 @@ export type ConsoleProfileFeatures = {
   partnersDocs: boolean
   /** Multiple organizations and organization switching */
   multiTenancy: boolean
-  /** Organization role selection (developer, editor, analyst, billing). When false, all members are owners and role UI is hidden. */
+  /** Cloud role scopes and additional organization roles (editor, analyst, billing). Owner and developer are always available. */
   orgRoles: boolean
-  /** Appwrite Cloud system status (status.appwrite.online) */ // pragma: allowlist secret
+  /** Appwrite Cloud system status (appwrite.online) */ // pragma: allowlist secret
   systemStatus: boolean
   /** Console account MFA (enable/disable, TOTP, email, SMS, recovery codes) */
   accountMfa: boolean
   /** Console account identities (OAuth providers linked to the account) */
   accountIdentities: boolean
+  /** Console account Applications page (OAuth2 consents granted on the account). */
+  accountApplications: boolean
   /**
    * Extra Git (VCS) OAuth connect providers (Origin). GitHub, GitLab, and
    * Bitbucket are always shown. Existing installations of a hidden provider
@@ -55,6 +57,8 @@ export type ConsoleProfileFeatures = {
   databaseBackups: boolean
   /** Dedicated database PITR restore UI (backups restore button and settings restore card). */
   databasePitrRestore: boolean
+  /** Database specification (compute tier) settings tab, route, and sidebar compute card. */
+  databaseSpecifications: boolean
   /** Native MongoDB databases via the `mongo` SDK service. */
   nativeDbsMongo: boolean
   /** Multi-region support (region picker/labels in project UX). */
@@ -98,6 +102,7 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   systemStatus: 'System status',
   accountMfa: 'Account MFA',
   accountIdentities: 'Account identities',
+  accountApplications: 'Account applications',
   extraVcsOAuth: 'Extra VCS OAuth',
   compliance: 'Compliance',
   orgApiKeys: 'Partners keys',
@@ -106,6 +111,7 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   browserAlerts: 'Browser alerts',
   databaseBackups: 'Database backups',
   databasePitrRestore: 'Database PITR restore',
+  databaseSpecifications: 'Database specifications',
   nativeDbsMongo: 'Native DBs: MongoDB',
   multiRegion: 'Multi-region',
   edgeNetwork: 'Edge network',
@@ -143,6 +149,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       systemStatus: true,
       accountMfa: true,
       accountIdentities: true,
+      accountApplications: true,
       extraVcsOAuth: false,
       compliance: true,
       orgApiKeys: false,
@@ -151,6 +158,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       browserAlerts: false,
       databaseBackups: true,
       databasePitrRestore: false,
+      databaseSpecifications: true,
       nativeDbsMongo: false,
       multiRegion: true,
       edgeNetwork: true,
@@ -176,6 +184,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       systemStatus: false,
       accountMfa: false,
       accountIdentities: false,
+      accountApplications: false,
       extraVcsOAuth: false,
       compliance: false,
       orgApiKeys: false,
@@ -184,6 +193,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       browserAlerts: false,
       databaseBackups: false,
       databasePitrRestore: false,
+      databaseSpecifications: false,
       nativeDbsMongo: false,
       multiRegion: false,
       edgeNetwork: false,
@@ -383,6 +393,11 @@ function getStoredProfile(): StoredConsoleProfile | null {
     syncDebugProfileCookie(stored)
   }
   return stored
+}
+
+/** Snapshot of explicitly stored feature overrides for the active profile. */
+export function getDebugProfileFeatureOverrides(): Partial<ConsoleProfileFeatures> {
+  return { ...getStoredProfile()?.features }
 }
 
 /** Whether a debug localStorage profile override is active (vs env). */

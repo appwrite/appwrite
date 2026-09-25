@@ -7,7 +7,7 @@ lastUpdated: 2026-06-29
 cover: /images/blog/best-pagination-technique/cover.avif
 timeToRead: 8
 author: matej-baco
-category: tutorial
+category: tutorials
 callToAction: true
 faqs:
   - question: "What's the difference between offset and cursor pagination?"
@@ -40,7 +40,7 @@ Now that we know what pagination is, how do we actually use it? And why is it ne
 
 Two widely used pagination strategies are **offset** and **cursor**. Before learning everything about them, let's look at some websites using them.
 
-First, let's visit GitHub's [Stargazer page](https://github.com/appwrite/appwrite/stargazers). Notice how the tab says `5,000+`, not an absolute number. Also, instead of standard page numbers, they use `Previous` and `Next` buttons.
+First, let's visit the [Appwrite GitHub repository](https://github.com/appwrite/appwrite). Notice how the star count shows `5,000+`, not an absolute number. On long member lists, GitHub also uses `Previous` and `Next` buttons instead of standard page numbers.
 
 Now, let's switch to [Amazon's products list](https://www.amazon.com/s?k=microwave) and notice the exact number of results: `364`. Standard pagination with all page numbers you can click through is `1 2 3 ... 20`.
 

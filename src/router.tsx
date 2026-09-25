@@ -14,6 +14,10 @@ import {
   reportRouterCaughtError,
   reportUnhandledError,
 } from '@/lib/sentry/report-error'
+import {
+  getDefaultRouterPreload,
+  ROUTER_PRELOAD_DELAY_MS,
+} from '@/lib/router-preload'
 // No default pending component: the root FullscreenLoader (Appwrite logo) is the
 // single loader. Showing a router pending UI here caused a dual-loader flash on
 // static build (text "Loading data for you" then logo).
@@ -52,7 +56,9 @@ async function buildRouter() {
   const router = createRouter({
     routeTree,
     context: { ...rqContext },
-    defaultPreload: 'intent',
+    defaultPreload: getDefaultRouterPreload(),
+    // Touchstart used to start preload in ~50ms and steal the tap's next paint.
+    defaultPreloadDelay: ROUTER_PRELOAD_DELAY_MS,
     // Keep the previous page visible while loaders run. A finite pendingMs with
     // defaultPendingComponent: () => null blanks the outlet after 1s on slow
     // navigations (e.g. TablesDB table switches). Wizards that need a pending
@@ -98,9 +104,7 @@ async function buildRouter() {
       reportUnhandledError(event.reason, 'unhandledrejection')
     }
     const onWindowError = (event: ErrorEvent) => {
-      if (
-        tryReloadForStaleChunk(event.error ?? event.message, { event })
-      ) {
+      if (tryReloadForStaleChunk(event.error ?? event.message, { event })) {
         event.preventDefault()
         return
       }

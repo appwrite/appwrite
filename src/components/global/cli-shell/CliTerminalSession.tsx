@@ -20,7 +20,7 @@ import { scheduleCliTerminalMount } from '@/lib/cli-shell/schedule-cli-terminal-
 import { MISSING_HASHED_MODULE_EXPORT_PREFIX } from '@/lib/stale-chunk-error'
 import { cn } from '@/lib/utils'
 import { CLI_SHELL_COLLAPSE_MS } from '@/lib/cli-shell/constants'
-import { useCliShell } from './CliShellProvider'
+import { useCliShell } from './cli-shell-context'
 
 type CliTerminalSessionProps = {
   sessionId: string

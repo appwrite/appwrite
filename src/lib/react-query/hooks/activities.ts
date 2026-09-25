@@ -171,6 +171,9 @@ export function activitiesQueryOptions(params: {
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
+    meta: {
+      skipInitialLoader: true,
+    },
   })
 }
 
@@ -189,6 +192,9 @@ export function activityEventQueryOptions(projectId: string, eventId: string) {
     queryFn: () => fetchProjectActivityEvent(projectId, eventId),
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
+    meta: {
+      skipInitialLoader: true,
+    },
   })
 }
 
@@ -236,6 +242,9 @@ export function useProjectActivity(
     enabled: !!projectId && !!eventId,
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
+    meta: {
+      skipInitialLoader: true,
+    },
   })
 
   return {

@@ -27,6 +27,8 @@ type MysqlTableHeaderProps = {
   searchValue?: string
   onSearchChange?: (value: string) => void
   filterTrigger?: React.ReactNode
+  beforeRefreshButtons?: React.ReactNode
+  afterRefreshButtons?: React.ReactNode
 }
 
 export function MysqlTableHeader({
@@ -45,6 +47,8 @@ export function MysqlTableHeader({
   searchValue,
   onSearchChange,
   filterTrigger,
+  beforeRefreshButtons,
+  afterRefreshButtons,
 }: MysqlTableHeaderProps) {
   const t = useT()
   const { schema, table } = parseMysqlTableId(tableId)
@@ -93,6 +97,8 @@ export function MysqlTableHeader({
       searchValue={searchValue}
       onSearchChange={onSearchChange}
       filterTrigger={filterTrigger}
+      beforeRefreshButtons={beforeRefreshButtons}
+      afterRefreshButtons={afterRefreshButtons}
     />
   )
 }

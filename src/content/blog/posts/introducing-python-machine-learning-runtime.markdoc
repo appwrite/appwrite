@@ -6,7 +6,7 @@ date: 2024-05-21
 cover: /images/blog/introducing-python-machine-learning-runtime/cover.avif
 timeToRead: 5
 author: luke-silver
-category: product, announcement
+category: products, announcements
 featured: false
 faqs:
   - question: "What is the Python ML runtime in Appwrite Functions?"

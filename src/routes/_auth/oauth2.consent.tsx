@@ -5,7 +5,13 @@ import { Loader2, TriangleAlert } from 'lucide-react'
 import { AppwriteException } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
-import { Card } from '@/components/ui/card'
+import { AuthFlowAccountSwitcher } from '@/components/global/auth/AuthFlowAccountSwitcher'
+import {
+  AuthFlowNarrowCard,
+  authFlowOAuthNarrowCardContentClassName,
+} from '@/components/global/auth/AuthFlowCard'
+import { AuthFlowHeaderIcon } from '@/components/global/auth/AuthFlowHeaderIcon'
+import { AuthFlowShell } from '@/components/global/auth/AuthFlowShell'
 import { Button } from '@/components/ui/button'
 import {
   OAuth2ConsentCard,
@@ -13,6 +19,13 @@ import {
 } from '@/components/global/auth/OAuth2ConsentCard'
 import { OAuth2OutcomeCard } from '@/components/global/auth/OAuth2OutcomeCard'
 import { getOAuth2App } from '@/lib/oauth2/cimd'
+import {
+  accountSwitchUrl,
+  createAccountSwitchRequest,
+  readAccountSwitchRequest,
+  rememberAccountSwitchRequest,
+  type AccountSwitchRequest,
+} from '@/lib/oauth2/account-switch'
 import { isWebRedirect } from '@/lib/oauth2/redirect'
 import { OAuth2ErrorMessage, OAuth2ErrorType } from '@/lib/oauth2/errors'
 import { performConsoleSignOut } from '@/lib/react-query/hooks/auth'
@@ -40,24 +53,6 @@ export const Route = createFileRoute('/_auth/oauth2/consent')({
 
 type Phase = 'loading' | 'ready' | 'approved' | 'denied' | 'error'
 type Account = Models.User<Models.Preferences>
-
-const ACCOUNT_SWITCH_STORAGE_PREFIX = 'oauth2-account-switch:'
-
-function rememberAccountSwitchUrl(key: string, url: string) {
-  try {
-    sessionStorage.setItem(`${ACCOUNT_SWITCH_STORAGE_PREFIX}${key}`, url)
-  } catch {
-    // Best-effort: without storage the chip simply won't offer switching.
-  }
-}
-
-function accountSwitchUrlFor(key: string): string | null {
-  try {
-    return sessionStorage.getItem(`${ACCOUNT_SWITCH_STORAGE_PREFIX}${key}`)
-  } catch {
-    return null
-  }
-}
 
 /**
  * OIDC `max_age` must be a non-negative integer count of seconds. Anything else
@@ -119,9 +114,12 @@ function OAuth2ConsentPage() {
   const [completedRedirectUrl, setCompletedRedirectUrl] = useState<
     string | undefined
   >(undefined)
-  const [accountSwitchResumeUrl, setAccountSwitchResumeUrl] = useState<
-    string | null
-  >(null)
+  const [accountSwitchRequest, setAccountSwitchRequest] =
+    useState<AccountSwitchRequest | null>(null)
+  const [switchingAccount, setSwitchingAccount] = useState(false)
+  const [accountSwitchError, setAccountSwitchError] = useState<string | null>(
+    null,
+  )
 
   const onDone = (outcome: OAuth2Outcome, redirectUrl?: string) => {
     setCompletedRedirectUrl(redirectUrl)
@@ -129,13 +127,27 @@ function OAuth2ConsentPage() {
   }
 
   const switchAccount = async () => {
-    if (!accountSwitchResumeUrl) return
-    setPhase('loading')
-    // Clears the session and lands on /sign-in with the consent URL as the
-    // post-login redirect, so the new account resumes this authorization.
-    await performConsoleSignOut(queryClient, {
-      redirect: accountSwitchResumeUrl,
-    })
+    if (switchingAccount) return
+    const resumeUrl = accountSwitchUrl(accountSwitchRequest, grant?.appId)
+    if (!resumeUrl) {
+      setAccountSwitchError(t(OAuth2ErrorMessage.HANDLE_EXPIRED))
+      return
+    }
+    setSwitchingAccount(true)
+    setAccountSwitchError(null)
+    try {
+      // Resume raw authorize input, not the old account's grant or consumed PAR.
+      // The native sign-in/MFA flow will obtain a fresh grant for the new user.
+      await performConsoleSignOut(queryClient, {
+        redirect: resumeUrl,
+        requireServerRevocation: true,
+      })
+    } catch {
+      setSwitchingAccount(false)
+      setAccountSwitchError(
+        t('Could not sign out. Try switching accounts again.'),
+      )
+    }
   }
 
   useEffect(() => {
@@ -147,7 +159,8 @@ function OAuth2ConsentPage() {
     setPhase('loading')
     setError(null)
     setCompletedRedirectUrl(undefined)
-    setAccountSwitchResumeUrl(null)
+    setAccountSwitchRequest(null)
+    setAccountSwitchError(null)
 
     const currentRelativeUrl = window.location.pathname + window.location.search
     const params = new URLSearchParams(window.location.search)
@@ -188,7 +201,7 @@ function OAuth2ConsentPage() {
       loggedInAccount: Account,
       clientId: string | null,
       fromRequestUri: boolean,
-      resumeUrl: string | null,
+      switchRequest: AccountSwitchRequest | null,
     ) {
       if (result.redirectUrl) {
         // Already consented - go straight back to the client.
@@ -208,8 +221,8 @@ function OAuth2ConsentPage() {
         return
       }
       if (result.grantId) {
-        if (resumeUrl) {
-          rememberAccountSwitchUrl(result.grantId, resumeUrl)
+        if (switchRequest) {
+          rememberAccountSwitchRequest(result.grantId, switchRequest)
         }
         if (fromRequestUri) {
           // The handle is now consumed - rewrite to the grant URL so
@@ -229,7 +242,7 @@ function OAuth2ConsentPage() {
     }
 
     async function resumeFromGrant(grantId: string) {
-      setAccountSwitchResumeUrl(accountSwitchUrlFor(grantId))
+      setAccountSwitchRequest(readAccountSwitchRequest(grantId))
       try {
         await loadConsent(grantId)
       } catch (e: unknown) {
@@ -246,8 +259,11 @@ function OAuth2ConsentPage() {
       clientId: string | null,
       requestUri: string,
     ) {
-      const resumeUrl = accountSwitchUrlFor(requestUri)
-      setAccountSwitchResumeUrl(resumeUrl)
+      const storedRequest = readAccountSwitchRequest(requestUri)
+      const switchRequest = accountSwitchUrl(storedRequest, clientId)
+        ? storedRequest
+        : null
+      setAccountSwitchRequest(switchRequest)
       const loggedInAccount = await getAccount()
       if (cancelled) return
 
@@ -271,7 +287,7 @@ function OAuth2ConsentPage() {
           loggedInAccount,
           clientId,
           true,
-          resumeUrl,
+          switchRequest,
         )
       } catch (e: unknown) {
         if (cancelled) return
@@ -291,7 +307,8 @@ function OAuth2ConsentPage() {
 
     // Pre-login entry with raw authorize params in the URL.
     async function startAuthorize(clientId: string) {
-      setAccountSwitchResumeUrl(currentRelativeUrl)
+      const switchRequest = createAccountSwitchRequest(currentRelativeUrl)
+      setAccountSwitchRequest(switchRequest)
       const loggedInAccount = await getAccount()
       if (cancelled) return
 
@@ -305,7 +322,15 @@ function OAuth2ConsentPage() {
             ...readAuthorizeParams(params),
           })
           if (cancelled) return
-          rememberAccountSwitchUrl(par.request_uri, currentRelativeUrl)
+          if (switchRequest) {
+            rememberAccountSwitchRequest(par.request_uri, {
+              ...switchRequest,
+              expiresAt: Math.min(
+                switchRequest.expiresAt,
+                Date.now() + par.expires_in * 1000,
+              ),
+            })
+          }
           goSignIn(
             `/oauth2/consent?client_id=${encodeURIComponent(clientId)}&request_uri=${encodeURIComponent(par.request_uri)}`,
           )
@@ -340,7 +365,7 @@ function OAuth2ConsentPage() {
           loggedInAccount,
           clientId,
           false,
-          currentRelativeUrl,
+          switchRequest,
         )
       } catch (e: unknown) {
         if (cancelled) return
@@ -379,67 +404,78 @@ function OAuth2ConsentPage() {
 
   const accountLabel = account?.email || account?.name || undefined
 
+  const accountSwitcher = accountLabel ? (
+    <AuthFlowAccountSwitcher
+      accountLabel={accountLabel}
+      onSwitchAccount={
+        accountSwitchRequest && phase === 'ready' ? switchAccount : undefined
+      }
+      disabled={switchingAccount}
+    />
+  ) : null
+
   return (
-    <div className="bg-background h-full overflow-y-auto">
-      <div className="flex min-h-full flex-col items-center p-6 md:p-10">
-        <div className="my-auto w-full max-w-xl">
-          {phase === 'loading' && (
-            <div className="flex min-h-64 items-center justify-center">
-              <Loader2 className="text-muted-foreground size-8 animate-spin" />
-            </div>
-          )}
+    <AuthFlowShell
+      width="narrow"
+      showLegal={false}
+      accountSwitcher={accountSwitcher}
+    >
+      {phase === 'loading' && (
+        <AuthFlowNarrowCard
+          contentClassName={authFlowOAuthNarrowCardContentClassName}
+        >
+          <div className="flex flex-col items-center py-8 text-center">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground motion-reduce:animate-none" />
+          </div>
+        </AuthFlowNarrowCard>
+      )}
 
-          {phase === 'error' && (
-            <Card className="overflow-hidden p-6 md:p-8">
-              <div className="space-y-6">
-                <div className="flex flex-col items-center gap-4 text-center">
-                  <div className="bg-destructive/10 flex size-10 items-center justify-center rounded-xl">
-                    <TriangleAlert className="text-destructive size-4" />
-                  </div>
-                  <div className="space-y-1">
-                    <h1 className="text-2xl font-semibold tracking-tight">
-                      {t('Authorization failed')}
-                    </h1>
-                    <p className="text-muted-foreground text-[13px] leading-relaxed">
-                      {error}
-                    </p>
-                  </div>
-                </div>
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => navigate({ to: '/', replace: true })}
-                >
-                  {t('Go to console')}
-                </Button>
+      {phase === 'error' && (
+        <AuthFlowNarrowCard
+          contentClassName={authFlowOAuthNarrowCardContentClassName}
+        >
+          <div className="space-y-6">
+            <div className="flex flex-col items-center gap-4 text-center">
+              <AuthFlowHeaderIcon icon={TriangleAlert} variant="destructive" />
+              <div className="space-y-1">
+                <h1 className="text-2xl font-semibold tracking-tight">
+                  {t('Authorization failed')}
+                </h1>
+                <p className="text-muted-foreground text-[13px] leading-relaxed">
+                  {error}
+                </p>
               </div>
-            </Card>
-          )}
+            </div>
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => navigate({ to: '/', replace: true })}
+            >
+              {t('Go to console')}
+            </Button>
+          </div>
+        </AuthFlowNarrowCard>
+      )}
 
-          {phase === 'ready' && grant && app && (
-            <OAuth2ConsentCard
-              grant={grant}
-              app={app}
-              accountLabel={accountLabel}
-              flow="authorization"
-              onSwitchAccount={
-                accountSwitchResumeUrl ? switchAccount : undefined
-              }
-              onDone={onDone}
-            />
-          )}
+      {phase === 'ready' && grant && app && (
+        <OAuth2ConsentCard
+          grant={grant}
+          app={app}
+          flow="authorization"
+          switchingAccount={switchingAccount}
+          accountSwitchError={accountSwitchError}
+          onDone={onDone}
+        />
+      )}
 
-          {(phase === 'approved' || phase === 'denied') && (
-            <OAuth2OutcomeCard
-              outcome={phase}
-              flow="authorization"
-              app={app}
-              accountLabel={accountLabel}
-              redirectUrl={completedRedirectUrl}
-            />
-          )}
-        </div>
-      </div>
-    </div>
+      {(phase === 'approved' || phase === 'denied') && (
+        <OAuth2OutcomeCard
+          outcome={phase}
+          flow="authorization"
+          app={app}
+          redirectUrl={completedRedirectUrl}
+        />
+      )}
+    </AuthFlowShell>
   )
 }

@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Outlet, useLocation, useNavigate } from '@tanstack/react-router'
+import { useQuery } from '@tanstack/react-query'
+import { organizationsQueryOptions } from '@/lib/react-query/hooks/organizations'
 import {
   CreditCard,
   Gift,
@@ -46,7 +48,14 @@ export function View() {
   const location = useLocation()
   const navigate = useNavigate()
   const { account, signOut } = useAuth()
-  const { features } = useConsoleProfile()
+  const { features, isSelfHosted } = useConsoleProfile()
+  const { data: organizations, isSuccess } = useQuery({
+    ...organizationsQueryOptions(),
+    enabled: isSelfHosted && !!account,
+    staleTime: 0,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
+  })
   const t = useT()
   const [commandCenterOpen, setCommandCenterOpen] = useState(false)
   const [commandCenterInitialSubPage, setCommandCenterInitialSubPage] =
@@ -114,13 +123,23 @@ export function View() {
         icon: Monitor,
         keywords: ['sessions', 'devices', 'logout', 'revoke'],
       },
-      {
-        id: 'applications',
-        label: t('Applications'),
-        to: '/account/applications',
-        icon: Package,
-        keywords: ['applications', 'oauth', 'authorized', 'consent', 'revoke'],
-      },
+      ...(features.accountApplications
+        ? [
+            {
+              id: 'applications',
+              label: t('Applications'),
+              to: '/account/applications',
+              icon: Package,
+              keywords: [
+                'applications',
+                'oauth',
+                'authorized',
+                'consent',
+                'revoke',
+              ],
+            },
+          ]
+        : []),
       ...(features.affiliates
         ? [
             {
@@ -164,7 +183,13 @@ export function View() {
     ]
 
     return items
-  }, [features.affiliates, features.billing, features.browserAlerts, t])
+  }, [
+    features.affiliates,
+    features.billing,
+    features.browserAlerts,
+    features.accountApplications,
+    t,
+  ])
 
   const accountSettingsCardIndex = useMemo(() => {
     return ACCOUNT_SETTINGS_CARD_INDEX.filter((entry) => {
@@ -173,6 +198,9 @@ export function View() {
       }
       if (entry.sectionId === 'affiliates') {
         return features.affiliates
+      }
+      if (entry.sectionId === 'applications') {
+        return features.accountApplications
       }
       if (
         entry.sectionId === 'payment-methods' ||
@@ -194,6 +222,7 @@ export function View() {
     features.browserAlerts,
     features.accountIdentities,
     features.accountMfa,
+    features.accountApplications,
   ])
 
   useEffect(() => {
@@ -266,6 +295,21 @@ export function View() {
 
         <div className="min-w-0 flex-1">
           <div className="mx-auto min-w-0 max-w-7xl px-4 py-4 sm:px-6">
+            {isSelfHosted && isSuccess && organizations.teams.length === 0 && (
+              <section
+                role="status"
+                className="mb-6 rounded-lg border border-border bg-card p-4"
+              >
+                <h2 className="text-sm font-medium text-foreground">
+                  {t('Join an organization')}
+                </h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {t(
+                    'Your account is ready. Ask an organization owner to invite you, then accept the invitation in your email to access existing projects.',
+                  )}
+                </p>
+              </section>
+            )}
             <SettingsLayoutShell
               navItems={accountNavItems}
               activeSectionId={activeSection}

@@ -242,6 +242,7 @@ export function AgentProjectPicker({
                     const selected = value === project.$id
                     const label = formatProjectNameForDisplay(project.name)
                     const paused = Boolean(project.paused)
+                    const blocked = Boolean(project.blocked)
                     return (
                       <CommandItem
                         key={project.$id}
@@ -262,7 +263,11 @@ export function AgentProjectPicker({
                           )}
                         />
                         <span className="min-w-0 flex-1 truncate">
-                          {paused ? `${label} ${t('(Paused)')}` : label}
+                          {blocked
+                            ? `${label} ${t('(Blocked)')}`
+                            : paused
+                              ? `${label} ${t('(Paused)')}`
+                              : label}
                         </span>
                         {selected ? (
                           <Check className="h-3.5 w-3.5 shrink-0 text-foreground" />

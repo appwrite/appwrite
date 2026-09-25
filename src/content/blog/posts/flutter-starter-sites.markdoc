@@ -6,7 +6,7 @@ date: 2025-05-20
 cover: /images/blog/flutter-starter-sites/cover.avif
 timeToRead: 5
 author: aditya-oberai
-category: tutorial
+category: tutorials
 featured: false
 callToAction: true
 faqs:
@@ -42,7 +42,7 @@ Appwrite's Flutter starter template includes:
 
 # Deploy the starter template on Appwrite
 
-Firstly, you must head to Appwrite Cloud and [create an account](https://cloud.appwrite.io/console/register) if you haven't already (or [self-host Appwrite 1.7](https://appwrite.io/docs/advanced/self-hosting)). Next, create your first project, which will lead you to the project overview page.
+Firstly, you must head to Appwrite Cloud and [create an account](https://appwrite.io/sign-up) if you haven't already (or [self-host Appwrite 1.7](https://appwrite.io/docs/advanced/self-hosting)). Next, create your first project, which will lead you to the project overview page.
 
 ![Add platform](/images/blog/flutter-starter-sites/add-platform.avif)
 

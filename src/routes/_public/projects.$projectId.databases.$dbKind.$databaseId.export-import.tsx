@@ -34,7 +34,7 @@ export const Route = createFileRoute(
     await queryClient.ensureQueryData(
       databaseQueryOptions(projectId, databaseId, dbKind as DatabaseRouteKind),
     )
-    const tablesData = await queryClient.ensureQueryData(
+    await queryClient.ensureQueryData(
       tablesQueryOptions(
         projectId,
         databaseId,
@@ -44,17 +44,9 @@ export const Route = createFileRoute(
         undefined,
       ),
     )
-
-    const tableIds = (tablesData.tables || []).map(
-      (t: { $id: string }) => t.$id,
-    )
-    if (tableIds.length > 0) {
-      await queryClient
-        .ensureQueryData(
-          databaseCsvMigrationsQueryOptions(projectId, databaseId, tableIds),
-        )
-        .catch(() => {})
-    }
+    await queryClient
+      .ensureQueryData(databaseCsvMigrationsQueryOptions(projectId, databaseId))
+      .catch(() => {})
 
     const database = queryClient.getQueryData<{ name?: string }>(
       databaseQueryOptions(projectId, databaseId, dbKind as DatabaseRouteKind).queryKey,

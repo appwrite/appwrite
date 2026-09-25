@@ -39,13 +39,3 @@ export function getMigrationTableRef(
 
   return null
 }
-
-export function migrationMatchesDatabaseTables(
-  migration: Pick<Models.Migration, 'resourceId' | 'parentResourceId'>,
-  databaseId: string,
-  tableIds: ReadonlySet<string>,
-): boolean {
-  const ref = getMigrationTableRef(migration)
-  if (!ref) return false
-  return ref.databaseId === databaseId && tableIds.has(ref.tableId)
-}

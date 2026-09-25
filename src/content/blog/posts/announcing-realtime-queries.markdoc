@@ -6,7 +6,7 @@ date: 2026-02-16
 cover: /images/blog/announcing-realtime-queries/cover.avif
 timeToRead: 4
 author: jake-barnby
-category: announcement
+category: announcements
 featured: false
 faqs:
   - question: "What are Realtime queries in Appwrite?"

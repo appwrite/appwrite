@@ -9,7 +9,7 @@ on:
 jobs:
   build:
     name: Build
-    runs-on: runs-on=${{ github.run_id }}/runner=checks
+    runs-on: gcrunner=${{ github.run_id }}-build/runner=checks
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
@@ -32,6 +32,12 @@ jobs:
 
       - name: Check content for hidden Unicode
         run: bun run lint:content
+
+      - name: Check for native browser dialogs
+        run: bun run lint:native-dialogs
+
+      - name: Check for preview SDK pins
+        run: bun run lint:sdk-pins
 
       - name: Build
         run: bun run build

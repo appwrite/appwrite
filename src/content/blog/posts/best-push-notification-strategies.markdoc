@@ -7,7 +7,7 @@ date: 2025-10-04
 timeToRead: 10
 author: veeresh-mulge
 unlisted: true
-category: product
+category: products
 faqs:
   - question: "What are push notifications?"
     answer: "Push notifications are short messages sent from your app to a user's device, even when the app isn't open. They show up on the lock screen or browser, giving you a direct way to grab attention. At their best, they're quick nudges that remind users of something useful, like a delivery update or a new feature worth trying."

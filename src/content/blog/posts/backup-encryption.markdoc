@@ -6,7 +6,7 @@ cover: /images/blog/backup-encryption/cover.avif
 timeToRead: 5
 date: 2024-10-15
 author: aditya-oberai
-category: product, security
+category: products, security
 faqs:
   - question: "Should I encrypt my database backups?"
     answer: "Yes. Backups often contain the same sensitive data as your live database, so an unencrypted backup is just as dangerous if it leaks. Encryption also helps you meet GDPR, HIPAA, and similar compliance requirements."

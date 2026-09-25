@@ -2,10 +2,11 @@
  * Screenshot mode - demo-friendly overlays for marketing captures.
  * Toggle by typing "smile" (see ScreenshotModeProvider).
  * Replaces the signed-in user's name, email, and avatar, organization names,
- * and hides the DEV construction stripe.
+ * hides the DEV construction stripe, and hides Appwrite Cloud status alerts.
  */
 
 import type { Models } from '@appwrite.io/console'
+import { getRuntimeConfig } from '@/lib/runtime-config'
 
 export const SCREENSHOT_MODE_OPEN_KEY = 'screenshot:modeOpen'
 export const SCREENSHOT_MODE_CHANGE_EVENT = 'screenshotModeChange'
@@ -20,11 +21,14 @@ export const SCREENSHOT_MODE_USER_AVATAR_URL =
 export const SCREENSHOT_MODE_ORG_NAME = 'ACME Corps'
 
 export function readScreenshotModeOpen(): boolean {
-  if (typeof window === 'undefined') return false
+  const defaultOpen = getRuntimeConfig().screenshotMode === 'true'
+  if (typeof window === 'undefined') return defaultOpen
   try {
-    return localStorage.getItem(SCREENSHOT_MODE_OPEN_KEY) === 'true'
+    const stored = localStorage.getItem(SCREENSHOT_MODE_OPEN_KEY)
+    if (stored === 'true' || stored === 'false') return stored === 'true'
+    return defaultOpen
   } catch {
-    return false
+    return defaultOpen
   }
 }
 

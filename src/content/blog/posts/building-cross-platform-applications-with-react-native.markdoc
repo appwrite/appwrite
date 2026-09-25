@@ -6,7 +6,7 @@ date: 2024-05-05
 cover: /images/blog/react-nativecross.avif
 timeToRead: 9
 author: damodar-lohani
-category: tutorial
+category: tutorials
 faqs:
   - question: "When should I choose React Native over native iOS and Android?"
     answer: "Pick React Native when you want one codebase across iOS, Android, and sometimes web, and your team already knows JavaScript or React. Stay native when you need cutting-edge platform APIs, intensive graphics, or fine-grained control over memory and background tasks. For most CRUD-style and content apps, React Native is the pragmatic choice."

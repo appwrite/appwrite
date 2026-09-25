@@ -1,6 +1,4 @@
 import type { QueryClient } from '@tanstack/react-query'
-import { redirect } from '@tanstack/react-router'
-import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import type { Models } from '@appwrite.io/console'
 import {
   ensureConsoleAccountQueryData,
@@ -10,12 +8,6 @@ import {
   shouldRevalidateConsoleAccount,
 } from '@/lib/react-query/hooks/auth'
 import { organizationPlanQueryOptions } from '@/lib/react-query/hooks/organizations'
-
-export function assertMarketingProfileEnabled() {
-  if (!getActiveProfileFeatures().marketing) {
-    throw redirect({ to: '/', replace: true })
-  }
-}
 
 async function prefetchOptionalAuthOrganizationPlan(
   queryClient: QueryClient,
@@ -61,9 +53,4 @@ export async function prefetchOptionalAuthHeaderData(
   } catch {
     // Unauthenticated or optional fetch errors - header handles guest state.
   }
-}
-
-export async function marketingPageLoader(queryClient: QueryClient) {
-  assertMarketingProfileEnabled()
-  await prefetchOptionalAuthHeaderData(queryClient)
 }

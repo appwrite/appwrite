@@ -3,6 +3,8 @@ import { ensureConsoleAccountOnAuthRoute } from '@/lib/react-query/hooks/auth'
 
 export const Route = createFileRoute('/_auth')({
   ssr: false,
+  // Refresh auth only on navigation; intent preloads must not clear guest state.
+  preload: false,
   loader: async ({ context, location }) => {
     if (typeof window !== 'undefined') {
       // MFA route loader owns account/MFA prefetch; skip guest refresh here.

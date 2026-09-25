@@ -1,4 +1,8 @@
 import type { AnalyticsActionId } from '@/lib/analytics-actions'
+import type {
+  ConsoleBannerCardAspectRatio,
+  ConsoleBannerCardSize,
+} from '@/lib/console-banners/floating-card-layout'
 
 export type ConsoleBannerScope = 'project' | 'console'
 export type ConsoleBannerPlacement = 'header' | 'bottom-left'
@@ -8,6 +12,10 @@ export type ConsoleBannerDefinition = {
   title: string
   scope: ConsoleBannerScope
   placement?: ConsoleBannerPlacement
+  /** Bottom-left floating card width variant (`large` = 300px max width). */
+  cardSize?: ConsoleBannerCardSize
+  /** When `square`, fixed 1:1 card (prefer explicit layout on one-off promos). */
+  cardAspectRatio?: ConsoleBannerCardAspectRatio
   /** Inclusive start (UTC ms). */
   startMs: number
   /** Inclusive end (UTC ms). */
@@ -19,23 +27,46 @@ export type ConsoleBannerDefinition = {
 }
 
 /** Stable id stored in `console.dismissedBanners` user prefs. */
+export const PRODUCT_HUNT_BANNER_ID = 'product-hunt-2026-09-16'
 export const POSTGRES_PROMO_BANNER_ID = 'postgres-promo-2026'
+export const START_PROMO_BANNER_ID = 'start-promo-india-2026-09'
 export const INIT_RECAP_PROMO_BANNER_ID = 'init-recap-promo-2026-09'
+export const NATIVE_OAUTH_PROMO_BANNER_ID = 'native-oauth-promo-2026-09'
 
-/**
- * Promo window: one month starting the week of 2026-09-14 (UTC).
- * Inclusive start, inclusive end (through end of day UTC).
- */
-export const POSTGRES_PROMO_BANNER_START_MS = Date.UTC(2026, 8, 14, 0, 0, 0, 0)
-export const POSTGRES_PROMO_BANNER_END_MS = Date.UTC(
+/** Appwrite Start India promo: 14 days from launch (inclusive, UTC). */
+export const START_PROMO_BANNER_START_MS = Date.UTC(2026, 8, 21, 0, 0, 0, 0)
+export const START_PROMO_BANNER_END_MS = Date.UTC(
   2026,
   9,
-  14,
+  4,
   23,
   59,
   59,
   999,
 )
+
+/**
+ * Product Hunt launch day: 16 Sep 2026, start of day through end of day Pacific Time
+ * (PDT, UTC-7). Inclusive start, inclusive end.
+ */
+export const PRODUCT_HUNT_BANNER_START_MS = new Date(
+  '2026-09-16T00:00:00.000-07:00',
+).getTime()
+export const PRODUCT_HUNT_BANNER_END_MS = new Date(
+  '2026-09-16T23:59:59.999-07:00',
+).getTime()
+
+/**
+ * Postgres promo resumes after Product Hunt (17 Sep 2026, start of day Pacific)
+ * and runs through the rest of the week (Sun 20 Sep 2026, end of day Pacific).
+ * Inclusive start, inclusive end.
+ */
+export const POSTGRES_PROMO_BANNER_START_MS = new Date(
+  '2026-09-17T00:00:00.000-07:00',
+).getTime()
+export const POSTGRES_PROMO_BANNER_END_MS = new Date(
+  '2026-09-20T23:59:59.999-07:00',
+).getTime()
 
 /**
  * Init recap floating promo: after Init week through end of week (Sun 13 Sep 2026 UTC).
@@ -45,6 +76,20 @@ export const INIT_RECAP_PROMO_BANNER_END_MS = Date.UTC(
   2026,
   8,
   13,
+  23,
+  59,
+  59,
+  999,
+)
+
+/**
+ * Native OAuth project promo: seven days from launch (inclusive, UTC).
+ */
+export const NATIVE_OAUTH_PROMO_BANNER_START_MS = Date.UTC(2026, 8, 24, 0, 0, 0, 0)
+export const NATIVE_OAUTH_PROMO_BANNER_END_MS = Date.UTC(
+  2026,
+  8,
+  30,
   23,
   59,
   59,
@@ -64,6 +109,16 @@ export const CONSOLE_BANNERS: readonly ConsoleBannerDefinition[] = [
     event: 'init-recap-promo-banner-view-recap',
   },
   {
+    id: PRODUCT_HUNT_BANNER_ID,
+    title: 'Appwrite 2.0 is launching on Product Hunt today',
+    scope: 'console',
+    placement: 'header',
+    startMs: PRODUCT_HUNT_BANNER_START_MS,
+    endMs: PRODUCT_HUNT_BANNER_END_MS,
+    cloudOnly: true,
+    event: 'product-hunt-banner-upvote',
+  },
+  {
     id: POSTGRES_PROMO_BANNER_ID,
     title: 'Appwrite now speaks PostgreSQL',
     scope: 'project',
@@ -72,6 +127,26 @@ export const CONSOLE_BANNERS: readonly ConsoleBannerDefinition[] = [
     endMs: POSTGRES_PROMO_BANNER_END_MS,
     cloudOnly: true,
     event: 'postgres-promo-banner-try-now',
+  },
+  {
+    id: START_PROMO_BANNER_ID,
+    title: 'Appwrite Start for India',
+    scope: 'console',
+    placement: 'header',
+    startMs: START_PROMO_BANNER_START_MS,
+    endMs: START_PROMO_BANNER_END_MS,
+    cloudOnly: true,
+    event: 'start-promo-banner-learn-more',
+  },
+  {
+    id: NATIVE_OAUTH_PROMO_BANNER_ID,
+    title: 'Add native OAuth to your app',
+    scope: 'project',
+    placement: 'bottom-left',
+    startMs: NATIVE_OAUTH_PROMO_BANNER_START_MS,
+    endMs: NATIVE_OAUTH_PROMO_BANNER_END_MS,
+    cloudOnly: true,
+    event: 'native-oauth-promo-banner-open-settings',
   },
 ] as const
 

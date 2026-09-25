@@ -8,13 +8,18 @@
  *   the first org and ensures that org has at least one project (creates
  *   "My first project" if none).
  *
+ * Self-hosted instances reject additional organization creation. Remember that
+ * denial during navigation, but recheck memberships so invitations can grant access.
+ *
  * Used after signup (email/OAuth) and after email verification so new users
  * are redirected to their org main page.
  */
 
-import { ID, Query, type Models } from '@appwrite.io/console'
+import { AppwriteException, ID, Query, type Models } from '@appwrite.io/console'
 import type { QueryClient } from '@tanstack/react-query'
 import { setConsoleAccountCache } from '@/lib/console-account-cache'
+import { getApiEndpoint } from '@/lib/appwrite/sdk'
+import { isCloudProfile } from '@/lib/console-profiles'
 import { getConsoleAccountQueryRevision } from '@/lib/console-impersonation'
 import {
   createConsoleProject,
@@ -36,6 +41,24 @@ import { isHttpNotFoundError } from '@/lib/utils/error-formatting'
 
 const PERSONAL_ORG_NAME = 'Personal Projects'
 const FIRST_PROJECT_NAME = 'My first project'
+
+function isOrganizationCreationProhibited(
+  error: unknown,
+): error is AppwriteException {
+  return (
+    error instanceof AppwriteException &&
+    error.code === 403 &&
+    error.type === 'organization_creation_prohibited'
+  )
+}
+
+// Do not retry a policy denial during post-auth prefetch/navigation. Keep this
+// in memory so reloading can recover if the instance's organization is deleted.
+const prohibitedAccounts = new Map<string, AppwriteException>()
+
+function provisioningAccountKey(accountId: string): string {
+  return JSON.stringify([getApiEndpoint(), accountId])
+}
 
 async function organizationIsAccessible(
   orgId: string,
@@ -76,6 +99,7 @@ export async function resolvePostAuthOrganizationId(
 
   if (preferredId) {
     if (await organizationIsAccessible(preferredId, queryClient)) {
+      prohibitedAccounts.delete(provisioningAccountKey(resolved.$id))
       return preferredId
     }
 
@@ -131,13 +155,32 @@ async function provisionPersonalOrgAndFirstProject(
   const account = await fetchConsoleAccount()
   const prefs = (account.prefs || {}) as Record<string, unknown>
 
+  const accountKey = provisioningAccountKey(account.$id)
+  const prohibited = !isCloudProfile()
+    ? prohibitedAccounts.get(accountKey)
+    : undefined
+  // Membership may have become available through an invitation. Recheck it,
+  // rather than letting a cached empty list make a policy denial permanent.
   const response = queryClient
-    ? await queryClient.ensureQueryData(organizationsQueryOptions())
+    ? prohibited
+      ? await queryClient.fetchQuery({
+          ...organizationsQueryOptions(),
+          staleTime: 0,
+        })
+      : await queryClient.ensureQueryData(organizationsQueryOptions())
     : await fetchOrganizations()
   const orgs = response.teams || []
 
   if (orgs.length === 0) {
-    const created = await createOrganization({ name: PERSONAL_ORG_NAME })
+    if (prohibited) throw prohibited
+    const created = await createOrganization({ name: PERSONAL_ORG_NAME }).catch(
+      (error: unknown) => {
+        if (!isCloudProfile() && isOrganizationCreationProhibited(error)) {
+          prohibitedAccounts.set(accountKey, error)
+        }
+        throw error
+      },
+    )
     if (!('$id' in created)) {
       throw new Error(
         'Creating the personal organization requires payment authentication',
@@ -169,6 +212,7 @@ async function provisionPersonalOrgAndFirstProject(
     return orgId
   }
 
+  prohibitedAccounts.delete(accountKey)
   const orgId = (prefs[USER_PREFS_KEY_ORGANIZATION] as string) || orgs[0].$id
 
   if (!prefs[USER_PREFS_KEY_ORGANIZATION]) {

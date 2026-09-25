@@ -179,7 +179,7 @@ export function InputTags({
     <div className={cn('space-y-1', className)}>
       <div
         className={cn(
-          'flex min-h-9 w-full flex-wrap items-center gap-1.5 rounded-md border border-input bg-transparent px-3 py-1.5 text-[13px] shadow-xs transition-[color,box-shadow]',
+          'flex min-h-9 w-full min-w-0 flex-wrap items-center gap-1.5 rounded-md border border-input bg-transparent px-3 py-1.5 text-[13px] shadow-xs transition-[color,box-shadow]',
           'focus-within:border-ring focus-within:ring-ring/50 focus-within:ring-[3px]',
           'dark:bg-input/30',
           disabled && 'cursor-not-allowed opacity-50',
@@ -189,23 +189,25 @@ export function InputTags({
           <Badge
             key={`locked-${tag}`}
             variant="secondary"
-            className="h-6 shrink-0 px-2 py-0 text-[12px] font-normal"
+            className="h-6 max-w-full px-2 py-0 text-[12px] font-normal"
+            title={tag}
           >
-            <span className="font-mono">{tag}</span>
+            <span className="min-w-0 truncate font-mono">{tag}</span>
           </Badge>
         ))}
         {value.map((tag) => (
           <Badge
             key={tag}
             variant="secondary"
-            className="h-6 shrink-0 gap-1 px-2 py-0 text-[12px] font-normal"
+            className="h-6 max-w-full gap-1 px-2 py-0 text-[12px] font-normal"
+            title={tag}
           >
-            <span className="font-mono">{tag}</span>
+            <span className="min-w-0 truncate font-mono">{tag}</span>
             <button
               type="button"
               onClick={() => handleRemove(tag)}
               disabled={disabled}
-              className="rounded-full text-muted-foreground hover:bg-muted-foreground/20 hover:text-foreground disabled:pointer-events-none"
+              className="shrink-0 rounded-full text-muted-foreground hover:bg-muted-foreground/20 hover:text-foreground disabled:pointer-events-none"
               aria-label={`Remove ${tag}`}
             >
               <X className="h-3 w-3" />

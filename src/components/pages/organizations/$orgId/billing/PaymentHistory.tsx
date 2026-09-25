@@ -1,26 +1,19 @@
 import { useState, useMemo, useEffect } from 'react'
-import {
-  Download,
-  Eye,
-  ChevronLeft,
-  ChevronRight,
-  ShieldCheck,
-} from 'lucide-react'
+import { Download, Eye, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { type Invoice } from '@/lib/utils/mock-data'
 import { formatCurrency, formatDate } from './utils'
-import { getInvoiceStatusBadgeVariant } from '@/lib/utils/status-badge'
 import {
-  useOrganizationInvoices,
-} from '@/lib/react-query/hooks'
+  getInvoiceStatusBadgeVariant,
+  mapInvoiceApiStatus,
+} from '@/lib/utils/status-badge'
+import { useOrganizationInvoices } from '@/lib/react-query/hooks'
 import { useParams } from '@tanstack/react-router'
-import { useQueryClient } from '@tanstack/react-query'
 import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import { toast } from 'sonner'
 import { WarningAlert } from '@/components/global/shared/WarningAlert'
-import { confirmPayment } from '@/lib/utils/stripe'
 import { useT } from '@/lib/i18n/translate'
 import { RetryPayment, type RetryPaymentInvoice } from './RetryPayment'
 
@@ -30,38 +23,7 @@ const ITEMS_PER_PAGE = 5
  * Map API Invoice model to component Invoice interface.
  */
 function mapApiInvoiceToComponent(apiInvoice: Models.Invoice): Invoice {
-  // API statuses: succeeded, pending, due, requires_authentication, failed,
-  // cancelled. 'paid' and 'requires_action' are accepted aliases from older
-  // responses / Stripe naming. 'overdue' is not returned by the API but is
-  // kept as a valid component status for UI-derived overdue rendering.
-  let status: Invoice['status']
-  const apiStatus = apiInvoice.status?.toLowerCase() || ''
-  switch (apiStatus) {
-    case 'succeeded':
-    case 'paid':
-      status = 'paid'
-      break
-    case 'requires_authentication':
-    case 'requires_action':
-      status = 'requires_authentication'
-      break
-    case 'failed':
-      status = 'failed'
-      break
-    case 'cancelled':
-      status = 'cancelled'
-      break
-    case 'due':
-      status = 'due'
-      break
-    case 'overdue':
-      status = 'overdue'
-      break
-    case 'pending':
-    default:
-      status = 'pending'
-      break
-  }
+  const status = mapInvoiceApiStatus(apiInvoice.status)
 
   const idToUse = apiInvoice.aggregationId || apiInvoice.$id
   const invoiceNumber = `INV-${idToUse.slice(-8).toUpperCase()}`
@@ -90,7 +52,6 @@ function mapApiInvoiceToComponent(apiInvoice: Models.Invoice): Invoice {
     amount: apiInvoice.grossAmount || apiInvoice.amount,
     currency: apiInvoice.currency || 'USD',
     downloadUrl: undefined,
-    clientSecret: apiInvoice.clientSecret || undefined,
     lastError: apiInvoice.lastError || undefined,
   }
 }
@@ -102,33 +63,9 @@ export function PaymentHistory() {
   const [requestedPage, setRequestedPage] = useState(0)
   const [displayedPage, setDisplayedPage] = useState(0)
 
-  const queryClient = useQueryClient()
   const [retryInvoice, setRetryInvoice] = useState<RetryPaymentInvoice | null>(
     null,
   )
-
-  const handleAuthorizeInvoice = async (invoice: Invoice) => {
-    if (!invoice.clientSecret) {
-      toast.error(t('This invoice is missing authentication details.'))
-      return
-    }
-    try {
-      await confirmPayment({ clientSecret: invoice.clientSecret })
-      toast.success(t('Payment authorized'))
-      if (orgId) {
-        await queryClient.invalidateQueries({
-          queryKey: ['invoices', 'organization', orgId],
-        })
-        await queryClient.invalidateQueries({
-          queryKey: ['organization', orgId],
-        })
-      }
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : t('Failed to authorize payment'),
-      )
-    }
-  }
 
   const handleRetryInvoicePayment = (invoice: Invoice) => {
     setRetryInvoice({
@@ -237,7 +174,10 @@ export function PaymentHistory() {
 
   return (
     <>
-    <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+    <div
+      id="payment-history"
+      className="scroll-mt-24 rounded-xl border border-border bg-card/50 overflow-hidden"
+    >
       <div className="px-6 py-4 flex items-center justify-between">
         <h3 className="text-[15px] font-semibold text-foreground">
           {t('Payment history')}
@@ -274,9 +214,13 @@ export function PaymentHistory() {
                 key={invoice.$id}
                 invoice={invoice}
                 orgId={orgId}
-                onAuthorize={() => handleAuthorizeInvoice(invoice)}
+                // An invoice awaiting authentication is paid through the same flow
+                // as a failed one: its stored PaymentIntent may since have been
+                // declined, and only a fresh payment lets the owner pick a card.
                 onRetryPayment={
-                  invoice.status === 'failed' || invoice.status === 'overdue'
+                  invoice.status === 'failed' ||
+                  invoice.status === 'overdue' ||
+                  invoice.status === 'requires_authentication'
                     ? () => handleRetryInvoicePayment(invoice)
                     : undefined
                 }
@@ -397,7 +341,6 @@ export function PaymentHistory() {
 interface InvoiceRowProps {
   invoice: Invoice
   orgId?: string
-  onAuthorize: () => Promise<void>
   onRetryPayment?: () => void
   onViewInvoice: (invoiceId: string) => Promise<void>
   onDownloadInvoice: (invoiceId: string) => Promise<void>
@@ -406,7 +349,6 @@ interface InvoiceRowProps {
 function InvoiceRow({
   invoice,
   orgId,
-  onAuthorize,
   onRetryPayment,
   onViewInvoice,
   onDownloadInvoice,
@@ -414,20 +356,6 @@ function InvoiceRow({
   const t = useT()
   const [isViewing, setIsViewing] = useState(false)
   const [isDownloading, setIsDownloading] = useState(false)
-  const [isAuthorizing, setIsAuthorizing] = useState(false)
-
-  const handleAuthorize = async () => {
-    setIsAuthorizing(true)
-    try {
-      await onAuthorize()
-    } finally {
-      setIsAuthorizing(false)
-    }
-  }
-
-  const showAuthorize =
-    invoice.status === 'requires_authentication' && !!invoice.clientSecret
-
   const handleView = async () => {
     if (!orgId) return
     setIsViewing(true)
@@ -448,7 +376,7 @@ function InvoiceRow({
     }
   }
 
-  const rowBusy = isViewing || isDownloading || isAuthorizing
+  const rowBusy = isViewing || isDownloading
 
   return (
     <tr className="hover:bg-accent/50 transition-colors">
@@ -469,7 +397,9 @@ function InvoiceRow({
         >
           {invoice.status === 'requires_authentication'
             ? t('Action required')
-            : invoice.status}
+            : invoice.status === 'abandoned'
+              ? t('Abandoned')
+              : invoice.status}
         </Badge>
       </td>
       <td className="px-6 py-3 text-end">
@@ -479,18 +409,6 @@ function InvoiceRow({
       </td>
       <td className="px-6 py-3 text-end">
         <div className="flex flex-wrap items-center justify-end gap-1.5">
-          {showAuthorize && (
-            <Button
-              size="sm"
-              className="h-8 gap-1.5 px-2.5 text-[12px]"
-              title={t('Authorize payment')}
-              onClick={handleAuthorize}
-              disabled={!orgId || rowBusy}
-            >
-              <ShieldCheck className="h-3.5 w-3.5" />
-              {t('Authorize')}
-            </Button>
-          )}
           {onRetryPayment && (
             <Button
               variant="outline"
@@ -499,7 +417,9 @@ function InvoiceRow({
               onClick={onRetryPayment}
               disabled={!orgId || rowBusy}
             >
-              {t('Retry payment')}
+              {invoice.status === 'requires_authentication'
+                ? t('Authorize payment')
+                : t('Retry payment')}
             </Button>
           )}
           <Button

@@ -12,6 +12,7 @@ import {
   getDocsArticleSchema,
   getDocsBreadcrumbSchema,
 } from '@/lib/docs/seo'
+import { stringifyJsonLd } from '@/lib/seo/json-ld'
 
 const DOCS_LLMS_TXT_SPLAT = 'llms.txt'
 
@@ -114,11 +115,11 @@ export const Route = createFileRoute('/docs/$')({
       scripts: [
         {
           type: 'application/ld+json',
-          children: JSON.stringify(getDocsBreadcrumbSchema(meta, slug)),
+          children: stringifyJsonLd(getDocsBreadcrumbSchema(meta, slug)),
         },
         {
           type: 'application/ld+json',
-          children: JSON.stringify(getDocsArticleSchema(meta, slug)),
+          children: stringifyJsonLd(getDocsArticleSchema(meta, slug)),
         },
       ],
     }

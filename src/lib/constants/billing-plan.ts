@@ -4,6 +4,8 @@
  */
 export const BillingPlanTier = {
   Tier0: 'tier-0',
+  /** Regional Start plan (India and Nepal). Must be matched before `tier-1`. */
+  Start: 'tier-1-1',
   Tier1: 'tier-1',
   Tier2: 'tier-2',
 } as const

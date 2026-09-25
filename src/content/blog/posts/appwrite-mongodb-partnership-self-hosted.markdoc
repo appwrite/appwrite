@@ -8,7 +8,7 @@ timeToRead: 6
 author:
     - eldad-fux
     - jake-barnby
-category: announcement
+category: announcements
 featured: true
 faqs:
   - question: "What is the Appwrite and MongoDB partnership?"

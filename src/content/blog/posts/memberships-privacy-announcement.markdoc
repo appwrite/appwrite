@@ -6,7 +6,7 @@ date: 2024-12-10
 cover: /images/blog/memberships-privacy-announcement/cover.avif
 timeToRead: 4
 author: ebenezer-don
-category: product, announcement
+category: products, announcements
 faqs:
   - question: "What is memberships privacy in Appwrite?"
     answer: "Memberships privacy lets you mark specific membership details as private so they are not exposed to other users or team members. You can configure the userName, userEmail, and mfa fields to remain hidden in collaborative workflows. This protects sensitive information without changing how the rest of the app behaves."

@@ -921,6 +921,55 @@ html:not([lang='en']):not([lang='he']) {
     height: 100dvh;
   }
 
+  /*
+    Marketing/docs scroll the document so Plausible can measure scroll depth.
+    The console shell is otherwise position:fixed with overflow on #main-content,
+    which makes document height === viewport and reports 100% depth on every visit.
+    API reference explorer keeps the nested scroller (class is not applied).
+  */
+  html.marketing-document-scroll {
+    height: auto;
+    overscroll-behavior: none;
+  }
+
+  html.marketing-document-scroll body {
+    height: auto;
+    overflow: auto;
+    overscroll-behavior: none;
+  }
+
+  html.marketing-document-scroll .root-container {
+    position: relative;
+    inset: auto;
+    width: 100%;
+    height: auto;
+    min-height: 100dvh;
+    overflow: visible !important;
+  }
+
+  html.marketing-document-scroll .root-container > .flex,
+  html.marketing-document-scroll .root-scroll-container,
+  html.marketing-document-scroll .org-layout-container,
+  html.marketing-document-scroll .project-layout-container {
+    height: auto !important;
+    max-height: none !important;
+    min-height: 100dvh;
+    overflow: visible !important;
+  }
+
+  /* The sidebar/content row clips overflow-y for the console's left nav. In
+     document-scroll mode that clip would make the row the scrollport for
+     sticky in-page TOCs, so it has to flow with the document as well. */
+  html.marketing-document-scroll .console-layout-row {
+    overflow: visible !important;
+  }
+
+  html.marketing-document-scroll #main-content {
+    overflow: visible !important;
+    max-height: none !important;
+    flex: 1 0 auto;
+  }
+
   /* Mobile/tablet flex constraints. The root chain already sizes to 100dvh, so
      these rules only need to ensure inner flex containers stay bounded and
      scroll regions claim remaining space. */
@@ -1019,6 +1068,21 @@ html:not([lang='en']):not([lang='he']) {
 }
 
 .upgrade-button-wrapper:hover {
+  filter: drop-shadow(
+    0 2px 4px color-mix(in oklch, var(--foreground) 12%, transparent)
+  );
+}
+
+.upgrade-button-wrapper > * {
+  border-radius: calc(0.375rem - 1px);
+}
+
+/* Keep animations attached and paused so hover resumes instead of restarting from 0%. */
+.upgrade-button-wrapper::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
   background: linear-gradient(
     90deg,
     color-mix(in oklch, var(--muted-foreground) 25%, var(--border)) 0%,
@@ -1032,13 +1096,15 @@ html:not([lang='en']):not([lang='he']) {
   );
   background-size: 300% 100%;
   animation: border-rotate 4s ease-in-out infinite;
-  filter: drop-shadow(
-    0 2px 4px color-mix(in oklch, var(--foreground) 12%, transparent)
-  );
+  animation-play-state: paused;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 0;
 }
 
-.upgrade-button-wrapper > * {
-  border-radius: calc(0.375rem - 1px);
+.upgrade-button-wrapper:hover::after {
+  animation-play-state: running;
+  opacity: 1;
 }
 
 .upgrade-button-wrapper::before {
@@ -1054,13 +1120,16 @@ html:not([lang='en']):not([lang='he']) {
     rgba(255, 255, 255, 0.6) 50%,
     transparent 70%
   );
-  animation: none;
+  animation: shimmer 3s ease-in-out infinite;
+  animation-play-state: paused;
+  opacity: 0;
   pointer-events: none;
   z-index: 1;
 }
 
 .upgrade-button-wrapper:hover::before {
-  animation: shimmer 3s ease-in-out infinite;
+  animation-play-state: running;
+  opacity: 1;
 }
 
 .dark .upgrade-button-wrapper {
@@ -1068,18 +1137,6 @@ html:not([lang='en']):not([lang='he']) {
 }
 
 .dark .upgrade-button-wrapper:hover {
-  background: linear-gradient(
-    90deg,
-    color-mix(in oklch, var(--muted-foreground) 25%, var(--border)) 0%,
-    var(--border) 15%,
-    color-mix(in oklch, var(--border) 60%, var(--background)) 30%,
-    var(--muted) 45%,
-    color-mix(in oklch, var(--border) 60%, var(--background)) 60%,
-    var(--border) 75%,
-    color-mix(in oklch, var(--muted-foreground) 25%, var(--border)) 90%,
-    color-mix(in oklch, var(--muted-foreground) 25%, var(--border)) 100%
-  );
-  background-size: 300% 100%;
   filter: drop-shadow(
     0 2px 6px color-mix(in oklch, var(--foreground) 18%, transparent)
   );
@@ -1103,18 +1160,17 @@ html:is(.crazy, .stealth, .premium, .high-contrast, .barbie, .nineties) .upgrade
 }
 
 html:is(.crazy, .stealth, .premium, .high-contrast, .barbie, .nineties) .upgrade-button-wrapper:hover {
-  background: var(--brand-cta);
-  background-size: 100% 100%;
-  animation: none;
   filter: brightness(1.1);
 }
 
-html:is(.crazy, .stealth, .premium, .high-contrast, .barbie, .nineties) .upgrade-button-wrapper::before {
+html:is(.crazy, .stealth, .premium, .high-contrast, .barbie, .nineties) .upgrade-button-wrapper::before,
+html:is(.crazy, .stealth, .premium, .high-contrast, .barbie, .nineties) .upgrade-button-wrapper::after {
   opacity: 0;
+  animation: none;
 }
 
-html:is(.crazy, .stealth, .premium, .high-contrast, .barbie, .nineties) .upgrade-button-wrapper:hover::before {
-  animation: none;
+html:is(.crazy, .stealth, .premium, .high-contrast, .barbie, .nineties) .upgrade-button-wrapper:hover::after {
+  opacity: 0;
 }
 
 /* Monaco editor surfaces follow console theme tokens (incl. stealth, premium, etc.). */
@@ -1189,10 +1245,27 @@ html:is(.crazy, .stealth, .premium, .high-contrast, .barbie, .nineties) .upgrade
   border-radius: var(--radius-sm);
 }
 
+/*
+ * Monaco always prepends a file/folder color-swatch `.icon` and sizes it to the
+ * suggest line height (28px). SQL completions use `.suggest-icon` instead, and
+ * the hide rule lives under `.monaco-editor`, so the empty slot was still
+ * taking a full column when the widget is portaled to body.
+ */
+.monaco-editor .suggest-widget .monaco-list .monaco-list-row > .icon,
+.editor-widget.suggest-widget .monaco-list .monaco-list-row > .icon {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden;
+}
+
 .monaco-editor .suggest-widget .monaco-list .monaco-list-row > .contents,
 .editor-widget.suggest-widget .monaco-list .monaco-list-row > .contents {
   display: flex;
   align-items: center;
+  width: 100%;
   height: 100%;
   overflow: hidden;
   padding-left: 0 !important;
@@ -1202,6 +1275,7 @@ html:is(.crazy, .stealth, .premium, .high-contrast, .barbie, .nineties) .upgrade
 .editor-widget.suggest-widget .monaco-list .monaco-list-row > .contents > .main {
   display: flex;
   align-items: center !important;
+  justify-content: flex-start;
   width: 100%;
   min-width: 0;
   font-family:
@@ -1212,17 +1286,21 @@ html:is(.crazy, .stealth, .premium, .high-contrast, .barbie, .nineties) .upgrade
 }
 
 .monaco-editor .suggest-widget .monaco-list .monaco-list-row > .contents > .main > .left,
-.editor-widget.suggest-widget .monaco-list .monaco-list-row > .contents > .main > .left,
+.editor-widget.suggest-widget .monaco-list .monaco-list-row > .contents > .main > .left {
+  display: flex;
+  flex: 0 1 auto;
+  align-items: center;
+  min-width: 0;
+  gap: 0;
+}
+
 .monaco-editor .suggest-widget .monaco-list .monaco-list-row > .contents > .main > .right,
 .editor-widget.suggest-widget .monaco-list .monaco-list-row > .contents > .main > .right {
   display: flex;
+  flex: 1 1 auto;
   align-items: center;
   min-width: 0;
-}
-
-.monaco-editor .suggest-widget .monaco-list .monaco-list-row > .contents > .main > .left,
-.editor-widget.suggest-widget .monaco-list .monaco-list-row > .contents > .main > .left {
-  gap: 0;
+  overflow: hidden;
 }
 
 .monaco-editor .suggest-widget .monaco-list .monaco-list-row > .contents > .main > .left > .monaco-icon-label,
@@ -1254,7 +1332,7 @@ html:is(.crazy, .stealth, .premium, .high-contrast, .barbie, .nineties) .upgrade
 
 .monaco-editor .suggest-widget .monaco-list .monaco-list-row .suggest-icon,
 .editor-widget.suggest-widget .monaco-list .monaco-list-row .suggest-icon {
-  display: flex;
+  display: inline-flex;
   flex-shrink: 0;
   align-items: center;
   justify-content: center;
@@ -1262,7 +1340,7 @@ html:is(.crazy, .stealth, .premium, .high-contrast, .barbie, .nineties) .upgrade
   height: 16px;
   margin-right: 8px !important;
   font-size: 14px;
-  line-height: 16px;
+  line-height: 1;
   color: var(--muted-foreground) !important;
 }
 
@@ -1278,6 +1356,7 @@ html:is(.crazy, .stealth, .premium, .high-contrast, .barbie, .nineties) .upgrade
 .monaco-editor .suggest-widget .monaco-list .monaco-list-row > .contents > .main > .right > .details-label,
 .editor-widget.suggest-widget .monaco-list .monaco-list-row > .contents > .main > .right > .details-label {
   display: inline !important;
+  flex: 0 1 auto;
   margin-left: 8px !important;
   overflow: hidden;
   font-size: 12px !important;
@@ -1286,6 +1365,37 @@ html:is(.crazy, .stealth, .premium, .high-contrast, .barbie, .nineties) .upgrade
   text-overflow: ellipsis;
   white-space: nowrap;
   opacity: 1 !important;
+}
+
+/*
+ * Suggest is portaled to body, so Monaco's `.monaco-editor .suggest-widget`
+ * readMore rules never apply. Keep chevrons in-flow, 16px, right-aligned.
+ * Inline width/height is the suggest line height (28px); override that box.
+ */
+.monaco-editor .suggest-widget .monaco-list .monaco-list-row > .contents > .main > .right > .readMore,
+.editor-widget.suggest-widget .monaco-list .monaco-list-row > .contents > .main > .right > .readMore {
+  display: inline-flex;
+  position: static;
+  top: auto;
+  right: auto;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 16px !important;
+  height: 16px !important;
+  margin-left: auto;
+  font-size: 14px;
+  line-height: 1;
+  visibility: visible;
+}
+
+.monaco-editor .suggest-widget .monaco-list .monaco-list-row > .contents > .main > .right > .readMore::before,
+.editor-widget.suggest-widget .monaco-list .monaco-list-row > .contents > .main > .right > .readMore::before {
+  display: block;
+  width: 16px;
+  height: 16px;
+  line-height: 16px;
+  text-align: center;
 }
 
 .monaco-editor .suggest-widget .monaco-icon-description-container,
@@ -1327,6 +1437,17 @@ html:is(.crazy, .stealth, .premium, .high-contrast, .barbie, .nineties) .upgrade
 
 .dark .find-in-file-highlight {
   background-color: rgba(255, 193, 7, 0.35);
+}
+
+/* Start plan badge: keep orange in CSS so it is not dropped by Tailwind scanning. */
+.plan-badge-start {
+  background-color: rgb(249 115 22 / 0.14) !important;
+  color: rgb(234 88 12) !important;
+}
+
+.dark .plan-badge-start {
+  background-color: rgb(249 115 22 / 0.18) !important;
+  color: rgb(251 146 60) !important;
 }
 
 /* Project selector plan pill - “strained” split when billing needs attention */
@@ -1841,20 +1962,12 @@ html[data-init-ticket-video-capturing] [data-init-ticket-export-control] * {
 /* Home product bento tile hover */
 .product-bento-hover-light {
   z-index: 20;
-  border-radius: calc(0.75rem - 1px);
 }
 
-/* Skip layout/paint for off-screen bento tiles while scrolling the home page. */
-.product-bento-grid > article {
-  content-visibility: auto;
-  contain-intrinsic-size: auto 420px;
-  contain: layout paint style;
-}
-
-@media (min-width: 1024px) {
-  .product-bento-grid > article {
-    contain-intrinsic-size: auto 240px;
-  }
+/* Keep bento tiles in normal layout. content-visibility/contain on these
+   articles jumps #main-content back to top when hover styles change. */
+.product-bento-grid {
+  overflow-anchor: none;
 }
 
 /* Home product bento mock UI */
@@ -1946,19 +2059,45 @@ html[data-init-ticket-video-capturing] [data-init-ticket-export-control] * {
   0% {
     transform: scale(1);
     border-color: var(--border);
-    background-color: color-mix(in oklch, var(--background) 80%, transparent);
+    background-color: var(--background);
+    color: var(--muted-foreground);
   }
 
   45% {
     transform: scale(0.96);
-    border-color: color-mix(in oklch, var(--brand-cta) 30%, var(--border));
-    background-color: color-mix(in oklch, var(--brand-cta) 12%, var(--background));
+    border-color: var(--brand-cta);
+    background-color: var(--brand-cta);
+    color: #fff;
   }
 
   100% {
     transform: scale(1);
-    border-color: color-mix(in oklch, var(--brand-cta) 18%, var(--border));
-    background-color: color-mix(in oklch, var(--brand-cta) 6%, var(--background));
+    border-color: var(--brand-cta);
+    background-color: var(--brand-cta);
+    color: #fff;
+  }
+}
+
+.group:hover .product-bento-pink-cta {
+  background-color: var(--brand-cta);
+  border-color: transparent;
+  color: #fff !important;
+}
+
+.group:hover .product-bento-pink-cta :is(p, span, svg, [class*='text-']) {
+  color: #fff !important;
+}
+
+.group:hover .product-bento-pink-cta img {
+  filter: brightness(0) invert(1);
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .group:hover .product-bento-pink-cta {
+    background-color: var(--brand-cta);
+    border-color: transparent;
+    color: #fff;
   }
 }
 
@@ -2342,6 +2481,53 @@ pre.prism-code .token-line > span {
   border: none !important;
   outline: none !important;
   box-shadow: none !important;
+}
+
+/* Blog code fences: Prism tokens rendered at build/server time. Same palette
+   as CodeBlock (prismSyntaxHighlightStyles) via the --code-* theme variables. */
+.blog-code .token.comment,
+.blog-code .token.prolog,
+.blog-code .token.doctype,
+.blog-code .token.cdata {
+  color: var(--code-comment);
+}
+.blog-code .token.namespace,
+.blog-code .token.class-name,
+.blog-code .language-markup .token.doctype {
+  color: var(--code-module-keyword);
+}
+.blog-code .token.keyword,
+.blog-code .token.builtin,
+.blog-code .token.changed,
+.blog-code .token.interpolation-punctuation,
+.blog-code .token.boolean,
+.blog-code .token.selector,
+.blog-code .language-markup .token.tag {
+  color: var(--code-keyword);
+}
+.blog-code .token.function {
+  color: var(--code-function);
+}
+.blog-code .token.attr-name,
+.blog-code .token.variable,
+.blog-code .token.property {
+  color: var(--code-property);
+}
+.blog-code .token.tag,
+.blog-code .token.deleted,
+.blog-code .token.string,
+.blog-code .token.attr-value,
+.blog-code .token.template-punctuation,
+.blog-code .token.char,
+.blog-code .token.regexp,
+.blog-code .token.number,
+.blog-code .token.inserted,
+.blog-code .token.constant {
+  color: var(--code-string);
+}
+.blog-code .token.punctuation,
+.blog-code .token.operator {
+  color: inherit;
 }
 
 /* Overlay scrollbar - hidden until hover/focus; thin rounded thumb on Windows/Linux */

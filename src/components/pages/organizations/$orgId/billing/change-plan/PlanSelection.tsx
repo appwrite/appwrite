@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { BillingPlanTier } from '@/lib/constants/billing-plan'
+import { BillingPlanTier } from '@/lib/constants/billing-plan'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -15,11 +15,9 @@ import {
   getPlanCanonicalFromRecord,
   getPlanNameFromTier,
   isFreePlanRef,
-  isPaidToFreeDowngradeBlocked,
   resolveBillingPlanRecord,
   resolveOrganizationPlanDisplayLabel,
 } from '@/lib/utils/plan-filter'
-import { getLegacyConsoleOrganizationBillingUrl } from '@/lib/legacy-console-path'
 import { cn } from '@/lib/utils'
 import { ContactSalesLink } from '@/components/global/shared/ContactSalesLink'
 import { MarketingSiteLink } from '@/components/global/shared/MarketingSiteLink'
@@ -58,13 +56,6 @@ const ENTERPRISE_COLLAPSED_HINT =
 const FREE_PLAN_CONFLICT_DESCRIPTION =
   'Only one free organization per account.'
 
-const FREE_DOWNGRADE_ALERT_TITLE = 'Downgrade to Free'
-const FREE_DOWNGRADE_ALERT_DESCRIPTION =
-  'Downgrading to the Free plan is temporarily unavailable here while we refine the experience. You can complete this change in the old console.'
-const FREE_DOWNGRADE_ALERT_CTA = 'Continue in the old console'
-const FREE_DOWNGRADE_PLAN_DESCRIPTION =
-  'Temporarily available in the old console'
-
 interface PlanSelectionProps {
   plans: Record<string, unknown>
   currentPlan: BillingPlanTier | string
@@ -74,7 +65,16 @@ interface PlanSelectionProps {
   hasFreeOrgs: boolean
   isCreateMode?: boolean
   variant?: 'card' | 'inline'
-  organizationId?: string
+}
+
+type PlanRecord = {
+  $id?: string
+  name?: string
+  order?: number
+  price?: number
+  /** The API returns `desc`; `description` is the older field name. */
+  desc?: string
+  description?: string
 }
 
 export function PlanSelection({
@@ -86,27 +86,36 @@ export function PlanSelection({
   hasFreeOrgs,
   isCreateMode = false,
   variant = 'card',
-  organizationId,
 }: PlanSelectionProps) {
   const t = useT()
   const [enterpriseOpen, setEnterpriseOpen] = useState(false)
   const availablePlans =
-    plans && typeof plans === 'object' ? Object.entries(plans) : []
+    plans && typeof plans === 'object'
+      ? (Object.entries(plans) as [string, PlanRecord | undefined][]).sort(
+          (a, b) => (a[1]?.order ?? 999) - (b[1]?.order ?? 999),
+        )
+      : []
 
-  const planCatalog = plans as Record<
-    string,
-    { $id?: string; name?: string; order?: number; price?: number }
->
+  const planCatalog = plans as Record<string, PlanRecord>
 
   const isOrganizationOnFreePlan =
     !isCreateMode && isFreePlanRef(currentPlan as string, planCatalog)
 
   const isCurrentPlan = (planTier: string) => {
     if (isCreateMode) return false
+    if (planTier === currentPlan) return true
+
+    // Start shares Pro's canonical group, so two distinct catalogue entries compare by id and
+    // the group is only a fallback for a legacy alias that resolves to no entry of its own.
+    const plan = resolveBillingPlanRecord(planTier, planCatalog)
+    const current = resolveBillingPlanRecord(currentPlan as string, planCatalog)
+    if (plan?.$id && current?.$id) {
+      return plan.$id === current.$id
+    }
+
     return (
-      planTier === currentPlan ||
       getPlanCanonicalFromRecord(planTier, planCatalog) ===
-        getPlanCanonicalFromRecord(currentPlan as string, planCatalog)
+      getPlanCanonicalFromRecord(currentPlan as string, planCatalog)
     )
   }
 
@@ -120,26 +129,11 @@ export function PlanSelection({
     hasFreeOrgs &&
     (isCreateMode || !isOrganizationOnFreePlan)
 
-  const isFreeDowngradeBlocked = (planTier: string) =>
-    isPaidToFreeDowngradeBlocked(currentPlan as string, planTier, planCatalog, {
-      isCreateMode,
-    })
-
   const isDisabled = (planTier: string) => {
     if (!selfService) return true
     if (isCreateMode && isFreeDisabledByAccountLimit(planTier)) return true
-    if (isFreeDowngradeBlocked(planTier)) return true
     return false
   }
-
-  const showFreeDowngradeNotice =
-    !isCreateMode &&
-    !isOrganizationOnFreePlan &&
-    availablePlans.some(([planTier]) => isFreePlan(planTier))
-
-  const legacyConsoleBillingUrl = organizationId
-    ? getLegacyConsoleOrganizationBillingUrl(organizationId)
-    : 'https://cloud.appwrite.io'
 
   const hasFreePlanConflict = (planTier: string) =>
     isFreeDisabledByAccountLimit(planTier)
@@ -274,6 +268,10 @@ export function PlanSelection({
     </div>
   )
 
+  // Pro keeps the badge wherever Start is sold: Start is the regional price of Pro, not a
+  // better plan, so recommending it over Pro reads as a downgrade being pushed.
+  const recommendedPlanId = BillingPlanTier.Tier1
+
   const radioGroupContent = (
     <>
       {/* Self-service restriction alert */}
@@ -287,64 +285,29 @@ export function PlanSelection({
         </Alert>
       )}
 
-      {showFreeDowngradeNotice && (
-        <Alert className="mb-4">
-          <Info className="h-4 w-4" />
-          <AlertTitle>{t(FREE_DOWNGRADE_ALERT_TITLE)}</AlertTitle>
-          <AlertDescription className="mt-2">
-            <p>{t(FREE_DOWNGRADE_ALERT_DESCRIPTION)}</p>
-            <Button
-              variant="outline"
-              size="sm"
-              className="mt-3 h-8 text-[13px]"
-              asChild
-            >
-              <a
-                href={legacyConsoleBillingUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                {...analyticsAttrs('upgrade-legacy-console-downgrade')}
-              >
-                {t(FREE_DOWNGRADE_ALERT_CTA)}
-                <ExternalLink className="ms-1.5 h-3.5 w-3.5" />
-              </a>
-            </Button>
-          </AlertDescription>
-        </Alert>
-      )}
-
       <RadioGroup
         value={selectedPlan || undefined}
-        onValueChange={(value) => {
-          if (isDisabled(value)) return
-          onPlanSelect(value as BillingPlanTier)
-        }}
+        onValueChange={(value) => onPlanSelect(value as BillingPlanTier)}
         className={planListClassName}
->
+      >
         {availablePlans.map(([planTier, planData]) => {
             // Use plan name from API response, fallback to derived name
             const planName = resolveOrganizationPlanDisplayLabel({
               billingPlan: planTier,
-              planName:
-                (planData as { name?: string } | undefined)?.name ?? null,
-              planId: (planData as { $id?: string } | undefined)?.$id,
+              planName: planData?.name ?? null,
+              planId: planData?.$id,
             })
             const disabled = isDisabled(planTier)
             const isCurrent = isCurrentPlan(planTier)
             const price = planData?.price || 0
-            // API uses 'desc' not 'description'
             const description = planData?.desc || planData?.description
-            const planDescription = isFreeDowngradeBlocked(planTier)
-              ? t(FREE_DOWNGRADE_PLAN_DESCRIPTION)
-              : hasFreePlanConflict(planTier)
-                ? t(FREE_PLAN_CONFLICT_DESCRIPTION)
-                : description
+            const planDescription = hasFreePlanConflict(planTier)
+              ? t(FREE_PLAN_CONFLICT_DESCRIPTION)
+              : description
             const isSelected = selectedPlan === planTier
             const isRecommendedPlan =
-              getPlanCanonicalFromRecord(
-                planTier,
-                plans as Record<string, { $id?: string; name?: string; order?: number; price?: number }>,
-              ) === 'pro'
+              (planData?.$id ?? planTier) === recommendedPlanId ||
+              planTier === recommendedPlanId
 
             const handleSelect = () => {
               if (disabled) return

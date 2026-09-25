@@ -10,7 +10,8 @@ export const DOCS_SECTION_HEADER_CLASS =
   'flex h-14 shrink-0 items-center border-b border-border bg-background'
 
 /** Scrollable docs nav panels - overlay scrollbar on Windows/Linux. */
-export const DOCS_NAV_SCROLL_CLASS = 'overlay-scrollbar overscroll-y-contain'
+export const DOCS_NAV_SCROLL_CLASS =
+  'min-h-0 overlay-scrollbar overscroll-y-contain'
 
 /** Gap between top-level docs nav groups (Products, APIs, Tooling, …). */
 export const DOCS_NAV_TREE_GAP_CLASS = 'space-y-6'

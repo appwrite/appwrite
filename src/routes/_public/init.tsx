@@ -2,7 +2,7 @@ import { lazy, Suspense } from 'react'
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { FullscreenLoader } from '@/components/ui/loader'
 import { getInitPageMetaTags } from '@/lib/init/init-seo'
-import { ensureConsoleAccountQueryData } from '@/lib/react-query/hooks/auth'
+import { prefetchOptionalAuthHeaderData } from '@/lib/marketing/route-loader'
 import { isInitSurfaceEnabled } from '@/lib/init/init-surface'
 import { importNamedDefault } from '@/lib/stale-chunk-error'
 
@@ -21,7 +21,7 @@ export const Route = createFileRoute('/_public/init')({
     }
 
     // Resolve auth before first paint so header, sidebar, and hero CTAs do not reflow.
-    await ensureConsoleAccountQueryData(context.queryClient)
+    await prefetchOptionalAuthHeaderData(context.queryClient)
   },
 })
 

@@ -15,6 +15,10 @@ export const BLOG_BODY_TEXT_CLASS = DOCS_BODY_TEXT_CLASS
 
 export const BLOG_FAQ_QUESTION_CLASS = 'text-[14px] font-medium text-foreground'
 
+/** FAQ answers: same scale as docs hub / marketing FAQs (not full article body). */
+export const BLOG_FAQ_ANSWER_CLASS =
+  'text-[13px] leading-6 text-muted-foreground @[640px]:text-[13px] @[640px]:leading-6'
+
 export const BLOG_PAGE_TITLE_CLASS = DOCS_PAGE_TITLE_CLASS
 
 export const BLOG_CATEGORY_TITLE_CLASS = DOCS_PAGE_TITLE_CLASS
