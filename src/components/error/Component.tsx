@@ -337,7 +337,7 @@ export function ErrorComponent({
           <p className="text-muted-foreground text-[13px] leading-relaxed text-center -mt-4">
             {t('If your connection looks fine, check our')}{' '}
             <a
-              href="https://status.appwrite.online"
+              href="https://appwrite.online"
               target="_blank"
               rel="noopener noreferrer"
               className="underline hover:text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 rounded"
@@ -382,7 +382,7 @@ export function ErrorComponent({
                 'We’ve already logged it to our error system and will probably spin up a super agent any minute to hunt this bug down. If you think this might be more than a client-side hiccup, check our',
               )}{' '}
               <a
-                href="https://status.appwrite.online"
+                href="https://appwrite.online"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="underline hover:text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 rounded"

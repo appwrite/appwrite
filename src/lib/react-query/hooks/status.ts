@@ -3,7 +3,7 @@ import { queryOptions, useQuery } from '@tanstack/react-query'
 
 import { formatStatusAffectedRegionsLine } from '@/lib/cloud-status-copy'
 
-const APPWRITE_CLOUD_STATUS_URL = 'https://status.appwrite.online/index.json'
+const APPWRITE_CLOUD_STATUS_URL = 'https://appwrite.online/index.json'
 const STATUS_REFRESH_INTERVAL = 60 * 1000
 
 export type AppwriteCloudAggregateState =

@@ -275,7 +275,7 @@ export function SupportWizardFullscreen() {
         <div className="px-6 py-4">
           <div className="grid grid-cols-2 gap-2">
             <a
-              href="https://status.appwrite.online"
+              href="https://appwrite.online"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-1.5 rounded-lg border border-border bg-muted/30 px-3 py-2.5 text-[12px] font-medium text-foreground hover:bg-muted/50 hover:border-border transition-colors"
