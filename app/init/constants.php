@@ -571,7 +571,7 @@ const COOKIE_NAME_PREVIEW = 'a_jwt_console';
 
 /** GitHub installation state cookie, a fallback for GitHub flows that drop the state parameter */
 const COOKIE_NAME_GITHUB_STATE = 'a_github_state';
-const COOKIE_PATH_GITHUB_STATE = '/v1/vcs/github';
+const COOKIE_PATH_GITHUB_STATE = '/v1/vcs/github/callback';
 const COOKIE_EXPIRY_GITHUB_STATE = 60 * 10; // 10 minutes
 
 // Cache Reconnect

@@ -9,7 +9,6 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
-use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Document;
 use Utopia\Domains\Domain;
@@ -53,7 +52,6 @@ class Get extends Action
             ))
             ->param('success', '', fn ($redirectValidator) => $redirectValidator, 'URL to redirect back to console after a successful installation attempt.', true, ['redirectValidator'])
             ->param('failure', '', fn ($redirectValidator) => $redirectValidator, 'URL to redirect back to console after a failed installation attempt.', true, ['redirectValidator'])
-            ->inject('request')
             ->inject('response')
             ->inject('project')
             ->inject('platform')
@@ -63,7 +61,6 @@ class Get extends Action
     public function action(
         string $success,
         string $failure,
-        Request $request,
         Response $response,
         Document $project,
         array $platform
@@ -114,16 +111,14 @@ class Get extends Action
             default => '.' . $host,
         };
 
-        // With another project's connection still pending in this browser, the
-        // callback could not tell which one GitHub finished, so keep neither.
-        $pending = \json_decode($request->getCookie(COOKIE_NAME_GITHUB_STATE, ''), true);
-        $conflict = ($pending['projectId'] ?? $project->getId()) !== $project->getId();
-
+        // A later connection replaces a pending one: GitHub returns nothing the
+        // callback could tell two flows apart by, and dropping both would fail
+        // the connection the user started last.
         $response
             ->addCookie(
                 COOKIE_NAME_GITHUB_STATE,
-                $conflict ? '' : $state,
-                $conflict ? \time() - 3600 : \time() + COOKIE_EXPIRY_GITHUB_STATE,
+                $state,
+                \time() + COOKIE_EXPIRY_GITHUB_STATE,
                 COOKIE_PATH_GITHUB_STATE,
                 $domain,
                 $protocol === 'https',
