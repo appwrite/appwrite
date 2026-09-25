@@ -290,7 +290,7 @@ class Deletes extends Action
                 $this->deleteProjectsByTeam($dbForPlatform, $getProjectDB, $getDatabasesDB, $certificates, $document, $bus, $executionStore);
                 break;
             case DELETE_TYPE_EXECUTIONS:
-                $this->deleteExecutionLogs($project, $getProjectDB, $executionRetention, executionStore: $executionStore);
+                $this->deleteExecutionLogs($project, $getProjectDB, executionStore: $executionStore);
                 break;
             case DELETE_TYPE_EXECUTIONS_LIMIT:
                 $resourceInternalId = $payload['resource'] ?? null;
@@ -338,7 +338,7 @@ class Deletes extends Action
                 break;
             case DELETE_TYPE_MAINTENANCE:
                 $this->deleteExpiredTargets($project, $getProjectDB);
-                $this->deleteExecutionLogs($project, $getProjectDB, $executionRetention, $executionsRetentionCount, $executionStore);
+                $this->deleteExecutionLogs($project, $getProjectDB, $executionsRetentionCount, $executionStore);
                 $this->deleteExpiredSessions($project, $getProjectDB);
                 $this->deleteExpiredTokens($project, $getProjectDB);
                 $this->deleteExpiredChallenges($project, $getProjectDB);
@@ -1103,14 +1103,18 @@ class Deletes extends Action
     }
 
     /**
+     * Time based retention belongs to the execution store itself: rows carry an
+     * expiresAt the table TTL deletes on and reads filter by. Only the custom
+     * per resource limit is left to the worker, so maintenance no longer runs an
+     * aggregation over every execution in the project.
+     *
      * @param Document $project
      * @param callable $getProjectDB
-     * @param string $datetime
      * @param int|null $executionsRetentionCount
      * @return void
      * @throws Exception|DatabaseException
      */
-    private function deleteExecutionLogs(Document $project, callable $getProjectDB, string $datetime, ?int $executionsRetentionCount = 0, ?Store $executionStore = null): void
+    private function deleteExecutionLogs(Document $project, callable $getProjectDB, ?int $executionsRetentionCount = 0, ?Store $executionStore = null): void
     {
         if ($project->getId() === 'console') {
             return;
@@ -1118,9 +1122,6 @@ class Deletes extends Action
 
         Console::info('Delete execution logs');
 
-        $executionStore?->deleteBefore($project->getId(), $datetime);
-
-        /* delete based on custom retention, if any */
         $this->deleteExecutionsByLimit($project, $getProjectDB, $executionsRetentionCount, executionStore: $executionStore);
     }
 

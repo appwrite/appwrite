@@ -142,6 +142,25 @@ final class StoreTest extends TestCase
         $this->assertStringContainsString('source.resourceInternalId = {resourceInternalId:String}', $body);
         $this->assertStringContainsString('source.createdAt < {createdBefore:String}', $body);
         $this->assertStringContainsString('now64(6) + INTERVAL 1209600 SECOND', $body);
+        $this->assertStringContainsString('expiresAt > now64(6)', $body);
+    }
+
+    public function testReadsHideExecutionsPastRetention(): void
+    {
+        $client = new CapturingClient([
+            $this->jsonResponse([]),
+            $this->jsonResponse([]),
+            $this->jsonResponse([['total' => 0]]),
+        ]);
+        $store = $this->store($client);
+
+        $store->get('project', 'execution');
+        $store->find('project', [Query::equal('status', ['completed'])]);
+        $store->count('project', [], 25);
+
+        foreach ($client->requests as $request) {
+            $this->assertStringContainsString('expiresAt > now64(6)', (string) $request->getBody());
+        }
     }
 
     public function testTerminalAndDeleteVersionsWinOverLatePendingWrites(): void
