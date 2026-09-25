@@ -805,6 +805,113 @@ final class NatsBrokerTest extends TestCase
         $this->assertSame(0, $this->broker->getQueueSize($this->queue));
     }
 
+    public static function lostPublishConnection(): iterable
+    {
+        foreach (['publish' => false, 'publishMany' => true] as $call => $batch) {
+            yield "{$call}, socket closed before the write" => ['before', $batch];
+            yield "{$call}, socket closed after the write landed" => ['after', $batch];
+            yield "{$call}, server reported the connection stale" => ['stale', $batch];
+        }
+    }
+
+    /**
+     * An idle publisher's socket is closed by the server when its pings go
+     * unanswered, and the next publish is the first to find out: the write fails,
+     * or lands and the reply never comes, or the server's last word is a stale
+     * -ERR. Every envelope carries its pid as Nats-Msg-Id, so republishing on a
+     * fresh connection is safe whichever it was -- a copy that did land collapses.
+     */
+    #[DataProvider('lostPublishConnection')]
+    public function testAPublishSurvivesTheServerHavingClosedItsConnection(string $fault, bool $batch): void
+    {
+        $url = getenv('NATS_URL') ?: 'nats://127.0.0.1:14225';
+        $state = new class {
+            public bool $armed = true;
+            public bool $stale = false;
+        };
+        $fire = (static fn(TcpTransport $transport): Transport => new readonly class ($transport, $state, $fault) implements Transport {
+            public function __construct(private TcpTransport $inner, private object $state, private string $fault) {}
+
+            public function connect(string $host, int $port, float $timeout): void
+            {
+                $this->inner->connect($host, $port, $timeout);
+            }
+
+            public function write(string $data): int
+            {
+                if ($this->state->armed && preg_match('/^H?PUB q\./m', $data) === 1) {
+                    $this->state->armed = false;
+                    if ($this->fault === 'before') {
+                        $this->inner->close();
+                        throw new ConnectionException('Connection closed by server');
+                    }
+                    $written = $this->inner->write($data);
+                    if ($this->fault === 'after') {
+                        $this->inner->close();
+                        throw new ConnectionException('Connection closed by server');
+                    }
+                    $this->state->stale = true;
+
+                    return $written;
+                }
+
+                return $this->inner->write($data);
+            }
+
+            public function read(int $maxBytes, ?float $timeout = null): string
+            {
+                if ($this->state->stale) {
+                    $this->state->stale = false;
+                    $this->inner->close();
+
+                    return "-ERR 'Stale Connection'\r\n";
+                }
+
+                return $this->inner->read($maxBytes, $timeout);
+            }
+
+            public function readLine(?float $timeout = null): string
+            {
+                return $this->inner->readLine($timeout);
+            }
+
+            public function upgradeTls(array $options): void
+            {
+                $this->inner->upgradeTls($options);
+            }
+
+            public function isConnected(): bool
+            {
+                return $this->inner->isConnected();
+            }
+
+            public function close(): void
+            {
+                $this->inner->close();
+            }
+        });
+        $broker = new Nats(static fn(): Connection => Connection::connect(new ConnectionOptions(
+            servers: $url,
+            reconnectWait: 0.01,
+            transportFactory: static fn(): Transport => $fire(new TcpTransport()),
+        )));
+        $queue = new Queue('t_' . substr(md5(uniqid('', true)), 0, 8));
+
+        try {
+            // Provision first, so the fault lands on the publish rather than on setup.
+            $this->assertSame(0, $broker->getQueueSize($queue));
+            $payloads = $batch ? [['task' => 'a'], ['task' => 'b'], ['task' => 'c']] : [['task' => 'a']];
+
+            $this->assertTrue($batch ? $broker->publishMany($queue, $payloads) : $broker->publish($queue, $payloads[0]));
+
+            $this->assertFalse($state->armed, 'the fault fired');
+            $stored = Connection::connect($url)->jetStream()->getStreamInfo('Q_' . strtoupper($queue->name))->state->messages;
+            $this->assertSame(\count($payloads), $stored, 'every payload stored exactly once');
+        } finally {
+            $broker->close();
+        }
+    }
+
     public function testRetriedPublishUnderAStableIdStoresOneMessage(): void
     {
         $broker = $this->brokerWithStableIds();

@@ -6,7 +6,9 @@ namespace Utopia\Queue\Broker;
 
 use Utopia\Lock\Mutex;
 use Utopia\NATS\Connection as NatsConnection;
+use Utopia\NATS\Exception\ConnectionException;
 use Utopia\NATS\Exception\JetStreamException;
+use Utopia\NATS\Exception\ProtocolException;
 use Utopia\NATS\Exception\TimeoutException;
 use Utopia\NATS\Headers;
 use Utopia\NATS\JetStream\AckPolicy;
@@ -463,7 +465,19 @@ class Nats implements Synchronous, Consumer, Bounded
             // written before any acknowledgment is read. Each payload still carries its
             // own message id, so deduplication works exactly as it does on the single
             // publish, and a payload the server rejects still throws.
-            foreach ($this->js()->publishMany($messages) as $ack) {
+            try {
+                $acks = $this->js()->publishMany($messages);
+            } catch (ConnectionException|ProtocolException $lost) {
+                // Republished whole, for the reason publishEnvelope() gives: every
+                // payload keeps its id, so the ones that did land collapse.
+                if (!$this->lostConnection($lost) || !$this->reconnect()) {
+                    throw $lost;
+                }
+
+                $acks = $this->js()->publishMany($messages);
+            }
+
+            foreach ($acks as $ack) {
                 // Not discarded, for the same reason publishEnvelope() counts it: a
                 // duplicate acknowledgment is the only signal that deduplication did
                 // anything, and a quiet success reads the same as nothing collapsing.
@@ -496,20 +510,18 @@ class Nats implements Synchronous, Consumer, Bounded
 
         try {
             $ack = $this->publishOnce($subject, $data, $id);
-        } catch (TimeoutException $timeout) {
-            // A publish waits for the stream's PubAck, so a socket the server has
-            // already closed does not fail -- it goes quiet, and the caller wears
-            // the full request timeout for a message that never reached a stream.
-            // The client only recycles a connection when the server tells it one
-            // died; a socket reaped while nothing was reading it says nothing, and
-            // the first thing to notice is this timeout.
+        } catch (ConnectionException|ProtocolException $lost) {
+            // A socket the server has already closed -- an idle publisher whose
+            // pings went unanswered -- is found out by the next publish, in one of
+            // three shapes: the write fails, the write lands and the PubAck never
+            // comes (a timeout), or the server's last word is a stale -ERR.
             //
             // Retrying is safe because the envelope carries its own pid as msgId
             // and the work stream keeps a duplicate window (refused at construction
             // if not positive), so a first publish that did land collapses the
             // second rather than delivering it twice.
-            if (!$this->reconnect()) {
-                throw $timeout;
+            if (!$this->lostConnection($lost) || !$this->reconnect()) {
+                throw $lost;
             }
 
             $ack = $this->publishOnce($subject, $data, $id);
@@ -523,6 +535,17 @@ class Nats implements Synchronous, Consumer, Bounded
         if ($ack->duplicate) {
             ++$this->duplicates;
         }
+    }
+
+    /**
+     * Whether a publish failed because its connection is gone, rather than because
+     * the server refused the message. Only the first is worth republishing: a
+     * permissions or payload-size error would be refused identically again.
+     */
+    private function lostConnection(ConnectionException|ProtocolException $error): bool
+    {
+        return $error instanceof ConnectionException
+            || str_contains(strtolower($error->getMessage()), 'stale connection');
     }
 
     /** One attempt at the stream, waiting for its PubAck. */
