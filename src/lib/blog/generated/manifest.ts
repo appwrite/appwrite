@@ -6,7 +6,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "slug": "sunsetting-appwrite-education-program",
     "href": "/blog/post/sunsetting-appwrite-education-program",
     "title": "Sunsetting the Appwrite Education program",
-    "description": "Appwrite is sunsetting the Education program on November 1st, 2026, and improving the free tier for all developers. Learn what changes and how to transition.",
+    "description": "Appwrite is sunsetting the Education program on November 1st, 2026. Learn why we made that call, what changes, and how to transition.",
     "date": "2026-11-04",
     "lastUpdated": "2026-11-04",
     "timeToRead": 7,
