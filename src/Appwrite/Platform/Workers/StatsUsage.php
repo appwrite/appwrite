@@ -8,6 +8,7 @@ use Utopia\Console;
 use Utopia\Database\Document;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
+use Utopia\System\System;
 use Utopia\Usage\Accumulator;
 use Utopia\Usage\Usage;
 use Utopia\UserAgent\UserAgent;
@@ -20,9 +21,29 @@ class StatsUsage extends Action
         METRIC_SITES_REQUESTS => METRIC_NETWORK_REQUESTS,
     ];
 
+    /** Buffers collected events across messages; flushed on threshold/interval. */
+    protected ?Accumulator $accumulator = null;
+
     public static function getName(): string
     {
         return 'stats-usage';
+    }
+
+    /**
+     * Flush once this many unique entries are buffered. Development defaults
+     * to every message, so local and E2E reads see usage at once.
+     */
+    protected function flushThreshold(): int
+    {
+        $default = System::getEnv('_APP_ENV', 'development') === 'development' ? '1' : '10000';
+
+        return max(1, (int) System::getEnv('_APP_USAGE_FLUSH_THRESHOLD', $default));
+    }
+
+    /** Flush once the buffer is this many seconds old. */
+    protected function flushInterval(): int
+    {
+        return max(1, (int) System::getEnv('_APP_USAGE_FLUSH_INTERVAL', '20'));
     }
 
     public function __construct()
@@ -60,11 +81,15 @@ class StatsUsage extends Action
         }
 
         try {
-            $accumulator = new Accumulator($usageConnection->getUsage());
+            // One accumulator buffers across messages (and across projects —
+            // the tenant is carried per collect()), so many requests fold into
+            // one ClickHouse insert instead of one part per message.
+            $accumulator = $this->accumulator ??= new Accumulator($usageConnection->getUsage());
             $projectId = (string) ($payload['project']['$id'] ?? '');
             $timestamp = $this->timestamp($payload, $message);
 
             foreach ($payload['metrics'] ?? [] as $metric) {
+                $metric = $this->normalizeMetric($metric, $payload);
                 $key = (string) ($metric['key'] ?? '');
                 $value = (int) ($metric['value'] ?? 0);
                 if (
@@ -109,6 +134,7 @@ class StatsUsage extends Action
                     'acceptLanguage' => $metric['acceptLanguage'] ?? '',
                     'queryKeys' => $metric['queryKeys'] ?? '',
                 ];
+                $tags = array_merge($tags, $this->resolveGeoTags((string) ($metric['ip'] ?? '')));
                 $tags = array_merge($this->resolveUserAgentTags((string) ($metric['userAgent'] ?? '')), $tags);
                 $tags = array_filter($tags, static fn (mixed $value): bool => $value !== '' && $value !== null);
 
@@ -123,13 +149,53 @@ class StatsUsage extends Action
                 );
             }
 
-            if ($accumulator->count() > 0 && !$accumulator->flush()) {
-                Console::error('Usage event flush returned false');
-            }
+            $this->flush($accumulator);
         } catch (\Throwable $th) {
             // Usage analytics deliberately remains best-effort and inserts are
             // not retried because the adapter has no durable deduplication key.
             Console::error('Failed to write usage events: ' . $th->getMessage());
+        }
+    }
+
+    /**
+     * Amend a metric before collection. Self-hosted payloads arrive complete;
+     * cloud overrides this to fill payload-level defaults (region, team) and
+     * parse resource paths.
+     *
+     * @param array<string, mixed> $metric
+     * @param array<string, mixed> $payload
+     * @return array<string, mixed>
+     */
+    protected function normalizeMetric(array $metric, array $payload): array
+    {
+        return $metric;
+    }
+
+    /**
+     * Extra tag dimensions resolved from the client IP. None on self-hosted;
+     * cloud overrides this with premium geo enrichment.
+     *
+     * @return array<string, string>
+     */
+    protected function resolveGeoTags(string $ip): array
+    {
+        return [];
+    }
+
+    protected function flush(Accumulator $accumulator): void
+    {
+        if ($accumulator->count() < $this->flushThreshold() && $accumulator->elapsedSeconds() < $this->flushInterval()) {
+            return;
+        }
+
+        // Detach before flushing: flush() yields on the insert, and the
+        // worker runs several coroutines — another message reaching this
+        // point mid-flush must not snapshot (and double-write) the same
+        // entries. Entries a failed flush retains are dropped with the
+        // detached buffer, consistent with the no-retry policy in action().
+        $this->accumulator = null;
+        if (!$accumulator->flush()) {
+            Console::error('Usage event flush returned false');
         }
     }
 
@@ -204,7 +270,7 @@ class StatsUsage extends Action
     }
 
     /** @param array<string, mixed> $payload */
-    private function timestamp(array $payload, Message $message): \DateTime
+    protected function timestamp(array $payload, Message $message): \DateTime
     {
         try {
             if (!empty($payload['timestamp']) && is_scalar($payload['timestamp'])) {
