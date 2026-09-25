@@ -197,7 +197,7 @@ abstract class Base extends Action
             $parameters[] = [
                 '$id' => 'prompt',
                 'name' => 'Prompt',
-                'example' => \json_encode([$promptValues[0]]),
+                'example' => \json_encode(static::getPromptDefault() ?: [$promptValues[0]]),
                 'hint' => '',
             ];
         }
@@ -213,6 +213,16 @@ abstract class Base extends Action
      * @return array<int, string> e.g. ['none', 'consent']
      */
     public static function getPromptValues(): array
+    {
+        return [];
+    }
+
+    /**
+     * Prompt values used when none are configured.
+     *
+     * @return array<int, string>
+     */
+    public static function getPromptDefault(): array
     {
         return [];
     }
@@ -421,7 +431,7 @@ abstract class Base extends Action
         ]);
 
         if (!empty(static::getPromptValues())) {
-            $document->setAttribute('prompt', $this->decodeStoredSecret($project)['prompt'] ?? []);
+            $document->setAttribute('prompt', $this->decodeStoredSecret($project)['prompt'] ?? static::getPromptDefault());
         }
 
         return $document;
