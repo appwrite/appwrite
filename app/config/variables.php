@@ -207,7 +207,7 @@ return [
             ],
             [
                 'name' => '_APP_DNS',
-                'description' => 'DNS server to use for domain validation. Default: 8.8.8.8',
+                'description' => 'Comma-separated IPs of the recursive DNS resolvers used for domain verification. The domain\'s own authoritative nameservers are asked first and decide when they answer; otherwise any one of these resolvers finding the record verifies. Default: 8.8.8.8',
                 'introduction' => '',
                 'default' => '8.8.8.8',
                 'required' => false,
