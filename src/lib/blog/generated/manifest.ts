@@ -3,6 +3,19 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "add-google-one-tap-to-your-web-app",
+    "href": "/blog/post/add-google-one-tap-to-your-web-app",
+    "title": "Add Google One Tap sign-in to your web app with Appwrite",
+    "description": "Show Google's One Tap prompt on your site and exchange its ID token for an Appwrite session. One web client ID covers the site and Android.",
+    "date": "2026-09-25",
+    "lastUpdated": "2026-09-25",
+    "timeToRead": 7,
+    "author": "atharva",
+    "category": "tutorials",
+    "cover": "/images/blog/add-google-one-tap-to-your-web-app/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-native-sign-in",
     "href": "/blog/post/announcing-native-sign-in",
     "title": "Announcing native sign-in: Create Appwrite sessions from Apple and Google ID tokens",
