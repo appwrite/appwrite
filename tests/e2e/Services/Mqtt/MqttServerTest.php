@@ -136,6 +136,21 @@ final class MqttServerTest extends Scope
         $subscriber->disconnect();
     }
 
+    public function testConnackEchoesAuthMethod(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        ['userId' => $userId, 'jwt' => $jwt] = $this->createUser();
+
+        // MQTT 5.0 (§3.2.2.3.10): a CONNECT that carries an Authentication Method uses enhanced
+        // auth, and the CONNACK MUST echo that method back — strict clients (e.g. HiveMQ) reject
+        // the connection otherwise. Lenient clients (mqtt.js) don't, which is why this regressed
+        // only for native background delivery.
+        $subscriber = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
+        $this->assertSame(0, $subscriber->connect($projectId, $jwt, 'e2e-connack-auth-' . $userId, cleanStart: true, authMethod: 'appwrite-jwt'));
+        $this->assertSame('appwrite-jwt', $subscriber->connackAuthMethod());
+        $subscriber->disconnect();
+    }
+
     public function testSessionAuthWithInvalidSecretRejected(): void
     {
         $projectId = $this->getProject()['$id'];
