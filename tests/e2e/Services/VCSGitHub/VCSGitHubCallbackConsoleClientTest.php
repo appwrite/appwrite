@@ -8,7 +8,6 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideConsole;
-use Utopia\System\System;
 
 /**
  * Deliberately does not use VCSGitHubBase: none of these reach GitHub, so they
@@ -19,14 +18,29 @@ final class VCSGitHubCallbackConsoleClientTest extends Scope
     use ProjectCustom;
     use SideConsole;
 
-    private function buildGitHubState(string $projectId, string $success, string $failure): string
+    /**
+     * @return array{state: string, cookie: string}
+     */
+    private function authorizeHelper(string $projectId): array
     {
-        return (string) \json_encode([
-            'projectId' => $projectId,
-            'success' => $success,
-            'failure' => $failure,
-            'signature' => \hash_hmac('sha256', \json_encode([$projectId, $success, $failure]), System::getEnv('_APP_OPENSSL_KEY_V1', '')),
-        ]);
+        $settingsUrl = $this->settingsUrl($projectId);
+
+        $response = $this->client->call(Client::METHOD_GET, '/vcs/github/authorize', \array_merge([
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'success' => $settingsUrl,
+            'failure' => $settingsUrl,
+        ], true, false);
+
+        $this->assertEquals(301, $response['headers']['status-code']);
+
+        $query = [];
+        \parse_str(\parse_url((string) $response['headers']['location'], PHP_URL_QUERY) ?: '', $query);
+
+        return [
+            'state' => (string) ($query['state'] ?? ''),
+            'cookie' => (string) ($response['cookies']['a_github_state'] ?? ''),
+        ];
     }
 
     /**
@@ -38,7 +52,7 @@ final class VCSGitHubCallbackConsoleClientTest extends Scope
         $headers = \array_merge(['x-appwrite-project' => $this->getProject()['$id']], $this->getHeaders());
 
         if ($cookie !== '') {
-            $headers['cookie'] .= '; a_github_state=' . \urlencode($cookie);
+            $headers['cookie'] .= '; a_github_state=' . $cookie;
         }
 
         return $this->client->call(Client::METHOD_GET, '/vcs/github/callback', $headers, $params, true, false);
@@ -71,90 +85,78 @@ final class VCSGitHubCallbackConsoleClientTest extends Scope
     public function testCreateInstallationWithoutCode(): void
     {
         $projectId = $this->getProject()['$id'];
-        $settingsUrl = $this->settingsUrl($projectId);
 
         // A valid state proves the project, not the installation, so an
         // installation_id without a code must not be linked
         $response = $this->callGitHubCallbackHelper([
             'setup_action' => 'install',
             'installation_id' => '1234567',
-            'state' => $this->buildGitHubState($projectId, $settingsUrl, $settingsUrl),
+            'state' => $this->authorizeHelper($projectId)['state'],
         ]);
 
         $this->assertEquals(301, $response['headers']['status-code']);
-        $this->assertStringStartsWith($settingsUrl . '?error=', (string) $response['headers']['location']);
+        $this->assertStringStartsWith($this->settingsUrl($projectId) . '?error=', (string) $response['headers']['location']);
     }
 
     public function testCreateInstallationWithStateCookie(): void
     {
         $projectId = $this->getProject()['$id'];
-        $settingsUrl = $this->settingsUrl($projectId);
 
         // GitHub drops state on an existing installation's update; the failure
         // redirect proves the project came back from the cookie
         $response = $this->callGitHubCallbackHelper([
             'setup_action' => 'update',
             'installation_id' => '1234567',
-        ], $this->buildGitHubState($projectId, $settingsUrl, $settingsUrl));
+        ], $this->authorizeHelper($projectId)['cookie']);
 
         $this->assertEquals(301, $response['headers']['status-code']);
-        $this->assertStringStartsWith($settingsUrl . '?error=', (string) $response['headers']['location']);
+        $this->assertStringStartsWith($this->settingsUrl($projectId) . '?error=', (string) $response['headers']['location']);
     }
 
     public function testCreateInstallationClearsStateCookie(): void
     {
-        $projectId = $this->getProject()['$id'];
-        $settingsUrl = $this->settingsUrl($projectId);
-
         $response = $this->callGitHubCallbackHelper([
             'setup_action' => 'update',
             'installation_id' => '1234567',
-        ], $this->buildGitHubState($projectId, $settingsUrl, $settingsUrl));
+        ], $this->authorizeHelper($this->getProject()['$id'])['cookie']);
 
         $this->assertStringStartsWith('a_github_state=deleted;', $response['headers']['set-cookie'] ?? '');
     }
 
     public function testCreateInstallationKeepsOtherProjectStateCookie(): void
     {
-        $projectId = $this->getProject()['$id'];
-        $settingsUrl = $this->settingsUrl($projectId);
+        $other = $this->getProject(true);
 
         // A flow for this project must not consume a connection pending for another one
         $response = $this->callGitHubCallbackHelper([
             'setup_action' => 'install',
             'installation_id' => '1234567',
-            'state' => $this->buildGitHubState($projectId, $settingsUrl, $settingsUrl),
-        ], $this->buildGitHubState('other-project', $settingsUrl, $settingsUrl));
+            'state' => $this->authorizeHelper($this->getProject()['$id'])['state'],
+        ], $this->authorizeHelper($other['$id'])['cookie']);
 
         $this->assertStringNotContainsString('a_github_state', (string) ($response['headers']['set-cookie'] ?? ''));
     }
 
     public function testCreateInstallationWithTamperedStateCookie(): void
     {
-        $projectId = $this->getProject()['$id'];
-        $settingsUrl = $this->settingsUrl($projectId);
-
-        $state = \json_decode($this->buildGitHubState($projectId, $settingsUrl, $settingsUrl), true);
+        $state = \json_decode(\urldecode($this->authorizeHelper($this->getProject()['$id'])['cookie']), true);
         $state['projectId'] = 'victim-project';
 
         $response = $this->callGitHubCallbackHelper([
             'setup_action' => 'update',
             'installation_id' => '1234567',
-        ], (string) \json_encode($state));
+        ], \urlencode((string) \json_encode($state)));
 
         $this->assertEquals(400, $response['headers']['status-code']);
     }
 
     public function testCreateInstallationWithStateCookieOnInstall(): void
     {
-        $projectId = $this->getProject()['$id'];
-        $settingsUrl = $this->settingsUrl($projectId);
-
         // Only an update drops state; any other callback must bring its own
         $response = $this->callGitHubCallbackHelper([
             'setup_action' => 'install',
             'installation_id' => '1234567',
-        ], $this->buildGitHubState($projectId, $settingsUrl, $settingsUrl));
+        ], $this->authorizeHelper($this->getProject()['$id'])['cookie']);
 
         $this->assertEquals(400, $response['headers']['status-code']);
     }
@@ -162,7 +164,6 @@ final class VCSGitHubCallbackConsoleClientTest extends Scope
     public function testCreateInstallationWithStateCookieForUnlinkedInstallation(): void
     {
         $projectId = $this->getProject()['$id'];
-        $settingsUrl = $this->settingsUrl($projectId);
 
         // The cookie rides along on any navigation, so another site could pair it
         // with its own code and installation. Refused before GitHub is asked.
@@ -170,9 +171,9 @@ final class VCSGitHubCallbackConsoleClientTest extends Scope
             'setup_action' => 'update',
             'installation_id' => '1234567',
             'code' => 'unused',
-        ], $this->buildGitHubState($projectId, $settingsUrl, $settingsUrl));
+        ], $this->authorizeHelper($projectId)['cookie']);
 
         $this->assertEquals(301, $response['headers']['status-code']);
-        $this->assertStringStartsWith($settingsUrl . '?error=', (string) $response['headers']['location']);
+        $this->assertStringStartsWith($this->settingsUrl($projectId) . '?error=', (string) $response['headers']['location']);
     }
 }
