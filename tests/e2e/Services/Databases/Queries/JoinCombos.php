@@ -1291,6 +1291,39 @@ trait JoinCombos
         }
     }
 
+    public function testJoinHardcoreCursorWithRejectedJoinIsAnInvalidQuery(): void
+    {
+        if (!$this->getSupportForJoins()) {
+            $this->markTestSkipped('Adapter does not support join queries');
+        }
+
+        $data = $this->setupJoinHardcoreFixture();
+
+        $first = $this->joinHardcoreList($data['databaseId'], $data['customersId'], [
+            Query::leftJoin($data['ordersId'], '$id', 'customerId', '=', 'ord')->toString(),
+            Query::orderAsc('name')->toString(),
+            Query::orderDesc('ord.amount')->toString(),
+            Query::select(['name', 'ord.amount'])->toString(),
+            Query::limit(1)->toString(),
+        ]);
+        $this->assertSame(200, $first['headers']['status-code']);
+        $firstRows = $this->joinHardcoreRows($first);
+        $this->assertSame(1, \count($firstRows));
+        $cursorId = $this->joinHardcoreCursorId($firstRows[0]);
+        $this->assertNotSame('', $cursorId);
+
+        $rejected = $this->joinHardcoreList($data['databaseId'], $data['customersId'], [
+            Query::leftJoin($data['ordersId'], '$id', 'customerId', '=~', 'ord')->toString(),
+            Query::orderDesc('ord.amount')->toString(),
+            Query::cursorAfter(new Document(['$id' => $cursorId]))->toString(),
+            Query::limit(1)->toString(),
+        ]);
+
+        $this->assertSame(400, $rejected['headers']['status-code'], 'a join the query library rejects is a 400 while the list resolves its cursor');
+        $this->assertSame('general_query_invalid', $rejected['body']['type']);
+        $this->assertSame(0, \count($this->joinHardcoreRows($rejected)));
+    }
+
     public function testJoinHardcoreJoinSideOperatorsAndInternalAttrs(): void
     {
         if (!$this->getSupportForJoins()) {

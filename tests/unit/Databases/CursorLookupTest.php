@@ -2,14 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Tests\Unit\Platform\Modules\Databases\Http\Documents;
+namespace Tests\Unit\Databases;
 
-use Appwrite\Databases\TransactionState;
-use Appwrite\Extend\Exception;
-use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\XList;
-use Appwrite\Usage\Context;
-use Appwrite\Utopia\Database\Documents\User;
-use Appwrite\Utopia\Response;
+use Appwrite\Databases\CursorLookup;
 use PDO;
 use PHPUnit\Framework\TestCase;
 use Utopia\Cache\Adapter\None;
@@ -19,7 +14,6 @@ use Utopia\Database\Attribute;
 use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Hook\Permissions;
@@ -28,20 +22,21 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Query\Schema\ColumnType;
 
-require_once __DIR__ . '/../../../../../../../app/init.php';
-require_once __DIR__ . '/../../../../../../../src/Appwrite/Platform/Modules/Databases/Constants.php';
-
 /**
  * A cursor only marks where the next page starts, so its document is looked up with authorization skipped,
  * whether or not the query joins another collection: a caller who may list a collection must be able to page
  * past a document it cannot read. The lookup never carries the request's selects or joins. An order on a joined
  * attribute takes its value from the joined rows the caller can read, read as listing that collection directly
  * reads them, so a page boundary never depends on a row the list itself hides.
+ *
+ * The queries reach the lookup as the list route hands them over: parsed, with each join resolved to the table
+ * of the collection it names.
  */
 final class CursorLookupTest extends TestCase
 {
-    private const string DATABASE_ID = 'blog';
     private const string CURSOR_ID = 'post2';
+    private const string POSTS = 'database_1_collection_1';
+    private const string AUTHORS = 'database_1_collection_2';
     private const string CUSTOMERS = 'database_1_collection_3';
     private const string ORDERS = 'database_1_collection_4';
     private const string PRODUCTS = 'database_1_collection_5';
@@ -49,85 +44,39 @@ final class CursorLookupTest extends TestCase
     private Authorization $authorization;
 
     /**
-     * @var array<string, array<string, Document>>
-     */
-    private array $metadata;
-
-    /**
      * @var list<array{authorized: bool, queries: array<Query>}>
      */
     private array $lookups = [];
-
-    /**
-     * @var list<array<Query>>
-     */
-    private array $searches = [];
 
     /**
      * @var list<array{collection: string, authorized: bool}>
      */
     private array $reads = [];
 
-    /**
-     * @var list<Document>
-     */
-    private array $cursors = [];
-
     protected function setUp(): void
     {
         $this->authorization = new Authorization();
         $this->authorization->addRole(Role::user('reader')->toString());
         $this->authorization->addRole(Role::users()->toString());
-
-        $this->metadata = [
-            'databases' => [
-                self::DATABASE_ID => new Document([
-                    '$id' => self::DATABASE_ID,
-                    '$sequence' => '1',
-                    'type' => DATABASE_TYPE_LEGACY,
-                    'enabled' => true,
-                ]),
-            ],
-            'database_1' => [
-                'posts' => new Document([
-                    '$id' => 'posts',
-                    '$sequence' => '1',
-                    'enabled' => true,
-                    'documentSecurity' => true,
-                    'attributes' => [self::attribute('title'), self::attribute('authorId')],
-                ]),
-                'authors' => new Document([
-                    '$id' => 'authors',
-                    '$sequence' => '2',
-                    '$permissions' => [Permission::read(Role::users())],
-                    'enabled' => true,
-                    'documentSecurity' => false,
-                    'attributes' => [self::attribute('name')],
-                ]),
-                'customers' => self::perDocument('customers', '3'),
-                'orders' => self::perDocument('orders', '4'),
-                'products' => self::perDocument('products', '5'),
-            ],
-        ];
     }
 
     public function testCursorWithJoinResolvesADocumentTheCallerCannotRead(): void
     {
-        $this->list([
-            Query::join('authors', 'authorId', '$id')->toString(),
+        $cursor = $this->lookup([
+            Query::join(self::AUTHORS, 'authorId', '$id')->toString(),
             Query::orderAsc('title')->toString(),
             Query::cursorAfter(self::CURSOR_ID)->toString(),
         ]);
 
         $this->assertCount(1, $this->lookups);
         $this->assertFalse($this->lookups[0]['authorized'], 'the cursor lookup must skip authorization, as it does without a join');
-        $this->assertSame(self::CURSOR_ID, $this->cursorValue()->getId(), 'the page must start after the cursor document');
+        $this->assertSame(self::CURSOR_ID, $cursor->getId(), 'the page must start after the cursor document');
     }
 
     public function testCursorWithJoinIsLookedUpWithoutSelectsOrJoins(): void
     {
-        $this->list([
-            Query::join('authors', 'authorId', '$id')->toString(),
+        $cursor = $this->lookup([
+            Query::join(self::AUTHORS, 'authorId', '$id')->toString(),
             Query::select(['title'])->toString(),
             Query::orderAsc('title')->toString(),
             Query::cursorAfter(self::CURSOR_ID)->toString(),
@@ -135,12 +84,12 @@ final class CursorLookupTest extends TestCase
 
         $this->assertCount(1, $this->lookups);
         $this->assertSame([], $this->lookups[0]['queries'], 'a select must not strip the order attributes from the cursor document, and a join must not read joined rows with authorization skipped');
-        $this->assertSame(self::CURSOR_ID, $this->cursorValue()->getId());
+        $this->assertSame(self::CURSOR_ID, $cursor->getId());
     }
 
     public function testCursorWithoutJoinIsLookedUpWithoutQueries(): void
     {
-        $this->list([
+        $cursor = $this->lookup([
             Query::select(['title'])->toString(),
             Query::cursorAfter(self::CURSOR_ID)->toString(),
         ]);
@@ -148,28 +97,7 @@ final class CursorLookupTest extends TestCase
         $this->assertCount(1, $this->lookups);
         $this->assertFalse($this->lookups[0]['authorized']);
         $this->assertSame([], $this->lookups[0]['queries']);
-        $this->assertSame(self::CURSOR_ID, $this->cursorValue()->getId());
-    }
-
-    public function testRejectedCursorLookupIsAnInvalidQuery(): void
-    {
-        $documents = $this->createStub(Database::class);
-        $documents->method('getDocument')->willThrowException(new QueryException('Invalid query: Join alias collides'));
-
-        try {
-            $this->list([
-                Query::join('authors', 'authorId', '$id')->toString(),
-                Query::cursorAfter(self::CURSOR_ID)->toString(),
-            ], $documents);
-        } catch (Exception $error) {
-            $this->assertSame(Exception::GENERAL_QUERY_INVALID, $error->getType());
-            $this->assertSame(400, $error->getCode());
-            $this->assertSame('Invalid query: Join alias collides', $error->getMessage());
-
-            return;
-        }
-
-        $this->fail('A query the library rejects while resolving the cursor must be a 400 ' . Exception::GENERAL_QUERY_INVALID);
+        $this->assertSame(self::CURSOR_ID, $cursor->getId());
     }
 
     public function testCursorWithJoinOrderTakesItsValueFromAJoinedRowTheCallerCanRead(): void
@@ -266,7 +194,7 @@ final class CursorLookupTest extends TestCase
         ])));
 
         $cursor = $this->page($store, [
-            Query::join('products', 'ord.productId', '$id', '=', 'prod')->toString(),
+            Query::join(self::PRODUCTS, 'ord.productId', '$id', '=', 'prod')->toString(),
             Query::orderAsc('prod.name'),
         ], Query::cursorAfter('alice'));
 
@@ -287,41 +215,28 @@ final class CursorLookupTest extends TestCase
     /**
      * @param list<string> $queries
      */
-    private function list(array $queries, ?Database $documents = null, string $collectionId = 'posts'): void
+    private function lookup(array $queries, ?Database $store = null, string $collection = self::POSTS): Document
     {
-        (new XList())->action(
-            databaseId: self::DATABASE_ID,
-            collectionId: $collectionId,
-            queries: $queries,
-            transactionId: null,
-            includeTotal: false,
-            ttl: 0,
-            response: $this->createStub(Response::class),
-            dbForProject: $this->projectDatabase(),
-            user: new User(['$id' => 'reader']),
-            getDatabasesDB: fn (): Database => $documents ?? $this->documentsDatabase(),
-            usage: new Context(),
-            transactionState: $this->createStub(TransactionState::class),
-            authorization: $this->authorization,
-        );
+        $parsed = Query::parseQueries($queries);
+        $cursors = Query::getCursorQueries($parsed, false);
+        $this->assertCount(1, $cursors, 'the list must carry the cursor the lookup resolves');
+
+        return (new CursorLookup($store ?? $this->documentsDatabase(), $this->authorization))
+            ->resolve($collection, \reset($cursors), $parsed);
     }
 
     /**
-     * Lists customers joined to their orders and returns the cursor document the list query received.
+     * Resolves the cursor of a list of customers joined to their orders.
      *
      * @param list<Query|string> $queries
      */
     private function page(Database $store, array $queries, Query $cursor): Document
     {
-        $this->list([
-            Query::join('orders', '$id', 'customerId', '=', 'ord')->toString(),
+        return $this->lookup([
+            Query::join(self::ORDERS, '$id', 'customerId', '=', 'ord')->toString(),
             ...\array_map(static fn (Query|string $query): string => $query instanceof Query ? $query->toString() : $query, $queries),
             $cursor->toString(),
-        ], $store, 'customers');
-
-        $this->assertNotSame([], $this->cursors, 'the page must be listed');
-
-        return \array_pop($this->cursors);
+        ], $store, self::CUSTOMERS);
     }
 
     /**
@@ -330,16 +245,6 @@ final class CursorLookupTest extends TestCase
     private function orderValue(Document $cursor, string $order): mixed
     {
         return $cursor->getAttribute($order) ?? $cursor->getAttribute(\substr($order, (int) \strrpos($order, '.') + 1));
-    }
-
-    private function projectDatabase(): Database
-    {
-        $database = $this->createStub(Database::class);
-        $database->method('getDocument')->willReturnCallback(
-            fn (string $collection, string $id): Document => $this->metadata[$collection][$id] ?? new Document()
-        );
-
-        return $database;
     }
 
     /**
@@ -357,35 +262,27 @@ final class CursorLookupTest extends TestCase
                 return $authorized && !$cursorReadable ? new Document() : new Document(['$id' => $id, 'title' => 'Second']);
             }
         );
-        $database->method('find')->willReturnCallback(function (string $collection, array $queries = []): array {
-            $this->searches[] = $queries;
-
-            return [];
-        });
+        $database->method('find')->willReturn([]);
         $database->method('skipRelationships')->willReturnCallback(static fn (callable $callback): mixed => $callback());
 
         return $database;
     }
 
     /**
-     * A real database whose collections hold per-document permissions only. Reads run in full; the list query
-     * itself is recorded instead of run, so each test sees the cursor document the list would page from.
+     * A real database whose collections hold per-document permissions only, recording which reads
+     * the lookup runs with the caller's permissions and which it runs with authorization skipped.
      */
     private function store(): Database
     {
         $record = function (string $collection, bool $authorized): void {
             $this->reads[] = ['collection' => $collection, 'authorized' => $authorized];
         };
-        $page = function (Document $cursor): void {
-            $this->cursors[] = $cursor;
-        };
 
-        $store = new class (new SQLite(new PDO('sqlite::memory:', options: [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION])), new Cache(new None()), $record, $page) extends Database {
+        $store = new class (new SQLite(new PDO('sqlite::memory:', options: [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION])), new Cache(new None()), $record) extends Database {
             /**
              * @param \Closure(string, bool): void $record
-             * @param \Closure(Document): void $page
              */
-            public function __construct(SQLite $adapter, Cache $cache, private readonly \Closure $record, private readonly \Closure $page)
+            public function __construct(SQLite $adapter, Cache $cache, private readonly \Closure $record)
             {
                 parent::__construct($adapter, $cache);
             }
@@ -401,13 +298,6 @@ final class CursorLookupTest extends TestCase
             #[\Override]
             public function find(string $collection, array $queries = [], PermissionType $forPermission = PermissionType::Read): array
             {
-                $cursors = Query::getCursorQueries($queries, false);
-                if ($cursors !== []) {
-                    ($this->page)(\reset($cursors)->getValue());
-
-                    return [];
-                }
-
                 ($this->record)($collection, $this->getAuthorization()->getStatus());
 
                 return parent::find($collection, $queries, $forPermission);
@@ -468,17 +358,6 @@ final class CursorLookupTest extends TestCase
         ])));
     }
 
-    private function cursorValue(): Document
-    {
-        $this->assertCount(1, $this->searches, 'the page must be listed');
-        $cursors = Query::getCursorQueries($this->searches[0], false);
-        $this->assertCount(1, $cursors);
-        $cursor = \reset($cursors)->getValue();
-        $this->assertInstanceOf(Document::class, $cursor);
-
-        return $cursor;
-    }
-
     /**
      * @param list<Attribute> $attributes
      */
@@ -490,29 +369,5 @@ final class CursorLookupTest extends TestCase
             permissions: [Permission::create(Role::any())],
             documentSecurity: true,
         );
-    }
-
-    private static function perDocument(string $id, string $sequence): Document
-    {
-        return new Document([
-            '$id' => $id,
-            '$sequence' => $sequence,
-            '$permissions' => [Permission::create(Role::any())],
-            'enabled' => true,
-            'documentSecurity' => true,
-            'attributes' => [],
-        ]);
-    }
-
-    private static function attribute(string $key): Document
-    {
-        return new Document([
-            '$id' => $key,
-            'key' => $key,
-            'type' => ColumnType::String->value,
-            'size' => 128,
-            'required' => false,
-            'array' => false,
-        ]);
     }
 }
