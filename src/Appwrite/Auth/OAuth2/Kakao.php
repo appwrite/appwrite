@@ -55,6 +55,7 @@ class Kakao extends OAuth2
             'redirect_uri' => $this->callback,
             'response_type' => 'code',
             'state' => \json_encode($this->state),
+            'prompt' => $this->getPrompt() ?: null,
         ];
 
         $scopes = $this->getScopes();
@@ -80,7 +81,7 @@ class Kakao extends OAuth2
                 \http_build_query([
                     'grant_type' => 'authorization_code',
                     'client_id' => $this->appID,
-                    'client_secret' => $this->appSecret,
+                    'client_secret' => $this->getClientSecret(),
                     'redirect_uri' => $this->callback,
                     'code' => $code,
                 ])
@@ -104,7 +105,7 @@ class Kakao extends OAuth2
             \http_build_query([
                 'grant_type' => 'refresh_token',
                 'client_id' => $this->appID,
-                'client_secret' => $this->appSecret,
+                'client_secret' => $this->getClientSecret(),
                 'refresh_token' => $refreshToken,
             ])
         ), true);
@@ -222,7 +223,7 @@ class Kakao extends OAuth2
             body: [
                 'grant_type' => 'authorization_code',
                 'client_id' => $this->appID,
-                'client_secret' => $this->appSecret,
+                'client_secret' => $this->getClientSecret(),
                 'redirect_uri' => 'https://invalid.appwrite.callback/intentionally-invalid',
                 'code' => 'intentionally-invalid-code',
             ]
@@ -237,5 +238,50 @@ class Kakao extends OAuth2
 
         // We still expect an error, like invalid_grant or invalid_request,
         // but that indicates valid credentials
+    }
+
+    /**
+     * Extracts the Client Secret from the JSON stored in appSecret
+     *
+     * @return string
+     */
+    protected function getClientSecret(): string
+    {
+        $secret = $this->getAppSecret();
+
+        return $secret['clientSecret'] ?? $this->appSecret;
+    }
+
+    /**
+     * Extracts the prompt values from the JSON stored in appSecret
+     *
+     * @return string
+     */
+    protected function getPrompt(): string
+    {
+        $secret = $this->getAppSecret();
+
+        return \implode(',', $secret['prompt'] ?? []);
+    }
+
+    /**
+     * Decode the JSON stored in appSecret.
+     * Falls back to treating the raw string as the client secret for backwards compatibility.
+     *
+     * @return array
+     */
+    protected function getAppSecret(): array
+    {
+        try {
+            $secret = \json_decode($this->appSecret, true, 512, JSON_THROW_ON_ERROR);
+        } catch (\Throwable $th) {
+            return ['clientSecret' => $this->appSecret];
+        }
+
+        if (!\is_array($secret)) {
+            return ['clientSecret' => $this->appSecret];
+        }
+
+        return $secret;
     }
 }
