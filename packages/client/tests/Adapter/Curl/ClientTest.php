@@ -40,6 +40,23 @@ final class ClientTest extends AdapterContract
         }
     }
 
+    public function testItStreamsLargeTemporaryBodiesWithBoundedMemory(): void
+    {
+        $size = 8 * 1024 * 1024;
+        $body = new Stream\Factory()->createStream(str_repeat('a', $size));
+
+        Http::serve(function (int $port) use ($body, $size): void {
+            $request = new Request\Factory()
+                ->createRequest(Method::POST, 'http://127.0.0.1:' . $port . '/body-info')
+                ->withBody($body);
+
+            $peak = $this->peakWhileSending($request);
+
+            $this->assertSame($size . ':' . hash('sha256', str_repeat('a', $size)), $peak['body']);
+            $this->assertLessThan(2 * 1_048_576, $peak['peak'], 'A temporary body that spilled to disk must not be read back into memory.');
+        });
+    }
+
     public function testItStreamsLargeMultipartUploadsWithBoundedMemory(): void
     {
         $size = 8 * 1024 * 1024;

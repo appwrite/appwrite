@@ -57,6 +57,15 @@ if ($path === '/redirect-stream-preserve') {
     return;
 }
 
+if ($path === '/redirect-307-body' || $path === '/redirect-308-body') {
+    http_response_code($path === '/redirect-307-body' ? 307 : 308);
+    header('Location: /body-info');
+    header('Content-Type: text/plain;charset=UTF-8');
+    echo 'redirect';
+
+    return;
+}
+
 if ($path === '/nested/parent') {
     http_response_code(302);
     header('Location: ../final');
