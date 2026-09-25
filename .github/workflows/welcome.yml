@@ -1,0 +1,33 @@
+name: Welcome First-Time Contributors
+
+on:
+  issues:
+    types: [opened]
+  pull_request_target:
+    types: [opened]
+
+jobs:
+  welcome:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+    
+    steps:
+      - name: Welcome New Contributor
+        uses: uses: actions/first-interaction@3c71ce730280171fd1cfb57c00c774f8998586f7
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          issue-message: |
+            👋 Welcome to the Appwrite community! 
+            
+            Thank you for taking the time to open your first issue! Our team will review it as soon as possible. 
+            
+            In the meantime, please make sure you have read our [Code of Conduct](https://github.com/appwrite/github/blob/main/CODE_OF_CONDUCT.md) and [Contributing Guidelines](https://github.com/appwrite/github/blob/main/CONTRIBUTING.md).
+            
+          pr-message: |
+            👋 Welcome to the Appwrite community! 
+            
+            Thank you so much for opening your first Pull Request! We truly appreciate your contribution. 
+            
+            Before we can merge your code, please ensure you have read our [Contributing Guidelines](https://github.com/appwrite/appwrite/blob/main/CONTRIBUTING.md). A maintainer will review your code shortly!
