@@ -74,6 +74,16 @@ class Update extends Base
         return 'A1bC2dE3fH4iJ5kL6mN7oP8qR9sT0u';
     }
 
+    public static function getPromptValues(): array
+    {
+        return ['none', 'login', 'consent', 'select_account'];
+    }
+
+    public static function getPromptLimit(): int
+    {
+        return 1;
+    }
+
     public static function getParameters(): array
     {
         return \array_merge(parent::getParameters(), [
@@ -116,6 +126,7 @@ class Update extends Base
             ->param(static::getClientIdParamName(), null, new Nullable(new Text(256, 0)), static::getClientIdDescription(), optional: true)
             ->param(static::getClientSecretParamName(), null, new Nullable(new Text(512, 0)), static::getClientSecretDescription(), optional: true)
             ->param('tenant', null, new Nullable(new Text(256, 0)), 'Microsoft Entra ID tenant identifier. Use \'common\', \'organizations\', \'consumers\' or a specific tenant ID. For example: common', true)
+            ->param('prompt', null, static::getPromptValidator(), static::getPromptDescription(), optional: true, enum: static::getPromptEnum())
             ->param('enabled', null, new Nullable(new Boolean()), 'OAuth2 sign-in method status. Set to true to enable new session creation. Setting to true will trigger end-to-end credentials validation, and will throw if the credentials are invalid.', true)
             ->inject('response')
             ->inject('dbForPlatform')
@@ -137,18 +148,20 @@ class Update extends Base
             static::getClientIdParamName() => $oAuthProviders[$providerId . 'Appid'] ?? '',
             static::getClientSecretParamName() => '',
             'tenant' => $decoded['tenantID'] ?? '',
+            'prompt' => $decoded['prompt'] ?? [],
         ]);
     }
 
     /**
      * Custom callback used instead of the parent's `action()` because Microsoft
-     * takes an additional required `tenant` parameter. The method is named
+     * takes additional `tenant` and `prompt` parameters. The method is named
      * differently to avoid an LSP-incompatible override of Base::action().
      */
     public function handle(
         ?string $applicationId,
         ?string $applicationSecret,
         ?string $tenant,
+        ?array $prompt,
         ?bool $enabled,
         Response $response,
         Database $dbForPlatform,
@@ -158,6 +171,8 @@ class Update extends Base
     ): void {
         $providerId = static::getProviderId();
         $queueForEvents->setParam('providerId', $providerId);
+
+        $this->validatePrompt($prompt);
 
         // The secret is stored as JSON `{"clientSecret": "...", "tenantID": "..."}`
         // to match the shape Microsoft's OAuth2 adapter expects (getTenantID()).
@@ -171,6 +186,7 @@ class Update extends Base
         $encodedSecret = \json_encode([
             'clientSecret' => $applicationSecret ?? ($existing['clientSecret'] ?? ''),
             'tenantID' => $tenant ?? ($existing['tenantID'] ?? ''),
+            'prompt' => $prompt ?? ($existing['prompt'] ?? []),
         ]);
 
         $project = $this->persistCredentials($project, $dbForPlatform, $authorization, $applicationId, $encodedSecret, $enabled);
