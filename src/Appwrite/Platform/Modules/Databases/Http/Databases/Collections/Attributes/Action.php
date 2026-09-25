@@ -7,6 +7,7 @@ use Appwrite\Event\Message\Database as DatabaseMessage;
 use Appwrite\Event\Publisher\Database as DatabasePublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Action as DatabasesAction;
+use Appwrite\Utopia\Database\Attribute as AttributeDefinition;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Throwable;
@@ -547,9 +548,7 @@ abstract class Action extends DatabasesAction
             throw new Exception($this->getNotAvailableException());
         }
 
-        $storedType = Attribute::tryNormalizeType($attribute->getAttribute('type', ''));
-
-        if ($storedType === null || $storedType !== Attribute::tryNormalizeType($type)) {
+        if (!AttributeDefinition::sameType($attribute->getAttribute('type', ''), $type)) {
             throw new Exception($this->getTypeInvalidException());
         }
 

@@ -84,8 +84,8 @@ class Attribute
         $type = $attribute['type'] ?? '';
         $format = $attribute['format'] ?? '';
 
-        if (\is_string($type) && DatabaseAttribute::tryNormalizeType($type) === ColumnType::BigInteger) {
-            $type = DatabaseAttribute::persistedType(ColumnType::BigInteger);
+        if (\is_string($type)) {
+            $type = self::storedType($type);
         }
 
         if (isset(self::FORMAT_SIZES[$type])) {
@@ -120,5 +120,22 @@ class Attribute
             'format' => $format,
             'size' => $size,
         ];
+    }
+
+    public static function storedType(string $type): string
+    {
+        return DatabaseAttribute::tryNormalizeType($type) === ColumnType::BigInteger
+            ? DatabaseAttribute::persistedType(ColumnType::BigInteger)
+            : $type;
+    }
+
+    /**
+     * An unrecognised stored type matches no type.
+     */
+    public static function sameType(string $stored, string $type): bool
+    {
+        $normalized = DatabaseAttribute::tryNormalizeType($stored);
+
+        return $normalized !== null && $normalized === DatabaseAttribute::tryNormalizeType($type);
     }
 }
