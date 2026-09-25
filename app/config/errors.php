@@ -1333,6 +1333,11 @@ return [
         'description' => 'Migration is already in progress. You can check the status of the migration in your Appwrite Console\'s "Settings" > "Migrations".',
         'code' => 409,
     ],
+    Exception::MIGRATION_SCHEMA_NOT_READY => [
+        'name' => Exception::MIGRATION_SCHEMA_NOT_READY,
+        'description' => 'Migration ownership schema is not ready. Run the database migration before accepting migration attempts.',
+        'code' => 503,
+    ],
     Exception::MIGRATION_DATABASE_TYPE_UNSUPPORTED => [
         'name' => Exception::MIGRATION_DATABASE_TYPE_UNSUPPORTED,
         'description' => 'The specified database type is not supported for CSV import or export operations.',

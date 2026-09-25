@@ -1,9 +1,9 @@
 <?php
 
 use Appwrite\Messaging\Adapter\Mqtt;
+use Appwrite\Mqtt\Databases;
 use Appwrite\Mqtt\Handler;
 use Appwrite\PubSub\Adapter\Pool as PubSubPool;
-use Appwrite\Utopia\Database\Documents\User;
 use Swoole\Coroutine;
 use Swoole\Runtime;
 use Utopia\Cache\Adapter\Pool as CachePool;
@@ -11,11 +11,9 @@ use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
 use Utopia\Console;
-use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\DI\Container;
-use Utopia\DSN\DSN;
 use Utopia\Mqtt\Adapter;
 use Utopia\Mqtt\Server;
 use Utopia\Pools\Group;
@@ -72,16 +70,7 @@ $container->set('getConsoleDB', fn () => function () use ($register, $container)
     /** @var Group $pools */
     $pools = $register->get('pools');
 
-    $adapter = new DatabasePool($pools->get('console'));
-    $database = new Database($adapter, $getCache());
-    $database
-        ->setDatabase(APP_DATABASE)
-        ->setNamespace('_console')
-        ->setMetadata('host', \gethostname())
-        ->setMetadata('project', '_console');
-    $database->setDocumentType('users', User::class);
-
-    return $ctx['dbForPlatform'] = $database;
+    return $ctx['dbForPlatform'] = (new Databases($pools, $getCache()))->console();
 }, []);
 
 $container->set('getProjectDB', fn () => function (Document $project) use ($register, $container): Database {
@@ -106,41 +95,7 @@ $container->set('getProjectDB', fn () => function (Document $project) use ($regi
     /** @var Group $pools */
     $pools = $register->get('pools');
 
-    try {
-        $dsn = new DSN($project->getAttribute('database'));
-    } catch (\InvalidArgumentException) {
-        $dsn = new DSN('mysql://' . $project->getAttribute('database'));
-    }
-
-    $adapter = new DatabasePool($pools->get($dsn->getHost()));
-    $database = new Database($adapter, $getCache());
-
-    $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
-
-    if (\in_array($dsn->getHost(), $sharedTables)) {
-        $projectCollections = Config::getParam('collections', [])['projects'] ?? [];
-        $globalCollections = array_keys($projectCollections);
-        $globalCollections[] = 'audit';
-
-        $database
-            ->setSharedTables(true)
-            ->setGlobalCollections($globalCollections)
-            ->setTenant($project->getSequence())
-            ->setNamespace($dsn->getParam('namespace'));
-    } else {
-        $database
-            ->setSharedTables(false)
-            ->setTenant(null)
-            ->setNamespace('_' . $project->getSequence());
-    }
-
-    $database
-        ->setDatabase(APP_DATABASE)
-        ->setMetadata('host', \gethostname())
-        ->setMetadata('project', $project->getId());
-    $database->setDocumentType('users', User::class);
-
-    return $ctx['dbForProject'][$project->getSequence()] = $database;
+    return $ctx['dbForProject'][$project->getSequence()] = (new Databases($pools, $getCache()))->project($project);
 }, []);
 
 $container->set('getPlanForUser', fn () => fn (Document $project, string $userId): int => (int) System::getEnv('_APP_MQTT_REPLAY_DEPTH', '5'), []);

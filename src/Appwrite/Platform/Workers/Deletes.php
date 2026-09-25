@@ -11,6 +11,7 @@ use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Execution\Store;
 use Appwrite\Extend\Exception;
+use Appwrite\Platform\Modules\Migrations\Claim;
 use Appwrite\Usage\Connection as UsageConnection;
 use Appwrite\Usage\Context as UsageContext;
 use Executor\Executor;
@@ -523,29 +524,39 @@ class Deletes extends Action
 
         /** @var Database $dbForProject */
         $dbForProject = $getProjectDB($project);
+        $claims = new Claim($dbForProject);
 
-        $date = DateTime::addSeconds(new \DateTime(), -self::PROCESSING_STUCK_RETENTION_SECONDS);
-
-        $queries = [
-            Query::select($this->selects),
-            Query::equal('status', ['processing']),
-            Query::lessThan('$updatedAt', $date),
-        ];
-
-        $this->listByGroup(
-            'migrations',
-            $queries,
-            $dbForProject,
-            function (Document $migration) use ($dbForProject, $project) {
-                try {
-                    $dbForProject->updateDocument('migrations', $migration->getId(), new Document([
-                        'status' => 'failed'
-                    ]));
-                } catch (Throwable $th) {
-                    Console::error("Failed to update processing migration {$migration->getId()} for project {$project->getId()}: " . $th->getMessage());
-                }
-            }
+        $selects = [...$this->selects, 'status', 'stage'];
+        $declared = \array_map(
+            static fn (Document $attribute): string => $attribute->getId(),
+            $dbForProject->getCollection('migrations')->getAttribute('attributes', []),
         );
+        if (\in_array('attemptId', $declared, true)) {
+            $selects[] = 'attemptId';
+        }
+
+        foreach ([
+            [[Claim::STAGE_PROCESSING, Claim::STAGE_MIGRATING], self::PROCESSING_STUCK_RETENTION_SECONDS],
+            [[Claim::STAGE_FINALIZING], Claim::FINALIZING_LEASE],
+        ] as [$stages, $retention]) {
+            $this->listByGroup(
+                'migrations',
+                [
+                    Query::select($selects),
+                    Query::equal('status', [Claim::STATUS_PROCESSING]),
+                    Query::equal('stage', $stages),
+                    Query::lessThan('$updatedAt', DateTime::addSeconds(new \DateTime(), -$retention)),
+                ],
+                $dbForProject,
+                function (Document $migration) use ($claims, $project) {
+                    try {
+                        $claims->expire($migration);
+                    } catch (Throwable $th) {
+                        Console::error("Failed to update processing migration {$migration->getId()} for project {$project->getId()}: " . $th->getMessage());
+                    }
+                }
+            );
+        }
     }
 
     private function deleteOldDeployments(DeletePublisher $publisherForDeletes, Document $project, callable $getProjectDB): void

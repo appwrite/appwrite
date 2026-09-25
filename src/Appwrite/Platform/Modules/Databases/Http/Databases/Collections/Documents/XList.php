@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents;
 
+use Appwrite\Databases\CursorLookup;
 use Appwrite\Databases\TransactionState;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
@@ -10,6 +11,7 @@ use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Usage\Context;
+use Appwrite\Usage\Operations;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
@@ -24,6 +26,9 @@ use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Http\Http;
+use Utopia\Query\Exception as QueryLibException;
+use Utopia\Query\Exception\UnsupportedException;
+use Utopia\Query\Exception\ValidationException;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Nullable;
@@ -84,10 +89,11 @@ class XList extends Action
             ->inject('transactionState')
             ->inject('authorization')
             ->inject('utopia')
+            ->inject('operations')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, array $queries, ?string $transactionId, bool $includeTotal, int $ttl, UtopiaResponse $response, Database $dbForProject, User $user, callable $getDatabasesDB, Context $usage, TransactionState $transactionState, Authorization $authorization, ?Http $utopia = null): void
+    public function action(string $databaseId, string $collectionId, array $queries, ?string $transactionId, bool $includeTotal, int $ttl, UtopiaResponse $response, Database $dbForProject, User $user, callable $getDatabasesDB, Context $usage, TransactionState $transactionState, Authorization $authorization, ?Http $utopia = null, Operations $operations = new Operations()): void
     {
         $isAPIKey = $user->isKey($authorization->getRoles());
         $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
@@ -104,11 +110,21 @@ class XList extends Action
 
         try {
             $queries = Query::parseQueries($queries);
-        } catch (QueryException $e) {
-            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        } catch (QueryException|UnsupportedException|ValidationException|QueryLibException $e) {
+            $this->mapQueryFailure($e);
         }
 
-        $dbForDatabases = $getDatabasesDB($database);
+        $queries = $this->resolveJoinCollections(
+            $queries,
+            $dbForProject,
+            $database,
+            $collection,
+            $authorization,
+            $isAPIKey || $isPrivilegedUser,
+        );
+
+        $dbForDatabases = $getDatabasesDB($database, $collection);
+        $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
         $cursor = Query::getCursorQueries($queries, false);
         $cursor = \reset($cursor);
 
@@ -121,12 +137,14 @@ class XList extends Action
             $documentId = $cursor->getValue();
 
             try {
-                $cursorDocument = $authorization->skip(fn () => $dbForDatabases->getDocument('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $documentId));
+                $cursorDocument = (new CursorLookup($dbForDatabases, $authorization))->resolve($collectionTableId, $cursor, $queries);
             } catch (NotFoundException) {
                 // The collection metadata document exists but the backing store (e.g. a
                 // dedicated DocumentsDB shard) has no table for it. Treat this as a
                 // not-found on the collection so the caller sees a 404 instead of a 500.
                 throw new Exception($this->getParentNotFoundException(), params: [$collectionId]);
+            } catch (QueryException|ValidationException $e) {
+                $this->mapQueryFailure($e);
             }
 
             if ($cursorDocument->isEmpty()) {
@@ -140,11 +158,10 @@ class XList extends Action
         $dbStart = \microtime(true);
 
         try {
-            $hasSelects = ! empty(Query::groupByType($queries)['selections']);
-            $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
+            $selectQueries = Query::groupByType($queries)->selections;
             // When there are no select queries, relationship loading is skipped on the
             // underlying find() to avoid pulling related documents the caller did not ask for.
-            $find = $hasSelects
+            $find = $selectQueries !== []
                 ? fn () => $dbForDatabases->find($collectionTableId, $queries)
                 : fn () => $dbForDatabases->skipRelationships(fn () => $dbForDatabases->find($collectionTableId, $queries));
 
@@ -156,6 +173,7 @@ class XList extends Action
                 $cacheKey = $this->getListCacheKey($dbForProject, $collectionId);
                 $roles = $dbForProject->getAuthorization()->getRoles();
                 $documentsField = $this->getListCacheField($collection, $roles, $queries, self::LIST_CACHE_FIELD_DOCUMENTS);
+                $operationsField = $this->getListCacheField($collection, $roles, $queries, self::LIST_CACHE_FIELD_OPERATIONS);
 
                 $documentsCacheHit = false;
                 try {
@@ -171,6 +189,13 @@ class XList extends Action
                         return new Document($doc);
                     }, $cachedDocuments);
                     $documentsCacheHit = true;
+
+                    try {
+                        $cachedOperations = $dbForProject->getCache()->load($cacheKey, $ttl, $operationsField);
+                    } catch (\Throwable) {
+                        $cachedOperations = null;
+                    }
+                    $this->recordCachedOperations($operations, $documents, $cachedOperations);
                 } else {
                     $documents = $find();
 
@@ -178,7 +203,12 @@ class XList extends Action
                         return $doc->getArrayCopy();
                     }, $documents);
                     try {
-                        $dbForProject->getCache()->save($cacheKey, $documentsArray, $documentsField);
+                        if ($documentsArray !== []) {
+                            $dbForProject->getCache()->saveMany($cacheKey, [
+                                $documentsField => $documentsArray,
+                                $operationsField => $operations->counts($documents),
+                            ]);
+                        }
                     } catch (\Throwable) {
                     }
                 }
@@ -218,33 +248,19 @@ class XList extends Action
             $attribute = $this->isCollectionsAPI() ? 'attribute' : 'column';
             $message = "The order $attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all $documents order $attribute values are non-null.";
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, $message);
-        } catch (QueryException $e) {
-            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        } catch (QueryException|ValidationException $e) {
+            $this->mapQueryFailure($e);
         } catch (Timeout) {
             throw new Exception(Exception::DATABASE_TIMEOUT);
         }
 
         $dbDurationMs = (\microtime(true) - $dbStart) * 1000;
 
-        $operations = 0;
-        $collectionsCache = [];
-        foreach ($documents as $document) {
-            $this->processDocument(
-                database: $database,
-                collection: $collection,
-                document: $document,
-                dbForProject: $dbForProject,
-                collectionsCache: $collectionsCache,
-                authorization: $authorization,
-                operations: $operations
-            );
-        }
-
         $usage
             ->setResource('database')
             ->setResourceId($database->getId())
             ->setResourceInternalId((string) $database->getSequence())
-            ->addMetric($this->getDatabasesOperationReadMetric(), max($operations, 1));
+            ->addMetric($this->getDatabasesOperationReadMetric(), \max($operations->reads($documents), 1));
 
         $response->dynamic(new Document([
             'total' => $total,
@@ -266,5 +282,26 @@ class XList extends Action
      */
     protected function afterQuery(float $dbDurationMs, Document $database, Document $collection, array $queries, ?Http $utopia): void
     {
+    }
+
+    /**
+     * @param array<Document> $documents
+     */
+    private function recordCachedOperations(Operations $operations, array $documents, mixed $counts): void
+    {
+        $documents = \array_values($documents);
+        if (!\is_array($counts) || !\array_is_list($counts) || \count($counts) !== \count($documents)) {
+            return;
+        }
+
+        foreach ($counts as $count) {
+            if (!\is_int($count) || $count < 1) {
+                return;
+            }
+        }
+
+        foreach ($documents as $index => $document) {
+            $operations->record($document, $counts[$index]);
+        }
     }
 }

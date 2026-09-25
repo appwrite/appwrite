@@ -101,8 +101,8 @@ class XList extends Action
         $total = $includeTotal ? \count($emailTemplates) : 0;
 
         $grouped = Query::groupByType($queries);
-        $offset = $grouped['offset'] ?? 0;
-        $limit = $grouped['limit'] ?? null;
+        $offset = $grouped->offset ?? 0;
+        $limit = $grouped->limit ?? null;
 
         $emailTemplates = \array_slice($emailTemplates, $offset, $limit);
 

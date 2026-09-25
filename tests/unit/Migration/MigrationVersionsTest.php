@@ -7,20 +7,42 @@ namespace Tests\Unit\Migration;
 use Appwrite\Migration\Migration;
 use Appwrite\Migration\Version\V24;
 use Appwrite\Migration\Version\V25;
+use Appwrite\Migration\Version\V26;
+use Appwrite\Platform\Tasks\Migrate;
 use PHPUnit\Framework\TestCase;
+use ReflectionProperty;
 use Utopia\Audit\Adapter\Database as AdapterDatabase;
 use Utopia\Audit\Audit;
 use Utopia\Cache\Adapter\None as NoCache;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
 use Utopia\Database\Adapter\Memory;
+use Utopia\Database\Attribute;
+use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Query\Schema\ColumnType;
+use Utopia\Registry\Registry;
 
 final class MigrationVersionsTest extends TestCase
 {
+    /**
+     * @var array<string, array{encode: callable, decode: callable, signature: string}>
+     */
+    private array $filters;
+
+    protected function setUp(): void
+    {
+        $this->filters = (new ReflectionProperty(Database::class, 'filters'))->getValue();
+    }
+
+    protected function tearDown(): void
+    {
+        (new ReflectionProperty(Database::class, 'filters'))->setValue(null, $this->filters);
+    }
+
     /**
      * Check versions array integrity.
      */
@@ -110,7 +132,7 @@ final class MigrationVersionsTest extends TestCase
             ->setDatabase('migrationV24ExistingAlerts')
             ->setNamespace('migration_existing_alerts_' . \uniqid());
         $database->create();
-        $database->createCollection('notifications');
+        $database->createCollection(new Collection(id: 'notifications'));
 
         $migration = new V24();
         $migration->setProject(
@@ -163,41 +185,22 @@ final class MigrationVersionsTest extends TestCase
             ->setNamespace('migration_team_notifications_' . \uniqid());
         $database->create();
 
-        $string = fn (string $id, int $size = Database::LENGTH_KEY): Document => new Document([
-            '$id' => $id,
-            'type' => Database::VAR_STRING,
-            'format' => '',
-            'size' => $size,
-            'signed' => true,
-            'required' => false,
-            'default' => null,
-            'array' => false,
-            'filters' => [],
-        ]);
-
-        $database->createCollection('notifications', [
-            $string('messageId'),
-            $string('recipientHash', 64),
-            $string('type', 100),
-            $string('channel', 64),
-            $string('projectId'),
-            $string('projectInternalId'),
-            $string('resourceType', 64),
-            $string('resourceId'),
-            $string('resourceInternalId'),
-            $string('title', 256),
-            new Document([
-                '$id' => 'read',
-                'type' => Database::VAR_BOOLEAN,
-                'format' => '',
-                'size' => 0,
-                'signed' => true,
-                'required' => false,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ]),
-        ]);
+        $database->createCollection(new Collection(
+            id: 'notifications',
+            attributes: [
+                Attribute::string(key: 'messageId'),
+                Attribute::string(key: 'recipientHash', size: 64),
+                Attribute::string(key: 'type', size: 100),
+                Attribute::string(key: 'channel', size: 64),
+                Attribute::string(key: 'projectId'),
+                Attribute::string(key: 'projectInternalId'),
+                Attribute::string(key: 'resourceType', size: 64),
+                Attribute::string(key: 'resourceId'),
+                Attribute::string(key: 'resourceInternalId'),
+                Attribute::string(key: 'title', size: 256),
+                Attribute::boolean(key: 'read'),
+            ],
+        ));
 
         $migration = new V25();
         $migration->setProject(
@@ -257,7 +260,7 @@ final class MigrationVersionsTest extends TestCase
             ->setDatabase('migrationV24Functions')
             ->setNamespace('migration_functions_' . \uniqid());
         $database->create();
-        $database->createCollection('functions');
+        $database->createCollection(new Collection(id: 'functions'));
 
         $migration = new V24();
         $migration->setProject(
@@ -308,11 +311,17 @@ final class MigrationVersionsTest extends TestCase
             ->setDatabase('migrationV25ProviderAttributes')
             ->setNamespace('migration_provider_attributes_' . \uniqid());
         $database->create();
-        $database->createCollection('databases');
-        $database->createCollection('functions');
-        $database->createCollection('sites');
+        $database->createCollection(new Collection(id: 'databases'));
+        $database->createCollection(new Collection(id: 'functions'));
+        $database->createCollection(new Collection(id: 'sites'));
+        $database->createCollection(new Collection(id: 'migrations'));
 
-        $migration = new V25();
+        $migration = new class () extends V25 {
+            #[\Override]
+            public function forEachDocument(callable $callback): void
+            {
+            }
+        };
         $migration->setProject(
             new Document(['$id' => 'project', '$sequence' => '1']),
             $database,
@@ -322,11 +331,10 @@ final class MigrationVersionsTest extends TestCase
 
         $migration->createAttributesFromCollection($database, 'functions', ['providerBranches']);
 
-        $migrateCollections = new \ReflectionMethod($migration, 'migrateCollections');
         \ob_start();
         try {
-            $migrateCollections->invoke($migration);
-            $migrateCollections->invoke($migration);
+            $migration->execute();
+            $migration->execute();
         } finally {
             \ob_end_clean();
         }
@@ -340,6 +348,347 @@ final class MigrationVersionsTest extends TestCase
             $this->assertContains('providerBranches', $attributes);
             $this->assertContains('providerPaths', $attributes);
         }
+
+        $databaseAttributes = [];
+        foreach ($database->getCollection('databases')->getAttribute('attributes', []) as $attribute) {
+            $databaseAttributes[] = $attribute instanceof Document ? $attribute->getAttribute('$id') : ($attribute['$id'] ?? '');
+        }
+
+        $this->assertContains('status', $databaseAttributes);
+        $this->assertNotContains('migrationId', $databaseAttributes);
+        $this->assertNotContains('migrationAttemptId', $databaseAttributes);
+
+        $migrationAttributes = [];
+        foreach ($database->getCollection('migrations')->getAttribute('attributes', []) as $attribute) {
+            $migrationAttributes[] = $attribute instanceof Document ? $attribute->getAttribute('$id') : ($attribute['$id'] ?? '');
+        }
+
+        $this->assertContains('resourceInternalId', $migrationAttributes);
+        $this->assertNotContains('attemptId', $migrationAttributes);
+    }
+
+    public function testMigrateToTheV25ReleaseStopsShortOfV26Ownership(): void
+    {
+        require_once __DIR__ . '/../../../app/init.php';
+
+        $authorization = new Authorization();
+        $authorization->disable();
+        $authorization->setDefaultStatus(false);
+        $platform = $this->createConfiguredDatabase($authorization, 'migrationV25ReleasePlatform', 'console');
+        $platform->createAttribute('projects', new Attribute('version', ColumnType::String, size: 16));
+        $project = $platform->createDocument('projects', new Document([
+            '$id' => 'pre-v25-project',
+            'version' => '1.9.5',
+        ]));
+
+        $database = $this->createConfiguredDatabase($authorization, 'migrationV25ReleaseProject', 'projects');
+        foreach (['status', 'stage'] as $attribute) {
+            $database->createAttribute('migrations', new Attribute($attribute, ColumnType::String));
+        }
+        $database->createDocument('migrations', new Document([
+            '$id' => 'migration',
+            'status' => 'failed',
+            'stage' => 'processing',
+        ]));
+
+        \ob_start();
+        try {
+            $this->runMigration('1.9.6', $platform, $database, $project, $authorization);
+        } finally {
+            \ob_end_clean();
+        }
+
+        foreach (['providerBranches', 'providerPaths'] as $attribute) {
+            $this->assertContains($attribute, $this->attributeIds($database, 'functions'));
+            $this->assertContains($attribute, $this->attributeIds($database, 'sites'));
+        }
+        $this->assertContains('scopes', $this->attributeIds($database, 'sites'));
+        $this->assertContains('status', $this->attributeIds($database, 'databases'));
+        $this->assertContains('resourceInternalId', $this->attributeIds($database, 'migrations'));
+
+        $this->assertNotContains('migrationId', $this->attributeIds($database, 'databases'));
+        $this->assertNotContains('migrationAttemptId', $this->attributeIds($database, 'databases'));
+        $this->assertNotContains('attemptId', $this->attributeIds($database, 'migrations'));
+        $this->assertSame('processing', $database->getDocument('migrations', 'migration')->getAttribute('stage'));
+    }
+
+    public function testMigrateRunsCumulativeV25AndV26FromPreV25Project(): void
+    {
+        require_once __DIR__ . '/../../../app/init.php';
+
+        $authorization = new Authorization();
+        $authorization->disable();
+        $authorization->setDefaultStatus(false);
+        $platform = $this->createConfiguredDatabase($authorization, 'migrationV26PreV25Platform', 'console');
+        $platform->createAttribute('projects', new Attribute('version', ColumnType::String, size: 16));
+        $project = $platform->createDocument('projects', new Document([
+            '$id' => 'pre-v25-project',
+            'version' => '1.9.5',
+        ]));
+
+        $database = $this->createConfiguredDatabase($authorization, 'migrationV26PreV25Project', 'projects');
+        $database->createAttribute('databases', new Attribute('legacy', ColumnType::String));
+        foreach (['legacy', 'status', 'stage'] as $attribute) {
+            $database->createAttribute('migrations', new Attribute($attribute, ColumnType::String));
+        }
+        $database->createDocument('databases', new Document([
+            '$id' => 'database',
+            'legacy' => 'database-preserved',
+        ]));
+        $database->createDocument('migrations', new Document([
+            '$id' => 'migration',
+            'legacy' => 'migration-preserved',
+            'status' => 'failed',
+            'stage' => 'processing',
+        ]));
+
+        \ob_start();
+        try {
+            $this->runMigration('2.0.0', $platform, $database, $project, $authorization);
+            $this->assertCumulativeMigration($database);
+            $this->runMigration('2.0.0', $platform, $database, $project, $authorization);
+        } finally {
+            \ob_end_clean();
+        }
+
+        $this->assertCumulativeMigration($database);
+        $this->assertSame('ready', $database->getDocument('databases', 'database')->getAttribute('status'));
+        $this->assertSame('database-preserved', $database->getDocument('databases', 'database')->getAttribute('legacy'));
+        $this->assertSame('migration-preserved', $database->getDocument('migrations', 'migration')->getAttribute('legacy'));
+        $this->assertSame('failed', $database->getDocument('migrations', 'migration')->getAttribute('status'));
+        $this->assertSame('finished', $database->getDocument('migrations', 'migration')->getAttribute('stage'));
+    }
+
+    public function testMigrateRunsV26FromV25CompleteReleaseCandidateProject(): void
+    {
+        require_once __DIR__ . '/../../../app/init.php';
+
+        $authorization = new Authorization();
+        $authorization->disable();
+        $authorization->setDefaultStatus(false);
+        $platform = $this->createConfiguredDatabase($authorization, 'migrationV26RcPlatform', 'console');
+        $platform->createAttribute('projects', new Attribute('version', ColumnType::String, size: 16));
+        $project = $platform->createDocument('projects', new Document([
+            '$id' => 'rc-project',
+            'version' => '2.0.0-rc.2',
+        ]));
+        $database = $this->createConfiguredDatabase($authorization, 'migrationV26RcProject', 'projects');
+        foreach (['status', 'legacy'] as $attribute) {
+            $database->createAttribute('databases', new Attribute($attribute, ColumnType::String));
+        }
+        foreach ([
+            'resourceInternalId',
+            'parentResourceId',
+            'parentResourceInternalId',
+            'parentResourceType',
+            'destinationResourceId',
+            'destinationResourceInternalId',
+            'destinationResourceType',
+            'status',
+            'stage',
+            'legacy',
+        ] as $attribute) {
+            $database->createAttribute('migrations', new Attribute($attribute, ColumnType::String));
+        }
+        foreach (['providerBranches', 'providerPaths'] as $attribute) {
+            $database->createAttribute('functions', new Attribute($attribute, ColumnType::String, array: true));
+            $database->createAttribute('sites', new Attribute($attribute, ColumnType::String, array: true));
+        }
+        $database->createAttribute('sites', new Attribute('scopes', ColumnType::String, array: true));
+        $database->createDocument('databases', new Document([
+            '$id' => 'database',
+            'status' => 'ready',
+            'legacy' => 'database-preserved',
+        ]));
+        $database->createDocument('migrations', new Document([
+            '$id' => 'migration',
+            'resourceInternalId' => 'resource-internal',
+            'legacy' => 'migration-preserved',
+            'status' => 'failed',
+            'stage' => 'processing',
+        ]));
+        $database->createDocument('migrations', new Document([
+            '$id' => 'migration-active',
+            'status' => 'processing',
+            'stage' => 'processing',
+        ]));
+
+        \ob_start();
+        try {
+            $this->runMigration('2.0.0', $platform, $database, $project, $authorization);
+            $this->assertCumulativeMigration($database);
+            $this->runMigration('2.0.0', $platform, $database, $project, $authorization);
+        } finally {
+            \ob_end_clean();
+        }
+
+        $this->assertCumulativeMigration($database);
+        $this->assertSame('ready', $database->getDocument('databases', 'database')->getAttribute('status'));
+        $this->assertSame('database-preserved', $database->getDocument('databases', 'database')->getAttribute('legacy'));
+        $this->assertSame('resource-internal', $database->getDocument('migrations', 'migration')->getAttribute('resourceInternalId'));
+        $this->assertSame('migration-preserved', $database->getDocument('migrations', 'migration')->getAttribute('legacy'));
+        $this->assertSame('failed', $database->getDocument('migrations', 'migration')->getAttribute('status'));
+        $this->assertSame('finished', $database->getDocument('migrations', 'migration')->getAttribute('stage'));
+        $this->assertSame('processing', $database->getDocument('migrations', 'migration-active')->getAttribute('status'));
+        $this->assertSame('processing', $database->getDocument('migrations', 'migration-active')->getAttribute('stage'));
+    }
+
+    public function testV26DoesNotNormalizeConcurrentlyRetriedMigration(): void
+    {
+        require_once __DIR__ . '/../../../app/init.php';
+
+        $authorization = new Authorization();
+        $authorization->disable();
+        $authorization->setDefaultStatus(false);
+        $database = new class (new Memory(), new Cache(new NoCache())) extends Database {
+            private bool $interleave = true;
+
+            #[\Override]
+            public function updateDocument(string $collection, string $id, Document $document, ?int $expectedVersion = null): Document
+            {
+                if ($this->interleave && $collection === 'migrations' && $this->timestamp !== null) {
+                    $this->interleave = false;
+                    parent::updateDocument($collection, $id, new Document([
+                        'attemptId' => 'attempt-retry',
+                        'status' => 'processing',
+                        'stage' => 'processing',
+                    ]));
+                }
+
+                return parent::updateDocument($collection, $id, $document);
+            }
+        };
+        $database
+            ->setAuthorization($authorization)
+            ->setDatabase('migrationV26Race')
+            ->setNamespace('migration_v26_race_' . \uniqid());
+        $database->create();
+
+        foreach (Config::getParam('collections', [])['projects'] as $collection) {
+            $database->createCollection(new Collection(id: (string) $collection['$id']));
+        }
+        foreach ([Database::METADATA, 'audit'] as $id) {
+            if ($database->getCollection($id)->isEmpty()) {
+                $database->createCollection(new Collection(id: $id));
+            }
+        }
+        foreach (['status', 'stage'] as $attribute) {
+            $database->createAttribute('migrations', new Attribute($attribute, ColumnType::String));
+        }
+        $database->createDocument('migrations', new Document([
+            '$id' => 'migration-race',
+            'status' => 'failed',
+            'stage' => 'processing',
+        ]));
+
+        $migration = new V26();
+        $migration->setProject(
+            new Document(['$id' => 'project', '$sequence' => '1']),
+            $database,
+            $database,
+            $authorization,
+        );
+
+        \ob_start();
+        try {
+            $migration->execute();
+        } finally {
+            \ob_end_clean();
+        }
+
+        $stored = $database->getDocument('migrations', 'migration-race');
+        $this->assertSame('attempt-retry', $stored->getAttribute('attemptId'));
+        $this->assertSame('processing', $stored->getAttribute('status'));
+        $this->assertSame('processing', $stored->getAttribute('stage'));
+    }
+
+    private function assertCumulativeMigration(Database $database): void
+    {
+        foreach (['providerBranches', 'providerPaths'] as $attribute) {
+            $this->assertContains($attribute, $this->attributeIds($database, 'functions'));
+            $this->assertContains($attribute, $this->attributeIds($database, 'sites'));
+        }
+        $this->assertContains('scopes', $this->attributeIds($database, 'sites'));
+        foreach (['status', 'migrationId', 'migrationAttemptId'] as $attribute) {
+            $this->assertContains($attribute, $this->attributeIds($database, 'databases'));
+        }
+        foreach ([
+            'resourceInternalId',
+            'parentResourceId',
+            'parentResourceInternalId',
+            'parentResourceType',
+            'destinationResourceId',
+            'destinationResourceInternalId',
+            'destinationResourceType',
+            'attemptId',
+        ] as $attribute) {
+            $this->assertContains($attribute, $this->attributeIds($database, 'migrations'));
+        }
+    }
+
+    private function createConfiguredDatabase(Authorization $authorization, string $name, string $type): Database
+    {
+        $database = new Database(new Memory(), new Cache(new NoCache()));
+        $database
+            ->setAuthorization($authorization)
+            ->setDatabase($name)
+            ->setNamespace($name . '_' . \uniqid());
+        $database->create();
+
+        foreach (Config::getParam('collections', [])[$type] as $collection) {
+            $id = (string) $collection['$id'];
+            if (!$database->getCollection($id)->isEmpty()) {
+                continue;
+            }
+
+            $database->createCollection(new Collection(id: $id));
+        }
+
+        if ($type === 'projects') {
+            foreach ([Database::METADATA, 'audit'] as $id) {
+                if (!$database->getCollection($id)->isEmpty()) {
+                    continue;
+                }
+
+                $database->createCollection(new Collection(id: $id));
+            }
+        }
+
+        return $database;
+    }
+
+    private function runMigration(
+        string $version,
+        Database $platform,
+        Database $database,
+        Document $project,
+        Authorization $authorization,
+    ): void {
+        $registry = new Registry();
+        $registry->set('db', static fn (): null => null);
+        $getProjectDatabase = static fn (Document $candidate): Database => $candidate->getId() === $project->getId()
+            ? $database
+            : $platform;
+
+        (new Migrate())->action(
+            $version,
+            $platform,
+            $getProjectDatabase,
+            $registry,
+            $authorization,
+            new Document(['$id' => 'console', '$sequence' => 'console']),
+        );
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function attributeIds(Database $database, string $collection): array
+    {
+        return \array_map(
+            static fn (Document $attribute): string => $attribute->getId(),
+            $database->getCollection($collection)->getAttribute('attributes', []),
+        );
     }
 
     /**
@@ -371,16 +720,16 @@ final class MigrationVersionsTest extends TestCase
                 continue;
             }
 
-            $database->createCollection(
-                $key,
-                \array_map(fn (array $attribute) => new Document($attribute), $collection['attributes']),
-                \array_map(fn (array $index) => new Document($index), $collection['indexes']),
-            );
+            $database->createCollection(new Collection(
+                id: $key,
+                attributes: \array_values($collection['attributes']),
+                indexes: \array_values($collection['indexes']),
+            ));
         }
 
         $string = fn (string $id, int $size): Document => new Document([
             '$id' => $id,
-            'type' => Database::VAR_STRING,
+            'type' => ColumnType::String->value,
             'format' => '',
             'size' => $size,
             'signed' => true,
@@ -392,7 +741,7 @@ final class MigrationVersionsTest extends TestCase
 
         $boolean = fn (string $id): Document => new Document([
             '$id' => $id,
-            'type' => Database::VAR_BOOLEAN,
+            'type' => ColumnType::Boolean->value,
             'format' => '',
             'size' => 0,
             'signed' => true,
@@ -402,7 +751,7 @@ final class MigrationVersionsTest extends TestCase
             'filters' => [],
         ]);
 
-        $database->createCollection('users', [
+        $database->createCollection(new Collection(id: 'users', attributes: [
             $string('name', 256),
             $string('email', 320),
             $string('phone', 16),
@@ -411,7 +760,7 @@ final class MigrationVersionsTest extends TestCase
             $boolean('phoneVerification'),
             $boolean('reset'),
             $boolean('mfa'),
-        ]);
+        ]));
 
         $migration = new V25();
         $migration->setProject(

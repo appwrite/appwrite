@@ -94,8 +94,8 @@ class XList extends Action
         $total = $includeTotal ? \count($documents) : 0;
 
         $grouped = Query::groupByType($queries);
-        $offset = $grouped['offset'] ?? 0;
-        $limit = $grouped['limit'] ?? null;
+        $offset = $grouped->offset ?? 0;
+        $limit = $grouped->limit ?? null;
 
         $documents = \array_slice($documents, $offset, $limit);
 

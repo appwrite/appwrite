@@ -3,10 +3,12 @@
 namespace Appwrite\Utopia\Database\Validator;
 
 use Appwrite\Utopia\Database\Attribute;
+use Utopia\Database\Attribute as DatabaseAttribute;
 use Utopia\Database\Database;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\Key;
 use Utopia\Emails\Validator\Email;
+use Utopia\Query\Schema\ColumnType;
 use Utopia\Validator;
 use Utopia\Validator\FloatValidator;
 use Utopia\Validator\Integer;
@@ -17,6 +19,24 @@ use Utopia\Validator\URL;
 
 class Attributes extends Validator
 {
+    private const string FILTER_ENCRYPT = 'encrypt';
+
+    private const string FILTER_DATETIME = 'datetime';
+
+    /**
+     * Filters each per-type create endpoint sets, keyed by the type it creates.
+     *
+     * @var array<string, list<string>>
+     */
+    private const array ENDPOINT_FILTERS = [
+        ColumnType::String->value => [self::FILTER_ENCRYPT],
+        ColumnType::Varchar->value => [self::FILTER_ENCRYPT],
+        ColumnType::Text->value => [self::FILTER_ENCRYPT],
+        ColumnType::MediumText->value => [self::FILTER_ENCRYPT],
+        ColumnType::LongText->value => [self::FILTER_ENCRYPT],
+        ColumnType::Datetime->value => [self::FILTER_DATETIME],
+    ];
+
     protected int $maxAttributes;
     protected string $message = 'Invalid attributes';
 
@@ -131,7 +151,7 @@ class Attributes extends Validator
             ['type' => $type, 'format' => $format, 'size' => $size] = Attribute::resolve($attribute);
 
             // Validate spatial type support
-            if (\in_array($type, Database::SPATIAL_TYPES) && !$this->supportForSpatialAttributes) {
+            if (\in_array($type, [ColumnType::Point->value, ColumnType::Linestring->value, ColumnType::Polygon->value]) && !$this->supportForSpatialAttributes) {
                 $this->message = "Spatial attributes are not supported by the current database";
                 return false;
             }
@@ -143,7 +163,7 @@ class Attributes extends Validator
 
             // Validate size for the types that take one. The remaining string
             // types (text, mediumtext, longtext) are fixed width.
-            if (\in_array($type, [Database::VAR_STRING, Database::VAR_VARCHAR])) {
+            if (\in_array($type, [ColumnType::String->value, ColumnType::Varchar->value])) {
                 if ($size < 1 || $size > APP_DATABASE_ATTRIBUTE_STRING_MAX_LENGTH) {
                     $this->message = "Invalid or missing size for string attribute '" . $attribute['key'] . "'. Size must be between 1 and " . APP_DATABASE_ATTRIBUTE_STRING_MAX_LENGTH;
                     return false;
@@ -153,7 +173,7 @@ class Attributes extends Validator
             // Validate format if provided
             if ($format !== '') {
                 // Format is only allowed for sized string types
-                if (!\in_array($type, [Database::VAR_STRING, Database::VAR_VARCHAR])) {
+                if (!\in_array($type, [ColumnType::String->value, ColumnType::Varchar->value])) {
                     $this->message = "Format is only allowed for string type for attribute '" . $attribute['key'] . "'";
                     return false;
                 }
@@ -161,6 +181,10 @@ class Attributes extends Validator
                     $this->message = "Invalid format for attribute '" . $attribute['key'] . "': " . $format;
                     return false;
                 }
+            }
+
+            if (!$this->hasAllowedFilters($attribute, $type, $format, $size)) {
+                return false;
             }
 
             // Validate required field if provided
@@ -182,7 +206,7 @@ class Attributes extends Validator
             }
 
             // Validate signed only for integer/bigint/float types
-            if (isset($attribute['signed']) && !in_array($type, [Database::VAR_INTEGER, Database::VAR_BIGINT, Database::VAR_FLOAT])) {
+            if (isset($attribute['signed']) && !in_array($type, [ColumnType::Integer->value, ColumnType::BigInteger->value, DatabaseAttribute::persistedType(ColumnType::BigInteger), ColumnType::Float->value, ColumnType::Double->value])) {
                 $this->message = "Attribute '" . $attribute['key'] . "': 'signed' can only be used with integer, bigint or float types";
                 return false;
             }
@@ -201,7 +225,7 @@ class Attributes extends Validator
 
             // Validate min/max range for integer/bigint/float
             if (isset($attribute['min']) || isset($attribute['max'])) {
-                if (!in_array($type, [Database::VAR_INTEGER, Database::VAR_BIGINT, Database::VAR_FLOAT])) {
+                if (!in_array($type, [ColumnType::Integer->value, ColumnType::BigInteger->value, DatabaseAttribute::persistedType(ColumnType::BigInteger), ColumnType::Float->value, ColumnType::Double->value])) {
                     $this->message = "Attribute '" . $attribute['key'] . "': min/max can only be used with integer, bigint or float types";
                     return false;
                 }
@@ -210,7 +234,7 @@ class Attributes extends Validator
                 // Without the same check a JSON number past PHP_INT_MAX decodes to a float and is
                 // stored verbatim, so an int64 bound round-tripped through a client that cannot
                 // hold it lands in formatOptions as 9.223372036854776e+18.
-                $boundValidator = $type === Database::VAR_FLOAT
+                $boundValidator = \in_array($type, [ColumnType::Float->value, ColumnType::Double->value], true)
                     ? new FloatValidator()
                     : new Integer(false, 64);
 
@@ -231,11 +255,11 @@ class Attributes extends Validator
             // Validate default value matches attribute type
             if (isset($attribute['default'])) {
                 switch ($type) {
-                    case Database::VAR_STRING:
-                    case Database::VAR_VARCHAR:
-                    case Database::VAR_TEXT:
-                    case Database::VAR_MEDIUMTEXT:
-                    case Database::VAR_LONGTEXT:
+                    case ColumnType::String->value:
+                    case ColumnType::Varchar->value:
+                    case ColumnType::Text->value:
+                    case ColumnType::MediumText->value:
+                    case ColumnType::LongText->value:
                         if (!is_string($attribute['default'])) {
                             $this->message = "Default value for string attribute '" . $attribute['key'] . "' must be a string";
                             return false;
@@ -272,7 +296,7 @@ class Attributes extends Validator
                         }
                         break;
 
-                    case Database::VAR_INTEGER:
+                    case ColumnType::Integer->value:
                         if (!is_int($attribute['default'])) {
                             $this->message = "Default value for integer attribute '" . $attribute['key'] . "' must be an integer";
                             return false;
@@ -289,7 +313,8 @@ class Attributes extends Validator
                         }
                         break;
 
-                    case Database::VAR_BIGINT:
+                    case ColumnType::BigInteger->value:
+                    case DatabaseAttribute::persistedType(ColumnType::BigInteger):
                         if (!is_int($attribute['default'])) {
                             $this->message = "Default value for bigint attribute '" . $attribute['key'] . "' must be an integer";
                             return false;
@@ -306,7 +331,8 @@ class Attributes extends Validator
                         }
                         break;
 
-                    case Database::VAR_FLOAT:
+                    case ColumnType::Float->value:
+                    case ColumnType::Double->value:
                         if (!is_float($attribute['default']) && !is_int($attribute['default'])) {
                             $this->message = "Default value for float attribute '" . $attribute['key'] . "' must be a number";
                             return false;
@@ -323,14 +349,14 @@ class Attributes extends Validator
                         }
                         break;
 
-                    case Database::VAR_BOOLEAN:
+                    case ColumnType::Boolean->value:
                         if (!is_bool($attribute['default'])) {
                             $this->message = "Default value for boolean attribute '" . $attribute['key'] . "' must be a boolean";
                             return false;
                         }
                         break;
 
-                    case Database::VAR_DATETIME:
+                    case ColumnType::Datetime->value:
                         if (!is_string($attribute['default'])) {
                             $this->message = "Default value for datetime attribute '" . $attribute['key'] . "' must be a string in ISO 8601 format";
                             return false;
@@ -375,6 +401,62 @@ class Attributes extends Validator
         }
 
         return true;
+    }
+
+    /**
+     * @param array<string, mixed> $attribute
+     */
+    private function hasAllowedFilters(array $attribute, string $type, string $format, int $size): bool
+    {
+        $filters = $attribute['filters'] ?? [];
+
+        if (!\is_array($filters) || !\array_is_list($filters) || \count(\array_filter($filters, \is_string(...))) !== \count($filters)) {
+            $this->message = "Invalid 'filters' value for attribute '" . $attribute['key'] . "': must be an array of strings";
+            return false;
+        }
+
+        $allowed = self::allowedFilters($type, $format);
+        $seen = [];
+
+        foreach ($filters as $filter) {
+            if (\in_array($filter, $seen, true)) {
+                $this->message = "Duplicate filter for attribute '" . $attribute['key'] . "': " . $filter;
+                return false;
+            }
+
+            if (!\in_array($filter, $allowed, true)) {
+                $this->message = "Invalid filter for attribute '" . $attribute['key'] . "': " . $filter;
+                return false;
+            }
+
+            $seen[] = $filter;
+        }
+
+        if (\in_array(self::FILTER_ENCRYPT, $filters, true) && $size < APP_DATABASE_ENCRYPT_SIZE_MIN) {
+            $this->message = "Size too small for encrypted attribute '" . $attribute['key'] . "'. Encrypted strings require a minimum size of " . APP_DATABASE_ENCRYPT_SIZE_MIN . ' characters.';
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * What the type's create endpoint sets, plus the filter the library adds to
+     * its type. The format endpoints (email, enum, ip, url) set none.
+     *
+     * @return list<string>
+     */
+    private static function allowedFilters(string $type, string $format): array
+    {
+        $filters = $format === '' ? (self::ENDPOINT_FILTERS[$type] ?? []) : [];
+
+        $columnType = ColumnType::tryFrom($type);
+
+        if ($columnType !== null && \in_array($columnType, Database::ATTRIBUTE_FILTER_COLUMN_TYPES, true)) {
+            $filters[] = $columnType->value;
+        }
+
+        return \array_values(\array_unique($filters));
     }
 
     /**

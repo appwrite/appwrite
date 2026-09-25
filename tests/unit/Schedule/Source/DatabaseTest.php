@@ -8,6 +8,7 @@ use Appwrite\Schedule\Source\Functions;
 use PHPUnit\Framework\TestCase;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\PermissionType;
 use Utopia\Schedule\Scheduler;
 
 final class DatabaseTest extends TestCase
@@ -149,7 +150,7 @@ final class ScheduleDatabase extends Database
         return $this->documents[$collection][$id] ?? new Document();
     }
 
-    public function deleteDocument(string $collection, string $id): bool
+    public function deleteDocument(string $collection, string $id, ?int $expectedVersion = null): bool
     {
         if ($this->deleteError !== null) {
             throw $this->deleteError;
@@ -159,7 +160,7 @@ final class ScheduleDatabase extends Database
         return true;
     }
 
-    public function find(string $collection, array $queries = [], string $forPermission = Database::PERMISSION_READ): array
+    public function find(string $collection, array $queries = [], PermissionType $forPermission = PermissionType::Read): array
     {
         return array_values($this->documents[$collection] ?? []);
     }

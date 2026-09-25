@@ -245,7 +245,17 @@ jobs:
 
             const pr = context.payload.pull_request;
 
-            const isDatabaseVersionChanged = async () => {
+            // Every library whose queries run on the matrix databases; usage writes to ClickHouse instead.
+            const databasePackages = [
+              'utopia-php/abuse',
+              'utopia-php/audit',
+              'utopia-php/database',
+              'utopia-php/migration',
+              'utopia-php/mongo',
+              'utopia-php/query',
+            ];
+
+            const databasePackagesChanged = async () => {
               const getContent = (ref) => github.rest.repos.getContent({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
@@ -253,18 +263,26 @@ jobs:
                 ref,
               });
 
-              const getDbVersion = (lock) => lock.packages?.find(p => p.name === 'utopia-php/database')?.version;
+              // A branch constraint locks the branch name as the version on every update,
+              // so only the source commit tells two builds of the same branch apart.
+              const getReferences = (lock) => new Map((lock.packages ?? [])
+                .filter((entry) => databasePackages.includes(entry.name))
+                .map((entry) => [entry.name, entry.source?.reference ?? entry.version]));
+
               const [{ data: base }, { data: head }] = await Promise.all([
                 getContent(pr.base.sha),
                 getContent(pr.head.sha),
               ]);
 
               const decode = (content) => JSON.parse(Buffer.from(content, 'base64').toString());
-              return getDbVersion(decode(base.content)) !== getDbVersion(decode(head.content));
+              const baseReferences = getReferences(decode(base.content));
+              const headReferences = getReferences(decode(head.content));
+
+              return databasePackages.some((name) => baseReferences.get(name) !== headReferences.get(name));
             };
 
             const fullMatrix = context.eventName === 'workflow_dispatch'
-              || (pr && await isDatabaseVersionChanged());
+              || (pr && await databasePackagesChanged());
 
             if (fullMatrix) {
               core.setOutput('databases', JSON.stringify(['MariaDB', 'PostgreSQL', 'MongoDB']));
@@ -564,7 +582,7 @@ jobs:
   e2e_service:
     name: Tests / E2E / ${{ matrix.database }} (${{ matrix.mode }}) / ${{ matrix.service.name }}
     runs-on: gcrunner=${{ github.run_id }}/runner=${{ matrix.service.runner }}
-    timeout-minutes: 20
+    timeout-minutes: 35
     needs: [build, matrix]
     permissions:
       contents: read
@@ -700,7 +718,7 @@ jobs:
             appwrite test tests/e2e/Services/Teams/TeamsConsoleClientTest.php --filter=testCreateOrganization
 
       - name: Run tests
-        timeout-minutes: 15
+        timeout-minutes: 25
         run: |
           SERVICE_PATH="/usr/src/code/tests/e2e/Services/${{ matrix.service.name }}"
 
@@ -851,7 +869,21 @@ jobs:
               $host = getenv("_APP_STORAGE_ANTIVIRUS_HOST") ?: "clamav";
               $port = (int) (getenv("_APP_STORAGE_ANTIVIRUS_PORT") ?: 3310);
               $av = new Appwrite\ClamAV\Network($host, $port);
-              exit(@$av->ping() ? 0 : 1);
+              // ping() answers PONG from a daemon that cannot classify anything
+              // yet, so scan something known-clean and require a clean verdict.
+              // fileScanInStream() is true only for an OK reply, so a daemon
+              // that refuses or errors keeps this waiting instead of releasing
+              // the suite against a scanner that rejects every upload.
+              $probe = tempnam(sys_get_temp_dir(), "clamav-ready");
+              file_put_contents($probe, str_repeat("appwrite readiness probe\n", 64));
+              try {
+                  exit($av->fileScanInStream($probe) ? 0 : 1);
+              } catch (Throwable $e) {
+                  // Not up yet, or up and unable to answer. Either way, wait.
+                  exit(1);
+              } finally {
+                  @unlink($probe);
+              }
             '; then
               echo "ClamAV is ready"
               exit 0

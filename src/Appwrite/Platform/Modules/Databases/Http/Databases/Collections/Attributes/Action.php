@@ -10,6 +10,8 @@ use Appwrite\Platform\Modules\Databases\Http\Databases\Action as DatabasesAction
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Throwable;
+use Utopia\Database\Attribute;
+use Utopia\Database\Capability;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
@@ -19,9 +21,12 @@ use Utopia\Database\Exception\Relationship as RelationshipException;
 use Utopia\Database\Exception\Structure as StructureException;
 use Utopia\Database\Exception\Truncate as TruncateException;
 use Utopia\Database\Helpers\ID;
+use Utopia\Database\RelationSide;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Structure;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
+use Utopia\Query\Schema\ColumnType;
+use Utopia\Query\Schema\ForeignKeyAction;
 use Utopia\Validator\Range;
 
 abstract class Action extends DatabasesAction
@@ -235,60 +240,61 @@ abstract class Action extends DatabasesAction
     {
         $isCollections = $this->isCollectionsAPI();
 
-        return match ($type) {
-            Database::VAR_BOOLEAN => $isCollections
+        return match (Attribute::tryNormalizeType($type)) {
+            ColumnType::Boolean => $isCollections
                 ? UtopiaResponse::MODEL_ATTRIBUTE_BOOLEAN
                 : UtopiaResponse::MODEL_COLUMN_BOOLEAN,
 
-            Database::VAR_INTEGER => $isCollections
+            ColumnType::Integer => $isCollections
                 ? UtopiaResponse::MODEL_ATTRIBUTE_INTEGER
                 : UtopiaResponse::MODEL_COLUMN_INTEGER,
 
-            Database::VAR_BIGINT => $isCollections
+            ColumnType::BigInteger => $isCollections
                 ? UtopiaResponse::MODEL_ATTRIBUTE_BIGINT
                 : UtopiaResponse::MODEL_COLUMN_BIGINT,
 
-            Database::VAR_FLOAT => $isCollections
+            ColumnType::Float,
+            ColumnType::Double => $isCollections
                 ? UtopiaResponse::MODEL_ATTRIBUTE_FLOAT
                 : UtopiaResponse::MODEL_COLUMN_FLOAT,
 
-            Database::VAR_DATETIME => $isCollections
+            ColumnType::Datetime => $isCollections
                 ? UtopiaResponse::MODEL_ATTRIBUTE_DATETIME
                 : UtopiaResponse::MODEL_COLUMN_DATETIME,
 
-            Database::VAR_RELATIONSHIP => $isCollections
+            ColumnType::Relationship => $isCollections
                 ? UtopiaResponse::MODEL_ATTRIBUTE_RELATIONSHIP
                 : UtopiaResponse::MODEL_COLUMN_RELATIONSHIP,
 
-            Database::VAR_POINT => $isCollections
+            ColumnType::Point => $isCollections
                 ? UtopiaResponse::MODEL_ATTRIBUTE_POINT
                 : UtopiaResponse::MODEL_COLUMN_POINT,
 
-            Database::VAR_LINESTRING => $isCollections
+            ColumnType::Linestring => $isCollections
                 ? UtopiaResponse::MODEL_ATTRIBUTE_LINE
                 : UtopiaResponse::MODEL_COLUMN_LINE,
 
-            Database::VAR_POLYGON => $isCollections
+            ColumnType::Polygon => $isCollections
                 ? UtopiaResponse::MODEL_ATTRIBUTE_POLYGON
                 : UtopiaResponse::MODEL_COLUMN_POLYGON,
 
-            Database::VAR_VARCHAR => $isCollections
+            ColumnType::Varchar => $isCollections
                 ? UtopiaResponse::MODEL_ATTRIBUTE_VARCHAR
                 : UtopiaResponse::MODEL_COLUMN_VARCHAR,
 
-            Database::VAR_TEXT => $isCollections
+            ColumnType::Text => $isCollections
                 ? UtopiaResponse::MODEL_ATTRIBUTE_TEXT
                 : UtopiaResponse::MODEL_COLUMN_TEXT,
 
-            Database::VAR_MEDIUMTEXT => $isCollections
+            ColumnType::MediumText => $isCollections
                 ? UtopiaResponse::MODEL_ATTRIBUTE_MEDIUMTEXT
                 : UtopiaResponse::MODEL_COLUMN_MEDIUMTEXT,
 
-            Database::VAR_LONGTEXT => $isCollections
+            ColumnType::LongText => $isCollections
                 ? UtopiaResponse::MODEL_ATTRIBUTE_LONGTEXT
                 : UtopiaResponse::MODEL_COLUMN_LONGTEXT,
 
-            Database::VAR_STRING => match ($format) {
+            ColumnType::String => match ($format) {
                 APP_DATABASE_ATTRIBUTE_EMAIL => $isCollections
                     ? UtopiaResponse::MODEL_ATTRIBUTE_EMAIL
                     : UtopiaResponse::MODEL_COLUMN_EMAIL,
@@ -329,7 +335,7 @@ abstract class Action extends DatabasesAction
         $default = $attribute->getAttribute('default');
         $options = $attribute->getAttribute('options', []);
 
-        if (in_array($type, Database::SPATIAL_TYPES) && !$dbForProject->getAdapter()->getSupportForSpatialAttributes()) {
+        if (in_array($type, [ColumnType::Point->value, ColumnType::Linestring->value, ColumnType::Polygon->value]) && !$this->supportsSpatial($dbForProject->getAdapter())) {
             throw new Exception($this->getSpatialTypeNotSupportedException(), params: [$type]);
         }
 
@@ -346,7 +352,7 @@ abstract class Action extends DatabasesAction
         }
 
         if (!empty($format)) {
-            if (!Structure::hasFormat($format, $type)) {
+            if (!Structure::hasFormat($format, Attribute::normalizeType($type))) {
                 throw new Exception($this->getFormatUnsupportedException(), "Format $format not available for $type columns.");
             }
         }
@@ -360,8 +366,8 @@ abstract class Action extends DatabasesAction
             throw new Exception($this->getDefaultUnsupportedException(), 'Cannot set default value for array ' . $this->getContext() . 's');
         }
 
-        if ($type === Database::VAR_RELATIONSHIP) {
-            $options['side'] = Database::RELATION_SIDE_PARENT;
+        if ($type === ColumnType::Relationship->value) {
+            $options['side'] = RelationSide::Parent->value;
             $relatedCollection = $dbForProject->getDocument('database_' . $db->getSequence(), $options['relatedCollection'] ?? '');
             if ($relatedCollection->isEmpty()) {
                 $parent = $this->isCollectionsAPI() ? 'collection' : 'table';
@@ -391,8 +397,8 @@ abstract class Action extends DatabasesAction
             ]);
 
             if (
-                !$dbForProject->getAdapter()->getSupportForSpatialIndexNull() &&
-                \in_array($attribute->getAttribute('type'), Database::SPATIAL_TYPES) &&
+                !$dbForProject->getAdapter()->supports(Capability::SpatialIndexNull) &&
+                \in_array($attribute->getAttribute('type'), [ColumnType::Point->value, ColumnType::Linestring->value, ColumnType::Polygon->value]) &&
                 $attribute->getAttribute('required')
             ) {
                 $hasData = $authorization->skip(fn () => $dbForProject
@@ -402,7 +408,19 @@ abstract class Action extends DatabasesAction
                     throw new StructureException('Failed to add required spatial column: existing rows present. Make the column optional.');
                 }
             }
-            $dbForProject->checkAttribute($collection, $attribute);
+            $dbForProject->checkAttribute($collection, Attribute::fromArray([
+                'key' => $key,
+                'type' => $type,
+                'size' => $size,
+                'required' => $required,
+                'signed' => $signed,
+                'default' => $default,
+                'array' => $array,
+                'format' => $format !== '' ? $format : null,
+                'formatOptions' => $formatOptions,
+                'filters' => $filters,
+                'options' => $options !== [] ? $options : null,
+            ]));
             $attribute = $dbForProject->createDocument('attributes', $attribute);
         } catch (DuplicateException) {
             throw new Exception($this->getDuplicateException(), params: [$key]);
@@ -419,11 +437,11 @@ abstract class Action extends DatabasesAction
         $dbForProject->purgeCachedDocument('database_' . $db->getSequence(), $collectionId);
         $dbForProject->purgeCachedCollection('database_' . $db->getSequence() . '_collection_' . $collection->getSequence());
 
-        if ($type === Database::VAR_RELATIONSHIP && $options['twoWay']) {
+        if ($type === ColumnType::Relationship->value && $options['twoWay']) {
             $twoWayKey = $options['twoWayKey'];
             $options['relatedCollection'] = $collection->getId();
             $options['twoWayKey'] = $key;
-            $options['side'] = Database::RELATION_SIDE_CHILD;
+            $options['side'] = RelationSide::Child->value;
 
             try {
                 $twoWayAttribute = new Document([
@@ -446,7 +464,19 @@ abstract class Action extends DatabasesAction
                     'options' => $options,
                 ]);
 
-                $dbForProject->checkAttribute($relatedCollection, $twoWayAttribute);
+                $dbForProject->checkAttribute($relatedCollection, Attribute::fromArray([
+                    'key' => $twoWayKey,
+                    'type' => $type,
+                    'size' => $size,
+                    'required' => $required,
+                    'signed' => $signed,
+                    'default' => $default,
+                    'array' => $array,
+                    'format' => $format !== '' ? $format : null,
+                    'formatOptions' => $formatOptions,
+                    'filters' => $filters,
+                    'options' => $options !== [] ? $options : null,
+                ]));
                 $dbForProject->createDocument('attributes', $twoWayAttribute);
             } catch (DuplicateException) {
                 throw new Exception($this->getDuplicateException(), params: [$twoWayKey]);
@@ -517,14 +547,16 @@ abstract class Action extends DatabasesAction
             throw new Exception($this->getNotAvailableException());
         }
 
-        if ($attribute->getAttribute('type') !== $type) {
+        $storedType = Attribute::tryNormalizeType($attribute->getAttribute('type', ''));
+
+        if ($storedType === null || $storedType !== Attribute::tryNormalizeType($type)) {
             throw new Exception($this->getTypeInvalidException());
         }
 
         // The discriminator for a formatted string is persisted as 'format', and is
         // the empty string for a plain one, while the plain string endpoint passes
         // no filter at all.
-        if ($attribute->getAttribute('type') === Database::VAR_STRING && $attribute->getAttribute('format', '') !== ($filter ?? '')) {
+        if ($attribute->getAttribute('type') === ColumnType::String->value && $attribute->getAttribute('format', '') !== ($filter ?? '')) {
             throw new Exception($this->getTypeInvalidException());
         }
 
@@ -565,14 +597,13 @@ abstract class Action extends DatabasesAction
                 }
 
                 if ($attribute->getAttribute('format') === APP_DATABASE_ATTRIBUTE_FLOAT_RANGE) {
-                    $validator = new Range($min, $max, Database::VAR_FLOAT);
+                    $validator = new Range($min, $max, ColumnType::Double->value);
 
                     if (!is_null($default)) {
                         $default = \floatval($default);
                     }
                 } else {
-                    // intRange and bigintRange share the same integer range semantics
-                    $validator = new Range($min, $max, Range::TYPE_INTEGER);
+                    $validator = new Range($min, $max, ColumnType::Integer->value);
                 }
 
                 if (!is_null($default) && !$validator->isValid($default)) {
@@ -610,7 +641,8 @@ abstract class Action extends DatabasesAction
                 break;
         }
 
-        if ($type === Database::VAR_RELATIONSHIP) {
+        if ($type === ColumnType::Relationship->value) {
+            $options = \array_filter($options, fn (mixed $option): bool => $option !== null);
             $primaryDocumentOptions = \array_merge($attribute->getAttribute('options', []), $options);
             $attribute->setAttribute('options', $primaryDocumentOptions);
             try {
@@ -618,7 +650,7 @@ abstract class Action extends DatabasesAction
                     collection: $collectionId,
                     id: $key,
                     newKey: $newKey,
-                    onDelete: $primaryDocumentOptions['onDelete'],
+                    onDelete: isset($options['onDelete']) ? ForeignKeyAction::from($options['onDelete']) : null,
                 );
             } catch (IndexException) {
                 throw new Exception(Exception::INDEX_INVALID);

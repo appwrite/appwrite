@@ -9,6 +9,7 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
+use Utopia\Query\Schema\IndexType;
 
 trait DatabasesBase
 {
@@ -966,7 +967,7 @@ trait DatabasesBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
             'key' => 'embedding_euclidean',
-            'type' => Database::INDEX_HNSW_EUCLIDEAN,
+            'type' => IndexType::HnswEuclidean->value,
             'attributes' => ['embeddings']
         ]);
         $this->assertEquals(202, $idxEuclidean['headers']['status-code']);
@@ -978,7 +979,7 @@ trait DatabasesBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
             'key' => 'embedding_dot',
-            'type' => Database::INDEX_HNSW_DOT,
+            'type' => IndexType::HnswDot->value,
             'attributes' => ['embeddings']
         ]);
         $this->assertEquals(202, $idxDot['headers']['status-code']);
@@ -990,7 +991,7 @@ trait DatabasesBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
             'key' => 'embedding_cosine',
-            'type' => Database::INDEX_HNSW_COSINE,
+            'type' => IndexType::HnswCosine->value,
             'attributes' => ['embeddings']
         ]);
         $this->assertEquals(202, $idxCosine['headers']['status-code']);
@@ -1028,9 +1029,9 @@ trait DatabasesBase
         $collectionId = $data['collectionId'];
 
         $keysToTypes = [
-            'embedding_euclidean' => Database::INDEX_HNSW_EUCLIDEAN,
-            'embedding_dot' => Database::INDEX_HNSW_DOT,
-            'embedding_cosine' => Database::INDEX_HNSW_COSINE,
+            'embedding_euclidean' => IndexType::HnswEuclidean->value,
+            'embedding_dot' => IndexType::HnswDot->value,
+            'embedding_cosine' => IndexType::HnswCosine->value,
         ];
 
         foreach ($keysToTypes as $key => $type) {

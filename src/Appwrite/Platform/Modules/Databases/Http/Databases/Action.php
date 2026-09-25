@@ -4,21 +4,50 @@ namespace Appwrite\Platform\Modules\Databases\Http\Databases;
 
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action as AppwriteAction;
+use Utopia\Database\Adapter;
+use Utopia\Database\Adapter\Feature\Relationships as FeatureRelationships;
+use Utopia\Database\Adapter\Feature\Spatial as FeatureSpatial;
+use Utopia\Database\Capability;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Operator;
 use Utopia\Database\Query;
+use Utopia\Query\Schema\ColumnType;
 
 class Action extends AppwriteAction
 {
     public const LIST_CACHE_FIELD_DOCUMENTS = 'documents';
     public const LIST_CACHE_FIELD_TOTAL = 'total';
+    public const string LIST_CACHE_FIELD_OPERATIONS = 'operations';
 
     private string $context = DATABASE_TYPE_LEGACY;
 
     public function getDatabaseType(): string
     {
         return $this->context;
+    }
+
+    /**
+     * Pool implements every Feature interface as a proxy, so instanceof is
+     * always true. Capability checks are delegated to the pooled adapter.
+     */
+    protected function supportsDefinedAttributes(Adapter $adapter): bool
+    {
+        return $adapter->supports(Capability::DefinedAttributes);
+    }
+
+    protected function supportsSpatial(Adapter $adapter): bool
+    {
+        return $adapter->hasFeature(FeatureSpatial::class);
+    }
+
+    /**
+     * Pool is a proxy and does not implement Feature interfaces, so instanceof
+     * is always false. Ask the inner adapter via hasFeature().
+     */
+    protected function supportsRelationships(Adapter $adapter): bool
+    {
+        return $adapter->hasFeature(FeatureRelationships::class);
     }
 
     /**
@@ -84,7 +113,7 @@ class Action extends AppwriteAction
     {
         $relationshipKeys = [];
         foreach ($collection->getAttribute('attributes', []) as $attribute) {
-            if ($attribute->getAttribute('type') === Database::VAR_RELATIONSHIP) {
+            if ($attribute->getAttribute('type') === ColumnType::Relationship->value) {
                 $relationshipKeys[$attribute->getAttribute('key')] = true;
             }
         }
@@ -172,7 +201,7 @@ class Action extends AppwriteAction
      * @param Document $collection Collection document (for schema hash)
      * @param array<mixed> $roles Caller authorization roles
      * @param array<Query|string> $queries Queries for this list call
-     * @param string $type LIST_CACHE_FIELD_DOCUMENTS or LIST_CACHE_FIELD_TOTAL
+     * @param string $type LIST_CACHE_FIELD_DOCUMENTS, LIST_CACHE_FIELD_TOTAL or LIST_CACHE_FIELD_OPERATIONS
      */
     protected function getListCacheField(Document $collection, array $roles, array $queries, string $type): string
     {

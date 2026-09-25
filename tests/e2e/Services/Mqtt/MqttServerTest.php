@@ -149,6 +149,61 @@ final class MqttServerTest extends Scope
         $subscriber->disconnect();
     }
 
+    public function testBlockedUserReconnectRejected(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        ['userId' => $userId, 'jwt' => $jwt] = $this->createUser();
+        $clientId = 'e2e-reblocked-' . $userId;
+
+        $subscriber = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
+        $this->assertSame(0, $subscriber->connect($projectId, $jwt, $clientId, cleanStart: true));
+        $subscriber->disconnect();
+
+        $status = $this->client->call(Client::METHOD_PATCH, '/users/' . $userId . '/status', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), ['status' => false]);
+        $this->assertSame(200, $status['headers']['status-code']);
+
+        $subscriber = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
+        $this->assertSame(
+            0x87,
+            $subscriber->connect($projectId, $jwt, $clientId, cleanStart: true),
+            'A user blocked after connecting must be refused at the next CONNECT'
+        );
+        $subscriber->disconnect();
+    }
+
+    public function testDeletedSessionReconnectRejected(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        ['userId' => $userId] = $this->createUser();
+        $clientId = 'e2e-resession-' . $userId;
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders());
+
+        $session = $this->client->call(Client::METHOD_POST, '/users/' . $userId . '/sessions', $headers);
+        $this->assertSame(201, $session['headers']['status-code']);
+        $credential = $session['body']['secret'];
+
+        $subscriber = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
+        $this->assertSame(0, $subscriber->connect($projectId, $credential, $clientId, cleanStart: true, authMethod: 'appwrite-session'));
+        $subscriber->disconnect();
+
+        $delete = $this->client->call(Client::METHOD_DELETE, '/users/' . $userId . '/sessions/' . $session['body']['$id'], $headers);
+        $this->assertSame(204, $delete['headers']['status-code']);
+
+        $subscriber = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
+        $this->assertSame(
+            0x87,
+            $subscriber->connect($projectId, $credential, $clientId, cleanStart: true, authMethod: 'appwrite-session'),
+            'A session deleted after connecting must be refused at the next CONNECT'
+        );
+        $subscriber->disconnect();
+    }
+
     public function testSubscribeToArbitraryTopicIsGranted(): void
     {
         $projectId = $this->getProject()['$id'];

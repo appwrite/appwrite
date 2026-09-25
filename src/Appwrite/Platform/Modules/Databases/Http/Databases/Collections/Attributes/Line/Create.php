@@ -18,6 +18,7 @@ use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\Spatial;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
+use Utopia\Query\Schema\ColumnType;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Nullable;
 
@@ -67,7 +68,7 @@ class Create extends Action
             ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).', false, ['dbForProject'])
             ->param('key', '', fn (Database $dbForProject) => new Key(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Attribute Key.', false, ['dbForProject'])
             ->param('required', null, new Boolean(), 'Is attribute required?')
-            ->param('default', null, new Nullable(new Spatial(Database::VAR_LINESTRING)), 'Default value for attribute when not provided, two-dimensional array of coordinate pairs, [[longitude, latitude], [longitude, latitude], …], listing the vertices of the line in order. Cannot be set when attribute is required.', true)
+            ->param('default', null, new Nullable(new Spatial(ColumnType::Linestring->value)), 'Default value for attribute when not provided, two-dimensional array of coordinate pairs, [[longitude, latitude], [longitude, latitude], …], listing the vertices of the line in order. Cannot be set when attribute is required.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('publisherForDatabase')
@@ -78,13 +79,13 @@ class Create extends Action
 
     public function action(string $databaseId, string $collectionId, string $key, ?bool $required, ?array $default, UtopiaResponse $response, Database $dbForProject, DatabasePublisher $publisherForDatabase, Event $queueForEvents, Authorization $authorization): void
     {
-        if (!$dbForProject->getAdapter()->getSupportForSpatialAttributes()) {
+        if (!$this->supportsSpatial($dbForProject->getAdapter())) {
             throw new Exception(Exception::GENERAL_FEATURE_UNSUPPORTED, 'Spatial columns are not supported by this database.');
         }
 
         $attribute = $this->createAttribute($databaseId, $collectionId, new Document([
             'key' => $key,
-            'type' => Database::VAR_LINESTRING,
+            'type' => ColumnType::Linestring->value,
             'required' => $required,
             'default' => $default
         ]), $response, $dbForProject, $publisherForDatabase, $queueForEvents, $authorization);

@@ -177,7 +177,11 @@ final class FunctionsClientTest extends Scope
         ], $this->getHeaders()), $gqlPayload);
 
         $this->assertIsArray($execution['body']['data']);
-        $this->assertArrayNotHasKey('errors', $execution['body']);
+        $this->assertArrayNotHasKey(
+            'errors',
+            $execution['body'],
+            \json_encode($execution['body']['errors'] ?? [], JSON_THROW_ON_ERROR)
+        );
 
         self::$cachedExecution[$key] = $execution['body']['data']['functionsCreateExecution'];
         return self::$cachedExecution[$key];

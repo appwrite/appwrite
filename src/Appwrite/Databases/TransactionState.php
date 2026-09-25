@@ -8,6 +8,7 @@ use Utopia\Database\Exception;
 use Utopia\Database\Exception\Timeout;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Query\Method;
 
 /**
  * Service for managing transaction state and providing transaction-aware document operations
@@ -559,7 +560,7 @@ class TransactionState
 
         $selections = [];
         foreach ($queries as $query) {
-            if ($query->getMethod() === Query::TYPE_SELECT) {
+            if ($query->getMethod() === Method::Select) {
                 $values = $query->getValues();
                 foreach ($values as $value) {
                     // Skip relationship selections (containing '.')
@@ -608,13 +609,13 @@ class TransactionState
         foreach ($queries as $query) {
             $method = $query->getMethod();
             if (!\in_array($method, [
-                Query::TYPE_LIMIT,
-                Query::TYPE_OFFSET,
-                Query::TYPE_CURSOR_AFTER,
-                Query::TYPE_CURSOR_BEFORE,
-                Query::TYPE_SELECT,
-                Query::TYPE_ORDER_ASC,
-                Query::TYPE_ORDER_DESC
+                Method::Limit,
+                Method::Offset,
+                Method::CursorAfter,
+                Method::CursorBefore,
+                Method::Select,
+                Method::OrderAsc,
+                Method::OrderDesc
             ])) {
                 $filters[] = $query;
             }
@@ -641,19 +642,19 @@ class TransactionState
             $docValue = $doc->getAttribute($attribute);
 
             switch ($filter->getMethod()) {
-                case Query::TYPE_EQUAL:
+                case Method::Equal:
                     if (!\in_array($docValue, $values)) {
                         return false;
                     }
                     break;
 
-                case Query::TYPE_NOT_EQUAL:
+                case Method::NotEqual:
                     if (\in_array($docValue, $values)) {
                         return false;
                     }
                     break;
 
-                case Query::TYPE_CONTAINS:
+                case Method::Contains:
                     $matches = false;
                     foreach ($values as $value) {
                         if (\is_array($docValue) && \in_array($value, $docValue)) {
@@ -666,7 +667,7 @@ class TransactionState
                     }
                     break;
 
-                case Query::TYPE_STARTS_WITH:
+                case Method::StartsWith:
                     $matches = false;
                     foreach ($values as $value) {
                         if (\is_string($docValue) && \str_starts_with($docValue, $value)) {
@@ -679,7 +680,7 @@ class TransactionState
                     }
                     break;
 
-                case Query::TYPE_ENDS_WITH:
+                case Method::EndsWith:
                     $matches = false;
                     foreach ($values as $value) {
                         if (\is_string($docValue) && \str_ends_with($docValue, $value)) {
@@ -692,43 +693,43 @@ class TransactionState
                     }
                     break;
 
-                case Query::TYPE_GREATER:
+                case Method::GreaterThan:
                     if (!($docValue > $values[0])) {
                         return false;
                     }
                     break;
 
-                case Query::TYPE_GREATER_EQUAL:
+                case Method::GreaterThanEqual:
                     if (!($docValue >= $values[0])) {
                         return false;
                     }
                     break;
 
-                case Query::TYPE_LESSER:
+                case Method::LessThan:
                     if (!($docValue < $values[0])) {
                         return false;
                     }
                     break;
 
-                case Query::TYPE_LESSER_EQUAL:
+                case Method::LessThanEqual:
                     if (!($docValue <= $values[0])) {
                         return false;
                     }
                     break;
 
-                case Query::TYPE_IS_NULL:
+                case Method::IsNull:
                     if (!\is_null($docValue)) {
                         return false;
                     }
                     break;
 
-                case Query::TYPE_IS_NOT_NULL:
+                case Method::IsNotNull:
                     if (\is_null($docValue)) {
                         return false;
                     }
                     break;
 
-                case Query::TYPE_BETWEEN:
+                case Method::Between:
                     if (!($docValue >= $values[0] && $docValue <= $values[1])) {
                         return false;
                     }

@@ -50,6 +50,7 @@
             <file>./tests/e2e/Services/Functions/FunctionsBase.php</file>
             <file>./tests/e2e/Services/Functions/FunctionsCustomServerTest.php</file>
             <file>./tests/e2e/Services/Functions/FunctionsCustomClientTest.php</file>
+            <file>./tests/e2e/Services/Functions/JobsTest.php</file>
         </testsuite>
         <testsuite name="mqtt">
             <directory>./tests/e2e/Services/Mqtt</directory>

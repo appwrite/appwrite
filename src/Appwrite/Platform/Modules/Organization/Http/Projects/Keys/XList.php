@@ -18,6 +18,7 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Query\Method as QueryMethod;
 use Utopia\Validator\Boolean;
 
 class XList extends Action
@@ -85,7 +86,7 @@ class XList extends Action
         }
 
         // Backwards compatibility
-        if (\count(Query::getByType($queries, [Query::TYPE_LIMIT])) === 0) {
+        if (\count(Query::getByType($queries, [QueryMethod::Limit])) === 0) {
             $queries[] = Query::limit(5000);
         }
 
@@ -115,7 +116,7 @@ class XList extends Action
             $cursor->setValue($cursorDocument);
         }
 
-        $filterQueries = Query::groupByType($queries)['filters'];
+        $filterQueries = Query::groupByType($queries)->filters;
 
         try {
             $keys = $authorization->skip(fn () => $dbForPlatform->find('keys', $queries));

@@ -11,14 +11,16 @@ use Tests\E2E\Services\Functions\FunctionsBase;
 use Tests\E2E\Services\Realtime\RealtimeBase;
 use Utopia\Command;
 use Utopia\Console;
-use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
+use Utopia\Database\RelationType;
 use Utopia\Migration\Resource;
 use Utopia\Migration\Sources\Appwrite;
+use Utopia\Query\Schema\ForeignKeyAction;
+use Utopia\Query\Schema\IndexType;
 use WebSocket\ConnectionException;
 use WebSocket\TimeoutException;
 
@@ -224,6 +226,44 @@ trait MigrationsBase
         $this->assertNotEmpty($response['body']);
 
         return $response['body'];
+    }
+
+    public function testRetryMigrationClaimsFailedRun(): void
+    {
+        $project = $this->getDestinationProject();
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $project['$id'],
+            'x-appwrite-key' => $project['apiKey'],
+        ];
+
+        $migration = $this->client->call(Client::METHOD_POST, '/migrations/appwrite', $headers, [
+            'resources' => [Resource::TYPE_USER],
+            'endpoint' => $this->webEndpoint,
+            'projectId' => ID::unique(),
+            'apiKey' => 'invalid',
+        ]);
+
+        $this->assertSame(202, $migration['headers']['status-code']);
+        $migrationId = $migration['body']['$id'];
+
+        $terminal = [];
+        $this->assertEventually(function () use ($headers, $migrationId, &$terminal): void {
+            $migration = $this->client->call(Client::METHOD_GET, '/migrations/' . $migrationId, $headers);
+
+            $this->assertSame(200, $migration['headers']['status-code']);
+            $this->assertSame('failed', $migration['body']['status']);
+            $this->assertSame('finished', $migration['body']['stage']);
+            $terminal = $migration['body'];
+        }, 60_000, 500);
+
+        $retry = $this->client->call(Client::METHOD_PATCH, '/migrations/' . $migrationId, $headers);
+
+        $this->assertSame(202, $retry['headers']['status-code']);
+        $this->assertSame($migrationId, $retry['body']['$id']);
+        $this->assertSame('pending', $retry['body']['status']);
+        $this->assertSame('finished', $retry['body']['stage']);
+        $this->assertNotSame($terminal['$updatedAt'], $retry['body']['$updatedAt']);
     }
 
     /**
@@ -563,6 +603,12 @@ trait MigrationsBase
         $this->assertEquals(1, $result['statusCounters'][Resource::TYPE_DATABASE]['success']);
         $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_DATABASE]['processing']);
         $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_DATABASE]['warning']);
+        $this->assertSame([[
+            'resource' => Resource::TYPE_DATABASE,
+            'id' => $databaseId,
+            'status' => Resource::STATUS_SUCCESS,
+            'message' => '',
+        ]], $result['resourceData']);
 
         $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId, [
             'content-type' => 'application/json',
@@ -1490,11 +1536,11 @@ trait MigrationsBase
         // Two-way: parents.kids ↔ children.parent. Required to hit the in-place path.
         $createRel = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/parents/columns/relationship', $sourceHeaders, [
             'relatedTableId' => 'children',
-            'type' => Database::RELATION_ONE_TO_MANY,
+            'type' => RelationType::OneToMany->value,
             'twoWay' => true,
             'key' => 'kids',
             'twoWayKey' => 'parent',
-            'onDelete' => Database::RELATION_MUTATE_CASCADE,
+            'onDelete' => ForeignKeyAction::Cascade->value,
         ]);
         $this->assertEquals(202, $createRel['headers']['status-code']);
 
@@ -1502,7 +1548,7 @@ trait MigrationsBase
             $r = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/parents/columns/kids', $sourceHeaders);
             $this->assertEquals(200, $r['headers']['status-code']);
             $this->assertEquals('available', $r['body']['status']);
-            $this->assertEquals(Database::RELATION_MUTATE_CASCADE, $r['body']['onDelete']);
+            $this->assertSame(ForeignKeyAction::Cascade->value, $r['body']['onDelete']);
         }, 10000, 500);
 
         $resources = [
@@ -1524,19 +1570,19 @@ trait MigrationsBase
             $parent = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/parents/columns/kids', $destHeaders);
             $this->assertEquals(200, $parent['headers']['status-code']);
             $this->assertEquals('available', $parent['body']['status']);
-            $this->assertEquals(Database::RELATION_MUTATE_CASCADE, $parent['body']['onDelete']);
+            $this->assertSame(ForeignKeyAction::Cascade->value, $parent['body']['onDelete']);
 
             $child = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/children/columns/parent', $destHeaders);
             $this->assertEquals(200, $child['headers']['status-code']);
             $this->assertEquals('available', $child['body']['status']);
-            $this->assertEquals(Database::RELATION_MUTATE_CASCADE, $child['body']['onDelete']);
+            $this->assertSame(ForeignKeyAction::Cascade->value, $child['body']['onDelete']);
         }, 10000, 500);
 
         sleep(1);
 
         // Legacy alias of PATCH /columns/relationship/:key, kept for shipped SDKs.
         $patch = $this->client->call(Client::METHOD_PATCH, '/tablesdb/' . $databaseId . '/tables/parents/columns/kids/relationship', $sourceHeaders, [
-            'onDelete' => Database::RELATION_MUTATE_RESTRICT,
+            'onDelete' => ForeignKeyAction::Restrict->value,
         ]);
         $this->assertEquals(200, $patch['headers']['status-code']);
 
@@ -1544,7 +1590,7 @@ trait MigrationsBase
             $r = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/parents/columns/kids', $sourceHeaders);
             $this->assertEquals(200, $r['headers']['status-code']);
             $this->assertEquals('available', $r['body']['status']);
-            $this->assertEquals(Database::RELATION_MUTATE_RESTRICT, $r['body']['onDelete']);
+            $this->assertSame(ForeignKeyAction::Restrict->value, $r['body']['onDelete']);
         }, 5000, 500);
 
         $overwriteResult = $this->performMigrationSync([
@@ -1563,14 +1609,14 @@ trait MigrationsBase
             $parent = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/parents/columns/kids', $destHeaders);
             $this->assertEquals(200, $parent['headers']['status-code']);
             $this->assertEquals('available', $parent['body']['status']);
-            $this->assertEquals(Database::RELATION_MUTATE_RESTRICT, $parent['body']['onDelete'], 'parent-side onDelete must reflect source');
-            $this->assertEquals(Database::RELATION_ONE_TO_MANY, $parent['body']['relationType'], 'In-place update must not change relationType');
+            $this->assertSame(ForeignKeyAction::Restrict->value, $parent['body']['onDelete'], 'parent-side onDelete must reflect source');
+            $this->assertSame(RelationType::OneToMany->value, $parent['body']['relationType'], 'In-place update must not change relationType');
             $this->assertTrue($parent['body']['twoWay'], 'In-place update must not change twoWay');
 
             $child = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/children/columns/parent', $destHeaders);
             $this->assertEquals(200, $child['headers']['status-code']);
             $this->assertEquals('available', $child['body']['status']);
-            $this->assertEquals(Database::RELATION_MUTATE_RESTRICT, $child['body']['onDelete'], 'partner-side onDelete must reflect source after in-place update');
+            $this->assertSame(ForeignKeyAction::Restrict->value, $child['body']['onDelete'], 'partner-side onDelete must reflect source after in-place update');
         }, 10000, 500);
 
         $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, $destHeaders);
@@ -1633,11 +1679,11 @@ trait MigrationsBase
 
         $createRel = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/parents/columns/relationship', $sourceHeaders, [
             'relatedTableId' => 'children',
-            'type' => Database::RELATION_ONE_TO_MANY,
+            'type' => RelationType::OneToMany->value,
             'twoWay' => true,
             'key' => 'kids',
             'twoWayKey' => 'parent',
-            'onDelete' => Database::RELATION_MUTATE_CASCADE,
+            'onDelete' => ForeignKeyAction::Cascade->value,
         ]);
         $this->assertEquals(202, $createRel['headers']['status-code']);
 
@@ -1688,11 +1734,11 @@ trait MigrationsBase
         sleep(1);
         $recreate = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/parents/columns/relationship', $sourceHeaders, [
             'relatedTableId' => 'children',
-            'type' => Database::RELATION_ONE_TO_MANY,
+            'type' => RelationType::OneToMany->value,
             'twoWay' => true,
             'key' => 'kids',
             'twoWayKey' => 'parent',
-            'onDelete' => Database::RELATION_MUTATE_CASCADE,
+            'onDelete' => ForeignKeyAction::Cascade->value,
         ]);
         $this->assertEquals(202, $recreate['headers']['status-code']);
 
@@ -1772,10 +1818,10 @@ trait MigrationsBase
 
         $createRel = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/parents/columns/relationship', $sourceHeaders, [
             'relatedTableId' => 'children',
-            'type' => Database::RELATION_ONE_TO_MANY,
+            'type' => RelationType::OneToMany->value,
             'twoWay' => false,
             'key' => 'kids',
-            'onDelete' => Database::RELATION_MUTATE_CASCADE,
+            'onDelete' => ForeignKeyAction::Cascade->value,
         ]);
         $this->assertEquals(202, $createRel['headers']['status-code']);
 
@@ -1803,20 +1849,20 @@ trait MigrationsBase
             $r = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/parents/columns/kids', $destHeaders);
             $this->assertEquals(200, $r['headers']['status-code']);
             $this->assertEquals('available', $r['body']['status']);
-            $this->assertEquals(Database::RELATION_MUTATE_CASCADE, $r['body']['onDelete']);
+            $this->assertSame(ForeignKeyAction::Cascade->value, $r['body']['onDelete']);
         }, 10000, 500);
 
         sleep(1);
 
         $patch = $this->client->call(Client::METHOD_PATCH, '/tablesdb/' . $databaseId . '/tables/parents/columns/kids/relationship', $sourceHeaders, [
-            'onDelete' => Database::RELATION_MUTATE_RESTRICT,
+            'onDelete' => ForeignKeyAction::Restrict->value,
         ]);
         $this->assertEquals(200, $patch['headers']['status-code']);
 
         $this->assertEventually(function () use ($databaseId, $sourceHeaders) {
             $r = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/parents/columns/kids', $sourceHeaders);
             $this->assertEquals('available', $r['body']['status']);
-            $this->assertEquals(Database::RELATION_MUTATE_RESTRICT, $r['body']['onDelete']);
+            $this->assertSame(ForeignKeyAction::Restrict->value, $r['body']['onDelete']);
         }, 5000, 500);
 
         $overwriteResult = $this->performMigrationSync([
@@ -1832,8 +1878,8 @@ trait MigrationsBase
             $r = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/parents/columns/kids', $destHeaders);
             $this->assertEquals(200, $r['headers']['status-code']);
             $this->assertEquals('available', $r['body']['status']);
-            $this->assertEquals(Database::RELATION_MUTATE_RESTRICT, $r['body']['onDelete'], 'one-way DropAndRecreate must propagate source onDelete');
-            $this->assertEquals(Database::RELATION_ONE_TO_MANY, $r['body']['relationType'], 'DropAndRecreate must preserve relationType');
+            $this->assertSame(ForeignKeyAction::Restrict->value, $r['body']['onDelete'], 'one-way DropAndRecreate must propagate source onDelete');
+            $this->assertSame(RelationType::OneToMany->value, $r['body']['relationType'], 'DropAndRecreate must preserve relationType');
             $this->assertFalse($r['body']['twoWay'], 'DropAndRecreate must preserve twoWay=false');
         }, 10000, 500);
 
@@ -4684,7 +4730,8 @@ trait MigrationsBase
         $this->assertNotEmpty($migration['body']['$id']);
         $migrationId = $migration['body']['$id'];
 
-        $this->assertEventually(function () use ($migrationId) {
+        $expectedDownloadUrl = '';
+        $this->assertEventually(function () use ($migrationId, &$expectedDownloadUrl) {
             $response = $this->client->call(Client::METHOD_GET, '/migrations/' . $migrationId, [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
@@ -4696,13 +4743,16 @@ trait MigrationsBase
             $this->assertEquals('completed', $response['body']['status']);
             $this->assertEquals('Appwrite', $response['body']['source']);
             $this->assertEquals('CSV', $response['body']['destination']);
+            $expectedDownloadUrl = $response['body']['options']['downloadUrl'] ?? '';
+            $this->assertNotEmpty($expectedDownloadUrl);
 
             return true;
         }, 30_000, 500);
 
         // Check that email was sent with download link
-        $lastEmail = $this->getLastEmail(probe: function ($email) {
+        $lastEmail = $this->getLastEmail(probe: function ($email) use ($expectedDownloadUrl) {
             $this->assertEquals('Your CSV export is ready', $email['subject']);
+            $this->assertStringContainsString($expectedDownloadUrl, html_entity_decode($email['html']));
         });
         $this->assertStringContainsStringIgnoringCase('Your data export has been completed successfully', $lastEmail['text']);
 
@@ -4710,6 +4760,7 @@ trait MigrationsBase
         \preg_match('/href="([^"]*\/storage\/buckets\/[^"]*\/push[^"]*)"/', $lastEmail['html'], $matches);
         $this->assertNotEmpty($matches[1], 'Download URL not found in email');
         $downloadUrl = html_entity_decode($matches[1]);
+        $this->assertSame($expectedDownloadUrl, $downloadUrl);
 
         // Parse the URL to extract components
         $components = \parse_url($downloadUrl);
@@ -6293,7 +6344,7 @@ trait MigrationsBase
             'x-appwrite-key' => $sourceProject['apiKey'],
         ], [
             'key' => $sqlIndexKey,
-            'type' => Database::INDEX_UNIQUE,
+            'type' => IndexType::Unique->value,
             'columns' => ['productName'],
         ]);
 
@@ -6360,7 +6411,7 @@ trait MigrationsBase
             'x-appwrite-key' => $sourceProject['apiKey'],
         ], [
             'key' => $documentsIndexKey,
-            'type' => Database::INDEX_UNIQUE,
+            'type' => IndexType::Unique->value,
             'attributes' => ['email'],
         ]);
 
@@ -6460,7 +6511,7 @@ trait MigrationsBase
             }
         }
         $this->assertNotNull($metadataIndex, 'Default metadata index should exist on source collection');
-        $this->assertEquals(Database::INDEX_OBJECT, $metadataIndex['type']);
+        $this->assertEquals(IndexType::Object->value, $metadataIndex['type']);
 
         $vectorEmbeddingIndexKey = 'embedding_euclidean';
         $vectorEmbeddingIndex = $this->client->call(Client::METHOD_POST, '/vectorsdb/' . $vectorDatabaseId . '/collections/' . $vectorCollectionId . '/indexes', [
@@ -6469,7 +6520,7 @@ trait MigrationsBase
             'x-appwrite-key' => $sourceProject['apiKey'],
         ], [
             'key' => $vectorEmbeddingIndexKey,
-            'type' => Database::INDEX_HNSW_EUCLIDEAN,
+            'type' => IndexType::HnswEuclidean->value,
             'attributes' => ['embeddings'],
         ]);
         $this->assertEquals(202, $vectorEmbeddingIndex['headers']['status-code']);
@@ -6482,7 +6533,7 @@ trait MigrationsBase
             ]);
 
             $this->assertEquals(200, $index['headers']['status-code']);
-            $this->assertEquals(Database::INDEX_HNSW_EUCLIDEAN, $index['body']['type']);
+            $this->assertEquals(IndexType::HnswEuclidean->value, $index['body']['type']);
             if (isset($index['body']['status'])) {
                 $this->assertEquals('available', $index['body']['status']);
             }
@@ -6714,7 +6765,7 @@ trait MigrationsBase
         ]);
         $this->assertEquals(200, $sqlIndexDestination['headers']['status-code']);
         $this->assertEquals($sqlIndexKey, $sqlIndexDestination['body']['key']);
-        $this->assertEquals(Database::INDEX_UNIQUE, $sqlIndexDestination['body']['type']);
+        $this->assertEquals(IndexType::Unique->value, $sqlIndexDestination['body']['type']);
         if (isset($sqlIndexDestination['body']['columns'])) {
             $this->assertEquals(['productName'], $sqlIndexDestination['body']['columns']);
         }
@@ -6760,7 +6811,7 @@ trait MigrationsBase
         ]);
         $this->assertEquals(200, $documentsIndexDestination['headers']['status-code']);
         $this->assertEquals($documentsIndexKey, $documentsIndexDestination['body']['key']);
-        $this->assertEquals(Database::INDEX_UNIQUE, $documentsIndexDestination['body']['type']);
+        $this->assertEquals(IndexType::Unique->value, $documentsIndexDestination['body']['type']);
         if (isset($documentsIndexDestination['body']['attributes'])) {
             $this->assertEquals(['email'], $documentsIndexDestination['body']['attributes']);
         }
@@ -6803,9 +6854,9 @@ trait MigrationsBase
             }
         }
         $this->assertArrayHasKey($metadataIndexKey, $indexByKey, 'Metadata index should exist on destination');
-        $this->assertEquals(Database::INDEX_OBJECT, $indexByKey[$metadataIndexKey]['type']);
+        $this->assertEquals(IndexType::Object->value, $indexByKey[$metadataIndexKey]['type']);
         $this->assertArrayHasKey($vectorEmbeddingIndexKey, $indexByKey, 'Embeddings HNSW index should exist on destination');
-        $this->assertEquals(Database::INDEX_HNSW_EUCLIDEAN, $indexByKey[$vectorEmbeddingIndexKey]['type']);
+        $this->assertEquals(IndexType::HnswEuclidean->value, $indexByKey[$vectorEmbeddingIndexKey]['type']);
 
         // Validate VectorsDB Document
         $response = $this->client->call(Client::METHOD_GET, '/vectorsdb/' . $vectorDatabaseId . '/collections/' . $vectorCollectionId . '/documents/' . $vectorDocumentId, [

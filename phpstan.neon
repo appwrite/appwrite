@@ -12,3 +12,9 @@ parameters:
     - vendor/swoole/ide-helper
   excludePaths:
     - tests/resources
+  ignoreErrors:
+    # Database\Query::parseQueries inherits the base @throws Utopia\Query\Exception
+    # annotation, but late static binding wraps that as Database\Exception\Query.
+    -
+      identifier: catch.neverThrown
+      message: '#Dead catch - Utopia.Database.Exception.Query is never thrown#'

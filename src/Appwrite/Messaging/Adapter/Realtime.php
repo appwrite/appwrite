@@ -11,6 +11,7 @@ use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
+use Utopia\Query\Method;
 
 class Realtime extends MessagingAdapter
 {
@@ -122,7 +123,7 @@ class Realtime extends MessagingAdapter
             }
             $data = [
                 'strings' => $strings,
-                'compiled' => RuntimeQuery::compile($queryGroup),
+                'compiled' => RuntimeQuery::prepare($queryGroup),
             ];
         }
 
@@ -208,6 +209,114 @@ class Realtime extends MessagingAdapter
         }
 
         return $subscriptions;
+    }
+
+    /**
+     * Rebuild a connection's subscriptions under a new role set.
+     *
+     * Roles are applied only after metadata is captured. If parse or
+     * subscribe throws after unsubscribe, previous subscriptions and
+     * roles are restored so the connection is never left empty.
+     *
+     * @param array<int, string> $roles
+     */
+    public function rebuildConnection(
+        mixed $connection,
+        string $projectId,
+        array $roles,
+        string $userId,
+    ): bool {
+        if (!isset($this->connections[$connection])) {
+            return false;
+        }
+
+        $authorization = $this->connections[$connection]['authorization'] ?? null;
+        $impersonatedUserId = $this->connections[$connection]['impersonatedUserId'] ?? null;
+        $previousUserId = $this->connections[$connection]['userId'] ?? '';
+        $previousRoles = $this->connections[$connection]['roles'] ?? [];
+        $meta = $this->getSubscriptionMetadata($connection);
+        $completed = false;
+
+        try {
+            $this->unsubscribe($connection);
+            $this->applySubscriptions(
+                $connection,
+                $projectId,
+                $meta,
+                $roles,
+                $previousUserId,
+                $userId,
+                fallbackQueries: false,
+            );
+            $completed = true;
+        } catch (\Throwable) {
+            $completed = false;
+        } finally {
+            if (!$completed) {
+                if (isset($this->connections[$connection])) {
+                    $this->unsubscribe($connection);
+                }
+                $this->applySubscriptions(
+                    $connection,
+                    $projectId,
+                    $meta,
+                    $previousRoles,
+                    $previousUserId,
+                    $previousUserId,
+                    fallbackQueries: true,
+                );
+            }
+
+            if ($authorization !== null && isset($this->connections[$connection])) {
+                $this->connections[$connection]['authorization'] = $authorization;
+                $this->connections[$connection]['impersonatedUserId'] = $impersonatedUserId;
+            }
+        }
+
+        return $completed;
+    }
+
+    /**
+     * @param array<string, array{channels: array<int, string>, queries: array<int, string>}> $meta
+     * @param array<int, string> $roles
+     */
+    private function applySubscriptions(
+        mixed $connection,
+        string $projectId,
+        array $meta,
+        array $roles,
+        string $previousUserId,
+        string $userId,
+        bool $fallbackQueries,
+    ): void {
+        foreach ($meta as $subscriptionId => $subscription) {
+            try {
+                $queries = Query::parseQueries($subscription['queries']);
+            } catch (\Throwable $error) {
+                if (!$fallbackQueries) {
+                    throw $error;
+                }
+                $queries = [];
+            }
+
+            $this->subscribe(
+                $projectId,
+                $connection,
+                $subscriptionId,
+                $roles,
+                self::rebindAccountChannels(
+                    $subscription['channels'],
+                    $previousUserId,
+                    $userId
+                ),
+                $queries,
+                $userId
+            );
+        }
+
+        if (!isset($this->connections[$connection])) {
+            $this->subscribe($projectId, $connection, '', $roles, [], [], $userId);
+        }
     }
 
     /**
@@ -774,7 +883,7 @@ class Realtime extends MessagingAdapter
     {
         $queries = Query::parseQueries($queries);
         $stack = $queries;
-        $allowed = implode(', ', RuntimeQuery::ALLOWED_QUERIES);
+        $allowed = implode(', ', array_map(fn (Method $m) => $m->value, RuntimeQuery::ALLOWED_QUERIES));
 
         while (!empty($stack)) {
             $query = array_pop($stack);
@@ -782,15 +891,15 @@ class Realtime extends MessagingAdapter
 
             if (! in_array($method, RuntimeQuery::ALLOWED_QUERIES, true)) {
                 throw new QueryException(
-                    "Query method '{$method}' is not supported in Realtime queries. Allowed: {$allowed}"
+                    "Query method '{$method->value}' is not supported in Realtime queries. Allowed: {$allowed}"
                 );
             }
 
-            if ($method === Query::TYPE_SELECT) {
+            if ($method === Method::Select) {
                 RuntimeQuery::validateSelectQuery($query);
             }
 
-            if (in_array($method, [Query::TYPE_AND, Query::TYPE_OR], true)) {
+            if (in_array($method, [Method::And, Method::Or], true)) {
                 \array_push($stack, ...$query->getValues());
             }
         }
