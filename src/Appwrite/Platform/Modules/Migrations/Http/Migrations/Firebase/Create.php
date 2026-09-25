@@ -54,7 +54,7 @@ class Create extends Action
                     )
                 ]
             ))
-            ->param('resources', [], new ArrayList(new WhiteList(Firebase::getSupportedResources())), 'List of resources to migrate', enum: new Enum(name: 'FirebaseMigrationResource'))
+            ->param('resources', [], new ArrayList(new WhiteList(Firebase::getSupportedResources())), 'List of resources to migrate', example: '["user"]', enum: new Enum(name: 'FirebaseMigrationResource'))
             ->param('serviceAccount', '', new Text(65536), 'JSON of the Firebase service account credentials')
             ->inject('response')
             ->inject('dbForProject')
