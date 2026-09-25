@@ -48,7 +48,10 @@
             "Utopia\\System\\": "packages/system/src",
             "Utopia\\Telemetry\\": "packages/telemetry/src",
             "Utopia\\UserAgent\\": "packages/user-agent/src",
-            "Utopia\\WebSocket\\": "packages/websocket/src"
+            "Utopia\\WebSocket\\": "packages/websocket/src",
+            "Utopia\\": [
+                "packages/validators/src"
+            ]
         }
     },
     "autoload-dev": {
@@ -78,6 +81,7 @@
             "Utopia\\System\\Tests\\": "packages/system/tests",
             "Utopia\\Telemetry\\Tests\\": "packages/telemetry/tests",
             "Utopia\\UserAgent\\Tests\\": "packages/user-agent/tests",
+            "Utopia\\Validator\\Tests\\": "packages/validators/tests",
             "Utopia\\WebSocket\\Tests\\": "packages/websocket/tests"
         }
     },
@@ -132,7 +136,6 @@
         "utopia-php/dns": "^3.0.7",
         "utopia-php/http": "^2.0@RC",
         "utopia-php/fetch": "^1.1",
-        "utopia-php/validators": "^1.0",
         "utopia-php/migration": "^2.0.0",
         "utopia-php/mqtt": "0.0.*",
         "utopia-php/platform": "1.0.0-rc25",
@@ -210,6 +213,7 @@
         "utopia-php/system": "*",
         "utopia-php/telemetry": "*",
         "utopia-php/user-agent": "*",
+        "utopia-php/validators": "*",
         "utopia-php/websocket": "*"
     }
 }

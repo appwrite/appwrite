@@ -60,7 +60,7 @@ class Create extends Action
                 ],
                 contentType: ContentType::NONE,
             ))
-            ->param('emails', [], new ArrayList(new Email(), 10), 'Array of emails to send test email to. Maximum of 10 emails are allowed.')
+            ->param('emails', [], new ArrayList(new Email(), 10), 'Array of emails to send test email to. Maximum of 10 emails are allowed.', example: '["recipient@example.com"]')
             ->param('senderName', '', new Text(256), 'Name of the email sender', optional: true, deprecated: true) // Backwards compatibility
             ->param('senderEmail', '', new Email(), 'Email of the sender', optional: true, deprecated: true) // Backwards compatibility
             ->param('replyTo', '', new Email(), 'Reply to email', optional: true, deprecated: true) // Backwards compatibility
