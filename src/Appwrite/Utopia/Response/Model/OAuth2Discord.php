@@ -25,6 +25,20 @@ class OAuth2Discord extends OAuth2Base
         return 'YmPXnM000000000000000000002zFg5D';
     }
 
+    public function __construct()
+    {
+        parent::__construct();
+
+        $this->addRule('prompt', [
+            'type' => self::TYPE_ENUM,
+            'description' => 'Discord OAuth2 prompt values.',
+            'default' => [],
+            'example' => ['none'],
+            'array' => true,
+            'enum' => ['none', 'consent'],
+        ]);
+    }
+
     /**
      * Get Name
      *

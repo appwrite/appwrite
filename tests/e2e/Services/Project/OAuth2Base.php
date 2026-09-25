@@ -22,6 +22,7 @@ trait OAuth2Base
             'oidc' => ['clientId' => '', 'clientSecret' => '', 'wellKnownURL' => '', 'authorizationURL' => '', 'tokenURL' => '', 'userInfoURL' => '', 'prompt' => [], 'enabled' => false],
             'okta' => ['clientId' => '', 'clientSecret' => '', 'domain' => '', 'authorizationServerId' => '', 'enabled' => false],
             'google' => ['clientId' => '', 'clientSecret' => '', 'prompt' => ['consent'], 'nativeClientIds' => [], 'enabled' => false, 'nativeEnabled' => false],
+            'discord' => ['clientId' => '', 'clientSecret' => '', 'prompt' => [], 'enabled' => false],
             'dropbox' => ['appKey' => '', 'appSecret' => '', 'enabled' => false],
         ];
 
@@ -479,6 +480,70 @@ trait OAuth2Base
         $this->assertSame(['select_account'], $update['body']['prompt']);
         $this->assertSame('', $update['body']['clientSecret']);
         $this->assertTrue($update['body']['enabled']);
+    }
+
+    public function testUpdateOAuth2DiscordPrompt(): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $update = $this->updateOAuth2('discord', [
+            'clientId' => '950722000000343754',
+            'clientSecret' => 'discord-secret',
+            'prompt' => ['none'],
+            'enabled' => true,
+        ]);
+
+        $this->assertSame(200, $update['headers']['status-code']);
+        $this->assertSame('discord', $update['body']['$id']);
+        $this->assertSame('950722000000343754', $update['body']['clientId']);
+        $this->assertSame(['none'], $update['body']['prompt']);
+        $this->assertSame('', $update['body']['clientSecret']);
+        $this->assertTrue($update['body']['enabled']);
+
+        $get = $this->getOAuth2Provider('discord');
+        $this->assertSame(200, $get['headers']['status-code']);
+        $this->assertSame(['none'], $get['body']['prompt']);
+
+        $login = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/discord', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], followRedirects: false);
+
+        $this->assertSame(301, $login['headers']['status-code']);
+        \parse_str((string) \parse_url($login['headers']['location'], PHP_URL_QUERY), $query);
+        $this->assertSame('none', $query['prompt'] ?? null);
+
+        $update = $this->updateOAuth2('discord', [
+            'prompt' => [],
+        ]);
+
+        $this->assertSame(200, $update['headers']['status-code']);
+        $this->assertSame([], $update['body']['prompt']);
+        $this->assertTrue($update['body']['enabled']);
+
+        $login = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/discord', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], followRedirects: false);
+
+        $this->assertSame(301, $login['headers']['status-code']);
+        \parse_str((string) \parse_url($login['headers']['location'], PHP_URL_QUERY), $query);
+        $this->assertArrayNotHasKey('prompt', $query);
+        $this->assertSame('950722000000343754', $query['client_id'] ?? null);
+
+        /**
+         * Test for FAILURE
+         */
+        $update = $this->updateOAuth2('discord', [
+            'prompt' => ['select_account'],
+        ]);
+
+        $this->assertSame(400, $update['headers']['status-code']);
+
+        $update = $this->updateOAuth2('discord', [
+            'prompt' => ['none', 'consent'],
+        ]);
+
+        $this->assertSame(400, $update['headers']['status-code']);
     }
 
     public function testUpdateOAuth2DropboxCustomFieldRoundTrip(): void
