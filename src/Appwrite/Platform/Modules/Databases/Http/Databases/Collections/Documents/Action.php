@@ -12,11 +12,7 @@ use Appwrite\Utopia\Database\Validator\CustomId;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
-use Utopia\Database\PermissionType;
-use Utopia\Database\Query;
-use Utopia\Database\RelationType;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Query\Schema\ColumnType;
 
@@ -365,87 +361,6 @@ abstract class Action extends DatabasesAction
     }
 
     /**
-     * @param array<Query> $queries
-     * @return array<Query>
-     */
-    protected function resolveJoinCollections(
-        array $queries,
-        Database $dbForProject,
-        Document $database,
-        Document $collection,
-        Authorization $authorization,
-        bool $privileged = false,
-    ): array {
-        $prefix = 'database_' . $database->getSequence() . '_collection_';
-        $relationships = $this->relationshipAttributes($collection);
-
-        foreach ($queries as $query) {
-            if (!$query->getMethod()->isJoin()) {
-                continue;
-            }
-
-            $externalId = $query->getAttribute();
-            if ($externalId !== '') {
-                // A name already in physical form is still caller-supplied: both entry points
-                // resolve freshly parsed queries exactly once, so nothing legitimately arrives
-                // pre-resolved. Passing it through skipped the enabled and permission checks
-                // below, which let a caller join a disabled collection by its sequence.
-                $related = $this->joinCollection($dbForProject, $database, $externalId, $prefix, $authorization);
-
-                if ($related->isEmpty() || (!$related->getAttribute('enabled', true) && !$privileged)) {
-                    throw new Exception($this->getParentNotFoundException(), params: [$externalId]);
-                }
-
-                if (!$privileged && !$this->isListable($related, $authorization)) {
-                    throw new Exception(Exception::USER_UNAUTHORIZED);
-                }
-
-                $query->setAttribute($prefix . $related->getSequence());
-            }
-
-            $this->resolveJoinColumns($query, $relationships);
-        }
-
-        return $queries;
-    }
-
-    private function isListable(Document $collection, Authorization $authorization): bool
-    {
-        return (bool) $collection->getAttribute('documentSecurity', false)
-            || $authorization->isValid(new Input(PermissionType::Read, $collection->getRead()));
-    }
-
-    private function joinCollection(
-        Database $dbForProject,
-        Document $database,
-        string $externalId,
-        string $prefix,
-        Authorization $authorization,
-    ): Document {
-        $registry = 'database_' . $database->getSequence();
-
-        if (!\str_starts_with($externalId, $prefix)) {
-            return $authorization->skip(
-                fn () => $dbForProject->getDocument($registry, $externalId)
-            );
-        }
-
-        $sequence = \substr($externalId, \strlen($prefix));
-        if ($sequence === '' || !\ctype_digit($sequence)) {
-            return new Document();
-        }
-
-        $found = $authorization->skip(
-            fn () => $dbForProject->find($registry, [
-                Query::equal('$sequence', [$sequence]),
-                Query::limit(1),
-            ])
-        );
-
-        return $found[0] ?? new Document();
-    }
-
-    /**
      * @return array<string, Document>
      */
     private function relationshipAttributes(Document $collection): array
@@ -462,34 +377,6 @@ abstract class Action extends DatabasesAction
         }
 
         return $relationships;
-    }
-
-    /**
-     * @param array<string, Document> $relationships
-     */
-    private function resolveJoinColumns(Query $query, array $relationships): void
-    {
-        $values = $query->getValues();
-        if (\count($values) < 3 || !\is_string($values[0]) || !isset($relationships[$values[0]])) {
-            return;
-        }
-
-        $relationship = $relationships[$values[0]];
-        $options = $relationship->getAttribute('options', []);
-        $relationType = $options['relationType'] ?? $relationship->getAttribute('relationType');
-        $twoWayKey = $options['twoWayKey'] ?? $relationship->getAttribute('twoWayKey');
-
-        if ($relationType !== RelationType::OneToMany->value) {
-            return;
-        }
-
-        if (!\is_string($twoWayKey) || $twoWayKey === '') {
-            return;
-        }
-
-        $values[0] = Document::ID;
-        $values[2] = $twoWayKey;
-        $query->setValues($values);
     }
 
     /**

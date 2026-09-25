@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents;
 
 use Appwrite\Databases\CursorLookup;
+use Appwrite\Databases\Joins;
 use Appwrite\Databases\Queries;
 use Appwrite\Databases\TransactionState;
 use Appwrite\Extend\Exception;
@@ -109,14 +110,13 @@ class XList extends Action
 
         $queries = Queries::parse($queries);
 
-        $queries = $this->resolveJoinCollections(
-            $queries,
+        $queries = (new Joins(
             $dbForProject,
             $database,
-            $collection,
             $authorization,
             $isAPIKey || $isPrivilegedUser,
-        );
+            $this->getParentNotFoundException(),
+        ))->resolve($queries, $collection);
 
         $dbForDatabases = $getDatabasesDB($database, $collection);
         $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
