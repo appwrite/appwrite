@@ -1064,6 +1064,24 @@ class Nats implements Synchronous, Consumer, Bounded
     }
 
     /**
+     * Upkeep for a consuming broker, called by the adapter's maintenance clock.
+     *
+     * Only the acknowledgement connection. The consume loop reads the receive
+     * connection on every fetch, but acks are the only traffic on the other one,
+     * so on a quiet queue it goes unread past the server's ping deadline and the
+     * next commit() fails after the work is done -- a guaranteed redelivery.
+     * Without this method the adapter skipped the broker entirely: it sweeps
+     * consumers through maintain(), and this broker only had tick().
+     */
+    public function maintain(): void
+    {
+        if ($this->commandsConnection instanceof NatsConnection && $this->commandsConnection !== $this->connection) {
+            $commands = $this->commandsConnection;
+            $this->command(fn() => $commands->tick());
+        }
+    }
+
+    /**
      * Keep this broker's connections alive while nothing is using them.
      *
      * NATS pings every 120s and closes after two go unanswered, and the client

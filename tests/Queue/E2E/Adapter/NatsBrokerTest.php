@@ -168,7 +168,74 @@ final class NatsBrokerTest extends TestCase
         }
     }
 
+    public function testMaintenanceKeepsTheAcknowledgementConnectionAnswering(): void
+    {
+        // Acks leave on their own connection, which carries nothing between them. On a
+        // quiet queue it goes unread past the server's ping deadline, the server closes
+        // it, and the next commit() fails after the work is done -- so the message is
+        // redelivered and runs twice. The adapter's maintenance clock calls maintain();
+        // it has to service that connection, and only that one: the receive connection
+        // belongs to the consume loop.
+        $url = getenv('NATS_URL') ?: 'nats://127.0.0.1:14225';
+        $wires = [];
+        $connections = 0;
+        $broker = new Nats(function () use ($url, &$wires, &$connections): Connection {
+            $index = ++$connections;
+            $wires[$index] = $log = new class {
+                public string $bytes = '';
+            };
+            $transport = new TcpTransport();
+            $recording = $this->createStub(Transport::class);
+            foreach (['connect', 'upgradeTls', 'isConnected', 'close'] as $method) {
+                $recording->method($method)->willReturnCallback($transport->$method(...));
+            }
+            $recording->method('write')->willReturnCallback(static function (string $data) use ($transport, $log): int {
+                $log->bytes .= 'out:' . $data;
+                return $transport->write($data);
+            });
+            $recording->method('read')->willReturnCallback(static function (int $max, ?float $timeout = null) use ($transport, $log): string {
+                $data = $transport->read($max, $timeout);
+                $log->bytes .= 'in:' . $data;
+                return $data;
+            });
+            $recording->method('readLine')->willReturnCallback(static function (?float $timeout = null) use ($transport, $log): string {
+                $data = $transport->readLine($timeout);
+                $log->bytes .= 'in:' . $data;
+                return $data;
+            });
 
+            return Connection::connect(new ConnectionOptions(
+                servers: $url,
+                pingInterval: 0.05,
+                transportFactory: fn(): Transport => $recording,
+            ));
+        });
+
+        try {
+            $broker->publish($this->queue, ['task' => 'first']);
+            $broker->publish($this->queue, ['task' => 'second']);
+            $first = $broker->receive($this->queue, 2)[0] ?? null;
+            $this->assertInstanceOf(Message::class, $first);
+            $broker->commit($this->queue, $first);
+            $this->assertSame(2, $connections, 'receive and acknowledgement connections');
+
+            usleep(100_000); // past the client's ping interval
+            $before = array_map(static fn(object $log): int => \strlen($log->bytes), $wires);
+            $broker->maintain();
+
+            $since = static fn(int $index): string => substr($wires[$index]->bytes, $before[$index]);
+            $this->assertStringContainsString("out:PING\r\n", $since(2), 'maintenance pings the acknowledgement connection');
+            $this->assertStringContainsString('in:PONG', $since(2), 'and reads the answer');
+            $this->assertSame('', $since(1), 'the receive connection is left to the consume loop');
+
+            $second = $broker->receive($this->queue, 2)[0] ?? null;
+            $this->assertInstanceOf(Message::class, $second);
+            $broker->commit($this->queue, $second);
+            $this->assertSame(0, $broker->getQueueSize($this->queue));
+        } finally {
+            $broker->close();
+        }
+    }
 
     public function testRejectRedeliversAndCountsAttempts(): void
     {

@@ -154,6 +154,8 @@ reading of the same socket in coroutine#3 at the same time is not allowed
 | receive | fetch, provisioning, the dead-letter advisory, publishing | the consume loop |
 | commands | `commit()`, `reject()`, `extend()`, `getQueueSize()` | the handler and telemetry coroutines |
 
+The consume loop keeps the receive connection read on every fetch. The commands connection carries nothing between acknowledgments, so the adapter's maintenance clock calls `maintain()` to keep it answering the server's pings. Without that, a queue quiet for longer than the server's ping deadline loses the connection, and the next `commit()` fails after the work is done.
+
 A JetStream acknowledgment is a message published to the delivery's reply subject, so it does not have to leave on the connection that fetched the message. Rebinding it moves the whole per-message acknowledgment path off the receive socket, so an acknowledgment raised while the loop is parked in a fetch is a round trip rather than a wait. Each connection has one lock and the two are never nested, so they cannot deadlock.
 
 So `job('…', N)` above one is safe on NATS, and handlers scale without the socket becoming the serialisation point. Drain rate over 1 → 8 coroutines, measured with `benchmarks/coroutines.php` against a NATS 2.12 cluster and Redis on one host, median of five runs:
