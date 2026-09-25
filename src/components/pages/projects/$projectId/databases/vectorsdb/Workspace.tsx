@@ -1445,12 +1445,16 @@ export function Workspace({
             )
           ) : (
             <div className="flex min-w-0 items-center gap-2">
-              <span className="truncate">{selectedTable!.name}</span>
-              <CopyableId
-                id={selectedTable!.$id}
-                size="xs"
-                className="shrink-0"
-              />
+              <span className="truncate">
+                {selectedTable?.name ?? t('Loading...')}
+              </span>
+              {selectedTable ? (
+                <CopyableId
+                  id={selectedTable.$id}
+                  size="xs"
+                  className="shrink-0"
+                />
+              ) : null}
             </div>
           )
         }
@@ -1893,12 +1897,12 @@ export function Workspace({
                 }}
               />
             ) : null}
-            {activeTab === 'security' && (
-              <TableSecurity table={selectedTable!} />
-            )}
-            {activeTab === 'settings' && (
-              <TableSettings table={selectedTable!} />
-            )}
+            {activeTab === 'security' && selectedTable ? (
+              <TableSecurity table={selectedTable} />
+            ) : null}
+            {activeTab === 'settings' && selectedTable ? (
+              <TableSettings table={selectedTable} />
+            ) : null}
           </>
         )}
       </div>

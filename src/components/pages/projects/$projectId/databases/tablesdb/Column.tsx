@@ -243,12 +243,13 @@ export function ColumnDrawer({
   const relatedTableFromList = relationshipTables.find(
     (table) => table.$id === formData.relatedTableId,
   )
-  // A target picked from search, or an existing relationship's, can be past the first page.
+  // Looked up as soon as it is picked, so its name is cached before a search
+  // result or the first page stops including it.
   const { table: relatedTableLookup } = useProjectTable(
     projectId,
     databaseId,
     'tablesdb',
-    relatedTableFromList ? null : formData.relatedTableId,
+    formData.relatedTableId,
   )
   const relatedTable = relatedTableFromList ?? relatedTableLookup
 

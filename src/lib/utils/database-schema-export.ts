@@ -5,7 +5,6 @@
  */
 
 import { DatabaseType } from '@/lib/databases/database-type'
-import { sdk } from '@/lib/appwrite/sdk'
 import { isHtmlDarkChrome } from '@/lib/html-theme'
 import type { DatabaseRouteKind } from '@/lib/database-routes'
 import {
@@ -150,7 +149,8 @@ export async function fetchDatabaseSchema(
         (idx: Record<string, unknown>) => ({
           key: String(idx.key ?? idx.$id ?? ''),
           type: String(idx.type || 'key'),
-          attributes: (idx.attributes as string[] | undefined) || [],
+          attributes:
+            ((idx.columns ?? idx.attributes) as string[] | undefined) || [],
           orders: (idx.orders as string[] | undefined) || undefined,
         }),
       )

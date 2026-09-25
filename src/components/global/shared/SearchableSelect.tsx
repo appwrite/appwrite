@@ -320,6 +320,7 @@ export function SearchableSelect({
                     onSelect={() => {
                       onValueChange(item.value)
                       setOpen(false)
+                      onSearchChange?.('')
                     }}
                   >
                     <SearchableSelectItemContent item={item} />
@@ -346,6 +347,7 @@ export function SearchableSelect({
                   onClick={() => {
                     onValueChange(item.value)
                     setOpen(false)
+                    onSearchChange?.('')
                   }}
                 >
                   <SearchableSelectItemContent item={item} />

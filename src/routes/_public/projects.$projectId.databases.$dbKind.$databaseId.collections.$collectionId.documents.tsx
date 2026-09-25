@@ -119,17 +119,7 @@ export const Route = createFileRoute(
     }
 
     if (collectionId) {
-      // Check if table exists and if there are any tables
       const tablesData = await tablesPromise
-
-      // If no tables exist, redirect to tables/-/rows (database main view)
-      if (!tablesData.tables || tablesData.tables.length === 0) {
-        throw redirect({
-          to: '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/documents',
-          params: { projectId, dbKind, databaseId, collectionId: '-' },
-          replace: true,
-        })
-      }
 
       // The list only holds the first page of collections, so a collection past it is
       // looked up by id. Only a 404 means it is gone: redirecting on any other
@@ -139,20 +129,25 @@ export const Route = createFileRoute(
       )
       if (!tableExists) {
         try {
-          queryClient.setQueryData(
-            tableQueryOptions(
-              projectId,
-              databaseId,
-              dbKind as DatabaseRouteKind,
-              collectionId,
-            ).queryKey,
-            await getProjectTable(
+          // fetchQuery keeps the query's gcTime (setQueryData would use the
+          // client's 0 and drop it before the page mounts); staleTime 0 so a
+          // table deleted earlier in the session is not served from cache.
+          await queryClient.fetchQuery({
+            ...tableQueryOptions(
               projectId,
               databaseId,
               dbKind as DatabaseRouteKind,
               collectionId,
             ),
-          )
+            queryFn: () =>
+              getProjectTable(
+                projectId,
+                databaseId,
+                dbKind as DatabaseRouteKind,
+                collectionId,
+              ),
+            staleTime: 0,
+          })
           tableExists = true
         } catch (error) {
           if (!isHttpNotFoundError(error)) throw error
