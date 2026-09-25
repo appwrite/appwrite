@@ -1,0 +1,229 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Parameter \#1 \$string of function strlen expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Validator/Assoc.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 2
+			path: src/Validator/Contains.php
+
+		-
+			message: '#^Method Utopia\\Validator\\Contains\:\:__construct\(\) has parameter \$patterns with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Validator/Contains.php
+
+		-
+			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, array given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Validator/Contains.php
+
+		-
+			message: '#^Property Utopia\\Validator\\Contains\:\:\$patterns type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Validator/Contains.php
+
+		-
+			message: '#^Argument of an invalid type mixed supplied for foreach, only iterables are supported\.$#'
+			identifier: foreach.nonIterable
+			count: 1
+			path: src/Validator/Domain.php
+
+		-
+			message: '#^Binary operation "\+" between mixed and 1 results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: src/Validator/Domain.php
+
+		-
+			message: '#^Cannot access offset ''hostname'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Validator/Domain.php
+
+		-
+			message: '#^Cannot access offset ''levels'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Validator/Domain.php
+
+		-
+			message: '#^Cannot access offset ''prefixDenyList'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Validator/Domain.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 2
+			path: src/Validator/Domain.php
+
+		-
+			message: '#^Method Utopia\\Validator\\Domain\:\:createRestriction\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Validator/Domain.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 8
+			path: src/Validator/Globstar.php
+
+		-
+			message: '#^Method Utopia\\Validator\\Globstar\:\:__construct\(\) has parameter \$patterns with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Validator/Globstar.php
+
+		-
+			message: '#^Parameter \#2 \$pattern of method Utopia\\Validator\\Globstar\:\:match\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Validator/Globstar.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 1
+			path: src/Validator/Host.php
+
+		-
+			message: '#^Method Utopia\\Validator\\Host\:\:__construct\(\) has parameter \$whitelist with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Validator/Host.php
+
+		-
+			message: '#^Parameter \#1 \$allowList of class Utopia\\Validator\\Hostname constructor expects array\<string\>, array given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Validator/Host.php
+
+		-
+			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, array given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Validator/Host.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 1
+			path: src/Validator/Identifier.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 2
+			path: src/Validator/JSON/FCM.php
+
+		-
+			message: '#^Parameter \#1 \$value of method Utopia\\Validator\\JSON\\FCM\:\:isHttpsUrl\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Validator/JSON/FCM.php
+
+		-
+			message: '#^Method Utopia\\Validator\\Multiple\:\:__construct\(\) has parameter \$rules with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Validator/Multiple.php
+
+		-
+			message: '#^Method Utopia\\Validator\\Multiple\:\:getType\(\) should return string but returns string\|null\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Validator/Multiple.php
+
+		-
+			message: '#^Parameter \#1 \$rule of method Utopia\\Validator\\Multiple\:\:addRule\(\) expects Utopia\\Validator, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Validator/Multiple.php
+
+		-
+			message: '#^Binary operation "\+\=" between mixed and 0 results in an error\.$#'
+			identifier: assignOp.invalid
+			count: 1
+			path: src/Validator/Range.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 4
+			path: src/Validator/URL.php
+
+		-
+			message: '#^Method Utopia\\Validator\\URL\:\:__construct\(\) has parameter \$allowedSchemes with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Validator/URL.php
+
+		-
+			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, array given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Validator/URL.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 2
+			path: src/Validator/WhiteList.php
+
+		-
+			message: '#^Method Utopia\\Validator\\WhiteList\:\:__construct\(\) has parameter \$list with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Validator/WhiteList.php
+
+		-
+			message: '#^Method Utopia\\Validator\\WhiteList\:\:getList\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Validator/WhiteList.php
+
+		-
+			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, array given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Validator/WhiteList.php
+
+		-
+			message: '#^Cannot call method getType\(\) on Utopia\\Validator\\Assoc\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: tests/AssocTest.php
+
+		-
+			message: '#^Cannot call method isArray\(\) on Utopia\\Validator\\Assoc\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: tests/AssocTest.php
+
+		-
+			message: '#^Cannot call method isValid\(\) on Utopia\\Validator\\Assoc\|null\.$#'
+			identifier: method.nonObject
+			count: 9
+			path: tests/AssocTest.php
+
+		-
+			message: '#^Cannot call method getDescription\(\) on Utopia\\Validator\\URL\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: tests/URLTest.php
+
+		-
+			message: '#^Cannot call method isValid\(\) on Utopia\\Validator\\URL\|null\.$#'
+			identifier: method.nonObject
+			count: 15
+			path: tests/URLTest.php

@@ -20,6 +20,14 @@ const HOISTED = ['laravel/pint', 'phpstan/phpstan', 'rector/rector', 'phpunit/ph
 const BANNED = ['pint.json', 'psalm.xml', 'phpcs.xml', '.travis.yml', '.gitpod.yml', '.coderabbit.yaml'];
 
 /**
+ * Packages that still declare the bare `Utopia\` prefix because a class lives
+ * at its root (`Utopia\Validator`), mapped to the namespace segment the rest
+ * of their classes and their tests use. Step B (rfc/monorepo.md, phase 6)
+ * renames those classes and removes the package from this list.
+ */
+const BARE = ['validators' => 'Validator'];
+
+/**
  * Dockerfiles a package's docker-compose.yml builds from. Those belong to the
  * e2e tier and stay; every other Dockerfile is CI tooling the root replaces.
  */
@@ -245,7 +253,8 @@ function manifest(string $package): ?array
 
 /**
  * The namespace segment a package's manifest declares (`Utopia\<Ns>\` => src),
- * or null when the main autoload does not have the standard shape.
+ * or null when the main autoload does not have the standard shape. A package
+ * in BARE declares `Utopia\` instead and takes its segment from that list.
  */
 function namespace_of(?array $manifest): ?string
 {
@@ -254,12 +263,71 @@ function namespace_of(?array $manifest): ?string
         return null;
     }
     $prefix = array_key_first($psr4);
+    if ($prefix === 'Utopia\\') {
+        return BARE[substr($manifest['name'] ?? '', strlen(ORG) + 1)] ?? null;
+    }
     $segments = explode('\\', $prefix);
     if (count($segments) !== 3 || $segments[0] !== 'Utopia' || $segments[1] === '' || $segments[2] !== '') {
         return null;
     }
 
     return $segments[1];
+}
+
+/**
+ * Classes under packages/ that more than one PSR-4 directory can load, mapped
+ * to every file that declares them. Composer probes a shared prefix's
+ * directories in order and stops at the first hit, so a duplicate silently
+ * shadows the other copy. Checked against the root map and, once installed,
+ * every vendored package (which is where the bare `Utopia\` prefix is shared).
+ */
+function duplicate_classes(array $root): array
+{
+    $mappings = [];
+    foreach (['autoload', 'autoload-dev'] as $section) {
+        foreach ($root[$section]['psr-4'] ?? [] as $prefix => $paths) {
+            foreach ((array) $paths as $path) {
+                $mappings[] = [$prefix, rtrim($path, '/')];
+            }
+        }
+    }
+    $installed = is_file('vendor/composer/installed.json') ? json_decode(file_get_contents('vendor/composer/installed.json'), true) : [];
+    foreach ($installed['packages'] ?? [] as $dependency) {
+        // install-path is relative to vendor/composer/
+        $path = $dependency['install-path'] ?? '../' . $dependency['name'];
+        $base = str_starts_with($path, '../') ? 'vendor/' . substr($path, 3) : "vendor/composer/{$path}";
+        foreach ($dependency['autoload']['psr-4'] ?? [] as $prefix => $paths) {
+            foreach ((array) $paths as $path) {
+                $mappings[] = [$prefix, rtrim("{$base}/{$path}", '/')];
+            }
+        }
+    }
+
+    $duplicates = [];
+    foreach ($mappings as [$prefix, $path]) {
+        if (!str_starts_with($path, 'packages/') || !is_dir($path)) {
+            continue;
+        }
+        $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($path, FilesystemIterator::SKIP_DOTS));
+        foreach ($files as $file) {
+            if ($file->getExtension() !== 'php') {
+                continue;
+            }
+            $class = $prefix . str_replace('/', '\\', substr($file->getPathname(), strlen($path) + 1, -4));
+            $locations = [];
+            foreach ($mappings as [$other, $directory]) {
+                $candidate = $directory . '/' . str_replace('\\', '/', substr($class, strlen($other))) . '.php';
+                if (str_starts_with($class, $other) && is_file($candidate)) {
+                    $locations[] = $candidate;
+                }
+            }
+            if (count($locations) > 1) {
+                $duplicates[$class] = $locations;
+            }
+        }
+    }
+
+    return $duplicates;
 }
 
 /**
@@ -274,14 +342,23 @@ function root_manifest(): string
         $map = $root->{$section}->{'psr-4'};
         $entries = [];
         foreach ($map as $prefix => $path) {
-            if (!is_string($path) || !str_starts_with($path, 'packages/')) {
-                $entries[$prefix] = $path;
+            $kept = array_values(array_filter((array) $path, fn (string $entry) => !str_starts_with($entry, 'packages/')));
+            if ($kept !== []) {
+                $entries[$prefix] = is_array($path) ? $kept : $kept[0];
             }
         }
         foreach (packages() as $package) {
-            $namespace = namespace_of(manifest($package));
-            if ($namespace !== null) {
-                $entries["Utopia\\{$namespace}\\{$suffix}"] = "packages/{$package}/{$directory}";
+            $manifest = manifest($package);
+            $namespace = namespace_of($manifest);
+            if ($namespace === null) {
+                continue;
+            }
+            $prefix = $suffix === '' ? array_key_first($manifest['autoload']['psr-4']) : "Utopia\\{$namespace}\\{$suffix}";
+            if ($prefix === 'Utopia\\') {
+                // several packages share the bare prefix, so it maps to a list
+                $entries[$prefix] = [...(array) ($entries[$prefix] ?? []), "packages/{$package}/{$directory}"];
+            } else {
+                $entries[$prefix] = "packages/{$package}/{$directory}";
             }
         }
         // the shared bare prefix probes its directory list last
@@ -688,19 +765,26 @@ switch ($command) {
 
                 // One prefix per package, Utopia\<Ns>\ => src/, with <Ns>
                 // spelling the package name (CircuitBreaker <-> circuit-breaker).
+                // A package in BARE declares Utopia\ => src/ until step B,
+                // and its tests use the segment BARE names.
                 $namespace = namespace_of($manifest);
-                if ($namespace === null || strtolower($namespace) !== str_replace('-', '', $package)) {
+                $bare = $namespace !== null && array_key_first($manifest['autoload']['psr-4']) === 'Utopia\\';
+                if ($namespace === null || (!$bare && strtolower($namespace) !== str_replace('-', '', $package))) {
                     $problems[] = 'autoload must declare exactly one PSR-4 prefix, Utopia\<Ns>\ with <Ns> spelling the package name';
                 } else {
                     $prefix = "Utopia\\{$namespace}\\";
-                    if (rtrim($manifest['autoload']['psr-4'][$prefix], '/') !== 'src') {
-                        $problems[] = "autoload must map {$prefix} to src/";
+                    $main = $bare ? 'Utopia\\' : $prefix;
+                    if (rtrim($manifest['autoload']['psr-4'][$main], '/') !== 'src') {
+                        $problems[] = "autoload must map {$main} to src/";
                     }
                     $dev = $manifest['autoload-dev']['psr-4'] ?? [];
                     if (array_keys($dev) !== ["{$prefix}Tests\\"] || rtrim($dev["{$prefix}Tests\\"], '/') !== 'tests') {
                         $problems[] = "autoload-dev must declare exactly {$prefix}Tests\\ mapped to tests/";
                     }
-                    if (($root['autoload']['psr-4'][$prefix] ?? null) !== "packages/{$package}/src"
+                    $registered = $bare
+                        ? in_array("packages/{$package}/src", (array) ($root['autoload']['psr-4'][$main] ?? []), true)
+                        : ($root['autoload']['psr-4'][$main] ?? null) === "packages/{$package}/src";
+                    if (!$registered
                         || ($root['autoload-dev']['psr-4']["{$prefix}Tests\\"] ?? null) !== "packages/{$package}/tests") {
                         $problems[] = 'root composer.json autoload is stale, run `bin/monorepo autoload`';
                     }
@@ -766,6 +850,10 @@ switch ($command) {
                 out("packages/{$package}: {$problem}");
                 $failures++;
             }
+        }
+        foreach (duplicate_classes($root) as $class => $locations) {
+            out("{$class}: loadable from more than one directory (" . implode(', ', $locations) . ')');
+            $failures++;
         }
         if (file_get_contents('composer.json') !== root_manifest()) {
             out('composer.json: package autoload entries are stale, run `bin/monorepo autoload`');

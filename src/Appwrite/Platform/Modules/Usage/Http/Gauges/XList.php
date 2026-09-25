@@ -105,7 +105,7 @@ class XList extends Action
                 // Preview SDK builds show the whole surface, so they do not hide.
                 hide: System::getEnv('_APP_SDK_PREVIEW', 'disabled') === 'enabled' ? false : ['server'],
             ))
-            ->param('metrics', [], new ArrayList(new Text(255), 10), 'One to ten metric names. Single-metric callers pass a one-element array.', false)
+            ->param('metrics', [], new ArrayList(new Text(255), 10), 'One to ten metric names. Single-metric callers pass a one-element array.', false, example: '["files.storage"]')
             ->param('queries', [], new ArrayList(new Text(4096), 10), 'Up to 10 filter queries in Utopia syntax. Allowed attributes, also published as the `UsageGaugeDimension` enum: ' . implode(', ', static::VALID_FILTER_ATTRIBUTES) . '. Allowed methods: equal, notEqual, isNull, isNotNull. Example: `queries[]=equal("resourceType", ["bucket"])`.', true)
             ->param('interval', null, new Nullable(new WhiteList(static::VALID_INTERVALS)), 'Time interval size. Omit (null) for a flat aggregate over the whole window. Allowed: ' . implode(', ', static::VALID_INTERVALS) . '.', true, enum: new Enum(
                 name: 'UsageInterval',
