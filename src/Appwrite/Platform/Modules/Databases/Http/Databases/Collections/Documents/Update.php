@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents;
 
+use Appwrite\Databases\RelationshipValues;
 use Appwrite\Databases\TransactionState;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
@@ -174,7 +175,7 @@ class Update extends Action
 
         $data['$id'] = $documentId;
         $data['$permissions'] = $permissions;
-        $data = $this->prepareRelationships($data, $collection, $database, $dbForProject, $authorization);
+        $data = (new RelationshipValues($dbForProject, $database, $authorization))->prepare($data, $collection);
         $data = $this->removeReadonlyAttributes($data, $isAPIKey || $isPrivilegedUser);
         $this->validateTimestamps($data);
         $newDocument = new Document($data);

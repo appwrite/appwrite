@@ -8,10 +8,8 @@ use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Functions\EventProcessor;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Action as DatabasesAction;
-use Appwrite\Utopia\Database\Validator\CustomId;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Query\Schema\ColumnType;
@@ -377,85 +375,6 @@ abstract class Action extends DatabasesAction
         }
 
         return $relationships;
-    }
-
-    /**
-     * Validate relationship values.
-     * Handles Document objects, ID strings, and associative arrays.
-     */
-    protected function validateRelationship(mixed $relation): void
-    {
-        $relationId = null;
-
-        if ($relation instanceof Document) {
-            $relationId = $relation->getId();
-        } elseif (\is_string($relation)) {
-            $relationId = $relation;
-        } elseif (\is_array($relation) && !\array_is_list($relation)) {
-            $relationId = $relation['$id'] ?? null;
-        } else {
-            throw new Exception(Exception::RELATIONSHIP_VALUE_INVALID, 'Relationship value must be an object, document ID string, or associative array');
-        }
-
-        if ($relationId !== null) {
-            if (!\is_string($relationId)) {
-                throw new Exception(Exception::RELATIONSHIP_VALUE_INVALID, 'Relationship $id must be a string');
-            }
-            $validator = new CustomId();
-            if (!$validator->isValid($relationId)) {
-                throw new Exception(Exception::RELATIONSHIP_VALUE_INVALID, $validator->getDescription());
-            }
-        }
-    }
-
-    /**
-     * Validate every relationship value of a document payload and give each nested related document that
-     * has no ID, or asks for one with the `unique()` placeholder, a generated ID, at any depth.
-     *
-     * @param array<string, mixed> $document
-     * @return array<string, mixed>
-     */
-    protected function prepareRelationships(
-        array $document,
-        Document $collection,
-        Document $database,
-        Database $dbForProject,
-        Authorization $authorization,
-    ): array {
-        foreach ($this->relationshipAttributes($collection) as $key => $relationship) {
-            $value = $document[$key] ?? null;
-            if (empty($value)) {
-                continue;
-            }
-
-            $isList = \is_array($value) && \array_is_list($value);
-            $relations = $isList ? $value : [$value];
-            $relatedCollection = null;
-
-            foreach ($relations as $index => $relation) {
-                $isDocument = \is_array($relation) && !\array_is_list($relation);
-
-                if ($isDocument && ($relation['$id'] ?? self::UNIQUE_ID) === self::UNIQUE_ID) {
-                    $relation['$id'] = ID::unique();
-                }
-
-                $this->validateRelationship($relation);
-
-                if ($isDocument) {
-                    $relatedCollection ??= $authorization->skip(fn () => $dbForProject->getDocument(
-                        'database_' . $database->getSequence(),
-                        (string) $relationship->getAttribute('relatedCollection', '')
-                    ));
-                    $relation = $this->prepareRelationships($relation, $relatedCollection, $database, $dbForProject, $authorization);
-                }
-
-                $relations[$index] = $relation;
-            }
-
-            $document[$key] = $isList ? $relations : $relations[0];
-        }
-
-        return $document;
     }
 
     /**

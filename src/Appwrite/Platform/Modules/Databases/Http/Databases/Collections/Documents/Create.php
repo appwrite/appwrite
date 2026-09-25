@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents;
 
+use Appwrite\Databases\RelationshipValues;
 use Appwrite\Event\Event;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Extend\Exception;
@@ -289,7 +290,9 @@ class Create extends Action
             $document->setAttribute('$permissions', $permissions);
         };
 
-        $documents = \array_map(function ($document) use ($collection, $permissions, $isBulk, $documentId, $setPermissions, $isAPIKey, $isPrivilegedUser, $database, $dbForProject, $authorization) {
+        $relationshipValues = new RelationshipValues($dbForProject, $database, $authorization);
+
+        $documents = \array_map(function ($document) use ($collection, $permissions, $isBulk, $documentId, $setPermissions, $isAPIKey, $isPrivilegedUser, $relationshipValues) {
             $document['$collection'] = $collection->getId();
 
             // Determine the source ID depending on whether it's a bulk operation.
@@ -307,7 +310,7 @@ class Create extends Action
 
             // Assign a unique ID if needed, otherwise use the provided ID.
             $document['$id'] = $sourceId === self::UNIQUE_ID ? ID::unique() : $sourceId;
-            $document = $this->prepareRelationships($document, $collection, $database, $dbForProject, $authorization);
+            $document = $relationshipValues->prepare($document, $collection);
             $document = $this->removeReadonlyAttributes($document, $isAPIKey || $isPrivilegedUser);
             $this->validateTimestamps($document);
             $document = new Document($document);
