@@ -25,6 +25,11 @@ class OAuth2Zoho extends OAuth2Base
         return 'fb5cac000000000000000000000000000000a68f6e';
     }
 
+    public function getPromptValues(): array
+    {
+        return ['consent'];
+    }
+
     /**
      * Get Name
      *
