@@ -90,9 +90,9 @@ Appwrite also uses the key-value cache for data it reads on almost every request
 - The runs alternated between JSON and binary 8 times, with the cache cleared before each run. The tables show the median of 4 runs for each format.
 - Each page size got up to 3,000 measured requests after a warm-up, and every request succeeded.
 
-# Availability
+# Availability on Cloud and self-hosted
 
-The binary cache format ships in self-hosted Appwrite 2.3. Self-hosted instances need no migration and no cache flush. After the upgrade, Appwrite reads an old JSON entry as a cache miss, loads the data from the database, and writes the entry again in the binary format. Cache misses rise for a short time after the upgrade.
+The binary cache format is live on Appwrite Cloud and ships in self-hosted Appwrite 2.3. Self-hosted instances need no migration and no cache flush. After the upgrade, Appwrite reads an old JSON entry as a cache miss, loads the data from the database, and writes the entry again in the binary format. Cache misses rise for a short time after the upgrade.
 
 # Resources
 

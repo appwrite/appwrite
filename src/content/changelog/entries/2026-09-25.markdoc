@@ -7,7 +7,7 @@ cover: /images/blog/faster-list-caching-binary-format/cover.avif
 
 Appwrite now serializes key-value cache entries in a compact binary format instead of JSON. This applies to list responses cached with a `ttl` and to internal entries such as sessions, API keys, and table schemas.
 
-In benchmarks, a cached page of 1,000 rows or more consumed 67% to 69% less memory, and cached `listRows` throughput increased by up to 29%. The change ships in self-hosted Appwrite 2.3 and requires no migration: existing JSON entries are treated as cache misses and rewritten in the binary format.
+In benchmarks, a cached page of 1,000 rows or more consumed 67% to 69% less memory, and cached `listRows` throughput increased by up to 29%. The change is live on Appwrite Cloud and ships in self-hosted Appwrite 2.3. Self-hosted instances require no migration: existing JSON entries are treated as cache misses and rewritten in the binary format.
 
 {% arrow_link href="/blog/post/faster-list-caching-binary-format" %}
 Read the announcement
