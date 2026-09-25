@@ -128,7 +128,7 @@ final class DeploymentsTest extends TestCase
         $this->assertSame(['users.read'], Deployments::scopes($site));
     }
 
-    private function buildPayload(array $vars): array
+    private function buildPayload(array $vars, ?array $source = null): array
     {
         // Presigned-URL and ephemeral-key signing both run before the
         // variables are assembled, and refuse an empty key.
@@ -150,6 +150,7 @@ final class DeploymentsTest extends TestCase
             ]),
             new Document(['$id' => 'deployment1', 'buildCommands' => 'npm install']),
             ['apiHostname' => 'localhost'],
+            $source,
         );
     }
 
@@ -174,12 +175,58 @@ final class DeploymentsTest extends TestCase
         $this->assertSame('v1', $payload['environment']['MY-VAR']);
         $this->assertSame('v2', $payload['environment']['MY_VAR']);
     }
+    public function testRemoteSourceSizeIsMeasuredOnTheRootDirectoryOnly(): void
+    {
+        // A VCS/template archive spans the whole repository. sourceSize (and
+        // the storage totals that sum it) must come from the tree extracted
+        // for rootDirectory, not from the provider archive, or files outside
+        // the root inflate it.
+        $payload = $this->buildPayload([], [
+            'url' => 'https://codeload.example/acme/monorepo/tar.gz/main',
+            'subdir' => '/apps/web/',
+        ]);
+
+        $artifacts = [];
+        foreach ($payload['artifacts'] as $artifact) {
+            $artifacts[$artifact->toArray()['id']] = $artifact->toArray();
+        }
+
+        $this->assertArrayHasKey('sourceSize', $artifacts);
+        $this->assertSame('stat', $artifacts['sourceSize']['type']);
+
+        // Walk back from the stat through the artifacts that wrote its input.
+        $producers = [];
+        $file = $artifacts['sourceSize']['in'];
+        while (($producer = $this->producerOf($artifacts, $file)) !== null) {
+            $producers[] = $producer['id'];
+            if ($producer['id'] === 'extract') {
+                break;
+            }
+            $file = $producer['in'];
+        }
+
+        $this->assertContains('extract', $producers, 'sourceSize must be measured after extraction, not on the downloaded provider archive');
+        $this->assertNotContains('source', $producers);
+        $this->assertSame('apps/web', $artifacts['extract']['subdir']);
+        $this->assertTrue($artifacts['extract']['strip']);
+    }
+
+    private function producerOf(array $artifacts, string $file): ?array
+    {
+        foreach ($artifacts as $artifact) {
+            if (($artifact['out'] ?? null) === $file) {
+                return $artifact;
+            }
+        }
+
+        return null;
+    }
 }
 
 final readonly class ExposedDeployments extends Deployments
 {
-    public static function submitPayload(Document $project, Document $resource, Document $deployment, array $platform): array
+    public static function submitPayload(Document $project, Document $resource, Document $deployment, array $platform, ?array $source = null): array
     {
-        return static::payload($project, $resource, $deployment, $platform, 137);
+        return static::payload($project, $resource, $deployment, $platform, 137, $source);
     }
 }
