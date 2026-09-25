@@ -82,10 +82,53 @@ class Get extends Action
 
         // GitHub drops state when the flow ends on an existing installation's
         // settings page (setup_action=update), so fall back to the copy
-        // Authorize left in a cookie. GitHub returns nothing to tell pending
-        // connections apart by, so only a lone one is used. The signature
-        // below still applies.
-        $fromCookie = empty($state) && $setupAction === 'update' && \count($pending) === 1;
+        // Authorize left in a cookie. The signature below still applies.
+        $fromCookie = empty($state) && $setupAction === 'update' && !empty($pending);
+        $readable = false;
+        $linkedTeams = [];
+
+        if ($fromCookie) {
+            // The cookie is sent on any top-level navigation to this URL, so it
+            // cannot vouch for the installation_id and code beside it. It may
+            // only relink an installation already linked to a project this user
+            // can read, or to one in the cookie project's organization. Members
+            // scoped to one project cannot read its siblings, hence the skips.
+            $linkedIds = \array_map(
+                fn (Document $installation) => $installation->getAttribute('projectId'),
+                $authorization->skip(fn () => $dbForPlatform->find('installations', [
+                    Query::equal('providerInstallationId', [$providerInstallationId]),
+                    Query::equal('provider', ['github']),
+                    Query::select(['projectId']),
+                    Query::limit(APP_DATABASE_QUERY_MAX_VALUES),
+                ]))
+            );
+
+            if (!empty($linkedIds)) {
+                $readable = !$dbForPlatform->findOne('projects', [
+                    Query::equal('$id', $linkedIds),
+                ])->isEmpty();
+                $linkedTeams = \array_map(
+                    fn (Document $linked) => $linked->getAttribute('teamInternalId'),
+                    $authorization->skip(fn () => $dbForPlatform->find('projects', [
+                        Query::equal('$id', $linkedIds),
+                        Query::select(['teamInternalId']),
+                        Query::limit(APP_DATABASE_QUERY_MAX_VALUES),
+                    ]))
+                );
+            }
+
+            // GitHub returns nothing to tell pending connections apart by, so
+            // with several, keep those this installation could be relinked into
+            if (\count($pending) > 1) {
+                $pending = \array_filter($pending, fn (string $cookie) => $readable || \in_array(
+                    $dbForPlatform->getDocument('projects', (string) (\json_decode($cookie, true)['projectId'] ?? ''))->getAttribute('teamInternalId'),
+                    $linkedTeams,
+                    true
+                ));
+            }
+
+            $fromCookie = \count($pending) === 1;
+        }
 
         if ($fromCookie) {
             $state = \reset($pending);
@@ -193,42 +236,14 @@ class Get extends Action
                 return;
             }
 
-            // The cookie is sent on any top-level navigation to this URL, so it
-            // cannot vouch for the installation_id and code beside it. From the
-            // cookie, only relink an installation already linked to a project
-            // this user can read, or to one in this project's organization.
-            // Members scoped to one project cannot read its siblings, hence the
-            // skip.
-            if ($fromCookie) {
-                $projectIds = \array_map(
-                    fn (Document $installation) => $installation->getAttribute('projectId'),
-                    $authorization->skip(fn () => $dbForPlatform->find('installations', [
-                        Query::equal('providerInstallationId', [$providerInstallationId]),
-                        Query::equal('provider', ['github']),
-                        Query::select(['projectId']),
-                        Query::limit(APP_DATABASE_QUERY_MAX_VALUES),
-                    ]))
-                );
-
-                $linked = !empty($projectIds) && (
-                    !$dbForPlatform->findOne('projects', [
-                        Query::equal('$id', $projectIds),
-                    ])->isEmpty()
-                    || !$authorization->skip(fn () => $dbForPlatform->findOne('projects', [
-                        Query::equal('$id', $projectIds),
-                        Query::equal('teamInternalId', [$project->getAttribute('teamInternalId')]),
-                    ]))->isEmpty()
-                );
-
-                if (!$linked) {
-                    $error = 'This GitHub installation is not connected to any project you can access, so it could not be linked. Ask someone who already uses it in one of their projects to connect GitHub for this project.';
-                    $separator = \str_contains($redirectFailure, '?') ? '&' : '?';
-                    $response
-                        ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
-                        ->addHeader('Pragma', 'no-cache')
-                        ->redirect($redirectFailure . $separator . \http_build_query(['error' => $error]));
-                    return;
-                }
+            if ($fromCookie && !$readable && !\in_array($project->getAttribute('teamInternalId'), $linkedTeams, true)) {
+                $error = 'This GitHub installation is not connected to any project you can access, so it could not be linked. Ask someone who already uses it in one of their projects to connect GitHub for this project.';
+                $separator = \str_contains($redirectFailure, '?') ? '&' : '?';
+                $response
+                    ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+                    ->addHeader('Pragma', 'no-cache')
+                    ->redirect($redirectFailure . $separator . \http_build_query(['error' => $error]));
+                return;
             }
 
             $oauth2 = new OAuth2Github(System::getEnv('_APP_VCS_GITHUB_CLIENT_ID', ''), System::getEnv('_APP_VCS_GITHUB_CLIENT_SECRET', ''), "");

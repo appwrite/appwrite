@@ -135,8 +135,8 @@ final class VCSGitHubCallbackConsoleClientTest extends Scope
 
     public function testCreateInstallationWithStateCookiesForTwoProjects(): void
     {
-        // GitHub returns nothing to tell two pending connections apart by, so
-        // the callback must refuse rather than pick one
+        // With several connections pending, only one this installation could be
+        // relinked into may be picked; one linked nowhere fits neither
         $response = $this->callGitHubCallbackHelper([
             'setup_action' => 'update',
             'installation_id' => '1234567',
