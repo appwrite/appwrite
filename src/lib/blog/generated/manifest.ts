@@ -44,6 +44,21 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
+    "slug": "gpt-6-sol-and-luna-launch-at-50-lower-api-prices",
+    "href": "/blog/post/gpt-6-sol-and-luna-launch-at-50-lower-api-prices",
+    "title": "GPT-6 Sol and Luna launch at 50% lower API prices",
+    "description": "OpenAI launches GPT-6 Sol and Luna with stronger coding, factuality, and agent performance, plus 50% lower API prices than GPT-5.6.",
+    "date": "2026-09-24",
+    "lastUpdated": "2026-09-24",
+    "timeToRead": 5,
+    "author": "aishwari",
+    "category": "news",
+    "featured": false,
+    "unlisted": true,
+    "cover": "/images/blog/gpt-6-sol-and-luna-launch-at-50-lower-api-prices/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "native-databases-all-appwrite-cloud-regions",
     "href": "/blog/post/native-databases-all-appwrite-cloud-regions",
     "title": "PostgreSQL, MySQL, and dedicated databases are now available across all regions",
