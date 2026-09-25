@@ -52,4 +52,19 @@ class Update extends Base
     {
         return 'YmPXnM000000000000000000002zFg5D';
     }
+
+    public static function getPromptValues(): array
+    {
+        return ['none', 'consent'];
+    }
+
+    public static function getPromptLimit(): int
+    {
+        return 1;
+    }
+
+    public static function getPromptDescription(): string
+    {
+        return 'Array with at most one Discord OAuth2 prompt value. "none" means: skip the authorization screen for users who already authorized the app with the requested scopes. "consent" means: ask users who already authorized the app to approve it again. Pass an empty array to use the Discord default.';
+    }
 }

@@ -57,4 +57,9 @@ class Update extends Base
     {
         return 'Generate it under Kakao Login > Security and set its status to enabled';
     }
+
+    public static function getPromptValues(): array
+    {
+        return ['none', 'login', 'create', 'select_account'];
+    }
 }
