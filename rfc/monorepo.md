@@ -186,6 +186,8 @@ Two steps with very different cost. Step A rides inside each absorb PR; step B i
 
 Each ships as a major on its mirror with a one-major `class_alias` shim for the old name (`src/compat.php`, autoloaded via `files`), so external consumers upgrade at their own pace. Appwrite and Cloud are updated in the same PR. When the last of the three lands, the bare `Utopia\` list leaves the root autoload for good.
 
+`client` took step B in `utopia-php/monorepo` and released it as `0.5.0` before its absorb, so it never joined the bare `Utopia\` list. Packages here are not installed by Composer, so `bin/monorepo autoload` copies each package's `autoload.files` into the root, which is how the shim loads in Appwrite. The shim registers its aliases up front and guarded: PHP never autoloads a name while checking a declared type, and a package's test run loads both the root and the package autoloader.
+
 ## Phases
 
 Package edits happen only where the package currently lives; this document carries the freeze list. Every absorb PR does the same six things:
@@ -257,7 +259,7 @@ Exit: `composer.lock` contains no `utopia-php/*` package.
 
 ### Phase 6. Standardise the breaking part of the shape
 
-`validators`, `console`, `client` (step B). One PR per package: rename, `class_alias` shim, major release on the mirror, Appwrite call sites updated in the same PR. Remove the bare `Utopia\` list from the root map with the last one. Cloud follows through `server-ce`.
+`validators` and `console` (step B); `client` did it as `0.5.0` before its absorb. One PR per package: rename, `class_alias` shim, major release on the mirror, Appwrite call sites updated in the same PR. Remove the bare `Utopia\` list from the root map with the last one. Cloud follows through `server-ce`.
 
 ### Phase 7. Retire the old homes and move Cloud
 
@@ -269,7 +271,7 @@ Exit: `composer.lock` contains no `utopia-php/*` package.
 - Add `packages/*/src` to `phpstan-deadcode.neon` and run `composer dead-code`. Candidates visible today: database adapters `SQLite`, `Memory`, `Redis`; cache adapters `Hazelcast`, `Memcached`, `Json`, `Memory`, `RedisCluster`; SMS adapters `Plivo`, `Telnyx`, `Clickatell`, `Infobip`, `Seven`, `Sinch`. Each deletion is mirror-visible: confirm against Executor and Packagist dependents first; anything a mirror consumer needs stays.
 - Collapse `||` compatibility constraints in package manifests to single ranges once every sibling is on the current major.
 - Delete duplicated test helpers (`tests/extensions/Queue/InMemoryConnection.php` versus the queue package's own fakes) and every Appwrite-side workaround that existed only because a library fix was waiting on a release.
-- Burn down every `packages/*/phpstan-baseline.neon` a package arrives with (abuse's Redis cluster log adapters need one under PHPStan 2).
+- Burn down every `packages/*/phpstan-baseline.neon` a package arrives with (abuse's Redis cluster log adapters need one under PHPStan 2). Compression arrives with 16 pre-existing findings covering extension return types and the untyped supported-encoding array; resolve these separately from its history-preserving import. System arrives with 16 pre-existing findings from mixed CPU and disk statistics; track those separately from its import. OpenAPI arrives with 166 findings at level max (it was analysed at level 5 in the monorepo), nearly all offset access on the decoded `mixed` document in its readers; narrow those separately from its import. Circuit-breaker arrives with 29 findings at level max (also level 5 in the monorepo): casts from `mixed` in the Redis and Swoole Table adapters, and loosely typed telemetry and Redis fixtures in its tests. WebSocket arrives with 22 (level 5 in the monorepo too): `mixed` handling in `Client` and the Workerman adapter, and its Swoole fixture server and e2e helpers. Cache arrives with 25 (level 5 in the monorepo): `mixed` from the Memcached and Hazelcast server stats and the `RedisCluster` node addresses, values passed to `Envelope::encode()` untyped, and casts of Redis replies in its multiplexing and leasable e2e tests.
 
 ## Risks
 

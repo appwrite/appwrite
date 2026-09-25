@@ -2,8 +2,9 @@
 
 namespace Utopia\Agents\Adapters;
 
+use Psr\Http\Client\ClientInterface;
 use Utopia\Agents\Adapters\OpenRouter\Models as OpenRouterModels;
-use Utopia\Fetch\Client;
+use Utopia\Client\Psr18\StreamingClientInterface;
 
 class OpenRouter extends OpenAI
 {
@@ -29,7 +30,8 @@ class OpenRouter extends OpenAI
         ?string $endpoint = null,
         int $timeout = 90000,
         ?string $httpReferer = null,
-        ?string $xTitle = null
+        ?string $xTitle = null,
+        (ClientInterface&StreamingClientInterface)|null $client = null
     ) {
         $this->httpReferer = $httpReferer;
         $this->xTitle = $xTitle;
@@ -40,7 +42,8 @@ class OpenRouter extends OpenAI
             $maxTokens,
             $temperature,
             $endpoint ?? self::ENDPOINT,
-            $timeout
+            $timeout,
+            $client
         );
     }
 
@@ -63,21 +66,21 @@ class OpenRouter extends OpenAI
     }
 
     /**
-     * Create a configured HTTP client for OpenRouter requests.
+     * @return array<string, string>
      */
-    protected function createClient(): Client
+    protected function headers(): array
     {
-        $client = parent::createClient();
+        $headers = parent::headers();
 
         if (! empty($this->httpReferer)) {
-            $client->addHeader('HTTP-Referer', $this->httpReferer);
+            $headers['HTTP-Referer'] = $this->httpReferer;
         }
 
         if (! empty($this->xTitle)) {
-            $client->addHeader('X-Title', $this->xTitle);
+            $headers['X-Title'] = $this->xTitle;
         }
 
-        return $client;
+        return $headers;
     }
 
     /**

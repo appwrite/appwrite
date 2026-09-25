@@ -102,8 +102,8 @@ class Base extends Action
         if (empty($providerInstallationId)) {
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
         }
-        $owner = $vcs->getOwnerName($providerInstallationId);
         $providerRepositoryId = $function->getAttribute('providerRepositoryId', '');
+        $owner = $vcs->getOwnerName($providerInstallationId, (int) $providerRepositoryId);
         try {
             $repositoryName = $vcs->getRepositoryName($providerRepositoryId);
             if (empty($repositoryName)) {
@@ -216,8 +216,8 @@ class Base extends Action
         if (empty($providerInstallationId)) {
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
         }
-        $owner = $vcs->getOwnerName($providerInstallationId);
         $providerRepositoryId = $site->getAttribute('providerRepositoryId', '');
+        $owner = $vcs->getOwnerName($providerInstallationId, (int) $providerRepositoryId);
         try {
             $repositoryName = $vcs->getRepositoryName($providerRepositoryId);
             if (empty($repositoryName)) {
@@ -514,6 +514,9 @@ class Base extends Action
             Query::equal('deploymentId', ['']),
             Query::equal('type', ['deployment']),
             Query::equal('trigger', ['manual']),
+            // A branch-pinned rule is bound by the build of its own branch, not
+            // by whichever deployment happens to be the resource's first.
+            Query::equal('deploymentVcsProviderBranch', ['']),
         ];
         $dbForPlatform->forEach('rules', function (Document $rule) use ($deployment, $dbForPlatform, $authorization, $bus) {
             $rule = $authorization->skip(fn () => $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([

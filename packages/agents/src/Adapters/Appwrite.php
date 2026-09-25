@@ -2,9 +2,10 @@
 
 namespace Utopia\Agents\Adapters;
 
+use Psr\Http\Client\ClientInterface;
 use Utopia\Agents\Adapter;
 use Utopia\Agents\Message;
-use Utopia\Fetch\Client;
+use Utopia\Client\Psr18\StreamingClientInterface;
 
 class Appwrite extends Adapter
 {
@@ -54,13 +55,15 @@ class Appwrite extends Adapter
      */
     public function __construct(
         string $model = self::MODEL_NOMIC_EMBED_TEXT,
-        int $timeout = 90000
+        int $timeout = 90000,
+        (ClientInterface&StreamingClientInterface)|null $client = null
     ) {
         if (! in_array($model, self::MODELS, true)) {
             throw new \InvalidArgumentException("Invalid model: {$model}. Supported models: ".implode(', ', self::MODELS));
         }
 
         $this->model = $model;
+        $this->client = $client;
         $this->setTimeout($timeout);
     }
 
@@ -104,20 +107,12 @@ class Appwrite extends Adapter
             throw new \InvalidArgumentException('bulkEmbed requires at least one text');
         }
 
-        $client = new Client();
-        $client->setTimeout($this->timeout);
-        $client->addHeader('Content-Type', 'application/json');
         $payload = [
             'model' => $this->model,
             'texts' => array_values($texts),
         ];
-        $response = $client->fetch(
-            $this->getEndpoint(),
-            Client::METHOD_POST,
-            $payload
-        );
-        $body = $response->getBody();
-        $json = is_string($body) ? json_decode($body, true) : null;
+        $response = $this->post($this->getEndpoint(), $payload);
+        $json = json_decode((string) $response->getBody(), true);
 
         if (! is_array($json)) {
             throw new \Exception('Invalid response format received from the API');

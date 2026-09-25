@@ -18,6 +18,7 @@ use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Queries;
 use Utopia\Database\Validator\Spatial;
 use Utopia\OpenAPI\Model\Composition;
+use Utopia\OpenAPI\Model\ParameterLocation;
 use Utopia\Platform\Enum;
 use Utopia\Validator;
 use Utopia\Validator\ArrayList;
@@ -199,6 +200,16 @@ class OpenAPI3 extends Format
     public function parse(): array
     {
         $schemes = $this->getSecuritySchemes();
+
+        // Keys binding a route to a path parameter, not to a credential.
+        $pathConfigs = [];
+        foreach ($this->keys as $platformSchemes) {
+            foreach ($platformSchemes as $name => $scheme) {
+                if (($scheme['location'] ?? '') === ParameterLocation::PATH->value) {
+                    $pathConfigs[$name] = [$scheme['param'] => $scheme['config']];
+                }
+            }
+        }
         /**
          * Specifications (v3.0.0):
          * https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.0.md
@@ -250,7 +261,6 @@ class OpenAPI3 extends Format
 
         foreach ([
             'Project' => '<YOUR_PROJECT_ID>',
-            'ProjectPath' => '<YOUR_PROJECT_ID>',
             'Key' => '<YOUR_API_KEY>',
             'Organization' => '<YOUR_ORGANIZATION_ID>',
             'JWT' => '<YOUR_JWT>',
@@ -544,19 +554,29 @@ class OpenAPI3 extends Format
             }
 
             if (!empty($scope)) {
-                $securities = [($sdk->getLocationAuth()[0] ?? 'Project') => []];
+                // A path binding is not a credential, so it stays out of
+                // `security`; examples still configure it on the client.
+                $binding = $sdk->getLocationAuth()[0] ?? 'Project';
+                $pathConfig = $pathConfigs[$binding] ?? null;
+                if ($pathConfig !== null) {
+                    $temp['x-appwrite']['config'] = $pathConfig;
+                }
+
+                $securities = $pathConfig === null ? [$binding => []] : [];
+                $exampleSecurities = $pathConfig === null ? $securities : ['Project' => []];
 
                 foreach ($sdk->getAuth() as $security) {
                     /** @var AuthType $security */
                     if (\array_key_exists($security->value, $schemes)) {
                         $securities[$security->value] = [];
+                        $exampleSecurities[$security->value] = [];
                     }
                 }
 
                 $locationKeys = $sdk->getType() === MethodType::LOCATION
                     ? \array_values(\array_filter($sdk->getLocationAuth(), fn (string $key) => \array_key_exists($key, $schemes)))
                     : [];
-                $temp['x-appwrite']['auth'] = $this->getExampleAuth($securities, $locationKeys, $sdkPlatforms);
+                $temp['x-appwrite']['auth'] = $this->getExampleAuth($exampleSecurities, $locationKeys, $sdkPlatforms);
 
                 $temp['security'][] = $securities;
                 // Location credentials supplement the base authentication. The

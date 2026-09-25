@@ -251,6 +251,54 @@ final class UserTest extends TestCase
         $this->assertEquals(false, $expired->tokenVerify(TOKEN_TYPE_VERIFICATION_OTP, $code, $proofForCode));
     }
 
+    public function testTokenVerifyRecoveryOtp(): void
+    {
+        $proofForCode = new Code();
+        $proofForToken = new Token();
+
+        $code = $proofForCode->generate();
+        $token = $proofForToken->generate();
+        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), 60 * 60 * 24));
+
+        $user = new User([
+            '$id' => ID::custom('user1'),
+            'tokens' => [
+                new Document([
+                    '$id' => ID::custom('otp'),
+                    'type' => TOKEN_TYPE_RECOVERY_OTP,
+                    'expire' => $expire,
+                    'secret' => $proofForCode->hash($code),
+                ]),
+                new Document([
+                    '$id' => ID::custom('link'),
+                    'type' => TOKEN_TYPE_RECOVERY,
+                    'expire' => $expire,
+                    'secret' => $proofForToken->hash($token),
+                ]),
+            ],
+        ]);
+
+        $this->assertSame('otp', $user->tokenVerify(TOKEN_TYPE_RECOVERY_OTP, $code, $proofForCode)->getId());
+        $this->assertSame('link', $user->tokenVerify(TOKEN_TYPE_RECOVERY, $token, $proofForToken)->getId());
+
+        $this->assertEquals(false, $user->tokenVerify(TOKEN_TYPE_RECOVERY, $code, $proofForToken));
+        $this->assertEquals(false, $user->tokenVerify(TOKEN_TYPE_RECOVERY_OTP, $token, $proofForCode));
+
+        $expired = new User([
+            '$id' => ID::custom('user2'),
+            'tokens' => [
+                new Document([
+                    '$id' => ID::custom('otp'),
+                    'type' => TOKEN_TYPE_RECOVERY_OTP,
+                    'expire' => DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -60 * 60 * 24)),
+                    'secret' => $proofForCode->hash($code),
+                ]),
+            ],
+        ]);
+
+        $this->assertEquals(false, $expired->tokenVerify(TOKEN_TYPE_RECOVERY_OTP, $code, $proofForCode));
+    }
+
     public function testIsPrivilegedUser(): void
     {
         $user = new User();

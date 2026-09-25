@@ -38,12 +38,18 @@ jobs:
       actions: read
       security-events: write
       contents: read
-    uses: "google/osv-scanner-action/.github/workflows/osv-scanner-reusable-pr.yml@c51854704019a247608d928f370c98740469d4b5" # v2.3.5
+    uses: "google/osv-scanner-action/.github/workflows/osv-scanner-reusable-pr.yml@a345acffa64b0eaede81a3d9aae6141214d9c8fc" # v2.6.0
+    with:
+      runs-on: ubuntu-24.04
 
   security:
     name: Checks / Image
     if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
+    runs-on: >-
+      ${{ (github.event_name != 'pull_request'
+      || github.event.pull_request.head.repo.full_name == github.repository)
+      && format('gcrunner={0}-security-{1}/runner=standard', github.run_id, strategy.job-index)
+      || 'ubuntu-24.04' }}
     permissions:
       contents: read
       security-events: write
@@ -97,7 +103,11 @@ jobs:
 
   checks:
     name: Checks
-    runs-on: ubuntu-latest
+    runs-on: >-
+      ${{ (github.event_name != 'pull_request'
+      || github.event.pull_request.head.repo.full_name == github.repository)
+      && format('gcrunner={0}-checks-{1}/runner=standard', github.run_id, strategy.job-index)
+      || 'ubuntu-24.04' }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -168,7 +178,11 @@ jobs:
 
   locale:
     name: Checks / Locale
-    runs-on: ubuntu-latest
+    runs-on: >-
+      ${{ (github.event_name != 'pull_request'
+      || github.event.pull_request.head.repo.full_name == github.repository)
+      && format('gcrunner={0}-locale-{1}/runner=small', github.run_id, strategy.job-index)
+      || 'ubuntu-24.04' }}
     steps:
       - name: Check out the repo
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -183,7 +197,7 @@ jobs:
 
   matrix:
     name: Tests / Matrix
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       databases: ${{ steps.generate.outputs.databases }}
       modes: ${{ steps.generate.outputs.modes }}
@@ -194,40 +208,38 @@ jobs:
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
-            const runner4 = `runs-on=${context.runId}/runner=4cpu-linux-x64/volume=60g/spot=price-capacity-optimized/retry=when-interrupted/extras=otel+ecr-cache`;
-            const runner8 = `runs-on=${context.runId}/runner=8cpu-linux-x64/volume=60g/spot=price-capacity-optimized/retry=when-interrupted/extras=otel+ecr-cache`;
-
             const services = [
-              { name: 'Account',           runner: runner4, functional: true,  processes: null },
-              { name: 'Avatars',           runner: runner4, functional: true,  processes: null },
-              { name: 'Console',           runner: runner4, functional: true,  processes: null },
-              { name: 'Databases',         runner: runner8, functional: false, processes: 3, documentsdb: true, embedding: true },
-              { name: 'TablesDB',          runner: runner8, functional: false, processes: 3 },
-              { name: 'Functions',         runner: runner4, functional: false, processes: null },
-              { name: 'FunctionsSchedule', runner: runner4, functional: true,  processes: null },
-              { name: 'GraphQL',           runner: runner4, functional: false, processes: null },
-              { name: 'Health',            runner: runner4, functional: true,  processes: null },
-              { name: 'Advisor',           runner: runner4, functional: true,  processes: null },
-              { name: 'Locale',            runner: runner4, functional: true,  processes: null },
-              { name: 'Projects',          runner: runner4, functional: true,  processes: null, documentsdb: true },
-              { name: 'Realtime',          runner: runner4, functional: false, processes: null, documentsdb: true },
-              { name: 'Sites',             runner: runner4, functional: true,  processes: null },
-              { name: 'Proxy',             runner: runner4, functional: true,  processes: null },
-              { name: 'Storage',           runner: runner4, functional: true,  processes: null },
-              { name: 'Tokens',            runner: runner4, functional: true,  processes: null },
-              { name: 'Teams',             runner: runner4, functional: true,  processes: null },
-              { name: 'Usage',             runner: runner4, functional: true,  processes: null },
-              { name: 'Users',             runner: runner4, functional: true,  processes: null },
-              { name: 'ProjectWebhooks',   runner: runner4, functional: false, processes: null },
-              { name: 'Webhooks',          runner: runner4, functional: true,  processes: null },
-              { name: 'VCSGitHub',         runner: runner4, functional: true,  processes: null },
-              { name: 'VCSGitea',          runner: runner4, functional: false, processes: null },
-              { name: 'Messaging',         runner: runner4, functional: true,  processes: null },
-              { name: 'Notifications',     runner: runner4, functional: true,  processes: null },
-              { name: 'Migrations',        runner: runner4, functional: true,  processes: 1, documentsdb: true },
-              { name: 'Project',           runner: runner4, functional: true,  processes: null },
-              { name: 'Organization',      runner: runner4, functional: true,  processes: null },
-              { name: 'Presences',         runner: runner4, functional: true,  processes: null },
+              { name: 'Account',           runner: 'e2e',       functional: true,  processes: null },
+              { name: 'Avatars',           runner: 'e2e',       functional: true,  processes: null },
+              { name: 'Console',           runner: 'e2e',       functional: true,  processes: null },
+              { name: 'Databases',         runner: 'e2e-large', functional: false, processes: 3, documentsdb: true, embedding: true },
+              { name: 'TablesDB',          runner: 'e2e-large', functional: false, processes: 3 },
+              { name: 'Functions',         runner: 'e2e',       functional: false, processes: null },
+              { name: 'FunctionsSchedule', runner: 'e2e',       functional: true,  processes: null },
+              { name: 'GraphQL',           runner: 'e2e',       functional: false, processes: null },
+              { name: 'Health',            runner: 'e2e',       functional: true,  processes: null },
+              { name: 'Advisor',           runner: 'e2e',       functional: true,  processes: null },
+              { name: 'Locale',            runner: 'e2e',       functional: true,  processes: null },
+              { name: 'Projects',          runner: 'e2e',       functional: true,  processes: null, documentsdb: true },
+              { name: 'Realtime',          runner: 'e2e',       functional: false, processes: null, documentsdb: true },
+              { name: 'Sites',             runner: 'e2e',       functional: true,  processes: null },
+              { name: 'Proxy',             runner: 'e2e',       functional: true,  processes: null },
+              { name: 'Storage',           runner: 'e2e',       functional: true,  processes: null },
+              { name: 'Tokens',            runner: 'e2e',       functional: true,  processes: null },
+              { name: 'Teams',             runner: 'e2e',       functional: true,  processes: null },
+              { name: 'Usage',             runner: 'e2e',       functional: true,  processes: null },
+              { name: 'Users',             runner: 'e2e',       functional: true,  processes: null },
+              { name: 'ProjectWebhooks',   runner: 'e2e',       functional: false, processes: null },
+              { name: 'Webhooks',          runner: 'e2e',       functional: true,  processes: null },
+              { name: 'VCSGitHub',         runner: 'e2e',       functional: true,  processes: null },
+              { name: 'VCSGitea',          runner: 'e2e',       functional: false, processes: null },
+              { name: 'Messaging',         runner: 'e2e',       functional: true,  processes: null },
+              { name: 'Notifications',     runner: 'e2e',       functional: true,  processes: null },
+              { name: 'Migrations',        runner: 'e2e',       functional: true,  processes: 1, documentsdb: true },
+              { name: 'Project',           runner: 'e2e',       functional: true,  processes: null },
+              { name: 'Organization',      runner: 'e2e',       functional: true,  processes: null },
+              { name: 'Presences',         runner: 'e2e',       functional: true,  processes: null },
+              { name: 'Mqtt',              runner: 'e2e',       functional: false, processes: 1 },
             ];
             core.setOutput('services', JSON.stringify(services));
 
@@ -265,7 +277,11 @@ jobs:
 
   packages:
     name: Packages / Changed
-    runs-on: ubuntu-latest
+    runs-on: >-
+      ${{ (github.event_name != 'pull_request'
+      || github.event.pull_request.head.repo.full_name == github.repository)
+      && format('gcrunner={0}-packages-{1}/runner=small', github.run_id, strategy.job-index)
+      || 'ubuntu-24.04' }}
     outputs:
       matrix: ${{ steps.changed.outputs.matrix }}
     steps:
@@ -274,6 +290,13 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Setup PHP
+        uses: shivammathur/setup-php@accd6127cb78bee3e8082180cb391013d204ef9f # 2.37.0
+        with:
+          php-version: '8.5'
+          tools: composer:v2
+          coverage: none
+
       - name: Compute changed packages
         id: changed
         run: |
@@ -281,15 +304,21 @@ jobs:
             CHANGED=$(ls packages)
           else
             if [ "${{ github.event_name }}" = "pull_request" ]; then
-              RANGE="origin/${{ github.base_ref }}...HEAD"
+              BASE=$(git merge-base "origin/${{ github.base_ref }}" HEAD)
             elif git rev-parse -q --verify "${{ github.event.before }}" > /dev/null; then
-              RANGE="${{ github.event.before }}..HEAD"
+              BASE="${{ github.event.before }}"
             else
-              RANGE="HEAD~1..HEAD"
+              BASE=$(git rev-parse HEAD~1)
             fi
-            CHANGED=$(git diff --name-only "$RANGE" -- packages/ | cut -d/ -f2)
+            CHANGED=$(git diff --name-only "$BASE" HEAD -- packages/ | cut -d/ -f2)
             # tooling changes affect every package
-            if git diff --name-only "$RANGE" | grep -qE '^(bin/monorepo|\.github/workflows/(ci|split.*|mirror-redirect)\.yml|composer\.json|pint\.json)$'; then
+            toolchain() {
+              git show "$1:composer.lock" | jq --compact-output '[(.packages + ."packages-dev")[]
+                | select(.name | IN("laravel/pint", "phpstan/phpstan", "rector/rector", "phpunit/phpunit"))
+                | {name, version}] | sort_by(.name)'
+            }
+            if git diff --name-only "$BASE" HEAD | grep -qE '^(bin/monorepo|\.github/workflows/ci\.yml|pint\.json)$' \
+              || [ "$(toolchain "$BASE")" != "$(toolchain HEAD)" ]; then
               CHANGED=$(ls packages)
             fi
           fi
@@ -323,10 +352,14 @@ jobs:
           echo "matrix=$MATRIX" >> "$GITHUB_OUTPUT"
 
   package:
-    name: Packages / ${{ matrix.package }}${{ matrix.linked && ' (linked)' || '' }}
+    name: Packages / ${{ matrix.package }}
     needs: packages
     if: needs.packages.outputs.matrix != '[]'
-    runs-on: ubuntu-latest
+    runs-on: >-
+      ${{ (github.event_name != 'pull_request'
+      || github.event.pull_request.head.repo.full_name == github.repository)
+      && format('gcrunner={0}-package-{1}/runner=small', github.run_id, strategy.job-index)
+      || 'ubuntu-24.04' }}
     strategy:
       fail-fast: false
       matrix:
@@ -355,12 +388,12 @@ jobs:
       - name: Check package
         run: bin/monorepo check ${{ matrix.package }}
 
-      - name: Test package
+      - name: Test package${{ matrix.linked && ' (linked)' || '' }}
         run: bin/monorepo test ${{ matrix.package }} ${{ matrix.linked && '--linked' || '' }}
 
   build:
     name: Build
-    runs-on: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/volume=60g/spot=price-capacity-optimized/retry=when-interrupted/extras=otel+s3-cache+ecr-cache
+    runs-on: gcrunner=${{ github.run_id }}/runner=build
     timeout-minutes: 30
     steps:
       - name: Checkout repository
@@ -375,6 +408,11 @@ jobs:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      # The runner injects GCRUNNER_REGISTRY into the shell only; action inputs
+      # read ${{ env.* }}, which needs it promoted to GITHUB_ENV first.
+      - name: Expose the runner registry to workflow expressions
+        run: echo "GCRUNNER_REGISTRY=${GCRUNNER_REGISTRY}" >> "${GITHUB_ENV}"
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
 
@@ -383,9 +421,9 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }}
-          cache-from: type=s3,blobs_prefix=cache/${{ github.repository }}/,manifests_prefix=cache/${{ github.repository }}/,region=${{ env.RUNS_ON_AWS_REGION }},bucket=${{ env.RUNS_ON_S3_BUCKET_CACHE }}
-          cache-to: type=s3,blobs_prefix=cache/${{ github.repository }}/,manifests_prefix=cache/${{ github.repository }}/,region=${{ env.RUNS_ON_AWS_REGION }},bucket=${{ env.RUNS_ON_S3_BUCKET_CACHE }},mode=max
+          tags: ${{ env.GCRUNNER_REGISTRY }}/appwrite:${{ env.IMAGE }}-${{ github.sha }}
+          cache-from: type=registry,ref=${{ env.GCRUNNER_REGISTRY }}/appwrite:buildcache
+          cache-to: type=registry,ref=${{ env.GCRUNNER_REGISTRY }}/appwrite:buildcache,mode=max
           target: development
           build-args: |
             DEBUG=false
@@ -394,7 +432,7 @@ jobs:
 
   unit:
     name: Tests / Unit
-    runs-on: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/volume=60g/spot=price-capacity-optimized/retry=when-interrupted/extras=otel+ecr-cache
+    runs-on: gcrunner=${{ github.run_id }}/runner=e2e
     timeout-minutes: 15
     needs: build
     permissions:
@@ -416,8 +454,8 @@ jobs:
       - parallel:
           - name: Pull Docker Image
             run: |
-              docker pull ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }}
-              docker tag ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }} ${{ env.IMAGE }}
+              docker pull "${GCRUNNER_REGISTRY_PULL}/appwrite:${IMAGE}-${GITHUB_SHA}"
+              docker tag "${GCRUNNER_REGISTRY_PULL}/appwrite:${IMAGE}-${GITHUB_SHA}" "${IMAGE}"
 
           - name: Pull Docker Compose images
             timeout-minutes: 5
@@ -456,7 +494,7 @@ jobs:
 
   e2e_general:
     name: Tests / E2E / General
-    runs-on: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/volume=60g/spot=price-capacity-optimized/retry=when-interrupted/extras=otel+ecr-cache
+    runs-on: gcrunner=${{ github.run_id }}/runner=e2e
     timeout-minutes: 15
     needs: build
     permissions:
@@ -478,8 +516,8 @@ jobs:
       - parallel:
           - name: Pull Docker Image
             run: |
-              docker pull ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }}
-              docker tag ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }} ${{ env.IMAGE }}
+              docker pull "${GCRUNNER_REGISTRY_PULL}/appwrite:${IMAGE}-${GITHUB_SHA}"
+              docker tag "${GCRUNNER_REGISTRY_PULL}/appwrite:${IMAGE}-${GITHUB_SHA}" "${IMAGE}"
 
           - name: Pull Docker Compose images
             timeout-minutes: 5
@@ -525,7 +563,7 @@ jobs:
 
   e2e_service:
     name: Tests / E2E / ${{ matrix.database }} (${{ matrix.mode }}) / ${{ matrix.service.name }}
-    runs-on: ${{ matrix.service.runner }}
+    runs-on: gcrunner=${{ github.run_id }}/runner=${{ matrix.service.runner }}
     timeout-minutes: 20
     needs: [build, matrix]
     permissions:
@@ -598,8 +636,8 @@ jobs:
       - parallel:
           - name: Pull Docker Image
             run: |
-              docker pull ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }}
-              docker tag ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }} ${{ env.IMAGE }}
+              docker pull "${GCRUNNER_REGISTRY_PULL}/appwrite:${IMAGE}-${GITHUB_SHA}"
+              docker tag "${GCRUNNER_REGISTRY_PULL}/appwrite:${IMAGE}-${GITHUB_SHA}" "${IMAGE}"
 
           - name: Pull Docker Compose images
             timeout-minutes: 5
@@ -690,7 +728,7 @@ jobs:
 
   e2e_grouped:
     name: Tests / E2E / ${{ matrix.config.label }} (${{ matrix.mode }})
-    runs-on: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/volume=60g/spot=price-capacity-optimized/retry=when-interrupted/extras=otel+ecr-cache
+    runs-on: gcrunner=${{ github.run_id }}/runner=e2e
     timeout-minutes: 35
     needs: [build, matrix]
     permissions:
@@ -749,8 +787,8 @@ jobs:
       - parallel:
           - name: Pull Docker Image
             run: |
-              docker pull ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }}
-              docker tag ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }} ${{ env.IMAGE }}
+              docker pull "${GCRUNNER_REGISTRY_PULL}/appwrite:${IMAGE}-${GITHUB_SHA}"
+              docker tag "${GCRUNNER_REGISTRY_PULL}/appwrite:${IMAGE}-${GITHUB_SHA}" "${IMAGE}"
 
           - name: Pull Docker Compose images
             timeout-minutes: 5
@@ -849,7 +887,7 @@ jobs:
   benchmark:
     name: Benchmark
     if: github.event_name == 'pull_request' || github.event_name == 'push'
-    runs-on: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/volume=60g/spot=price-capacity-optimized/retry=when-interrupted/extras=otel+ecr-cache
+    runs-on: gcrunner=${{ github.run_id }}/runner=e2e
     timeout-minutes: 20
     needs: build
     permissions:
@@ -879,9 +917,9 @@ jobs:
       - parallel:
           - name: Pull Appwrite image
             run: |
-              docker pull ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }}
-              docker tag ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }} ${{ env.IMAGE }}
-              docker tag ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }} ${{ env.IMAGE }}:after
+              docker pull "${GCRUNNER_REGISTRY_PULL}/appwrite:${IMAGE}-${GITHUB_SHA}"
+              docker tag "${GCRUNNER_REGISTRY_PULL}/appwrite:${IMAGE}-${GITHUB_SHA}" "${IMAGE}"
+              docker tag "${GCRUNNER_REGISTRY_PULL}/appwrite:${IMAGE}-${GITHUB_SHA}" "${IMAGE}:after"
 
           - name: Setup k6
             uses: grafana/setup-k6-action@db07bd9765aac508ef18982e52ab937fe633a065 # v1.2.1

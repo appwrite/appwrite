@@ -362,10 +362,11 @@ Http::post('/v1/account')
         }
 
         // null when the policy did not look, false when it looked and found nothing
-        $passwordPwned = ($project->getAttribute('auths', [])['passwordPwned']['enabled'] ?? true)
+        $pwnedPolicy = $project->getAttribute('auths', [])['passwordPwned'] ?? [];
+        $passwordPwned = ($pwnedPolicy['enabled'] ?? true)
             ? !$pwnedPasswords->isValid($password)
             : null;
-        if ($passwordPwned) {
+        if ($passwordPwned && ($pwnedPolicy['users'] ?? false)) {
             throw new Exception(Exception::USER_PASSWORD_PWNED);
         }
 
@@ -597,15 +598,17 @@ Http::get('/v1/account/sessions')
         contentType: ContentType::JSON,
     ))
     ->inject('response')
-    ->inject('user')
+    ->inject('targetUser')
     ->inject('locale')
     ->inject('store')
     ->inject('proofForToken')
-    ->action(function (Response $response, User $user, Locale $locale, Store $store, ProofsToken $proofForToken) {
+    ->action(function (Response $response, User $targetUser, Locale $locale, Store $store, ProofsToken $proofForToken) {
 
 
-        $sessions = $user->getAttribute('sessions', []);
-        $current = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken);
+        $sessions = $targetUser->getAttribute('sessions', []);
+        // While impersonating, the request runs on the impersonator's session, so none of
+        // the target's sessions is marked current.
+        $current = $targetUser->sessionVerify($store->getProperty('secret', ''), $proofForToken);
 
         foreach ($sessions as $key => $session) {
             /** @var Document $session */
@@ -729,15 +732,18 @@ Http::get('/v1/account/sessions/:sessionId')
     ))
     ->param('sessionId', 'current', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Session ID. Use the string \'current\' to get the current device session.', true, ['dbForProject'])
     ->inject('response')
-    ->inject('user')
+    ->inject('targetUser')
     ->inject('locale')
     ->inject('store')
     ->inject('proofForToken')
-    ->action(function (?string $sessionId, Response $response, User $user, Locale $locale, Store $store, ProofsToken $proofForToken) {
+    ->action(function (?string $sessionId, Response $response, User $targetUser, Locale $locale, Store $store, ProofsToken $proofForToken) {
 
-        $sessions = $user->getAttribute('sessions', []);
+        $sessions = $targetUser->getAttribute('sessions', []);
+        // While impersonating, the request runs on the impersonator's session, so 'current'
+        // resolves against none of the target's sessions and this throws. That matches the
+        // sessions list, which marks none of them current for the same reason.
         $sessionId = ($sessionId === 'current')
-            ? $user->sessionVerify($store->getProperty('secret', ''), $proofForToken)
+            ? $targetUser->sessionVerify($store->getProperty('secret', ''), $proofForToken)
             : $sessionId;
 
         foreach ($sessions as $session) {
@@ -763,6 +769,7 @@ Http::delete('/v1/account/sessions/:sessionId')
     ->desc('Delete session')
     ->groups(['api', 'account', 'mfa'])
     ->label('scope', 'account')
+    ->label('impersonation', 'allow')
     ->label('event', 'users.[userId].sessions.[sessionId].delete')
     ->label('audits.event', 'session.delete')
     ->label('audits.resource', 'user/{user.$id}')
@@ -928,6 +935,20 @@ Http::patch('/v1/account/sessions/:sessionId')
                 ->setAttribute('providerRefreshToken', $oauth2->getRefreshToken(''))
                 ->setAttribute('providerAccessTokenExpiry', DateTime::formatTz(DateTime::addSeconds(new \DateTime(), (int) $oauth2->getAccessTokenExpiry(''))));
 
+            try {
+                $identity = $dbForProject->findOne('identities', [
+                    Query::equal('provider', [$provider]),
+                    Query::equal('providerUid', [$session->getAttribute('providerUid', '')]),
+                ]);
+
+                if (!$identity->isEmpty()) {
+                    $dbForProject->updateDocument('identities', $identity->getId(), new Document([
+                        'photo' => $oauth2->getUserPhoto($oauth2->getAccessToken('')),
+                    ]));
+                }
+            } catch (\Throwable $th) {
+                // Photo refresh is best-effort and must not block session token refresh
+            }
         }
 
         // Save changes
@@ -1051,8 +1072,8 @@ Http::post('/v1/account/sessions/email')
 
         $pwnedPolicy = $project->getAttribute('auths', [])['passwordPwned'] ?? [];
 
-        if (($pwnedPolicy['enabled'] ?? true) && ($pwnedPolicy['sessions'] ?? false)) {
-            // The outcome is recorded either way; only a forced reset needs an answer, so an outage never blocks a plain sign-in
+        if ($pwnedPolicy['enabled'] ?? true) {
+            // Every sign-in records the outcome so the flag follows the breach corpus; only the sessions option refuses the sign-in
             $passwordPwned = !$pwnedPasswords->isValid($password);
 
             if ($passwordPwned !== $user->getAttribute('passwordPwned')) {
@@ -1062,7 +1083,7 @@ Http::post('/v1/account/sessions/email')
                 ]));
             }
 
-            if ($passwordPwned && ($pwnedPolicy['users'] ?? false)) {
+            if ($passwordPwned && ($pwnedPolicy['sessions'] ?? false)) {
                 throw new Exception(Exception::USER_PASSWORD_RESET_REQUIRED);
             }
         }
@@ -2493,7 +2514,11 @@ Http::post('/v1/account/tokens/magic-url')
             ]);
 
             $user->removeAttribute('$sequence');
-            $user = $authorization->skip(fn () => $dbForProject->createDocument('users', $user));
+            try {
+                $user = $authorization->skip(fn () => $dbForProject->createDocument('users', $user));
+            } catch (Duplicate) {
+                throw new Exception(Exception::USER_ALREADY_EXISTS);
+            }
         }
 
         $proofForToken = new ProofsToken(TOKEN_LENGTH_MAGIC_URL);
@@ -2821,7 +2846,11 @@ Http::post('/v1/account/tokens/email')
             ]);
 
             $user->removeAttribute('$sequence');
-            $user = $authorization->skip(fn () => $dbForProject->createDocument('users', $user));
+            try {
+                $user = $authorization->skip(fn () => $dbForProject->createDocument('users', $user));
+            } catch (Duplicate) {
+                throw new Exception(Exception::USER_ALREADY_EXISTS);
+            }
             try {
                 $target = $authorization->skip(fn () => $dbForProject->createDocument('targets', new Document([
                     '$permissions' => [
@@ -3225,7 +3254,11 @@ Http::post('/v1/account/tokens/phone')
             ]);
 
             $user->removeAttribute('$sequence');
-            $user = $authorization->skip(fn () => $dbForProject->createDocument('users', $user));
+            try {
+                $user = $authorization->skip(fn () => $dbForProject->createDocument('users', $user));
+            } catch (Duplicate) {
+                throw new Exception(Exception::USER_ALREADY_EXISTS);
+            }
             try {
                 $target = $authorization->skip(fn () => $dbForProject->createDocument('targets', new Document([
                     '$permissions' => [
@@ -3346,6 +3379,7 @@ Http::post('/v1/account/jwts')
     ->groups(['api', 'account', 'auth'])
     ->label('scope', 'account')
     ->label('auth.type', 'jwt')
+    ->label('impersonation', 'allow')
     ->label('sdk', new Method(
         namespace: 'account',
         group: 'tokens',
@@ -3411,10 +3445,10 @@ Http::get('/v1/account/prefs')
         contentType: ContentType::JSON
     ))
     ->inject('response')
-    ->inject('user')
-    ->action(function (Response $response, Document $user) {
+    ->inject('targetUser')
+    ->action(function (Response $response, Document $targetUser) {
 
-        $prefs = $user->getAttribute('prefs', []);
+        $prefs = $targetUser->getAttribute('prefs', []);
 
         $response->dynamic(new Document($prefs), Response::MODEL_PREFERENCES);
     });
@@ -3523,10 +3557,11 @@ Http::patch('/v1/account/password')
         }
 
         // null when the policy did not look, false when it looked and found nothing
-        $passwordPwned = ($project->getAttribute('auths', [])['passwordPwned']['enabled'] ?? true)
+        $pwnedPolicy = $project->getAttribute('auths', [])['passwordPwned'] ?? [];
+        $passwordPwned = ($pwnedPolicy['enabled'] ?? true)
             ? !$pwnedPasswords->isValid($password)
             : null;
-        if ($passwordPwned) {
+        if ($passwordPwned && ($pwnedPolicy['users'] ?? false)) {
             throw new Exception(Exception::USER_PASSWORD_PWNED);
         }
 
@@ -3629,10 +3664,11 @@ Http::patch('/v1/account/email')
                 }
             }
 
-            $passwordPwned = ($project->getAttribute('auths', [])['passwordPwned']['enabled'] ?? true)
+            $pwnedPolicy = $project->getAttribute('auths', [])['passwordPwned'] ?? [];
+            $passwordPwned = ($pwnedPolicy['enabled'] ?? true)
                 ? !$pwnedPasswords->isValid($password)
                 : null;
-            if ($passwordPwned) {
+            if ($passwordPwned && ($pwnedPolicy['users'] ?? false)) {
                 throw new Exception(Exception::USER_PASSWORD_PWNED);
             }
         }
@@ -3805,10 +3841,11 @@ Http::patch('/v1/account/phone')
                 }
             }
 
-            $passwordPwned = ($project->getAttribute('auths', [])['passwordPwned']['enabled'] ?? true)
+            $pwnedPolicy = $project->getAttribute('auths', [])['passwordPwned'] ?? [];
+            $passwordPwned = ($pwnedPolicy['enabled'] ?? true)
                 ? !$pwnedPasswords->isValid($password)
                 : null;
-            if ($passwordPwned) {
+            if ($passwordPwned && ($pwnedPolicy['users'] ?? false)) {
                 throw new Exception(Exception::USER_PASSWORD_PWNED);
             }
         }
@@ -4257,10 +4294,381 @@ Http::put('/v1/account/recovery')
         }
 
         // null when the policy did not look, false when it looked and found nothing
-        $passwordPwned = ($project->getAttribute('auths', [])['passwordPwned']['enabled'] ?? true)
+        $pwnedPolicy = $project->getAttribute('auths', [])['passwordPwned'] ?? [];
+        $passwordPwned = ($pwnedPolicy['enabled'] ?? true)
             ? !$pwnedPasswords->isValid($password)
             : null;
-        if ($passwordPwned) {
+        if ($passwordPwned && ($pwnedPolicy['users'] ?? false)) {
+            throw new Exception(Exception::USER_PASSWORD_PWNED);
+        }
+
+        $hooks->trigger('passwordValidator', [$dbForProject, $project, $password, &$user, true]);
+
+        $sessions = $profile->getAttribute('sessions', []);
+
+        $profile = $dbForProject->updateDocument('users', $profile->getId(), new Document(
+            [
+                'password' => $newPassword,
+                'passwordHistory' => $history,
+                'passwordPwned' => $passwordPwned,
+                'passwordUpdate' => DateTime::now(),
+                'hash' => $proofForPassword->getHash()->getName(),
+                'hashOptions' => $proofForPassword->getHash()->getOptions(),
+                'emailVerification' => true]
+        ));
+
+        $user->setAttributes($profile->getArrayCopy());
+
+        $invalidate = $project->getAttribute('auths', default: [])['invalidateSessions'] ?? false;
+        if ($invalidate) {
+            foreach ($sessions as $session) {
+                /** @var Document $session */
+                $dbForProject->deleteDocument('sessions', $session->getId());
+            }
+        }
+
+        $recoveryDocument = $dbForProject->getDocument('tokens', $verifiedToken->getId());
+
+        /**
+         * We act like we're updating and validating
+         *  the recovery token but actually we don't need it anymore.
+         */
+        $dbForProject->deleteDocument('tokens', $verifiedToken->getId());
+        $dbForProject->purgeCachedDocument('users', $profile->getId());
+
+        $queueForEvents
+            ->setParam('userId', $profile->getId())
+            ->setParam('tokenId', $recoveryDocument->getId())
+            ->setPayload($response->showSensitive(fn () => $response->output($recoveryDocument, Response::MODEL_TOKEN)), sensitive: ['secret']);
+
+        $response->dynamic($recoveryDocument, Response::MODEL_TOKEN);
+    });
+
+Http::post('/v1/account/recovery/otp')
+    ->desc('Create password recovery (OTP)')
+    ->groups(['api', 'account'])
+    ->label('scope', 'sessions.write')
+    ->label('event', 'users.[userId].recovery.[tokenId].create')
+    ->label('audits.event', 'recovery.create')
+    ->label('audits.resource', 'user/{response.userId}')
+    ->label('audits.userId', '{response.userId}')
+    ->label('sdk', new Method(
+        namespace: 'account',
+        group: 'recovery',
+        name: 'createRecoveryOTP',
+        description: '/docs/references/account/create-recovery-otp.md',
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_TOKEN,
+            )
+        ],
+        contentType: ContentType::JSON,
+    ))
+    ->label('abuse-limit', 10)
+    ->label('abuse-key', ['url:{url},email:{param-email}', 'url:{url},ip:{ip}'])
+    ->param('email', '', new EmailValidator(), 'User email.')
+    ->param('phrase', false, new Boolean(), 'Toggle for security phrase. If enabled, email will be sent with a randomly generated phrase and the phrase will also be included in the response. Confirming phrases match increases the security of your authentication flow.', true)
+    ->inject('request')
+    ->inject('response')
+    ->inject('user')
+    ->inject('dbForProject')
+    ->inject('project')
+    ->inject('platform')
+    ->inject('locale')
+    ->inject('publisherForMails')
+    ->inject('queueForEvents')
+    ->inject('proofForCode')
+    ->inject('authorization')
+    ->action(function (string $email, bool $phrase, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, MailPublisher $publisherForMails, Event $queueForEvents, ProofsCode $proofForCode, Authorization $authorization) {
+        if (empty(System::getEnv('_APP_SMTP_HOST'))) {
+            throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP Disabled');
+        }
+
+        $email = \strtolower($email);
+
+        if ($phrase === true) {
+            $phrase = (new Phrase())->generate();
+        }
+
+        $profile = $dbForProject->findOne('users', [
+            Query::equal('email', [$email]),
+        ]);
+
+        $deliverable = !$profile->isEmpty() && $profile->getAttribute('status') !== false;
+
+        if ($deliverable) {
+            $user->setAttributes($profile->getArrayCopy());
+        }
+
+        $userId = $deliverable ? $profile->getId() : ID::unique();
+
+        $secret = $proofForCode->generate();
+        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), TOKEN_EXPIRATION_OTP));
+
+        $recovery = new Document([
+            '$id' => ID::unique(),
+            'userId' => $userId,
+            'userInternalId' => $deliverable ? $profile->getSequence() : ID::unique(),
+            'type' => TOKEN_TYPE_RECOVERY_OTP,
+            'secret' => $proofForCode->hash($secret),
+            'expire' => $expire,
+            'userAgent' => $request->getUserAgent('UNKNOWN'),
+            'ip' => $request->getIP(),
+        ]);
+
+        $authorization->addRole(Role::user($userId)->toString());
+
+        $recovery = $dbForProject->createDocument('tokens', $recovery
+            ->setAttribute('$permissions', [
+                Permission::read(Role::user($userId)),
+                Permission::update(Role::user($userId)),
+                Permission::delete(Role::user($userId)),
+            ]));
+
+        if ($deliverable) {
+            $dbForProject->purgeCachedDocument('users', $profile->getId());
+        } else {
+            $authorization->skip(fn () => $dbForProject->deleteDocument('tokens', $recovery->getId()));
+        }
+
+        if ($deliverable) {
+            $subject = $locale->getText('emails.otpRecovery.subject');
+            $preview = $locale->getText('emails.otpRecovery.preview');
+            $heading = $locale->getText('emails.otpRecovery.heading');
+
+            $customTemplate =
+                $project->getAttribute('templates', [])['email.otpRecovery-' . $locale->default] ??
+                $project->getAttribute('templates', [])['email.otpRecovery-' . $locale->fallback] ?? [];
+            $smtpBaseTemplate = $project->getAttribute('smtpBaseTemplate', 'email-base');
+
+            $validator = new FileName();
+            if (!$validator->isValid($smtpBaseTemplate)) {
+                throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid template path');
+            }
+
+            $bodyTemplate = __DIR__ . '/../../config/locale/templates/' . $smtpBaseTemplate . '.tpl';
+
+            $detector = new Detector($request->getUserAgent('UNKNOWN'));
+            $agentOs = $detector->getOS();
+            $agentClient = $detector->getClient();
+            $agentDevice = $detector->getDevice();
+
+            $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-otp.tpl');
+            $message
+                ->setParam('{{hello}}', $locale->getText('emails.otpRecovery.hello'))
+                ->setParam('{{description}}', $locale->getText('emails.otpRecovery.description'))
+                ->setParam('{{clientInfo}}', $locale->getText('emails.otpRecovery.clientInfo'))
+                ->setParam('{{thanks}}', $locale->getText('emails.otpRecovery.thanks'))
+                ->setParam('{{signature}}', $locale->getText('emails.otpRecovery.signature'));
+
+            if (!empty($phrase)) {
+                $message->setParam('{{securityPhrase}}', $locale->getText('emails.otpRecovery.securityPhrase'));
+            } else {
+                $message->setParam('{{securityPhrase}}', '');
+            }
+
+            $body = $message->render();
+
+            $smtp = $project->getAttribute('smtp', []);
+            $smtpEnabled = $smtp['enabled'] ?? false;
+
+            $senderEmail = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
+            $senderName = System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
+            $replyToEmail = '';
+            $replyToName = '';
+            $smtpConfig = [];
+
+            if ($smtpEnabled) {
+                if (!empty($smtp['senderEmail'])) {
+                    $senderEmail = $smtp['senderEmail'];
+                }
+                if (!empty($smtp['senderName'])) {
+                    $senderName = $smtp['senderName'];
+                }
+                $smtpReplyToEmail = $smtp['replyToEmail'] ?? $smtp['replyTo'] ?? '';
+                if (!empty($smtpReplyToEmail)) {
+                    $replyToEmail = $smtpReplyToEmail;
+                }
+                if (!empty($smtp['replyToName'])) {
+                    $replyToName = $smtp['replyToName'];
+                }
+
+                if (!empty($customTemplate)) {
+                    if (!empty($customTemplate['senderEmail'])) {
+                        $senderEmail = $customTemplate['senderEmail'];
+                    }
+                    if (!empty($customTemplate['senderName'])) {
+                        $senderName = $customTemplate['senderName'];
+                    }
+                    $customReplyToEmail = $customTemplate['replyToEmail'] ?? $customTemplate['replyTo'] ?? '';
+                    if (!empty($customReplyToEmail)) {
+                        $replyToEmail = $customReplyToEmail;
+                    }
+                    if (!empty($customTemplate['replyToName'])) {
+                        $replyToName = $customTemplate['replyToName'];
+                    }
+
+                    $body = $customTemplate['message'] ?? '';
+                    $subject = $customTemplate['subject'] ?? $subject;
+                }
+
+                $smtpConfig = [
+                    'host' => $smtp['host'] ?? '',
+                    'port' => $smtp['port'] ?? '',
+                    'username' => $smtp['username'] ?? '',
+                    'password' => $smtp['password'] ?? '',
+                    'secure' => $smtp['secure'] ?? '',
+                    'replyToEmail' => $replyToEmail,
+                    'replyToName' => $replyToName,
+                    'senderEmail' => $senderEmail,
+                    'senderName' => $senderName,
+                ];
+            }
+
+            $projectName = $project->isEmpty()
+                ? 'Console'
+                : $project->getAttribute('name', '[APP-NAME]');
+
+            if ($project->getId() === 'console') {
+                $projectName = $platform['platformName'];
+            }
+
+            $emailVariables = [
+                'heading' => $heading,
+                'direction' => $locale->getText('settings.direction'),
+                'user' => $profile->getAttribute('name'),
+                'project' => $projectName,
+                'otp' => $secret,
+                'agentDevice' => $agentDevice['deviceBrand'] ?? 'UNKNOWN',
+                'agentClient' => $agentClient['clientName'] ?? 'UNKNOWN',
+                'agentOs' => $agentOs['osName'] ?? 'UNKNOWN',
+                'phrase' => !empty($phrase) ? $phrase : '',
+                'team' => '',
+            ];
+
+            if ($smtpBaseTemplate === APP_BRANDED_EMAIL_BASE_TEMPLATE) {
+                $emailVariables = array_merge($emailVariables, [
+                    'accentColor' => $platform['accentColor'],
+                    'logoUrl' => $platform['logoUrl'],
+                    'twitter' => $platform['twitterUrl'],
+                    'discord' => $platform['discordUrl'],
+                    'github' => $platform['githubUrl'],
+                    'terms' => $platform['termsUrl'],
+                    'privacy' => $platform['privacyUrl'],
+                    'platform' => $platform['platformName'],
+                ]);
+            }
+
+            $publisherForMails->enqueue(new MailMessage(
+                project: $project,
+                recipient: $profile->getAttribute('email', ''),
+                name: $profile->getAttribute('name', ''),
+                subject: $subject,
+                template: MAIL_TEMPLATE_OTP_RECOVERY,
+                bodyTemplate: $bodyTemplate,
+                body: $body,
+                preview: $preview,
+                smtp: $smtpConfig,
+                variables: $emailVariables,
+                customMailOptions: $project->getId() === 'console' ? ['senderName' => $platform['emailSenderName']] : [],
+                platform: $platform,
+            ));
+        }
+
+        $recovery->setAttribute('secret', $secret);
+
+        if (!empty($phrase)) {
+            $recovery->setAttribute('phrase', $phrase);
+        }
+
+        $queueForEvents
+            ->setParam('userId', $userId)
+            ->setParam('tokenId', $recovery->getId())
+            ->setUser($deliverable ? $profile : new Document())
+            ->setPayload($response->showSensitive(fn () => $response->output($recovery, Response::MODEL_TOKEN)), sensitive: ['secret']);
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($recovery, Response::MODEL_TOKEN);
+    });
+
+Http::put('/v1/account/recovery/otp')
+    ->desc('Update password recovery (OTP)')
+    ->groups(['api', 'account'])
+    ->label('scope', 'sessions.write')
+    ->label('event', 'users.[userId].recovery.[tokenId].update')
+    ->label('audits.event', 'recovery.update')
+    ->label('audits.resource', 'user/{response.userId}')
+    ->label('audits.userId', '{response.userId}')
+    ->label('sdk', new Method(
+        namespace: 'account',
+        group: 'recovery',
+        name: 'updateRecoveryOTP',
+        description: '/docs/references/account/update-recovery-otp.md',
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_TOKEN,
+            )
+        ],
+        contentType: ContentType::JSON,
+    ))
+    ->label('abuse-limit', 10)
+    ->label('abuse-key', 'url:{url},userId:{param-userId}')
+    ->param('userId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'User ID.', false, ['dbForProject'])
+    ->param('secret', '', new Text(256), 'Valid recovery OTP code.')
+    ->param('password', '', fn ($project, $passwordsDictionary) => new PasswordFormat(new AllOf([new PasswordStrength($project->getAttribute('auths', [])['passwordStrength'] ?? []), new PasswordDictionary($passwordsDictionary, enabled: $project->getAttribute('auths', [])['passwordDictionary'] ?? false)], Validator::TYPE_STRING)), 'New user password. Must be between 8 and 256 chars.', false, ['project', 'passwordsDictionary'])
+    ->inject('response')
+    ->inject('user')
+    ->inject('dbForProject')
+    ->inject('project')
+    ->inject('queueForEvents')
+    ->inject('hooks')
+    ->inject('proofForPassword')
+    ->inject('proofForCode')
+    ->inject('authorization')
+    ->inject('pwnedPasswords')
+    ->action(function (string $userId, string $secret, string $password, Response $response, User $user, Database $dbForProject, Document $project, Event $queueForEvents, Hooks $hooks, ProofsPassword $proofForPassword, ProofsCode $proofForCode, Authorization $authorization, PasswordPwned $pwnedPasswords) {
+        /** @var Appwrite\Utopia\Database\Documents\User $profile */
+        $profile = $dbForProject->getDocument('users', $userId);
+
+        if ($profile->isEmpty()) {
+            throw new Exception(Exception::USER_NOT_FOUND);
+        }
+
+        $verifiedToken = $profile->tokenVerify(TOKEN_TYPE_RECOVERY_OTP, $secret, $proofForCode);
+
+        if (!$verifiedToken) {
+            throw new Exception(Exception::USER_INVALID_TOKEN);
+        }
+
+        $authorization->addRole(Role::user($profile->getId())->toString());
+
+        $newPassword = $proofForPassword->hash($password);
+
+        $hash = ProofsPassword::createHash($profile->getAttribute('hash'), $profile->getAttribute('hashOptions'));
+        $historyLimit = $project->getAttribute('auths', [])['passwordHistory'] ?? 0;
+        $history = $profile->getAttribute('passwordHistory', []);
+
+        if ($historyLimit > 0) {
+            $validator = new PasswordHistory($history, $hash);
+            if (!$validator->isValid($password)) {
+                throw new Exception(Exception::USER_PASSWORD_RECENTLY_USED);
+            }
+
+            $history[] = $newPassword;
+            $history = array_slice($history, (count($history) - $historyLimit), $historyLimit);
+        }
+
+        // null when the policy did not look, false when it looked and found nothing
+        $pwnedPolicy = $project->getAttribute('auths', [])['passwordPwned'] ?? [];
+        $passwordPwned = ($pwnedPolicy['enabled'] ?? true)
+            ? !$pwnedPasswords->isValid($password)
+            : null;
+        if ($passwordPwned && ($pwnedPolicy['users'] ?? false)) {
             throw new Exception(Exception::USER_PASSWORD_PWNED);
         }
 
@@ -4898,27 +5306,73 @@ Http::post('/v1/account/targets/push')
 
         $sessionId = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken);
         $session = $dbForProject->getDocument('sessions', $sessionId);
+        $name = "{$device['deviceBrand']} {$device['deviceModel']}";
+
+        // A session is one device install holding one push token per provider. Re-registering a rotated
+        // token instead of updating used to leave the superseded one live, so messages arrived twice.
+        $siblings = $session->isEmpty()
+            ? []
+            : $authorization->skip(fn () => $dbForProject->find('targets', [
+                Query::equal('userInternalId', [$user->getSequence()]),
+                Query::equal('sessionInternalId', [$session->getSequence()]),
+                Query::equal('providerType', [MESSAGE_TYPE_PUSH]),
+                empty($providerId)
+                    ? Query::isNull('providerId')
+                    : Query::equal('providerId', [$providerId]),
+                Query::orderAsc('$sequence'),
+                Query::limit(APP_LIMIT_SUBQUERY),
+            ]));
+
+        // A sibling already holding this token has to be the one reused, or the update below collides
+        // with it on the unique identifier index. Otherwise the oldest wins, since a client that
+        // subscribes to topics only on first registration left its subscriptions there.
+        $current = null;
+
+        foreach ($siblings as $key => $sibling) {
+            if ($sibling->getAttribute('identifier') === $identifier) {
+                $current = $sibling;
+                unset($siblings[$key]);
+                break;
+            }
+        }
+
+        $current ??= \array_shift($siblings);
 
         try {
-            $target = $dbForProject->createDocument('targets', new Document([
-                '$id' => $targetId,
-                '$permissions' => [
-                    Permission::read(Role::user($user->getId())),
-                    Permission::update(Role::user($user->getId())),
-                    Permission::delete(Role::user($user->getId())),
-                ],
-                'providerId' => !empty($providerId) ? $providerId : null,
-                'providerInternalId' => !empty($providerId) ? $provider->getSequence() : null,
-                'providerType' => MESSAGE_TYPE_PUSH,
-                'userId' => $user->getId(),
-                'userInternalId' => $user->getSequence(),
-                'sessionId' => $session->getId(),
-                'sessionInternalId' => $session->getSequence(),
-                'identifier' => $identifier,
-                'name' => "{$device['deviceBrand']} {$device['deviceModel']}"
-            ]));
+            $target = $current === null
+                ? $dbForProject->createDocument('targets', new Document([
+                    '$id' => $targetId,
+                    '$permissions' => [
+                        Permission::read(Role::user($user->getId())),
+                        Permission::update(Role::user($user->getId())),
+                        Permission::delete(Role::user($user->getId())),
+                    ],
+                    'providerId' => !empty($providerId) ? $providerId : null,
+                    'providerInternalId' => !empty($providerId) ? $provider->getSequence() : null,
+                    'providerType' => MESSAGE_TYPE_PUSH,
+                    'userId' => $user->getId(),
+                    'userInternalId' => $user->getSequence(),
+                    'sessionId' => $session->getId(),
+                    'sessionInternalId' => $session->getSequence(),
+                    'identifier' => $identifier,
+                    'name' => $name
+                ]))
+                : $dbForProject->updateDocument('targets', $current->getId(), new Document([
+                    'identifier' => $identifier,
+                    'expired' => false,
+                    'name' => $name,
+                ]));
         } catch (Duplicate) {
             throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
+        }
+
+        // Anything left holds a token the client just told us it no longer uses. Expiring rather than
+        // deleting hands it to the maintenance sweep, which also releases its subscriptions and the
+        // topic counters those hold.
+        foreach ($siblings as $sibling) {
+            $dbForProject->updateDocument('targets', $sibling->getId(), new Document([
+                'expired' => true,
+            ]));
         }
 
         $dbForProject->purgeCachedDocument('users', $user->getId());
@@ -4986,11 +5440,15 @@ Http::put('/v1/account/targets/:targetId/push')
 
         $target->setAttribute('name', "{$device['deviceBrand']} {$device['deviceModel']}");
 
-        $target = $dbForProject->updateDocument('targets', $target->getId(), new Document([
-            'identifier' => $target->getAttribute('identifier'),
-            'expired' => $target->getAttribute('expired'),
-            'name' => $target->getAttribute('name'),
-        ]));
+        try {
+            $target = $dbForProject->updateDocument('targets', $target->getId(), new Document([
+                'identifier' => $target->getAttribute('identifier'),
+                'expired' => $target->getAttribute('expired'),
+                'name' => $target->getAttribute('name'),
+            ]));
+        } catch (Duplicate) {
+            throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
+        }
 
         $dbForProject->purgeCachedDocument('users', $user->getId());
 
@@ -5080,9 +5538,9 @@ Http::get('/v1/account/identities')
     ->param('queries', [], new Identities(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Identities::ALLOWED_ATTRIBUTES), true)
     ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
-    ->inject('user')
+    ->inject('targetUser')
     ->inject('dbForProject')
-    ->action(function (array $queries, bool $includeTotal, Response $response, User $user, Database $dbForProject) {
+    ->action(function (array $queries, bool $includeTotal, Response $response, User $targetUser, Database $dbForProject) {
 
         try {
             $queries = Query::parseQueries($queries);
@@ -5090,7 +5548,7 @@ Http::get('/v1/account/identities')
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
-        $queries[] = Query::equal('userInternalId', [$user->getSequence()]);
+        $queries[] = Query::equal('userInternalId', [$targetUser->getSequence()]);
 
         $cursor = Query::getCursorQueries($queries, false);
         $cursor = \reset($cursor);

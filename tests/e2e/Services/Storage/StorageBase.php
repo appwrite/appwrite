@@ -522,6 +522,8 @@ trait StorageBase
             // HTML is not in the storage-mimes allowlist on purpose: rendering
             // user uploads as HTML on the API origin would allow stored XSS.
             ['source' => 'page.html', 'mimeType' => 'text/html', 'contentType' => 'text/plain', 'disposition' => 'inline'],
+            // A TrueType font sniffs as a bare SFNT, so its type comes from the extension.
+            ['source' => '../../public/fonts/Poppins-Bold.ttf', 'mimeType' => 'font/ttf', 'contentType' => 'text/plain', 'disposition' => 'inline'],
         ];
 
         foreach ($cases as $case) {
@@ -531,7 +533,7 @@ trait StorageBase
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()), [
                 'fileId' => ID::unique(),
-                'file' => new CURLFile($source, $case['mimeType'], $case['source']),
+                'file' => new CURLFile($source, $case['mimeType'], \basename($source)),
                 'permissions' => [
                     Permission::read(Role::any()),
                 ],
@@ -712,6 +714,91 @@ trait StorageBase
         $this->assertEquals('image/png', $file['body']['mimeType']);
         $this->assertEquals(47218, $file['body']['sizeOriginal']);
         $this->assertTrue(md5_file(realpath(__DIR__ . '/../../../resources/logo.png')) == $file['body']['signature']);
+    }
+
+    public function testBucketFileCompressionAndEncryptionAreNeverNull(): void
+    {
+        // Neither compression nor encryption is configured, so the response
+        // values come from whatever the File model falls back to.
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'bucketId' => ID::unique(),
+            'name' => 'Test Bucket',
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $bucket['headers']['status-code']);
+
+        $bucketId = $bucket['body']['$id'];
+
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => ID::unique(),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
+        ]);
+        $this->assertEquals(201, $file['headers']['status-code']);
+        $this->assertSame('none', $file['body']['compression']);
+        $this->assertTrue($file['body']['encryption']);
+
+        $file = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $file['body']['$id'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+        $this->assertEquals(200, $file['headers']['status-code']);
+        $this->assertSame('none', $file['body']['compression']);
+        $this->assertTrue($file['body']['encryption']);
+
+        // A chunked upload creates the file document on the first chunk, before
+        // the algorithm is known, and returns it. Every chunk response is a File.
+        $source = __DIR__ . '/../../../resources/disk-a/large-file.mp4';
+        $size = \filesize($source);
+
+        // Both are skipped above the buffer, so every chunk reports none/false.
+        $this->assertGreaterThan(APP_STORAGE_READ_BUFFER, $size);
+        $chunkSize = 5 * 1024 * 1024;
+        $handle = @\fopen($source, 'rb');
+        $mimeType = \mime_content_type($source);
+        $counter = 0;
+        $id = '';
+        $chunked = null;
+        $headers = [
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ];
+        while (!\feof($handle)) {
+            $curlFile = new CURLFile('data://' . $mimeType . ';base64,' . \base64_encode(@\fread($handle, $chunkSize)), $mimeType, 'large-file.mp4');
+            $headers['content-range'] = 'bytes ' . ($counter * $chunkSize) . '-' . \min(((($counter * $chunkSize) + $chunkSize) - 1), $size - 1) . '/' . $size;
+            if (!empty($id)) {
+                $headers['x-appwrite-id'] = $id;
+            }
+            $chunked = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', \array_merge($headers, $this->getHeaders()), [
+                'fileId' => 'unique()',
+                'file' => $curlFile,
+            ]);
+            $this->assertNotEmpty($chunked['body']['$id']);
+            $this->assertSame('none', $chunked['body']['compression']);
+            $this->assertFalse($chunked['body']['encryption']);
+            $id = $chunked['body']['$id'];
+            $counter++;
+        }
+        \fclose($handle);
+        $this->assertEquals(201, $chunked['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $bucketId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+        $this->assertEquals(204, $response['headers']['status-code']);
     }
 
     public function testCreateBucketFileNoCollidingId(): void
@@ -1006,6 +1093,53 @@ trait StorageBase
 
         $this->assertEquals(416, $file54['headers']['status-code']);
 
+        // Test ranged download - inclusive bounds, so start === end is one byte
+        $size = \filesize($path);
+
+        $file55 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $data['fileId'] . '/download', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'Range' => 'bytes=0-0',
+        ], $this->getHeaders()));
+
+        $this->assertEquals(206, $file55['headers']['status-code']);
+        $this->assertEquals('bytes 0-0/' . $size, $file55['headers']['content-range']);
+        $this->assertEquals('1', $file55['headers']['content-length']);
+        $this->assertEquals(\file_get_contents($path, false, null, 0, 1), $file55['body']);
+
+        // Test ranged download - the final byte
+        $file56 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $data['fileId'] . '/download', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'Range' => 'bytes=' . ($size - 1) . '-' . ($size - 1),
+        ], $this->getHeaders()));
+
+        $this->assertEquals(206, $file56['headers']['status-code']);
+        $this->assertEquals('bytes ' . ($size - 1) . '-' . ($size - 1) . '/' . $size, $file56['headers']['content-range']);
+        $this->assertEquals('1', $file56['headers']['content-length']);
+        $this->assertEquals(\file_get_contents($path, false, null, $size - 1, 1), $file56['body']);
+
+        // Test ranged download - an end past the last byte is clamped to it
+        $file57 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $data['fileId'] . '/download', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'Range' => 'bytes=' . ($size - 100) . '-' . ($size + 500),
+        ], $this->getHeaders()));
+
+        $this->assertEquals(206, $file57['headers']['status-code']);
+        $this->assertEquals('bytes ' . ($size - 100) . '-' . ($size - 1) . '/' . $size, $file57['headers']['content-range']);
+        $this->assertEquals('100', $file57['headers']['content-length']);
+        $this->assertEquals(\file_get_contents($path, false, null, $size - 100, 100), $file57['body']);
+
+        // Test ranged download - with a start at the end of the file
+        $file58 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $data['fileId'] . '/download', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'Range' => 'bytes=' . $size . '-' . ($size + 500),
+        ], $this->getHeaders()));
+
+        $this->assertEquals(416, $file58['headers']['status-code']);
+
         $file6 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $data['fileId'] . '/view', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -1014,6 +1148,39 @@ trait StorageBase
         $this->assertEquals(200, $file6['headers']['status-code']);
         $this->assertEquals('image/png', $file6['headers']['content-type']);
         $this->assertNotEmpty($file6['body']);
+
+        // Test ranged view - the same guard as download
+        $file61 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $data['fileId'] . '/view', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'Range' => 'bytes=0-0',
+        ], $this->getHeaders()));
+
+        $this->assertEquals(206, $file61['headers']['status-code']);
+        $this->assertEquals('bytes 0-0/' . $size, $file61['headers']['content-range']);
+        $this->assertEquals('1', $file61['headers']['content-length']);
+        $this->assertEquals(\file_get_contents($path, false, null, 0, 1), $file61['body']);
+
+        // Test ranged view - the final byte, with an end past it
+        $file62 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $data['fileId'] . '/view', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'Range' => 'bytes=' . ($size - 1) . '-' . ($size + 500),
+        ], $this->getHeaders()));
+
+        $this->assertEquals(206, $file62['headers']['status-code']);
+        $this->assertEquals('bytes ' . ($size - 1) . '-' . ($size - 1) . '/' . $size, $file62['headers']['content-range']);
+        $this->assertEquals('1', $file62['headers']['content-length']);
+        $this->assertEquals(\file_get_contents($path, false, null, $size - 1, 1), $file62['body']);
+
+        // Test ranged view - with a start at the end of the file
+        $file63 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $data['fileId'] . '/view', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'Range' => 'bytes=' . $size . '-',
+        ], $this->getHeaders()));
+
+        $this->assertEquals(416, $file63['headers']['status-code']);
 
         // Test for negative angle values in fileGetPreview
         $file7 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $data['fileId'] . '/preview', array_merge([
