@@ -9164,6 +9164,111 @@ trait DatabasesBase
         $this->assertSame('Artist 2', $this->nestedAlbumArtist($fixture, $albumIds['Artist 2'])['name']);
     }
 
+    public function testStagedWritesGiveNestedDocumentsGeneratedIds(): void
+    {
+        if (!$this->getSupportForRelationships()) {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
+        $fixture = $this->setupAlbumArtistRelationship();
+        $databaseId = $fixture['databaseId'];
+        $albumsId = $fixture['albumsId'];
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $existingId = ID::unique();
+        $existing = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $albumsId), $headers, [
+            $this->getRecordIdParam() => $existingId,
+            'data' => ['name' => 'Album 0'],
+        ]);
+        $this->assertSame(201, $existing['headers']['status-code']);
+
+        $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), $headers);
+        $this->assertSame(201, $transaction['headers']['status-code']);
+        $transactionId = $transaction['body']['$id'];
+
+        $createdId = ID::unique();
+        $created = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $albumsId), $headers, [
+            $this->getRecordIdParam() => $createdId,
+            'data' => [
+                'name' => 'Album 1',
+                'artist' => ['$id' => 'unique()', 'name' => 'Staged 1'],
+            ],
+            'transactionId' => $transactionId,
+        ]);
+        $this->assertSame(201, $created['headers']['status-code']);
+
+        $updated = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $albumsId, $existingId), $headers, [
+            'data' => [
+                'artist' => ['$id' => 'unique()', 'name' => 'Staged 2'],
+            ],
+            'transactionId' => $transactionId,
+        ]);
+        $this->assertSame(200, $updated['headers']['status-code']);
+
+        $upsertedId = ID::unique();
+        $upserted = $this->client->call(Client::METHOD_PUT, $this->getRecordUrl($databaseId, $albumsId, $upsertedId), $headers, [
+            'data' => [
+                'name' => 'Album 2',
+                'artist' => ['$id' => 'unique()', 'name' => 'Staged 3'],
+            ],
+            'transactionId' => $transactionId,
+        ]);
+        $this->assertSame(201, $upserted['headers']['status-code']);
+
+        $committed = $this->client->call(Client::METHOD_PATCH, $this->getTransactionUrl($transactionId), $headers, [
+            'commit' => true,
+        ]);
+        $this->assertSame(200, $committed['headers']['status-code']);
+        $this->assertSame('committed', $committed['body']['status']);
+
+        $this->assertSame(['Staged 1', 'Staged 2', 'Staged 3'], $this->nestedArtistNames($fixture), 'each staged write must commit its own related document');
+        $first = $this->nestedAlbumArtist($fixture, $createdId);
+        $second = $this->nestedAlbumArtist($fixture, $existingId);
+        $third = $this->nestedAlbumArtist($fixture, $upsertedId);
+        $this->assertSame('Staged 1', $first['name'], 'a staged create must link the related document it staged');
+        $this->assertSame('Staged 2', $second['name'], 'a staged update must link the related document it staged');
+        $this->assertSame('Staged 3', $third['name'], 'a staged upsert must link the related document it staged');
+        $this->assertCount(3, \array_unique([$first['$id'], $second['$id'], $third['$id']]), 'staged writes must not share a related document');
+    }
+
+    public function testNestedDocumentWithoutIdCannotSetItsSequence(): void
+    {
+        if (!$this->getSupportForRelationships()) {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
+        $fixture = $this->setupAlbumArtistRelationship();
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+
+        $album = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($fixture['databaseId'], $fixture['albumsId']), $headers, [
+            $this->getRecordIdParam() => ID::unique(),
+            'data' => [
+                'name' => 'Album',
+                'artist' => ['name' => 'Artist', '$sequence' => '987654321'],
+            ],
+        ]);
+        $this->assertSame(201, $album['headers']['status-code']);
+
+        $artistId = $this->nestedAlbumArtist($fixture, $album['body']['$id'])['$id'];
+        $artist = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($fixture['databaseId'], $fixture['artistsId'], $artistId), [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+        $this->assertSame(200, $artist['headers']['status-code']);
+        $this->assertSame('Artist', $artist['body']['name']);
+        $this->assertNotSame('987654321', $artist['body']['$sequence'], 'a client must not choose the internal sequence of a related document');
+    }
+
     /**
      * @return array{databaseId: string, albumsId: string, artistsId: string}
      */
