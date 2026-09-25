@@ -9,6 +9,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
+use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Database\RelationType;
@@ -472,6 +473,108 @@ final class UsageCustomServerTest extends Scope
             ]);
             $this->assertSame(200, $response['headers']['status-code']);
             $this->assertSame(9, (int) array_sum(array_column($response['body']['metrics'][0]['points'], 'value')), 'reads: the album and its two tracks for the uncached list, the cache miss and the cache hit');
+        }, 60_000, 500);
+    }
+
+    #[DataProvider('databaseApis')]
+    public function testUpsertQueryAndCursorOperationsAreMetered(string $api, string $containers, string $records, string $attributes, string $containerIdKey, string $recordIdKey): void
+    {
+        if (!$this->getSupportForRelationships()) {
+            $this->markTestSkipped('The database adapter does not support relationships');
+        }
+
+        self::$project = $this->getProject(true);
+        $this->waitForUsageStats();
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $databaseId = ID::unique();
+        $path = "/$api/$databaseId/$containers";
+
+        $response = $this->client->call(Client::METHOD_POST, "/$api", $headers, [
+            'databaseId' => $databaseId,
+            'name' => 'Upsert and query operations',
+        ]);
+        $this->assertSame(201, $response['headers']['status-code']);
+        foreach (['albums', 'tracks'] as $containerId) {
+            $response = $this->client->call(Client::METHOD_POST, $path, $headers, [
+                $containerIdKey => $containerId,
+                'name' => $containerId,
+            ]);
+            $this->assertSame(201, $response['headers']['status-code']);
+            $response = $this->client->call(Client::METHOD_POST, "$path/$containerId/$attributes/string", $headers, [
+                'key' => 'name',
+                'size' => 64,
+                'required' => false,
+            ]);
+            $this->assertSame(202, $response['headers']['status-code']);
+        }
+        $response = $this->client->call(Client::METHOD_POST, "$path/albums/$attributes/relationship", $headers, [
+            'related' . \ucfirst($containerIdKey) => 'tracks',
+            'type' => RelationType::OneToMany->value,
+            'twoWay' => true,
+            'key' => 'tracks',
+            'twoWayKey' => 'album',
+            'onDelete' => ForeignKeyAction::Cascade->value,
+        ]);
+        $this->assertSame(202, $response['headers']['status-code']);
+        $this->assertEventually(function () use ($path, $attributes, $headers) {
+            foreach (["albums/$attributes/name", "albums/$attributes/tracks", "tracks/$attributes/name", "tracks/$attributes/album"] as $attribute) {
+                $response = $this->client->call(Client::METHOD_GET, "$path/$attribute", $headers);
+                $this->assertSame(200, $response['headers']['status-code']);
+                $this->assertSame('available', $response['body']['status']);
+            }
+        });
+
+        // Test for SUCCESS: an upsert is metered as its document plus every related document in its payload.
+        $albums = "$path/albums/$records";
+        $response = $this->client->call(Client::METHOD_PUT, "$albums/album1", $headers, [
+            'data' => [
+                'name' => 'Album 1',
+                'tracks' => [
+                    ['$id' => 'track1', 'name' => 'Track 1'],
+                    ['$id' => 'track2', 'name' => 'Track 2'],
+                ],
+            ],
+        ]);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $response = $this->client->call(Client::METHOD_PUT, "$albums/album2", $headers, [
+            'data' => [
+                'name' => 'Album 2',
+                'tracks' => [
+                    ['$id' => 'track3', 'name' => 'Track 3'],
+                ],
+            ],
+        ]);
+        $this->assertSame(200, $response['headers']['status-code']);
+
+        // Test for SUCCESS: a query and a page after a cursor are metered as the documents they return, related documents included, and not the cursor document.
+        $select = Query::select(['*', 'tracks.*'])->toString();
+        $response = $this->client->call(Client::METHOD_POST, "$albums/query", $headers, [
+            'queries' => [$select],
+        ]);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame(['album1', 'album2'], array_column($response['body'][$records], '$id'));
+        $this->assertCount(2, $response['body'][$records][0]['tracks']);
+        $this->assertCount(1, $response['body'][$records][1]['tracks']);
+        $response = $this->client->call(Client::METHOD_GET, $albums, $headers, [
+            'queries' => [$select, Query::cursorAfter(new Document(['$id' => 'album1']))->toString()],
+        ]);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame(['album2'], array_column($response['body'][$records], '$id'));
+        $this->assertCount(1, $response['body'][$records][0]['tracks']);
+
+        $usageHeaders = array_merge($headers, ['x-appwrite-key' => $this->getNewKey(['usage.read'])]);
+        $this->assertEventually(function () use ($databaseId, $usageHeaders) {
+            $response = $this->client->call(Client::METHOD_GET, '/usage/events', $usageHeaders, [
+                'metrics' => ['databases.operations.reads', 'databases.operations.writes'],
+                'queries' => [Query::equal('resourceId', [$databaseId])->toString()],
+            ]);
+            $this->assertSame(200, $response['headers']['status-code']);
+            $this->assertSame(7, (int) array_sum(array_column($response['body']['metrics'][0]['points'], 'value')), 'reads: 5 for the query of both albums with their three tracks, 2 for album2 and its track on the page after album1');
+            $this->assertSame(5, (int) array_sum(array_column($response['body']['metrics'][1]['points'], 'value')), 'writes: 3 for the upsert of album1 with two tracks, 2 for the upsert of album2 with one');
         }, 60_000, 500);
     }
 

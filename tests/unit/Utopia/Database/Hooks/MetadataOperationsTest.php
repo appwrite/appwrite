@@ -99,6 +99,20 @@ final class MetadataOperationsTest extends TestCase
         $this->assertSame($hook->getOperations(), $operations->reads($albums));
     }
 
+    public function testAPageMetersItsDocumentsButNotTheCursorDocument(): void
+    {
+        $operations = new Operations();
+        $hook = new Metadata(new Document(['$id' => 'library']), tenant: $this->database, operations: $operations);
+        $this->database->addHook($hook);
+
+        $cursor = $this->database->getDocument('albums', 'first');
+        $page = $this->database->find('albums', [Query::cursorAfter($cursor)]);
+
+        $this->assertSame(['second'], \array_map(static fn (Document $album): string => $album->getId(), $page));
+        $this->assertSame(3, $operations->reads($page), 'second, track3 and the empty genre list of track3');
+        $this->assertSame(8, $hook->getOperations(), 'the hook decorated the cursor document too, which counts 5');
+    }
+
     public function testWithoutACounterEveryDocumentReadsAsOne(): void
     {
         $operations = new Operations();

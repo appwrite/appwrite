@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Usage;
 
 use Appwrite\Usage\Operations;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Utopia\Database\Document;
 use Utopia\Query\Schema\ColumnType;
@@ -65,6 +66,63 @@ final class OperationsTest extends TestCase
         ];
 
         $this->assertSame(5, Operations::writes($this->albums(), [$payload], $this->collections()), 'the album, artist, track1, rock and track2');
+    }
+
+    /**
+     * @return iterable<string, array{array<string, mixed>, int}>
+     */
+    public static function requestBodies(): iterable
+    {
+        yield 'the album and four new tracks' => [
+            [
+                'tracks' => [
+                    ['$id' => 'track1', 'name' => 'Track 1'],
+                    ['$id' => 'track2', 'name' => 'Track 2'],
+                    ['$id' => 'track3', 'name' => 'Track 3'],
+                    ['$id' => 'track4', 'name' => 'Track 4'],
+                ],
+            ],
+            5,
+        ];
+        yield 'the album, a track and its new genre, not the linked genre or track' => [
+            [
+                'tracks' => [
+                    ['$id' => 'track1', 'genres' => [['$id' => 'rock', 'name' => 'Rock'], 'jazz']],
+                    'track2',
+                ],
+            ],
+            3,
+        ];
+        yield 'the album, two tracks and a new genre, not the linked genre or the empty genre list' => [
+            [
+                'name' => 'Album',
+                'tracks' => [
+                    ['$id' => 'track1', 'genres' => [['$id' => 'rock', 'name' => 'Rock'], 'jazz']],
+                    ['$id' => 'track2', 'genres' => []],
+                ],
+            ],
+            4,
+        ];
+        yield 'the album, two tracks and a genre given by ID alone, not the linked track' => [
+            [
+                'name' => 'Album',
+                'tracks' => [
+                    ['$id' => 'track1', 'genres' => [['$id' => 'rock']]],
+                    ['$id' => 'track2'],
+                    'track3',
+                ],
+            ],
+            4,
+        ];
+    }
+
+    /**
+     * @param array<string, mixed> $body
+     */
+    #[DataProvider('requestBodies')]
+    public function testWritesCountRelatedDocumentsGivenAsArraysAtEveryDepth(array $body, int $writes): void
+    {
+        $this->assertSame($writes, Operations::writes($this->albums(), [$body], $this->collections()));
     }
 
     public function testWritesDoNotCountLinksOrEmptyRelationships(): void
