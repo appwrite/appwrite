@@ -71,7 +71,7 @@ function CloudStatusBannerInner({
   const regionsLine =
     mockCloudStatusAlert === 'live' ? data?.regionsLine : undefined
 
-  const statusUrl = 'https://status.appwrite.online'
+  const statusUrl = 'https://appwrite.online'
 
   return (
     <motion.div

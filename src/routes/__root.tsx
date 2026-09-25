@@ -432,7 +432,7 @@ function RootAppShell({ children }: { children: React.ReactNode }) {
   )
 }
 
-const STATUS_PAGE_URL = 'https://status.appwrite.online'
+const STATUS_PAGE_URL = 'https://appwrite.online'
 
 function RootFullscreenLoader() {
   const { isLoading, skipStaticLoader } = useInitialLoader()
