@@ -29,6 +29,15 @@ class OAuth2Auth0 extends OAuth2Base
     {
         parent::__construct();
 
+        $this->addRule('prompt', [
+            'type' => self::TYPE_ENUM,
+            'description' => 'Auth0 OAuth2 prompt values.',
+            'default' => [],
+            'example' => ['none'],
+            'array' => true,
+            'enum' => ['none', 'login', 'consent'],
+        ]);
+
         $this->addRule('endpoint', [
             'type' => self::TYPE_STRING,
             'description' => 'Auth0 OAuth2 endpoint domain.',

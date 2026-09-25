@@ -41,7 +41,8 @@ class Github extends OAuth2
             'client_id' => $this->appID,
             'redirect_uri' => $this->callback,
             'scope' => \implode(' ', $this->getScopes()),
-            'state' => \json_encode($this->state)
+            'state' => \json_encode($this->state),
+            'prompt' => $this->getPrompt() ?: null,
         ]);
     }
 
@@ -60,7 +61,7 @@ class Github extends OAuth2
                 \http_build_query([
                     'client_id' => $this->appID,
                     'redirect_uri' => $this->callback,
-                    'client_secret' => $this->appSecret,
+                    'client_secret' => $this->getClientSecret(),
                     'code' => $code
                 ])
             );
@@ -84,7 +85,7 @@ class Github extends OAuth2
             ['Accept: application/json'],
             \http_build_query([
                 'client_id' => $this->appID,
-                'client_secret' => $this->appSecret,
+                'client_secret' => $this->getClientSecret(),
                 'grant_type' => 'refresh_token',
                 'refresh_token' => $refreshToken
             ])
@@ -274,7 +275,7 @@ class Github extends OAuth2
             method: FetchClient::METHOD_POST,
             query: [
                 'client_id' => $this->appID,
-                'client_secret' => $this->appSecret,
+                'client_secret' => $this->getClientSecret(),
                 'code' => 'intentionally-invalid-code',
                 'redirect_uri' => 'intentionally-invalid-redirect',
             ]
@@ -292,5 +293,50 @@ class Github extends OAuth2
 
         // We still expect error, like redirect_uri_mismatch or bad_verification_code,
         // but that indicates valid credentials
+    }
+
+    /**
+     * Extracts the Client Secret from the JSON stored in appSecret
+     *
+     * @return string
+     */
+    protected function getClientSecret(): string
+    {
+        $secret = $this->getAppSecret();
+
+        return $secret['clientSecret'] ?? $this->appSecret;
+    }
+
+    /**
+     * Extracts the prompt values from the JSON stored in appSecret
+     *
+     * @return string
+     */
+    protected function getPrompt(): string
+    {
+        $secret = $this->getAppSecret();
+
+        return \implode(' ', $secret['prompt'] ?? []);
+    }
+
+    /**
+     * Decode the JSON stored in appSecret.
+     * Falls back to treating the raw string as the client secret for backwards compatibility.
+     *
+     * @return array
+     */
+    protected function getAppSecret(): array
+    {
+        try {
+            $secret = \json_decode($this->appSecret, true, 512, JSON_THROW_ON_ERROR);
+        } catch (\Throwable $th) {
+            return ['clientSecret' => $this->appSecret];
+        }
+
+        if (!\is_array($secret)) {
+            return ['clientSecret' => $this->appSecret];
+        }
+
+        return $secret;
     }
 }

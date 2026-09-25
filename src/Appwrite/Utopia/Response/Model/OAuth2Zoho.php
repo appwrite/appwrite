@@ -25,6 +25,20 @@ class OAuth2Zoho extends OAuth2Base
         return 'fb5cac000000000000000000000000000000a68f6e';
     }
 
+    public function __construct()
+    {
+        parent::__construct();
+
+        $this->addRule('prompt', [
+            'type' => self::TYPE_ENUM,
+            'description' => 'Zoho OAuth2 prompt values.',
+            'default' => [],
+            'example' => ['consent'],
+            'array' => true,
+            'enum' => ['consent'],
+        ]);
+    }
+
     /**
      * Get Name
      *

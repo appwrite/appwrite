@@ -3,6 +3,7 @@
 namespace Tests\E2E\Services\Project;
 
 use PHPUnit\Framework\Attributes\Before;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\E2E\Client;
 use Utopia\Database\Query;
 
@@ -17,12 +18,17 @@ trait OAuth2Base
         $providers = [
             'amazon' => ['clientId' => '', 'clientSecret' => '', 'enabled' => false],
             'cloudflare' => ['clientId' => '', 'clientSecret' => '', 'enabled' => false],
-            'github' => ['clientId' => '', 'clientSecret' => '', 'enabled' => false],
             'apple' => ['serviceId' => '', 'keyId' => '', 'teamId' => '', 'p8File' => '', 'nativeClientIds' => [], 'enabled' => false, 'nativeEnabled' => false],
             'oidc' => ['clientId' => '', 'clientSecret' => '', 'wellKnownURL' => '', 'authorizationURL' => '', 'tokenURL' => '', 'userInfoURL' => '', 'prompt' => [], 'enabled' => false],
-            'okta' => ['clientId' => '', 'clientSecret' => '', 'domain' => '', 'authorizationServerId' => '', 'enabled' => false],
+            'okta' => ['clientId' => '', 'clientSecret' => '', 'domain' => '', 'authorizationServerId' => '', 'prompt' => [], 'enabled' => false],
             'google' => ['clientId' => '', 'clientSecret' => '', 'prompt' => ['consent'], 'nativeClientIds' => [], 'enabled' => false, 'nativeEnabled' => false],
+            'auth0' => ['clientId' => '', 'clientSecret' => '', 'endpoint' => '', 'prompt' => [], 'enabled' => false],
             'discord' => ['clientId' => '', 'clientSecret' => '', 'prompt' => [], 'enabled' => false],
+            'github' => ['clientId' => '', 'clientSecret' => '', 'prompt' => [], 'enabled' => false],
+            'kakao' => ['clientId' => '', 'clientSecret' => '', 'prompt' => [], 'enabled' => false],
+            'microsoft' => ['applicationId' => '', 'applicationSecret' => '', 'tenant' => '', 'prompt' => [], 'enabled' => false],
+            'salesforce' => ['customerKey' => '', 'customerSecret' => '', 'prompt' => [], 'enabled' => false],
+            'zoho' => ['clientId' => '', 'clientSecret' => '', 'prompt' => [], 'enabled' => false],
             'dropbox' => ['appKey' => '', 'appSecret' => '', 'enabled' => false],
         ];
 
@@ -482,62 +488,78 @@ trait OAuth2Base
         $this->assertTrue($update['body']['enabled']);
     }
 
-    public function testUpdateOAuth2DiscordPrompt(): void
+    /**
+     * @return \Iterator<string, array{string, array<string, string>, array<int, string>, string, bool}>
+     */
+    public static function promptProviders(): \Iterator
+    {
+        // Providers that verify credentials against the real API when enabled are only checked through the project API.
+        yield 'auth0' => ['auth0', ['clientId' => 'auth0-client', 'clientSecret' => 'auth0-secret', 'endpoint' => 'example.us.auth0.com'], ['login', 'consent'], 'login consent', true];
+        yield 'discord' => ['discord', ['clientId' => '950722000000343754', 'clientSecret' => 'discord-secret'], ['none'], 'none', true];
+        yield 'github' => ['github', ['clientId' => 'github-client', 'clientSecret' => 'github-secret'], ['select_account'], 'select_account', false];
+        yield 'kakao' => ['kakao', ['clientId' => 'kakao-client', 'clientSecret' => 'kakao-secret'], ['login', 'select_account'], 'login,select_account', false];
+        yield 'microsoft' => ['microsoft', ['applicationId' => 'microsoft-client', 'applicationSecret' => 'microsoft-secret', 'tenant' => 'common'], ['select_account'], 'select_account', false];
+        yield 'okta' => ['okta', ['clientId' => 'okta-client', 'clientSecret' => 'okta-secret', 'domain' => 'trial-6400025.okta.com'], ['none'], 'none', true];
+        yield 'salesforce' => ['salesforce', ['customerKey' => 'salesforce-client', 'customerSecret' => 'salesforce-secret'], ['login', 'consent'], 'login consent', true];
+        yield 'zoho' => ['zoho', ['clientId' => 'zoho-client', 'clientSecret' => 'zoho-secret'], ['consent'], 'consent', true];
+    }
+
+    /**
+     * @param array<string, string> $credentials
+     * @param array<int, string> $prompt
+     */
+    #[DataProvider('promptProviders')]
+    public function testUpdateOAuth2Prompt(string $provider, array $credentials, array $prompt, string $query, bool $login): void
     {
         /**
          * Test for SUCCESS
          */
-        $update = $this->updateOAuth2('discord', [
-            'clientId' => '950722000000343754',
-            'clientSecret' => 'discord-secret',
-            'prompt' => ['none'],
-            'enabled' => true,
-        ]);
+        $update = $this->updateOAuth2($provider, \array_merge($credentials, [
+            'prompt' => $prompt,
+            'enabled' => $login,
+        ]));
 
         $this->assertSame(200, $update['headers']['status-code']);
-        $this->assertSame('discord', $update['body']['$id']);
-        $this->assertSame('950722000000343754', $update['body']['clientId']);
-        $this->assertSame(['none'], $update['body']['prompt']);
-        $this->assertSame('', $update['body']['clientSecret']);
-        $this->assertTrue($update['body']['enabled']);
+        $this->assertSame($prompt, $update['body']['prompt']);
 
-        $get = $this->getOAuth2Provider('discord');
+        $get = $this->getOAuth2Provider($provider);
         $this->assertSame(200, $get['headers']['status-code']);
-        $this->assertSame(['none'], $get['body']['prompt']);
+        $this->assertSame($prompt, $get['body']['prompt']);
 
-        $login = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/discord', [
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], followRedirects: false);
+        if ($login) {
+            $this->assertSame($query, $this->getLoginQuery($provider)['prompt'] ?? null);
+        }
 
-        $this->assertSame(301, $login['headers']['status-code']);
-        \parse_str((string) \parse_url($login['headers']['location'], PHP_URL_QUERY), $query);
-        $this->assertSame('none', $query['prompt'] ?? null);
-
-        $update = $this->updateOAuth2('discord', [
+        $update = $this->updateOAuth2($provider, [
             'prompt' => [],
+            'enabled' => $login,
         ]);
 
         $this->assertSame(200, $update['headers']['status-code']);
         $this->assertSame([], $update['body']['prompt']);
-        $this->assertTrue($update['body']['enabled']);
 
-        $login = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/discord', [
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], followRedirects: false);
-
-        $this->assertSame(301, $login['headers']['status-code']);
-        \parse_str((string) \parse_url($login['headers']['location'], PHP_URL_QUERY), $query);
-        $this->assertArrayNotHasKey('prompt', $query);
-        $this->assertSame('950722000000343754', $query['client_id'] ?? null);
+        if ($login) {
+            $this->assertArrayNotHasKey('prompt', $this->getLoginQuery($provider));
+        }
 
         /**
          * Test for FAILURE
          */
-        $update = $this->updateOAuth2('discord', [
-            'prompt' => ['select_account'],
+        $update = $this->updateOAuth2($provider, [
+            'prompt' => ['unknown'],
         ]);
 
         $this->assertSame(400, $update['headers']['status-code']);
+    }
+
+    public function testUpdateOAuth2PromptNoneMustBeAlone(): void
+    {
+        $update = $this->updateOAuth2('okta', [
+            'prompt' => ['none', 'login'],
+        ]);
+
+        $this->assertSame(400, $update['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $update['body']['type']);
 
         $update = $this->updateOAuth2('discord', [
             'prompt' => ['none', 'consent'],
@@ -565,6 +587,22 @@ trait OAuth2Base
         $this->assertSame(200, $get['headers']['status-code']);
         $this->assertSame('dropbox-app-key', $get['body']['appKey']);
         $this->assertSame('', $get['body']['appSecret']);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function getLoginQuery(string $provider): array
+    {
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/' . $provider, [
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], followRedirects: false);
+
+        $this->assertSame(301, $response['headers']['status-code']);
+
+        \parse_str((string) \parse_url($response['headers']['location'], PHP_URL_QUERY), $query);
+
+        return $query;
     }
 
     /**

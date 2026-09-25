@@ -13,10 +13,14 @@ use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Validator;
+use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\Text;
+use Utopia\Validator\WhiteList;
 
 abstract class Base extends Action
 {
@@ -188,7 +192,69 @@ abstract class Base extends Action
             ];
         }
 
+        $promptValues = static::getPromptValues();
+        if (!empty($promptValues)) {
+            $parameters[] = [
+                '$id' => 'prompt',
+                'name' => 'Prompt',
+                'example' => \json_encode([$promptValues[0]]),
+                'hint' => '',
+            ];
+        }
+
         return $parameters;
+    }
+
+    /**
+     * Prompt values the provider accepts in its authorization URL. Providers
+     * that return values get an optional `prompt` param on the update
+     * endpoint and a `prompt` field on the response.
+     *
+     * @return array<int, string> e.g. ['none', 'consent']
+     */
+    public static function getPromptValues(): array
+    {
+        return [];
+    }
+
+    /**
+     * Maximum number of prompt values the provider accepts together.
+     */
+    public static function getPromptLimit(): int
+    {
+        return \count(static::getPromptValues());
+    }
+
+    public static function getPromptDescription(): string
+    {
+        $meanings = [
+            'none' => '"none" means: don\'t display any authentication or consent screens.',
+            'login' => '"login" means: prompt the user to re-authenticate.',
+            'consent' => '"consent" means: prompt the user for consent.',
+            'select_account' => '"select_account" means: prompt the user to select an account.',
+            'create' => '"create" means: prompt the user to sign up.',
+        ];
+
+        $description = 'Array of ' . static::getProviderLabel() . ' OAuth2 prompt values.';
+        if (\in_array('none', static::getPromptValues()) && static::getPromptLimit() > 1) {
+            $description .= ' If "none" is included, it must be the only element.';
+        }
+
+        foreach (static::getPromptValues() as $value) {
+            $description .= ' ' . $meanings[$value];
+        }
+
+        return $description . ' Pass an empty array to use the ' . static::getProviderLabel() . ' default.';
+    }
+
+    public static function getPromptValidator(): Validator
+    {
+        return new Nullable(new ArrayList(new WhiteList(static::getPromptValues(), true), static::getPromptLimit()));
+    }
+
+    public static function getPromptEnum(): Enum
+    {
+        return new Enum(name: 'ProjectOAuth2' . static::getProviderLabel() . 'Prompt');
     }
 
     /**
@@ -256,14 +322,21 @@ abstract class Base extends Action
                 ],
             ))
             ->param(static::getClientIdParamName(), null, new Nullable(new Text(256, 0)), static::getClientIdDescription(), optional: true)
-            ->param(static::getClientSecretParamName(), null, new Nullable(new Text(512, 0)), static::getClientSecretDescription(), optional: true)
+            ->param(static::getClientSecretParamName(), null, new Nullable(new Text(512, 0)), static::getClientSecretDescription(), optional: true);
+
+        $prompt = !empty(static::getPromptValues());
+        if ($prompt) {
+            $this->param('prompt', null, static::getPromptValidator(), static::getPromptDescription(), optional: true, enum: static::getPromptEnum());
+        }
+
+        $this
             ->param('enabled', null, new Nullable(new Boolean()), 'OAuth2 sign-in method status. Set to true to enable new session creation. Setting to true will trigger end-to-end credentials validation, and will throw if the credentials are invalid.', true)
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('project')
             ->inject('authorization')
             ->inject('queueForEvents')
-            ->callback($this->action(...));
+            ->callback($prompt ? $this->updateWithPrompt(...) : $this->action(...));
     }
 
     /**
@@ -340,12 +413,29 @@ abstract class Base extends Action
         $providerId = static::getProviderId();
         $oAuthProviders = $project->getAttribute('oAuthProviders', []);
 
-        return new Document([
+        $document = new Document([
             '$id' => $providerId,
             'enabled' => $oAuthProviders[$providerId . 'Enabled'] ?? false,
             static::getClientIdParamName() => $oAuthProviders[$providerId . 'Appid'] ?? '',
             static::getClientSecretParamName() => '',
         ]);
+
+        if (!empty(static::getPromptValues())) {
+            $document->setAttribute('prompt', $this->decodeStoredSecret($project)['prompt'] ?? []);
+        }
+
+        return $document;
+    }
+
+    /**
+     * Throw when "none" is combined with other prompt values, since it means
+     * no screens at all.
+     */
+    protected function validatePrompt(?array $prompt): void
+    {
+        if ($prompt !== null && \in_array('none', $prompt) && \count($prompt) > 1) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'When "none" is used as a prompt value, it must be the only element in the array.');
+        }
     }
 
     /**
@@ -492,6 +582,49 @@ abstract class Base extends Action
 
         // Reuse buildReadResponse to keep PATCH/GET shapes identical and
         // guarantee the clientSecret is write-only on every response path.
+        $response->dynamic($this->buildReadResponse($project), static::getResponseModel());
+    }
+
+    /**
+     * Callback for providers with prompt values. Stores the client secret and
+     * prompt as JSON `{"clientSecret": "...", "prompt": [...]}`, reading a
+     * secret stored before prompt support as a plain client secret.
+     */
+    public function updateWithPrompt(
+        ?string $clientId,
+        ?string $clientSecret,
+        ?array $prompt,
+        ?bool $enabled,
+        Response $response,
+        Database $dbForPlatform,
+        Document $project,
+        Authorization $authorization,
+        QueueEvent $queueForEvents
+    ): void {
+        $providerId = static::getProviderId();
+        $queueForEvents->setParam('providerId', $providerId);
+
+        $this->validatePrompt($prompt);
+
+        $encodedSecret = null;
+        if (!\is_null($clientSecret) || !\is_null($prompt)) {
+            $storedRaw = $project->getAttribute('oAuthProviders', [])[$providerId . 'Secret'] ?? '';
+            $existing = $this->decodeStoredSecret($project);
+            if (!empty($storedRaw) && empty($existing)) {
+                $existing = ['clientSecret' => $storedRaw];
+            }
+
+            $secret = [
+                'clientSecret' => $clientSecret ?? ($existing['clientSecret'] ?? ''),
+                'prompt' => $prompt ?? ($existing['prompt'] ?? []),
+            ];
+
+            // Keep an empty secret empty, so enabling still requires a client secret.
+            $encodedSecret = empty($secret['clientSecret']) && empty($secret['prompt']) ? '' : \json_encode($secret);
+        }
+
+        $project = $this->persistCredentials($project, $dbForPlatform, $authorization, $clientId, $encodedSecret, $enabled);
+
         $response->dynamic($this->buildReadResponse($project), static::getResponseModel());
     }
 }

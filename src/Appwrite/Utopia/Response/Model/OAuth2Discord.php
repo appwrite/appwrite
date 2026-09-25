@@ -37,6 +37,15 @@ class OAuth2Discord extends OAuth2Base
             'array' => true,
             'enum' => ['none', 'consent'],
         ]);
+
+        $this->addRule('prompt', [
+            'type' => self::TYPE_ENUM,
+            'description' => 'Discord OAuth2 prompt values.',
+            'default' => [],
+            'example' => ['none'],
+            'array' => true,
+            'enum' => ['none', 'consent'],
+        ]);
     }
 
     /**

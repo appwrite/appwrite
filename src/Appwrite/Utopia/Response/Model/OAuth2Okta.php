@@ -29,6 +29,15 @@ class OAuth2Okta extends OAuth2Base
     {
         parent::__construct();
 
+        $this->addRule('prompt', [
+            'type' => self::TYPE_ENUM,
+            'description' => 'Okta OAuth2 prompt values.',
+            'default' => [],
+            'example' => ['none'],
+            'array' => true,
+            'enum' => ['none', 'login', 'consent'],
+        ]);
+
         $this->addRule('domain', [
             'type' => self::TYPE_STRING,
             'description' => 'Okta OAuth2 domain.',

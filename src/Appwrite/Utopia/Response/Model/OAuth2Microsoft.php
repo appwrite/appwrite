@@ -49,6 +49,15 @@ class OAuth2Microsoft extends OAuth2Base
     {
         parent::__construct();
 
+        $this->addRule('prompt', [
+            'type' => self::TYPE_ENUM,
+            'description' => 'Microsoft OAuth2 prompt values.',
+            'default' => [],
+            'example' => ['none'],
+            'array' => true,
+            'enum' => ['none', 'login', 'consent', 'select_account'],
+        ]);
+
         $this->addRule('tenant', [
             'type' => self::TYPE_STRING,
             'description' => 'Microsoft Entra ID tenant identifier. Use \'common\', \'organizations\', \'consumers\' or a specific tenant ID.',
