@@ -33,6 +33,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import {
   useProjectDatabase,
+  useResolvedProductDatabaseLifecycleStatus,
   useProjectTables,
   useProjectCollectionAttributes,
   useProjectCollectionIndexes,
@@ -229,9 +230,12 @@ export function Workspace({
     databaseId,
     DB_KIND,
   )
-  const provisioning = isDedicatedDatabaseProvisioning(
-    (database as { status?: string | null } | null)?.status,
+  const lifecycleStatus = useResolvedProductDatabaseLifecycleStatus(
+    projectId,
+    databaseId,
+    DB_KIND,
   )
+  const provisioning = isDedicatedDatabaseProvisioning(lifecycleStatus)
   const provisioningDisabledSections = provisioning
     ? {
         monitor: DEDICATED_DATABASE_PROVISIONING_RESTRICTED_MESSAGE,

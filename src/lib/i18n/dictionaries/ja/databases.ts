@@ -340,8 +340,8 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Current': '現在',
   'Current database': '現在のデータベース',
   'Current session states from pg_stat_activity.': 'pg_stat_activity からの現在のセッション状態。',
-  'Upgrade from serverless to a dedicated tier to reserve CPU, memory, and connection limits. Migrating applies with a brief read-only window during cutover.':
-    'Serverless から専用ティアにアップグレードすると、CPU・メモリ・接続数の上限を確保できます。移行時は切り替えのあいだ、短時間の読み取り専用ウィンドウがあります。',
+  'Upgrade from serverless to a dedicated tier to reserve CPU, memory, and connection limits.':
+    'Serverless から専用ティアにアップグレードすると、CPU・メモリ・接続数の上限を確保できます。',
   'Migration to dedicated compute started': '専用コンピュートへの移行を開始しました',
   'Compute and connection limits for this database.':
     'このデータベースのコンピュートと接続数の上限です。',
@@ -1516,6 +1516,29 @@ export const jaDatabasesDictionary: Record<string, string> = {
     'データベースのアップグレード進行中です。一部の操作は一時的に利用できない場合があります。',
   'A database migration is in progress. Some operations may be temporarily unavailable.':
     'データベースの移行進行中です。一部の操作は一時的に利用できない場合があります。',
+  'Starting dedicated migration': '専用コンピュートへの移行を開始しています',
+  'Dedicated compute provisioned': '専用コンピュートをプロビジョニングしました',
+  'Capturing live changes': 'ライブ変更をキャプチャしています',
+  'Copying data to dedicated compute': '専用コンピュートへデータをコピーしています',
+  'Catching up on changes': '変更の追いつき中',
+  'Verifying migrated data': '移行データを検証しています',
+  'Ready to cut over': 'カットオーバー準備完了',
+  'Cutting over to dedicated compute': '専用コンピュートへカットオーバー中',
+  'Finishing migration': '移行を完了しています',
+  'Migration completed': '移行が完了しました',
+  'Migration failed': '移行に失敗しました',
+  'Migration rolled back': '移行がロールバックされました',
+  'Migrating to dedicated compute': '専用コンピュートへ移行中',
+  'Your database stays available while data is copied. During cutover, writes pause briefly while routing switches and replay automatically.':
+    'データのコピー中もデータベースは利用できます。カットオーバー時はルーティング切り替えの間だけ書き込みが一時停止し、自動的に再実行されます。',
+  'rows pending replication': '行がレプリケーション待ち',
+  'Abort migration': '移行を中止',
+  'Migration aborted': '移行を中止しました',
+  'Failed to abort migration': '移行の中止に失敗しました',
+  'This migration did not finish. Abort it to try upgrading again.':
+    '移行が完了していません。中止してから再度アップグレードしてください。',
+  'A migration is in progress past cutover and cannot be aborted from the Console. Contact support if it is stuck.':
+    'カットオーバー後の移行は Console から中止できません。停止している場合はサポートにお問い合わせください。',
   'This database is being paused. Some operations may be temporarily unavailable.':
     'このデータベースは一時停止処理中です。一部の操作は一時的に利用できない場合があります。',
   'This database is resuming. Some operations may be temporarily unavailable.':

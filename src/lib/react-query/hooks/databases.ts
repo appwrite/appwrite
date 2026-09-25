@@ -62,7 +62,22 @@ import {
 } from '@/lib/databases/dedicated-database-source'
 import { requireOperationalDatabase } from '@/lib/databases/dedicated-database-write-lock'
 import { ensureConsoleSqlApiStatements } from '@/lib/databases/sql-api-statements'
-import { coerceTrimmedString } from '@/lib/databases/dedicated-database-status'
+import {
+  coerceTrimmedString,
+  resolveDatabaseLifecycleStatus,
+} from '@/lib/databases/dedicated-database-status'
+import {
+  canAbortTablesDatabaseMigration,
+  getBlockingTablesDatabaseMigration,
+  hasTablesDatabaseMigrationCutover,
+  parseTablesDatabaseMigrationIdFromError,
+} from '@/lib/databases/tables-database-migration'
+import {
+  isAppwriteHttpStatus,
+  isHttpNotFoundError,
+} from '@/lib/utils/error-formatting'
+import { translate } from '@/lib/i18n/translate'
+import { readDatabaseSpecification } from '@/lib/databases/database-compute'
 import { waitForDatabaseRealtimeEvent } from '@/lib/realtime/wait-for-database-realtime'
 import { normalizeDedicatedRealtimeEngine } from '@/lib/realtime/dedicated-database-cache'
 import { buildPostgresListSchemasSql } from '@/lib/postgres-sql'
@@ -1580,6 +1595,53 @@ export async function updateProjectDatabase(
  * if already dedicated). Dedicated tier changes use
  * `updateTablesDatabaseSpecification` instead.
  */
+export async function deleteTablesDatabaseMigration(
+  projectId: string,
+  databaseId: string,
+  migrationId: string,
+) {
+  if (!projectId || !databaseId || !migrationId.trim()) {
+    throw new Error('Project ID, Database ID, and Migration ID are required')
+  }
+  await sdk.forProject(projectId).tablesDB.deleteMigration({
+    databaseId,
+    migrationId: migrationId.trim(),
+  })
+}
+
+async function clearAbortableTablesDatabaseMigrations(
+  projectId: string,
+  databaseId: string,
+): Promise<void> {
+  const migrations = await fetchTablesDatabaseMigrations(projectId, databaseId)
+  if (!migrations.length) return
+
+  for (const migration of migrations) {
+    const phase = coerceTrimmedString(migration.phase).toLowerCase()
+    if (phase === 'done') continue
+    if (!canAbortTablesDatabaseMigration(migration)) {
+      throw new Error(
+        translate(
+          'A migration is in progress past cutover and cannot be aborted from the Console. Contact support if it is stuck.',
+        ),
+      )
+    }
+    await deleteTablesDatabaseMigration(projectId, databaseId, migration.$id)
+  }
+}
+
+async function startTablesDatabaseProductMigration(
+  projectSdk: ReturnType<typeof sdk.forProject>,
+  databaseId: string,
+  specification: string,
+) {
+  return projectSdk.tablesDB.createMigration({
+    databaseId,
+    specification,
+    autoCutover: true,
+  })
+}
+
 export async function createTablesDatabaseMigration(
   projectId: string,
   databaseId: string,
@@ -1592,10 +1654,149 @@ export async function createTablesDatabaseMigration(
   if (!trimmed || isServerlessDatabaseSpecId(trimmed)) {
     throw new Error('A dedicated specification is required.')
   }
-  return sdk.forProject(projectId).tablesDB.createMigration({
+  const projectSdk = sdk.forProject(projectId)
+
+  await clearAbortableTablesDatabaseMigrations(projectId, databaseId)
+
+  const runProductMigration = async () => {
+    try {
+      return await startTablesDatabaseProductMigration(
+        projectSdk,
+        databaseId,
+        trimmed,
+      )
+    } catch (tablesMigrationError) {
+      const message =
+        tablesMigrationError instanceof Error
+          ? tablesMigrationError.message
+          : String(tablesMigrationError ?? '')
+      const alreadyExists =
+        message.toLowerCase().includes('migration record already exists') ||
+        message.toLowerCase().includes('already exists for this database')
+      if (alreadyExists) {
+        const migrationId =
+          parseTablesDatabaseMigrationIdFromError(tablesMigrationError)
+        if (migrationId) {
+          await deleteTablesDatabaseMigration(
+            projectId,
+            databaseId,
+            migrationId,
+          )
+        } else {
+          await clearAbortableTablesDatabaseMigrations(projectId, databaseId)
+        }
+        return startTablesDatabaseProductMigration(
+          projectSdk,
+          databaseId,
+          trimmed,
+        )
+      }
+      throw tablesMigrationError
+    }
+  }
+
+  try {
+    return await runProductMigration()
+  } catch (tablesMigrationError) {
+    const routeMissing =
+      isAppwriteHttpStatus(tablesMigrationError, 404) ||
+      isHttpNotFoundError(tablesMigrationError)
+    if (!routeMissing) {
+      throw tablesMigrationError
+    }
+  }
+
+  // Cloud may expose shared→dedicated for TablesDB-backed compute on the MySQL
+  // engine migration route before (or instead of) tablesDB /migrations.
+  return projectSdk.mysql.createMigration({
     databaseId,
+    targetType: 'dedicated',
     specification: trimmed,
   })
+}
+
+/** True when TablesDB already runs on dedicated MySQL compute (not shared/serverless). */
+async function isTablesDatabaseOnDedicatedCompute(
+  projectId: string,
+  databaseId: string,
+): Promise<boolean> {
+  const engineDb = await fetchDedicatedDatabaseById(projectId, databaseId, {
+    type: 'engine',
+    engine: 'mysql',
+  })
+  if (!engineDb?.$id) return false
+  const spec = readDatabaseSpecification(engineDb.specification)
+  if (!spec || isServerlessDatabaseSpecId(spec)) return false
+  const status = coerceTrimmedString(engineDb.status).toLowerCase()
+  return status !== 'deleted' && status !== 'failed'
+}
+
+export function tablesDatabaseMigrationsQueryKey(
+  projectId: string,
+  databaseId: string,
+) {
+  return ['tablesdb-migrations', 'project', projectId, databaseId] as const
+}
+
+export async function fetchTablesDatabaseMigrations(
+  projectId: string,
+  databaseId: string,
+): Promise<Models.DatabaseMigration[]> {
+  if (!projectId || !databaseId) return []
+  try {
+    const response = await sdk
+      .forProject(projectId)
+      .tablesDB.listMigrations({ databaseId })
+    return response.migrations ?? []
+  } catch (error) {
+    if (isHttpNotFoundError(error)) return []
+    throw error
+  }
+}
+
+export function tablesDatabaseMigrationsQueryOptions(
+  projectId: string | null | undefined,
+  databaseId: string | null | undefined,
+  dbKind: DatabaseRouteKind,
+) {
+  return queryOptions({
+    queryKey: tablesDatabaseMigrationsQueryKey(projectId!, databaseId!),
+    queryFn: () => fetchTablesDatabaseMigrations(projectId!, databaseId!),
+    enabled: !!projectId && !!databaseId && dbKind === 'tablesdb',
+    staleTime: 10 * 1000,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    refetchInterval: (query) => {
+      const migrations = query.state.data
+      const blocking = getBlockingTablesDatabaseMigration(migrations)
+      if (!blocking) return false
+      return hasTablesDatabaseMigrationCutover(blocking) ? 30_000 : 4000
+    },
+    gcTime: projectId && databaseId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+export function useActiveTablesDatabaseMigration(
+  projectId: string | null | undefined,
+  databaseId: string | null | undefined,
+  dbKind: DatabaseRouteKind,
+) {
+  const { data, isLoading, isFetching, error, refetch } = useQuery(
+    tablesDatabaseMigrationsQueryOptions(projectId, databaseId, dbKind),
+  )
+  const blockingMigration = getBlockingTablesDatabaseMigration(data)
+  return {
+    migration: blockingMigration,
+    blockingMigration,
+    migrations: data ?? [],
+    isLoading,
+    isFetching,
+    error,
+    refetch,
+    hasActiveMigration: blockingMigration != null,
+  }
 }
 
 /**
@@ -1662,12 +1863,14 @@ export async function updateProductDatabaseSpecification(
     throw new Error('A dedicated specification is required.')
   }
 
-  const currentIsServerless =
-    !currentSpecification?.trim() ||
-    isServerlessDatabaseSpecId(currentSpecification)
-
-  if (dbKind === 'tablesdb' && currentIsServerless) {
-    return createTablesDatabaseMigration(projectId, databaseId, trimmed)
+  if (dbKind === 'tablesdb') {
+    const onDedicated = await isTablesDatabaseOnDedicatedCompute(
+      projectId,
+      databaseId,
+    )
+    if (!onDedicated) {
+      return createTablesDatabaseMigration(projectId, databaseId, trimmed)
+    }
   }
 
   return updateProductDatabaseSpecificationViaUpdate(
@@ -3186,11 +3389,11 @@ export async function deleteProjectTableRow(
 }
 
 /**
- * Appwrite returns "The document data is missing..." when `data` is an empty object.
- * Fill attribute keys from the collection schema (null / defaults / type empties) so
- * duplicate, create-with-empty-JSON, etc. still succeed. Skips relationship attributes.
+ * Appwrite rejects create when `data` is an empty object (`row_missing_data` / document equivalent).
+ * Fill column keys from the table schema (null / defaults / type empties) so duplicate and
+ * similar flows still succeed. Skips relationship attributes.
  */
-async function ensureDocumentOrVectorCreateDataPopulated(
+async function ensureCreateRowDataPopulated(
   projectId: string,
   databaseId: string,
   dbKind: DatabaseRouteKind,
@@ -3240,6 +3443,15 @@ async function ensureDocumentOrVectorCreateDataPopulated(
     }
   }
   return Object.keys(filled).length > 0 ? filled : payloadWithoutId
+}
+
+/** Tables with no user columns still need a non-empty payload (row drawer uses timestamps). */
+function ensureMinimumCreateRowPayload(
+  payload: Record<string, unknown>,
+): Record<string, unknown> {
+  if (Object.keys(payload).length > 0) return payload
+  const now = new Date().toISOString()
+  return { $createdAt: now, $updatedAt: now }
 }
 
 /**
@@ -3295,14 +3507,16 @@ export async function createProjectTableRow(
   let payload = { ...data } as Record<string, unknown>
   if (payload.$id) delete payload.$id
 
+  payload = await ensureCreateRowDataPopulated(
+    projectId,
+    databaseId,
+    dbKind,
+    tableId,
+    payload,
+  )
+  payload = ensureMinimumCreateRowPayload(payload)
+
   if (kind === DatabaseType.Documentsdb) {
-    payload = await ensureDocumentOrVectorCreateDataPopulated(
-      projectId,
-      databaseId,
-      dbKind,
-      tableId,
-      payload,
-    )
     const created = await projectSdk.documentsDB.createDocument({
       databaseId,
       collectionId: tableId,
@@ -3314,13 +3528,6 @@ export async function createProjectTableRow(
   }
 
   if (kind === DatabaseType.Vectorsdb) {
-    payload = await ensureDocumentOrVectorCreateDataPopulated(
-      projectId,
-      databaseId,
-      dbKind,
-      tableId,
-      payload,
-    )
     const created = await projectSdk.vectorsDB.createDocument({
       databaseId,
       collectionId: tableId,
@@ -4927,6 +5134,23 @@ export function useProjectDatabase(
     error,
     refetch,
   }
+}
+
+export function useResolvedProductDatabaseLifecycleStatus(
+  projectId: string | null | undefined,
+  databaseId: string | null | undefined,
+  dbKind: DatabaseRouteKind,
+) {
+  const { database } = useProjectDatabase(projectId, databaseId, dbKind)
+  const { databases: dedicatedDatabases } = useProjectDedicatedDatabases(
+    projectId,
+  )
+  return useMemo(() => {
+    const dedicatedStatus = dedicatedDatabases.find(
+      (db) => db.$id === databaseId,
+    )?.status
+    return resolveDatabaseLifecycleStatus(database?.status, dedicatedStatus)
+  }, [database?.status, databaseId, dedicatedDatabases])
 }
 
 /**
