@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "514c89b81fb58fae05dff3d2447bb8a4",
+    "content-hash": "07e65ba9c45cde6223906740b7205a6c",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2936,54 +2936,6 @@
             "time": "2026-09-10T18:16:47+00:00"
         },
         {
-            "name": "utopia-php/balancer",
-            "version": "0.4.1",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/utopia-php/balancer.git",
-                "reference": "7fc8922da3e381c227cd88435cb12b17040c6ee1"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/balancer/zipball/7fc8922da3e381c227cd88435cb12b17040c6ee1",
-                "reference": "7fc8922da3e381c227cd88435cb12b17040c6ee1",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=8.1",
-                "utopia-php/telemetry": "^0.4.0"
-            },
-            "require-dev": {
-                "laravel/pint": "1.2.*",
-                "phpstan/phpstan": "^1.8",
-                "phpunit/phpunit": "^9.3"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Utopia\\Balancer\\": "src/Balancer"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "description": "A simple library to balance choices between multiple options.",
-            "keywords": [
-                "balancer",
-                "balancing",
-                "framework",
-                "php",
-                "upf",
-                "utopia"
-            ],
-            "support": {
-                "issues": "https://github.com/utopia-php/balancer/issues",
-                "source": "https://github.com/utopia-php/balancer/tree/0.4.1"
-            },
-            "time": "2026-08-13T19:36:49+00:00"
-        },
-        {
             "name": "utopia-php/cdn",
             "version": "0.0.13",
             "source": {
@@ -4063,46 +4015,6 @@
                 "source": "https://github.com/utopia-php/usage/tree/0.16.6"
             },
             "time": "2026-09-24T12:26:53+00:00"
-        },
-        {
-            "name": "utopia-php/validators",
-            "version": "1.0.1",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/utopia-php/validators.git",
-                "reference": "f0a08bd888d035b68c463d22b47ef385984da73d"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/validators/zipball/f0a08bd888d035b68c463d22b47ef385984da73d",
-                "reference": "f0a08bd888d035b68c463d22b47ef385984da73d",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=8.5"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Utopia\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "description": "A lightweight collection of reusable validators for Utopia projects",
-            "keywords": [
-                "php",
-                "utopia",
-                "validation",
-                "validator"
-            ],
-            "support": {
-                "issues": "https://github.com/utopia-php/validators/issues",
-                "source": "https://github.com/utopia-php/validators/tree/1.0.1"
-            },
-            "time": "2026-09-02T15:57:19+00:00"
         },
         {
             "name": "utopia-php/vcs",

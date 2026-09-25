@@ -47,7 +47,7 @@ class Get extends Action
                     )
                 ]
             ))
-            ->param('resources', [], new ArrayList(new WhiteList(AppwriteSource::getSupportedResources())), 'List of resources to migrate', enum: new Enum(name: 'AppwriteMigrationResource'))
+            ->param('resources', [], new ArrayList(new WhiteList(AppwriteSource::getSupportedResources())), 'List of resources to migrate', example: '["user"]', enum: new Enum(name: 'AppwriteMigrationResource'))
             ->param('endpoint', '', new URL(), "Source's Appwrite Endpoint")
             ->param('projectID', '', new Text(512), "Source's Project ID")
             ->param('key', '', new Text(512), "Source's API Key")
