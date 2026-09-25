@@ -25,18 +25,14 @@ class OAuth2Auth0 extends OAuth2Base
         return 'zXz0000-00000000000000000000000000000-00000000000000000000PJafnF';
     }
 
+    public function getPromptValues(): array
+    {
+        return ['none', 'login', 'consent'];
+    }
+
     public function __construct()
     {
         parent::__construct();
-
-        $this->addRule('prompt', [
-            'type' => self::TYPE_ENUM,
-            'description' => 'Auth0 OAuth2 prompt values.',
-            'default' => [],
-            'example' => ['none'],
-            'array' => true,
-            'enum' => ['none', 'login', 'consent'],
-        ]);
 
         $this->addRule('endpoint', [
             'type' => self::TYPE_STRING,

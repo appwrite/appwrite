@@ -25,18 +25,9 @@ class OAuth2Salesforce extends OAuth2Base
         return '3w000000000000e2';
     }
 
-    public function __construct()
+    public function getPromptValues(): array
     {
-        parent::__construct();
-
-        $this->addRule('prompt', [
-            'type' => self::TYPE_ENUM,
-            'description' => 'Salesforce OAuth2 prompt values.',
-            'default' => [],
-            'example' => ['login'],
-            'array' => true,
-            'enum' => ['login', 'consent'],
-        ]);
+        return ['login', 'consent'];
     }
 
     public function getClientIdFieldName(): string

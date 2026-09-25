@@ -25,6 +25,11 @@ class OAuth2Microsoft extends OAuth2Base
         return 'A1bC2dE3fH4iJ5kL6mN7oP8qR9sT0u';
     }
 
+    public function getPromptValues(): array
+    {
+        return ['none', 'login', 'consent', 'select_account'];
+    }
+
     public function getClientIdFieldName(): string
     {
         return 'applicationId';
@@ -48,15 +53,6 @@ class OAuth2Microsoft extends OAuth2Base
     public function __construct()
     {
         parent::__construct();
-
-        $this->addRule('prompt', [
-            'type' => self::TYPE_ENUM,
-            'description' => 'Microsoft OAuth2 prompt values.',
-            'default' => [],
-            'example' => ['none'],
-            'array' => true,
-            'enum' => ['none', 'login', 'consent', 'select_account'],
-        ]);
 
         $this->addRule('tenant', [
             'type' => self::TYPE_STRING,

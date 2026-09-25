@@ -42,18 +42,9 @@ class OAuth2Kakao extends OAuth2Base
         return 'jLNVOK00000000000000000000yJebea';
     }
 
-    public function __construct()
+    public function getPromptValues(): array
     {
-        parent::__construct();
-
-        $this->addRule('prompt', [
-            'type' => self::TYPE_ENUM,
-            'description' => 'Kakao OAuth2 prompt values.',
-            'default' => [],
-            'example' => ['none'],
-            'array' => true,
-            'enum' => ['none', 'login', 'create', 'select_account'],
-        ]);
+        return ['none', 'login', 'create', 'select_account'];
     }
 
     /**

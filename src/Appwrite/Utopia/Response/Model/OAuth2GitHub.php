@@ -25,18 +25,9 @@ class OAuth2GitHub extends OAuth2Base
         return '5e07c00000000000000000000000000000198bcc';
     }
 
-    public function __construct()
+    public function getPromptValues(): array
     {
-        parent::__construct();
-
-        $this->addRule('prompt', [
-            'type' => self::TYPE_ENUM,
-            'description' => 'GitHub OAuth2 prompt values.',
-            'default' => [],
-            'example' => ['select_account'],
-            'array' => true,
-            'enum' => ['select_account'],
-        ]);
+        return ['select_account'];
     }
 
     public function getClientIdDescription(): string
