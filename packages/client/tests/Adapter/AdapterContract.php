@@ -430,6 +430,19 @@ abstract class AdapterContract extends TestCase
         });
     }
 
+    public function testItSendsARawBodyWithoutAContentTypeItDidNotSet(): void
+    {
+        Http::serve(function (int $port): void {
+            $request = new Request\Factory()
+                ->createRequest(Method::POST, 'http://127.0.0.1:' . $port . '/content-type')
+                ->withBody(new Stream\Factory()->createStream('raw'));
+
+            $response = $this->send($this->createAdapter(), $request);
+
+            $this->assertSame('', (string) $response->getBody());
+        });
+    }
+
     public function testItPreservesDuplicateMixedCaseHeadersAndBinaryBodies(): void
     {
         Http::serve(function (int $port): void {
