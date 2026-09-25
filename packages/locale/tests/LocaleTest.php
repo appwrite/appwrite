@@ -209,8 +209,8 @@ class LocaleTest extends TestCase
 
         $this->assertEquals('Код истекает через 21 минуту.', $locale->getText('expires', plurals: ['expire' => ['minutes', 21]]));
 
-        // A pattern that does not compile falls back to the fallback language
-        $this->assertEquals('in 5 minutes', $locale->getPlural('broken', 5));
+        // A pattern that does not compile falls back to the fallback language and its rules
+        $this->assertEquals('in 21 minutes', $locale->getPlural('broken', 21));
 
         // A translation served by the fallback language is filled with that language's plural
         $locale->setDefault('cs-CZ');
