@@ -8,6 +8,7 @@ import {
   tableIndexesQueryOptions,
   tableRowsQueryOptions,
   getRelationshipColumnKeys,
+  getProjectTable,
   tableQueryOptions,
   projectQueryOptions,
   organizationPlanQueryOptions,
@@ -20,6 +21,7 @@ import {
   parseListSearch,
 } from '@/lib/table-filters'
 import { pageTitle } from '@/lib/utils/page-title'
+import { isHttpNotFoundError } from '@/lib/utils/error-formatting'
 import { throwRedirectCollectionsDbFromTablesChild, throwRedirectPostgresDbKind, throwRedirectMysqlDbKind } from '@/lib/database-route-redirects'
 
 const TABLES_PER_PAGE = 100
@@ -124,6 +126,17 @@ export const Route = createFileRoute(
     }
 
     if (tableId) {
+      // Same columns query the Spreadsheet reads, so the loader and the View
+      // build the same rows query key (a mismatch means a second listRows on mount).
+      const columnsPromise = queryClient.ensureQueryData(
+        tableColumnsQueryOptions(
+          projectId,
+          databaseId,
+          dbKind as DatabaseRouteKind,
+          tableId,
+        ),
+      )
+
       // Check if table exists and if there are any tables
       const tablesData = await tablesPromise
 
@@ -136,10 +149,31 @@ export const Route = createFileRoute(
         })
       }
 
-      // Check if the requested table exists in the tables list
-      const tableExists = tablesData.tables.some(
-        (table: unknown) => table.$id === tableId,
-      )
+      // The list only holds the first page of tables, so a table past it is
+      // looked up by id. Only a 404 means it is gone: redirecting on any other
+      // failure would open the oldest table instead.
+      let tableExists = tablesData.tables.some((table) => table.$id === tableId)
+      if (!tableExists) {
+        try {
+          queryClient.setQueryData(
+            tableQueryOptions(
+              projectId,
+              databaseId,
+              dbKind as DatabaseRouteKind,
+              tableId,
+            ).queryKey,
+            await getProjectTable(
+              projectId,
+              databaseId,
+              dbKind as DatabaseRouteKind,
+              tableId,
+            ),
+          )
+          tableExists = true
+        } catch (error) {
+          if (!isHttpNotFoundError(error)) throw error
+        }
+      }
       if (!tableExists) {
         throw redirect({
           to: '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/rows',
@@ -169,15 +203,8 @@ export const Route = createFileRoute(
             )
           : null
 
-      // From the already-awaited tables list, so the loader and the View build the
-      // same query key (a mismatch means a second listRows on mount). This route
-      // serves every `dbKind`: tables expose their schema as `columns`, while
-      // Documents/Vectors collections expose it as `attributes`.
-      const tableEntity = tablesData.tables.find(
-        (table: unknown) => (table as { $id?: string }).$id === tableId,
-      ) as { columns?: unknown[]; attributes?: unknown[] } | undefined
       const relationshipKeys = getRelationshipColumnKeys(
-        tableEntity?.columns ?? tableEntity?.attributes,
+        (await columnsPromise).columns,
       )
 
       await Promise.all([

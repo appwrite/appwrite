@@ -3078,49 +3078,59 @@ export async function fetchProjectTable(
     return null
   }
 
+  try {
+    return await getProjectTable(projectId, databaseId, dbKind, tableId)
+  } catch {
+    return null
+  }
+}
+
+/** Like `fetchProjectTable`, but rejects on any API error (404 included). */
+export async function getProjectTable(
+  projectId: string,
+  databaseId: string,
+  dbKind: DatabaseRouteKind,
+  tableId: string,
+) {
   const projectSdk = sdk.forProject(projectId)
   const kind = resolveProjectDatabaseType(dbKind)
 
-  try {
-    let response: Record<string, unknown> | null = null
+  let response: Record<string, unknown> | null = null
 
-    if (kind === DatabaseType.Documentsdb) {
-      response = (await projectSdk.documentsDB.getCollection({
-        databaseId,
-        collectionId: tableId,
-      })) as unknown as Record<string, unknown>
-    } else if (kind === DatabaseType.Vectorsdb) {
-      response = (await projectSdk.vectorsDB.getCollection({
-        databaseId,
-        collectionId: tableId,
-      })) as unknown as Record<string, unknown>
-    } else {
-      response = (await projectSdk.tablesDB.getTable({
-        databaseId,
-        tableId,
-      })) as unknown as Record<string, unknown>
-    }
+  if (kind === DatabaseType.Documentsdb) {
+    response = (await projectSdk.documentsDB.getCollection({
+      databaseId,
+      collectionId: tableId,
+    })) as unknown as Record<string, unknown>
+  } else if (kind === DatabaseType.Vectorsdb) {
+    response = (await projectSdk.vectorsDB.getCollection({
+      databaseId,
+      collectionId: tableId,
+    })) as unknown as Record<string, unknown>
+  } else {
+    response = (await projectSdk.tablesDB.getTable({
+      databaseId,
+      tableId,
+    })) as unknown as Record<string, unknown>
+  }
 
-    const rowSecurity =
-      response.rowSecurity === true || response.documentSecurity === true
+  const rowSecurity =
+    response.rowSecurity === true || response.documentSecurity === true
 
-    return {
-      $id: response.$id as string,
-      name: (response.name as string) || 'Unnamed Table',
-      databaseId: databaseId,
-      enabled: response.enabled !== false,
-      rowSecurity,
-      $permissions: (response.$permissions as string[]) || [],
-      $createdAt: (response.$createdAt as string) || new Date().toISOString(),
-      $updatedAt:
-        (response.$updatedAt as string) ||
-        (response.$createdAt as string) ||
-        new Date().toISOString(),
-      dimension:
-        typeof response.dimension === 'number' ? response.dimension : undefined,
-    }
-  } catch {
-    return null
+  return {
+    $id: response.$id as string,
+    name: (response.name as string) || 'Unnamed Table',
+    databaseId: databaseId,
+    enabled: response.enabled !== false,
+    rowSecurity,
+    $permissions: (response.$permissions as string[]) || [],
+    $createdAt: (response.$createdAt as string) || new Date().toISOString(),
+    $updatedAt:
+      (response.$updatedAt as string) ||
+      (response.$createdAt as string) ||
+      new Date().toISOString(),
+    dimension:
+      typeof response.dimension === 'number' ? response.dimension : undefined,
   }
 }
 

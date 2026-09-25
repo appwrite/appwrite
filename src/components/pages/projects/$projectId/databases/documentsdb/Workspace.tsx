@@ -262,6 +262,12 @@ export function Workspace({
     TABLE_WORKSPACE_TABLES_LIST_LIMIT,
   )
 
+  const effectiveTableId = tableId === '-' ? undefined : tableId
+  // Prefer the dedicated table query so the shell stays mounted when the table
+  // is not on the first page of dbTables (or while that list is still settling).
+  const { table: tableDataForStatus, isLoading: tableDetailLoading } =
+    useProjectTable(projectId, databaseId, DB_KIND, effectiveTableId)
+
   // Requested page query (drives fetch when user changes page)
   const { isFetching: sidebarTablesFetching } = useProjectTables(
     projectId,
@@ -314,8 +320,23 @@ export function Workspace({
     sidebarTablesLoading && sidebarTables.length === 0
       ? lastSidebarTablesRef.current
       : sidebarTables
-  const selectedTable =
+  const selectedTableFromList =
     tableId === '-' ? undefined : dbTables.find((c) => c.$id === tableId)
+  const selectedTable = useMemo(() => {
+    if (tableId === '-') return undefined
+    if (selectedTableFromList) return selectedTableFromList
+    if (!tableDataForStatus) return undefined
+    // The detail query carries no counts, and nothing below reads them.
+    return {
+      $id: tableDataForStatus.$id,
+      name: tableDataForStatus.name,
+      databaseId,
+      rows: 0,
+      columns: 0,
+      indexes: 0,
+      enabled: tableDataForStatus.enabled,
+    }
+  }, [tableId, selectedTableFromList, tableDataForStatus, databaseId])
   // Only show loading if we don't have data yet (account for prefetched data)
   const isActuallyLoading =
     (databaseLoading && !database) || (tablesLoading && dbTables.length === 0)
@@ -665,7 +686,6 @@ export function Workspace({
     },
   })
 
-  const effectiveTableId = tableId === '-' ? undefined : tableId
   const { columns: tableColumns } = useProjectCollectionAttributes(
     projectId,
     databaseId,
@@ -673,12 +693,6 @@ export function Workspace({
     effectiveTableId,
   )
   const { indexes: tableIndexes } = useProjectCollectionIndexes(
-    projectId,
-    databaseId,
-    DB_KIND,
-    effectiveTableId,
-  )
-  const { table: tableDataForStatus } = useProjectTable(
     projectId,
     databaseId,
     DB_KIND,
@@ -1010,7 +1024,7 @@ export function Workspace({
     )
   }
 
-  if (tableId !== '-' && !selectedTable) {
+  if (tableId !== '-' && !selectedTable && !tableDetailLoading) {
     return (
       <div className="flex h-full items-center justify-center">
         <div className="text-center">

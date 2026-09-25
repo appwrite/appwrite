@@ -6,6 +6,7 @@ import {
   databaseQueryOptions,
   tableRowsQueryOptions,
   tableQueryOptions,
+  getProjectTable,
   projectQueryOptions,
   organizationPlanQueryOptions,
 } from '@/lib/react-query/hooks'
@@ -15,6 +16,7 @@ import {
   parseListSearch,
 } from '@/lib/table-filters'
 import { pageTitle } from '@/lib/utils/page-title'
+import { isHttpNotFoundError } from '@/lib/utils/error-formatting'
 import { throwRedirectCollectionsDbFromTablesChild } from '@/lib/database-route-redirects'
 
 const TABLES_PER_PAGE = 100
@@ -121,9 +123,31 @@ export const Route = createFileRoute(
         })
       }
 
-      const tableExists = tablesData.tables.some(
-        (table: unknown) => (table as { $id?: string }).$id === tableId,
-      )
+      // The list only holds the first page of tables, so a table past it is
+      // looked up by id. Only a 404 means it is gone: redirecting on any other
+      // failure would open the oldest table instead.
+      let tableExists = tablesData.tables.some((table) => table.$id === tableId)
+      if (!tableExists) {
+        try {
+          queryClient.setQueryData(
+            tableQueryOptions(
+              projectId,
+              databaseId,
+              dbKind as DatabaseRouteKind,
+              tableId,
+            ).queryKey,
+            await getProjectTable(
+              projectId,
+              databaseId,
+              dbKind as DatabaseRouteKind,
+              tableId,
+            ),
+          )
+          tableExists = true
+        } catch (error) {
+          if (!isHttpNotFoundError(error)) throw error
+        }
+      }
       if (!tableExists) {
         throw redirect({
           to: '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/documents',

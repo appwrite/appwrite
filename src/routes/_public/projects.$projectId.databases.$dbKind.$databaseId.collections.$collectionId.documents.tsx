@@ -8,6 +8,7 @@ import {
   tableIndexesQueryOptions,
   tableRowsQueryOptions,
   tableQueryOptions,
+  getProjectTable,
   projectQueryOptions,
   organizationPlanQueryOptions,
 } from '@/lib/react-query/hooks'
@@ -17,6 +18,7 @@ import {
   parseListSearch,
 } from '@/lib/table-filters'
 import { pageTitle } from '@/lib/utils/page-title'
+import { isHttpNotFoundError } from '@/lib/utils/error-formatting'
 import { throwRedirectTablesDbFromCollectionsChild } from '@/lib/database-route-redirects'
 
 const TABLES_PER_PAGE = 100
@@ -129,10 +131,33 @@ export const Route = createFileRoute(
         })
       }
 
-      // Check if the requested table exists in the tables list
-      const tableExists = tablesData.tables.some(
-        (table: unknown) => table.$id === collectionId,
+      // The list only holds the first page of collections, so a collection past it is
+      // looked up by id. Only a 404 means it is gone: redirecting on any other
+      // failure would open the oldest collection instead.
+      let tableExists = tablesData.tables.some(
+        (table) => table.$id === collectionId,
       )
+      if (!tableExists) {
+        try {
+          queryClient.setQueryData(
+            tableQueryOptions(
+              projectId,
+              databaseId,
+              dbKind as DatabaseRouteKind,
+              collectionId,
+            ).queryKey,
+            await getProjectTable(
+              projectId,
+              databaseId,
+              dbKind as DatabaseRouteKind,
+              collectionId,
+            ),
+          )
+          tableExists = true
+        } catch (error) {
+          if (!isHttpNotFoundError(error)) throw error
+        }
+      }
       if (!tableExists) {
         throw redirect({
           to: '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/documents',
