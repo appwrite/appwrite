@@ -101,6 +101,8 @@ final class MqttServerTest extends Scope
         $this->assertSame(0x87, $subscriber->connect($projectId, 'not.a.valid.jwt', 'e2e-reject', cleanStart: true));
         // The CONNACK carries a human-readable reason so clients learn why they were refused.
         $this->assertNotEmpty($subscriber->connackReason());
+        // A refusal must still echo the enhanced-auth method (MQTT 5.0 §3.2.2.3.10).
+        $this->assertSame('appwrite-jwt', $subscriber->connackAuthMethod());
         $subscriber->disconnect();
     }
 
@@ -133,6 +135,21 @@ final class MqttServerTest extends Scope
         // the session-based analogue of the JWT auth method.
         $subscriber = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
         $this->assertSame(0, $subscriber->connect($projectId, $credential, 'e2e-session-' . $userId, cleanStart: true, authMethod: 'appwrite-session'));
+        $subscriber->disconnect();
+    }
+
+    public function testConnackEchoesAuthMethod(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        ['userId' => $userId, 'jwt' => $jwt] = $this->createUser();
+
+        // MQTT 5.0 (§3.2.2.3.10): a CONNECT that carries an Authentication Method uses enhanced
+        // auth, and the CONNACK MUST echo that method back — strict clients (e.g. HiveMQ) reject
+        // the connection otherwise. Lenient clients (mqtt.js) don't, which is why this regressed
+        // only for native background delivery.
+        $subscriber = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
+        $this->assertSame(0, $subscriber->connect($projectId, $jwt, 'e2e-connack-auth-' . $userId, cleanStart: true, authMethod: 'appwrite-jwt'));
+        $this->assertSame('appwrite-jwt', $subscriber->connackAuthMethod());
         $subscriber->disconnect();
     }
 

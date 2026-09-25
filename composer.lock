@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "18c6f31ccfff509e25560a1c66f33dd7",
+    "content-hash": "514c89b81fb58fae05dff3d2447bb8a4",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3242,54 +3242,6 @@
             "time": "2026-09-17T08:18:45+00:00"
         },
         {
-            "name": "utopia-php/di",
-            "version": "0.3.6",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/utopia-php/di.git",
-                "reference": "a72d8ee141c0883145876da95b527ffdff7ae2a9"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/di/zipball/a72d8ee141c0883145876da95b527ffdff7ae2a9",
-                "reference": "a72d8ee141c0883145876da95b527ffdff7ae2a9",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=8.2",
-                "psr/container": "^2.0"
-            },
-            "require-dev": {
-                "phpbench/phpbench": "^1.2",
-                "swoole/ide-helper": "4.8.3"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Utopia\\": "src/",
-                    "Tests\\E2E\\": "tests/e2e"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "description": "A simple and lite library for managing dependency injections",
-            "keywords": [
-                "PSR-11",
-                "container",
-                "dependency-injection",
-                "di",
-                "php",
-                "utopia"
-            ],
-            "support": {
-                "issues": "https://github.com/utopia-php/di/issues",
-                "source": "https://github.com/utopia-php/di/tree/0.3.6"
-            },
-            "time": "2026-09-02T15:57:19+00:00"
-        },
-        {
             "name": "utopia-php/dns",
             "version": "3.0.7",
             "source": {
@@ -3959,65 +3911,6 @@
                 "source": "https://github.com/utopia-php/registry/tree/0.5.0"
             },
             "time": "2021-03-10T10:45:22+00:00"
-        },
-        {
-            "name": "utopia-php/schedule",
-            "version": "0.3.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/utopia-php/schedule.git",
-                "reference": "fd28416654405e865649569e111fe1d3a3cf9868"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/schedule/zipball/fd28416654405e865649569e111fe1d3a3cf9868",
-                "reference": "fd28416654405e865649569e111fe1d3a3cf9868",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=8.3",
-                "utopia-php/telemetry": "^0.4"
-            },
-            "require-dev": {
-                "phpunit/phpunit": "^12"
-            },
-            "suggest": {
-                "ext-opentelemetry": "Required by utopia-php/telemetry when using OpenTelemetry metrics",
-                "ext-protobuf": "Required by utopia-php/telemetry when using OpenTelemetry metrics",
-                "ext-redis": "Required when using Store\\Redis to share the claim across replicas"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Utopia\\Schedule\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Team Appwrite",
-                    "email": "team@appwrite.io"
-                }
-            ],
-            "description": "An opinionated scheduler that reconciles schedules from a source of truth and dispatches cron, interval, delayed and fixed-time occurrences without silently skipping a run",
-            "keywords": [
-                "cron",
-                "framework",
-                "interval",
-                "php",
-                "schedule",
-                "scheduler",
-                "upf",
-                "utopia"
-            ],
-            "support": {
-                "issues": "https://github.com/utopia-php/schedule/issues",
-                "source": "https://github.com/utopia-php/schedule/tree/0.3.0"
-            },
-            "time": "2026-09-17T15:41:29+00:00"
         },
         {
             "name": "utopia-php/servers",
