@@ -163,6 +163,92 @@ final class FunctionsTest extends TestCase
         }
     }
 
+    public function testFailedPublishDoesNotReviveScheduleAfterConcurrentCancellation(): void
+    {
+        $store = new MemoryScheduleStore(new Document([
+            '$id' => 'schedule-id',
+            'active' => true,
+            'data' => ['functionId' => 'function-id'],
+        ]));
+        $locks = new QueueingLock();
+        $cancelled = false;
+
+        try {
+            $this->worker()->schedule(
+                $this->scheduleDatabase($store),
+                new Document(['$id' => 'project-id', 'accessedAt' => DateTime::now()]),
+                new Document(['$id' => 'execution-id', 'scheduleId' => 'schedule-id']),
+                'function-id',
+                function () use ($store, $locks, &$cancelled): void {
+                    $this->cancelSchedule($this->scheduleDatabase($store), $locks, 'schedule-id', $cancelled);
+                    throw new \RuntimeException('Queue unavailable');
+                },
+                $locks,
+            );
+        } catch (\RuntimeException $error) {
+            $this->assertSame('Queue unavailable', $error->getMessage());
+        }
+
+        $this->assertTrue($cancelled, 'Cancellation must succeed when publication was prevented');
+        $this->assertTrue($store->document->isEmpty(), 'Failed publication must not revive a cancelled schedule');
+    }
+
+    public function testCancellationLosesOncePublicationSucceedsEvenIfCleanupFails(): void
+    {
+        $store = new MemoryScheduleStore(new Document([
+            '$id' => 'schedule-id',
+            'active' => true,
+            'data' => ['functionId' => 'function-id'],
+        ]));
+        $store->failDeletes = true;
+        $locks = new QueueingLock();
+        $cancelled = false;
+
+        try {
+            $this->worker()->schedule(
+                $this->scheduleDatabase($store),
+                new Document(['$id' => 'project-id', 'accessedAt' => DateTime::now()]),
+                new Document(['$id' => 'execution-id', 'scheduleId' => 'schedule-id']),
+                'function-id',
+                function () use ($store, $locks, &$cancelled): void {
+                    $this->cancelSchedule($this->scheduleDatabase($store), $locks, 'schedule-id', $cancelled);
+                },
+                $locks,
+            );
+            $this->fail('Cleanup failure must surface after a successful publish');
+        } catch (\RuntimeException $error) {
+            $this->assertSame('Failed to remove claimed execution schedule', $error->getMessage());
+        }
+
+        $this->assertFalse($cancelled, '204 is not allowed after the function job is already queued');
+        $this->assertFalse($store->document->isEmpty());
+        $this->assertFalse($store->document->getAttribute('active'));
+    }
+
+    /**
+     * @param callable(string, int, callable, float): mixed $locks
+     */
+    private function cancelSchedule(Database $dbForPlatform, callable $locks, string $scheduleId, ?bool &$result = null): ?bool
+    {
+        return $locks(
+            'lock:platform:schedules:' . $scheduleId,
+            30,
+            function () use ($dbForPlatform, $scheduleId, &$result): bool {
+                $result = $dbForPlatform->withTransaction(function () use ($dbForPlatform, $scheduleId): bool {
+                    $schedule = $dbForPlatform->getDocument('schedules', $scheduleId, forUpdate: true);
+                    if ($schedule->isEmpty() || !$schedule->getAttribute('active', false)) {
+                        return false;
+                    }
+
+                    return $dbForPlatform->deleteDocument('schedules', $scheduleId);
+                });
+
+                return $result;
+            },
+            10.0,
+        );
+    }
+
     /**
      * @return \Iterator<string, array{array<string, string>, string, string}>
      */
@@ -185,19 +271,102 @@ final class FunctionsTest extends TestCase
     {
         return new TestFunctions();
     }
+
+    private function scheduleDatabase(MemoryScheduleStore $store): Database
+    {
+        $db = $this->createMock(Database::class);
+        $db->method('withTransaction')->willReturnCallback(fn (callable $callback): mixed => $callback());
+        $db->method('getDocument')->willReturnCallback(function (string $collection, string $id) use ($store): Document {
+            if ($store->document->isEmpty() || $store->document->getId() !== $id) {
+                return new Document();
+            }
+
+            return $store->document;
+        });
+        $db->method('updateDocument')->willReturnCallback(function (string $collection, string $id, Document $update) use ($store): Document {
+            if ($store->document->isEmpty() || $store->document->getId() !== $id) {
+                return new Document();
+            }
+
+            foreach ($update->getArrayCopy() as $key => $value) {
+                $store->document->setAttribute($key, $value);
+            }
+
+            return $store->document;
+        });
+        $db->method('deleteDocument')->willReturnCallback(function (string $collection, string $id) use ($store): bool {
+            if ($store->failDeletes || $store->document->isEmpty() || $store->document->getId() !== $id) {
+                return false;
+            }
+
+            $store->document = new Document();
+
+            return true;
+        });
+
+        return $db;
+    }
 }
 
 final class TestFunctions extends Functions
 {
     public int $projectAccessUpdates = 0;
 
-    public function schedule(Database $dbForPlatform, Document $project, Document $execution, string $functionId, callable $enqueue): bool
+    /**
+     * @param callable(string, int, callable, float): mixed|null $locks
+     */
+    public function schedule(Database $dbForPlatform, Document $project, Document $execution, string $functionId, callable $enqueue, ?callable $locks = null): bool
     {
-        return $this->enqueueScheduledExecution($dbForPlatform, $project, $execution, $functionId, $enqueue);
+        return $this->enqueueScheduledExecution($dbForPlatform, $project, $execution, $functionId, $enqueue, $locks);
     }
 
     protected function updateProjectAccess(Document $project, Database $dbForPlatform): void
     {
         $this->projectAccessUpdates++;
+    }
+}
+
+/**
+ * Single-thread stand-in for a blocking per-key lock: waiters run after release.
+ */
+final class QueueingLock
+{
+    /** @var array<string, bool> */
+    private array $held = [];
+
+    /** @var array<string, list<callable(): mixed>> */
+    private array $waiters = [];
+
+    public function __invoke(string $key, int $ttl, callable $callback, float $timeout = 0.0): mixed
+    {
+        if ($this->held[$key] ?? false) {
+            $result = null;
+            $this->waiters[$key][] = function () use ($callback, &$result): mixed {
+                return $result = $callback();
+            };
+
+            return $result;
+        }
+
+        $this->held[$key] = true;
+        try {
+            return $callback();
+        } finally {
+            $this->held[$key] = false;
+            $waiters = $this->waiters[$key] ?? [];
+            $this->waiters[$key] = [];
+            foreach ($waiters as $waiter) {
+                ($this)($key, $ttl, $waiter, $timeout);
+            }
+        }
+    }
+}
+
+final class MemoryScheduleStore
+{
+    public bool $failDeletes = false;
+
+    public function __construct(public Document $document)
+    {
     }
 }
