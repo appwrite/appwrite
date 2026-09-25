@@ -16,6 +16,20 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
+    "slug": "announcing-user-photos",
+    "href": "/blog/post/announcing-user-photos",
+    "title": "Announcing user photos: A profile picture for every user",
+    "description": "Appwrite Avatars now returns a profile photo for any user with one getPhoto call, resolving OAuth2 photos, Gravatar, Libravatar, and initials in order.",
+    "date": "2026-09-25",
+    "lastUpdated": "2026-09-25",
+    "timeToRead": 7,
+    "author": "aditya-oberai",
+    "category": "announcements",
+    "featured": false,
+    "cover": "/images/blog/announcing-user-photos/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "faster-list-caching-binary-format",
     "href": "/blog/post/faster-list-caching-binary-format",
     "title": "Cached list queries now use up to 69% less memory and serve up to 29% more requests",
