@@ -242,7 +242,7 @@ class Messaging extends Action
         $deliveryErrors = [];
         $hasRecipients = false;
 
-        foreach ($this->streamRecipients($dbForProject, $topicIds, $userIds, $targetIds, $providerType, $default) as $page) {
+        foreach ($this->streamRecipients($dbForProject, $topicIds, $userIds, $targetIds, $providerType, $default) as [$page, $perUser]) {
             /**
              * @var array<callable> $tasks
              */
@@ -259,8 +259,22 @@ class Messaging extends Action
                     default => throw new \Exception('Provider with the requested ID is of the incorrect type')
                 };
 
+                // A user- or target-addressed Appwrite push is delivered on the reserved per-user
+                // topic users/<userId>, so a user's targets collapse to one implicit topic. Topic
+                // campaigns (and every other provider) keep sending to the resolved identifiers.
+                $recipients = \array_keys($identifiers);
+                if ($perUser && $resolvedProviderType === MESSAGE_TYPE_PUSH && $provider->getAttribute('provider') === 'appwrite') {
+                    $userTopics = [];
+                    foreach ($identifiers as $userId) {
+                        if (!empty($userId)) {
+                            $userTopics['users/' . $userId] = null;
+                        }
+                    }
+                    $recipients = \array_keys($userTopics);
+                }
+
                 $batches = \array_chunk(
-                    \array_keys($identifiers),
+                    $recipients,
                     $adapter->getMaxMessagesPerRequest()
                 );
 
@@ -364,7 +378,7 @@ class Messaging extends Action
      * @param array<string> $topicIds
      * @param array<string> $userIds
      * @param array<string> $targetIds
-     * @return \Generator<array<string, array<string, null>>>
+     * @return \Generator<array{0: array<string, array<string, string>>, 1: bool}>
      * @throws \Exception
      */
     private function streamRecipients(
@@ -422,25 +436,42 @@ class Messaging extends Action
                         fn () => $dbForProject->getAuthorization()->skip(
                             fn () => $dbForProject->find('targets', [
                                 Query::equal('$sequence', $targetInternalIds),
-                                Query::select(['providerId', 'identifier', 'expired']),
+                                Query::select(['providerId', 'identifier', 'userId', 'expired']),
                                 Query::limit(\count($targetInternalIds)),
                             ])
                         )
                     );
 
-                    yield $this->groupTargetsByProvider($targets, $default);
+                    // Topic campaign: deliver on the topic's own channel, not a per-user topic.
+                    yield [$this->groupTargetsByProvider($targets, $default), false];
                 } while ($count === MESSAGE_RECIPIENTS_PAGE_SIZE);
             }
         }
 
         if (\count($userIds) > 0) {
+            // Only address users that actually exist, so a bogus id can't create a phantom users/
+            // topic or be counted as delivered.
+            $existingUserIds = \array_map(
+                fn (Document $user) => $user->getId(),
+                $dbForProject->getAuthorization()->skip(
+                    fn () => $dbForProject->find('users', [
+                        Query::equal('$id', \array_values(\array_unique($userIds))),
+                        Query::select(['$id']),
+                        Query::limit(\count($userIds)),
+                    ])
+                )
+            );
+
+            // Resolve each user's registered device targets first, so FCM/APNS (and any explicit
+            // Appwrite target) still receive — the reserved topic is additive, not a replacement.
+            $reachedViaTarget = [];
             $cursor = null;
 
             do {
                 $queries = [
-                    Query::equal('userId', $userIds),
+                    Query::equal('userId', $existingUserIds),
                     Query::equal('providerType', [$providerType]),
-                    Query::select(['$sequence', 'providerId', 'identifier', 'expired']),
+                    Query::select(['$sequence', 'providerId', 'identifier', 'userId', 'expired']),
                     Query::orderAsc('$sequence'),
                     Query::limit(MESSAGE_RECIPIENTS_PAGE_SIZE),
                 ];
@@ -449,7 +480,7 @@ class Messaging extends Action
                     $queries[] = Query::cursorAfter($cursor);
                 }
 
-                $targets = $dbForProject->find('targets', $queries);
+                $targets = $existingUserIds === [] ? [] : $dbForProject->find('targets', $queries);
                 $count = \count($targets);
 
                 if ($count === 0) {
@@ -458,8 +489,35 @@ class Messaging extends Action
 
                 $cursor = $targets[$count - 1];
 
-                yield $this->groupTargetsByProvider($targets, $default);
+                foreach ($targets as $target) {
+                    // groupTargetsByProvider drops expired targets, so an expired-only user is not
+                    // actually reached and must still get the direct MQTT fallback below.
+                    if (!$target->getAttribute('expired')) {
+                        $reachedViaTarget[$target->getAttribute('userId')] = true;
+                    }
+                }
+
+                // User-addressed: deliver on the reserved per-user topic (Appwrite push).
+                yield [$this->groupTargetsByProvider($targets, $default), true];
             } while ($count === MESSAGE_RECIPIENTS_PAGE_SIZE);
+
+            // Appwrite push needs no device target: reach existing users with no registered target on
+            // their reserved MQTT topic (users/<userId>), which they subscribe to with their session.
+            if ($default->getAttribute('provider') === 'appwrite') {
+                $targetless = \array_values(\array_filter(
+                    $existingUserIds,
+                    fn (string $userId) => !isset($reachedViaTarget[$userId]),
+                ));
+
+                foreach (\array_chunk($targetless, MESSAGE_RECIPIENTS_PAGE_SIZE) as $chunk) {
+                    $identifiers = [];
+                    foreach ($chunk as $userId) {
+                        $identifiers[$userId] = $userId;
+                    }
+
+                    yield [[$default->getId() => $identifiers], true];
+                }
+            }
         }
 
         if (\count($targetIds) > 0) {
@@ -469,7 +527,7 @@ class Messaging extends Action
                 $queries = [
                     Query::equal('$id', $targetIds),
                     Query::equal('providerType', [$providerType]),
-                    Query::select(['$sequence', 'providerId', 'identifier', 'expired']),
+                    Query::select(['$sequence', 'providerId', 'identifier', 'userId', 'expired']),
                     Query::orderAsc('$sequence'),
                     Query::limit(MESSAGE_RECIPIENTS_PAGE_SIZE),
                 ];
@@ -487,22 +545,25 @@ class Messaging extends Action
 
                 $cursor = $targets[$count - 1];
 
-                yield $this->groupTargetsByProvider($targets, $default);
+                // User- or target-addressed: deliver on the reserved per-user topic (Appwrite push).
+                yield [$this->groupTargetsByProvider($targets, $default), true];
             } while ($count === MESSAGE_RECIPIENTS_PAGE_SIZE);
         }
     }
 
     /**
      * Group a page of target documents by provider id, deduplicating identifiers within the page and
-     * dropping targets already known to be unreachable.
+     * dropping targets already known to be unreachable. Each identifier maps to its target's user id,
+     * which the Appwrite push provider uses to deliver on the reserved per-user topic (see the send
+     * loop); other providers only read the keys.
      *
      * @param array<Document> $targets
-     * @return array<string, array<string, null>>
+     * @return array<string, array<string, string>>
      */
     private function groupTargetsByProvider(array $targets, Document $default): array
     {
         /**
-         * @var array<string, array<string, null>> $identifiers
+         * @var array<string, array<string, string>> $identifiers
          */
         $identifiers = [];
 
@@ -520,8 +581,9 @@ class Messaging extends Action
                 $identifiers[$providerId] = [];
             }
 
-            // Null values keep identifiers unique without a second lookup structure.
-            $identifiers[$providerId][$target->getAttribute('identifier')] = null;
+            // identifier => userId: the key dedupes recipients; the value lets the Appwrite push
+            // provider collapse a user's targets to one users/<userId> topic.
+            $identifiers[$providerId][$target->getAttribute('identifier')] = $target->getAttribute('userId');
         }
 
         return $identifiers;

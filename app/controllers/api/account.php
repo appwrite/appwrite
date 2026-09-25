@@ -599,15 +599,17 @@ Http::get('/v1/account/sessions')
         contentType: ContentType::JSON,
     ))
     ->inject('response')
-    ->inject('user')
+    ->inject('targetUser')
     ->inject('locale')
     ->inject('store')
     ->inject('proofForToken')
-    ->action(function (Response $response, User $user, Locale $locale, Store $store, ProofsToken $proofForToken) {
+    ->action(function (Response $response, User $targetUser, Locale $locale, Store $store, ProofsToken $proofForToken) {
 
 
-        $sessions = $user->getAttribute('sessions', []);
-        $current = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken);
+        $sessions = $targetUser->getAttribute('sessions', []);
+        // While impersonating, the request runs on the impersonator's session, so none of
+        // the target's sessions is marked current.
+        $current = $targetUser->sessionVerify($store->getProperty('secret', ''), $proofForToken);
 
         foreach ($sessions as $key => $session) {
             /** @var Document $session */
@@ -731,15 +733,18 @@ Http::get('/v1/account/sessions/:sessionId')
     ))
     ->param('sessionId', 'current', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Session ID. Use the string \'current\' to get the current device session.', true, ['dbForProject'])
     ->inject('response')
-    ->inject('user')
+    ->inject('targetUser')
     ->inject('locale')
     ->inject('store')
     ->inject('proofForToken')
-    ->action(function (?string $sessionId, Response $response, User $user, Locale $locale, Store $store, ProofsToken $proofForToken) {
+    ->action(function (?string $sessionId, Response $response, User $targetUser, Locale $locale, Store $store, ProofsToken $proofForToken) {
 
-        $sessions = $user->getAttribute('sessions', []);
+        $sessions = $targetUser->getAttribute('sessions', []);
+        // While impersonating, the request runs on the impersonator's session, so 'current'
+        // resolves against none of the target's sessions and this throws. That matches the
+        // sessions list, which marks none of them current for the same reason.
         $sessionId = ($sessionId === 'current')
-            ? $user->sessionVerify($store->getProperty('secret', ''), $proofForToken)
+            ? $targetUser->sessionVerify($store->getProperty('secret', ''), $proofForToken)
             : $sessionId;
 
         foreach ($sessions as $session) {
@@ -765,6 +770,7 @@ Http::delete('/v1/account/sessions/:sessionId')
     ->desc('Delete session')
     ->groups(['api', 'account', 'mfa'])
     ->label('scope', 'account')
+    ->label('impersonation', 'allow')
     ->label('event', 'users.[userId].sessions.[sessionId].delete')
     ->label('audits.event', 'session.delete')
     ->label('audits.resource', 'user/{user.$id}')
@@ -3359,6 +3365,7 @@ Http::post('/v1/account/jwts')
     ->groups(['api', 'account', 'auth'])
     ->label('scope', 'account')
     ->label('auth.type', 'jwt')
+    ->label('impersonation', 'allow')
     ->label('sdk', new Method(
         namespace: 'account',
         group: 'tokens',
@@ -3424,10 +3431,10 @@ Http::get('/v1/account/prefs')
         contentType: ContentType::JSON
     ))
     ->inject('response')
-    ->inject('user')
-    ->action(function (Response $response, Document $user) {
+    ->inject('targetUser')
+    ->action(function (Response $response, Document $targetUser) {
 
-        $prefs = $user->getAttribute('prefs', []);
+        $prefs = $targetUser->getAttribute('prefs', []);
 
         $response->dynamic(new Document($prefs), Response::MODEL_PREFERENCES);
     });
@@ -5510,9 +5517,9 @@ Http::get('/v1/account/identities')
     ->param('queries', [], new Identities(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Identities::ALLOWED_ATTRIBUTES), true)
     ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
-    ->inject('user')
+    ->inject('targetUser')
     ->inject('dbForProject')
-    ->action(function (array $queries, bool $includeTotal, Response $response, User $user, Database $dbForProject) {
+    ->action(function (array $queries, bool $includeTotal, Response $response, User $targetUser, Database $dbForProject) {
 
         try {
             $queries = Query::parseQueries($queries);
@@ -5520,7 +5527,7 @@ Http::get('/v1/account/identities')
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
-        $queries[] = Query::equal('userInternalId', [$user->getSequence()]);
+        $queries[] = Query::equal('userInternalId', [$targetUser->getSequence()]);
 
         $cursor = Query::getCursorQueries($queries, false);
         $cursor = \reset($cursor);

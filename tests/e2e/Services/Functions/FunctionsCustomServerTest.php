@@ -2883,12 +2883,16 @@ final class FunctionsCustomServerTest extends Scope
         $this->assertNotEmpty($response['headers']['x-appwrite-execution-id']);
 
         // Duration covers the whole request, cold start included, so it tracks
-        // what the caller waited rather than only the warm runtime window
-        $execution = $this->getExecution($functionId, $response['headers']['x-appwrite-execution-id']);
+        // what the caller waited rather than only the warm runtime window. The
+        // execution record is written after the response, so wait for it.
+        $executionId = $response['headers']['x-appwrite-execution-id'];
+        $this->assertEventually(function () use ($functionId, $executionId, $elapsed) {
+            $execution = $this->getExecution($functionId, $executionId);
 
-        $this->assertEquals(200, $execution['headers']['status-code']);
-        $this->assertLessThanOrEqual($elapsed, $execution['body']['duration']);
-        $this->assertGreaterThan($elapsed / 2, $execution['body']['duration']);
+            $this->assertEquals(200, $execution['headers']['status-code']);
+            $this->assertLessThanOrEqual($elapsed, $execution['body']['duration']);
+            $this->assertGreaterThan($elapsed / 2, $execution['body']['duration']);
+        }, 30000, 500);
 
         $this->cleanupFunction($functionId);
     }

@@ -78,6 +78,23 @@ class Jobs extends Action
         ErrorCode::CloneFailed->value => 'Failed to clone the repository. Check that the repository and branch exist and are accessible.',
     ];
 
+    // Repository sources only: an uploaded source is downloaded from Appwrite.
+    private const array USER_SOURCE_ERRORS = [
+        'Download failed with status 401' => 'Access to the repository was denied. Check that it is still accessible to your Git installation.',
+        'Download failed with status 403' => 'Access to the repository was denied. Check that it is still accessible to your Git installation.',
+        'Download failed with status 404' => 'The repository, branch or commit could not be found. Check that it still exists.',
+    ];
+
+    private static function userMessage(Document $deployment, JobArtifact $artifact): ?string
+    {
+        $code = $artifact->error?->code;
+        if ($code === ErrorCode::DownloadHttpError && $deployment->getAttribute('type') === 'vcs') {
+            return self::USER_SOURCE_ERRORS[$artifact->error->message] ?? null;
+        }
+
+        return self::USER_ARTIFACT_ERRORS[$code->value ?? ''] ?? null;
+    }
+
     public static function getName(): string
     {
         return 'jobs';
@@ -196,9 +213,11 @@ class Jobs extends Action
                 $this->dispatchUpdate($queueForEvents, $queueForWebhooks, $publisherForFunctions, $project, $deployment);
             }
 
+            // Artifacts after a failed build fail for want of output.
             if ($artifact?->status === 'failed'
+                && $statusBefore !== 'failed'
                 && !\in_array($artifact->artifactId, ['cache', 'manifest'], true)
-                && !isset(self::USER_ARTIFACT_ERRORS[$artifact->error?->code->value ?? ''])) {
+                && self::userMessage($deployment, $artifact) === null) {
                 Span::add('deployment.id', $deploymentId);
                 Span::add('artifact.id', $artifact->artifactId);
                 Span::add('artifact.type', $artifact->artifactType);
@@ -327,7 +346,7 @@ class Jobs extends Action
         Bus $bus,
     ): Document {
         $failed = $artifact->status === 'failed';
-        $message = self::USER_ARTIFACT_ERRORS[$artifact->error?->code->value ?? ''] ?? self::INTERNAL_ERROR_MESSAGE;
+        $message = self::userMessage($deployment, $artifact) ?? self::INTERNAL_ERROR_MESSAGE;
         if ($artifact->artifactId === 'manifest') {
             // A failed manifest degrades to an empty listing (detection
             // skipped), never a failed build.

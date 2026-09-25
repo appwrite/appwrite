@@ -449,6 +449,11 @@ final class ClaimTest extends TestCase
             {
                 return 0;
             }
+
+            public function getFailedCount(Queue $queue): int
+            {
+                return 0;
+            }
         };
         $claims = new Claim($this->database, $this->locks());
 
@@ -509,6 +514,12 @@ final class ClaimTest extends TestCase
             {
                 return 0;
             }
+
+            #[\Override]
+            public function getFailedCount(Queue $queue): int
+            {
+                return 0;
+            }
         };
         $claims = new Claim($this->database, $this->locks());
 
@@ -560,6 +571,12 @@ final class ClaimTest extends TestCase
 
             #[\Override]
             public function getQueueSize(Queue $queue, bool $failedJobs = false): int
+            {
+                return 0;
+            }
+
+            #[\Override]
+            public function getFailedCount(Queue $queue): int
             {
                 return 0;
             }
@@ -622,6 +639,12 @@ final class ClaimTest extends TestCase
 
             #[\Override]
             public function getQueueSize(Queue $queue, bool $failedJobs = false): int
+            {
+                return 0;
+            }
+
+            #[\Override]
+            public function getFailedCount(Queue $queue): int
             {
                 return 0;
             }
@@ -1055,6 +1078,12 @@ final class ClaimTest extends TestCase
 
             #[\Override]
             public function getQueueSize(Queue $queue, bool $failedJobs = false): int
+            {
+                return 0;
+            }
+
+            #[\Override]
+            public function getFailedCount(Queue $queue): int
             {
                 return 0;
             }
@@ -1802,6 +1831,12 @@ final class ClaimTest extends TestCase
 
             #[\Override]
             public function getQueueSize(Queue $queue, bool $failedJobs = false): int
+            {
+                return 0;
+            }
+
+            #[\Override]
+            public function getFailedCount(Queue $queue): int
             {
                 return 0;
             }
