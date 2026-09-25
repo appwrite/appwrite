@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Workers;
 use Appwrite\Bus\Events\RuleDeleted;
 use Appwrite\Deletes\Identities;
 use Appwrite\Deletes\Targets;
+use Appwrite\Deployment\Deployments;
 use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Message\Usage;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
@@ -35,6 +36,7 @@ use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\Span\Span;
 use Utopia\Storage\Device;
+use Utopia\Storage\DeviceType;
 use Utopia\System\System;
 use Utopia\Usage\Tenant as UsageTenant;
 
@@ -1575,6 +1577,13 @@ class Deletes extends Action
     {
         $deploymentId = $deployment->getId();
         $buildPath = $deployment->getAttribute('buildPath', '');
+
+        // A build canceled or deleted before it completed never had its staged
+        // source moved (see Deployments::payload()).
+        $staged = Deployments::stagedSourcePath($device, $deploymentId);
+        if ($device->getType() === DeviceType::Local && $device->exists($staged)) {
+            $device->delete($staged);
+        }
 
         if (empty($buildPath)) {
             Console::info("No build files for deployment " . $deploymentId);

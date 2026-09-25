@@ -31,6 +31,7 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Platform\Action;
+use Utopia\Psr7\Stream;
 use Utopia\Queue\Message;
 use Utopia\Queue\PermanentFailure;
 use Utopia\Span\Span;
@@ -221,7 +222,7 @@ class Jobs extends Action
             // Artifacts after a failed build fail for want of output.
             if ($artifact?->status === 'failed'
                 && $statusBefore !== 'failed'
-                && !\in_array($artifact->artifactId, ['cache', 'manifest', 'sourceUpload'], true)
+                && !\in_array($artifact->artifactId, ['cache', 'manifest'], true)
                 && self::userMessage($deployment, $artifact) === null) {
                 Span::add('deployment.id', $deploymentId);
                 Span::add('artifact.id', $artifact->artifactId);
@@ -387,10 +388,10 @@ class Jobs extends Action
 
         // Any other artifact failing dooms the build — the orchestrator aborts
         // the job on a pre-job failure, and a lost output has nothing to serve
-        // — so fail it now rather than waiting for the bare exit code. The build
-        // cache and source uploads are best-effort: losing them costs the next
-        // build time, or the source download, not this build.
-        if ($failed && !\in_array($artifact->artifactId, ['cache', 'sourceUpload'], true)) {
+        // — so fail it now rather than waiting for the bare exit code. The build cache
+        // upload is the one best-effort artifact: losing it costs the next
+        // build time, not this one.
+        if ($failed && $artifact->artifactId !== 'cache') {
             return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, $message, $publisherForScreenshots, $vcsFactory, $platform, $bus);
         }
 
@@ -503,18 +504,39 @@ class Jobs extends Action
         $cache->save('jobs-complete-' . $deployment->getId(), true);
 
         // On the local device a remote-source build leaves its source on the
-        // builds volume (see Deployments::payload()); move it where manual
-        // uploads keep theirs.
-        $staged = Deployments::stagedSourcePath($project->getId(), $deployment->getId());
+        // builds volume (see Deployments::payload()). The build's own code can
+        // write that volume too, so only a regular file reached without any
+        // symlink is kept, and only if the inode opened is the one checked.
+        // Losing it costs the download, never the build.
+        $staged = Deployments::stagedSourcePath($deviceForBuilds, $deployment->getId());
         if ($deviceForBuilds->getType() === DeviceType::Local && $deviceForBuilds->exists($staged)) {
-            $resourceType = $deployment->getAttribute('resourceType', 'functions');
-            $sourcePath = Deployments::sourcePath($project->getId(), $resourceType, $deployment->getId());
-            if ($deviceForBuilds->copy($staged, $sourcePath, $resourceType === 'sites' ? $deviceForSites : $deviceForFunctions)) {
-                $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
-                    'sourcePath' => $sourcePath,
-                ]));
+            $file = false;
+            try {
+                $stat = \lstat($staged);
+                if ($deployment->getAttribute('sourcePath', '') === ''
+                    && $stat !== false
+                    && ($stat['mode'] & 0o170000) === 0o100000
+                    && \realpath($staged) === $staged
+                    && ($file = \fopen($staged, 'rb')) !== false
+                ) {
+                    $opened = \fstat($file);
+                    if ($opened !== false && $opened['ino'] === $stat['ino'] && $opened['dev'] === $stat['dev']) {
+                        $resourceType = $deployment->getAttribute('resourceType', 'functions');
+                        $sourcePath = Deployments::sourcePath($project->getId(), $resourceType, $deployment->getId());
+                        ($resourceType === 'sites' ? $deviceForSites : $deviceForFunctions)->write($sourcePath, new Stream((string) \stream_get_contents($file)), 'application/gzip');
+                        $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
+                            'sourcePath' => $sourcePath,
+                        ]));
+                    }
+                }
+            } catch (\Throwable $error) {
+                Span::add('source.error', $error->getMessage());
+            } finally {
+                if ($file !== false) {
+                    \fclose($file);
+                }
+                $deviceForBuilds->delete($staged);
             }
-            $deviceForBuilds->delete($staged);
         }
 
         return $this->ready($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus);

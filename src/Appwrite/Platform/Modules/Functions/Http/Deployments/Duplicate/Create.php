@@ -102,10 +102,10 @@ class Create extends Action
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
-        // Remote-source deployments (templates / VCS) on the jobs-service
-        // backend never store a source tarball — the build sidecar fetches
-        // it — so a duplicate re-fetches the same source from the
-        // coordinates persisted on the deployment.
+        // Copy the stored source when there is one. Remote-source deployments
+        // (templates / VCS) built before their source was kept have none, so
+        // a duplicate re-fetches the same source from the coordinates
+        // persisted on the deployment.
         $path = $deployment->getAttribute('sourcePath');
         $hasSource = ! empty($path) && $deviceForFunctions->exists($path);
         $installationId = $deployment->getAttribute('installationId', '');

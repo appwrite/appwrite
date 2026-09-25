@@ -425,9 +425,10 @@ readonly class Deployments
 
         // Only the sidecar ever sees a remote source, so pack the root
         // directory it builds, flat like an uploaded tarball, and keep it where
-        // manual uploads keep theirs for downloads and duplicates. The stat
-        // reports its size as sourceSize. The upload is best-effort (see the
-        // Jobs worker); the build does not wait on it.
+        // manual uploads keep theirs for downloads and duplicates. Both the
+        // upload and the local staging copy run before build.sh, so nothing
+        // the build runs produces what is kept. The stat reports its size as
+        // sourceSize.
         $stage = '';
         if ($source !== null) {
             $sourceArtifacts[] = new ArchiveArtifact(id: 'sourceArchive', in: 'source', out: 'source-root.tar.gz', compression: ArchiveCompression::Gzip, depends: isset($source['clone']) ? 'source' : 'extract');
@@ -437,10 +438,10 @@ readonly class Deployments
             if ($sourceDevice->getType() === DeviceType::Local) {
                 // The worker mounts only the builds volume, so it stages the
                 // tarball there for the Jobs worker to move.
-                $staged = static::stagedSourcePath($projectId, $deploymentId);
+                $staged = static::stagedSourcePath(static::device($projectId), $deploymentId);
                 $stage = 'mkdir -p ' . \escapeshellarg(\dirname($staged)) . ' && cp /mnt/code/source-root.tar.gz ' . \escapeshellarg($staged) . '; ';
             } else {
-                $sourceArtifacts[] = new UploadArtifact(id: 'sourceUpload', in: 'source-root.tar.gz', out: static::objectUrl($sourceDevice, static::sourcePath($projectId, $resource->getCollection(), $deploymentId)), depends: 'job');
+                $sourceArtifacts[] = new UploadArtifact(id: 'sourceUpload', in: 'source-root.tar.gz', out: static::objectUrl($sourceDevice, static::sourcePath($projectId, $resource->getCollection(), $deploymentId)), depends: 'sourceArchive');
             }
         }
 
@@ -536,9 +537,9 @@ readonly class Deployments
      * Where the build worker leaves that source on the local device: the
      * builds volume, the only one it mounts.
      */
-    public static function stagedSourcePath(string $projectId, string $deploymentId): string
+    public static function stagedSourcePath(Device $deviceForBuilds, string $deploymentId): string
     {
-        return static::device($projectId)->getPath("{$deploymentId}/source.tar.gz");
+        return $deviceForBuilds->getPath("{$deploymentId}/source.tar.gz");
     }
 
     /**
