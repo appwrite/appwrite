@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Platform\Modules\Databases\Http\Documents;
 
+use Appwrite\Databases\ListCache;
 use Appwrite\Databases\TransactionState;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\XList;
 use Appwrite\Usage\Context;
@@ -133,8 +134,8 @@ final class CachedListMeteringTest extends TestCase
         $this->cache = \array_map(
             static fn (array $fields): array => \array_filter(
                 $fields,
-                static fn (string $field): bool => \str_ends_with($field, ':' . XList::LIST_CACHE_FIELD_DOCUMENTS)
-                    || \str_ends_with($field, ':' . XList::LIST_CACHE_FIELD_TOTAL),
+                static fn (string $field): bool => \str_ends_with($field, ':' . ListCache::DOCUMENTS)
+                    || \str_ends_with($field, ':' . ListCache::TOTAL),
                 ARRAY_FILTER_USE_KEY,
             ),
             $this->cache,
@@ -168,7 +169,7 @@ final class CachedListMeteringTest extends TestCase
         $replaced = 0;
         foreach ($this->cache as $key => $fields) {
             foreach (\array_keys($fields) as $field) {
-                if (!\str_ends_with($field, ':' . XList::LIST_CACHE_FIELD_OPERATIONS)) {
+                if (!\str_ends_with($field, ':' . ListCache::OPERATIONS)) {
                     continue;
                 }
                 $this->cache[$key][$field] = $operations;
