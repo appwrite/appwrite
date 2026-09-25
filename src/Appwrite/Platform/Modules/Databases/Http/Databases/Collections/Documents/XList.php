@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents;
 
 use Appwrite\Databases\CursorLookup;
+use Appwrite\Databases\Queries;
 use Appwrite\Databases\TransactionState;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
@@ -26,9 +27,7 @@ use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Http\Http;
-use Utopia\Query\Exception as QueryLibException;
-use Utopia\Query\Exception\UnsupportedException;
-use Utopia\Query\Exception\ValidationException;
+use Utopia\Query\Exception as QueryLibraryException;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Nullable;
@@ -108,11 +107,7 @@ class XList extends Action
             throw new Exception($this->getParentNotFoundException(), params: [$collectionId]);
         }
 
-        try {
-            $queries = Query::parseQueries($queries);
-        } catch (QueryException|UnsupportedException|ValidationException|QueryLibException $e) {
-            $this->mapQueryFailure($e);
-        }
+        $queries = Queries::parse($queries);
 
         $queries = $this->resolveJoinCollections(
             $queries,
@@ -143,8 +138,8 @@ class XList extends Action
                 // dedicated DocumentsDB shard) has no table for it. Treat this as a
                 // not-found on the collection so the caller sees a 404 instead of a 500.
                 throw new Exception($this->getParentNotFoundException(), params: [$collectionId]);
-            } catch (QueryException|ValidationException $e) {
-                $this->mapQueryFailure($e);
+            } catch (QueryException|QueryLibraryException $failure) {
+                throw Queries::failure($failure);
             }
 
             if ($cursorDocument->isEmpty()) {
@@ -248,8 +243,8 @@ class XList extends Action
             $attribute = $this->isCollectionsAPI() ? 'attribute' : 'column';
             $message = "The order $attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all $documents order $attribute values are non-null.";
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, $message);
-        } catch (QueryException|ValidationException $e) {
-            $this->mapQueryFailure($e);
+        } catch (QueryException|QueryLibraryException $failure) {
+            throw Queries::failure($failure);
         } catch (Timeout) {
             throw new Exception(Exception::DATABASE_TIMEOUT);
         }

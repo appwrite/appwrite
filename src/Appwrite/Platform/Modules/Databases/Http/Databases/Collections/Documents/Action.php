@@ -364,11 +364,6 @@ abstract class Action extends DatabasesAction
         return $document;
     }
 
-    protected function mapQueryFailure(\Throwable $error): never
-    {
-        throw new Exception(Exception::GENERAL_QUERY_INVALID, $error->getMessage());
-    }
-
     /**
      * @param array<Query> $queries
      * @return array<Query>

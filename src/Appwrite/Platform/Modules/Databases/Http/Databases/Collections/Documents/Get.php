@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents;
 
+use Appwrite\Databases\Queries;
 use Appwrite\Databases\TransactionState;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
@@ -19,9 +20,7 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
-use Utopia\Query\Exception as QueryLibException;
-use Utopia\Query\Exception\UnsupportedException;
-use Utopia\Query\Exception\ValidationException;
+use Utopia\Query\Exception as QueryLibraryException;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\Text;
@@ -99,11 +98,7 @@ class Get extends Action
             throw new Exception($this->getParentNotFoundException(), params: [$collectionId]);
         }
 
-        try {
-            $queries = Query::parseQueries($queries);
-        } catch (QueryException|UnsupportedException|ValidationException|QueryLibException $e) {
-            $this->mapQueryFailure($e);
-        }
+        $queries = Queries::parse($queries);
 
         $queries = $this->resolveJoinCollections(
             $queries,
@@ -128,8 +123,8 @@ class Get extends Action
                 // has no selects, disable relationship looping on documents!
                 $document = $dbForDatabases->skipRelationships(fn () => $dbForDatabases->getDocument($collectionTableId, $documentId, $queries));
             }
-        } catch (QueryException|ValidationException $e) {
-            $this->mapQueryFailure($e);
+        } catch (QueryException|QueryLibraryException $failure) {
+            throw Queries::failure($failure);
         }
 
         if ($document->isEmpty()) {
