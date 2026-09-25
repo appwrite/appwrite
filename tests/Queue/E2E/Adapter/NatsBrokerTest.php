@@ -398,6 +398,37 @@ final class NatsBrokerTest extends TestCase
         $this->assertSame([0, 1, 2, 3, 4, 5], $seen, 'each message delivered exactly once across two consumers');
     }
 
+    /**
+     * Workers stopping together hand their prefetched messages back through release().
+     * Redelivered at once, a message lands on the next worker that is also stopping,
+     * which hands it back again, and every round costs a delivery until maxDeliver runs
+     * out without a handler ever seeing it. A fleet scaled down 8 -> 1 lost messages
+     * that way.
+     */
+    public function testAReleasedMessageIsNotHandedStraightToTheNextWorker(): void
+    {
+        $url = getenv('NATS_URL') ?: 'nats://127.0.0.1:14225';
+        $leaving = new Nats(Connection::connect($url), ackWait: 2.0, maxDeliver: 3, releaseDelay: 2.0);
+        $next = new Nats(Connection::connect($url), ackWait: 2.0, maxDeliver: 3, releaseDelay: 2.0);
+
+        $this->broker->publish($this->queue, ['task' => 'keep']);
+
+        $message = $leaving->receive($this->queue, 2)[0] ?? null;
+        $this->assertInstanceOf(Message::class, $message);
+        $leaving->release($this->queue, $message);
+
+        $this->assertSame([], $next->receive($this->queue, 1), 'a released message is not redelivered at once');
+
+        $again = $next->receive($this->queue, 3)[0] ?? null;
+        $this->assertInstanceOf(Message::class, $again);
+        $this->assertSame('keep', $again->getPayload()['task']);
+        $this->assertSame(1, $again->getAttempts(), 'the release cost one delivery, not the budget');
+        $next->commit($this->queue, $again);
+
+        $leaving->close();
+        $next->close();
+    }
+
     public function testMessagesSurviveClientReconnect(): void
     {
         // Durability: unlike the ephemeral Dragonfly store, JetStream persists jobs

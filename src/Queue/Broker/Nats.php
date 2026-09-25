@@ -243,6 +243,13 @@ class Nats implements Synchronous, Consumer, Bounded
      * @param Provisioning $provisioning Whether this broker may create and rewrite the
      *        queue's streams and worker consumers, or must use what is already there
      *        and refuse otherwise. See {@see Provisioning}.
+     * @param float $releaseDelay How long a message handed back by release() waits
+     *        before JetStream redelivers it, in seconds. Every redelivery counts toward
+     *        $maxDeliver and JetStream has no NAK that doesn't, so an immediate NAK lets
+     *        several workers stopping at once pass a message between them until it runs
+     *        out of deliveries without running: a fleet scaled down 8 -> 1 lost messages
+     *        that way. The delay has to outlast the stopping workers' last fetch. 0
+     *        redelivers at once.
      */
     public function __construct(
         private readonly NatsConnection|\Closure $source,
@@ -267,6 +274,7 @@ class Nats implements Synchronous, Consumer, Bounded
         // How an envelope is written and read; see Codec\Compat before changing
         // it on a stream that already holds messages.
         private readonly Codec $codec = new Json(),
+        private readonly float $releaseDelay = 5.0,
     ) {
         $this->lock = new Mutex();
 
@@ -289,6 +297,9 @@ class Nats implements Synchronous, Consumer, Bounded
         }
         if ($this->duplicateWindow <= 0) {
             throw new \InvalidArgumentException('duplicateWindow must be a positive number of seconds');
+        }
+        if ($this->releaseDelay < 0) {
+            throw new \InvalidArgumentException('releaseDelay must be zero or a positive number of seconds');
         }
         if ($this->maxAge !== null && $this->maxAge <= 0) {
             throw new \InvalidArgumentException('maxAge must be a positive number of seconds, or null to derive it from the queue\'s jobTtl');
@@ -794,7 +805,7 @@ class Nats implements Synchronous, Consumer, Bounded
             foreach ($messages as $message) {
                 $pid = $message->getPid();
                 if (isset($this->inFlight[$pid])) {
-                    $this->onCommands($this->inFlight[$pid])->nak();
+                    $this->onCommands($this->inFlight[$pid])->nak($this->releaseDelay > 0 ? $this->releaseDelay : null);
                     unset($this->inFlight[$pid]);
                 }
             }
