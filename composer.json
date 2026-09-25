@@ -130,7 +130,6 @@
         "utopia-php/dns": "^3.0.7",
         "utopia-php/dsn": "0.2.1",
         "utopia-php/http": "^2.0@RC",
-        "utopia-php/fetch": "^1.1",
         "utopia-php/validators": "^1.0",
         "utopia-php/migration": "^2.0.0",
         "utopia-php/mqtt": "0.0.*",
