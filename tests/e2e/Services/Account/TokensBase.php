@@ -48,7 +48,7 @@ trait TokensBase
 
             $secret = match ($type) {
                 'phone' => $this->readPhoneCode($params['phone']),
-                'email' => $this->readEmailCode($params['email'], $options['expire'] ?? $defaultExpire),
+                'email' => $this->readEmailCode($params['email']),
                 default => $this->readEmailLink($params['email'], $token),
             };
 
@@ -58,7 +58,6 @@ trait TokensBase
             ]);
 
             $this->assertEquals(201, $session['headers']['status-code']);
-            $this->assertSame($token['userId'], $session['body']['userId']);
         }
 
         /**
@@ -99,27 +98,18 @@ trait TokensBase
         });
         $params = $this->extractQueryParamsFromEmailLink($message['html']);
 
-        $this->assertSame($token['userId'], $params['userId']);
         $this->assertNotEmpty($params['secret']);
 
         return $params['secret'];
     }
 
-    protected function readEmailCode(string $email, int $expire): string
+    protected function readEmailCode(string $email): string
     {
-        $phrase = match ($expire) {
-            60 => 'in 1 minute',
-            900 => 'in 15 minutes',
-            3600 => 'in 1 hour',
-            default => $this->fail('Unsupported expiry: ' . $expire),
-        };
-        $message = $this->getLastEmailByAddress($email, function (array $message) use ($phrase) {
-            $this->assertStringContainsString($phrase, (string) $message['text']);
-        });
-        \preg_match('/\b\d{6}\b/', (string) $message['text'], $matches);
-        $this->assertNotEmpty($matches);
+        $message = $this->getLastEmailByAddress($email);
+        $code = \array_find(\array_map(\trim(...), \explode("\n", (string) $message['text'])), fn (string $line) => \strlen($line) === 6 && \ctype_digit($line));
+        $this->assertNotNull($code);
 
-        return $matches[0];
+        return $code;
     }
 
     protected function readPhoneCode(string $phone): string

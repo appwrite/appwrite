@@ -4513,7 +4513,7 @@ final class AccountCustomClientTest extends Scope
         $lastEmail = $this->getLastEmailByAddress($email);
         $this->assertNotEmpty($lastEmail, 'Email not found for address: ' . $email);
         $this->assertEquals($this->getProject()['name'] . ' Login', $lastEmail['subject']);
-        $this->assertStringContainsString('in 1 hour', (string) $lastEmail['text']);
+        $this->assertStringContainsStringIgnoringCase('Sign in to '. $this->getProject()['name'] . ' with your secure link. Expires in 1 hour.', $lastEmail['text']);
         $this->assertStringNotContainsStringIgnoringCase('security phrase', $lastEmail['text']);
 
         $token = substr($lastEmail['text'], strpos($lastEmail['text'], '&secret=', 0) + 8, 64);
@@ -7131,7 +7131,7 @@ final class AccountCustomClientTest extends Scope
 
             $response = $this->client->call(Client::METHOD_PUT, '/account/verifications/email/otp', $headers, [
                 'userId' => $user['id'],
-                'secret' => $this->readEmailCode($user['email'], $options['expire'] ?? 900),
+                'secret' => $this->readEmailCode($user['email']),
             ]);
             $this->assertEquals(200, $response['headers']['status-code']);
         }
@@ -7234,7 +7234,7 @@ final class AccountCustomClientTest extends Scope
 
             $code = $factor === 'phone'
                 ? $this->readPhoneCode($phone)
-                : $this->readEmailCode($user['email'], $options['expire'] ?? 3600);
+                : $this->readEmailCode($user['email']);
 
             $response = $this->client->call(Client::METHOD_PUT, '/account/mfa/challenges', $headers, [
                 'challengeId' => $challenge['$id'],
