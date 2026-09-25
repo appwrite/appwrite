@@ -121,6 +121,26 @@ final class InstallationTokensTest extends TestCase
         $this->assertSame(1, $oauth2->refreshCalls);
     }
 
+    public function testRefreshedTokenWithZeroExpiryPersistsNullExpiry(): void
+    {
+        $db = $this->createMock(Database::class);
+
+        $db->expects($this->once())
+            ->method('updateDocument')
+            ->with('installations', 'installation1', $this->callback(function (Document $update) {
+                $this->assertSame('fresh-token', $update->getAttribute('personalAccessToken'));
+                $this->assertNull($update->getAttribute('personalAccessTokenExpiry'));
+                return true;
+            }))
+            ->willReturnArgument(2);
+
+        $oauth2 = $this->fakeOAuth2(expiresIn: 0);
+
+        $result = (new InstallationTokens())->refresh($this->expired(), $db, $oauth2);
+
+        $this->assertNull($result->getAttribute('personalAccessTokenExpiry'));
+    }
+
     public function testFallsBackToIdentityWhenInstallationHasNoTokens(): void
     {
         $installation = new Document(['$id' => 'installation1']);
@@ -349,13 +369,13 @@ final class InstallationTokensTest extends TestCase
     /**
      * @param string $refresh One of: ok, refused, invalidGrant, empty, throw.
      */
-    protected function fakeOAuth2(bool $emptyUserId = false, string $refresh = 'ok')
+    protected function fakeOAuth2(bool $emptyUserId = false, string $refresh = 'ok', int $expiresIn = 3600)
     {
-        return new class ($emptyUserId, $refresh) extends OAuth2 {
+        return new class ($emptyUserId, $refresh, $expiresIn) extends OAuth2 {
             public int $refreshCalls = 0;
             protected array $tokens = [];
 
-            public function __construct(protected bool $emptyUserId, protected string $refresh)
+            public function __construct(protected bool $emptyUserId, protected string $refresh, protected int $expiresIn = 3600)
             {
                 parent::__construct('id', 'secret', '');
             }
@@ -389,7 +409,7 @@ final class InstallationTokensTest extends TestCase
                     default => [
                         'access_token' => 'fresh-token',
                         'refresh_token' => 'fresh-refresh',
-                        'expires_in' => 3600,
+                        'expires_in' => $this->expiresIn,
                     ],
                 };
 

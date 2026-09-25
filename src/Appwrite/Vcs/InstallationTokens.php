@@ -127,10 +127,13 @@ class InstallationTokens
         }
 
         // The provider has already rotated the family, so persist before anything else can fail.
+        $expiry = (int) $oauth2->getAccessTokenExpiry('');
+        $expiryDate = $expiry > 0 ? DateTime::addSeconds(new \DateTime(), $expiry) : null;
+
         $installation = $dbForPlatform->updateDocument('installations', $installation->getId(), new Document([
             'personalAccessToken' => $accessToken,
             'personalRefreshToken' => $oauth2->getRefreshToken(''),
-            'personalAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), (int)$oauth2->getAccessTokenExpiry('')),
+            'personalAccessTokenExpiry' => $expiryDate,
         ]));
 
         if (empty($oauth2->getUserID($accessToken))) {
