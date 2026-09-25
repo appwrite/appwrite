@@ -8,13 +8,31 @@ abstract class Framework extends Detection
 {
     protected string $packager = '';
 
+    protected string $packages = '';
+
+    protected string $config = '';
+
     public function __construct()
     {
     }
 
-    public function setPackager(string $packager): self
+    public function setPackager(string $packager): static
     {
         $this->packager = $packager;
+
+        return $this;
+    }
+
+    public function setPackages(string $packages): static
+    {
+        $this->packages = $packages;
+
+        return $this;
+    }
+
+    public function setConfig(string $config): static
+    {
+        $this->config = $config;
 
         return $this;
     }

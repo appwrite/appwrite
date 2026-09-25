@@ -128,6 +128,7 @@ class Framework extends Detector
         foreach ($this->options as $detector) {
             if ($detector->getName() === $bestFramework) {
                 $detector->setPackager($this->packager);
+                $detector->setPackages(\implode("\n", $packages));
                 return $detector;
             }
         }

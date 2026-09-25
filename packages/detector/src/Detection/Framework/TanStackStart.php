@@ -47,7 +47,13 @@ class TanStackStart extends React
 
     public function getOutputDirectory(): string
     {
-        return './.output';
+        $static = $this->getAdapter($this->config) === 'static';
+
+        if ($this->usesNitro()) {
+            return $static ? './.output/public' : './.output';
+        }
+
+        return $static ? './dist/client' : './dist';
     }
 
     /**
@@ -58,11 +64,50 @@ class TanStackStart extends React
         return ['vite.config.ts', 'vite.config.js', 'vite.config.mjs'];
     }
 
+    private function usesNitro(): bool
+    {
+        if ($this->config !== '') {
+            $stripped = \preg_replace('/(?<!:)\/\/[^\n]*/', '', $this->config) ?? $this->config;
+
+            // Installing the plugin is not registering it, and only a registered one moves the build.
+            if (!\preg_match('/\bnitro\w*\s*\(/i', $stripped)) {
+                return false;
+            }
+        }
+
+        $packages = \json_decode($this->packages, true);
+
+        if (!\is_array($packages)) {
+            // The scaffold registers the plugin, so an unread manifest is nitro.
+            return true;
+        }
+
+        $dependencies = \array_merge(
+            (array) ($packages['dependencies'] ?? []),
+            (array) ($packages['devDependencies'] ?? [])
+        );
+
+        foreach (['nitro', 'nitropack', '@tanstack/nitro-v2-vite-plugin'] as $package) {
+            if (isset($dependencies[$package])) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public function getAdapter(string $configContent): string
     {
         $stripped = \preg_replace('/(?<!:)\/\/[^\n]*/', '', $configContent) ?? $configContent;
 
         if (!\preg_match('/\bprerender\b/', $stripped) || \preg_match('/\bprerender[\x27\x22]?\s*:\s*false\b/', $stripped)) {
+            return 'ssr';
+        }
+
+        \preg_match('/\bprerender[\x27\x22]?\s*:\s*(\{(?:[^{}]|(?1))*\})/s', $stripped, $prerender);
+
+        // Listing routes, filtering them, or switching it off all leave part of the site to a server.
+        if (\preg_match('/\b(?:routes|filter)[\x27\x22]?\s*:|\benabled[\x27\x22]?\s*:\s*false\b/', $prerender[1] ?? '')) {
             return 'ssr';
         }
 
