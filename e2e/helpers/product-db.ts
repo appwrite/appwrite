@@ -543,7 +543,13 @@ export async function addTablesDbRelationshipColumnViaUi(
 
   const relatedTrigger = page.locator('#related-table')
   await expect(relatedTrigger).toBeVisible({ timeout: 15_000 })
-  await openSelectAndChoose(page, relatedTrigger, options.relatedTableName)
+  await chooseCommandItem(
+    page,
+    relatedTrigger,
+    'Search tables...',
+    options.relatedTableName,
+    new RegExp(`^${escapeRegExp(options.relatedTableName)}$`),
+  )
 
   const keyInput = page.locator('#column-key-relationship')
   await expect(keyInput).toBeVisible({ timeout: 10_000 })

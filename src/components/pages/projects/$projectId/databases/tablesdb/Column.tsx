@@ -29,6 +29,9 @@ import {
 import { useT } from '@/lib/i18n/translate'
 import { ColumnArrayCheckbox } from '@/components/pages/projects/$projectId/databases/_components/ColumnArrayCheckbox'
 import { toByteCount } from '@/lib/utils/byte-display-unit'
+import { SearchableSelect } from '@/components/global/shared/SearchableSelect'
+import { useProjectTable, useProjectTables } from '@/lib/react-query/hooks'
+import { TABLE_WORKSPACE_TABLES_LIST_LIMIT } from '@/lib/react-query/hooks/constants'
 
 export type ColumnType =
   | 'text'
@@ -101,7 +104,8 @@ interface ColumnDrawerProps {
   onOpenChange: (open: boolean) => void
   onSubmit: (data: ColumnFormData) => Promise<void>
   column?: unknown // Existing column for edit mode
-  availableTables?: Array<{ $id: string; name: string }>
+  projectId: string
+  databaseId: string
   currentTableId?: string
   existingColumns?: Array<{ key: string }>
   isLoading?: boolean
@@ -189,7 +193,8 @@ export function ColumnDrawer({
   onOpenChange,
   onSubmit,
   column,
-  availableTables = [],
+  projectId,
+  databaseId,
   currentTableId,
   existingColumns = [],
   isLoading = false,
@@ -197,8 +202,37 @@ export function ColumnDrawer({
 }: ColumnDrawerProps) {
   const t = useT()
   const isEditMode = !!column
-  const relationshipTables = availableTables.filter(
+  const [tableSearch, setTableSearch] = useState('')
+  const [debouncedTableSearch, setDebouncedTableSearch] = useState('')
+
+  useEffect(() => {
+    const timeout = window.setTimeout(
+      () => setDebouncedTableSearch(tableSearch.trim()),
+      300,
+    )
+    return () => window.clearTimeout(timeout)
+  }, [tableSearch])
+
+  const {
+    tables,
+    total: tablesTotal,
+    isFetching: tablesFetching,
+  } = useProjectTables(
+    projectId,
+    databaseId,
+    'tablesdb',
+    0,
+    TABLE_WORKSPACE_TABLES_LIST_LIMIT,
+    debouncedTableSearch,
+  )
+  const relationshipTables = tables.filter(
     (table) => table.$id !== currentTableId,
+  )
+  const { table: currentTable } = useProjectTable(
+    projectId,
+    databaseId,
+    'tablesdb',
+    currentTableId,
   )
   const [formData, setFormData] = useState<ColumnFormData>({
     key: '',
@@ -206,6 +240,17 @@ export function ColumnDrawer({
     required: false,
     array: false,
   })
+  const relatedTableFromList = relationshipTables.find(
+    (table) => table.$id === formData.relatedTableId,
+  )
+  // A target picked from search, or an existing relationship's, can be past the first page.
+  const { table: relatedTableLookup } = useProjectTable(
+    projectId,
+    databaseId,
+    'tablesdb',
+    relatedTableFromList ? null : formData.relatedTableId,
+  )
+  const relatedTable = relatedTableFromList ?? relatedTableLookup
 
   const [enumElements, setEnumElements] = useState<string[]>([])
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -303,9 +348,6 @@ export function ColumnDrawer({
       formData.relatedTableId &&
       !isEditMode
     ) {
-      const relatedTable = relationshipTables.find(
-        (t) => t.$id === formData.relatedTableId,
-      )
       if (relatedTable && !formData.key) {
         // Convert table name to camelCase
         const camelCase = relatedTable.name
@@ -317,7 +359,7 @@ export function ColumnDrawer({
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formData.type, formData.relatedTableId, relationshipTables, isEditMode])
+  }, [formData.type, formData.relatedTableId, relatedTable, isEditMode])
 
   // Auto-generate two-way key from current table name
   useEffect(() => {
@@ -523,12 +565,8 @@ export function ColumnDrawer({
   const showDefaultValue =
     !formData.required && !formData.array && !isSpatialType
   const showDefaultValueCheckbox = isSpatialType && !formData.required
-  const currentTableName =
-    availableTables.find((table) => table.$id === currentTableId)?.name ||
-    t('Current table')
-  const relatedTableName =
-    relationshipTables.find((table) => table.$id === formData.relatedTableId)
-      ?.name || t('Related table')
+  const currentTableName = currentTable?.name || t('Current table')
+  const relatedTableName = relatedTable?.name || t('Related table')
   const relationshipPreview = getRelationshipPreviewText(
     formData.relationshipType,
     currentTableName,
@@ -1001,32 +1039,39 @@ export function ColumnDrawer({
                     {t('Related table')}{' '}
                     <span className="text-destructive">*</span>
                   </Label>
-                  <Select
+                  <SearchableSelect
+                    id="related-table"
                     value={formData.relatedTableId || ''}
+                    selectedName={relatedTable?.name ?? formData.relatedTableId}
                     onValueChange={(value) => {
                       setFormData((prev) => ({
                         ...prev,
                         relatedTableId: value,
                       }))
                     }}
+                    items={relationshipTables.map((table) => ({
+                      value: table.$id,
+                      label: table.name,
+                      description: table.$id,
+                      inlineDescription: true,
+                    }))}
+                    placeholder={t('Select a table')}
+                    searchPlaceholder={t('Search tables...')}
+                    emptyMessage={t('No tables found')}
                     disabled={isLoading || isEditMode}
-                  >
-                    <SelectTrigger
-                      id="related-table"
-                      className={
-                        errors.relatedTableId ? 'border-destructive' : ''
-                      }
-                    >
-                      <SelectValue placeholder={t('Select a table')} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {relationshipTables.map((table) => (
-                        <SelectItem key={table.$id} value={table.$id}>
-                          {table.name} ({table.$id})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    triggerClassName={
+                      errors.relatedTableId ? 'border-destructive' : ''
+                    }
+                    onSearchChange={setTableSearch}
+                    isFetching={tablesFetching}
+                    listFooter={
+                      tablesTotal > tables.length
+                        ? t(
+                            'Showing first results. Refine your search to find more.',
+                          )
+                        : undefined
+                    }
+                  />
                   {errors.relatedTableId && (
                     <p className="text-[12px] text-destructive">
                       {errors.relatedTableId}

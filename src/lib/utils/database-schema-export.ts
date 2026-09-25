@@ -9,11 +9,13 @@ import { sdk } from '@/lib/appwrite/sdk'
 import { isHtmlDarkChrome } from '@/lib/html-theme'
 import type { DatabaseRouteKind } from '@/lib/database-routes'
 import {
-  fetchProjectTableColumns,
-  fetchProjectTableIndexes,
-  fetchProjectTables,
   getDatabaseModel,
+  listProjectTables,
+  mapCollectionAttributesToColumnLike,
 } from '@/lib/react-query/hooks/databases'
+
+/** Tables per list request when exporting the whole schema. */
+const SCHEMA_TABLES_PAGE_SIZE = 1000
 
 export interface DatabaseSchema {
   database: {
@@ -87,23 +89,37 @@ export async function fetchDatabaseSchema(
   }
 
   const kind = db.type ?? DatabaseType.Tablesdb
-  const tablesResponse = await fetchProjectTables(
-    projectId,
-    databaseId,
-    dbKind,
-    0,
-    1000,
-  )
+  // Page until a short page: `total` is capped server-side, so it cannot end the loop.
+  // A failed page rejects, so the export never silently leaves tables out.
+  const listedTables = []
+  for (let page = 0; ; page++) {
+    const { tables: batch } = await listProjectTables(
+      projectId,
+      databaseId,
+      dbKind,
+      page,
+      SCHEMA_TABLES_PAGE_SIZE,
+    )
+    listedTables.push(...batch)
+    if (batch.length < SCHEMA_TABLES_PAGE_SIZE) break
+  }
 
-  const tables: TableSchema[] = await Promise.all(
-    (tablesResponse.tables || []).map(async (table: Record<string, unknown>) => {
+  const isCollection =
+    kind === DatabaseType.Documentsdb || kind === DatabaseType.Vectorsdb
+
+  // Each listed table carries its columns and indexes: no per-table requests.
+  const tables: TableSchema[] = listedTables.map(
+    (table: Record<string, unknown>) => {
       const tableId = String(table.$id ?? '')
-      const [columnsResponse, indexesResponse] = await Promise.all([
-        fetchProjectTableColumns(projectId, databaseId, dbKind, tableId),
-        fetchProjectTableIndexes(projectId, databaseId, dbKind, tableId),
-      ])
+      const listedColumns = isCollection
+        ? mapCollectionAttributesToColumnLike(
+            table.attributes as unknown[] | undefined,
+          )
+        : ((table.columns as unknown[] | undefined) ?? [])
+      const listedIndexes =
+        (table.indexes as Record<string, unknown>[] | undefined) ?? []
 
-      const columns: ColumnSchema[] = (columnsResponse.columns || []).map(
+      const columns: ColumnSchema[] = listedColumns.map(
         (col: Record<string, unknown>) => ({
           key: String(col.key ?? col.$id ?? ''),
           type: String(col.type || 'string'),
@@ -130,7 +146,7 @@ export async function fetchDatabaseSchema(
         }),
       )
 
-      const indexes: IndexSchema[] = (indexesResponse.indexes || []).map(
+      const indexes: IndexSchema[] = listedIndexes.map(
         (idx: Record<string, unknown>) => ({
           key: String(idx.key ?? idx.$id ?? ''),
           type: String(idx.type || 'key'),
@@ -147,7 +163,7 @@ export async function fetchDatabaseSchema(
         columns,
         indexes,
       }
-    }),
+    },
   )
 
   return {

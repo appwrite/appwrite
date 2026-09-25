@@ -752,7 +752,7 @@ function flattenDocumentForTableRow(
   return { ...doc }
 }
 
-function mapCollectionAttributesToColumnLike(
+export function mapCollectionAttributesToColumnLike(
   attributes: unknown[] | undefined,
 ): unknown[] {
   if (!Array.isArray(attributes)) return []
@@ -2444,6 +2444,33 @@ export async function fetchProjectTables(
     return { tables: [], total: 0 }
   }
 
+  try {
+    return await listProjectTables(
+      projectId,
+      databaseId,
+      dbKind,
+      page,
+      limit,
+      search,
+      order,
+      sortBy,
+    )
+  } catch {
+    return { tables: [], total: 0 }
+  }
+}
+
+/** Like `fetchProjectTables`, but rejects when the list request fails. */
+export async function listProjectTables(
+  projectId: string,
+  databaseId: string,
+  dbKind: DatabaseRouteKind,
+  page: number = 0,
+  limit: number = DEFAULT_PAGE_SIZE,
+  search?: string,
+  order: 'asc' | 'desc' = 'asc',
+  sortBy: TablesSortBy = '$createdAt',
+) {
   const projectSdk = sdk.forProject(projectId)
   const queries = [
     ...buildAttributePrefixSearchQueries(['name', '$id'], search),
@@ -2455,45 +2482,31 @@ export async function fetchProjectTables(
   const kind = resolveProjectDatabaseType(dbKind)
 
   if (kind === DatabaseType.Documentsdb) {
-    try {
-      const response = await projectSdk.documentsDB.listCollections({
-        databaseId,
-        queries,
-      })
-      return {
-        tables: response.collections ?? [],
-        total: response.total ?? 0,
-      }
-    } catch {
-      return { tables: [], total: 0 }
+    const response = await projectSdk.documentsDB.listCollections({
+      databaseId,
+      queries,
+    })
+    return {
+      tables: response.collections ?? [],
+      total: response.total ?? 0,
     }
   }
 
   if (kind === DatabaseType.Vectorsdb) {
-    try {
-      const response = await projectSdk.vectorsDB.listCollections({
-        databaseId,
-        queries,
-      })
-      return {
-        tables: response.collections ?? [],
-        total: response.total ?? 0,
-      }
-    } catch {
-      return { tables: [], total: 0 }
-    }
-  }
-
-  let response: Models.TableList
-  try {
-    response = await projectSdk.tablesDB.listTables({
+    const response = await projectSdk.vectorsDB.listCollections({
       databaseId,
       queries,
     })
-  } catch {
-    response = { tables: [], total: 0 }
+    return {
+      tables: response.collections ?? [],
+      total: response.total ?? 0,
+    }
   }
 
+  const response = await projectSdk.tablesDB.listTables({
+    databaseId,
+    queries,
+  })
   return {
     tables: response.tables ?? [],
     total: response.total ?? 0,
@@ -2502,6 +2515,8 @@ export async function fetchProjectTables(
 
 /** Documents sampled per collection when inferring visualizer attribute lists. */
 const VISUALIZER_DOCUMENT_SAMPLE_SIZE = 25
+/** Tables per list request when loading every table for the visualizer. */
+const VISUALIZER_TABLES_PAGE_SIZE = 1000
 /** Max concurrent document-sample fetches while building visualizer columns. */
 const VISUALIZER_SAMPLE_CONCURRENCY = 10
 
@@ -2595,59 +2610,45 @@ export async function fetchAllProjectTablesForVisualizer(
     return { tables: [] }
   }
 
-  const projectSdk = sdk.forProject(projectId)
-  const queries = [Query.orderDesc('$createdAt'), Query.limit(1000)]
+  // Page until a short page: `total` is capped server-side, so it cannot end the loop.
+  // A failed page shows no tables rather than a diagram with some missing.
+  const listed: Array<Models.Table | Models.Collection> = []
+  try {
+    for (let page = 0; ; page++) {
+      const { tables } = await listProjectTables(
+        projectId,
+        databaseId,
+        dbKind,
+        page,
+        VISUALIZER_TABLES_PAGE_SIZE,
+        undefined,
+        'desc',
+      )
+      listed.push(...tables)
+      if (tables.length < VISUALIZER_TABLES_PAGE_SIZE) break
+    }
+  } catch {
+    return { tables: [] }
+  }
 
   const kind = resolveProjectDatabaseType(dbKind)
 
-  if (kind === DatabaseType.Documentsdb) {
+  if (kind === DatabaseType.Documentsdb || kind === DatabaseType.Vectorsdb) {
     try {
-      const response = await projectSdk.documentsDB.listCollections({
-        databaseId,
-        queries,
-      })
       const tables = await enrichCollectionsForVisualizer(
         projectId,
         databaseId,
-        response.collections ?? [],
-        DatabaseType.Documentsdb,
+        listed as Models.Collection[],
+        kind,
       )
       return { tables }
     } catch {
       return { tables: [] }
     }
-  }
-
-  if (kind === DatabaseType.Vectorsdb) {
-    try {
-      const response = await projectSdk.vectorsDB.listCollections({
-        databaseId,
-        queries,
-      })
-      const tables = await enrichCollectionsForVisualizer(
-        projectId,
-        databaseId,
-        response.collections ?? [],
-        DatabaseType.Vectorsdb,
-      )
-      return { tables }
-    } catch {
-      return { tables: [] }
-    }
-  }
-
-  let response: Models.TableList
-  try {
-    response = await projectSdk.tablesDB.listTables({
-      databaseId,
-      queries,
-    })
-  } catch {
-    response = { tables: [], total: 0 }
   }
 
   return {
-    tables: response.tables ?? [],
+    tables: listed as Models.Table[],
   }
 }
 

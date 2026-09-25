@@ -69,6 +69,8 @@ export interface SearchableSelectProps {
   onOpenChange?: (open: boolean) => void
   /** Applied to the trigger button (e.g. for label `htmlFor`). */
   id?: string
+  /** Trigger label when `value` is not in the loaded `items` (paged lists). */
+  selectedName?: string
 }
 
 function focusSearchableSelectInput(content: HTMLElement) {
@@ -154,6 +156,7 @@ export function SearchableSelect({
   listFooter,
   onOpenChange,
   id,
+  selectedName,
 }: SearchableSelectProps) {
   const t = useT()
   const [open, setOpen] = useState(false)
@@ -166,7 +169,7 @@ export function SearchableSelect({
     [items, footerItems],
   )
   const selectedItem = allItems.find((i) => i.value === value)
-  const selectedLabel = selectedItem?.label ?? ''
+  const selectedLabel = selectedItem?.label ?? selectedName ?? ''
   const displayText =
     value && selectedLabel
       ? selectedLabel
