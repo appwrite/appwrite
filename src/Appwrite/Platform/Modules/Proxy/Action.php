@@ -203,7 +203,7 @@ class Action extends PlatformAction
                 }
                 $targetCNAMEs[] = new Domain($targetCNAME);
             }
-        } elseif ($resourceType === 'function' || $ruleType === 'api') {
+        } elseif ($resourceType === 'function' || $ruleType === 'api' || $ruleType === 'bucket') {
             // For example: fra.cloud.appwrite.io
             $targetCNAMEs[] = new Domain(System::getEnv('_APP_DOMAIN_TARGET_CNAME', ''));
         } elseif ($ruleType === 'redirect') {
