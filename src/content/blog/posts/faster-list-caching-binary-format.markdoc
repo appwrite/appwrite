@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "Cached list queries now use up to 69% less memory and serve up to 29% more requests"
-description: Appwrite now stores its Redis cache in a binary format instead of JSON. Cached list responses take up to 69% less memory and serve up to 29% more requests per second, with no change to your code.
+description: Appwrite now serializes key-value cache entries in a binary format instead of JSON. Cached list responses consume up to 69% less memory, and cached list throughput increases by up to 29%.
 date: 2026-09-25
 cover: /images/blog/faster-list-caching-binary-format/cover.avif
 timeToRead: 5
@@ -15,24 +15,24 @@ faqs:
   - question: "How much less memory does a cached list response use?"
     answer: "A cached page of 25 rows is 37% smaller, a page of 100 rows is 50% smaller, and a page of 1,000 rows or more is 67% to 69% smaller. A cached page of 5,000 rows drops from 3.38 MB to 1.06 MB."
   - question: "How much faster are cached list queries?"
-    answer: "In benchmarks on self-hosted Appwrite 2.3, a server handled 5% more cached requests per second for pages of 25 rows and 20% to 29% more for pages of 250 rows or more. A single request for a cached page of 1,000 rows took 32.6 ms instead of 42.0 ms."
+    answer: "In benchmarks on self-hosted Appwrite 2.3, a server handled 5% more cached requests per second for pages of 25 rows and 20% to 29% more for pages of 250 rows or more. Latency for a single cached page of 1,000 rows dropped from 42.0 ms to 32.6 ms."
   - question: "Why does the speedup stop growing at larger page sizes?"
     answer: "The binary format only speeds up the cache read. Appwrite still converts every response to JSON before it sends it to the client, and that work also grows with the page size. Cache memory has no such conversion step, so the memory saving keeps growing up to 69%."
   - question: "Do self-hosted instances need a migration to use the new format?"
     answer: "No. After the upgrade to Appwrite 2.3, Appwrite reads an old JSON cache entry as a cache miss, loads the data from the database, and writes the entry again in the binary format. Cache misses rise for a short time after the upgrade."
   - question: "Do requests without a TTL get faster too?"
-    answer: "Yes, by a smaller margin. Appwrite also caches data such as sessions, API keys, and table schemas in Redis, and all of them now use the binary format. Uncached requests in the benchmark were about 5% faster, which is smaller than the gain for TTL-cached lists."
+    answer: "Yes, by a smaller margin. Appwrite also stores sessions, API keys, and table schemas in the key-value cache, and those entries now use the binary format too. Uncached requests in the benchmark were about 5% faster, which is smaller than the gain for TTL-cached lists."
 ---
 
-The [TTL cache for list queries](/blog/post/announcing-list-cache-ttl) lets Appwrite answer a repeated `listRows` call from Redis instead of the database. On a cache hit, Appwrite reads the stored entry from Redis and converts it back into rows, then builds the response.
+The [TTL cache for list queries](/blog/post/announcing-list-cache-ttl) lets Appwrite serve a repeated `listRows` call from the key-value cache instead of the database. On a cache hit, Appwrite reads the stored entry, deserializes it into rows, and builds the response.
 
 Appwrite now stores that cache in a binary format instead of JSON. Each cached page is smaller, and Appwrite reads it faster. In benchmarks, cached list queries used up to **69% less memory** and served up to **29% more requests per second**.
 
 # The cache now uses a binary format instead of JSON
 
-Appwrite used to write every cache entry to Redis as JSON. JSON is text, so each row in a cached page repeats every column name, and JSON stores every number as a string of digits. On a hit, Appwrite had to parse all of that text again.
+Appwrite previously serialized every cache entry as JSON. Because JSON is a text format, each row in a cached page repeats every column name, and numbers are stored as strings of digits. Every cache hit required parsing the full payload.
 
-The cache now uses [igbinary](https://github.com/igbinary/igbinary), a compact binary format for PHP data. igbinary stores a repeated string, such as a column name, only once per entry, and it stores numbers as numbers. Appwrite writes less data to Redis, reads less data back, and spends less CPU time on decoding.
+The cache now uses a compact binary serialization format. It stores each repeated string, such as a column name, once per entry and encodes numbers natively. Appwrite writes and reads fewer bytes per entry and spends less CPU time on deserialization.
 
 Larger pages repeat the same column names more times, so they get the biggest saving.
 
@@ -40,7 +40,7 @@ Larger pages repeat the same column names more times, so they get the biggest sa
 
 ![Cache size per cached page, JSON compared with binary](/images/blog/faster-list-caching-binary-format/cache-memory.avif)
 
-The table shows the size of one cached page in Redis for each page size.
+The table shows the size of one cached page in the key-value cache for each page size.
 
 | Rows per page | JSON | Binary | Reduction |
 |---|---|---|---|
@@ -50,7 +50,7 @@ The table shows the size of one cached page in Redis for each page size.
 | 1,000 | 672.8 KB | 218.9 KB | 67% |
 | 5,000 | 3.38 MB | 1.06 MB | 69% |
 
-The same Redis memory now holds about **three times** as many cached pages of 1,000 rows.
+The same cache memory now holds about **three times** as many cached pages of 1,000 rows.
 
 The saving applies to the whole cache. After a mixed workload of 200 cached queries, 500 single-row reads, and the table schemas, the full cache used **2.65 MB** instead of **5.66 MB**.
 
@@ -77,11 +77,11 @@ The gain stops growing at about 1,000 rows. The binary format only speeds up the
 
 ![Response time for one cached request of 1,000 and 5,000 rows](/images/blog/faster-list-caching-binary-format/response-time.avif)
 
-With one request at a time, a cached page of 1,000 rows took **32.6 ms** instead of **42.0 ms**. For a page of 5,000 rows, the time went from **217.8 ms** to **175.0 ms**.
+At a concurrency of one, latency for a cached page of 1,000 rows dropped from **42.0 ms** to **32.6 ms**. For a page of 5,000 rows, latency dropped from **217.8 ms** to **175.0 ms**.
 
 # Requests without a TTL are slightly faster
 
-Appwrite also uses Redis to cache data it reads on almost every request, such as sessions, API keys, and table schemas. These entries now use the binary format too. Requests that don't use a TTL, such as a single `getRow` call or a call for the signed-in account, were about **5%** faster in the benchmark.
+Appwrite also uses the key-value cache for data it reads on almost every request, such as sessions, API keys, and table schemas. These entries now use the binary format too. Requests that don't use a TTL, such as a single `getRow` call or a call for the signed-in account, were about **5%** faster in the benchmark.
 
 # How the benchmark ran
 
@@ -90,9 +90,9 @@ Appwrite also uses Redis to cache data it reads on almost every request, such as
 - The runs alternated between JSON and binary 8 times, with the cache cleared before each run. The tables show the median of 4 runs for each format.
 - Each page size got up to 3,000 measured requests after a warm-up, and every request succeeded.
 
-# Availability on Cloud and self-hosted
+# Availability
 
-The binary cache is live on Appwrite Cloud and ships in self-hosted Appwrite 2.3. Self-hosted instances need no migration and no cache flush. After the upgrade, Appwrite reads an old JSON entry as a cache miss, loads the data from the database, and writes the entry again in the binary format. Cache misses rise for a short time after the upgrade.
+The binary cache format ships in self-hosted Appwrite 2.3. Self-hosted instances need no migration and no cache flush. After the upgrade, Appwrite reads an old JSON entry as a cache miss, loads the data from the database, and writes the entry again in the binary format. Cache misses rise for a short time after the upgrade.
 
 # Resources
 
