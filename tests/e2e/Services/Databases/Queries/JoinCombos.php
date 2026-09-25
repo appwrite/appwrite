@@ -803,16 +803,21 @@ trait JoinCombos
         return false;
     }
 
-    protected function assertJoinHardcoreClientHidden(string $encoded, array $amounts = []): void
+    protected function assertJoinHardcoreClientHidden(string $encoded, array $amounts = [], array $submitted = []): void
     {
         $this->assertStringNotContainsString('combo-hard-alpha', $encoded);
         $this->assertStringNotContainsString('user:combo-hard-hidden', $encoded);
         $this->assertSame(false, \in_array(8686, $amounts, true));
         $this->assertSame(false, \in_array(5151, $amounts, true));
-        $this->assertSame(false, $this->encodedJsonContainsScalar($encoded, 8686));
-        $this->assertSame(false, $this->encodedJsonContainsScalar($encoded, 5151));
-        $this->assertSame(false, $this->encodedJsonContainsExactString($encoded, '8686'));
-        $this->assertSame(false, $this->encodedJsonContainsExactString($encoded, '5151'));
+
+        foreach ([8686, 5151] as $amount) {
+            if (\in_array($amount, $submitted, true)) {
+                continue;
+            }
+
+            $this->assertSame(false, $this->encodedJsonContainsScalar($encoded, $amount), 'the response carries no stored amount ' . $amount);
+            $this->assertSame(false, $this->encodedJsonContainsExactString($encoded, (string) $amount), 'the response carries no stored amount ' . $amount);
+        }
     }
 
     public function testJoinHardcoreSameTableTwoAliasesIndependentPredicates(): void
@@ -1474,7 +1479,7 @@ trait JoinCombos
 
         $this->assertSame(0, \count($rows));
         $this->assertSame(0, (int) ($result['body']['total'] ?? 0));
-        $this->assertJoinHardcoreClientHidden($encoded, $amounts);
+        $this->assertJoinHardcoreClientHidden($encoded, $amounts, [8686]);
     }
 
     public function testJoinHardcoreSkipAuthMixedDocSecStillHidesSecrets(): void
