@@ -241,7 +241,7 @@ class LocaleTest extends TestCase
             (new Locale('ru-RU'))->getPlural('broken', 5);
             $this->fail('Failed to throw exception when the pattern is invalid');
         } catch (Exception $e) {
-            $this->assertStringContainsString('is not a valid plural pattern', $e->getMessage());
+            $this->assertStringContainsString('could not be formatted', $e->getMessage());
         }
     }
 

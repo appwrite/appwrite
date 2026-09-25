@@ -219,16 +219,19 @@ class Locale
             }
 
             try {
-                $text = (new \MessageFormatter(self::$rules[$name] ?? $name, $pattern))->format(['count' => $count] + $arguments);
+                $formatter = new \MessageFormatter(self::$rules[$name] ?? $name, $pattern);
+                $text = $formatter->format(['count' => $count] + $arguments);
+                $error = $formatter->getErrorMessage();
             } catch (\IntlException $exception) {
-                $invalid ??= 'Key named "'.$key.'" in "'.$name.'" is not a valid plural pattern: '.$exception->getMessage();
-
-                continue;
+                $text = false;
+                $error = $exception->getMessage();
             }
 
             if (\is_string($text)) {
                 return $text;
             }
+
+            $invalid ??= 'Key named "'.$key.'" in "'.$name.'" could not be formatted: '.$error;
         }
 
         if (self::$exceptions) {
