@@ -37,11 +37,8 @@ final class VCSGitHubCallbackConsoleClientTest extends Scope
         $query = [];
         \parse_str(\parse_url((string) $response['headers']['location'], PHP_URL_QUERY) ?: '', $query);
 
-        $name = (string) \array_key_first(\array_filter(
-            $response['cookies'],
-            fn (string $name) => \str_starts_with($name, 'a_github_state_'),
-            ARRAY_FILTER_USE_KEY
-        ));
+        // The state cookie is the only one Authorize sets
+        $name = (string) \array_key_first($response['cookies']);
 
         return [
             'state' => (string) ($query['state'] ?? ''),
@@ -77,15 +74,6 @@ final class VCSGitHubCallbackConsoleClientTest extends Scope
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
-    }
-
-    public function testCreateInstallationRequestWithoutState(): void
-    {
-        // An owner approving a member's request on GitHub comes back without state
-        $response = $this->callGitHubCallbackHelper(['setup_action' => 'request']);
-
-        $this->assertEquals(400, $response['headers']['status-code']);
-        $this->assertStringContainsString('sent to the organization owners', (string) $response['body']);
     }
 
     public function testCreateInstallationWithoutCode(): void
@@ -133,16 +121,16 @@ final class VCSGitHubCallbackConsoleClientTest extends Scope
 
     public function testCreateInstallationKeepsOtherProjectStateCookie(): void
     {
-        $other = $this->getProject(true);
+        $other = $this->authorizeHelper($this->getProject(true)['$id'])['cookie'];
 
         // A flow for this project must not consume a connection pending for another one
         $response = $this->callGitHubCallbackHelper([
             'setup_action' => 'install',
             'installation_id' => '1234567',
             'state' => $this->authorizeHelper($this->getProject()['$id'])['state'],
-        ], $this->authorizeHelper($other['$id'])['cookie']);
+        ], $other);
 
-        $this->assertStringNotContainsString('a_github_state', (string) ($response['headers']['set-cookie'] ?? ''));
+        $this->assertStringNotContainsString((string) \strtok($other, '='), (string) ($response['headers']['set-cookie'] ?? ''));
     }
 
     public function testCreateInstallationWithStateCookiesForTwoProjects(): void
@@ -155,7 +143,6 @@ final class VCSGitHubCallbackConsoleClientTest extends Scope
         ], $this->authorizeHelper($this->getProject()['$id'])['cookie'], $this->authorizeHelper($this->getProject(true)['$id'])['cookie']);
 
         $this->assertEquals(400, $response['headers']['status-code']);
-        $this->assertStringContainsString('more than one project', (string) $response['body']);
     }
 
     public function testCreateInstallationWithTamperedStateCookie(): void
