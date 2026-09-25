@@ -5281,7 +5281,7 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals($data['id'], $account['body']['$id']);
     }
 
-    public function testMFARecencyCheckBypassedUnderJWT(): void
+    public function testMFARecencyCheckFailsUnderJWT(): void
     {
         $data = $this->createFreshAccountWithSession();
         $projectId = $this->getProject()['$id'];
@@ -5313,8 +5313,9 @@ final class AccountCustomClientTest extends Scope
 
         // EXPECTED: identical 401 user_challenge_required — nothing about
         // the underlying session state changed, only the auth transport.
-        // ACTUAL (bug): the 'session' resource can't resolve under JWT, so
-        // this check is never correctly evaluated.
+        // ACTUAL (bug): the 'session' resource resolves to null under JWT, and
+        // the mfaProtected middleware requires a non-null Document, so the
+        // request errors out instead of evaluating recency.
         $jwtAttempt = $this->client->call(Client::METHOD_PATCH, '/account/mfa/recovery-codes', $jwtHeaders);
         $this->assertEquals(401, $jwtAttempt['headers']['status-code']);
         $this->assertEquals('user_challenge_required', $jwtAttempt['body']['type']);
@@ -5332,6 +5333,32 @@ final class AccountCustomClientTest extends Scope
             'cookie' => 'a_session_' . $projectId . '=' . $data['session'],
         ];
 
+        // Second password-only session, created while MFA is still off.
+        $sessionB = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'email' => $data['email'],
+            'password' => $data['password'],
+        ]);
+        $this->assertEquals(201, $sessionB['headers']['status-code']);
+        $this->assertEquals(['password'], $sessionB['body']['factors']);
+
+        $sessionBHeaders = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $sessionB['cookies']['a_session_' . $projectId],
+        ];
+
+        // The JWT must be issued now: /account/jwts runs the same factor-count
+        // check, so it would be refused once session B is under-verified.
+        $jwtResponse = $this->client->call(Client::METHOD_POST, '/account/jwt', $sessionBHeaders);
+        $this->assertEquals(201, $jwtResponse['headers']['status-code']);
+
+        // Enable MFA from session A. Only the calling session gains the totp
+        // factor; session B stays at ['password'], below the new 2-factor minimum.
         $authenticator = $this->client->call(Client::METHOD_POST, '/account/mfa/authenticators/totp', $headers);
         $this->assertEquals(200, $authenticator['headers']['status-code']);
 
@@ -5344,34 +5371,11 @@ final class AccountCustomClientTest extends Scope
         $mfa = $this->client->call(Client::METHOD_PATCH, '/account/mfa', $headers, ['mfa' => true]);
         $this->assertEquals(200, $mfa['headers']['status-code']);
 
-        // Fresh password-only login — factors: ['password'], below the
-        // 2-factor minimum now that MFA + a verified authenticator exist.
-        $freshSession = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ], [
-            'email' => $data['email'],
-            'password' => $data['password'],
-        ]);
-        $this->assertEquals(201, $freshSession['headers']['status-code']);
-        $this->assertEquals(['password'], $freshSession['body']['factors']);
-
-        $freshCookieHeaders = [
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-            'cookie' => 'a_session_' . $projectId . '=' . $freshSession['cookies']['a_session_' . $projectId],
-        ];
-
-        // Cookie auth: correctly blocked, only 1 of 2 required factors present.
-        $cookieAttempt = $this->client->call(Client::METHOD_GET, '/account', $freshCookieHeaders);
+        // Cookie auth on session B: correctly blocked, only 1 of 2 required factors present.
+        $cookieAttempt = $this->client->call(Client::METHOD_GET, '/account', $sessionBHeaders);
         $this->assertEquals(401, $cookieAttempt['headers']['status-code']);
         $this->assertEquals('user_more_factors_required', $cookieAttempt['body']['type']);
 
-        // Same under-verified session, converted to a JWT.
-        $jwtResponse = $this->client->call(Client::METHOD_POST, '/account/jwt', $freshCookieHeaders);
-        $this->assertEquals(201, $jwtResponse['headers']['status-code']);
         $jwtHeaders = [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
