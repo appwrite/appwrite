@@ -14,6 +14,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Domains\Domain;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
@@ -74,12 +75,28 @@ class Get extends Action
 
         if ($fromCookie) {
             $state = $cookie;
+        }
 
-            // One shot: a leftover cookie must never carry a later flow into
-            // the project this browser happened to start from.
+        if (empty($state)) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $setupAction === 'request'
+                ? 'Your request was sent to the organization owners. An owner must complete the installation from the Appwrite Console; approving the request on GitHub is not enough.'
+                : 'GitHub did not say which project this installation is for, so it could not be connected. Open your project\'s settings in the Appwrite Console and connect GitHub again.');
+        }
+
+        $state = \json_decode($state, true) ?? [];
+        $redirectFailure = $state['failure'] ?? '';
+        $projectId = $state['projectId'] ?? '';
+
+        // One shot: once this project's flow ends, its cookie must not carry a
+        // later one. Another project's pending cookie is left alone.
+        if ((\json_decode($cookie, true)['projectId'] ?? null) === $projectId) {
             $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
             $host = \parse_url('//' . ($platform['consoleHostname'] ?? ''), PHP_URL_HOST) ?: '';
-            $domain = (\in_array($host, ['', 'localhost'], true) || \filter_var($host, FILTER_VALIDATE_IP) !== false) ? null : '.' . $host;
+            $domain = match (true) {
+                \in_array($host, ['', 'localhost'], true), \filter_var($host, FILTER_VALIDATE_IP) !== false => null,
+                System::getEnv('_APP_CONSOLE_ROOT_SESSION', 'disabled') === 'enabled' => '.' . ((new Domain($host))->getRegisterable() ?: $host),
+                default => '.' . $host,
+            };
 
             $response->addCookie(
                 COOKIE_NAME_GITHUB_STATE,
@@ -92,16 +109,6 @@ class Get extends Action
                 Response::COOKIE_SAMESITE_LAX
             );
         }
-
-        if (empty($state)) {
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $setupAction === 'request'
-                ? 'Your request was sent to the organization owners. An owner must complete the installation from the Appwrite Console; approving the request on GitHub is not enough.'
-                : 'This installation was completed on GitHub, so it could not be connected to a project. Open your project\'s settings in the Appwrite Console and connect GitHub from there.');
-        }
-
-        $state = \json_decode($state, true) ?? [];
-        $redirectFailure = $state['failure'] ?? '';
-        $projectId = $state['projectId'] ?? '';
 
         // This endpoint is public -- without verifying the signature the
         // Authorize action put in state, anyone could pass an arbitrary

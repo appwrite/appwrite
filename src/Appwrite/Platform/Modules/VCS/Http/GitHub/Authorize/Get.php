@@ -9,8 +9,10 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Document;
+use Utopia\Domains\Domain;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
 
@@ -51,6 +53,7 @@ class Get extends Action
             ))
             ->param('success', '', fn ($redirectValidator) => $redirectValidator, 'URL to redirect back to console after a successful installation attempt.', true, ['redirectValidator'])
             ->param('failure', '', fn ($redirectValidator) => $redirectValidator, 'URL to redirect back to console after a failed installation attempt.', true, ['redirectValidator'])
+            ->inject('request')
             ->inject('response')
             ->inject('project')
             ->inject('platform')
@@ -60,6 +63,7 @@ class Get extends Action
     public function action(
         string $success,
         string $failure,
+        Request $request,
         Response $response,
         Document $project,
         array $platform
@@ -99,16 +103,27 @@ class Get extends Action
         // When the app is already installed on the chosen account, GitHub sends
         // the user to that installation's settings, and saving there returns
         // setup_action=update without state. Mirror state into a cookie the
-        // callback can fall back to. The callback lands on the console host
-        // while this request may come through a regional one, hence the domain.
+        // callback can fall back to. The callback can only read the project
+        // through the console session, so the cookie gets the same reach: the
+        // registrable domain with root sessions, else the console host and its
+        // subdomains, which covers regional hosts.
         $host = \parse_url('//' . $hostname, PHP_URL_HOST) ?: '';
-        $domain = (\in_array($host, ['', 'localhost'], true) || \filter_var($host, FILTER_VALIDATE_IP) !== false) ? null : '.' . $host;
+        $domain = match (true) {
+            \in_array($host, ['', 'localhost'], true), \filter_var($host, FILTER_VALIDATE_IP) !== false => null,
+            System::getEnv('_APP_CONSOLE_ROOT_SESSION', 'disabled') === 'enabled' => '.' . ((new Domain($host))->getRegisterable() ?: $host),
+            default => '.' . $host,
+        };
+
+        // With another project's connection still pending in this browser, the
+        // callback could not tell which one GitHub finished, so keep neither.
+        $pending = \json_decode($request->getCookie(COOKIE_NAME_GITHUB_STATE, ''), true);
+        $conflict = ($pending['projectId'] ?? $project->getId()) !== $project->getId();
 
         $response
             ->addCookie(
                 COOKIE_NAME_GITHUB_STATE,
-                $state,
-                \time() + COOKIE_EXPIRY_GITHUB_STATE,
+                $conflict ? '' : $state,
+                $conflict ? \time() - 3600 : \time() + COOKIE_EXPIRY_GITHUB_STATE,
                 COOKIE_PATH_GITHUB_STATE,
                 $domain,
                 $protocol === 'https',
