@@ -1,0 +1,28 @@
+{
+  "name": "appwrite-relationship-event-orchestration",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Production-grade orchestration layer that guarantees document.*.create events fire for relationship-cascaded child documents in Appwrite 1.6.x.",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "setup": "tsx src/repro/setup.ts",
+    "repro:bug": "tsx src/repro/demonstrate-bug.ts",
+    "repro:fix": "tsx src/repro/verify-fix.ts",
+    "orchestrator:demo": "tsx src/orchestrator/demo.ts",
+    "lint": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "node-appwrite": "^14.0.0",
+    "dotenv": "^16.4.5",
+    "pino": "^9.5.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.7.5",
+    "tsx": "^4.19.1",
+    "typescript": "^5.6.3"
+  }
+}
