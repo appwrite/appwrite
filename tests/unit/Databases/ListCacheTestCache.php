@@ -1,0 +1,45 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Tests\Unit\Databases;
+
+use Utopia\Cache\Adapter\None;
+use Utopia\Cache\Cache;
+
+final class ListCacheTestCache extends Cache
+{
+    /**
+     * @var array<string, array<string, mixed>> key => hash field => value
+     */
+    public array $entries = [];
+
+    public function __construct()
+    {
+        parent::__construct(new None());
+    }
+
+    #[\Override]
+    public function load(string $key, int $ttl, string $hash = ''): mixed
+    {
+        return $this->entries[$key][$hash] ?? false;
+    }
+
+    #[\Override]
+    public function save(string $key, mixed $data, string $hash = '', int $ttl = 0): bool|string|array
+    {
+        $this->entries[$key][$hash] = $data;
+
+        return true;
+    }
+
+    #[\Override]
+    public function saveMany(string $key, array $data, int $ttl = 0): array
+    {
+        foreach ($data as $field => $value) {
+            $this->entries[$key][$field] = $value;
+        }
+
+        return $data;
+    }
+}
