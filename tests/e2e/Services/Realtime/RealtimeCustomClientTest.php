@@ -2733,6 +2733,92 @@ final class RealtimeCustomClientTest extends Scope
         $client->close();
     }
 
+    public function testChannelMembershipsDelete(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $adminHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $email = uniqid('', true) . getmypid() . bin2hex(random_bytes(4)) . '@localhost.test';
+        $user = $this->client->call(Client::METHOD_POST, '/account', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'userId' => ID::unique(),
+            'email' => $email,
+            'password' => 'password',
+            'name' => 'Realtime Target User',
+        ]);
+        $this->assertEquals(201, $user['headers']['status-code']);
+        $userId = $user['body']['$id'];
+
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'email' => $email,
+            'password' => 'password',
+        ]);
+        $this->assertEquals(201, $session['headers']['status-code']);
+
+        $client = $this->getWebsocket(['memberships'], [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $projectId . '=' . $session['cookies']['a_session_' . $projectId],
+        ]);
+        $response = json_decode($client->receive(), true);
+        $this->assertEquals('connected', $response['type']);
+
+        $team = $this->client->call(Client::METHOD_POST, '/teams', $adminHeaders, [
+            'teamId' => ID::unique(),
+            'name' => 'Realtime Delete Team ' . uniqid(),
+        ]);
+        $this->assertEquals(201, $team['headers']['status-code']);
+        $teamId = $team['body']['$id'];
+
+        $membership = $this->client->call(Client::METHOD_POST, '/teams/' . $teamId . '/memberships', $adminHeaders, [
+            'userId' => $userId,
+            'roles' => ['member'],
+        ]);
+        $this->assertEquals(201, $membership['headers']['status-code']);
+        $membershipId = $membership['body']['$id'];
+
+        $createEvent = $this->receiveUntilEvent(
+            $client,
+            fn (array $message): bool => ($message['type'] ?? null) === 'event'
+                && \in_array("teams.{$teamId}.memberships.{$membershipId}.create", $message['data']['events'] ?? [], true)
+        );
+        $this->assertEquals('event', $createEvent['type']);
+        $this->assertContains('memberships', $createEvent['data']['channels']);
+        $this->assertContains("memberships.{$membershipId}", $createEvent['data']['channels']);
+        $this->assertContains('memberships.create', $createEvent['data']['channels']);
+        $this->assertContains("memberships.{$membershipId}.create", $createEvent['data']['channels']);
+        $this->assertContains("teams.{$teamId}.memberships.{$membershipId}.create", $createEvent['data']['events']);
+        $this->assertNotEmpty($createEvent['data']['payload']);
+
+        $deleted = $this->client->call(Client::METHOD_DELETE, '/teams/' . $teamId . '/memberships/' . $membershipId, $adminHeaders);
+        $this->assertEquals(204, $deleted['headers']['status-code']);
+
+        $deleteEvent = $this->receiveUntilEvent(
+            $client,
+            fn (array $message): bool => ($message['type'] ?? null) === 'event'
+                && \in_array("teams.{$teamId}.memberships.{$membershipId}.delete", $message['data']['events'] ?? [], true)
+        );
+        $this->assertEquals('event', $deleteEvent['type']);
+        $this->assertContains('memberships', $deleteEvent['data']['channels']);
+        $this->assertContains("memberships.{$membershipId}", $deleteEvent['data']['channels']);
+        $this->assertContains('memberships.delete', $deleteEvent['data']['channels']);
+        $this->assertContains("memberships.{$membershipId}.delete", $deleteEvent['data']['channels']);
+        $this->assertContains("teams.{$teamId}.memberships.{$membershipId}.delete", $deleteEvent['data']['events']);
+        $this->assertNotEmpty($deleteEvent['data']['payload']);
+
+        $client->close();
+    }
+
     public function testChannelsTablesDB()
     {
         $user = $this->getUser();
