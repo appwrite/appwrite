@@ -150,11 +150,9 @@ final class GeneratorTest extends TestCase
         ]);
 
         $this->assertSame(['mysqld', '--innodb-flush-method=fsync'], $mariadb['services']['mariadb']['command']);
-        $this->assertSame([
-            'postgres',
-            '-c',
-            'max_connections=${_APP_CONNECTIONS_MAX:-151}',
-        ], $postgresql['services']['postgresql']['command']);
+        $command = $postgresql['services']['postgresql']['command'];
+        $this->assertIsList($command);
+        $this->assertSame('postgres', $command[0]);
         $this->assertSame([
             'redis-server',
             '--maxmemory',
@@ -164,6 +162,54 @@ final class GeneratorTest extends TestCase
             '--maxmemory-samples',
             '5',
         ], $postgresql['services']['redis']['command']);
+    }
+
+    public function testPostgreSQLConnectionLimitFollowsAppConnectionBudget(): void
+    {
+        $command = $this->render([
+            'database' => 'postgresql',
+        ])['services']['postgresql']['command'];
+
+        $appDefault = $this->appConnectionBudgetDefault();
+
+        $this->assertSame($appDefault, $this->postgresMaxConnections($command, []));
+        $this->assertSame(300, $this->postgresMaxConnections($command, ['_APP_CONNECTIONS_MAX' => '300']));
+        $this->assertSame($appDefault, $this->postgresMaxConnections($command, ['_APP_CONNECTIONS_MAX' => '']));
+    }
+
+    /**
+     * Resolves the PostgreSQL `max_connections` server setting the way Compose
+     * interpolates `${NAME:-default}` for the given environment.
+     *
+     * @param array<int, string> $command
+     * @param array<string, string> $env
+     */
+    private function postgresMaxConnections(array $command, array $env): int
+    {
+        $index = \array_search('-c', $command, true);
+        $this->assertIsInt($index, 'postgres command sets no -c server option');
+
+        $value = \preg_replace_callback(
+            '/\$\{([A-Z0-9_]+):-([^}]*)\}/',
+            fn (array $match): string => ($env[$match[1]] ?? '') !== '' ? $env[$match[1]] : $match[2],
+            $command[$index + 1],
+        );
+
+        $this->assertMatchesRegularExpression('/^max_connections=\d+$/', $value);
+
+        return (int) \substr($value, \strlen('max_connections='));
+    }
+
+    /**
+     * The default connection budget the app-side pools are sized from.
+     */
+    private function appConnectionBudgetDefault(): int
+    {
+        $registers = \file_get_contents(__DIR__ . '/../../../../app/init/registers.php');
+        $this->assertIsString($registers);
+        $this->assertSame(1, \preg_match("/getEnv\\('_APP_CONNECTIONS_MAX',\\s*(\\d+)\\)/", $registers, $match));
+
+        return (int) $match[1];
     }
 
     /**
