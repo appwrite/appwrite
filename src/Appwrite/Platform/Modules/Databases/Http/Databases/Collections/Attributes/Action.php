@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes;
 
+use Appwrite\Databases\RelationshipUpdate;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Database as DatabaseMessage;
 use Appwrite\Event\Publisher\Database as DatabasePublisher;
@@ -27,7 +28,6 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Structure;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Query\Schema\ColumnType;
-use Utopia\Query\Schema\ForeignKeyAction;
 use Utopia\Validator\Range;
 
 abstract class Action extends DatabasesAction
@@ -641,15 +641,15 @@ abstract class Action extends DatabasesAction
         }
 
         if ($type === ColumnType::Relationship->value) {
-            $options = \array_filter($options, fn (mixed $option): bool => $option !== null);
-            $primaryDocumentOptions = \array_merge($attribute->getAttribute('options', []), $options);
+            $update = new RelationshipUpdate($options, $key, $newKey);
+            $primaryDocumentOptions = $update->options($attribute->getAttribute('options', []));
             $attribute->setAttribute('options', $primaryDocumentOptions);
             try {
                 $dbForProject->updateRelationship(
                     collection: $collectionId,
                     id: $key,
                     newKey: $newKey,
-                    onDelete: isset($options['onDelete']) ? ForeignKeyAction::from($options['onDelete']) : null,
+                    onDelete: $update->onDelete(),
                 );
             } catch (IndexException) {
                 throw new Exception(Exception::INDEX_INVALID);
@@ -666,12 +666,7 @@ abstract class Action extends DatabasesAction
 
                 $relatedAttribute = $dbForProject->getDocument('attributes', $db->getSequence() . '_' . $relatedCollection->getSequence() . '_' . $primaryDocumentOptions['twoWayKey']);
 
-                if (!empty($newKey) && $newKey !== $key) {
-                    $options['twoWayKey'] = $newKey;
-                }
-
-                $relatedOptions = \array_merge($relatedAttribute->getAttribute('options'), $options);
-                $relatedAttribute->setAttribute('options', $relatedOptions);
+                $relatedAttribute->setAttribute('options', $update->related($relatedAttribute->getAttribute('options')));
                 $dbForProject->updateDocument('attributes', $db->getSequence() . '_' . $relatedCollection->getSequence() . '_' . $primaryDocumentOptions['twoWayKey'], $relatedAttribute);
 
                 $dbForProject->purgeCachedDocument('database_' . $db->getSequence(), $relatedCollection->getId());
