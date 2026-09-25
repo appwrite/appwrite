@@ -296,12 +296,16 @@ class Create extends Action
                 'search' => implode(' ', [$membershipId, $invitee->getId()]),
             ]);
 
-            $membership = ($isPrivilegedUser || $isAppUser) ?
-                $authorization->skip(fn () => $dbForProject->createDocument('memberships', $membership)) :
-                $dbForProject->createDocument('memberships', $membership);
+            try {
+                $membership = ($isPrivilegedUser || $isAppUser) ?
+                    $authorization->skip(fn () => $dbForProject->createDocument('memberships', $membership)) :
+                    $dbForProject->createDocument('memberships', $membership);
 
-            if ($isPrivilegedUser || $isAppUser) {
-                $authorization->skip(fn () => $dbForProject->increaseDocumentAttribute('teams', $team->getId(), 'total', 1));
+                if ($isPrivilegedUser || $isAppUser) {
+                    $authorization->skip(fn () => $dbForProject->increaseDocumentAttribute('teams', $team->getId(), 'total', 1));
+                }
+            } catch (Duplicate) {
+                throw new Exception(Exception::MEMBERSHIP_ALREADY_CONFIRMED);
             }
         } elseif ($membership->getAttribute('confirm') === false) {
             $secretHash = $proofForToken->hash($secret);
