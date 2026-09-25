@@ -30,6 +30,20 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
+    "slug": "faster-list-caching-binary-format",
+    "href": "/blog/post/faster-list-caching-binary-format",
+    "title": "Cached list queries now use up to 69% less memory and serve up to 29% more requests",
+    "description": "Appwrite now stores its Redis cache in a binary format instead of JSON. Cached list responses take up to 69% less memory and serve up to 29% more requests per second, with no change to your code.",
+    "date": "2026-09-25",
+    "lastUpdated": "2026-09-25",
+    "timeToRead": 5,
+    "author": "luke-silver",
+    "category": "announcements, performance",
+    "featured": false,
+    "cover": "/images/blog/faster-list-caching-binary-format/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-native-sign-in",
     "href": "/blog/post/announcing-native-sign-in",
     "title": "Announcing native sign-in: Create Appwrite sessions from Apple and Google ID tokens",
