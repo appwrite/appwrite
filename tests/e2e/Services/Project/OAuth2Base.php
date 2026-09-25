@@ -552,6 +552,27 @@ trait OAuth2Base
         $this->assertSame(400, $update['headers']['status-code']);
     }
 
+    public function testUpdateOAuth2PromptEnableRequiresClientSecret(): void
+    {
+        $response = $this->updateOAuth2('zoho', [
+            'clientId' => 'zoho-client',
+            'prompt' => ['consent'],
+            'enabled' => true,
+        ]);
+
+        $this->assertSame(400, $response['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $response['body']['type']);
+
+        $response = $this->updateOAuth2('salesforce', [
+            'customerKey' => 'salesforce-client',
+            'prompt' => ['login'],
+        ]);
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame(['login'], $response['body']['prompt']);
+        $this->assertFalse($response['body']['enabled']);
+    }
+
     public function testUpdateOAuth2PromptNoneMustBeAlone(): void
     {
         $update = $this->updateOAuth2('okta', [

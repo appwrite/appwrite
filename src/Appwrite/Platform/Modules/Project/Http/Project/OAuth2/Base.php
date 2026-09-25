@@ -466,6 +466,20 @@ abstract class Base extends Action
     }
 
     /**
+     * A secret stored as JSON with a `clientSecret` key counts only when that
+     * key is set. Other secrets, plain or JSON (Apple), count when not empty.
+     */
+    protected function hasClientSecret(string $secret): bool
+    {
+        $decoded = \json_decode($secret, true);
+        if (\is_array($decoded) && \array_key_exists('clientSecret', $decoded)) {
+            return !empty($decoded['clientSecret']);
+        }
+
+        return !empty($secret);
+    }
+
+    /**
      * Apply the provided credential changes to the project's oAuthProviders map,
      * run the optional credential verification hook, persist the project, and
      * return the updated project document.
@@ -546,7 +560,7 @@ abstract class Base extends Action
 
         if ($enabled === true || $implicitEnable) {
             try {
-                if (empty($oAuthProviders[$appIdKey]) || empty($oAuthProviders[$appSecretKey])) {
+                if (empty($oAuthProviders[$appIdKey]) || !$this->hasClientSecret($oAuthProviders[$appSecretKey] ?? '')) {
                     throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Client ID and Client Secret are required when enabling OAuth2 provider.');
                 }
 
@@ -629,8 +643,7 @@ abstract class Base extends Action
                 'prompt' => $prompt ?? ($existing['prompt'] ?? []),
             ];
 
-            // Keep an empty secret empty, so enabling still requires a client secret.
-            $encodedSecret = empty($secret['clientSecret']) && empty($secret['prompt']) ? '' : \json_encode($secret);
+            $encodedSecret = \json_encode($secret);
         }
 
         $project = $this->persistCredentials($project, $dbForPlatform, $authorization, $clientId, $encodedSecret, $enabled);
