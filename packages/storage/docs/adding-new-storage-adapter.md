@@ -23,9 +23,9 @@ Add a case for the new device to the `DeviceType` enum in `src/DeviceType.php` a
 
 ## 3. Test your adapter
 
-After you finish adding your new adapter, you need to ensure that it is usable. Use your newly created adapter to make some sample requests to your storage service. 
+After you finish adding your new adapter, you need to ensure that it is usable. Use your newly created adapter to make some sample requests to your storage service.
 
-Great! You're almost there. You can now move onto writing some tests for your Adapter!  
+Great! You're almost there. You can now move onto writing some tests for your Adapter!
 
 ### 3.1. Introduce new device tests
 Add tests for the newly added device adapter inside `tests/Device`. Use the existing adapter tests as a reference. The test file and class should be properly named `<Adapter class name>Test.php` and class should be `<Adapter class name>Test`
