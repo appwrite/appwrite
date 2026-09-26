@@ -740,7 +740,11 @@ class Install extends Action
             }
 
             if ($database === 'mongodb' && !$useExistingConfig && $startIndex <= 1) {
-                $this->copyMongoFilesIfNeeded();
+                $this->copyFiles(['mongo-entrypoint.sh', 'mongo-init.js']);
+            }
+
+            if (!$useExistingConfig && $startIndex <= 1) {
+                $this->copyFiles(['clickhouse-config.xml', 'clickhouse-init.sh']);
             }
 
             // Changes to what the containers run on, rather than to what is inside the
@@ -1272,13 +1276,11 @@ class Install extends Action
         }
     }
 
-    private function copyMongoFilesIfNeeded(): void
+    /**
+     * @param string[] $files
+     */
+    private function copyFiles(array $files): void
     {
-        $files = [
-            'mongo-entrypoint.sh',
-            'mongo-init.js',
-        ];
-
         foreach ($files as $file) {
             $source = $this->buildFromProjectPath('/' . $file);
             if (file_exists($source)) {
@@ -1288,6 +1290,8 @@ class Install extends Action
                     $errorMsg = $lastError ? $lastError['message'] : 'Unknown error';
                     throw new \RuntimeException('Failed to copy ' . $file . ' to ' . $target . ': ' . $errorMsg);
                 }
+                // copy() drops the executable bit, which decides how the ClickHouse entrypoint runs its init script.
+                @chmod($target, fileperms($source) & 0777);
             }
         }
     }
