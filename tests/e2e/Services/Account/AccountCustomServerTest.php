@@ -14,6 +14,7 @@ use Utopia\Database\Validator\Datetime as DatetimeValidator;
 final class AccountCustomServerTest extends Scope
 {
     use AccountBase;
+    use TokensBase;
     use ProjectCustom;
     use SideServer;
 
@@ -418,5 +419,64 @@ final class AccountCustomServerTest extends Scope
 
         $this->assertEquals(200, $account['headers']['status-code']);
         $this->assertEquals($email, $account['body']['email']);
+    }
+
+    public function testCreateRecovery(): void
+    {
+        $headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ];
+        $serverHeaders = array_merge($headers, $this->getHeaders());
+        $email = ID::unique() . '@localhost.test';
+
+        /**
+         * Test for SUCCESS
+         */
+        $account = $this->client->call(Client::METHOD_POST, '/account', $serverHeaders, [
+            'userId' => ID::unique(),
+            'email' => $email,
+            'password' => 'password',
+            'name' => 'Recovery User',
+        ]);
+        $this->assertEquals(201, $account['headers']['status-code']);
+
+        $params = ['email' => $email, 'url' => 'http://localhost/recovery'];
+        $response = $this->client->call(Client::METHOD_POST, '/account/recovery', $serverHeaders, array_merge($params, [
+            'length' => 4,
+            'expire' => 31536000,
+        ]));
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $token = $response['body'];
+        $this->assertSame($account['body']['$id'], $token['userId']);
+        $this->assertTokenExpire($token, 31536000);
+        $secret = $this->readEmailLink($email, $token);
+        $this->assertSame(4, strlen($secret));
+        $this->assertSame($secret, $token['secret']);
+
+        $confirmation = [
+            'userId' => $token['userId'],
+            'secret' => $secret,
+            'password' => 'updated-password',
+        ];
+        $response = $this->client->call(Client::METHOD_PUT, '/account/recovery', $headers, $confirmation);
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $headers, [
+            'email' => $email,
+            'password' => 'updated-password',
+        ]);
+        $this->assertEquals(201, $session['headers']['status-code']);
+        $this->assertSame($token['userId'], $session['body']['userId']);
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_PUT, '/account/recovery', $headers, $confirmation);
+        $this->assertEquals(401, $response['headers']['status-code']);
+        $this->assertSame('user_invalid_token', $response['body']['type']);
+        $this->assertInvalidTokenOptions('/account/recovery', $serverHeaders, $params, 256);
     }
 }
