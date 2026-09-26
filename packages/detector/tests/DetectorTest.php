@@ -420,7 +420,7 @@ class DetectorTest extends TestCase
         $this->assertSame('tanstack-start', $detectedFramework->getName());
         $this->assertSame('npm install', $detectedFramework->getInstallCommand());
         $this->assertSame('npm run build', $detectedFramework->getBuildCommand());
-        $this->assertSame('./.output', $detectedFramework->getOutputDirectory());
+        $this->assertSame('./dist', $detectedFramework->getOutputDirectory());
     }
 
     /**
@@ -795,12 +795,46 @@ class DetectorTest extends TestCase
         $fw = new TanStackStart();
 
         $this->assertSame('ssr', $fw->getAdapter('export default defineConfig({ plugins: [tanstackStart()] })'));
-        $this->assertSame('static', $fw->getAdapter('export default defineConfig({ plugins: [tanstackStart({ prerender: { routes: [\'/\'] } })] })'));
+        $this->assertSame('static', $fw->getAdapter('export default defineConfig({ plugins: [tanstackStart({ prerender: { crawlLinks: true } })] })'));
+        $this->assertSame('ssr', $fw->getAdapter('export default defineConfig({ plugins: [tanstackStart({ prerender: { routes: [\'/\'] } })] })'));
+        $this->assertSame('ssr', $fw->getAdapter('export default defineConfig({ plugins: [tanstackStart({ prerender: { filter: (p) => p === \'/\' } })] })'));
+        $this->assertSame('ssr', $fw->getAdapter('tanstackStart({ prerender: { headers: { \'x-robots-tag\': \'all\' }, routes: [\'/\'] } })'));
+        $this->assertSame('ssr', $fw->getAdapter('tanstackStart({ prerender: { enabled: false, crawlLinks: true } })'));
+        $this->assertSame('static', $fw->getAdapter('TanStackRouterVite({ routesDirectory: \'./src/routes\' }), tanstackStart({ prerender: { crawlLinks: true } })'));
         $this->assertSame('ssr', $fw->getAdapter('export default defineConfig({ plugins: [tanstackStart({ prerender: false })] })'));
         $this->assertSame('ssr', $fw->getAdapter('export default defineConfig({ plugins: [tanstackStart({ "prerender": false })] })'));
+        $this->assertSame('ssr', $fw->getAdapter('export default defineConfig({ plugins: [tanstackStart({ "prerender": { "routes": ["/"] } })] })'));
         $this->assertSame('ssr', $fw->getAdapter('// prerender: true' . "\n" . 'export default defineConfig({})'));
-        $this->assertSame('static', $fw->getAdapter('server: { url: "https://example.com" },' . "\n" . 'prerender: { routes: [\'/\'] }'));
+        $this->assertSame('ssr', $fw->getAdapter('server: { url: "https://example.com" },' . "\n" . 'prerender: { routes: [\'/\'] }'));
+        $this->assertSame('static', $fw->getAdapter('server: { url: "https://example.com" }, prerender: { crawlLinks: true }'));
         $this->assertNotEmpty($fw->getConfigFiles());
+    }
+
+    public function testTanStackStartOutputDirectoryDetection(): void
+    {
+        $nitro = '{"devDependencies":{"nitro":"^3.0.0"}}';
+        $nitroV2 = '{"devDependencies":{"@tanstack/nitro-v2-vite-plugin":"^1.0.0"}}';
+        $plain = '{"dependencies":{"@tanstack/react-start":"^1.168.0"}}';
+        $prerender = 'export default defineConfig({ plugins: [tanstackStart({ prerender: { crawlLinks: true } })] })';
+        $nitroPrerender = 'export default defineConfig({ plugins: [nitro(), tanstackStart({ prerender: { crawlLinks: true } })] })';
+
+        $this->assertSame('./.output', (new TanStackStart())->setPackages($nitro)->getOutputDirectory());
+        $this->assertSame('./.output', (new TanStackStart())->setPackages($nitroV2)->getOutputDirectory());
+        $this->assertSame('./dist', (new TanStackStart())->setPackages($plain)->getOutputDirectory());
+
+        $this->assertSame('./.output/public', (new TanStackStart())->setPackages($nitro)->setConfig($nitroPrerender)->getOutputDirectory());
+        $this->assertSame('./dist/client', (new TanStackStart())->setPackages($plain)->setConfig($prerender)->getOutputDirectory());
+
+        // Installing the plugin is not registering it.
+        $this->assertSame('./dist', (new TanStackStart())->setPackages($nitro)->setConfig('export default defineConfig({ plugins: [tanstackStart()] })')->getOutputDirectory());
+        $this->assertSame('./.output', (new TanStackStart())->setPackages($nitroV2)->setConfig('export default defineConfig({ plugins: [nitroV2Plugin(), tanstackStart()] })')->getOutputDirectory());
+        $this->assertSame('./dist', (new TanStackStart())->setPackages($nitro)->setConfig('// nitro(),' . "\n" . 'export default defineConfig({ plugins: [tanstackStart()] })')->getOutputDirectory());
+
+        // A nitro reference only in the config does not make it a dependency.
+        $this->assertSame('./dist', (new TanStackStart())->setPackages($plain)->setConfig('import { nitro } from \'nitro/vite\'')->getOutputDirectory());
+
+        $this->assertSame('./.output', (new TanStackStart())->setPackages('not json')->getOutputDirectory());
+        $this->assertSame('./.output', (new TanStackStart())->getOutputDirectory());
     }
 
     public function testSvelteKitAdapterDetection(): void

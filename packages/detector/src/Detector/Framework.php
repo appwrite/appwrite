@@ -54,8 +54,9 @@ class Framework extends Detector
         $files = array_filter($this->inputs, fn ($input) => $input['type'] === self::INPUT_FILE);
         $files = array_map(fn ($input) => $input['content'], $files);
 
-        $packages = array_filter($this->inputs, fn ($input) => $input['type'] === self::INPUT_PACKAGES);
-        $packages = array_map(fn ($input) => $this->dependencies($input['content']), $packages);
+        $manifests = array_filter($this->inputs, fn ($input) => $input['type'] === self::INPUT_PACKAGES);
+        $manifests = array_map(fn ($input) => $input['content'], $manifests);
+        $packages = array_map(fn (string $manifest) => $this->dependencies($manifest), $manifests);
 
         // List of frameworks with count of matches
         $frameworkMatches = [];
@@ -128,6 +129,7 @@ class Framework extends Detector
         foreach ($this->options as $detector) {
             if ($detector->getName() === $bestFramework) {
                 $detector->setPackager($this->packager);
+                $detector->setPackages(\implode("\n", $manifests));
                 return $detector;
             }
         }
