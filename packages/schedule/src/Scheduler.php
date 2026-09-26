@@ -65,7 +65,7 @@ use Utopia\Telemetry\Histogram;
  * instance are not supported; two loops over one {@see Store} are — that is
  * the leader election.
  *
- * @phpstan-type Registered array{trigger: Trigger, payload: mixed, version: string, coverFrom: \DateTimeImmutable|null}
+ * @phpstan-type Registered array{trigger: Trigger, payload: mixed, version: string, activeFrom: \DateTimeImmutable|null, replaced: bool, coverFrom: \DateTimeImmutable|null}
  */
 final class Scheduler
 {
@@ -290,6 +290,8 @@ final class Scheduler
                 'trigger' => $entry->trigger,
                 'payload' => $entry->payload,
                 'version' => $row->version,
+                'activeFrom' => $row->activeFrom,
+                'replaced' => $existing !== null,
                 'coverFrom' => $this->coverFrom($row->activeFrom, $since, $existing !== null),
             ];
         }
@@ -380,6 +382,12 @@ final class Scheduler
     public function count(): int
     {
         return \count($this->entries);
+    }
+
+    /** Whether initial loading completed, including an empty source, on a leader or follower. */
+    public function isReady(): bool
+    {
+        return $this->lastSyncAt instanceof \DateTimeImmutable;
     }
 
     /**
@@ -623,6 +631,7 @@ final class Scheduler
         foreach ($this->pendingCovered as $id => $version) {
             if (isset($this->entries[$id]) && $this->entries[$id]['version'] === $version) {
                 $this->entries[$id]['coverFrom'] = null;
+                $this->entries[$id]['replaced'] = false;
             }
         }
 
@@ -641,9 +650,9 @@ final class Scheduler
     }
 
     /**
-     * The loop: elect, reconcile on the source's cadence, then tick,
-     * dispatch and commit on a wall-anchored cadence. Followers idle and
-     * poll for the claim.
+     * The loop: reconcile on the source's cadence, then elect, tick,
+     * dispatch and commit on a wall-anchored cadence. Followers keep their
+     * schedules warm without holding up the active dispatcher.
      *
      * Anchoring ticks to the clock instead of sleeping a fixed span
      * after variable work keeps the tick phase from drifting. A handler
@@ -671,15 +680,18 @@ final class Scheduler
 
         try {
             while ($this->running) {
-                if (!$this->elect() instanceof Claim) {
-                    $this->clock->sleep((float) $this->tickSeconds);
-                    continue;
-                }
-
                 $this->syncIfDue();
 
-                $this->deliver($this->tick(), $handler);
-                $this->commit();
+                // A stop during initialization must not claim or dispatch work.
+                if (!$this->running) {
+                    break;
+                }
+
+                // Never advance shared coverage after a failed initial load.
+                if ($this->isReady()) {
+                    $this->deliver($this->tick(), $handler);
+                    $this->commit();
+                }
 
                 if (!$this->running) {
                     break;
@@ -758,11 +770,18 @@ final class Scheduler
             return null; // lost the takeover race
         }
 
+        // Rebase discovery coverage on the predecessor's committed source view.
+        if ($syncedUntil !== null) {
+            $seen = $this->moment($syncedUntil);
+            foreach ($this->entries as &$entry) {
+                $entry['coverFrom'] = $this->coverFrom($entry['activeFrom'], $seen, $entry['replaced']);
+            }
+            unset($entry);
+        }
+
         // A tick left pending from before losing leadership must never
         // commit after re-acquiring: its window predates the successor's
         // coverage and the matching token would let it through the fence.
-        // Memory staleness needs no special-casing — the snapshot timer is
-        // already due after any stretch spent as a follower.
         $this->clearPending();
 
         return $next;

@@ -27,6 +27,69 @@ final class ReconcileTest extends TestCase
         return array_map(fn (Occurrence $occurrence): string => $occurrence->due->format('H:i:s'), $occurrences);
     }
 
+    public function testWarmTakeoverRecoversAnOccurrenceThePreviousLeaderNeverSaw(): void
+    {
+        $clock = new TestClock(new \DateTimeImmutable('2026-08-18 03:00:00'));
+        $store = new MemoryStore();
+        $set = new RowSet([]);
+        $source = new SnapshotSource(
+            snapshot: $set->list(...),
+            make: fn (Row $row): Entry => new Entry(new At(new \DateTimeImmutable('2026-08-18 03:00:45'))),
+        );
+        $leader = new Scheduler(source: $source, store: $store, clock: $clock);
+        $follower = new Scheduler(source: $source, store: $store, clock: $clock);
+        $leader->reconcile();
+        $leader->tick();
+        $leader->commit();
+
+        $clock->advance(30);
+        $follower->reconcile(); // A newer read, but the row is not visible yet.
+        $set->rows = [new Row('job', 'v1', activeFrom: new \DateTimeImmutable('2026-08-18 03:00:20'))];
+        $clock->advance(30);
+        $follower->reconcile(); // Its own cursor predates discovery, not the effective time.
+
+        // The leader's last good view never contained this job.
+        $this->assertSame([], $leader->tick());
+        $leader->commit();
+        $clock->advance(4); // Let the leader's lease expire.
+
+        $this->assertSame(['03:00:45'], $this->dues($follower->tick()));
+        $follower->commit();
+        $clock->advance(1);
+        $this->assertSame([], $follower->tick(), 'the recovered one-shot is delivered only once');
+    }
+
+    public function testWarmTakeoverKeepsPendingBackdatedReplacementCoverage(): void
+    {
+        $clock = new TestClock(new \DateTimeImmutable('2026-08-18 03:00:30'));
+        $store = new MemoryStore();
+        $set = new RowSet([new Row('job', 'v1', activeFrom: new \DateTimeImmutable('2026-08-18 03:00:00'))]);
+        $source = new SnapshotSource(
+            snapshot: $set->list(...),
+            make: fn (Row $row): Entry => new Entry(new At(new \DateTimeImmutable(
+                $row->version === 'v1' ? '2026-08-18 04:00:00' : '2026-08-18 03:00:45',
+            ))),
+        );
+        $leader = new Scheduler(source: $source, store: $store, clock: $clock);
+        $follower = new Scheduler(source: $source, store: $store, clock: $clock);
+        $leader->reconcile();
+        $leader->tick();
+        $leader->commit();
+        $follower->reconcile();
+
+        $clock->advance(30);
+        $set->rows = [new Row('job', 'v2', activeFrom: new \DateTimeImmutable('2026-08-18 03:00:20'))];
+        $follower->reconcile();
+        $this->assertSame([], $leader->tick());
+        $leader->commit();
+        $clock->advance(4);
+
+        $this->assertSame(['03:00:45'], $this->dues($follower->tick()));
+        $follower->commit();
+        $clock->advance(1);
+        $this->assertSame([], $follower->tick());
+    }
+
     public function testFullSnapshotDiffAddsUpdatesAndRemoves(): void
     {
         $clock = new TestClock(new \DateTimeImmutable('2026-08-18 03:00:30.000000'));

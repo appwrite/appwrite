@@ -99,6 +99,34 @@ The scheduler decides *what runs when* and hands each due moment over as it arri
 
 `run()` ticks on a wall-anchored cadence: it sleeps to the next multiple of the tick interval instead of sleeping a fixed span after variable work, so the tick phase never drifts. A handler exception propagates before the tick commits, which means a supervised restart re-delivers the tick instead of losing it. Reconciliation errors go the other way — through the `onError` callback, leaving the last good view dispatching, because stale schedules beat a stopped scheduler. Call `stop()` — from the handler or a signal handler — to return after the current tick completes.
 
+## Rolling replacement
+
+With a shared `Store\Redis`, every instance refreshes its schedules while only the
+leader dispatches. A replacement loads its initial snapshot while the old leader
+continues to run. Use a distinct Redis key for each independent scheduler, such as
+its region and task name.
+
+`$scheduler->isReady()` reports whether initial loading completed. An empty
+source can be ready; individual row errors still follow the configured `onError`
+policy. Readiness does not require leadership and stays true if a later refresh
+fails: the scheduler retains its last good view. The host application must expose
+this value through its readiness endpoint and monitor dispatch progress separately.
+
+For a Kubernetes replacement, use `maxUnavailable: 0` and `maxSurge: 1`, and keep
+the old instance until the replacement is ready. Call `stop()` on termination
+and allow the current batch to finish. The loop commits its coverage and releases
+the claim; the prepared replacement resumes from that shared watermark.
+Leadership loss and crashes can still cause duplicate delivery. A pending
+replacement definition can also replay during handoff: the shared watermark does
+not record which versions the predecessor saw, so retaining its catch-up coverage
+avoids dropping an unseen replacement. Consumers that need deduplication should
+use `Occurrence::key()`.
+
+All overlapping instances must use the same shared store. An old instance using
+`Store\Memory` cannot participate in that election. Also account for the extra
+source reads from followers; slow reconciliation still pauses a leader's own
+loop, and recovery remains limited by `recoverSeconds`.
+
 ## Triggers
 
 A schedule's **trigger** answers one question: which moments does this schedule fall due at? Three implementations ship, all under `Utopia\Schedule\Trigger`:
