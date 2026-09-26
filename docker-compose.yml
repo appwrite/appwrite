@@ -55,6 +55,7 @@ services:
       start_period: 120s
     networks:
       - appwrite
+      - compute
     labels:
       - traefik.enable=true
       - traefik.constraint-label-stack=appwrite
@@ -209,6 +210,7 @@ services:
       - _APP_JOBS_HOST
       - _APP_JOBS_SECRET
       - _APP_JOBS_ENDPOINT
+      - _APP_COMPUTE_ENDPOINT
       - _APP_LOGGING_CONFIG
       - _APP_LOGGING_FORMAT
       - _APP_LOCKING_ENABLED
@@ -571,6 +573,7 @@ services:
       - _APP_JOBS_HOST
       - _APP_JOBS_SECRET
       - _APP_JOBS_ENDPOINT
+      - _APP_COMPUTE_ENDPOINT
       - _APP_BROWSER_HOST
       - _APP_WORKER_SCREENSHOTS_ROUTER
       - _APP_NOTIFICATIONS_TRACKING_SECRET
@@ -1219,6 +1222,7 @@ services:
       - _APP_COMPUTE_BUILD_TIMEOUT
       - _APP_COMPUTE_CPUS
       - _APP_COMPUTE_MEMORY
+      - _APP_COMPUTE_ENDPOINT
       - _APP_EXECUTOR_SECRET
       - _APP_EXECUTOR_HOST
       - _APP_DOCKER_HUB_USERNAME
@@ -1936,6 +1940,13 @@ networks:
     name: appwrite
   runtimes:
     name: runtimes
+  # Where runtimes reach the API, over plain HTTP, the way build containers already do.
+  # Fixed name on purpose: the executor creates its own network with a bare
+  # `docker network create`, and compose refuses to adopt a network it did not label,
+  # so pointing this at _APP_COMPUTE_RUNTIMES_NETWORK would abort `up` on every install
+  # whose runtimes network already exists.
+  compute:
+    name: compute
 volumes:
   appwrite-mariadb: null
   appwrite-mongodb: null

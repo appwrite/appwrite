@@ -650,7 +650,13 @@ class Functions extends Action
         }
 
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
-        $endpoint = "$protocol://{$platform['apiHostname']}/v1";
+        // Runtimes reach the API over the internal network, the way builds already do
+        // through _APP_JOBS_ENDPOINT, which is an origin the caller appends the path to.
+        // The public endpoint stays the fallback for anyone who clears the variable.
+        $computeEndpoint = System::getEnv('_APP_COMPUTE_ENDPOINT');
+        $endpoint = !empty($computeEndpoint)
+            ? \rtrim($computeEndpoint, '/') . '/v1'
+            : "$protocol://{$platform['apiHostname']}/v1";
 
         // Appwrite vars
         $vars = \array_merge($vars, [
