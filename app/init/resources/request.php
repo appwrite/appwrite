@@ -793,14 +793,6 @@ return function (Container $context): void {
                 case $document->getCollection() === 'sessions': // sessions
                     $usage->addMetric(METRIC_SESSIONS, $value); // per project
                     break;
-                case $document->getCollection() === 'deployments':
-                    $resourceType = $document->getAttribute('resourceType');
-                    $usage
-                        ->setResource(rtrim($resourceType, 's'))
-                        ->setResourceInternalId((string) $document->getAttribute('resourceInternalId'))
-                        ->addMetric(str_replace(['{resourceType}'], [$resourceType], METRIC_RESOURCE_TYPE_DEPLOYMENTS), $value) // per resource type
-                        ->addMetric(str_replace(['{resourceType}'], [$resourceType], METRIC_RESOURCE_TYPE_DEPLOYMENTS_STORAGE), $document->getAttribute('size') * $value);
-                    break;
                 default:
                     break;
             }

@@ -269,33 +269,22 @@ class StatsResources extends Action
             return [];
         }
 
-        array_push($gauges, ...$this->computeGauges($project, $dbForProject, RESOURCE_TYPE_FUNCTIONS, 'functions', 'function', 'functions'));
-        array_push($gauges, ...$this->computeGauges($project, $dbForProject, RESOURCE_TYPE_SITES, 'sites', 'site', 'sites'));
+        array_push($gauges, ...$this->computeGauges($dbForProject, RESOURCE_TYPE_FUNCTIONS, 'functions', 'function', 'functions'));
+        array_push($gauges, ...$this->computeGauges($dbForProject, RESOURCE_TYPE_SITES, 'sites', 'site', 'sites'));
 
         return $gauges;
     }
 
     /**
-     * Deployment gauges for one compute kind (functions or sites): the
-     * per-resource-type project totals, then one row set per function or site.
+     * Deployment gauges for one compute kind (functions or sites): one row set
+     * per function or site. The project totals come from deploymentGauges(); a
+     * per-service subtotal is the same sum over these rows filtered on service.
      *
      * @return array<int, array<string, mixed>>
      */
-    private function computeGauges(Document $project, Database $dbForProject, string $resourceType, string $service, string $resource, string $collection): array
+    private function computeGauges(Database $dbForProject, string $resourceType, string $service, string $resource, string $collection): array
     {
-        $byResourceType = [Query::equal('resourceType', [$resourceType])];
-
-        try {
-            $gauges = [
-                ['metric' => str_replace('{resourceType}', $resourceType, METRIC_RESOURCE_TYPE_DEPLOYMENTS_STORAGE), 'value' => (int) $dbForProject->sum('deployments', 'sourceSize', $byResourceType), 'service' => $service, 'resourceType' => 'deployment', 'resourceId' => $project->getId()],
-                ['metric' => str_replace('{resourceType}', $resourceType, METRIC_RESOURCE_TYPE_BUILDS_STORAGE), 'value' => (int) $dbForProject->sum('deployments', 'buildSize', $byResourceType), 'service' => $service, 'resourceType' => 'build', 'resourceId' => $project->getId()],
-                ['metric' => str_replace('{resourceType}', $resourceType, METRIC_RESOURCE_TYPE_DEPLOYMENTS), 'value' => $dbForProject->count('deployments', $byResourceType), 'service' => $service, 'resourceType' => 'deployment', 'resourceId' => $project->getId()],
-                ['metric' => str_replace('{resourceType}', $resourceType, METRIC_RESOURCE_TYPE_BUILDS), 'value' => $dbForProject->count('deployments', $byResourceType), 'service' => $service, 'resourceType' => 'build', 'resourceId' => $project->getId()],
-            ];
-        } catch (\Throwable $th) {
-            Console::warning("Failed to measure {$resourceType} deployments for {$project->getId()}: " . $th->getMessage());
-            return [];
-        }
+        $gauges = [];
 
         $this->foreachDocument($dbForProject, $collection, [], function (Document $document) use ($dbForProject, $resourceType, $service, $resource, &$gauges): void {
             $byResource = [
