@@ -1,0 +1,391 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Tests\Unit;
+
+use PHPUnit\Framework\TestCase;
+use Utopia\Queue\Adapter;
+use Utopia\Queue\Consumer;
+use Utopia\Queue\Message;
+use Utopia\Queue\PermanentFailure;
+use Utopia\Queue\Queue;
+
+/**
+ * Which failures mean "the work did not happen".
+ *
+ * Handling, acking and the success hook used to share one try, so a transient
+ * ack timeout was treated exactly like a handler that threw: the message went
+ * back to the broker. That redelivers a job that already ran — or, at the
+ * delivery ceiling, dead-letters a job that succeeded as though it never had.
+ */
+final class ProcessPhasesTest extends TestCase
+{
+    private function message(): Message
+    {
+        return new Message([
+            'pid' => 'p1',
+            'queue' => 'q',
+            'timestamp' => time(),
+            'payload' => ['task' => 'a'],
+        ]);
+    }
+
+    public function testAFailedHandlerIsRejected(): void
+    {
+        $consumer = new PhaseConsumer();
+        $adapter = new PhaseAdapter($consumer);
+        $errors = [];
+
+        $adapter->runOne(
+            $this->message(),
+            static function (): never {
+                throw new \RuntimeException('handler blew up');
+            },
+            static function (): void {},
+            static function (?Message $m, \Throwable $e) use (&$errors): void {
+                $errors[] = $e->getMessage();
+            },
+        );
+
+        // The work did not happen, so the message must go back.
+        $this->assertSame(['reject'], $consumer->calls);
+        $this->assertSame(['handler blew up'], $errors);
+    }
+
+    public function testAPermanentFailureIsRejectedAsTerminal(): void
+    {
+        $consumer = new PhaseConsumer();
+        $adapter = new PhaseAdapter($consumer);
+        $message = $this->message();
+
+        $adapter->runOne(
+            $message,
+            static function (): never {
+                throw new PermanentFailure('the credential is not valid');
+            },
+            static function (): void {},
+            static function (): void {},
+        );
+
+        // The verdict has to be on the message by the time reject() reads it:
+        // that call is where the broker chooses between another attempt and the
+        // dead letter, and nothing downstream of it can change the choice.
+        $this->assertSame(['reject'], $consumer->calls);
+        $this->assertTrue($consumer->terminal, 'the rejected message must carry the terminal verdict');
+    }
+
+    public function testAnOrdinaryFailureIsNotTerminal(): void
+    {
+        $consumer = new PhaseConsumer();
+        $adapter = new PhaseAdapter($consumer);
+
+        $adapter->runOne(
+            $this->message(),
+            static function (): never {
+                throw new \RuntimeException('the database is down');
+            },
+            static function (): void {},
+            static function (): void {},
+        );
+
+        // An outage is what the redelivery budget is for. Marking it terminal
+        // would dead-letter work that the next attempt would have completed.
+        $this->assertSame(['reject'], $consumer->calls);
+        $this->assertFalse($consumer->terminal);
+    }
+
+    public function testATypeErrorIsRejectedAsTerminalWithoutTheHandlerSayingSo(): void
+    {
+        $consumer = new PhaseConsumer();
+        $adapter = new PhaseAdapter($consumer);
+
+        $adapter->runOne(
+            $this->message(),
+            static function (): never {
+                // What a payload and a signature disagreeing actually looks like:
+                // staging wrote objects where handlers construct from arrays, and
+                // every delivery of those 701 messages threw exactly this.
+                throw new \TypeError('Document::__construct(): Argument #1 ($input) must be of type array, Document given');
+            },
+            static function (): void {},
+            static function (): void {},
+        );
+
+        // The payload and the signature will disagree identically on every
+        // delivery, so spending the redelivery budget to find that out costs a
+        // maxAckPending slot per attempt for the length of its backoff.
+        $this->assertSame(['reject'], $consumer->calls);
+        $this->assertTrue($consumer->terminal);
+    }
+
+    public function testExhaustionIsNotTerminalEvenThoughItIsAnError(): void
+    {
+        $consumer = new PhaseConsumer();
+        $adapter = new PhaseAdapter($consumer);
+
+        $adapter->runOne(
+            $this->message(),
+            static function (): never {
+                // \Error, but it says the host was short at that moment rather
+                // than that the work is impossible -- which is what the budget is
+                // for. Treating every \Error as terminal would dead-letter a
+                // queue's backlog during the memory pressure that backlog caused.
+                throw new \Error('Allowed memory size exhausted');
+            },
+            static function (): void {},
+            static function (): void {},
+        );
+
+        $this->assertSame(['reject'], $consumer->calls);
+        $this->assertFalse($consumer->terminal);
+    }
+
+    public function testAPermanentFailureIsStillReported(): void
+    {
+        $consumer = new PhaseConsumer();
+        $adapter = new PhaseAdapter($consumer);
+        $errors = [];
+
+        $adapter->runOne(
+            $this->message(),
+            static function (): never {
+                throw new PermanentFailure('the credential is not valid');
+            },
+            static function (): void {},
+            static function (?Message $m, \Throwable $e) use (&$errors): void {
+                $errors[] = $e->getMessage();
+            },
+        );
+
+        // Ending the message's life is not a reason to stop telling anyone. A
+        // dead letter nobody was told about is the failure mode this class of
+        // fault already has.
+        $this->assertSame(['the credential is not valid'], $errors);
+    }
+
+    public function testAFailedAckIsNeverRejected(): void
+    {
+        $consumer = new PhaseConsumer(commitThrows: true);
+        $adapter = new PhaseAdapter($consumer);
+        $errors = [];
+
+        $adapter->runOne(
+            $this->message(),
+            static function (): void {},
+            static function (): void {},
+            static function (?Message $m, \Throwable $e) use (&$errors): void {
+                $errors[] = $e->getMessage();
+            },
+        );
+
+        // The handler succeeded. Rejecting now NAKs completed work; the broker
+        // will redeliver on its own deadline if the ack really never landed,
+        // which a handler can guard against — a NAK here is a rerun for certain.
+        $this->assertSame(['commit'], $consumer->calls);
+        $this->assertNotContains('reject', $consumer->calls);
+        $this->assertSame(['ack timed out'], $errors);
+    }
+
+    public function testAFailedSuccessHookIsNeverRejected(): void
+    {
+        $consumer = new PhaseConsumer();
+        $adapter = new PhaseAdapter($consumer);
+        $errors = [];
+
+        $adapter->runOne(
+            $this->message(),
+            static function (): void {},
+            static function (): never {
+                throw new \RuntimeException('shutdown hook failed');
+            },
+            static function (?Message $m, \Throwable $e) use (&$errors): void {
+                $errors[] = $e->getMessage();
+            },
+        );
+
+        // Bookkeeping after the message is acked and gone: there is nothing
+        // left to reject, and rerunning the job would not fix a shutdown hook.
+        $this->assertSame(['commit'], $consumer->calls);
+        $this->assertSame(['shutdown hook failed'], $errors);
+    }
+
+    public function testTheSuccessHookRunsOnlyAfterTheAckLands(): void
+    {
+        $consumer = new PhaseConsumer(commitThrows: true);
+        $adapter = new PhaseAdapter($consumer);
+        $succeeded = false;
+
+        $adapter->runOne(
+            $this->message(),
+            static function (): void {},
+            static function () use (&$succeeded): void {
+                $succeeded = true;
+            },
+            static function (): void {},
+        );
+
+        // Reporting success for a message the broker never acknowledged would
+        // tell every downstream hook the job is finished and settled.
+        $this->assertFalse($succeeded);
+    }
+
+    public function testAHandlerFailureWhoseReportAlsoFailsStillRejects(): void
+    {
+        $consumer = new PhaseConsumer();
+        $adapter = new PhaseAdapter($consumer);
+
+        $adapter->runOne(
+            $this->message(),
+            static function (): never {
+                throw new \RuntimeException('handler blew up');
+            },
+            static function (): void {},
+            static function (): never {
+                throw new \RuntimeException('the reporter is down too');
+            },
+        );
+
+        // The outages that fail a message tend to fail the reporting of it, and
+        // the message must still be given back when that happens.
+        $this->assertSame(['reject'], $consumer->calls);
+        $this->assertStringContainsString('handler blew up', $adapter->traced());
+    }
+
+    public function testTheHandlerRunsUnderAnAckExtension(): void
+    {
+        $consumer = new PhaseConsumer();
+        $adapter = new PhaseAdapter($consumer);
+        $order = [];
+
+        $adapter->onExtension = static function () use (&$order): void {
+            $order[] = 'extension:open';
+        };
+
+        $adapter->runOne(
+            $this->message(),
+            static function () use (&$order): void {
+                $order[] = 'handler';
+            },
+            static function (): void {},
+            static function (): void {},
+        );
+
+        // The handler, and only the handler, is wrapped: extending an ack while
+        // committing would be reporting progress on work that is finished.
+        $this->assertSame(['extension:open', 'handler'], $order);
+    }
+}
+
+final class PhaseAdapter extends Adapter
+{
+    public ?\Closure $onExtension = null;
+
+    /** @var resource */
+    private readonly mixed $traceStream;
+
+    public function __construct(Consumer $consumer)
+    {
+        parent::__construct($consumer, 1);
+
+        $stream = fopen('php://memory', 'r+');
+        \assert(\is_resource($stream));
+        $this->traceStream = $stream;
+    }
+
+    public function traced(): string
+    {
+        rewind($this->traceStream);
+
+        return (string) stream_get_contents($this->traceStream);
+    }
+
+    public function runOne(Message $message, callable $handler, callable $success, callable $error): void
+    {
+        $this->processFrom($message, $handler, $success, $error, new Queue('q'), $this->consumer);
+    }
+
+    public function start(): self
+    {
+        return $this;
+    }
+
+    public function stop(): self
+    {
+        return $this;
+    }
+
+    public function workerStart(callable $callback): self
+    {
+        return $this;
+    }
+
+    public function workerStop(callable $callback): self
+    {
+        return $this;
+    }
+
+    #[\Override]
+    protected function withAckExtension(Consumer $consumer, Queue $queue, Message $message, \Closure $work): void
+    {
+        if ($this->onExtension instanceof \Closure) {
+            ($this->onExtension)();
+        }
+
+        $work();
+    }
+
+    /**
+     * Capture the last-resort trace instead of writing it to stderr.
+     *
+     * @return resource
+     */
+    #[\Override]
+    protected function trace(): mixed
+    {
+        return $this->traceStream;
+    }
+}
+
+final class PhaseConsumer implements Consumer
+{
+    /** @var list<string> */
+    public array $calls = [];
+
+    /** The verdict the message carried when it was rejected. */
+    public bool $terminal = false;
+
+    public function __construct(private readonly bool $commitThrows = false) {}
+
+    public function receive(Queue $queue, int $timeout, int $n = 1): array
+    {
+        return [];
+    }
+
+    public function commit(Queue $queue, Message $message): void
+    {
+        $this->calls[] = 'commit';
+
+        if ($this->commitThrows) {
+            throw new \RuntimeException('ack timed out');
+        }
+    }
+
+    public function reject(Queue $queue, Message $message): void
+    {
+        $this->calls[] = 'reject';
+        $this->terminal = $message->isTerminal();
+    }
+
+    public function getQueueSize(Queue $queue, bool $failedJobs = false): int
+    {
+        return 0;
+    }
+
+    public function getFailedCount(Queue $queue): int
+    {
+        return 0;
+    }
+
+    public function close(): void {}
+}

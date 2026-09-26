@@ -1,0 +1,65 @@
+{
+    "name": "utopia-php/queue",
+    "description": "A powerful task queue.",
+    "type": "library",
+    "keywords": [
+        "php",
+        "framework",
+        "upf",
+        "utopia",
+        "tasks",
+        "queue"
+    ],
+    "license": "MIT",
+    "minimum-stability": "stable",
+    "authors": [
+        {
+            "name": "Torsten Dittmann",
+            "email": "torsten@appwrite.io"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "Utopia\\Queue\\": "src/Queue"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\E2E\\": "tests/Queue/E2E",
+            "Tests\\Unit\\": "tests/Queue/Unit"
+        }
+    },
+    "scripts": {
+        "test": "phpunit --testsuite unit",
+        "test:e2e": "tests/e2e.sh",
+        "bench": "bash tests/bench/run.sh"
+    },
+    "require": {
+        "php": ">=8.5",
+        "utopia-php/di": "^0.3",
+        "utopia-php/lock": "^0.3",
+        "utopia-php/servers": "^0.4",
+        "utopia-php/pools": "^2.1",
+        "utopia-php/telemetry": "^0.4",
+        "utopia-php/validators": "^1.0"
+    },
+    "require-dev": {
+        "ext-redis": "*",
+        "swoole/ide-helper": "4.8.8",
+        "utopia-php/nats": "^1.4",
+        "workerman/workerman": "^4.0"
+    },
+    "suggest": {
+        "ext-swoole": "Needed to support Swoole.",
+        "workerman/workerman": "Needed to support Workerman.",
+        "ext-pcntl": "Fallback for Adapter\\KubernetesJob graceful shutdown when Swoole is unavailable.",
+        "ext-igbinary": "Required for the Igbinary codec (Codec\\Igbinary).",
+        "utopia-php/nats": "Version ^1.4 is needed to support the NATS JetStream broker (Broker\\Nats)."
+    },
+    "config": {
+        "allow-plugins": {
+            "php-http/discovery": true,
+            "tbachert/spi": true
+        }
+    }
+}
