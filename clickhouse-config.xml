@@ -1,0 +1,48 @@
+<?xml version="1.0"?>
+<!--
+    Retention for ClickHouse's own system log tables.
+
+    Every <ttl> in the image's config.xml sits inside an XML comment, so these
+    tables keep every row forever, and the metric ones add a row per second
+    whether or not the instance serves traffic. Left alone they outgrow the
+    usage data they sit next to and fill the volume.
+
+    ClickHouse applies a window when it creates the table and alters the table
+    on the next restart when the window here changes, so an install that has
+    been running without one shrinks on upgrade.
+-->
+<clickhouse>
+    <!-- Verbose and only worth reading about something that just happened. -->
+    <text_log><ttl>event_date + INTERVAL 3 DAY DELETE</ttl></text_log>
+    <trace_log><ttl>event_date + INTERVAL 3 DAY DELETE</ttl></trace_log>
+    <asynchronous_insert_log><ttl>event_date + INTERVAL 3 DAY DELETE</ttl></asynchronous_insert_log>
+
+    <!-- Sampled every second by default, and metric_log carries a column per
+         profile event, so it outgrows everything else here. A ten second
+         sample is still plenty to read an incident from. -->
+    <metric_log>
+        <ttl>event_date + INTERVAL 7 DAY DELETE</ttl>
+        <collect_interval_milliseconds>10000</collect_interval_milliseconds>
+    </metric_log>
+    <histogram_metric_log>
+        <ttl>event_date + INTERVAL 7 DAY DELETE</ttl>
+        <collect_interval_milliseconds>10000</collect_interval_milliseconds>
+    </histogram_metric_log>
+    <query_metric_log>
+        <ttl>event_date + INTERVAL 7 DAY DELETE</ttl>
+        <collect_interval_milliseconds>10000</collect_interval_milliseconds>
+    </query_metric_log>
+
+    <!-- A row per flush, query, view and part. -->
+    <asynchronous_metric_log><ttl>event_date + INTERVAL 7 DAY DELETE</ttl></asynchronous_metric_log>
+    <query_log><ttl>event_date + INTERVAL 7 DAY DELETE</ttl></query_log>
+    <query_views_log><ttl>event_date + INTERVAL 7 DAY DELETE</ttl></query_views_log>
+    <query_thread_log><ttl>event_date + INTERVAL 7 DAY DELETE</ttl></query_thread_log>
+    <processors_profile_log><ttl>event_date + INTERVAL 7 DAY DELETE</ttl></processors_profile_log>
+    <part_log><ttl>event_date + INTERVAL 7 DAY DELETE</ttl></part_log>
+    <background_schedule_pool_log><ttl>event_date + INTERVAL 7 DAY DELETE</ttl></background_schedule_pool_log>
+
+    <!-- Longer, so it still covers a report that reaches us late. crash_log is
+         deliberately left alone: it is tiny and worth keeping. -->
+    <error_log><ttl>event_date + INTERVAL 14 DAY DELETE</ttl></error_log>
+</clickhouse>

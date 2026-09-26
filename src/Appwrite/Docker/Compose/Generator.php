@@ -53,6 +53,7 @@ class Generator
     private const array HOST_PATH_REWRITABLE_BINDS = [
         './mongo-init.js:/mongo-init.js:ro',
         './mongo-entrypoint.sh:/mongo-entrypoint.sh:ro',
+        './clickhouse-config.xml:/etc/clickhouse-server/config.d/appwrite.xml:ro',
     ];
 
     private const array PARAM_DEFAULTS = [
