@@ -93,18 +93,12 @@ export type CreateConversationParams = {
   [Type in ConversationType]: ConversationFields<Type>
 }[ConversationType]
 
-export type Conversation = {
-  type: ConversationType
-  email: string
-  organizationId: string
-}
-
-export type GrowthTarget = {
+type GrowthTarget = {
   endpoint: string
   credentials: RequestCredentials
 }
 
-export const CONVERSATIONS_PATH = '/growth/conversations'
+const CONVERSATIONS_PATH = '/growth/conversations'
 
 const RATE_LIMIT_MESSAGE = 'Too many requests. Try again in a few minutes.'
 const SERVER_ERROR_MESSAGE = 'Internal server error.'
@@ -128,7 +122,7 @@ export class GrowthError extends Error {
  * Where conversations go: the console's own API with the session on Cloud,
  * Appwrite Cloud without credentials everywhere else.
  */
-export function resolveGrowthTarget(
+function resolveGrowthTarget(
   cloud: boolean,
   endpoint: string,
   session: boolean,
@@ -210,13 +204,14 @@ async function toError(response: Response): Promise<GrowthError> {
 }
 
 /**
- * Creates a conversation with the Appwrite team.
+ * Creates a conversation with the Appwrite team. Resolves on 201 without
+ * reading the body, so a created conversation never reports as failed.
  *
  * @throws GrowthError when the server rejects the request (400, 429, 5xx).
  */
 export async function createConversation(
   params: CreateConversationParams,
-): Promise<Conversation> {
+): Promise<void> {
   const { endpoint, credentials } = resolveGrowthTarget(
     isCloudProfile(),
     getBaseEndpoint(),
@@ -240,6 +235,4 @@ export async function createConversation(
   if (response.status !== 201) {
     throw await toError(response)
   }
-
-  return (await response.json()) as Conversation
 }

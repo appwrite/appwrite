@@ -1,16 +1,37 @@
 import { afterEach, beforeEach, describe, expect, mock, test } from 'bun:test'
-import {
-  createConversation,
-  GrowthError,
-  resolveGrowthTarget,
-} from '@/lib/growth'
-import { submitDocsFeedback, submitFeedback } from '@/lib/feedback'
-import {
+import * as profiles from '@/lib/console-profiles'
+import * as sdk from '@/lib/appwrite/sdk'
+import type { GrowthError as GrowthErrorType } from '@/lib/growth'
+
+// The console's profile and endpoint, as the running console would report them.
+// Null leaves the real value, so other test files see no change.
+const consoleState: { cloud: boolean | null; endpoint: string | null } = {
+  cloud: null,
+  endpoint: null,
+}
+const { isCloudProfile } = profiles
+const { getBaseEndpoint } = sdk
+
+mock.module('@/lib/console-profiles', () => ({
+  ...profiles,
+  isCloudProfile: (...args: Parameters<typeof isCloudProfile>) =>
+    consoleState.cloud ?? isCloudProfile(...args),
+}))
+mock.module('@/lib/appwrite/sdk', () => ({
+  ...sdk,
+  getBaseEndpoint: () => consoleState.endpoint ?? getBaseEndpoint(),
+}))
+
+const { createConversation, GrowthError } = await import('@/lib/growth')
+const { isFeedbackReady, submitDocsFeedback, submitFeedback } = await import(
+  '@/lib/feedback'
+)
+const {
   submitEnterpriseApplication,
   submitPartnerApplication,
   submitStartupsApplication,
-} from '@/lib/marketing/growth-forms'
-import { submitSupportTicket } from '@/lib/support'
+} = await import('@/lib/marketing/growth-forms')
+const { submitSupportTicket } = await import('@/lib/support')
 
 type Call = { url: string; init: RequestInit }
 
@@ -54,40 +75,67 @@ beforeEach(() => {
 
 afterEach(() => {
   globalThis.fetch = originalFetch
+  consoleState.cloud = null
+  consoleState.endpoint = null
 })
 
-describe('resolveGrowthTarget', () => {
-  test('uses the console endpoint with the session on Cloud', () => {
-    expect(
-      resolveGrowthTarget(true, 'https://fra.cloud.appwrite.io/v1/', true),
-    ).toEqual({
-      endpoint: 'https://fra.cloud.appwrite.io/v1',
-      credentials: 'include',
+describe('where conversations go', () => {
+  test('Cloud consoles send to their own endpoint with the session', async () => {
+    consoleState.cloud = true
+    consoleState.endpoint = 'https://fra.cloud.appwrite.io/v1/'
+
+    await submitFeedback({
+      message: 'Nice',
+      source: 'navbar',
+      route: '/',
     })
+
+    expect(lastCall().url).toBe(
+      'https://fra.cloud.appwrite.io/v1/growth/conversations',
+    )
+    expect(lastCall().init.credentials).toBe('include')
   })
 
-  test('leaves the session out when the form keeps typed contact details', () => {
-    expect(
-      resolveGrowthTarget(true, 'https://cloud.appwrite.io/v1', false),
-    ).toEqual({
-      endpoint: 'https://cloud.appwrite.io/v1',
-      credentials: 'omit',
+  test('Cloud forms that keep typed contact details leave the session out', async () => {
+    consoleState.cloud = true
+    consoleState.endpoint = 'https://fra.cloud.appwrite.io/v1'
+
+    await submitStartupsApplication({
+      name: 'Walter',
+      email: 'walter@acme.co',
+      companyName: 'Acme',
+      companyUrl: 'acme.co',
     })
+
+    expect(lastCall().url).toBe(
+      'https://fra.cloud.appwrite.io/v1/growth/conversations',
+    )
+    expect(lastCall().init.credentials).toBe('omit')
   })
 
-  test('sends self-hosted consoles to Appwrite Cloud anonymously', () => {
-    expect(
-      resolveGrowthTarget(false, 'https://appwrite.example.com/v1', true),
-    ).toEqual({
-      endpoint: 'https://cloud.appwrite.io/v1',
-      credentials: 'omit',
+  test('self-hosted consoles send to Appwrite Cloud anonymously', async () => {
+    consoleState.cloud = false
+    consoleState.endpoint = 'https://appwrite.example.com/v1'
+
+    await submitSupportTicket({
+      email: 'a@b.co',
+      name: 'Ada',
+      subject: 'Deploy fails',
+      message: 'Build error',
+      organizationId: 'org1',
     })
+
+    expect(lastCall().url).toBe(
+      'https://cloud.appwrite.io/v1/growth/conversations',
+    )
+    expect(lastCall().init.credentials).toBe('omit')
   })
 })
 
 describe('createConversation', () => {
   test('posts JSON to the conversations route and drops empty values', async () => {
-    const conversation = await createConversation({
+    consoleState.cloud = true
+    await createConversation({
       type: 'feedback',
       email: 'a@b.co',
       name: '',
@@ -96,7 +144,6 @@ describe('createConversation', () => {
       attributes: { route: '/console', source: '' },
     })
 
-    expect(conversation.type).toBe('feedback')
     const { url, init } = lastCall()
     expect(url.endsWith('/v1/growth/conversations')).toBe(true)
     expect(init.method).toBe('POST')
@@ -139,8 +186,8 @@ describe('createConversation', () => {
     }).catch((caught: unknown) => caught)
 
     expect(error).toBeInstanceOf(GrowthError)
-    expect((error as GrowthError).isRateLimited).toBe(true)
-    expect((error as GrowthError).message).toBe(
+    expect((error as GrowthErrorType).isRateLimited).toBe(true)
+    expect((error as GrowthErrorType).message).toBe(
       'Too many requests. Try again in a few minutes.',
     )
   })
@@ -165,12 +212,47 @@ describe('createConversation', () => {
     ).rejects.toThrow('Attribute "companyUrl" is required.')
   })
 
+  test('resolves on 201 even when the body is empty', async () => {
+    reply = () => new Response(null, { status: 201 })
+
+    await expect(
+      createConversation({ type: 'feedback', email: 'a@b.co', message: 'Hi' }),
+    ).resolves.toBeUndefined()
+  })
+
   test('treats the old 200 response as a failure', async () => {
     reply = () => new Response('{}', { status: 200 })
 
     await expect(
       createConversation({ type: 'feedback', message: 'Hi' }),
     ).rejects.toBeInstanceOf(GrowthError)
+  })
+})
+
+describe('feedback form', () => {
+  test('a signed-out visitor needs an email to send feedback', () => {
+    expect(
+      isFeedbackReady({ sentiment: 'positive', message: '', email: '' }),
+    ).toBe(false)
+    expect(
+      isFeedbackReady({ sentiment: 'positive', message: '', email: ' ' }),
+    ).toBe(false)
+    expect(
+      isFeedbackReady({ sentiment: 'positive', message: '', email: 'a@b.co' }),
+    ).toBe(true)
+  })
+
+  test('negative feedback needs a comment', () => {
+    expect(
+      isFeedbackReady({ sentiment: 'negative', message: ' ', email: 'a@b.co' }),
+    ).toBe(false)
+    expect(
+      isFeedbackReady({
+        sentiment: 'negative',
+        message: 'Slow',
+        email: 'a@b.co',
+      }),
+    ).toBe(true)
   })
 })
 

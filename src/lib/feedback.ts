@@ -4,6 +4,30 @@
 
 import { ConversationType, createConversation } from '@/lib/growth'
 
+export const MAX_FEEDBACK_LENGTH = 500
+
+export type FeedbackSentiment = 'positive' | 'negative'
+
+export interface FeedbackDraft {
+  sentiment: FeedbackSentiment | null
+  message: string
+  /** The account email, or the one a signed-out visitor typed. */
+  email: string
+}
+
+/**
+ * Whether console feedback can be sent. Negative feedback needs a comment, and
+ * an email is always needed because signed-out visitors send without a session.
+ */
+export function isFeedbackReady(draft: FeedbackDraft): boolean {
+  return (
+    draft.sentiment !== null &&
+    draft.email.trim().length > 0 &&
+    draft.message.length <= MAX_FEEDBACK_LENGTH &&
+    (draft.sentiment !== 'negative' || draft.message.trim().length > 0)
+  )
+}
+
 export interface SubmitFeedbackParams {
   message: string
   /** Where the feedback form was opened (e.g. navbar, command-center). */

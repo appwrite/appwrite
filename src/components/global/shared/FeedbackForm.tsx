@@ -12,7 +12,12 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from 'sonner'
 import { useAuth } from '@/components/global/auth/RequireAuth'
-import { submitFeedback } from '@/lib/feedback'
+import {
+  type FeedbackSentiment,
+  isFeedbackReady,
+  MAX_FEEDBACK_LENGTH,
+  submitFeedback,
+} from '@/lib/feedback'
 import { submitCustomerStoryInterviewRequest } from '@/lib/marketing/customer-story-request'
 import {
   useOrganizationById,
@@ -24,10 +29,6 @@ import { useT } from '@/lib/i18n/translate'
 import { analyticsAttrs, type AnalyticsActionId } from '@/lib/analytics-actions'
 import { trackEvent } from '@/lib/analytics'
 import { GrowthError } from '@/lib/growth'
-
-const MAX_FEEDBACK_LENGTH = 500
-
-type FeedbackSentiment = 'positive' | 'negative'
 
 export interface FeedbackFormContext {
   source?: string
@@ -132,6 +133,7 @@ export function FeedbackForm({
 
   const [sentiment, setSentiment] = useState<FeedbackSentiment | null>(null)
   const [message, setMessage] = useState('')
+  const [email, setEmail] = useState('')
   const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false)
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false)
 
@@ -146,11 +148,14 @@ export function FeedbackForm({
     [account?.name],
   )
 
-  const commentRequired = sentiment === 'negative'
-  const canSubmitFeedback =
-    Boolean(sentiment) &&
-    message.length <= MAX_FEEDBACK_LENGTH &&
-    (!commentRequired || message.trim().length > 0)
+  // Signed-out visitors have no session, so they type the email themselves.
+  const accountEmail = account?.email?.trim() ?? ''
+  const feedbackEmail = accountEmail || email.trim()
+  const canSubmitFeedback = isFeedbackReady({
+    sentiment,
+    message,
+    email: feedbackEmail,
+  })
 
   const canSubmitStory =
     storySummary.trim().length > 0 &&
@@ -180,7 +185,7 @@ export function FeedbackForm({
         message: labeledMessage,
         source,
         route: window.location.pathname,
-        email: account?.email,
+        email: feedbackEmail,
         name: account?.name,
         organizationId: orgId,
         projectId,
@@ -313,6 +318,18 @@ export function FeedbackForm({
               maxLength={MAX_FEEDBACK_LENGTH}
               autoFocus
             />
+            {accountEmail ? null : (
+              <Input
+                id="console-feedback-email"
+                type="email"
+                aria-label={t('Email')}
+                placeholder="you@example.com"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                required
+                className="h-9 text-[13px]"
+              />
+            )}
             <Button
               size="sm"
               className="h-9 w-full text-[13px]"
