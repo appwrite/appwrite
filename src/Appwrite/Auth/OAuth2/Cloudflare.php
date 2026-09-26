@@ -3,7 +3,12 @@
 namespace Appwrite\Auth\OAuth2;
 
 use Appwrite\Auth\OAuth2;
-use Utopia\Fetch\Client as FetchClient;
+use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
+use Utopia\Client\Client;
+use Utopia\Psr7\ContentType;
+use Utopia\Psr7\Header;
+use Utopia\Psr7\Method;
+use Utopia\Psr7\Request\Factory as RequestFactory;
 
 // Reference Material
 // https://developers.cloudflare.com/fundamentals/oauth/
@@ -249,24 +254,26 @@ class Cloudflare extends OAuth2
      */
     public function verifyCredentials(): void
     {
-        $client = new FetchClient();
-        $client->addHeader('Content-Type', 'application/x-www-form-urlencoded');
-        $client->addHeader('Accept', 'application/json');
+        $response = (new Client(new CurlAdapter()))
+            ->withTimeout(15)
+            ->withFollowRedirects(maxHops: 5)
+            ->sendRequest((new RequestFactory())->form(
+                Method::POST,
+                'https://dash.cloudflare.com/oauth2/token',
+                [
+                    'grant_type' => 'authorization_code',
+                    'code' => 'intentionally-invalid-code',
+                    'redirect_uri' => 'https://invalid.appwrite.callback/intentionally-invalid',
+                    'client_id' => $this->appID,
+                    'client_secret' => $this->appSecret,
+                    'code_verifier' => 'intentionally-invalid-verifier-intentionally-invalid',
+                ],
+                [
+                    Header::ACCEPT => ContentType::JSON,
+                ],
+            ));
 
-        $response = $client->fetch(
-            url: 'https://dash.cloudflare.com/oauth2/token',
-            method: FetchClient::METHOD_POST,
-            body: [
-                'grant_type' => 'authorization_code',
-                'code' => 'intentionally-invalid-code',
-                'redirect_uri' => 'https://invalid.appwrite.callback/intentionally-invalid',
-                'client_id' => $this->appID,
-                'client_secret' => $this->appSecret,
-                'code_verifier' => 'intentionally-invalid-verifier-intentionally-invalid',
-            ]
-        );
-
-        $json = \json_decode($response->getBody(), true);
+        $json = \json_decode((string) $response->getBody(), true);
 
         if (isset($json['error']) && $json['error'] === 'invalid_client') {
             throw new \Exception('Cloudflare application with the provided Client ID and/or Client Secret is invalid.');
