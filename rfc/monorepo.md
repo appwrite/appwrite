@@ -28,11 +28,11 @@ Numbers are from `composer.lock` on `main` at 2026-09-10 and the `utopia-php/mon
 | | |
 |---|---|
 | `utopia-php/*` packages resolved by Appwrite | 45 (40 direct, 5 transitive: `circuit-breaker`, `di`, `mongo`, `psr7`, `smtp`) |
-| Pulled from GitHub VCS repositories rather than Packagist | 3 (`auth`, `cdn`, `vcs`) |
+| Pulled from GitHub VCS repositories rather than Packagist | 3 (`auth`, `cdn`, `vcs`), plus `mqtt`, which Appwrite adopted after this inventory and which is not on Packagist |
 | Library source | ~537K lines (`database` 49K, `migration` 21K) |
 | Library tests | ~179K lines (`database` 65K) |
 | Already in `utopia-php/monorepo` | 32 of the 45 |
-| Still standalone repositories, never absorbed | 13: `abuse agents balancer database detector dsn emails fetch locale migration mongo openapi query registry usage` |
+| Still standalone repositories, never absorbed | 13: `abuse agents balancer database detector dsn emails fetch locale migration mongo openapi query registry usage`, plus `mqtt` (adopted after this inventory) |
 | Distinct PSR-4 declarations across the 45 | 28 |
 | Packages declaring the bare `Utopia\` prefix | 5: `http`, `validators`, `client`, `console`, `di` |
 
@@ -225,17 +225,17 @@ One PR, labelled `absorb`, containing:
 
 Exit: full Appwrite CI green; `bin/monorepo release validators 1.0.2` cut from this repository; the mirror and Packagist show it. This PR is the reversible checkpoint: reverting it restores the Packagist dependency.
 
-### Phase 2. Leaves (no Utopia dependencies), 22 packages
+### Phase 2. Leaves (no Utopia dependencies), 23 packages
 
-`auth circuit-breaker compression console detector di dsn fetch image locale lock mongo openapi psr7 query registry smtp system telemetry user-agent websocket` and the `config` registry move.
+`auth circuit-breaker compression console detector di dsn fetch image locale lock mongo mqtt openapi psr7 query registry smtp system telemetry user-agent websocket` and the `config` registry move.
 
 - `console` lands via #13616 first; its absorb then changes only the source of the same 0.2.9 code.
 - `system` is upgraded to 0.11 in its absorb PR.
-- The 8 standalone ones (`detector dsn fetch locale mongo openapi query registry`) go through `absorb`'s full playbook; the others are re-absorbed from their mirrors, which are already prepared.
+- The 9 standalone ones (`detector dsn fetch locale mongo mqtt openapi query registry`) go through `absorb`'s full playbook; the others are re-absorbed from their mirrors, which are already prepared.
 - `http` and `di` do their step-A prefix change here.
 - Batch four to six per PR; independent packages can run in parallel.
 
-Exit: no `utopia-php/*` leaf in `require`; root map has 22 more lines.
+Exit: no `utopia-php/*` leaf in `require`; root map has 23 more lines.
 
 ### Phase 3. Infrastructure tier
 
@@ -271,7 +271,7 @@ Exit: `composer.lock` contains no `utopia-php/*` package.
 - Add `packages/*/src` to `phpstan-deadcode.neon` and run `composer dead-code`. Candidates visible today: database adapters `SQLite`, `Memory`, `Redis`; cache adapters `Hazelcast`, `Memcached`, `Json`, `Memory`, `RedisCluster`; SMS adapters `Plivo`, `Telnyx`, `Clickatell`, `Infobip`, `Seven`, `Sinch`. Each deletion is mirror-visible: confirm against Executor and Packagist dependents first; anything a mirror consumer needs stays.
 - Collapse `||` compatibility constraints in package manifests to single ranges once every sibling is on the current major.
 - Delete duplicated test helpers (`tests/extensions/Queue/InMemoryConnection.php` versus the queue package's own fakes) and every Appwrite-side workaround that existed only because a library fix was waiting on a release.
-- Burn down every `packages/*/phpstan-baseline.neon` a package arrives with (abuse's Redis cluster log adapters need one under PHPStan 2). Compression arrives with 16 pre-existing findings covering extension return types and the untyped supported-encoding array; resolve these separately from its history-preserving import. System arrives with 16 pre-existing findings from mixed CPU and disk statistics; track those separately from its import. OpenAPI arrives with 166 findings at level max (it was analysed at level 5 in the monorepo), nearly all offset access on the decoded `mixed` document in its readers; narrow those separately from its import. Circuit-breaker arrives with 29 findings at level max (also level 5 in the monorepo): casts from `mixed` in the Redis and Swoole Table adapters, and loosely typed telemetry and Redis fixtures in its tests. WebSocket arrives with 22 (level 5 in the monorepo too): `mixed` handling in `Client` and the Workerman adapter, and its Swoole fixture server and e2e helpers. Cache arrives with 25 (level 5 in the monorepo): `mixed` from the Memcached and Hazelcast server stats and the `RedisCluster` node addresses, values passed to `Envelope::encode()` untyped, and casts of Redis replies in its multiplexing and leasable e2e tests. Validators arrives with 75 (level 5 in the monorepo): 48 in `src`, unvalued `array` parameters and casts from `mixed`, mostly in `Globstar`, `Domain`, `URL`, `Contains` and `WhiteList`; 27 in its tests, nullable validator fixtures in `AssocTest` and `URLTest`. Auth arrives with 33 (it had no PHPStan config of its own): `mixed` out-parameters and results from `openssl_pkey_export()`, `openssl_pkey_get_details()` and `openssl_sign()` in the asymmetric issuer and verifier, integer arithmetic in the PHPass encoder, and array shapes in `AuthorizationDetails` and `ResourceIndicators`, plus decoded-claim arithmetic in its tests.
+- Burn down every `packages/*/phpstan-baseline.neon` a package arrives with (abuse's Redis cluster log adapters need one under PHPStan 2). Compression arrives with 16 pre-existing findings covering extension return types and the untyped supported-encoding array; resolve these separately from its history-preserving import. System arrives with 16 pre-existing findings from mixed CPU and disk statistics; track those separately from its import. OpenAPI arrives with 166 findings at level max (it was analysed at level 5 in the monorepo), nearly all offset access on the decoded `mixed` document in its readers; narrow those separately from its import. Circuit-breaker arrives with 29 findings at level max (also level 5 in the monorepo): casts from `mixed` in the Redis and Swoole Table adapters, and loosely typed telemetry and Redis fixtures in its tests. WebSocket arrives with 22 (level 5 in the monorepo too): `mixed` handling in `Client` and the Workerman adapter, and its Swoole fixture server and e2e helpers. Cache arrives with 25 (level 5 in the monorepo): `mixed` from the Memcached and Hazelcast server stats and the `RedisCluster` node addresses, values passed to `Envelope::encode()` untyped, and casts of Redis replies in its multiplexing and leasable e2e tests. Validators arrives with 75 (level 5 in the monorepo): 48 in `src`, unvalued `array` parameters and casts from `mixed`, mostly in `Globstar`, `Domain`, `URL`, `Contains` and `WhiteList`; 27 in its tests, nullable validator fixtures in `AssocTest` and `URLTest`. MQTT arrives with 82 (its own repository analysed it at level max under PHPStan 1): `chr()` arguments not narrowed to `int<0, 255>` and casts from `mixed` in the packet codecs and `Property`, untyped Swoole client and request fields in `Client` and the Swoole adapter, and loosely typed data providers and e2e assertions in its tests. Auth arrives with 33 (it had no PHPStan config of its own): `mixed` out-parameters and results from `openssl_pkey_export()`, `openssl_pkey_get_details()` and `openssl_sign()` in the asymmetric issuer and verifier, integer arithmetic in the PHPass encoder, and array shapes in `AuthorizationDetails` and `ResourceIndicators`, plus decoded-claim arithmetic in its tests.
 
 ## Risks
 
