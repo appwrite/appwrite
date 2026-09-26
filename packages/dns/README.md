@@ -1,7 +1,7 @@
 # Utopia DNS
 
 > [!IMPORTANT]
-> This repository is a read-only mirror of the [utopia-php monorepo](https://github.com/utopia-php/monorepo). Development happens in [`packages/dns`](https://github.com/utopia-php/monorepo/tree/main/packages/dns) — please open issues and pull requests there.
+> This repository is a read-only mirror of [`packages/dns`](https://github.com/appwrite/appwrite/tree/main/packages/dns) in [appwrite/appwrite](https://github.com/appwrite/appwrite). Development happens there — please open issues and pull requests against appwrite/appwrite.
 
 [![Tests](https://github.com/utopia-php/dns/actions/workflows/tests.yml/badge.svg)](https://github.com/utopia-php/dns/actions/workflows/tests.yml)
 [![Packagist Version](https://img.shields.io/packagist/v/utopia-php/dns.svg)](https://packagist.org/packages/utopia-php/dns)
