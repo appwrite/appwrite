@@ -68,6 +68,7 @@ class Delete extends DocumentDelete
             ->inject('dbForProject')
             ->inject('getDatabasesDB')
             ->inject('queueForEvents')
+            ->inject('queueForRealtime')
             ->inject('usage')
             ->inject('transactionState')
             ->inject('plan')
