@@ -1,0 +1,54 @@
+{
+    "name": "utopia-php/dns",
+    "description": "Lite & fast micro PHP DNS server abstraction that is **easy to use**.",
+    "type": "library",
+    "keywords": [
+        "php",
+        "framework",
+        "upf",
+        "utopia",
+        "dns"
+    ],
+    "license": "MIT",
+    "minimum-stability": "stable",
+    "scripts": {
+        "test": "phpunit --testsuite unit",
+        "test:e2e": "phpunit --testsuite e2e",
+        "bench": "bash tests/bench/run.sh"
+    },
+    "authors": [
+        {
+            "name": "Eldad Fux",
+            "email": "eldad@appwrite.io"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "Utopia\\DNS\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Utopia\\DNS\\Tests\\": "tests/"
+        }
+    },
+    "require": {
+        "php": ">=8.5",
+        "ext-sockets": "*",
+        "utopia-php/telemetry": "^0.4",
+        "utopia-php/validators": "^1.0",
+        "utopia-php/domains": "^4.0.0"
+    },
+    "require-dev": {
+        "swoole/ide-helper": "5.1.8"
+    },
+    "config": {
+        "allow-plugins": {
+            "php-http/discovery": true,
+            "tbachert/spi": true
+        }
+    },
+    "suggest": {
+        "ext-swoole": "Required by the Swoole adapter"
+    }
+}
