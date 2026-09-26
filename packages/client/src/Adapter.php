@@ -36,6 +36,7 @@ interface Adapter extends ClientInterface, StreamingClientInterface
     /**
      * Follow HTTP Location redirects until the final non-redirect response.
      * Off by default, so a 3xx response is returned with its Location header.
+     * A chain longer than $maxHops redirects fails with a ProtocolException.
      */
-    public function withFollowRedirects(bool $enabled = true): static;
+    public function withFollowRedirects(bool $enabled = true, int $maxHops = Redirect::MAX_HOPS): static;
 }

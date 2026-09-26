@@ -17,6 +17,7 @@ This project follows semantic versioning.
 
 ### Added
 
+- `withFollowRedirects()` takes an optional `int $maxHops` (default `Redirect::MAX_HOPS`, 50) that caps how many redirects are followed before a `ProtocolException`. Callers need no change; custom `Adapter` implementations must add the parameter to their `withFollowRedirects()` signature.
 - Initial PSR-18 HTTP client wrapper: `Utopia\Client`.
 - Immutable client defaults for headers, base URI, basic auth, and bearer auth.
 - cURL adapter for regular PHP runtimes.

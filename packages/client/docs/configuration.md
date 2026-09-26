@@ -77,6 +77,16 @@ Pass `false` to turn following off again.
 $client = $client->withFollowRedirects();        // or ->withFollowRedirects(false)
 ```
 
+A chain of more than 50 redirects (`Redirect::MAX_HOPS`) fails with a
+`ProtocolException`. Pass `maxHops` to lower or raise that cap; `0` fails on the
+first redirect.
+
+```php
+<?php
+
+$client = $client->withFollowRedirects(maxHops: 5);
+```
+
 The cURL adapter maps this to `CURLOPT_FOLLOWLOCATION`. The Swoole coroutine HTTP
 client has no follow-redirects setting, so the adapter issues each hop itself.
 Relative `Location` values are resolved with RFC 3986 (including `.` / `..`).

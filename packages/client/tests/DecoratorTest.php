@@ -9,6 +9,7 @@ use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Utopia\Client\Adapter;
 use Utopia\Client\Decorator;
+use Utopia\Client\Redirect;
 use Utopia\Client\Tls;
 use Utopia\Psr7\Method;
 use Utopia\Psr7\Request;
@@ -101,7 +102,7 @@ final class SwappableAdapter implements Adapter
         return $this;
     }
 
-    public function withFollowRedirects(bool $enabled = true): static
+    public function withFollowRedirects(bool $enabled = true, int $maxHops = Redirect::MAX_HOPS): static
     {
         return $this;
     }
