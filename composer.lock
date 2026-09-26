@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "856adce013a90d7c6fdfaec7d0c237ce",
+    "content-hash": "4f38c1d9a106de9a711e2d5d2aa5ffbf",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3638,55 +3638,6 @@
                 "source": "https://github.com/utopia-php/queue/tree/6.0.0"
             },
             "time": "2026-09-22T15:31:24+00:00"
-        },
-        {
-            "name": "utopia-php/servers",
-            "version": "0.4.11",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/utopia-php/servers.git",
-                "reference": "060da7b356fc9ffecd30d5c3849e8465892e8615"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/servers/zipball/060da7b356fc9ffecd30d5c3849e8465892e8615",
-                "reference": "060da7b356fc9ffecd30d5c3849e8465892e8615",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=8.5",
-                "utopia-php/di": "^0.3",
-                "utopia-php/validators": "^1.0"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Utopia\\Servers\\": "src/Servers"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Team Appwrite",
-                    "email": "team@appwrite.io"
-                }
-            ],
-            "description": "A base library for building Utopia style servers.",
-            "keywords": [
-                "framework",
-                "php",
-                "servers",
-                "upf",
-                "utopia"
-            ],
-            "support": {
-                "issues": "https://github.com/utopia-php/servers/issues",
-                "source": "https://github.com/utopia-php/servers/tree/0.4.11"
-            },
-            "time": "2026-09-02T15:57:19+00:00"
         },
         {
             "name": "utopia-php/storage",
