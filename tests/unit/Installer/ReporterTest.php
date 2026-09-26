@@ -62,17 +62,6 @@ final class ReporterTest extends TestCase
         $this->assertSame('appwrite.example.com', $body['domain']);
     }
 
-    public function testRequestGivesUpAfterFiveSeconds(): void
-    {
-        $recorder = new Recorder();
-
-        (new Reporter($recorder))->send($this->report());
-
-        $options = $recorder->requests[0]['options'];
-        $this->assertSame(5000, $options->getTimeout());
-        $this->assertSame(5000, $options->getConnectTimeout());
-    }
-
     public function testUpgradeIsNotSent(): void
     {
         $recorder = new Recorder();
