@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Utopia\Tests\Storage\E2E;
+namespace Utopia\Storage\Tests\E2E;
 
 use Throwable;
 use Utopia\Psr7\Stream;
@@ -94,7 +94,7 @@ final class S3Test extends S3Base
             $this->assertSame('virtual-hosted', (string) $path->read($virtualObject));
             $this->assertSame(
                 [$pathObject, $virtualObject],
-                array_map(static fn(FileInfo $file): string => $file->path, $path->listFiles($prefix)->files),
+                array_map(static fn (FileInfo $file): string => $file->path, $path->listFiles($prefix)->files),
             );
         } catch (Throwable $error) {
             $failure = $error;

@@ -14,12 +14,12 @@ This library is developed in the [utopia-php monorepo](https://github.com/utopia
 
 ### 2.1 Add new adapter and implement it
 
-In order to start implementing new storage adapter, add new file inside `packages/storage/src/Storage/Device/YYY.php` where `YYY` is the name of the storage provider in `PascalCase`. Inside the file you should create a class that extends the basic `Device` abstract class. Note that the class name should start with a capital letter, as PHP FIG standards suggest.
+In order to start implementing new storage adapter, add new file inside `packages/storage/src/Device/YYY.php` where `YYY` is the name of the storage provider in `PascalCase`. Inside the file you should create a class that extends the basic `Device` abstract class. Note that the class name should start with a capital letter, as PHP FIG standards suggest.
 
 Always use properly named environment variables if any credentials are required.
 
 ### 2.2. Introduce new device type
-Add a case for the new device to the `DeviceType` enum in `src/Storage/DeviceType.php` alongside the existing cases, and return it from your adapter's `getType()` method.
+Add a case for the new device to the `DeviceType` enum in `src/DeviceType.php` alongside the existing cases, and return it from your adapter's `getType()` method.
 
 ## 3. Test your adapter
 
@@ -28,16 +28,16 @@ After you finish adding your new adapter, you need to ensure that it is usable. 
 Great! You're almost there. You can now move onto writing some tests for your Adapter!  
 
 ### 3.1. Introduce new device tests
-Add tests for the newly added device adapter inside `tests/Storage/Device`. Use the existing adapter tests as a reference. The test file and class should be properly named `<Adapter class name>Test.php` and class should be `<Adapter class name>Test`
+Add tests for the newly added device adapter inside `tests/Device`. Use the existing adapter tests as a reference. The test file and class should be properly named `<Adapter class name>Test.php` and class should be `<Adapter class name>Test`
 
 ### 3.2. Run and verify tests
-Run tests using `bin/monorepo test storage` from the monorepo root and verify that everything is working correctly.
+Run tests using `bin/monorepo test storage` from the appwrite/appwrite root and verify that everything is working correctly.
 
 If everything goes well, raise a pull request and be ready to respond to any feedback which can arise during our code review.
 
 ## 4. Raise a pull request
 
-First of all, commit the changes with the message `Added YYY Storage adapter` and push the branch to your fork of the monorepo. If you visit your fork on GitHub, you will see a new alert saying you are ready to submit a pull request against `utopia-php/monorepo`. Follow the steps GitHub provides, and at the end, you will have your pull request submitted.
+First of all, commit the changes with the message `Added YYY Storage adapter` and push the branch to your fork of appwrite/appwrite. If you visit your fork on GitHub, you will see a new alert saying you are ready to submit a pull request against `appwrite/appwrite`. Follow the steps GitHub provides, and at the end, you will have your pull request submitted.
 
 ## 🤕 Stuck ?
 If you need any help with the contribution, feel free to head over to [our discord channel](https://appwrite.io/discord) and we'll be happy to help you out.

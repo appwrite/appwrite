@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "4eac57ef0ef24eca0848b4fa90a960eb",
+    "content-hash": "3eeffc438633bdc2c62fbac3ae6c509a",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3687,56 +3687,6 @@
                 "source": "https://github.com/utopia-php/servers/tree/0.4.11"
             },
             "time": "2026-09-02T15:57:19+00:00"
-        },
-        {
-            "name": "utopia-php/storage",
-            "version": "4.3.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/utopia-php/storage.git",
-                "reference": "7afbd2ed663db4ad2f3325e46afd685a5bbd4fbf"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/storage/zipball/7afbd2ed663db4ad2f3325e46afd685a5bbd4fbf",
-                "reference": "7afbd2ed663db4ad2f3325e46afd685a5bbd4fbf",
-                "shasum": ""
-            },
-            "require": {
-                "ext-curl": "*",
-                "ext-fileinfo": "*",
-                "ext-simplexml": "*",
-                "php": ">=8.5",
-                "psr/http-client": "^1.0",
-                "psr/http-message": "^1.1 || ^2.0",
-                "utopia-php/client": "^0.5",
-                "utopia-php/psr7": "0.2.*",
-                "utopia-php/telemetry": "^0.4.6",
-                "utopia-php/validators": "^1.0"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Utopia\\Storage\\": "src/Storage"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "description": "A simple Storage library to manage application storage",
-            "keywords": [
-                "framework",
-                "php",
-                "storage",
-                "upf",
-                "utopia"
-            ],
-            "support": {
-                "issues": "https://github.com/utopia-php/storage/issues",
-                "source": "https://github.com/utopia-php/storage/tree/4.3.0"
-            },
-            "time": "2026-09-24T12:25:17+00:00"
         },
         {
             "name": "utopia-php/usage",

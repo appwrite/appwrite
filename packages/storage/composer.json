@@ -17,13 +17,12 @@
     "authors": [],
     "autoload": {
         "psr-4": {
-            "Utopia\\Storage\\": "src/Storage"
+            "Utopia\\Storage\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Utopia\\Tests\\Storage\\": "tests/Storage",
-            "Utopia\\Tests\\Storage\\E2E\\": "tests/E2E"
+            "Utopia\\Storage\\Tests\\": "tests/"
         }
     },
     "require": {
