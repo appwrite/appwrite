@@ -1,8 +1,8 @@
 # Utopia Emails
 
-[![Tests](https://github.com/utopia-php/emails/workflows/Tests/badge.svg)](https://github.com/utopia-php/emails/actions/workflows/test.yml)
-[![Linter](https://github.com/utopia-php/emails/workflows/Linter/badge.svg)](https://github.com/utopia-php/emails/actions/workflows/linter.yml)
-[![CodeQL](https://github.com/utopia-php/emails/workflows/CodeQL/badge.svg)](https://github.com/utopia-php/emails/actions/workflows/codeql-analysis.yml)
+> [!IMPORTANT]
+> This repository is a read-only mirror of [`packages/emails`](https://github.com/appwrite/appwrite/tree/main/packages/emails) in [appwrite/appwrite](https://github.com/appwrite/appwrite). Development happens there — please open issues and pull requests against appwrite/appwrite.
+
 ![Total Downloads](https://img.shields.io/packagist/dt/utopia-php/emails.svg)
 [![Discord](https://img.shields.io/discord/564160730845151244)](https://appwrite.io/discord)
 

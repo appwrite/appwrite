@@ -319,4 +319,4 @@ temp/
 # Build artifacts
 build/
 dist/
-
+composer.lock
