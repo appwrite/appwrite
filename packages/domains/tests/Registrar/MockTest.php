@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Utopia\Tests\Registrar;
+namespace Utopia\Domains\Tests\Registrar;
 
 use Utopia\Cache\Adapter\None as NoneAdapter;
 use Utopia\Cache\Cache as UtopiaCache;

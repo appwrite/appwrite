@@ -20,7 +20,8 @@ class Contact
         public string $postalcode,
         public string $org,
         public ?string $owner = null,
-    ) {}
+    ) {
+    }
 
     public function toArray(): array
     {

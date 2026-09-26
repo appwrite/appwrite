@@ -26,12 +26,12 @@
     ],
     "autoload": {
         "psr-4": {
-            "Utopia\\Domains\\": "src/Domains"
+            "Utopia\\Domains\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Utopia\\Tests\\": "tests"
+            "Utopia\\Domains\\Tests\\": "tests/"
         }
     },
     "scripts": {

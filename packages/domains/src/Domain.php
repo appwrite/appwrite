@@ -71,7 +71,7 @@ class Domain
         $this->parts = explode('.', $this->domain);
 
         if (empty(self::$list)) {
-            self::$list = include __DIR__ . '/../../data/data.php';
+            self::$list = include __DIR__ . '/../data/data.php';
         }
     }
 

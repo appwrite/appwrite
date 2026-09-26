@@ -11,5 +11,6 @@ final readonly class Renewal
     public function __construct(
         public ?string $orderId = null,
         public ?DateTime $expiresAt = null,
-    ) {}
+    ) {
+    }
 }

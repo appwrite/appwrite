@@ -14,5 +14,6 @@ final readonly class Domain
         public ?DateTime $expiresAt = null,
         public ?bool $autoRenew = null,
         public ?array $nameservers = null,
-    ) {}
+    ) {
+    }
 }

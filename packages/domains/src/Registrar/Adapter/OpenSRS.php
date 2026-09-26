@@ -296,7 +296,7 @@ class OpenSRS extends Adapter
                 'skip_registry_lookup' => 1,
             ],
         ];
-        $tlds = $tlds === [] ? [] : array_map(fn($tld): string => '.' . ltrim((string) $tld, '.'), $tlds);
+        $tlds = $tlds === [] ? [] : array_map(fn ($tld): string => '.' . ltrim((string) $tld, '.'), $tlds);
 
         if ($tlds !== []) {
             $message['attributes']['tlds'] = $tlds;

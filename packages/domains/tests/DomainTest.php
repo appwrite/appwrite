@@ -15,7 +15,7 @@ declare(strict_types=1);
  * @license The MIT License (MIT) <http://www.opensource.org/licenses/mit-license.php>
  */
 
-namespace Utopia\Tests;
+namespace Utopia\Domains\Tests;
 
 use Exception;
 use PHPUnit\Framework\TestCase;

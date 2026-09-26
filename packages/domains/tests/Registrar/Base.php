@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Utopia\Tests\Registrar;
+namespace Utopia\Domains\Tests\Registrar;
 
 use PHPUnit\Framework\TestCase;
 use Utopia\Domains\Registrar;

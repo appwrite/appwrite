@@ -6,4 +6,6 @@ namespace Utopia\Domains\Registrar\Exception;
 
 use Utopia\Domains\Exception;
 
-class DomainTakenException extends Exception {}
+class PriceNotFoundException extends Exception
+{
+}

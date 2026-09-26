@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Utopia\Tests\Registrar;
+namespace Utopia\Domains\Tests\E2E\Registrar;
 
 use Utopia\Cache\Adapter\Memory;
 use Utopia\Cache\Cache as UtopiaCache;
@@ -13,6 +13,7 @@ use Utopia\Domains\Registrar\Exception\AuthException;
 use Utopia\Domains\Registrar\Exception\InvalidPeriodException;
 use Utopia\Domains\Registrar\Exception\UnsupportedTldException;
 use Utopia\Domains\Registrar\UpdateDetails;
+use Utopia\Domains\Tests\Registrar\Base;
 
 final class NameComTest extends Base
 {
@@ -104,7 +105,7 @@ final class NameComTest extends Base
     {
         $prefix = $this->generateRandomString();
         $domains = array_map(
-            fn(int $index): string => "{$prefix}-{$index}.com",
+            fn (int $index): string => "{$prefix}-{$index}.com",
             range(1, 51),
         );
 

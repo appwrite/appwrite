@@ -371,7 +371,7 @@ class NameCom extends Adapter
         ];
 
         if ($tlds !== []) {
-            $data['tldFilter'] = array_map(fn($tld): string => ltrim((string) $tld, '.'), $tlds);
+            $data['tldFilter'] = array_map(fn ($tld): string => ltrim((string) $tld, '.'), $tlds);
         }
 
         if ($limit) {
@@ -513,13 +513,13 @@ class NameCom extends Adapter
                 }
             }
 
-            if (!array_filter($priceMap, fn($p): bool => $p !== null)) {
+            if (!array_filter($priceMap, fn ($p): bool => $p !== null)) {
                 throw new PriceNotFoundException("Price not found for domain: {$domain}", 400);
             }
 
             if ($this->cache && !$availabilityFailed) {
                 $cacheData = array_map(
-                    fn($price): array => ['price' => $price !== null ? (float) $price : null, 'premium' => $isPremium],
+                    fn ($price): array => ['price' => $price !== null ? (float) $price : null, 'premium' => $isPremium],
                     $priceMap,
                 );
                 $this->cache->save($cacheKey, $cacheData);

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Utopia\Tests\Registrar;
+namespace Utopia\Domains\Tests\E2E\Registrar;
 
 use Utopia\Cache\Adapter\None as NoneAdapter;
 use Utopia\Cache\Cache as UtopiaCache;
@@ -12,6 +12,7 @@ use Utopia\Domains\Registrar\Adapter\OpenSRS;
 use Utopia\Domains\Registrar\Exception\AuthException;
 use Utopia\Domains\Registrar\Exception\DomainNotTransferableException;
 use Utopia\Domains\Registrar\UpdateDetails;
+use Utopia\Domains\Tests\Registrar\Base;
 
 final class OpenSRSTest extends Base
 {

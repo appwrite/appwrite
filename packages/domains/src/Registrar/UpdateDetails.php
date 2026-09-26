@@ -11,5 +11,6 @@ final class UpdateDetails
      */
     public function __construct(
         public ?bool $autoRenew = null,
-    ) {}
+    ) {
+    }
 }

@@ -2,9 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Utopia\Domains\Validator;
+namespace Utopia\Domains\Tests\Validator;
 
 use PHPUnit\Framework\TestCase;
+use Utopia\Domains\Validator\ApexDomain;
 
 final class ApexDomainTest extends TestCase
 {
