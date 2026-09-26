@@ -4,10 +4,13 @@ namespace Appwrite\Platform\Modules\Health\Http\Health\Geo;
 
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Response;
+use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
+use Utopia\Client\Client;
 use Utopia\Database\Document;
-use Utopia\Fetch\Client;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Psr7\Method;
+use Utopia\Psr7\Request\Factory as RequestFactory;
 use Utopia\System\System;
 
 class Get extends Action
@@ -42,10 +45,10 @@ class Get extends Action
         $checkStart = \microtime(true);
 
         try {
-            $client = new Client();
-            $client->setTimeout(3000);
-
-            $result = $client->fetch(\rtrim($geoEndpoint, '/') . '/health', Client::METHOD_GET);
+            $result = (new Client(new CurlAdapter()))
+                ->withTimeout(3)
+                ->withFollowRedirects(maxHops: 5)
+                ->sendRequest((new RequestFactory())->createRequest(Method::GET, \rtrim($geoEndpoint, '/') . '/health'));
 
             if ($result->getStatusCode() !== 200) {
                 throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Geo service returned status ' . $result->getStatusCode());

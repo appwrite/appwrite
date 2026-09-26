@@ -4,7 +4,11 @@ namespace Appwrite\Auth\OIDC;
 
 use Appwrite\Extend\Exception;
 use Utopia\Cache\Cache;
-use Utopia\Fetch\Client;
+use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
+use Utopia\Client\Client;
+use Utopia\Psr7\Header;
+use Utopia\Psr7\Method;
+use Utopia\Psr7\Request\Factory as RequestFactory;
 
 /**
  * Fetches a provider's JSON Web Key Set and caches its RSA keys as PEM.
@@ -18,8 +22,8 @@ class Jwks
     public const TTL = 21600; // 6 hours
     public const REFRESH_COOLDOWN = 60; // seconds between forced refetches per URL
 
-    private const CONNECT_TIMEOUT = 5 * 1000; // milliseconds
-    private const REQUEST_TIMEOUT = 10 * 1000; // milliseconds
+    private const CONNECT_TIMEOUT = 5; // seconds
+    private const REQUEST_TIMEOUT = 10; // seconds
 
     private const RSA_ENCRYPTION_OID = "\x06\x09\x2a\x86\x48\x86\xf7\x0d\x01\x01\x01"; // 1.2.840.113549.1.1.1
 
@@ -75,12 +79,11 @@ class Jwks
             $body = ($this->fetcher)($jwksUrl);
         } else {
             try {
-                $response = (new Client())
-                    ->setConnectTimeout(self::CONNECT_TIMEOUT)
-                    ->setTimeout(self::REQUEST_TIMEOUT)
-                    ->setAllowRedirects(false)
-                    ->setUserAgent('Appwrite')
-                    ->fetch($jwksUrl);
+                $response = (new Client(new CurlAdapter()))
+                    ->withConnectTimeout(self::CONNECT_TIMEOUT)
+                    ->withTimeout(self::REQUEST_TIMEOUT)
+                    ->withHeaders([Header::USER_AGENT => 'Appwrite'])
+                    ->sendRequest((new RequestFactory())->createRequest(Method::GET, $jwksUrl));
             } catch (\Throwable) {
                 $response = null;
             }
@@ -89,7 +92,7 @@ class Jwks
                 throw new Exception(Exception::USER_OAUTH2_PROVIDER_ERROR, 'Failed to fetch the provider signing keys. Please try again.');
             }
 
-            $body = $response->text();
+            $body = (string) $response->getBody();
         }
 
         $document = \json_decode($body, true);
