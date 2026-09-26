@@ -4,7 +4,7 @@ namespace Utopia\Http\Tests;
 
 use Utopia\Http\Adapter\FPM\Request as UtopiaFPMRequest;
 
-class UtopiaFPMRequestTest extends UtopiaFPMRequest
+class FPMRequest extends UtopiaFPMRequest
 {
     /**
      * @var array<string, mixed>|null

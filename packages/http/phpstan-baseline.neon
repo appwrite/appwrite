@@ -427,6 +427,30 @@ parameters:
 			path: tests/E2E/ResponseSwooleTest.php
 
 		-
+			message: '#^Method Utopia\\Http\\Tests\\FPMRequest\:\:getParams\(\) should return array\<string, mixed\> but returns array\<mixed, mixed\>\.$#'
+			identifier: return.type
+			count: 1
+			path: tests/FPMRequest.php
+
+		-
+			message: '#^Offset string might not exist on array\<string, mixed\>\|null\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: tests/FPMRequest.php
+
+		-
+			message: '#^Parameter \#1 \.\.\.\$arrays of function array_merge expects array, array\<string, mixed\>\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/FPMRequest.php
+
+		-
+			message: '#^Parameter \#2 \$haystack of function in_array expects array, array\<string, mixed\>\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/FPMRequest.php
+
+		-
 			message: '#^Cannot access offset ''name'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
@@ -643,7 +667,7 @@ parameters:
 			path: tests/HttpTest.php
 
 		-
-			message: '#^Parameter \#1 \$params of static method Utopia\\Http\\Tests\\UtopiaFPMRequestTest\:\:_setParams\(\) expects array\<string, mixed\>\|null, array given\.$#'
+			message: '#^Parameter \#1 \$params of static method Utopia\\Http\\Tests\\FPMRequest\:\:_setParams\(\) expects array\<string, mixed\>\|null, array given\.$#'
 			identifier: argument.type
 			count: 1
 			path: tests/HttpTest.php
@@ -1049,27 +1073,3 @@ parameters:
 			identifier: return.type
 			count: 1
 			path: tests/SwooleRequestTest.php
-
-		-
-			message: '#^Method Utopia\\Http\\Tests\\UtopiaFPMRequestTest\:\:getParams\(\) should return array\<string, mixed\> but returns array\<mixed, mixed\>\.$#'
-			identifier: return.type
-			count: 1
-			path: tests/UtopiaFPMRequestTest.php
-
-		-
-			message: '#^Offset string might not exist on array\<string, mixed\>\|null\.$#'
-			identifier: offsetAccess.notFound
-			count: 1
-			path: tests/UtopiaFPMRequestTest.php
-
-		-
-			message: '#^Parameter \#1 \.\.\.\$arrays of function array_merge expects array, array\<string, mixed\>\|null given\.$#'
-			identifier: argument.type
-			count: 1
-			path: tests/UtopiaFPMRequestTest.php
-
-		-
-			message: '#^Parameter \#2 \$haystack of function in_array expects array, array\<string, mixed\>\|null given\.$#'
-			identifier: argument.type
-			count: 1
-			path: tests/UtopiaFPMRequestTest.php

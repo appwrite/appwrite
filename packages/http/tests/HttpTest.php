@@ -158,7 +158,7 @@ final class HttpTest extends TestCase
             });
 
         ob_start();
-        $request = new UtopiaFPMRequestTest();
+        $request = new FPMRequest();
         $request::_setParams(['x' => 'param-x', 'y' => 'param-y', 'z' => 'param-z']);
         $this->http->execute($request, new Response());
         $result = ob_get_contents();
@@ -178,7 +178,7 @@ final class HttpTest extends TestCase
             });
 
         ob_start();
-        $request = new UtopiaFPMRequestTest();
+        $request = new FPMRequest();
         $request::_setParams(['x' => 'param-x', 'y' => 'param-y']);
         $this->http->execute($request, new Response());
         $result = ob_get_contents();
@@ -250,7 +250,7 @@ final class HttpTest extends TestCase
             });
 
         ob_start();
-        $request = new UtopiaFPMRequestTest();
+        $request = new FPMRequest();
         $request::_setParams(['x' => 'param-x', 'y' => 'param-y']);
         $_SERVER['REQUEST_URI'] = '/api';
         $this->http->execute($request, new Response());
@@ -261,7 +261,7 @@ final class HttpTest extends TestCase
 
         $resource = $this->resources->get('rand');
         ob_start();
-        $request = new UtopiaFPMRequestTest();
+        $request = new FPMRequest();
         $request::_setParams(['x' => 'param-x', 'y' => 'param-y']);
         $_SERVER['REQUEST_URI'] = '/homepage';
         $this->http->execute($request, new Response());
@@ -926,7 +926,7 @@ final class HttpTest extends TestCase
             });
 
         ob_start();
-        $request = new UtopiaFPMRequestTest();
+        $request = new FPMRequest();
         $request::_setParams(['func' => 'system']);
         $this->http->execute($request, new Response());
         $result = ob_get_contents();
@@ -959,7 +959,7 @@ final class HttpTest extends TestCase
         $run = function (string $path, array $params): string {
             $_SERVER['REQUEST_URI'] = $path;
 
-            $request = new UtopiaFPMRequestTest();
+            $request = new FPMRequest();
             $request::_setParams($params);
 
             ob_start();
@@ -1044,7 +1044,7 @@ final class HttpTest extends TestCase
             });
 
         ob_start();
-        $request = new UtopiaFPMRequestTest();
+        $request = new FPMRequest();
         $request::_setParams(['locale' => 'es']);
         $this->http->execute($request, new Response());
         $result = ob_get_contents();
