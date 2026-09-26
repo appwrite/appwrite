@@ -157,12 +157,12 @@ class Router
             return self::$wildcard !== null ? new RouteMatch(self::$wildcard, []) : null;
         }
 
-        $parts = array_values(array_filter(explode('/', $path), fn($segment) => $segment !== ''));
+        $parts = array_values(array_filter(explode('/', $path), fn ($segment) => $segment !== ''));
         $length = \count($parts) - 1;
-        $filteredParams = array_filter(self::$params, fn($i) => $i <= $length);
+        $filteredParams = array_filter(self::$params, fn ($i) => $i <= $length);
 
         foreach (self::combinations($filteredParams) as $sample) {
-            $sample = array_filter($sample, fn(int $i) => $i <= $length);
+            $sample = array_filter($sample, fn (int $i) => $i <= $length);
             $template = implode(
                 '/',
                 array_replace(

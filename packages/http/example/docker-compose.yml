@@ -1,8 +1,0 @@
-services:
-  server:
-    build:
-      context: .
-    ports: 
-      - "80:80"
-    volumes:
-      - ./src:/usr/src/code/src

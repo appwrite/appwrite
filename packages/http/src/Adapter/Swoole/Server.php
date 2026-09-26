@@ -106,8 +106,8 @@ class Server extends Adapter
     {
         $this->server->on('request', function (SwooleRequest $request, SwooleResponse $response) use ($callback) {
             $context = new Container($this->resources);
-            $context->set('swooleRequest', fn() => $request);
-            $context->set('swooleResponse', fn() => $response);
+            $context->set('swooleRequest', fn () => $request);
+            $context->set('swooleResponse', fn () => $response);
 
             $cid = Coroutine::getCid();
             if ($cid !== -1) {
@@ -191,19 +191,19 @@ class Server extends Adapter
         // service.instance.id is accurate. max_coroutine is a per-worker ceiling
         // (PHPCoroutine::config is thread-local), so it pairs with coroutine_num.
         foreach (self::WORKER_STATS as $key => $name) {
-            $observe($name, fn() => $server->stats()[$key] ?? null);
+            $observe($name, fn () => $server->stats()[$key] ?? null);
         }
-        $observe(self::METRIC_COROUTINE_MAX, fn() => $settings['max_coroutine'] ?? 100_000);
+        $observe(self::METRIC_COROUTINE_MAX, fn () => $settings['max_coroutine'] ?? 100_000);
 
         // Co::stats() reflects this worker's coroutine scheduler.
         foreach (self::COROUTINE_STATS as $key => $name) {
-            $observe($name, fn() => Coroutine::stats()[$key] ?? 0);
+            $observe($name, fn () => Coroutine::stats()[$key] ?? 0);
         }
-        $observe(self::METRIC_TIMERS_ACTIVE, fn() => Timer::stats()['num'] ?? 0);
+        $observe(self::METRIC_TIMERS_ACTIVE, fn () => Timer::stats()['num'] ?? 0);
         // real_usage=false reports the in-use script heap, not the OS pool (which
         // grows in slabs and rarely shrinks), revealing per-request churn.
-        $observe(self::METRIC_MEMORY_USAGE, fn() => memory_get_usage(false));
-        $observe(self::METRIC_MEMORY_PEAK, fn() => memory_get_peak_usage(false));
+        $observe(self::METRIC_MEMORY_USAGE, fn () => memory_get_usage(false));
+        $observe(self::METRIC_MEMORY_PEAK, fn () => memory_get_peak_usage(false));
 
         // Co::sleep(10ms) should take ~10ms; any extra is how long the event loop
         // was blocked. Needs a coroutine, so it's skipped in non-coroutine mode.
@@ -228,9 +228,9 @@ class Server extends Adapter
         }
 
         foreach (self::SERVER_STATS as $key => $name) {
-            $observe($name, fn() => $server->stats()[$key] ?? null);
+            $observe($name, fn () => $server->stats()[$key] ?? null);
         }
-        $observe(self::METRIC_REACTOR_THREADS, fn() => $settings['reactor_num'] ?? swoole_cpu_num());
+        $observe(self::METRIC_REACTOR_THREADS, fn () => $settings['reactor_num'] ?? swoole_cpu_num());
     }
 
     public function onStart(callable $callback): void

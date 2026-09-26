@@ -1,8 +1,6 @@
 <?php
 
-namespace Utopia\Http\Tests;
-
-use Tests\E2E\Client;
+namespace Utopia\Http\Tests\E2E;
 
 trait BaseTest
 {

@@ -15,7 +15,8 @@ class Server extends Adapter
     public function __construct(
         private Container $resources,
         private TrustedHeaders $trusted = new TrustedHeaders(),
-    ) {}
+    ) {
+    }
 
     public function onRequest(callable $callback): void
     {
@@ -23,8 +24,8 @@ class Server extends Adapter
         $response = new Response();
 
         $this->context = new Container($this->resources);
-        $this->context->set('fpmRequest', fn() => $request);
-        $this->context->set('fpmResponse', fn() => $response);
+        $this->context->set('fpmRequest', fn () => $request);
+        $this->context->set('fpmResponse', fn () => $response);
 
         try {
             \call_user_func($callback, $request, $response);
@@ -48,5 +49,7 @@ class Server extends Adapter
         return $this->context ?? $this->resources;
     }
 
-    public function start(): void {}
+    public function start(): void
+    {
+    }
 }

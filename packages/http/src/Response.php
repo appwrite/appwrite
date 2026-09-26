@@ -561,7 +561,7 @@ abstract class Response
      */
     public function removeCookie(string $name): static
     {
-        $this->cookies = array_filter($this->cookies, fn($cookie) => $cookie['name'] !== $name);
+        $this->cookies = array_filter($this->cookies, fn ($cookie) => $cookie['name'] !== $name);
 
         return $this;
     }

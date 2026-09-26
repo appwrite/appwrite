@@ -1,0 +1,1075 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Method Utopia\\Http\\Adapter\\FPM\\Request\:\:generateCookies\(\) should return array\<string, string\> but returns array\<mixed\>\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Adapter/FPM/Request.php
+
+		-
+			message: '#^Method Utopia\\Http\\Adapter\\FPM\\Request\:\:generateInput\(\) should return array\<string, mixed\> but returns array\<mixed\>\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Adapter/FPM/Request.php
+
+		-
+			message: '#^Method Utopia\\Http\\Adapter\\FPM\\Request\:\:getFiles\(\) should return array\<string, mixed\> but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Adapter/FPM/Request.php
+
+		-
+			message: '#^Method Utopia\\Http\\Adapter\\FPM\\Request\:\:getServer\(\) should return string\|null but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Adapter/FPM/Request.php
+
+		-
+			message: '#^Property Utopia\\Http\\Request\:\:\$cookies \(array\<string, string\>\|null\) does not accept array\<mixed\>\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: src/Adapter/FPM/Request.php
+
+		-
+			message: '#^Property Utopia\\Http\\Request\:\:\$payload \(array\<string, mixed\>\|null\) does not accept array\<mixed\>\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: src/Adapter/FPM/Request.php
+
+		-
+			message: '#^Property Utopia\\Http\\Request\:\:\$queryString \(array\<string, mixed\>\|null\) does not accept array\<mixed\>\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: src/Adapter/FPM/Request.php
+
+		-
+			message: '#^Parameter \#3 \$options of function setcookie expects array\{expires\?\: int, path\?\: string, domain\?\: string, secure\?\: bool, httponly\?\: bool, samesite\?\: ''Lax''\|''lax''\|''None''\|''none''\|''Strict''\|''strict'', partitioned\?\: bool\}, array\{expires\: mixed, path\: mixed, domain\: mixed, secure\: mixed, httponly\: mixed, samesite\: mixed\} given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapter/FPM/Response.php
+
+		-
+			message: '#^Argument of an invalid type mixed supplied for foreach, only iterables are supported\.$#'
+			identifier: foreach.nonIterable
+			count: 1
+			path: src/Adapter/Swoole/Request.php
+
+		-
+			message: '#^Cannot access offset string on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 3
+			path: src/Adapter/Swoole/Request.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 1
+			path: src/Adapter/Swoole/Request.php
+
+		-
+			message: '#^Method Utopia\\Http\\Adapter\\Swoole\\Request\:\:generateCookies\(\) should return array\<string, string\> but returns array\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Adapter/Swoole/Request.php
+
+		-
+			message: '#^Method Utopia\\Http\\Adapter\\Swoole\\Request\:\:generateInput\(\) should return array\<string, mixed\> but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Adapter/Swoole/Request.php
+
+		-
+			message: '#^Method Utopia\\Http\\Adapter\\Swoole\\Request\:\:getFiles\(\) should return array\<string, mixed\> but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Adapter/Swoole/Request.php
+
+		-
+			message: '#^Method Utopia\\Http\\Adapter\\Swoole\\Request\:\:getServer\(\) should return string\|null but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Adapter/Swoole/Request.php
+
+		-
+			message: '#^Parameter \#1 \$callback of function array_map expects \(callable\(mixed\)\: mixed\)\|null, Closure\(bool\|float\|GMP\|int\|resource\|string\|null\)\: string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapter/Swoole/Request.php
+
+		-
+			message: '#^Parameter \#1 \$string of function strtolower expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapter/Swoole/Request.php
+
+		-
+			message: '#^Property Utopia\\Http\\Request\:\:\$cookies \(array\<string, string\>\|null\) does not accept mixed\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: src/Adapter/Swoole/Request.php
+
+		-
+			message: '#^Property Utopia\\Http\\Request\:\:\$payload \(array\<string, mixed\>\|null\) does not accept mixed\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: src/Adapter/Swoole/Request.php
+
+		-
+			message: '#^Property Utopia\\Http\\Request\:\:\$queryString \(array\<string, mixed\>\|null\) does not accept mixed\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: src/Adapter/Swoole/Request.php
+
+		-
+			message: '#^Method Utopia\\Http\\Adapter\\Swoole\\Response\:\:write\(\) should return bool but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Adapter/Swoole/Response.php
+
+		-
+			message: '#^Cannot access offset ''__utopia__'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: src/Adapter/Swoole/Server.php
+
+		-
+			message: '#^Cannot access offset ''abort_count''\|''accept_count''\|''close_count''\|''concurrency''\|''connection_num''\|''dispatch_count''\|''idle_worker_num''\|''request_count''\|''response_count''\|''task_worker_num''\|''total_recv_bytes''\|''total_send_bytes''\|''worker_num'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Swoole/Server.php
+
+		-
+			message: '#^Cannot access offset ''aio_task_num''\|''aio_worker_num''\|''coroutine_last_cid''\|''event_num''\|''signal_listener_num'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Swoole/Server.php
+
+		-
+			message: '#^Cannot access offset ''coroutine_num''\|''coroutine_peek_num''\|''worker_concurrency''\|''worker_dispatch_count''\|''worker_request_count''\|''worker_response_count'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Swoole/Server.php
+
+		-
+			message: '#^Cannot access offset ''max_coroutine'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Swoole/Server.php
+
+		-
+			message: '#^Cannot access offset ''reactor_num'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Swoole/Server.php
+
+		-
+			message: '#^Method Utopia\\Http\\Adapter\\Swoole\\Server\:\:context\(\) should return Utopia\\DI\\Container but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Adapter/Swoole/Server.php
+
+		-
+			message: '#^Parameter \#1 of callable callable\(float\|int, iterable\<non\-empty\-string, array\<mixed\>\|bool\|float\|int\|string\|null\>\)\: void expects float\|int, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapter/Swoole/Server.php
+
+		-
+			message: '#^Cannot access offset ''__utopia__'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: src/Adapter/SwooleCoroutine/Server.php
+
+		-
+			message: '#^Method Utopia\\Http\\Adapter\\SwooleCoroutine\\Server\:\:context\(\) should return Utopia\\DI\\Container but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Adapter/SwooleCoroutine/Server.php
+
+		-
+			message: '#^Cannot access offset ''contents'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Files.php
+
+		-
+			message: '#^Cannot access offset ''mimeType'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Files.php
+
+		-
+			message: '#^Method Utopia\\Http\\Files\:\:getFileContents\(\) should return string but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Files.php
+
+		-
+			message: '#^Method Utopia\\Http\\Files\:\:getFileMimeType\(\) should return string but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Files.php
+
+		-
+			message: '#^Argument of an invalid type mixed supplied for foreach, only iterables are supported\.$#'
+			identifier: foreach.nonIterable
+			count: 2
+			path: src/Http.php
+
+		-
+			message: '#^Cannot access offset ''aliases'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: src/Http.php
+
+		-
+			message: '#^Cannot access offset ''default'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: src/Http.php
+
+		-
+			message: '#^Cannot access offset ''injections'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Http.php
+
+		-
+			message: '#^Cannot access offset ''name'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: src/Http.php
+
+		-
+			message: '#^Cannot access offset ''optional'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: src/Http.php
+
+		-
+			message: '#^Cannot access offset ''order'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: src/Http.php
+
+		-
+			message: '#^Cannot access offset ''skipValidation'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: src/Http.php
+
+		-
+			message: '#^Method Utopia\\Http\\Http\:\:getArguments\(\) should return array\<int, mixed\> but returns array\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Http.php
+
+		-
+			message: '#^Method Utopia\\Http\\Http\:\:getEnv\(\) should return string\|null but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Http.php
+
+		-
+			message: '#^Parameter \#1 \$callback of function array_map expects \(callable\(mixed\)\: mixed\)\|null, Closure\(string\)\: mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Http.php
+
+		-
+			message: '#^Parameter \#1 \$id of method Utopia\\DI\\Container\:\:get\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Http.php
+
+		-
+			message: '#^Parameter \#1 \$key of function array_key_exists expects int\|string, mixed given\.$#'
+			identifier: argument.type
+			count: 3
+			path: src/Http.php
+
+		-
+			message: '#^Parameter \#1 \$param of method Utopia\\Http\\Http\:\:resolveValidator\(\) expects array\<string, mixed\>, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Http.php
+
+		-
+			message: '#^Parameter \#2 \$array of function array_map expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Http.php
+
+		-
+			message: '#^Parameter \#2 \$param of method Utopia\\Http\\Http\:\:validate\(\) expects array\<string, mixed\>, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Http.php
+
+		-
+			message: '#^Possibly invalid array key type mixed\.$#'
+			identifier: offsetAccess.invalidOffset
+			count: 2
+			path: src/Http.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 2
+			path: src/Request.php
+
+		-
+			message: '#^Method Utopia\\Http\\Request\:\:decodePayload\(\) should return array\<string, mixed\> but returns array\<mixed\>\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Request.php
+
+		-
+			message: '#^Method Utopia\\Http\\Request\:\:getRangeEnd\(\) should return int\|null but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Request.php
+
+		-
+			message: '#^Method Utopia\\Http\\Request\:\:getRangeStart\(\) should return int\|null but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Request.php
+
+		-
+			message: '#^Method Utopia\\Http\\Request\:\:getRangeUnit\(\) should return string\|null but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Request.php
+
+		-
+			message: '#^Parameter \#1 \$name of method Utopia\\Http\\Response\:\:sendCookie\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Response.php
+
+		-
+			message: '#^Parameter \#2 \$supported of static method Utopia\\Compression\\Compression\:\:fromAcceptEncoding\(\) expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Response.php
+
+		-
+			message: '#^Parameter \#2 \$value of method Utopia\\Http\\Response\:\:sendCookie\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Response.php
+
+		-
+			message: '#^Parameter \#1 \$keys of function array_fill_keys expects an array of values castable to string, array\<int, mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Router.php
+
+		-
+			message: '#^Parameter \#1 \$set of static method Utopia\\Http\\Router\:\:combinations\(\) expects array\<int, mixed\>, array\<int\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Router.php
+
+		-
+			message: '#^Parameter \#2 \$callback of function array_filter expects \(callable\(mixed\)\: bool\)\|null, Closure\(int\)\: bool given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Router.php
+
+		-
+			message: '#^Cannot access offset string on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/View.php
+
+		-
+			message: '#^Possibly invalid array key type int\|string\|null\.$#'
+			identifier: offsetAccess.invalidOffset
+			count: 2
+			path: tests/E2E/Client.php
+
+		-
+			message: '#^Cannot access offset ''key1'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/E2E/ResponseFPMTest.php
+
+		-
+			message: '#^Cannot access offset ''key2'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/E2E/ResponseFPMTest.php
+
+		-
+			message: '#^Cannot access offset ''status\-code'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 9
+			path: tests/E2E/ResponseFPMTest.php
+
+		-
+			message: '#^Cannot access offset ''key1'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/E2E/ResponseSwooleTest.php
+
+		-
+			message: '#^Cannot access offset ''key2'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/E2E/ResponseSwooleTest.php
+
+		-
+			message: '#^Cannot access offset ''status\-code'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 6
+			path: tests/E2E/ResponseSwooleTest.php
+
+		-
+			message: '#^Cannot access offset ''name'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/FPMResponseTest.php
+
+		-
+			message: '#^Cannot call method addCookie\(\) on Utopia\\Http\\Adapter\\FPM\\Response\|null\.$#'
+			identifier: method.nonObject
+			count: 3
+			path: tests/FPMResponseTest.php
+
+		-
+			message: '#^Cannot call method addHeader\(\) on Utopia\\Http\\Adapter\\FPM\\Response\|null\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: tests/FPMResponseTest.php
+
+		-
+			message: '#^Cannot call method getContentType\(\) on Utopia\\Http\\Adapter\\FPM\\Response\|null\.$#'
+			identifier: method.nonObject
+			count: 5
+			path: tests/FPMResponseTest.php
+
+		-
+			message: '#^Cannot call method getStatusCode\(\) on Utopia\\Http\\Adapter\\FPM\\Response\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: tests/FPMResponseTest.php
+
+		-
+			message: '#^Cannot call method html\(\) on Utopia\\Http\\Adapter\\FPM\\Response\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: tests/FPMResponseTest.php
+
+		-
+			message: '#^Cannot call method iframe\(\) on Utopia\\Http\\Adapter\\FPM\\Response\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: tests/FPMResponseTest.php
+
+		-
+			message: '#^Cannot call method json\(\) on Utopia\\Http\\Adapter\\FPM\\Response\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: tests/FPMResponseTest.php
+
+		-
+			message: '#^Cannot call method jsonp\(\) on Utopia\\Http\\Adapter\\FPM\\Response\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: tests/FPMResponseTest.php
+
+		-
+			message: '#^Cannot call method redirect\(\) on Utopia\\Http\\Adapter\\FPM\\Response\|null\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: tests/FPMResponseTest.php
+
+		-
+			message: '#^Cannot call method setContentType\(\) on Utopia\\Http\\Adapter\\FPM\\Response\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: tests/FPMResponseTest.php
+
+		-
+			message: '#^Cannot call method setStatusCode\(\) on Utopia\\Http\\Adapter\\FPM\\Response\|null\.$#'
+			identifier: method.nonObject
+			count: 3
+			path: tests/FPMResponseTest.php
+
+		-
+			message: '#^Cannot call method text\(\) on Utopia\\Http\\Adapter\\FPM\\Response\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: tests/FPMResponseTest.php
+
+		-
+			message: '#^Binary operation "\." between ''\(init\)\-'' and mixed results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: tests/HttpTest.php
+
+		-
+			message: '#^Binary operation "\." between ''callback\-value\: '' and mixed results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: tests/HttpTest.php
+
+		-
+			message: '#^Binary operation "\." between ''error\-'' and mixed results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 2
+			path: tests/HttpTest.php
+
+		-
+			message: '#^Binary operation "\." between ''error\: '' and mixed results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: tests/HttpTest.php
+
+		-
+			message: '#^Binary operation "\." between ''func\-value\: '' and mixed results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: tests/HttpTest.php
+
+		-
+			message: '#^Binary operation "\." between ''generated\: '' and mixed results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: tests/HttpTest.php
+
+		-
+			message: '#^Binary operation "\." between ''init\-'' and mixed results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 3
+			path: tests/HttpTest.php
+
+		-
+			message: '#^Binary operation "\." between ''userinfo\:'' and mixed results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: tests/HttpTest.php
+
+		-
+			message: '#^Binary operation "\." between mixed and ''\*'' results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: tests/HttpTest.php
+
+		-
+			message: '#^Binary operation "\." between mixed and ''\-'' results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 5
+			path: tests/HttpTest.php
+
+		-
+			message: '#^Binary operation "\." between mixed and ''\-param\-x\-param\-y'' results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: tests/HttpTest.php
+
+		-
+			message: '#^Binary operation "\." between non\-falsy\-string and mixed results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: tests/HttpTest.php
+
+		-
+			message: '#^Cannot call method error\(\) on Utopia\\Http\\Http\|null\.$#'
+			identifier: method.nonObject
+			count: 4
+			path: tests/HttpTest.php
+
+		-
+			message: '#^Cannot call method execute\(\) on Utopia\\Http\\Http\|null\.$#'
+			identifier: method.nonObject
+			count: 28
+			path: tests/HttpTest.php
+
+		-
+			message: '#^Cannot call method get\(\) on Utopia\\DI\\Container\|null\.$#'
+			identifier: method.nonObject
+			count: 5
+			path: tests/HttpTest.php
+
+		-
+			message: '#^Cannot call method getMessage\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 3
+			path: tests/HttpTest.php
+
+		-
+			message: '#^Cannot call method getMethod\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: tests/HttpTest.php
+
+		-
+			message: '#^Cannot call method init\(\) on Utopia\\Http\\Http\|null\.$#'
+			identifier: method.nonObject
+			count: 6
+			path: tests/HttpTest.php
+
+		-
+			message: '#^Cannot call method match\(\) on Utopia\\Http\\Http\|null\.$#'
+			identifier: method.nonObject
+			count: 7
+			path: tests/HttpTest.php
+
+		-
+			message: '#^Cannot call method run\(\) on Utopia\\Http\\Http\|null\.$#'
+			identifier: method.nonObject
+			count: 6
+			path: tests/HttpTest.php
+
+		-
+			message: '#^Cannot call method send\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 4
+			path: tests/HttpTest.php
+
+		-
+			message: '#^Cannot call method set\(\) on Utopia\\DI\\Container\|null\.$#'
+			identifier: method.nonObject
+			count: 3
+			path: tests/HttpTest.php
+
+		-
+			message: '#^Cannot call method shutdown\(\) on Utopia\\Http\\Http\|null\.$#'
+			identifier: method.nonObject
+			count: 5
+			path: tests/HttpTest.php
+
+		-
+			message: '#^Parameter \#1 \$params of static method Utopia\\Http\\Tests\\UtopiaFPMRequestTest\:\:_setParams\(\) expects array\<string, mixed\>\|null, array given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/HttpTest.php
+
+		-
+			message: '#^Parameter \#1 \(mixed\) of echo cannot be converted to string\.$#'
+			identifier: echo.nonString
+			count: 12
+			path: tests/HttpTest.php
+
+		-
+			message: '#^Parameter \#2 \(mixed\) of echo cannot be converted to string\.$#'
+			identifier: echo.nonString
+			count: 4
+			path: tests/HttpTest.php
+
+		-
+			message: '#^Property Utopia\\Http\\Tests\\HttpTest\:\:\$get \(array\<string, mixed\>\) does not accept array\<mixed\>\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: tests/HttpTest.php
+
+		-
+			message: '#^Property Utopia\\Http\\Tests\\HttpTest\:\:\$method \(string\|null\) does not accept mixed\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: tests/HttpTest.php
+
+		-
+			message: '#^Property Utopia\\Http\\Tests\\HttpTest\:\:\$post \(array\<string, mixed\>\) does not accept array\<mixed\>\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: tests/HttpTest.php
+
+		-
+			message: '#^Property Utopia\\Http\\Tests\\HttpTest\:\:\$uri \(string\|null\) does not accept mixed\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: tests/HttpTest.php
+
+		-
+			message: '#^Cannot access offset ''accept'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/RequestTest.php
+
+		-
+			message: '#^Cannot access offset ''x\-custom'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/RequestTest.php
+
+		-
+			message: '#^Cannot call method addHeader\(\) on Utopia\\Http\\Adapter\\FPM\\Request\|null\.$#'
+			identifier: method.nonObject
+			count: 6
+			path: tests/RequestTest.php
+
+		-
+			message: '#^Cannot call method getAccept\(\) on Utopia\\Http\\Adapter\\FPM\\Request\|null\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: tests/RequestTest.php
+
+		-
+			message: '#^Cannot call method getContentRangeEnd\(\) on Utopia\\Http\\Adapter\\FPM\\Request\|null\.$#'
+			identifier: method.nonObject
+			count: 7
+			path: tests/RequestTest.php
+
+		-
+			message: '#^Cannot call method getContentRangeSize\(\) on Utopia\\Http\\Adapter\\FPM\\Request\|null\.$#'
+			identifier: method.nonObject
+			count: 7
+			path: tests/RequestTest.php
+
+		-
+			message: '#^Cannot call method getContentRangeStart\(\) on Utopia\\Http\\Adapter\\FPM\\Request\|null\.$#'
+			identifier: method.nonObject
+			count: 7
+			path: tests/RequestTest.php
+
+		-
+			message: '#^Cannot call method getContentRangeUnit\(\) on Utopia\\Http\\Adapter\\FPM\\Request\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: tests/RequestTest.php
+
+		-
+			message: '#^Cannot call method getCookie\(\) on Utopia\\Http\\Adapter\\FPM\\Request\|null\.$#'
+			identifier: method.nonObject
+			count: 4
+			path: tests/RequestTest.php
+
+		-
+			message: '#^Cannot call method getCookieParams\(\) on Utopia\\Http\\Adapter\\FPM\\Request\|null\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: tests/RequestTest.php
+
+		-
+			message: '#^Cannot call method getHeader\(\) on Utopia\\Http\\Adapter\\FPM\\Request\|null\.$#'
+			identifier: method.nonObject
+			count: 11
+			path: tests/RequestTest.php
+
+		-
+			message: '#^Cannot call method getHeaderLine\(\) on Utopia\\Http\\Adapter\\FPM\\Request\|null\.$#'
+			identifier: method.nonObject
+			count: 3
+			path: tests/RequestTest.php
+
+		-
+			message: '#^Cannot call method getHeaders\(\) on Utopia\\Http\\Adapter\\FPM\\Request\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: tests/RequestTest.php
+
+		-
+			message: '#^Cannot call method getHostname\(\) on Utopia\\Http\\Adapter\\FPM\\Request\|null\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: tests/RequestTest.php
+
+		-
+			message: '#^Cannot call method getIP\(\) on Utopia\\Http\\Adapter\\FPM\\Request\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: tests/RequestTest.php
+
+		-
+			message: '#^Cannot call method getMethod\(\) on Utopia\\Http\\Adapter\\FPM\\Request\|null\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: tests/RequestTest.php
+
+		-
+			message: '#^Cannot call method getOrigin\(\) on Utopia\\Http\\Adapter\\FPM\\Request\|null\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: tests/RequestTest.php
+
+		-
+			message: '#^Cannot call method getPayload\(\) on Utopia\\Http\\Adapter\\FPM\\Request\|null\.$#'
+			identifier: method.nonObject
+			count: 3
+			path: tests/RequestTest.php
+
+		-
+			message: '#^Cannot call method getPort\(\) on Utopia\\Http\\Adapter\\FPM\\Request\|null\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: tests/RequestTest.php
+
+		-
+			message: '#^Cannot call method getProtocol\(\) on Utopia\\Http\\Adapter\\FPM\\Request\|null\.$#'
+			identifier: method.nonObject
+			count: 3
+			path: tests/RequestTest.php
+
+		-
+			message: '#^Cannot call method getQuery\(\) on Utopia\\Http\\Adapter\\FPM\\Request\|null\.$#'
+			identifier: method.nonObject
+			count: 4
+			path: tests/RequestTest.php
+
+		-
+			message: '#^Cannot call method getRangeEnd\(\) on Utopia\\Http\\Adapter\\FPM\\Request\|null\.$#'
+			identifier: method.nonObject
+			count: 10
+			path: tests/RequestTest.php
+
+		-
+			message: '#^Cannot call method getRangeStart\(\) on Utopia\\Http\\Adapter\\FPM\\Request\|null\.$#'
+			identifier: method.nonObject
+			count: 10
+			path: tests/RequestTest.php
+
+		-
+			message: '#^Cannot call method getRangeUnit\(\) on Utopia\\Http\\Adapter\\FPM\\Request\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: tests/RequestTest.php
+
+		-
+			message: '#^Cannot call method getRawPayload\(\) on Utopia\\Http\\Adapter\\FPM\\Request\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: tests/RequestTest.php
+
+		-
+			message: '#^Cannot call method getReferer\(\) on Utopia\\Http\\Adapter\\FPM\\Request\|null\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: tests/RequestTest.php
+
+		-
+			message: '#^Cannot call method getServer\(\) on Utopia\\Http\\Adapter\\FPM\\Request\|null\.$#'
+			identifier: method.nonObject
+			count: 4
+			path: tests/RequestTest.php
+
+		-
+			message: '#^Cannot call method getSize\(\) on Utopia\\Http\\Adapter\\FPM\\Request\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: tests/RequestTest.php
+
+		-
+			message: '#^Cannot call method getURI\(\) on Utopia\\Http\\Adapter\\FPM\\Request\|null\.$#'
+			identifier: method.nonObject
+			count: 3
+			path: tests/RequestTest.php
+
+		-
+			message: '#^Cannot call method getUserAgent\(\) on Utopia\\Http\\Adapter\\FPM\\Request\|null\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: tests/RequestTest.php
+
+		-
+			message: '#^Cannot call method hasHeader\(\) on Utopia\\Http\\Adapter\\FPM\\Request\|null\.$#'
+			identifier: method.nonObject
+			count: 3
+			path: tests/RequestTest.php
+
+		-
+			message: '#^Cannot call method removeHeader\(\) on Utopia\\Http\\Adapter\\FPM\\Request\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: tests/RequestTest.php
+
+		-
+			message: '#^Cannot call method setCookieParams\(\) on Utopia\\Http\\Adapter\\FPM\\Request\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: tests/RequestTest.php
+
+		-
+			message: '#^Cannot call method setHeader\(\) on Utopia\\Http\\Adapter\\FPM\\Request\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: tests/RequestTest.php
+
+		-
+			message: '#^Cannot call method setPayload\(\) on Utopia\\Http\\Adapter\\FPM\\Request\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: tests/RequestTest.php
+
+		-
+			message: '#^Cannot call method setQueryString\(\) on Utopia\\Http\\Adapter\\FPM\\Request\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: tests/RequestTest.php
+
+		-
+			message: '#^Cannot call method setServer\(\) on Utopia\\Http\\Adapter\\FPM\\Request\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: tests/RequestTest.php
+
+		-
+			message: '#^Cannot call method setURI\(\) on Utopia\\Http\\Adapter\\FPM\\Request\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: tests/RequestTest.php
+
+		-
+			message: '#^Parameter \#1 \$objectOrClass of class ReflectionClass constructor expects class\-string\<Utopia\\Http\\Adapter\\FPM\\Request\>\|Utopia\\Http\\Adapter\\FPM\\Request, Utopia\\Http\\Adapter\\FPM\\Request\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/RequestTest.php
+
+		-
+			message: '#^Cannot access offset ''name'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: tests/RouteTest.php
+
+		-
+			message: '#^Cannot call method action\(\) on Utopia\\Http\\Route\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: tests/RouteTest.php
+
+		-
+			message: '#^Cannot call method desc\(\) on Utopia\\Http\\Route\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: tests/RouteTest.php
+
+		-
+			message: '#^Cannot call method getAction\(\) on Utopia\\Http\\Route\|null\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: tests/RouteTest.php
+
+		-
+			message: '#^Cannot call method getDesc\(\) on Utopia\\Http\\Route\|null\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: tests/RouteTest.php
+
+		-
+			message: '#^Cannot call method getGroups\(\) on Utopia\\Http\\Route\|null\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: tests/RouteTest.php
+
+		-
+			message: '#^Cannot call method getHook\(\) on Utopia\\Http\\Route\|null\.$#'
+			identifier: method.nonObject
+			count: 3
+			path: tests/RouteTest.php
+
+		-
+			message: '#^Cannot call method getInjections\(\) on Utopia\\Http\\Route\|null\.$#'
+			identifier: method.nonObject
+			count: 4
+			path: tests/RouteTest.php
+
+		-
+			message: '#^Cannot call method getLabel\(\) on Utopia\\Http\\Route\|null\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: tests/RouteTest.php
+
+		-
+			message: '#^Cannot call method getMethod\(\) on Utopia\\Http\\Route\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: tests/RouteTest.php
+
+		-
+			message: '#^Cannot call method getMethods\(\) on Utopia\\Http\\Route\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: tests/RouteTest.php
+
+		-
+			message: '#^Cannot call method getParams\(\) on Utopia\\Http\\Route\|null\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: tests/RouteTest.php
+
+		-
+			message: '#^Cannot call method getPath\(\) on Utopia\\Http\\Route\|null\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: tests/RouteTest.php
+
+		-
+			message: '#^Cannot call method groups\(\) on Utopia\\Http\\Route\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: tests/RouteTest.php
+
+		-
+			message: '#^Cannot call method hook\(\) on Utopia\\Http\\Route\|null\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: tests/RouteTest.php
+
+		-
+			message: '#^Cannot call method inject\(\) on Utopia\\Http\\Route\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: tests/RouteTest.php
+
+		-
+			message: '#^Cannot call method label\(\) on Utopia\\Http\\Route\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: tests/RouteTest.php
+
+		-
+			message: '#^Cannot call method param\(\) on Utopia\\Http\\Route\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: tests/RouteTest.php
+
+		-
+			message: '#^Cannot call method path\(\) on Utopia\\Http\\Route\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: tests/RouteTest.php
+
+		-
+			message: '#^Cannot call method parse\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: tests/SwooleRequestTest.php
+
+		-
+			message: '#^Method Utopia\\Http\\Tests\\SwooleRequestTest\:\:schemeRequest\(\) should return Swoole\\Http\\Request but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: tests/SwooleRequestTest.php
+
+		-
+			message: '#^Method Utopia\\Http\\Tests\\SwooleRequestTest\:\:swooleRequest\(\) should return Swoole\\Http\\Request but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: tests/SwooleRequestTest.php
+
+		-
+			message: '#^Method Utopia\\Http\\Tests\\UtopiaFPMRequestTest\:\:getParams\(\) should return array\<string, mixed\> but returns array\<mixed, mixed\>\.$#'
+			identifier: return.type
+			count: 1
+			path: tests/UtopiaFPMRequestTest.php
+
+		-
+			message: '#^Offset string might not exist on array\<string, mixed\>\|null\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: tests/UtopiaFPMRequestTest.php
+
+		-
+			message: '#^Parameter \#1 \.\.\.\$arrays of function array_merge expects array, array\<string, mixed\>\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/UtopiaFPMRequestTest.php
+
+		-
+			message: '#^Parameter \#2 \$haystack of function in_array expects array, array\<string, mixed\>\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/UtopiaFPMRequestTest.php

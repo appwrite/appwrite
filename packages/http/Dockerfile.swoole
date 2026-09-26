@@ -14,4 +14,4 @@ COPY ./vendor /usr/src/code/vendor
 
 EXPOSE 80
 
-CMD ["php", "tests/e2e/server-swoole.php"]
+CMD ["php", "tests/E2E/server-swoole.php"]

@@ -2,15 +2,18 @@
 
 declare(strict_types=1);
 
-namespace Utopia\Http;
+namespace Utopia\Http\Tests;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Utopia\DI\Container;
+use Utopia\Http\Adapter;
 use Utopia\Http\Adapter\FPM\Request;
 use Utopia\Http\Adapter\FPM\Response;
 use Utopia\Http\Adapter\FPM\Server;
-use Utopia\Http\Tests\UtopiaFPMRequestTest;
+use Utopia\Http\Exception;
+use Utopia\Http\Http;
+use Utopia\Http\Route;
 use Utopia\Validator\AnyOf;
 use Utopia\Validator\Integer;
 use Utopia\Validator\Nullable;
@@ -112,7 +115,7 @@ final class HttpTest extends TestCase
         $_SERVER['REQUEST_METHOD'] = 'GET';
         $_SERVER['REQUEST_URI'] = '/path';
 
-        $this->resources->set('rand', fn() => rand());
+        $this->resources->set('rand', fn () => rand());
         $resource = $this->resources->get('rand');
 
         $this->http
@@ -829,7 +832,7 @@ final class HttpTest extends TestCase
         Http::init()
             ->inject('route')
             ->action(function (?Route $route) {
-                $this->resources->set('myRoute', fn() => $route);
+                $this->resources->set('myRoute', fn () => $route);
             });
 
 
@@ -936,7 +939,7 @@ final class HttpTest extends TestCase
         $route3 = Http::get('/test-callable-closure');
 
         $route3
-            ->param('generated', fn() => 'generated-value', new Text(200), 'generated param', true)
+            ->param('generated', fn () => 'generated-value', new Text(200), 'generated param', true)
             ->action(function ($generated) {
                 echo 'generated: ' . $generated;
             });
@@ -983,7 +986,7 @@ final class HttpTest extends TestCase
         // Validators that accept null declare it as a value, so it is passed through
         Http::get('/nullable')
             ->param('x', 'x-def', new Nullable(new Text(200)), 'x param', true)
-            ->param('y', 'y-def', fn() => new Nullable(new Text(200)), 'y param', true)
+            ->param('y', 'y-def', fn () => new Nullable(new Text(200)), 'y param', true)
             ->param('z', 'z-def', new AnyOf([new Nullable(new Text(200)), new Integer()]), 'z param', true)
             ->action(function (?string $x, ?string $y, mixed $z) {
                 echo var_export([$x, $y, $z], true);
@@ -1026,7 +1029,7 @@ final class HttpTest extends TestCase
 
         // Register a 'locale' resource returning a Locale instance whose
         // `name` statically resolves to "en".
-        $this->resources->set('locale', fn() => new Locale());
+        $this->resources->set('locale', fn () => new Locale());
 
         $route = Http::get('/path');
 
@@ -1155,7 +1158,8 @@ final class HttpTest extends TestCase
         $_SERVER['REQUEST_METHOD'] = 'GET';
         $_SERVER['REQUEST_URI'] = '/path';
 
-        Http::get('/path')->action(function (): void {});
+        Http::get('/path')->action(function (): void {
+        });
 
         $this->http
             ->init()
@@ -1196,16 +1200,22 @@ final class HttpTest extends TestCase
     private function startOnlyServer(Container $resources): Adapter
     {
         return new class ($resources) extends Adapter {
-            public function __construct(private Container $resources) {}
+            public function __construct(private Container $resources)
+            {
+            }
 
             public function onStart(callable $callback): void
             {
                 \call_user_func($callback, $this);
             }
 
-            public function onRequest(callable $callback): void {}
+            public function onRequest(callable $callback): void
+            {
+            }
 
-            public function start(): void {}
+            public function start(): void
+            {
+            }
 
             public function resources(): Container
             {

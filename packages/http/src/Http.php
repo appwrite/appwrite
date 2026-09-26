@@ -511,11 +511,11 @@ class Http
     {
 
         $this->adapter->onRequest(
-            fn(Request $request, Response $response) => $this->run($request, $response),
+            fn (Request $request, Response $response) => $this->run($request, $response),
         );
 
         $this->adapter->onStart(function ($server) {
-            $this->resources()->set('server', fn() => $server);
+            $this->resources()->set('server', fn () => $server);
             try {
 
                 foreach (self::$startHooks as $hook) {
@@ -523,7 +523,7 @@ class Http
                     \call_user_func_array($hook->getAction(), $arguments);
                 }
             } catch (\Exception $e) {
-                $this->resources()->set('error', fn() => $e);
+                $this->resources()->set('error', fn () => $e);
 
                 foreach (self::$errors as $error) { // Global error hooks
                     if (\in_array('*', $error->getGroups())) {
@@ -601,7 +601,7 @@ class Http
                 foreach (self::$errors as $error) { // Global error hooks
                     /** @var Hook $error */
                     if (\in_array('*', $error->getGroups())) {
-                        $this->context()->set('error', fn() => $e, []);
+                        $this->context()->set('error', fn () => $e, []);
                         \call_user_func_array($error->getAction(), $this->getArguments($error, [], $request->getParams(), $match?->route));
                     }
                 }
@@ -613,7 +613,7 @@ class Http
         if ($match === null) {
             foreach (self::$errors as $error) {
                 if (\in_array('*', $error->getGroups())) {
-                    $this->context()->set('error', fn() => new Exception('Not Found', 404), []);
+                    $this->context()->set('error', fn () => new Exception('Not Found', 404), []);
                     \call_user_func_array($error->getAction(), $this->getArguments($error, [], $request->getParams()));
                 }
             }
@@ -667,7 +667,7 @@ class Http
                 }
             }
         } catch (\Throwable $e) {
-            $this->context()->set('error', fn() => $e, []);
+            $this->context()->set('error', fn () => $e, []);
 
             foreach ($groups as $group) {
                 foreach (self::$errors as $error) { // Group error hooks
@@ -839,8 +839,8 @@ class Http
             $response->setCompressionSupported($this->compressionSupported);
         }
 
-        $this->context()->set('request', fn() => $request);
-        $this->context()->set('response', fn() => $response);
+        $this->context()->set('request', fn () => $request);
+        $this->context()->set('response', fn () => $response);
 
         try {
             foreach (self::$requestHooks as $hook) {
@@ -848,7 +848,7 @@ class Http
                 \call_user_func_array($hook->getAction(), $arguments);
             }
         } catch (\Exception $e) {
-            $this->context()->set('error', fn() => $e, []);
+            $this->context()->set('error', fn () => $e, []);
 
             foreach (self::$errors as $error) { // Global error hooks
                 if (\in_array('*', $error->getGroups())) {

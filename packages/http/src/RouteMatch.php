@@ -20,5 +20,6 @@ final readonly class RouteMatch
          * @var array<string, string>
          */
         public array $params,
-    ) {}
+    ) {
+    }
 }

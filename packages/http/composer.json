@@ -12,18 +12,17 @@
     "minimum-stability": "stable",
     "autoload": {
         "psr-4": {
-            "Utopia\\": "src/"
+            "Utopia\\Http\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Utopia\\Http\\Tests\\": "tests/",
-            "Tests\\E2E\\": "tests/e2e"
+            "Utopia\\Http\\Tests\\": "tests/"
         }
     },
     "scripts": {
-        "test": "phpunit --configuration phpunit.xml --testsuite unit",
-        "test:e2e": "phpunit --configuration phpunit.xml --testsuite e2e-fpm,e2e-swoole",
+        "test": "phpunit --testsuite unit",
+        "test:e2e": "phpunit --testsuite e2e",
         "bench": "bash tests/bench/run.sh"
     },
     "require": {

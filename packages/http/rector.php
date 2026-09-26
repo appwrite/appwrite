@@ -2,72 +2,52 @@
 
 declare(strict_types=1);
 
-use Rector\CodeQuality\Rector\Empty_\SimplifyEmptyCheckOnEmptyArrayRector;
-use Rector\CodeQuality\Rector\Identical\FlipTypeControlToUseExclusiveTypeRector;
-use Rector\CodeQuality\Rector\If_\ExplicitBoolCompareRector;
-use Rector\CodeQuality\Rector\Ternary\SwitchNegatedTernaryRector;
 use Rector\Config\RectorConfig;
-use Rector\DeadCode\Rector\Cast\RecastingRemovalRector;
 use Rector\Php55\Rector\String_\StringClassNameToClassConstantRector;
 use Rector\Php70\Rector\FuncCall\RandomFunctionRector;
+use Rector\Php74\Rector\If_\IfToNullCoalescingAssignRector;
 use Rector\Php74\Rector\Property\RestoreDefaultNullToNullableTypePropertyRector;
 use Rector\Php80\Rector\Class_\ClassPropertyAssignToConstructorPromotionRector;
-use Rector\Php81\Rector\FuncCall\NullToStrictStringFuncCallArgRector;
 use Rector\Php81\Rector\Property\ReadOnlyPropertyRector;
-use Rector\Php82\Rector\Class_\ReadOnlyClassRector;
-use Rector\PHPUnit\CodeQuality\Rector\MethodCall\AssertEmptyNullableObjectToAssertInstanceofRector;
-use Rector\PHPUnit\Set\PHPUnitSetList;
-use Rector\Set\ValueObject\LevelSetList;
-use Rector\Set\ValueObject\SetList;
-use Rector\Strict\Rector\Empty_\DisallowedEmptyRuleFixerRector;
+use Rector\Php84\Rector\MethodCall\NewMethodCallWithoutParenthesesRector;
+use Rector\Php85\Rector\ArrayDimFetch\ArrayFirstLastRector;
+use Rector\TypeDeclaration\Rector\ArrowFunction\AddArrowFunctionReturnTypeRector;
+use Rector\TypeDeclaration\Rector\ClassMethod\ParamTypeByParentCallTypeRector;
+use Rector\TypeDeclaration\Rector\Closure\AddClosureNeverReturnTypeRector;
+use Rector\TypeDeclaration\Rector\Closure\AddClosureVoidReturnTypeWhereNoReturnRector;
+use Rector\TypeDeclaration\Rector\Closure\ClosureReturnTypeRector;
+use Rector\TypeDeclaration\Rector\FuncCall\AddArrayFunctionClosureParamTypeRector;
+use Rector\TypeDeclaration\Rector\FuncCall\AddArrowFunctionParamArrayWhereDimFetchRector;
+use Rector\TypeDeclaration\Rector\Property\TypedPropertyFromAssignsRector;
+use Rector\TypeDeclaration\Rector\Property\TypedPropertyFromStrictConstructorRector;
 
 return RectorConfig::configure()
     ->withPaths([
         __DIR__ . '/src',
         __DIR__ . '/tests',
     ])
-    ->withPhpSets(php83: true)
-    ->withSets([
-        LevelSetList::UP_TO_PHP_83,
-        SetList::CODE_QUALITY,
-        SetList::DEAD_CODE,
-        SetList::EARLY_RETURN,
-        SetList::INSTANCEOF,
-        PHPUnitSetList::PHPUNIT_100,
-        PHPUnitSetList::PHPUNIT_110,
-        PHPUnitSetList::PHPUNIT_120,
-        PHPUnitSetList::PHPUNIT_CODE_QUALITY,
-        PHPUnitSetList::ANNOTATIONS_TO_ATTRIBUTES,
-    ])
-    ->withImportNames(importShortClasses: false, removeUnusedImports: true)
+    ->withPhpSets()
+    ->withPreparedSets(
+        typeDeclarations: true,
+    )
+    // Absorbing moves code: keep the source exactly as released.
     ->withSkip([
-        // BC breaks in a published library
-        ReadOnlyPropertyRector::class,
-        ReadOnlyClassRector::class,
-
-        // Changes truthy semantics — "0", null, "" behave differently
-        ExplicitBoolCompareRector::class,
-        SimplifyEmptyCheckOnEmptyArrayRector::class,
-
-        // Different distribution and failure mode than rand()
-        RandomFunctionRector::class,
-
-        // Subtle casting/control-flow shifts — apply manually
-        RecastingRemovalRector::class,
-        FlipTypeControlToUseExclusiveTypeRector::class,
-        SwitchNegatedTernaryRector::class,
-        StringClassNameToClassConstantRector::class,
-
-        // Promoted properties / nullable defaults — BC shape changes for library
+        __DIR__ . '/tests/bench',
+        AddArrayFunctionClosureParamTypeRector::class,
+        AddArrowFunctionParamArrayWhereDimFetchRector::class,
+        AddArrowFunctionReturnTypeRector::class,
+        AddClosureNeverReturnTypeRector::class,
+        AddClosureVoidReturnTypeWhereNoReturnRector::class,
+        ArrayFirstLastRector::class,
         ClassPropertyAssignToConstructorPromotionRector::class,
+        ClosureReturnTypeRector::class,
+        IfToNullCoalescingAssignRector::class,
+        NewMethodCallWithoutParenthesesRector::class,
+        ParamTypeByParentCallTypeRector::class,
+        RandomFunctionRector::class,
+        ReadOnlyPropertyRector::class,
         RestoreDefaultNullToNullableTypePropertyRector::class,
-
-        // empty() replacement rarely covers every falsy case Rector's type info misses
-        DisallowedEmptyRuleFixerRector::class,
-
-        // Throws TypeError when args are objects/arrays — review per-call
-        NullToStrictStringFuncCallArgRector::class,
-
-        // Weakens `assertNull` to `assertNotInstanceOf` — keep the stricter assertion
-        AssertEmptyNullableObjectToAssertInstanceofRector::class,
+        StringClassNameToClassConstantRector::class,
+        TypedPropertyFromAssignsRector::class,
+        TypedPropertyFromStrictConstructorRector::class,
     ]);

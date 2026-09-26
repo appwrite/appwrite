@@ -117,7 +117,7 @@ $http = new Http(new Server('0.0.0.0', '80', resources: $resources), 'America/Ne
 $http->start();
 ```
 
-> When using Swoole, you can use the command `php src/server.php` to run the HTTP server locally, but you need Swoole installed. For setup with Docker, check out our [example application](/example)
+> When using Swoole, you can use the command `php src/server.php` to run the HTTP server locally, but you need Swoole installed.
 
 ### Parameters
 

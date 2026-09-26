@@ -18,7 +18,9 @@ abstract class Adapter
      * metrics. No-op unless the adapter exposes runtime stats (see the Swoole
      * worker server).
      */
-    public function setTelemetry(Telemetry $telemetry): void {}
+    public function setTelemetry(Telemetry $telemetry): void
+    {
+    }
 
     /**
      * Static resources container.

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "4f38c1d9a106de9a711e2d5d2aa5ffbf",
+    "content-hash": "2a97f9b199759dd427c22dfbcdf036d7",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3356,59 +3356,6 @@
             },
             "abandoned": true,
             "time": "2026-04-29T11:19:19+00:00"
-        },
-        {
-            "name": "utopia-php/http",
-            "version": "2.0.0-rc33",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/utopia-php/http.git",
-                "reference": "7d534357923046b2ef6b03a7873314e70fb255a4"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/http/zipball/7d534357923046b2ef6b03a7873314e70fb255a4",
-                "reference": "7d534357923046b2ef6b03a7873314e70fb255a4",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=8.5",
-                "utopia-php/compression": "^0.1",
-                "utopia-php/di": "^0.3",
-                "utopia-php/psr7": "^0.2.0",
-                "utopia-php/servers": "^0.4",
-                "utopia-php/system": "^0.10 || ^0.11",
-                "utopia-php/telemetry": "^0.4",
-                "utopia-php/validators": "^1.0"
-            },
-            "require-dev": {
-                "swoole/ide-helper": "4.8.3"
-            },
-            "suggest": {
-                "ext-swoole": "Required to use the Swoole server adapter (\\Utopia\\Http\\Adapter\\Swoole\\Server)."
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Utopia\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "description": "A simple, light and advanced PHP HTTP framework",
-            "keywords": [
-                "framework",
-                "http",
-                "php",
-                "upf"
-            ],
-            "support": {
-                "issues": "https://github.com/utopia-php/http/issues",
-                "source": "https://github.com/utopia-php/http/tree/2.0.0-rc33"
-            },
-            "time": "2026-09-23T13:19:19+00:00"
         },
         {
             "name": "utopia-php/migration",
@@ -7104,9 +7051,7 @@
     ],
     "aliases": [],
     "minimum-stability": "dev",
-    "stability-flags": {
-        "utopia-php/http": 5
-    },
+    "stability-flags": {},
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {

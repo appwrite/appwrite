@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Utopia\Http;
+namespace Utopia\Http\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Utopia\Http\Adapter\FPM\Response;

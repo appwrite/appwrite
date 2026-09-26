@@ -4,4 +4,6 @@ declare(strict_types=1);
 
 namespace Utopia\Http;
 
-class Exception extends \Exception {}
+class Exception extends \Exception
+{
+}

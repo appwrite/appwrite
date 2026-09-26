@@ -2,10 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Utopia\Http\Tests;
+namespace Utopia\Http\Tests\E2E;
 
 use PHPUnit\Framework\TestCase;
-use Tests\E2E\Client;
 
 final class ResponseFPMTest extends TestCase
 {

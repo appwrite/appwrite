@@ -1,7 +1,12 @@
 includes:
-    - ../../phpstan.neon
+    - phpstan-baseline.neon
 
 parameters:
-    level: 7
+    level: max
+    paths:
+        - src
+        - tests
+    excludePaths:
+        - tests/bench
     scanDirectories:
         - vendor/swoole/ide-helper

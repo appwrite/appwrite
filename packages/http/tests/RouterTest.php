@@ -2,9 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Utopia\Http;
+namespace Utopia\Http\Tests;
 
 use PHPUnit\Framework\TestCase;
+use Utopia\Http\Http;
+use Utopia\Http\Route;
+use Utopia\Http\Router;
 
 final class RouterTest extends TestCase
 {

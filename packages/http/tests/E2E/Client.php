@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\E2E;
+namespace Utopia\Http\Tests\E2E;
 
 use Exception;
 
