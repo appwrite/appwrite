@@ -1,7 +1,7 @@
 services:
   minio:
-    image: quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z
-    entrypoint: sh -c 'mkdir -p /data/utopia-storage-test && exec minio server /data'
+    image: ghcr.io/appwrite/silo:RELEASE.2026-09-16T00-00-00Z@sha256:635197cb9f36d01bee221d34d1c7d7960f6a95c48b0b6c01d99cd13bdae51a46
+    entrypoint: sh -c 'mkdir -p /data/utopia-storage-test && exec silo server /data'
     environment:
       MINIO_DOMAIN: localhost
     ports:
