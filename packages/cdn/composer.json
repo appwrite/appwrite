@@ -20,16 +20,16 @@
     ],
     "minimum-stability": "stable",
     "scripts": {
-        "test": "phpunit"
+        "test": "phpunit --configuration phpunit.xml"
     },
     "autoload": {
         "psr-4": {
-            "Utopia\\Cdn\\": "src/Cdn"
+            "Utopia\\Cdn\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Utopia\\Tests\\Cdn\\": "tests/Cdn"
+            "Utopia\\Cdn\\Tests\\": "tests/"
         }
     },
     "require": {
