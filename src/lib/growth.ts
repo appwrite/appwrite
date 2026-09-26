@@ -2,18 +2,20 @@
  * Conversations with the Appwrite team (support, feedback, docs ratings, and
  * sales applications) through Appwrite Cloud's `POST /v1/growth/conversations`.
  *
- * Cloud consoles call their own API endpoint with the console session, so the
- * server takes the email, name and user ID from the session and derives the
- * billing plan from the organization. Self-hosted servers have no growth
- * route, so self-hosted consoles send anonymously to Appwrite Cloud, where the
- * email param is required.
+ * Cloud consoles call their own API endpoint and identify the signed-in user
+ * with a short-lived JWT, so the server takes the email, name and user ID from
+ * the account and derives the billing plan from the organization. The route
+ * accepts any origin, so Cloud never sends the session cookie to it
+ * (Access-Control-Allow-Credentials is false); the JWT carries the identity
+ * instead. Self-hosted servers have no growth route, so self-hosted consoles
+ * send anonymously to Appwrite Cloud, where the email param is required.
  *
  * The console SDK has no growth service, and the attachment has to go out in
  * one multipart request rather than through the SDK's chunked upload, so this
  * module uses fetch.
  */
 
-import { getBaseEndpoint } from '@/lib/appwrite/sdk'
+import { getBaseEndpoint, sdk } from '@/lib/appwrite/sdk'
 import { isCloudProfile } from '@/lib/console-profiles'
 import { DEFAULT_CLOUD_APPWRITE_ENDPOINT } from '@/lib/runtime-config-shared'
 
@@ -83,7 +85,7 @@ type ConversationFields<Type extends ConversationType> = {
   /** Support and feedback only, 5 MB at most. */
   attachment?: File
   /**
-   * Send the console session so the server identifies the signed-in user.
+   * Identify the signed-in user with a JWT so the server uses their account.
    * Pass false when the form collects contact details that must be kept.
    */
   session?: boolean
@@ -95,7 +97,7 @@ export type CreateConversationParams = {
 
 type GrowthTarget = {
   endpoint: string
-  credentials: RequestCredentials
+  identify: boolean
 }
 
 const CONVERSATIONS_PATH = '/growth/conversations'
@@ -119,8 +121,8 @@ export class GrowthError extends Error {
 }
 
 /**
- * Where conversations go: the console's own API with the session on Cloud,
- * Appwrite Cloud without credentials everywhere else.
+ * Where conversations go: the console's own API, identified by the user's JWT,
+ * on Cloud; Appwrite Cloud anonymously everywhere else.
  */
 function resolveGrowthTarget(
   cloud: boolean,
@@ -128,11 +130,21 @@ function resolveGrowthTarget(
   session: boolean,
 ): GrowthTarget {
   if (!cloud) {
-    return { endpoint: DEFAULT_CLOUD_APPWRITE_ENDPOINT, credentials: 'omit' }
+    return { endpoint: DEFAULT_CLOUD_APPWRITE_ENDPOINT, identify: false }
   }
-  return {
-    endpoint: endpoint.replace(/\/+$/, ''),
-    credentials: session ? 'include' : 'omit',
+  return { endpoint: endpoint.replace(/\/+$/, ''), identify: session }
+}
+
+/**
+ * A JWT for the signed-in console user, or null when there is none. Signed-out
+ * visitors then send anonymously, with the email they typed.
+ */
+async function createSessionJwt(): Promise<string | null> {
+  try {
+    const { jwt } = await sdk.forConsole.account.createJWT()
+    return jwt
+  } catch {
+    return null
   }
 }
 
@@ -212,7 +224,7 @@ async function toError(response: Response): Promise<GrowthError> {
 export async function createConversation(
   params: CreateConversationParams,
 ): Promise<void> {
-  const { endpoint, credentials } = resolveGrowthTarget(
+  const { endpoint, identify } = resolveGrowthTarget(
     isCloudProfile(),
     getBaseEndpoint(),
     params.session ?? true,
@@ -224,11 +236,15 @@ export async function createConversation(
     // Multipart bodies get their boundary from fetch.
     headers['Content-Type'] = 'application/json'
   }
+  const jwt = identify ? await createSessionJwt() : null
+  if (jwt) {
+    headers['X-Appwrite-JWT'] = jwt
+  }
 
   const response = await fetch(`${endpoint}${CONVERSATIONS_PATH}`, {
     method: 'POST',
     headers,
-    credentials,
+    credentials: 'omit',
     body,
   })
 

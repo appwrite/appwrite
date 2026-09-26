@@ -5,9 +5,15 @@ import type { GrowthError as GrowthErrorType } from '@/lib/growth'
 
 // The console's profile and endpoint, as the running console would report them.
 // Null leaves the real value, so other test files see no change.
-const consoleState: { cloud: boolean | null; endpoint: string | null } = {
+// jwt: the signed-in user's JWT; null means no session, so createJWT fails.
+const consoleState: {
+  cloud: boolean | null
+  endpoint: string | null
+  jwt: string | null
+} = {
   cloud: null,
   endpoint: null,
+  jwt: null,
 }
 const { isCloudProfile } = profiles
 const { getBaseEndpoint } = sdk
@@ -20,6 +26,21 @@ mock.module('@/lib/console-profiles', () => ({
 mock.module('@/lib/appwrite/sdk', () => ({
   ...sdk,
   getBaseEndpoint: () => consoleState.endpoint ?? getBaseEndpoint(),
+  sdk: {
+    ...sdk.sdk,
+    forConsole: {
+      ...sdk.sdk.forConsole,
+      account: {
+        ...sdk.sdk.forConsole.account,
+        createJWT: async () => {
+          if (consoleState.jwt === null) {
+            throw new Error('User (role: guests) missing scopes (["account"])')
+          }
+          return { jwt: consoleState.jwt }
+        },
+      },
+    },
+  },
 }))
 
 const { createConversation, GrowthError } = await import('@/lib/growth')
@@ -75,12 +96,18 @@ afterEach(() => {
   globalThis.fetch = originalFetch
   consoleState.cloud = null
   consoleState.endpoint = null
+  consoleState.jwt = null
 })
 
+function sentJwt(): string | undefined {
+  return (lastCall().init.headers as Record<string, string>)['X-Appwrite-JWT']
+}
+
 describe('where conversations go', () => {
-  test('Cloud consoles send to their own endpoint with the session', async () => {
+  test('Cloud consoles send to their own endpoint as the signed-in user, without cookies', async () => {
     consoleState.cloud = true
     consoleState.endpoint = 'https://fra.cloud.appwrite.io/v1/'
+    consoleState.jwt = 'user-jwt'
 
     await submitFeedback({
       message: 'Nice',
@@ -92,12 +119,29 @@ describe('where conversations go', () => {
     expect(lastCall().url).toBe(
       'https://fra.cloud.appwrite.io/v1/growth/conversations',
     )
-    expect(lastCall().init.credentials).toBe('include')
+    expect(lastCall().init.credentials).toBe('omit')
+    expect(sentJwt()).toBe('user-jwt')
+  })
+
+  test('signed-out Cloud visitors send anonymously with their email', async () => {
+    consoleState.cloud = true
+    consoleState.endpoint = 'https://fra.cloud.appwrite.io/v1'
+
+    await submitFeedback({
+      message: 'Nice',
+      source: 'navbar',
+      route: '/',
+      email: 'a@b.co',
+    })
+
+    expect(sentJwt()).toBeUndefined()
+    expect(jsonBody()).toMatchObject({ email: 'a@b.co' })
   })
 
   test('Cloud forms that keep typed contact details leave the session out', async () => {
     consoleState.cloud = true
     consoleState.endpoint = 'https://fra.cloud.appwrite.io/v1'
+    consoleState.jwt = 'user-jwt'
 
     await submitStartupsApplication({
       name: 'Walter',
@@ -109,12 +153,13 @@ describe('where conversations go', () => {
     expect(lastCall().url).toBe(
       'https://fra.cloud.appwrite.io/v1/growth/conversations',
     )
-    expect(lastCall().init.credentials).toBe('omit')
+    expect(sentJwt()).toBeUndefined()
   })
 
   test('self-hosted consoles send to Appwrite Cloud anonymously', async () => {
     consoleState.cloud = false
     consoleState.endpoint = 'https://appwrite.example.com/v1'
+    consoleState.jwt = 'self-hosted-jwt'
 
     await submitSupportTicket({
       email: 'a@b.co',
@@ -127,7 +172,7 @@ describe('where conversations go', () => {
     expect(lastCall().url).toBe(
       'https://cloud.appwrite.io/v1/growth/conversations',
     )
-    expect(lastCall().init.credentials).toBe('omit')
+    expect(sentJwt()).toBeUndefined()
   })
 })
 
@@ -146,7 +191,7 @@ describe('createConversation', () => {
     const { url, init } = lastCall()
     expect(url.endsWith('/v1/growth/conversations')).toBe(true)
     expect(init.method).toBe('POST')
-    expect(init.credentials).toBe('include')
+    expect(init.credentials).toBe('omit')
     expect(init.headers).toEqual({
       'X-Appwrite-Project': 'console',
       'Content-Type': 'application/json',
@@ -350,6 +395,19 @@ describe('call sites', () => {
       email: 'walter@acme.co',
       name: 'Walter',
       attributes: { companyName: 'Acme', companyUrl: 'https://acme.co' },
+    })
+  })
+
+  test('bare domains get https, even ones that start with "http"', async () => {
+    await submitStartupsApplication({
+      name: 'Walter',
+      email: 'walter@acme.co',
+      companyName: 'HTTPie',
+      companyUrl: 'httpie.io',
+    })
+
+    expect(jsonBody()).toMatchObject({
+      attributes: { companyUrl: 'https://httpie.io' },
     })
   })
 

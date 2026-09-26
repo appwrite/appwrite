@@ -1,10 +1,13 @@
 import { ConversationType, createConversation } from '@/lib/growth'
 import { getReferrerAndUtmSource } from '@/lib/marketing/utm'
 
-/** Prefixes `https://` when the visitor typed a bare domain. */
+/** Prefixes `https://` when the visitor typed a bare domain; empty stays empty. */
 function withProtocol(url: string): string {
   const trimmed = url.trim()
-  return trimmed.startsWith('http') ? trimmed : `https://${trimmed}`
+  if (trimmed === '' || /^https?:\/\//i.test(trimmed)) {
+    return trimmed
+  }
+  return `https://${trimmed}`
 }
 
 export type PartnerApplicationPayload = {
