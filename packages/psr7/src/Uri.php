@@ -152,7 +152,17 @@ final readonly class Uri implements UriInterface, \Stringable
             $uri .= '//' . $authority;
         }
 
-        $uri .= $this->path;
+        $path = $this->path;
+
+        if ($authority !== '') {
+            if ($path !== '' && $path[0] !== '/') {
+                $path = '/' . $path;
+            }
+        } elseif (str_starts_with($path, '//')) {
+            $path = '/' . ltrim($path, '/');
+        }
+
+        $uri .= $path;
 
         if ($this->query !== '') {
             $uri .= '?' . $this->query;
