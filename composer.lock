@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "856adce013a90d7c6fdfaec7d0c237ce",
+    "content-hash": "1640d10bf859366f5e56010569e939c8",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3031,48 +3031,6 @@
                 "source": "https://github.com/utopia-php/config/tree/1.0.0"
             },
             "time": "2025-11-18T17:02:00+00:00"
-        },
-        {
-            "name": "utopia-php/console",
-            "version": "0.2.9",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/utopia-php/console.git",
-                "reference": "7bd794582ad7a1964e1d0d762bdf8f42e6e834ad"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/console/zipball/7bd794582ad7a1964e1d0d762bdf8f42e6e834ad",
-                "reference": "7bd794582ad7a1964e1d0d762bdf8f42e6e834ad",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=8.5",
-                "utopia-php/validators": "^1.0"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Utopia\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "description": "Console helpers for logging, prompting, and executing commands",
-            "keywords": [
-                "cli",
-                "console",
-                "php",
-                "terminal",
-                "utopia"
-            ],
-            "support": {
-                "issues": "https://github.com/utopia-php/console/issues",
-                "source": "https://github.com/utopia-php/console/tree/0.2.9"
-            },
-            "time": "2026-09-02T15:57:19+00:00"
         },
         {
             "name": "utopia-php/database",
