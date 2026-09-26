@@ -816,9 +816,6 @@ class OpenAPI3 extends Format
                         $node['schema']['items'] = [
                             'type' => 'string',
                         ];
-                        if (($param['example'] ?? '') !== '') {
-                            $node['schema']['example'] = $param['example'];
-                        }
                         break;
                     case \Utopia\Database\Validator\Permissions::class:
                         $node['schema']['type'] = $validator->getType();
@@ -1084,9 +1081,6 @@ class OpenAPI3 extends Format
                         $methodTemp['parameters'][] = $node;
                     } elseif (\in_array($method, ['GET', 'DELETE'], true)) { // Param is in query
                         $node['in'] = 'query';
-                        if (($parameters[$name]['example'] ?? '') !== '' && \array_key_exists('example', $node['schema'])) {
-                            $node['example'] = $node['schema']['example'];
-                        }
                         $methodTemp['parameters'][] = $node;
                     } else { // Param is in payload
                         if ($node['required']) {
