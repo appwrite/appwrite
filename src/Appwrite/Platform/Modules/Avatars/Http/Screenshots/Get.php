@@ -12,13 +12,17 @@ use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Usage\Context;
 use Appwrite\Utopia\Response;
+use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
+use Utopia\Client\Client;
 use Utopia\Config\Config;
 use Utopia\Domains\Domain;
-use Utopia\Fetch\Client;
 use Utopia\Image\Image;
 use Utopia\Platform\Action as UtopiaAction;
 use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Psr7\ContentType as RequestContentType;
+use Utopia\Psr7\Method as RequestMethod;
+use Utopia\Psr7\Request\Factory as RequestFactory;
 use Utopia\System\System;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Assoc;
@@ -111,10 +115,6 @@ class Get extends Action
             throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED, $hostnameValidator->getDescription());
         }
 
-        $client = new Client();
-        $client->setTimeout(30 * 1000); // 30 seconds
-        $client->addHeader('content-type', Client::CONTENT_TYPE_APPLICATION_JSON);
-
         // Convert indexed array to empty array (should not happen due to Assoc validator)
         if (count($headers) > 0 && array_keys($headers) === range(0, count($headers) - 1)) {
             $headers = [];
@@ -183,17 +183,21 @@ class Get extends Action
         try {
             $browserEndpoint = System::getEnv('_APP_BROWSER_HOST', 'http://appwrite-browser:3000/v1');
 
-            $fetchResponse = $client->fetch(
-                url: $browserEndpoint . '/screenshots',
-                method: 'POST',
-                body: $config
-            );
+            $screenshotResponse = (new Client(new CurlAdapter()))
+                ->withTimeout(30)
+                ->withFollowRedirects(maxHops: 5)
+                ->sendRequest((new RequestFactory())->body(
+                    RequestMethod::POST,
+                    $browserEndpoint . '/screenshots',
+                    \json_encode($config, JSON_THROW_ON_ERROR),
+                    RequestContentType::JSON,
+                ));
 
-            if ($fetchResponse->getStatusCode() >= 400) {
-                throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED, 'Screenshot service failed: ' . $fetchResponse->getBody());
+            if ($screenshotResponse->getStatusCode() >= 400) {
+                throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED, 'Screenshot service failed: ' . $screenshotResponse->getBody());
             }
 
-            $screenshot = $fetchResponse->getBody();
+            $screenshot = (string) $screenshotResponse->getBody();
 
             if (empty($screenshot)) {
                 throw new Exception(Exception::AVATAR_IMAGE_NOT_FOUND, 'Screenshot not generated');
