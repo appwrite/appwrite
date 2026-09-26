@@ -257,8 +257,6 @@ export const heSharedUiDictionary: Record<string, string> = {
 
   False: 'False',
   Feedback: 'משוב',
-  'Feedback is not configured. Set VITE_GROWTH_ENDPOINT in .env to enable submission.':
-    'משוב אינו מוגדר. הגדירו VITE_GROWTH_ENDPOINT בקובץ ‎.env כדי לאפשר שליחה.',
   File: 'קובץ',
   'File uploaded': 'הקובץ הועלה',
   'Filter name': 'שם הסינון',
@@ -612,8 +610,6 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Product, results, and how Appwrite fits your stack':
     'המוצר, התוצאות, ואיך Appwrite משתלב בסטק שלכם',
   'Request customer story interview': 'בקשה לראיון לסיפור לקוח',
-  'Story requests are not configured. Set VITE_GROWTH_ENDPOINT in .env to enable submission.':
-    'בקשות לסיפורים אינן מוגדרות. הגדירו VITE_GROWTH_ENDPOINT בקובץ ‎.env כדי לאפשר שליחה.',
   'Failed to submit story request': 'שליחת בקשת הסיפור נכשלה',
   'Too many requests. Try again in a few minutes.':
     'יותר מדי בקשות. נסו שוב בעוד כמה דקות.',

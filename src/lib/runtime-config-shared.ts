@@ -13,7 +13,6 @@ export interface RuntimeConfig {
   consoleProfile: string
   /** HMAC key for the console fingerprint token. Public (ships to the browser). */
   fingerprintKey: string
-  growthEndpoint: string
   stripePublishableKey: string
   sentryDsn: string
   plausibleScriptSrc: string
@@ -119,7 +118,6 @@ export function readRuntimeConfigFromEnv(env: EnvRecord): RuntimeConfig {
     fingerprintKey:
       read('VITE_CONSOLE_FINGERPRINT_KEY') ||
       read('PUBLIC_CONSOLE_FINGERPRINT_KEY'),
-    growthEndpoint: read('VITE_GROWTH_ENDPOINT'),
     stripePublishableKey: read('VITE_STRIPE_PUBLISHABLE_KEY'),
     sentryDsn: read('VITE_SENTRY_DSN'),
     plausibleScriptSrc: read('VITE_PLAUSIBLE_SCRIPT_SRC'),

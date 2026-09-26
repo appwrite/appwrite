@@ -20,7 +20,6 @@ import { useAnalytics } from '@/hooks/use-analytics'
 import { analyticsAttrs } from '@/lib/analytics-actions'
 import { EDUCATION_JOIN_PATH } from '@/lib/education/paths'
 import {
-  addToStudentMailingList,
   connectGithubForStudentProgram,
   hasGithubIdentity,
   joinGithubStudentProgram,
@@ -79,7 +78,6 @@ export function View() {
       // navigation must never turn it into a failed enrollment or a second POST.
       setIsOpeningOrganization(true)
       track('Resource Created', { resource: 'education-membership' })
-      addToStudentMailingList(account)
       // Seed the returned organization, as in the organization creation wizard,
       // so the destination loader does not wait for a redundant list refresh.
       const organizationOptions: ReturnType<typeof organizationQueryOptions> = {

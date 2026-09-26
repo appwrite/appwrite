@@ -413,8 +413,6 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Product, results, and how Appwrite fits your stack':
     'プロダクト、成果、Appwrite がスタックにどうフィットするか',
   'Request customer story interview': '導入事例インタビューを依頼',
-  'Story requests are not configured. Set VITE_GROWTH_ENDPOINT in .env to enable submission.':
-    'ストーリー依頼は設定されていません。送信を有効にするには .env で VITE_GROWTH_ENDPOINT を設定してください。',
   'Failed to submit story request': 'ストーリー依頼の送信に失敗しました',
   'Too many requests. Try again in a few minutes.':
     'リクエストが多すぎます。数分後にもう一度お試しください。',
@@ -883,8 +881,6 @@ export const jaSharedUiDictionary: Record<string, string> = {
     'すべての変数を一度に編集します。シークレット変数は表示されず、影響を受けません。',
   'Enter text that matches the start of a name, email, phone, or user ID.':
     '名前、メール、電話番号、またはユーザー ID の先頭に一致するテキストを入力してください。',
-  'Feedback is not configured. Set VITE_GROWTH_ENDPOINT in .env to enable submission.':
-    'フィードバックが設定されていません。送信を有効にするには、.env で VITE_GROWTH_ENDPOINT を設定してください。',
   "If selected, you and your team won't be able to read the values after creation.":
     '選択すると、作成後はあなたとチームメンバーが値を読み取れなくなります。',
   'Impersonation active. Operating as another console user. Exit to return to your operator session.':
