@@ -9,7 +9,7 @@ To get started with implementing a new VCS adapter, start by reviewing the [READ
 
 ### File structure 📂
 
-Below are outlined the most useful files for adding a new VCS adapter: 
+Below are outlined the most useful files for adding a new VCS adapter:
 
 ```bash
 .
