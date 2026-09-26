@@ -278,6 +278,7 @@ Exit: `composer.lock` contains no `utopia-php/*` package.
   - `compression`: 16 findings covering extension return types and the untyped supported-encoding array.
   - `domains`: 274 findings (it had no PHPStan config of its own): 219 in `src`, nearly all in the `NameCom`, `OpenSRS` and `Mock` registrar adapters and the base `Adapter`, unvalued `array` parameters and offset access and casts on decoded `mixed` API responses; 55 in its tests, mostly nullable validator fixtures in `ApexDomainTest` and `PublicDomainTest`.
   - `dsn`: 4 findings (it had no PHPStan config on its standalone repository): the untyped `$params` array, `parse_url()`'s integer port stored in a `?string` property, and `getParam()` returning the `mixed` parsed query value.
+  - `emails`: 25 findings, all in `src` (its standalone repository analysed it at level 4): unvalued `array` types on the canonical providers' domain lists and `Email`'s parts and domain caches, and concatenation of `mixed` parts in `Email`.
   - `mqtt`: 82 findings (its own repository analysed it at level max under PHPStan 1): `chr()` arguments not narrowed to `int<0, 255>` and casts from `mixed` in the packet codecs and `Property`, untyped Swoole client and request fields in `Client` and the Swoole adapter, and loosely typed data providers and e2e assertions in its tests.
   - `openapi`: 166 findings (level 5 in the monorepo), nearly all offset access on the decoded `mixed` document in its readers.
   - `system`: 16 findings from mixed CPU and disk statistics.

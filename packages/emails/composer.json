@@ -1,0 +1,58 @@
+{
+    "name": "utopia-php/emails",
+    "description": "Utopia Emails library is simple and lite library for parsing and validating email addresses. This library is aiming to be as simple and easy to learn and use.",
+    "type": "library",
+    "keywords": [
+        "php",
+        "framework",
+        "upf",
+        "utopia",
+        "emails",
+        "email",
+        "validation",
+        "parsing",
+        "rfc5322"
+    ],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Eldad Fux",
+            "email": "eldad@appwrite.io"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "Utopia\\Emails\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Utopia\\Emails\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit --testsuite unit",
+        "import": "php import.php",
+        "import:all": "php import.php all --commit=true",
+        "import:disposable": "php import.php disposable --commit=true",
+        "import:free": "php import.php free --commit=true",
+        "import:stats": "php import.php stats"
+    },
+    "require": {
+        "php": ">=8.5",
+        "utopia-php/validators": "^1.0",
+        "utopia-php/domains": "^4.0.0"
+    },
+    "require-dev": {
+        "utopia-php/cli": "^0.24.4",
+        "utopia-php/console": "0.*",
+        "utopia-php/fetch": "^1.1"
+    },
+    "minimum-stability": "stable",
+    "config": {
+        "allow-plugins": {
+            "php-http/discovery": false,
+            "tbachert/spi": false
+        }
+    }
+}

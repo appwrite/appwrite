@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "0c4a0bf5e22f3998ff6f0b66d2bf2600",
+    "content-hash": "6c4d878523a9eb441ab4bb7a4b83f25b",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3190,67 +3190,6 @@
                 "source": "https://github.com/utopia-php/dns/tree/3.0.7"
             },
             "time": "2026-09-10T10:48:03+00:00"
-        },
-        {
-            "name": "utopia-php/emails",
-            "version": "0.8.3",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/utopia-php/emails.git",
-                "reference": "b5f04fae6392265317aedfc2de4c39fe06d05e16"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/emails/zipball/b5f04fae6392265317aedfc2de4c39fe06d05e16",
-                "reference": "b5f04fae6392265317aedfc2de4c39fe06d05e16",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=8.5",
-                "utopia-php/domains": "^4.0.0",
-                "utopia-php/validators": "^1.0"
-            },
-            "require-dev": {
-                "laravel/pint": "1.25.*",
-                "phpstan/phpstan": "^1.10",
-                "phpunit/phpunit": "^9.3",
-                "utopia-php/cli": "^0.24.4",
-                "utopia-php/console": "0.*",
-                "utopia-php/fetch": "^1.1"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Utopia\\Emails\\": "src/Emails"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Eldad Fux",
-                    "email": "eldad@appwrite.io"
-                }
-            ],
-            "description": "Utopia Emails library is simple and lite library for parsing and validating email addresses. This library is aiming to be as simple and easy to learn and use.",
-            "keywords": [
-                "RFC5322",
-                "email",
-                "emails",
-                "framework",
-                "parsing",
-                "php",
-                "upf",
-                "utopia",
-                "validation"
-            ],
-            "support": {
-                "issues": "https://github.com/utopia-php/emails/issues",
-                "source": "https://github.com/utopia-php/emails/tree/0.8.3"
-            },
-            "time": "2026-09-10T11:01:51+00:00"
         },
         {
             "name": "utopia-php/fetch",
