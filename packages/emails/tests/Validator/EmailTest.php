@@ -1,6 +1,6 @@
 <?php
 
-namespace Utopia\Tests\Validator;
+namespace Utopia\Emails\Tests\Validator;
 
 use PHPUnit\Framework\TestCase;
 use Utopia\Emails\Validator\Email;
@@ -9,7 +9,7 @@ class EmailTest extends TestCase
 {
     public function test_validemail(): void
     {
-        $validator = new Email;
+        $validator = new Email();
 
         $this->assertSame(true, $validator->isValid('test@example.com'));
         $this->assertSame(true, $validator->isValid('user.name+tag@example.com'));
@@ -23,7 +23,7 @@ class EmailTest extends TestCase
 
     public function test_invalidemail(): void
     {
-        $validator = new Email;
+        $validator = new Email();
 
         $this->assertSame(false, $validator->isValid(''));
         $this->assertSame(false, $validator->isValid('invalid-email'));
@@ -48,33 +48,33 @@ class EmailTest extends TestCase
 
     public function test_non_string_input(): void
     {
-        $validator = new Email;
+        $validator = new Email();
 
         $this->assertSame(false, $validator->isValid(null));
         $this->assertSame(false, $validator->isValid(123));
         $this->assertSame(false, $validator->isValid([]));
-        $this->assertSame(false, $validator->isValid(new \stdClass));
+        $this->assertSame(false, $validator->isValid(new \stdClass()));
         $this->assertSame(false, $validator->isValid(true));
         $this->assertSame(false, $validator->isValid(false));
     }
 
     public function test_validatordescription(): void
     {
-        $validator = new Email;
+        $validator = new Email();
 
         $this->assertSame('Value must be a valid email address', $validator->getDescription());
     }
 
     public function test_validatortype(): void
     {
-        $validator = new Email;
+        $validator = new Email();
 
         $this->assertSame('string', $validator->getType());
     }
 
     public function test_validator_is_array(): void
     {
-        $validator = new Email;
+        $validator = new Email();
 
         $this->assertSame(false, $validator->isArray());
     }
@@ -98,7 +98,7 @@ class EmailTest extends TestCase
 
     public function test_allow_empty_default_behavior(): void
     {
-        $validator = new Email;
+        $validator = new Email();
 
         $this->assertSame(false, $validator->isValid(''));
         $this->assertSame(true, $validator->isValid('test@example.com'));

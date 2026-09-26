@@ -1,6 +1,6 @@
 <?php
 
-namespace Utopia\Tests\Canonicals\Providers;
+namespace Utopia\Emails\Tests\Canonicals\Providers;
 
 use PHPUnit\Framework\TestCase;
 use Utopia\Emails\Canonicals\Providers\Yahoo;
@@ -11,7 +11,7 @@ class YahooTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->provider = new Yahoo;
+        $this->provider = new Yahoo();
     }
 
     public function test_supports(): void

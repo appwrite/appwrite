@@ -1,6 +1,6 @@
 <?php
 
-namespace Utopia\Tests\Canonicals\Providers;
+namespace Utopia\Emails\Tests\Canonicals\Providers;
 
 use PHPUnit\Framework\TestCase;
 use Utopia\Emails\Canonicals\Providers\Yandex;
@@ -11,7 +11,7 @@ class YandexTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->provider = new Yandex;
+        $this->provider = new Yandex();
     }
 
     public function test_supports(): void

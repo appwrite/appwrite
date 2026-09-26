@@ -1,6 +1,6 @@
 <?php
 
-namespace Utopia\Tests\Canonicals\Providers;
+namespace Utopia\Emails\Tests\Canonicals\Providers;
 
 use PHPUnit\Framework\TestCase;
 use Utopia\Emails\Canonicals\Providers\Icloud;
@@ -11,7 +11,7 @@ class IcloudTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->provider = new Icloud;
+        $this->provider = new Icloud();
     }
 
     public function test_supports(): void

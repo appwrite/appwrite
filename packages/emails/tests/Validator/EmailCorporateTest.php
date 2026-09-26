@@ -1,6 +1,6 @@
 <?php
 
-namespace Utopia\Tests\Validator;
+namespace Utopia\Emails\Tests\Validator;
 
 use PHPUnit\Framework\TestCase;
 use Utopia\Emails\Validator\EmailCorporate;
@@ -9,7 +9,7 @@ class EmailCorporateTest extends TestCase
 {
     public function test_valid_corporate_email(): void
     {
-        $validator = new EmailCorporate;
+        $validator = new EmailCorporate();
 
         $this->assertSame(true, $validator->isValid('test@company.com'));
         $this->assertSame(true, $validator->isValid('user@business.org'));
@@ -23,7 +23,7 @@ class EmailCorporateTest extends TestCase
 
     public function test_invalid_free_email(): void
     {
-        $validator = new EmailCorporate;
+        $validator = new EmailCorporate();
 
         $this->assertSame(false, $validator->isValid('user@gmail.com'));
         $this->assertSame(false, $validator->isValid('user@yahoo.com'));
@@ -45,7 +45,7 @@ class EmailCorporateTest extends TestCase
 
     public function test_invalid_disposable_email(): void
     {
-        $validator = new EmailCorporate;
+        $validator = new EmailCorporate();
 
         $this->assertSame(false, $validator->isValid('user@10minutemail.com'));
         $this->assertSame(false, $validator->isValid('user@tempmail.org'));
@@ -66,7 +66,7 @@ class EmailCorporateTest extends TestCase
 
     public function test_invalid_email_format(): void
     {
-        $validator = new EmailCorporate;
+        $validator = new EmailCorporate();
 
         $this->assertSame(false, $validator->isValid(''));
         $this->assertSame(false, $validator->isValid('invalid-email'));
@@ -77,33 +77,33 @@ class EmailCorporateTest extends TestCase
 
     public function test_non_string_input(): void
     {
-        $validator = new EmailCorporate;
+        $validator = new EmailCorporate();
 
         $this->assertSame(false, $validator->isValid(null));
         $this->assertSame(false, $validator->isValid(123));
         $this->assertSame(false, $validator->isValid([]));
-        $this->assertSame(false, $validator->isValid(new \stdClass));
+        $this->assertSame(false, $validator->isValid(new \stdClass()));
         $this->assertSame(false, $validator->isValid(true));
         $this->assertSame(false, $validator->isValid(false));
     }
 
     public function test_validatordescription(): void
     {
-        $validator = new EmailCorporate;
+        $validator = new EmailCorporate();
 
         $this->assertSame('Value must be a valid email address from a corporate domain', $validator->getDescription());
     }
 
     public function test_validatortype(): void
     {
-        $validator = new EmailCorporate;
+        $validator = new EmailCorporate();
 
         $this->assertSame('string', $validator->getType());
     }
 
     public function test_validator_is_array(): void
     {
-        $validator = new EmailCorporate;
+        $validator = new EmailCorporate();
 
         $this->assertSame(false, $validator->isArray());
     }

@@ -1,6 +1,6 @@
 <?php
 
-namespace Utopia\Tests\Canonicals\Providers;
+namespace Utopia\Emails\Tests\Canonicals\Providers;
 
 use PHPUnit\Framework\TestCase;
 use Utopia\Emails\Canonicals\Providers\Generic;
@@ -11,7 +11,7 @@ class GenericTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->provider = new Generic;
+        $this->provider = new Generic();
     }
 
     public function test_supports(): void

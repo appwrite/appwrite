@@ -1,6 +1,6 @@
 <?php
 
-namespace Utopia\Tests\Canonicals\Providers;
+namespace Utopia\Emails\Tests\Canonicals\Providers;
 
 use PHPUnit\Framework\TestCase;
 use Utopia\Emails\Canonicals\Providers\Fastmail;
@@ -11,7 +11,7 @@ class FastmailTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->provider = new Fastmail;
+        $this->provider = new Fastmail();
     }
 
     public function test_supports(): void

@@ -1,6 +1,6 @@
 <?php
 
-namespace Utopia\Tests\Canonicals\Providers;
+namespace Utopia\Emails\Tests\Canonicals\Providers;
 
 use PHPUnit\Framework\TestCase;
 use Utopia\Emails\Canonicals\Providers\Gmail;
@@ -11,7 +11,7 @@ class GmailTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->provider = new Gmail;
+        $this->provider = new Gmail();
     }
 
     public function test_supports(): void

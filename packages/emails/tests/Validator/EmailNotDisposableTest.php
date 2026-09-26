@@ -1,6 +1,6 @@
 <?php
 
-namespace Utopia\Tests\Validator;
+namespace Utopia\Emails\Tests\Validator;
 
 use PHPUnit\Framework\TestCase;
 use Utopia\Emails\Validator\EmailNotDisposable;
@@ -9,7 +9,7 @@ class EmailNotDisposableTest extends TestCase
 {
     public function test_valid_non_disposable_email(): void
     {
-        $validator = new EmailNotDisposable;
+        $validator = new EmailNotDisposable();
 
         $this->assertSame(true, $validator->isValid('test@company.org'));
         $this->assertSame(true, $validator->isValid('user@gmail.com'));
@@ -20,7 +20,7 @@ class EmailNotDisposableTest extends TestCase
 
     public function test_invalid_disposable_email(): void
     {
-        $validator = new EmailNotDisposable;
+        $validator = new EmailNotDisposable();
 
         $this->assertSame(false, $validator->isValid('user@10minutemail.com'));
         $this->assertSame(false, $validator->isValid('user@tempmail.org'));
@@ -41,7 +41,7 @@ class EmailNotDisposableTest extends TestCase
 
     public function test_invalid_email_format(): void
     {
-        $validator = new EmailNotDisposable;
+        $validator = new EmailNotDisposable();
 
         $this->assertSame(false, $validator->isValid(''));
         $this->assertSame(false, $validator->isValid('invalid-email'));
@@ -52,33 +52,33 @@ class EmailNotDisposableTest extends TestCase
 
     public function test_non_string_input(): void
     {
-        $validator = new EmailNotDisposable;
+        $validator = new EmailNotDisposable();
 
         $this->assertSame(false, $validator->isValid(null));
         $this->assertSame(false, $validator->isValid(123));
         $this->assertSame(false, $validator->isValid([]));
-        $this->assertSame(false, $validator->isValid(new \stdClass));
+        $this->assertSame(false, $validator->isValid(new \stdClass()));
         $this->assertSame(false, $validator->isValid(true));
         $this->assertSame(false, $validator->isValid(false));
     }
 
     public function test_validatordescription(): void
     {
-        $validator = new EmailNotDisposable;
+        $validator = new EmailNotDisposable();
 
         $this->assertSame('Value must be a valid email address that is not from a disposable email service', $validator->getDescription());
     }
 
     public function test_validatortype(): void
     {
-        $validator = new EmailNotDisposable;
+        $validator = new EmailNotDisposable();
 
         $this->assertSame('string', $validator->getType());
     }
 
     public function test_validator_is_array(): void
     {
-        $validator = new EmailNotDisposable;
+        $validator = new EmailNotDisposable();
 
         $this->assertSame(false, $validator->isArray());
     }

@@ -1,6 +1,6 @@
 <?php
 
-namespace Utopia\Tests\Canonicals\Providers;
+namespace Utopia\Emails\Tests\Canonicals\Providers;
 
 use PHPUnit\Framework\TestCase;
 use Utopia\Emails\Canonicals\Providers\Protonmail;
@@ -11,7 +11,7 @@ class ProtonmailTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->provider = new Protonmail;
+        $this->provider = new Protonmail();
     }
 
     public function test_supports(): void

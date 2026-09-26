@@ -307,7 +307,7 @@ function fetchSource(string $sourceKey, array $sourceConfig, string $type): arra
 function fetchMartensonDomains(array $sourceConfig): array
 {
     try {
-        $client = new \Utopia\Fetch\Client;
+        $client = new \Utopia\Fetch\Client();
 
         $response = $client->fetch(
             url: $sourceConfig['url'],
@@ -353,7 +353,7 @@ function fetchMartensonDomains(array $sourceConfig): array
 function fetchDisposableDomains(array $sourceConfig): array
 {
     try {
-        $client = new \Utopia\Fetch\Client;
+        $client = new \Utopia\Fetch\Client();
 
         $response = $client->fetch(
             url: $sourceConfig['url'],
@@ -400,7 +400,7 @@ function fetchDisposableDomains(array $sourceConfig): array
 function fetchWesbosDomains(array $sourceConfig): array
 {
     try {
-        $client = new \Utopia\Fetch\Client;
+        $client = new \Utopia\Fetch\Client();
 
         $response = $client->fetch(
             url: $sourceConfig['url'],
@@ -447,7 +447,7 @@ function fetchWesbosDomains(array $sourceConfig): array
 function fetchFakeFilterDomains(array $sourceConfig): array
 {
     try {
-        $client = new \Utopia\Fetch\Client;
+        $client = new \Utopia\Fetch\Client();
 
         $response = $client->fetch(
             url: $sourceConfig['url'],
@@ -493,7 +493,7 @@ function fetchFakeFilterDomains(array $sourceConfig): array
 function fetchAdamLovingDomains(array $sourceConfig): array
 {
     try {
-        $client = new \Utopia\Fetch\Client;
+        $client = new \Utopia\Fetch\Client();
 
         $response = $client->fetch(
             url: $sourceConfig['url'],
@@ -557,7 +557,7 @@ function loadManualDisposableDomains(array $sourceConfig): array
 function fetchKikobeatsDomains(array $sourceConfig): array
 {
     try {
-        $client = new \Utopia\Fetch\Client;
+        $client = new \Utopia\Fetch\Client();
 
         $response = $client->fetch(
             url: $sourceConfig['url'],
@@ -855,7 +855,7 @@ function showPreview(array $currentDomains, array $newDomains): void
 }
 
 // Setup CLI
-$cli = new CLI;
+$cli = new CLI();
 
 // Disposable domains command
 $cli

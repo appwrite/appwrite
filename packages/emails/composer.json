@@ -22,11 +22,16 @@
     ],
     "autoload": {
         "psr-4": {
-            "Utopia\\Emails\\": "src/Emails"
+            "Utopia\\Emails\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Utopia\\Emails\\Tests\\": "tests/"
         }
     },
     "scripts": {
-        "test": "phpunit",
+        "test": "phpunit --testsuite unit",
         "import": "php import.php",
         "import:all": "php import.php all --commit=true",
         "import:disposable": "php import.php disposable --commit=true",

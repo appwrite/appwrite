@@ -212,7 +212,7 @@ class Email
     public function isDisposable(): bool
     {
         if (self::$disposableDomains === null) {
-            $data = include __DIR__.'/../../data/disposable-domains.php';
+            $data = include __DIR__.'/../data/disposable-domains.php';
             if (! is_array($data)) {
                 throw new Exception('Disposable domains data file must return an array');
             }
@@ -228,7 +228,7 @@ class Email
     public function isFree(): bool
     {
         if (self::$freeDomains === null) {
-            $data = include __DIR__.'/../../data/free-domains.php';
+            $data = include __DIR__.'/../data/free-domains.php';
             if (! is_array($data)) {
                 throw new Exception('Free domains data file must return an array');
             }
@@ -332,13 +332,13 @@ class Email
     {
         if (self::$providers === null) {
             self::$providers = [
-                new Gmail,
-                new Outlook,
-                new Yahoo,
-                new Icloud,
-                new Protonmail,
-                new Fastmail,
-                new Walla,
+                new Gmail(),
+                new Outlook(),
+                new Yahoo(),
+                new Icloud(),
+                new Protonmail(),
+                new Fastmail(),
+                new Walla(),
             ];
         }
     }
@@ -357,7 +357,7 @@ class Email
         }
 
         // Return generic provider if no specific provider found
-        return new Generic;
+        return new Generic();
     }
 
     /**

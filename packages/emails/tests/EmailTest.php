@@ -1,6 +1,6 @@
 <?php
 
-namespace Utopia\Tests;
+namespace Utopia\Emails\Tests;
 
 use Exception;
 use PHPUnit\Framework\TestCase;
