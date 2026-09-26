@@ -39,6 +39,7 @@
             "Utopia\\Locale\\": "packages/locale/src",
             "Utopia\\Lock\\": "packages/lock/src",
             "Utopia\\Messaging\\": "packages/messaging/src",
+            "Utopia\\Mqtt\\": "packages/mqtt/src",
             "Utopia\\OpenAPI\\": "packages/openapi/src",
             "Utopia\\Pools\\": "packages/pools/src",
             "Utopia\\Psr7\\": "packages/psr7/src",
@@ -72,6 +73,7 @@
             "Utopia\\Locale\\Tests\\": "packages/locale/tests",
             "Utopia\\Lock\\Tests\\": "packages/lock/tests",
             "Utopia\\Messaging\\Tests\\": "packages/messaging/tests",
+            "Utopia\\Mqtt\\Tests\\": "packages/mqtt/tests",
             "Utopia\\OpenAPI\\Tests\\": "packages/openapi/tests",
             "Utopia\\Pools\\Tests\\": "packages/pools/tests",
             "Utopia\\Psr7\\Tests\\": "packages/psr7/tests",
@@ -99,10 +101,6 @@
         {
             "type": "vcs",
             "url": "https://github.com/utopia-php/vcs"
-        },
-        {
-            "type": "vcs",
-            "url": "https://github.com/utopia-php/mqtt"
         }
     ],
     "require": {
@@ -137,7 +135,6 @@
         "utopia-php/http": "^2.0@RC",
         "utopia-php/fetch": "^1.1",
         "utopia-php/migration": "^2.0.0",
-        "utopia-php/mqtt": "0.0.*",
         "utopia-php/platform": "1.0.0-rc25",
         "utopia-php/queue": "^6.0.0",
         "utopia-php/servers": "0.4.*",
@@ -204,6 +201,7 @@
         "utopia-php/locale": "*",
         "utopia-php/lock": "*",
         "utopia-php/messaging": "*",
+        "utopia-php/mqtt": "*",
         "utopia-php/openapi": "*",
         "utopia-php/pools": "*",
         "utopia-php/psr7": "*",
