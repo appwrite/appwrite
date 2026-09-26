@@ -10,6 +10,7 @@ use Throwable;
 use Utopia\Cache\Adapter;
 use Utopia\Cache\Codec;
 use Utopia\Cache\Codec\Json;
+use Utopia\Cache\DecodedEnvelopes;
 use Utopia\Cache\Feature\Batchable;
 use Utopia\Cache\Feature\Telemetry as TelemetryFeature;
 use Utopia\Telemetry\Adapter as Telemetry;
@@ -48,6 +49,8 @@ class Multiplexing extends Leasable implements Adapter, Batchable, TelemetryFeat
     private Telemetry $telemetry;
 
     private ?UpDownCounter $pendingDepth = null;
+
+    private ?DecodedEnvelopes $decoded = null;
 
     /**
      * @param  float  $timeout connect timeout in seconds
@@ -155,7 +158,7 @@ class Multiplexing extends Leasable implements Adapter, Batchable, TelemetryFeat
             return false;
         }
 
-        return $this->envelope->decode($value, $ttl, time());
+        return ($this->decoded ??= new DecodedEnvelopes($this->envelope))->decode($key . ' ' . $hash, $value, $ttl, time());
     }
 
     /**

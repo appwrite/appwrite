@@ -109,7 +109,7 @@ parameters:
 			path: src/Adapter/RedisCluster.php
 
 		-
-			message: '#^Method Utopia\\Cache\\Envelope\:\:unwrap\(\) should return array\<string, mixed\>\|false but returns non\-empty\-array\<mixed, mixed\>\.$#'
+			message: '#^Method Utopia\\Cache\\Envelope\:\:record\(\) should return array\<string, mixed\>\|false but returns non\-empty\-array\<mixed, mixed\>\.$#'
 			identifier: return.type
 			count: 1
 			path: src/Envelope.php

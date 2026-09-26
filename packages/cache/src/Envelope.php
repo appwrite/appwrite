@@ -38,7 +38,7 @@ final readonly class Envelope
     public function decode(string $value, int $ttl, int $now): mixed
     {
         $cache = $this->unwrap($value);
-        if ($cache === false || ! isset($cache['time']) || ! \is_int($cache['time'])) {
+        if ($cache === false) {
             return false;
         }
 
@@ -55,7 +55,7 @@ final readonly class Envelope
      */
     public function touch(string $value, int $newTime): string|false
     {
-        $cache = $this->unwrap($value);
+        $cache = $this->record($value);
         if ($cache === false) {
             return false;
         }
@@ -70,10 +70,26 @@ final readonly class Envelope
     }
 
     /**
+     * Decode a stored envelope without applying a TTL. Returns false when the
+     * value is not a well-formed envelope.
+     *
+     * @return array{time: int, data: mixed}|false
+     */
+    public function unwrap(string $value): array|false
+    {
+        $cache = $this->record($value);
+        if ($cache === false || ! isset($cache['time']) || ! \is_int($cache['time'])) {
+            return false;
+        }
+
+        return ['time' => $cache['time'], 'data' => $cache['data']];
+    }
+
+    /**
      * @return array<string, mixed>|false the decoded record when it carries a
      *                                    non-null `data` field, false otherwise
      */
-    private function unwrap(string $value): array|false
+    private function record(string $value): array|false
     {
         try {
             $cache = $this->codec->decode($value);
