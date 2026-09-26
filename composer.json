@@ -27,6 +27,7 @@
             "Appwrite\\": "src/Appwrite",
             "Executor\\": "src/Executor",
             "Utopia\\Agents\\": "packages/agents/src",
+            "Utopia\\Auth\\": "packages/auth/src",
             "Utopia\\Balancer\\": "packages/balancer/src",
             "Utopia\\Bus\\": "packages/bus/src",
             "Utopia\\Cache\\": "packages/cache/src",
@@ -63,6 +64,7 @@
             "Tests\\Unit\\": "tests/unit",
             "Appwrite\\Tests\\": "tests/extensions",
             "Utopia\\Agents\\Tests\\": "packages/agents/tests",
+            "Utopia\\Auth\\Tests\\": "packages/auth/tests",
             "Utopia\\Balancer\\Tests\\": "packages/balancer/tests",
             "Utopia\\Bus\\Tests\\": "packages/bus/tests",
             "Utopia\\Cache\\Tests\\": "packages/cache/tests",
@@ -96,10 +98,6 @@
     "repositories": [
         {
             "type": "vcs",
-            "url": "https://github.com/utopia-php/auth"
-        },
-        {
-            "type": "vcs",
             "url": "https://github.com/utopia-php/cdn"
         },
         {
@@ -126,7 +124,6 @@
         "appwrite/php-clamav": "2.0.*",
         "utopia-php/abuse": "2.0.*",
         "utopia-php/audit": "^4.0",
-        "utopia-php/auth": "^0.12",
         "utopia-php/cdn": "^0.0.13",
         "utopia-php/cli": "^0.24",
         "utopia-php/config": "1.*",
@@ -191,6 +188,7 @@
     },
     "replace": {
         "utopia-php/agents": "*",
+        "utopia-php/auth": "*",
         "utopia-php/balancer": "*",
         "utopia-php/bus": "*",
         "utopia-php/cache": "*",
