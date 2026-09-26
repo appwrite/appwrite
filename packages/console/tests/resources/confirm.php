@@ -6,6 +6,4 @@ use Utopia\Console;
 
 require __DIR__ . '/autoload.php';
 
-Console::loop(function (): void {
-    echo "Hello\n";
-});
+echo Console::confirm('this is a question');

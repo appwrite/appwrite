@@ -11,11 +11,16 @@
     ],
     "license": "MIT",
     "scripts": {
-        "test": "phpunit < tests/input.txt"
+        "test": "phpunit --configuration phpunit.xml --testsuite unit"
     },
     "autoload": {
         "psr-4": {
             "Utopia\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Utopia\\Console\\Tests\\": "tests/"
         }
     },
     "require": {

@@ -151,7 +151,7 @@ class Command implements Stringable
     {
         return match ($this->type) {
             self::TYPE_PLAIN => implode(' ', array_map(escapeshellarg(...), $this->arguments)),
-            self::TYPE_COMPOSITE => implode(' ' . $this->operator . ' ', array_map(static fn(self $command): string => $command->toString(), $this->commands)),
+            self::TYPE_COMPOSITE => implode(' ' . $this->operator . ' ', array_map(static fn (self $command): string => $command->toString(), $this->commands)),
             self::TYPE_GROUP => '( ' . $this->command?->toString() . ' )',
             self::TYPE_REDIRECT => $this->command?->toString() . ' ' . $this->redirect . ' ' . escapeshellarg($this->redirectTarget ?? ''),
             default => throw new InvalidArgumentException('Unsupported command type: ' . $this->type),

@@ -18,7 +18,19 @@ final class ConsoleTest extends TestCase
         $this->assertSame(14, Console::info('info'));
         $this->assertSame(19, Console::warning('warning'));
         $this->assertSame(15, Console::error('error'));
-        $this->assertSame('this is an answer', Console::confirm('this is a question'));
+    }
+
+    public function testConfirm(): void
+    {
+        $command = new Command(PHP_BINARY)
+            ->argument(__DIR__ . '/resources/confirm.php');
+        $input = "this is an answer\n";
+        $output = '';
+        $stderr = '';
+        $code = Console::execute($command, $input, $output, $stderr, 10);
+
+        $this->assertSame("this is a question\nthis is an answer", $output);
+        $this->assertSame(0, $code);
     }
 
     public function testExecuteBasic(): void
@@ -65,7 +77,7 @@ final class ConsoleTest extends TestCase
     {
         $command = new Command('git')
             ->argument('checkout')
-            ->argument('develop', fn(string $value): bool => \in_array($value, ['main', 'develop', 'staging'], true));
+            ->argument('develop', fn (string $value): bool => \in_array($value, ['main', 'develop', 'staging'], true));
 
         $this->assertSame(['git', 'checkout', 'develop'], $command->toArray());
     }
@@ -77,7 +89,7 @@ final class ConsoleTest extends TestCase
 
         new Command('git')
             ->argument('checkout')
-            ->argument('feature/test; rm -rf /', fn(string $value): bool => preg_match('/^[A-Za-z0-9._\/-]+$/', $value) === 1);
+            ->argument('feature/test; rm -rf /', fn (string $value): bool => preg_match('/^[A-Za-z0-9._\/-]+$/', $value) === 1);
     }
 
     public function testCommandRejectsInvalidFlag(): void
@@ -239,7 +251,7 @@ final class ConsoleTest extends TestCase
 
     public function testLoop(): void
     {
-        $file = __DIR__ . '/../resources/loop.php';
+        $file = __DIR__ . '/resources/loop.php';
         $command = new Command(PHP_BINARY)
             ->argument($file);
         $input = '';

@@ -25,7 +25,7 @@ const BANNED = ['pint.json', 'psalm.xml', 'phpcs.xml', '.travis.yml', '.gitpod.y
  * of their classes and their tests use. Step B (rfc/monorepo.md, phase 6)
  * renames those classes and removes the package from this list.
  */
-const BARE = ['validators' => 'Validator'];
+const BARE = ['validators' => 'Validator', 'console' => 'Console'];
 
 /**
  * Dockerfiles a package's docker-compose.yml builds from. Those belong to the
