@@ -58,10 +58,10 @@ keda_up() {
     helm repo update kedacore > /dev/null
     helm upgrade --install keda kedacore/keda --namespace keda --create-namespace --wait --timeout 5m
 
-    docker build -t utopia-queue-keda-worker:e2e -f tests/Queue/servers/Keda/Dockerfile .
+    docker build -t utopia-queue-keda-worker:e2e -f tests/E2E/servers/Keda/Dockerfile .
     kind load docker-image utopia-queue-keda-worker:e2e --name "$KIND_CLUSTER"
 
-    kubectl apply -f tests/Queue/servers/Keda/k8s.yaml
+    kubectl apply -f tests/E2E/servers/Keda/k8s.yaml
     kubectl rollout status deploy/redis -n utopia-queue-keda --timeout=120s
 
     export KEDA_E2E=true

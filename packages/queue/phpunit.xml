@@ -1,39 +1,23 @@
-<phpunit backupGlobals="false"
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/12.0/phpunit.xsd"
          bootstrap="vendor/autoload.php"
          colors="true"
-         processIsolation="false"
-         stopOnFailure="false"
-        >
+         cacheDirectory=".phpunit.cache">
     <testsuites>
         <testsuite name="unit">
-            <directory>./tests/Queue/Unit</directory>
-            <file>./tests/Queue/E2E/Adapter/ConsumerResilienceTest.php</file>
-            <file>./tests/Queue/E2E/Adapter/KubernetesJobAdapterTest.php</file>
-            <file>./tests/Queue/E2E/Adapter/BackgroundTest.php</file>
-            <file>./tests/Queue/E2E/Adapter/LockingTest.php</file>
-            <file>./tests/Queue/E2E/Adapter/RedisReconnectCallbackTest.php</file>
-            <file>./tests/Queue/E2E/Adapter/ServerTelemetryTest.php</file>
-            <file>./tests/Queue/E2E/Adapter/SwooleConcurrencyTest.php</file>
+            <directory>tests</directory>
+            <exclude>tests/E2E</exclude>
+            <exclude>tests/bench</exclude>
         </testsuite>
         <testsuite name="e2e">
-            <file>./tests/Queue/E2E/Adapter/RedisBrokerRecoveryTest.php</file>
-            <file>./tests/Queue/E2E/Adapter/BatchedReceiveTest.php</file>
-            <file>./tests/Queue/E2E/Adapter/RedisCodecTest.php</file>
-            <file>./tests/Queue/E2E/Adapter/RedisRejectTest.php</file>
-            <file>./tests/Queue/E2E/Adapter/RedisReservationTest.php</file>
-            <file>./tests/Queue/E2E/Adapter/PrefetchTest.php</file>
-            <file>./tests/Queue/E2E/Adapter/RedisExpiryTest.php</file>
-            <file>./tests/Queue/E2E/Adapter/NatsBrokerTest.php</file>
-            <file>./tests/Queue/E2E/Adapter/NatsServerTest.php</file>
-            <file>./tests/Queue/E2E/Adapter/NatsPoolTest.php</file>
-            <file>./tests/Queue/E2E/Adapter/KedaTest.php</file>
-            <file>./tests/Queue/E2E/Adapter/PoolTest.php</file>
-            <file>./tests/Queue/E2E/Adapter/RedisAuthTest.php</file>
-            <file>./tests/Queue/E2E/Adapter/RedisConnectionRecoveryTest.php</file>
-            <file>./tests/Queue/E2E/Adapter/SwooleTest.php</file>
-            <file>./tests/Queue/E2E/Adapter/SwooleRestartTest.php</file>
-            <file>./tests/Queue/E2E/Adapter/SwooleRedisClusterTest.php</file>
-            <file>./tests/Queue/E2E/Adapter/WorkermanTest.php</file>
+            <directory>tests/E2E</directory>
+            <exclude>tests/E2E/servers</exclude>
         </testsuite>
     </testsuites>
+    <source>
+        <include>
+            <directory>src</directory>
+        </include>
+    </source>
 </phpunit>

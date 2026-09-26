@@ -20,13 +20,12 @@
     ],
     "autoload": {
         "psr-4": {
-            "Utopia\\Queue\\": "src/Queue"
+            "Utopia\\Queue\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Tests\\E2E\\": "tests/Queue/E2E",
-            "Tests\\Unit\\": "tests/Queue/Unit"
+            "Utopia\\Queue\\Tests\\": "tests/"
         }
     },
     "scripts": {

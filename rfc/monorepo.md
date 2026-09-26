@@ -76,7 +76,7 @@ Rules `validate` checks per package:
 2. The main `autoload` declares exactly one PSR-4 prefix, `Utopia\<Ns>\`, mapped to `src/`. `<Ns>` lowercased with hyphens removed equals `<name>` (`CircuitBreaker` ↔ `circuit-breaker`, `DNS` ↔ `dns`, `Psr7` ↔ `psr7`, `OpenAPI` ↔ `openapi`).
 3. `autoload-dev` declares exactly `Utopia\<Ns>\Tests\` mapped to `tests/`.
 4. No `composer.lock`; `.gitignore` lists it.
-5. None of: `psalm.xml`, `phpcs.xml`, `.travis.yml`, `.gitpod.yml`, `.coderabbit.yaml`, `pint.json`, Pint/PHPStan/Rector/PHPUnit in `require-dev`, nor any `Dockerfile*` except the ones `docker-compose.yml` builds an e2e service from.
+5. None of: `psalm.xml`, `phpcs.xml`, `.travis.yml`, `.gitpod.yml`, `.coderabbit.yaml`, `pint.json`, Pint/PHPStan/Rector/PHPUnit in `require-dev`, nor any `Dockerfile*` except the ones `docker-compose.yml` builds an e2e service from and fixtures under `tests/E2E/`.
 6. Sibling dependencies are Packagist constraints, never path repositories (the mirror must install standalone).
 7. The root autoload map and `replace` entries (below) match what the manifests declare.
 8. `phpstan.neon` never includes or references a path outside the package: in the old monorepo `../../phpstan.neon` was a per-package floor, here it is Appwrite's own config.
@@ -279,6 +279,7 @@ Exit: `composer.lock` contains no `utopia-php/*` package.
   - `dsn`: 4 findings (it had no PHPStan config on its standalone repository): the untyped `$params` array, `parse_url()`'s integer port stored in a `?string` property, and `getParam()` returning the `mixed` parsed query value.
   - `mqtt`: 82 findings (its own repository analysed it at level max under PHPStan 1): `chr()` arguments not narrowed to `int<0, 255>` and casts from `mixed` in the packet codecs and `Property`, untyped Swoole client and request fields in `Client` and the Swoole adapter, and loosely typed data providers and e2e assertions in its tests.
   - `openapi`: 166 findings (level 5 in the monorepo), nearly all offset access on the decoded `mixed` document in its readers.
+  - `queue`: 296 findings (level 5 in the monorepo): 162 in `src`, unvalued `array` payloads and returns across `Connection`, `Message` and the brokers, and `mixed` Redis replies and decoded jobs in `Connection\Redis`, `Connection\RedisCluster`, `Broker\Redis`, `Broker\Pool` and `Server`; 134 in its tests, loosely typed connection fakes, the Swoole restart and proxy fixture servers, and decoded NATS and Redis payloads in its e2e tests.
   - `servers`: 74 findings (level 5 in the monorepo): 34 in `src`, unvalued `array` parameters, properties and returns in `Hook`, and offset access on the `mixed` param and injection definitions in `Base::prepare()` and `Base::validate()`; 40 in its tests, the nullable `?Hook` fixture and offsets on `getParams()` results in `HookTest`.
   - `system`: 16 findings from mixed CPU and disk statistics.
   - `validators`: 75 findings (level 5 in the monorepo): 48 in `src`, unvalued `array` parameters and casts from `mixed`, mostly in `Globstar`, `Domain`, `URL`, `Contains` and `WhiteList`; 27 in its tests, nullable validator fixtures in `AssocTest` and `URLTest`.

@@ -11,4 +11,4 @@ cd "$(dirname "$0")/.."
 trap keda_down EXIT INT TERM
 keda_up
 
-../../vendor/bin/phpunit tests/Queue/E2E/Adapter/KedaTest.php
+phpunit tests/E2E/KedaTest.php

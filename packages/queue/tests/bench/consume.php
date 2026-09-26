@@ -122,7 +122,9 @@ final class Timed implements Consumer
      */
     public float $lastCommittedAt = 0.0;
 
-    public function __construct(private readonly Consumer $inner) {}
+    public function __construct(private readonly Consumer $inner)
+    {
+    }
 
     public function receive(Queue $queue, int $timeout, int $n = 1): array
     {
@@ -180,7 +182,7 @@ function broker(string $name): RedisBroker|NatsBroker
 
     $url = getenv('NATS_URL') ?: 'nats://127.0.0.1:14225';
 
-    return new NatsBroker(fn(): \Utopia\NATS\Connection => \Utopia\NATS\Connection::connect($url));
+    return new NatsBroker(fn (): \Utopia\NATS\Connection => \Utopia\NATS\Connection::connect($url));
 }
 
 function queueFor(string $name): Queue
@@ -292,7 +294,7 @@ function consume(array $args): array
                     $adapter->stop();
                 }
             },
-            static fn(): null => null,
+            static fn (): null => null,
             function (?Message $message, Throwable $failure) use ($adapter, &$error): void {
                 $error ??= 'handler: ' . $failure->getMessage();
                 $adapter->stop();
@@ -327,7 +329,7 @@ function measure(string $name, array $args): array
     $processes = max(1, (int) $args['processes']);
     $stagger = max(0, (int) $args['stagger']);
     $filler = str_repeat('x', (int) $args['payload']);
-    $fail = static fn(string $why): array => ['drain' => 0.0, 'p50' => 0.0, 'p95' => 0.0, 'received' => 0, 'error' => $why];
+    $fail = static fn (string $why): array => ['drain' => 0.0, 'p50' => 0.0, 'p95' => 0.0, 'received' => 0, 'error' => $why];
 
     // Provision, then drain whatever a previous or interrupted run left behind. These
     // queues are durable and reused, so without this a sample can consume the last
@@ -539,7 +541,7 @@ foreach ($backends as $name) {
     }
 
     $pick = static function (string $key) use ($complete): float {
-        $series = array_map(static fn(array $s): float => $s[$key], $complete);
+        $series = array_map(static fn (array $s): float => $s[$key], $complete);
         sort($series);
 
         return $series[intdiv(count($series), 2)];

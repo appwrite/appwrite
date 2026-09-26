@@ -1,0 +1,1579 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Anonymous function should return Utopia\\Queue\\Consumer but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Adapter.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Adapter\:\:trace\(\) should return resource but returns resource\|false\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Adapter.php
+
+		-
+			message: '#^Argument of an invalid type mixed supplied for foreach, only iterables are supported\.$#'
+			identifier: foreach.nonIterable
+			count: 1
+			path: src/Adapter/KubernetesJob.php
+
+		-
+			message: '#^Cannot access offset ''__utopia__'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: src/Adapter/Swoole.php
+
+		-
+			message: '#^Cannot access offset ''pid'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Swoole.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Adapter\\Swoole\:\:context\(\) should return Utopia\\DI\\Container but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Adapter/Swoole.php
+
+		-
+			message: '#^Possibly invalid array key type mixed\.$#'
+			identifier: offsetAccess.invalidOffset
+			count: 6
+			path: src/Adapter/Swoole.php
+
+		-
+			message: '#^Property Utopia\\Queue\\Adapter\\Swoole\:\:\$workerIds \(array\<int, int\>\) does not accept array\<int\>\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: src/Adapter/Swoole.php
+
+		-
+			message: '#^Cannot access property \$workerId on mixed\.$#'
+			identifier: property.nonObject
+			count: 2
+			path: src/Adapter/Workerman.php
+
+		-
+			message: '#^Binary operation "\+" between mixed and float results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: src/Broker/Background.php
+
+		-
+			message: '#^Cannot access property \$name on mixed\.$#'
+			identifier: property.nonObject
+			count: 2
+			path: src/Broker/Background.php
+
+		-
+			message: '#^Cannot access property \$namespace on mixed\.$#'
+			identifier: property.nonObject
+			count: 2
+			path: src/Broker/Background.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Broker\\Background\:\:enqueue\(\) has parameter \$payload with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Broker/Background.php
+
+		-
+			message: '#^Parameter \#1 \$queue of method Utopia\\Queue\\Broker\\Background\:\:dispatch\(\) expects Utopia\\Queue\\Queue, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Broker/Background.php
+
+		-
+			message: '#^Parameter \#1 of callable callable\(float\|int, iterable\<non\-empty\-string, array\<mixed\>\|bool\|float\|int\|string\|null\>\)\: void expects float\|int, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Broker/Background.php
+
+		-
+			message: '#^Parameter \#2 \$payload of method Utopia\\Queue\\Broker\\Background\:\:publish\(\) expects array\<string, mixed\>, array given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Broker/Background.php
+
+		-
+			message: '#^Parameter \#2 \$payloads of method Utopia\\Queue\\Broker\\Background\:\:dispatch\(\) expects list\<array\<string, mixed\>\>, array\{mixed\} given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Broker/Background.php
+
+		-
+			message: '#^Parameter \#2 \$payloads of method Utopia\\Queue\\Broker\\Background\:\:dispatch\(\) expects list\<array\<string, mixed\>\>, non\-empty\-list\<mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Broker/Background.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Broker\\Nats\:\:fetch\(\) should return list\<Utopia\\NATS\\JetStream\\JetStreamMessage\> but returns list\<mixed\>\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Broker/Nats.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Broker\\Nats\:\:pull\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Broker/Nats.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Broker\\Nats\:\:receive\(\) should return list\<Utopia\\Queue\\Message\> but returns array\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Broker/Nats.php
+
+		-
+			message: '#^Parameter \#1 \$messages of method Utopia\\NATS\\JetStream\\JetStream\:\:ackBatch\(\) expects list\<Utopia\\NATS\\JetStream\\JetStreamMessage\>, array given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Broker/Nats.php
+
+		-
+			message: '#^Cannot cast mixed to float\.$#'
+			identifier: cast.double
+			count: 1
+			path: src/Broker/Pool.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Broker\\Pool\:\:__construct\(\) has parameter \$consumer with generic class Utopia\\Pools\\Pool but does not specify its types\: TResource$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Broker/Pool.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Broker\\Pool\:\:__construct\(\) has parameter \$publisher with generic class Utopia\\Pools\\Pool but does not specify its types\: TResource$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Broker/Pool.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Broker\\Pool\:\:delegate\(\) has parameter \$pool with generic class Utopia\\Pools\\Pool but does not specify its types\: TResource$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Broker/Pool.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Broker\\Pool\:\:getFailedCount\(\) should return int but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Broker/Pool.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Broker\\Pool\:\:getQueueSize\(\) should return int but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Broker/Pool.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Broker\\Pool\:\:publish\(\) should return bool but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Broker/Pool.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Broker\\Pool\:\:publishMany\(\) should return bool but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Broker/Pool.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Broker\\Pool\:\:reap\(\) should return int but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Broker/Pool.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Broker\\Pool\:\:receive\(\) should return list\<Utopia\\Queue\\Message\> but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Broker/Pool.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Utopia\\Pools\\Pool\<mixed\>\:\:use\(\) expects callable\(mixed\)\: \(float\|null\), Closure\(Utopia\\Queue\\Consumer\|Utopia\\Queue\\Publisher\\Synchronous\)\: \(float\|null\) given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Broker/Pool.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Utopia\\Pools\\Pool\<mixed\>\:\:use\(\) expects callable\(mixed\)\: \(int\|null\), Closure\(Utopia\\Queue\\Consumer\|Utopia\\Queue\\Publisher\\Synchronous\)\: \(int\|null\) given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Broker/Pool.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Utopia\\Pools\\Pool\<mixed\>\:\:use\(\) expects callable\(mixed\)\: mixed, Closure\(Utopia\\Queue\\Consumer\|Utopia\\Queue\\Publisher\\Synchronous\)\: mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Broker/Pool.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Utopia\\Pools\\Pool\<mixed\>\:\:use\(\) expects callable\(mixed\)\: void, Closure\(Utopia\\Queue\\Consumer\|Utopia\\Queue\\Publisher\\Synchronous\)\: void given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Broker/Pool.php
+
+		-
+			message: '#^Argument of an invalid type mixed supplied for foreach, only iterables are supported\.$#'
+			identifier: foreach.nonIterable
+			count: 1
+			path: src/Broker/Redis.php
+
+		-
+			message: '#^Cannot access offset string on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Broker/Redis.php
+
+		-
+			message: '#^Cannot cast array\|string\|null to string\.$#'
+			identifier: cast.string
+			count: 1
+			path: src/Broker/Redis.php
+
+		-
+			message: '#^Cannot cast mixed to int\.$#'
+			identifier: cast.int
+			count: 1
+			path: src/Broker/Redis.php
+
+		-
+			message: '#^Cannot use array destructuring on mixed\.$#'
+			identifier: offsetAccess.nonArray
+			count: 1
+			path: src/Broker/Redis.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Broker\\Redis\:\:claim\(\) has parameter \$batch with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Broker/Redis.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Broker\\Redis\:\:claim\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Broker/Redis.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Broker\\Redis\:\:receive\(\) should return list\<Utopia\\Queue\\Message\> but returns array\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Broker/Redis.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Broker\\Redis\:\:script\(\) has parameter \$args with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Broker/Redis.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Broker\\Redis\:\:script\(\) has parameter \$keys with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Broker/Redis.php
+
+		-
+			message: '#^Only iterables can be unpacked, mixed given in argument \#2\.$#'
+			identifier: argument.unpackNonIterable
+			count: 2
+			path: src/Broker/Redis.php
+
+		-
+			message: '#^Only iterables can be unpacked, mixed given\.$#'
+			identifier: arrayUnpacking.nonIterable
+			count: 2
+			path: src/Broker/Redis.php
+
+		-
+			message: '#^Parameter \#1 \$script of method Utopia\\Queue\\Connection\:\:execute\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Broker/Redis.php
+
+		-
+			message: '#^Parameter \#1 \$value of method Utopia\\Queue\\Codec\:\:decode\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Broker/Redis.php
+
+		-
+			message: '#^Parameter \#1 of callable callable\(int, mixed\)\: void expects int, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Broker/Redis.php
+
+		-
+			message: '#^Parameter \#2 \$batch of method Utopia\\Queue\\Broker\\Redis\:\:claim\(\) expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Broker/Redis.php
+
+		-
+			message: '#^Parameter \#2 \$keys of method Utopia\\Queue\\Connection\:\:execute\(\) expects list\<string\>, array given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Broker/Redis.php
+
+		-
+			message: '#^Parameter \#2 \$string of function explode expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Broker/Redis.php
+
+		-
+			message: '#^Parameter \#3 \$args of method Utopia\\Queue\\Connection\:\:execute\(\) expects list\<float\|int\|string\>, array given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Broker/Redis.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Connection\:\:get\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Connection.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Connection\:\:leftPopArray\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Connection.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Connection\:\:leftPushArray\(\) has parameter \$payload with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Connection.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Connection\:\:listRange\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Connection.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Connection\:\:rightPopArray\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Connection.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Connection\:\:rightPopLeftPushArray\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Connection.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Connection\:\:rightPushArray\(\) has parameter \$payload with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Connection.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Connection\:\:setArray\(\) has parameter \$value with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Connection.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Connection\\Locking\:\:get\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Connection/Locking.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Connection\\Locking\:\:leftPopArray\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Connection/Locking.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Connection\\Locking\:\:leftPushArray\(\) has parameter \$payload with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Connection/Locking.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Connection\\Locking\:\:listRange\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Connection/Locking.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Connection\\Locking\:\:rightPopArray\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Connection/Locking.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Connection\\Locking\:\:rightPopLeftPushArray\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Connection/Locking.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Connection\\Locking\:\:rightPushArray\(\) has parameter \$payload with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Connection/Locking.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Connection\\Locking\:\:setArray\(\) has parameter \$value with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Connection/Locking.php
+
+		-
+			message: '#^Cannot access offset 1 on non\-empty\-array\|Redis\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: src/Connection/Redis.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 1
+			path: src/Connection/Redis.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Connection\\Redis\:\:get\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Connection/Redis.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Connection\\Redis\:\:get\(\) should return array\|string\|null but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Connection/Redis.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Connection\\Redis\:\:leftPop\(\) should return string\|false but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Connection/Redis.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Connection\\Redis\:\:leftPopArray\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Connection/Redis.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Connection\\Redis\:\:leftPopArray\(\) should return array\|false but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Connection/Redis.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Connection\\Redis\:\:leftPushArray\(\) has parameter \$value with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Connection/Redis.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Connection\\Redis\:\:listRange\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Connection/Redis.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Connection\\Redis\:\:rightPop\(\) should return string\|false but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Connection/Redis.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Connection\\Redis\:\:rightPopArray\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Connection/Redis.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Connection\\Redis\:\:rightPopArray\(\) should return array\|false but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Connection/Redis.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Connection\\Redis\:\:rightPopLeftPushArray\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Connection/Redis.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Connection\\Redis\:\:rightPopLeftPushArray\(\) should return array\|false but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Connection/Redis.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Connection\\Redis\:\:rightPushArray\(\) has parameter \$value with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Connection/Redis.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Connection\\Redis\:\:setArray\(\) has parameter \$value with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Connection/Redis.php
+
+		-
+			message: '#^Parameter \#2 \$value of method Utopia\\Queue\\Connection\\Redis\:\:set\(\) expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Connection/Redis.php
+
+		-
+			message: '#^Property Utopia\\Queue\\Connection\\Redis\:\:\$scripts type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Connection/Redis.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 1
+			path: src/Connection/RedisCluster.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Connection\\RedisCluster\:\:__construct\(\) has parameter \$seeds with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Connection/RedisCluster.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Connection\\RedisCluster\:\:get\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Connection/RedisCluster.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Connection\\RedisCluster\:\:get\(\) should return array\|string\|null but returns string\|true\|null\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Connection/RedisCluster.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Connection\\RedisCluster\:\:leftPop\(\) should return string\|false but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Connection/RedisCluster.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Connection\\RedisCluster\:\:leftPopArray\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Connection/RedisCluster.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Connection\\RedisCluster\:\:leftPopArray\(\) should return array\|false but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Connection/RedisCluster.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Connection\\RedisCluster\:\:leftPushArray\(\) has parameter \$value with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Connection/RedisCluster.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Connection\\RedisCluster\:\:listRange\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Connection/RedisCluster.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Connection\\RedisCluster\:\:rightPop\(\) should return string\|false but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Connection/RedisCluster.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Connection\\RedisCluster\:\:rightPopArray\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Connection/RedisCluster.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Connection\\RedisCluster\:\:rightPopArray\(\) should return array\|false but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Connection/RedisCluster.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Connection\\RedisCluster\:\:rightPopLeftPushArray\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Connection/RedisCluster.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Connection\\RedisCluster\:\:rightPopLeftPushArray\(\) should return array\|false but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Connection/RedisCluster.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Connection\\RedisCluster\:\:rightPushArray\(\) has parameter \$value with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Connection/RedisCluster.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Connection\\RedisCluster\:\:setArray\(\) has parameter \$value with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Connection/RedisCluster.php
+
+		-
+			message: '#^Parameter \#1 \$key_or_address of method RedisCluster\:\:ping\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Connection/RedisCluster.php
+
+		-
+			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, array given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Connection/RedisCluster.php
+
+		-
+			message: '#^Parameter \#2 \$elements of method RedisCluster\:\:rPush\(\) expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Connection/RedisCluster.php
+
+		-
+			message: '#^Parameter \#2 \$seeds of class RedisCluster constructor expects array\<string\>\|null, array given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Connection/RedisCluster.php
+
+		-
+			message: '#^Parameter \#2 \$value of method RedisCluster\:\:lPush\(\) expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Connection/RedisCluster.php
+
+		-
+			message: '#^Parameter \#2 \$value of method Utopia\\Queue\\Connection\\RedisCluster\:\:set\(\) expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Connection/RedisCluster.php
+
+		-
+			message: '#^Cannot access offset 1 on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Internal/Buffer.php
+
+		-
+			message: '#^Cannot call method push\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: src/Internal/Buffer.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Internal\\Buffer\:\:__construct\(\) has parameter \$send with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Internal/Buffer.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Internal\\Buffer\:\:dispatch\(\) has parameter \$requests with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Internal/Buffer.php
+
+		-
+			message: '#^Property Utopia\\Queue\\Internal\\Buffer\:\:\$pending type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Internal/Buffer.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Message\:\:__construct\(\) has parameter \$array with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Message.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Message\:\:asArray\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Message.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Message\:\:getPayload\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Message.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Message\:\:setPayload\(\) has parameter \$payload with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Message.php
+
+		-
+			message: '#^Property Utopia\\Queue\\Message\:\:\$attempts \(int\) does not accept mixed\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: src/Message.php
+
+		-
+			message: '#^Property Utopia\\Queue\\Message\:\:\$payload \(array\) does not accept mixed\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: src/Message.php
+
+		-
+			message: '#^Property Utopia\\Queue\\Message\:\:\$payload type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Message.php
+
+		-
+			message: '#^Property Utopia\\Queue\\Message\:\:\$pid \(string\) does not accept mixed\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: src/Message.php
+
+		-
+			message: '#^Property Utopia\\Queue\\Message\:\:\$queue \(string\) does not accept mixed\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: src/Message.php
+
+		-
+			message: '#^Property Utopia\\Queue\\Message\:\:\$sequence \(int\|null\) does not accept mixed\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: src/Message.php
+
+		-
+			message: '#^Property Utopia\\Queue\\Message\:\:\$timestamp \(int\) does not accept mixed\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: src/Message.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Publisher\\Asynchronous\:\:enqueue\(\) has parameter \$payload with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Publisher/Asynchronous.php
+
+		-
+			message: '#^Argument of an invalid type mixed supplied for foreach, only iterables are supported\.$#'
+			identifier: foreach.nonIterable
+			count: 1
+			path: src/Server.php
+
+		-
+			message: '#^Cannot access offset ''aliases'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Server.php
+
+		-
+			message: '#^Cannot access offset ''default'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: src/Server.php
+
+		-
+			message: '#^Cannot access offset ''name'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Server.php
+
+		-
+			message: '#^Cannot access offset ''order'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: src/Server.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Server\:\:getArguments\(\) has parameter \$payload with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Server.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Server\:\:getArguments\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Server.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Server\:\:getWorkerStart\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Server.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Server\:\:getWorkerStop\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Server.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Server\:\:validate\(\) has parameter \$param with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Server.php
+
+		-
+			message: '#^Parameter \#1 \$id of method Utopia\\DI\\Container\:\:get\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Server.php
+
+		-
+			message: '#^Parameter \#1 \$key of function array_key_exists expects int\|string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Server.php
+
+		-
+			message: '#^Parameter \#1 \$messageCallback of method Utopia\\Queue\\Adapter\:\:consume\(\) expects callable\(Utopia\\Queue\\Message\)\: void, Closure\(Utopia\\Queue\\Message\)\: mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Server.php
+
+		-
+			message: '#^Parameter \#2 \$param of method Utopia\\Queue\\Server\:\:validate\(\) expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Server.php
+
+		-
+			message: '#^Parameter \#3 \$dependencies of method Utopia\\DI\\Container\:\:set\(\) expects list\<string\>, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Server.php
+
+		-
+			message: '#^Possibly invalid array key type mixed\.$#'
+			identifier: offsetAccess.invalidOffset
+			count: 2
+			path: src/Server.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Tests\\SequentialContextAdapter\:\:retain\(\) return type with generic class WeakReference does not specify its types\: T$#'
+			identifier: missingType.generics
+			count: 1
+			path: tests/AdapterContextTest.php
+
+		-
+			message: '#^Anonymous function should return array but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: tests/BatchedPublishTest.php
+
+		-
+			message: '#^Cannot access offset ''payload'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/BatchedPublishTest.php
+
+		-
+			message: '#^Parameter \#1 \$array of function array_unique expects an array of values castable to string, list given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/BatchedPublishTest.php
+
+		-
+			message: '#^Parameter \#1 \.\.\.\$arg1 of function max expects non\-empty\-array, list\<int\<0, max\>\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/BufferTest.php
+
+		-
+			message: '#^Parameter \#1 \$message of method Utopia\\Queue\\Adapter\:\:process\(\) expects Utopia\\Queue\\Message, Utopia\\Queue\\Message\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/ConsumerResilienceTest.php
+
+		-
+			message: '#^Property Utopia\\Queue\\Adapter\\Swoole@anonymous/tests/ConsumerResilienceTest\.php\:113\:\:\$sink \(resource\) does not accept resource\|false\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: tests/ConsumerResilienceTest.php
+
+		-
+			message: '#^Parameter \#2 \$payload of method Utopia\\Queue\\Publisher\\Synchronous\:\:publish\(\) expects array\<string, mixed\>, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: tests/E2E/Base.php
+
+		-
+			message: '#^Property Utopia\\Queue\\Tests\\E2E\\Base\:\:\$payloads type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: tests/E2E/Base.php
+
+		-
+			message: '#^Anonymous function should return int but returns mixed\.$#'
+			identifier: return.type
+			count: 2
+			path: tests/E2E/BatchedReceiveTest.php
+
+		-
+			message: '#^Parameter \#2 \$message of method Utopia\\Queue\\Broker\\Redis\:\:reject\(\) expects Utopia\\Queue\\Message, Utopia\\Queue\\Message\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/E2E/BatchedReceiveTest.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Tests\\E2E\\KedaTest\:\:enqueue\(\) has parameter \$payload with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: tests/E2E/KedaTest.php
+
+		-
+			message: '#^Parameter \#1 \$string of function trim expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 2
+			path: tests/E2E/KedaTest.php
+
+		-
+			message: '#^Access to an undefined property object\:\:\$armed\.$#'
+			identifier: property.notFound
+			count: 1
+			path: tests/E2E/NatsBrokerTest.php
+
+		-
+			message: '#^Access to an undefined property object\:\:\$stale\.$#'
+			identifier: property.notFound
+			count: 2
+			path: tests/E2E/NatsBrokerTest.php
+
+		-
+			message: '#^Anonymous function should return string but returns mixed\.$#'
+			identifier: return.type
+			count: 2
+			path: tests/E2E/NatsBrokerTest.php
+
+		-
+			message: '#^Cannot access offset ''payload'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/E2E/NatsBrokerTest.php
+
+		-
+			message: '#^Cannot access offset ''task'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/E2E/NatsBrokerTest.php
+
+		-
+			message: '#^Cannot call method close\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: tests/E2E/NatsBrokerTest.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 2
+			path: tests/E2E/NatsBrokerTest.php
+
+		-
+			message: '#^Method Utopia\\NATS\\Transport\\Transport@anonymous/tests/E2E/NatsBrokerTest\.php\:863\:\:upgradeTls\(\) has parameter \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: tests/E2E/NatsBrokerTest.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Tests\\E2E\\NatsBrokerTest\:\:failedAcknowledgement\(\) return type has no value type specified in iterable type iterable\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: tests/E2E/NatsBrokerTest.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Tests\\E2E\\NatsBrokerTest\:\:lostPublishConnection\(\) return type has no value type specified in iterable type iterable\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: tests/E2E/NatsBrokerTest.php
+
+		-
+			message: '#^Only iterables can be unpacked, mixed given\.$#'
+			identifier: arrayUnpacking.nonIterable
+			count: 1
+			path: tests/E2E/NatsBrokerTest.php
+
+		-
+			message: '#^Parameter \#2 \$array of method PHPUnit\\Framework\\Assert\:\:assertArrayHasKey\(\) expects array\<mixed\>\|ArrayAccess\<\(int\|string\), covariant mixed\>, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/E2E/NatsBrokerTest.php
+
+		-
+			message: '#^Parameter \#2 \$array of method PHPUnit\\Framework\\Assert\:\:assertArrayNotHasKey\(\) expects array\<mixed\>\|ArrayAccess\<\(int\|string\), covariant mixed\>, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/E2E/NatsBrokerTest.php
+
+		-
+			message: '#^Parameter \$metadata of class Utopia\\NATS\\JetStream\\StreamConfig constructor expects array\<string, string\>\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/E2E/NatsBrokerTest.php
+
+		-
+			message: '#^Parameter \$subjects of class Utopia\\NATS\\JetStream\\StreamConfig constructor expects list\<string\>, non\-empty\-array given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/E2E/NatsBrokerTest.php
+
+		-
+			message: '#^Binary operation "\-\=" between mixed and int results in an error\.$#'
+			identifier: assignOp.invalid
+			count: 1
+			path: tests/E2E/RedisBrokerRecoveryTest.php
+
+		-
+			message: '#^Cannot access offset ''timestamp'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/E2E/RedisBrokerRecoveryTest.php
+
+		-
+			message: '#^Cannot call method getAttempts\(\) on Utopia\\Queue\\Message\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: tests/E2E/RedisBrokerRecoveryTest.php
+
+		-
+			message: '#^Cannot cast array\|string\|null to string\.$#'
+			identifier: cast.string
+			count: 1
+			path: tests/E2E/RedisBrokerRecoveryTest.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Connection\\Redis@anonymous/tests/E2E/RedisBrokerRecoveryTest\.php\:228\:\:get\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: tests/E2E/RedisBrokerRecoveryTest.php
+
+		-
+			message: '#^Parameter \#1 \$value of method Utopia\\Queue\\Codec\\Json\:\:decode\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/E2E/RedisBrokerRecoveryTest.php
+
+		-
+			message: '#^Property Utopia\\Queue\\Tests\\E2E\\RedisConnectionRecoveryTest\:\:\$proxy \(resource\|null\) does not accept resource\|false\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: tests/E2E/RedisConnectionRecoveryTest.php
+
+		-
+			message: '#^Binary operation "\-\=" between mixed and int results in an error\.$#'
+			identifier: assignOp.invalid
+			count: 1
+			path: tests/E2E/RedisRejectTest.php
+
+		-
+			message: '#^Cannot access offset ''timestamp'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/E2E/RedisRejectTest.php
+
+		-
+			message: '#^Cannot cast array\|string\|null to string\.$#'
+			identifier: cast.string
+			count: 1
+			path: tests/E2E/RedisRejectTest.php
+
+		-
+			message: '#^Parameter \#1 \$project of closure expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/E2E/RedisRejectTest.php
+
+		-
+			message: '#^Parameter \#1 \$value of method Utopia\\Queue\\Codec\\Json\:\:decode\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/E2E/RedisRejectTest.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Tests\\E2E\\RedisReservationTest\:\:reclaimRace\(\) return type has no value type specified in iterable type iterable\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: tests/E2E/RedisReservationTest.php
+
+		-
+			message: '#^Parameter \#1 \$key of method Redis\:\:lLen\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: tests/E2E/RedisReservationTest.php
+
+		-
+			message: '#^Parameter \#1 \$process_id of function posix_kill expects int, int\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/E2E/RedisReservationTest.php
+
+		-
+			message: '#^Parameter \#1 \$status of function pcntl_wifsignaled expects int, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/E2E/RedisReservationTest.php
+
+		-
+			message: '#^Parameter \#2 \$message of method Utopia\\Queue\\Broker\\Redis\:\:reject\(\) expects Utopia\\Queue\\Message, Utopia\\Queue\\Message\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/E2E/RedisReservationTest.php
+
+		-
+			message: '#^Property Utopia\\Queue\\Connection\\Redis@anonymous/tests/E2E/RedisReservationTest\.php\:184\:\:\$sizes type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: tests/E2E/RedisReservationTest.php
+
+		-
+			message: '#^Binary operation "\." between ''Worker error\: '' and mixed results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: tests/E2E/SwooleRestartTest.php
+
+		-
+			message: '#^Cannot access offset ''pid'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 4
+			path: tests/E2E/SwooleRestartTest.php
+
+		-
+			message: '#^Cannot access offset ''worker'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/E2E/SwooleRestartTest.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Tests\\E2E\\SwooleRestartTest\:\:waitFor\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: tests/E2E/SwooleRestartTest.php
+
+		-
+			message: '#^Parameter \#1 \$array of function array_intersect expects an array of values castable to string, list given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/E2E/SwooleRestartTest.php
+
+		-
+			message: '#^Parameter \#1 \$process of function proc_get_status expects resource, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/E2E/SwooleRestartTest.php
+
+		-
+			message: '#^Parameter \#1 \$process of function proc_terminate expects resource, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/E2E/SwooleRestartTest.php
+
+		-
+			message: '#^Parameter \#1 \$stream of function fclose expects resource, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/E2E/SwooleRestartTest.php
+
+		-
+			message: '#^Parameter \#1 \$stream of function stream_get_contents expects resource, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/E2E/SwooleRestartTest.php
+
+		-
+			message: '#^Parameter \#2 \$arrays of function array_intersect expects an array of values castable to string, list given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/E2E/SwooleRestartTest.php
+
+		-
+			message: '#^Parameter \#2 \$callback of function array_filter expects \(callable\(mixed\)\: bool\)\|null, Closure\(array\)\: bool given\.$#'
+			identifier: argument.type
+			count: 4
+			path: tests/E2E/SwooleRestartTest.php
+
+		-
+			message: '#^Possibly invalid array key type mixed\.$#'
+			identifier: offsetAccess.invalidOffset
+			count: 1
+			path: tests/E2E/SwooleRestartTest.php
+
+		-
+			message: '#^Property Utopia\\Queue\\Tests\\E2E\\SwooleRestartTest\:\:\$children type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: tests/E2E/SwooleRestartTest.php
+
+		-
+			message: '#^Property Utopia\\Queue\\Tests\\E2E\\SwooleRestartTest\:\:\$events type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: tests/E2E/SwooleRestartTest.php
+
+		-
+			message: '#^Binary operation "\." between mixed and "\\n"\|"\\r\\n" results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: tests/E2E/servers/Nats/worker.php
+
+		-
+			message: '#^Cannot call method getMessage\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: tests/E2E/servers/Nats/worker.php
+
+		-
+			message: '#^Binary operation "\+" between mixed and array\{null, null, null, null, null\} results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: tests/E2E/servers/Proxy/proxy.php
+
+		-
+			message: '#^Parameter \#1 \$filename of function is_file expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/E2E/servers/Proxy/proxy.php
+
+		-
+			message: '#^Parameter \#1 \$filename of function unlink expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/E2E/servers/Proxy/proxy.php
+
+		-
+			message: '#^Parameter \#2 \$filename of function clearstatcache expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/E2E/servers/Proxy/proxy.php
+
+		-
+			message: '#^Part \$listenPort \(mixed\) of encapsed string cannot be cast to string\.$#'
+			identifier: encapsedStringPart.nonString
+			count: 1
+			path: tests/E2E/servers/Proxy/proxy.php
+
+		-
+			message: '#^Part \$targetHost \(mixed\) of encapsed string cannot be cast to string\.$#'
+			identifier: encapsedStringPart.nonString
+			count: 1
+			path: tests/E2E/servers/Proxy/proxy.php
+
+		-
+			message: '#^Part \$targetPort \(mixed\) of encapsed string cannot be cast to string\.$#'
+			identifier: encapsedStringPart.nonString
+			count: 1
+			path: tests/E2E/servers/Proxy/proxy.php
+
+		-
+			message: '#^Cannot access offset 3 on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/E2E/servers/Swoole/restart.php
+
+		-
+			message: '#^Cannot cast mixed to int\.$#'
+			identifier: cast.int
+			count: 2
+			path: tests/E2E/servers/Swoole/restart.php
+
+		-
+			message: '#^Cannot use array destructuring on mixed\.$#'
+			identifier: offsetAccess.nonArray
+			count: 1
+			path: tests/E2E/servers/Swoole/restart.php
+
+		-
+			message: '#^Parameter \#3 \$namespace of class Utopia\\Queue\\Adapter\\Swoole constructor expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/E2E/servers/Swoole/restart.php
+
+		-
+			message: '#^Binary operation "\." between mixed and "\\n"\|"\\r\\n" results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: tests/E2E/servers/Swoole/worker.php
+
+		-
+			message: '#^Cannot call method getMessage\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: tests/E2E/servers/Swoole/worker.php
+
+		-
+			message: '#^Binary operation "\." between mixed and "\\n"\|"\\r\\n" results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: tests/E2E/servers/SwooleRedisCluster/worker.php
+
+		-
+			message: '#^Cannot call method getMessage\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: tests/E2E/servers/SwooleRedisCluster/worker.php
+
+		-
+			message: '#^Binary operation "\." between mixed and "\\n"\|"\\r\\n" results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: tests/E2E/servers/Workerman/worker.php
+
+		-
+			message: '#^Cannot call method getMessage\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: tests/E2E/servers/Workerman/worker.php
+
+		-
+			message: '#^Parameter \#2 \$arrays of function array_diff expects an array of values castable to string, array\<mixed, mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/E2E/servers/tests.php
+
+		-
+			message: '#^Parameter \#1 \$array of function array_unique expects an array of values castable to string, list\<mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/KubernetesJobAdapterTest.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Tests\\RecordingConnection\:\:get\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: tests/LockingTest.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Tests\\RecordingConnection\:\:leftPopArray\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: tests/LockingTest.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Tests\\RecordingConnection\:\:leftPushArray\(\) has parameter \$payload with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: tests/LockingTest.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Tests\\RecordingConnection\:\:listRange\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: tests/LockingTest.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Tests\\RecordingConnection\:\:record\(\) has parameter \$args with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: tests/LockingTest.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Tests\\RecordingConnection\:\:rightPopArray\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: tests/LockingTest.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Tests\\RecordingConnection\:\:rightPopLeftPushArray\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: tests/LockingTest.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Tests\\RecordingConnection\:\:rightPushArray\(\) has parameter \$payload with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: tests/LockingTest.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Tests\\RecordingConnection\:\:setArray\(\) has parameter \$value with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: tests/LockingTest.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Tests\\ThrowingConnection\:\:get\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: tests/LockingTest.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Tests\\ThrowingConnection\:\:leftPopArray\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: tests/LockingTest.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Tests\\ThrowingConnection\:\:leftPushArray\(\) has parameter \$payload with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: tests/LockingTest.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Tests\\ThrowingConnection\:\:listRange\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: tests/LockingTest.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Tests\\ThrowingConnection\:\:rightPopArray\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: tests/LockingTest.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Tests\\ThrowingConnection\:\:rightPopLeftPushArray\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: tests/LockingTest.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Tests\\ThrowingConnection\:\:rightPushArray\(\) has parameter \$payload with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: tests/LockingTest.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Tests\\ThrowingConnection\:\:setArray\(\) has parameter \$value with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: tests/LockingTest.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Tests\\MemoryConsumer\:\:add\(\) has parameter \$payload with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: tests/MemoryConsumer.php
+
+		-
+			message: '#^Cannot call method getMessage\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: tests/PrefetchTest.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Tests\\PushRecordingConnection\:\:get\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: tests/PushRecordingConnection.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Tests\\PushRecordingConnection\:\:leftPopArray\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: tests/PushRecordingConnection.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Tests\\PushRecordingConnection\:\:leftPushArray\(\) has parameter \$payload with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: tests/PushRecordingConnection.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Tests\\PushRecordingConnection\:\:listRange\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: tests/PushRecordingConnection.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Tests\\PushRecordingConnection\:\:rightPopArray\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: tests/PushRecordingConnection.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Tests\\PushRecordingConnection\:\:rightPopLeftPushArray\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: tests/PushRecordingConnection.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Tests\\PushRecordingConnection\:\:rightPushArray\(\) has parameter \$payload with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: tests/PushRecordingConnection.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Tests\\PushRecordingConnection\:\:setArray\(\) has parameter \$value with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: tests/PushRecordingConnection.php
+
+		-
+			message: '#^Property Utopia\\Queue\\Tests\\PushRecordingConnection\:\:\$arrays \(list\<array\<string, mixed\>\>\) does not accept non\-empty\-list\<array\>\.$#'
+			identifier: assign.propertyType
+			count: 2
+			path: tests/PushRecordingConnection.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Tests\\FailingRedisConnection\:\:get\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: tests/RedisReconnectCallbackTest.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Tests\\FailingRedisConnection\:\:leftPopArray\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: tests/RedisReconnectCallbackTest.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Tests\\FailingRedisConnection\:\:leftPushArray\(\) has parameter \$payload with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: tests/RedisReconnectCallbackTest.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Tests\\FailingRedisConnection\:\:listRange\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: tests/RedisReconnectCallbackTest.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Tests\\FailingRedisConnection\:\:rightPopArray\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: tests/RedisReconnectCallbackTest.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Tests\\FailingRedisConnection\:\:rightPopLeftPushArray\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: tests/RedisReconnectCallbackTest.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Tests\\FailingRedisConnection\:\:rightPushArray\(\) has parameter \$payload with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: tests/RedisReconnectCallbackTest.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Tests\\FailingRedisConnection\:\:setArray\(\) has parameter \$value with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: tests/RedisReconnectCallbackTest.php
+
+		-
+			message: '#^Cannot access offset ''__utopia__'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/SwooleContextTest.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Tests\\ContextSwoole\:\:retain\(\) return type with generic class WeakReference does not specify its types\: T$#'
+			identifier: missingType.generics
+			count: 1
+			path: tests/SwooleContextTest.php
