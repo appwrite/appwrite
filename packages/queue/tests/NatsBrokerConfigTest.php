@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Utopia\Queue\Tests;
 
+use PHPUnit\Framework\Attributes\RequiresMethod;
 use PHPUnit\Framework\TestCase;
 use Utopia\NATS\Connection;
 use Utopia\NATS\JetStream\DiscardPolicy;
@@ -14,6 +15,7 @@ use Utopia\Queue\Broker\Provisioning;
  * Constructor validation for the JetStream knob coupling. The Closure source is
  * never invoked: validation must fail at construction, before any connection.
  */
+#[RequiresMethod(Connection::class, 'connect')]
 final class NatsBrokerConfigTest extends TestCase
 {
     private function neverConnect(): \Closure

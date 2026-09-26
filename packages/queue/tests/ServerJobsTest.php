@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Utopia\Queue\Tests;
 
+use PHPUnit\Framework\Attributes\RequiresMethod;
 use PHPUnit\Framework\TestCase;
 use Utopia\NATS\Connection as NatsConnection;
 use Utopia\Queue\Adapter;
@@ -186,6 +187,7 @@ final class ServerJobsTest extends TestCase
      * class declaration; refusing the cap is the consequence worth pinning, and it
      * fails here the moment the marker comes back.
      */
+    #[RequiresMethod(NatsConnection::class, 'connect')]
     public function testStartKeepsConcurrencyOnTheNatsBroker(): void
     {
         $adapter = new RecordingAdapter();
