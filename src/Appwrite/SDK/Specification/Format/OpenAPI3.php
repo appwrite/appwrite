@@ -591,6 +591,20 @@ class OpenAPI3 extends Format
                 }
             }
 
+            $requestExamples = [];
+            foreach ($additionalMethods ?? [$sdk] as $method) {
+                $platforms = $method->getPlatforms();
+                if ($this->platform === null ? $platforms === [] : !\in_array($this->platform, $platforms, true)) {
+                    continue;
+                }
+                foreach ($method->getRequestExamples() as $name => $example) {
+                    if (isset($requestExamples[$name]) && $requestExamples[$name] !== $example) {
+                        throw new \RuntimeException("Conflicting request example '{$name}' for route '{$url}'.");
+                    }
+                    $requestExamples[$name] = $example;
+                }
+            }
+
             $parameterNodes = [];
 
             $parameters = $this->getMethodParameters($route, $sdk);
@@ -802,6 +816,9 @@ class OpenAPI3 extends Format
                         $node['schema']['items'] = [
                             'type' => 'string',
                         ];
+                        if (($param['example'] ?? '') !== '') {
+                            $node['schema']['example'] = $param['example'];
+                        }
                         break;
                     case \Utopia\Database\Validator\Permissions::class:
                         $node['schema']['type'] = $validator->getType();
@@ -1067,6 +1084,9 @@ class OpenAPI3 extends Format
                         $methodTemp['parameters'][] = $node;
                     } elseif (\in_array($method, ['GET', 'DELETE'], true)) { // Param is in query
                         $node['in'] = 'query';
+                        if (($parameters[$name]['example'] ?? '') !== '' && \array_key_exists('example', $node['schema'])) {
+                            $node['example'] = $node['schema']['example'];
+                        }
                         $methodTemp['parameters'][] = $node;
                     } else { // Param is in payload
                         if ($node['required']) {
@@ -1119,6 +1139,9 @@ class OpenAPI3 extends Format
                 }
 
                 if (!empty($body['content'][$consumes[0]]['schema']['properties'])) {
+                    if ($requestExamples !== []) {
+                        $body['content'][$consumes[0]]['examples'] = $requestExamples;
+                    }
                     $methodTemp['requestBody'] = $body;
                 }
 
