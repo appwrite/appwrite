@@ -426,6 +426,35 @@ $http->on(Constant::EVENT_START, function ($http) use ($payloadSize, $totalWorke
         }
 
         Span::current()?->finish();
+
+        /** @var \Appwrite\Logs\Store $runtimeLogStore */
+        $runtimeLogStore = $container->get('runtimeLogStore');
+
+        Span::init('runtime_logs.setup');
+
+        $max = 15;
+        $sleep = 2;
+        $attempts = 0;
+
+        while (true) {
+            try {
+                $attempts++;
+                $runtimeLogStore->setup();
+                Console::success('[Setup] - Runtime log schema is ready');
+                break;
+            } catch (\Throwable $e) {
+                if ($attempts >= $max) {
+                    Span::add('runtime_logs.ready', false);
+                    Console::warning('[Setup] - Skip: runtime log schema is not ready: ' . $e->getMessage());
+                    break;
+                }
+
+                Console::warning("  └── Runtime log schema setup failed. Retrying ({$attempts})...");
+                sleep($sleep);
+            }
+        }
+
+        Span::current()?->finish();
     });
 
     Span::init('http.server.start');

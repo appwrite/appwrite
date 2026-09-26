@@ -22,6 +22,7 @@ use Appwrite\Event\Publisher\StatsResources as StatsResourcesPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Execution\Store as ExecutionStore;
 use Appwrite\Geo\Client as GeoClient;
+use Appwrite\Logs\Store as RuntimeLogStore;
 use Appwrite\Messaging\Provider as MessagingProvider;
 use Appwrite\Platform\Modules\Storage\Config\StorageCacheControl;
 use Appwrite\Screenshots\Client as ScreenshotsClient;
@@ -228,6 +229,33 @@ $container->set('executionStore', function () {
     }
 
     return new ExecutionStore(
+        dsn: $connection,
+        client: $client,
+        retention: (int) System::getEnv('_APP_MAINTENANCE_RETENTION_EXECUTION', 1209600),
+    );
+}, []);
+
+$container->set('runtimeLogStore', function () {
+    $client = new HttpClientPool(new Connections(
+        new SwoolePoolAdapter(),
+        'runtime_logs',
+        max(1, (int) System::getEnv('_APP_POOL_SIZE_EXECUTIONS', 2)),
+        fn () => new Client((new SwooleClientAdapter())->withConnectionReuse()),
+        timeout: 3.0,
+    ));
+
+    $defaultConnection = 'http://appwrite:'
+        . rawurlencode(System::getEnv('_APP_USAGE_PASS', 'appwrite'))
+        . '@clickhouse:8123/appwrite';
+    $connection = System::getEnv(
+        '_APP_CONNECTIONS_DB_EXECUTIONS',
+        System::getEnv('_APP_CONNECTIONS_DB_USAGE', $defaultConnection)
+    );
+    if ($connection === '') {
+        $connection = $defaultConnection;
+    }
+
+    return new RuntimeLogStore(
         dsn: $connection,
         client: $client,
         retention: (int) System::getEnv('_APP_MAINTENANCE_RETENTION_EXECUTION', 1209600),
