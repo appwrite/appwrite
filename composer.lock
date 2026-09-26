@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "ddbb125034e9187e892d6c2b2d06a266",
+    "content-hash": "4eac57ef0ef24eca0848b4fa90a960eb",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3571,55 +3571,6 @@
                 "source": "https://github.com/utopia-php/platform/tree/1.0.0-rc25"
             },
             "time": "2026-09-23T13:10:08+00:00"
-        },
-        {
-            "name": "utopia-php/query",
-            "version": "0.6.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/utopia-php/query.git",
-                "reference": "abaebb2f3426bdbc6f44bab04254a668de937148"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/query/zipball/abaebb2f3426bdbc6f44bab04254a668de937148",
-                "reference": "abaebb2f3426bdbc6f44bab04254a668de937148",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=8.4"
-            },
-            "require-dev": {
-                "brianium/paratest": "*",
-                "laravel/pint": "*",
-                "mongodb/mongodb": "^2.0",
-                "phpstan/phpstan": "*",
-                "phpunit/phpcov": "*",
-                "phpunit/phpunit": "^12.0"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Utopia\\Query\\": "src/Query"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "description": "A simple library providing a query abstraction for filtering, ordering, and pagination",
-            "keywords": [
-                "framework",
-                "php",
-                "query",
-                "upf",
-                "utopia"
-            ],
-            "support": {
-                "issues": "https://github.com/utopia-php/query/issues",
-                "source": "https://github.com/utopia-php/query/tree/0.6.0"
-            },
-            "time": "2026-08-21T11:03:36+00:00"
         },
         {
             "name": "utopia-php/queue",
