@@ -1,4 +1,5 @@
 import { OrgOverview } from '@/components/pages/organizations/$orgId/overview/View'
+import { EducationSunsetCurtain } from '@/components/global/layout/EducationSunsetCurtain'
 import { createFileRoute, Outlet, useMatches } from '@tanstack/react-router'
 import { RequireAuth } from '@/components/global/auth/RequireAuth'
 import {
@@ -45,6 +46,7 @@ export const Route = createFileRoute('/_public/organizations/$orgId')({
 })
 
 function OrganizationLayout() {
+  const { orgId } = Route.useParams()
   const matches = useMatches()
 
   // Check if we're on a domain detail route (should not have org header/tabs)
@@ -101,6 +103,7 @@ function OrganizationLayout() {
 
   return (
     <RequireAuth>
+      <EducationSunsetCurtain orgId={orgId} />
       {renderOutletOnly ? (
         // Domain detail, apps, marketplace detail, support, domain wizards,
         // and agent: outlet only (own ConsoleLayout / fullscreen chrome)

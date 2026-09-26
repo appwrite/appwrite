@@ -1511,4 +1511,32 @@ export const heOrganizationsDictionary: Record<string, string> = {
     'לא ניתן היה לטעון אילו מדיניות גיבוי יפסיקו לפעול כשהתוכנית תשתנה.',
   'Could not load which dedicated databases are spun down when your plan changes.':
     'לא ניתן היה לטעון אילו מסדי נתונים ייעודיים יושבתו כשהתוכנית תשתנה.',
+  'Choose a new plan': 'בחירת תוכנית חדשה',
+  'Plans could not be loaded. Refresh and try again.':
+    'לא ניתן לטעון את התוכניות. רעננו ונסו שוב.',
+  'Appwrite is leaving the GitHub Student Developer Pack':
+    'Appwrite עוזבת את GitHub Student Developer Pack',
+  'The Education plan ends on November 1, 2026.':
+    'תוכנית Education מסתיימת ב-1 בנובמבר 2026.',
+  'Many of you used it to learn, finish coursework, and ship your first projects on Appwrite Cloud. That is exactly what we hoped for, and we are grateful to the GitHub team for making it possible.':
+    'רבים מכם השתמשו בה כדי ללמוד, להשלים עבודות ולהשיק את הפרויקטים הראשונים שלכם על Appwrite Cloud. זה בדיוק מה שקיווינו לו, ואנחנו מודים לצוות GitHub שאפשר את זה.',
+  'The plan also became the main path for abuse on Appwrite Cloud, and we can no longer keep it open. If you followed the terms, we are sorry this affects you.':
+    'התוכנית הפכה גם לנתיב המרכזי לשימוש לרעה ב-Appwrite Cloud, ואנחנו לא יכולים להשאיר אותה פתוחה. אם פעלתם לפי התנאים, אנחנו מצטערים שזה משפיע עליכם.',
+  'Nothing changes until November 1.': 'עד ה-1 בנובמבר שום דבר לא משתנה.',
+  'Your projects stay where they are. When you are ready, pick the plan that fits what you are building next.':
+    'הפרויקטים נשארים במקום. כשתהיו מוכנים, בחרו את התוכנית שמתאימה למה שתבנו בהמשך.',
+  'Read the full announcement': 'קריאת ההודעה המלאה',
+  'Many of you used the Education plan to learn and build your first projects on Appwrite Cloud. Closing it was a hard call, and we are grateful to the GitHub team for making it possible.':
+    'רבים מכם השתמשו בתוכנית Education כדי ללמוד ולבנות את הפרויקטים הראשונים שלכם על Appwrite Cloud. ההחלטה לסגור אותה לא הייתה קלה, ואנחנו מודים לצוות GitHub שאפשר אותה.',
+  'Choose a plan to keep this organization.':
+    'בחרו תוכנית כדי להמשיך עם הארגון.',
+  'Your projects are exactly where you left them.':
+    'הפרויקטים נמצאים בדיוק איפה שהשארתם אותם.',
+  'Production resources for the projects you want to keep.':
+    'משאבי פרודקשן לפרויקטים שאתם רוצים להמשיך.',
+  'Daily backups, email support, and more': 'גיבוי יומי, תמיכה באימייל ועוד',
+  'day left before November 1': 'יום נותר עד ה-1 בנובמבר',
+  'days left before November 1': 'ימים נותרו עד ה-1 בנובמבר',
+  'Remind me later': 'תזכורת מאוחר יותר',
+  'The Education plan has ended': 'תוכנית Education הסתיימה',
 }

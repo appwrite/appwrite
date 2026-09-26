@@ -85,7 +85,9 @@ export function filterBillingPlansByLocation(
     const isCurrent =
       key === currentId ||
       plan.$id === currentId ||
-      (currentId.length > 0 && isStartPlanRef(currentId, plan) && isStartPlanRef(key, plan))
+      (currentId.length > 0 &&
+        isStartPlanRef(currentId) &&
+        isStartPlanRef(key, plan))
 
     if (!countries || isCurrent) {
       filtered[key] = plan

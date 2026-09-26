@@ -1287,4 +1287,33 @@ export const jaOrganizationsDictionary: Record<string, string> = {
     'プラン変更時にどのバックアップポリシーが停止するかを読み込めませんでした。',
   'Could not load which dedicated databases are spun down when your plan changes.':
     'プラン変更時にどの専用データベースが停止されるかを読み込めませんでした。',
+  'Choose a new plan': '新しいプランを選択',
+  'Plans could not be loaded. Refresh and try again.':
+    'プランを読み込めませんでした。更新してやり直してください。',
+  'Appwrite is leaving the GitHub Student Developer Pack':
+    'AppwriteはGitHub Student Developer Packから離脱します',
+  'The Education plan ends on November 1, 2026.':
+    'Educationプランは2026年11月1日に終了します。',
+  'Many of you used it to learn, finish coursework, and ship your first projects on Appwrite Cloud. That is exactly what we hoped for, and we are grateful to the GitHub team for making it possible.':
+    '多くの方が、学習や課題、初めてのプロジェクトの公開にAppwrite Cloudで使ってくださいました。まさに私たちが願っていたことです。それを可能にしてくれたGitHubチームに感謝します。',
+  'The plan also became the main path for abuse on Appwrite Cloud, and we can no longer keep it open. If you followed the terms, we are sorry this affects you.':
+    '一方で、このプランはAppwrite Cloudにおける不正利用の主な経路にもなり、これ以上続けることはできません。規約を守って使っていた方には、影響が出ることをお詫びします。',
+  'Nothing changes until November 1.': '11月1日までは何も変わりません。',
+  'Your projects stay where they are. When you are ready, pick the plan that fits what you are building next.':
+    'プロジェクトはそのまま残ります。準備ができたら、次に作るものに合うプランを選んでください。',
+  'Read the full announcement': 'お知らせの全文を読む',
+  'Many of you used the Education plan to learn and build your first projects on Appwrite Cloud. Closing it was a hard call, and we are grateful to the GitHub team for making it possible.':
+    '多くの方が、Educationプランで学び、Appwrite Cloudで初めてのプロジェクトを作ってくださいました。終了は簡単な決断ではありませんでした。それを可能にしてくれたGitHubチームに感謝します。',
+  'Choose a plan to keep this organization.':
+    'この組織を使い続けるにはプランを選択してください。',
+  'Your projects are exactly where you left them.':
+    'プロジェクトはそのまま残っています。',
+  'Production resources for the projects you want to keep.':
+    '続けたいプロジェクトのための本番リソース。',
+  'Daily backups, email support, and more':
+    '日次バックアップ、メールサポート、その他',
+  'day left before November 1': '日（11月1日まで）',
+  'days left before November 1': '日（11月1日まで）',
+  'Remind me later': '後で通知',
+  'The Education plan has ended': 'Educationプランは終了しました',
 }

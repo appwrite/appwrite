@@ -10,6 +10,7 @@ import { useState, useEffect, useRef, useMemo, useLayoutEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { CloudStatusBanner } from '@/components/global/layout/CloudStatusBanner'
 import { BlockedProjectCurtain } from '@/components/global/layout/BlockedProjectCurtain'
+import { EducationSunsetCurtain } from '@/components/global/layout/EducationSunsetCurtain'
 import { BudgetLimitProjectCurtain } from '@/components/global/layout/BudgetLimitProjectCurtain'
 import { PlanUsageLimitProjectCurtain } from '@/components/global/layout/PlanUsageLimitProjectCurtain'
 import { PausedProjectCurtain } from '@/components/global/layout/PausedProjectCurtain'
@@ -844,6 +845,10 @@ function ProjectLayout() {
         />
       ) : projectBlocked && projectForPaused?.teamId ? (
         <BlockedProjectCurtain teamId={projectForPaused.teamId} />
+      ) : !isPaused &&
+        billingOrganization?.plan === 'education' &&
+        teamIdForBilling ? (
+        <EducationSunsetCurtain orgId={teamIdForBilling} />
       ) : null}
       {isPaused && projectForPaused && (
         <PausedProjectCurtain
