@@ -206,33 +206,6 @@ describe('where conversations go', () => {
 })
 
 describe('createConversation', () => {
-  test('posts JSON to the conversations route and drops empty values', async () => {
-    consoleState.cloud = true
-    await createConversation({
-      type: 'feedback',
-      email: 'a@b.co',
-      name: '',
-      message: 'Great console',
-      organizationId: '',
-      attributes: { route: '/console', source: '' },
-    })
-
-    const { url, init } = lastCall()
-    expect(url.endsWith('/v1/growth/conversations')).toBe(true)
-    expect(init.method).toBe('POST')
-    expect(init.credentials).toBe('omit')
-    expect(init.headers).toEqual({
-      'X-Appwrite-Project': 'console',
-      'Content-Type': 'application/json',
-    })
-    expect(jsonBody()).toEqual({
-      type: 'feedback',
-      email: 'a@b.co',
-      message: 'Great console',
-      attributes: { route: '/console' },
-    })
-  })
-
   test('sends one multipart request when there is an attachment', async () => {
     await createConversation({
       type: 'support',

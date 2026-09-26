@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { submitDocsFeedback, type DocsFeedbackType } from '@/lib/feedback'
 import { GrowthError } from '@/lib/growth'
+import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 
 const FEEDBACK_EASE: [number, number, number, number] = [0.22, 1, 0.36, 1]
@@ -31,6 +32,7 @@ export function DocsFeedback() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const t = useT()
 
   const accountEmail = account?.email?.trim() ?? ''
   const hasAccountEmail = accountEmail.length > 0
@@ -111,7 +113,7 @@ export function DocsFeedback() {
     } catch (error) {
       setError(
         error instanceof GrowthError && error.isRateLimited
-          ? error.message
+          ? t(error.message)
           : 'There was an error submitting your feedback. Please try again later.',
       )
     } finally {

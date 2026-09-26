@@ -129,12 +129,13 @@ export function SalesWizardFullscreen() {
       setSubmitted(true)
     } catch (error) {
       setSubmitError(true)
+      // API messages are dynamic, so only the rate limit and fallback copy go through t().
       toast.error(
-        t(
-          error instanceof GrowthError
-            ? error.message
-            : 'Error submitting form. Please contact support.',
-        ),
+        error instanceof GrowthError
+          ? error.isRateLimited
+            ? t(error.message)
+            : error.message
+          : t('Error submitting form. Please contact support.'),
       )
     } finally {
       setIsSubmitting(false)
