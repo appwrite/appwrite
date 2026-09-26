@@ -12,7 +12,11 @@ import {
   organizationProjectScopeQueryOptions,
   prefetchOrganizationInvoiceDataIfAllowed,
 } from '@/lib/react-query/hooks/organizations'
-import { activeProjectsQueryOptions, pinnedProjectsQueryOptions } from '@/lib/react-query/hooks/projects'
+import {
+  activeProjectsQueryOptions,
+  activeProjectsTotalQueryOptions,
+  pinnedProjectsQueryOptions,
+} from '@/lib/react-query/hooks/projects'
 import {
   consoleTeamQueryOptions,
   organizationMembershipsQueryOptions,
@@ -126,6 +130,9 @@ export async function prefetchOrganizationOverviewData(
     )
 
     await Promise.all([
+      queryClient.ensureQueryData(
+        activeProjectsTotalQueryOptions(orgId, projectScope ?? null),
+      ),
       queryClient.ensureQueryData(
         activeProjectsQueryOptions(
           orgId,
