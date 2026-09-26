@@ -1,0 +1,46 @@
+{
+    "name": "utopia-php/storage",
+    "description": "A simple Storage library to manage application storage",
+    "type": "library",
+    "keywords": [
+        "php",
+        "framework",
+        "upf",
+        "utopia",
+        "storage"
+    ],
+    "license": "MIT",
+    "scripts": {
+        "test": "phpunit --testsuite unit",
+        "test:e2e": "phpunit --testsuite e2e"
+    },
+    "authors": [],
+    "autoload": {
+        "psr-4": {
+            "Utopia\\Storage\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Utopia\\Storage\\Tests\\": "tests/"
+        }
+    },
+    "require": {
+        "php": ">=8.5",
+        "ext-fileinfo": "*",
+        "ext-curl": "*",
+        "ext-simplexml": "*",
+        "utopia-php/telemetry": "^0.4.6",
+        "utopia-php/validators": "^1.0",
+        "psr/http-client": "^1.0",
+        "psr/http-message": "^1.1 || ^2.0",
+        "utopia-php/client": "^0.5",
+        "utopia-php/psr7": "0.2.*"
+    },
+    "config": {
+        "allow-plugins": {
+            "php-http/discovery": false,
+            "tbachert/spi": false
+        }
+    }
+}

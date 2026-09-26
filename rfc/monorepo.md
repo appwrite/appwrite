@@ -279,6 +279,7 @@ Exit: `composer.lock` contains no `utopia-php/*` package.
   - `dsn`: 4 findings (it had no PHPStan config on its standalone repository): the untyped `$params` array, `parse_url()`'s integer port stored in a `?string` property, and `getParam()` returning the `mixed` parsed query value.
   - `mqtt`: 82 findings (its own repository analysed it at level max under PHPStan 1): `chr()` arguments not narrowed to `int<0, 255>` and casts from `mixed` in the packet codecs and `Property`, untyped Swoole client and request fields in `Client` and the Swoole adapter, and loosely typed data providers and e2e assertions in its tests.
   - `openapi`: 166 findings (level 5 in the monorepo), nearly all offset access on the decoded `mixed` document in its readers.
+  - `storage`: 3 findings, all in one test fixture: Pint's `simplified_null_return` turns the untyped `detach()` of `LocalTest`'s failing stream from `return null;` into `return;`, which PHPStan reads as an empty return against its `resource|null` docblock.
   - `system`: 16 findings from mixed CPU and disk statistics.
   - `validators`: 75 findings (level 5 in the monorepo): 48 in `src`, unvalued `array` parameters and casts from `mixed`, mostly in `Globstar`, `Domain`, `URL`, `Contains` and `WhiteList`; 27 in its tests, nullable validator fixtures in `AssocTest` and `URLTest`.
   - `websocket`: 22 findings (level 5 in the monorepo): `mixed` handling in `Client` and the Workerman adapter, and its Swoole fixture server and e2e helpers.

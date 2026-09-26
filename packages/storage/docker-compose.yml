@@ -1,0 +1,13 @@
+services:
+  minio:
+    image: ghcr.io/appwrite/silo:RELEASE.2026-09-16T00-00-00Z@sha256:635197cb9f36d01bee221d34d1c7d7960f6a95c48b0b6c01d99cd13bdae51a46
+    entrypoint: sh -c 'mkdir -p /data/utopia-storage-test && exec silo server /data'
+    environment:
+      MINIO_DOMAIN: localhost
+    ports:
+      - '9805:9000'
+    healthcheck:
+      test: ['CMD', 'mc', 'ready', 'local']
+      interval: 2s
+      timeout: 5s
+      retries: 15
