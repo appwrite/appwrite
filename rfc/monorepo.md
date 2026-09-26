@@ -281,6 +281,7 @@ Exit: `composer.lock` contains no `utopia-php/*` package.
   - `openapi`: 166 findings (level 5 in the monorepo), nearly all offset access on the decoded `mixed` document in its readers.
   - `system`: 16 findings from mixed CPU and disk statistics.
   - `validators`: 75 findings (level 5 in the monorepo): 48 in `src`, unvalued `array` parameters and casts from `mixed`, mostly in `Globstar`, `Domain`, `URL`, `Contains` and `WhiteList`; 27 in its tests, nullable validator fixtures in `AssocTest` and `URLTest`.
+  - `vcs`: 1,087 findings (level 5 in the monorepo): 970 in `src`, nearly all offset access, arguments and casts on the decoded `mixed` provider responses in the GitHub, GitLab, Gitea, Bitbucket, Origin and Gogs adapters; 117 in its tests, mostly the same response handling in the e2e `Base`.
   - `websocket`: 22 findings (level 5 in the monorepo): `mixed` handling in `Client` and the Workerman adapter, and its Swoole fixture server and e2e helpers.
 
 ## Risks

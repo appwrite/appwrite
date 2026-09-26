@@ -26,7 +26,7 @@ Below are outlined the most useful files for adding a new VCS adapter:
 ```
 ### Extend the adapter 💻
 
-Create your Git-based adapter `NewGitAdapter.php` file in `src/VCS/Adapter/Git` and extend the parent class:
+Create your Git-based adapter `NewGitAdapter.php` file in `src/Adapter/Git` and extend the parent class:
 
 ```php
 <?php
@@ -44,7 +44,7 @@ class NewGitAdapter extends Git
 }
 ```
 
-To add a non-git adapter, create your new adapter `NewVCSAdapter.php` file in `src/VCS/Adapter` and extend the parent class:
+To add a non-git adapter, create your new adapter `NewVCSAdapter.php` file in `src/Adapter` and extend the parent class:
 ```php
 <?php
 
@@ -95,7 +95,7 @@ rather than `getEvent()` — the latter reports only the first event of a batch.
 
 ### Testing the adapter 🛠️
 
-The suite runs in two tiers. Put the webhook payload fixtures and the parsing assertions your adapter answers offline in `tests/Unit/<Adapter>Test.php`, and the calls against a running provider in `tests/E2E/<Adapter>Test.php`. A provider you can self-host joins `docker-compose.yml` as an official image on an offset host port, with a bootstrap that mints an access token into `tests/.tokens`; see the [README](/README.md#tests) for how to run both tiers.
+The suite runs in two tiers. Put the webhook payload fixtures and the parsing assertions your adapter answers offline in `tests/<Adapter>Test.php`, and the calls against a running provider in `tests/E2E/<Adapter>Test.php`. A provider you can self-host joins `docker-compose.yml` as an official image on an offset host port, with a bootstrap that mints an access token into `tests/.tokens`; see the [README](/README.md#tests) for how to run both tiers.
 
 ### Tips and tricks 💡
 

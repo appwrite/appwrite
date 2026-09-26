@@ -21,7 +21,9 @@ class GitLab extends Git
      */
     protected $headers = ['content-type' => 'application/json'];
 
-    public function __construct(protected Cache $cache) {}
+    public function __construct(protected Cache $cache)
+    {
+    }
 
     public function setEndpoint(string $endpoint): void
     {
@@ -83,7 +85,9 @@ class GitLab extends Git
         throw new Exception('accessToken is required for this adapter.');
     }
 
-    protected function generateAccessToken(string $privateKey, string $appId): void {}
+    protected function generateAccessToken(string $privateKey, string $appId): void
+    {
+    }
 
     /**
      * Create a new group/organization
@@ -264,7 +268,7 @@ class GitLab extends Git
         $items = $response['body'] ?? [];
         $items = \is_array($items) ? $items : [];
 
-        $namespaces = array_map(fn(array $namespace): array => [
+        $namespaces = array_map(fn (array $namespace): array => [
             'id' => (string) ($namespace['id'] ?? ''),
             'name' => $namespace['name'] ?? ($namespace['path'] ?? ''),
             'path' => $namespace['full_path'] ?? ($namespace['path'] ?? ''),

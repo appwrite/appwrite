@@ -21,7 +21,9 @@ abstract class Git extends Adapter
      */
     protected $headers = ['content-type' => 'application/json'];
 
-    public function __construct(protected Cache $cache) {}
+    public function __construct(protected Cache $cache)
+    {
+    }
 
     /**
      * Get Adapter Type
@@ -299,7 +301,7 @@ abstract class Git extends Adapter
     {
         $segments = array_filter(
             explode('/', $path),
-            fn(string $segment): bool => $segment !== '' && $segment !== '.',
+            fn (string $segment): bool => $segment !== '' && $segment !== '.',
         );
 
         return implode('/', $segments);
@@ -318,6 +320,6 @@ abstract class Git extends Adapter
             return array_values($names);
         }
 
-        return array_values(array_filter($names, fn(string $name): bool => fnmatch($pattern, $name)));
+        return array_values(array_filter($names, fn (string $name): bool => fnmatch($pattern, $name)));
     }
 }

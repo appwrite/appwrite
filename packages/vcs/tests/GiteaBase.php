@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Utopia\Tests\Unit;
+namespace Utopia\VCS\Tests;
 
 /**
  * Forgejo and Gogs are Gitea forks and deliver Gitea-shaped payloads, so all

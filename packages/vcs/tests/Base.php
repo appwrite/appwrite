@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Utopia\Tests\Unit;
+namespace Utopia\VCS\Tests;
 
 use Exception;
 use PHPUnit\Framework\Attributes\DataProvider;

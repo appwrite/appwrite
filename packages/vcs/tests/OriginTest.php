@@ -1,6 +1,6 @@
 <?php
 
-namespace Utopia\Tests\Unit;
+namespace Utopia\VCS\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Utopia\Cache\Adapter\None;
@@ -239,7 +239,7 @@ final class OriginTest extends TestCase
      */
     protected function signReceipt(array $header, array $claims, string $secretKey): string
     {
-        $encode = fn(string $data): string => rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
+        $encode = fn (string $data): string => rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
         $signingInput = $encode(json_encode($header) ?: '') . '.' . $encode(json_encode($claims) ?: '');
 
         return $signingInput . '.' . $encode(sodium_crypto_sign_detached($signingInput, $secretKey));

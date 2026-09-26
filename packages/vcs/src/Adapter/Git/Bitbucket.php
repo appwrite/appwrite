@@ -103,7 +103,9 @@ class Bitbucket extends Git
      */
     protected $headers = ['content-type' => 'application/json'];
 
-    public function __construct(protected Cache $cache) {}
+    public function __construct(protected Cache $cache)
+    {
+    }
 
     /**
      * Moves only the API host; the browser-facing host stays on bitbucket.org.
@@ -178,7 +180,9 @@ class Bitbucket extends Git
     /**
      * Not applicable for this adapter - OAuth2 tokens are passed directly.
      */
-    protected function generateAccessToken(string $privateKey, string $appId): void {}
+    protected function generateAccessToken(string $privateKey, string $appId): void
+    {
+    }
 
     /**
      * Bitbucket reads the ref as one path segment, so a nested name like
@@ -1058,7 +1062,7 @@ class Bitbucket extends Git
     {
         $url = "/repositories/{$owner}/{$repositoryName}/commit/" . rawurlencode($commitHash) . '/statuses/build';
 
-        $response = $this->call(self::METHOD_POST, $url, ['Authorization' => $this->authorizationHeader()], array_filter($payload, fn($value): bool => $value !== ''));
+        $response = $this->call(self::METHOD_POST, $url, ['Authorization' => $this->authorizationHeader()], array_filter($payload, fn ($value): bool => $value !== ''));
 
         $statusCode = $response['headers']['status-code'] ?? 0;
         if ($statusCode >= 400) {

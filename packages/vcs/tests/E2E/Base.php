@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace Utopia\Tests\E2E;
+namespace Utopia\VCS\Tests\E2E;
 
 use Exception;
 use PHPUnit\Framework\TestCase;
 use Utopia\Fetch\Client;
-use Utopia\Tests\Services;
 use Utopia\VCS\Adapter\Git;
 use Utopia\VCS\Exception\FileNotFound;
 use Utopia\VCS\Exception\RepositoryNotFound;
+use Utopia\VCS\Tests\Services;
 
 abstract class Base extends TestCase
 {

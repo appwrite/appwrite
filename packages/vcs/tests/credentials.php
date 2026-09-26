@@ -12,7 +12,7 @@ if (getenv('GITHUB_ACTIONS') !== 'true') {
     exit(0);
 }
 
-require dirname(__DIR__) . '/vendor/autoload.php';
+require __DIR__ . '/../vendor/autoload.php';
 
 $identifier = System::getEnv('TESTS_GITHUB_APP_IDENTIFIER') ?? '';
 $installation = System::getEnv('TESTS_GITHUB_INSTALLATION_ID') ?? '';

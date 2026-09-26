@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Utopia\Tests\Unit;
+namespace Utopia\VCS\Tests;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use Utopia\Cache\Adapter\None;
@@ -274,7 +274,7 @@ final class GitHubTest extends Base
     public static function encodedPemProvider(): \Iterator
     {
         yield 'base64' => [base64_encode(...)];
-        yield 'wrapped base64' => [fn(string $pem): string => chunk_split(base64_encode($pem), 76, "\n")];
-        yield 'escaped newlines' => [fn(string $pem): string => str_replace("\n", '\n', $pem)];
+        yield 'wrapped base64' => [fn (string $pem): string => chunk_split(base64_encode($pem), 76, "\n")];
+        yield 'escaped newlines' => [fn (string $pem): string => str_replace("\n", '\n', $pem)];
     }
 }

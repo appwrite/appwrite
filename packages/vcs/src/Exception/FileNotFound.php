@@ -4,4 +4,6 @@ declare(strict_types=1);
 
 namespace Utopia\VCS\Exception;
 
-class RepositoryNotFound extends \Exception {}
+class FileNotFound extends \Exception
+{
+}

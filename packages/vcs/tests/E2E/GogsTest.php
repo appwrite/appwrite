@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Utopia\Tests\E2E;
+namespace Utopia\VCS\Tests\E2E;
 
 use Utopia\Cache\Adapter\None;
 use Utopia\Cache\Cache;
-use Utopia\Tests\Services;
 use Utopia\VCS\Adapter\Git\Gogs;
+use Utopia\VCS\Tests\Services;
 
 final class GogsTest extends GiteaBase
 {

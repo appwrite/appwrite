@@ -11,20 +11,20 @@
     "license": "MIT",
     "minimum-stability": "stable",
     "scripts": {
-        "test": "phpunit --configuration phpunit.xml --testsuite unit",
+        "test": "phpunit --testsuite unit",
         "test:e2e": [
             "@php tests/credentials.php",
-            "phpunit --configuration phpunit.xml --testsuite e2e"
+            "phpunit --testsuite e2e"
         ]
     },
     "autoload": {
         "psr-4": {
-            "Utopia\\VCS\\": "src/VCS"
+            "Utopia\\VCS\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Utopia\\Tests\\": "tests/"
+            "Utopia\\VCS\\Tests\\": "tests/"
         }
     },
     "require": {

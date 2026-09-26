@@ -87,7 +87,9 @@ class Origin extends Git
      */
     protected $headers = ['content-type' => 'application/json'];
 
-    public function __construct(protected Cache $cache) {}
+    public function __construct(protected Cache $cache)
+    {
+    }
 
     /**
      * Get Adapter Name
@@ -372,7 +374,7 @@ class Origin extends Git
      */
     public function getSigningKeys(bool $refresh = false): array
     {
-        return array_values(array_map(fn(array $key): string => \strval($key['x']), $this->jwks($refresh)));
+        return array_values(array_map(fn (array $key): string => \strval($key['x']), $this->jwks($refresh)));
     }
 
     /**
@@ -524,7 +526,7 @@ class Origin extends Git
 
         return [
             'items' => array_map(
-                fn($repository): array => $this->normalizeRepository(\is_array($repository) ? $repository : []),
+                fn ($repository): array => $this->normalizeRepository(\is_array($repository) ? $repository : []),
                 \array_slice($repositories, ($page - 1) * $per_page, $per_page),
             ),
             'total' => \count($repositories),
@@ -1456,12 +1458,12 @@ class Origin extends Git
                 'startedAt' => $startedAt,
                 'completedAt' => $completedAt,
                 'detailsUrl' => $detailsUrl,
-            ], fn(string $value): bool => $value !== '' && $value !== '0'),
+            ], fn (string $value): bool => $value !== '' && $value !== '0'),
         );
 
         // Output requires both title and summary.
         if ($title !== '' && $title !== '0' && ($summary !== '' && $summary !== '0')) {
-            $checkRun['output'] = array_filter(['title' => $title, 'summary' => $summary, 'text' => $text], fn(string $value): bool => $value !== '' && $value !== '0');
+            $checkRun['output'] = array_filter(['title' => $title, 'summary' => $summary, 'text' => $text], fn (string $value): bool => $value !== '' && $value !== '0');
         }
 
         $response = $this->call(
@@ -1584,12 +1586,12 @@ class Origin extends Git
                 'startedAt' => $startedAt === '' || $startedAt === '0' ? \strval($existing['startedAt'] ?? '') : $startedAt,
                 'completedAt' => $completedAt === '' || $completedAt === '0' ? \strval($existing['completedAt'] ?? '') : $completedAt,
                 'detailsUrl' => $detailsUrl === '' || $detailsUrl === '0' ? \strval($existing['detailsUrl'] ?? '') : $detailsUrl,
-            ], fn(string $value): bool => $value !== '' && $value !== '0'),
+            ], fn (string $value): bool => $value !== '' && $value !== '0'),
         );
 
         // Output requires both title and summary; keep what the run already reports otherwise.
         if ($title !== '' && $title !== '0' && ($summary !== '' && $summary !== '0')) {
-            $checkRun['output'] = array_filter(['title' => $title, 'summary' => $summary, 'text' => $text], fn(string $value): bool => $value !== '' && $value !== '0');
+            $checkRun['output'] = array_filter(['title' => $title, 'summary' => $summary, 'text' => $text], fn (string $value): bool => $value !== '' && $value !== '0');
         } elseif ($existingOutput !== []) {
             $checkRun['output'] = $existingOutput;
         }
@@ -1606,7 +1608,7 @@ class Origin extends Git
                         'name' => \strval($suite['name'] ?? ''),
                         'externalId' => \strval($suite['externalId'] ?? ''),
                     ],
-                    array_filter(['detailsUrl' => \strval($suite['detailsUrl'] ?? '')], fn(string $value): bool => $value !== '' && $value !== '0'),
+                    array_filter(['detailsUrl' => \strval($suite['detailsUrl'] ?? '')], fn (string $value): bool => $value !== '' && $value !== '0'),
                 ),
                 'checkRun' => $checkRun,
             ],
@@ -2280,7 +2282,7 @@ class Origin extends Git
         );
 
         return array_map(
-            fn($pullRequest): array => $this->normalizePullRequest(\is_array($pullRequest) ? $pullRequest : []),
+            fn ($pullRequest): array => $this->normalizePullRequest(\is_array($pullRequest) ? $pullRequest : []),
             $pullRequests,
         );
     }
@@ -2579,7 +2581,7 @@ class Origin extends Git
         );
 
         return array_map(
-            fn($checkRun): array => $this->normalizeCheckRun(\is_array($checkRun) ? $checkRun : [], $owner, $repositoryName),
+            fn ($checkRun): array => $this->normalizeCheckRun(\is_array($checkRun) ? $checkRun : [], $owner, $repositoryName),
             $checkRuns,
         );
     }
@@ -2597,7 +2599,7 @@ class Origin extends Git
         );
 
         return array_map(
-            fn($checkRun): array => $this->normalizeCheckRun(\is_array($checkRun) ? $checkRun : [], $owner, $repositoryName),
+            fn ($checkRun): array => $this->normalizeCheckRun(\is_array($checkRun) ? $checkRun : [], $owner, $repositoryName),
             $checkRuns,
         );
     }
@@ -2650,7 +2652,7 @@ class Origin extends Git
                     'startedAt' => \strval($input['startedAt'] ?? ''),
                     'completedAt' => $completedAt,
                     'detailsUrl' => \strval($input['detailsUrl'] ?? ''),
-                ], fn(string $value): bool => $value !== '' && $value !== '0'),
+                ], fn (string $value): bool => $value !== '' && $value !== '0'),
             );
 
             $title = \strval($input['title'] ?? '');
@@ -2660,7 +2662,7 @@ class Origin extends Git
                     'title' => $title,
                     'summary' => $summary,
                     'text' => \strval($input['text'] ?? ''),
-                ], fn(string $value): bool => $value !== '' && $value !== '0');
+                ], fn (string $value): bool => $value !== '' && $value !== '0');
             }
 
             $runs[] = $run;
@@ -2689,7 +2691,7 @@ class Origin extends Git
         $responseBody = \is_array($response['body'] ?? null) ? $response['body'] : [];
 
         return array_map(
-            fn($checkRun): array => $this->normalizeCheckRun(\is_array($checkRun) ? $checkRun : [], $owner, $repositoryName),
+            fn ($checkRun): array => $this->normalizeCheckRun(\is_array($checkRun) ? $checkRun : [], $owner, $repositoryName),
             \is_array($responseBody['checkRuns'] ?? null) ? $responseBody['checkRuns'] : [],
         );
     }

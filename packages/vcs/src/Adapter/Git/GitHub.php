@@ -45,7 +45,9 @@ class GitHub extends Git
      */
     protected $headers = ['content-type' => 'application/json'];
 
-    public function __construct(protected Cache $cache) {}
+    public function __construct(protected Cache $cache)
+    {
+    }
 
     /**
      * Get Adapter Name
@@ -318,7 +320,7 @@ class GitHub extends Git
             $responseBody = $response['body'] ?? [];
 
             // Filter repositories to only include those that match the search query.
-            $filteredRepositories = array_filter($responseBody['repositories'] ?? [], fn(array $repo): bool => stripos($repo['name'] ?? '', $search) !== false);
+            $filteredRepositories = array_filter($responseBody['repositories'] ?? [], fn (array $repo): bool => stripos($repo['name'] ?? '', $search) !== false);
 
             // Merge with result so far.
             $repositories = array_merge($repositories, $filteredRepositories);
@@ -816,7 +818,7 @@ class GitHub extends Git
                 return [];
             }
 
-            $branches = array_map(fn(array $ref): string|array => str_replace('refs/heads/', '', $ref['ref'] ?? ''), $responseBody);
+            $branches = array_map(fn (array $ref): string|array => str_replace('refs/heads/', '', $ref['ref'] ?? ''), $responseBody);
             $offset = ($page - 1) * $perPage;
 
             return array_values(\array_slice($branches, $offset, $perPage));
@@ -835,7 +837,7 @@ class GitHub extends Git
             return [];
         }
 
-        return array_values(array_map(fn(array $branch) => $branch['name'] ?? '', $responseBody));
+        return array_values(array_map(fn (array $branch) => $branch['name'] ?? '', $responseBody));
     }
 
     /**
@@ -860,7 +862,7 @@ class GitHub extends Git
             return [];
         }
 
-        $tags = array_map(fn(array $ref): string|array => str_replace('refs/tags/', '', $ref['ref'] ?? ''), $responseBody);
+        $tags = array_map(fn (array $ref): string|array => str_replace('refs/tags/', '', $ref['ref'] ?? ''), $responseBody);
 
         return $this->matchGlob($tags, $search);
     }
@@ -1062,12 +1064,12 @@ class GitHub extends Git
                 'details_url' => $detailsUrl,
                 'external_id' => $externalId,
                 'started_at' => $startedAt,
-            ], fn(string $value): bool => $value !== '' && $value !== '0'),
+            ], fn (string $value): bool => $value !== '' && $value !== '0'),
         );
 
         // Output requires both title and summary.
         if ($title !== '' && $title !== '0' && ($summary !== '' && $summary !== '0')) {
-            $output = array_filter(['title' => $title, 'summary' => $summary, 'text' => $text], fn(string $value): bool => $value !== '' && $value !== '0');
+            $output = array_filter(['title' => $title, 'summary' => $summary, 'text' => $text], fn (string $value): bool => $value !== '' && $value !== '0');
             if ($annotations !== []) {
                 $output['annotations'] = $annotations;
             }
@@ -1165,11 +1167,11 @@ class GitHub extends Git
             'started_at' => $startedAt,
             'conclusion' => $conclusion,
             'completed_at' => $completedAt,
-        ], fn(string $value): bool => $value !== '' && $value !== '0');
+        ], fn (string $value): bool => $value !== '' && $value !== '0');
 
         // Output requires both title and summary.
         if ($title !== '' && $title !== '0' && ($summary !== '' && $summary !== '0')) {
-            $output = array_filter(['title' => $title, 'summary' => $summary, 'text' => $text], fn(string $value): bool => $value !== '' && $value !== '0');
+            $output = array_filter(['title' => $title, 'summary' => $summary, 'text' => $text], fn (string $value): bool => $value !== '' && $value !== '0');
             if ($annotations !== []) {
                 $output['annotations'] = $annotations;
             }

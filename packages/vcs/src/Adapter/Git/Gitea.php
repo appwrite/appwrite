@@ -29,7 +29,9 @@ class Gitea extends Git
      */
     protected $headers = ['content-type' => 'application/json'];
 
-    public function __construct(protected Cache $cache) {}
+    public function __construct(protected Cache $cache)
+    {
+    }
 
     public function setEndpoint(string $endpoint): void
     {

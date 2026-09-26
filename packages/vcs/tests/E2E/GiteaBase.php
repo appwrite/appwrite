@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Utopia\Tests\E2E;
+namespace Utopia\VCS\Tests\E2E;
 
 /**
  * Forgejo and Gogs are Gitea forks: they answer the same API and report the

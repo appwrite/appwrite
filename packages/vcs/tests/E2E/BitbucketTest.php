@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Utopia\Tests\E2E;
+namespace Utopia\VCS\Tests\E2E;
 
 use Utopia\Cache\Adapter\None;
 use Utopia\Cache\Cache;
