@@ -1,0 +1,1099 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Binary operation "\." between non\-falsy\-string and mixed results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 2
+			path: src/Adapter.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Adapter\:\:call\(\) has parameter \$headers with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Adapter.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Adapter\:\:call\(\) has parameter \$params with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Adapter.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Adapter\:\:call\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Adapter.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Adapter\:\:call\(\) should return array\|string but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Adapter.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Adapter\:\:flatten\(\) has parameter \$data with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Adapter.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Adapter\:\:flatten\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Adapter.php
+
+		-
+			message: '#^Parameter \#1 \$data of function http_build_query expects array\|object, array\|string given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Adapter.php
+
+		-
+			message: '#^Parameter \#1 \$data of method Utopia\\Domains\\Adapter\:\:flatten\(\) expects array, array\|string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapter.php
+
+		-
+			message: '#^Parameter \#1 \$json of function json_decode expects string, bool\|string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapter.php
+
+		-
+			message: '#^Parameter \#1 \$message of class Exception constructor expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapter.php
+
+		-
+			message: '#^Parameter \#3 \$length of function substr expects int\|null, int\<0, max\>\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapter.php
+
+		-
+			message: '#^Parameter \#3 \$value of function curl_setopt expects array\<int, string\>, array given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapter.php
+
+		-
+			message: '#^Parameter \#3 \$value of function curl_setopt expects array\|string, array\|string\|false\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapter.php
+
+		-
+			message: '#^Parameter \#3 \$value of function curl_setopt expects non\-empty\-string\|null, string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapter.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Cache\:\:save\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Cache.php
+
+		-
+			message: '#^Parameter \#2 \$data of method Utopia\\Cache\\Cache\:\:save\(\) expects array\<int\|string, mixed\>\|string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Cache.php
+
+		-
+			message: '#^Static property Utopia\\Domains\\Domain\:\:\$list \(array\<string, array\{suffix\: string, type\: string, comments\: array\<string\>\}\>\) does not accept mixed\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: src/Domain.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Registrar\:\:__construct\(\) has parameter \$defaultNameservers with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Registrar.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Registrar\:\:purchase\(\) has parameter \$contacts with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Registrar.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Registrar\:\:purchase\(\) has parameter \$nameservers with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Registrar.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Registrar\:\:suggest\(\) has parameter \$query with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Registrar.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Registrar\:\:suggest\(\) has parameter \$tlds with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Registrar.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Registrar\:\:suggest\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Registrar.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Registrar\:\:tlds\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Registrar.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Registrar\:\:updateNameservers\(\) has parameter \$nameservers with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Registrar.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Registrar\:\:updateNameservers\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Registrar.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Registrar\\Adapter\:\:purchase\(\) has parameter \$contacts with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Registrar/Adapter.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Registrar\\Adapter\:\:purchase\(\) has parameter \$nameservers with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Registrar/Adapter.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Registrar\\Adapter\:\:setDefaultNameservers\(\) has parameter \$nameservers with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Registrar/Adapter.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Registrar\\Adapter\:\:suggest\(\) has parameter \$query with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Registrar/Adapter.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Registrar\\Adapter\:\:suggest\(\) has parameter \$tlds with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Registrar/Adapter.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Registrar\\Adapter\:\:suggest\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Registrar/Adapter.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Registrar\\Adapter\:\:tlds\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Registrar/Adapter.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Registrar\\Adapter\:\:updateNameservers\(\) has parameter \$nameservers with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Registrar/Adapter.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Registrar\\Adapter\:\:updateNameservers\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Registrar/Adapter.php
+
+		-
+			message: '#^Property Utopia\\Domains\\Registrar\\Adapter\:\:\$defaultNameservers type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Registrar/Adapter.php
+
+		-
+			message: '#^Binary operation "\*" between mixed and int results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: src/Registrar/Adapter/Mock.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 1
+			path: src/Registrar/Adapter/Mock.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Registrar\\Adapter\\Mock\:\:__construct\(\) has parameter \$supportedTlds with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Registrar/Adapter/Mock.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Registrar\\Adapter\\Mock\:\:__construct\(\) has parameter \$takenDomains with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Registrar/Adapter/Mock.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Registrar\\Adapter\\Mock\:\:getPurchasedDomains\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Registrar/Adapter/Mock.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Registrar\\Adapter\\Mock\:\:getTransferredDomains\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Registrar/Adapter/Mock.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Registrar\\Adapter\\Mock\:\:purchase\(\) has parameter \$contacts with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Registrar/Adapter/Mock.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Registrar\\Adapter\\Mock\:\:purchase\(\) has parameter \$nameservers with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Registrar/Adapter/Mock.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Registrar\\Adapter\\Mock\:\:suggest\(\) has parameter \$query with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Registrar/Adapter/Mock.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Registrar\\Adapter\\Mock\:\:suggest\(\) has parameter \$tlds with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Registrar/Adapter/Mock.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Registrar\\Adapter\\Mock\:\:suggest\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Registrar/Adapter/Mock.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Registrar\\Adapter\\Mock\:\:tlds\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Registrar/Adapter/Mock.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Registrar\\Adapter\\Mock\:\:updateNameservers\(\) has parameter \$nameservers with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Registrar/Adapter/Mock.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Registrar\\Adapter\\Mock\:\:updateNameservers\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Registrar/Adapter/Mock.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Registrar\\Adapter\\Mock\:\:validateContacts\(\) has parameter \$contacts with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Registrar/Adapter/Mock.php
+
+		-
+			message: '#^Parameter \#1 \$price of class Utopia\\Domains\\Registrar\\Price constructor expects float, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Registrar/Adapter/Mock.php
+
+		-
+			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, array given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Registrar/Adapter/Mock.php
+
+		-
+			message: '#^Parameter \#2 \$premium of class Utopia\\Domains\\Registrar\\Price constructor expects bool, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Registrar/Adapter/Mock.php
+
+		-
+			message: '#^Property Utopia\\Domains\\Registrar\\Adapter\\Mock\:\:\$premiumDomains type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Registrar/Adapter/Mock.php
+
+		-
+			message: '#^Property Utopia\\Domains\\Registrar\\Adapter\\Mock\:\:\$purchasedDomains type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Registrar/Adapter/Mock.php
+
+		-
+			message: '#^Property Utopia\\Domains\\Registrar\\Adapter\\Mock\:\:\$supportedTlds type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Registrar/Adapter/Mock.php
+
+		-
+			message: '#^Property Utopia\\Domains\\Registrar\\Adapter\\Mock\:\:\$takenDomains type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Registrar/Adapter/Mock.php
+
+		-
+			message: '#^Property Utopia\\Domains\\Registrar\\Adapter\\Mock\:\:\$transferredDomains type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Registrar/Adapter/Mock.php
+
+		-
+			message: '#^Argument of an invalid type mixed supplied for foreach, only iterables are supported\.$#'
+			identifier: foreach.nonIterable
+			count: 2
+			path: src/Registrar/Adapter/NameCom.php
+
+		-
+			message: '#^Binary operation "\.\=" between mixed and non\-falsy\-string results in an error\.$#'
+			identifier: assignOp.invalid
+			count: 1
+			path: src/Registrar/Adapter/NameCom.php
+
+		-
+			message: '#^Cannot access offset ''details'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Registrar/Adapter/NameCom.php
+
+		-
+			message: '#^Cannot access offset ''domainName'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: src/Registrar/Adapter/NameCom.php
+
+		-
+			message: '#^Cannot access offset ''expireDate'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Registrar/Adapter/NameCom.php
+
+		-
+			message: '#^Cannot access offset ''message'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Registrar/Adapter/NameCom.php
+
+		-
+			message: '#^Cannot access offset ''premium'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 3
+			path: src/Registrar/Adapter/NameCom.php
+
+		-
+			message: '#^Cannot access offset ''purchasable'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 4
+			path: src/Registrar/Adapter/NameCom.php
+
+		-
+			message: '#^Cannot access offset ''purchasePrice'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 3
+			path: src/Registrar/Adapter/NameCom.php
+
+		-
+			message: '#^Cannot access offset ''purchaseType'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 3
+			path: src/Registrar/Adapter/NameCom.php
+
+		-
+			message: '#^Cannot access offset ''renewalPrice'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 3
+			path: src/Registrar/Adapter/NameCom.php
+
+		-
+			message: '#^Cannot access offset ''tld'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Registrar/Adapter/NameCom.php
+
+		-
+			message: '#^Cannot access offset 0 on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Registrar/Adapter/NameCom.php
+
+		-
+			message: '#^Cannot access offset string on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Registrar/Adapter/NameCom.php
+
+		-
+			message: '#^Cannot cast mixed to float\.$#'
+			identifier: cast.double
+			count: 8
+			path: src/Registrar/Adapter/NameCom.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 7
+			path: src/Registrar/Adapter/NameCom.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Registrar\\Adapter\\NameCom\:\:available\(\) should return array\<string, bool\> but returns array\<mixed\>\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Registrar/Adapter/NameCom.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Registrar\\Adapter\\NameCom\:\:formatContact\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Registrar/Adapter/NameCom.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Registrar\\Adapter\\NameCom\:\:getAuthCode\(\) should return string but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Registrar/Adapter/NameCom.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Registrar\\Adapter\\NameCom\:\:purchase\(\) has parameter \$contacts with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Registrar/Adapter/NameCom.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Registrar\\Adapter\\NameCom\:\:purchase\(\) has parameter \$nameservers with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Registrar/Adapter/NameCom.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Registrar\\Adapter\\NameCom\:\:sanitizeContacts\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Registrar/Adapter/NameCom.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Registrar\\Adapter\\NameCom\:\:send\(\) has parameter \$data with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Registrar/Adapter/NameCom.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Registrar\\Adapter\\NameCom\:\:send\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Registrar/Adapter/NameCom.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Registrar\\Adapter\\NameCom\:\:send\(\) should return array but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Registrar/Adapter/NameCom.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Registrar\\Adapter\\NameCom\:\:suggest\(\) has parameter \$query with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Registrar/Adapter/NameCom.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Registrar\\Adapter\\NameCom\:\:suggest\(\) has parameter \$tlds with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Registrar/Adapter/NameCom.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Registrar\\Adapter\\NameCom\:\:suggest\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Registrar/Adapter/NameCom.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Registrar\\Adapter\\NameCom\:\:tlds\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Registrar/Adapter/NameCom.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Registrar\\Adapter\\NameCom\:\:updateNameservers\(\) has parameter \$nameservers with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Registrar/Adapter/NameCom.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Registrar\\Adapter\\NameCom\:\:updateNameservers\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Registrar/Adapter/NameCom.php
+
+		-
+			message: '#^Parameter \#1 \$datetime of class DateTime constructor expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 4
+			path: src/Registrar/Adapter/NameCom.php
+
+		-
+			message: '#^Parameter \#1 \$message of class Exception constructor expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Registrar/Adapter/NameCom.php
+
+		-
+			message: '#^Parameter \#1 \$price of class Utopia\\Domains\\Registrar\\Price constructor expects float, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Registrar/Adapter/NameCom.php
+
+		-
+			message: '#^Parameter \#1 \$status of method Utopia\\Domains\\Registrar\\Adapter\\NameCom\:\:mapTransferStatus\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Registrar/Adapter/NameCom.php
+
+		-
+			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, array given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Registrar/Adapter/NameCom.php
+
+		-
+			message: '#^Parameter \#2 \$premium of class Utopia\\Domains\\Registrar\\Price constructor expects bool, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Registrar/Adapter/NameCom.php
+
+		-
+			message: '#^Parameter \#2 \$string of function explode expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Registrar/Adapter/NameCom.php
+
+		-
+			message: '#^Parameter \#5 \$headers of method Utopia\\Psr7\\Request\\Factory\:\:body\(\) expects array\<string, array\<int, string\>\|string\>, array\<mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Registrar/Adapter/NameCom.php
+
+		-
+			message: '#^Parameter \$nameservers of class Utopia\\Domains\\Registrar\\Domain constructor expects array\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Registrar/Adapter/NameCom.php
+
+		-
+			message: '#^Parameter \$reason of class Utopia\\Domains\\Registrar\\TransferStatus constructor expects string\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Registrar/Adapter/NameCom.php
+
+		-
+			message: '#^Part \$details \(mixed\) of encapsed string cannot be cast to string\.$#'
+			identifier: encapsedStringPart.nonString
+			count: 1
+			path: src/Registrar/Adapter/NameCom.php
+
+		-
+			message: '#^Part \$domainName \(mixed\) of encapsed string cannot be cast to string\.$#'
+			identifier: encapsedStringPart.nonString
+			count: 2
+			path: src/Registrar/Adapter/NameCom.php
+
+		-
+			message: '#^Part \$message \(mixed\) of encapsed string cannot be cast to string\.$#'
+			identifier: encapsedStringPart.nonString
+			count: 1
+			path: src/Registrar/Adapter/NameCom.php
+
+		-
+			message: '#^Part \$page \(mixed\) of encapsed string cannot be cast to string\.$#'
+			identifier: encapsedStringPart.nonString
+			count: 1
+			path: src/Registrar/Adapter/NameCom.php
+
+		-
+			message: '#^Possibly invalid array key type mixed\.$#'
+			identifier: offsetAccess.invalidOffset
+			count: 2
+			path: src/Registrar/Adapter/NameCom.php
+
+		-
+			message: '#^Argument of an invalid type array\<SimpleXMLElement\>\|null supplied for foreach, only iterables are supported\.$#'
+			identifier: foreach.nonIterable
+			count: 7
+			path: src/Registrar/Adapter/OpenSRS.php
+
+		-
+			message: '#^Cannot access offset ''premium'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Registrar/Adapter/OpenSRS.php
+
+		-
+			message: '#^Cannot access offset ''tlds'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 3
+			path: src/Registrar/Adapter/OpenSRS.php
+
+		-
+			message: '#^Cannot call method xpath\(\) on SimpleXMLElement\|false\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: src/Registrar/Adapter/OpenSRS.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 1
+			path: src/Registrar/Adapter/OpenSRS.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Registrar\\Adapter\\OpenSRS\:\:buildEnvelop\(\) has parameter \$attributes with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Registrar/Adapter/OpenSRS.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Registrar\\Adapter\\OpenSRS\:\:createArray\(\) has parameter \$ary with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Registrar/Adapter/OpenSRS.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Registrar\\Adapter\\OpenSRS\:\:createAssoc\(\) has parameter \$assoc with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Registrar/Adapter/OpenSRS.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Registrar\\Adapter\\OpenSRS\:\:createContact\(\) has parameter \$contact with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Registrar/Adapter/OpenSRS.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Registrar\\Adapter\\OpenSRS\:\:createContactSet\(\) has parameter \$contacts with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Registrar/Adapter/OpenSRS.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Registrar\\Adapter\\OpenSRS\:\:createEnvelopItem\(\) has parameter \$value with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Registrar/Adapter/OpenSRS.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Registrar\\Adapter\\OpenSRS\:\:createNameserverList\(\) has parameter \$nameservers with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Registrar/Adapter/OpenSRS.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Registrar\\Adapter\\OpenSRS\:\:createNamespaceAssign\(\) has parameter \$nameservers with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Registrar/Adapter/OpenSRS.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Registrar\\Adapter\\OpenSRS\:\:createServiceOverride\(\) has parameter \$overrides with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Registrar/Adapter/OpenSRS.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Registrar\\Adapter\\OpenSRS\:\:purchase\(\) has parameter \$contacts with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Registrar/Adapter/OpenSRS.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Registrar\\Adapter\\OpenSRS\:\:purchase\(\) has parameter \$nameservers with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Registrar/Adapter/OpenSRS.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Registrar\\Adapter\\OpenSRS\:\:purchase\(\) should return string but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Registrar/Adapter/OpenSRS.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Registrar\\Adapter\\OpenSRS\:\:register\(\) has parameter \$contacts with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Registrar/Adapter/OpenSRS.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Registrar\\Adapter\\OpenSRS\:\:register\(\) has parameter \$nameservers with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Registrar/Adapter/OpenSRS.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Registrar\\Adapter\\OpenSRS\:\:register\(\) has parameter \$user with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Registrar/Adapter/OpenSRS.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Registrar\\Adapter\\OpenSRS\:\:response\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Registrar/Adapter/OpenSRS.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Registrar\\Adapter\\OpenSRS\:\:sanitizeContacts\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Registrar/Adapter/OpenSRS.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Registrar\\Adapter\\OpenSRS\:\:send\(\) has parameter \$params with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Registrar/Adapter/OpenSRS.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Registrar\\Adapter\\OpenSRS\:\:suggest\(\) has parameter \$query with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Registrar/Adapter/OpenSRS.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Registrar\\Adapter\\OpenSRS\:\:suggest\(\) has parameter \$tlds with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Registrar/Adapter/OpenSRS.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Registrar\\Adapter\\OpenSRS\:\:suggest\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Registrar/Adapter/OpenSRS.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Registrar\\Adapter\\OpenSRS\:\:tlds\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Registrar/Adapter/OpenSRS.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Registrar\\Adapter\\OpenSRS\:\:transfer\(\) should return string but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Registrar/Adapter/OpenSRS.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Registrar\\Adapter\\OpenSRS\:\:updateNameservers\(\) has parameter \$nameservers with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Registrar/Adapter/OpenSRS.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Registrar\\Adapter\\OpenSRS\:\:updateNameservers\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Registrar/Adapter/OpenSRS.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Registrar\\Adapter\\OpenSRS\:\:validateContact\(\) has parameter \$contact with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Registrar/Adapter/OpenSRS.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Registrar\\Adapter\\OpenSRS\:\:validateContact\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Registrar/Adapter/OpenSRS.php
+
+		-
+			message: '#^Offset 0 might not exist on array\<SimpleXMLElement\>\|null\.$#'
+			identifier: offsetAccess.notFound
+			count: 9
+			path: src/Registrar/Adapter/OpenSRS.php
+
+		-
+			message: '#^Parameter \#1 \$contacts of method Utopia\\Domains\\Registrar\\Adapter\\OpenSRS\:\:createContactSet\(\) expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Registrar/Adapter/OpenSRS.php
+
+		-
+			message: '#^Parameter \#1 \$contacts of method Utopia\\Domains\\Registrar\\Adapter\\OpenSRS\:\:sanitizeContacts\(\) expects array\<Utopia\\Domains\\Registrar\\Contact\>, array given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Registrar/Adapter/OpenSRS.php
+
+		-
+			message: '#^Parameter \#1 \$name of method Utopia\\Domains\\Registrar\\Adapter\\OpenSRS\:\:createNameserver\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Registrar/Adapter/OpenSRS.php
+
+		-
+			message: '#^Parameter \#1 \$nameservers of method Utopia\\Domains\\Registrar\\Adapter\\OpenSRS\:\:createNameserverList\(\) expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Registrar/Adapter/OpenSRS.php
+
+		-
+			message: '#^Parameter \#1 \$nameservers of method Utopia\\Domains\\Registrar\\Adapter\\OpenSRS\:\:createNamespaceAssign\(\) expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Registrar/Adapter/OpenSRS.php
+
+		-
+			message: '#^Parameter \#1 \$object of method Utopia\\Domains\\Registrar\\Adapter\\OpenSRS\:\:buildEnvelop\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Registrar/Adapter/OpenSRS.php
+
+		-
+			message: '#^Parameter \#1 \$overrides of method Utopia\\Domains\\Registrar\\Adapter\\OpenSRS\:\:createServiceOverride\(\) expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Registrar/Adapter/OpenSRS.php
+
+		-
+			message: '#^Parameter \#1 \$price of class Utopia\\Domains\\Registrar\\Price constructor expects float, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Registrar/Adapter/OpenSRS.php
+
+		-
+			message: '#^Parameter \#1 \$value of function count expects array\|Countable, array\<SimpleXMLElement\>\|null given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Registrar/Adapter/OpenSRS.php
+
+		-
+			message: '#^Parameter \#2 \$action of method Utopia\\Domains\\Registrar\\Adapter\\OpenSRS\:\:buildEnvelop\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Registrar/Adapter/OpenSRS.php
+
+		-
+			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, array given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Registrar/Adapter/OpenSRS.php
+
+		-
+			message: '#^Parameter \#2 \$assoc of method Utopia\\Domains\\Registrar\\Adapter\\OpenSRS\:\:createAssoc\(\) expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Registrar/Adapter/OpenSRS.php
+
+		-
+			message: '#^Parameter \#2 \$contact of method Utopia\\Domains\\Registrar\\Adapter\\OpenSRS\:\:createContact\(\) expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Registrar/Adapter/OpenSRS.php
+
+		-
+			message: '#^Parameter \#2 \$premium of class Utopia\\Domains\\Registrar\\Price constructor expects bool, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Registrar/Adapter/OpenSRS.php
+
+		-
+			message: '#^Parameter \#2 \$value of method Utopia\\Domains\\Registrar\\Adapter\\OpenSRS\:\:createEnvelopItem\(\) expects array\|int\|string, mixed given\.$#'
+			identifier: argument.type
+			count: 5
+			path: src/Registrar/Adapter/OpenSRS.php
+
+		-
+			message: '#^Parameter \#3 \$attributes of method Utopia\\Domains\\Registrar\\Adapter\\OpenSRS\:\:buildEnvelop\(\) expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Registrar/Adapter/OpenSRS.php
+
+		-
+			message: '#^Parameter \#4 \$domain of method Utopia\\Domains\\Registrar\\Adapter\\OpenSRS\:\:buildEnvelop\(\) expects string\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Registrar/Adapter/OpenSRS.php
+
+		-
+			message: '#^Parameter \#4 \$headers of method Utopia\\Psr7\\Request\\Factory\:\:xml\(\) expects array\<string, array\<int, string\>\|string\>, array\<mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Registrar/Adapter/OpenSRS.php
+
+		-
+			message: '#^Property Utopia\\Domains\\Registrar\\Adapter\\OpenSRS\:\:\$user type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Registrar/Adapter/OpenSRS.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Registrar\\Contact\:\:toArray\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Registrar/Contact.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Registrar\\Domain\:\:__construct\(\) has parameter \$nameservers with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Registrar/Domain.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 1
+			path: src/Validator/ApexDomain.php
+
+		-
+			message: '#^Parameter \#1 \$domain of class Utopia\\Domains\\Domain constructor expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Validator/ApexDomain.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 1
+			path: src/Validator/PublicDomain.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Validator\\PublicDomain\:\:allow\(\) has parameter \$domains with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Validator/PublicDomain.php
+
+		-
+			message: '#^Parameter \#1 \$domain of class Utopia\\Domains\\Domain constructor expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Validator/PublicDomain.php
+
+		-
+			message: '#^Property Utopia\\Domains\\Validator\\PublicDomain\:\:\$allowedDomains type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Validator/PublicDomain.php
+
+		-
+			message: '#^Cannot access offset ''price'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/E2E/Registrar/NameComTest.php
+
+		-
+			message: '#^Cannot access offset ''type'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: tests/E2E/Registrar/NameComTest.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Tests\\E2E\\Registrar\\NameComTest\:\:getDefaultNameservers\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: tests/E2E/Registrar/NameComTest.php
+
+		-
+			message: '#^Cannot access offset ''available'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/E2E/Registrar/OpenSRSTest.php
+
+		-
+			message: '#^Cannot access offset ''price'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: tests/E2E/Registrar/OpenSRSTest.php
+
+		-
+			message: '#^Cannot access offset ''type'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: tests/E2E/Registrar/OpenSRSTest.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Tests\\E2E\\Registrar\\OpenSRSTest\:\:getDefaultNameservers\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: tests/E2E/Registrar/OpenSRSTest.php
+
+		-
+			message: '#^Cannot access offset ''available'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Registrar/Base.php
+
+		-
+			message: '#^Cannot access offset ''price'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Registrar/Base.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Tests\\Registrar\\Base\:\:getDefaultNameservers\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: tests/Registrar/Base.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Tests\\Registrar\\Base\:\:getPurchaseContact\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: tests/Registrar/Base.php
+
+		-
+			message: '#^Parameter \#2 \$array of method PHPUnit\\Framework\\Assert\:\:assertArrayHasKey\(\) expects array\<mixed\>\|ArrayAccess\<\(int\|string\), covariant mixed\>, mixed given\.$#'
+			identifier: argument.type
+			count: 3
+			path: tests/Registrar/Base.php
+
+		-
+			message: '#^Method Utopia\\Domains\\Tests\\Registrar\\MockTest\:\:getDefaultNameservers\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: tests/Registrar/MockTest.php
+
+		-
+			message: '#^Cannot call method getDescription\(\) on Utopia\\Domains\\Validator\\ApexDomain\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: tests/Validator/ApexDomainTest.php
+
+		-
+			message: '#^Cannot call method isValid\(\) on Utopia\\Domains\\Validator\\ApexDomain\|null\.$#'
+			identifier: method.nonObject
+			count: 12
+			path: tests/Validator/ApexDomainTest.php
+
+		-
+			message: '#^Cannot call method getDescription\(\) on Utopia\\Domains\\Validator\\PublicDomain\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: tests/Validator/PublicDomainTest.php
+
+		-
+			message: '#^Cannot call method isValid\(\) on Utopia\\Domains\\Validator\\PublicDomain\|null\.$#'
+			identifier: method.nonObject
+			count: 22
+			path: tests/Validator/PublicDomainTest.php
