@@ -6,7 +6,10 @@ namespace Utopia\VCS\Tests\E2E;
 
 use Exception;
 use PHPUnit\Framework\TestCase;
-use Utopia\Fetch\Client;
+use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
+use Utopia\Client\Client;
+use Utopia\Psr7\Method;
+use Utopia\Psr7\Request\Factory as RequestFactory;
 use Utopia\VCS\Adapter\Git;
 use Utopia\VCS\Exception\FileNotFound;
 use Utopia\VCS\Exception\RepositoryNotFound;
@@ -161,17 +164,15 @@ abstract class Base extends TestCase
     /** @return array<mixed> */
     protected function getLastWebhookRequest(): array
     {
-        $client = new Client();
-        $response = $client->fetch(
-            url: Services::CATCHER_URL . '/__last_request__',
-            method: 'GET',
+        $response = $this->client()->sendRequest(
+            new RequestFactory()->createRequest(Method::GET, Services::CATCHER_URL . '/__last_request__'),
         );
 
         if ($response->getStatusCode() < 200 || $response->getStatusCode() >= 300) {
             return [];
         }
 
-        $body = $response->text();
+        $body = (string) $response->getBody();
 
         if ($body === '' || $body === '0') {
             return [];
@@ -361,11 +362,16 @@ abstract class Base extends TestCase
 
     protected function deleteLastWebhookRequest(): void
     {
-        $client = new Client();
-        $client->fetch(
-            url: Services::CATCHER_URL . '/__clear__',
-            method: 'DELETE',
+        $this->client()->sendRequest(
+            new RequestFactory()->createRequest(Method::DELETE, Services::CATCHER_URL . '/__clear__'),
         );
+    }
+
+    private function client(): Client
+    {
+        return new Client(new CurlAdapter())
+            ->withTimeout(15)
+            ->withFollowRedirects();
     }
 
     public function testCreateRepository(): void
@@ -416,14 +422,11 @@ abstract class Base extends TestCase
      */
     private function fetchAnonymousRefAdvertisement(string $repositoryName): array
     {
-        $client = new Client();
-        $response = $client->fetch(
-            url: $this->anonymousCloneUrl($repositoryName) . '/info/refs',
-            method: 'GET',
-            query: ['service' => 'git-upload-pack'],
+        $response = $this->client()->sendRequest(
+            new RequestFactory()->query(Method::GET, $this->anonymousCloneUrl($repositoryName) . '/info/refs', ['service' => 'git-upload-pack']),
         );
 
-        return [$response->getStatusCode(), $response->text()];
+        return [$response->getStatusCode(), (string) $response->getBody()];
     }
 
     /**
