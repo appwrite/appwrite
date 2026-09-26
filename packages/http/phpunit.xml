@@ -15,6 +15,7 @@
         </testsuite>
         <testsuite name="e2e">
             <directory>tests/E2E</directory>
+            <exclude>tests/E2E/BaseTest.php</exclude>
         </testsuite>
     </testsuites>
     <source>
