@@ -94,6 +94,10 @@ class ScheduleFunctions extends Action
                 Span::add('occurrence.batch', $batch);
                 Span::add('occurrence.index', $index);
 
+                if (($schedule['project']->getAttribute('status') ?? PROJECT_STATUS_ACTIVE) !== PROJECT_STATUS_ACTIVE) {
+                    continue;
+                }
+
                 $publisherForFunctions->enqueue(new FunctionMessage(
                     project: $schedule['project'],
                     function: $schedule['resource'],
