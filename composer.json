@@ -132,7 +132,6 @@
         "utopia-php/emails": "0.8.*",
         "utopia-php/dns": "^3.0.7",
         "utopia-php/http": "^2.0@RC",
-        "utopia-php/fetch": "^1.1",
         "utopia-php/migration": "^2.0.0",
         "utopia-php/platform": "1.0.0-rc25",
         "utopia-php/queue": "^6.0.0",
