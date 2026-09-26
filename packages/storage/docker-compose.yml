@@ -1,0 +1,13 @@
+services:
+  minio:
+    image: quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z
+    entrypoint: sh -c 'mkdir -p /data/utopia-storage-test && exec minio server /data'
+    environment:
+      MINIO_DOMAIN: localhost
+    ports:
+      - '9805:9000'
+    healthcheck:
+      test: ['CMD', 'mc', 'ready', 'local']
+      interval: 2s
+      timeout: 5s
+      retries: 15
