@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "a852b0ced3f50d0658ddd8ffebf82c91",
+    "content-hash": "f341525181442205736c59a43acee1f2",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2875,65 +2875,6 @@
                 "source": "https://github.com/utopia-php/audit/tree/4.0.3"
             },
             "time": "2026-09-10T11:04:06+00:00"
-        },
-        {
-            "name": "utopia-php/auth",
-            "version": "0.12.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/utopia-php/auth.git",
-                "reference": "580e41d69b0248b79fa419dca5bab4abce0d32c4"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/auth/zipball/580e41d69b0248b79fa419dca5bab4abce0d32c4",
-                "reference": "580e41d69b0248b79fa419dca5bab4abce0d32c4",
-                "shasum": ""
-            },
-            "require": {
-                "ext-hash": "*",
-                "ext-openssl": "*",
-                "ext-scrypt": "*",
-                "ext-sodium": "*",
-                "php": ">=8.3"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Utopia\\Auth\\": "src/Auth"
-                }
-            },
-            "autoload-dev": {
-                "psr-4": {
-                    "Utopia\\Tests\\Auth\\": "tests/Auth"
-                }
-            },
-            "scripts": {
-                "test": [
-                    "phpunit --configuration phpunit.xml"
-                ]
-            },
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Utopia PHP",
-                    "email": "team@appwrite.io"
-                }
-            ],
-            "description": "A simple PHP authentication library",
-            "keywords": [
-                "auth",
-                "authentication",
-                "php",
-                "security"
-            ],
-            "support": {
-                "source": "https://github.com/utopia-php/auth/tree/0.12.0",
-                "issues": "https://github.com/utopia-php/auth/issues"
-            },
-            "time": "2026-09-10T18:16:47+00:00"
         },
         {
             "name": "utopia-php/cdn",
