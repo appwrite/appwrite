@@ -15,13 +15,17 @@ use Appwrite\Utopia\Response;
 use DOMDocument;
 use DOMElement;
 use enshrined\svgSanitize\Sanitizer as SvgSanitizer;
+use Psr\Http\Client\ClientInterface;
+use Psr\Http\Message\ResponseInterface;
+use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
+use Utopia\Client\Client;
 use Utopia\Domains\Domain;
-use Utopia\Fetch\Adapter;
-use Utopia\Fetch\Client;
-use Utopia\Fetch\Response as FetchResponse;
 use Utopia\Image\Image;
 use Utopia\Platform\Action as UtopiaAction;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Psr7\Header;
+use Utopia\Psr7\Method as RequestMethod;
+use Utopia\Psr7\Request\Factory as RequestFactory;
 use Utopia\System\System;
 use Utopia\Validator\URL;
 
@@ -91,7 +95,7 @@ class Get extends Action
             throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
         }
 
-        $body = $pageResponse->getBody();
+        $body = (string) $pageResponse->getBody();
 
         $doc = new DOMDocument();
         $doc->strictErrorChecking = false;
@@ -161,7 +165,7 @@ class Get extends Action
             throw new Exception(Exception::AVATAR_ICON_NOT_FOUND);
         }
 
-        $data = $iconResponse->getBody();
+        $data = (string) $iconResponse->getBody();
 
         if ('ico' === $outputExt) { // Skip crop, Imagick isn\'t supporting icon files
             if (
@@ -245,24 +249,28 @@ class Get extends Action
     /**
      * @throws Exception
      */
-    protected function safeFetch(string $url, string $userAgent, ?Adapter $adapter = null): FetchResponse
+    protected function safeFetch(string $url, string $userAgent, ?ClientInterface $client = null): ResponseInterface
     {
+        // Redirects are followed here, one hop at a time, so every target passes assertSafeUrl()
+        $client ??= (new Client(new CurlAdapter()))->withTimeout(15);
+        $requestFactory = new RequestFactory();
+
         for ($hop = 0; $hop <= self::MAX_REDIRECTS; $hop++) {
             self::assertSafeUrl($url);
 
-            $client = $adapter !== null ? new Client($adapter) : new Client();
-            $response = $client
-                ->setAllowRedirects(false)
-                ->setUserAgent($userAgent)
-                ->fetch($url);
+            $response = $client->sendRequest(
+                $requestFactory
+                    ->createRequest(RequestMethod::GET, $url)
+                    ->withHeader(Header::USER_AGENT, $userAgent),
+            );
 
             $status = $response->getStatusCode();
             if ($status < 300 || $status >= 400) {
                 return $response;
             }
 
-            $headers = \array_change_key_case($response->getHeaders(), CASE_LOWER);
-            $location = $headers['location'] ?? '';
+            $locations = $response->getHeader(Header::LOCATION);
+            $location = \end($locations) ?: '';
             if ($location === '') {
                 return $response;
             }
