@@ -1,0 +1,322 @@
+# Composer
+/vendor/
+composer.phar
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Runtime
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+
+# nyc test coverage
+.nyc_output
+
+# Dependency directories
+node_modules/
+
+# Optional npm cache directory
+.npm
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# dotenv environment variables file
+.env
+.env.test
+
+# parcel-bundler cache (https://parceljs.org/)
+.cache
+.parcel-cache
+
+# next.js build output
+.next
+
+# nuxt.js build output
+.nuxt
+
+# vuepress build output
+.vuepress/dist
+
+# Serverless directories
+.serverless
+
+# FuseBox cache
+.fusebox/
+
+# DynamoDB Local files
+.dynamodb/
+
+# TernJS port file
+.tern-port
+
+# Stores VSCode versions used for testing VSCode extensions
+.vscode-test
+
+# Temporary folders
+tmp/
+temp/
+
+# Build artifacts
+build/
+dist/
+
+# PHPUnit
+.phpunit.result.cache
+
+# PHPStan
+.phpstan.neon
+
+# PHP CS Fixer
+.php_cs.cache
+
+# Laravel Pint
+.php-cs-fixer.cache
+
+# PHP_CodeSniffer
+.phpcs.xml
+
+# Psalm
+psalm.xml
+psalm-baseline.xml
+
+# PHPUnit coverage
+clover.xml
+coverage.xml
+coverage/
+
+# PHPUnit cache
+.phpunit.result.cache
+
+# PHPStan cache
+.phpstan.cache
+
+# PHP CS Fixer cache
+.php_cs.cache
+
+# Laravel Pint cache
+.php-cs-fixer.cache
+
+# PHP_CodeSniffer cache
+.phpcs.cache
+
+# Psalm cache
+.psalm/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Log files
+*.log
+
+# Runtime files
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory
+coverage/
+
+# Dependency directories
+node_modules/
+
+# Optional npm cache directory
+.npm
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# dotenv environment variables file
+.env
+.env.test
+
+# parcel-bundler cache (https://parceljs.org/)
+.cache
+.parcel-cache
+
+# next.js build output
+.next
+
+# nuxt.js build output
+.nuxt
+
+# vuepress build output
+.vuepress/dist
+
+# Serverless directories
+.serverless
+
+# FuseBox cache
+.fusebox/
+
+# DynamoDB Local files
+.dynamodb/
+
+# TernJS port file
+.tern-port
+
+# Stores VSCode versions used for testing VSCode extensions
+.vscode-test
+
+# Temporary folders
+tmp/
+temp/
+
+# Build artifacts
+build/
+dist/
+
+# PHPUnit
+.phpunit.result.cache
+
+# PHPStan
+.phpstan.neon
+
+# PHP CS Fixer
+.php_cs.cache
+
+# Laravel Pint
+.php-cs-fixer.cache
+
+# PHP_CodeSniffer
+.phpcs.xml
+
+# Psalm
+psalm.xml
+psalm-baseline.xml
+
+# PHPUnit coverage
+clover.xml
+coverage.xml
+coverage/
+
+# PHPUnit cache
+.phpunit.result.cache
+
+# PHPStan cache
+.phpstan.cache
+
+# PHP CS Fixer cache
+.php_cs.cache
+
+# Laravel Pint cache
+.php-cs-fixer.cache
+
+# PHP_CodeSniffer cache
+.phpcs.cache
+
+# Psalm cache
+.psalm/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Log files
+*.log
+
+# Runtime files
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory
+coverage/
+
+# Dependency directories
+node_modules/
+
+# Optional npm cache directory
+.npm
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# dotenv environment variables file
+.env
+.env.test
+
+# parcel-bundler cache (https://parceljs.org/)
+.cache
+.parcel-cache
+
+# next.js build output
+.next
+
+# nuxt.js build output
+.nuxt
+
+# vuepress build output
+.vuepress/dist
+
+# Serverless directories
+.serverless
+
+# FuseBox cache
+.fusebox/
+
+# DynamoDB Local files
+.dynamodb/
+
+# TernJS port file
+.tern-port
+
+# Stores VSCode versions used for testing VSCode extensions
+.vscode-test
+
+# Temporary folders
+tmp/
+temp/
+
+# Build artifacts
+build/
+dist/
+

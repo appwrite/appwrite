@@ -1,0 +1,17 @@
+name: "Composer Checks"
+
+on: [pull_request]
+jobs:
+  lint:
+    name: Composer Checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run Composer Checks
+        run: |
+          docker run --rm -v $PWD:/app composer:2.8 sh -c \
+          "composer install --profile --ignore-platform-reqs && composer check"
+

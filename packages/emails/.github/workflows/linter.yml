@@ -1,0 +1,17 @@
+name: "Linter"
+
+on: [pull_request]
+jobs:
+  lint:
+    name: Linter
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Run Linter
+      run: |
+        docker run --rm -v $PWD:/app composer:2.8 sh -c \
+        "composer install --profile --ignore-platform-reqs && composer lint"
+

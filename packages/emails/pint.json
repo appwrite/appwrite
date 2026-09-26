@@ -1,0 +1,10 @@
+{
+    "preset": "laravel",
+    "rules": {
+        "simplified_null_return": true,
+        "blank_line_before_statement": {
+            "statements": ["break", "continue", "declare", "return", "throw", "try"]
+        }
+    }
+}
+
