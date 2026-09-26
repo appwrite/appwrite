@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "4f38c1d9a106de9a711e2d5d2aa5ffbf",
+    "content-hash": "d68ec1eb4aef2de21165e4f35614d0fe",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3571,73 +3571,6 @@
                 "source": "https://github.com/utopia-php/platform/tree/1.0.0-rc25"
             },
             "time": "2026-09-23T13:10:08+00:00"
-        },
-        {
-            "name": "utopia-php/queue",
-            "version": "6.0.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/utopia-php/queue.git",
-                "reference": "723f758f0313e215ff644e25c4bfe1aa98540f48"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/queue/zipball/723f758f0313e215ff644e25c4bfe1aa98540f48",
-                "reference": "723f758f0313e215ff644e25c4bfe1aa98540f48",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=8.5",
-                "utopia-php/di": "^0.3",
-                "utopia-php/lock": "^0.3",
-                "utopia-php/pools": "^2.1",
-                "utopia-php/servers": "^0.4",
-                "utopia-php/telemetry": "^0.4",
-                "utopia-php/validators": "^1.0"
-            },
-            "require-dev": {
-                "ext-redis": "*",
-                "swoole/ide-helper": "4.8.8",
-                "utopia-php/nats": "^1.4",
-                "workerman/workerman": "^4.0"
-            },
-            "suggest": {
-                "ext-igbinary": "Required for the Igbinary codec (Codec\\Igbinary).",
-                "ext-pcntl": "Fallback for Adapter\\KubernetesJob graceful shutdown when Swoole is unavailable.",
-                "ext-swoole": "Needed to support Swoole.",
-                "utopia-php/nats": "Version ^1.4 is needed to support the NATS JetStream broker (Broker\\Nats).",
-                "workerman/workerman": "Needed to support Workerman."
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Utopia\\Queue\\": "src/Queue"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Torsten Dittmann",
-                    "email": "torsten@appwrite.io"
-                }
-            ],
-            "description": "A powerful task queue.",
-            "keywords": [
-                "Tasks",
-                "framework",
-                "php",
-                "queue",
-                "upf",
-                "utopia"
-            ],
-            "support": {
-                "issues": "https://github.com/utopia-php/queue/issues",
-                "source": "https://github.com/utopia-php/queue/tree/6.0.0"
-            },
-            "time": "2026-09-22T15:31:24+00:00"
         },
         {
             "name": "utopia-php/storage",
