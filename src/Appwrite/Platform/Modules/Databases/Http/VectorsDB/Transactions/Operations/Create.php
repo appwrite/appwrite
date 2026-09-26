@@ -34,6 +34,21 @@ class Create extends OperationsCreate
                 group: 'transactions',
                 name: 'createOperations',
                 description: '/docs/references/vectorsdb/create-operations.md',
+                requestExamples: [
+                    'createDocument' => [
+                        'summary' => 'Stage a document creation in a four-dimensional collection',
+                        'value' => ['operations' => [[
+                            'action' => 'create',
+                            'databaseId' => '<DATABASE_ID>',
+                            'collectionId' => '<COLLECTION_ID>',
+                            'documentId' => '<DOCUMENT_ID>',
+                            'data' => [
+                                'embeddings' => [0.12, -0.55, 0.88, 1.02],
+                                'metadata' => ['name' => 'Example document'],
+                            ],
+                        ]]],
+                    ],
+                ],
                 auth: [AuthType::ADMIN, AuthType::KEY, AuthType::SESSION, AuthType::JWT],
                 responses: [
                     new SDKResponse(

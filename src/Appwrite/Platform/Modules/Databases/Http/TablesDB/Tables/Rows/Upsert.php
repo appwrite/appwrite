@@ -49,6 +49,18 @@ class Upsert extends DocumentUpsert
                     group: $this->getSDKGroup(),
                     name: self::getName(),
                     description: '/docs/references/tablesdb/upsert-row.md',
+                    requestExamples: [
+                        'upsert' => [
+                            'summary' => 'Create or update row data',
+                            'value' => ['data' => [
+                                'username' => 'walter.obrien',
+                                'email' => 'walter.obrien@example.com',
+                                'fullName' => "Walter O'Brien",
+                                'age' => 30,
+                                'isAdmin' => false,
+                            ]],
+                        ],
+                    ],
                     auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                     responses: [
                         new SDKResponse(

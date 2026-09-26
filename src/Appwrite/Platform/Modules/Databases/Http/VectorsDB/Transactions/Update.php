@@ -38,6 +38,10 @@ class Update extends TransactionsUpdate
                 group: 'transactions',
                 name: 'updateTransaction',
                 description: '/docs/references/vectorsdb/update-transaction.md',
+                requestExamples: [
+                    'commit' => ['summary' => 'Commit the transaction', 'value' => ['commit' => true]],
+                    'rollback' => ['summary' => 'Roll back the transaction', 'value' => ['rollback' => true]],
+                ],
                 auth: [AuthType::ADMIN, AuthType::KEY, AuthType::SESSION, AuthType::JWT],
                 responses: [
                     new SDKResponse(

@@ -94,6 +94,17 @@ class Create extends Action
                 group: 'messages',
                 name: 'createPush',
                 description: '/docs/references/messaging/create-push.md',
+                requestExamples: [
+                    'draft' => [
+                        'summary' => 'Create a push notification draft without sending it',
+                        'value' => [
+                            'messageId' => '<MESSAGE_ID>',
+                            'title' => 'Welcome',
+                            'body' => 'Welcome to our app.',
+                            'draft' => true,
+                        ],
+                    ],
+                ],
                 auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(

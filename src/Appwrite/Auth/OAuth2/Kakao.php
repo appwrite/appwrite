@@ -3,7 +3,12 @@
 namespace Appwrite\Auth\OAuth2;
 
 use Appwrite\Auth\OAuth2;
-use Utopia\Fetch\Client as FetchClient;
+use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
+use Utopia\Client\Client;
+use Utopia\Psr7\ContentType;
+use Utopia\Psr7\Header;
+use Utopia\Psr7\Method;
+use Utopia\Psr7\Request\Factory as RequestFactory;
 
 // Reference Material
 // https://developers.kakao.com/docs/latest/en/kakaologin/common
@@ -214,22 +219,25 @@ class Kakao extends OAuth2
 
     public function verifyCredentials(): void
     {
-        $client = new FetchClient();
-        $client->addHeader('Content-Type', 'application/x-www-form-urlencoded;charset=utf-8');
+        $response = (new Client(new CurlAdapter()))
+            ->withTimeout(15)
+            ->withFollowRedirects(maxHops: 5)
+            ->sendRequest((new RequestFactory())->form(
+                Method::POST,
+                $this->endpoint . 'token',
+                [
+                    'grant_type' => 'authorization_code',
+                    'client_id' => $this->appID,
+                    'client_secret' => $this->getClientSecret(),
+                    'redirect_uri' => 'https://invalid.appwrite.callback/intentionally-invalid',
+                    'code' => 'intentionally-invalid-code',
+                ],
+                [
+                    Header::CONTENT_TYPE => ContentType::FORM_URLENCODED . ';charset=utf-8',
+                ],
+            ));
 
-        $response = $client->fetch(
-            url: $this->endpoint . 'token',
-            method: FetchClient::METHOD_POST,
-            body: [
-                'grant_type' => 'authorization_code',
-                'client_id' => $this->appID,
-                'client_secret' => $this->getClientSecret(),
-                'redirect_uri' => 'https://invalid.appwrite.callback/intentionally-invalid',
-                'code' => 'intentionally-invalid-code',
-            ]
-        );
-
-        $json = \json_decode($response->getBody(), true);
+        $json = \json_decode((string) $response->getBody(), true);
 
         // KOE010, raised before the authorization code is looked at
         if (isset($json['error']) && $json['error'] === 'invalid_client') {

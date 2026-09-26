@@ -35,6 +35,18 @@ class Create extends OperationsCreate
                 group: 'transactions',
                 name: 'createOperations',
                 description: '/docs/references/tablesdb/create-operations.md',
+                requestExamples: [
+                    'createRow' => [
+                        'summary' => 'Stage a row creation',
+                        'value' => ['operations' => [[
+                            'action' => 'create',
+                            'databaseId' => '<DATABASE_ID>',
+                            'tableId' => '<TABLE_ID>',
+                            'rowId' => '<ROW_ID>',
+                            'data' => ['username' => 'walter.obrien'],
+                        ]]],
+                    ],
+                ],
                 auth: [AuthType::ADMIN, AuthType::KEY, AuthType::SESSION, AuthType::JWT],
                 responses: [
                     new SDKResponse(

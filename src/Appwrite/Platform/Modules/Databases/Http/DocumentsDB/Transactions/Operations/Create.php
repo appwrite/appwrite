@@ -34,6 +34,18 @@ class Create extends OperationsCreate
                 group: 'transactions',
                 name: 'createOperations',
                 description: '/docs/references/documentsdb/create-operations.md',
+                requestExamples: [
+                    'createDocument' => [
+                        'summary' => 'Stage a document creation',
+                        'value' => ['operations' => [[
+                            'action' => 'create',
+                            'databaseId' => '<DATABASE_ID>',
+                            'collectionId' => '<COLLECTION_ID>',
+                            'documentId' => '<DOCUMENT_ID>',
+                            'data' => ['username' => 'walter.obrien'],
+                        ]]],
+                    ],
+                ],
                 auth: [AuthType::KEY, AuthType::SESSION, AuthType::JWT],
                 responses: [
                     new SDKResponse(
