@@ -12,8 +12,8 @@
     "license": "MIT",
     "minimum-stability": "stable",
     "scripts": {
-        "test": "phpunit --configuration phpunit.xml --testsuite unit",
-        "test:e2e": "phpunit --configuration phpunit.xml --testsuite e2e",
+        "test": "phpunit --testsuite unit",
+        "test:e2e": "phpunit --testsuite e2e",
         "bench": "bash tests/bench/run.sh"
     },
     "authors": [
@@ -24,7 +24,12 @@
     ],
     "autoload": {
         "psr-4": {
-            "Utopia\\DNS\\": "src/DNS/"
+            "Utopia\\DNS\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Utopia\\DNS\\Tests\\": "tests/"
         }
     },
     "require": {

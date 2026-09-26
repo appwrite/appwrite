@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "0c4a0bf5e22f3998ff6f0b66d2bf2600",
+    "content-hash": "2e6b195e401e4c2ee832838237acae69",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3133,63 +3133,6 @@
                 "source": "https://github.com/utopia-php/database/tree/7.3.11"
             },
             "time": "2026-09-17T08:18:45+00:00"
-        },
-        {
-            "name": "utopia-php/dns",
-            "version": "3.0.7",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/utopia-php/dns.git",
-                "reference": "c4ea29cf8d13a69c62fab8e23ee2a02b5a5db9c0"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/dns/zipball/c4ea29cf8d13a69c62fab8e23ee2a02b5a5db9c0",
-                "reference": "c4ea29cf8d13a69c62fab8e23ee2a02b5a5db9c0",
-                "shasum": ""
-            },
-            "require": {
-                "ext-sockets": "*",
-                "php": ">=8.5",
-                "utopia-php/domains": "^4.0.0",
-                "utopia-php/telemetry": "^0.4",
-                "utopia-php/validators": "^1.0"
-            },
-            "require-dev": {
-                "swoole/ide-helper": "5.1.8"
-            },
-            "suggest": {
-                "ext-swoole": "Required by the Swoole adapter"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Utopia\\DNS\\": "src/DNS/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Eldad Fux",
-                    "email": "eldad@appwrite.io"
-                }
-            ],
-            "description": "Lite & fast micro PHP DNS server abstraction that is **easy to use**.",
-            "keywords": [
-                "dns",
-                "framework",
-                "php",
-                "upf",
-                "utopia"
-            ],
-            "support": {
-                "issues": "https://github.com/utopia-php/dns/issues",
-                "source": "https://github.com/utopia-php/dns/tree/3.0.7"
-            },
-            "time": "2026-09-10T10:48:03+00:00"
         },
         {
             "name": "utopia-php/emails",

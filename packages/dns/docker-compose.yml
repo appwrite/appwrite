@@ -3,6 +3,7 @@ services:
     image: dns-dev
     build:
       context: .
+      dockerfile: Dockerfile
     command: [ "sh", "-c", "php /usr/src/code/tests/resources/server.php" ]
     volumes:
       - ./bin:/usr/src/code/bin

@@ -70,7 +70,9 @@ $localhostZone = File::import($localhostZoneContent);
  */
 $multiZoneResolver = new readonly class ([$appwriteZone, $localhostZone]) implements Resolver {
     /** @param list<Zone> $zones */
-    public function __construct(private array $zones) {}
+    public function __construct(private array $zones)
+    {
+    }
 
     public function resolve(Query $query): Message
     {
