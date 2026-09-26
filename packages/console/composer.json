@@ -1,0 +1,26 @@
+{
+    "name": "utopia-php/console",
+    "description": "Console helpers for logging, prompting, and executing commands",
+    "type": "library",
+    "keywords": [
+        "php",
+        "utopia",
+        "console",
+        "cli",
+        "terminal"
+    ],
+    "license": "MIT",
+    "scripts": {
+        "test": "phpunit < tests/input.txt"
+    },
+    "autoload": {
+        "psr-4": {
+            "Utopia\\": "src/"
+        }
+    },
+    "require": {
+        "php": ">=8.5",
+        "utopia-php/validators": "^1.0"
+    },
+    "minimum-stability": "dev"
+}
