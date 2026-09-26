@@ -238,7 +238,7 @@ describe('feedback from signed-out visitors', () => {
           route: '/pricing',
           email,
         }),
-      ).rejects.toThrow('Enter a valid email address.')
+      ).rejects.toThrow('Please enter a valid email address')
     }
     expect(calls).toHaveLength(0)
   })

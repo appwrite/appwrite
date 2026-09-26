@@ -3,12 +3,13 @@
  */
 
 import { ConversationType, createConversation, GrowthError } from '@/lib/growth'
+import { translate } from '@/lib/i18n/translate'
 
 export const MAX_FEEDBACK_LENGTH = 500
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
-export const INVALID_EMAIL_MESSAGE = 'Enter a valid email address.'
+const INVALID_EMAIL_MESSAGE = 'Please enter a valid email address'
 
 function isEmail(value: string): boolean {
   return EMAIL_PATTERN.test(value.trim())
@@ -62,7 +63,7 @@ export async function submitFeedback(
   params: SubmitFeedbackParams,
 ): Promise<void> {
   if (!isEmail(params.email)) {
-    throw new GrowthError(INVALID_EMAIL_MESSAGE, 400)
+    throw new GrowthError(translate(INVALID_EMAIL_MESSAGE), 400)
   }
   await createConversation({
     type: ConversationType.Feedback,

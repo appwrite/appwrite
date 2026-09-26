@@ -194,9 +194,12 @@ export function FeedbackForm({
       setFeedbackSubmitted(true)
       onSubmitted?.()
     } catch (error) {
+      // API messages are dynamic, so only the rate limit and fallback copy go through t().
       toast.error(
         error instanceof GrowthError
-          ? t(error.message)
+          ? error.isRateLimited
+            ? t(error.message)
+            : error.message
           : t('Failed to submit feedback'),
       )
     } finally {
