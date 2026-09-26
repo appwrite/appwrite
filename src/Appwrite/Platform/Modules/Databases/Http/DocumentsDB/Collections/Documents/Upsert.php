@@ -48,6 +48,12 @@ class Upsert extends DocumentUpsert
                     group: $this->getSdkGroup(),
                     name: 'upsertDocument',
                     description: '/docs/references/documentsdb/upsert-document.md',
+                    requestExamples: [
+                        'upsert' => [
+                            'summary' => 'Create or update document data',
+                            'value' => ['data' => ['username' => 'walter.obrien']],
+                        ],
+                    ],
                     auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                     responses: [
                         new SDKResponse(
