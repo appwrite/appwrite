@@ -1,0 +1,7 @@
+includes:
+    - ../../phpstan.neon
+
+parameters:
+    level: 7
+    scanDirectories:
+        - vendor/swoole/ide-helper

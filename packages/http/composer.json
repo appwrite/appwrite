@@ -1,0 +1,56 @@
+{
+    "name": "utopia-php/http",
+    "description": "A simple, light and advanced PHP HTTP framework",
+    "type": "library",
+    "keywords": [
+        "php",
+        "framework",
+        "http",
+        "upf"
+    ],
+    "license": "MIT",
+    "minimum-stability": "stable",
+    "autoload": {
+        "psr-4": {
+            "Utopia\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Utopia\\Http\\Tests\\": "tests/",
+            "Tests\\E2E\\": "tests/e2e"
+        }
+    },
+    "scripts": {
+        "test": "phpunit --configuration phpunit.xml --testsuite unit",
+        "test:e2e": "phpunit --configuration phpunit.xml --testsuite e2e-fpm,e2e-swoole",
+        "bench": "bash tests/bench/run.sh"
+    },
+    "require": {
+        "php": ">=8.5",
+        "utopia-php/di": "^0.3",
+        "utopia-php/servers": "^0.4",
+        "utopia-php/compression": "^0.1",
+        "utopia-php/psr7": "^0.2.0",
+        "utopia-php/telemetry": "^0.4",
+        "utopia-php/validators": "^1.0",
+        "utopia-php/system": "^0.10 || ^0.11"
+    },
+    "suggest": {
+        "ext-swoole": "Required to use the Swoole server adapter (\\Utopia\\Http\\Adapter\\Swoole\\Server)."
+    },
+    "config": {
+        "platform": {
+            "php": "8.5",
+            "ext-opentelemetry": "1.0.0",
+            "ext-protobuf": "4.26.1"
+        },
+        "allow-plugins": {
+            "php-http/discovery": true,
+            "tbachert/spi": true
+        }
+    },
+    "require-dev": {
+        "swoole/ide-helper": "4.8.3"
+    }
+}

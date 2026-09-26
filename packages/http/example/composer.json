@@ -1,0 +1,6 @@
+{
+    "name": "utopia-php/http-app",
+    "require": {
+        "utopia-php/http": "latest"
+    }
+}

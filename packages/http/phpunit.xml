@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd" backupGlobals="false" bootstrap="vendor/autoload.php" colors="true" processIsolation="false" stopOnFailure="false" cacheDirectory=".phpunit.cache" backupStaticProperties="false">
+  <testsuites>
+    <testsuite name="unit">
+      <directory>./tests</directory>
+      <exclude>./tests/e2e</exclude>
+      <exclude>./tests/BaseTest.php</exclude>
+      <exclude>./tests/UtopiaFPMRequestTest.php</exclude>
+    </testsuite>
+    <testsuite name="e2e-fpm">
+      <file>./tests/e2e/ResponseFPMTest.php</file>
+    </testsuite>
+    <testsuite name="e2e-swoole">
+      <file>./tests/e2e/ResponseSwooleTest.php</file>
+    </testsuite>
+  </testsuites>
+  <source>
+    <include>
+      <directory>./src</directory>
+    </include>
+  </source>
+</phpunit>
