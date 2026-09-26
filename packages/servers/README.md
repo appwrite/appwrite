@@ -1,7 +1,7 @@
 # Utopia Servers
 
 > [!IMPORTANT]
-> This repository is a read-only mirror of the [utopia-php monorepo](https://github.com/utopia-php/monorepo). Development happens in [`packages/servers`](https://github.com/utopia-php/monorepo/tree/main/packages/servers) — please open issues and pull requests there.
+> This repository is a read-only mirror of [`packages/servers`](https://github.com/appwrite/appwrite/tree/main/packages/servers) in [appwrite/appwrite](https://github.com/appwrite/appwrite). Development happens there — please open issues and pull requests against appwrite/appwrite.
 
 ![Total Downloads](https://img.shields.io/packagist/dt/utopia-php/servers.svg)
 [![Discord](https://img.shields.io/discord/564160730845151244?label=discord)](https://appwrite.io/discord)
