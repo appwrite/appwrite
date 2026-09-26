@@ -195,7 +195,7 @@ export function FeedbackForm({
       onSubmitted?.()
     } catch (error) {
       toast.error(
-        error instanceof GrowthError && error.isRateLimited
+        error instanceof GrowthError
           ? t(error.message)
           : t('Failed to submit feedback'),
       )

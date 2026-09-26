@@ -2,9 +2,17 @@
  * Console and docs feedback, filed as growth conversations.
  */
 
-import { ConversationType, createConversation } from '@/lib/growth'
+import { ConversationType, createConversation, GrowthError } from '@/lib/growth'
 
 export const MAX_FEEDBACK_LENGTH = 500
+
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+export const INVALID_EMAIL_MESSAGE = 'Enter a valid email address.'
+
+function isEmail(value: string): boolean {
+  return EMAIL_PATTERN.test(value.trim())
+}
 
 export type FeedbackSentiment = 'positive' | 'negative'
 
@@ -17,12 +25,13 @@ export interface FeedbackDraft {
 
 /**
  * Whether console feedback can be sent. Negative feedback needs a comment, and
- * an email is always needed because signed-out visitors send without a session.
+ * a valid email is always needed because signed-out visitors send without a
+ * session.
  */
 export function isFeedbackReady(draft: FeedbackDraft): boolean {
   return (
     draft.sentiment !== null &&
-    draft.email.trim().length > 0 &&
+    isEmail(draft.email) &&
     draft.message.length <= MAX_FEEDBACK_LENGTH &&
     (draft.sentiment !== 'negative' || draft.message.trim().length > 0)
   )
@@ -34,8 +43,11 @@ export interface SubmitFeedbackParams {
   source: string
   /** Page the feedback was sent from. */
   route: string
-  /** Used only without a console session; the server reads it from the session otherwise. */
-  email?: string
+  /**
+   * The account email, or the one a signed-out visitor typed. The server reads
+   * it from the session when there is one.
+   */
+  email: string
   name?: string
   organizationId?: string
   projectId?: string
@@ -44,11 +56,14 @@ export interface SubmitFeedbackParams {
 /**
  * Submits general console feedback.
  *
- * @throws GrowthError when the server rejects the request.
+ * @throws GrowthError when the email is invalid or the server rejects the request.
  */
 export async function submitFeedback(
   params: SubmitFeedbackParams,
 ): Promise<void> {
+  if (!isEmail(params.email)) {
+    throw new GrowthError(INVALID_EMAIL_MESSAGE, 400)
+  }
   await createConversation({
     type: ConversationType.Feedback,
     email: params.email,

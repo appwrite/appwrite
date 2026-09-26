@@ -23,9 +23,7 @@ mock.module('@/lib/appwrite/sdk', () => ({
 }))
 
 const { createConversation, GrowthError } = await import('@/lib/growth')
-const { isFeedbackReady, submitDocsFeedback, submitFeedback } = await import(
-  '@/lib/feedback'
-)
+const { submitDocsFeedback, submitFeedback } = await import('@/lib/feedback')
 const {
   submitEnterpriseApplication,
   submitPartnerApplication,
@@ -88,6 +86,7 @@ describe('where conversations go', () => {
       message: 'Nice',
       source: 'navbar',
       route: '/',
+      email: 'a@b.co',
     })
 
     expect(lastCall().url).toBe(
@@ -229,30 +228,33 @@ describe('createConversation', () => {
   })
 })
 
-describe('feedback form', () => {
-  test('a signed-out visitor needs an email to send feedback', () => {
-    expect(
-      isFeedbackReady({ sentiment: 'positive', message: '', email: '' }),
-    ).toBe(false)
-    expect(
-      isFeedbackReady({ sentiment: 'positive', message: '', email: ' ' }),
-    ).toBe(false)
-    expect(
-      isFeedbackReady({ sentiment: 'positive', message: '', email: 'a@b.co' }),
-    ).toBe(true)
+describe('feedback from signed-out visitors', () => {
+  test('is not sent without a valid email', async () => {
+    for (const email of ['', '  ', 'not-an-email']) {
+      await expect(
+        submitFeedback({
+          message: '[Positive feedback]\n\nNice',
+          source: 'navbar',
+          route: '/pricing',
+          email,
+        }),
+      ).rejects.toThrow('Enter a valid email address.')
+    }
+    expect(calls).toHaveLength(0)
   })
 
-  test('negative feedback needs a comment', () => {
-    expect(
-      isFeedbackReady({ sentiment: 'negative', message: ' ', email: 'a@b.co' }),
-    ).toBe(false)
-    expect(
-      isFeedbackReady({
-        sentiment: 'negative',
-        message: 'Slow',
-        email: 'a@b.co',
-      }),
-    ).toBe(true)
+  test('is sent with the typed email', async () => {
+    await submitFeedback({
+      message: '[Positive feedback]\n\nNice',
+      source: 'navbar',
+      route: '/pricing',
+      email: ' visitor@acme.co ',
+    })
+
+    expect(jsonBody()).toMatchObject({
+      type: 'feedback',
+      email: 'visitor@acme.co',
+    })
   })
 })
 
