@@ -1,7 +1,7 @@
 # Utopia CLI
 
 > [!IMPORTANT]
-> This repository is a read-only mirror of the [utopia-php monorepo](https://github.com/utopia-php/monorepo). Development happens in [`packages/cli`](https://github.com/utopia-php/monorepo/tree/main/packages/cli) — please open issues and pull requests there.
+> This repository is a read-only mirror of [`packages/cli`](https://github.com/appwrite/appwrite/tree/main/packages/cli) in [appwrite/appwrite](https://github.com/appwrite/appwrite). Development happens there — please open issues and pull requests against appwrite/appwrite.
 
 [![Tests](https://github.com/utopia-php/monorepo/actions/workflows/tests.yml/badge.svg)](https://github.com/utopia-php/monorepo/actions/workflows/tests.yml)
 ![Total Downloads](https://img.shields.io/packagist/dt/utopia-php/cli.svg)
