@@ -1,0 +1,12 @@
+<phpunit backupGlobals="false"
+         bootstrap="vendor/autoload.php"
+         colors="true"
+         processIsolation="false"
+         stopOnFailure="false"
+        >
+    <testsuites>
+        <testsuite name="E2E">
+            <directory>./tests/Servers/Unit</directory>
+        </testsuite>
+    </testsuites>
+</phpunit>
