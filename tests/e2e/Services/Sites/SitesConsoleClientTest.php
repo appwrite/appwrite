@@ -149,6 +149,19 @@ final class SitesConsoleClientTest extends Scope
         $file = $this->client->call(Client::METHOD_GET, "/storage/buckets/screenshots/files/$screenshotId/preview?project=console");
         $this->assertEquals(404, $file['headers']['status-code']);
 
+        $previewId = $this->setupDeployment($siteId, [
+            'code' => $this->packageSite('static-themed'),
+            'activate' => '0'
+        ]);
+
+        $this->assertEventually(function () use ($siteId, $previewId) {
+            $preview = $this->getDeployment($siteId, $previewId);
+            $this->assertNotEmpty($preview['body']['screenshotLight']);
+        });
+
+        $site = $this->getSite($siteId);
+        $this->assertEquals($deployment['body']['screenshotLight'], $site['body']['deploymentScreenshotLight']);
+
         $this->cleanupSite($siteId);
     }
 
@@ -163,23 +176,23 @@ final class SitesConsoleClientTest extends Scope
         ]);
         $this->assertNotEmpty($siteId);
 
-        $deploymentIdInactive = $this->setupDeployment($siteId, [
-            'code' => $this->packageSite('static'),
-            'activate' => true
-        ]);
-        $this->assertNotEmpty($deploymentIdInactive);
-
-        $deploymentIdInactiveOld = $this->setupDeployment($siteId, [
-            'code' => $this->packageSite('static'),
-            'activate' => true
-        ]);
-        $this->assertNotEmpty($deploymentIdInactiveOld);
-
         $deploymentIdActive = $this->setupDeployment($siteId, [
             'code' => $this->packageSite('static'),
             'activate' => true
         ]);
         $this->assertNotEmpty($deploymentIdActive);
+
+        $deploymentIdInactive = $this->setupDeployment($siteId, [
+            'code' => $this->packageSite('static'),
+            'activate' => '0'
+        ]);
+        $this->assertNotEmpty($deploymentIdInactive);
+
+        $deploymentIdInactiveOld = $this->setupDeployment($siteId, [
+            'code' => $this->packageSite('static'),
+            'activate' => '0'
+        ]);
+        $this->assertNotEmpty($deploymentIdInactiveOld);
 
         $stdout = '';
         $stderr = '';
@@ -199,10 +212,13 @@ final class SitesConsoleClientTest extends Scope
         $code = Console::execute((new Command('docker'))->argument('exec')->argument('appwrite')->argument('maintenance')->argument('--type=trigger'), '', $stdout, $stderr);
         $this->assertSame(0, $code, "Maintenance command failed with code $code: $stderr ($stdout)");
 
-        $this->assertEventually(function () use ($siteId) {
+        $this->assertEventually(function () use ($siteId, $deploymentIdInactive) {
             $response = $this->listDeployments($siteId);
             $this->assertSame(200, $response['headers']['status-code']);
             $this->assertSame(2, $response['body']['total']);
+
+            $site = $this->getSite($siteId);
+            $this->assertSame($deploymentIdInactive, $site['body']['latestDeploymentId']);
         });
 
         $this->cleanupSite($siteId);

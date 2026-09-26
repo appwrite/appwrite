@@ -13,6 +13,7 @@ use Utopia\Compression\Compression;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Conflict as ConflictException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Platform\Action;
@@ -219,10 +220,24 @@ class Screenshots extends Action
                 ->setPayload($deployment->getArrayCopy())
                 ->trigger();
 
-            $site = $dbForProject->updateDocument('sites', $site->getId(), new Document([
-                'deploymentScreenshotDark' => $deployment->getAttribute('screenshotDark', ''),
-                'deploymentScreenshotLight' => $deployment->getAttribute('screenshotLight', ''),
-            ]));
+            // Preview builds are captured too, but only the active deployment represents the site. The request
+            // timestamp makes the write conflict when the site was updated after this read, such as by an activation.
+            for ($attempt = 0; $attempt < 3; $attempt++) {
+                $site = $dbForProject->getDocument('sites', $siteId);
+                if ($site->getAttribute('deploymentId') !== $deployment->getId()) {
+                    break;
+                }
+
+                try {
+                    $dbForProject->withRequestTimestamp(new \DateTime($site->getUpdatedAt()), fn () => $dbForProject->updateDocument('sites', $site->getId(), new Document([
+                        'deploymentScreenshotDark' => $deployment->getAttribute('screenshotDark', ''),
+                        'deploymentScreenshotLight' => $deployment->getAttribute('screenshotLight', ''),
+                    ])));
+                    break;
+                } catch (ConflictException) {
+                    // Re-check which deployment is active now.
+                }
+            }
         } catch (\Throwable $th) {
             $date = \date('H:i:s');
             $this->appendToLogs($dbForProject, $deployment->getId(), $queueForRealtime, "[90m[$date] [90m[[0mappwrite[90m][33m Screenshot capturing failed. Deployment will continue. [0m\n");
