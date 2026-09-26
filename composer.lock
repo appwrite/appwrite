@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "cf933555d0a406e3b7068983f0db1f04",
+    "content-hash": "40047e1efb25ff5bcae833f53f2f4d3e",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2936,54 +2936,6 @@
             "time": "2026-09-10T18:16:47+00:00"
         },
         {
-            "name": "utopia-php/balancer",
-            "version": "0.4.1",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/utopia-php/balancer.git",
-                "reference": "7fc8922da3e381c227cd88435cb12b17040c6ee1"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/balancer/zipball/7fc8922da3e381c227cd88435cb12b17040c6ee1",
-                "reference": "7fc8922da3e381c227cd88435cb12b17040c6ee1",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=8.1",
-                "utopia-php/telemetry": "^0.4.0"
-            },
-            "require-dev": {
-                "laravel/pint": "1.2.*",
-                "phpstan/phpstan": "^1.8",
-                "phpunit/phpunit": "^9.3"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Utopia\\Balancer\\": "src/Balancer"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "description": "A simple library to balance choices between multiple options.",
-            "keywords": [
-                "balancer",
-                "balancing",
-                "framework",
-                "php",
-                "upf",
-                "utopia"
-            ],
-            "support": {
-                "issues": "https://github.com/utopia-php/balancer/issues",
-                "source": "https://github.com/utopia-php/balancer/tree/0.4.1"
-            },
-            "time": "2026-08-13T19:36:49+00:00"
-        },
-        {
             "name": "utopia-php/cdn",
             "version": "0.0.13",
             "source": {
@@ -3680,73 +3632,6 @@
             "time": "2026-09-09T05:42:37+00:00"
         },
         {
-            "name": "utopia-php/mqtt",
-            "version": "0.0.2",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/utopia-php/mqtt.git",
-                "reference": "44684468347b09959cfb64a28dbaf7e5be9cce04"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/mqtt/zipball/44684468347b09959cfb64a28dbaf7e5be9cce04",
-                "reference": "44684468347b09959cfb64a28dbaf7e5be9cce04",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=8.2",
-                "utopia-php/telemetry": "^0.4"
-            },
-            "require-dev": {
-                "laravel/pint": "^1.15 <1.21",
-                "phpstan/phpstan": "^1.12",
-                "phpunit/phpunit": "^10.5",
-                "swoole/ide-helper": "5.1.2"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Utopia\\Mqtt\\": "src/Mqtt"
-                }
-            },
-            "autoload-dev": {
-                "psr-4": {
-                    "Utopia\\Mqtt\\Tests\\": "tests"
-                }
-            },
-            "scripts": {
-                "test": [
-                    "./vendor/bin/phpunit"
-                ],
-                "lint": [
-                    "./vendor/bin/pint --test --preset=psr12 src tests"
-                ],
-                "format": [
-                    "./vendor/bin/pint --preset=psr12 src tests"
-                ],
-                "check": [
-                    "./vendor/bin/phpstan analyse --level max src tests"
-                ]
-            },
-            "license": [
-                "MIT"
-            ],
-            "description": "A simple abstraction for building MQTT 5.0 brokers.",
-            "keywords": [
-                "broker",
-                "framework",
-                "mqtt",
-                "php",
-                "upf",
-                "utopia"
-            ],
-            "support": {
-                "source": "https://github.com/utopia-php/mqtt/tree/0.0.2",
-                "issues": "https://github.com/utopia-php/mqtt/issues"
-            },
-            "time": "2026-09-23T06:01:44+00:00"
-        },
-        {
             "name": "utopia-php/platform",
             "version": "1.0.0-rc25",
             "source": {
@@ -4112,46 +3997,6 @@
                 "source": "https://github.com/utopia-php/usage/tree/0.16.6"
             },
             "time": "2026-09-24T12:26:53+00:00"
-        },
-        {
-            "name": "utopia-php/validators",
-            "version": "1.0.1",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/utopia-php/validators.git",
-                "reference": "f0a08bd888d035b68c463d22b47ef385984da73d"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/validators/zipball/f0a08bd888d035b68c463d22b47ef385984da73d",
-                "reference": "f0a08bd888d035b68c463d22b47ef385984da73d",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=8.5"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Utopia\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "description": "A lightweight collection of reusable validators for Utopia projects",
-            "keywords": [
-                "php",
-                "utopia",
-                "validation",
-                "validator"
-            ],
-            "support": {
-                "issues": "https://github.com/utopia-php/validators/issues",
-                "source": "https://github.com/utopia-php/validators/tree/1.0.1"
-            },
-            "time": "2026-09-02T15:57:19+00:00"
         },
         {
             "name": "utopia-php/vcs",

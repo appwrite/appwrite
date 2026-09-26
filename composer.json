@@ -27,6 +27,7 @@
             "Appwrite\\": "src/Appwrite",
             "Executor\\": "src/Executor",
             "Utopia\\Agents\\": "packages/agents/src",
+            "Utopia\\Balancer\\": "packages/balancer/src",
             "Utopia\\Bus\\": "packages/bus/src",
             "Utopia\\Cache\\": "packages/cache/src",
             "Utopia\\CircuitBreaker\\": "packages/circuit-breaker/src",
@@ -38,6 +39,7 @@
             "Utopia\\Locale\\": "packages/locale/src",
             "Utopia\\Lock\\": "packages/lock/src",
             "Utopia\\Messaging\\": "packages/messaging/src",
+            "Utopia\\Mqtt\\": "packages/mqtt/src",
             "Utopia\\OpenAPI\\": "packages/openapi/src",
             "Utopia\\Pools\\": "packages/pools/src",
             "Utopia\\Psr7\\": "packages/psr7/src",
@@ -47,7 +49,10 @@
             "Utopia\\System\\": "packages/system/src",
             "Utopia\\Telemetry\\": "packages/telemetry/src",
             "Utopia\\UserAgent\\": "packages/user-agent/src",
-            "Utopia\\WebSocket\\": "packages/websocket/src"
+            "Utopia\\WebSocket\\": "packages/websocket/src",
+            "Utopia\\": [
+                "packages/validators/src"
+            ]
         }
     },
     "autoload-dev": {
@@ -56,6 +61,7 @@
             "Tests\\Unit\\": "tests/unit",
             "Appwrite\\Tests\\": "tests/extensions",
             "Utopia\\Agents\\Tests\\": "packages/agents/tests",
+            "Utopia\\Balancer\\Tests\\": "packages/balancer/tests",
             "Utopia\\Bus\\Tests\\": "packages/bus/tests",
             "Utopia\\Cache\\Tests\\": "packages/cache/tests",
             "Utopia\\CircuitBreaker\\Tests\\": "packages/circuit-breaker/tests",
@@ -67,6 +73,7 @@
             "Utopia\\Locale\\Tests\\": "packages/locale/tests",
             "Utopia\\Lock\\Tests\\": "packages/lock/tests",
             "Utopia\\Messaging\\Tests\\": "packages/messaging/tests",
+            "Utopia\\Mqtt\\Tests\\": "packages/mqtt/tests",
             "Utopia\\OpenAPI\\Tests\\": "packages/openapi/tests",
             "Utopia\\Pools\\Tests\\": "packages/pools/tests",
             "Utopia\\Psr7\\Tests\\": "packages/psr7/tests",
@@ -76,6 +83,7 @@
             "Utopia\\System\\Tests\\": "packages/system/tests",
             "Utopia\\Telemetry\\Tests\\": "packages/telemetry/tests",
             "Utopia\\UserAgent\\Tests\\": "packages/user-agent/tests",
+            "Utopia\\Validator\\Tests\\": "packages/validators/tests",
             "Utopia\\WebSocket\\Tests\\": "packages/websocket/tests"
         }
     },
@@ -93,10 +101,6 @@
         {
             "type": "vcs",
             "url": "https://github.com/utopia-php/vcs"
-        },
-        {
-            "type": "vcs",
-            "url": "https://github.com/utopia-php/mqtt"
         }
     ],
     "require": {
@@ -119,7 +123,6 @@
         "utopia-php/abuse": "2.0.*",
         "utopia-php/audit": "^4.0",
         "utopia-php/auth": "^0.12",
-        "utopia-php/balancer": "0.4.*",
         "utopia-php/cdn": "^0.0.13",
         "utopia-php/cli": "^0.24",
         "utopia-php/config": "1.*",
@@ -130,9 +133,7 @@
         "utopia-php/dns": "^3.0.7",
         "utopia-php/dsn": "0.2.1",
         "utopia-php/http": "^2.0@RC",
-        "utopia-php/validators": "^1.0",
         "utopia-php/migration": "^2.0.0",
-        "utopia-php/mqtt": "0.0.*",
         "utopia-php/platform": "1.0.0-rc25",
         "utopia-php/queue": "^6.0.0",
         "utopia-php/servers": "0.4.*",
@@ -187,6 +188,7 @@
     },
     "replace": {
         "utopia-php/agents": "*",
+        "utopia-php/balancer": "*",
         "utopia-php/bus": "*",
         "utopia-php/cache": "*",
         "utopia-php/circuit-breaker": "*",
@@ -198,6 +200,7 @@
         "utopia-php/locale": "*",
         "utopia-php/lock": "*",
         "utopia-php/messaging": "*",
+        "utopia-php/mqtt": "*",
         "utopia-php/openapi": "*",
         "utopia-php/pools": "*",
         "utopia-php/psr7": "*",
@@ -207,6 +210,7 @@
         "utopia-php/system": "*",
         "utopia-php/telemetry": "*",
         "utopia-php/user-agent": "*",
+        "utopia-php/validators": "*",
         "utopia-php/websocket": "*"
     }
 }

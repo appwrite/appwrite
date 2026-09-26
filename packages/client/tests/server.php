@@ -186,6 +186,14 @@ if (preg_match('#^/hops/(\d+)$#', $path, $matches) === 1) {
     return;
 }
 
+if ($path === '/content-type') {
+    http_response_code(200);
+    header('Content-Type: text/plain;charset=UTF-8');
+    echo \is_string($_SERVER['CONTENT_TYPE'] ?? null) ? $_SERVER['CONTENT_TYPE'] : '';
+
+    return;
+}
+
 if ($path === '/headers') {
     http_response_code(204);
     header('X-Trace: one', false);

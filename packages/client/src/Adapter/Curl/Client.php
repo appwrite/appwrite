@@ -323,6 +323,10 @@ class Client implements Adapter
         if ($size !== null && $size !== 0 && $size <= self::TEMP_MEMORY && \in_array($body->getMetadata('uri'), ['php://temp', 'php://memory'], true)) {
             // cURL keeps a copy of POSTFIELDS, so 307/308 redirects can resend it
             $options[\CURLOPT_POSTFIELDS] = (string) $body;
+
+            if (!$request->hasHeader(Header::CONTENT_TYPE)) {
+                $options[\CURLOPT_HTTPHEADER][] = 'Content-Type:';
+            }
         } elseif ($size !== 0) {
             if ($body->isSeekable()) {
                 $body->rewind();
