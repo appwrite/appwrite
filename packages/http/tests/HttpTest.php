@@ -30,6 +30,8 @@ final class HttpTest extends TestCase
 
     protected ?string $uri;
 
+    protected string $timezone;
+
     /**
      * @var array<string, mixed>
      */
@@ -42,6 +44,7 @@ final class HttpTest extends TestCase
 
     public function setUp(): void
     {
+        $this->timezone = date_default_timezone_get();
         Http::reset();
         $this->resources = new Container();
         $this->http = new Http(new Server($this->resources), 'Asia/Tel_Aviv');
@@ -53,6 +56,7 @@ final class HttpTest extends TestCase
         $this->http = null;
         $this->resources = null;
         $this->restoreRequest();
+        date_default_timezone_set($this->timezone);
     }
 
     protected function saveRequest(): void
