@@ -35,6 +35,10 @@ export function EmailPreview({ content, html, className }: EmailPreviewProps) {
 
   return (
     <iframe
+      // A new document must be a new frame. Updating srcdoc on an iframe that
+      // has not finished its first load leaves that first (often empty)
+      // document on screen.
+      key={srcDoc}
       title={t('Email preview')}
       srcDoc={srcDoc}
       sandbox=""

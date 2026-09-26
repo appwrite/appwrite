@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import type { CSSProperties } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
@@ -221,37 +221,9 @@ export function Templates({ projectId }: TemplatesProps) {
     selectedLocale,
   )
 
-  // Keep previous template data visible when switching languages
-  // This prevents the form from clearing while new data loads
+  // Keep the previous template visible while another locale or type loads.
   const [displayTemplate, setDisplayTemplate] =
     useState<Models.EmailTemplate | null>(null)
-
-  // Update display template when new data arrives, but keep previous data while loading
-  useEffect(() => {
-    if (template) {
-      setDisplayTemplate(template)
-    }
-    // Don't clear displayTemplate when template is undefined/null - keep previous data visible
-    // This allows smooth transitions when switching languages
-  }, [template])
-
-  // Check if we have cached data for the current template
-  const hasCachedData = useMemo(() => {
-    if (!projectId || !selectedType || !selectedLocale) return false
-    return !!queryClient.getQueryData([
-      'emailTemplate',
-      projectId,
-      selectedType,
-      selectedLocale,
-    ])
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [projectId, selectedType, selectedLocale]) // queryClient is stable, no need to include in deps
-
-  // Only show loading if we don't have cached data AND we don't have previous data to display
-  const showLoading = isTemplateLoading && !hasCachedData && !displayTemplate
-
-  const updateMutation = useUpdateEmailTemplate(projectId)
-  const resetMutation = useDeleteEmailTemplate(projectId)
 
   // Local state for form fields
   const [formData, setFormData] = useState<{
@@ -268,29 +240,32 @@ export function Templates({ projectId }: TemplatesProps) {
     message: '',
   })
 
-  // Update form data when display template changes (keeps previous data visible)
-  useEffect(() => {
-    if (displayTemplate) {
-      setFormData({
-        senderName: displayTemplate.senderName || '',
-        senderEmail: displayTemplate.senderEmail || '',
-        replyToEmail: displayTemplate.replyToEmail || '',
-        subject: displayTemplate.subject || '',
-        message: displayTemplate.message || '',
-      })
-    }
-  }, [displayTemplate])
-
   // Store base template for change detection
   const [baseTemplate, setBaseTemplate] = useState<Models.EmailTemplate | null>(
     null,
   )
 
-  useEffect(() => {
-    if (displayTemplate) {
-      setBaseTemplate(displayTemplate)
-    }
-  }, [displayTemplate])
+  // Apply a newly fetched template during render so the editor, including the
+  // preview frame, commits once with the message. Copying it in an effect
+  // paints an empty frame first, and that frame then ignores the later srcdoc.
+  if (template && template !== displayTemplate) {
+    setDisplayTemplate(template)
+    setBaseTemplate(template)
+    setFormData({
+      senderName: template.senderName || '',
+      senderEmail: template.senderEmail || '',
+      replyToEmail: template.replyToEmail || '',
+      subject: template.subject || '',
+      message: template.message || '',
+    })
+  }
+
+  // Stay on the spinner until a template has been applied. A fetch for a
+  // different locale keeps the previous template on screen.
+  const showLoading = !displayTemplate && (isTemplateLoading || !!template)
+
+  const updateMutation = useUpdateEmailTemplate(projectId)
+  const resetMutation = useDeleteEmailTemplate(projectId)
 
   // Check if form has changes
   const hasChanges = useMemo(() => {
@@ -410,65 +385,69 @@ export function Templates({ projectId }: TemplatesProps) {
   )
 
   return (
-    <div className="@container w-full">
-      <div className="flex h-full flex-col gap-4 @[640px]:flex-row @[640px]:gap-6">
-        {/* Mobile - template picker */}
-        <div className="@[640px]:hidden">
-          <TemplateTypeSelector
-            selectedType={selectedType}
-            onTypeChange={setSelectedType}
-          />
-        </div>
+    <div className="w-full">
+      {/* Mobile - template picker */}
+      <div className="min-[640px]:hidden">
+        <TemplateTypeSelector
+          selectedType={selectedType}
+          onTypeChange={setSelectedType}
+        />
+      </div>
 
-        {/* Sidebar - Template List (desktop) */}
-        <div className="hidden w-full shrink-0 @[640px]:block @[640px]:w-64">
-          <div className="overflow-hidden rounded-lg border border-border bg-card">
-            <div className="border-b border-border px-4 py-3">
-              <h2 className="text-sm font-semibold text-foreground">
-                {t('Email templates')}
-              </h2>
-              <p className="mt-1 text-xs text-muted-foreground">
-                {EMAIL_TEMPLATE_TYPES.length} {t('templates')}
-              </p>
-            </div>
-            <div className="divide-y divide-border">
-              {EMAIL_TEMPLATE_TYPES.map((templateConfig) => {
-                const isSelected = selectedType === templateConfig.type
-                return (
-                  <button
-                    key={templateConfig.type}
-                    onClick={() => setSelectedType(templateConfig.type)}
-                    className={cn(
-                      'w-full cursor-pointer px-4 py-3 text-start transition-colors hover:bg-muted/50',
-                      isSelected && 'bg-muted',
-                    )}
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className="mt-0.5 shrink-0">
-                        <Mail className="h-4 w-4 text-muted-foreground" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div
-                          className={cn(
-                            'text-sm font-medium',
-                            isSelected
-                              ? 'text-foreground'
-                              : 'text-muted-foreground',
-                          )}
-                        >
-                          {t(templateConfig.label)}
+      <div className="flex flex-col gap-4 min-[640px]:flex-row min-[640px]:gap-6">
+        {/* Sidebar - Template List (desktop). Sticky lives outside @container
+            so container-type does not break stickiness in #main-content. The
+            column stretches with the editor so the list can pin while scrolling. */}
+        <aside className="hidden min-[640px]:block w-64 shrink-0">
+          <div className="sticky top-4 z-10">
+            <div className="overflow-hidden rounded-lg border border-border bg-card">
+              <div className="border-b border-border px-4 py-3">
+                <h2 className="text-sm font-semibold text-foreground">
+                  {t('Email templates')}
+                </h2>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {EMAIL_TEMPLATE_TYPES.length} {t('templates')}
+                </p>
+              </div>
+              <div className="divide-y divide-border">
+                {EMAIL_TEMPLATE_TYPES.map((templateConfig) => {
+                  const isSelected = selectedType === templateConfig.type
+                  return (
+                    <button
+                      key={templateConfig.type}
+                      onClick={() => setSelectedType(templateConfig.type)}
+                      className={cn(
+                        'w-full cursor-pointer px-4 py-3 text-start transition-colors hover:bg-muted/50',
+                        isSelected && 'bg-muted',
+                      )}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="mt-0.5 shrink-0">
+                          <Mail className="h-4 w-4 text-muted-foreground" />
                         </div>
-                        <div className="mt-0.5 text-xs text-muted-foreground line-clamp-2">
-                          {t(templateConfig.description)}
+                        <div className="min-w-0 flex-1">
+                          <div
+                            className={cn(
+                              'text-sm font-medium',
+                              isSelected
+                                ? 'text-foreground'
+                                : 'text-muted-foreground',
+                            )}
+                          >
+                            {t(templateConfig.label)}
+                          </div>
+                          <div className="mt-0.5 text-xs text-muted-foreground line-clamp-2">
+                            {t(templateConfig.description)}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </button>
-                )
-              })}
+                    </button>
+                  )
+                })}
+              </div>
             </div>
           </div>
-        </div>
+        </aside>
 
         {/* Main Editor Area */}
         <div className="min-w-0 flex-1">
@@ -596,6 +575,7 @@ function TemplateEditor({
 }: TemplateEditorProps) {
   const t = useT()
   const [localFormData, setLocalFormData] = useState(formData)
+  const formDataRef = useRef(formData)
   const [messageViewChoice, setMessageViewChoice] = useState<
     'source' | 'preview' | null
   >(null)
@@ -604,9 +584,12 @@ function TemplateEditor({
     messageViewChoice ?? (isSmtpEnabled ? 'source' : 'preview')
   const isRTL = isRTLLocale(locale)
 
-  useEffect(() => {
+  // Follow parent template updates before paint. An effect would let the
+  // preview frame mount against the previous (empty) message.
+  if (formData !== formDataRef.current) {
+    formDataRef.current = formData
     setLocalFormData(formData)
-  }, [formData])
+  }
 
   const handleLocalFieldChange = (field: string, value: string) => {
     setLocalFormData((prev) => ({ ...prev, [field]: value }))
