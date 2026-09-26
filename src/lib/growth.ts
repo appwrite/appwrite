@@ -15,6 +15,7 @@
  * module uses fetch.
  */
 
+import { AppwriteException } from '@appwrite.io/console'
 import { getBaseEndpoint, sdk } from '@/lib/appwrite/sdk'
 import { isCloudProfile } from '@/lib/console-profiles'
 import { DEFAULT_CLOUD_APPWRITE_ENDPOINT } from '@/lib/runtime-config-shared'
@@ -136,15 +137,26 @@ function resolveGrowthTarget(
 }
 
 /**
- * A JWT for the signed-in console user, or null when there is none. Signed-out
- * visitors then send anonymously, with the email they typed.
+ * A JWT for the signed-in console user, or null when there is no session, so
+ * signed-out visitors send anonymously with the email they typed. Any other
+ * failure is thrown: sending anonymously would drop a signed-in user's
+ * identity and organization.
+ *
+ * @throws GrowthError when the JWT cannot be created for a signed-in user.
  */
 async function createSessionJwt(): Promise<string | null> {
   try {
     const { jwt } = await sdk.forConsole.account.createJWT()
     return jwt
-  } catch {
-    return null
+  } catch (error) {
+    if (error instanceof AppwriteException && error.code === 401) {
+      return null
+    }
+    const status = error instanceof AppwriteException ? error.code : 0
+    throw new GrowthError(
+      status === 429 ? RATE_LIMIT_MESSAGE : FALLBACK_ERROR_MESSAGE,
+      status,
+    )
   }
 }
 

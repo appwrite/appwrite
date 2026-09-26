@@ -1,19 +1,23 @@
 import { afterEach, beforeEach, describe, expect, mock, test } from 'bun:test'
+import { AppwriteException } from '@appwrite.io/console'
 import * as profiles from '@/lib/console-profiles'
 import * as sdk from '@/lib/appwrite/sdk'
 import type { GrowthError as GrowthErrorType } from '@/lib/growth'
 
 // The console's profile and endpoint, as the running console would report them.
 // Null leaves the real value, so other test files see no change.
-// jwt: the signed-in user's JWT; null means no session, so createJWT fails.
+// jwt: the signed-in user's JWT; null means no session, so createJWT answers
+// 401. jwtError: createJWT fails for a signed-in user.
 const consoleState: {
   cloud: boolean | null
   endpoint: string | null
   jwt: string | null
+  jwtError: AppwriteException | null
 } = {
   cloud: null,
   endpoint: null,
   jwt: null,
+  jwtError: null,
 }
 const { isCloudProfile } = profiles
 const { getBaseEndpoint } = sdk
@@ -33,8 +37,15 @@ mock.module('@/lib/appwrite/sdk', () => ({
       account: {
         ...sdk.sdk.forConsole.account,
         createJWT: async () => {
+          if (consoleState.jwtError) {
+            throw consoleState.jwtError
+          }
           if (consoleState.jwt === null) {
-            throw new Error('User (role: guests) missing scopes (["account"])')
+            throw new AppwriteException(
+              'User (role: guests) missing scopes (["account"])',
+              401,
+              'general_unauthorized_scope',
+            )
           }
           return { jwt: consoleState.jwt }
         },
@@ -97,6 +108,7 @@ afterEach(() => {
   consoleState.cloud = null
   consoleState.endpoint = null
   consoleState.jwt = null
+  consoleState.jwtError = null
 })
 
 function sentJwt(): string | undefined {
@@ -136,6 +148,23 @@ describe('where conversations go', () => {
 
     expect(sentJwt()).toBeUndefined()
     expect(jsonBody()).toMatchObject({ email: 'a@b.co' })
+  })
+
+  test('a signed-in user whose JWT fails is not sent anonymously', async () => {
+    consoleState.cloud = true
+    consoleState.endpoint = 'https://fra.cloud.appwrite.io/v1'
+    consoleState.jwtError = new AppwriteException('Server Error', 500)
+
+    await expect(
+      submitSupportTicket({
+        email: 'a@b.co',
+        name: 'Ada',
+        subject: 'Deploy fails',
+        message: 'Build error',
+        organizationId: 'org1',
+      }),
+    ).rejects.toBeInstanceOf(GrowthError)
+    expect(calls).toHaveLength(0)
   })
 
   test('Cloud forms that keep typed contact details leave the session out', async () => {
