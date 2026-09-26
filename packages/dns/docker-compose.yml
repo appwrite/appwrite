@@ -1,0 +1,22 @@
+services:
+  dns-server:
+    image: dns-dev
+    build:
+      context: .
+    command: [ "sh", "-c", "php /usr/src/code/tests/resources/server.php" ]
+    volumes:
+      - ./bin:/usr/src/code/bin
+      - ./src:/usr/src/code/src
+      - ./tests:/usr/src/code/tests
+      - ./phpunit.xml:/usr/src/code/phpunit.xml
+    dns:
+      - 127.0.0.1
+    networks:
+      - dns
+    ports:
+      - '5300:5300/udp'
+      - '5300:5300/tcp'
+      - '5301:5301/tcp'
+      - '5302:5302/tcp'
+networks:
+  dns:
