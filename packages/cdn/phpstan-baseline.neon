@@ -1,0 +1,373 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Binary operation "\." between non\-falsy\-string and mixed results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: src/Cache/Adapter/Cloudflare.php
+
+		-
+			message: '#^Cannot access offset ''message'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Cache/Adapter/Cloudflare.php
+
+		-
+			message: '#^Cannot access offset 0 on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Cache/Adapter/Cloudflare.php
+
+		-
+			message: '#^Method Utopia\\Cdn\\Cache\\Adapter\\Cloudflare\:\:request\(\) should return array\{statusCode\: int, response\: array\<string, mixed\>\|string\|null, error\: string\|null\} but returns array\{statusCode\: int, response\: mixed, error\: null\}\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Cache/Adapter/Cloudflare.php
+
+		-
+			message: '#^Binary operation "\." between non\-falsy\-string and mixed results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: src/Cache/Adapter/Fastly.php
+
+		-
+			message: '#^Method Utopia\\Cdn\\Cache\\Adapter\\Fastly\:\:request\(\) should return array\{statusCode\: int, response\: array\<string, mixed\>\|string\|null, error\: string\|null\} but returns array\{statusCode\: int, response\: mixed, error\: null\}\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Cache/Adapter/Fastly.php
+
+		-
+			message: '#^Binary operation "\." between non\-falsy\-string and mixed results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: src/Certificates/Provider/Cloudflare.php
+
+		-
+			message: '#^Cannot access offset ''code'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Certificates/Provider/Cloudflare.php
+
+		-
+			message: '#^Cannot access offset ''message'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Certificates/Provider/Cloudflare.php
+
+		-
+			message: '#^Cannot access offset 0 on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: src/Certificates/Provider/Cloudflare.php
+
+		-
+			message: '#^Method Utopia\\Cdn\\Certificates\\Provider\\Cloudflare\:\:findHostname\(\) should return array\<string, mixed\>\|null but returns array\<mixed\>\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Certificates/Provider/Cloudflare.php
+
+		-
+			message: '#^Method Utopia\\Cdn\\Certificates\\Provider\\Cloudflare\:\:request\(\) should return array\{statusCode\: int, response\: array\<string, mixed\>\|string\|null, error\: string\|null\} but returns array\{statusCode\: int, response\: mixed, error\: null\}\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Certificates/Provider/Cloudflare.php
+
+		-
+			message: '#^Binary operation "\." between non\-falsy\-string and mixed results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: src/Certificates/Provider/Fastly.php
+
+		-
+			message: '#^Cannot access offset ''detail'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Certificates/Provider/Fastly.php
+
+		-
+			message: '#^Cannot access offset ''title'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Certificates/Provider/Fastly.php
+
+		-
+			message: '#^Cannot access offset 0 on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: src/Certificates/Provider/Fastly.php
+
+		-
+			message: '#^Method Utopia\\Cdn\\Certificates\\Provider\\Fastly\:\:findDomain\(\) should return array\<string, mixed\>\|null but returns array\<mixed\>\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Certificates/Provider/Fastly.php
+
+		-
+			message: '#^Method Utopia\\Cdn\\Certificates\\Provider\\Fastly\:\:request\(\) should return array\{statusCode\: int, response\: array\<string, mixed\>\|string\|null, error\: string\|null\} but returns array\{statusCode\: int, response\: mixed, error\: null\}\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Certificates/Provider/Fastly.php
+
+		-
+			message: '#^Binary operation "\." between ''/tls/subscriptions/'' and mixed results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: src/Certificates/Provider/FastlyTls.php
+
+		-
+			message: '#^Binary operation "\." between non\-falsy\-string and mixed results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: src/Certificates/Provider/FastlyTls.php
+
+		-
+			message: '#^Cannot access offset ''challenges'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Certificates/Provider/FastlyTls.php
+
+		-
+			message: '#^Cannot access offset ''data'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 3
+			path: src/Certificates/Provider/FastlyTls.php
+
+		-
+			message: '#^Cannot access offset ''detail'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Certificates/Provider/FastlyTls.php
+
+		-
+			message: '#^Cannot access offset ''id'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Certificates/Provider/FastlyTls.php
+
+		-
+			message: '#^Cannot access offset ''not_after'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Certificates/Provider/FastlyTls.php
+
+		-
+			message: '#^Cannot access offset ''state'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 5
+			path: src/Certificates/Provider/FastlyTls.php
+
+		-
+			message: '#^Cannot access offset ''title'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Certificates/Provider/FastlyTls.php
+
+		-
+			message: '#^Cannot access offset ''tls_authorizations'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Certificates/Provider/FastlyTls.php
+
+		-
+			message: '#^Cannot access offset ''tls_certificates'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Certificates/Provider/FastlyTls.php
+
+		-
+			message: '#^Cannot access offset ''tls_domain'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Certificates/Provider/FastlyTls.php
+
+		-
+			message: '#^Cannot access offset ''warnings'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Certificates/Provider/FastlyTls.php
+
+		-
+			message: '#^Cannot access offset 0 on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: src/Certificates/Provider/FastlyTls.php
+
+		-
+			message: '#^Method Utopia\\Cdn\\Certificates\\Provider\\FastlyTls\:\:createSubscription\(\) should return array\{resource\: array\<string, mixed\>, included\: array\<int, array\<string, mixed\>\>\} but returns array\{resource\: array\<mixed, mixed\>, included\: list\<array\<mixed, mixed\>\>\}\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Certificates/Provider/FastlyTls.php
+
+		-
+			message: '#^Method Utopia\\Cdn\\Certificates\\Provider\\FastlyTls\:\:findSubscription\(\) should return array\{resource\: array\<string, mixed\>, included\: array\<int, array\<string, mixed\>\>\}\|null but returns array\{resource\: array\<mixed, mixed\>, included\: list\<array\<mixed, mixed\>\>\}\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Certificates/Provider/FastlyTls.php
+
+		-
+			message: '#^Method Utopia\\Cdn\\Certificates\\Provider\\FastlyTls\:\:request\(\) should return array\{statusCode\: int, response\: array\<string, mixed\>\|string\|null, error\: string\|null\} but returns array\{statusCode\: int, response\: mixed, error\: null\}\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Certificates/Provider/FastlyTls.php
+
+		-
+			message: '#^Method Utopia\\Cdn\\Certificates\\Provider\\FastlyTls\:\:retrySubscription\(\) should return array\{resource\: array\<string, mixed\>, included\: array\<int, array\<string, mixed\>\>\} but returns array\{resource\: array\<mixed, mixed\>, included\: list\<array\<mixed, mixed\>\>\}\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Certificates/Provider/FastlyTls.php
+
+		-
+			message: '#^Parameter \#1 \$state of method Utopia\\Cdn\\Certificates\\Provider\\FastlyTls\:\:mapStatus\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 4
+			path: src/Certificates/Provider/FastlyTls.php
+
+		-
+			message: '#^Parameter \#1 \$subscriptionId of method Utopia\\Cdn\\Certificates\\Provider\\FastlyTls\:\:retrySubscription\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Certificates/Provider/FastlyTls.php
+
+		-
+			message: '#^Cannot access offset ''files'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: tests/Cache/Adapter/CloudflareTest.php
+
+		-
+			message: '#^Parameter \#2 \$haystack of method PHPUnit\\Framework\\Assert\:\:assertCount\(\) expects Countable\|iterable, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: tests/Cache/Adapter/CloudflareTest.php
+
+		-
+			message: '#^Cannot access offset ''surrogate_keys'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: tests/Cache/Adapter/FastlyTest.php
+
+		-
+			message: '#^Parameter \#2 \$haystack of method PHPUnit\\Framework\\Assert\:\:assertCount\(\) expects Countable\|iterable, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/Cache/Adapter/FastlyTest.php
+
+		-
+			message: '#^Cannot access offset ''hostname'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Certificates/Provider/CloudflareTest.php
+
+		-
+			message: '#^Cannot access offset ''method'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Certificates/Provider/CloudflareTest.php
+
+		-
+			message: '#^Cannot access offset ''ssl'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Certificates/Provider/CloudflareTest.php
+
+		-
+			message: '#^Cannot access offset ''data'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: tests/Certificates/Provider/FastlyTest.php
+
+		-
+			message: '#^Cannot access offset ''id'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Certificates/Provider/FastlyTest.php
+
+		-
+			message: '#^Cannot access offset ''relationships'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Certificates/Provider/FastlyTest.php
+
+		-
+			message: '#^Cannot access offset ''tls_domains'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Certificates/Provider/FastlyTest.php
+
+		-
+			message: '#^Cannot access offset 0 on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Certificates/Provider/FastlyTest.php
+
+		-
+			message: '#^Cannot access offset ''attributes'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Certificates/Provider/FastlyTlsTest.php
+
+		-
+			message: '#^Cannot access offset ''data'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 7
+			path: tests/Certificates/Provider/FastlyTlsTest.php
+
+		-
+			message: '#^Cannot access offset ''id'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 3
+			path: tests/Certificates/Provider/FastlyTlsTest.php
+
+		-
+			message: '#^Cannot access offset ''relationships'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 4
+			path: tests/Certificates/Provider/FastlyTlsTest.php
+
+		-
+			message: '#^Cannot access offset ''state'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Certificates/Provider/FastlyTlsTest.php
+
+		-
+			message: '#^Cannot access offset ''tls_authorizations'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Certificates/Provider/FastlyTlsTest.php
+
+		-
+			message: '#^Cannot access offset ''tls_configuration'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Certificates/Provider/FastlyTlsTest.php
+
+		-
+			message: '#^Cannot access offset ''tls_domain'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Certificates/Provider/FastlyTlsTest.php
+
+		-
+			message: '#^Cannot access offset ''tls_domains'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Certificates/Provider/FastlyTlsTest.php
+
+		-
+			message: '#^Cannot access offset 0 on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 3
+			path: tests/Certificates/Provider/FastlyTlsTest.php
+
+		-
+			message: '#^Parameter \#1 \$content of class Utopia\\Psr7\\Stream constructor expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/Certificates/Provider/FastlyTlsTest.php
+
+		-
+			message: '#^Parameter \#2 \$array of method PHPUnit\\Framework\\Assert\:\:assertArrayNotHasKey\(\) expects array\<mixed\>\|ArrayAccess\<\(int\|string\), covariant mixed\>, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: tests/Certificates/Provider/FastlyTlsTest.php
