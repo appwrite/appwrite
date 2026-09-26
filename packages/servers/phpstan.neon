@@ -1,6 +1,8 @@
 includes:
-    - ../../phpstan.neon
+    - phpstan-baseline.neon
 
 parameters:
-    excludePaths:
-        - tests/Servers/servers
+    level: max
+    paths:
+        - src
+        - tests

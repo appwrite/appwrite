@@ -46,7 +46,8 @@ class Hook
 
     public function __construct()
     {
-        $this->action = function (): void {};
+        $this->action = function (): void {
+        };
     }
 
     /**
@@ -144,7 +145,7 @@ class Hook
 
         $injections = array_values($this->injections);
 
-        usort($injections, static fn(array $left, array $right): int => $left['order'] <=> $right['order']);
+        usort($injections, static fn (array $left, array $right): int => $left['order'] <=> $right['order']);
 
         return array_column($injections, 'name');
     }

@@ -19,12 +19,12 @@
     ],
     "autoload": {
         "psr-4": {
-            "Utopia\\Servers\\": "src/Servers"
+            "Utopia\\Servers\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Tests\\Servers\\Unit\\": "tests/Servers/Unit"
+            "Utopia\\Servers\\Tests\\": "tests/"
         }
     },
     "scripts": {

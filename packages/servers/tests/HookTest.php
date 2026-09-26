@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Tests\Servers\Unit;
+namespace Utopia\Servers\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Utopia\Servers\Hook;
@@ -42,7 +42,7 @@ final class HookTest extends TestCase
         $this->assertInstanceOf(\Closure::class, $default);
         $this->assertNull($default());
 
-        $this->hook->action(fn(): string => 'hello world');
+        $this->hook->action(fn (): string => 'hello world');
 
         $this->assertEquals('hello world', $this->hook->getAction()());
     }
@@ -107,7 +107,8 @@ final class HookTest extends TestCase
         $this->hook
             ->inject('user')
             ->inject('time')
-            ->action(function (): void {});
+            ->action(function (): void {
+            });
 
         $this->assertCount(2, $this->hook->getInjections());
         $this->assertEquals('user', $this->hook->getInjections()['user']['name']);
