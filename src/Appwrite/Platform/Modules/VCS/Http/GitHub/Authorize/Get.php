@@ -11,6 +11,7 @@ use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Document;
+use Utopia\Domains\Domain;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
 
@@ -96,7 +97,33 @@ class Get extends Action
             'redirect_uri' => $protocol . '://' . $hostname . "/v1/vcs/github/callback"
         ]);
 
+        // When the app is already installed on the chosen account, GitHub sends
+        // the user to that installation's settings, and saving there returns
+        // setup_action=update without state. Mirror state into a cookie the
+        // callback can fall back to. The callback can only read the project
+        // through the console session, so the cookie gets the same reach: the
+        // registrable domain with root sessions, else the console host and its
+        // subdomains, which covers regional hosts.
+        $host = \parse_url('//' . $hostname, PHP_URL_HOST) ?: '';
+        $domain = match (true) {
+            \in_array($host, ['', 'localhost'], true), \filter_var($host, FILTER_VALIDATE_IP) !== false => null,
+            System::getEnv('_APP_CONSOLE_ROOT_SESSION', 'disabled') === 'enabled' => '.' . ((new Domain($host))->getRegisterable() ?: $host),
+            default => '.' . $host,
+        };
+
+        // One cookie per project, so starting a connection for another project
+        // leaves this one pending instead of replacing it.
         $response
+            ->addCookie(
+                COOKIE_NAME_GITHUB_STATE . '_' . $project->getSequence(),
+                $state,
+                \time() + COOKIE_EXPIRY_GITHUB_STATE,
+                COOKIE_PATH_GITHUB_STATE,
+                $domain,
+                $protocol === 'https',
+                true,
+                Response::COOKIE_SAMESITE_LAX
+            )
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->addHeader('Pragma', 'no-cache')
             ->redirect($url);

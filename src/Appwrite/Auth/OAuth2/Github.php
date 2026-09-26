@@ -254,6 +254,34 @@ class Github extends OAuth2
         return $this->user;
     }
 
+    /**
+     * IDs of this GitHub App's installations that the user behind the token can access.
+     *
+     * @link https://docs.github.com/en/rest/apps/installations#list-app-installations-accessible-to-the-user-access-token
+     *
+     * @return array<string>
+     */
+    public function getInstallationIds(string $accessToken): array
+    {
+        $ids = [];
+        $page = 1;
+
+        do {
+            $response = $this->request('GET', 'https://api.github.com/user/installations?' . \http_build_query([
+                'per_page' => 100,
+                'page' => $page++,
+            ]), ['Authorization: token ' . \urlencode($accessToken)]);
+
+            $installations = \json_decode($response, true)['installations'] ?? [];
+
+            foreach ($installations as $installation) {
+                $ids[] = (string) $installation['id'];
+            }
+        } while (\count($installations) === 100);
+
+        return $ids;
+    }
+
     public function createRepository(string $accessToken, string $repositoryName, bool $private, string $namespaceId = ''): array
     {
         $repository = $this->request('POST', 'https://api.github.com/user/repos', ['Authorization: token ' . \urlencode($accessToken)], \json_encode([
