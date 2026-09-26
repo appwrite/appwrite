@@ -46,6 +46,10 @@ class V25 extends Migration
 
         $collections = $this->collections[$collectionType];
 
+        if ($collectionType === 'console') {
+            $this->createCollection('installationRequests');
+        }
+
         foreach ($collections as $collection) {
             $id = $collection['$id'];
 

@@ -1,0 +1,254 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Tests\E2E\Services\VCSGitHub;
+
+use Tests\E2E\Client;
+use Tests\E2E\Scopes\ProjectCustom;
+use Tests\E2E\Scopes\Scope;
+use Tests\E2E\Scopes\SideConsole;
+use Utopia\System\System;
+
+/**
+ * Member-requested installation flow: request document, webhook approval,
+ * Console confirmation. Deliberately does not use VCSGitHubBase: nothing here
+ * reaches GitHub, so it must also run on installations that have no GitHub App
+ * configured.
+ */
+final class VCSGitHubRequestsConsoleClientTest extends Scope
+{
+    use ProjectCustom;
+    use SideConsole;
+
+    /**
+     * @return array<string, string>
+     */
+    private function getRequestHeaders(?string $projectId = null): array
+    {
+        return array_merge(['x-appwrite-project' => $projectId ?? $this->getProject()['$id']], $this->getHeaders());
+    }
+
+    private function seedRequest(string $requester): string
+    {
+        $seeded = $this->client->call(Client::METHOD_GET, '/mock/github/request', $this->getRequestHeaders(), [
+            'projectId' => $this->getProject()['$id'],
+            'requester' => $requester,
+        ]);
+
+        $this->assertEquals(200, $seeded['headers']['status-code']);
+
+        return $seeded['body']['requestId'];
+    }
+
+    private function postInstallationEvent(array $payload): void
+    {
+        // GitHub webhooks are public and intentionally have no x-appwrite-project header.
+        $headers = [
+            'content-type' => 'application/json',
+            'x-github-event' => 'installation',
+        ];
+
+        $secret = System::getEnv('_APP_VCS_GITHUB_WEBHOOK_SECRET', '');
+        if (!empty($secret)) {
+            $headers['x-hub-signature-256'] = 'sha256=' . hash_hmac('sha256', json_encode($payload, JSON_THROW_ON_ERROR), $secret);
+        }
+
+        $event = $this->client->call(Client::METHOD_POST, '/vcs/github/events', $headers, $payload);
+
+        $this->assertEquals(200, $event['headers']['status-code']);
+    }
+
+    private function findRequest(string $requestId): ?array
+    {
+        $requests = $this->client->call(Client::METHOD_GET, '/vcs/requests', $this->getRequestHeaders());
+        $this->assertEquals(200, $requests['headers']['status-code']);
+
+        foreach ($requests['body']['requests'] as $request) {
+            if ($request['$id'] === $requestId) {
+                return $request;
+            }
+        }
+
+        return null;
+    }
+
+    public function testUpdateRequest(): void
+    {
+        $requester = uniqid('octocat-');
+        $requestId = $this->seedRequest($requester);
+
+        $this->postInstallationEvent([
+            'action' => 'created',
+            'installation' => [
+                'id' => 424242,
+                'account' => ['login' => 'request-test-org'],
+            ],
+            'requester' => ['login' => $requester],
+        ]);
+
+        $confirmed = $this->client->call(Client::METHOD_PATCH, '/vcs/requests/' . $requestId, $this->getRequestHeaders());
+        $this->assertEquals(200, $confirmed['headers']['status-code']);
+        $this->assertEquals('github', $confirmed['body']['provider']);
+        $this->assertEquals('request-test-org', $confirmed['body']['organization']);
+        $this->assertSame('424242', $confirmed['body']['providerInstallationId']);
+
+        // Confirming consumes the request.
+        $this->assertNull($this->findRequest($requestId));
+    }
+
+    public function testUpdateRequestNotReady(): void
+    {
+        $requestId = $this->seedRequest(uniqid('octocat-'));
+
+        $early = $this->client->call(Client::METHOD_PATCH, '/vcs/requests/' . $requestId, $this->getRequestHeaders());
+        $this->assertEquals(400, $early['headers']['status-code']);
+        $this->assertEquals('installation_request_not_ready', $early['body']['type']);
+    }
+
+    public function testCreateEventMarksRequestReady(): void
+    {
+        $requester = uniqid('octocat-');
+        $requestId = $this->seedRequest($requester);
+        $this->postInstallationEvent([
+            'action' => 'created',
+            'installation' => [
+                'id' => 424247,
+                'account' => ['login' => 'request-test-org6'],
+            ],
+            'requester' => ['login' => $requester],
+        ]);
+
+        $request = $this->findRequest($requestId);
+        $this->assertEquals('ready', $request['status'] ?? '');
+        $this->assertEquals('request-test-org6', $request['organization'] ?? '');
+    }
+
+    public function testUpdateRequestForeignProject(): void
+    {
+        $requester = uniqid('octocat-');
+        $requestId = $this->seedRequest($requester);
+        $this->postInstallationEvent([
+            'action' => 'created',
+            'installation' => [
+                'id' => 424243,
+                'account' => ['login' => 'request-test-org2'],
+            ],
+            'requester' => ['login' => $requester],
+        ]);
+
+        $foreignProject = $this->getProject(true)['$id'];
+
+        $foreign = $this->client->call(Client::METHOD_PATCH, '/vcs/requests/' . $requestId, $this->getRequestHeaders($foreignProject));
+        $this->assertEquals(404, $foreign['headers']['status-code']);
+        $this->assertEquals('installation_request_not_found', $foreign['body']['type']);
+
+        $foreign = $this->client->call(Client::METHOD_DELETE, '/vcs/requests/' . $requestId, $this->getRequestHeaders($foreignProject));
+        $this->assertEquals(404, $foreign['headers']['status-code']);
+
+        $deleted = $this->client->call(Client::METHOD_DELETE, '/vcs/requests/' . $requestId, $this->getRequestHeaders());
+        $this->assertEquals(204, $deleted['headers']['status-code']);
+    }
+
+    public function testDeleteRequest(): void
+    {
+        $requestId = $this->seedRequest(uniqid('octocat-'));
+
+        $deleted = $this->client->call(Client::METHOD_DELETE, '/vcs/requests/' . $requestId, $this->getRequestHeaders());
+        $this->assertEquals(204, $deleted['headers']['status-code']);
+
+        $missing = $this->client->call(Client::METHOD_PATCH, '/vcs/requests/' . $requestId, $this->getRequestHeaders());
+        $this->assertEquals(404, $missing['headers']['status-code']);
+    }
+
+    public function testCreateEventIgnoresUnrelatedApproval(): void
+    {
+        $requester = uniqid('octocat-');
+        $requestId = $this->seedRequest($requester);
+
+        // No requester in the payload: a direct owner install, not an approval.
+        $this->postInstallationEvent([
+            'action' => 'created',
+            'installation' => [
+                'id' => 424244,
+                'account' => ['login' => 'request-test-org3'],
+            ],
+        ]);
+
+        $this->postInstallationEvent([
+            'action' => 'created',
+            'installation' => [
+                'id' => 424245,
+                'account' => ['login' => 'request-test-org4'],
+            ],
+            'requester' => ['login' => uniqid('someone-else-')],
+        ]);
+
+        $request = $this->findRequest($requestId);
+        $this->assertEquals('requested', $request['status'] ?? '');
+    }
+
+    public function testCreateEventDeletesRequestOnUninstall(): void
+    {
+        $requester = uniqid('octocat-');
+        $requestId = $this->seedRequest($requester);
+        $this->postInstallationEvent([
+            'action' => 'created',
+            'installation' => [
+                'id' => 424246,
+                'account' => ['login' => 'request-test-org5'],
+            ],
+            'requester' => ['login' => $requester],
+        ]);
+
+        $this->postInstallationEvent([
+            'action' => 'deleted',
+            'installation' => [
+                'id' => 424246,
+                'account' => ['login' => 'request-test-org5'],
+            ],
+        ]);
+
+        $this->assertNull($this->findRequest($requestId));
+    }
+
+    public function testCreateRequestRejectsASecondForTheSameRequester(): void
+    {
+        $requester = uniqid('octocat-');
+        $this->seedRequest($requester);
+
+        $otherProject = $this->getProject(true)['$id'];
+        $other = $this->client->call(Client::METHOD_GET, '/mock/github/request', $this->getRequestHeaders($otherProject), [
+            'projectId' => $otherProject,
+            'requester' => $requester,
+        ]);
+
+        $this->assertEquals(409, $other['headers']['status-code']);
+    }
+
+    public function testCreateEventLeavesAReadyRequestAlone(): void
+    {
+        $requester = uniqid('octocat-');
+        $readyId = $this->seedRequest($requester);
+        $this->postInstallationEvent([
+            'action' => 'created',
+            'installation' => [
+                'id' => 424249,
+                'account' => ['login' => 'request-test-org8'],
+            ],
+            'requester' => ['login' => $requester],
+        ]);
+
+        $this->postInstallationEvent([
+            'action' => 'created',
+            'installation' => [
+                'id' => 424250,
+                'account' => ['login' => 'request-test-org9'],
+            ],
+            'requester' => ['login' => $requester],
+        ]);
+
+        $ready = $this->findRequest($readyId);
+        $this->assertEquals('request-test-org8', $ready['organization'] ?? '');
+    }
+}

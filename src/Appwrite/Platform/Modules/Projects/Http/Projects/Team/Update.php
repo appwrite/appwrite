@@ -89,6 +89,13 @@ class Update extends Action
             $dbForPlatform->updateDocument('repositories', $repository->getId(), new Document(['$permissions' => $permissions]));
         }
 
+        $installationRequests = $dbForPlatform->find('installationRequests', [
+            Query::equal('projectInternalId', [$project->getSequence()]),
+        ]);
+        foreach ($installationRequests as $installationRequest) {
+            $dbForPlatform->updateDocument('installationRequests', $installationRequest->getId(), new Document(['$permissions' => $permissions]));
+        }
+
         $vcsComments = $dbForPlatform->find('vcsComments', [
             Query::equal('projectInternalId', [$project->getSequence()]),
         ]);
