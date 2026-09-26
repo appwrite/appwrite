@@ -6,6 +6,7 @@ use Appwrite\Docker\Compose;
 use Appwrite\Docker\Compose\Generator;
 use Appwrite\Docker\Env;
 use Appwrite\Installer\Report;
+use Appwrite\Installer\Reporter;
 use Appwrite\Migration\Infrastructure\Migration as InfrastructureMigration;
 use Appwrite\Platform\Installer\Runtime\State;
 use Appwrite\Platform\Installer\Server as InstallerServer;
@@ -42,8 +43,7 @@ class Install extends Action
     public const string CHANNEL_NIGHTLY = 'nightly';
 
     private const string APPWRITE_API_URL = 'http://appwrite';
-    private const string INSTALLATIONS_URL = 'https://cloud.appwrite.io/v1/growth/installations';
-    private const string INSTALLATIONS_PROJECT = 'console';
+    private const string PROJECT = 'console';
 
     protected bool $isUpgrade = false;
     protected bool $migrate = false;
@@ -1056,22 +1056,11 @@ class Install extends Action
 
     private function track(?Report $report): void
     {
-        if ($report === null || !$report->sendable()) {
+        if ($report === null) {
             return;
         }
 
-        try {
-            $client = new Client();
-            $client
-                ->setConnectTimeout(5000)
-                ->setTimeout(5000)
-                ->setUserAgent($report->userAgent())
-                ->addHeader('Content-Type', 'application/json')
-                ->addHeader('X-Appwrite-Project', self::INSTALLATIONS_PROJECT)
-                ->fetch(self::INSTALLATIONS_URL, Client::METHOD_POST, $report->payload());
-        } catch (\Throwable) {
-            // tracking shouldn't block installation
-        }
+        (new Reporter())->send($report);
     }
 
     /**
@@ -1188,7 +1177,7 @@ class Install extends Action
             ->setTimeout(30000)
             ->setConnectTimeout(10000)
             ->addHeader('Content-Type', 'application/json')
-            ->addHeader('X-Appwrite-Project', self::INSTALLATIONS_PROJECT)
+            ->addHeader('X-Appwrite-Project', self::PROJECT)
             ->addHeader('Host', $domain);
 
         $url = $apiUrl . $endpoint;
