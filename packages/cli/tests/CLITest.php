@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Utopia\Tests;
+namespace Utopia\CLI\Tests;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -16,17 +16,21 @@ use Utopia\Validator\Text;
 
 final class CLITest extends TestCase
 {
-    public function setUp(): void {}
+    public function setUp(): void
+    {
+    }
 
-    public function tearDown(): void {}
+    public function tearDown(): void
+    {
+    }
 
     public function testResources(): void
     {
         $cli = new CLI(new Generic(), ['test.php', 'build']);
 
-        $cli->setResource('rand', fn(): int => random_int(0, mt_getrandmax()));
-        $cli->setResource('first', fn($second): string => 'first-' . $second, ['second']);
-        $cli->setResource('second', fn(): string => 'second');
+        $cli->setResource('rand', fn (): int => random_int(0, mt_getrandmax()));
+        $cli->setResource('first', fn ($second): string => 'first-' . $second, ['second']);
+        $cli->setResource('second', fn (): string => 'second');
 
         $second = $cli->getResource('second');
         $first = $cli->getResource('first');
@@ -187,7 +191,7 @@ final class CLITest extends TestCase
 
         $cli = new CLI(new Generic(), ['test.php', 'build', '--email=me@example.com']);
 
-        $cli->setResource('test', fn(): string => 'test-value');
+        $cli->setResource('test', fn (): string => 'test-value');
 
         $cli->task('build')
             ->inject('test')
@@ -208,7 +212,7 @@ final class CLITest extends TestCase
         ob_start();
 
         $container = new Container();
-        $container->set('test', fn(): string => 'test-value');
+        $container->set('test', fn (): string => 'test-value');
 
         $cli = new CLI(new Generic(), ['test.php', 'build'], $container);
 
@@ -231,10 +235,10 @@ final class CLITest extends TestCase
     public function testResetPreservesInjectedContainer(): void
     {
         $container = new Container();
-        $container->set('base', fn(): string => 'base-value');
+        $container->set('base', fn (): string => 'base-value');
 
         $cli = new CLI(new Generic(), ['test.php', 'build'], $container);
-        $cli->setResource('runtime', fn(): string => 'runtime-value');
+        $cli->setResource('runtime', fn (): string => 'runtime-value');
 
         $this->assertEquals('base-value', $cli->getResource('base'));
         $this->assertEquals('runtime-value', $cli->getResource('runtime'));

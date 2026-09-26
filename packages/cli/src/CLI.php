@@ -321,7 +321,7 @@ class CLI
                 }
             } catch (Exception $e) {
                 foreach ($this->errors as $hook) {
-                    $this->setResource('error', fn(): \Exception => $e);
+                    $this->setResource('error', fn (): \Exception => $e);
                     \call_user_func_array($hook->getAction(), $this->getParams($hook));
                 }
             }

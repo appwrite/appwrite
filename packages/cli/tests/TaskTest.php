@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Utopia\Tests;
+namespace Utopia\CLI\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Utopia\CLI\Task;
@@ -39,7 +39,7 @@ final class TaskTest extends TestCase
 
     public function testAction(): void
     {
-        $this->task->action(fn(): string => 'result');
+        $this->task->action(fn (): string => 'result');
 
         $this->assertEquals('result', $this->task->getAction()());
     }
@@ -66,7 +66,8 @@ final class TaskTest extends TestCase
         $this->task
             ->inject('user')
             ->inject('time')
-            ->action(function (): void {});
+            ->action(function (): void {
+            });
 
         $this->assertCount(2, $this->task->getDependencies());
         $this->assertEquals('user', $this->task->getDependencies()[0]);

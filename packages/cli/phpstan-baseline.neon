@@ -1,0 +1,301 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Method Utopia\\CLI\\Adapter\:\:start\(\) has parameter \$callback with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Adapter.php
+
+		-
+			message: '#^Method Utopia\\CLI\\Adapters\\Generic\:\:onWorkerStart\(\) has parameter \$callback with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Adapters/Generic.php
+
+		-
+			message: '#^Method Utopia\\CLI\\Adapters\\Generic\:\:start\(\) has parameter \$callback with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Adapters/Generic.php
+
+		-
+			message: '#^Trying to invoke mixed but it''s not a callable\.$#'
+			identifier: callable.nonCallable
+			count: 1
+			path: src/Adapters/Generic.php
+
+		-
+			message: '#^Method Utopia\\CLI\\Adapters\\Swoole\:\:onWorkerStart\(\) has parameter \$callback with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Adapters/Swoole.php
+
+		-
+			message: '#^Method Utopia\\CLI\\Adapters\\Swoole\:\:start\(\) has parameter \$callback with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Adapters/Swoole.php
+
+		-
+			message: '#^Parameter \#1 \$callback of function call_user_func expects callable\(\)\: mixed, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapters/Swoole.php
+
+		-
+			message: '#^Argument of an invalid type mixed supplied for foreach, only iterables are supported\.$#'
+			identifier: foreach.nonIterable
+			count: 1
+			path: src/CLI.php
+
+		-
+			message: '#^Cannot access offset ''aliases'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/CLI.php
+
+		-
+			message: '#^Cannot access offset ''default'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/CLI.php
+
+		-
+			message: '#^Cannot access offset ''validator'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/CLI.php
+
+		-
+			message: '#^Method Utopia\\CLI\\CLI\:\:__construct\(\) has parameter \$args with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/CLI.php
+
+		-
+			message: '#^Method Utopia\\CLI\\CLI\:\:camelCaseIt\(\) has parameter \$key with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: src/CLI.php
+
+		-
+			message: '#^Method Utopia\\CLI\\CLI\:\:getArgs\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/CLI.php
+
+		-
+			message: '#^Method Utopia\\CLI\\CLI\:\:getParams\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/CLI.php
+
+		-
+			message: '#^Method Utopia\\CLI\\CLI\:\:getResources\(\) has parameter \$list with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/CLI.php
+
+		-
+			message: '#^Method Utopia\\CLI\\CLI\:\:getResources\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/CLI.php
+
+		-
+			message: '#^Method Utopia\\CLI\\CLI\:\:getTasks\(\) should return array\<Utopia\\CLI\\Task\> but returns array\.$#'
+			identifier: return.type
+			count: 1
+			path: src/CLI.php
+
+		-
+			message: '#^Method Utopia\\CLI\\CLI\:\:match\(\) should return Utopia\\CLI\\Task\|null but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/CLI.php
+
+		-
+			message: '#^Method Utopia\\CLI\\CLI\:\:parse\(\) has parameter \$args with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/CLI.php
+
+		-
+			message: '#^Method Utopia\\CLI\\CLI\:\:parse\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/CLI.php
+
+		-
+			message: '#^Method Utopia\\CLI\\CLI\:\:setResource\(\) has parameter \$dependencies with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/CLI.php
+
+		-
+			message: '#^Method Utopia\\CLI\\CLI\:\:validate\(\) has parameter \$param with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/CLI.php
+
+		-
+			message: '#^Parameter \#1 \$args of method Utopia\\CLI\\CLI\:\:parse\(\) expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/CLI.php
+
+		-
+			message: '#^Parameter \#1 \$name of method Utopia\\CLI\\CLI\:\:getResource\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/CLI.php
+
+		-
+			message: '#^Parameter \#1 \$string of function substr expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/CLI.php
+
+		-
+			message: '#^Parameter \#1 \$validator of method Utopia\\CLI\\CLI\:\:coerce\(\) expects \(callable\(\)\: mixed\)\|Utopia\\Validator, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/CLI.php
+
+		-
+			message: '#^Parameter \#2 \$param of method Utopia\\CLI\\CLI\:\:validate\(\) expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/CLI.php
+
+		-
+			message: '#^Parameter \#2 \$string of function explode expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/CLI.php
+
+		-
+			message: '#^Parameter \#3 \$dependencies of method Utopia\\DI\\Container\:\:set\(\) expects list\<string\>, array given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/CLI.php
+
+		-
+			message: '#^Parameter \#3 \$subject of function str_replace expects array\<string\>\|string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/CLI.php
+
+		-
+			message: '#^Possibly invalid array key type mixed\.$#'
+			identifier: offsetAccess.invalidOffset
+			count: 3
+			path: src/CLI.php
+
+		-
+			message: '#^Property Utopia\\CLI\\CLI\:\:\$args type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/CLI.php
+
+		-
+			message: '#^Property Utopia\\CLI\\CLI\:\:\$command \(string\) does not accept mixed\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: src/CLI.php
+
+		-
+			message: '#^Property Utopia\\CLI\\CLI\:\:\$tasks type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/CLI.php
+
+		-
+			message: '#^Binary operation "\." between ''first\-'' and mixed results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: tests/CLITest.php
+
+		-
+			message: '#^Cannot call method getName\(\) on Utopia\\CLI\\Task\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: tests/CLITest.php
+
+		-
+			message: '#^Parameter \#1 \(mixed\) of echo cannot be converted to string\.$#'
+			identifier: echo.nonString
+			count: 5
+			path: tests/CLITest.php
+
+		-
+			message: '#^Parameter \#2 \$array of function implode expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 10
+			path: tests/CLITest.php
+
+		-
+			message: '#^Cannot call method action\(\) on Utopia\\CLI\\Task\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: tests/TaskTest.php
+
+		-
+			message: '#^Cannot call method desc\(\) on Utopia\\CLI\\Task\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: tests/TaskTest.php
+
+		-
+			message: '#^Cannot call method getAction\(\) on Utopia\\CLI\\Task\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: tests/TaskTest.php
+
+		-
+			message: '#^Cannot call method getDependencies\(\) on Utopia\\CLI\\Task\|null\.$#'
+			identifier: method.nonObject
+			count: 4
+			path: tests/TaskTest.php
+
+		-
+			message: '#^Cannot call method getDesc\(\) on Utopia\\CLI\\Task\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: tests/TaskTest.php
+
+		-
+			message: '#^Cannot call method getLabel\(\) on Utopia\\CLI\\Task\|null\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: tests/TaskTest.php
+
+		-
+			message: '#^Cannot call method getName\(\) on Utopia\\CLI\\Task\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: tests/TaskTest.php
+
+		-
+			message: '#^Cannot call method getParams\(\) on Utopia\\CLI\\Task\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: tests/TaskTest.php
+
+		-
+			message: '#^Cannot call method inject\(\) on Utopia\\CLI\\Task\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: tests/TaskTest.php
+
+		-
+			message: '#^Cannot call method label\(\) on Utopia\\CLI\\Task\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: tests/TaskTest.php
+
+		-
+			message: '#^Cannot call method param\(\) on Utopia\\CLI\\Task\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: tests/TaskTest.php

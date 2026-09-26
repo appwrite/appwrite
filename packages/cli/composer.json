@@ -12,11 +12,16 @@
     ],
     "license": "MIT",
     "scripts": {
-        "test": "phpunit --configuration phpunit.xml < tests/input.txt"
+        "test": "phpunit"
     },
     "autoload": {
         "psr-4": {
-            "Utopia\\CLI\\": "src/CLI"
+            "Utopia\\CLI\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Utopia\\CLI\\Tests\\": "tests/"
         }
     },
     "require": {
@@ -24,7 +29,6 @@
         "utopia-php/servers": "^0.4"
     },
     "require-dev": {
-        "utopia-php/console": "0.0.*",
-        "swoole/ide-helper": "4.8.8"
+        "swoole/ide-helper": "6.*"
     }
 }

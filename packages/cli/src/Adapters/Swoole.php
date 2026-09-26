@@ -23,7 +23,7 @@ class Swoole extends Adapter
         $this->pool->set(['enable_coroutine' => true]);
 
         $this->onWorkerStart($callback);
-        $this->onWorkerStop(fn() => $this->pool->shutdown());
+        $this->onWorkerStop(fn () => $this->pool->shutdown());
         $this->pool->start();
 
         return $this;
