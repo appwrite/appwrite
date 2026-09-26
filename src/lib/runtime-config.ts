@@ -33,7 +33,6 @@ const EMPTY_CONFIG: RuntimeConfig = {
   appwriteEndpoint: '',
   consoleProfile: '',
   fingerprintKey: '',
-  growthEndpoint: '',
   stripePublishableKey: '',
   sentryDsn: '',
   plausibleScriptSrc: '',

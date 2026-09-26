@@ -16,7 +16,6 @@ import {
   updateAccountPrefs,
 } from '@/lib/react-query/hooks/auth'
 import { EDUCATION_JOIN_PATH } from '@/lib/education/paths'
-import { getRuntimeConfig } from '@/lib/runtime-config'
 import { USER_PREFS_KEY_ORGANIZATION } from '@/lib/user-prefs-keys'
 
 export const GITHUB_STUDENT_PROGRAM_ID = 'github-student-developer'
@@ -84,27 +83,4 @@ export async function rememberEducationOrganization(
   if (updatedAccount) {
     syncConsoleAccountAfterMutation(queryClient, { apiResult: updatedAccount })
   }
-}
-
-/**
- * Best-effort subscribe to the student mailing list, mirroring the previous
- * console. Never blocks or fails enrollment; skipped when growth is unset.
- */
-export function addToStudentMailingList(
-  account: Pick<Models.User, 'name' | 'email'> | null | undefined,
-): void {
-  const endpoint = getRuntimeConfig().growthEndpoint?.trim()
-  if (!endpoint || !account?.email) return
-
-  void fetch(`${endpoint.replace(/\/$/, '')}/mailinglists/gh-student`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(
-      account.name
-        ? { name: account.name, email: account.email }
-        : { email: account.email },
-    ),
-  }).catch((error: unknown) => {
-    console.error('Failed to add student to the mailing list:', error)
-  })
 }

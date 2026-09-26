@@ -14,10 +14,7 @@ import {
 } from '@/components/ui/select'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { WizardLayout } from '@/components/global/shared/WizardLayout'
-import {
-  useOrganizationPlan,
-  useOrganizationProjects,
-} from '@/lib/react-query/hooks'
+import { useOrganizationProjects } from '@/lib/react-query/hooks'
 import { useSmartNavigation } from '@/lib/hooks/useSmartNavigation'
 import {
   submitSupportTicket,
@@ -25,6 +22,7 @@ import {
   getSupportAnalyticsEvent,
 } from '@/lib/support'
 import { toast } from 'sonner'
+import { GrowthError } from '@/lib/growth'
 import {
   Activity,
   AlertTriangle,
@@ -56,6 +54,7 @@ const NO_PROJECT_VALUE = '__none__'
 
 type SupportSubmitError =
   | { kind: 'portal' }
+  | { kind: 'rate-limit' }
   | { kind: 'attachment'; message: string }
 
 function formatFileSize(bytes: number): string {
@@ -74,7 +73,6 @@ export function SupportWizardFullscreen() {
   const handleCancel = useSmartNavigation()
 
   const { account } = useAuth()
-  const { plan } = useOrganizationPlan(orgId)
   const { projects } = useOrganizationProjects(orgId)
 
   const [supportHours, setSupportHours] = useState(() =>
@@ -102,14 +100,16 @@ export function SupportWizardFullscreen() {
 
   useEffect(() => {
     if (!submitError) return
-    submitErrorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    submitErrorRef.current?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start',
+    })
   }, [submitError])
 
   const projectList = projects ?? []
 
   const email = account?.email ?? ''
-  const firstName = account?.name ?? 'Unknown'
-  const billingPlanId = plan?.$id ?? ''
+  const name = account?.name ?? ''
 
   const canSubmit =
     !!orgId &&
@@ -122,7 +122,9 @@ export function SupportWizardFullscreen() {
 
   const handleAttachmentSelect = (file: File) => {
     if (file.size > ATTACHMENT_MAX_BYTES) {
-      toast.error(`${t('File must be')} ${ATTACHMENT_MAX_MB} ${t('MB or less')}`)
+      toast.error(
+        `${t('File must be')} ${ATTACHMENT_MAX_MB} ${t('MB or less')}`,
+      )
       return
     }
     setSubmitError((e) => (e?.kind === 'attachment' ? null : e))
@@ -163,13 +165,12 @@ export function SupportWizardFullscreen() {
     try {
       await submitSupportTicket({
         email,
-        firstName,
+        name,
         subject: subject.trim(),
         message: message.trim(),
         organizationId: orgId,
         projectId:
           projectId && projectId !== NO_PROJECT_VALUE ? projectId : undefined,
-        billingPlanId: billingPlanId || undefined,
         attachment: attachment ?? undefined,
       })
       const eventName = getSupportAnalyticsEvent()
@@ -185,6 +186,8 @@ export function SupportWizardFullscreen() {
       const errMessage = err instanceof Error ? err.message : String(err)
       if (errMessage.includes('Attachment must be')) {
         setSubmitError({ kind: 'attachment', message: errMessage })
+      } else if (err instanceof GrowthError && err.isRateLimited) {
+        setSubmitError({ kind: 'rate-limit' })
       } else {
         setSubmitError({ kind: 'portal' })
       }
@@ -227,7 +230,9 @@ export function SupportWizardFullscreen() {
         <div className="border-t border-border/80" />
         <div className="px-6 py-3 bg-muted/30">
           <p className="text-[12px] text-muted-foreground/90 leading-relaxed">
-            {t('Tickets can be submitted anytime; we reply during support hours.')}
+            {t(
+              'Tickets can be submitted anytime; we reply during support hours.',
+            )}
           </p>
         </div>
       </div>
@@ -284,7 +289,10 @@ export function SupportWizardFullscreen() {
               <span>{t('Status')}</span>
               <ExternalLink className="h-3 w-3 ms-auto shrink-0 text-muted-foreground" />
             </a>
-            <DocsRouteLink className="flex items-center gap-1.5 rounded-lg border border-border bg-muted/30 px-3 py-2.5 text-[12px] font-medium text-foreground hover:bg-muted/50 hover:border-border transition-colors" href="/docs">
+            <DocsRouteLink
+              className="flex items-center gap-1.5 rounded-lg border border-border bg-muted/30 px-3 py-2.5 text-[12px] font-medium text-foreground hover:bg-muted/50 hover:border-border transition-colors"
+              href="/docs"
+            >
               <BookOpen className="h-4 w-4 shrink-0 text-muted-foreground" />
               <span>{t('Docs')}</span>
               <ExternalLink className="h-3 w-3 ms-auto shrink-0 text-muted-foreground" />
@@ -461,6 +469,17 @@ export function SupportWizardFullscreen() {
                     </a>
                     .
                   </p>
+                </AlertDescription>
+              </Alert>
+            )}
+            {submitError.kind === 'rate-limit' && (
+              <Alert variant="destructive">
+                <AlertTriangle aria-hidden />
+                <AlertTitle>
+                  {t("We're sorry - we couldn't submit your support request")}
+                </AlertTitle>
+                <AlertDescription className="text-[13px]">
+                  {t('Too many requests. Try again in a few minutes.')}
                 </AlertDescription>
               </Alert>
             )}

@@ -12,11 +12,8 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from 'sonner'
 import { useAuth } from '@/components/global/auth/RequireAuth'
-import { submitFeedback, FEEDBACK_CUSTOM_FIELDS } from '@/lib/feedback'
-import {
-  isGrowthFormsConfigured,
-  submitCustomerStoryInterviewRequest,
-} from '@/lib/marketing/customer-story-request'
+import { submitFeedback } from '@/lib/feedback'
+import { submitCustomerStoryInterviewRequest } from '@/lib/marketing/customer-story-request'
 import {
   useOrganizationById,
   useOrganizationPlan,
@@ -24,11 +21,9 @@ import {
 import { isPayingBillingPlan } from '@/lib/utils/plan-filter'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
-import {
-  analyticsAttrs,
-  type AnalyticsActionId,
-} from '@/lib/analytics-actions'
+import { analyticsAttrs, type AnalyticsActionId } from '@/lib/analytics-actions'
 import { trackEvent } from '@/lib/analytics'
+import { GrowthError } from '@/lib/growth'
 
 const MAX_FEEDBACK_LENGTH = 500
 
@@ -38,7 +33,6 @@ export interface FeedbackFormContext {
   source?: string
   orgId?: string
   projectId?: string
-  billingPlanId?: string
 }
 
 type FeedbackFormProps = FeedbackFormContext & {
@@ -127,7 +121,6 @@ export function FeedbackForm({
   source = 'n/a',
   orgId = '',
   projectId = '',
-  billingPlanId,
   onSubmitted,
 }: FeedbackFormProps) {
   const t = useT()
@@ -136,7 +129,6 @@ export function FeedbackForm({
   const { plan: organizationPlan } = useOrganizationPlan(orgId || undefined)
 
   const showCustomerStorySection = isPayingBillingPlan(organizationPlan)
-  const growthConfigured = isGrowthFormsConfigured()
 
   const [sentiment, setSentiment] = useState<FeedbackSentiment | null>(null)
   const [message, setMessage] = useState('')
@@ -161,7 +153,6 @@ export function FeedbackForm({
     (!commentRequired || message.trim().length > 0)
 
   const canSubmitStory =
-    growthConfigured &&
     storySummary.trim().length > 0 &&
     storySummary.length <= MAX_FEEDBACK_LENGTH &&
     isFullWebsiteUrl(companyWebsite) &&
@@ -176,9 +167,6 @@ export function FeedbackForm({
     setIsSubmittingFeedback(true)
 
     try {
-      const firstname =
-        (account?.name || account?.email || 'Unknown').slice(0, 40) || 'Unknown'
-
       const trimmed = message.trim()
       const body =
         trimmed ||
@@ -188,40 +176,24 @@ export function FeedbackForm({
 
       const labeledMessage = `[${sentiment === 'positive' ? 'Positive' : 'Negative'} feedback]\n\n${body}`
 
-      const customFields = [
-        { id: FEEDBACK_CUSTOM_FIELDS.PAGE_URL, value: window.location.href },
-        ...(billingPlanId
-          ? [{ id: FEEDBACK_CUSTOM_FIELDS.BILLING_PLAN, value: billingPlanId }]
-          : []),
-      ]
-
-      const sent = await submitFeedback({
-        subject: 'feedback-general',
+      await submitFeedback({
         message: labeledMessage,
+        source,
+        route: window.location.pathname,
         email: account?.email,
-        firstname,
-        customFields,
-        metaFields: {
-          source,
-          orgId,
-          projectId,
-          userId: account?.$id ?? '',
-        },
+        name: account?.name,
+        organizationId: orgId,
+        projectId,
       })
-
-      if (!sent) {
-        toast.error(
-          t(
-            'Feedback is not configured. Set VITE_GROWTH_ENDPOINT in .env to enable submission.',
-          ),
-        )
-        return
-      }
 
       setFeedbackSubmitted(true)
       onSubmitted?.()
-    } catch {
-      toast.error(t('Failed to submit feedback'))
+    } catch (error) {
+      toast.error(
+        error instanceof GrowthError && error.isRateLimited
+          ? t(error.message)
+          : t('Failed to submit feedback'),
+      )
     } finally {
       setIsSubmittingFeedback(false)
     }
@@ -232,7 +204,7 @@ export function FeedbackForm({
 
     setIsSubmittingStory(true)
     try {
-      const sent = await submitCustomerStoryInterviewRequest({
+      await submitCustomerStoryInterviewRequest({
         firstName: nameParts.firstName,
         lastName: nameParts.lastName || nameParts.firstName,
         email: account.email,
@@ -241,15 +213,6 @@ export function FeedbackForm({
         storySummary: storySummary.trim(),
         cloudEmail: account.email,
       })
-
-      if (!sent) {
-        toast.error(
-          t(
-            'Story requests are not configured. Set VITE_GROWTH_ENDPOINT in .env to enable submission.',
-          ),
-        )
-        return
-      }
 
       trackEvent('Form Submitted', { form: 'customer-story' })
       setStorySubmitted(true)
@@ -271,7 +234,9 @@ export function FeedbackForm({
         <div className="flex size-10 items-center justify-center rounded-full bg-muted">
           <Check className="size-5 text-foreground" aria-hidden />
         </div>
-        <p className="text-[14px] font-medium text-foreground">{t('Thank you!')}</p>
+        <p className="text-[14px] font-medium text-foreground">
+          {t('Thank you!')}
+        </p>
         <p className="text-[13px] text-muted-foreground">
           {t('Your feedback helps us improve.')}
         </p>

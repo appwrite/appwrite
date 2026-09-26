@@ -30,8 +30,8 @@ import {
 } from '@/lib/startups/content'
 
 const STARTUPS_FORM_FIELDS = [
-  { name: 'personName', label: 'Full name', type: 'text' as const, placeholder: "Walter O'Brien" },
-  { name: 'personEmail', label: 'Email address', type: 'email' as const, placeholder: 'walter@company.com' },
+  { name: 'name', label: 'Full name', type: 'text' as const, placeholder: "Walter O'Brien" },
+  { name: 'email', label: 'Email address', type: 'email' as const, placeholder: 'walter@company.com' },
   { name: 'companyName', label: 'Company name', type: 'text' as const, placeholder: 'Company Inc.' },
   { name: 'companyUrl', label: 'Company website', type: 'text' as const, placeholder: 'https://company.com' },
 ]
@@ -224,8 +224,8 @@ export function View() {
                 submitAnalyticsAction="startups-form-submit"
                 onSubmit={async (values) => {
                   await submitStartupsApplication({
-                    personName: values.personName ?? '',
-                    personEmail: values.personEmail ?? '',
+                    name: values.name ?? '',
+                    email: values.email ?? '',
                     companyName: values.companyName ?? '',
                     companyUrl: values.companyUrl ?? '',
                   })
