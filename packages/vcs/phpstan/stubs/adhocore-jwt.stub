@@ -1,0 +1,27 @@
+<?php
+
+namespace Ahc\Jwt;
+
+class JWT
+{
+    /**
+     * The library's own docblock says `string|resource`, but on PHP 8 its
+     * validateKey() accepts an \OpenSSLAsymmetricKey and treats a string as a
+     * `file://` path — a PEM string is never valid. This stub states the real
+     * contract so callers are pushed toward the key object.
+     *
+     * @param \OpenSSLAsymmetricKey|\OpenSSLCertificate|resource $key    The signature key. For RS* algos pass the parsed private key, not a PEM string.
+     * @param string                                             $algo   The algorithm to sign/verify the token.
+     * @param int                                                $maxAge The TTL of token.
+     * @param int                                                $leeway Leeway for clock skew.
+     * @param string|null                                        $pass   The passphrase (only for RS* algos).
+     */
+    public function __construct(
+        $key,
+        string $algo = 'HS256',
+        int $maxAge = 3600,
+        int $leeway = 0,
+        ?string $pass = null
+    ) {
+    }
+}
