@@ -57,7 +57,27 @@ class Init extends Action
             'Last-Modified',
             'x-amz-server-side-encryption',
         ])));
+
+        // S3 routes label origin '*': SigV4 (or the presigned query) is the
+        // capability check, so any browser Origin may read the response. The
+        // shared project allowlist alone is too narrow for Sites and other
+        // first-party hosts, and a shared cache without Vary: Origin can then
+        // replay a no-Origin response as Access-Control-Allow-Origin: ''.
+        $origin = \strtolower(\trim($request->getOrigin()));
+        if ($origin !== '') {
+            $corsHeaders[Cors::HEADER_ALLOW_ORIGIN] = $origin;
+        } else {
+            unset($corsHeaders[Cors::HEADER_ALLOW_ORIGIN]);
+        }
+
+        // Drop a stale Allow-Origin from a prior write on this response, then
+        // only set headers with a real value — never an empty Allow-Origin.
+        $response->removeHeader(Cors::HEADER_ALLOW_ORIGIN);
         foreach ($corsHeaders as $name => $value) {
+            $value = (string) $value;
+            if ($name === Cors::HEADER_ALLOW_ORIGIN && $value === '') {
+                continue;
+            }
             $response
                 ->removeHeader($name)
                 ->addHeader($name, $value);
