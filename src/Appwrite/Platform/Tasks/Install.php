@@ -42,7 +42,8 @@ class Install extends Action
     public const string CHANNEL_NIGHTLY = 'nightly';
 
     private const string APPWRITE_API_URL = 'http://appwrite';
-    private const string GROWTH_API_URL = 'https://growth.appwrite.io/v1';
+    private const string INSTALLATIONS_URL = 'https://cloud.appwrite.io/v1/growth/installations';
+    private const string INSTALLATIONS_PROJECT = 'console';
 
     protected bool $isUpgrade = false;
     protected bool $migrate = false;
@@ -1055,7 +1056,7 @@ class Install extends Action
 
     private function track(?Report $report): void
     {
-        if ($report === null) {
+        if ($report === null || !$report->sendable()) {
             return;
         }
 
@@ -1066,7 +1067,8 @@ class Install extends Action
                 ->setTimeout(5000)
                 ->setUserAgent($report->userAgent())
                 ->addHeader('Content-Type', 'application/json')
-                ->fetch(self::GROWTH_API_URL . '/analytics', Client::METHOD_POST, $report->payload());
+                ->addHeader('X-Appwrite-Project', self::INSTALLATIONS_PROJECT)
+                ->fetch(self::INSTALLATIONS_URL, Client::METHOD_POST, $report->payload());
         } catch (\Throwable) {
             // tracking shouldn't block installation
         }
@@ -1186,7 +1188,7 @@ class Install extends Action
             ->setTimeout(30000)
             ->setConnectTimeout(10000)
             ->addHeader('Content-Type', 'application/json')
-            ->addHeader('X-Appwrite-Project', 'console')
+            ->addHeader('X-Appwrite-Project', self::INSTALLATIONS_PROJECT)
             ->addHeader('Host', $domain);
 
         $url = $apiUrl . $endpoint;

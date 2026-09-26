@@ -45,7 +45,6 @@ jobs:
         target: production
         build-args: |
           VERSION=${{ steps.meta.outputs.version }}
-          VITE_APPWRITE_GROWTH_ENDPOINT=https://growth.appwrite.io/v1
           VITE_GA_PROJECT=G-L7G2B6PLDS
           VITE_CONSOLE_MODE=cloud
         push: true
