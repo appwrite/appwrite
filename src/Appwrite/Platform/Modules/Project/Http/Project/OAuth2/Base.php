@@ -407,6 +407,7 @@ abstract class Base extends Action
             'apple' => Apple\Update::class,
             'microsoft' => Microsoft\Update::class,
             'resend' => Resend\Update::class,
+            'vercel' => Vercel\Update::class,
         ];
     }
 
