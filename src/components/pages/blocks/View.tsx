@@ -8,6 +8,7 @@ import { OPEN_COMMAND_CENTER_SHORTCUT_OPTIONS } from '@/lib/keyboard-shortcuts/u
 import { isOperatorAccount, type OperatorAccount } from '@/lib/operator-account'
 import { BlocksList } from './BlocksList'
 import { ComposeBlock } from './ComposeBlock'
+import { OrganizationStatusPanel } from './OrganizationStatusPanel'
 import { TargetBar } from './TargetBar'
 import { UserStatusPanel } from './UserStatusPanel'
 
@@ -55,7 +56,7 @@ export function BlocksConsoleView() {
               Blocks
             </h1>
             <p className="text-[13px] text-muted-foreground">
-              Manage resource blocks and user access.
+              Manage resource blocks and user and organization access.
             </p>
           </div>
         </div>
@@ -79,6 +80,10 @@ export function BlocksConsoleView() {
 
           <div className="mt-6">
             <UserStatusPanel />
+          </div>
+
+          <div className="mt-6">
+            <OrganizationStatusPanel />
           </div>
         </div>
       </ConsoleLayout>

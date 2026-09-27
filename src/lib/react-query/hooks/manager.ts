@@ -11,6 +11,7 @@
  * - deleteBlock                       - remove resource block(s)
  * - deleteCache                        - flush internal caches by region/target
  * - updateUserStatus                  - block/unblock a console user
+ * - updateOrganizationStatus          - block/unblock an organization
  *
  * Resource blocks are region-scoped on the server. Because the console SDK
  * points at the base endpoint, we pass through `sdk.forConsole.manager` and
@@ -31,6 +32,7 @@ import type {
   Region,
   CacheTarget,
   CacheDatabase,
+  Manager,
 } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 
@@ -330,6 +332,42 @@ export function useUpdateUserStatus(
         status: params.status,
         userId: params.userId?.trim() || undefined,
         email: params.email?.trim() || undefined,
+        reason: params.reason?.trim() || undefined,
+      })
+    },
+    ...options,
+  })
+}
+
+export type UpdateOrganizationStatusParams = {
+  teamId: string
+  status: boolean
+  reason?: string
+}
+
+// TODO: drop once the console SDK ships `manager.updateOrganizationStatus` (appwrite-labs/cloud#6118).
+type ManagerWithOrganizationStatus = Manager & {
+  updateOrganizationStatus(
+    params: UpdateOrganizationStatusParams,
+  ): Promise<Models.Organization>
+}
+
+export function useUpdateOrganizationStatus(
+  options?: Omit<
+    UseMutationOptions<
+      Models.Organization,
+      unknown,
+      UpdateOrganizationStatusParams
+    >,
+    'mutationFn'
+  >,
+) {
+  return useMutation({
+    mutationFn: async (params: UpdateOrganizationStatusParams) => {
+      const manager = sdk.forConsole.manager as ManagerWithOrganizationStatus
+      return manager.updateOrganizationStatus({
+        teamId: params.teamId.trim(),
+        status: params.status,
         reason: params.reason?.trim() || undefined,
       })
     },
