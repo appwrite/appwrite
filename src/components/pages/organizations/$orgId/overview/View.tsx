@@ -46,6 +46,7 @@ import {
   organizationScopesQueryOptions,
   organizationProjectScopeQueryOptions,
   activeProjectsQueryOptions,
+  activeProjectsTotalQueryOptions,
   projectsByIdsQueryOptions,
   deleteOrganization,
   organizationMembershipsQueryOptions,
@@ -1293,8 +1294,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
 
   // Pins live in org-level team prefs and are shared by every member, so a
   // project-scoped member would otherwise see pinned cards for projects they
-  // cannot open. Filtering here also keeps them out of the exclude list and
-  // the project count.
+  // cannot open. Filtering here also keeps them out of the exclude list.
   const pinnedIds = useMemo(() => {
     if (!restrictToProjectIds) return allPinnedIds
     const allowed = new Set(restrictToProjectIds)
@@ -1310,6 +1310,10 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   const { data: pinnedProjectsData } = useQuery({
     ...pinnedProjectsQueryOptions(orgTeamId, pinnedIds),
     placeholderData: keepPreviousData})
+
+  const { data: activeProjectsTotalData } = useQuery(
+    activeProjectsTotalQueryOptions(orgTeamId, restrictToProjectIds),
+  )
 
   // Sync page state from URL when it changes (e.g. browser back or initial load)
   useEffect(() => {
@@ -1635,18 +1639,14 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   // Pagination info (from search results)
   const activeProjectsTotal = activeProjectsData?.total || 0
 
-  // Total count of all projects (without search) - for plan-limit checks.
-  // The active-projects listing excludes pinned ids, so when no search is
-  // active the unconditional total is just `listing total + pinned count`.
-  // We cache the last value seen while the search box was empty so the
-  // limit check stays accurate when the user starts typing a query (the
-  // listing's total is filtered by the search and would otherwise drift).
+  // Total active projects in the org (API `total`, pinned included) for plan limits.
+  // Cache the last unfiltered total while searching so the limit check does not drift.
   const lastUnfilteredTotalRef = useRef(0)
-  if (!searchQuery && activeProjectsData?.total != null) {
-    lastUnfilteredTotalRef.current = activeProjectsData.total + pinnedIds.length
+  if (!searchQuery && activeProjectsTotalData?.total != null) {
+    lastUnfilteredTotalRef.current = activeProjectsTotalData.total
   }
   const totalProjectsCount = !searchQuery
-    ? (activeProjectsData?.total ?? 0) + pinnedIds.length
+    ? (activeProjectsTotalData?.total ?? 0)
     : lastUnfilteredTotalRef.current
 
   // Fetch organization plan to check if additional members are supported
@@ -2035,6 +2035,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
             GRID_DEFAULT_PAGE_SIZE,
             '',
           ),
+        ),
+        queryClient.ensureQueryData(
+          activeProjectsTotalQueryOptions(nextOrgId, nextProjectScope),
         ),
         ...projectPages.map((page) =>
           queryClient.ensureQueryData(

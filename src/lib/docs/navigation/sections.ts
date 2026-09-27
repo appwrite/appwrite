@@ -1112,6 +1112,10 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
         label: 'Concepts',
         items: [
           {
+            label: 'User photos',
+            href: '/docs/products/avatars/user-photos',
+          },
+          {
             label: 'User initials',
             href: '/docs/products/avatars/initials',
           },

@@ -1463,11 +1463,6 @@ export const jaMarketingDictionary: Record<string, string> = {
   'Tell us about your organization and requirements. Our enterprise team will follow up with a tailored proposal.':
     '組織と要件をお知らせください。Enterprise チームがカスタム提案でご連絡します。',
   "We couldn't submit your inquiry": 'お問い合わせを送信できませんでした',
-  'Sales inquiries are not configured': '営業お問い合わせが設定されていません',
-  'Set VITE_GROWTH_ENDPOINT in .env to enable submission.':
-    '送信を有効にするには、.env で VITE_GROWTH_ENDPOINT を設定してください。',
-  'Sales inquiries are not configured. Set VITE_GROWTH_ENDPOINT in .env to enable submission.':
-    '営業お問い合わせが設定されていません。送信を有効にするには、.env で VITE_GROWTH_ENDPOINT を設定してください。',
   'Something went wrong while sending your request. Please try again in a moment.':
     'リクエストの送信中に問題が発生しました。しばらくしてからもう一度お試しください。',
   'Your details': 'お客様情報',

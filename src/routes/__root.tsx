@@ -72,6 +72,8 @@ import { useDebugOverrides } from '@/lib/debug-overrides'
 import {
   applyScreenshotModeOrganizationName,
   isScreenshotModeActive,
+  readScreenshotModeOpen,
+  subscribeScreenshotMode,
 } from '@/lib/screenshot-mode'
 import { PageDirectionProvider } from '@/lib/layout/page-direction'
 import { isOperatorAccount, type OperatorAccount } from '@/lib/operator-account'
@@ -430,7 +432,7 @@ function RootAppShell({ children }: { children: React.ReactNode }) {
   )
 }
 
-const STATUS_PAGE_URL = 'https://status.appwrite.online'
+const STATUS_PAGE_URL = 'https://appwrite.online'
 
 function RootFullscreenLoader() {
   const { isLoading, skipStaticLoader } = useInitialLoader()
@@ -443,14 +445,20 @@ function RootFullscreenLoader() {
   const { data: statusData, isSuccess: isStatusSuccess } =
     useAppwriteCloudStatus(cloudStatusEnabled && showCloudStatusToOperator)
   const { showFullscreenLoader } = useDebugOverrides()
+  const [screenshotModeOpen, setScreenshotModeOpen] = useState(() =>
+    readScreenshotModeOpen(),
+  )
 
   useEffect(() => {
     setClientMounted(true)
   }, [])
 
+  useEffect(() => subscribeScreenshotMode(setScreenshotModeOpen), [])
+
   const isLoaderVisible = isLoading || showFullscreenLoader
   const statusBanner =
     cloudStatusEnabled &&
+    !screenshotModeOpen &&
     showCloudStatusToOperator &&
     isLoaderVisible &&
     isStatusSuccess &&

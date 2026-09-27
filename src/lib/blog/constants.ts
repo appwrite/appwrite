@@ -15,6 +15,7 @@ export const BLOG_INDEX_SPOTLIGHT_EXCLUDED_SLUGS = new Set<string>([
  */
 export const BLOG_FEATURED_SLUG_ORDER = [
   'announcing-appwrite-2',
+  'native-databases-all-appwrite-cloud-regions',
   'announcing-appwrite-chatgpt-plugin',
   'announcing-firewall-presets',
   'hyperloop-b',

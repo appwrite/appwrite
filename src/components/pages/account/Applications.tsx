@@ -13,7 +13,7 @@ import {
   type AccountConnectedAppGroup,
   type AccountConnectedAppsData,
 } from '@/lib/react-query/hooks/account-applications'
-import type { KnownOAuthClient } from '@/lib/oauth-known-clients'
+import { OAuth2AppAvatar } from '@/components/global/auth/OAuth2AppAvatar'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -49,44 +49,6 @@ function clientIdDisplay(connectedApp: AccountConnectedApp): string {
   return connectedApp.cimdUrl
     ? cimdUrlHost(connectedApp.cimdUrl)
     : truncateClientId(connectedApp.clientId)
-}
-
-function ConnectedAppAvatar({
-  app,
-  knownClient,
-}: {
-  app: Models.App | null
-  knownClient: KnownOAuthClient | null
-}) {
-  if (app?.logoUri) {
-    return (
-      <img
-        src={app.logoUri}
-        alt={app.name}
-        className="h-9 w-9 rounded-xl object-cover ring-1 ring-border/50"
-        height={36}
-        width={36}
-      />
-    )
-  }
-
-  if (knownClient) {
-    return (
-      <img
-        src={knownClient.iconPath}
-        alt={knownClient.name}
-        className="h-9 w-9 rounded-xl object-cover ring-1 ring-border/50"
-        height={36}
-        width={36}
-      />
-    )
-  }
-
-  return (
-    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted ring-1 ring-border/50">
-      <Package className="h-4 w-4 text-muted-foreground" />
-    </div>
-  )
 }
 
 function ClientIdentifier({
@@ -423,7 +385,8 @@ export function AccountApplications({
             </TableHeader>
             <TableBody>
               {groups.map((group) => {
-                const { key, displayName, app, knownClient, grants } = group
+                const { key, displayName, app, grants } = group
+                const representativeGrant = grants[0]
                 const isGrouped = grants.length > 1
                 const isExpanded = expandedGroups.has(key)
                 const subtitle =
@@ -438,9 +401,10 @@ export function AccountApplications({
                     >
                       <TableCell className="px-4 py-3">
                         <div className="flex items-center gap-3 min-w-0">
-                          <ConnectedAppAvatar
+                          <OAuth2AppAvatar
                             app={app}
-                            knownClient={knownClient}
+                            cimdUrl={representativeGrant?.cimdUrl}
+                            size="sm"
                           />
                           <div className="min-w-0">
                             <div className="flex items-center gap-2 min-w-0">

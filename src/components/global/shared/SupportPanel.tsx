@@ -331,7 +331,7 @@ export function SupportPanel({ orgId, onNavigateAway }: SupportPanelProps) {
           <Separator />
           <div className="p-4">
             <a
-              href="https://status.appwrite.online"
+              href="https://appwrite.online"
               target="_blank"
               rel="noopener noreferrer"
               className="flex cursor-pointer items-start gap-3 rounded-md px-3 py-2 text-sm transition-colors hover:bg-muted"

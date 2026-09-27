@@ -1617,11 +1617,6 @@ export const heMarketingDictionary: Record<string, string> = {
   'Tell us about your organization and requirements. Our enterprise team will follow up with a tailored proposal.':
     'ספרו לנו על הארגון והדרישות שלכם. צוות ה-Enterprise שלנו יחזור אליכם עם הצעה מותאמת.',
   "We couldn't submit your inquiry": 'לא הצלחנו לשלוח את הפנייה',
-  'Sales inquiries are not configured': 'פניות מכירות אינן מוגדרות',
-  'Set VITE_GROWTH_ENDPOINT in .env to enable submission.':
-    'הגדירו VITE_GROWTH_ENDPOINT בקובץ ‎.env כדי לאפשר שליחה.',
-  'Sales inquiries are not configured. Set VITE_GROWTH_ENDPOINT in .env to enable submission.':
-    'פניות מכירות אינן מוגדרות. הגדירו VITE_GROWTH_ENDPOINT בקובץ ‎.env כדי לאפשר שליחה.',
   'Something went wrong while sending your request. Please try again in a moment.':
     'משהו השתבש בשליחת הבקשה. נסו שוב בעוד רגע.',
   'Your details': 'הפרטים שלכם',

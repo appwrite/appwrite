@@ -33,6 +33,7 @@ import {
   urlFromRouterLocation,
 } from '@/lib/table-filters'
 import {
+  useProjectTable,
   useProjectTables,
   useDatabaseCsvMigrations,
 } from '@/lib/react-query/hooks'
@@ -69,6 +70,29 @@ function getMigrationStatusBadge(status: string): {
   }
 }
 
+/** Looks up names for tables past the first page of the tables list. */
+function MigrationTableName({
+  projectId,
+  databaseId,
+  dbKind,
+  tableId,
+  name,
+}: {
+  projectId: string
+  databaseId: string
+  dbKind: DatabaseRouteKind
+  tableId: string
+  name: string | undefined
+}) {
+  const { table } = useProjectTable(
+    projectId,
+    databaseId,
+    dbKind,
+    name || !tableId ? null : tableId,
+  )
+  return name ?? table?.name ?? tableId
+}
+
 export function ExportImportView({ databaseId }: ExportImportViewProps) {
   const t = useT()
   const params = useParams({ strict: false })
@@ -98,11 +122,9 @@ export function ExportImportView({ databaseId }: ExportImportViewProps) {
     TABLE_WORKSPACE_TABLES_LIST_LIMIT,
     undefined,
   )
-  const tableIds = useMemo(() => tables.map((t) => t.$id), [tables])
   const { migrations, isLoading: migrationsLoading } = useDatabaseCsvMigrations(
     projectId,
     databaseId,
-    tableIds,
   )
 
   const tableNameById = useMemo(
@@ -191,7 +213,7 @@ export function ExportImportView({ databaseId }: ExportImportViewProps) {
     })
   }
 
-  const isLoading = tablesLoading || (tableIds.length > 0 && migrationsLoading)
+  const isLoading = tablesLoading || migrationsLoading
 
   const shellClassName =
     'mx-auto w-full max-w-7xl px-4 pt-4 pb-4 sm:px-6 sm:pt-6 sm:pb-6'
@@ -251,7 +273,6 @@ export function ExportImportView({ databaseId }: ExportImportViewProps) {
                 migration.options as { downloadUrl?: string }
               )?.downloadUrl
               const tid = getMigrationTableRef(migration)?.tableId ?? ''
-              const tableName = tableNameById[tid] ?? tid
               const status = migration.status
 
               return (
@@ -267,7 +288,13 @@ export function ExportImportView({ databaseId }: ExportImportViewProps) {
                   </TableCell>
                   <TableCell className="px-4 py-3">
                     <code className="text-[12px] font-mono text-foreground bg-muted/50 px-1.5 py-0.5 rounded">
-                      {tableName}
+                      <MigrationTableName
+                        projectId={projectId}
+                        databaseId={databaseId}
+                        dbKind={dbKind}
+                        tableId={tid}
+                        name={tableNameById[tid]}
+                      />
                     </code>
                   </TableCell>
                   <TableCell className="px-4 py-3">

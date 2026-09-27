@@ -29,7 +29,7 @@ const PARTNER_FORM_FIELDS = [
   { name: 'name', label: 'Full name', type: 'text' as const, placeholder: "Walter O'Brien" },
   { name: 'email', label: 'Email address', type: 'email' as const, placeholder: 'walter@company.com' },
   { name: 'companyName', label: 'Company name', type: 'text' as const, placeholder: 'Acme Inc.' },
-  { name: 'companyUrl', label: 'Company URL', type: 'url' as const, placeholder: 'https://', required: false },
+  { name: 'companyUrl', label: 'Company URL', type: 'url' as const, placeholder: 'https://' },
   {
     name: 'message',
     label: "Any other details you'd like to share?",

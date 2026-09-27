@@ -123,6 +123,13 @@ export function getVcsInstallationErrorKind(
   return message.includes('reconnect') ? 'reconnect' : 'provider'
 }
 
+/** True when an Appwrite API error used an exact HTTP status (ignores message heuristics). */
+export function isAppwriteHttpStatus(error: unknown, status: number): boolean {
+  if (!error || typeof error !== 'object') return false
+  const e = error as { code?: number; status?: number }
+  return e.code === status || e.status === status
+}
+
 /** True when the API responded with HTTP 404 (resource missing or inaccessible). */
 export function isHttpNotFoundError(error: unknown): boolean {
   if (!error || typeof error !== 'object') return false

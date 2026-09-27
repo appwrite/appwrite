@@ -218,6 +218,10 @@ export const ANALYTICS_ACTIONS = {
   'start-promo-banner-learn-more': 'Start Promo Banner Learn More Clicked',
   'product-hunt-banner-upvote': 'Product Hunt Banner Upvote Clicked',
   'init-recap-promo-banner-view-recap': 'Init Recap Promo Banner View Recap Clicked',
+  'native-oauth-promo-banner-open-settings':
+    'Native OAuth Promo Banner Open Settings Clicked',
+  'native-oauth-promo-banner-learn-more':
+    'Native OAuth Promo Banner Learn More Clicked',
   'create-table': 'Create Table Clicked',
   'create-row': 'Create Row Clicked',
   'create-bucket': 'Create Bucket Clicked',

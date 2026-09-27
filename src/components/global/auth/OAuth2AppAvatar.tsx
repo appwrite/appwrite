@@ -3,7 +3,11 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Package } from 'lucide-react'
 import type { Models } from '@appwrite.io/console'
-import { MarketplaceAppLogo } from '@/components/pages/organizations/$orgId/marketplace/_components/MarketplaceAppLogo'
+import {
+  MARKETPLACE_APP_LOGO_SIZE_CLASSNAMES,
+  MarketplaceAppLogo,
+  type MarketplaceAppLogoSize,
+} from '@/components/pages/organizations/$orgId/marketplace/_components/MarketplaceAppLogo'
 import { resolveAppLogoDisplayUrl } from '@/lib/appwrite/apps-logo'
 import { sdk } from '@/lib/appwrite/sdk'
 import { normalizeHostnameForFavicon } from '@/lib/hostname-favicon'
@@ -67,9 +71,18 @@ function buildLogoSources(
   return sources
 }
 
+const FALLBACK_ICON_CLASS: Record<MarketplaceAppLogoSize, string> = {
+  sm: 'size-4',
+  md: 'size-5',
+  lg: 'size-6',
+  consent: 'size-7',
+  xl: 'size-8',
+}
+
 type OAuth2AppAvatarProps = {
   app?: Models.App | null
   className?: string
+  size?: MarketplaceAppLogoSize
   /** CIMD document URL when the client is URL-form; improves known-client matching. */
   cimdUrl?: string | null
 }
@@ -82,6 +95,7 @@ type OAuth2AppAvatarProps = {
 export function OAuth2AppAvatar({
   app,
   className,
+  size = 'consent',
   cimdUrl,
 }: OAuth2AppAvatarProps) {
   const sources = useMemo(
@@ -92,12 +106,7 @@ export function OAuth2AppAvatar({
 
   useEffect(() => {
     setSourceIndex(0)
-  }, [app?.$id, app?.logoUri])
-
-  const frameClassName = cn(
-    'bg-muted text-muted-foreground flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border/60',
-    className,
-  )
+  }, [app?.$id, app?.logoUri, cimdUrl])
 
   const active = sources[sourceIndex]
   if (active) {
@@ -105,7 +114,7 @@ export function OAuth2AppAvatar({
       <MarketplaceAppLogo
         src={active.src}
         alt={active.alt}
-        size="consent"
+        size={size}
         className={className}
         monochrome={active.monochrome}
         onImageError={() => setSourceIndex((current) => current + 1)}
@@ -114,8 +123,15 @@ export function OAuth2AppAvatar({
   }
 
   return (
-    <div className={frameClassName} aria-hidden>
-      <Package className="size-7" />
+    <div
+      className={cn(
+        'bg-muted text-muted-foreground flex shrink-0 items-center justify-center overflow-hidden border border-border/60',
+        MARKETPLACE_APP_LOGO_SIZE_CLASSNAMES[size],
+        className,
+      )}
+      aria-hidden
+    >
+      <Package className={FALLBACK_ICON_CLASS[size]} />
     </div>
   )
 }

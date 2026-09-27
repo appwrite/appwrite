@@ -6,6 +6,7 @@ import {
   databaseQueryOptions,
   tableRowsQueryOptions,
   tableQueryOptions,
+  getProjectTable,
   projectQueryOptions,
   organizationPlanQueryOptions,
 } from '@/lib/react-query/hooks'
@@ -15,6 +16,7 @@ import {
   parseListSearch,
 } from '@/lib/table-filters'
 import { pageTitle } from '@/lib/utils/page-title'
+import { isHttpNotFoundError } from '@/lib/utils/error-formatting'
 import { throwRedirectCollectionsDbFromTablesChild } from '@/lib/database-route-redirects'
 
 const TABLES_PER_PAGE = 100
@@ -113,17 +115,36 @@ export const Route = createFileRoute(
     if (tableId) {
       const tablesData = await tablesPromise
 
-      if (!tablesData.tables || tablesData.tables.length === 0) {
-        throw redirect({
-          to: '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/documents',
-          params: { projectId, dbKind, databaseId, tableId: '-' },
-          replace: true,
-        })
+      // The list only holds the first page of tables, so a table past it is
+      // looked up by id. Only a 404 means it is gone: redirecting on any other
+      // failure would open the oldest table instead.
+      let tableExists = tablesData.tables.some((table) => table.$id === tableId)
+      if (!tableExists) {
+        try {
+          // fetchQuery keeps the query's gcTime (setQueryData would use the
+          // client's 0 and drop it before the page mounts); staleTime 0 so a
+          // table deleted earlier in the session is not served from cache.
+          await queryClient.fetchQuery({
+            ...tableQueryOptions(
+              projectId,
+              databaseId,
+              dbKind as DatabaseRouteKind,
+              tableId,
+            ),
+            queryFn: () =>
+              getProjectTable(
+                projectId,
+                databaseId,
+                dbKind as DatabaseRouteKind,
+                tableId,
+              ),
+            staleTime: 0,
+          })
+          tableExists = true
+        } catch (error) {
+          if (!isHttpNotFoundError(error)) throw error
+        }
       }
-
-      const tableExists = tablesData.tables.some(
-        (table: unknown) => (table as { $id?: string }).$id === tableId,
-      )
       if (!tableExists) {
         throw redirect({
           to: '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/documents',

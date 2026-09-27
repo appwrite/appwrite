@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { analyticsAttrs } from '@/lib/analytics-actions'
 import {
+  consoleBannerFloatingCardShellClassName,
   getConsoleBannerById,
   INIT_RECAP_PROMO_BANNER_ID,
   isConsoleBannerVisible,
@@ -15,7 +16,9 @@ import {
   POSTGRES_PROMO_BANNER_ID,
   PRODUCT_HUNT_BANNER_ID,
   shouldHideInitRecapForHeaderPromo,
+  shouldHideInitRecapForNativeOAuthPromo,
   useDebugConsoleBannerPreviews,
+  useNativeOAuthPromoVisibility,
 } from '@/lib/console-banners'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
@@ -61,6 +64,7 @@ export function InitRecapPromoBanner() {
     dismissed: isConsoleBannerDismissed(prefs, PRODUCT_HUNT_BANNER_ID),
   })
   const headerPromoVisible = postgresHeaderVisible || productHuntHeaderVisible
+  const nativeOAuthPromoVisible = useNativeOAuthPromoVisibility()
 
   if (!visible || isScreenshotModeActive) return null
   if (
@@ -73,6 +77,14 @@ export function InitRecapPromoBanner() {
     if (!features.init || !isAuthenticated || !onPromoPath) return null
   }
   if (shouldHideInitRecapForHeaderPromo(location.pathname, headerPromoVisible)) {
+    return null
+  }
+  if (
+    shouldHideInitRecapForNativeOAuthPromo(
+      location.pathname,
+      nativeOAuthPromoVisible,
+    )
+  ) {
     return null
   }
 
@@ -91,9 +103,8 @@ export function InitRecapPromoBanner() {
 
   return (
     <div
-      className={cn(
-        'fixed bottom-4 start-4 z-50 w-[min(calc(100%-2rem),280px)] overflow-hidden rounded-lg border border-[#2d2d31]',
-        'bg-[linear-gradient(to_bottom,#0d0d10_0%,#131316_55%,#19191c_100%)]',
+      className={consoleBannerFloatingCardShellClassName(
+        INIT_RECAP_PROMO_BANNER.cardSize,
       )}
     >
       <div className="relative flex h-[180px] items-center justify-center overflow-hidden">
