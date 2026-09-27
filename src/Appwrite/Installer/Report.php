@@ -18,8 +18,6 @@ final readonly class Report
     public const string SOURCE_CLI = 'cli';
     public const string SOURCE_CLI_HEADLESS = 'cli-headless';
 
-    public const string ACCOUNT = 'self-hosted';
-    public const string CATEGORY = 'self_hosted';
     public const string ENVIRONMENT_PRODUCTION = 'production';
 
     public function __construct(
@@ -83,28 +81,38 @@ final readonly class Report
     }
 
     /**
-     * @return array<string, mixed>
+     * Only fresh installs are sent, and only with the version, domain and
+     * database set: the installations endpoint drops rows missing any of
+     * them, so sending those would just spend the rate limit.
+     */
+    public function sendable(): bool
+    {
+        return $this->action === self::ACTION_INSTALL
+            && $this->version !== ''
+            && $this->domain !== ''
+            && $this->database !== '';
+    }
+
+    /**
+     * Body for `POST /v1/growth/installations`. Every field is optional, so
+     * unknown values are left out rather than sent empty.
+     *
+     * @return array<string, string|int>
      */
     public function payload(): array
     {
-        return [
-            'action' => $this->action,
-            'account' => self::ACCOUNT,
-            'url' => 'https://' . $this->domain,
-            'category' => self::CATEGORY,
-            'label' => self::CATEGORY . '_' . $this->action,
+        return \array_filter([
+            'name' => $this->name,
+            'email' => $this->email,
             'version' => $this->version,
-            'data' => \json_encode([
-                'name' => $this->name,
-                'email' => $this->email,
-                'domain' => $this->domain,
-                'database' => $this->database,
-                'ip' => $this->ip,
-                'os' => $this->os,
-                'arch' => $this->arch,
-                'cpus' => $this->cpus,
-                'ram' => $this->ram,
-            ]),
-        ];
+            'domain' => $this->domain,
+            'database' => $this->database,
+            'hostIp' => $this->ip,
+            'userAgent' => $this->userAgent(),
+            'os' => $this->os,
+            'arch' => $this->arch,
+            'cpus' => $this->cpus,
+            'ram' => $this->ram,
+        ], fn (string|int|null $value): bool => $value !== null && $value !== '');
     }
 }
