@@ -667,10 +667,9 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
             // Stage, commit, push
             $repo->addAllChanges();
 
-            try {
+            if ($repo->hasChanges()) {
                 $repo->commit($commitMessage);
-            } catch (\Throwable $e) {
-                // Exit code 1 (256 in PHP) = nothing to commit
+            } else {
                 Console::log('  No changes to commit, SDK is up to date');
                 if (!$hasBranch) {
                     return true;
