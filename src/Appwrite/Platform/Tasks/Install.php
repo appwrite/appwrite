@@ -47,7 +47,8 @@ class Install extends Action
     public const string CHANNEL_NIGHTLY = 'nightly';
 
     private const string APPWRITE_API_URL = 'http://appwrite';
-    private const string GROWTH_API_URL = 'https://growth.appwrite.io/v1';
+    private const string PROJECT = 'console';
+    private const string INSTALLATIONS_URL = 'https://cloud.appwrite.io/v1/growth/installations';
 
     protected bool $isUpgrade = false;
     protected bool $migrate = false;
@@ -1060,7 +1061,7 @@ class Install extends Action
 
     private function track(?Report $report): void
     {
-        if ($report === null) {
+        if ($report === null || !$report->sendable()) {
             return;
         }
 
@@ -1071,10 +1072,13 @@ class Install extends Action
                 ->withFollowRedirects(maxHops: 5)
                 ->sendRequest((new RequestFactory())->body(
                     Method::POST,
-                    self::GROWTH_API_URL . '/analytics',
+                    self::INSTALLATIONS_URL,
                     \json_encode($report->payload(), JSON_THROW_ON_ERROR),
                     ContentType::JSON,
-                    [Header::USER_AGENT => $report->userAgent()],
+                    [
+                        Header::USER_AGENT => $report->userAgent(),
+                        'X-Appwrite-Project' => self::PROJECT,
+                    ],
                 ));
         } catch (\Throwable) {
             // tracking shouldn't block installation
@@ -1203,7 +1207,7 @@ class Install extends Action
                 \json_encode($body, JSON_THROW_ON_ERROR),
                 ContentType::JSON,
                 [
-                    'X-Appwrite-Project' => 'console',
+                    'X-Appwrite-Project' => self::PROJECT,
                     Header::HOST => $domain,
                 ],
             ));
