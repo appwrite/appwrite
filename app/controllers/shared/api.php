@@ -342,9 +342,18 @@ Http::init()
         $scopes = \array_unique($scopes);
 
         // Intentional: impersonators get users.read so they can discover a target user
-        // before impersonation starts, and keep that access while impersonating.
+        // before impersonation starts, and keep that access while impersonating. Discovery
+        // is all it covers -- listing users and reading one user document -- because
+        // users.read also reaches another user's MFA recovery codes and challenge secrets,
+        // which are enough to pass that user's second factor. An impersonator holds the
+        // flag on their own account, not a role on the project, so they get the browse
+        // they need and nothing that reads someone else's credentials.
+        $isUserDiscovery = $request->getMethod() === Request::METHOD_GET
+            && \in_array($route->getPath(), ['/v1/users', '/v1/users/:userId'], true);
+
         if (
-            !$user->isEmpty()
+            $isUserDiscovery
+            && !$user->isEmpty()
             && (
                 $user->getAttribute('impersonator', false)
                 || !$impersonatorUser->isEmpty()
@@ -461,6 +470,21 @@ Http::init()
 
         if (! empty($method)) {
             $namespace = \strtolower($method->getNamespace());
+
+            // Impersonation shows the target's account without letting the impersonator change
+            // it, so account writes are refused. The `impersonation` label decides per route:
+            // 'allow' for a write aimed at the impersonator's own session rather than the
+            // target's account -- their JWT, their MFA challenge, deleting their own session --
+            // and 'deny' to refuse a route on any method, which is how a GET of the target's
+            // recovery codes stays closed.
+            if (! $impersonatorUser->isEmpty()) {
+                $impersonation = $route->getLabel('impersonation', null);
+                $isAccountWrite = $namespace === 'account' && $request->getMethod() !== Request::METHOD_GET;
+
+                if ($impersonation === 'deny' || ($isAccountWrite && $impersonation !== 'allow')) {
+                    throw new Exception(Exception::USER_IMPERSONATION_READ_ONLY);
+                }
+            }
 
             // DocumentsDB runs only on MongoDB and VectorsDB only on PostgreSQL, while an
             // installation deploys just the engine backing the platform, so neither is on
@@ -1176,6 +1200,7 @@ Http::shutdown()
 Http::shutdown()
     ->groups(['api'])
     ->inject('route')
+    ->inject('request')
     ->inject('response')
     ->inject('project')
     ->inject('user')
@@ -1184,7 +1209,7 @@ Http::shutdown()
     ->inject('apiKey')
     ->inject('mode')
     ->inject('lock')
-    ->action(function (Route $route, Response $response, Document $project, User $user, Database $dbForPlatform, Authorization $authorization, ?Key $apiKey, string $mode, Lock $lock) {
+    ->action(function (Route $route, Request $request, Response $response, Document $project, User $user, Database $dbForPlatform, Authorization $authorization, ?Key $apiKey, string $mode, Lock $lock) {
         /**
          * Persist completed onboarding stage after usage shutdown so a schema/write failure here
          * cannot suppress RequestCompleted or usage metrics on the same request.
@@ -1195,7 +1220,11 @@ Http::shutdown()
         }
 
         $sdkLabel = $route->getLabel('sdk', false);
-        if ($sdkLabel === false || $sdkLabel === null) {
+        $sdkName = $request->getHeaderLine('x-sdk-name', '');
+        $sdkLanguage = $request->getHeaderLine('x-sdk-language', '');
+        if (($sdkLabel === false || $sdkLabel === null)
+            && ! \in_array($sdkName, ['mcp', 'cli', 'Command Line'], true)
+            && $sdkLanguage !== 'cli') {
             return;
         }
 
@@ -1205,11 +1234,11 @@ Http::shutdown()
             return;
         }
 
-        $method = null;
+        $methods = [];
         if ($sdkLabel instanceof Method) {
             $key = $sdkLabel->getNamespace() . '.' . $sdkLabel->getMethodName();
             if (isset($onboarding[$key])) {
-                $method = $key;
+                $methods[$key] = true;
             }
         } elseif (\is_array($sdkLabel)) {
             foreach ($sdkLabel as $sdkMethod) {
@@ -1218,13 +1247,23 @@ Http::shutdown()
                 }
                 $key = $sdkMethod->getNamespace() . '.' . $sdkMethod->getMethodName();
                 if (isset($onboarding[$key])) {
-                    $method = $key;
+                    $methods[$key] = true;
                     break;
                 }
             }
         }
 
-        if ($method === null) {
+        // CLI/MCP install stages are not SDK methods; match the client x-sdk-name header.
+        $installKey = match ($sdkName) {
+            'mcp' => 'mcp.install',
+            'cli', 'Command Line' => 'cli.install',
+            default => $sdkLanguage === 'cli' ? 'cli.install' : null,
+        };
+        if ($installKey !== null && isset($onboarding[$installKey])) {
+            $methods[$installKey] = true;
+        }
+
+        if ($methods === []) {
             return;
         }
 
@@ -1242,11 +1281,6 @@ Http::shutdown()
         }
 
         $byMethod = $project->getAttribute('onboarding', []);
-        $status = \is_array($byMethod) ? ($byMethod[$method]['status'] ?? null) : null;
-        if ($status === ONBOARDING_STATUS_COMPLETED || $status === ONBOARDING_STATUS_SKIPPED) {
-            return;
-        }
-
         if (! \is_array($byMethod)) {
             $byMethod = [];
         }
@@ -1261,11 +1295,26 @@ Http::shutdown()
         : (! $user->isEmpty()
             ? ($mode === APP_MODE_ADMIN ? ACTOR_TYPE_ADMIN : ACTOR_TYPE_USER)
             : ACTOR_TYPE_GUEST);
-        $byMethod[$method] = [
-            'status' => ONBOARDING_STATUS_COMPLETED,
-            'at' => DateTime::now(),
-            'actorType' => $actorType,
-        ];
+
+        $now = DateTime::now();
+        $dirty = false;
+        foreach (\array_keys($methods) as $method) {
+            $row = $byMethod[$method] ?? null;
+            $status = \is_array($row) ? ($row['status'] ?? null) : null;
+            if ($status === ONBOARDING_STATUS_COMPLETED || $status === ONBOARDING_STATUS_SKIPPED) {
+                continue;
+            }
+            $byMethod[$method] = [
+                'status' => ONBOARDING_STATUS_COMPLETED,
+                'at' => $now,
+                'actorType' => $actorType,
+            ];
+            $dirty = true;
+        }
+
+        if (! $dirty) {
+            return;
+        }
 
         try {
             // last write overwriting the other's stage on multiple request

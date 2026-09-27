@@ -5,6 +5,7 @@ namespace Appwrite\Messaging\Adapter\Push;
 use Appwrite\Messaging\Adapter\Mqtt;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
@@ -18,6 +19,10 @@ use Utopia\Telemetry\Adapter as Telemetry;
 class Appwrite extends PushAdapter
 {
     protected const NAME = 'Appwrite';
+
+    // The reserved per-user topic namespace. A recipient target resolves to `users/<userId>`, an
+    // implicit topic auto-provisioned on first publish so per-user pushes need no pre-created topic.
+    private const USER_TOPIC_PREFIX = 'users';
 
     /**
      * @param Mqtt     $broker             the broker adapter used for internal pub/sub fan-out
@@ -57,26 +62,83 @@ class Appwrite extends PushAdapter
         $payload = $this->buildPayload($message);
         $response = new Response($this->getType());
 
-        foreach ($message->getTo() as $topic) {
+        // A target is either a campaign topic id or a reserved users/<id> name. Publish identifies a
+        // topic by id (persist/sequence/ledger) but subscribers match on the name, so resolve each
+        // target to [id, name] and fan out under the name. Topic ids resolve in one bulk query;
+        // reserved user topics auto-provision their row on first use.
+        $names = $this->topicNames(\array_values(\array_filter(
+            $message->getTo(),
+            fn (string $to): bool => !$this->isUserTopic($to),
+        )));
+
+        foreach ($message->getTo() as $to) {
             try {
-                $sequence = $this->persist($topic, $payload);
+                [$id, $name] = $this->isUserTopic($to)
+                    ? $this->createUserTopic($to)
+                    : [$to, $names[$to] ?? $to];
+
+                $sequence = $this->persist($id, $payload);
                 $this->broker->send(
                     $this->projectId,
                     [],
                     [],
-                    [$topic],
+                    [$name],
                     [],
                     ['payload' => $payload, 'qos' => $this->qos, 'sequence' => $sequence],
                 );
 
                 $response->incrementDeliveredTo();
-                $response->addResult($topic);
+                $response->addResult($to);
             } catch (\Throwable $error) {
-                $response->addResult($topic, $error->getMessage());
+                $response->addResult($to, $error->getMessage());
             }
         }
 
         return $response->toArray();
+    }
+
+    /** Whether a target is a reserved per-user topic name (users/<userId>) rather than a topic id. */
+    private function isUserTopic(string $to): bool
+    {
+        return \str_starts_with($to, self::USER_TOPIC_PREFIX . '/');
+    }
+
+    /**
+     * Resolve a reserved users/<id> topic to [id, name], creating its topics row on first publish so
+     * per-user pushes need no pre-created topic. The id is a deterministic hash of the reserved name
+     * (as domain rules key on md5 of the domain): the primary key makes the row a singleton and needs
+     * no name index. A concurrent first publish that already created it throws Duplicate and is re-read.
+     * `qos` is left null (subscriber chosen), matching a normal topic.
+     *
+     * The id space is shared with developer-created topics, so the resolved row's name is verified to
+     * be the reserved one: a normal topic squatting the hash must never carry another user's pushes.
+     *
+     * @return array{0: string, 1: string} [topic id, topic name]
+     */
+    private function createUserTopic(string $name): array
+    {
+        $id = ID::custom(\md5($name));
+        $authorization = $this->dbForProject->getAuthorization();
+
+        $topic = $authorization->skip(fn () => $this->dbForProject->getDocument('topics', $id));
+        if ($topic->isEmpty()) {
+            try {
+                $topic = $authorization->skip(fn () => $this->dbForProject->createDocument('topics', new Document([
+                    '$id' => $id,
+                    'name' => $name,
+                    'sequence' => 0,
+                ])));
+            } catch (Duplicate) {
+                // A concurrent first publish created it; re-read it to verify below.
+                $topic = $authorization->skip(fn () => $this->dbForProject->getDocument('topics', $id));
+            }
+        }
+
+        if ($topic->getAttribute('name') !== $name) {
+            throw new \RuntimeException("Reserved topic id for {$name} collides with an existing topic");
+        }
+
+        return [$id, $name];
     }
 
     /**
@@ -127,6 +189,34 @@ class Appwrite extends PushAdapter
                 return $sequence;
             })
         );
+    }
+
+    /**
+     * Resolve topic ids to the names subscribers match on, in one query.
+     *
+     * @param  array<int, string>  $topicIds
+     * @return array<string, string> id => name
+     */
+    private function topicNames(array $topicIds): array
+    {
+        if ($topicIds === []) {
+            return [];
+        }
+
+        $topics = $this->dbForProject->getAuthorization()->skip(
+            fn () => $this->dbForProject->find('topics', [
+                Query::equal('$id', $topicIds),
+                Query::select(['$id', 'name']),
+                Query::limit(\count($topicIds)),
+            ])
+        );
+
+        $names = [];
+        foreach ($topics as $topic) {
+            $names[$topic->getId()] = $topic->getAttribute('name');
+        }
+
+        return $names;
     }
 
     /** The existing ledger row for this campaign message on a topic, or an empty document. */

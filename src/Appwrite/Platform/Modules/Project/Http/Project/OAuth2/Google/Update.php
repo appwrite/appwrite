@@ -14,12 +14,10 @@ use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Platform\Enum;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\Text;
-use Utopia\Validator\WhiteList;
 
 class Update extends Base
 {
@@ -68,15 +66,24 @@ class Update extends Base
         return 'GOCSPX-2k8gsR0000000000000000VNahJj';
     }
 
+    public static function getPromptValues(): array
+    {
+        return ['none', 'consent', 'select_account'];
+    }
+
+    public static function getPromptDefault(): array
+    {
+        return ['consent'];
+    }
+
+    public static function getPromptDescription(): string
+    {
+        return 'Array of Google OAuth2 prompt values. If "none" is included, it must be the only element. "none" means: don\'t display any authentication or consent screens. Must not be specified with other values. "consent" means: prompt the user for consent. "select_account" means: prompt the user to select an account.';
+    }
+
     public static function getParameters(): array
     {
         return \array_merge(parent::getParameters(), [
-            [
-                '$id' => 'prompt',
-                'name' => 'Prompt',
-                'example' => '["consent"]',
-                'hint' => '',
-            ],
             [
                 '$id' => 'nativeClientIds',
                 'name' => 'Native client IDs',
@@ -115,7 +122,7 @@ class Update extends Base
             ))
             ->param(static::getClientIdParamName(), null, new Nullable(new Text(256, 0)), static::getClientIdDescription(), optional: true)
             ->param(static::getClientSecretParamName(), null, new Nullable(new Text(512, 0)), static::getClientSecretDescription(), optional: true)
-            ->param('prompt', null, new Nullable(new ArrayList(new WhiteList(['none', 'consent', 'select_account'], true), 3)), 'Array of Google OAuth2 prompt values. If "none" is included, it must be the only element. "none" means: don\'t display any authentication or consent screens. Must not be specified with other values. "consent" means: prompt the user for consent. "select_account" means: prompt the user to select an account.', optional: true, enum: new Enum(name: 'ProjectOAuth2GooglePrompt'))
+            ->param('prompt', null, static::getPromptValidator(), static::getPromptDescription(), optional: true, enum: static::getPromptEnum())
             ->param('nativeClientIds', null, new Nullable(new ArrayList(new Text(256, 0), 20)), 'Additional OAuth2 client IDs accepted as ID token audiences for native sign-in (Android and iOS client IDs). Together with the client ID, which is always accepted, these are the only client IDs whose tokens are trusted. Pass an empty array to clear the list.', optional: true)
             ->param('enabled', null, new Nullable(new Boolean()), 'Browser-based OAuth2 sign-in status. Set to true to enable new session creation through the redirect flow. Setting to true will trigger end-to-end credentials validation, and will throw if the credentials are invalid. Has no effect on native sign-in, which is controlled by nativeEnabled only.', true)
             ->param('nativeEnabled', null, new Nullable(new Boolean()), 'Native Google sign-in status. This is the only switch for creating sessions from ID tokens obtained on device and is independent of enabled. Needs a client ID or at least one native client ID to match tokens against, but no client secret: this method verifies a signature rather than redeeming an authorization code.', true)
@@ -138,7 +145,7 @@ class Update extends Base
             'enabled' => $oAuthProviders[$providerId . 'Enabled'] ?? false,
             static::getClientIdParamName() => $oAuthProviders[$providerId . 'Appid'] ?? '',
             static::getClientSecretParamName() => '',
-            'prompt' => $decoded['prompt'] ?? ['consent'],
+            'prompt' => $decoded['prompt'] ?? static::getPromptDefault(),
             'nativeClientIds' => $oAuthProviders[$providerId . 'ClientIds'] ?? [],
             'nativeEnabled' => $oAuthProviders[$providerId . 'NativeEnabled'] ?? false,
         ]);
@@ -165,15 +172,11 @@ class Update extends Base
         $providerId = static::getProviderId();
         $queueForEvents->setParam('providerId', $providerId);
 
-        if ($prompt !== null) {
-            if (empty($prompt)) {
-                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Prompt array cannot be empty.');
-            }
-
-            if (\in_array('none', $prompt) && \count($prompt) > 1) {
-                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'When "none" is used as a prompt value, it must be the only element in the array.');
-            }
+        if ($prompt === []) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Prompt array cannot be empty.');
         }
+
+        $this->validatePrompt($prompt);
 
         $storedRaw = $project->getAttribute('oAuthProviders', [])[$providerId . 'Secret'] ?? '';
         $existing = $this->decodeStoredSecret($project);
@@ -186,7 +189,7 @@ class Update extends Base
 
         $encodedSecret = \json_encode([
             'clientSecret' => $clientSecret ?? ($existing['clientSecret'] ?? ''),
-            'prompt' => $prompt ?? ($existing['prompt'] ?? ['consent']),
+            'prompt' => $prompt ?? ($existing['prompt'] ?? static::getPromptDefault()),
         ]);
 
         $project = $this->persistCredentials($project, $dbForPlatform, $authorization, $clientId, $encodedSecret, $enabled, $nativeClientIds, $nativeEnabled);

@@ -49,6 +49,15 @@ class Upsert extends DocumentUpsert
                     group: $this->getSdkGroup(),
                     name: 'upsertDocument',
                     description: '/docs/references/vectorsdb/upsert-document.md',
+                    requestExamples: [
+                        'upsert' => [
+                            'summary' => 'Create or update a document in a four-dimensional collection',
+                            'value' => ['data' => [
+                                'embeddings' => [0.12, -0.55, 0.88, 1.02],
+                                'metadata' => ['name' => 'Example document'],
+                            ]],
+                        ],
+                    ],
                     auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                     responses: [
                         new SDKResponse(

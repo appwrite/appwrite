@@ -62,7 +62,7 @@ class Update extends Action
             ->param('webhookId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getAdapter()->getMaxUIDLength()), 'Webhook ID.', false, ['dbForPlatform'])
             ->param('name', null, new Text(128), 'Webhook name. Max length: 128 chars.')
             ->param('url', '', fn () => new Multiple([new URL(['http', 'https']), new PublicDomain()], Multiple::TYPE_STRING), 'Webhook URL.', example: 'https://example.com/webhook')
-            ->param('events', null, new ArrayList(new Event(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.')
+            ->param('events', null, new ArrayList(new Event(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.', example: '["users.*.create"]')
             ->param('enabled', true, new Boolean(), 'Enable or disable a webhook.', true)
             ->param('tls', false, new Boolean(), 'Certificate verification, false for disabled or true for enabled.', true)
             ->param('authUsername', '', new Text(256), 'Webhook HTTP user. Max length: 256 chars.', true)
