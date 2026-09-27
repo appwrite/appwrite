@@ -624,6 +624,9 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
             if ($hasBranch) {
                 $repo->execute('checkout', '-f', $gitBranch);
+                // Base branch squash-merges diverge from the target branch, so record the base as a parent to keep PRs conflict-free
+                $repo->execute('fetch', 'origin', '--quiet', '--no-tags', '--depth', '1', $repoBranch);
+                $repo->execute('merge', '--quiet', '-s', 'ours', '--allow-unrelated-histories', '--no-edit', 'FETCH_HEAD');
             } else {
                 // Fetch base branch to create the target branch from it
                 try {
