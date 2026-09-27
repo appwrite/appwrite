@@ -1,0 +1,47 @@
+{
+    "name": "utopia-php/cdn",
+    "description": "CDN cache purge and certificate provider abstractions for Utopia PHP",
+    "type": "library",
+    "keywords": [
+        "php",
+        "cdn",
+        "cache",
+        "tls",
+        "utopia",
+        "utopia-php",
+        "library"
+    ],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Torsten Dittmann",
+            "email": "torsten@appwrite.io"
+        }
+    ],
+    "minimum-stability": "stable",
+    "scripts": {
+        "test": "phpunit --configuration phpunit.xml"
+    },
+    "autoload": {
+        "psr-4": {
+            "Utopia\\Cdn\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Utopia\\Cdn\\Tests\\": "tests/"
+        }
+    },
+    "require": {
+        "php": ">=8.5.0",
+        "ext-curl": "*",
+        "ext-json": "*",
+        "utopia-php/client": "^0.5",
+        "utopia-php/balancer": "^0.4.1"
+    },
+    "config": {
+        "platform": {
+            "php": "8.5"
+        }
+    }
+}
