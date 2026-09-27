@@ -89,6 +89,13 @@ class Create extends Action
 
     public function action(string $databaseId, string $collectionId, string $key, string $type, array $attributes, array $orders, array $lengths, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, DatabasePublisher $publisherForDatabase, Event $queueForEvents, Authorization $authorization): void
     {
+        // The orders WhiteList is case-insensitive, so values such as "asc"/"desc" pass validation
+        // but are stored as-is. Normalize to the uppercase ASC/DESC the database adapter requires.
+        $orders = \array_map(
+            fn ($order) => \is_string($order) ? \strtoupper($order) : $order,
+            $orders
+        );
+
         $db = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         if ($db->isEmpty() || $this->isDatabaseTypeMismatch($db)) {
