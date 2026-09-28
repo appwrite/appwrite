@@ -212,10 +212,11 @@ Http::init()
                     $updates->setAttribute('accessedAt', DateTime::now());
                 }
 
+                // SDKs send display names such as "Go" or "Node.js"; the allowlist is lowercase.
                 $sdkValidator = new WhiteList($servers, true);
-                $sdk = $request->getHeaderLine('x-sdk-name', 'UNKNOWN');
+                $sdk = \strtolower($request->getHeaderLine('x-sdk-name', ''));
 
-                if ($sdk !== 'UNKNOWN' && $sdkValidator->isValid($sdk)) {
+                if ($sdk !== '' && $sdkValidator->isValid($sdk)) {
                     $sdks = $dbKey->getAttribute('sdks', []);
 
                     if (! in_array($sdk, $sdks)) {
