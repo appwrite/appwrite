@@ -69,6 +69,12 @@ const WRITE_METHOD = /^(create|update|upsert|delete)/
 const DATA_METHOD =
   /Execution|File|Row|Document|Transaction|Operation|Log|Subscriber|Message/
 
+/**
+ * Adding a new child does not drift the parent: Terraform only reverts the
+ * children in its configuration, so an extra variable is left alone.
+ */
+const ADDITIVE_METHOD = /^createVariable$/
+
 type SdkCallParams = Record<string, unknown>
 
 function stringParam(params: SdkCallParams, key: string): string | null {
@@ -85,7 +91,13 @@ export function getSdkCallResourcePath(
   method: string,
   params: unknown,
 ): string | null {
-  if (!WRITE_METHOD.test(method) || DATA_METHOD.test(method)) return null
+  if (
+    !WRITE_METHOD.test(method) ||
+    DATA_METHOD.test(method) ||
+    ADDITIVE_METHOD.test(method)
+  ) {
+    return null
+  }
   if (!params || typeof params !== 'object' || Array.isArray(params)) {
     return null
   }

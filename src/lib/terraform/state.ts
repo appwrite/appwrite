@@ -46,6 +46,9 @@ const CONSOLE_ACTOR = 'admin'
 /** Running a function does not change its configuration. */
 const IGNORED_EVENT = /^execution\./
 
+/** Terraform only reverts the variables in its configuration, so adding one by hand is not drift. */
+const ADDITIVE_EVENT = /^variable\.create$/
+
 function isResourceDeletion(event: Models.ActivityEvent): boolean {
   return event.event === `${event.resourceType}.delete`
 }
@@ -106,7 +109,7 @@ export function summarizeTerraformActivity(
     }
 
     const managed = resources[path]
-    if (!managed) continue
+    if (!managed || ADDITIVE_EVENT.test(event.event)) continue
     if (event.actorType === CONSOLE_ACTOR) {
       managed.lastConsoleOrApplyAt = event.time
       managed.consoleOrApplyCount += 1
