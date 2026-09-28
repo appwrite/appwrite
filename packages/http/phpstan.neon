@@ -1,0 +1,12 @@
+includes:
+    - phpstan-baseline.neon
+
+parameters:
+    level: max
+    paths:
+        - src
+        - tests
+    excludePaths:
+        - tests/bench
+    scanDirectories:
+        - vendor/swoole/ide-helper
