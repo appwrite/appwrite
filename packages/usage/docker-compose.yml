@@ -1,0 +1,69 @@
+services:
+  mariadb:
+    image: mariadb:10.7
+    container_name: utopia-usage-mariadb
+    restart: unless-stopped
+    networks:
+      - usage
+    ports:
+      - "3307:3306"
+    volumes:
+      - mariadb:/var/lib/mysql:rw
+    environment:
+      - MYSQL_ROOT_PASSWORD=password
+      - MYSQL_DATABASE=utopiaTests
+      - MYSQL_USER=user
+      - MYSQL_PASSWORD=password
+    healthcheck:
+      test: ["CMD", "sh", "-c", "mysqladmin ping -h localhost -u root -p$$MYSQL_ROOT_PASSWORD"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 30s
+
+  clickhouse:
+    image: clickhouse/clickhouse-server:25.11-alpine
+    environment:
+      - CLICKHOUSE_DB=default
+      - CLICKHOUSE_USER=default
+      - CLICKHOUSE_PASSWORD=clickhouse
+      - CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT=1
+    networks:
+      - usage
+    ports:
+      - "8124:8123"
+      - "9001:9000"
+    healthcheck:
+      test: ["CMD", "clickhouse-client", "--host=localhost", "--port=9000", "-q", "SELECT 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 15s
+
+  usage:
+    container_name: utopia-usage
+    build:
+      context: .
+      dockerfile: Dockerfile
+    networks:
+      - usage
+    volumes:
+      - ./tests:/code/tests
+      - ./src:/code/src
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      clickhouse:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "php", "--version"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+
+networks:
+  usage:
+
+volumes:
+  mariadb:

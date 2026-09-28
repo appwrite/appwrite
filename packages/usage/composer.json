@@ -1,0 +1,52 @@
+{
+    "name": "utopia-php/usage",
+    "description": "Light and Fast Usage library",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Appwrite",
+            "email": "team@appwrite.io"
+        }
+    ],
+    "scripts": {
+        "lint": "./vendor/bin/pint --test",
+        "format": "./vendor/bin/pint",
+        "check": "./vendor/bin/phpstan analyse -c phpstan.neon --memory-limit=1G",
+        "test": "./vendor/bin/phpunit --configuration phpunit.xml --testsuite \"Test Suite\"",
+        "bench": "./vendor/bin/phpunit --configuration phpunit.xml --testsuite Benchmark"
+    },
+    "minimum-stability": "stable",
+    "require": {
+        "php": ">=8.4",
+        "psr/http-client": "^1.0",
+        "utopia-php/client": "^0.5",
+        "utopia-php/database": "^7.0.0",
+        "utopia-php/query": "0.6.*"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.5",
+        "utopia-php/cache": "^4.0",
+        "phpstan/phpstan": "^2.0",
+        "laravel/pint": "1.*"
+    },
+    "suggest": {
+        "ext-curl": "Required by the default cURL transport for the ClickHouse adapter. Not needed if you inject a non-cURL utopia-php/client into the adapter."
+    },
+    "autoload": {
+        "psr-4": {
+            "Utopia\\Usage\\": "src/Usage"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Utopia\\Tests\\": "tests"
+        }
+    },
+    "config": {
+        "allow-plugins": {
+            "php-http/discovery": false,
+            "tbachert/spi": false
+        }
+    }
+}

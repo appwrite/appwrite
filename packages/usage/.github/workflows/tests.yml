@@ -1,0 +1,23 @@
+name: "Tests"
+
+on: [ pull_request ]
+jobs:
+  lint:
+    name: Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - run: git checkout HEAD^2
+
+      - name: Build
+        run: |
+          docker compose build
+          docker compose up -d --wait
+
+      - name: Run Tests
+        run: docker compose exec usage vendor/bin/phpunit --configuration phpunit.xml tests

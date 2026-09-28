@@ -1,0 +1,4 @@
+vendor/
+.phpunit.result.cache
+.phpunit.cache/
+tests/Benchmark/output/
