@@ -302,6 +302,22 @@ class V25 extends Migration
                     $this->createCollection($id);
                     break;
 
+                case 'avatars':
+                    // Added in 2.3.0; create the collection so forEachDocument never
+                    // hits a missing-collection error on projects that pre-date this release.
+                    $this->createCollection($id);
+
+                    try {
+                        $this->createAttributeFromCollection($this->dbForProject, 'users', 'avatarPath');
+                    } catch (Throwable $th) {
+                        Console::warning("Failed to create attribute \"avatarPath\" in collection users: {$th->getMessage()}");
+                    }
+
+                    $this->dbForProject->purgeCachedCollection('avatars');
+                    $this->dbForProject->purgeCachedDocument(Database::METADATA, 'avatars');
+                    $this->dbForProject->purgeCachedCollection('users');
+                    break;
+
                 case 'topics':
                     // Added in 2.3.0 for the push broker, which increments sequence on publish.
                     $attributes = [

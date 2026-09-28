@@ -41,10 +41,10 @@ class StatsResources extends Action
         callable $getDatabasesDB,
         Connection $usageConnection,
     ): void {
-        if (!$usageConnection->isEnabled()) {
+        if (! $usageConnection->isEnabled()) {
             return;
         }
-        if (!$usageConnection->isReady()) {
+        if (! $usageConnection->isReady()) {
             throw new \RuntimeException('Usage schema is not ready');
         }
 
@@ -92,11 +92,11 @@ class StatsResources extends Action
                 );
             }
 
-            if ($accumulator->count() > 0 && !$accumulator->flush()) {
-                Console::error('Usage gauge flush returned false for project: ' . $project->getId());
+            if ($accumulator->count() > 0 && ! $accumulator->flush()) {
+                Console::error('Usage gauge flush returned false for project: '.$project->getId());
             }
         } catch (\Throwable $th) {
-            Console::error('Failed to write usage gauges: ' . $th->getMessage());
+            Console::error('Failed to write usage gauges: '.$th->getMessage());
         }
     }
 
@@ -104,9 +104,9 @@ class StatsResources extends Action
     protected function count(Document $project, Database $dbForProject, Database $dbForPlatform, callable $getDatabasesDB): array
     {
         $projectFilter = [Query::equal('projectInternalId', [$project->getSequence()])];
-        $last30Days = (new \DateTime())->sub(new \DateInterval('P30D'))->format('Y-m-d 00:00:00');
-        $last7Days = (new \DateTime())->sub(new \DateInterval('P7D'))->format('Y-m-d 00:00:00');
-        $lastDay = (new \DateTime())->sub(new \DateInterval('P1D'))->format('Y-m-d 00:00:00');
+        $last30Days = (new \DateTime)->sub(new \DateInterval('P30D'))->format('Y-m-d 00:00:00');
+        $last7Days = (new \DateTime)->sub(new \DateInterval('P7D'))->format('Y-m-d 00:00:00');
+        $lastDay = (new \DateTime)->sub(new \DateInterval('P1D'))->format('Y-m-d 00:00:00');
 
         $metrics = [
             METRIC_DATABASES => $this->safeCount($dbForProject, 'databases'),
@@ -136,6 +136,7 @@ class StatsResources extends Action
         array_push($gauges, ...$this->bucketGauges($project, $dbForProject));
         array_push($gauges, ...$this->databaseGauges($project, $dbForProject, $getDatabasesDB));
         array_push($gauges, ...$this->deploymentGauges($project, $dbForProject));
+        array_push($gauges, ...$this->avatarGauges($project, $dbForProject));
 
         return $gauges;
     }
@@ -154,14 +155,15 @@ class StatsResources extends Action
         $complete = true;
 
         $this->foreachDocument($dbForProject, 'buckets', [], function (Document $bucket) use ($dbForProject, &$gauges, &$totalFiles, &$totalStorage, &$complete): void {
-            $files = 'bucket_' . $bucket->getSequence();
+            $files = 'bucket_'.$bucket->getSequence();
 
             try {
                 $count = $dbForProject->count($files);
                 $storage = (int) $dbForProject->sum($files, 'sizeActual');
             } catch (\Throwable $th) {
                 $complete = false;
-                Console::warning("Failed to measure bucket {$bucket->getId()}: " . $th->getMessage());
+                Console::warning("Failed to measure bucket {$bucket->getId()}: ".$th->getMessage());
+
                 return;
             }
 
@@ -207,37 +209,39 @@ class StatsResources extends Action
         $this->foreachDocument($dbForProject, 'databases', [], function (Document $database) use ($dbForProject, $getDatabasesDB, &$gauges, &$totals, &$complete): void {
             $databaseSequence = $database->getSequence();
             $type = (string) $database->getAttribute('type', '');
-            $prefix = ($type !== '' && $type !== DATABASE_TYPE_LEGACY && $type !== DATABASE_TYPE_TABLESDB) ? $type . '.' : '';
+            $prefix = ($type !== '' && $type !== DATABASE_TYPE_LEGACY && $type !== DATABASE_TYPE_TABLESDB) ? $type.'.' : '';
 
             try {
                 $dbForDatabases = $getDatabasesDB($database);
-                $collections = $dbForProject->count('database_' . $databaseSequence);
+                $collections = $dbForProject->count('database_'.$databaseSequence);
 
                 $documents = 0;
                 $storage = 0;
-                $this->foreachDocument($dbForProject, 'database_' . $databaseSequence, [], function (Document $collection) use ($dbForDatabases, $databaseSequence, &$documents, &$storage): void {
-                    $data = 'database_' . $databaseSequence . '_collection_' . $collection->getSequence();
+                $this->foreachDocument($dbForProject, 'database_'.$databaseSequence, [], function (Document $collection) use ($dbForDatabases, $databaseSequence, &$documents, &$storage): void {
+                    $data = 'database_'.$databaseSequence.'_collection_'.$collection->getSequence();
                     $documents += $dbForDatabases->count($data);
                     $storage += $dbForDatabases->getSizeOfCollection($data);
                 });
             } catch (\Throwable $th) {
                 $complete = false;
-                Console::warning("Failed to measure database {$database->getId()}: " . $th->getMessage());
+                Console::warning("Failed to measure database {$database->getId()}: ".$th->getMessage());
+
                 return;
             }
 
-            $gauges[] = ['metric' => $prefix . METRIC_COLLECTIONS, 'value' => $collections, 'service' => 'databases', 'resourceType' => 'database', 'resourceId' => $database->getId()];
-            $gauges[] = ['metric' => $prefix . METRIC_DOCUMENTS, 'value' => $documents, 'service' => 'databases', 'resourceType' => 'database', 'resourceId' => $database->getId()];
-            $gauges[] = ['metric' => $prefix . METRIC_DATABASES_STORAGE, 'value' => $storage, 'service' => 'databases', 'resourceType' => 'database', 'resourceId' => $database->getId()];
+            $gauges[] = ['metric' => $prefix.METRIC_COLLECTIONS, 'value' => $collections, 'service' => 'databases', 'resourceType' => 'database', 'resourceId' => $database->getId()];
+            $gauges[] = ['metric' => $prefix.METRIC_DOCUMENTS, 'value' => $documents, 'service' => 'databases', 'resourceType' => 'database', 'resourceId' => $database->getId()];
+            $gauges[] = ['metric' => $prefix.METRIC_DATABASES_STORAGE, 'value' => $storage, 'service' => 'databases', 'resourceType' => 'database', 'resourceId' => $database->getId()];
             $gauges[] = ['metric' => METRIC_STORAGE, 'value' => $storage, 'service' => 'databases', 'resourceType' => 'database', 'resourceId' => $database->getId()];
 
-            $totals[$prefix . METRIC_COLLECTIONS] = ($totals[$prefix . METRIC_COLLECTIONS] ?? 0) + $collections;
-            $totals[$prefix . METRIC_DOCUMENTS] = ($totals[$prefix . METRIC_DOCUMENTS] ?? 0) + $documents;
-            $totals[$prefix . METRIC_DATABASES_STORAGE] = ($totals[$prefix . METRIC_DATABASES_STORAGE] ?? 0) + $storage;
+            $totals[$prefix.METRIC_COLLECTIONS] = ($totals[$prefix.METRIC_COLLECTIONS] ?? 0) + $collections;
+            $totals[$prefix.METRIC_DOCUMENTS] = ($totals[$prefix.METRIC_DOCUMENTS] ?? 0) + $documents;
+            $totals[$prefix.METRIC_DATABASES_STORAGE] = ($totals[$prefix.METRIC_DATABASES_STORAGE] ?? 0) + $storage;
         });
 
-        if (!$complete) {
-            Console::warning('Skipping project database totals for ' . $project->getId() . '; at least one database failed to measure');
+        if (! $complete) {
+            Console::warning('Skipping project database totals for '.$project->getId().'; at least one database failed to measure');
+
             return $gauges;
         }
 
@@ -265,7 +269,8 @@ class StatsResources extends Action
                 ['metric' => METRIC_BUILDS, 'value' => $dbForProject->count('deployments'), 'service' => '', 'resourceType' => 'build', 'resourceId' => $project->getId()],
             ];
         } catch (\Throwable $th) {
-            Console::warning("Failed to measure deployments for {$project->getId()}: " . $th->getMessage());
+            Console::warning("Failed to measure deployments for {$project->getId()}: ".$th->getMessage());
+
             return [];
         }
 
@@ -273,6 +278,22 @@ class StatsResources extends Action
         array_push($gauges, ...$this->computeGauges($project, $dbForProject, RESOURCE_TYPE_SITES, 'sites', 'site', 'sites'));
 
         return $gauges;
+    }
+
+    /** @return array<int, array<string, mixed>> */
+    private function avatarGauges(Document $project, Database $dbForProject): array
+    {
+        try {
+            $storage = (int) $dbForProject->sum('avatars', 'sizeActual');
+        } catch (\Throwable $th) {
+            Console::warning("Failed to measure avatars for {$project->getId()}: ".$th->getMessage());
+
+            return [];
+        }
+
+        return [
+            ['metric' => METRIC_AVATARS_STORAGE, 'value' => $storage, 'service' => '', 'resourceType' => 'project', 'resourceId' => $project->getId()],
+        ];
     }
 
     /**
@@ -293,7 +314,8 @@ class StatsResources extends Action
                 ['metric' => str_replace('{resourceType}', $resourceType, METRIC_RESOURCE_TYPE_BUILDS), 'value' => $dbForProject->count('deployments', $byResourceType), 'service' => $service, 'resourceType' => 'build', 'resourceId' => $project->getId()],
             ];
         } catch (\Throwable $th) {
-            Console::warning("Failed to measure {$resourceType} deployments for {$project->getId()}: " . $th->getMessage());
+            Console::warning("Failed to measure {$resourceType} deployments for {$project->getId()}: ".$th->getMessage());
+
             return [];
         }
 
@@ -308,7 +330,8 @@ class StatsResources extends Action
                 $buildsStorage = (int) $dbForProject->sum('deployments', 'buildSize', $byResource);
                 $deployments = $dbForProject->count('deployments', $byResource);
             } catch (\Throwable $th) {
-                Console::warning("Failed to measure {$resource} {$document->getId()}: " . $th->getMessage());
+                Console::warning("Failed to measure {$resource} {$document->getId()}: ".$th->getMessage());
+
                 return;
             }
 
@@ -329,7 +352,8 @@ class StatsResources extends Action
         try {
             return $database->count($collection, $queries);
         } catch (\Throwable $th) {
-            Console::warning("Failed to count {$collection}: " . $th->getMessage());
+            Console::warning("Failed to count {$collection}: ".$th->getMessage());
+
             return null;
         }
     }

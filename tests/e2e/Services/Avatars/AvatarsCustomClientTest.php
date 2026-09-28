@@ -394,4 +394,193 @@ final class AvatarsCustomClientTest extends Scope
             );
         }
     }
+
+    public function testUpdatePhoto(): void
+    {
+        $headers = \array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+
+        /**
+         * Test for SUCCESS — single-shot upload
+         */
+        $response = $this->client->call(Client::METHOD_PUT, '/avatars/photo', $headers, [
+            'file' => new \CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(1, $response['body']['chunksTotal']);
+        $this->assertEquals(1, $response['body']['chunksUploaded']);
+        $this->assertEquals('image/png', $response['body']['mimeType']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertNotEmpty($response['body']['userId']);
+        $this->assertGreaterThan(0, $response['body']['sizeActual']);
+
+        /**
+         * Test for SUCCESS — custom photo wins the provider chain
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/photo', \array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('image/png', $response['headers']['content-type']);
+        $this->assertNotEmpty($response['body']);
+
+        /**
+         * Test for SUCCESS — replacing the photo keeps serving
+         */
+        $response = $this->client->call(Client::METHOD_PUT, '/avatars/photo', $headers, [
+            'file' => new \CURLFile(realpath(__DIR__ . '/../../../resources/image.webp'), 'image/webp', 'image.webp'),
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('image/webp', $response['body']['mimeType']);
+        $this->assertEquals(1, $response['body']['chunksUploaded']);
+
+        /**
+         * Test for FAILURE — no file
+         */
+        $response = $this->client->call(Client::METHOD_PUT, '/avatars/photo', $headers, []);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+        if (\is_array($response['body'])) {
+            $this->assertEquals(Exception::STORAGE_FILE_EMPTY, $response['body']['type']);
+        }
+
+        /**
+         * Test for FAILURE — unsupported extension
+         */
+        $response = $this->client->call(Client::METHOD_PUT, '/avatars/photo', $headers, [
+            'file' => new \CURLFile('data://text/plain;base64,' . \base64_encode('not an image'), 'text/plain', 'notes.txt'),
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals(Exception::STORAGE_FILE_TYPE_UNSUPPORTED, $response['body']['type']);
+
+        /**
+         * Test for FAILURE — size over the limit
+         */
+        $response = $this->client->call(Client::METHOD_PUT, '/avatars/photo', \array_merge($headers, [
+            'content-range' => 'bytes 0-99/99999999',
+        ]), [
+            'file' => new \CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals(Exception::STORAGE_INVALID_FILE_SIZE, $response['body']['type']);
+
+        /**
+         * Test for FAILURE — invalid content range
+         */
+        $response = $this->client->call(Client::METHOD_PUT, '/avatars/photo', \array_merge($headers, [
+            'content-range' => 'bytes invalid',
+        ]), [
+            'file' => new \CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+    }
+
+    public function testUpdatePhotoChunked(): void
+    {
+        $headers = \array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+
+        /**
+         * Test for SUCCESS — chunked upload across the 5 MB chunk boundary
+         */
+        $source = realpath(__DIR__ . '/../../../resources/avatar-large.png');
+
+        if (!$source || !\file_exists($source)) {
+            $this->markTestSkipped('tests/resources/avatar-large.png not found; generate it first.');
+        }
+
+        $size = \filesize($source);
+        $chunkSize = 5 * 1024 * 1024;
+        $handle = @fopen($source, 'rb');
+        $mimeType = mime_content_type($source);
+        $counter = 0;
+        $id = '';
+        $final = null;
+
+        while (!feof($handle)) {
+            $curlFile = new \CURLFile('data://' . $mimeType . ';base64,' . \base64_encode(@fread($handle, $chunkSize)), $mimeType, 'avatar-large.png');
+            $headers['content-range'] = 'bytes ' . ($counter * $chunkSize) . '-' . min(((($counter * $chunkSize) + $chunkSize) - 1), $size - 1) . '/' . $size;
+
+            if (!empty($id)) {
+                $headers['x-appwrite-id'] = $id;
+            }
+
+            $final = $this->client->call(Client::METHOD_PUT, '/avatars/photo', $headers, [
+                'file' => $curlFile,
+            ]);
+
+            $this->assertEquals(200, $final['headers']['status-code']);
+            $id = $final['body']['$id'];
+            $counter++;
+        }
+
+        @fclose($handle);
+
+        $this->assertEquals($final['body']['chunksTotal'], $final['body']['chunksUploaded']);
+        $this->assertEquals('image/png', $final['body']['mimeType']);
+        $this->assertEquals($size, $final['body']['sizeActual']);
+
+        /**
+         * Test for SUCCESS — repeated final chunk is an idempotent no-op
+         */
+        $response = $this->client->call(Client::METHOD_PUT, '/avatars/photo', \array_merge($headers, [
+            'content-range' => 'bytes ' . (($counter - 1) * $chunkSize) . '-' . ($size - 1) . '/' . $size,
+            'x-appwrite-id' => $id,
+        ]), [
+            'file' => new \CURLFile('data://' . $mimeType . ';base64,' . \base64_encode(''), $mimeType, 'avatar-large.png'),
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($id, $response['body']['$id']);
+        $this->assertEquals($final['body']['sizeActual'], $response['body']['sizeActual']);
+    }
+
+    public function testDeletePhoto(): void
+    {
+        $headers = \array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+
+        $upload = $this->client->call(Client::METHOD_PUT, '/avatars/photo', $headers, [
+            'file' => new \CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
+        ]);
+
+        $this->assertEquals(200, $upload['headers']['status-code']);
+
+        /**
+         * Test for SUCCESS — delete reverts to the default chain
+         */
+        $response = $this->client->call(Client::METHOD_DELETE, '/avatars/photo', \array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/photo', \array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']);
+
+        /**
+         * Test for SUCCESS — deleting again stays idempotent
+         */
+        $response = $this->client->call(Client::METHOD_DELETE, '/avatars/photo', \array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+    }
 }
