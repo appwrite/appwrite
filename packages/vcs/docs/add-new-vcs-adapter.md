@@ -14,15 +14,16 @@ Below are outlined the most useful files for adding a new VCS adapter:
 ```bash
 .
 ├── src # Source code
-│   └── VCS
-│       ├── Adapter/ # Where your new adapter goes!
-│       │    ├── Git/ # Where your new Git-based adapter goes!
-│       │    └── Git.php # Parent class for Git-based adapters
-│       └── Adapter.php # Parent class for individual adapters
+│   ├── Adapter/ # Where your new adapter goes!
+│   │   ├── Git/ # Where your new Git-based adapter goes, e.g. Git/GitHub.php
+│   │   └── Git.php # Parent class for Git-based adapters
+│   └── Adapter.php # Parent class for individual adapters
 └── tests
-    └── VCS
-        ├── Adapter/ # Where tests of your new adapter go!
-        └── Base.php # Parent class that holds all tests
+    ├── <Adapter>Test.php # Unit tests of your new adapter
+    ├── Base.php # Parent class that holds the unit tests
+    └── E2E
+        ├── <Adapter>Test.php # Tests of your new adapter against a running provider
+        └── Base.php # Parent class that holds the provider tests
 ```
 ### Extend the adapter 💻
 
