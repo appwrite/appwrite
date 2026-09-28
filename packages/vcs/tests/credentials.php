@@ -17,6 +17,12 @@ require __DIR__ . '/../vendor/autoload.php';
 $identifier = System::getEnv('TESTS_GITHUB_APP_IDENTIFIER') ?? '';
 $installation = System::getEnv('TESTS_GITHUB_INSTALLATION_ID') ?? '';
 $privateKey = str_replace('\\n', "\n", System::getEnv('TESTS_GITHUB_PRIVATE_KEY') ?? '');
+
+if ($identifier === '' && $installation === '' && $privateKey === '') {
+    fwrite(STDOUT, 'GitHub authentication preflight: skipped, no credentials configured' . PHP_EOL);
+    exit(0);
+}
+
 $diagnostic = [
     'identifierPresent' => $identifier !== '' && $identifier !== '0',
     'identifierNumeric' => ctype_digit($identifier),
