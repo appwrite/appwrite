@@ -143,7 +143,6 @@
         "utopia-php/abuse": "2.0.*",
         "utopia-php/config": "1.*",
         "utopia-php/database": "^7.3.11",
-        "utopia-php/fetch": "^1.1",
         "utopia-php/migration": "^2.0.0",
         "utopia-php/platform": "1.0.0-rc25",
         "mustangostang/spyc": "0.6.*",
