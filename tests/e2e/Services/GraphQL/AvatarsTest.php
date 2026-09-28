@@ -15,6 +15,8 @@ final class AvatarsTest extends Scope
     use SideServer;
     use Base;
 
+    private const string SCREENSHOT_URL = 'http://screenshot.webapp.com';
+
     public function testGetCreditCardIcon()
     {
         $projectId = $this->getProject()['$id'];
@@ -190,7 +192,7 @@ final class AvatarsTest extends Scope
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'url' => 'https://appwrite.io',
+                'url' => self::SCREENSHOT_URL,
                 'width' => 800,
                 'height' => 600,
             ],
@@ -222,7 +224,7 @@ final class AvatarsTest extends Scope
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'url' => 'https://appwrite.io',
+                'url' => self::SCREENSHOT_URL,
                 'width' => 0,
                 'height' => 0,
             ],
@@ -253,7 +255,7 @@ final class AvatarsTest extends Scope
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'url' => 'https://appwrite.io',
+                'url' => self::SCREENSHOT_URL,
                 'width' => 800,
                 'height' => 600,
                 'viewportWidth' => 1920,
@@ -305,7 +307,7 @@ final class AvatarsTest extends Scope
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'url' => 'https://appwrite.io',
+                'url' => self::SCREENSHOT_URL,
                 'width' => 800,
                 'height' => 600,
                 'viewportWidth' => 1920,
@@ -332,7 +334,7 @@ final class AvatarsTest extends Scope
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'url' => 'https://appwrite.io',
+                'url' => self::SCREENSHOT_URL,
                 'width' => 800,
                 'height' => 600,
                 'permissions' => [
@@ -371,7 +373,7 @@ final class AvatarsTest extends Scope
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'url' => 'https://appwrite.io',
+                'url' => self::SCREENSHOT_URL,
                 'width' => 800,
                 'height' => 600,
                 'permissions' => [
