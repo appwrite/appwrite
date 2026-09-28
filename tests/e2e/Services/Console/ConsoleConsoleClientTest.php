@@ -100,7 +100,7 @@ final class ConsoleConsoleClientTest extends Scope
             }
         }
         $this->assertNotNull($github);
-        $this->assertCount(2, $github['parameters']);
+        $this->assertCount(3, $github['parameters']);
         $clientId = $github['parameters'][0];
         $this->assertEquals('clientId', $clientId['$id']);
         $this->assertEquals('OAuth2 app Client ID, or App ID', $clientId['name']);
@@ -111,6 +111,10 @@ final class ConsoleConsoleClientTest extends Scope
         $this->assertEquals('Client Secret', $clientSecret['name']);
         $this->assertNotEmpty($clientSecret['example']);
         $this->assertEquals('', $clientSecret['hint']);
+        $prompt = $github['parameters'][2];
+        $this->assertEquals('prompt', $prompt['$id']);
+        $this->assertEquals('Prompt', $prompt['name']);
+        $this->assertEquals('["select_account"]', $prompt['example']);
 
         // Multi-parameter provider (Apple) exposes its non-clientSecret fields
         $apple = null;

@@ -64,7 +64,7 @@ class Handler implements MqttHandler
 
         if ($identity === []) {
             Span::add('mqtt.result', 'rejected');
-            return $this->refuseConnect(Connack::NOT_AUTHORIZED, Exception::USER_UNAUTHORIZED);
+            return $this->refuseConnect(Connack::NOT_AUTHORIZED, Exception::USER_UNAUTHORIZED, $authMethod);
         }
 
         $connection->identity = $identity;
@@ -78,7 +78,7 @@ class Handler implements MqttHandler
 
             if ((new Abuse($timeLimit))->check()) {
                 Span::add('mqtt.result', 'abuse');
-                return $this->refuseConnect(Connack::QUOTA_EXCEEDED, Exception::GENERAL_RATE_LIMIT_EXCEEDED);
+                return $this->refuseConnect(Connack::QUOTA_EXCEEDED, Exception::GENERAL_RATE_LIMIT_EXCEEDED, $authMethod);
             }
         }
 
@@ -91,20 +91,37 @@ class Handler implements MqttHandler
         $connection->setClientId($clientId);
         Span::add('mqtt.client_id', $connection->getClientId());
 
-        return Connack::accept();
+        return Connack::accept(properties: $this->connackProperties($authMethod));
     }
 
     /**
-     * Refuse a CONNECT with an MQTT reason code and, on MQTT 5.0, the matching Appwrite error
-     * message as the Reason String (property 0x1F) so clients learn why — the same messages the
-     * realtime endpoint returns. 3.1.1 clients only get the reason code; the string is dropped.
+     * Refuse a CONNECT with an MQTT reason code, echoing the enhanced-auth method (see
+     * connackProperties) and carrying the matching Appwrite error message as the Reason String.
      */
-    private function refuseConnect(int $reasonCode, string $error): Connack
+    private function refuseConnect(int $reasonCode, string $error, string $authMethod): Connack
+    {
+        return Connack::refuse($reasonCode, $this->connackProperties($authMethod, $error));
+    }
+
+    /**
+     * CONNACK properties for a connection. MQTT 5.0 (§3.2.2.3.10) requires the server to echo the
+     * CONNECT's Authentication Method on the CONNACK for enhanced auth, or strict clients (e.g.
+     * HiveMQ) reject it with "Auth method in CONNACK must be present". A refusal also carries the
+     * Appwrite error message as the Reason String (0x1F). Returns null when there is nothing to add.
+     */
+    private function connackProperties(string $authMethod, ?string $error = null): ?Properties
     {
         $properties = new Properties();
-        $properties->add(new Property(Property::REASON_STRING, (new Exception($error))->getMessage()));
 
-        return Connack::refuse($reasonCode, $properties);
+        if ($authMethod !== '') {
+            $properties->add(new Property(Property::AUTHENTICATION_METHOD, $authMethod));
+        }
+
+        if ($error !== null) {
+            $properties->add(new Property(Property::REASON_STRING, (new Exception($error))->getMessage()));
+        }
+
+        return $properties->all() === [] ? null : $properties;
     }
 
     public function onAuthenticate(Auth $auth, Connection $connection): Connack|Auth|Disconnect

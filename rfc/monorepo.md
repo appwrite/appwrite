@@ -28,11 +28,11 @@ Numbers are from `composer.lock` on `main` at 2026-09-10 and the `utopia-php/mon
 | | |
 |---|---|
 | `utopia-php/*` packages resolved by Appwrite | 45 (40 direct, 5 transitive: `circuit-breaker`, `di`, `mongo`, `psr7`, `smtp`) |
-| Pulled from GitHub VCS repositories rather than Packagist | 3 (`auth`, `cdn`, `vcs`) |
+| Pulled from GitHub VCS repositories rather than Packagist | 3 (`auth`, `cdn`, `vcs`), plus `mqtt`, which Appwrite adopted after this inventory and which is not on Packagist |
 | Library source | ~537K lines (`database` 49K, `migration` 21K) |
 | Library tests | ~179K lines (`database` 65K) |
 | Already in `utopia-php/monorepo` | 32 of the 45 |
-| Still standalone repositories, never absorbed | 13: `abuse agents balancer database detector dsn emails fetch locale migration mongo openapi query registry usage` |
+| Still standalone repositories, never absorbed | 13: `abuse agents balancer database detector dsn emails fetch locale migration mongo openapi query registry usage`, plus `mqtt` (adopted after this inventory) |
 | Distinct PSR-4 declarations across the 45 | 28 |
 | Packages declaring the bare `Utopia\` prefix | 5: `http`, `validators`, `client`, `console`, `di` |
 
@@ -109,7 +109,7 @@ Rules `validate` checks per package:
 }
 ```
 
-The bare `Utopia\` directory list exists only until the five packages that declare it are standardised (phases 2 and 6).
+The bare `Utopia\` directory list exists only until the five packages that declare it are standardised (phases 2 and 6). An absorbed package that still declares it is named in `BARE` in `bin/monorepo`, with the segment its tests use (`validators` → `Utopia\Validator\Tests\`); `validate` accepts `Utopia\` → `src/` for those packages only, and step B removes each entry.
 
 The root also declares every absorbed package under `replace` (`"utopia-php/<name>": "*"`). Most leaves are transitive dependencies of packages still vendored (`queue` requires `lock`, ten packages require `validators`), and without `replace` Composer would keep installing the vendored copy next to `packages/<name>`; with it the solver treats the root as providing that package and skips the install. `bin/monorepo autoload` generates these entries with the autoload map. Composer probes the list in order; `validate` fails on any class path that resolves in more than one of them.
 
@@ -225,17 +225,17 @@ One PR, labelled `absorb`, containing:
 
 Exit: full Appwrite CI green; `bin/monorepo release validators 1.0.2` cut from this repository; the mirror and Packagist show it. This PR is the reversible checkpoint: reverting it restores the Packagist dependency.
 
-### Phase 2. Leaves (no Utopia dependencies), 22 packages
+### Phase 2. Leaves (no Utopia dependencies), 23 packages
 
-`auth circuit-breaker compression console detector di dsn fetch image locale lock mongo openapi psr7 query registry smtp system telemetry user-agent websocket` and the `config` registry move.
+`auth circuit-breaker compression console detector di dsn fetch image locale lock mongo mqtt openapi psr7 query registry smtp system telemetry user-agent websocket` and the `config` registry move.
 
 - `console` lands via #13616 first; its absorb then changes only the source of the same 0.2.9 code.
 - `system` is upgraded to 0.11 in its absorb PR.
-- The 8 standalone ones (`detector dsn fetch locale mongo openapi query registry`) go through `absorb`'s full playbook; the others are re-absorbed from their mirrors, which are already prepared.
+- The 9 standalone ones (`detector dsn fetch locale mongo mqtt openapi query registry`) go through `absorb`'s full playbook; the others are re-absorbed from their mirrors, which are already prepared.
 - `http` and `di` do their step-A prefix change here.
 - Batch four to six per PR; independent packages can run in parallel.
 
-Exit: no `utopia-php/*` leaf in `require`; root map has 22 more lines.
+Exit: no `utopia-php/*` leaf in `require`; root map has 23 more lines.
 
 ### Phase 3. Infrastructure tier
 
@@ -269,10 +269,25 @@ Exit: `composer.lock` contains no `utopia-php/*` package.
 ### Phase 8. Harvest
 
 - Add `packages/*/src` to `phpstan-deadcode.neon` and run `composer dead-code`. Candidates visible today: database adapters `SQLite`, `Memory`, `Redis`; cache adapters `Hazelcast`, `Memcached`, `Json`, `Memory`, `RedisCluster`; SMS adapters `Plivo`, `Telnyx`, `Clickatell`, `Infobip`, `Seven`, `Sinch`. Each deletion is mirror-visible: confirm against Executor and Packagist dependents first; anything a mirror consumer needs stays.
-- Remove `packages/client/src/compat.php` at client's next major, once the vendored `storage`, `domains`, `cdn`, `usage` and `open-runtimes/sdk-for-php` use `Utopia\Client\Client` (`agents` and `span` moved with the client absorb, `messaging` with its own).
 - Collapse `||` compatibility constraints in package manifests to single ranges once every sibling is on the current major.
 - Delete duplicated test helpers (`tests/extensions/Queue/InMemoryConnection.php` versus the queue package's own fakes) and every Appwrite-side workaround that existed only because a library fix was waiting on a release.
-- Burn down every `packages/*/phpstan-baseline.neon` a package arrives with (abuse's Redis cluster log adapters need one under PHPStan 2). Compression arrives with 16 pre-existing findings covering extension return types and the untyped supported-encoding array; resolve these separately from its history-preserving import. System arrives with 16 pre-existing findings from mixed CPU and disk statistics; track those separately from its import. OpenAPI arrives with 166 findings at level max (it was analysed at level 5 in the monorepo), nearly all offset access on the decoded `mixed` document in its readers; narrow those separately from its import. Circuit-breaker arrives with 29 findings at level max (also level 5 in the monorepo): casts from `mixed` in the Redis and Swoole Table adapters, and loosely typed telemetry and Redis fixtures in its tests. WebSocket arrives with 22 (level 5 in the monorepo too): `mixed` handling in `Client` and the Workerman adapter, and its Swoole fixture server and e2e helpers.
+- Burn down every `packages/*/phpstan-baseline.neon` a package arrives with (abuse's Redis cluster log adapters need one under PHPStan 2).
+  - `auth`: 33 findings (it had no PHPStan config of its own): `mixed` out-parameters and results from `openssl_pkey_export()`, `openssl_pkey_get_details()` and `openssl_sign()` in the asymmetric issuer and verifier, integer arithmetic in the PHPass encoder, and array shapes in `AuthorizationDetails` and `ResourceIndicators`, plus decoded-claim arithmetic in its tests.
+  - `cache`: 25 findings (level 5 in the monorepo): `mixed` from the Memcached and Hazelcast server stats and the `RedisCluster` node addresses, values passed to `Envelope::encode()` untyped, and casts of Redis replies in its multiplexing and leasable e2e tests.
+  - `cdn`: 92 findings (its standalone repository analysed it at level 6): 50 in `src`, offset access and string concatenation on the `mixed` decoded API responses in the Fastly, Fastly TLS and Cloudflare providers and cache adapters, and `request()` results not narrowed to their declared shapes; 42 in its tests, assertions on decoded request bodies captured by `TestClient`.
+  - `circuit-breaker`: 29 findings (level 5 in the monorepo): casts from `mixed` in the Redis and Swoole Table adapters, and loosely typed telemetry and Redis fixtures in its tests.
+  - `compression`: 16 findings covering extension return types and the untyped supported-encoding array.
+  - `console`: 8 findings (it had no PHPStan config of its own): unchecked `fopen()` and `fgets()` results in `confirm()`, the untyped `$cmd` array in `execute()`, and variadic `Command` arrays with string keys passed to `compose()`.
+  - `domains`: 274 findings (it had no PHPStan config of its own): 219 in `src`, nearly all in the `NameCom`, `OpenSRS` and `Mock` registrar adapters and the base `Adapter`, unvalued `array` parameters and offset access and casts on decoded `mixed` API responses; 55 in its tests, mostly nullable validator fixtures in `ApexDomainTest` and `PublicDomainTest`.
+  - `dsn`: 4 findings (it had no PHPStan config on its standalone repository): the untyped `$params` array, `parse_url()`'s integer port stored in a `?string` property, and `getParam()` returning the `mixed` parsed query value.
+  - `http`: 394 findings (level 7 in the monorepo): 81 in `src`, casts and offset access on `mixed` request globals, Swoole server stats and the `__utopia__` coroutine context in the FPM and Swoole adapters, and the `mixed` param and injection definitions in `Http`; 313 in its tests, mostly calls on nullable `?Request`, `?Response`, `?Route` and `?Http` fixtures in `RequestTest`, `HttpTest` and `RouteTest`.
+  - `mqtt`: 82 findings (its own repository analysed it at level max under PHPStan 1): `chr()` arguments not narrowed to `int<0, 255>` and casts from `mixed` in the packet codecs and `Property`, untyped Swoole client and request fields in `Client` and the Swoole adapter, and loosely typed data providers and e2e assertions in its tests.
+  - `openapi`: 166 findings (level 5 in the monorepo), nearly all offset access on the decoded `mixed` document in its readers.
+  - `servers`: 74 findings (level 5 in the monorepo): 34 in `src`, unvalued `array` parameters, properties and returns in `Hook`, and offset access on the `mixed` param and injection definitions in `Base::prepare()` and `Base::validate()`; 40 in its tests, the nullable `?Hook` fixture and offsets on `getParams()` results in `HookTest`.
+  - `storage`: 3 findings, all in one test fixture: Pint's `simplified_null_return` turns the untyped `detach()` of `LocalTest`'s failing stream from `return null;` into `return;`, which PHPStan reads as an empty return against its `resource|null` docblock.
+  - `system`: 16 findings from mixed CPU and disk statistics.
+  - `validators`: 75 findings (level 5 in the monorepo): 48 in `src`, unvalued `array` parameters and casts from `mixed`, mostly in `Globstar`, `Domain`, `URL`, `Contains` and `WhiteList`; 27 in its tests, nullable validator fixtures in `AssocTest` and `URLTest`.
+  - `websocket`: 22 findings (level 5 in the monorepo): `mixed` handling in `Client` and the Workerman adapter, and its Swoole fixture server and e2e helpers.
 
 ## Risks
 

@@ -1,0 +1,66 @@
+x-redis: &redis
+  image: redis:7-alpine
+  command: ["redis-server", "--save", "", "--appendonly", "no"]
+  healthcheck:
+    test: ["CMD", "redis-cli", "ping"]
+    interval: 1s
+    timeout: 1s
+    retries: 30
+
+services:
+  redis:
+    <<: *redis
+    ports:
+      - "16381:6379"
+
+  shard-a:
+    <<: *redis
+    ports:
+      - "16382:6379"
+
+  shard-b:
+    <<: *redis
+    ports:
+      - "16383:6379"
+
+  shard-c:
+    <<: *redis
+    ports:
+      - "16384:6379"
+
+  # The cluster advertises the addresses clients must dial, so its published
+  # ports have to match the ones inside the container.
+  redis-cluster:
+    image: grokzen/redis-cluster:7.0.10
+    environment:
+      IP: 127.0.0.1
+      INITIAL_PORT: 17000
+    ports:
+      - "17000-17005:17000-17005"
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -p 17000 cluster info | grep -q cluster_state:ok"]
+      interval: 2s
+      timeout: 3s
+      retries: 60
+
+  memcached:
+    image: memcached:1.6.17-alpine
+    ports:
+      - "11212:11211"
+    healthcheck:
+      test: ["CMD-SHELL", "echo version | nc -w 1 127.0.0.1 11211 | grep -q VERSION"]
+      interval: 1s
+      timeout: 2s
+      retries: 30
+
+  hazelcast:
+    image: hazelcast/hazelcast:5.3.7
+    environment:
+      HZ_NETWORK_MEMCACHEPROTOCOL_ENABLED: "true"
+    ports:
+      - "15701:5701"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://127.0.0.1:5701/hazelcast/health/node-state | grep -q ACTIVE"]
+      interval: 2s
+      timeout: 3s
+      retries: 60
