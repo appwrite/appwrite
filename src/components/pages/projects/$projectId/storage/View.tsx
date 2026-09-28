@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { useNavigate, useParams, useLocation, useSearch } from '@tanstack/react-router'
 import {
   isStoragePlaceholderBucketId,
@@ -32,7 +32,6 @@ export function View() {
   const location = useLocation()
   const search = useSearch({ strict: false }) as { create?: string }
   const queryClient = useQueryClient()
-  const [createOpen, setCreateOpen] = useState(false)
 
   const { data: total = 0 } = useQuery({
     ...bucketsQueryOptions(projectId, 0, 1, ''),
@@ -59,21 +58,22 @@ export function View() {
   const { plan: organizationPlan } = useOrganizationPlan(project?.teamId)
   const bucketsLimit = organizationPlan?.buckets ?? 0
 
-  useEffect(() => {
-    if (search?.create === 'bucket' && !createOpen) {
-      setCreateOpen(true)
-      navigate({
-        to: location.pathname,
-        search: (prev: Record<string, unknown>) => {
-          if (!prev || typeof prev !== 'object') return {}
-          const next = { ...prev }
-          delete next.create
-          return Object.keys(next).length === 0 ? {} : next
-        },
-        replace: true,
-      })
-    }
-  }, [search?.create, createOpen, navigate, location.pathname])
+  // The dialog stays open for as long as `?create=bucket` is in the URL. Dropping the param
+  // while it is open re-runs the storage loaders, which redirect to the first bucket and
+  // unmount this view (and the dialog with it).
+  const createOpen = search?.create === 'bucket'
+  const closeCreate = () => {
+    navigate({
+      to: location.pathname,
+      search: (prev: Record<string, unknown>) => {
+        if (!prev || typeof prev !== 'object') return {}
+        const next = { ...prev }
+        delete next.create
+        return next
+      },
+      replace: true,
+    })
+  }
 
   const createMutation = useMutation({
     mutationFn: async (data: { bucketId?: string; name: string }) => {
@@ -88,7 +88,6 @@ export function View() {
     onSuccess: (bucket) => {
       toast.success(`${bucket.name} ${t('has been created')}`)
       void queryClient.invalidateQueries({ queryKey: Dependencies.BUCKETS })
-      setCreateOpen(false)
       navigate({
         to: '/projects/$projectId/storage/$bucketId',
         params: { projectId: projectId!, bucketId: bucket.$id },
@@ -144,7 +143,9 @@ export function View() {
 
       <CreateBucket
         open={createOpen}
-        onOpenChange={setCreateOpen}
+        onOpenChange={(open) => {
+          if (!open) closeCreate()
+        }}
         onCreate={(data) => createMutation.mutate(data)}
         isLoading={createMutation.isPending}
       />
