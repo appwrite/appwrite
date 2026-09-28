@@ -161,8 +161,11 @@ class Install extends Action
                             continue;
                         }
 
+                        // A variable the installer never asks about still holding an earlier
+                        // default was written by the installer, not chosen, so it moves to
+                        // the current default like the image tags do.
                         $configVar = $vars[$key] ?? [];
-                        if (!empty($configVar) && !($configVar['overwrite'] ?? false)) {
+                        if (!empty($configVar) && !($configVar['overwrite'] ?? false) && !\in_array($value, $configVar['previous'] ?? [], true)) {
                             $vars[$key]['default'] = $value;
                         }
                     }
@@ -183,7 +186,7 @@ class Install extends Action
                         }
 
                         $configVar = $vars[$key] ?? [];
-                        if (!empty($configVar) && !($configVar['overwrite'] ?? false)) {
+                        if (!empty($configVar) && !($configVar['overwrite'] ?? false) && !\in_array($value, $configVar['previous'] ?? [], true)) {
                             $vars[$key]['default'] = $value;
                         }
                     }
@@ -667,8 +670,8 @@ class Install extends Action
             'trim',
             \explode(',', ($input['_APP_FUNCTIONS_RUNTIMES'] ?? '') . ',' . ($input['_APP_SITES_RUNTIMES'] ?? ''))
         )));
-        // Function templates need Node 18 or later. An upgrade keeps the operator's runtimes,
-        // so point out when none of the enabled Node runtimes can run them.
+        // Function templates need Node 18 or later. A runtimes list the operator chose is
+        // kept on upgrade, so point out when none of its Node runtimes can run them.
         $nodeRuntimes = \array_filter(
             \array_map('trim', \explode(',', (string) ($input['_APP_FUNCTIONS_RUNTIMES'] ?? ''))),
             fn (string $runtime) => \str_starts_with($runtime, 'node-')

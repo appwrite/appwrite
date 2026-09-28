@@ -1296,6 +1296,7 @@ return [
                 'description' => "This option allows you to enable or disable runtime environments for cloud functions. Disable unused runtimes to save disk space.\n\nTo enable cloud function runtimes, pass a list of enabled environments separated by a comma.\n\nCurrently, supported environments are: " . \implode(', ', \array_keys(Config::getParam('runtimes'))),
                 'introduction' => '0.8.0',
                 'default' => 'node-16.0,node-22,php-8.0,python-3.9,ruby-3.0',
+                'previous' => ['node-16.0,php-8.0,python-3.9,ruby-3.0'],
                 'required' => false,
                 'question' => '',
                 'filter' => ''
