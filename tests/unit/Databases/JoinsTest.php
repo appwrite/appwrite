@@ -8,10 +8,14 @@ use Appwrite\Databases\Joins;
 use Appwrite\Extend\Exception;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Utopia\Cache\Adapter\None;
+use Utopia\Cache\Cache;
+use Utopia\Database\Adapter\Memory;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
+use Utopia\Database\PermissionType;
 use Utopia\Database\Query;
 use Utopia\Database\RelationType;
 use Utopia\Database\Validator\Authorization;
@@ -164,18 +168,25 @@ final class JoinsTest extends TestCase
 
     private function catalog(): Database
     {
-        $collections = [
+        return new class ([self::CATALOG => [
             self::collection('customers', '1', [Permission::read(Role::any())], documentSecurity: true),
             self::collection('shared', '2', [Permission::read(Role::any())], documentSecurity: false),
             self::collection('owned', '3', [Permission::create(Role::any())], documentSecurity: true),
             self::collection('closed', '4', [Permission::create(Role::any())], documentSecurity: false),
             self::collection('disabled', '5', [Permission::read(Role::any())], documentSecurity: true, enabled: false),
-        ];
+        ]]) extends Database {
+            /**
+             * @param array<string, list<Document>> $registries
+             */
+            public function __construct(private readonly array $registries)
+            {
+                parent::__construct(new Memory(), new Cache(new None()));
+            }
 
-        $catalog = $this->createStub(Database::class);
-        $catalog->method('getDocument')->willReturnCallback(
-            static function (string $collection, string $id) use ($collections): Document {
-                foreach ($collection === self::CATALOG ? $collections : [] as $entry) {
+            #[\Override]
+            public function getDocument(string $collection, string $id, array $queries = [], bool $forUpdate = false): Document
+            {
+                foreach ($this->registries[$collection] ?? [] as $entry) {
                     if ($entry->getId() === $id) {
                         return $entry;
                     }
@@ -183,9 +194,10 @@ final class JoinsTest extends TestCase
 
                 return new Document();
             }
-        );
-        $catalog->method('find')->willReturnCallback(
-            static function (string $collection, array $queries = []) use ($collections): array {
+
+            #[\Override]
+            public function find(string $collection, array $queries = [], PermissionType $forPermission = PermissionType::Read): array
+            {
                 $sequences = [];
                 foreach ($queries as $query) {
                     if ($query->getAttribute() === '$sequence') {
@@ -194,13 +206,11 @@ final class JoinsTest extends TestCase
                 }
 
                 return \array_values(\array_filter(
-                    $collection === self::CATALOG ? $collections : [],
+                    $this->registries[$collection] ?? [],
                     static fn (Document $entry): bool => \in_array($entry->getSequence(), $sequences, true),
                 ));
             }
-        );
-
-        return $catalog;
+        };
     }
 
     private static function customers(Document ...$attributes): Document
