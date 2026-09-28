@@ -413,7 +413,7 @@ $container->set('servers', function () {
 
     $languages = array_map(fn ($language) => strtolower($language['name']), $server['sdks']);
 
-    return $languages;
+    return [...$languages, ...APP_SDK_INTEGRATIONS];
 });
 
 $container->set('promiseAdapter', fn ($register) => $register->get('promiseAdapter'), ['register']);
