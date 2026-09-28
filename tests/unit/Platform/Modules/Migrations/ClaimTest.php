@@ -541,6 +541,115 @@ final class ClaimTest extends TestCase
         $this->assertSame('finished', $stored->getAttribute('stage'));
     }
 
+    /**
+     * @return \Iterator<string, array{Collection|null}>
+     */
+    public static function incompleteOwnershipSchemas(): \Iterator
+    {
+        yield 'no databases collection' => [null];
+        yield 'no database migration attempt ID' => [new Collection(
+            id: 'databases',
+            attributes: [
+                new Attribute('migrationId', ColumnType::String, size: Database::LENGTH_KEY),
+            ],
+        )];
+    }
+
+    #[DataProvider('incompleteOwnershipSchemas')]
+    public function testStartRefusesAnIncompleteOwnershipSchemaBeforeStoringTheMigration(?Collection $databases): void
+    {
+        $database = new Database(new Memory(), new Cache(new NoCache()));
+        $database
+            ->setAuthorization(new Authorization())
+            ->setDatabase('migrationClaimStart')
+            ->setNamespace('migration_claim_start_' . \uniqid());
+        $database->create();
+        if ($databases !== null) {
+            $database->createCollection($databases);
+        }
+        $database->createCollection(new Collection(
+            id: 'migrations',
+            attributes: [
+                new Attribute('status', ColumnType::String, size: 255, required: true),
+                new Attribute('stage', ColumnType::String, size: 255, required: true),
+                new Attribute('attemptId', ColumnType::String, size: Database::LENGTH_KEY),
+                new Attribute('resourceData', ColumnType::String, size: 131_070, required: true, filters: ['json']),
+            ],
+            permissions: [
+                Permission::create(Role::any()),
+                Permission::delete(Role::any()),
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+            ],
+            documentSecurity: false,
+        ));
+        $publisher = new MockPublisher();
+
+        try {
+            (new Claim($database, $this->locks()))->start(
+                project: new Document(['$id' => 'project-1']),
+                migration: new Document(['$id' => 'migration-1', 'resourceData' => []]),
+                platform: [],
+                publisher: new MigrationPublisher($publisher, new Queue('migrations')),
+            );
+            $this->fail('Expected incomplete ownership schema to be refused');
+        } catch (Exception $error) {
+            $this->assertSame(Exception::MIGRATION_SCHEMA_NOT_READY, $error->getType());
+            $this->assertSame(503, $error->getCode());
+        }
+
+        $this->assertSame([], $database->find('migrations'));
+        $this->assertEmpty($publisher->getEvents('migrations'));
+    }
+
+    public function testStartStoresThePendingFirstAttemptBeforePublishingIt(): void
+    {
+        $publisher = new MockPublisher();
+        $claims = new Claim($this->database, $this->locks());
+
+        $started = $claims->start(
+            project: new Document(['$id' => 'project-1']),
+            migration: new Document(['$id' => 'migration-1', 'resourceData' => []]),
+            platform: [],
+            publisher: new MigrationPublisher($publisher, new Queue('migrations')),
+        );
+
+        $migrations = $this->database->find('migrations');
+        $this->assertCount(1, $migrations);
+        $stored = $migrations[0];
+        $this->assertSame('migration-1', $stored->getId());
+        $this->assertSame('pending', $stored->getAttribute('status'));
+        $this->assertSame('init', $stored->getAttribute('stage'));
+        $this->assertIsString($stored->getAttribute('attemptId'));
+        $this->assertNotSame('', $stored->getAttribute('attemptId'));
+        $this->assertSame($stored->getId(), $started->getId());
+        $this->assertSame($stored->getAttribute('attemptId'), $started->getAttribute('attemptId'));
+
+        $events = $publisher->getEvents('migrations');
+        $this->assertCount(1, $events);
+        $message = MigrationMessage::fromArray($events[0]);
+        $this->assertSame($stored->getId(), $message->migration->getId());
+        $this->assertSame($stored->getAttribute('attemptId'), $message->migration->getAttribute('attemptId'));
+        $this->assertInstanceOf(Delivery::class, $claims->consume('project-1', $message));
+    }
+
+    public function testStartLeavesNothingStoredWhenPublishingFails(): void
+    {
+        try {
+            (new Claim($this->database, $this->locks()))->start(
+                project: new Document(['$id' => 'project-1']),
+                migration: new Document(['$id' => 'migration-1', 'resourceData' => []]),
+                platform: [],
+                publisher: new MigrationPublisher($this->unavailablePublisher(), new Queue('migrations')),
+            );
+            $this->fail('Expected enqueue failure');
+        } catch (\RuntimeException $error) {
+            $this->assertSame('Queue unavailable', $error->getMessage());
+        }
+
+        $this->assertSame([], $this->database->find('migrations'));
+    }
+
     public function testInitialPublishFailureDeletesOnlyItsExactGeneration(): void
     {
         $migration = $this->database->createDocument('migrations', new Document([

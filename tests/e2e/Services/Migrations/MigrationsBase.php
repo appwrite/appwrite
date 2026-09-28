@@ -266,6 +266,55 @@ trait MigrationsBase
         $this->assertNotSame($terminal['$updatedAt'], $retry['body']['$updatedAt']);
     }
 
+    public function testCreateAppwriteMigrationEvent(): void
+    {
+        $project = $this->getDestinationProject();
+        $realtime = $this->getWebsocket(
+            channels: ['console'],
+            headers: [
+                'origin' => 'http://localhost',
+                'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            ],
+            projectId: 'console',
+        );
+
+        try {
+            $connected = json_decode($realtime->receive(), true);
+
+            $this->assertSame('connected', $connected['type'] ?? null);
+            $this->assertContains('console', $connected['data']['channels'] ?? []);
+
+            $migration = $this->client->call(Client::METHOD_POST, '/migrations/appwrite', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $project['$id'],
+                'x-appwrite-key' => $project['apiKey'],
+            ], [
+                'resources' => [Resource::TYPE_USER],
+                'endpoint' => $this->webEndpoint,
+                'projectId' => ID::unique(),
+                'apiKey' => 'invalid',
+            ]);
+
+            $this->assertSame(202, $migration['headers']['status-code']);
+            $migrationId = $migration['body']['$id'];
+
+            $event = $this->receiveUntilEvent(
+                $realtime,
+                fn (array $message): bool => ($message['type'] ?? null) === 'event'
+                    && in_array("migrations.{$migrationId}.create", $message['data']['events'] ?? [], true),
+                timeoutMs: 30_000,
+            );
+
+            $this->assertContains('console', $event['data']['channels']);
+            $this->assertContains("projects.{$project['$id']}", $event['data']['channels']);
+            $this->assertSame($migrationId, $event['data']['payload']['$id']);
+            $this->assertSame('pending', $event['data']['payload']['status']);
+            $this->assertSame('init', $event['data']['payload']['stage']);
+        } finally {
+            $realtime->close();
+        }
+    }
+
     /**
      * Appwrite E2E Migration Tests
      */
