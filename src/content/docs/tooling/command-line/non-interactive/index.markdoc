@@ -3,7 +3,7 @@ layout: article
 title: Non-interactive
 description: Deploy changes to Appwrite projects to migrate databases and tables schema, functions, teams, buckets, and more.
 ---
-The Appwrite CLI can be used in a non-interactive and headless manner, without saving configuration or sessions. This is especially useful when you want to automate tasks on a continuous integration server. You can enable the non-interactive mode for the Appwrite CLI by setting the `project ID`, `endpoint`, and `API Key`:
+The Appwrite CLI can be used in a non-interactive and headless manner. This is especially useful when you want to automate tasks on a continuous integration server. You can enable the non-interactive mode for the Appwrite CLI by setting the `project ID`, `endpoint`, and `API Key`:
 
 ```sh
 appwrite client \
@@ -12,7 +12,7 @@ appwrite client \
     --key YOUR_API_KEY
 ```
 
-When you set the global configuration parameters using the `appwrite client` command, they take precedence over the local configuration parameters in your `appwrite.config.json` thereby switching the CLI to non-interactive mode.
+The `appwrite client` command stores the endpoint and API key in the CLI's global configuration, and writes the project ID to your project config file, `appwrite.config.json` by default.
 
 In this mode, the CLI can only interact with one project at a time.
 

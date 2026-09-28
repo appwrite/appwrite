@@ -280,8 +280,8 @@ At any point, if you would like to change your server's endpoint, project ID, or
 appwrite client --endpoint https://<REGION>.cloud.appwrite.io/v1
 appwrite client --key 23f24gwrhSDgefaY
 appwrite client --self-signed true
-appwrite client --reset // Resets your CLI configuration
-appwrite client --debug // Prints your current configuration
+appwrite client --reset # Resets your CLI configuration
+appwrite client --debug # Prints your current configuration
 ```
 
 # Uninstall {% #uninstall %}
