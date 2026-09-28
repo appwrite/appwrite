@@ -449,7 +449,9 @@ function FunctionLayoutContent() {
     )
   }
 
-  const terraformAlert = isTerraformManaged ? (
+  // Executions are data, not configuration Terraform manages.
+  const terraformAlert =
+    isTerraformManaged && activeTab !== 'executions' ? (
     <TerraformResourceAlert
       projectId={projectId}
       resource={terraformResource}

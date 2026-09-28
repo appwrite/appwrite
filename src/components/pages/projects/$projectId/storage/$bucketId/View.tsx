@@ -1409,6 +1409,9 @@ export function View() {
     ],
   )
 
+  // Files are data, not configuration Terraform manages.
+  const showTerraformAlert = isTerraformManaged && activeTab !== 'files'
+
   return (
     <div className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden">
       <ServiceHeader
@@ -1499,9 +1502,9 @@ export function View() {
         fullWidthBorder
         fullWidth
         contentAfterBorder={
-          isTerraformManaged || (displayBucket && !displayBucket.enabled) ? (
+          showTerraformAlert || (displayBucket && !displayBucket.enabled) ? (
             <div>
-              {isTerraformManaged ? (
+              {showTerraformAlert ? (
                 <TerraformResourceAlert
                   projectId={projectId}
                   resource={terraformResource}

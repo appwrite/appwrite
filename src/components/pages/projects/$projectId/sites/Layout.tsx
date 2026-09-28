@@ -352,7 +352,13 @@ function SiteLayoutContent() {
   const isLogsTabLayout = activeTab === 'logs'
 
   const terraformResource = getTerraformResourcePath('site', siteId ?? '')
-  const terraformAlert = useTerraformResource(projectId, terraformResource) ? (
+  const isTerraformManaged = !!useTerraformResource(
+    projectId,
+    terraformResource,
+  )
+  // Logs are data, not configuration Terraform manages.
+  const terraformAlert =
+    isTerraformManaged && activeTab !== 'logs' ? (
     <TerraformResourceAlert
       projectId={projectId}
       resource={terraformResource}

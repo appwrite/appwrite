@@ -1788,7 +1788,10 @@ export function Workspace({
         }
         contentAfterBorder={
           <>
-            {isDatabaseLevelView ? null : (
+            {/* Rows are data; only structure and configuration tabs are Terraform's. */}
+            {isDatabaseLevelView ||
+            activeTab === 'rows' ||
+            activeTab === 'documents' ? null : (
               <TerraformResourceAlert
                 projectId={projectId}
                 resource={getTerraformResourcePath(

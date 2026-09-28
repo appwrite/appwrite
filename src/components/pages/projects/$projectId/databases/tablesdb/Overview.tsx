@@ -816,10 +816,12 @@ export function Overview({
           }
           contentAfterBorder={
             <>
-              <TerraformResourceAlert
-                projectId={projectId}
-                resource={getTerraformResourcePath('database', databaseId)}
-              />
+              {activeTab === 'settings' ? (
+                <TerraformResourceAlert
+                  projectId={projectId}
+                  resource={getTerraformResourcePath('database', databaseId)}
+                />
+              ) : null}
               {activeTab === 'monitor' ? (
                 <div className="border-b border-border px-4 py-3 sm:px-6 lg:hidden">
                   <DatabaseMonitorMobileNav
