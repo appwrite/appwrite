@@ -56,7 +56,7 @@ class Create extends Action
                     )
                 ]
             ))
-            ->param('resources', [], new ArrayList(new WhiteList(Supabase::getSupportedResources(), true)), 'List of resources to migrate', enum: new Enum(name: 'SupabaseMigrationResource'))
+            ->param('resources', [], new ArrayList(new WhiteList(Supabase::getSupportedResources(), true)), 'List of resources to migrate', example: '["user"]', enum: new Enum(name: 'SupabaseMigrationResource'))
             ->param('endpoint', '', new URL(), 'Source\'s Supabase Endpoint')
             ->param('apiKey', '', new Text(512), 'Source\'s API Key')
             ->param('databaseHost', '', new Text(512), 'Source\'s Database Host')

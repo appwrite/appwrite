@@ -26,6 +26,12 @@ final class MqttSubscriber
     /** @var Packet[] PUBLISH packets read before the SUBACK (replay), drained by consume(). */
     private array $pending = [];
 
+    /** The Reason String (property 0x1F) from the last CONNACK, or null when absent. */
+    private ?string $connackReason = null;
+
+    /** The Authentication Method (property 0x15) echoed on the last CONNACK, or null when absent. */
+    private ?string $connackAuthMethod = null;
+
     public function __construct(
         private readonly string $host,
         private readonly int $port,
@@ -60,7 +66,29 @@ final class MqttSubscriber
         }
 
         // CONNACK body: [acknowledge flags][reason code][properties].
+        $this->connackReason = null;
+        $this->connackAuthMethod = null;
+        if (\strlen($packet->body) > 2) {
+            [$properties] = Properties::parse($packet->body, 2);
+            $reason = $properties->get(Property::REASON_STRING);
+            $this->connackReason = \is_string($reason) ? $reason : null;
+            $authMethod = $properties->get(Property::AUTHENTICATION_METHOD);
+            $this->connackAuthMethod = \is_string($authMethod) ? $authMethod : null;
+        }
+
         return \ord($packet->body[1] ?? "\x80");
+    }
+
+    /** The Authentication Method (MQTT 5.0 property 0x15) echoed on the last CONNACK, or null. */
+    public function connackAuthMethod(): ?string
+    {
+        return $this->connackAuthMethod;
+    }
+
+    /** The Reason String (MQTT 5.0 property 0x1F) from the last CONNACK, or null when absent. */
+    public function connackReason(): ?string
+    {
+        return $this->connackReason;
     }
 
     /**

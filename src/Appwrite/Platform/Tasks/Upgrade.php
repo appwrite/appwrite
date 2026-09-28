@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Docker\Compose;
 use Appwrite\Docker\Env;
+use Appwrite\Platform\Installer\Validator\AppDomain;
 use Utopia\Console;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
@@ -33,6 +34,7 @@ class Upgrade extends Install
             ->param('database', '', new Text(length: 0, min: 0), 'Ignored: an upgrade always keeps the database the installation already uses', true)
             ->param('topology', 'combined', new WhiteList(['combined', 'separate']), 'Worker and scheduler topology (combined|separate)', true)
             ->param('channel', Install::CHANNEL_STABLE, new WhiteList([Install::CHANNEL_STABLE, Install::CHANNEL_NIGHTLY]), 'Release channel to track (stable|nightly). Nightly is unsupported and moves daily.', true)
+            ->param('domain', '', new AppDomain(), 'Appwrite hostname, also used as the custom domain CNAME target', true)
             ->param('migrate', false, new Boolean(true), 'Run database migration after upgrade', true)
             ->callback($this->action(...));
     }
@@ -47,6 +49,7 @@ class Upgrade extends Install
         string $database,
         string $topology = 'combined',
         string $channel = Install::CHANNEL_STABLE,
+        string $domain = '',
         bool $migrate = false,
     ): void {
         $this->isUpgrade = true;
@@ -103,7 +106,7 @@ class Upgrade extends Install
 
         $this->lockedDatabase = $database;
 
-        parent::action($httpPort, $httpsPort, $organization, $image, $interactive, $noStart, $database, $topology, $channel);
+        parent::action($httpPort, $httpsPort, $organization, $image, $interactive, $noStart, $database, $topology, $channel, $domain);
     }
 
     protected function startWebServer(

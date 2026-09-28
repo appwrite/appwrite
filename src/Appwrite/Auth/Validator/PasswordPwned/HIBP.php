@@ -4,8 +4,13 @@ namespace Appwrite\Auth\Validator\PasswordPwned;
 
 use Appwrite\Auth\Validator\PasswordPwned;
 use Appwrite\Extend\Exception;
+use Psr\Http\Client\ClientInterface;
 use Utopia\Cache\Cache;
-use Utopia\Fetch\Client;
+use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
+use Utopia\Client\Client;
+use Utopia\Psr7\Header;
+use Utopia\Psr7\Method;
+use Utopia\Psr7\Request\Factory as RequestFactory;
 
 /**
  * Asks the public Have I Been Pwned range API.
@@ -22,22 +27,21 @@ class HIBP extends PasswordPwned
     public const ENDPOINT = 'https://api.pwnedpasswords.com/range';
 
     private const PREFIX_LENGTH = 5;
-    private const CONNECT_TIMEOUT = 3 * 1000; // milliseconds
-    private const REQUEST_TIMEOUT = 5 * 1000; // milliseconds
+    private const CONNECT_TIMEOUT = 3; // seconds
+    private const REQUEST_TIMEOUT = 5; // seconds
 
-    protected Client $client;
+    protected ClientInterface $client;
     protected string $endpoint;
 
-    public function __construct(?Cache $cache = null, ?Client $client = null, string $endpoint = self::ENDPOINT, bool $allowEmpty = false)
+    public function __construct(?Cache $cache = null, ?ClientInterface $client = null, string $endpoint = self::ENDPOINT, bool $allowEmpty = false)
     {
         parent::__construct($allowEmpty);
 
         $this->cache = $cache;
-        $this->client = $client ?? (new Client())
-            ->setConnectTimeout(self::CONNECT_TIMEOUT)
-            ->setTimeout(self::REQUEST_TIMEOUT)
-            ->setAllowRedirects(false)
-            ->setUserAgent('Appwrite');
+        $this->client = $client ?? (new Client(new CurlAdapter()))
+            ->withConnectTimeout(self::CONNECT_TIMEOUT)
+            ->withTimeout(self::REQUEST_TIMEOUT)
+            ->withHeaders([Header::USER_AGENT => 'Appwrite']);
         $this->endpoint = \rtrim($endpoint, '/');
     }
 
@@ -61,9 +65,11 @@ class HIBP extends PasswordPwned
     {
         return $this->remember('pwned-passwords:' . \md5($this->endpoint) . ':' . $prefix, function () use ($prefix) {
             try {
-                $response = $this->client
-                    ->addHeader('Add-Padding', 'true')
-                    ->fetch($this->endpoint . '/' . $prefix);
+                $response = $this->client->sendRequest(
+                    (new RequestFactory())
+                        ->createRequest(Method::GET, $this->endpoint . '/' . $prefix)
+                        ->withHeader('Add-Padding', 'true'),
+                );
             } catch (\Throwable) {
                 throw new Exception(Exception::GENERAL_PWNED_PASSWORDS_UNAVAILABLE);
             }
@@ -74,7 +80,7 @@ class HIBP extends PasswordPwned
 
             // Each line is `HASH_SUFFIX:COUNT`; padded entries carry a count of 0 and are not breaches
             $breaches = [];
-            foreach (\explode("\n", $response->text()) as $line) {
+            foreach (\explode("\n", (string) $response->getBody()) as $line) {
                 $line = \trim($line);
                 $separator = \strpos($line, ':');
                 if ($line === '' || $separator === false) {

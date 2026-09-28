@@ -2186,6 +2186,27 @@ trait MessagingBase
         $image = $client->call(Client::METHOD_GET, $imageUrl);
 
         $this->assertEquals(200, $image['headers']['status-code']);
+
+        // Push serves ranged reads on the same guard as file view and download.
+        $path = __DIR__ . '/../../../resources/logo.png';
+        $size = \filesize($path);
+
+        $firstByte = $client->call(Client::METHOD_GET, $imageUrl, ['Range' => 'bytes=0-0']);
+
+        $this->assertEquals(206, $firstByte['headers']['status-code']);
+        $this->assertEquals('bytes 0-0/' . $size, $firstByte['headers']['content-range']);
+        $this->assertEquals('1', $firstByte['headers']['content-length']);
+        $this->assertEquals(\file_get_contents($path, false, null, 0, 1), $firstByte['body']);
+
+        $pastEnd = $client->call(Client::METHOD_GET, $imageUrl, ['Range' => 'bytes=' . ($size - 1) . '-' . ($size + 500)]);
+
+        $this->assertEquals(206, $pastEnd['headers']['status-code']);
+        $this->assertEquals('bytes ' . ($size - 1) . '-' . ($size - 1) . '/' . $size, $pastEnd['headers']['content-range']);
+        $this->assertEquals('1', $pastEnd['headers']['content-length']);
+
+        $rejected = $client->call(Client::METHOD_GET, $imageUrl, ['Range' => 'bytes=' . $size . '-']);
+
+        $this->assertEquals(416, $rejected['headers']['status-code']);
     }
 
     public function testCreateDraftPushWithData(): void
@@ -2225,6 +2246,98 @@ trait MessagingBase
 
         $this->assertEquals(200, $message['headers']['status-code']);
         $this->assertEquals($data, $message['body']['data']['data']);
+    }
+
+    public function testCreateDraftEmailKeepsNullAttachments(): void
+    {
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $email = $this->client->call(Client::METHOD_POST, '/messaging/messages/email', $headers, [
+            'messageId' => ID::unique(),
+            'subject' => 'Draft',
+            'content' => 'Draft content',
+            'attachments' => null,
+            'draft' => true,
+        ]);
+        $this->assertSame(201, $email['headers']['status-code']);
+
+        // An explicit null is stored as given rather than replaced with the empty-list default
+        $email = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $email['body']['$id'], $headers);
+        $this->assertSame(200, $email['headers']['status-code']);
+        $this->assertArrayHasKey('attachments', $email['body']['data']);
+        $this->assertNull($email['body']['data']['attachments']);
+    }
+
+    public function testCreatePushWithNullOptionalParams(): void
+    {
+        // Explicit nulls must behave like omitted params instead of reaching the action as null
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $required = [
+            'title' => 'New blog post',
+            'body' => 'Check out the new blog post',
+            'draft' => true,
+        ];
+
+        $omitted = $this->client->call(Client::METHOD_POST, '/messaging/messages/push', $headers, [
+            'messageId' => ID::unique(),
+            ...$required,
+        ]);
+        $this->assertSame(201, $omitted['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/messaging/messages/push', $headers, [
+            'messageId' => ID::unique(),
+            ...$required,
+            'topics' => null,
+            'users' => null,
+            'targets' => null,
+            'data' => null,
+            'action' => null,
+            'image' => null,
+            'icon' => null,
+            'sound' => null,
+            'color' => null,
+            'tag' => null,
+            'badge' => null,
+            'scheduledAt' => null,
+            'contentAvailable' => null,
+            'critical' => null,
+            'priority' => null,
+        ]);
+        $this->assertSame(201, $response['headers']['status-code']);
+
+        $expected = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $omitted['body']['$id'], $headers);
+        $actual = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $response['body']['$id'], $headers);
+
+        $this->assertSame(200, $actual['headers']['status-code']);
+        foreach (['status', 'topics', 'users', 'targets', 'scheduledAt', 'data'] as $attribute) {
+            $this->assertSame($expected['body'][$attribute], $actual['body'][$attribute], $attribute);
+        }
+
+        // Without draft, null recipients must be rejected the same way as omitted ones rather than crash
+        $omitted = $this->client->call(Client::METHOD_POST, '/messaging/messages/push', $headers, [
+            'messageId' => ID::unique(),
+            'title' => 'New blog post',
+        ]);
+        $response = $this->client->call(Client::METHOD_POST, '/messaging/messages/push', $headers, [
+            'messageId' => ID::unique(),
+            'title' => 'New blog post',
+            'topics' => null,
+            'users' => null,
+            'targets' => null,
+            'draft' => null,
+        ]);
+
+        $this->assertSame(400, $omitted['headers']['status-code']);
+        $this->assertSame($omitted['headers']['status-code'], $response['headers']['status-code']);
+        $this->assertSame($omitted['body']['type'], $response['body']['type']);
     }
 
     public function testScheduledMessage(): void

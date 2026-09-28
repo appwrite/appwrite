@@ -7,6 +7,7 @@ namespace Tests\Unit\Auth\OAuth2;
 use Appwrite\Auth\OAuth2\Exception;
 use Appwrite\Auth\OAuth2\Github;
 use Appwrite\Extend\Exception as AppwriteException;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
@@ -21,6 +22,35 @@ final class GithubTest extends TestCase
         ], JSON_THROW_ON_ERROR));
 
         $this->assertSame('access-token', $github->getAccessToken('authorization-code'));
+    }
+
+    public function testAccessTokenWithJsonSecret(): void
+    {
+        $github = $this->createGithub(\json_encode([
+            'access_token' => 'access-token',
+        ], JSON_THROW_ON_ERROR), secret: \json_encode(['clientSecret' => 'client-secret', 'prompt' => ['select_account']]));
+
+        $this->assertSame('access-token', $github->getAccessToken('authorization-code'));
+    }
+
+    /**
+     * @return \Iterator<string, array{string, string|null}>
+     */
+    public static function promptSecrets(): \Iterator
+    {
+        yield 'plain secret' => ['client-secret', null];
+        yield 'no prompt' => [\json_encode(['clientSecret' => 'client-secret', 'prompt' => []]), null];
+        yield 'select account' => [\json_encode(['clientSecret' => 'client-secret', 'prompt' => ['select_account']]), 'select_account'];
+    }
+
+    #[DataProvider('promptSecrets')]
+    public function testLoginURLPrompt(string $secret, ?string $expected): void
+    {
+        $github = new Github('client-id', $secret, 'https://example.com/callback');
+
+        \parse_str((string) \parse_url($github->getLoginURL(), PHP_URL_QUERY), $query);
+
+        $this->assertSame($expected, $query['prompt'] ?? null);
     }
 
     public function testProviderError(): void
@@ -128,10 +158,10 @@ final class GithubTest extends TestCase
         $this->assertSame($previous, $exception->getPrevious());
     }
 
-    private function createGithub(string $response, string $code = 'authorization-code'): Github&MockObject
+    private function createGithub(string $response, string $code = 'authorization-code', string $secret = 'client-secret'): Github&MockObject
     {
         $github = $this->getMockBuilder(Github::class)
-            ->setConstructorArgs(['client-id', 'client-secret', 'https://example.com/callback'])
+            ->setConstructorArgs(['client-id', $secret, 'https://example.com/callback'])
             ->onlyMethods(['request'])
             ->getMock();
 

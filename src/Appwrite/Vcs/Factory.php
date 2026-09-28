@@ -66,6 +66,22 @@ class Factory
         return $adapter;
     }
 
+    /**
+     * Adapter for building links a browser will open, which can reach the
+     * provider on a different host than the server-side API does.
+     */
+    public function fromProviderForBrowser(string $key): Git
+    {
+        $adapter = $this->fromProvider($key);
+
+        $browserEndpoint = $this->registry[$key]['browserEndpoint'] ?? '';
+        if (!empty($browserEndpoint) && \method_exists($adapter, 'setEndpoint')) {
+            $adapter->setEndpoint(\rtrim($browserEndpoint, '/'));
+        }
+
+        return $adapter;
+    }
+
     public function fromInstallation(Document $installation): Git
     {
         if ($installation->isEmpty()) {

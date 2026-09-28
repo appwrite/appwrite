@@ -324,11 +324,18 @@ abstract class Base extends Action
     protected function contentType(string $name, string $contentType, string $body = ''): string
     {
         $contentType = \strtolower(\trim(\explode(';', $contentType)[0]));
-        if ($contentType !== '' && $contentType !== 'application/octet-stream' && $contentType !== 'binary/octet-stream') {
-            return $contentType;
+        if ($contentType === 'binary/octet-stream') {
+            $contentType = 'application/octet-stream';
         }
 
         $extension = \strtolower(\pathinfo($name, PATHINFO_EXTENSION));
+        $formats = Config::getParam('storage-formats');
+        $format = $formats['extensions'][$extension] ?? null;
+
+        if ($contentType !== '' && $contentType !== 'application/octet-stream') {
+            return $format !== null && \in_array($contentType, $formats['ambiguous'], true) ? $format : $contentType;
+        }
+
         $byExtension = [
             'avif' => 'image/avif',
             'bmp' => 'image/bmp',
@@ -363,11 +370,11 @@ abstract class Base extends Action
         if ($body !== '') {
             $detected = (new \finfo(FILEINFO_MIME_TYPE))->buffer($body);
             if (\is_string($detected) && $detected !== '') {
-                return $detected;
+                return $format !== null && \in_array($detected, $formats['ambiguous'], true) ? $format : $detected;
             }
         }
 
-        return 'application/octet-stream';
+        return $format ?? 'application/octet-stream';
     }
 
     protected function validateFileConstraints(Document $bucket, string $name, int $size): void
