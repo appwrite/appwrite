@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, mock, test } from 'bun:test'
+import { afterAll, beforeEach, describe, expect, mock, test } from 'bun:test'
 import { QueryClient } from '@tanstack/react-query'
 import type { Models } from '@appwrite.io/console'
 import prodEvents from './fixtures/terraform-activity-prod.json'
@@ -18,6 +18,11 @@ mock.module('@/lib/appwrite/sdk', () => ({
 const { recordTerraformDrift, terraformProjectQueryOptions } = await import(
   '@/lib/react-query/hooks/terraform'
 )
+const {
+  guardTerraformChanges,
+  setTerraformChangeConfirmer,
+  TerraformChangeCancelledError,
+} = await import('@/lib/terraform/guard')
 
 const STAGING = stagingEvents as Models.ActivityEvent[]
 const PROD = prodEvents as Models.ActivityEvent[]
@@ -95,6 +100,17 @@ describe('console change on a Terraform-managed resource', () => {
     expect((await refetch()).drift?.event).toBe('functions.update')
   })
 
+  test('adding a variable keeps the function in sync', async () => {
+    log = [
+      {
+        ...logged(adminUpdate, '2026-09-28T12:02:38.000+00:00'),
+        event: 'variable.create',
+      },
+      ...log,
+    ]
+    expect((await refetch()).drift).toBeNull()
+  })
+
   test('clears after a later apply even when the browser clock runs ahead', async () => {
     await refetch()
     changeInConsole(new Date(Date.now() + 5 * 60 * 1000).toISOString())
@@ -106,4 +122,66 @@ describe('console change on a Terraform-managed resource', () => {
     ]
     expect((await refetch()).drift).toBeNull()
   })
+})
+
+describe('console writes to a Terraform-managed function', () => {
+  const client = {
+    config: { project: 'terraform-demo', endpoint: 'https://example.test/v1' },
+    setEndpoint() {
+      return this
+    },
+    setProject() {
+      return this
+    },
+  }
+  let sent: string[] = []
+  const functions = guardTerraformChanges(
+    {
+      functions: {
+        createVariable: async () => {
+          sent.push('createVariable')
+          return 'created'
+        },
+        updateVariable: async () => {
+          sent.push('updateVariable')
+          return 'updated'
+        },
+      },
+    },
+    client as never,
+  ).functions as {
+    createVariable: (params: object) => Promise<string>
+    updateVariable: (params: object) => Promise<string>
+  }
+
+  let asked: string[] = []
+  beforeEach(() => {
+    asked = []
+    sent = []
+    setTerraformChangeConfirmer({
+      confirm: (request) => {
+        asked.push(request.resource)
+        return false
+      },
+      changed: () => {},
+    })
+  })
+
+  test('adding a variable goes through without asking', async () => {
+    await expect(
+      functions.createVariable({ functionId: 'api', key: 'EXTRA' }),
+    ).resolves.toBe('created')
+    expect(asked).toEqual([])
+    expect(sent).toEqual(['createVariable'])
+  })
+
+  test('changing an existing variable asks first, and cancelling sends nothing', async () => {
+    await expect(
+      functions.updateVariable({ functionId: 'api', variableId: 'x' }),
+    ).rejects.toBeInstanceOf(TerraformChangeCancelledError)
+    expect(asked).toEqual(['function/api'])
+    expect(sent).toEqual([])
+  })
+
+  afterAll(() => setTerraformChangeConfirmer(null))
 })

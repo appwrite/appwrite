@@ -111,22 +111,6 @@ describe('summarizeTerraformActivity', () => {
     expect(reconciled.resources['function/api'].drift).toBeNull()
   })
 
-  test('adding a variable by hand does not drift the function', () => {
-    const admin = STAGING_EVENTS.find((event) => event.actorType === 'admin')!
-    const project = summarizeTerraformActivity([
-      {
-        ...admin,
-        $id: 'extra-variable',
-        event: 'variable.create',
-        time: '2026-09-28T13:00:00.000+00:00',
-      },
-      ...STAGING_EVENTS.filter(
-        (event) => event.time <= '2026-09-28T11:41:20.000+00:00',
-      ),
-    ])
-    expect(project.resources['function/api'].drift).toBeNull()
-  })
-
   test('drops deleted resources and ignores executions', () => {
     const table = STAGING_EVENTS.find(
       (event) => event.event === 'table.create',
@@ -178,24 +162,6 @@ describe('getSdkCallResourcePath', () => {
     expect(
       getSdkCallResourcePath('project', 'deleteKey', { keyId: 'terraform' }),
     ).toBe('project.key/terraform')
-  })
-
-  test('adding a variable is not a change to what Terraform manages', () => {
-    expect(
-      getSdkCallResourcePath('functions', 'createVariable', {
-        functionId: 'api',
-        key: 'EXTRA',
-      }),
-    ).toBeNull()
-    expect(
-      getSdkCallResourcePath('sites', 'createVariable', { siteId: 'web' }),
-    ).toBeNull()
-    expect(
-      getSdkCallResourcePath('functions', 'deleteVariable', {
-        functionId: 'api',
-        variableId: 'x',
-      }),
-    ).toBe('function/api')
   })
 
   test('skips reads, data writes and positional calls', () => {
