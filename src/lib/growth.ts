@@ -10,27 +10,22 @@
  * instead. Self-hosted servers have no growth route, so self-hosted consoles
  * send anonymously to Appwrite Cloud, where the email param is required.
  *
- * The console SDK has no growth service, and the attachment has to go out in
- * one multipart request rather than through the SDK's chunked upload, so this
- * module uses fetch.
+ * Requests go through the console SDK's Growth service on a dedicated client
+ * that never sends cookies; the attachment (5 MB at most) goes out in the same
+ * multipart request.
  */
 
-import { AppwriteException } from '@appwrite.io/console'
+import {
+  AppwriteException,
+  Client,
+  ConversationType,
+  Growth,
+} from '@appwrite.io/console'
 import { getBaseEndpoint, sdk } from '@/lib/appwrite/sdk'
 import { isCloudProfile } from '@/lib/console-profiles'
 import { DEFAULT_CLOUD_APPWRITE_ENDPOINT } from '@/lib/runtime-config-shared'
 
-export const ConversationType = {
-  Support: 'support',
-  Feedback: 'feedback',
-  Docs: 'docs',
-  Enterprise: 'enterprise',
-  Startup: 'startup',
-  Partner: 'partner',
-} as const
-
-export type ConversationType =
-  (typeof ConversationType)[keyof typeof ConversationType]
+export { ConversationType }
 
 type UtmAttributes = {
   utmSource?: string
@@ -45,22 +40,22 @@ type ApplicationAttributes = UtmAttributes & {
 
 /** Attribute keys the server accepts per type; any other key is rejected with 400. */
 export type ConversationAttributes = {
-  support: {
+  [ConversationType.Support]: {
     employees?: string
     country?: string
     role?: string
     website?: string
   }
-  feedback: {
+  [ConversationType.Feedback]: {
     route?: string
     npsScore?: number
     source?: string
   }
-  docs: {
+  [ConversationType.Docs]: {
     rating: 'positive' | 'negative'
     route?: string
   }
-  enterprise: UtmAttributes & {
+  [ConversationType.Enterprise]: UtmAttributes & {
     companyName: string
     companySize: string
     companyWebsite: string
@@ -69,11 +64,11 @@ export type ConversationAttributes = {
     cloudEmail?: string
     platform?: 'appwrite' | 'imagine'
   }
-  startup: ApplicationAttributes
-  partner: ApplicationAttributes
+  [ConversationType.Startup]: ApplicationAttributes
+  [ConversationType.Partner]: ApplicationAttributes
 }
 
-type ConversationFields<Type extends ConversationType> = {
+type ConversationFields<Type extends keyof ConversationAttributes> = {
   type: Type
   /** Required without a console session; ignored by the server with one. */
   email?: string
@@ -93,15 +88,13 @@ type ConversationFields<Type extends ConversationType> = {
 }
 
 export type CreateConversationParams = {
-  [Type in ConversationType]: ConversationFields<Type>
-}[ConversationType]
+  [Type in keyof ConversationAttributes]: ConversationFields<Type>
+}[keyof ConversationAttributes]
 
 type GrowthTarget = {
   endpoint: string
   identify: boolean
 }
-
-const CONVERSATIONS_PATH = '/growth/conversations'
 
 const RATE_LIMIT_MESSAGE = 'Too many requests. Try again in a few minutes.'
 const SERVER_ERROR_MESSAGE = 'Internal server error.'
@@ -173,63 +166,20 @@ function compact<Value>(
   return Object.fromEntries(entries)
 }
 
-function buildBody(params: CreateConversationParams): {
-  body: BodyInit
-  json: boolean
-} {
-  const fields = compact<string>({
-    type: params.type,
-    email: params.email?.trim(),
-    name: params.name?.trim(),
-    subject: params.subject?.trim(),
-    message: params.message?.trim(),
-    organizationId: params.organizationId,
-    projectId: params.projectId,
-  })
-  const attributes = compact<string | number>(params.attributes ?? {})
-  const hasAttributes = Object.keys(attributes).length > 0
-
-  if (!params.attachment) {
-    return {
-      body: JSON.stringify(hasAttributes ? { ...fields, attributes } : fields),
-      json: true,
-    }
+function toGrowthError(error: unknown): GrowthError {
+  const status = error instanceof AppwriteException ? error.code : 0
+  if (status === 429) {
+    return new GrowthError(RATE_LIMIT_MESSAGE, status)
   }
-
-  const form = new FormData()
-  for (const [key, value] of Object.entries(fields)) {
-    form.append(key, value)
+  if (status >= 500) {
+    return new GrowthError(SERVER_ERROR_MESSAGE, status)
   }
-  if (hasAttributes) {
-    form.append('attributes', JSON.stringify(attributes))
-  }
-  form.append('attachment', params.attachment)
-  return { body: form, json: false }
-}
-
-async function toError(response: Response): Promise<GrowthError> {
-  if (response.status === 429) {
-    return new GrowthError(RATE_LIMIT_MESSAGE, response.status)
-  }
-  if (response.status >= 500) {
-    return new GrowthError(SERVER_ERROR_MESSAGE, response.status)
-  }
-
-  let message = ''
-  try {
-    const data = (await response.json()) as { message?: unknown }
-    if (typeof data.message === 'string') {
-      message = data.message.trim()
-    }
-  } catch {
-    // Non-JSON error body
-  }
-  return new GrowthError(message || FALLBACK_ERROR_MESSAGE, response.status)
+  const message = error instanceof AppwriteException ? error.message.trim() : ''
+  return new GrowthError(message || FALLBACK_ERROR_MESSAGE, status)
 }
 
 /**
- * Creates a conversation with the Appwrite team. Resolves on 201 without
- * reading the body, so a created conversation never reports as failed.
+ * Creates a conversation with the Appwrite team.
  *
  * @throws GrowthError when the server rejects the request (400, 429, 5xx).
  */
@@ -241,26 +191,34 @@ export async function createConversation(
     getBaseEndpoint(),
     params.session ?? true,
   )
-  const { body, json } = buildBody(params)
-
-  const headers: Record<string, string> = { 'X-Appwrite-Project': 'console' }
-  if (json) {
-    // Multipart bodies get their boundary from fetch.
-    headers['Content-Type'] = 'application/json'
-  }
   const jwt = identify ? await createSessionJwt() : null
+
+  const client = new Client()
+    .setEndpoint(endpoint)
+    .setProject('console')
+    .setCredentials('omit')
   if (jwt) {
-    headers['X-Appwrite-JWT'] = jwt
+    client.setJWT(jwt)
   }
 
-  const response = await fetch(`${endpoint}${CONVERSATIONS_PATH}`, {
-    method: 'POST',
-    headers,
-    credentials: 'omit',
-    body,
+  const fields = compact<string>({
+    email: params.email?.trim(),
+    name: params.name?.trim(),
+    subject: params.subject?.trim(),
+    message: params.message?.trim(),
+    organizationId: params.organizationId,
+    projectId: params.projectId,
   })
+  const attributes = compact<string | number>(params.attributes ?? {})
 
-  if (response.status !== 201) {
-    throw await toError(response)
+  try {
+    await new Growth(client).createConversation({
+      type: params.type,
+      ...fields,
+      ...(Object.keys(attributes).length > 0 ? { attributes } : {}),
+      ...(params.attachment ? { attachment: params.attachment } : {}),
+    })
+  } catch (error) {
+    throw toGrowthError(error)
   }
 }
