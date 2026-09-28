@@ -2140,6 +2140,27 @@ final class FunctionsCustomServerTest extends Scope
                 ], $this->getHeaders()), []);
                 $this->assertEquals(204, $execution['headers']['status-code']);
             }, 10000, 500);
+
+            /**
+             * Test for FAILURE
+             */
+            $execution = $this->createExecution($data['functionId'], [
+                'headers' => [
+                    'X-Test' => ['bad'],
+                ],
+            ]);
+
+            $this->assertEquals(400, $execution['headers']['status-code']);
+            $this->assertEquals('general_argument_invalid', $execution['body']['type']);
+
+            $execution = $this->createExecution($data['functionId'], [
+                'headers' => [
+                    'bad/name' => 'value',
+                ],
+            ]);
+
+            $this->assertEquals(400, $execution['headers']['status-code']);
+            $this->assertEquals('general_argument_invalid', $execution['body']['type']);
         } finally {
             $this->cleanupFunction($functionId);
         }
