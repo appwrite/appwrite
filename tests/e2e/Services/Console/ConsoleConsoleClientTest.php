@@ -44,6 +44,23 @@ final class ConsoleConsoleClientTest extends Scope
         // When adding new keys, dont forget to update count a few lines above
     }
 
+    public function testGetVariablesSpatialSupport(): void
+    {
+        $response = $this->client->call(Client::METHOD_GET, '/console/variables', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertSame(200, $response['headers']['status-code']);
+
+        $adapter = $response['body']['_APP_DB_ADAPTER'];
+        $this->assertSame(
+            \in_array($adapter, ['mariadb', 'mysql', 'postgresql'], true),
+            $response['body']['supportForSpatials'],
+            'Spatial support is advertised exactly on the SQL adapters (adapter: ' . $adapter . ')',
+        );
+    }
+
     public function testListOAuth2Providers(): void
     {
         $response = $this->client->call(Client::METHOD_GET, '/console/oauth2-providers', array_merge([
