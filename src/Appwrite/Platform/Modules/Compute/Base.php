@@ -362,14 +362,14 @@ class Base extends Action
 
         // VCS branch preview
         if (!empty($providerBranch)) {
-            $domain = (new BranchDomainFilter())->apply([
-                'branch' => $providerBranch,
-                'resourceId' => $site->getId(),
-                'projectId' => $project->getId(),
-                'sitesDomain' => $sitesDomain,
-            ]);
-            $ruleId = md5($domain);
             try {
+                $domain = (new BranchDomainFilter())->apply([
+                    'branch' => $providerBranch,
+                    'resourceId' => $site->getId(),
+                    'projectId' => $project->getId(),
+                    'sitesDomain' => $sitesDomain,
+                ]);
+                $ruleId = md5($domain);
                 $rule = $authorization->skip(
                     fn () => $dbForPlatform->createDocument('rules', new Document([
                         '$id' => $ruleId,
@@ -394,6 +394,9 @@ class Base extends Action
                 $bus->dispatch(new RuleCreated($rule->getArrayCopy()));
             } catch (Duplicate $err) {
                 // Ignore, rule already exists; will be updated by builds worker
+            } catch (\InvalidArgumentException) {
+                // The branch name yields no valid hostname, so the deployment goes
+                // ahead without a branch preview rather than storing an unreachable rule
             }
         }
 
@@ -440,41 +443,50 @@ class Base extends Action
             return;
         }
 
-        $domain = (new BranchDomainFilter())->apply([
-            'branch' => $branchName,
-            'resourceId' => $site->getId(),
-            'projectId' => $project->getId(),
-            'sitesDomain' => $sitesDomain,
-        ]);
-        $ruleId = md5($domain);
-
         try {
-            $rule = $dbForPlatform->createDocument('rules', new Document([
-                '$id' => $ruleId,
+            $domain = (new BranchDomainFilter())->apply([
+                'branch' => $branchName,
+                'resourceId' => $site->getId(),
                 'projectId' => $project->getId(),
-                'projectInternalId' => $project->getSequence(),
-                'domain' => $domain,
-                'type' => 'deployment',
-                'trigger' => 'deployment',
-                'deploymentId' => $deployment->getId(),
-                'deploymentInternalId' => $deployment->getSequence(),
-                'deploymentResourceType' => 'site',
-                'deploymentResourceId' => $site->getId(),
-                'deploymentResourceInternalId' => $site->getSequence(),
-                'deploymentVcsProviderBranch' => $branchName,
-                'status' => 'verified',
-                'certificateId' => '',
-                'search' => implode(' ', [$ruleId, $domain]),
-                'owner' => 'Appwrite',
-                'region' => $project->getAttribute('region'),
-            ]));
-            $bus->dispatch(new RuleCreated($rule->getArrayCopy()));
-        } catch (Duplicate) {
-            $rule = $dbForPlatform->updateDocument('rules', $ruleId, new Document([
-                'deploymentId' => $deployment->getId(),
-                'deploymentInternalId' => $deployment->getSequence(),
-            ]));
-            $bus->dispatch(new RuleUpdated($rule->getArrayCopy()));
+                'sitesDomain' => $sitesDomain,
+            ]);
+        } catch (\InvalidArgumentException) {
+            // The branch name yields no valid hostname. Skip only the preview rule:
+            // manual rules pinned to the branch below still follow the deployment.
+            $domain = null;
+        }
+
+        if ($domain !== null) {
+            $ruleId = md5($domain);
+
+            try {
+                $rule = $dbForPlatform->createDocument('rules', new Document([
+                    '$id' => $ruleId,
+                    'projectId' => $project->getId(),
+                    'projectInternalId' => $project->getSequence(),
+                    'domain' => $domain,
+                    'type' => 'deployment',
+                    'trigger' => 'deployment',
+                    'deploymentId' => $deployment->getId(),
+                    'deploymentInternalId' => $deployment->getSequence(),
+                    'deploymentResourceType' => 'site',
+                    'deploymentResourceId' => $site->getId(),
+                    'deploymentResourceInternalId' => $site->getSequence(),
+                    'deploymentVcsProviderBranch' => $branchName,
+                    'status' => 'verified',
+                    'certificateId' => '',
+                    'search' => implode(' ', [$ruleId, $domain]),
+                    'owner' => 'Appwrite',
+                    'region' => $project->getAttribute('region'),
+                ]));
+                $bus->dispatch(new RuleCreated($rule->getArrayCopy()));
+            } catch (Duplicate) {
+                $rule = $dbForPlatform->updateDocument('rules', $ruleId, new Document([
+                    'deploymentId' => $deployment->getId(),
+                    'deploymentInternalId' => $deployment->getSequence(),
+                ]));
+                $bus->dispatch(new RuleUpdated($rule->getArrayCopy()));
+            }
         }
 
         $dbForPlatform->forEach('rules', function (Document $rule) use ($dbForPlatform, $deployment, $bus) {

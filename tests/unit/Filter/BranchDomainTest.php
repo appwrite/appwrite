@@ -97,4 +97,30 @@ final class BranchDomainTest extends TestCase
         $this->assertStringStartsWith('branch-dependabot-npm-a-', $domain);
         $this->assertStringEndsWith('.appwrite.network', $domain);
     }
+
+    public function testBranchOfOnlySeparatorsStillYieldsAHostname(): void
+    {
+        $domain = (new BranchDomainFilter())->apply([
+            'branch' => '///',
+            'resourceId' => 'site123',
+            'projectId' => 'proj456',
+            'sitesDomain' => 'appwrite.network'
+        ]);
+
+        $this->assertNotFalse(\filter_var($domain, FILTER_VALIDATE_DOMAIN, FILTER_FLAG_HOSTNAME));
+    }
+
+    public function testInvalidHostnameIsRefused(): void
+    {
+        // A sites domain carrying a path is enough to break the result, as the
+        // unsanitized branch "/" once did for every dependabot preview rule.
+        $this->expectException(\InvalidArgumentException::class);
+
+        (new BranchDomainFilter())->apply([
+            'branch' => 'main',
+            'resourceId' => 'site123',
+            'projectId' => 'proj456',
+            'sitesDomain' => 'appwrite.network/path'
+        ]);
+    }
 }

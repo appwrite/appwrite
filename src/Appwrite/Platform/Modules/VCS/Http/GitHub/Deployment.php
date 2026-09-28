@@ -445,14 +445,14 @@ trait Deployment
 
                     // VCS branch preview
                     if (!empty($providerBranch)) {
-                        $domain = (new BranchDomainFilter())->apply([
-                            'branch' => $providerBranch,
-                            'resourceId' => $resource->getId(),
-                            'projectId' => $project->getId(),
-                            'sitesDomain' => $sitesDomain,
-                        ]);
-                        $ruleId = md5($domain);
                         try {
+                            $domain = (new BranchDomainFilter())->apply([
+                                'branch' => $providerBranch,
+                                'resourceId' => $resource->getId(),
+                                'projectId' => $project->getId(),
+                                'sitesDomain' => $sitesDomain,
+                            ]);
+                            $ruleId = md5($domain);
                             $rule = $authorization->skip(
                                 fn () => $dbForPlatform->createDocument('rules', new Document([
                                     '$id' => $ruleId,
@@ -477,6 +477,9 @@ trait Deployment
                             $bus->dispatch(new RuleCreated($rule->getArrayCopy()));
                         } catch (Duplicate $err) {
                             // Ignore, rule already exists; will be updated by builds worker
+                        } catch (\InvalidArgumentException) {
+                            // The branch name yields no valid hostname, so the deployment goes
+                            // ahead without a branch preview rather than storing an unreachable rule
                         }
                     }
 
