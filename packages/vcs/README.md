@@ -43,7 +43,7 @@ $github->initializeVariables($installationId, $privateKey, $githubAppId);
 $owner = '<repository-owner>';
 $name = '<repository-name>';
 $isPrivate = true; // Set to false if you want to create a public repository
-$repository = $github->createRepository($owner, $name, $private);
+$repository = $github->createRepository($owner, $name, $isPrivate);
 ```
 
 ### Environment variables
