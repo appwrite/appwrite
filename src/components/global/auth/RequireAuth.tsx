@@ -44,6 +44,10 @@ function isAuthPage(pathname: string): boolean {
 export function isOptionalAuthPage(pathname: string): boolean {
   // Native consent owns guest PAR/sign-in; the global guard must not preempt it.
   if (pathname === '/oauth2/consent') return true
+  // Native SDK OAuth relays open in a browser with no console session.
+  if (pathname === '/auth/oauth2/success' || pathname === '/auth/oauth2/failure') {
+    return true
+  }
   const features = getActiveProfileFeatures()
   if (pathname === '/init' || pathname.startsWith('/init/')) {
     return isInitSurfaceEnabled()
