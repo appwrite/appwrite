@@ -62,6 +62,7 @@
             "Utopia\\System\\": "packages/system/src",
             "Utopia\\Telemetry\\": "packages/telemetry/src",
             "Utopia\\UserAgent\\": "packages/user-agent/src",
+            "Utopia\\VCS\\": "packages/vcs/src",
             "Utopia\\WebSocket\\": "packages/websocket/src",
             "Utopia\\": [
                 "packages/console/src",
@@ -112,17 +113,13 @@
             "Utopia\\Telemetry\\Tests\\": "packages/telemetry/tests",
             "Utopia\\UserAgent\\Tests\\": "packages/user-agent/tests",
             "Utopia\\Validator\\Tests\\": "packages/validators/tests",
+            "Utopia\\VCS\\Tests\\": "packages/vcs/tests",
             "Utopia\\WebSocket\\Tests\\": "packages/websocket/tests"
         }
     },
     "minimum-stability": "dev",
     "prefer-stable": true,
-    "repositories": [
-        {
-            "type": "vcs",
-            "url": "https://github.com/utopia-php/vcs"
-        }
-    ],
+    "repositories": [],
     "require": {
         "php": ">=8.5.0",
         "ext-curl": "*",
@@ -148,7 +145,6 @@
         "utopia-php/migration": "^2.0.0",
         "utopia-php/platform": "1.0.0-rc25",
         "mustangostang/spyc": "0.6.*",
-        "utopia-php/vcs": "5.5.*",
         "dragonmantank/cron-expression": "3.4.*",
         "chillerlan/php-qrcode": "4.3.*",
         "adhocore/jwt": "1.1.*",
@@ -232,6 +228,7 @@
         "utopia-php/telemetry": "*",
         "utopia-php/user-agent": "*",
         "utopia-php/validators": "*",
+        "utopia-php/vcs": "*",
         "utopia-php/websocket": "*"
     }
 }
