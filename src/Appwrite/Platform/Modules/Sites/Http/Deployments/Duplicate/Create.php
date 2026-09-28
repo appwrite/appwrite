@@ -113,15 +113,15 @@ class Create extends Action
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
-        // Copy the stored source when there is one. Remote-source deployments
-        // (templates / VCS) built before their source was kept have none, so
-        // a duplicate re-fetches the same source from the coordinates
-        // persisted on the deployment.
+        // Remote-source deployments (templates / VCS) re-fetch from the
+        // coordinates persisted on the deployment, so a VCS redeploy picks up
+        // the resource's current root directory. The source kept from their
+        // build only serves downloads.
         $path = $deployment->getAttribute('sourcePath');
-        $hasSource = !empty($path) && $deviceForSites->exists($path);
         $installationId = $deployment->getAttribute('installationId', '');
         $owner = $deployment->getAttribute('providerRepositoryOwner', '');
         $repository = $deployment->getAttribute('providerRepositoryName', '');
+        $hasSource = ($owner === '' || $repository === '') && !empty($path) && $deviceForSites->exists($path);
 
         if (!$hasSource && ($owner === '' || $repository === '')) {
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
