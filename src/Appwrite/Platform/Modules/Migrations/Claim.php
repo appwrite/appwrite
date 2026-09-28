@@ -114,7 +114,7 @@ final readonly class Claim
     ): Document {
         $this->assertReady();
 
-        return $this->initial(
+        return $this->publish(
             project: $project,
             migration: $this->database->createDocument('migrations', new Document([
                 ...$migration->getArrayCopy(),
@@ -134,14 +134,12 @@ final readonly class Claim
      *
      * @param array<string, mixed> $platform
      */
-    public function initial(
+    private function publish(
         Document $project,
         Document $migration,
         array $platform,
         MigrationPublisher $publisher,
     ): Document {
-        $this->assertReady();
-
         $migrationId = $migration->getId();
         if ($migrationId === '') {
             throw new \LogicException('Migration identifier is missing');

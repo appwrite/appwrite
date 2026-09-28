@@ -45,6 +45,19 @@ final class InterleavingClaimDatabase extends Database
 {
     public ?\Closure $afterMigrationRead = null;
 
+    /**
+     * @var list<string>
+     */
+    public array $purged = [];
+
+    #[\Override]
+    public function purgeCachedCollection(string $collectionId): bool
+    {
+        $this->purged[] = $collectionId;
+
+        return parent::purgeCachedCollection($collectionId);
+    }
+
     #[\Override]
     public function getDocument(string $collection, string $id, array $queries = [], bool $forUpdate = false): Document
     {
@@ -635,6 +648,8 @@ final class ClaimTest extends TestCase
 
     public function testStartLeavesNothingStoredWhenPublishingFails(): void
     {
+        $error = null;
+
         try {
             (new Claim($this->database, $this->locks()))->start(
                 project: new Document(['$id' => 'project-1']),
@@ -642,81 +657,36 @@ final class ClaimTest extends TestCase
                 platform: [],
                 publisher: new MigrationPublisher($this->unavailablePublisher(), new Queue('migrations')),
             );
-            $this->fail('Expected enqueue failure');
-        } catch (\RuntimeException $error) {
-            $this->assertSame('Queue unavailable', $error->getMessage());
+        } catch (\RuntimeException $caught) {
+            $error = $caught;
         }
 
+        $this->assertInstanceOf(\RuntimeException::class, $error, 'Expected enqueue failure');
+        $this->assertSame('Queue unavailable', $error->getMessage());
         $this->assertSame([], $this->database->find('migrations'));
     }
 
-    public function testInitialPublishFailureDeletesOnlyItsExactGeneration(): void
+    public function testStartChecksTheOwnershipSchemaOnce(): void
     {
-        $migration = $this->database->createDocument('migrations', new Document([
-            '$id' => 'migration-1',
-            'attemptId' => 'attempt-initial',
-            'status' => 'pending',
-            'stage' => 'init',
-            'resourceData' => [],
-        ]));
-        $claims = new Claim($this->database, $this->locks());
-        $publisher = new class () implements Publisher {
-            #[\Override]
-            public function publish(Queue $queue, array $payload): bool
-            {
-                throw new \RuntimeException('Queue unavailable');
-            }
+        $database = $this->database;
+        $this->assertInstanceOf(InterleavingClaimDatabase::class, $database);
+        $database->purged = [];
 
-            #[\Override]
-            public function publishMany(Queue $queue, array $payloads): bool
-            {
-                throw new \LogicException('Not used');
-            }
+        (new Claim($database, $this->locks()))->start(
+            project: new Document(['$id' => 'project-1']),
+            migration: new Document(['$id' => 'migration-1', 'resourceData' => []]),
+            platform: [],
+            publisher: new MigrationPublisher(new MockPublisher(), new Queue('migrations')),
+        );
 
-            #[\Override]
-            public function retry(Queue $queue, ?int $limit = null): void
-            {
-            }
-
-            #[\Override]
-            public function getQueueSize(Queue $queue, bool $failedJobs = false): int
-            {
-                return 0;
-            }
-
-            #[\Override]
-            public function getFailedCount(Queue $queue): int
-            {
-                return 0;
-            }
-        };
-
-        try {
-            $claims->initial(
-                project: new Document(['$id' => 'project-1']),
-                migration: $migration,
-                platform: [],
-                publisher: new MigrationPublisher($publisher, new Queue('migrations')),
-            );
-            $this->fail('Expected enqueue failure');
-        } catch (\RuntimeException $error) {
-            $this->assertSame('Queue unavailable', $error->getMessage());
-        }
-
-        $this->assertTrue($this->database->getDocument('migrations', $migration->getId())->isEmpty());
+        $purged = $database->purged;
+        \sort($purged);
+        $this->assertSame(['databases', 'migrations'], $purged, 'a readiness check purges and re-reads both ownership collections, and one start needs one check');
     }
 
-    public function testInitialRollbackDoesNotDeleteNewerGeneration(): void
+    public function testStartRollbackDoesNotDeleteNewerGeneration(): void
     {
-        $migration = $this->database->createDocument('migrations', new Document([
-            '$id' => 'migration-1',
-            'attemptId' => 'attempt-initial',
-            'status' => 'pending',
-            'stage' => 'init',
-            'resourceData' => [],
-        ]));
-        $database = $this->database;
-        $publisher = new class ($database, $migration->getId()) implements Publisher {
+        $publisher = new class ($this->database, 'migration-1') implements Publisher {
             public function __construct(
                 private readonly Database $database,
                 private readonly string $migrationId,
@@ -758,66 +728,55 @@ final class ClaimTest extends TestCase
                 return 0;
             }
         };
-        $claims = new Claim($this->database, $this->locks());
+        $error = null;
 
         try {
-            $claims->initial(
+            (new Claim($this->database, $this->locks()))->start(
                 project: new Document(['$id' => 'project-1']),
-                migration: $migration,
+                migration: new Document(['$id' => 'migration-1', 'resourceData' => []]),
                 platform: [],
                 publisher: new MigrationPublisher($publisher, new Queue('migrations')),
             );
-            $this->fail('Expected enqueue failure');
-        } catch (\RuntimeException $error) {
-            $this->assertSame('Ambiguous enqueue failure', $error->getMessage());
+        } catch (\RuntimeException $caught) {
+            $error = $caught;
         }
 
-        $stored = $this->database->getDocument('migrations', $migration->getId());
+        $this->assertInstanceOf(\RuntimeException::class, $error, 'Expected enqueue failure');
+        $this->assertSame('Ambiguous enqueue failure', $error->getMessage());
+        $stored = $this->database->getDocument('migrations', 'migration-1');
         $this->assertSame('attempt-newer', $stored->getAttribute('attemptId'));
         $this->assertSame('pending', $stored->getAttribute('status'));
         $this->assertSame('init', $stored->getAttribute('stage'));
     }
 
-    public function testStaleInitialProducerCannotPublishAfterLeaseExpires(): void
+    public function testStartDoesNotPublishAGenerationAnotherWriterMovedOn(): void
     {
-        $original = $this->database->createDocument('migrations', new Document([
-            '$id' => 'migration-1',
-            'attemptId' => 'attempt-original',
-            'status' => 'pending',
-            'stage' => 'init',
-            'resourceData' => [],
-        ]));
+        $database = $this->database;
         $publisher = new MockPublisher();
-        $migrationPublisher = new MigrationPublisher($publisher, new Queue('migrations'));
-        $claims = new Claim($this->database, $this->locks());
+        $claims = new Claim($database, static function (string $key, int $ttl, callable $callback, float $timeout) use ($database): mixed {
+            $database->updateDocument('migrations', 'migration-1', new Document([
+                'attemptId' => 'attempt-newer',
+            ]));
 
-        // Producer A holds this snapshot past its lease. Producer B claims it first.
-        $claimed = $claims->initial(
-            project: new Document(['$id' => 'project-1']),
-            migration: $original,
-            platform: [],
-            publisher: $migrationPublisher,
-        );
-
-        $this->assertNotSame($original->getAttribute('attemptId'), $claimed->getAttribute('attemptId'));
-        $this->assertCount(1, $publisher->getEvents('migrations'));
+            return $callback();
+        });
+        $error = null;
 
         try {
-            $claims->initial(
+            $claims->start(
                 project: new Document(['$id' => 'project-1']),
-                migration: $original,
+                migration: new Document(['$id' => 'migration-1', 'resourceData' => []]),
                 platform: [],
-                publisher: $migrationPublisher,
+                publisher: new MigrationPublisher($publisher, new Queue('migrations')),
             );
-            $this->fail('Expected the stale producer generation to be refused');
-        } catch (\LogicException $error) {
-            $this->assertSame('Initial migration generation is no longer publishable', $error->getMessage());
+        } catch (\LogicException $caught) {
+            $error = $caught;
         }
 
-        $this->assertCount(1, $publisher->getEvents('migrations'));
-        $queued = MigrationMessage::fromArray($publisher->getEvents('migrations')[0]);
-        $this->assertSame($claimed->getAttribute('attemptId'), $queued->migration->getAttribute('attemptId'));
-        $this->assertSame($claimed->getUpdatedAt(), $queued->migration->getUpdatedAt());
+        $this->assertInstanceOf(\LogicException::class, $error, 'Expected the superseded generation to be refused');
+        $this->assertSame('Initial migration generation is no longer publishable', $error->getMessage());
+        $this->assertSame(0, $publisher->getQueueSize(new Queue('migrations')), 'nothing is published');
+        $this->assertSame('attempt-newer', $database->getDocument('migrations', 'migration-1')->getAttribute('attemptId'));
     }
 
     public function testWorkerPersistenceRefusesSupersededGeneration(): void
@@ -930,29 +889,25 @@ final class ClaimTest extends TestCase
         $this->assertSame('finished', $stored->getAttribute('stage'));
     }
 
-    public function testInitialClaimRefusesDocumentDeletedAfterGenerationRead(): void
+    public function testStartRefusesDocumentDeletedAfterGenerationRead(): void
     {
-        $migration = $this->database->createDocument('migrations', new Document([
-            '$id' => 'migration-1',
-            'attemptId' => 'attempt-a',
-            'status' => 'pending',
-            'stage' => 'init',
-            'resourceData' => [],
-        ]));
         $publisher = new MockPublisher();
-        $this->deleteAfterRead($migration->getId());
+        $this->deleteAfterRead('migration-1');
+        $error = null;
 
         try {
-            (new Claim($this->database))->initial(
+            (new Claim($this->database))->start(
                 project: new Document(['$id' => 'project-1']),
-                migration: $migration,
+                migration: new Document(['$id' => 'migration-1', 'resourceData' => []]),
                 platform: [],
                 publisher: new MigrationPublisher($publisher, new Queue('migrations')),
             );
-            $this->fail('Expected deleted initial claim to lose ownership');
-        } catch (Conflict) {
-            $this->assertEmpty($publisher->getEvents('migrations'));
+        } catch (Conflict $caught) {
+            $error = $caught;
         }
+
+        $this->assertInstanceOf(Conflict::class, $error, 'Expected deleted initial claim to lose ownership');
+        $this->assertSame(0, $publisher->getQueueSize(new Queue('migrations')), 'nothing is published');
     }
 
     public function testRetryClaimRefusesDocumentDeletedAfterGenerationRead(): void
