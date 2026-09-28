@@ -99,11 +99,11 @@ class Update extends Action
                 ]
             ))
             ->param('messageId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Message ID.', false, ['dbForProject'])
+            ->param('title', null, new Nullable(new Text(256)), 'Title for push notification.', true)
+            ->param('body', null, new Nullable(new Text(64230)), 'Body for push notification.', true)
             ->param('topics', null, fn (Database $dbForProject) => new Nullable(new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength()))), 'List of Topic IDs.', true, ['dbForProject'])
             ->param('users', null, fn (Database $dbForProject) => new Nullable(new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength()))), 'List of User IDs.', true, ['dbForProject'])
             ->param('targets', null, fn (Database $dbForProject) => new Nullable(new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength()))), 'List of Targets IDs.', true, ['dbForProject'])
-            ->param('title', null, new Nullable(new Text(256)), 'Title for push notification.', true)
-            ->param('body', null, new Nullable(new Text(64230)), 'Body for push notification.', true)
             ->param('data', null, new Nullable(new JSONObject()), 'Additional Data for push notification.', true)
             ->param('action', null, new Nullable(new Text(256)), 'Action for push notification.', true)
             ->param('image', null, new Nullable(new CompoundUID()), 'Image for push notification. Must be a compound bucket ID to file ID of a jpeg, png, or bmp image in Appwrite Storage. It should be formatted as <BUCKET_ID>:<FILE_ID>.', true)
@@ -127,7 +127,7 @@ class Update extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $messageId, ?array $topics, ?array $users, ?array $targets, ?string $title, ?string $body, null|array|\stdClass $data, ?string $action, ?string $image, ?string $icon, ?string $sound, ?string $color, ?string $tag, ?int $badge, ?bool $draft, ?string $scheduledAt, ?bool $contentAvailable, ?bool $critical, ?string $priority, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, MessagingPublisher $publisherForMessaging, Response $response, array $platform)
+    public function action(string $messageId, ?string $title, ?string $body, ?array $topics, ?array $users, ?array $targets, null|array|\stdClass $data, ?string $action, ?string $image, ?string $icon, ?string $sound, ?string $color, ?string $tag, ?int $badge, ?bool $draft, ?string $scheduledAt, ?bool $contentAvailable, ?bool $critical, ?string $priority, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, MessagingPublisher $publisherForMessaging, Response $response, array $platform)
     {
         $data = $this->normalizeJsonObject($data);
 
