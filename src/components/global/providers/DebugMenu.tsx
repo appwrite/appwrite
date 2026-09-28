@@ -1856,6 +1856,21 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 'Usage & analytics',
               ),
               createDebugFeatureFlagItem(
+                'Project environments',
+                'Show the mock environment switcher (Production, Staging, Development, Preview) in the project sidebar.',
+                'showProjectEnvironments',
+                overrides.showProjectEnvironments,
+                (checked) => {
+                  setOverrides((prev) => ({
+                    ...prev,
+                    showProjectEnvironments: checked,
+                  }))
+                  setDebugOverride('showProjectEnvironments', checked)
+                },
+                undefined,
+                'UI & tools',
+              ),
+              createDebugFeatureFlagItem(
                 'Show native app bar',
                 'App bar above header (native OS).',
                 'showNativeAppBar',
