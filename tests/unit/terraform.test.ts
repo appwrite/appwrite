@@ -165,6 +165,15 @@ describe('isTerraformDriftSettled', () => {
     expect(isTerraformDriftSettled(recorded, change, soon)).toBe(true)
   })
 
+  test('an earlier change to the same resource does not settle a newer one', () => {
+    const recorded =
+      summarizeTerraformActivity(STAGING_EVENTS).resources['function/api']
+    const newer = { ...change, time: '2026-09-28T12:03:30.000+00:00' }
+    expect(
+      isTerraformDriftSettled(recorded, newer, Date.parse(newer.time) + 1000),
+    ).toBe(false)
+  })
+
   test('settles when Terraform applies afterwards or the resource goes away', () => {
     const applied = { ...managed, appliedAt: '2026-09-28T12:10:00.000+00:00' }
     expect(isTerraformDriftSettled(applied, change, soon)).toBe(true)

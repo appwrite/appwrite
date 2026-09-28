@@ -131,7 +131,7 @@ export function markTerraformDrift(
   }
 }
 
-/** Browser and server clocks disagree slightly, so compare drift times loosely. */
+/** Browser and server clocks disagree slightly, so only a clearly later apply counts. */
 const CLOCK_SKEW_MS = 2 * 60 * 1000
 
 /** Stop waiting for the log after this long, so a lost event cannot pin a warning. */
@@ -151,8 +151,6 @@ export function isTerraformDriftSettled(
   if (!resource) return true
   if (now - recordedAt > PENDING_DRIFT_TTL_MS) return true
   if (Date.parse(resource.appliedAt) > recordedAt + CLOCK_SKEW_MS) return true
-  return (
-    !!resource.drift &&
-    Date.parse(resource.drift.time) >= recordedAt - CLOCK_SKEW_MS
-  )
+  // No skew allowance here: an earlier change to the same resource must not settle a newer one.
+  return !!resource.drift && Date.parse(resource.drift.time) >= recordedAt
 }
