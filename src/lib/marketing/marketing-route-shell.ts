@@ -1,4 +1,8 @@
-import { isConsoleRedirectHopPath } from '@/lib/root-guest-redirect'
+import {
+  isConsoleRedirectHopPath,
+  isRootHomeMatch,
+  isRootRedirectPath,
+} from '@/lib/root-guest-redirect'
 import { matchesMarketingPagePath } from '@/lib/marketing/is-marketing-page-path'
 import {
   MARKETING_PAGE_ROUTE_STATIC_DATA,
@@ -55,8 +59,13 @@ function isConsoleAuthRouteMatch(
   )
 }
 
-export function isExcludedMarketingSiteLayoutPath(pathname: string): boolean {
-  if (isConsoleRedirectHopPath(pathname)) return true
+export function isExcludedMarketingSiteLayoutPath(
+  pathname: string,
+  { rootHome = false }: { rootHome?: boolean } = {},
+): boolean {
+  if (isConsoleRedirectHopPath(pathname)) {
+    return !(rootHome && isRootRedirectPath(pathname))
+  }
   const normalized = normalizeShellPath(pathname)
   if (isConsoleAuthPath(normalized)) return true
   if (normalized === '/generator' || normalized.startsWith('/generator/')) {
@@ -116,10 +125,21 @@ export function shouldUseMarketingSiteLayout({
 }: {
   marketingEnabled: boolean
   pathname: string
-  matches: Array<{ staticData?: unknown; routeId?: string }>
+  matches: Array<{
+    staticData?: unknown
+    routeId?: string
+    status?: string
+    loaderData?: unknown
+  }>
 }): boolean {
   if (isConsoleAuthRouteMatch(matches)) return false
-  if (isExcludedMarketingSiteLayoutPath(pathname)) return false
+  if (
+    isExcludedMarketingSiteLayoutPath(pathname, {
+      rootHome: isRootHomeMatch(matches),
+    })
+  ) {
+    return false
+  }
 
   if (resolveMarketingRouteShellOptions(matches) !== null) {
     return true

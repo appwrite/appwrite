@@ -9,10 +9,15 @@ import {
 } from '@/lib/pre-launch'
 import { isLocalDevelopmentHost } from '@/lib/sentry/environment-shared'
 
-export type RootGuestRedirectPath = '/init' | '/sign-in' | '/home'
+export type RootGuestRedirectPath = '/init' | '/sign-in'
 
 /** Client console entry after auth or from `/`. */
 export const CONSOLE_ENTRY_PATH = '/' as const
+
+/** Route id of `/`: the marketing homepage for guests, a console hop otherwise. */
+export const ROOT_HOME_ROUTE_ID = '/_marketing/'
+
+export type RootHomeLoaderData = { view: 'home' | 'console' }
 
 export type RootDocumentRedirectPath = RootGuestRedirectPath
 
@@ -26,10 +31,29 @@ export function isRootRedirectPath(pathname: string | undefined): boolean {
   return normalized === '/'
 }
 
-/** `/` (and legacy `/app`) are blank redirect hops (no marketing/console chrome). */
+/**
+ * `/` (and legacy `/app`) are blank redirect hops (no marketing/console chrome)
+ * unless `/` resolved to the guest homepage (see {@link isRootHomeMatch}).
+ */
 export function isConsoleRedirectHopPath(pathname: string | undefined): boolean {
   const normalized = (pathname ?? '/').replace(/\/+$/, '') || '/'
   return normalized === '/' || normalized === '/app'
+}
+
+/** True when the rendered `/` match is showing the marketing homepage. */
+export function isRootHomeMatch(
+  matches: ReadonlyArray<{
+    routeId?: string
+    status?: string
+    loaderData?: unknown
+  }>,
+): boolean {
+  return matches.some(
+    (match) =>
+      match.routeId === ROOT_HOME_ROUTE_ID &&
+      match.status === 'success' &&
+      (match.loaderData as RootHomeLoaderData | undefined)?.view === 'home',
+  )
 }
 
 function isLocalSiteRequest(request: Request): boolean {
@@ -62,9 +86,9 @@ export function rootRedirectLocationPath(
 }
 
 /**
- * 301 for the stable public landing (`/home`, and `/sign-in` when marketing is
- * off). Crawlers do not send a console session cookie, so this is the URL
- * they should index; a 302 would leave `/` in the index with no content.
+ * 301 for `/sign-in` when marketing is off. Crawlers do not send a console
+ * session cookie, so this is the URL they should index; a 302 would leave `/`
+ * in the index with no content.
  *
  * 302 for pre-launch `/init` only.
  */
@@ -75,15 +99,25 @@ export function getRootGuestRedirectStatus(
 }
 
 /**
+ * `/` requests the server cannot classify as guest: a console session cookie
+ * is present, or the host is localhost (where the Appwrite SDK often keeps the
+ * session in `localStorage` via `cookieFallback`). These render `/` as a
+ * client-only hop so the loader can call `account.get` and route to the console.
+ */
+export function isRootConsoleHopRequest(request: Request): boolean {
+  if (isLocalSiteRequest(request)) return true
+  return hasConsoleSessionCookieFromHeader(request.headers.get('cookie'))
+}
+
+/**
  * Where `/` document requests should go before the SPA boots.
  *
- * Guests: 301 `/home` (or `/sign-in` / `/init`). Session cookie: no redirect;
- * the client loader on `/` calls `account.get` (HttpOnly cookies are invisible
- * to JS) and routes to the console.
+ * Guests: no redirect; `/` server-renders the marketing homepage. Pre-launch
+ * guests go to `/init`, and `/sign-in` when marketing is off. Session cookie:
+ * no redirect; the client loader on `/` calls `account.get` (HttpOnly cookies
+ * are invisible to JS) and routes to the console.
  *
- * Skipped on localhost/loopback: the Appwrite SDK often stores the session in
- * `localStorage` (`cookieFallback`) instead of an HTTP cookie, so only the
- * client loader can tell guest vs signed-in.
+ * Skipped on localhost/loopback (see {@link isRootConsoleHopRequest}).
  */
 export function resolveRootGuestRedirect(
   request: Request,
@@ -116,11 +150,12 @@ export function resolveRootGuestRedirect(
     return null
   }
 
-  const dest: RootGuestRedirectPath = isPreLaunchModeEnabled(cookieHeader)
+  const dest: RootGuestRedirectPath | null = isPreLaunchModeEnabled(cookieHeader)
     ? '/init'
     : getActiveProfileWithoutDebugOverride().features.marketing
-      ? '/home'
+      ? null
       : '/sign-in'
+  if (!dest) return null
 
   return {
     url: guestRedirectUrl(request.url, dest),
@@ -128,8 +163,11 @@ export function resolveRootGuestRedirect(
   }
 }
 
-/** Mirrors {@link resolveRootGuestRedirect} for client loaders (no Request). */
-export function resolveRootGuestRedirectPathname(): RootGuestRedirectPath {
+/**
+ * Mirrors {@link resolveRootGuestRedirect} for client loaders (no Request).
+ * `null` means the guest stays on `/` and sees the homepage.
+ */
+export function resolveRootGuestRedirectPathname(): RootGuestRedirectPath | null {
   if (isPreLaunchModeEnabled()) {
     return '/init'
   }
@@ -137,5 +175,5 @@ export function resolveRootGuestRedirectPathname(): RootGuestRedirectPath {
   if (!marketing) {
     return '/sign-in'
   }
-  return '/home'
+  return null
 }

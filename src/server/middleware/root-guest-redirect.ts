@@ -1,5 +1,6 @@
 import { createMiddleware } from '@tanstack/react-start'
 import {
+  isRootConsoleHopRequest,
   isRootRedirectPath,
   resolveRootGuestRedirect,
   rootRedirectLocationPath,
@@ -7,13 +8,13 @@ import {
 import { applyNoIndexResponseHeaders } from '@/lib/seo/indexing'
 
 /**
- * SSR redirect for `/` on production hosts: guests 301 to `/home` (or /init /
- * sign-in). A console session cookie stays on `/`, where the client calls
- * `account.get` (HttpOnly cookies are not visible to JS). Localhost skips this
- * and uses the client loader in `routes/_public/index.tsx` (`cookieFallback`).
+ * SSR handling for `/` on production hosts: guests get the server-rendered
+ * marketing homepage (or a redirect to /init / sign-in). A console session
+ * cookie keeps `/` as a client-only hop, where the client calls `account.get`
+ * (HttpOnly cookies are not visible to JS). Localhost always uses the client
+ * hop in `routes/_marketing/index.tsx` (`cookieFallback`).
  *
- * `/home` uses 301 so crawlers index the marketing homepage. Pre-launch `/init`
- * stays 302. Any HTML that still renders `/` is noindexed.
+ * The response varies by cookie, and the console hop HTML is noindexed.
  */
 export const rootGuestRedirectMiddleware = createMiddleware({
   type: 'request',
@@ -34,12 +35,16 @@ export const rootGuestRedirectMiddleware = createMiddleware({
   }
 
   const { response } = result
+  const headers = isRootConsoleHopRequest(request)
+    ? applyNoIndexResponseHeaders(response.headers)
+    : new Headers(response.headers)
+  headers.append('Vary', 'Cookie')
   return {
     ...result,
     response: new Response(response.body, {
       status: response.status,
       statusText: response.statusText,
-      headers: applyNoIndexResponseHeaders(response.headers),
+      headers,
     }),
   }
 })

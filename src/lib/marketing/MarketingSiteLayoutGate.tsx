@@ -8,6 +8,7 @@ import {
   isExcludedMarketingSiteLayoutPath,
   shouldUseMarketingSiteLayout,
 } from '@/lib/marketing/marketing-route-shell'
+import { isRootHomeMatch, isRootRedirectPath } from '@/lib/root-guest-redirect'
 
 type MarketingSiteLayoutGateProps = {
   children: ReactNode
@@ -30,10 +31,17 @@ export function MarketingSiteLayoutGate({
   const matches = useMatches()
   const { features } = useConsoleProfile()
   const keepMarketingShellRef = useRef(false)
+  const rootHome = isRootHomeMatch(matches)
+
+  // A pending `/` is undecided (homepage for guests, console for signed-in
+  // users) until its loader resolves, so it neither keeps nor drops the shell.
+  const pendingRootUndecided =
+    isRootRedirectPath(pendingPathname) && pendingPathname !== resolvedPathname
 
   const leavingMarketingShell =
-    isExcludedMarketingSiteLayoutPath(pendingPathname) ||
-    isConsoleAreaPath(pendingPathname)
+    !pendingRootUndecided &&
+    (isExcludedMarketingSiteLayoutPath(pendingPathname, { rootHome }) ||
+      isConsoleAreaPath(pendingPathname))
 
   const computed =
     !leavingMarketingShell &&
@@ -53,7 +61,7 @@ export function MarketingSiteLayoutGate({
   } else if (computed) {
     keepMarketingShellRef.current = true
   } else if (
-    isExcludedMarketingSiteLayoutPath(resolvedPathname) ||
+    isExcludedMarketingSiteLayoutPath(resolvedPathname, { rootHome }) ||
     isConsoleAreaPath(resolvedPathname)
   ) {
     keepMarketingShellRef.current = false
