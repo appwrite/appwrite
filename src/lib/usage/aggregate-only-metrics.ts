@@ -2,27 +2,15 @@ import type { Models } from '@appwrite.io/console'
 import { BANDWIDTH_EVENT_METRICS } from '@/lib/usage/bandwidth-events'
 import { REQUESTS_EVENT_METRICS } from '@/lib/usage/requests-events'
 
-/**
- * Plan field from billing API. Typed as an extension until the SDK pin
- * includes `usageAggregateOnlyMetrics` on `Models.BillingPlan`.
- */
-export type BillingPlanAggregateOnlyMetricsFields = {
-  usageAggregateOnlyMetrics?: string[]
-}
-
 export type UsageAggregateOnlyPlan =
-  | (Models.BillingPlan & BillingPlanAggregateOnlyMetricsFields)
-  | BillingPlanAggregateOnlyMetricsFields
+  | Pick<Models.BillingPlan, 'usageAggregateOnlyMetrics'>
   | null
   | undefined
 
 export function getUsageAggregateOnlyMetrics(
   plan: UsageAggregateOnlyPlan,
 ): ReadonlySet<string> {
-  const metrics =
-    (plan as BillingPlanAggregateOnlyMetricsFields | null | undefined)
-      ?.usageAggregateOnlyMetrics ?? []
-  return new Set(metrics)
+  return new Set(plan?.usageAggregateOnlyMetrics ?? [])
 }
 
 /** True when any of the given metrics are totals-only on this plan. */

@@ -83,8 +83,10 @@ export function persistAcquisitionSource(
   source: AcquisitionSource,
   storage: Pick<Storage, 'setItem'>,
 ): void {
-  if (source.utmSource) storage.setItem(STORAGE_KEYS.utmSource, source.utmSource)
-  if (source.utmMedium) storage.setItem(STORAGE_KEYS.utmMedium, source.utmMedium)
+  if (source.utmSource)
+    storage.setItem(STORAGE_KEYS.utmSource, source.utmSource)
+  if (source.utmMedium)
+    storage.setItem(STORAGE_KEYS.utmMedium, source.utmMedium)
   if (source.utmCampaign) {
     storage.setItem(STORAGE_KEYS.utmCampaign, source.utmCampaign)
   }
@@ -126,9 +128,7 @@ export function getReferrerAndUtmSource(
 ): Record<string, string> {
   if (!storage) return {}
 
-  return (
-    ['utmReferral', 'utmSource', 'utmMedium'] as const
-  ).reduce(
+  return (['utmReferral', 'utmSource', 'utmMedium'] as const).reduce(
     (acc, key) => {
       const value = storage.getItem(STORAGE_KEYS[key])
       if (value) acc[key] = value
@@ -199,10 +199,10 @@ function createSource(source: AcquisitionSource): void {
       const client = sdk.forConsole.client
       const endpoint = client.config.endpoint.replace(/\/$/, '')
       const project = client.config.project || 'console'
-      // Cloud marks this route `origin: *` with credentials disabled. The SDK
-      // always sends cookies, which makes the browser reject the preflight
-      // (`PreflightInvalidAllowCredentials`). Attribution is IP/UA fingerprint,
-      // so a cookieless POST is enough.
+      // Cloud marks this route `origin: *` with credentials disabled, so the
+      // POST goes out without cookies; attribution is by IP/UA fingerprint.
+      // This stays a raw fetch because the SDK can't set `keepalive`, which
+      // lets the POST finish when the visitor leaves the landing page.
       const response = await fetch(`${endpoint}/console/sources`, {
         method: 'POST',
         credentials: 'omit',

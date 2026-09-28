@@ -48,7 +48,6 @@ import {
   Webhooks,
   Notifications,
   Waf,
-  type Models,
 } from '@appwrite.io/console'
 import { Agent } from '@/lib/appwrite/agent'
 import {
@@ -518,90 +517,6 @@ export function createRegionalConsoleRealtime(projectId: string): Realtime {
 }
 
 // Create Project SDK instance (raw), then wrap for slow-call reporting
-const tablesDBForProject = new TablesDB(clientProject)
-const documentsDBForProject = new DocumentsDB(clientProject)
-const vectorsDBForProject = new VectorsDB(clientProject)
-
-/**
- * Upstream product `update()` only serializes name / enabled / replicas.
- * Dedicated compute tier changes need `specification` on the same product
- * update path. Extend our project SDK instances so call sites always use
- * `tablesDB.update` / `documentsDB.update` / `vectorsDB.update` (never a
- * raw REST `client.call` from feature code).
- */
-function installProductDatabaseUpdateSpecificationSupport(
-  service: TablesDB | DocumentsDB | VectorsDB,
-  pathPrefix: 'tablesdb' | 'documentsdb' | 'vectorsdb',
-) {
-  const originalUpdate = service.update.bind(service)
-  service.update = ((
-    paramsOrFirst: unknown,
-    ...rest: unknown[]
-  ): Promise<Models.Database> => {
-    const params =
-      paramsOrFirst &&
-      typeof paramsOrFirst === 'object' &&
-      !Array.isArray(paramsOrFirst)
-        ? (paramsOrFirst as Record<string, unknown>)
-        : {
-            databaseId: paramsOrFirst,
-            name: rest[0],
-            enabled: rest[1],
-            replicas: rest[2],
-          }
-
-    const specification =
-      typeof params.specification === 'string'
-        ? params.specification.trim()
-        : undefined
-    if (!specification) {
-      return originalUpdate(
-        paramsOrFirst as never,
-        ...(rest as never[]),
-      ) as Promise<Models.Database>
-    }
-
-    const databaseId = params.databaseId
-    if (typeof databaseId === 'undefined') {
-      return originalUpdate(
-        paramsOrFirst as never,
-        ...(rest as never[]),
-      ) as Promise<Models.Database>
-    }
-
-    const payload: Record<string, unknown> = { specification }
-    if (typeof params.name !== 'undefined') payload.name = params.name
-    if (typeof params.enabled !== 'undefined') payload.enabled = params.enabled
-    if (typeof params.replicas !== 'undefined') {
-      payload.replicas = params.replicas
-    }
-
-    const uri = new URL(
-      `${service.client.config.endpoint}/${pathPrefix}/${encodeURIComponent(String(databaseId))}`,
-    )
-    return service.client.call(
-      'put',
-      uri,
-      {
-        'X-Appwrite-Project': service.client.config.project,
-        'content-type': 'application/json',
-        accept: 'application/json',
-      },
-      payload,
-    ) as Promise<Models.Database>
-  }) as typeof service.update
-}
-
-installProductDatabaseUpdateSpecificationSupport(tablesDBForProject, 'tablesdb')
-installProductDatabaseUpdateSpecificationSupport(
-  documentsDBForProject,
-  'documentsdb',
-)
-installProductDatabaseUpdateSpecificationSupport(
-  vectorsDBForProject,
-  'vectorsdb',
-)
-
 const sdkForProjectRaw = {
   client: clientProject,
   account: new Account(clientProject),
@@ -625,9 +540,9 @@ const sdkForProjectRaw = {
   proxy: new Proxy(clientProject),
   migrations: new Migrations(clientProject),
   sites: new Sites(clientProject),
-  tablesDB: tablesDBForProject,
-  documentsDB: documentsDBForProject,
-  vectorsDB: vectorsDBForProject,
+  tablesDB: new TablesDB(clientProject),
+  documentsDB: new DocumentsDB(clientProject),
+  vectorsDB: new VectorsDB(clientProject),
   waf: new Waf(clientProject),
   console: new Console(clientProject), // suggestions API, unified database list
   usage: new Usage(clientProject),

@@ -1813,29 +1813,26 @@ async function updateProductDatabaseSpecificationViaUpdate(
 ): Promise<Models.Database> {
   const projectSdk = sdk.forProject(projectId)
   const trimmedName = name?.trim()
-  // `specification` is accepted by our project SDK update polyfill until the
-  // console package serializes it upstream.
-  const payload = {
-    databaseId,
-    specification,
-    ...(trimmedName ? { name: trimmedName } : {}),
-  }
 
   if (dbKind === 'documentsdb') {
     return projectSdk.documentsDB.update({
       databaseId,
       name: trimmedName || databaseId,
       specification,
-    } as never)
+    })
   }
   if (dbKind === 'vectorsdb') {
     return projectSdk.vectorsDB.update({
       databaseId,
       name: trimmedName || databaseId,
       specification,
-    } as never)
+    })
   }
-  return projectSdk.tablesDB.update(payload as never)
+  return projectSdk.tablesDB.update({
+    databaseId,
+    specification,
+    ...(trimmedName ? { name: trimmedName } : {}),
+  })
 }
 
 /**
@@ -5142,9 +5139,8 @@ export function useResolvedProductDatabaseLifecycleStatus(
   dbKind: DatabaseRouteKind,
 ) {
   const { database } = useProjectDatabase(projectId, databaseId, dbKind)
-  const { databases: dedicatedDatabases } = useProjectDedicatedDatabases(
-    projectId,
-  )
+  const { databases: dedicatedDatabases } =
+    useProjectDedicatedDatabases(projectId)
   return useMemo(() => {
     const dedicatedStatus = dedicatedDatabases.find(
       (db) => db.$id === databaseId,
