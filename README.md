@@ -20,6 +20,8 @@ It is designed for the AI agents in your workflow as well as for developers. Con
 
 Find out more at [https://appwrite.io](https://appwrite.io).
 
+<!-- CI smoke test -->
+
 Table of Contents:
 
 - [Products](#products)
