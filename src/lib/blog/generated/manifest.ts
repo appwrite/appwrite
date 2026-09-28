@@ -3,6 +3,20 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "announcing-breached-password-detection",
+    "href": "/blog/post/announcing-breached-password-detection",
+    "title": "Announcing breached password detection for Appwrite Auth",
+    "description": "Appwrite Auth now checks passwords against Have I Been Pwned, so you can flag, reject, or block sign-in with passwords exposed in known data breaches.",
+    "date": "2026-09-29",
+    "lastUpdated": "2026-09-29",
+    "timeToRead": 7,
+    "author": "aditya-oberai",
+    "category": "announcements, security",
+    "featured": false,
+    "cover": "/images/blog/announcing-breached-password-detection/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "add-google-one-tap-to-your-web-app",
     "href": "/blog/post/add-google-one-tap-to-your-web-app",
     "title": "Add Google One Tap sign-in to your web app with Appwrite",

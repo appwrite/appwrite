@@ -1827,7 +1827,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/auth/email-password",
     "title": "Email and password login",
     "description": "Implement email and password authentication with Appwrite. Securely register and authenticate users in your applications using Appwrite's robust email-based authentication system.",
-    "excerpt": "Email and password login is the most commonly used authentication method. Appwrite Authentication promotes a safer internet by providing secure APIs and promoting better password choices to end users. Appwrite supports added security features like password strength requirements, blocking personal info in passwords, password dictionary, and password history to help users choose good passwords. You can also restrict which addresses can sign up by enabling email policies to block free, aliased, or disposable email providers. Signup You can use the…",
+    "excerpt": "Email and password login is the most commonly used authentication method. Appwrite Authentication promotes a safer internet by providing secure APIs and promoting better password choices to end users. Appwrite supports added security features like password strength requirements, blocking personal info in passwords, password dictionary, password history, and breached password detection to help users choose good passwords. You can also restrict which addresses can sign up by enabling email policies to block free, aliased, or disposable email providers. Signup You…",
     "breadcrumbs": [
       "Auth",
       "Guides",
@@ -1937,7 +1937,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/auth/native-sign-in",
     "title": "Native sign-in",
     "description": "Sign users in with Sign in with Apple or Google on device, then exchange the ID token for an Appwrite session without a redirect through Appwrite.",
-    "excerpt": "Native sign-in creates an Appwrite session from an OpenID Connect ID token that your app obtained on the device. The app calls the platform's own sign-in API, such as Sign in with Apple on iOS or Credential Manager on Android, and sends the returned ID token to Appwrite. Appwrite verifies the token against the provider's published signing keys and returns a session in the same request. Compared with OAuth2 login, no redirect passes through Appwrite, and the provider configuration holds…",
+    "excerpt": "Native sign-in creates an Appwrite session from an ID token that Apple or Google issues to your app on the device. An ID token is a signed record of who the user is, defined by the OpenID Connect standard. The app calls the platform's own sign-in API, such as Sign in with Apple on iOS or Credential Manager on Android, and sends the returned ID token to Appwrite. Appwrite verifies the token against the provider's published signing keys and returns…",
     "breadcrumbs": [
       "Auth",
       "Guides",
@@ -6357,7 +6357,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "tooling/command-line/non-interactive",
     "title": "Non-interactive",
     "description": "Deploy changes to Appwrite projects to migrate databases and tables schema, functions, teams, buckets, and more.",
-    "excerpt": "The Appwrite CLI can be used in a non-interactive and headless manner, without saving configuration or sessions. This is especially useful when you want to automate tasks on a continuous integration server. You can enable the non-interactive mode for the Appwrite CLI by setting the , , and : When you set the global configuration parameters using the command, they take precedence over the local configuration parameters in your thereby switching the CLI to non-interactive mode. In this mode, the…",
+    "excerpt": "The Appwrite CLI can be used in a non-interactive and headless manner. This is especially useful when you want to automate tasks on a continuous integration server. You can enable the non-interactive mode for the Appwrite CLI by setting the , , and : The command stores the endpoint and API key in the CLI's global configuration, and writes the project ID to your project config file, by default. In this mode, the CLI can only interact with one project…",
     "breadcrumbs": [
       "Tooling",
       "Guides",
