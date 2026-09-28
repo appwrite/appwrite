@@ -5,8 +5,8 @@ use Utopia\System\System;
 
 $templateRuntimes = Config::getParam('template-runtimes');
 // The templates' SDKs need Node 18.17+ (node-appwrite 29) and Python 3.9+ (appwrite 23)
-$templateRuntimes['NODE'] = \array_values(\array_diff($templateRuntimes['NODE'], ['node-14.5', 'node-16.0']));
-$templateRuntimes['PYTHON'] = \array_values(\array_diff($templateRuntimes['PYTHON'], ['python-3.8']));
+$templateRuntimes['NODE'] = \array_diff($templateRuntimes['NODE'], ['node-14.5', 'node-16.0']);
+$templateRuntimes['PYTHON'] = \array_diff($templateRuntimes['PYTHON'], ['python-3.8']);
 $allowList = \array_map('trim', \explode(',', System::getEnv('_APP_FUNCTIONS_RUNTIMES', '')));
 
 function getRuntimes($runtimes, $commands, $entrypoint, $providerRootDirectory, $allowList)
