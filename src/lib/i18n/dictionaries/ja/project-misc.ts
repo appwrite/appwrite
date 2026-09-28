@@ -3032,4 +3032,13 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Delete anyway': '削除を続行',
   'Update anyway': '更新を続行',
   'Via Terraform': 'Terraform 経由',
+
+  // Project environment switcher
+  Environments: '環境',
+  Staging: 'ステージング',
+  Development: '開発',
+  'Switch environment': '環境を切り替え',
+  'Environment switched': '環境を切り替えました',
+  'Create environment': '環境を作成',
+  'Custom environments are coming soon': 'カスタム環境は近日公開予定です',
 }

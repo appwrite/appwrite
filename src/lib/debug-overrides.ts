@@ -23,6 +23,7 @@ const DEBUG_OVERRIDE_EVENT = 'debugOverridesChange'
 export const DEBUG_OVERRIDE_KEYS = {
   showNativeAppBar: 'debug:showNativeAppBar',
   showActivityChart: 'debug:showActivityChart',
+  showProjectEnvironments: 'debug:showProjectEnvironments',
   showSuccessTeamCard: 'debug:showSuccessTeamCard',
   mockCloudStatusAlert: 'debug:mockCloudStatusAlert',
   showFullscreenLoader: 'debug:showFullscreenLoader',
@@ -78,6 +79,8 @@ export type DebugOverrides = {
   showNativeAppBar: boolean
   /** When true, the activity log volume chart is shown above activity events. Default false. */
   showActivityChart: boolean
+  /** When true, the project sidebar shows the mock environment switcher. Default false. */
+  showProjectEnvironments: boolean
   /** When true, the success team card is shown on organization overview (custom plans). Default false. */
   showSuccessTeamCard: boolean
   /** Mock Appwrite Cloud status alert state for design review in debug mode. */
@@ -244,6 +247,10 @@ export function loadDebugOverrides(): DebugOverrides {
       DEBUG_OVERRIDE_KEYS.showActivityChart,
       false,
     ),
+    showProjectEnvironments: readBooleanFromStorage(
+      DEBUG_OVERRIDE_KEYS.showProjectEnvironments,
+      false,
+    ),
     showSuccessTeamCard: readBooleanFromStorage(
       DEBUG_OVERRIDE_KEYS.showSuccessTeamCard,
       false,
@@ -376,6 +383,7 @@ export function resetDebugOverrides() {
 export const FEATURE_FLAGS_MENU_DEBUG_KEYS = [
   'preLaunch',
   'showActivityChart',
+  'showProjectEnvironments',
   'showNativeAppBar',
   'showSuccessTeamCard',
   'showFunctionsLocalEditor',
@@ -395,6 +403,7 @@ export const FEATURE_FLAGS_MENU_DEBUG_DEFAULTS: Pick<
 > = {
   preLaunch: getPreLaunchDefault(),
   showActivityChart: false,
+  showProjectEnvironments: false,
   showNativeAppBar: false,
   showSuccessTeamCard: false,
   showFunctionsLocalEditor: false,
@@ -470,6 +479,7 @@ export function getDefaultDebugOverrides(): DebugOverrides {
   return {
     showNativeAppBar: false,
     showActivityChart: false,
+    showProjectEnvironments: false,
     showSuccessTeamCard: false,
     mockCloudStatusAlert: 'live',
     showFullscreenLoader: ephemeralOverrides.showFullscreenLoader ?? false,

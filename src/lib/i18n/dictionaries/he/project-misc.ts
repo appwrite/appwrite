@@ -3049,4 +3049,13 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Delete anyway': 'מחיקה בכל זאת',
   'Update anyway': 'עדכון בכל זאת',
   'Via Terraform': 'דרך Terraform',
+
+  // Project environment switcher
+  Environments: 'סביבות',
+  Staging: 'Staging',
+  Development: 'פיתוח',
+  'Switch environment': 'החלפת סביבה',
+  'Environment switched': 'הסביבה הוחלפה',
+  'Create environment': 'יצירת סביבה',
+  'Custom environments are coming soon': 'סביבות מותאמות אישית יגיעו בקרוב',
 }
