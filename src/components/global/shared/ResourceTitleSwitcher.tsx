@@ -4,7 +4,7 @@ import { ArrowLeft, ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { CopyableId } from '@/components/global/shared/CopyableId'
-import { TerraformBadge } from '@/components/global/shared/TerraformBadge'
+import { TerraformIndicator } from '@/components/global/shared/TerraformIndicator'
 import {
   ResourceSearchPopover,
   type ResourceSearchKind,
@@ -227,7 +227,10 @@ export function DetailResourceHeaderTitle({
         <CopyableId id={resourceId} size="xs" className="shrink-0" />
       ) : null}
       {projectId && terraformResource ? (
-        <TerraformBadge projectId={projectId} resource={terraformResource} />
+        <TerraformIndicator
+          projectId={projectId}
+          resource={terraformResource}
+        />
       ) : null}
     </div>
   )

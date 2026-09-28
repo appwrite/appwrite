@@ -1,6 +1,6 @@
 // Database product workspace (see ../Workspace.tsx router).
 import { cn } from '@/lib/utils'
-import { TerraformBadge } from '@/components/global/shared/TerraformBadge'
+import { TerraformIndicator } from '@/components/global/shared/TerraformIndicator'
 import { TerraformResourceAlert } from '@/components/global/shared/TerraformResourceAlert'
 import { getTerraformResourcePath } from '@/lib/terraform/resource'
 import {
@@ -1497,7 +1497,7 @@ export function Workspace({
                 />
               ) : null}
               {selectedTable ? (
-                <TerraformBadge
+                <TerraformIndicator
                   projectId={projectId}
                   resource={getTerraformResourcePath(
                     'table',

@@ -45,8 +45,6 @@ const badgeVariants = cva(
           'bg-slate-500/10 text-slate-600 dark:text-slate-400',
         unverified:
           'bg-red-500/10 text-red-600 dark:text-red-400',
-        /** Resources managed by the Appwrite Terraform provider. */
-        terraform: 'bg-violet-500/10 text-violet-600 dark:text-violet-400',
       },
     },
     defaultVariants: {

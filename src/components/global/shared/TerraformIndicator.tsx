@@ -1,5 +1,4 @@
 import { Link } from '@tanstack/react-router'
-import { Badge } from '@/components/ui/badge'
 import {
   HoverCard,
   HoverCardContent,
@@ -12,19 +11,19 @@ import { isTerraformProjectManaged } from '@/lib/terraform/state'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 
-type TerraformBadgeProps = {
+type TerraformIndicatorProps = {
   projectId: string
   /** Activity resource path; omit for the project as a whole. */
   resource?: string | null
   className?: string
 }
 
-/** "Terraform" pill with a hover card explaining where the claim comes from. */
-export function TerraformBadge({
+/** Purple Terraform mark with a hover card explaining where the claim comes from. */
+export function TerraformIndicator({
   projectId,
   resource,
   className,
-}: TerraformBadgeProps) {
+}: TerraformIndicatorProps) {
   const t = useT()
   const project = useTerraformProject(projectId)
   const managed = resource
@@ -39,17 +38,17 @@ export function TerraformBadge({
   return (
     <HoverCard openDelay={150} closeDelay={100}>
       <HoverCardTrigger asChild>
-        <Badge
-          variant="terraform"
+        <span
           tabIndex={0}
+          role="img"
+          aria-label={t('Managed by Terraform')}
           className={cn(
-            'cursor-default text-[10px] font-medium shrink-0',
+            'inline-flex shrink-0 cursor-default text-violet-600 dark:text-violet-400',
             className,
           )}
         >
-          <TerraformIcon variant="mark" className="h-2.5 w-2.5" />
-          {t('Terraform')}
-        </Badge>
+          <TerraformIcon variant="mark" className="h-3.5 w-3.5" />
+        </span>
       </HoverCardTrigger>
       <HoverCardContent align="start" className="w-80 p-0 text-[12px]">
         <div className="flex gap-2.5 px-3.5 py-3">

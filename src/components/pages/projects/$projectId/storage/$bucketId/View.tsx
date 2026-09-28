@@ -10,7 +10,7 @@ import {
   type MouseEvent,
   type PointerEvent as ReactPointerEvent,
 } from 'react'
-import { TerraformBadge } from '@/components/global/shared/TerraformBadge'
+import { TerraformIndicator } from '@/components/global/shared/TerraformIndicator'
 import { TerraformResourceAlert } from '@/components/global/shared/TerraformResourceAlert'
 import { useTerraformResource } from '@/lib/react-query/hooks/terraform'
 import { getTerraformResourcePath } from '@/lib/terraform/resource'
@@ -1421,7 +1421,7 @@ export function View() {
               <span className="truncate">{displayBucket.name}</span>
               <CopyableId id={displayBucket.$id} size="xs" className="shrink-0" />
               {projectId ? (
-                <TerraformBadge
+                <TerraformIndicator
                   projectId={projectId}
                   resource={terraformResource}
                 />

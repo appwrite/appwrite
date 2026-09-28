@@ -3031,6 +3031,5 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   "Don't ask again for this project": 'このプロジェクトでは今後確認しない',
   'Delete anyway': '削除を続行',
   'Update anyway': '更新を続行',
-  Terraform: 'Terraform',
   'Via Terraform': 'Terraform 経由',
 }

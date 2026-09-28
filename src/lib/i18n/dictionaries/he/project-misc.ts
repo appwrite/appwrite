@@ -3048,6 +3048,5 @@ export const heProjectMiscDictionary: Record<string, string> = {
   "Don't ask again for this project": 'לא לשאול שוב עבור הפרויקט הזה',
   'Delete anyway': 'מחיקה בכל זאת',
   'Update anyway': 'עדכון בכל זאת',
-  Terraform: 'Terraform',
   'Via Terraform': 'דרך Terraform',
 }
