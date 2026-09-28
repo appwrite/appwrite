@@ -161,11 +161,8 @@ class Install extends Action
                             continue;
                         }
 
-                        // A variable the installer never asks about still holding an earlier
-                        // default was written by the installer, not chosen, so it moves to
-                        // the current default like the image tags do.
                         $configVar = $vars[$key] ?? [];
-                        if (!empty($configVar) && !($configVar['overwrite'] ?? false) && !\in_array($value, $configVar['previous'] ?? [], true)) {
+                        if (!empty($configVar) && !($configVar['overwrite'] ?? false)) {
                             $vars[$key]['default'] = $value;
                         }
                     }
@@ -186,7 +183,7 @@ class Install extends Action
                         }
 
                         $configVar = $vars[$key] ?? [];
-                        if (!empty($configVar) && !($configVar['overwrite'] ?? false) && !\in_array($value, $configVar['previous'] ?? [], true)) {
+                        if (!empty($configVar) && !($configVar['overwrite'] ?? false)) {
                             $vars[$key]['default'] = $value;
                         }
                     }
@@ -670,16 +667,6 @@ class Install extends Action
             'trim',
             \explode(',', ($input['_APP_FUNCTIONS_RUNTIMES'] ?? '') . ',' . ($input['_APP_SITES_RUNTIMES'] ?? ''))
         )));
-        // Function templates need Node 18 or later. A runtimes list the operator chose is
-        // kept on upgrade, so point out when none of its Node runtimes can run them.
-        $nodeRuntimes = \array_filter(
-            \array_map('trim', \explode(',', (string) ($input['_APP_FUNCTIONS_RUNTIMES'] ?? ''))),
-            fn (string $runtime) => \str_starts_with($runtime, 'node-')
-        );
-        if ($nodeRuntimes !== [] && \array_filter($nodeRuntimes, fn (string $runtime) => \version_compare(\substr($runtime, 5), '18', '>=')) === []) {
-            Console::warning('Function templates need Node 18 or later, but _APP_FUNCTIONS_RUNTIMES only enables ' . \implode(', ', $nodeRuntimes) . '. Add a runtime such as node-22 to create Node functions from templates.');
-        }
-
         $runtimes = Config::getParam('runtimes', []);
         $runtimeImages = [];
         foreach ($enabledRuntimes as $runtime) {
