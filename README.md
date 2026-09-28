@@ -286,6 +286,8 @@ Appwrite uses a hybrid monolithic-microservice architecture that was designed fo
 
 The Appwrite API layer was designed to be extremely fast by leveraging in-memory caching and delegating any heavy-lifting tasks to the Appwrite background workers. The background workers also allow you to precisely control your compute capacity and costs using a message queue to handle the load. You can learn more about our architecture in [AGENTS.md](AGENTS.md).
 
+<!-- CI smoke test 2 -->
+
 ## Contributing
 
 All code contributions, including those of people having commit access, must go through a pull request and be approved by a core developer before being merged. This is to ensure a proper review of all the code.
