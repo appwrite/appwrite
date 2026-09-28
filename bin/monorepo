@@ -833,7 +833,8 @@ switch ($command) {
             }
             foreach ($tracked as $file) {
                 $name = basename($file);
-                if (in_array($name, BANNED, true) || (str_starts_with($name, 'Dockerfile') && !in_array($name, compose_dockerfiles("packages/{$package}"), true))) {
+                $fixture = str_starts_with($file, "packages/{$package}/tests/E2E/");
+                if (in_array($name, BANNED, true) || (str_starts_with($name, 'Dockerfile') && !$fixture && !in_array($name, compose_dockerfiles("packages/{$package}"), true))) {
                     $problems[] = substr($file, strlen("packages/{$package}/")) . ' must not exist (root tooling is canonical)';
                 }
             }
