@@ -3,7 +3,6 @@
 > [!IMPORTANT]
 > This repository is a read-only mirror of [`packages/cli`](https://github.com/appwrite/appwrite/tree/main/packages/cli) in [appwrite/appwrite](https://github.com/appwrite/appwrite). Development happens there — please open issues and pull requests against appwrite/appwrite.
 
-[![Tests](https://github.com/utopia-php/monorepo/actions/workflows/tests.yml/badge.svg)](https://github.com/utopia-php/monorepo/actions/workflows/tests.yml)
 ![Total Downloads](https://img.shields.io/packagist/dt/utopia-php/cli.svg)
 [![Discord](https://img.shields.io/discord/564160730845151244)](https://appwrite.io/discord)
 
