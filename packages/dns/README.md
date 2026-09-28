@@ -60,7 +60,7 @@ $server->setDebug(true);
 $server->start();
 ```
 
-The server listens on UDP and TCP port `5300` (RFC 5966) and answers queries for `example.test` from the in-memory zone. Implement the [`Utopia\DNS\Resolver`](src/DNS/Resolver.php) interface to serve records from databases, APIs, or other stores.
+The server listens on UDP and TCP port `5300` (RFC 5966) and answers queries for `example.test` from the in-memory zone. Implement the [`Utopia\DNS\Resolver`](src/Resolver.php) interface to serve records from databases, APIs, or other stores.
 
 ## Resolvers
 - `Memory`: authoritative resolver backed by a `Zone` object
