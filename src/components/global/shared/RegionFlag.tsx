@@ -1,6 +1,7 @@
+import type { Flag } from '@appwrite.io/console'
 import { Globe } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { getBaseEndpoint } from '@/lib/appwrite/sdk'
+import { sdk } from '@/lib/appwrite/sdk'
 
 interface RegionFlagProps {
   region: string
@@ -46,7 +47,12 @@ export function RegionFlag({
     )
   }
 
-  const flagUrl = `${getBaseEndpoint()}/avatars/flags/${countryCode}?width=${width}&height=${height}&quality=100&project=console`
+  const flagUrl = sdk.forConsole.avatars.getFlag({
+    code: countryCode as Flag,
+    width: width,
+    height: height,
+    quality: 100,
+  })
 
   return (
     <div

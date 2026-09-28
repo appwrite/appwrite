@@ -1,3 +1,4 @@
+import type { Flag } from '@appwrite.io/console'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Gift, Globe, Link2, Plus, Trash2 } from 'lucide-react'
@@ -57,7 +58,7 @@ import {
 import { AffiliatesOverview } from './_components/AffiliatesOverview'
 import { AffiliatesProgramEmpty } from './_components/AffiliatesProgramEmpty'
 import { ClaimAffiliateReward } from './_components/ClaimAffiliateReward'
-import { getBaseEndpoint } from '@/lib/appwrite/sdk'
+import { sdk } from '@/lib/appwrite/sdk'
 import { formatCurrency } from '@/components/pages/organizations/$orgId/billing/utils'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { useT } from '@/lib/i18n/translate'
@@ -321,7 +322,11 @@ function LinksCard({
   const displayed = useAffiliateLinks(displayedPage - 1, pageSize)
 
   useEffect(() => {
-    if (requestedPage !== displayedPage && !requested.isFetching && requested.isSuccess) {
+    if (
+      requestedPage !== displayedPage &&
+      !requested.isFetching &&
+      requested.isSuccess
+    ) {
       setDisplayedPage(requestedPage)
     }
   }, [
@@ -521,7 +526,11 @@ function ReferralsCard({
   const displayed = useAffiliateReferrals(displayedPage - 1, pageSize)
 
   useEffect(() => {
-    if (requestedPage !== displayedPage && !requested.isFetching && requested.isSuccess) {
+    if (
+      requestedPage !== displayedPage &&
+      !requested.isFetching &&
+      requested.isSuccess
+    ) {
       setDisplayedPage(requestedPage)
     }
   }, [
@@ -571,7 +580,12 @@ function ReferralsCard({
   const getCountryFlagUrl = (countryCode?: string) => {
     const code = normalizeCountryCode(countryCode)
     if (!code) return null
-    return `${getBaseEndpoint()}/avatars/flags/${code.toLowerCase()}?width=20&height=20&quality=100&project=console`
+    return sdk.forConsole.avatars.getFlag({
+      code: code.toLowerCase() as Flag,
+      width: 20,
+      height: 20,
+      quality: 100,
+    })
   }
 
   return (
@@ -717,7 +731,11 @@ function RewardsCard({
   const displayed = useAffiliateRewards(displayedPage - 1, pageSize)
 
   useEffect(() => {
-    if (requestedPage !== displayedPage && !requested.isFetching && requested.isSuccess) {
+    if (
+      requestedPage !== displayedPage &&
+      !requested.isFetching &&
+      requested.isSuccess
+    ) {
       setDisplayedPage(requestedPage)
     }
   }, [
@@ -909,13 +927,11 @@ export function AccountAffiliatesPage({
   )
   const { data: linksLookupData } = useQuery({
     ...affiliateLinksQueryOptions(0, AFFILIATE_LINK_LOOKUP_LIMIT),
-    enabled:
-      (linksPageData?.total ?? initialData?.links?.total ?? 0) > 0,
+    enabled: (linksPageData?.total ?? initialData?.links?.total ?? 0) > 0,
   })
   const { data: organizationsFromQuery } = useQuery({
     ...organizationsFullQueryOptions(),
-    enabled:
-      (linksPageData?.total ?? initialData?.links?.total ?? 0) > 0,
+    enabled: (linksPageData?.total ?? initialData?.links?.total ?? 0) > 0,
   })
 
   const links =
@@ -974,10 +990,7 @@ export function AccountAffiliatesPage({
           keywords: ['referral', 'signup', 'converted', 'pending', 'country'],
         },
         node: (
-          <ReferralsCard
-            initialData={initialData?.referrals}
-            links={links}
-          />
+          <ReferralsCard initialData={initialData?.referrals} links={links} />
         ),
       },
       {

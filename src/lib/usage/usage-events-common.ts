@@ -22,7 +22,7 @@ import {
 } from '@/lib/date-range-retention'
 import { formatLocalizedDate } from '@/lib/i18n/date-format'
 import type { DateRange } from 'react-day-picker'
-import type { Models } from '@appwrite.io/console'
+import type { Models, UsageEventDimension } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import { buildUsageResourceFilterQueries } from '@/lib/usage/usage-resource-queries'
 import type { UsageChartInterval } from '@/lib/usage/chart-interval'
@@ -99,32 +99,7 @@ export const USAGE_RESOURCE_BREAKDOWN_DIMENSIONS = [
 export const USAGE_SDK_BREAKDOWN_DIMENSIONS = ['sdk', 'sdkVersion'] as const
 
 /** Closed listEvents dimension contract used at the SDK boundary. */
-export type UsageEventApiDimension =
-  | 'path'
-  | 'method'
-  | 'status'
-  | 'service'
-  | 'resourceType'
-  | 'country'
-  | 'continentCode'
-  | 'city'
-  | 'region'
-  | 'hostname'
-  | 'ip'
-  | 'osName'
-  | 'clientType'
-  | 'clientName'
-  | 'deviceName'
-  | 'isp'
-  | 'autonomousSystemNumber'
-  | 'autonomousSystemOrganization'
-  | 'connectionType'
-  | 'connectionUsageType'
-  | 'connectionOrganization'
-  | 'sdk'
-  | 'sdkVersion'
-  | 'teamId'
-  | 'resourceId'
+export type UsageEventApiDimension = `${UsageEventDimension}`
 
 export interface UsageBreakdownItem {
   id: string
@@ -422,7 +397,10 @@ export function resolveOverviewUsagePeriod(
   let previousTo: Date
 
   if (calendarRange) {
-    const rangeDays = Math.max(1, differenceInCalendarDays(to, effectiveFrom) + 1)
+    const rangeDays = Math.max(
+      1,
+      differenceInCalendarDays(to, effectiveFrom) + 1,
+    )
     previousTo = endOfDay(subDays(effectiveFrom, 1))
     previousFrom = startOfDay(subDays(previousTo, rangeDays - 1))
   } else {
@@ -1334,14 +1312,7 @@ async function listUsageEventGroupsByMetric(
     request.queries = queries
   }
 
-  // The bundled SDK's dimension enum is generated from the backend and lags the
-  // newer network/geo dimensions (isp / ASN / connection*) the backend already
-  // accepts via VALID_DIMENSIONS. Bridge past the stale enum here until the SDK
-  // is regenerated; the values are validated server-side regardless.
-  const response = await projectSdk.usage.listEvents({
-    ...request,
-    dimensions: request.dimensions as unknown as never[] | undefined,
-  })
+  const response = await projectSdk.usage.listEvents(request)
   const result = new Map<string, Models.UsageDataPoint[]>()
 
   for (const metric of params.metrics) {

@@ -1,3 +1,4 @@
+import type { Flag } from '@appwrite.io/console'
 import { useState, useEffect, useMemo } from 'react'
 import { Button } from '@/components/ui/button'
 import {
@@ -281,7 +282,12 @@ export function CreateProjectDialog({
                               const regionName =
                                 region.name || region.$id || t('Unknown')
                               const flagUrl = flagCode
-                                ? `${sdk.forConsole.client.config.endpoint}/avatars/flags/${flagCode.toLowerCase()}?width=80&height=80&quality=100&project=console`
+                                ? sdk.forConsole.avatars.getFlag({
+                                    code: flagCode.toLowerCase() as Flag,
+                                    width: 80,
+                                    height: 80,
+                                    quality: 100,
+                                  })
                                 : null
                               return (
                                 <div className="flex items-center gap-2 w-full">
@@ -315,7 +321,12 @@ export function CreateProjectDialog({
                         const regionName =
                           region.name || region.$id || t('Unknown')
                         const flagUrl = flagCode
-                          ? `${sdk.forConsole.client.config.endpoint}/avatars/flags/${flagCode.toLowerCase()}?width=80&height=80&quality=100&project=console`
+                          ? sdk.forConsole.avatars.getFlag({
+                              code: flagCode.toLowerCase() as Flag,
+                              width: 80,
+                              height: 80,
+                              quality: 100,
+                            })
                           : null
                         const isComingSoon = isRegionComingSoon(region)
                         const isFirstInactive =

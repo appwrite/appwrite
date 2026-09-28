@@ -80,8 +80,10 @@ export function persistAcquisitionSource(
   source: AcquisitionSource,
   storage: Pick<Storage, 'setItem'>,
 ): void {
-  if (source.utmSource) storage.setItem(STORAGE_KEYS.utmSource, source.utmSource)
-  if (source.utmMedium) storage.setItem(STORAGE_KEYS.utmMedium, source.utmMedium)
+  if (source.utmSource)
+    storage.setItem(STORAGE_KEYS.utmSource, source.utmSource)
+  if (source.utmMedium)
+    storage.setItem(STORAGE_KEYS.utmMedium, source.utmMedium)
   if (source.utmCampaign) {
     storage.setItem(STORAGE_KEYS.utmCampaign, source.utmCampaign)
   }
@@ -123,9 +125,7 @@ export function getReferrerAndUtmSource(
 ): Record<string, string> {
   if (!storage) return {}
 
-  return (
-    ['utmReferral', 'utmSource', 'utmMedium'] as const
-  ).reduce(
+  return (['utmReferral', 'utmSource', 'utmMedium'] as const).reduce(
     (acc, key) => {
       const value = storage.getItem(STORAGE_KEYS[key])
       if (value) acc[key] = value
@@ -193,26 +193,9 @@ function createSource(source: AcquisitionSource): void {
       }
 
       const { sdk } = await import('@/lib/appwrite/sdk')
-      const client = sdk.forConsole.client
-      const endpoint = client.config.endpoint.replace(/\/$/, '')
-      const project = client.config.project || 'console'
-      // Cloud marks this route `origin: *` with credentials disabled. The SDK
-      // always sends cookies, which makes the browser reject the preflight
-      // (`PreflightInvalidAllowCredentials`). Attribution is IP/UA fingerprint,
-      // so a cookieless POST is enough.
-      const response = await fetch(`${endpoint}/console/sources`, {
-        method: 'POST',
-        credentials: 'omit',
-        keepalive: true,
-        headers: {
-          'content-type': 'application/json',
-          'X-Appwrite-Project': project,
-        },
-        body: JSON.stringify(payload),
-      })
-      if (!response.ok) {
-        throw new Error(`createSource failed: ${response.status}`)
-      }
+      // Cloud serves this route with `origin: *`, so it must go out without
+      // cookies. Attribution is by IP/UA fingerprint, so no identity is needed.
+      await sdk.forPublic().console.createSource(payload)
       storage?.setItem(STORAGE_KEYS.posted, signature)
     } catch {
       startedSignatures.delete(signature)

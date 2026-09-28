@@ -1,3 +1,4 @@
+import type { Flag } from '@appwrite.io/console'
 import { useState, useRef, useEffect } from 'react'
 import * as React from 'react'
 import { cn } from '@/lib/utils'
@@ -371,7 +372,12 @@ const browsers: BrowserData[] = [
 ]
 
 const operatingSystems: OSData[] = [
-  { name: 'Mac', visitors: 94200, color: 'var(--chart-1)', fill: 'var(--chart-1)' },
+  {
+    name: 'Mac',
+    visitors: 94200,
+    color: 'var(--chart-1)',
+    fill: 'var(--chart-1)',
+  },
   {
     name: 'Windows',
     visitors: 67300,
@@ -384,7 +390,12 @@ const operatingSystems: OSData[] = [
     color: 'var(--chart-3)',
     fill: 'var(--chart-3)',
   },
-  { name: 'iOS', visitors: 19200, color: 'var(--chart-4)', fill: 'var(--chart-4)' },
+  {
+    name: 'iOS',
+    visitors: 19200,
+    color: 'var(--chart-4)',
+    fill: 'var(--chart-4)',
+  },
   {
     name: 'Android',
     visitors: 18900,
@@ -696,7 +707,12 @@ function MapContent({ data }: { data: LocationData[] }) {
                 <div className="flex items-center gap-2">
                   <div className="flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded border border-border/50 bg-background">
                     <img
-                      src={`${sdk.forConsole.client.config.endpoint}/avatars/flags/${location.code.toLowerCase()}?width=40&height=40&quality=100&project=console`}
+                      src={sdk.forConsole.avatars.getFlag({
+                        code: location.code.toLowerCase() as Flag,
+                        width: 40,
+                        height: 40,
+                        quality: 100,
+                      })}
                       alt={`${location.country} flag`}
                       className="h-full w-full object-cover"
                       role="img"
@@ -1021,10 +1037,7 @@ export function View({
                         minWidth={0}
                         minHeight={0}
                       >
-                        <AreaChart
-                          data={chartData}
-                          margin={USAGE_CHART_MARGIN}
-                        >
+                        <AreaChart data={chartData} margin={USAGE_CHART_MARGIN}>
                           <defs>
                             <linearGradient
                               id="visitorGradient"
@@ -1092,12 +1105,16 @@ export function View({
                       {t('AI discovery')}
                     </h3>
                     <p className="mt-0.5 text-[11px] text-muted-foreground">
-                      {t('Agent crawler breakdown is not available on this dataset yet')}
+                      {t(
+                        'Agent crawler breakdown is not available on this dataset yet',
+                      )}
                     </p>
                   </div>
                   <div className="px-4 py-6">
                     <p className="text-[13px] text-muted-foreground">
-                      {t('This view does not include mock ChatGPT, Claude, or Perplexity counts. Measure coding-agent fetches on llms.txt and Markdown docs in Plausible instead of chatgpt.com referrers.')}
+                      {t(
+                        'This view does not include mock ChatGPT, Claude, or Perplexity counts. Measure coding-agent fetches on llms.txt and Markdown docs in Plausible instead of chatgpt.com referrers.',
+                      )}
                     </p>
                   </div>
                 </div>
@@ -1405,7 +1422,8 @@ export function View({
                                 </>
                               ) : (
                                 <>
-                                  {t('Show more')} ({topPages.length - 15} {t('more')})
+                                  {t('Show more')} ({topPages.length - 15}{' '}
+                                  {t('more')})
                                   <ChevronDown className="ms-1 h-3 w-3" />
                                 </>
                               )}
@@ -1479,7 +1497,8 @@ export function View({
                                 </>
                               ) : (
                                 <>
-                                  {t('Show more')} ({entryPages.length - 15} {t('more')})
+                                  {t('Show more')} ({entryPages.length - 15}{' '}
+                                  {t('more')})
                                   <ChevronDown className="ms-1 h-3 w-3" />
                                 </>
                               )}
@@ -1553,7 +1572,8 @@ export function View({
                                 </>
                               ) : (
                                 <>
-                                  {t('Show more')} ({exitPages.length - 15} {t('more')})
+                                  {t('Show more')} ({exitPages.length - 15}{' '}
+                                  {t('more')})
                                   <ChevronDown className="ms-1 h-3 w-3" />
                                 </>
                               )}
@@ -1650,7 +1670,12 @@ export function View({
                                   <div className="relative flex flex-1 items-center gap-2">
                                     <div className="flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded border border-border/50 bg-background">
                                       <img
-                                        src={`${sdk.forConsole.client.config.endpoint}/avatars/flags/${location.code.toLowerCase()}?width=40&height=40&quality=100&project=console`}
+                                        src={sdk.forConsole.avatars.getFlag({
+                                          code: location.code.toLowerCase() as Flag,
+                                          width: 40,
+                                          height: 40,
+                                          quality: 100,
+                                        })}
                                         alt={`${location.country} flag`}
                                         className="h-full w-full object-cover"
                                         role="img"
@@ -1691,7 +1716,8 @@ export function View({
                                   </>
                                 ) : (
                                   <>
-                                    {t('Show more')} ({locationData.length - 15} {t('more')})
+                                    {t('Show more')} ({locationData.length - 15}{' '}
+                                    {t('more')})
                                     <ChevronDown className="ms-1 h-3 w-3" />
                                   </>
                                 )}
@@ -1728,7 +1754,12 @@ export function View({
                                   <div className="relative flex flex-1 items-center gap-2">
                                     <div className="flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded border border-border/50 bg-background">
                                       <img
-                                        src={`${sdk.forConsole.client.config.endpoint}/avatars/flags/${region.code.toLowerCase()}?width=40&height=40&quality=100&project=console`}
+                                        src={sdk.forConsole.avatars.getFlag({
+                                          code: region.code.toLowerCase() as Flag,
+                                          width: 40,
+                                          height: 40,
+                                          quality: 100,
+                                        })}
                                         alt={`${region.country} flag`}
                                         className="h-full w-full object-cover"
                                         role="img"
@@ -1768,7 +1799,8 @@ export function View({
                                   </>
                                 ) : (
                                   <>
-                                    {t('Show more')} ({regions.length - 15} {t('more')})
+                                    {t('Show more')} ({regions.length - 15}{' '}
+                                    {t('more')})
                                     <ChevronDown className="ms-1 h-3 w-3" />
                                   </>
                                 )}
@@ -1803,7 +1835,12 @@ export function View({
                                     <div className="relative flex flex-1 items-center gap-2">
                                       <div className="flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded border border-border/50 bg-background">
                                         <img
-                                          src={`${sdk.forConsole.client.config.endpoint}/avatars/flags/${city.code.toLowerCase()}?width=40&height=40&quality=100&project=console`}
+                                          src={sdk.forConsole.avatars.getFlag({
+                                            code: city.code.toLowerCase() as Flag,
+                                            width: 40,
+                                            height: 40,
+                                            quality: 100,
+                                          })}
                                           alt={`${city.country} flag`}
                                           className="h-full w-full object-cover"
                                           role="img"
@@ -1842,7 +1879,8 @@ export function View({
                                   </>
                                 ) : (
                                   <>
-                                    {t('Show more')} ({cities.length - 15} {t('more')})
+                                    {t('Show more')} ({cities.length - 15}{' '}
+                                    {t('more')})
                                     <ChevronDown className="ms-1 h-3 w-3" />
                                   </>
                                 )}
@@ -1961,7 +1999,8 @@ export function View({
                                 </>
                               ) : (
                                 <>
-                                  {t('Show more')} ({browsers.length - 15} {t('more')})
+                                  {t('Show more')} ({browsers.length - 15}{' '}
+                                  {t('more')})
                                   <ChevronDown className="ms-1 h-3 w-3" />
                                 </>
                               )}
@@ -2037,8 +2076,8 @@ export function View({
                                 </>
                               ) : (
                                 <>
-                                  {t('Show more')} ({operatingSystems.length - 15}{' '}
-                                  {t('more')})
+                                  {t('Show more')} (
+                                  {operatingSystems.length - 15} {t('more')})
                                   <ChevronDown className="ms-1 h-3 w-3" />
                                 </>
                               )}
@@ -2116,7 +2155,8 @@ export function View({
                                 </>
                               ) : (
                                 <>
-                                  {t('Show more')} ({devices.length - 15} {t('more')})
+                                  {t('Show more')} ({devices.length - 15}{' '}
+                                  {t('more')})
                                   <ChevronDown className="ms-1 h-3 w-3" />
                                 </>
                               )}

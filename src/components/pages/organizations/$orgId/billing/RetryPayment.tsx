@@ -11,11 +11,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { PaymentMethodDropdown } from './change-plan/PaymentMethodDropdown'
 import { PaymentModal } from './Payment'
-import {
-  asOrganizationPaymentRefs,
-  formatCurrency,
-  formatDate,
-} from './utils'
+import { asOrganizationPaymentRefs, formatCurrency, formatDate } from './utils'
 import {
   useOrganizationById,
   usePaymentMethods,
@@ -102,17 +98,15 @@ export function RetryPayment({
   const currency = invoice?.currency || 'USD'
   const dueAt = invoice?.dueAt
   const isSubmitting =
-    retryPaymentMutation.isPending ||
-    setDefaultPaymentMethodMutation.isPending
+    retryPaymentMutation.isPending || setDefaultPaymentMethodMutation.isPending
 
   const handleViewInvoice = () => {
     if (!invoice) return
-    const endpoint = sdk.forConsole.client.config.endpoint
-    window.open(
-      `${endpoint}/organizations/${organizationId}/invoices/${invoice.$id}/view`,
-      '_blank',
-      'noopener,noreferrer',
-    )
+    const url = sdk.forConsole.organizations.getInvoiceView({
+      organizationId,
+      invoiceId: invoice.$id,
+    })
+    window.open(url, '_blank', 'noopener,noreferrer')
   }
 
   const handleSubmit = async () => {
@@ -146,9 +140,7 @@ export function RetryPayment({
       toast.success(t('Payment has been successfully processed'))
       onOpenChange(false)
     } catch (submitError) {
-      setError(
-        getErrorMessage(submitError, t('Failed to retry payment')),
-      )
+      setError(getErrorMessage(submitError, t('Failed to retry payment')))
     }
   }
 
