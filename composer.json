@@ -129,6 +129,7 @@
         "ext-pdo": "*",
         "ext-openssl": "*",
         "ext-zlib": "*",
+        "ext-simplexml": "*",
         "ext-sockets": "*",
         "appwrite/php-runtimes": "0.20.*",
         "appwrite/php-clamav": "2.0.*",
