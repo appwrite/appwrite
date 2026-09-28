@@ -3028,9 +3028,9 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'このリソースは Terraform によって作成されました。Terraform の構成からも削除しない限り、次回の terraform apply で再作成されます。',
   'Terraform created this resource. Your next terraform apply may overwrite this change unless you also update your Terraform configuration.':
     'このリソースは Terraform によって作成されました。Terraform の構成も更新しない限り、次回の terraform apply でこの変更が上書きされる可能性があります。',
-  Changes: '変更',
   "Don't ask again for this project": 'このプロジェクトでは今後確認しない',
   'Delete anyway': '削除を続行',
   'Update anyway': '更新を続行',
+  Terraform: 'Terraform',
   'Via Terraform': 'Terraform 経由',
 }

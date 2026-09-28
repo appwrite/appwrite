@@ -460,7 +460,10 @@ export const Route = createFileRoute('/_public/projects/$projectId')({
             .catch(() => {}),
           // Terraform badges, banners and the change guard read this on first paint.
           queryClient
-            .ensureQueryData(terraformProjectQueryOptions(projectId))
+            .ensureQueryData({
+              ...terraformProjectQueryOptions(projectId),
+              revalidateIfStale: true,
+            })
             .catch(() => {}),
         ])
 

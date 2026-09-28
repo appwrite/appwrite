@@ -3045,9 +3045,9 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'Terraform יצר את המשאב הזה. ה-terraform apply הבא ייצור אותו מחדש, אלא אם תסירו אותו גם מתצורת ה-Terraform שלכם.',
   'Terraform created this resource. Your next terraform apply may overwrite this change unless you also update your Terraform configuration.':
     'Terraform יצר את המשאב הזה. ה-terraform apply הבא עשוי לדרוס את השינוי, אלא אם תעדכנו גם את תצורת ה-Terraform שלכם.',
-  Changes: 'שינויים',
   "Don't ask again for this project": 'לא לשאול שוב עבור הפרויקט הזה',
   'Delete anyway': 'מחיקה בכל זאת',
   'Update anyway': 'עדכון בכל זאת',
+  Terraform: 'Terraform',
   'Via Terraform': 'דרך Terraform',
 }

@@ -12,9 +12,6 @@ import { isTerraformProjectManaged } from '@/lib/terraform/state'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 
-export const TERRAFORM_BADGE_CLASSNAME =
-  'gap-1 bg-violet-500/10 text-[10px] font-medium text-violet-600 dark:text-violet-400 shrink-0'
-
 type TerraformBadgeProps = {
   projectId: string
   /** Activity resource path; omit for the project as a whole. */
@@ -43,12 +40,15 @@ export function TerraformBadge({
     <HoverCard openDelay={150} closeDelay={100}>
       <HoverCardTrigger asChild>
         <Badge
-          variant="outline"
+          variant="terraform"
           tabIndex={0}
-          className={cn(TERRAFORM_BADGE_CLASSNAME, 'cursor-default', className)}
+          className={cn(
+            'cursor-default text-[10px] font-medium shrink-0',
+            className,
+          )}
         >
           <TerraformIcon variant="mark" className="h-2.5 w-2.5" />
-          Terraform
+          {t('Terraform')}
         </Badge>
       </HoverCardTrigger>
       <HoverCardContent align="start" className="w-80 p-0 text-[12px]">

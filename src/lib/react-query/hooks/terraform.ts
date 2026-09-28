@@ -15,7 +15,7 @@ import {
   type TerraformProject,
   type TerraformResource,
 } from '@/lib/terraform/state'
-import { ACTIVITY_DEFAULT_PAGE_SIZE, LONG_STALE_TIME } from './constants'
+import { ACTIVITY_DEFAULT_PAGE_SIZE, DEFAULT_STALE_TIME } from './constants'
 
 /** End users never change resource configuration; only the console and API keys do. */
 const TERRAFORM_ACTOR_TYPES = [
@@ -61,9 +61,11 @@ export function terraformProjectQueryOptions(
     queryKey: ['terraform', 'project', projectId],
     queryFn: () => fetchTerraformProject(projectId!),
     enabled: !!projectId,
-    staleTime: LONG_STALE_TIME,
+    staleTime: DEFAULT_STALE_TIME,
     retry: false,
-    refetchOnWindowFocus: false,
+    // Applies happen outside the console, so refresh stale state on mount and focus.
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   })
 }
 

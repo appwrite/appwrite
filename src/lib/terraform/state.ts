@@ -34,10 +34,27 @@ function isResourceDeletion(event: Models.ActivityEvent): boolean {
   return event.event === `${event.resourceType}.delete`
 }
 
+/** What an event changed, e.g. `function` for `function.update`, `variable` for `variable.delete`. */
+function getChangeKind(event: Models.ActivityEvent): string {
+  return event.event.slice(0, event.event.lastIndexOf('.'))
+}
+
+function toDrift(event: Models.ActivityEvent): TerraformDrift {
+  return {
+    time: event.time,
+    event: event.event,
+    actorName: event.actorName,
+    actorType: event.actorType,
+    userAgent: event.userAgent,
+  }
+}
+
 /**
  * Builds the Terraform view of a project from its activity log. A resource is
- * managed once Terraform writes to it, and drifts when a later write comes from
- * anywhere else. Expects the newest-first order the API returns.
+ * managed once Terraform writes to it. A later write from anywhere else drifts
+ * it until Terraform writes the same kind of change again, so a Terraform
+ * deployment does not hide a manual settings change. Expects the newest-first
+ * order the API returns.
  */
 export function summarizeTerraformActivity(
   events: Models.ActivityEvent[],
@@ -46,6 +63,7 @@ export function summarizeTerraformActivity(
     .reverse()
     .sort((a, b) => a.time.localeCompare(b.time))
   const resources: Record<string, TerraformResource> = {}
+  const outstanding = new Map<string, Map<string, TerraformDrift>>()
   let latest: Models.ActivityEvent | null = null
 
   for (const event of chronological) {
@@ -56,6 +74,7 @@ export function summarizeTerraformActivity(
       latest = event
       if (isResourceDeletion(event)) {
         delete resources[path]
+        outstanding.delete(path)
         continue
       }
       resources[path] = {
@@ -64,22 +83,25 @@ export function summarizeTerraformActivity(
         providerVersion: getTerraformProviderVersion(event),
         drift: null,
       }
+      outstanding.get(path)?.delete(getChangeKind(event))
       continue
     }
 
-    const managed = resources[path]
-    if (!managed) continue
+    if (!resources[path]) continue
     if (isResourceDeletion(event)) {
       delete resources[path]
+      outstanding.delete(path)
       continue
     }
-    managed.drift = {
-      time: event.time,
-      event: event.event,
-      actorName: event.actorName,
-      actorType: event.actorType,
-      userAgent: event.userAgent,
-    }
+    const drifts = outstanding.get(path) ?? new Map<string, TerraformDrift>()
+    drifts.delete(getChangeKind(event))
+    drifts.set(getChangeKind(event), toDrift(event))
+    outstanding.set(path, drifts)
+  }
+
+  for (const [path, drifts] of outstanding) {
+    const resource = resources[path]
+    if (resource) resource.drift = [...drifts.values()].pop() ?? null
   }
 
   return {

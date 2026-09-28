@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { Fragment, useEffect, useRef, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import type { Models } from '@appwrite.io/console'
 import { Button } from '@/components/ui/button'
@@ -71,15 +71,17 @@ export function ConfirmTerraformChange() {
 
   useEffect(() => {
     setTerraformChangeConfirmer({
-      confirm: (request) => {
-        const project = queryClient.getQueryData(
-          terraformProjectQueryOptions(request.projectId).queryKey,
-        )
-        const resource = project?.resources[request.resource]
-        if (!resource) return true
+      confirm: async (request) => {
         const account = getConsoleAccountFromCache(queryClient)
         const skipped = parseTerraformSkipConfirmProjectIds(account?.prefs)
         if (skipped.includes(request.projectId)) return true
+        const options = terraformProjectQueryOptions(request.projectId)
+        // Refetch when stale so a recent apply is seen; keep the last known state if that fails.
+        const project = await queryClient
+          .fetchQuery(options)
+          .catch(() => queryClient.getQueryData(options.queryKey))
+        const resource = project?.resources[request.resource]
+        if (!resource) return true
         return new Promise<boolean>((resolve) => {
           setQueue((current) => [...current, { request, resource, resolve }])
         })
@@ -135,9 +137,8 @@ export function ConfirmTerraformChange() {
 
   if (!current) return null
 
-  const isDelete = current.request.action === 'delete'
-  const kind = getTerraformResourceKind(current.request.resource)
-  const resourceId = getTerraformResourceId(current.request.resource)
+  const isDelete = queue.some(({ request }) => request.action === 'delete')
+  const resources = [...new Set(queue.map(({ request }) => request.resource))]
 
   return (
     <Dialog
@@ -171,22 +172,25 @@ export function ConfirmTerraformChange() {
         </DialogHeader>
         <div className="border-t border-border" />
         <div className="space-y-3 px-6 py-4">
-          <dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-1.5 text-[13px]">
-            <dt className="text-muted-foreground">
-              {kind ? t(RESOURCE_KIND_LABELS[kind]) : t('Resource')}
-            </dt>
-            <dd className="min-w-0 truncate text-end font-mono text-[12px] text-foreground">
-              {resourceId}
-            </dd>
-            <dt className="text-muted-foreground">{t('Last apply')}</dt>
-            <dd className="text-end text-foreground">
-              <DateTooltip date={current.resource.appliedAt} />
-            </dd>
-            {queue.length > 1 ? (
+          <dl className="grid max-h-48 grid-cols-[auto_1fr] gap-x-6 gap-y-1.5 overflow-y-auto text-[13px]">
+            {resources.map((resource) => {
+              const kind = getTerraformResourceKind(resource)
+              return (
+                <Fragment key={resource}>
+                  <dt className="text-muted-foreground">
+                    {kind ? t(RESOURCE_KIND_LABELS[kind]) : t('Resource')}
+                  </dt>
+                  <dd className="min-w-0 truncate text-end font-mono text-[12px] text-foreground">
+                    {getTerraformResourceId(resource)}
+                  </dd>
+                </Fragment>
+              )
+            })}
+            {resources.length === 1 ? (
               <>
-                <dt className="text-muted-foreground">{t('Changes')}</dt>
-                <dd className="text-end tabular-nums text-foreground">
-                  {queue.length}
+                <dt className="text-muted-foreground">{t('Last apply')}</dt>
+                <dd className="text-end text-foreground">
+                  <DateTooltip date={current.resource.appliedAt} />
                 </dd>
               </>
             ) : null}

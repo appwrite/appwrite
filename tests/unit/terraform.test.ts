@@ -28,31 +28,12 @@ const CLI = {
 }
 const CURL = { userAgent: 'curl/8.7.1', sdk: '', sdkVersion: '' }
 
-let sequence = 0
+import prodEvents from './fixtures/terraform-activity-prod.json'
+import stagingEvents from './fixtures/terraform-activity-staging.json'
 
-function event(
-  time: string,
-  name: string,
-  resource: string,
-  source: { userAgent: string; sdk: string; sdkVersion: string },
-): Models.ActivityEvent {
-  const segments = resource.split('/')
-  return {
-    $id: String(sequence++),
-    time: `2026-09-28T${time}.000+00:00`,
-    event: name,
-    resource,
-    resourceType: segments[segments.length - 2],
-    actorType: 'keyProject',
-    actorName: 'Terraform growth legacy',
-    ...source,
-  } as Models.ActivityEvent
-}
-
-/** Newest first, the way the API returns events. */
-function newestFirst(events: Models.ActivityEvent[]) {
-  return [...events].reverse()
-}
+/** Real `listEvents` payloads (newest first), stripped of IPs and emails. */
+const PROD_EVENTS = prodEvents as Models.ActivityEvent[]
+const STAGING_EVENTS = stagingEvents as Models.ActivityEvent[]
 
 describe('isTerraformActivity', () => {
   test('matches provider releases before and after the SDK identity headers', () => {
@@ -77,68 +58,86 @@ describe('isTerraformActivity', () => {
 })
 
 describe('summarizeTerraformActivity', () => {
-  test('marks resources the provider wrote to and records drift after the last apply', () => {
-    const project = summarizeTerraformActivity(
-      newestFirst([
-        event(
-          '08:19:37',
-          'function.create',
-          'function/growth-legacy',
-          LEGACY_PROVIDER,
-        ),
-        event('08:19:38', 'rule.create', 'rule/f3e8', LEGACY_PROVIDER),
-        event('08:23:22', 'deployment.create', 'function/growth-legacy', CLI),
-        event(
-          '09:08:21',
-          'deployment.create',
-          'function/growth-legacy',
-          LEGACY_PROVIDER,
-        ),
-        event('09:08:59', 'deployment.delete', 'function/growth-legacy', CURL),
-        event('09:10:00', 'bucket.create', 'bucket/manual', CLI),
-      ]),
-    )
+  test('provider 1.8.0 on prod: drift from curl after the last apply', () => {
+    const project = summarizeTerraformActivity(PROD_EVENTS)
 
     expect(Object.keys(project.resources).sort()).toEqual([
       'function/growth-legacy',
-      'rule/f3e8',
+      'project.key/terraform-growth-legacy',
+      'rule/f3e873a8365b73f9bb5d96185cb2040a',
     ])
     const managed = project.resources['function/growth-legacy']
     expect(managed.appliedAt).toBe('2026-09-28T09:08:21.000+00:00')
     expect(managed.providerVersion).toBe('1.8.0')
     expect(managed.drift?.event).toBe('deployment.delete')
     expect(managed.drift?.userAgent).toBe('curl/8.7.1')
-    expect(project.resources['rule/f3e8'].drift).toBeNull()
-    expect(project.appliedAt).toBe('2026-09-28T09:08:21.000+00:00')
+    expect(
+      project.resources['rule/f3e873a8365b73f9bb5d96185cb2040a'].drift,
+    ).toBeNull()
     expect(project.keyName).toBe('Terraform growth legacy')
   })
 
-  test('a later apply clears drift', () => {
-    const project = summarizeTerraformActivity(
-      newestFirst([
-        event('10:00:00', 'function.create', 'function/api', PROVIDER),
-        event('10:05:00', 'function.update', 'function/api', CLI),
-        event('10:10:00', 'function.update', 'function/api', PROVIDER),
-      ]),
+  test('provider with SDK identity headers on staging', () => {
+    const project = summarizeTerraformActivity(STAGING_EVENTS)
+
+    expect(Object.keys(project.resources).sort()).toEqual([
+      'bucket/uploads',
+      'database/main',
+      'database/main/table/posts',
+      'function/api',
+      'webhook/65c88b2001b8c18f2fe8',
+    ])
+    expect(project.resources['function/api'].providerVersion).toBe('dev')
+    expect(project.resources['function/api'].drift?.event).toBe(
+      'function.update',
     )
-    expect(project.resources['function/api'].drift).toBeNull()
+    expect(project.resources['bucket/uploads'].drift).toBeNull()
+  })
+
+  test('a Terraform write only clears drift of the same kind', () => {
+    // Up to the apply that rewrote the function settings but not yet the variable.
+    const beforeVariableApply = STAGING_EVENTS.filter(
+      (event) =>
+        event.time <= '2026-09-28T11:41:20.000+00:00' &&
+        !(event.event === 'variable.create' && event.time.includes('11:41:20')),
+    )
+    const drifted = summarizeTerraformActivity(beforeVariableApply)
+    expect(drifted.resources['function/api'].drift?.event).toBe(
+      'variable.delete',
+    )
+
+    const reconciled = summarizeTerraformActivity(
+      STAGING_EVENTS.filter(
+        (event) => event.time <= '2026-09-28T11:41:20.000+00:00',
+      ),
+    )
+    expect(reconciled.resources['function/api'].drift).toBeNull()
   })
 
   test('drops deleted resources and ignores executions', () => {
-    const project = summarizeTerraformActivity(
-      newestFirst([
-        event('10:00:00', 'function.create', 'function/api', PROVIDER),
-        event('10:01:00', 'execution.create', 'function/api', CURL),
-        event(
-          '10:02:00',
-          'table.create',
-          'database/main/table/posts',
-          PROVIDER,
-        ),
-        event('10:03:00', 'table.delete', 'database/main/table/posts', CLI),
-      ]),
-    )
-    expect(Object.keys(project.resources)).toEqual(['function/api'])
+    const table = STAGING_EVENTS.find(
+      (event) => event.event === 'table.create',
+    )!
+    // A console admin deleting the table and running the function, after the last apply.
+    const admin = STAGING_EVENTS.find((event) => event.actorType === 'admin')!
+    const later = '2026-09-28T13:00:00.000+00:00'
+    const events = [
+      {
+        ...admin,
+        $id: 'delete',
+        event: 'table.delete',
+        resource: table.resource,
+        resourceType: table.resourceType,
+        resourceParent: table.resourceParent,
+        time: later,
+      },
+      { ...admin, $id: 'run', event: 'execution.create', time: later },
+      ...STAGING_EVENTS.filter(
+        (event) => event.time <= '2026-09-28T11:41:20.000+00:00',
+      ),
+    ]
+    const project = summarizeTerraformActivity(events)
+    expect(project.resources['database/main/table/posts']).toBeUndefined()
     expect(project.resources['function/api'].drift).toBeNull()
   })
 })
