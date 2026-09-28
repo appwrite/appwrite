@@ -6,13 +6,13 @@ date: 2026-04-27
 cover: /images/blog/appwrite-vs-firebase-ai-development/cover.avif
 timeToRead: 9
 author: aishwari
-unlisted: true
+unlisted: false
 category: comparisons
 faqs:
   - question: "What is the main difference between Appwrite and Firebase for AI-assisted development?"
     answer: "Appwrite is an open-source, self-hostable backend with typed tables, broad runtime choice, Sites for hosting, and MCP coverage across the full product surface. Firebase is a proprietary managed service on Google Cloud that bundles Authentication, Firestore, Cloud Storage, Cloud Functions, App Hosting, and a Gemini-centric AI assistance layer. The choice usually comes down to whether you want self-hosting and open source or Google's managed stack."
   - question: "Does Appwrite have an MCP server like Firebase?"
-    answer: "Yes. Appwrite ships official MCP servers for both the API and the documentation. The API server uses a compact two-tool workflow with automatic service discovery, so an agent can operate across Auth, databases, Storage, Functions, Sites, and Messaging without hand-written glue. The Docs MCP server keeps the agent grounded in current documentation rather than training-data memories."
+    answer: "Yes. Appwrite has one official remote MCP server at https://mcp.appwrite.io. It covers API actions across Auth, databases, Storage, Functions, Sites, and Messaging, plus docs search, so an agent stays on current APIs instead of training-data memories."
   - question: "Which platform supports more language runtimes for server-side code?"
     answer: "Appwrite Functions supports Node.js, PHP, Ruby, Python, Python ML, Deno, Bun, Dart, .NET, Java, Swift, Kotlin, C++, and Go. Firebase Cloud Functions runs JavaScript, TypeScript, and Python with experimental Dart. If your AI agent needs to reach for Python ML packages, Go, C++, or Kotlin, Appwrite gives it more room."
   - question: "How do permissions differ between Appwrite and Firestore?"
@@ -23,6 +23,8 @@ faqs:
     answer: "Yes. Appwrite Sites deploys frontends across Next.js, SvelteKit, Nuxt, Astro, React, Vue, Remix, TanStack Start, Angular, Analog, Vite, and more, with custom domains, environment variables, rollbacks, and deploy logs. Both backend and frontend live under one control plane that you can self-host."
 ---
 
+Use Appwrite when a coding agent needs an open-source, self-hostable backend with MCP, skills, and hosting in one project. Pick Firebase when you want Google's managed stack and Gemini-in-console assistance. Install Appwrite with `npx skills add appwrite/skills` and the remote MCP server at https://mcp.appwrite.io.
+
 Picking a backend for an app that an AI coding agent will help build is a decision with a long half-life. The agent spends most of its context budget reasoning about identity, data, files, server-side code, and hosting, so the platform underneath has to give it clear primitives, a stable API, and an MCP surface the model can use directly. Appwrite vs Firebase AI is the comparison teams run when they weigh an open-source, self-hostable backend against Google's AI assistance ecosystem.
 
 This article looks at Appwrite as a Firebase alternative for AI apps, focused on open-source flexibility, MCP coverage, Databases with tables and rows, Functions, Sites, and self-hosting, against Firebase's Gemini in Firebase, Firebase MCP server, Gemini CLI extension, and agent skills.
@@ -31,7 +33,7 @@ This article looks at Appwrite as a Firebase alternative for AI apps, focused on
 
 Firebase is a managed platform on Google Cloud that bundles Authentication, Cloud Firestore, Cloud Storage, Cloud Functions, App Hosting, Cloud Messaging, and a growing AI assistance layer. Its AI assistance story is organized around three surfaces: [Gemini in Firebase](https://firebase.google.com/docs/ai-assistance/gemini-in-firebase) inside Firebase services and the console, the [Firebase MCP server](https://firebase.google.com/docs/ai-assistance/mcp-server) for AI-powered editors, and a [Gemini CLI extension](https://firebase.google.com/docs/ai-assistance/gcli-extension) that wraps the MCP tools with Firebase-specific commands. Firebase also ships [AI Logic](https://firebase.google.com/docs/ai-logic), a client SDK for calling Gemini from Firebase apps.
 
-Appwrite is an open-source backend you can run on [Appwrite Cloud](/cloud) or host yourself. It presents a single suite covering [Auth](/docs/products/auth), [databases with tables, rows, and columns](/docs/products/databases), [Storage](/docs/products/storage), [Functions](/docs/products/functions), [Realtime](/docs/apis/realtime), [Messaging](/docs/products/messaging), and [Sites](/docs/products/sites) for deploying full-stack web apps. Its AI tooling hub covers [MCP servers for the API and the docs](/docs/tooling/ai/mcp-servers), [Agent Skills](/docs/tooling/ai), an in-console [Assistant](/docs/tooling/ai), and plugin integrations with editors like [Cursor](/docs/tooling/ai/ai-dev-tools/cursor), [Claude Code](/docs/tooling/ai/ai-dev-tools/claude-code), and [Lovable](/docs/tooling/ai/ai-dev-tools/lovable).
+Appwrite is an open-source backend you can run on [Appwrite Cloud](/cloud) or host yourself. It presents a single suite covering [Auth](/docs/products/auth), [databases with tables, rows, and columns](/docs/products/databases), [Storage](/docs/products/storage), [Functions](/docs/products/functions), [Realtime](/docs/apis/realtime), [Messaging](/docs/products/messaging), and [Sites](/docs/products/sites) for deploying full-stack web apps. Its AI tooling hub covers [one remote MCP server](/docs/tooling/ai/mcp-servers), [Agent Skills](/docs/tooling/ai/skills), and plugin integrations with editors like [Cursor](/docs/tooling/ai/agents/cursor), [Claude Code](/docs/tooling/ai/agents/claude-code), [Codex](/docs/tooling/ai/agents/codex), and [ChatGPT](/docs/tooling/ai/agents/chatgpt).
 
 Both platforms expose an MCP server to AI-powered editors. The difference is everything around those servers: data model, permissions, SDK coverage, runtime choice, hosting surface, and whether you can run the whole stack on your own infrastructure.
 
@@ -51,7 +53,7 @@ That is the honest frame for this comparison. It is not about which platform has
 | Functions | Node.js, PHP, Ruby, Python, Python ML, Deno, Bun, Dart, .NET, Java, Swift, Kotlin, C++, Go; triggered by HTTP, events, or schedule | Cloud Functions for Firebase in JavaScript, TypeScript, and Python, with experimental Dart; triggered by HTTP, background events, Admin SDK, or Cloud Scheduler |
 | Realtime | Channel-based subscriptions across databases, Auth, Storage, and Functions | Firestore realtime listeners and Realtime Database sync |
 | Hosting | Sites for deploying Next.js, SvelteKit, Nuxt, Astro, React, Vue, Remix, TanStack Start, Angular, Analog, Vite, and more, with custom domains, env vars, rollbacks, and logs | Firebase Hosting for static assets; Firebase App Hosting for Next.js, Angular, and other frameworks, built on Cloud Run and Cloud Build |
-| MCP for AI agents | Official MCP servers for the API and the docs | Official Firebase MCP server exposing Firebase tools and prompts |
+| MCP for AI agents | Official remote MCP server for API actions and docs search | Official Firebase MCP server exposing Firebase tools and prompts |
 | Agent skills | Agent Skills for Appwrite workflows | Firebase agent skills for setup, deploy, and service configuration |
 | Self-hosting | Fully self-hostable, Docker-based, open source | Managed only on Google Cloud; no first-party self-hosted option |
 | License | Open source | Proprietary managed service |
@@ -60,7 +62,7 @@ That is the honest frame for this comparison. It is not about which platform has
 
 Firebase's MCP server ships as part of the Firebase CLI and runs over stdio. It works with Antigravity, Gemini CLI, Gemini Code Assist, Firebase Studio, Claude Code, Claude Desktop, Cline, Cursor, VS Code Copilot, and Windsurf, and exposes tools for creating and managing Firebase projects, managing Authentication users, reading and writing Cloud Firestore data, retrieving Firebase SQL Connect schemas, inspecting security rules, and sending Cloud Messaging messages. It also offers pre-written prompts like `firebase:init` and `firebase:deploy`.
 
-Appwrite's API MCP server uses a compact two-tool workflow with automatic service discovery, so an agent can operate across Auth, databases, Storage, Functions, Sites, and Messaging without hand-written glue. A separate Docs MCP server keeps the agent grounded in current Appwrite documentation rather than training-data memories. Both servers are covered in the [AI tooling hub](/docs/tooling/ai).
+Appwrite's remote MCP server uses a compact workflow with automatic service discovery, so an agent can operate across Auth, databases, Storage, Functions, Sites, and Messaging and search current docs. Setup is covered in the [MCP docs](/docs/tooling/ai/mcp-servers) and the [for coding agents](/for-agents) page.
 
 The practical difference is scope. Firebase's MCP is rich inside the Firebase surface. Appwrite's MCP reaches the same database, auth, storage, and functions territory and also covers Sites deployments and the full Appwrite API. For an agent that has to generate an app, deploy the frontend, and configure secrets, fewer hops across tools means fewer chances to drift.
 

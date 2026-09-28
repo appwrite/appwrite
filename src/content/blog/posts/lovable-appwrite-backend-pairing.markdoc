@@ -10,7 +10,7 @@ unlisted: true
 category: ai
 faqs:
   - question: "How do I connect Appwrite to Lovable?"
-    answer: "Add the Appwrite Docs MCP server to Lovable's personal connectors. In Lovable, open Settings, go to Connectors, open Personal connectors, click New MCP server, and add the Appwrite Docs server with name Appwrite Docs and URL https://mcp-for-docs.appwrite.io with no authentication. Once it is added, Lovable can answer Appwrite questions and write code with documentation-grounded context instead of guessing."
+    answer: "Add the Appwrite Docs MCP server to Lovable's personal connectors. In Lovable, open Settings, go to Connectors, open Personal connectors, click New MCP server, and add the Appwrite Docs server with name Appwrite Docs and URL https://mcp.appwrite.io with no authentication. Once it is added, Lovable can answer Appwrite questions and write code with documentation-grounded context instead of guessing."
   - question: "Why pair Lovable with Appwrite specifically?"
     answer: "Appwrite is open source, self-hostable, and covers Auth, Databases, Storage, Functions, Realtime, Messaging, and Sites under one platform. That replaces stitching several services together for a Lovable app and keeps the backend portable as the project grows. The pairing also gives Lovable accurate Appwrite context through the docs MCP, so generated code calls real APIs instead of inventing them."
   - question: "Should I let Lovable design the backend or define it in Appwrite first?"
@@ -38,7 +38,7 @@ The Lovable and Appwrite combination is worth considering when any of these matt
 - You want your AI coding tools, including Lovable, to have accurate context on your backend through docs and MCP.
 - You want to keep production data portable, with clear APIs and SDKs you can reach from any frontend Lovable generates.
 
-Appwrite already publishes a Lovable integration page in its docs. It covers connecting the Appwrite docs MCP server to Lovable, so the assistant can answer Appwrite questions with current documentation context. The setup lives under Lovable's personal connectors: server name `Appwrite Docs`, server URL `https://mcp-for-docs.appwrite.io`, no authentication. Once it is added, Lovable can respond to prompts like "how do I set up real-time subscriptions in Appwrite" or "show me an example of using Appwrite Functions" with accurate, documentation-grounded answers instead of guesses.
+Appwrite already publishes a Lovable integration page in its docs. It covers connecting the Appwrite docs MCP server to Lovable, so the assistant can answer Appwrite questions with current documentation context. The setup lives under Lovable's personal connectors: server name `Appwrite Docs`, server URL `https://mcp.appwrite.io`, no authentication. Once it is added, Lovable can respond to prompts like "how do I set up real-time subscriptions in Appwrite" or "show me an example of using Appwrite Functions" with accurate, documentation-grounded answers instead of guesses.
 
 ## What Appwrite gives a Lovable app
 

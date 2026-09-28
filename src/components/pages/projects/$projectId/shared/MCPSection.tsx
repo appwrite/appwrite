@@ -7,6 +7,7 @@ import {
   MCP_EDITOR_CONFIG_SNIPPET,
   MCP_OPENCODE_CONFIG_SNIPPET,
   MCP_SELF_HOSTED_DOCS_URL,
+  MCP_SERVER_URL,
   getCursorMcpInstallUrl,
   getMcpClaudeCodeInstallCommand,
   getSelfHostedClaudeCodeInstallCommand,
@@ -29,7 +30,7 @@ import type { CodeBlockLanguage } from '@/components/global/shared/CodeBlock'
 import { ConnectCodeExample } from '@/components/global/shared/ConnectCodeExample'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { McpIcon } from '@/components/global/shared/McpIcon'
-import { useT, type Translator } from '@/lib/i18n/translate'
+import { analyticsAttrs } from '@/lib/analytics-actions'
 
 export interface MCPSectionProps {
   /** Current project ID (used to prefill self-hosted MCP env) */
@@ -42,6 +43,7 @@ export interface MCPSectionProps {
 
 type McpToolId =
   | 'claude-code'
+  | 'chatgpt'
   | 'codex'
   | 'cursor'
   | 'claude-desktop'
@@ -73,6 +75,13 @@ function getCloudMcpTools(t: Translator): McpToolConfig[] {
       code: getMcpClaudeCodeInstallCommand(
         t('select "appwrite", then "Authenticate"'),
       ),
+    },
+    {
+      id: 'chatgpt',
+      name: 'ChatGPT',
+      iconPath: '/icons/chatgpt.svg',
+      language: 'bash',
+      code: MCP_SERVER_URL,
     },
     {
       id: 'codex',
@@ -284,6 +293,7 @@ export function MCPSection({
             size="sm"
             className="h-9 text-[13px] gap-1.5"
             onClick={() => openMcpInstallUrl(selectedTool.installUrl!)}
+            {...analyticsAttrs('mcp-connect')}
           >
             <Download className="h-4 w-4" />
             {t('Install')}

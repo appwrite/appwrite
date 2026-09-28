@@ -93,6 +93,11 @@ export const ANALYTICS_ACTIONS = {
   'partners-become': 'Become Partner Clicked',
   'affiliates-join': 'Affiliates Join Clicked',
   'init-claim-ticket': 'Init Claim Ticket Clicked',
+  'mcp-connect': 'MCP Connect Clicked',
+  'skills-install': 'Skills Install Clicked',
+  'for-agents-install-skills': 'For Agents Install Skills Clicked',
+  'for-agents-connect-mcp': 'For Agents Connect MCP Clicked',
+  'for-agents-view-docs': 'For Agents View Docs Clicked',
 
   // Pricing page CTAs
   'pricing-start-free': 'Pricing Start Free Clicked',

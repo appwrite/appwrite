@@ -53,6 +53,9 @@ AI-powered IDEs and code editors provide intelligent code completion and context
 {% cards_item href="/docs/tooling/ai/agents/claude-code" title="Claude Code" icon="claude" %}
 {% /cards_item %}
 
+{% cards_item href="/docs/tooling/ai/agents/chatgpt" title="ChatGPT" icon="chatgpt" %}
+{% /cards_item %}
+
 {% cards_item href="/docs/tooling/ai/agents/codex" title="Codex" icon="codex" %}
 {% /cards_item %}
 
@@ -81,6 +84,9 @@ AI-powered IDEs and code editors provide intelligent code completion and context
 {% cards %}
 
 {% cards_item href="/docs/tooling/ai/agents/claude-code" title="Claude Code" icon="claude" %}
+{% /cards_item %}
+
+{% cards_item href="/docs/tooling/ai/agents/chatgpt" title="ChatGPT" icon="chatgpt" %}
 {% /cards_item %}
 
 {% cards_item href="/docs/tooling/ai/agents/codex" title="Codex" icon="codex" %}
@@ -158,6 +164,9 @@ Vibe coding platforms let you build applications through natural language. Descr
 Guides for building AI-powered features on top of Appwrite, from running models in Functions to building full agent pipelines.
 
 {% cards %}
+{% cards_item href="/docs/tooling/ai/backend-for-agents" title="Backend for coding agents" %}
+When to pick Appwrite, plus skills and MCP for Cursor, Claude Code, Codex, and ChatGPT.
+{% /cards_item %}
 {% cards_item href="/docs/tooling/ai/ai-in-functions" title="AI in Functions" %}
 Run AI models inside Appwrite Functions with providers like OpenAI and Anthropic.
 {% /cards_item %}

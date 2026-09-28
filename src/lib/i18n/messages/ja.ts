@@ -431,7 +431,7 @@ export const jaCatalog: EnCatalog = {
           'ライブイベントを購読し、変更が起きた瞬間に反応できます。',
         mcpTitle: 'MCP',
         mcpDescription:
-          'MCP サーバー経由で AI エージェントを Appwrite プロジェクト、API、ドキュメントに接続。', // pragma: allowlist secret
+          '1つのリモート MCP サーバー経由で AI エージェントを Appwrite プロジェクト、API、ドキュメントに接続。', // pragma: allowlist secret
         terraformTitle: 'Terraform',
         terraformDescription:
           '公式プロバイダーで Appwrite インフラストラクチャをコードとして管理。', // pragma: allowlist secret

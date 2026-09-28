@@ -49,6 +49,7 @@
     "generate:specs": "bun run scripts/generate-specs.ts",
     "i18n:audit:he": "bun run scripts/i18n-audit-he.ts",
     "i18n:audit:ja": "bun run scripts/i18n-audit-ja.ts",
+    "agent-recommendation-qa": "bun run scripts/agent-recommendation-qa.ts",
     "benchmark:init-server-memory": "bun run scripts/benchmark-init-server-memory.ts",
     "benchmark:init-memory": "bun run scripts/benchmark-init-memory.ts"
   },

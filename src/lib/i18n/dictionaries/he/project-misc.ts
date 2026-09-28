@@ -3018,4 +3018,9 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Resume live updates': 'חידוש עדכונים חיים',
   'Updating…': 'מתעדכן…',
   Paused: 'מושהה',
+  'AI discovery': 'גילוי AI',
+  'Agent crawler breakdown is not available on this dataset yet':
+    'פירוט סורקי סוכנים עדיין לא זמין בסט הנתונים הזה',
+  'This view does not include mock ChatGPT, Claude, or Perplexity counts. Measure coding-agent fetches on llms.txt and Markdown docs in Plausible instead of chatgpt.com referrers.':
+    'תצוגה זו לא כוללת ספירות מדומות של ChatGPT, Claude או Perplexity. מדדו שליפות של סוכני קוד על llms.txt ומסמכי Markdown ב-Plausible, לא לפי מפנים מ-chatgpt.com.',
 }

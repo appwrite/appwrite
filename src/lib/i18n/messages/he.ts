@@ -430,7 +430,7 @@ export const heCatalog: EnCatalog = {
           'הרשמה לאירועים חיים ותגובה לשינויים בזמן שהם קורים.',
         mcpTitle: 'MCP',
         mcpDescription:
-          'חיבור סוכני AI לפרויקט, ל-APIs ולדוקומנטציה של Appwrite דרך שרתי MCP.', // pragma: allowlist secret
+          'חיבור סוכני AI לפרויקט, ל-APIs ולדוקומנטציה של Appwrite דרך שרת MCP מרוחק אחד.', // pragma: allowlist secret
         terraformTitle: 'Terraform',
         terraformDescription:
           'ניהול תשתיות Appwrite כקוד עם הספק הרשמי.', // pragma: allowlist secret

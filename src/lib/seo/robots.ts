@@ -2,10 +2,29 @@
  * Production robots.txt body. Served by the `/robots.txt` route (and written to
  * `public/robots.txt` by generate:docs-exports for static mirrors).
  */
+const RETRIEVAL_BOTS = [
+  'OAI-SearchBot',
+  'ChatGPT-User',
+  'Claude-User',
+  'Claude-SearchBot',
+  'PerplexityBot',
+  'Google-Extended',
+] as const
+
+function retrievalBotAllowBlocks(): string {
+  return RETRIEVAL_BOTS.map(
+    (bot) => `User-agent: ${bot}
+Allow: /`,
+  ).join('\n\n')
+}
+
 export function getProductionRobotsTxt(): string {
   return `# https://www.robotstxt.org/robotstxt.html
 User-agent: *
 Allow: /
+
+# Retrieval crawlers that answer live queries (not training-only bots)
+${retrievalBotAllowBlocks()}
 
 # Console and authenticated areas (not public marketing content)
 Disallow: /projects/

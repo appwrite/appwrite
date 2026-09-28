@@ -11,7 +11,7 @@ faqs:
   - question: "What is the Appwrite MCP server?"
     answer: "The Appwrite MCP server is a Model Context Protocol implementation that lets AI agents interact with your Appwrite project resources. Agents can read your database schemas, create tables, query records, and run other actions through the protocol. It connects tools like Claude Desktop and Cursor directly to your Appwrite backend."
   - question: "How do I install the Appwrite MCP server?"
-    answer: "Installation steps are documented in the [Appwrite MCP guide](/docs/tooling/mcp). You configure your AI client (Claude Desktop, Cursor, etc.) to launch the MCP server with your project credentials. After setup, the agent can access your Appwrite resources within the permissions you grant."
+    answer: "Installation steps are documented in the [Appwrite MCP guide](/docs/tooling/ai/mcp-servers). You configure your AI client (Claude Desktop, Cursor, etc.) to launch the MCP server with your project credentials. After setup, the agent can access your Appwrite resources within the permissions you grant."
   - question: "What is MCP and why does it matter?"
     answer: "MCP (Model Context Protocol) is an open standard for connecting AI models to external systems and data sources. It replaces ad hoc plugin systems with a uniform protocol that any compatible client can use. This means one MCP server works across many AI tools without per platform integrations."
   - question: "Can the MCP server modify my production database?"
@@ -24,7 +24,7 @@ faqs:
 
 MCP servers are the next big thing in the AI space. Everyone is talking about them. An MCP server allows your AI agents to interact with external services. The use cases are legit, so we launched our own Appwrite MCP server that allows your AI agents to interact with your Appwrite projects. This MCP server unlocks some handy use cases, which we will look at in this article.
 
-Our documentation has a [guide for installing and setting up the Appwrite MCP server](/docs/tooling/mcp) if you haven't already.
+Our documentation has a [guide for installing and setting up the Appwrite MCP server](/docs/tooling/ai/mcp-servers) if you haven't already.
 
 # Generating documentation for your project
 
@@ -84,5 +84,5 @@ This should make the AI agent scan through all your database tables, record the 
 
 Appwrite's MCP server can unlock many different possibilities when powered by an AI agent. These were just a few of the many more use cases you could imagine. If you have any questions, please join our [Discord server](https://appwrite.io/discord) to connect with the team.
 
-- [Appwrite MCP documentation](/docs/tooling/mcp)
+- [Appwrite MCP documentation](/docs/tooling/ai/mcp-servers)
 - [What exactly is MCP, and why is it trending?](/blog/post/what-is-mcp)

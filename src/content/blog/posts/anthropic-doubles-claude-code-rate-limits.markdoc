@@ -100,4 +100,4 @@ claude plugins install appwrite@appwrite
 
 From there the loop is straightforward: Claude Code now runs longer before hitting limits, and Appwrite gives it a backend to ship against. The increased usage Anthropic just announced means more things shipped per session. Pair it with a backend you do not have to babysit, and the session translates into actual product instead of half-finished scaffolding.
 
-Check out the [Claude Code integration guide](/docs/tooling/ai/ai-dev-tools/claude-code) and the [Appwrite MCP server docs](/docs/tooling/ai/mcp-servers) to get started, or [join us on Discord](https://appwrite.io/discord) if you want to compare notes on what you are building.
+Check out the [Claude Code integration guide](/docs/tooling/ai/agents/claude-code) and the [Appwrite MCP server docs](/docs/tooling/ai/mcp-servers) to get started, or [join us on Discord](https://appwrite.io/discord) if you want to compare notes on what you are building.

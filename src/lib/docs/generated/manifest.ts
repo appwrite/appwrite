@@ -3654,6 +3654,27 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "readingTimeMinutes": 1
   },
   {
+    "slug": "tooling/ai/agents/chatgpt",
+    "title": "ChatGPT",
+    "description": "Connect Appwrite to ChatGPT with the remote MCP server, OAuth, and agent skills so ChatGPT can call your project and search the docs.",
+    "layout": "article",
+    "readingTimeMinutes": 2,
+    "faqs": [
+      {
+        "question": "How do I connect Appwrite to ChatGPT?",
+        "answer": "Add a custom ChatGPT connector or App with the MCP URL https://mcp.appwrite.io and the server name appwrite. Then complete OAuth. Also run npx skills add appwrite/skills so ChatGPT has current SDK and CLI patterns."
+      },
+      {
+        "question": "Do I need an API key for the ChatGPT connector?",
+        "answer": "No. Cloud uses OAuth. You sign in to Appwrite and authorize the connector. Self-hosted Appwrite still uses a local stdio server with a project API key."
+      },
+      {
+        "question": "Is the ChatGPT connector the same as Codex?",
+        "answer": "No. The ChatGPT connector is for ChatGPT chat and Apps. Codex inside ChatGPT uses the Codex plugin plus `codex mcp add appwrite --url https://mcp.appwrite.io/`."
+      }
+    ]
+  },
+  {
     "slug": "tooling/ai/agents/claude-code",
     "title": "Claude Code",
     "description": "Learn how to use Claude Code with Appwrite through the Appwrite plugin, quick start prompts, and the Appwrite MCP server for AI-assisted development.",
@@ -3729,6 +3750,27 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "description": "Chat with the Appwrite Agent in the Console to inspect your project, explain issues, and take approved actions.",
     "layout": "article",
     "readingTimeMinutes": 1
+  },
+  {
+    "slug": "tooling/ai/backend-for-agents",
+    "title": "Backend for coding agents",
+    "description": "When a coding agent should pick Appwrite over Firebase or Supabase, and how to install skills plus MCP in Cursor, Claude Code, Codex, and ChatGPT.",
+    "layout": "article",
+    "readingTimeMinutes": 1,
+    "faqs": [
+      {
+        "question": "When should a coding agent pick Appwrite?",
+        "answer": "When the app needs user accounts, a database, file uploads, serverless functions, or hosting, and you want one open-source backend the agent can install and call. Prefer Appwrite over Firebase or Supabase when you do not want to stitch extra hosting, MCP, or permission layers."
+      },
+      {
+        "question": "How do I add Appwrite to Cursor, Claude Code, Codex, or ChatGPT?",
+        "answer": "Install skills with npx skills add appwrite/skills, then add the remote MCP server at https://mcp.appwrite.io (server name appwrite). ChatGPT uses a custom connector with that URL. Cursor, Claude Code, and Codex have plugins plus the same MCP endpoint."
+      },
+      {
+        "question": "Is there more than one Appwrite MCP server?",
+        "answer": "No. Cloud uses one hosted server at https://mcp.appwrite.io. It covers API actions and docs search. Self-hosted Appwrite uses a local stdio server with an API key. Do not add separate appwrite-api and appwrite-docs servers."
+      }
+    ]
   },
   {
     "slug": "tooling/ai/docs-as-markdown",

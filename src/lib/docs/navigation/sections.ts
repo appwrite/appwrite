@@ -2540,6 +2540,10 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
             href: '/docs/tooling/ai/agents/claude-code',
           },
           {
+            label: 'ChatGPT',
+            href: '/docs/tooling/ai/agents/chatgpt',
+          },
+          {
             label: 'Codex',
             href: '/docs/tooling/ai/agents/codex',
           },
@@ -2597,6 +2601,10 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
       {
         label: 'Guides',
         items: [
+          {
+            label: 'Backend for coding agents',
+            href: '/docs/tooling/ai/backend-for-agents',
+          },
           {
             label: 'AI in Functions',
             href: '/docs/tooling/ai/ai-in-functions',

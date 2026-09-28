@@ -140,20 +140,18 @@ A few practical reads:
 
 # Build the rest with Claude Code and Appwrite
 
-Claude Design hands off to Claude Code. Claude Code works beautifully with Appwrite. The Appwrite MCP servers let Claude Code work against your backend and documentation without leaving the terminal.
+Claude Design hands off to Claude Code. Claude Code works with Appwrite. The Appwrite MCP server lets Claude Code work against your backend and documentation without leaving the terminal.
 
 Setup is a couple of commands:
 
 ```bash
-claude mcp add-json appwrite-api '{"command":"uvx","args":["mcp-server-appwrite"],"env":{"APPWRITE_PROJECT_ID": "your-project-id", "APPWRITE_API_KEY": "your-api-key", "APPWRITE_ENDPOINT": "https://<REGION>.cloud.appwrite.io/v1"}}'
-```
-
-```bash
-claude mcp add appwrite-docs https://mcp-for-docs.appwrite.io -t http
+npx skills add appwrite/skills
+claude mcp add appwrite --transport http https://mcp.appwrite.io
+claude "/mcp"
 ```
 
 From there the flow is: design in Claude Design, hand off to Claude Code, and let Claude Code wire up users, databases, and auth against your Appwrite backend. Three tools, one conversation, and you own the code at the end of it.
 
-Check out our [Claude Code integration guide](/docs/tooling/ai/ai-dev-tools/claude-code) and our [Appwrite MCP server docs](/docs/tooling/mcp) to get started. For deeper context on Claude Design itself, see our [full breakdown of the launch](/blog/post/claude-design).
+Check out our [Claude Code integration guide](/docs/tooling/ai/agents/claude-code) and our [Appwrite MCP server docs](/docs/tooling/ai/mcp-servers) to get started. For deeper context on Claude Design itself, see our [full breakdown of the launch](/blog/post/claude-design).
 
 Did Claude Design kill Lovable? Not today. But this is a wrapper fighting the LLM provider it depends on, and that fight only ever breaks one way over a long enough timeline. The developers who move to the integrated stack early are going to ship faster, and cheaper, than the ones still paying the wrapper tax a year from now.

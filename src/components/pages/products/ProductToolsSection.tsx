@@ -25,6 +25,9 @@ import {
   PRODUCT_TOOLS_TOTAL_SDK_COUNT,
 } from '@/lib/products/tools-section'
 import type { ProductId } from '@/lib/products/types'
+import { analyticsAttrs, type AnalyticsActionId } from '@/lib/analytics-actions'
+import { MCP_SERVER_NAME, MCP_SERVER_URL } from '@/lib/config/mcp'
+import { APPWRITE_AGENT_SKILLS_INSTALL } from '@/lib/seo/agent-discovery'
 import { cn } from '@/lib/utils'
 import { useI18n } from '@/lib/i18n'
 
@@ -36,10 +39,12 @@ function ToolsTileLink({
   href,
   children,
   className,
+  analyticsAction,
 }: {
   href: string
   children: ReactNode
   className?: string
+  analyticsAction?: AnalyticsActionId
 }) {
   return (
     <a
@@ -48,6 +53,7 @@ function ToolsTileLink({
         'group block h-full p-4 transition-colors hover:bg-accent/15 sm:p-5',
         className,
       )}
+      {...(analyticsAction ? analyticsAttrs(analyticsAction) : {})}
     >
       {children}
     </a>
@@ -204,6 +210,7 @@ export function ProductToolsSection({ productId }: ProductToolsSectionProps) {
 
           <ToolsTileLink
             href={PRODUCT_TOOLS_LINKS.mcp}
+            analyticsAction="mcp-connect"
             className="border-b border-border lg:col-start-4 lg:row-start-2 lg:border-b"
           >
             <ToolsTileIcon>
@@ -211,7 +218,7 @@ export function ProductToolsSection({ productId }: ProductToolsSectionProps) {
             </ToolsTileIcon>
             <ToolsTileTitle>{toolsCopy.mcpTitle}</ToolsTileTitle>
             <ToolsTileDescription>{toolsCopy.mcpDescription}</ToolsTileDescription>
-            <ToolsTileSnippet>{`appwrite-docs\nappwrite-api`}</ToolsTileSnippet>
+            <ToolsTileSnippet>{`${MCP_SERVER_NAME}\n${MCP_SERVER_URL}`}</ToolsTileSnippet>
           </ToolsTileLink>
 
           <ToolsTileLink
@@ -228,12 +235,13 @@ export function ProductToolsSection({ productId }: ProductToolsSectionProps) {
 
           <ToolsTileLink
             href={PRODUCT_TOOLS_LINKS.skills}
+            analyticsAction="skills-install"
             className="border-b border-border sm:border-e lg:col-start-2 lg:row-start-3 lg:border-b-0 lg:border-e"
           >
             <ToolsTileIcon icon={Sparkles} />
             <ToolsTileTitle>{toolsCopy.agentSkillsTitle}</ToolsTileTitle>
             <ToolsTileDescription>{toolsCopy.agentSkillsDescription}</ToolsTileDescription>
-            <ToolsTileSnippet>npx skills add appwrite/skills</ToolsTileSnippet>
+            <ToolsTileSnippet>{APPWRITE_AGENT_SKILLS_INSTALL}</ToolsTileSnippet>
           </ToolsTileLink>
 
           <ToolsTileLink

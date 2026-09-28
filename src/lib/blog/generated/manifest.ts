@@ -2182,7 +2182,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "slug": "announcing-appwrite-codex-plugin",
     "href": "/blog/post/announcing-appwrite-codex-plugin",
     "title": "Introducing the Appwrite plugin for Codex: Skills and MCP in one install",
-    "description": "The Appwrite plugin for Codex bundles agent skills and the Appwrite Docs MCP server into a single install, so Codex can build with Appwrite out of the box.",
+    "description": "The Appwrite plugin for Codex bundles agent skills with one remote MCP server, so Codex can build with Appwrite out of the box.",
     "date": "2026-05-11",
     "lastUpdated": "2026-05-11",
     "timeToRead": 4,
@@ -2414,7 +2414,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "timeToRead": 9,
     "author": "aishwari",
     "category": "comparisons",
-    "unlisted": true,
+    "unlisted": false,
     "cover": "/images/blog/appwrite-vs-firebase-ai-development/cover.avif",
     "hasCover": true
   },
@@ -2428,7 +2428,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "timeToRead": 8,
     "author": "aditya-oberai",
     "category": "comparisons",
-    "unlisted": true,
+    "unlisted": false,
     "cover": "/images/blog/appwrite-vs-supabase-ai-apps/cover.avif",
     "hasCover": true
   },
