@@ -5141,6 +5141,52 @@ trait RelationshipTests
 
             $this->assertEquals([], $fired);
             $this->assertTrue($database->getDocument('related_pair', 'pair1')->isEmpty());
+
+            // Removed further down a cascade chain, so it is gone, not changed, while its sibling survives
+            $database->updateRelationship(
+                collection: 'related_parent',
+                id: 'children',
+                onDelete: Database::RELATION_MUTATE_SET_NULL,
+            );
+
+            $database->createRelationship(
+                collection: 'related_pair',
+                relatedCollection: 'related_child',
+                type: Database::RELATION_ONE_TO_ONE,
+                twoWay: true,
+                id: 'tail',
+                twoWayKey: 'tailOf',
+                onDelete: Database::RELATION_MUTATE_CASCADE,
+            );
+
+            $database->createDocument('related_child', new Document([
+                '$id' => 'child5',
+                '$permissions' => $documentPermissions,
+            ]));
+
+            $database->createDocument('related_child', new Document([
+                '$id' => 'child6',
+                '$permissions' => $documentPermissions,
+            ]));
+
+            $database->createDocument('related_pair', new Document([
+                '$id' => 'pair2',
+                '$permissions' => $documentPermissions,
+                'tail' => 'child5',
+            ]));
+
+            $database->createDocument('related_parent', new Document([
+                '$id' => 'parent6',
+                '$permissions' => $documentPermissions,
+                'children' => ['child5', 'child6'],
+                'buddy' => 'pair2',
+            ]));
+
+            $fired = [];
+            $database->deleteDocument('related_parent', 'parent6');
+
+            $this->assertEquals(['child6'], $fired);
+            $this->assertTrue($database->getDocument('related_child', 'child5')->isEmpty());
         } finally {
             $database->on(Database::EVENT_DOCUMENT_UPDATE, 'related-test', null);
         }

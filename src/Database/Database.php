@@ -8009,7 +8009,9 @@ class Database
             }
 
             if ($this->resolveRelationships) {
-                $related = $this->silent(fn () => $this->deleteDocumentRelationships($collection, $document));
+                // A delete made while silenced, like a cascade's, has no one to report to
+                $report = $this->silentListeners !== null;
+                $related = $this->silent(fn () => $this->deleteDocumentRelationships($collection, $document, $report));
             }
 
             $result = $this->adapter->deleteDocument($collection->getId(), $id);
@@ -8035,17 +8037,18 @@ class Database
     /**
      * @param Document $collection
      * @param Document $document
-     * @return array<string, Document> The two-way related documents left changed
+     * @param bool $report
+     * @return array<string, Document> The two-way related documents left changed, when $report is set
      * @throws AuthorizationException
      * @throws ConflictException
      * @throws DatabaseException
      * @throws RestrictedException
      * @throws StructureException
      */
-    private function deleteDocumentRelationships(Document $collection, Document $document): array
+    private function deleteDocumentRelationships(Document $collection, Document $document, bool $report = false): array
     {
         $related = [];
-        $deleted = [$collection->getId() . ':' . $document->getId() => true];
+        $cascaded = false;
 
         $attributes = $collection->getAttribute('attributes', []);
 
@@ -8146,16 +8149,50 @@ class Database
                     continue;
                 }
 
-                // A peer reached through another relationship may be cascaded away by this one
                 if ($onDelete === Database::RELATION_MUTATE_CASCADE && !$unwritten) {
-                    $deleted[$relatedCollection->getId() . ':' . $relation->getId()] = true;
+                    $cascaded = true;
                 } elseif ($twoWay && $unwritten) {
                     $related[$relatedCollection->getId() . ':' . $relation->getId()] = $relation;
                 }
             }
         }
 
-        return \array_diff_key($related, $deleted);
+        if (!$report) {
+            return [];
+        }
+
+        // A document related to itself is deleted, not changed
+        unset($related[$collection->getId() . ':' . $document->getId()]);
+
+        if (!$cascaded || empty($related)) {
+            return $related;
+        }
+
+        // A cascade can remove a related document anywhere down its chain, so keep only the ones still there
+        $idsByCollection = [];
+        foreach ($related as $relation) {
+            $idsByCollection[$relation->getCollection()][] = $relation->getId();
+        }
+
+        $existing = [];
+        foreach ($idsByCollection as $collectionId => $ids) {
+            foreach (\array_chunk($ids, \max(1, $this->maxQueryValues)) as $chunk) {
+                $found = $this->authorization->skip(fn () => $this->find($collectionId, [
+                    Query::equal('$id', $chunk),
+                    Query::select(['$id']),
+                    Query::limit(\count($chunk)),
+                ]));
+
+                foreach ($found as $doc) {
+                    $existing[$collectionId][$doc->getId()] = true;
+                }
+            }
+        }
+
+        return \array_filter(
+            $related,
+            fn (Document $relation) => isset($existing[$relation->getCollection()][$relation->getId()]),
+        );
     }
 
     /**
@@ -8301,7 +8338,7 @@ class Database
                     ));
                 });
 
-                if ($result !== null) {
+                if ($result !== null && !$result->isEmpty()) {
                     $updated[] = $result;
                 }
                 break;
@@ -8324,7 +8361,9 @@ class Database
                         ));
                     });
 
-                    $updated[] = $result;
+                    if (!$result->isEmpty()) {
+                        $updated[] = $result;
+                    }
                 }
                 break;
 
@@ -8346,7 +8385,9 @@ class Database
                         ));
                     });
 
-                    $updated[] = $result;
+                    if (!$result->isEmpty()) {
+                        $updated[] = $result;
+                    }
                 }
                 break;
 
