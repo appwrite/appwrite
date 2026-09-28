@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/table'
 import type { Models } from '@appwrite.io/console'
 import { Columns3 } from 'lucide-react'
+import { useT } from '@/lib/i18n/translate'
 import { getLocalizedDatabaseConsoleLabels } from '@/lib/database-console-labels'
 import {
   isDatabaseRouteKind,

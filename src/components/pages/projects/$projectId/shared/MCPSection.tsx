@@ -24,6 +24,7 @@ import {
 import { getApiEndpoint } from '@/lib/appwrite/sdk'
 import { useProject } from '@/lib/react-query/hooks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { useT } from '@/lib/i18n/translate'
 import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import { Button } from '@/components/ui/button'
 import type { CodeBlockLanguage } from '@/components/global/shared/CodeBlock'
