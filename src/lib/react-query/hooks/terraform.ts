@@ -15,6 +15,7 @@ import {
   markTerraformDrift,
   summarizeTerraformActivity,
   type TerraformDrift,
+  type TerraformPendingDrift,
   type TerraformProject,
   type TerraformResource,
 } from '@/lib/terraform/state'
@@ -58,7 +59,7 @@ export async function fetchTerraformProject(
 }
 
 /** Console writes the activity log has not recorded yet, by project and resource. */
-const pendingDrift = new Map<string, Map<string, TerraformDrift>>()
+const pendingDrift = new Map<string, Map<string, TerraformPendingDrift>>()
 
 function withPendingDrift(
   projectId: string,
@@ -67,12 +68,12 @@ function withPendingDrift(
   const pending = pendingDrift.get(projectId)
   if (!pending) return project
   let merged = project
-  for (const [resource, drift] of pending) {
-    if (isTerraformDriftSettled(project.resources[resource], drift)) {
+  for (const [resource, change] of pending) {
+    if (isTerraformDriftSettled(project.resources[resource], change)) {
       pending.delete(resource)
       continue
     }
-    merged = markTerraformDrift(merged, resource, drift)
+    merged = markTerraformDrift(merged, resource, change.drift)
   }
   return merged
 }
@@ -88,13 +89,19 @@ export function recordTerraformDrift(
   resource: string,
   drift: TerraformDrift,
 ): void {
+  const queryKey = terraformProjectQueryOptions(projectId).queryKey
+  const managed = queryClient.getQueryData(queryKey)?.resources[resource]
+  if (!managed) return
   const pending = pendingDrift.get(projectId) ?? new Map()
-  pending.set(resource, drift)
+  pending.set(resource, {
+    drift,
+    lastEventAt: managed.lastEventAt,
+    eventCount: managed.eventCount,
+    recordedAt: Date.now(),
+  })
   pendingDrift.set(projectId, pending)
-  queryClient.setQueryData(
-    terraformProjectQueryOptions(projectId).queryKey,
-    (project) =>
-      project ? markTerraformDrift(project, resource, drift) : project,
+  queryClient.setQueryData(queryKey, (project) =>
+    project ? markTerraformDrift(project, resource, drift) : project,
   )
 }
 

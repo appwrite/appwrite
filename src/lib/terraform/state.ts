@@ -18,6 +18,19 @@ export type TerraformResource = {
   appliedAt: string
   providerVersion: string | null
   drift: TerraformDrift | null
+  /** Server time of the newest logged event on this resource, from any source. */
+  lastEventAt: string
+  /** Logged events on this resource since Terraform started managing it. */
+  eventCount: number
+}
+
+/** A console change the activity log may not have recorded yet. */
+export type TerraformPendingDrift = {
+  drift: TerraformDrift
+  /** The resource's log position when the change was made, so no clocks are compared. */
+  lastEventAt: string
+  eventCount: number
+  recordedAt: number
 }
 
 export type TerraformProject = {
@@ -82,12 +95,17 @@ export function summarizeTerraformActivity(
         appliedAt: event.time,
         providerVersion: getTerraformProviderVersion(event),
         drift: null,
+        lastEventAt: event.time,
+        eventCount: (resources[path]?.eventCount ?? 0) + 1,
       }
       outstanding.get(path)?.delete(getChangeKind(event))
       continue
     }
 
-    if (!resources[path]) continue
+    const managed = resources[path]
+    if (!managed) continue
+    managed.lastEventAt = event.time
+    managed.eventCount += 1
     if (isResourceDeletion(event)) {
       delete resources[path]
       outstanding.delete(path)
@@ -131,26 +149,24 @@ export function markTerraformDrift(
   }
 }
 
-/** Browser and server clocks disagree slightly, so only a clearly later apply counts. */
-const CLOCK_SKEW_MS = 2 * 60 * 1000
-
 /** Stop waiting for the log after this long, so a lost event cannot pin a warning. */
 const PENDING_DRIFT_TTL_MS = 10 * 60 * 1000
 
 /**
- * Whether the activity log has caught up with a drift the console recorded
- * locally: the log shows that change (or a later one), Terraform has applied
- * since, the resource is no longer managed, or the log never caught up.
+ * Whether the activity log has caught up with a console change: the resource
+ * has logged anything since the change was made (the change itself or a later
+ * apply), it is no longer managed, or the log never caught up. Positions in
+ * the log are compared instead of browser and server clocks.
  */
 export function isTerraformDriftSettled(
   resource: TerraformResource | undefined,
-  drift: TerraformDrift,
+  pending: TerraformPendingDrift,
   now: number = Date.now(),
 ): boolean {
-  const recordedAt = Date.parse(drift.time)
   if (!resource) return true
-  if (now - recordedAt > PENDING_DRIFT_TTL_MS) return true
-  if (Date.parse(resource.appliedAt) > recordedAt + CLOCK_SKEW_MS) return true
-  // No skew allowance here: an earlier change to the same resource must not settle a newer one.
-  return !!resource.drift && Date.parse(resource.drift.time) >= recordedAt
+  if (now - pending.recordedAt > PENDING_DRIFT_TTL_MS) return true
+  return (
+    resource.lastEventAt > pending.lastEventAt ||
+    resource.eventCount > pending.eventCount
+  )
 }
