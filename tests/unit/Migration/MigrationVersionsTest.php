@@ -62,7 +62,7 @@ final class MigrationVersionsTest extends TestCase
             ->setNamespace('migration_' . \uniqid());
         $database->create();
 
-        $migration = new V24();
+        $migration = $this->v24WithoutWalks();
         $migration->setProject(
             new Document(['$id' => 'console', '$sequence' => 'console']),
             $database,
@@ -70,10 +70,9 @@ final class MigrationVersionsTest extends TestCase
             $authorization,
         );
 
-        $migrateCollections = new \ReflectionMethod($migration, 'migrateCollections');
         \ob_start();
         try {
-            $migrateCollections->invoke($migration);
+            $migration->execute();
         } finally {
             \ob_end_clean();
         }
@@ -123,7 +122,7 @@ final class MigrationVersionsTest extends TestCase
         $database->create();
         $database->createCollection(new Collection(id: 'notifications'));
 
-        $migration = new V24();
+        $migration = $this->v24WithoutWalks();
         $migration->setProject(
             new Document(['$id' => 'console', '$sequence' => 'console']),
             $database,
@@ -131,10 +130,9 @@ final class MigrationVersionsTest extends TestCase
             $authorization,
         );
 
-        $migrateCollections = new \ReflectionMethod($migration, 'migrateCollections');
         \ob_start();
         try {
-            $migrateCollections->invoke($migration);
+            $migration->execute();
         } finally {
             \ob_end_clean();
         }
@@ -156,8 +154,8 @@ final class MigrationVersionsTest extends TestCase
      * from the current config, so it keeps describing the old install even as
      * the config moves on.
      *
-     * Drives migrateCollections, as the other migration tests here do:
-     * execute() also walks every document in every console collection, which
+     * Runs execute() without its document walk, as the other migration tests
+     * here do: the walk reads every document of every console collection, which
      * needs a full install rather than a fixture. Then does the thing the
      * columns exist for: store a notification against a team, read it back by
      * team, and check another team does not see it.
@@ -191,7 +189,12 @@ final class MigrationVersionsTest extends TestCase
             ],
         ));
 
-        $migration = new V25();
+        $migration = new class () extends V25 {
+            #[\Override]
+            public function forEachDocument(callable $callback): void
+            {
+            }
+        };
         $migration->setProject(
             new Document(['$id' => 'console', '$sequence' => 'console']),
             $database,
@@ -199,10 +202,9 @@ final class MigrationVersionsTest extends TestCase
             $authorization,
         );
 
-        $migrateCollections = new \ReflectionMethod($migration, 'migrateCollections');
         \ob_start();
         try {
-            $migrateCollections->invoke($migration);
+            $migration->execute();
         } finally {
             \ob_end_clean();
         }
@@ -589,6 +591,24 @@ final class MigrationVersionsTest extends TestCase
         $this->assertSame('attempt-retry', $stored->getAttribute('attemptId'));
         $this->assertSame('processing', $stored->getAttribute('status'));
         $this->assertSame('processing', $stored->getAttribute('stage'));
+    }
+
+    /**
+     * V24 without its bucket and document walks, which need a full install rather than a fixture.
+     */
+    private function v24WithoutWalks(): V24
+    {
+        return new class () extends V24 {
+            #[\Override]
+            protected function migrateBuckets(): void
+            {
+            }
+
+            #[\Override]
+            public function forEachDocument(callable $callback): void
+            {
+            }
+        };
     }
 
     private function assertCumulativeMigration(Database $database): void
