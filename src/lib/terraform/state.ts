@@ -18,18 +18,18 @@ export type TerraformResource = {
   appliedAt: string
   providerVersion: string | null
   drift: TerraformDrift | null
-  /** Server time of the newest logged event on this resource, from any source. */
-  lastEventAt: string
-  /** Logged events on this resource since Terraform started managing it. */
-  eventCount: number
+  /** Server time of the newest console or Terraform write logged on this resource. */
+  lastConsoleOrApplyAt: string
+  /** Console and Terraform writes logged on this resource since Terraform started managing it. */
+  consoleOrApplyCount: number
 }
 
 /** A console change the activity log may not have recorded yet. */
 export type TerraformPendingDrift = {
   drift: TerraformDrift
   /** The resource's log position when the change was made, so no clocks are compared. */
-  lastEventAt: string
-  eventCount: number
+  lastConsoleOrApplyAt: string
+  consoleOrApplyCount: number
   recordedAt: number
 }
 
@@ -39,6 +39,9 @@ export type TerraformProject = {
   providerVersion: string | null
   keyName: string | null
 }
+
+/** Console writes are logged under the signed-in admin. */
+const CONSOLE_ACTOR = 'admin'
 
 /** Running a function does not change its configuration. */
 const IGNORED_EVENT = /^execution\./
@@ -95,8 +98,8 @@ export function summarizeTerraformActivity(
         appliedAt: event.time,
         providerVersion: getTerraformProviderVersion(event),
         drift: null,
-        lastEventAt: event.time,
-        eventCount: (resources[path]?.eventCount ?? 0) + 1,
+        lastConsoleOrApplyAt: event.time,
+        consoleOrApplyCount: (resources[path]?.consoleOrApplyCount ?? 0) + 1,
       }
       outstanding.get(path)?.delete(getChangeKind(event))
       continue
@@ -104,8 +107,10 @@ export function summarizeTerraformActivity(
 
     const managed = resources[path]
     if (!managed) continue
-    managed.lastEventAt = event.time
-    managed.eventCount += 1
+    if (event.actorType === CONSOLE_ACTOR) {
+      managed.lastConsoleOrApplyAt = event.time
+      managed.consoleOrApplyCount += 1
+    }
     if (isResourceDeletion(event)) {
       delete resources[path]
       outstanding.delete(path)
@@ -154,9 +159,10 @@ const PENDING_DRIFT_TTL_MS = 10 * 60 * 1000
 
 /**
  * Whether the activity log has caught up with a console change: the resource
- * has logged anything since the change was made (the change itself or a later
- * apply), it is no longer managed, or the log never caught up. Positions in
- * the log are compared instead of browser and server clocks.
+ * has logged a console write (the change itself) or a Terraform apply since
+ * the change was made, it is no longer managed, or the log never caught up.
+ * Writes from other clients, such as a CLI deployment, do not count. Positions
+ * in the log are compared instead of browser and server clocks.
  */
 export function isTerraformDriftSettled(
   resource: TerraformResource | undefined,
@@ -166,7 +172,7 @@ export function isTerraformDriftSettled(
   if (!resource) return true
   if (now - pending.recordedAt > PENDING_DRIFT_TTL_MS) return true
   return (
-    resource.lastEventAt > pending.lastEventAt ||
-    resource.eventCount > pending.eventCount
+    resource.lastConsoleOrApplyAt > pending.lastConsoleOrApplyAt ||
+    resource.consoleOrApplyCount > pending.consoleOrApplyCount
   )
 }

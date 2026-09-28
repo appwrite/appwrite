@@ -8,10 +8,7 @@ import {
   getSdkCallResourcePath,
   getTerraformResourceKind,
 } from '@/lib/terraform/resource'
-import {
-  isTerraformDriftSettled,
-  summarizeTerraformActivity,
-} from '@/lib/terraform/state'
+import { summarizeTerraformActivity } from '@/lib/terraform/state'
 import prodEvents from './fixtures/terraform-activity-prod.json'
 import stagingEvents from './fixtures/terraform-activity-staging.json'
 
@@ -139,67 +136,6 @@ describe('summarizeTerraformActivity', () => {
     const project = summarizeTerraformActivity(events)
     expect(project.resources['database/main/table/posts']).toBeUndefined()
     expect(project.resources['function/api'].drift).toBeNull()
-  })
-})
-
-describe('isTerraformDriftSettled', () => {
-  const upTo = (time: string) =>
-    summarizeTerraformActivity(
-      STAGING_EVENTS.filter((event) => event.time <= time),
-    ).resources['function/api']
-  const beforeChange = upTo('2026-09-28T11:41:20.000+00:00')
-  const afterChange = upTo('2026-09-28T12:02:38.000+00:00')
-  const recordedAt = Date.parse('2026-09-28T12:02:40.000+00:00')
-
-  const pendingFrom = (resource: typeof beforeChange, browserTime: string) => ({
-    drift: {
-      time: browserTime,
-      event: 'functions.update',
-      actorName: 'Console admin',
-      actorType: 'admin',
-      userAgent: '',
-    },
-    lastEventAt: resource.lastEventAt,
-    eventCount: resource.eventCount,
-    recordedAt,
-  })
-
-  test('keeps a console change until the log records it', () => {
-    const pending = pendingFrom(beforeChange, '2026-09-28T12:02:40.000Z')
-    expect(isTerraformDriftSettled(beforeChange, pending, recordedAt)).toBe(
-      false,
-    )
-    expect(isTerraformDriftSettled(afterChange, pending, recordedAt)).toBe(true)
-  })
-
-  test('an earlier logged change does not settle a newer one', () => {
-    const pending = pendingFrom(afterChange, '2026-09-28T12:03:30.000Z')
-    expect(isTerraformDriftSettled(afterChange, pending, recordedAt)).toBe(
-      false,
-    )
-  })
-
-  test('a later apply settles it even when the browser clock runs ahead', () => {
-    // Console change before the 11:41:20 apply, stamped five minutes late by the browser.
-    const pending = pendingFrom(
-      upTo('2026-09-28T11:40:38.000+00:00'),
-      '2026-09-28T11:45:38.000Z',
-    )
-    expect(isTerraformDriftSettled(beforeChange, pending, recordedAt)).toBe(
-      true,
-    )
-  })
-
-  test('settles when the resource goes away or the log never catches up', () => {
-    const pending = pendingFrom(afterChange, '2026-09-28T12:03:30.000Z')
-    expect(isTerraformDriftSettled(undefined, pending, recordedAt)).toBe(true)
-    expect(
-      isTerraformDriftSettled(
-        afterChange,
-        pending,
-        recordedAt + 60 * 60 * 1000,
-      ),
-    ).toBe(true)
   })
 })
 

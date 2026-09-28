@@ -95,8 +95,8 @@ export function recordTerraformDrift(
   const pending = pendingDrift.get(projectId) ?? new Map()
   pending.set(resource, {
     drift,
-    lastEventAt: managed.lastEventAt,
-    eventCount: managed.eventCount,
+    lastConsoleOrApplyAt: managed.lastConsoleOrApplyAt,
+    consoleOrApplyCount: managed.consoleOrApplyCount,
     recordedAt: Date.now(),
   })
   pendingDrift.set(projectId, pending)
