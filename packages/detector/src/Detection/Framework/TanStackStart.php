@@ -66,6 +66,11 @@ class TanStackStart extends React
             return 'ssr';
         }
 
+        // A `routes` list or a `filter` narrows prerendering to part of the site, so the server entry is still built.
+        if (\preg_match('/\bprerender[\x27\x22]?\s*:\s*\{([^}]*)/', $stripped, $block) && \preg_match('/\b(?:routes|filter)[\x27\x22]?\s*:/', $block[1])) {
+            return 'ssr';
+        }
+
         return 'static';
     }
 }
