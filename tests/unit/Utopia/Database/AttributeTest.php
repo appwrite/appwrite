@@ -7,6 +7,7 @@ namespace Tests\Unit\Utopia\Database;
 use Appwrite\Utopia\Database\Attribute;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Utopia\Database\Document;
 use Utopia\Query\Schema\ColumnType;
 
 final class AttributeTest extends TestCase
@@ -90,5 +91,22 @@ final class AttributeTest extends TestCase
     public function testAStoredTypeMatchesOnlyItsOwnTypeWhicheverSpellingEitherSideCarries(string $stored, string $type, bool $expected): void
     {
         $this->assertSame($expected, Attribute::sameType($stored, $type));
+    }
+
+    public function testRelationshipsAreTheRelationshipAttributesOfTheCollectionByKey(): void
+    {
+        $collection = new Document(['attributes' => [
+            ['$id' => '1_1_title', 'key' => 'title', 'type' => ColumnType::String->value],
+            ['$id' => '1_1_artist', 'key' => 'artist', 'type' => ColumnType::Relationship->value],
+            ['key' => 'label', 'type' => ColumnType::Relationship->value],
+            ['$id' => '1_1_tracks', 'key' => 'tracks', 'type' => ColumnType::Relationship->value],
+        ]]);
+        $attributes = $collection->getAttribute('attributes');
+
+        $relationships = Attribute::relationships($collection);
+
+        $this->assertSame(['artist', 'tracks'], \array_keys($relationships), 'relationship attribute documents only, by key; a string attribute and an entry that is not a document are left out');
+        $this->assertSame($attributes[1], $relationships['artist']);
+        $this->assertSame($attributes[3], $relationships['tracks']);
     }
 }

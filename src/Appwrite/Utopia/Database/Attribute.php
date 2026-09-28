@@ -4,6 +4,7 @@ namespace Appwrite\Utopia\Database;
 
 use Utopia\Database\Attribute as DatabaseAttribute;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Query\Schema\ColumnType;
 
 /**
@@ -137,5 +138,24 @@ class Attribute
         $normalized = DatabaseAttribute::tryNormalizeType($stored);
 
         return $normalized !== null && $normalized === DatabaseAttribute::tryNormalizeType($type);
+    }
+
+    /**
+     * @return array<string, Document>
+     */
+    public static function relationships(Document $collection): array
+    {
+        $relationships = [];
+        foreach ($collection->getAttribute('attributes', []) as $attribute) {
+            if (!$attribute instanceof Document) {
+                continue;
+            }
+            if ($attribute->getAttribute('type') !== ColumnType::Relationship->value) {
+                continue;
+            }
+            $relationships[$attribute->getAttribute('key')] = $attribute;
+        }
+
+        return $relationships;
     }
 }

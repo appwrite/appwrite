@@ -3,12 +3,12 @@
 namespace Appwrite\Databases;
 
 use Appwrite\Extend\Exception;
+use Appwrite\Utopia\Database\Attribute;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Query\Schema\ColumnType;
 
 /**
  * A nested related document without an ID, or with the `unique()` placeholder, gets a generated ID at any depth,
@@ -31,7 +31,7 @@ final readonly class RelationshipValues
      */
     public function prepare(array $document, Document $collection): array
     {
-        foreach ($this->relationships($collection) as $key => $relationship) {
+        foreach (Attribute::relationships($collection) as $key => $relationship) {
             $value = $document[$key] ?? null;
             if (empty($value)) {
                 continue;
@@ -90,24 +90,5 @@ final readonly class RelationshipValues
                 throw new Exception(Exception::RELATIONSHIP_VALUE_INVALID, $validator->getDescription());
             }
         }
-    }
-
-    /**
-     * @return array<string, Document>
-     */
-    private function relationships(Document $collection): array
-    {
-        $relationships = [];
-        foreach ($collection->getAttribute('attributes', []) as $attribute) {
-            if (!$attribute instanceof Document) {
-                continue;
-            }
-            if ($attribute->getAttribute('type') !== ColumnType::Relationship->value) {
-                continue;
-            }
-            $relationships[$attribute->getAttribute('key')] = $attribute;
-        }
-
-        return $relationships;
     }
 }

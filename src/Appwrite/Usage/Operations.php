@@ -2,9 +2,9 @@
 
 namespace Appwrite\Usage;
 
+use Appwrite\Utopia\Database\Attribute;
 use Closure;
 use Utopia\Database\Document;
-use Utopia\Query\Schema\ColumnType;
 use WeakMap;
 
 /**
@@ -75,19 +75,15 @@ final readonly class Operations
     {
         $operations = 1;
 
-        foreach ($collection->getAttribute('attributes', []) as $attribute) {
-            if (!$attribute instanceof Document || $attribute->getAttribute('type') !== ColumnType::Relationship->value) {
-                continue;
-            }
-
-            $value = $document[$attribute->getAttribute('key')] ?? null;
+        foreach (Attribute::relationships($collection) as $key => $relationship) {
+            $value = $document[$key] ?? null;
             foreach (self::values($value) as $relation) {
                 if (!self::isDocument($relation)) {
                     continue;
                 }
 
                 $operations += self::nestsDocuments($relation)
-                    ? self::written($relatedCollection($attribute->getAttribute('relatedCollection', '')), $relation, $relatedCollection)
+                    ? self::written($relatedCollection($relationship->getAttribute('relatedCollection', '')), $relation, $relatedCollection)
                     : 1;
             }
         }

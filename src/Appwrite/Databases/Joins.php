@@ -3,6 +3,7 @@
 namespace Appwrite\Databases;
 
 use Appwrite\Extend\Exception;
+use Appwrite\Utopia\Database\Attribute;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\PermissionType;
@@ -10,7 +11,6 @@ use Utopia\Database\Query;
 use Utopia\Database\RelationType;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Authorization\Input;
-use Utopia\Query\Schema\ColumnType;
 
 /**
  * A join may read a collection only as listing it directly would: enabled, and readable at collection level or
@@ -34,7 +34,7 @@ final readonly class Joins
     public function resolve(array $queries, Document $collection): array
     {
         $prefix = 'database_' . $this->database->getSequence() . '_collection_';
-        $relationships = $this->relationships($collection);
+        $relationships = Attribute::relationships($collection);
 
         foreach ($queries as $query) {
             if (!$query->getMethod()->isJoin()) {
@@ -95,25 +95,6 @@ final readonly class Joins
         );
 
         return $found[0] ?? new Document();
-    }
-
-    /**
-     * @return array<string, Document>
-     */
-    private function relationships(Document $collection): array
-    {
-        $relationships = [];
-        foreach ($collection->getAttribute('attributes', []) as $attribute) {
-            if (!$attribute instanceof Document) {
-                continue;
-            }
-            if ($attribute->getAttribute('type') !== ColumnType::Relationship->value) {
-                continue;
-            }
-            $relationships[$attribute->getAttribute('key')] = $attribute;
-        }
-
-        return $relationships;
     }
 
     /**
