@@ -41,7 +41,6 @@ final class ConsoleConsoleClientTest extends Scope
         $this->assertIsString($response['body']['_APP_OPTIONS_FORCE_HTTPS']);
         $this->assertIsString($response['body']['_APP_DOMAINS_NAMESERVERS']);
         $this->assertIsString($response['body']['_APP_DB_ADAPTER']);
-        // When adding new keys, dont forget to update count a few lines above
     }
 
     public function testGetVariablesSpatialSupport(): void

@@ -155,13 +155,10 @@ class XList extends Action
 
         try {
             $selectQueries = Query::groupByType($queries)->selections;
-            // When there are no select queries, relationship loading is skipped on the
-            // underlying find() to avoid pulling related documents the caller did not ask for.
             $find = $selectQueries !== []
                 ? fn () => $dbForDatabases->find($collectionTableId, $queries)
                 : fn () => $dbForDatabases->skipRelationships(fn () => $dbForDatabases->find($collectionTableId, $queries));
 
-            // Use transaction-aware document retrieval if transactionId is provided
             if ($transactionId !== null) {
                 $documents = $transactionState->listDocuments($database, $collectionTableId, $transactionId, $queries);
                 $total = $includeTotal ? $transactionState->countDocuments($database, $collectionTableId, $transactionId, $queries) : 0;
@@ -221,7 +218,6 @@ class XList extends Action
 
         $response->dynamic(new Document([
             'total' => $total,
-            // rows or documents
             $this->getSDKGroup() => $documents,
         ]), $this->getResponseModel());
 

@@ -113,14 +113,11 @@ class Get extends Action
             $selects = Query::groupByType($queries)->selections;
             $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
 
-            // Use transaction-aware document retrieval if transactionId is provided
             if ($transactionId !== null) {
                 $document = $transactionState->getDocument($database, $collectionTableId, $documentId, $transactionId, $queries);
             } elseif (! empty($selects)) {
-                // has selects, allow relationship on documents!
                 $document = $dbForDatabases->getDocument($collectionTableId, $documentId, $queries);
             } else {
-                // has no selects, disable relationship looping on documents!
                 $document = $dbForDatabases->skipRelationships(fn () => $dbForDatabases->getDocument($collectionTableId, $documentId, $queries));
             }
         } catch (QueryException|QueryLibraryException $failure) {
