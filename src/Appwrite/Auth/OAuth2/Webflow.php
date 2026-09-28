@@ -80,9 +80,7 @@ class Webflow extends OAuth2
     }
 
     /**
-     * Webflow issues no refresh token and exposes no refresh grant, so there
-     * is nothing to exchange. Sessions therefore never hold a Webflow refresh
-     * token and the session refresh path skips providers that have none.
+     * Webflow exposes no refresh grant, so there is nothing to exchange.
      *
      * @param string $refreshToken
      *

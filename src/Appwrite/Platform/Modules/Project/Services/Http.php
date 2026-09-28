@@ -217,8 +217,8 @@ class Http extends Service
         $this->addAction(UpdateOAuth2Zoho::getName(), new UpdateOAuth2Zoho());
         $this->addAction(UpdateOAuth2Yandex::getName(), new UpdateOAuth2Yandex());
         $this->addAction(UpdateOAuth2X::getName(), new UpdateOAuth2X());
-        $this->addAction(UpdateOAuth2Webflow::getName(), new UpdateOAuth2Webflow());
         $this->addAction(UpdateOAuth2WordPress::getName(), new UpdateOAuth2WordPress());
+        $this->addAction(UpdateOAuth2Webflow::getName(), new UpdateOAuth2Webflow());
         $this->addAction(UpdateOAuth2Twitch::getName(), new UpdateOAuth2Twitch());
         $this->addAction(UpdateOAuth2Stripe::getName(), new UpdateOAuth2Stripe());
         $this->addAction(UpdateOAuth2Spotify::getName(), new UpdateOAuth2Spotify());
