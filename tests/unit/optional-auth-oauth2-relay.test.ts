@@ -1,22 +1,27 @@
 import { describe, expect, test } from 'bun:test'
-import { isOptionalAuthPage } from '@/components/global/auth/RequireAuth'
+import {
+  shouldRedirectGuestToSignIn,
+  shouldRedirectToConsoleMfa,
+} from '@/components/global/auth/RequireAuth'
 
-describe('isOptionalAuthPage native OAuth2 relays', () => {
-  test('lets guests reach the SDK success and failure relays', () => {
-    expect(isOptionalAuthPage('/auth/oauth2/success')).toBe(true)
-    expect(isOptionalAuthPage('/auth/oauth2/failure')).toBe(true)
+describe('native OAuth2 relay auth redirects', () => {
+  test('keeps the success and failure relays on the page for guests', () => {
+    expect(shouldRedirectGuestToSignIn('/auth/oauth2/success')).toBe(false)
+    expect(shouldRedirectGuestToSignIn('/auth/oauth2/failure')).toBe(false)
   })
 
-  test('matches any path under /auth/oauth2/', () => {
-    expect(isOptionalAuthPage('/auth/oauth2/success/')).toBe(true)
-    expect(isOptionalAuthPage('/auth/oauth2/extra')).toBe(true)
+  test('keeps the success and failure relays on the page when MFA is required', () => {
+    expect(shouldRedirectToConsoleMfa('/auth/oauth2/success')).toBe(false)
+    expect(shouldRedirectToConsoleMfa('/auth/oauth2/failure')).toBe(false)
   })
 
-  test('does not treat nearby auth paths as relays', () => {
-    expect(isOptionalAuthPage('/auth/oauth2')).toBe(false)
-    expect(isOptionalAuthPage('/auth/magic-url')).toBe(false)
-    expect(isOptionalAuthPage('/oauth2/consent')).toBe(true)
-    expect(isOptionalAuthPage('/sign-in')).toBe(false)
-    expect(isOptionalAuthPage('/projects/abc')).toBe(false)
+  test('still sends protected console routes to sign-in or MFA', () => {
+    expect(shouldRedirectGuestToSignIn('/projects/abc')).toBe(true)
+    expect(shouldRedirectToConsoleMfa('/projects/abc')).toBe(true)
+  })
+
+  test('still sends the sign-in page to MFA when a challenge is required', () => {
+    expect(shouldRedirectGuestToSignIn('/sign-in')).toBe(false)
+    expect(shouldRedirectToConsoleMfa('/sign-in')).toBe(true)
   })
 })

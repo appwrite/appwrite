@@ -126,6 +126,25 @@ function shouldSkipDuplicateAuthRedirect(key: string): boolean {
 }
 
 /**
+ * Whether a console MFA challenge may divert this path. Optional-auth pages
+ * (native OAuth relays, consent, marketing) must keep rendering so an in-progress
+ * callback is not sent to `/mfa`.
+ */
+export function shouldRedirectToConsoleMfa(pathname: string): boolean {
+  if (pathname === '/mfa') return false
+  return !isOptionalAuthPage(pathname)
+}
+
+/**
+ * Whether a guest 401 may divert this path to `/sign-in`.
+ */
+export function shouldRedirectGuestToSignIn(pathname: string): boolean {
+  if (pathname === '/') return false
+  if (isAuthPage(pathname) || isOptionalAuthPage(pathname)) return false
+  return true
+}
+
+/**
  * Navigate to MFA or sign-in when the account query fails. Must run in useEffect -
  * never call navigate from inside queryFn (async updates before mount).
  */
@@ -141,7 +160,7 @@ function useAuthErrorNavigation(error: unknown, location: RouterLocation) {
   useEffect(() => {
     // Sign-out uses a hard redirect; SPA MFA navigation would flash under it.
     if (isConsoleSigningOut()) return
-    if (!needsMfa || location.pathname === '/mfa') return
+    if (!needsMfa || !shouldRedirectToConsoleMfa(location.pathname)) return
     const redirectUrl = getRelativeRedirectUrl(location.pathname)
     if (redirectUrl === undefined) return
     const redirectKey = `mfa:${redirectUrl ?? ''}`
@@ -162,14 +181,7 @@ function useAuthErrorNavigation(error: unknown, location: RouterLocation) {
     // Sign-out covers the viewport and hard-navigates to /sign-in. Do not SPA
     // navigate here or the console will flash empty/guest states mid-logout.
     if (isConsoleSigningOut()) return
-    if (
-      !is401 ||
-      location.pathname === '/' ||
-      isAuthPage(location.pathname) ||
-      isOptionalAuthPage(location.pathname)
-    ) {
-      return
-    }
+    if (!is401 || !shouldRedirectGuestToSignIn(location.pathname)) return
     const redirectUrl = getRelativeRedirectUrl(location.pathname)
     if (redirectUrl === undefined) return
     const redirectKey = `signin:${redirectUrl ?? ''}`
