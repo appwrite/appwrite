@@ -985,7 +985,7 @@ parameters:
 			path: tests/E2E/NatsBrokerTest.php
 
 		-
-			message: '#^Method Utopia\\NATS\\Transport\\Transport@anonymous/tests/E2E/NatsBrokerTest\.php\:863\:\:upgradeTls\(\) has parameter \$options with no value type specified in iterable type array\.$#'
+			message: '#^Method Utopia\\NATS\\Transport\\Transport@anonymous/tests/E2E/NatsBrokerTest\.php\:892\:\:upgradeTls\(\) has parameter \$options with no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
 			path: tests/E2E/NatsBrokerTest.php

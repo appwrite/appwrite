@@ -96,6 +96,10 @@ class Nats implements Synchronous, Consumer, Bounded
     private const int MAX_STREAM_NAME = 255;
     private const string METADATA_IDENTITY = 'utopia_queue_identity';
 
+    // Consumer-metadata key marking a work consumer provisioned with one delivery past
+    // maxDeliver, so a broker adopting it can tell that spare from a larger budget.
+    private const string METADATA_SPARE_DELIVERY = 'utopia_queue_spare_delivery';
+
     // Retry budget for first-time provisioning of a replicated stream. The window
     // doubles per attempt because a fixed one re-synchronises the losers: every process
     // that lost the first race waits the same interval and collides again. See ensure().
@@ -119,6 +123,13 @@ class Nats implements Synchronous, Consumer, Bounded
 
     /** @var array<string, \Utopia\NATS\Subscription> max-deliveries advisory subscription per queue */
     private array $advisories = [];
+
+    /**
+     * @var array<string, int|null> per queue, the delivery that is dead-lettered on
+     *      arrival -- the server's last, when it allows one past maxDeliver; null when
+     *      the consumer allows none, and exhaustion falls to the advisory alone
+     */
+    private array $spareDelivery = [];
 
     /** Publishes the stream recognised as duplicates of an id it already held. */
     private int $duplicates = 0;
@@ -724,7 +735,19 @@ class Nats implements Synchronous, Consumer, Bounded
 
         $messages = [];
 
+        $spare = $this->spareDelivery[$key] ?? null;
+
         foreach ($deliveries as $jsMessage) {
+            // The server allows one delivery past maxDeliver (see provision()), and it
+            // only reaches here when no attempt before it ended in reject() -- a worker
+            // died holding each one. Dead-lettered on this delivery rather than by the
+            // advisory, which nobody receives while no broker is subscribed.
+            if ($spare !== null && $jsMessage->metadata()->numDelivered >= $spare) {
+                $this->park($queue, $jsMessage, 'max deliveries exceeded');
+
+                continue;
+            }
+
             try {
                 $data = $this->codec->decode($jsMessage->getData());
             } catch (\Throwable) {
@@ -735,7 +758,7 @@ class Nats implements Synchronous, Consumer, Bounded
                 // Parked rather than thrown: in a batch a throw here would leave
                 // every message behind it unregistered and unacknowledged, each
                 // burning an attempt and a maxAckPending slot for a full ackWait.
-                $this->park($queue, $jsMessage);
+                $this->park($queue, $jsMessage, 'payload could not be decoded');
 
                 continue;
             }
@@ -753,7 +776,8 @@ class Nats implements Synchronous, Consumer, Bounded
     }
 
     /**
-     * Set aside a message no codec on this worker can read.
+     * Set aside a message no handler should see: one no codec on this worker can
+     * read, or one past its last attempt.
      *
      * Straight to the dead stream and terminated, rather than NAK'd: every
      * redelivery would fail the same way, and unacknowledged it would hold a
@@ -766,7 +790,7 @@ class Nats implements Synchronous, Consumer, Bounded
      * redelivery and ends on the dead stream anyway, where dropping the ack
      * first would lose it outright.
      */
-    private function park(Queue $queue, JetStreamMessage $jsMessage): void
+    private function park(Queue $queue, JetStreamMessage $jsMessage, string $reason): void
     {
         try {
             // The message's own Content-Type, not this codec's: the bytes go over
@@ -779,7 +803,7 @@ class Nats implements Synchronous, Consumer, Bounded
             }
 
             $this->js()->publish($this->deadSubject($queue), $jsMessage->getData(), headers: $headers);
-            $jsMessage->term('payload could not be decoded');
+            $jsMessage->term($reason);
         } catch (\Throwable $error) {
             $this->report($error);
         }
@@ -876,6 +900,7 @@ class Nats implements Synchronous, Consumer, Bounded
         $this->commandsConsumers = [];
         $this->consumers = [];
         $this->advisories = [];
+        $this->spareDelivery = [];
         $this->provisioned = [];
         $this->inFlight = [];
 
@@ -1288,20 +1313,25 @@ class Nats implements Synchronous, Consumer, Bounded
             durableName: self::CONSUMER_WORK,
             ackPolicy: AckPolicy::Explicit,
             ackWait: $this->ackWait,
-            maxDeliver: $this->maxDeliver,
+            // One more than the broker's own budget. reject() dead-letters on the
+            // maxDeliver-th failure itself; the spare delivery is for the message whose
+            // every attempt died unacknowledged, which pull() dead-letters on arrival.
+            // At exactly maxDeliver the server would retire it silently instead, left
+            // on the work stream where nothing delivers or counts it.
+            maxDeliver: $this->maxDeliver + 1,
             filterSubject: $this->workSubject($queue),
             maxWaiting: $this->maxWaiting,
             maxAckPending: $this->maxAckPending,
             inactiveThreshold: $this->inactiveThreshold,
+            metadata: [self::METADATA_SPARE_DELIVERY => '1'],
             backoff: $this->backoff,
         ));
 
-        // Best-effort terminal dead-lettering for the crash-loop case: a worker that
-        // dies (never reject()s) is redelivered by AckWait until maxDeliver, after which
-        // JetStream stops delivering and emits this advisory. We drain it in receive()
-        // and move the stuck message to the dead stream. Caveat: core
-        // advisories are ephemeral, so a message that exhausts while no broker is
-        // subscribed stays as pending backlog (still visible) rather than dead-lettered.
+        // The fallback for the spare delivery above dying too: JetStream then stops
+        // delivering and emits this advisory, which receive() drains to move the
+        // message to the dead stream. Only a fallback, because core advisories are
+        // ephemeral: one emitted while no broker is subscribed is lost, and the
+        // message stays on the work stream reading as neither pending nor in flight.
         // The queue group is what keeps this to one dead-letter copy. A plain
         // subscription delivers the advisory to every worker process, and each
         // of them then publishes its own copy of the exhausted message onto the
@@ -1313,6 +1343,7 @@ class Nats implements Synchronous, Consumer, Bounded
             queue: self::ADVISORY_GROUP,
         );
 
+        $this->spareDelivery[$key] = $this->maxDeliver + 1;
         $this->provisioned[$key] = true;
     }
 
@@ -1347,6 +1378,20 @@ class Nats implements Synchronous, Consumer, Bounded
         }
 
         $this->consumers[$key] = $this->adoptConsumer($queue, self::CONSUMER_WORK);
+
+        // The owner's spare delivery, not this broker's: it exists only if the owner
+        // provisioned one, which it marks in the consumer's metadata. A consumer from
+        // before the spare was introduced allows none, and nothing here may change that,
+        // so it is reported instead -- a message it exhausts while no broker is
+        // subscribed stays on the work stream until its owner reprovisions. A limit
+        // below 1 is unlimited: such a message never exhausts.
+        $config = $this->consumers[$key]->info()->config;
+        $allowed = $config->maxDeliver ?? -1;
+        $marked = isset($config->metadata[self::METADATA_SPARE_DELIVERY]);
+        $this->spareDelivery[$key] = $marked && $allowed >= 1 ? $allowed : null;
+        if (!$marked && $allowed >= 1) {
+            $this->report(new \RuntimeException('NATS consumer "' . self::CONSUMER_WORK . "\" on stream \"{$this->workStream($queue)}\" allows no delivery past max_deliver {$allowed}, so a message exhausted while no broker is subscribed is left on the work stream; reprovision it from the queue's owner."));
+        }
 
         // Same advisory subscription provision() takes: a core subscription carries no
         // configuration, and a broker consuming a pre-provisioned queue still owes its
