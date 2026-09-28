@@ -305,42 +305,7 @@ final class UsageCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ];
         $databaseId = ID::unique();
-        $path = "/$api/$databaseId/$containers";
-
-        $response = $this->client->call(Client::METHOD_POST, "/$api", $headers, [
-            'databaseId' => $databaseId,
-            'name' => 'Nested operations',
-        ]);
-        $this->assertSame(201, $response['headers']['status-code']);
-        foreach (['albums', 'tracks'] as $containerId) {
-            $response = $this->client->call(Client::METHOD_POST, $path, $headers, [
-                $containerIdKey => $containerId,
-                'name' => $containerId,
-            ]);
-            $this->assertSame(201, $response['headers']['status-code']);
-            $response = $this->client->call(Client::METHOD_POST, "$path/$containerId/$attributes/string", $headers, [
-                'key' => 'name',
-                'size' => 64,
-                'required' => false,
-            ]);
-            $this->assertSame(202, $response['headers']['status-code']);
-        }
-        $response = $this->client->call(Client::METHOD_POST, "$path/albums/$attributes/relationship", $headers, [
-            'related' . \ucfirst($containerIdKey) => 'tracks',
-            'type' => RelationType::OneToMany->value,
-            'twoWay' => true,
-            'key' => 'tracks',
-            'twoWayKey' => 'album',
-            'onDelete' => ForeignKeyAction::Cascade->value,
-        ]);
-        $this->assertSame(202, $response['headers']['status-code']);
-        $this->assertEventually(function () use ($path, $attributes, $headers) {
-            foreach (["albums/$attributes/name", "albums/$attributes/tracks", "tracks/$attributes/name", "tracks/$attributes/album"] as $attribute) {
-                $response = $this->client->call(Client::METHOD_GET, "$path/$attribute", $headers);
-                $this->assertSame(200, $response['headers']['status-code']);
-                $this->assertSame('available', $response['body']['status']);
-            }
-        });
+        $path = $this->createAlbumsWithTracks($api, $databaseId, $containers, $attributes, $containerIdKey, $headers);
 
         // Test for SUCCESS: a write is metered as its document plus every related document in its payload.
         $albums = "$path/albums/$records";
@@ -402,42 +367,7 @@ final class UsageCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ];
         $databaseId = ID::unique();
-        $path = "/$api/$databaseId/$containers";
-
-        $response = $this->client->call(Client::METHOD_POST, "/$api", $headers, [
-            'databaseId' => $databaseId,
-            'name' => 'Cached list operations',
-        ]);
-        $this->assertSame(201, $response['headers']['status-code']);
-        foreach (['albums', 'tracks'] as $containerId) {
-            $response = $this->client->call(Client::METHOD_POST, $path, $headers, [
-                $containerIdKey => $containerId,
-                'name' => $containerId,
-            ]);
-            $this->assertSame(201, $response['headers']['status-code']);
-            $response = $this->client->call(Client::METHOD_POST, "$path/$containerId/$attributes/string", $headers, [
-                'key' => 'name',
-                'size' => 64,
-                'required' => false,
-            ]);
-            $this->assertSame(202, $response['headers']['status-code']);
-        }
-        $response = $this->client->call(Client::METHOD_POST, "$path/albums/$attributes/relationship", $headers, [
-            'related' . \ucfirst($containerIdKey) => 'tracks',
-            'type' => RelationType::OneToMany->value,
-            'twoWay' => true,
-            'key' => 'tracks',
-            'twoWayKey' => 'album',
-            'onDelete' => ForeignKeyAction::Cascade->value,
-        ]);
-        $this->assertSame(202, $response['headers']['status-code']);
-        $this->assertEventually(function () use ($path, $attributes, $headers) {
-            foreach (["albums/$attributes/name", "albums/$attributes/tracks", "tracks/$attributes/name", "tracks/$attributes/album"] as $attribute) {
-                $response = $this->client->call(Client::METHOD_GET, "$path/$attribute", $headers);
-                $this->assertSame(200, $response['headers']['status-code']);
-                $this->assertSame('available', $response['body']['status']);
-            }
-        });
+        $path = $this->createAlbumsWithTracks($api, $databaseId, $containers, $attributes, $containerIdKey, $headers);
         $albums = "$path/albums/$records";
         $response = $this->client->call(Client::METHOD_POST, $albums, $headers, [
             $recordIdKey => 'album1',
@@ -491,42 +421,7 @@ final class UsageCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ];
         $databaseId = ID::unique();
-        $path = "/$api/$databaseId/$containers";
-
-        $response = $this->client->call(Client::METHOD_POST, "/$api", $headers, [
-            'databaseId' => $databaseId,
-            'name' => 'Upsert and query operations',
-        ]);
-        $this->assertSame(201, $response['headers']['status-code']);
-        foreach (['albums', 'tracks'] as $containerId) {
-            $response = $this->client->call(Client::METHOD_POST, $path, $headers, [
-                $containerIdKey => $containerId,
-                'name' => $containerId,
-            ]);
-            $this->assertSame(201, $response['headers']['status-code']);
-            $response = $this->client->call(Client::METHOD_POST, "$path/$containerId/$attributes/string", $headers, [
-                'key' => 'name',
-                'size' => 64,
-                'required' => false,
-            ]);
-            $this->assertSame(202, $response['headers']['status-code']);
-        }
-        $response = $this->client->call(Client::METHOD_POST, "$path/albums/$attributes/relationship", $headers, [
-            'related' . \ucfirst($containerIdKey) => 'tracks',
-            'type' => RelationType::OneToMany->value,
-            'twoWay' => true,
-            'key' => 'tracks',
-            'twoWayKey' => 'album',
-            'onDelete' => ForeignKeyAction::Cascade->value,
-        ]);
-        $this->assertSame(202, $response['headers']['status-code']);
-        $this->assertEventually(function () use ($path, $attributes, $headers) {
-            foreach (["albums/$attributes/name", "albums/$attributes/tracks", "tracks/$attributes/name", "tracks/$attributes/album"] as $attribute) {
-                $response = $this->client->call(Client::METHOD_GET, "$path/$attribute", $headers);
-                $this->assertSame(200, $response['headers']['status-code']);
-                $this->assertSame('available', $response['body']['status']);
-            }
-        });
+        $path = $this->createAlbumsWithTracks($api, $databaseId, $containers, $attributes, $containerIdKey, $headers);
 
         // Test for SUCCESS: an upsert is metered as its document plus every related document in its payload.
         $albums = "$path/albums/$records";
@@ -576,6 +471,51 @@ final class UsageCustomServerTest extends Scope
             $this->assertSame(7, (int) array_sum(array_column($response['body']['metrics'][0]['points'], 'value')), 'reads: 5 for the query of both albums with their three tracks, 2 for album2 and its track on the page after album1');
             $this->assertSame(5, (int) array_sum(array_column($response['body']['metrics'][1]['points'], 'value')), 'writes: 3 for the upsert of album1 with two tracks, 2 for the upsert of album2 with one');
         }, 60_000, 500);
+    }
+
+    /**
+     * @param array<string, string> $headers
+     */
+    private function createAlbumsWithTracks(string $api, string $databaseId, string $containers, string $attributes, string $containerIdKey, array $headers): string
+    {
+        $path = "/$api/$databaseId/$containers";
+
+        $response = $this->client->call(Client::METHOD_POST, "/$api", $headers, [
+            'databaseId' => $databaseId,
+            'name' => 'Albums and tracks',
+        ]);
+        $this->assertSame(201, $response['headers']['status-code']);
+        foreach (['albums', 'tracks'] as $containerId) {
+            $response = $this->client->call(Client::METHOD_POST, $path, $headers, [
+                $containerIdKey => $containerId,
+                'name' => $containerId,
+            ]);
+            $this->assertSame(201, $response['headers']['status-code']);
+            $response = $this->client->call(Client::METHOD_POST, "$path/$containerId/$attributes/string", $headers, [
+                'key' => 'name',
+                'size' => 64,
+                'required' => false,
+            ]);
+            $this->assertSame(202, $response['headers']['status-code']);
+        }
+        $response = $this->client->call(Client::METHOD_POST, "$path/albums/$attributes/relationship", $headers, [
+            'related' . \ucfirst($containerIdKey) => 'tracks',
+            'type' => RelationType::OneToMany->value,
+            'twoWay' => true,
+            'key' => 'tracks',
+            'twoWayKey' => 'album',
+            'onDelete' => ForeignKeyAction::Cascade->value,
+        ]);
+        $this->assertSame(202, $response['headers']['status-code']);
+        $this->assertEventually(function () use ($path, $attributes, $headers) {
+            foreach (["albums/$attributes/name", "albums/$attributes/tracks", "tracks/$attributes/name", "tracks/$attributes/album"] as $attribute) {
+                $response = $this->client->call(Client::METHOD_GET, "$path/$attribute", $headers);
+                $this->assertSame(200, $response['headers']['status-code']);
+                $this->assertSame('available', $response['body']['status']);
+            }
+        });
+
+        return $path;
     }
 
     private function waitForUsageStats(): void
