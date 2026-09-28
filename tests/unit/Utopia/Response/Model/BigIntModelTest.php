@@ -20,15 +20,6 @@ use Utopia\Query\Schema\ColumnType;
 final class BigIntModelTest extends TestCase
 {
     /**
-     * @return \Iterator<string, array{class-string<Model>}>
-     */
-    public static function models(): \Iterator
-    {
-        yield 'attribute' => [AttributeBigInt::class];
-        yield 'column' => [ColumnBigInt::class];
-    }
-
-    /**
      * @return \Iterator<string, array{class-string<Model>, string|ColumnType}>
      */
     public static function storedTypes(): \Iterator
@@ -52,13 +43,25 @@ final class BigIntModelTest extends TestCase
     }
 
     /**
+     * @return \Iterator<string, array{class-string<Model>, string|ColumnType|null}>
+     */
+    public static function unrelatedTypes(): \Iterator
+    {
+        foreach (['attribute' => AttributeBigInt::class, 'column' => ColumnBigInt::class] as $label => $model) {
+            yield $label . ' integer' => [$model, 'integer'];
+            yield $label . ' integer column type' => [$model, ColumnType::Integer];
+            yield $label . ' missing type' => [$model, null];
+        }
+    }
+
+    /**
      * @param class-string<Model> $model
      */
-    #[DataProvider('models')]
-    public function testTheModelLeavesAnUnrelatedTypeAlone(string $model): void
+    #[DataProvider('unrelatedTypes')]
+    public function testTheModelLeavesAnUnrelatedTypeAlone(string $model, string|ColumnType|null $type): void
     {
-        $filtered = (new $model())->filter(new Document(['key' => 'pages', 'type' => 'integer']));
+        $filtered = (new $model())->filter(new Document(['key' => 'pages', 'type' => $type]));
 
-        $this->assertSame('integer', $filtered->getAttribute('type'));
+        $this->assertSame($type, $filtered->getAttribute('type'));
     }
 }

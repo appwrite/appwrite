@@ -123,17 +123,19 @@ class Attribute
         ];
     }
 
-    public static function storedType(string $type): string
+    public static function storedType(ColumnType|string $type): string
     {
-        return DatabaseAttribute::tryNormalizeType($type) === ColumnType::BigInteger
-            ? DatabaseAttribute::persistedType(ColumnType::BigInteger)
-            : $type;
+        if (DatabaseAttribute::tryNormalizeType($type) === ColumnType::BigInteger) {
+            return DatabaseAttribute::persistedType(ColumnType::BigInteger);
+        }
+
+        return $type instanceof ColumnType ? $type->value : $type;
     }
 
     /**
      * An unrecognised stored type matches no type.
      */
-    public static function sameType(string $stored, string $type): bool
+    public static function sameType(ColumnType|string $stored, ColumnType|string $type): bool
     {
         $normalized = DatabaseAttribute::tryNormalizeType($stored);
 

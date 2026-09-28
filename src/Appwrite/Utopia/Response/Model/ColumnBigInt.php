@@ -2,8 +2,8 @@
 
 namespace Appwrite\Utopia\Response\Model;
 
+use Appwrite\Utopia\Database\Attribute as AttributeDefinition;
 use Appwrite\Utopia\Response;
-use Utopia\Database\Attribute as DatabaseAttribute;
 use Utopia\Database\Document;
 use Utopia\Query\Schema\ColumnType;
 
@@ -61,8 +61,8 @@ class ColumnBigInt extends Column
     {
         $type = $document->getAttribute('type');
 
-        if (($type instanceof ColumnType || \is_string($type)) && DatabaseAttribute::tryNormalizeType($type) === ColumnType::BigInteger) {
-            $document->setAttribute('type', DatabaseAttribute::persistedType(ColumnType::BigInteger));
+        if (($type instanceof ColumnType || \is_string($type)) && AttributeDefinition::sameType($type, ColumnType::BigInteger)) {
+            $document->setAttribute('type', AttributeDefinition::storedType($type));
         }
 
         return $document;
