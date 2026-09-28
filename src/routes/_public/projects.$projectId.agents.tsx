@@ -1,6 +1,7 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { View } from '@/components/pages/projects/$projectId/agents/View'
 import { canAccessProjectAgentConnect } from '@/lib/console-rbac-loader'
+import { loadDebugOverrides } from '@/lib/debug-overrides'
 import {
   accountConnectedAppsQueryOptions,
   projectQueryOptions,
@@ -16,7 +17,9 @@ export const Route = createFileRoute('/_public/projects/$projectId/agents')({
     const { queryClient } = context
     if (!projectId) return undefined
 
-    const canAccess = await canAccessProjectAgentConnect(queryClient, projectId)
+    const canAccess =
+      loadDebugOverrides().showProjectAgents &&
+      (await canAccessProjectAgentConnect(queryClient, projectId))
     if (!canAccess) {
       throw redirect({
         to: '/projects/$projectId/overview',

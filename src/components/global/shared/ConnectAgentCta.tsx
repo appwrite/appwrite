@@ -34,7 +34,7 @@ export function ConnectAgentCta({
 }) {
   const t = useT()
   const { isAuthenticated } = useAuth()
-  const { features, isSelfHosted } = useConsoleProfile()
+  const { features } = useConsoleProfile()
   const { project } = useProject(projectId)
   const { access } = useOrganizationScopes(project?.teamId)
   const { data: connectedApps, isFetched } = useAccountConnectedApps({
@@ -54,10 +54,9 @@ export function ConnectAgentCta({
       buildConnectMcpPrompt({
         projectId,
         projectName,
-        isSelfHosted,
         endpoint: getApiEndpoint(project?.region),
       }),
-    [projectId, projectName, isSelfHosted, project?.region],
+    [projectId, projectName, project?.region],
   )
 
   if (!canShow || !projectConnect || connected) {

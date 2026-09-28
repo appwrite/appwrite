@@ -34,6 +34,7 @@ import {
   Camera,
   Info,
   MapPin,
+  FileText,
 } from 'lucide-react'
 import {
   Popover,
@@ -125,6 +126,7 @@ import { DebugMenuFaviconPanel } from '@/components/global/providers/DebugMenuFa
 import { DebugMenuIpPanel } from '@/components/global/providers/DebugMenuIpPanel'
 import { DebugMenuLocalePanel } from '@/components/global/providers/DebugMenuLocalePanel'
 import { DebugMenuDemosPanel } from '@/components/global/providers/DebugMenuDemosPanel'
+import { DebugMenuAgentSetupPanel } from '@/components/global/providers/DebugMenuAgentSetupPanel'
 import {
   useInitLowPowerAnimationDecision,
   type InitLowPowerAnimationDecision,
@@ -240,6 +242,7 @@ interface MenuItem {
     | 'clientIp'
     | 'localeStatus'
     | 'demos'
+    | 'agentSetup'
   /** Extra classes on submenu row buttons (e.g. separator above reset actions). */
   rowClassName?: string
   /** Feature flags submenu: group label for categorized lists. */
@@ -704,7 +707,8 @@ function isDebugPanelSubmenuVariant(
     variant === 'faviconStatus' ||
     variant === 'clientIp' ||
     variant === 'localeStatus' ||
-    variant === 'demos'
+    variant === 'demos' ||
+    variant === 'agentSetup'
   )
 }
 
@@ -791,7 +795,8 @@ function menuItemHasSubmenu(item: MenuItem): boolean {
     item.submenuVariant === 'faviconStatus' ||
     item.submenuVariant === 'clientIp' ||
     item.submenuVariant === 'localeStatus' ||
-    item.submenuVariant === 'demos'
+    item.submenuVariant === 'demos' ||
+    item.submenuVariant === 'agentSetup'
   )
 }
 
@@ -1900,6 +1905,21 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 undefined,
                 'UI & tools',
               ),
+              createDebugFeatureFlagItem(
+                'Project agents',
+                'Project Agents page (/agents). New projects land on it from the project root; off always opens Overview.',
+                'showProjectAgents',
+                overrides.showProjectAgents,
+                (checked) => {
+                  setOverrides((prev) => ({
+                    ...prev,
+                    showProjectAgents: checked,
+                  }))
+                  setDebugOverride('showProjectAgents', checked)
+                },
+                undefined,
+                'UI & tools',
+              ),
               ...(import.meta.env.DEV
                 ? [
                     createDebugFeatureFlagItem(
@@ -2167,6 +2187,12 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
               submenu: mcpEndpointOptions,
             }
           })(),
+          {
+            label: 'Agent setup',
+            description: 'Review the /setup.md guide coding agents fetch.',
+            icon: <FileText className="h-3 w-3" />,
+            submenuVariant: 'agentSetup',
+          },
           {
             label: 'Variables',
             description: 'Check if env vars are set (values never shown).',
@@ -2596,7 +2622,8 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
               currentSubmenu?.submenuVariant === 'faviconStatus' ||
               currentSubmenu?.submenuVariant === 'clientIp' ||
               currentSubmenu?.submenuVariant === 'localeStatus' ||
-              currentSubmenu?.submenuVariant === 'demos'
+              currentSubmenu?.submenuVariant === 'demos' ||
+              currentSubmenu?.submenuVariant === 'agentSetup'
                 ? 'w-[min(92vw,720px)]'
                 : 'w-80',
           )}
@@ -2740,6 +2767,8 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 <DebugMenuLocalePanel />
               ) : currentSubmenu.submenuVariant === 'demos' ? (
                 <DebugMenuDemosPanel onLaunchDemo={() => setIsOpen(false)} />
+              ) : currentSubmenu.submenuVariant === 'agentSetup' ? (
+                <DebugMenuAgentSetupPanel />
               ) : (
                 <div className="space-y-0.5">
                   {currentSubmenu.note ? (

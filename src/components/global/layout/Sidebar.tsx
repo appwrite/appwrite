@@ -31,6 +31,7 @@ import {
   canShowAgentMcpConnectCta,
 } from '@/lib/console-access-checks'
 import { useDebugMode } from '@/components/global/providers/DebugMode'
+import { useDebugOverrides } from '@/lib/debug-overrides'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import {
   analyticsAttrs,
@@ -330,6 +331,7 @@ export function ConsoleSidebar({
   const { access, isLoading: scopesLoading } = useOrganizationScopes(
     project?.teamId,
   )
+  const { showProjectAgents } = useDebugOverrides()
 
   const { overviewItem, settingsItem } = getNavItems(projectId, sidebarCopy)
 
@@ -349,12 +351,22 @@ export function ConsoleSidebar({
           if (item.id === 'firewall')
             return isCloud && canSeeProjectNavItem(access, features, item.id)
           if (item.id === 'agents')
-            return canShowAgentMcpConnectCta(access, features)
+            return (
+              showProjectAgents && canShowAgentMcpConnectCta(access, features)
+            )
           return canSeeProjectNavItem(access, features, item.id)
         }),
       }))
       .filter((cat) => cat.items.length > 0)
-  }, [projectId, isDebugModeOpen, features, access, sidebarCopy, isCloud])
+  }, [
+    projectId,
+    isDebugModeOpen,
+    features,
+    access,
+    sidebarCopy,
+    isCloud,
+    showProjectAgents,
+  ])
 
   const showOverview = canSeeProjects(access, features)
   // Hide project Settings from left nav when user lacks write access (e.g. analyst).

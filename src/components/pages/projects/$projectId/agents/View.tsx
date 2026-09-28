@@ -137,7 +137,7 @@ export function View() {
   const navigate = useNavigate()
   const { projectId } = useParams({ strict: false })
   const { isAuthenticated, account } = useAuth()
-  const { features, isSelfHosted } = useConsoleProfile()
+  const { features } = useConsoleProfile()
   const { project } = useProject(projectId)
   const { access } = useOrganizationScopes(project?.teamId)
   const { data: connectedApps } = useAccountConnectedApps({
@@ -159,10 +159,9 @@ export function View() {
       buildConnectMcpPrompt({
         projectId: projectId ?? '',
         projectName,
-        isSelfHosted,
         endpoint: getApiEndpoint(project?.region),
       }),
-    [projectId, projectName, isSelfHosted, project?.region],
+    [projectId, projectName, project?.region],
   )
 
   if (!canShow || !projectConnect || !projectId) {

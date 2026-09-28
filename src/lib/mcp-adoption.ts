@@ -3,8 +3,7 @@
  */
 
 import type { AccountConnectedAppGroup } from '@/lib/react-query/hooks/account-applications'
-import { MCP_API_KEY_PLACEHOLDER } from '@/lib/config/mcp'
-import { AGENT_SETUP_URL } from '@/lib/seo/agent-setup'
+import { AGENT_SETUP_PATH, AGENT_SETUP_URL } from '@/lib/seo/agent-setup'
 
 /** First-party console Agent OAuth client. Not a coding-agent MCP install. */
 export const FIRST_PARTY_APPWRITE_AGENT_CLIENT_ID = 'appwrite-agent'
@@ -35,29 +34,30 @@ export function getMcpTryItPrompts(projectName: string): string[] {
   )
 }
 
+/** `/setup.md` on the host serving this console, so each environment hands out its own guide. */
+export function getAgentSetupUrl(origin?: string): string {
+  const resolvedOrigin =
+    origin ?? (typeof window !== 'undefined' ? window.location.origin : undefined)
+  return resolvedOrigin ? `${resolvedOrigin}${AGENT_SETUP_PATH}` : AGENT_SETUP_URL
+}
+
 /** Short handoff so a coding agent fetches public setup instructions (and we can track that fetch). */
 export function buildConnectMcpPrompt(options: {
   projectId: string
   projectName: string
-  isSelfHosted: boolean
   endpoint?: string
+  origin?: string
 }): string {
-  const { projectId, projectName, isSelfHosted, endpoint } = options
+  const { projectId, projectName, endpoint, origin } = options
   const lines: string[] = [
-    `Install Appwrite MCP, the latest CLI, and the matching official SDK by following ${AGENT_SETUP_URL}`,
+    `Install Appwrite MCP, the latest CLI, and the matching official SDK by following ${getAgentSetupUrl(origin)}`,
     '',
     `- Project ID: \`${projectId}\``,
     `- Name: ${projectName}`,
     `- Endpoint: \`${endpoint ?? ''}\``,
+    '',
+    'If you cannot open that page, ask me to paste it instead of guessing the steps.',
   ]
 
-  if (isSelfHosted) {
-    lines.push(
-      `- API key placeholder: \`${MCP_API_KEY_PLACEHOLDER}\``,
-      '',
-      'This instance is self-hosted. Use the self-hosted path in those instructions.',
-    )
-  }
-
-  return `${lines.join('\n').trimEnd()}\n`
+  return `${lines.join('\n')}\n`
 }
