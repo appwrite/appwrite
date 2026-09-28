@@ -48,7 +48,7 @@ Formwrite is a forms product with the features you would expect from one:
 
 ![The Formwrite builder with a field palette, question cards, and an inspector for a single choice question](/images/blog/multi-tenant-app-appwrite-teams-documentsdb/form-builder.avif)
 
-The whole thing is a [SvelteKit](https://svelte.dev/docs/kit) app rendered on the server. There is no client-side Appwrite SDK at all. Every Appwrite call happens in a `load` function, a form action, or a request handler on the server, which is what makes the two-client model below possible.
+The front-end is a [SvelteKit](https://svelte.dev/docs/kit) app rendered on the server. There is no client-side Appwrite SDK at all. Every Appwrite call happens in a `load` function, a form action, or a request handler on the server, which is what makes the two-client model below possible.
 
 > Note: The code in this post focuses on the tenancy and data model. The form builder UI, theming, and validation are in the repository linked at the end.
 
