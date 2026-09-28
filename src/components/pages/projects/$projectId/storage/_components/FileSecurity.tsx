@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { useParams } from '@tanstack/react-router'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { sdk, getApiEndpoint } from '@/lib/appwrite/sdk'
+import { getApiEndpoint, getFileTokenUrl, sdk } from '@/lib/appwrite/sdk'
 import { useFile, useFileTokens, Dependencies } from '@/lib/react-query/hooks'
 import { FILE_TOKENS_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
@@ -15,7 +15,8 @@ import { Badge } from '@/components/ui/badge'
 import {
   Tooltip,
   TooltipContent,
-  TooltipTrigger} from '@/components/ui/tooltip'
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { DateTimePicker } from '@/components/global/shared/DateTimePicker'
 import { Pagination } from '@/components/global/shared/Pagination'
@@ -25,13 +26,15 @@ import {
   DialogContent,
   DialogDescription,
   DialogHeader,
-  DialogTitle} from '@/components/ui/dialog'
+  DialogTitle,
+} from '@/components/ui/dialog'
 
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger} from '@/components/ui/dropdown-menu'
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import {
   Loader2,
   Plus,
@@ -40,7 +43,8 @@ import {
   Eye,
   Check,
   AlertCircle,
-  Link2} from 'lucide-react'
+  Link2,
+} from 'lucide-react'
 import type { Models } from '@appwrite.io/console'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { useProject } from '@/lib/react-query/hooks'
@@ -59,13 +63,7 @@ function maskSecret(secret: string): string {
   return `${secret.slice(0, 4)}${'•'.repeat(8)}${secret.slice(-3)}`
 }
 
-type FileTokenExpiryOption =
-  | 'never'
-  | '1h'
-  | '24h'
-  | '7d'
-  | '30d'
-  | 'custom'
+type FileTokenExpiryOption = 'never' | '1h' | '24h' | '7d' | '30d' | 'custom'
 
 const FILE_TOKEN_EXPIRY_OPTIONS: {
   value: FileTokenExpiryOption
@@ -123,7 +121,8 @@ export function FileSecurity({
   bucketId: bucketIdProp,
   fileId: fileIdProp,
   variant = 'page',
-  panelSection = 'all'}: FileSecurityProps = {}) {
+  panelSection = 'all',
+}: FileSecurityProps = {}) {
   const params = useParams({ strict: false }) as {
     projectId?: string
     bucketId?: string
@@ -217,7 +216,8 @@ export function FileSecurity({
       return await projectSdk.storage.updateFile({
         bucketId,
         fileId,
-        permissions})
+        permissions,
+      })
     },
     onSuccess: () => {
       toast.success(t('File permissions have been updated'))
@@ -225,7 +225,8 @@ export function FileSecurity({
     },
     onError: (error) => {
       toast.error(getErrorMessage(error))
-    }})
+    },
+  })
 
   const handleFilePermissionsUpdate = () => {
     if (!arraysEqual(filePermissions, file?.$permissions || [])) {
@@ -243,7 +244,8 @@ export function FileSecurity({
       return await projectSdk.tokens.createFileToken({
         bucketId,
         fileId,
-        expire: expiration || undefined})
+        expire: expiration || undefined,
+      })
     },
     onSuccess: () => {
       toast.success(t('Token has been created'))
@@ -254,7 +256,8 @@ export function FileSecurity({
     },
     onError: (error) => {
       toast.error(getErrorMessage(error))
-    }})
+    },
+  })
 
   // Delete token mutation
   const deleteTokenMutation = useMutation({
@@ -271,7 +274,8 @@ export function FileSecurity({
     },
     onError: (error) => {
       toast.error(getErrorMessage(error))
-    }})
+    },
+  })
 
   const handleCreateToken = () => {
     const expiration = getFileTokenCreateExpirationIso(
@@ -308,25 +312,16 @@ export function FileSecurity({
     (item: Models.ResourceToken) => item.$id === viewingTokenId,
   )
 
-  // Build file URL with token (public REST URL - must include `project` query param)
   const getFileUrl = (
     mode: 'preview' | 'view' | 'download',
     tokenSecret: string,
   ): string => {
     if (!projectId || !bucketId || !fileId) return ''
-    const baseUrl = `${projectEndpoint}/storage/buckets/${bucketId}/files/${fileId}`
-    const params = new URLSearchParams({
-      project: projectId,
-      token: tokenSecret})
-    const qs = params.toString()
-
-    if (mode === 'preview') {
-      return `${baseUrl}/preview?${qs}`
-    }
-    if (mode === 'view') {
-      return `${baseUrl}/view?${qs}`
-    }
-    return `${baseUrl}/download?${qs}`
+    return getFileTokenUrl(projectEndpoint, projectId, mode, {
+      bucketId,
+      fileId,
+      token: tokenSecret,
+    })
   }
 
   const handleOpenCopyDialog = (token: Models.ResourceToken) => {
@@ -366,7 +361,8 @@ export function FileSecurity({
       : 'px-4 py-3.5'
   const panelTone = variant === 'panel' || cardlessPanel
 
-  const showPermissions = panelSection === 'all' || panelSection === 'permissions'
+  const showPermissions =
+    panelSection === 'all' || panelSection === 'permissions'
   const showTokens = panelSection === 'all' || panelSection === 'tokens'
 
   function renderPermissionsDescription(opts?: { afterHeading?: boolean }) {
@@ -375,8 +371,11 @@ export function FileSecurity({
       <p
         className={cn(
           'text-muted-foreground',
-          variant === 'panel' || cardlessPanel ? 'text-[12px] leading-snug' : 'text-[13px]',
-          afterHeading && (variant === 'panel' || cardlessPanel ? 'mt-1' : 'mt-2'),
+          variant === 'panel' || cardlessPanel
+            ? 'text-[12px] leading-snug'
+            : 'text-[13px]',
+          afterHeading &&
+            (variant === 'panel' || cardlessPanel ? 'mt-1' : 'mt-2'),
         )}
       >
         {t('Choose who can access this file.')}{' '}
@@ -408,14 +407,19 @@ export function FileSecurity({
       <p
         className={cn(
           'text-muted-foreground',
-          variant === 'panel' || cardlessPanel ? 'text-[12px] leading-snug' : 'text-[13px]',
+          variant === 'panel' || cardlessPanel
+            ? 'text-[12px] leading-snug'
+            : 'text-[13px]',
           afterHeading && 'mt-2',
         )}
       >
         {t(
           'File tokens allow you to share files publicly with anyone without configuring bucket or file permissions. They work around browser restrictions on third-party cookies and can be set to expire on a specific date or work indefinitely.',
         )}{' '}
-        <DocsRouteLink className="link-neutral" href="/docs/products/storage/file-tokens">
+        <DocsRouteLink
+          className="link-neutral"
+          href="/docs/products/storage/file-tokens"
+        >
           {t('Learn more')}
         </DocsRouteLink>
         .
@@ -450,7 +454,9 @@ export function FileSecurity({
         <h3
           className={cn(
             'font-semibold text-foreground',
-            variant === 'panel' || cardlessPanel ? 'text-[14px]' : 'text-[15px]',
+            variant === 'panel' || cardlessPanel
+              ? 'text-[14px]'
+              : 'text-[15px]',
           )}
         >
           {t('Tokens')}
@@ -460,7 +466,9 @@ export function FileSecurity({
       <Button
         size="sm"
         className={
-          variant === 'panel' || cardlessPanel ? 'h-8 shrink-0 text-[12px]' : 'h-9 text-[13px]'
+          variant === 'panel' || cardlessPanel
+            ? 'h-8 shrink-0 text-[12px]'
+            : 'h-9 text-[13px]'
         }
         onClick={() => setCreateTokenDialogOpen(true)}
       >
@@ -484,7 +492,9 @@ export function FileSecurity({
     <Button
       size="sm"
       className={
-        variant === 'panel' || cardlessPanel ? 'h-8 text-[12px]' : 'h-9 text-[13px]'
+        variant === 'panel' || cardlessPanel
+          ? 'h-8 text-[12px]'
+          : 'h-9 text-[13px]'
       }
       disabled={
         arraysEqual(filePermissions, file.$permissions || []) ||
@@ -572,7 +582,9 @@ export function FileSecurity({
                   }
                 >
                   <MenuItemContent
-                    icon={copiedField === `token-id-${token.$id}` ? Check : Copy}
+                    icon={
+                      copiedField === `token-id-${token.$id}` ? Check : Copy
+                    }
                   >
                     {copiedField === `token-id-${token.$id}`
                       ? t('Copied')
@@ -585,9 +597,7 @@ export function FileSecurity({
                     setDeleteTokenDialogOpen(true)
                   }}
                 >
-                  <MenuItemContent icon={Trash2}>
-                    {t('Delete')}
-                  </MenuItemContent>
+                  <MenuItemContent icon={Trash2}>{t('Delete')}</MenuItemContent>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -611,10 +621,7 @@ export function FileSecurity({
                 )}
               />
             </span>
-            <span
-              aria-hidden
-              className="shrink-0 text-muted-foreground/40"
-            >
+            <span aria-hidden className="shrink-0 text-muted-foreground/40">
               ·
             </span>
             <span className="inline-flex shrink-0 flex-nowrap items-center gap-1 whitespace-nowrap">
@@ -642,10 +649,7 @@ export function FileSecurity({
                 <span className="text-foreground">{t('Never')}</span>
               )}
             </span>
-            <span
-              aria-hidden
-              className="shrink-0 text-muted-foreground/40"
-            >
+            <span aria-hidden className="shrink-0 text-muted-foreground/40">
               ·
             </span>
             <span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap">
@@ -677,10 +681,14 @@ export function FileSecurity({
       ) : tokens.length > 0 ? (
         <>
           {cardlessPanel ? (
-            <div className="divide-y divide-border">{tokens.map(renderTokenRow)}</div>
+            <div className="divide-y divide-border">
+              {tokens.map(renderTokenRow)}
+            </div>
           ) : (
             <div className="overflow-hidden rounded-lg border border-border">
-              <div className="divide-y divide-border">{tokens.map(renderTokenRow)}</div>
+              <div className="divide-y divide-border">
+                {tokens.map(renderTokenRow)}
+              </div>
             </div>
           )}
           {tokensTotal > 0 ? (
@@ -720,7 +728,11 @@ export function FileSecurity({
     <div className={cn('w-full', variant === 'page' && 'px-4 py-4 sm:px-6')}>
       <div
         className={cn(
-          cardlessPanel ? 'space-y-4' : variant === 'panel' ? 'space-y-3' : 'space-y-6',
+          cardlessPanel
+            ? 'space-y-4'
+            : variant === 'panel'
+              ? 'space-y-3'
+              : 'space-y-6',
         )}
       >
         {/* Permissions */}
@@ -728,15 +740,21 @@ export function FileSecurity({
           cardlessPanel ? (
             <div className="space-y-4">
               <div>{renderPermissionsDescription()}</div>
-              <div className="border-t border-border pt-4">{permissionsEditorBlock}</div>
-              <div className="border-t border-border pt-4">{updatePermissionsButton}</div>
+              <div className="border-t border-border pt-4">
+                {permissionsEditorBlock}
+              </div>
+              <div className="border-t border-border pt-4">
+                {updatePermissionsButton}
+              </div>
             </div>
           ) : (
             <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
               <div className={cardPad}>{permissionsIntroWithTitle}</div>
               <div className="border-t border-border" />
               <div className={cardPad}>{permissionsEditorBlock}</div>
-              <div className={cn(cardPad, 'border-t border-border bg-muted/30')}>
+              <div
+                className={cn(cardPad, 'border-t border-border bg-muted/30')}
+              >
                 {updatePermissionsButton}
               </div>
             </div>
@@ -748,7 +766,9 @@ export function FileSecurity({
           cardlessPanel ? (
             <div className="space-y-4">
               {tokensIntroCardless}
-              <div className="border-t border-border pt-4">{tokensListSection}</div>
+              <div className="border-t border-border pt-4">
+                {tokensListSection}
+              </div>
             </div>
           ) : (
             <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
@@ -797,7 +817,9 @@ export function FileSecurity({
                     setTokenExpiryOption(next)
                     if (next === 'custom' && !tokenExpiration.trim()) {
                       setTokenExpiration(
-                        new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+                        new Date(
+                          Date.now() + 24 * 60 * 60 * 1000,
+                        ).toISOString(),
                       )
                     }
                   }}
@@ -988,7 +1010,8 @@ export function FileSecurity({
                     onSuccess: () => {
                       setDeleteTokenDialogOpen(false)
                       setTokenToDelete(null)
-                    }})
+                    },
+                  })
                 }
               }}
               disabled={deleteTokenMutation.isPending}
@@ -1147,7 +1170,9 @@ export function FileSecurity({
                     <span className="font-semibold">
                       {t('No expiration date.')}
                     </span>{' '}
-                    {t("This token doesn't expire. Be cautious when sharing links.")}
+                    {t(
+                      "This token doesn't expire. Be cautious when sharing links.",
+                    )}
                   </AlertDescription>
                 </Alert>
               )}

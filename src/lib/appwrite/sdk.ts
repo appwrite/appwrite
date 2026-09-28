@@ -505,6 +505,31 @@ export function getSiteScreenshotFilePreviewUrl(
 }
 
 /**
+ * Public URL for a file shared with a file token. Built on a fresh client so
+ * the link carries none of the console session's state (admin mode,
+ * impersonation), and without the empty `impersonateuserid` the SDK appends.
+ */
+export function getFileTokenUrl(
+  endpoint: string,
+  projectId: string,
+  mode: 'preview' | 'view' | 'download',
+  params: { bucketId: string; fileId: string; token: string },
+): string {
+  const storage = new Storage(
+    new Client().setEndpoint(endpoint).setProject(projectId),
+  )
+  const url = new URL(
+    mode === 'preview'
+      ? storage.getFilePreview(params)
+      : mode === 'view'
+        ? storage.getFileView(params)
+        : storage.getFileDownload(params),
+  )
+  url.searchParams.delete('impersonateuserid')
+  return url.toString()
+}
+
+/**
  * Realtime for console-scoped channels on the project's regional API host
  * (project id `console`, same session as the main console client).
  */
