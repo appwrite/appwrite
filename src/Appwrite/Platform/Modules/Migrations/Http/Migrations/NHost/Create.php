@@ -91,38 +91,32 @@ class Create extends Action
         callable $locks,
     ): void {
         $claim = new Claim($dbForProject, $locks);
-        $claim->assertReady();
 
-        $migration = $dbForProject->createDocument('migrations', new Document([
-            '$id' => ID::unique(),
-            'attemptId' => ID::unique(),
-            'status' => 'pending',
-            'stage' => 'init',
-            'source' => NHost::getName(),
-            'destination' => AppwriteSource::getName(),
-            'credentials' => [
-                'subdomain' => $subdomain,
-                'region' => $region,
-                'adminSecret' => $adminSecret,
-                'database' => $database,
-                'username' => $username,
-                'password' => $password,
-                'port' => $port,
-            ],
-            'resources' => $resources,
-            'statusCounters' => '{}',
-            'resourceData' => '{}',
-            'errors' => [],
-        ]));
-
-        $queueForEvents->setParam('migrationId', $migration->getId());
-
-        $migration = $claim->initial(
+        $migration = $claim->start(
             project: $project,
-            migration: $migration,
+            migration: new Document([
+                '$id' => ID::unique(),
+                'source' => NHost::getName(),
+                'destination' => AppwriteSource::getName(),
+                'credentials' => [
+                    'subdomain' => $subdomain,
+                    'region' => $region,
+                    'adminSecret' => $adminSecret,
+                    'database' => $database,
+                    'username' => $username,
+                    'password' => $password,
+                    'port' => $port,
+                ],
+                'resources' => $resources,
+                'statusCounters' => '{}',
+                'resourceData' => '{}',
+                'errors' => [],
+            ]),
             platform: $platform,
             publisher: $publisherForMigrations,
         );
+
+        $queueForEvents->setParam('migrationId', $migration->getId());
 
         $response
             ->setStatusCode(Response::STATUS_CODE_ACCEPTED)

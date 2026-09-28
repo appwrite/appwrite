@@ -102,6 +102,32 @@ final readonly class Claim
     }
 
     /**
+     * Nothing is stored until the ownership schema is complete, and nothing is published before it is stored.
+     *
+     * @param array<string, mixed> $platform
+     */
+    public function start(
+        Document $project,
+        Document $migration,
+        array $platform,
+        MigrationPublisher $publisher,
+    ): Document {
+        $this->assertReady();
+
+        return $this->initial(
+            project: $project,
+            migration: $this->database->createDocument('migrations', new Document([
+                ...$migration->getArrayCopy(),
+                'attemptId' => ID::unique(),
+                'status' => self::STATUS_PENDING,
+                'stage' => self::STAGE_INIT,
+            ])),
+            platform: $platform,
+            publisher: $publisher,
+        );
+    }
+
+    /**
      * Publish one exact initial generation. If publishing fails, remove only
      * the still-pending generation created by this request; a worker or newer
      * claim that advanced it always wins.

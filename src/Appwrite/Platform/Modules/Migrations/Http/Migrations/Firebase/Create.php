@@ -90,30 +90,25 @@ class Create extends Action
             throw new Exception(Exception::MIGRATION_PROVIDER_ERROR, 'Invalid Service Account JSON');
         }
 
-        $migration = $dbForProject->createDocument('migrations', new Document([
-            '$id' => ID::unique(),
-            'attemptId' => ID::unique(),
-            'status' => 'pending',
-            'stage' => 'init',
-            'source' => Firebase::getName(),
-            'destination' => AppwriteSource::getName(),
-            'credentials' => [
-                'serviceAccount' => $serviceAccount,
-            ],
-            'resources' => $resources,
-            'statusCounters' => '{}',
-            'resourceData' => '{}',
-            'errors' => [],
-        ]));
-
-        $queueForEvents->setParam('migrationId', $migration->getId());
-
-        $migration = $claim->initial(
+        $migration = $claim->start(
             project: $project,
-            migration: $migration,
+            migration: new Document([
+                '$id' => ID::unique(),
+                'source' => Firebase::getName(),
+                'destination' => AppwriteSource::getName(),
+                'credentials' => [
+                    'serviceAccount' => $serviceAccount,
+                ],
+                'resources' => $resources,
+                'statusCounters' => '{}',
+                'resourceData' => '{}',
+                'errors' => [],
+            ]),
             platform: $platform,
             publisher: $publisherForMigrations,
         );
+
+        $queueForEvents->setParam('migrationId', $migration->getId());
 
         $response
             ->setStatusCode(Response::STATUS_CODE_ACCEPTED)

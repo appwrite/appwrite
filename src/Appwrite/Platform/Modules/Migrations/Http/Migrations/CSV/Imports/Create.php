@@ -189,41 +189,36 @@ class Create extends Action
         $resources = Transfer::extractServices([self::transferGroupForDatabaseType($databaseType)]);
         $parentResourceType = self::resourceTypeForDatabaseType($databaseType);
 
-        $migration = $dbForProject->createDocument('migrations', new Document([
-            '$id' => $migrationId,
-            'attemptId' => ID::unique(),
-            'status' => 'pending',
-            'stage' => 'init',
-            'source' => CSV::getName(),
-            'destination' => AppwriteSource::getName(),
-            'resources' => $resources,
-            'resourceId' => $collection->getId(),
-            'resourceInternalId' => $collection->getSequence(),
-            'resourceType' => Resource::TYPE_COLLECTION,
-            'parentResourceId' => $database->getId(),
-            'parentResourceInternalId' => $database->getSequence(),
-            'parentResourceType' => $parentResourceType,
-            'destinationResourceId' => $database->getId(),
-            'destinationResourceInternalId' => $database->getSequence(),
-            'destinationResourceType' => $parentResourceType,
-            'statusCounters' => '{}',
-            'resourceData' => '{}',
-            'errors' => [],
-            'options' => [
-                'path' => $newPath,
-                'size' => $fileSize,
-                'onDuplicate' => $onDuplicate,
-            ],
-        ]));
-
-        $queueForEvents->setParam('migrationId', $migration->getId());
-
-        $migration = $claim->initial(
+        $migration = $claim->start(
             project: $project,
-            migration: $migration,
+            migration: new Document([
+                '$id' => $migrationId,
+                'source' => CSV::getName(),
+                'destination' => AppwriteSource::getName(),
+                'resources' => $resources,
+                'resourceId' => $collection->getId(),
+                'resourceInternalId' => $collection->getSequence(),
+                'resourceType' => Resource::TYPE_COLLECTION,
+                'parentResourceId' => $database->getId(),
+                'parentResourceInternalId' => $database->getSequence(),
+                'parentResourceType' => $parentResourceType,
+                'destinationResourceId' => $database->getId(),
+                'destinationResourceInternalId' => $database->getSequence(),
+                'destinationResourceType' => $parentResourceType,
+                'statusCounters' => '{}',
+                'resourceData' => '{}',
+                'errors' => [],
+                'options' => [
+                    'path' => $newPath,
+                    'size' => $fileSize,
+                    'onDuplicate' => $onDuplicate,
+                ],
+            ]),
             platform: $platform,
             publisher: $publisherForMigrations,
         );
+
+        $queueForEvents->setParam('migrationId', $migration->getId());
 
         $response
             ->setStatusCode(Response::STATUS_CODE_ACCEPTED)

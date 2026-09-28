@@ -140,41 +140,36 @@ class Create extends Action
         $resources = Transfer::extractServices([self::transferGroupForDatabaseType($databaseType)]);
         $parentResourceType = self::resourceTypeForDatabaseType($databaseType);
 
-        $migration = $dbForProject->createDocument('migrations', new Document([
-            '$id' => ID::unique(),
-            'attemptId' => ID::unique(),
-            'status' => 'pending',
-            'stage' => 'init',
-            'source' => AppwriteSource::getName(),
-            'destination' => JSONSource::getName(),
-            'resources' => $resources,
-            'resourceId' => $collection->getId(),
-            'resourceInternalId' => $collection->getSequence(),
-            'resourceType' => Resource::TYPE_COLLECTION,
-            'parentResourceId' => $database->getId(),
-            'parentResourceInternalId' => $database->getSequence(),
-            'parentResourceType' => $parentResourceType,
-            'statusCounters' => '{}',
-            'resourceData' => '{}',
-            'errors' => [],
-            'options' => [
-                'bucketId' => 'default', // Always use internal bucket
-                'filename' => $filename,
-                'columns' => $columns,
-                'queries' => $queries,
-                'notify' => $notify,
-                'userInternalId' => $user->getSequence(),
-            ],
-        ]));
-
-        $queueForEvents->setParam('migrationId', $migration->getId());
-
-        $migration = $claim->initial(
+        $migration = $claim->start(
             project: $project,
-            migration: $migration,
+            migration: new Document([
+                '$id' => ID::unique(),
+                'source' => AppwriteSource::getName(),
+                'destination' => JSONSource::getName(),
+                'resources' => $resources,
+                'resourceId' => $collection->getId(),
+                'resourceInternalId' => $collection->getSequence(),
+                'resourceType' => Resource::TYPE_COLLECTION,
+                'parentResourceId' => $database->getId(),
+                'parentResourceInternalId' => $database->getSequence(),
+                'parentResourceType' => $parentResourceType,
+                'statusCounters' => '{}',
+                'resourceData' => '{}',
+                'errors' => [],
+                'options' => [
+                    'bucketId' => 'default', // Always use internal bucket
+                    'filename' => $filename,
+                    'columns' => $columns,
+                    'queries' => $queries,
+                    'notify' => $notify,
+                    'userInternalId' => $user->getSequence(),
+                ],
+            ]),
             platform: $platform,
             publisher: $publisherForMigrations,
         );
+
+        $queueForEvents->setParam('migrationId', $migration->getId());
 
         $response
             ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
