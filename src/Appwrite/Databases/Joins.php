@@ -34,7 +34,7 @@ final readonly class Joins
     public function resolve(array $queries, Document $collection): array
     {
         $prefix = 'database_' . $this->database->getSequence() . '_collection_';
-        $relationships = Attribute::relationships($collection);
+        $relationships = null;
 
         foreach ($queries as $query) {
             if (!$query->getMethod()->isJoin()) {
@@ -57,6 +57,7 @@ final readonly class Joins
                 $query->setAttribute($prefix . $related->getSequence());
             }
 
+            $relationships ??= Attribute::relationships($collection);
             $this->resolveColumns($query, $relationships);
         }
 
