@@ -130,3 +130,29 @@ export function markTerraformDrift(
     resources: { ...project.resources, [resource]: { ...managed, drift } },
   }
 }
+
+/** Browser and server clocks disagree slightly, so compare drift times loosely. */
+const CLOCK_SKEW_MS = 2 * 60 * 1000
+
+/** Stop waiting for the log after this long, so a lost event cannot pin a warning. */
+const PENDING_DRIFT_TTL_MS = 10 * 60 * 1000
+
+/**
+ * Whether the activity log has caught up with a drift the console recorded
+ * locally: the log shows that change (or a later one), Terraform has applied
+ * since, the resource is no longer managed, or the log never caught up.
+ */
+export function isTerraformDriftSettled(
+  resource: TerraformResource | undefined,
+  drift: TerraformDrift,
+  now: number = Date.now(),
+): boolean {
+  const recordedAt = Date.parse(drift.time)
+  if (!resource) return true
+  if (now - recordedAt > PENDING_DRIFT_TTL_MS) return true
+  if (Date.parse(resource.appliedAt) > recordedAt + CLOCK_SKEW_MS) return true
+  return (
+    !!resource.drift &&
+    Date.parse(resource.drift.time) >= recordedAt - CLOCK_SKEW_MS
+  )
+}

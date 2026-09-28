@@ -16,7 +16,10 @@ import {
   syncConsoleAccountAfterMutation,
   updateAccountPrefs,
 } from '@/lib/react-query/hooks/auth'
-import { terraformProjectQueryOptions } from '@/lib/react-query/hooks/terraform'
+import {
+  recordTerraformDrift,
+  terraformProjectQueryOptions,
+} from '@/lib/react-query/hooks/terraform'
 import {
   setTerraformChangeConfirmer,
   type TerraformChangeRequest,
@@ -30,10 +33,7 @@ import {
   getTerraformResourceKind,
   type TerraformResourceKind,
 } from '@/lib/terraform/resource'
-import {
-  markTerraformDrift,
-  type TerraformResource,
-} from '@/lib/terraform/state'
+import type { TerraformResource } from '@/lib/terraform/state'
 import { useT } from '@/lib/i18n/translate'
 
 const RESOURCE_KIND_LABELS: Record<TerraformResourceKind, string> = {
@@ -86,24 +86,17 @@ export function ConfirmTerraformChange() {
           setQueue((current) => [...current, { request, resource, resolve }])
         })
       },
-      // The activity log lags behind the write, so record the drift right away.
       changed: (request) => {
         const account = getConsoleAccountFromCache(queryClient) as
           | Models.User
           | undefined
-        queryClient.setQueryData(
-          terraformProjectQueryOptions(request.projectId).queryKey,
-          (project) =>
-            project
-              ? markTerraformDrift(project, request.resource, {
-                  time: new Date().toISOString(),
-                  event: request.call,
-                  actorName: account?.name ?? '',
-                  actorType: 'admin',
-                  userAgent: '',
-                })
-              : project,
-        )
+        recordTerraformDrift(queryClient, request.projectId, request.resource, {
+          time: new Date().toISOString(),
+          event: request.call,
+          actorName: account?.name ?? '',
+          actorType: 'admin',
+          userAgent: '',
+        })
       },
     })
     return () => {

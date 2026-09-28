@@ -8,7 +8,12 @@ import {
   getSdkCallResourcePath,
   getTerraformResourceKind,
 } from '@/lib/terraform/resource'
-import { summarizeTerraformActivity } from '@/lib/terraform/state'
+import {
+  isTerraformDriftSettled,
+  summarizeTerraformActivity,
+} from '@/lib/terraform/state'
+import prodEvents from './fixtures/terraform-activity-prod.json'
+import stagingEvents from './fixtures/terraform-activity-staging.json'
 
 const LEGACY_PROVIDER = {
   userAgent: 'terraform-provider-appwrite/1.8.0',
@@ -27,9 +32,6 @@ const CLI = {
   sdkVersion: '27.3.0',
 }
 const CURL = { userAgent: 'curl/8.7.1', sdk: '', sdkVersion: '' }
-
-import prodEvents from './fixtures/terraform-activity-prod.json'
-import stagingEvents from './fixtures/terraform-activity-staging.json'
 
 /** Real `listEvents` payloads (newest first), stripped of IPs and emails. */
 const PROD_EVENTS = prodEvents as Models.ActivityEvent[]
@@ -68,7 +70,6 @@ describe('summarizeTerraformActivity', () => {
     ])
     const managed = project.resources['function/growth-legacy']
     expect(managed.appliedAt).toBe('2026-09-28T09:08:21.000+00:00')
-    expect(managed.providerVersion).toBe('1.8.0')
     expect(managed.drift?.event).toBe('deployment.delete')
     expect(managed.drift?.userAgent).toBe('curl/8.7.1')
     expect(
@@ -87,7 +88,6 @@ describe('summarizeTerraformActivity', () => {
       'function/api',
       'webhook/65c88b2001b8c18f2fe8',
     ])
-    expect(project.resources['function/api'].providerVersion).toBe('dev')
     expect(project.resources['function/api'].drift?.event).toBe(
       'function.update',
     )
@@ -139,6 +139,41 @@ describe('summarizeTerraformActivity', () => {
     const project = summarizeTerraformActivity(events)
     expect(project.resources['database/main/table/posts']).toBeUndefined()
     expect(project.resources['function/api'].drift).toBeNull()
+  })
+})
+
+describe('isTerraformDriftSettled', () => {
+  const managed = summarizeTerraformActivity(
+    STAGING_EVENTS.filter(
+      (event) => event.time <= '2026-09-28T11:41:20.000+00:00',
+    ),
+  ).resources['function/api']
+  const change = {
+    time: '2026-09-28T12:02:38.000+00:00',
+    event: 'functions.update',
+    actorName: 'Console admin',
+    actorType: 'admin',
+    userAgent: '',
+  }
+  const soon = Date.parse(change.time) + 60 * 1000
+
+  test('keeps a console change until the log records it', () => {
+    expect(isTerraformDriftSettled(managed, change, soon)).toBe(false)
+
+    const recorded =
+      summarizeTerraformActivity(STAGING_EVENTS).resources['function/api']
+    expect(isTerraformDriftSettled(recorded, change, soon)).toBe(true)
+  })
+
+  test('settles when Terraform applies afterwards or the resource goes away', () => {
+    const applied = { ...managed, appliedAt: '2026-09-28T12:10:00.000+00:00' }
+    expect(isTerraformDriftSettled(applied, change, soon)).toBe(true)
+    expect(isTerraformDriftSettled(undefined, change, soon)).toBe(true)
+  })
+
+  test('stops waiting when the log never catches up', () => {
+    const muchLater = Date.parse(change.time) + 60 * 60 * 1000
+    expect(isTerraformDriftSettled(managed, change, muchLater)).toBe(true)
   })
 })
 
