@@ -161,8 +161,10 @@ class Install extends Action
                             continue;
                         }
 
+                        // A value still equal to an earlier default was never chosen, so it
+                        // follows the current default instead.
                         $configVar = $vars[$key] ?? [];
-                        if (!empty($configVar) && !($configVar['overwrite'] ?? false)) {
+                        if (!empty($configVar) && !($configVar['overwrite'] ?? false) && !\in_array($value, $configVar['previous'] ?? [], true)) {
                             $vars[$key]['default'] = $value;
                         }
                     }
@@ -183,7 +185,7 @@ class Install extends Action
                         }
 
                         $configVar = $vars[$key] ?? [];
-                        if (!empty($configVar) && !($configVar['overwrite'] ?? false)) {
+                        if (!empty($configVar) && !($configVar['overwrite'] ?? false) && !\in_array($value, $configVar['previous'] ?? [], true)) {
                             $vars[$key]['default'] = $value;
                         }
                     }
