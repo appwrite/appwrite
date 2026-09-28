@@ -60,16 +60,17 @@ export function ProjectListCardMain({
             {t('Paused')}
           </Badge>
         ) : null}
+        {failedInvoiceWarning ? (
+          <div className="pointer-events-auto flex shrink-0 items-center">
+            {failedInvoiceWarning}
+          </div>
+        ) : null}
+        {/* Last in the row so it can appear late without shifting anything. */}
         {!showLockedBadge && !showBlockedBadge && !showPausedBadge ? (
           <TerraformIndicator
             projectId={project.$id}
             className="pointer-events-auto relative z-10"
           />
-        ) : null}
-        {failedInvoiceWarning ? (
-          <div className="pointer-events-auto flex shrink-0 items-center">
-            {failedInvoiceWarning}
-          </div>
         ) : null}
       </div>
       {showRegion ? (

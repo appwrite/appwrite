@@ -5,7 +5,13 @@
  * which resources it created and whether anything changed them since.
  */
 
-import { queryOptions, useQuery, type QueryClient } from '@tanstack/react-query'
+import {
+  queryOptions,
+  useQuery,
+  useQueryClient,
+  type QueryClient,
+} from '@tanstack/react-query'
+import { useState } from 'react'
 import { Query } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
@@ -113,6 +119,8 @@ export function terraformProjectQueryOptions(
     queryFn: () => fetchTerraformProject(projectId!),
     enabled: !!projectId,
     staleTime: DEFAULT_STALE_TIME,
+    // The app default drops unwatched queries at once; keep this for pages that mount later.
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
     retry: false,
     // Applies happen outside the console, so refresh stale state on mount and focus.
     refetchOnMount: true,
@@ -131,4 +139,61 @@ export function useTerraformResource(
 ): TerraformResource | null {
   const project = useTerraformProject(resource ? projectId : null)
   return (resource && project?.resources[resource]) || null
+}
+
+/**
+ * Like `useTerraformResource`, but stays null unless the Terraform state was
+ * already loaded when this resource first rendered. Layout-affecting UI
+ * (banners) uses it so a slow or failing activity lookup never pops in after
+ * first paint; switching to another resource decides again.
+ */
+export function useTerraformResourceOnMount(
+  projectId: string | null | undefined,
+  resource: string | null | undefined,
+): TerraformResource | null {
+  const queryClient = useQueryClient()
+  const key = projectId && resource ? `${projectId}:${resource}` : null
+  const loaded =
+    !!projectId &&
+    queryClient.getQueryData(
+      terraformProjectQueryOptions(projectId).queryKey,
+    ) !== undefined
+  const [decision, setDecision] = useState({ key, show: loaded })
+  if (decision.key !== key) setDecision({ key, show: loaded })
+  const managed = useTerraformResource(projectId, resource)
+  return decision.key === key && decision.show ? managed : null
+}
+
+/** How long a console write waits for ownership before using the last known state. */
+const OWNERSHIP_LOOKUP_TIMEOUT_MS = 5000
+
+/**
+ * Fresh Terraform state for a resource about to be changed. The activity store
+ * has no failover, so a hang or error falls back to the last known state
+ * instead of holding the write.
+ */
+export async function lookupTerraformResource(
+  queryClient: QueryClient,
+  projectId: string,
+  resource: string,
+  timeoutMs: number = OWNERSHIP_LOOKUP_TIMEOUT_MS,
+): Promise<TerraformResource | null> {
+  const options = terraformProjectQueryOptions(projectId)
+  const lastKnown = () =>
+    queryClient.getQueryData(options.queryKey)?.resources[resource] ?? null
+  let timer: ReturnType<typeof setTimeout> | undefined
+  const timedOut = new Promise<null>((resolve) => {
+    timer = setTimeout(() => resolve(null), timeoutMs)
+  })
+  try {
+    const project = await Promise.race([
+      queryClient.fetchQuery(options),
+      timedOut,
+    ])
+    return project ? (project.resources[resource] ?? null) : lastKnown()
+  } catch {
+    return lastKnown()
+  } finally {
+    clearTimeout(timer)
+  }
 }

@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useEffect } from 'react'
 import { TerraformResourceAlert } from '@/components/global/shared/TerraformResourceAlert'
-import { useTerraformResource } from '@/lib/react-query/hooks/terraform'
+import { useTerraformResourceOnMount } from '@/lib/react-query/hooks/terraform'
 import { getTerraformResourcePath } from '@/lib/terraform/resource'
 import {
   useParams,
@@ -403,7 +403,7 @@ function FunctionLayoutContent() {
     'function',
     functionId ?? '',
   )
-  const isTerraformManaged = !!useTerraformResource(
+  const isTerraformManaged = !!useTerraformResourceOnMount(
     projectId,
     terraformResource,
   )

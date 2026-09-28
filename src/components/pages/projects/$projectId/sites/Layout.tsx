@@ -13,7 +13,7 @@ import {
 import { ServiceHeader, type Tab } from '../shared/ServiceHeader'
 import { DetailResourceHeaderTitle } from '@/components/global/shared/ResourceTitleSwitcher'
 import { TerraformResourceAlert } from '@/components/global/shared/TerraformResourceAlert'
-import { useTerraformResource } from '@/lib/react-query/hooks/terraform'
+import { useTerraformResourceOnMount } from '@/lib/react-query/hooks/terraform'
 import { getTerraformResourcePath } from '@/lib/terraform/resource'
 import type { Models } from '@appwrite.io/console'
 import {
@@ -352,7 +352,7 @@ function SiteLayoutContent() {
   const isLogsTabLayout = activeTab === 'logs'
 
   const terraformResource = getTerraformResourcePath('site', siteId ?? '')
-  const isTerraformManaged = !!useTerraformResource(
+  const isTerraformManaged = !!useTerraformResourceOnMount(
     projectId,
     terraformResource,
   )

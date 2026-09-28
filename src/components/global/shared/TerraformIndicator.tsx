@@ -43,7 +43,7 @@ export function TerraformIndicator({
           role="img"
           aria-label={t('Managed by Terraform')}
           className={cn(
-            'inline-flex shrink-0 cursor-default text-violet-600 dark:text-violet-400',
+            'inline-flex shrink-0 cursor-default text-violet-600 animate-in fade-in duration-300 dark:text-violet-400',
             className,
           )}
         >

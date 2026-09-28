@@ -2,7 +2,7 @@ import { AlertTriangle } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { TerraformIcon } from '@/components/global/shared/TerraformIcon'
-import { useTerraformResource } from '@/lib/react-query/hooks/terraform'
+import { useTerraformResourceOnMount } from '@/lib/react-query/hooks/terraform'
 import { getUserAgentClient } from '@/lib/terraform/activity'
 import type { TerraformDrift } from '@/lib/terraform/state'
 import { useT } from '@/lib/i18n/translate'
@@ -34,7 +34,7 @@ export function TerraformResourceAlert({
   resource,
 }: TerraformResourceAlertProps) {
   const t = useT()
-  const managed = useTerraformResource(projectId, resource)
+  const managed = useTerraformResourceOnMount(projectId, resource)
   if (!managed) return null
 
   if (managed.drift) {

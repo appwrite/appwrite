@@ -12,7 +12,7 @@ import {
 } from 'react'
 import { TerraformIndicator } from '@/components/global/shared/TerraformIndicator'
 import { TerraformResourceAlert } from '@/components/global/shared/TerraformResourceAlert'
-import { useTerraformResource } from '@/lib/react-query/hooks/terraform'
+import { useTerraformResourceOnMount } from '@/lib/react-query/hooks/terraform'
 import { getTerraformResourcePath } from '@/lib/terraform/resource'
 import { flushSync } from 'react-dom'
 import { useLocation, Link, useSearch } from '@tanstack/react-router'
@@ -175,7 +175,7 @@ export function View() {
     strict: false,
   })
   const terraformResource = getTerraformResourcePath('bucket', bucketId ?? '')
-  const isTerraformManaged = !!useTerraformResource(
+  const isTerraformManaged = !!useTerraformResourceOnMount(
     projectId,
     terraformResource,
   )

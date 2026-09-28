@@ -17,8 +17,8 @@ import {
   updateAccountPrefs,
 } from '@/lib/react-query/hooks/auth'
 import {
+  lookupTerraformResource,
   recordTerraformDrift,
-  terraformProjectQueryOptions,
 } from '@/lib/react-query/hooks/terraform'
 import {
   setTerraformChangeConfirmer,
@@ -75,12 +75,11 @@ export function ConfirmTerraformChange() {
         const account = getConsoleAccountFromCache(queryClient)
         const skipped = parseTerraformSkipConfirmProjectIds(account?.prefs)
         if (skipped.includes(request.projectId)) return true
-        const options = terraformProjectQueryOptions(request.projectId)
-        // Refetch when stale so a recent apply is seen; keep the last known state if that fails.
-        const project = await queryClient
-          .fetchQuery(options)
-          .catch(() => queryClient.getQueryData(options.queryKey))
-        const resource = project?.resources[request.resource]
+        const resource = await lookupTerraformResource(
+          queryClient,
+          request.projectId,
+          request.resource,
+        )
         if (!resource) return true
         return new Promise<boolean>((resolve) => {
           setQueue((current) => [...current, { request, resource, resolve }])

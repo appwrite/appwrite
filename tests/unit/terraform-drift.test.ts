@@ -6,18 +6,25 @@ import stagingEvents from './fixtures/terraform-activity-staging.json'
 
 /** Activity log the mocked API serves, newest first. */
 let log: Models.ActivityEvent[] = []
+let listEvents: () => Promise<{
+  events: Models.ActivityEvent[]
+}> = async () => ({
+  events: log,
+})
 
 mock.module('@/lib/appwrite/sdk', () => ({
   sdk: {
     forProject: () => ({
-      activities: { listEvents: async () => ({ events: log }) },
+      activities: { listEvents: () => listEvents() },
     }),
   },
 }))
 
-const { recordTerraformDrift, terraformProjectQueryOptions } = await import(
-  '@/lib/react-query/hooks/terraform'
-)
+const {
+  lookupTerraformResource,
+  recordTerraformDrift,
+  terraformProjectQueryOptions,
+} = await import('@/lib/react-query/hooks/terraform')
 const {
   guardTerraformChanges,
   setTerraformChangeConfirmer,
@@ -76,9 +83,11 @@ function changeInConsole(browserTime: string) {
 }
 
 beforeEach(() => {
-  queryClient = new QueryClient()
+  // Same defaults as the app: unwatched queries are dropped at once.
+  queryClient = new QueryClient({ defaultOptions: { queries: { gcTime: 0 } } })
   projectId = `project-${crypto.randomUUID()}`
   log = [...inSync]
+  listEvents = async () => ({ events: log })
 })
 
 describe('console change on a Terraform-managed resource', () => {
@@ -121,6 +130,53 @@ describe('console change on a Terraform-managed resource', () => {
       ...log,
     ]
     expect((await refetch()).drift).toBeNull()
+  })
+})
+
+describe('background prefetch', () => {
+  test('stays cached until a page that shows the banner mounts', async () => {
+    await queryClient.prefetchQuery(terraformProjectQueryOptions(projectId))
+    await new Promise((resolve) => setTimeout(resolve, 20))
+    expect(
+      queryClient.getQueryData(
+        terraformProjectQueryOptions(projectId).queryKey,
+      ),
+    ).toBeDefined()
+  })
+})
+
+describe('activity store outage', () => {
+  test('a hanging lookup does not hold up a console write', async () => {
+    listEvents = () => new Promise(() => {})
+    const started = Date.now()
+    const resource = await lookupTerraformResource(
+      queryClient,
+      projectId,
+      RESOURCE,
+      50,
+    )
+    expect(resource).toBeNull()
+    expect(Date.now() - started).toBeLessThan(1000)
+  })
+
+  test('a failing lookup falls back to the last known state', async () => {
+    await refetch()
+    let calls = 0
+    listEvents = async () => {
+      calls += 1
+      throw new Error('ClickHouse unavailable')
+    }
+    await queryClient.invalidateQueries({
+      queryKey: terraformProjectQueryOptions(projectId).queryKey,
+      refetchType: 'none',
+    })
+    const resource = await lookupTerraformResource(
+      queryClient,
+      projectId,
+      RESOURCE,
+    )
+    expect(calls).toBe(1)
+    expect(resource?.resource).toBe(RESOURCE)
   })
 })
 
