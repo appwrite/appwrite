@@ -10,9 +10,7 @@ use Appwrite\Functions\EventProcessor;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Action as DatabasesAction;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
-use Utopia\Query\Schema\ColumnType;
 
 abstract class Action extends DatabasesAction
 {
@@ -356,25 +354,6 @@ abstract class Action extends DatabasesAction
         }
 
         return $document;
-    }
-
-    /**
-     * @return array<string, Document>
-     */
-    private function relationshipAttributes(Document $collection): array
-    {
-        $relationships = [];
-        foreach ($collection->getAttribute('attributes', []) as $attribute) {
-            if (!$attribute instanceof Document) {
-                continue;
-            }
-            if ($attribute->getAttribute('type') !== ColumnType::Relationship->value) {
-                continue;
-            }
-            $relationships[$attribute->getAttribute('key')] = $attribute;
-        }
-
-        return $relationships;
     }
 
     /**
