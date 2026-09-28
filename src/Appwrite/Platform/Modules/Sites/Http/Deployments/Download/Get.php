@@ -123,7 +123,8 @@ class Get extends Action
             default => throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid deployment download type.'),
         };
 
-        if (!$device->exists($path)) {
+        // Not every storage device reports an empty path as missing.
+        if ($path === '' || !$device->exists($path)) {
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
