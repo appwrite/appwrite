@@ -2,6 +2,7 @@
 
 use Ahc\Jwt\JWT;
 use Appwrite\Auth\MFA\Type;
+use Appwrite\Auth\OAuth2\ConsoleRelay;
 use Appwrite\Auth\OAuth2\Exception as OAuth2Exception;
 use Appwrite\Auth\Validator\EmailWhitelist;
 use Appwrite\Auth\Validator\Password;
@@ -1435,10 +1436,26 @@ Http::get('/v1/account/sessions/oauth2/:provider')
 
         if (empty($success)) {
             $success = $redirectBase . $oauthDefaultSuccess;
+        } else {
+            $success = ConsoleRelay::normalize(
+                $success,
+                $oauthDefaultSuccess,
+                $redirectBase,
+                $platform,
+                $request->getHostname(),
+            );
         }
 
         if (empty($failure)) {
             $failure = $redirectBase . $oauthDefaultFailure;
+        } else {
+            $failure = ConsoleRelay::normalize(
+                $failure,
+                $oauthDefaultFailure,
+                $redirectBase,
+                $platform,
+                $request->getHostname(),
+            );
         }
 
         $oauth2 = new $className($appId, $appSecret, $callback, [
@@ -1627,15 +1644,16 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
         if (!empty($state['failure']) && !$redirectValidator->isValid($state['failure'])) {
             throw new Exception(Exception::PROJECT_INVALID_FAILURE_URL);
         }
-        // The default relays live on the console host; the same path on any other allowed host is a customer page
-        $consoleHostname = \parse_url($platform['consoleUrl'] ?? '', PHP_URL_HOST);
+        // Default relays live on the console host; Appwrite API hosts 301 /auth/* there too.
+        // Customer platforms that reuse the same path must not receive relay query params.
+        $requestHostname = $request->getHostname();
 
         $failure = [];
         if (!empty($state['failure'])) {
             $failure = URLParser::parse($state['failure']);
         }
 
-        $failureRedirect = (function (string $type, ?string $message = null, ?int $code = null, ?\Throwable $previous = null, array $params = []) use ($failure, $response, $project, $oauthDefaultFailure, $consoleHostname) {
+        $failureRedirect = (function (string $type, ?string $message = null, ?int $code = null, ?\Throwable $previous = null, array $params = []) use ($failure, $response, $project, $oauthDefaultFailure, $platform, $requestHostname) {
             $exception = new Exception($type, $message, $code, $previous, params: $params);
             if (!empty($failure)) {
                 $query = URLParser::parseQuery($failure['query']);
@@ -1646,7 +1664,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                 ]);
                 // Mirror success path: default OAuth failure relay needs project to deep-link
                 // back into the native app via appwrite-callback-{project}://
-                if ($failure['host'] === $consoleHostname && $failure['path'] === $oauthDefaultFailure) {
+                if (ConsoleRelay::matches($failure['host'] ?? '', $failure['path'] ?? '', $oauthDefaultFailure, $platform, $requestHostname)) {
                     $query['project'] = $project->getId();
                 }
                 $failure['query'] = URLParser::unparseQuery($query);
@@ -2229,7 +2247,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
             ;
 
             // TODO: Remove this deprecated workaround - support only token
-            if ($state['success']['host'] === $consoleHostname && $state['success']['path'] === $oauthDefaultSuccess) {
+            if (ConsoleRelay::matches($state['success']['host'] ?? '', $state['success']['path'] ?? '', $oauthDefaultSuccess, $platform, $requestHostname)) {
                 $query['project'] = $project->getId();
                 $query['domain'] = $cookieDomain;
                 $query['key'] = $store->getKey();
@@ -2345,10 +2363,26 @@ Http::get('/v1/account/tokens/oauth2/:provider')
 
         if (empty($success)) {
             $success = $redirectBase . $oauthDefaultSuccess;
+        } else {
+            $success = ConsoleRelay::normalize(
+                $success,
+                $oauthDefaultSuccess,
+                $redirectBase,
+                $platform,
+                $request->getHostname(),
+            );
         }
 
         if (empty($failure)) {
             $failure = $redirectBase . $oauthDefaultFailure;
+        } else {
+            $failure = ConsoleRelay::normalize(
+                $failure,
+                $oauthDefaultFailure,
+                $redirectBase,
+                $platform,
+                $request->getHostname(),
+            );
         }
 
         $oauth2 = new $className($appId, $appSecret, $callback, [
