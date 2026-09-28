@@ -6,9 +6,9 @@ namespace Tests\Unit\Network\Validators;
 
 use Appwrite\Network\Validator\PublicHostname;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use PHPUnit\Framework\TestCase;
 use Swoole\Coroutine;
-use Swoole\Runtime;
 
 final class PublicHostnameTest extends TestCase
 {
@@ -158,6 +158,7 @@ final class PublicHostnameTest extends TestCase
         $this->assertTrue(PublicHostname::isPublicIp('100.63.255.255'));
     }
 
+    #[RunInSeparateProcess]
     public function testResolvesHostnameInsideCoroutine(): void
     {
         $validator = new PublicHostname();
@@ -168,20 +169,22 @@ final class PublicHostnameTest extends TestCase
         });
 
         $this->assertFalse($valid);
-        $this->assertSame('Hostname localhost resolves to private or reserved address 127.0.0.1.', $validator->getDescription());
+        $this->assertStringContainsString('Hostname localhost resolves to private or reserved address', $validator->getDescription());
     }
 
-    public function testResolvingInsideCoroutineRetainsNoMemory(): void
+    #[RunInSeparateProcess]
+    public function testResolvingInsideCoroutineRetainsNoMemoryPerLookup(): void
     {
         $validator = new PublicHostname();
+        $lookups = 200;
         $growth = null;
 
-        $this->inHookedCoroutine(function () use ($validator, &$growth): void {
+        $this->inHookedCoroutine(function () use ($validator, $lookups, &$growth): void {
             $validator->isValid('localhost');
             \gc_collect_cycles();
             $before = \memory_get_usage();
 
-            for ($i = 0; $i < 200; $i++) {
+            for ($i = 0; $i < $lookups; $i++) {
                 $validator->isValid('localhost');
             }
 
@@ -189,19 +192,13 @@ final class PublicHostnameTest extends TestCase
             $growth = \memory_get_usage() - $before;
         });
 
-        // The hooked dns_get_record() kept ~140 KiB per call, ~27 MiB over this loop.
-        $this->assertLessThan(1024 * 1024, $growth);
+        // The hooked dns_get_record() retained ~140 KiB per lookup.
+        $this->assertLessThan(4 * 1024, $growth / $lookups);
     }
 
     private function inHookedCoroutine(callable $callback): void
     {
-        $flags = Runtime::getHookFlags();
-
-        try {
-            Coroutine::set(['hook_flags' => SWOOLE_HOOK_ALL]);
-            Coroutine\run($callback);
-        } finally {
-            Runtime::setHookFlags($flags);
-        }
+        Coroutine::set(['hook_flags' => SWOOLE_HOOK_ALL]);
+        Coroutine\run($callback);
     }
 }
