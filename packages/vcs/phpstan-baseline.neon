@@ -1,0 +1,2233 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Parameter \#3 \$value of function curl_setopt expects array\|string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapter.php
+
+		-
+			message: '#^Parameter \#3 \$value of function curl_setopt expects non\-empty\-string\|null, string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapter.php
+
+		-
+			message: '#^Argument of an invalid type mixed supplied for foreach, only iterables are supported\.$#'
+			identifier: foreach.nonIterable
+			count: 4
+			path: src/Adapter/Git/Bitbucket.php
+
+		-
+			message: '#^Binary operation "\." between non\-falsy\-string and mixed results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 5
+			path: src/Adapter/Git/Bitbucket.php
+
+		-
+			message: '#^Cannot access offset ''avatar'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/Bitbucket.php
+
+		-
+			message: '#^Cannot access offset ''changes'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/Bitbucket.php
+
+		-
+			message: '#^Cannot access offset ''content'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/Bitbucket.php
+
+		-
+			message: '#^Cannot access offset ''description'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/Bitbucket.php
+
+		-
+			message: '#^Cannot access offset ''error'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/Bitbucket.php
+
+		-
+			message: '#^Cannot access offset ''hash'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 3
+			path: src/Adapter/Git/Bitbucket.php
+
+		-
+			message: '#^Cannot access offset ''href'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 12
+			path: src/Adapter/Git/Bitbucket.php
+
+		-
+			message: '#^Cannot access offset ''html'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 4
+			path: src/Adapter/Git/Bitbucket.php
+
+		-
+			message: '#^Cannot access offset ''key'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/Bitbucket.php
+
+		-
+			message: '#^Cannot access offset ''location'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/Bitbucket.php
+
+		-
+			message: '#^Cannot access offset ''message'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/Bitbucket.php
+
+		-
+			message: '#^Cannot access offset ''name'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 5
+			path: src/Adapter/Git/Bitbucket.php
+
+		-
+			message: '#^Cannot access offset ''new'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/Bitbucket.php
+
+		-
+			message: '#^Cannot access offset ''old'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/Bitbucket.php
+
+		-
+			message: '#^Cannot access offset ''path'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/Bitbucket.php
+
+		-
+			message: '#^Cannot access offset ''raw'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/Bitbucket.php
+
+		-
+			message: '#^Cannot access offset ''self'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/Bitbucket.php
+
+		-
+			message: '#^Cannot access offset ''size'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/Bitbucket.php
+
+		-
+			message: '#^Cannot access offset ''slug'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 3
+			path: src/Adapter/Git/Bitbucket.php
+
+		-
+			message: '#^Cannot access offset ''state'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/Bitbucket.php
+
+		-
+			message: '#^Cannot access offset ''status\-code'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 28
+			path: src/Adapter/Git/Bitbucket.php
+
+		-
+			message: '#^Cannot access offset ''summary'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/Bitbucket.php
+
+		-
+			message: '#^Cannot access offset ''type'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 3
+			path: src/Adapter/Git/Bitbucket.php
+
+		-
+			message: '#^Cannot access offset ''url'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/Bitbucket.php
+
+		-
+			message: '#^Cannot access offset ''uuid'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 3
+			path: src/Adapter/Git/Bitbucket.php
+
+		-
+			message: '#^Cannot access offset ''workspace'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/Bitbucket.php
+
+		-
+			message: '#^Cannot access offset 0 on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 3
+			path: src/Adapter/Git/Bitbucket.php
+
+		-
+			message: '#^Cannot cast mixed to int\.$#'
+			identifier: cast.int
+			count: 2
+			path: src/Adapter/Git/Bitbucket.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 33
+			path: src/Adapter/Git/Bitbucket.php
+
+		-
+			message: '#^Method Utopia\\VCS\\Adapter\\Git\\Bitbucket\:\:createBranch\(\) should return array\<mixed\> but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Adapter/Git/Bitbucket.php
+
+		-
+			message: '#^Method Utopia\\VCS\\Adapter\\Git\\Bitbucket\:\:createTag\(\) should return array\<mixed\> but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Adapter/Git/Bitbucket.php
+
+		-
+			message: '#^Method Utopia\\VCS\\Adapter\\Git\\Bitbucket\:\:getComment\(\) should return string but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Adapter/Git/Bitbucket.php
+
+		-
+			message: '#^Method Utopia\\VCS\\Adapter\\Git\\Bitbucket\:\:getRepositoryTree\(\) should return array\<string\> but returns list\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Adapter/Git/Bitbucket.php
+
+		-
+			message: '#^Method Utopia\\VCS\\Adapter\\Git\\Bitbucket\:\:listRefs\(\) should return array\<string\> but returns list\<mixed\>\.$#'
+			identifier: return.type
+			count: 2
+			path: src/Adapter/Git/Bitbucket.php
+
+		-
+			message: '#^Method Utopia\\VCS\\Adapter\\Git\\Bitbucket\:\:writeBuildStatus\(\) should return array\<string, mixed\> but returns array\<mixed\>\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Adapter/Git/Bitbucket.php
+
+		-
+			message: '#^Parameter \#1 \$commit of method Utopia\\VCS\\Adapter\\Git\\Bitbucket\:\:parseCommit\(\) expects array\<mixed\>, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapter/Git/Bitbucket.php
+
+		-
+			message: '#^Parameter \#1 \$pullRequest of method Utopia\\VCS\\Adapter\\Git\\Bitbucket\:\:parsePullRequest\(\) expects array\<mixed\>, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapter/Git/Bitbucket.php
+
+		-
+			message: '#^Parameter \#1 \$status of method Utopia\\VCS\\Adapter\\Git\\Bitbucket\:\:parseCheckRun\(\) expects array\<string, mixed\>, array\<mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapter/Git/Bitbucket.php
+
+		-
+			message: '#^Parameter \#2 \$code of class Exception constructor expects int, mixed given\.$#'
+			identifier: argument.type
+			count: 20
+			path: src/Adapter/Git/Bitbucket.php
+
+		-
+			message: '#^Part \$error \(mixed\) of encapsed string cannot be cast to string\.$#'
+			identifier: encapsedStringPart.nonString
+			count: 1
+			path: src/Adapter/Git/Bitbucket.php
+
+		-
+			message: '#^Part \$statusCode \(mixed\) of encapsed string cannot be cast to string\.$#'
+			identifier: encapsedStringPart.nonString
+			count: 20
+			path: src/Adapter/Git/Bitbucket.php
+
+		-
+			message: '#^Property Utopia\\VCS\\Adapter\\Git\\Bitbucket\:\:\$authenticatedUser \(array\<string, mixed\>\|null\) does not accept array\<mixed\>\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: src/Adapter/Git/Bitbucket.php
+
+		-
+			message: '#^Argument of an invalid type mixed supplied for foreach, only iterables are supported\.$#'
+			identifier: foreach.nonIterable
+			count: 6
+			path: src/Adapter/Git/GitHub.php
+
+		-
+			message: '#^Binary operation "\." between ''Failed to retrieve…'' and mixed results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: src/Adapter/Git/GitHub.php
+
+		-
+			message: '#^Binary operation "\." between mixed and ''/commits/'' results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: src/Adapter/Git/GitHub.php
+
+		-
+			message: '#^Binary operation "\." between mixed and ''/tree/'' results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 2
+			path: src/Adapter/Git/GitHub.php
+
+		-
+			message: '#^Binary operation "\." between non\-falsy\-string and mixed results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 2
+			path: src/Adapter/Git/GitHub.php
+
+		-
+			message: '#^Cannot access offset ''accessToken'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/GitHub.php
+
+		-
+			message: '#^Cannot access offset ''account'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: src/Adapter/Git/GitHub.php
+
+		-
+			message: '#^Cannot access offset ''added'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/GitHub.php
+
+		-
+			message: '#^Cannot access offset ''author'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 5
+			path: src/Adapter/Git/GitHub.php
+
+		-
+			message: '#^Cannot access offset ''avatar_url'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 3
+			path: src/Adapter/Git/GitHub.php
+
+		-
+			message: '#^Cannot access offset ''base'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/GitHub.php
+
+		-
+			message: '#^Cannot access offset ''body'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/GitHub.php
+
+		-
+			message: '#^Cannot access offset ''commit'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: src/Adapter/Git/GitHub.php
+
+		-
+			message: '#^Cannot access offset ''content'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/GitHub.php
+
+		-
+			message: '#^Cannot access offset ''email'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/GitHub.php
+
+		-
+			message: '#^Cannot access offset ''encoding'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/GitHub.php
+
+		-
+			message: '#^Cannot access offset ''head'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/GitHub.php
+
+		-
+			message: '#^Cannot access offset ''html_url'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 7
+			path: src/Adapter/Git/GitHub.php
+
+		-
+			message: '#^Cannot access offset ''id'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 10
+			path: src/Adapter/Git/GitHub.php
+
+		-
+			message: '#^Cannot access offset ''items'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/GitHub.php
+
+		-
+			message: '#^Cannot access offset ''jwtToken'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/GitHub.php
+
+		-
+			message: '#^Cannot access offset ''location'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/GitHub.php
+
+		-
+			message: '#^Cannot access offset ''login'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 4
+			path: src/Adapter/Git/GitHub.php
+
+		-
+			message: '#^Cannot access offset ''message'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 3
+			path: src/Adapter/Git/GitHub.php
+
+		-
+			message: '#^Cannot access offset ''modified'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/GitHub.php
+
+		-
+			message: '#^Cannot access offset ''name'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 8
+			path: src/Adapter/Git/GitHub.php
+
+		-
+			message: '#^Cannot access offset ''owner'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: src/Adapter/Git/GitHub.php
+
+		-
+			message: '#^Cannot access offset ''ref'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/GitHub.php
+
+		-
+			message: '#^Cannot access offset ''removed'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/GitHub.php
+
+		-
+			message: '#^Cannot access offset ''repositories'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 3
+			path: src/Adapter/Git/GitHub.php
+
+		-
+			message: '#^Cannot access offset ''repository_selection'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/GitHub.php
+
+		-
+			message: '#^Cannot access offset ''sha'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 4
+			path: src/Adapter/Git/GitHub.php
+
+		-
+			message: '#^Cannot access offset ''size'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: src/Adapter/Git/GitHub.php
+
+		-
+			message: '#^Cannot access offset ''status\-code'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 23
+			path: src/Adapter/Git/GitHub.php
+
+		-
+			message: '#^Cannot access offset ''total_count'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: src/Adapter/Git/GitHub.php
+
+		-
+			message: '#^Cannot access offset ''tree'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/GitHub.php
+
+		-
+			message: '#^Cannot access offset ''type'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/GitHub.php
+
+		-
+			message: '#^Cannot access offset ''url'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/GitHub.php
+
+		-
+			message: '#^Cannot access offset ''user'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 3
+			path: src/Adapter/Git/GitHub.php
+
+		-
+			message: '#^Cannot access offset 0 on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: src/Adapter/Git/GitHub.php
+
+		-
+			message: '#^Cannot cast mixed to int\.$#'
+			identifier: cast.int
+			count: 1
+			path: src/Adapter/Git/GitHub.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 4
+			path: src/Adapter/Git/GitHub.php
+
+		-
+			message: '#^Method Utopia\\VCS\\Adapter\\Git\\GitHub\:\:createBranch\(\) should return array\<mixed\> but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Adapter/Git/GitHub.php
+
+		-
+			message: '#^Method Utopia\\VCS\\Adapter\\Git\\GitHub\:\:createCheckRun\(\) should return array\<mixed\> but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Adapter/Git/GitHub.php
+
+		-
+			message: '#^Method Utopia\\VCS\\Adapter\\Git\\GitHub\:\:createComment\(\) should return string but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Adapter/Git/GitHub.php
+
+		-
+			message: '#^Method Utopia\\VCS\\Adapter\\Git\\GitHub\:\:createFile\(\) should return array\<mixed\> but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Adapter/Git/GitHub.php
+
+		-
+			message: '#^Method Utopia\\VCS\\Adapter\\Git\\GitHub\:\:createRepository\(\) should return array\<mixed\> but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Adapter/Git/GitHub.php
+
+		-
+			message: '#^Method Utopia\\VCS\\Adapter\\Git\\GitHub\:\:getCheckRun\(\) should return array\<mixed\> but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Adapter/Git/GitHub.php
+
+		-
+			message: '#^Method Utopia\\VCS\\Adapter\\Git\\GitHub\:\:getComment\(\) should return string but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Adapter/Git/GitHub.php
+
+		-
+			message: '#^Method Utopia\\VCS\\Adapter\\Git\\GitHub\:\:getInstallationRepository\(\) should return array\<mixed\> but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Adapter/Git/GitHub.php
+
+		-
+			message: '#^Method Utopia\\VCS\\Adapter\\Git\\GitHub\:\:getOwnerName\(\) should return string but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Adapter/Git/GitHub.php
+
+		-
+			message: '#^Method Utopia\\VCS\\Adapter\\Git\\GitHub\:\:getPullRequest\(\) should return array\<mixed\> but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Adapter/Git/GitHub.php
+
+		-
+			message: '#^Method Utopia\\VCS\\Adapter\\Git\\GitHub\:\:getPullRequestFromBranch\(\) should return array\<mixed\> but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Adapter/Git/GitHub.php
+
+		-
+			message: '#^Method Utopia\\VCS\\Adapter\\Git\\GitHub\:\:getRepository\(\) should return array\<mixed\> but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Adapter/Git/GitHub.php
+
+		-
+			message: '#^Method Utopia\\VCS\\Adapter\\Git\\GitHub\:\:getRepositoryName\(\) should return string but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Adapter/Git/GitHub.php
+
+		-
+			message: '#^Method Utopia\\VCS\\Adapter\\Git\\GitHub\:\:getRepositoryPresignedUrl\(\) should return string but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Adapter/Git/GitHub.php
+
+		-
+			message: '#^Method Utopia\\VCS\\Adapter\\Git\\GitHub\:\:getRepositoryTree\(\) should return array\<string\> but returns list\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Adapter/Git/GitHub.php
+
+		-
+			message: '#^Method Utopia\\VCS\\Adapter\\Git\\GitHub\:\:listBranches\(\) should return array\<string\> but returns list\<mixed\>\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Adapter/Git/GitHub.php
+
+		-
+			message: '#^Method Utopia\\VCS\\Adapter\\Git\\GitHub\:\:updateCheckRun\(\) should return array\<mixed\> but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Adapter/Git/GitHub.php
+
+		-
+			message: '#^Method Utopia\\VCS\\Adapter\\Git\\GitHub\:\:updateComment\(\) should return string but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Adapter/Git/GitHub.php
+
+		-
+			message: '#^Parameter \#1 \$array of function array_column expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapter/Git/GitHub.php
+
+		-
+			message: '#^Parameter \#1 \$array of function array_filter expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapter/Git/GitHub.php
+
+		-
+			message: '#^Parameter \#1 \$array of function array_keys expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapter/Git/GitHub.php
+
+		-
+			message: '#^Parameter \#1 \$callback of function array_map expects \(callable\(mixed\)\: mixed\)\|null, Closure\(array\)\: \(array\<string\>\|string\) given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Adapter/Git/GitHub.php
+
+		-
+			message: '#^Parameter \#1 \$callback of function array_map expects \(callable\(mixed\)\: mixed\)\|null, Closure\(array\)\: mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapter/Git/GitHub.php
+
+		-
+			message: '#^Parameter \#1 \$haystack of function stripos expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapter/Git/GitHub.php
+
+		-
+			message: '#^Parameter \#1 \$string of function base64_decode expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapter/Git/GitHub.php
+
+		-
+			message: '#^Parameter \#1 \$string of function strtolower expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapter/Git/GitHub.php
+
+		-
+			message: '#^Parameter \#1 \$value of function count expects array\|Countable, mixed given\.$#'
+			identifier: argument.type
+			count: 3
+			path: src/Adapter/Git/GitHub.php
+
+		-
+			message: '#^Parameter \#1 \$value of function strval expects bool\|float\|GMP\|int\|resource\|string\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 3
+			path: src/Adapter/Git/GitHub.php
+
+		-
+			message: '#^Parameter \#2 \$array of function array_key_exists expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 6
+			path: src/Adapter/Git/GitHub.php
+
+		-
+			message: '#^Parameter \#2 \$callback of function array_filter expects \(callable\(mixed\)\: bool\)\|null, Closure\(array\)\: bool given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapter/Git/GitHub.php
+
+		-
+			message: '#^Parameter \#2 \$code of class Exception constructor expects int, mixed given\.$#'
+			identifier: argument.type
+			count: 15
+			path: src/Adapter/Git/GitHub.php
+
+		-
+			message: '#^Parameter \#2 \.\.\.\$arrays of function array_merge expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapter/Git/GitHub.php
+
+		-
+			message: '#^Parameter \#3 \$subject of function str_replace expects array\<string\>\|string, mixed given\.$#'
+			identifier: argument.type
+			count: 3
+			path: src/Adapter/Git/GitHub.php
+
+		-
+			message: '#^Part \$responseHeadersStatusCode \(mixed\) of encapsed string cannot be cast to string\.$#'
+			identifier: encapsedStringPart.nonString
+			count: 8
+			path: src/Adapter/Git/GitHub.php
+
+		-
+			message: '#^Part \$statusCode \(mixed\) of encapsed string cannot be cast to string\.$#'
+			identifier: encapsedStringPart.nonString
+			count: 6
+			path: src/Adapter/Git/GitHub.php
+
+		-
+			message: '#^Possibly invalid array key type mixed\.$#'
+			identifier: offsetAccess.invalidOffset
+			count: 3
+			path: src/Adapter/Git/GitHub.php
+
+		-
+			message: '#^Property Utopia\\VCS\\Adapter\\Git\\GitHub\:\:\$accessToken \(string\) does not accept mixed\.$#'
+			identifier: assign.propertyType
+			count: 2
+			path: src/Adapter/Git/GitHub.php
+
+		-
+			message: '#^Property Utopia\\VCS\\Adapter\\Git\\GitHub\:\:\$jwtToken \(string\) does not accept mixed\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: src/Adapter/Git/GitHub.php
+
+		-
+			message: '#^Argument of an invalid type mixed supplied for foreach, only iterables are supported\.$#'
+			identifier: foreach.nonIterable
+			count: 2
+			path: src/Adapter/Git/GitLab.php
+
+		-
+			message: '#^Binary operation "\." between ''Failed to update…'' and mixed results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: src/Adapter/Git/GitLab.php
+
+		-
+			message: '#^Binary operation "\." between mixed and ''/\-/tree/'' results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 2
+			path: src/Adapter/Git/GitLab.php
+
+		-
+			message: '#^Binary operation "\." between mixed and ''\:'' results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: src/Adapter/Git/GitLab.php
+
+		-
+			message: '#^Binary operation "\." between non\-falsy\-string and mixed results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 3
+			path: src/Adapter/Git/GitLab.php
+
+		-
+			message: '#^Cannot access offset ''action'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/GitLab.php
+
+		-
+			message: '#^Cannot access offset ''added'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/GitLab.php
+
+		-
+			message: '#^Cannot access offset ''author'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: src/Adapter/Git/GitLab.php
+
+		-
+			message: '#^Cannot access offset ''author_name'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: src/Adapter/Git/GitLab.php
+
+		-
+			message: '#^Cannot access offset ''avatar_url'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/GitLab.php
+
+		-
+			message: '#^Cannot access offset ''blob_id'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/GitLab.php
+
+		-
+			message: '#^Cannot access offset ''body'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/GitLab.php
+
+		-
+			message: '#^Cannot access offset ''content'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/GitLab.php
+
+		-
+			message: '#^Cannot access offset ''description'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: src/Adapter/Git/GitLab.php
+
+		-
+			message: '#^Cannot access offset ''email'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/GitLab.php
+
+		-
+			message: '#^Cannot access offset ''encoding'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/GitLab.php
+
+		-
+			message: '#^Cannot access offset ''id'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 9
+			path: src/Adapter/Git/GitLab.php
+
+		-
+			message: '#^Cannot access offset ''iid'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 3
+			path: src/Adapter/Git/GitLab.php
+
+		-
+			message: '#^Cannot access offset ''last_activity_at'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/GitLab.php
+
+		-
+			message: '#^Cannot access offset ''last_commit'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: src/Adapter/Git/GitLab.php
+
+		-
+			message: '#^Cannot access offset ''message'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 3
+			path: src/Adapter/Git/GitLab.php
+
+		-
+			message: '#^Cannot access offset ''modified'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/GitLab.php
+
+		-
+			message: '#^Cannot access offset ''name'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 8
+			path: src/Adapter/Git/GitLab.php
+
+		-
+			message: '#^Cannot access offset ''namespace'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 4
+			path: src/Adapter/Git/GitLab.php
+
+		-
+			message: '#^Cannot access offset ''new_path'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/GitLab.php
+
+		-
+			message: '#^Cannot access offset ''old_path'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/GitLab.php
+
+		-
+			message: '#^Cannot access offset ''patch_id_sha'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/GitLab.php
+
+		-
+			message: '#^Cannot access offset ''path'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 4
+			path: src/Adapter/Git/GitLab.php
+
+		-
+			message: '#^Cannot access offset ''removed'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/GitLab.php
+
+		-
+			message: '#^Cannot access offset ''sha'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: src/Adapter/Git/GitLab.php
+
+		-
+			message: '#^Cannot access offset ''size'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/GitLab.php
+
+		-
+			message: '#^Cannot access offset ''source_branch'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 3
+			path: src/Adapter/Git/GitLab.php
+
+		-
+			message: '#^Cannot access offset ''source_project_id'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/GitLab.php
+
+		-
+			message: '#^Cannot access offset ''state'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: src/Adapter/Git/GitLab.php
+
+		-
+			message: '#^Cannot access offset ''status'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/GitLab.php
+
+		-
+			message: '#^Cannot access offset ''status\-code'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 34
+			path: src/Adapter/Git/GitLab.php
+
+		-
+			message: '#^Cannot access offset ''target_branch'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: src/Adapter/Git/GitLab.php
+
+		-
+			message: '#^Cannot access offset ''target_project_id'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/GitLab.php
+
+		-
+			message: '#^Cannot access offset ''target_url'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/GitLab.php
+
+		-
+			message: '#^Cannot access offset ''title'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: src/Adapter/Git/GitLab.php
+
+		-
+			message: '#^Cannot access offset ''type'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/GitLab.php
+
+		-
+			message: '#^Cannot access offset ''url'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: src/Adapter/Git/GitLab.php
+
+		-
+			message: '#^Cannot access offset ''username'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/GitLab.php
+
+		-
+			message: '#^Cannot access offset ''visibility'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/GitLab.php
+
+		-
+			message: '#^Cannot access offset ''web_url'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 4
+			path: src/Adapter/Git/GitLab.php
+
+		-
+			message: '#^Cannot access offset ''x\-total'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: src/Adapter/Git/GitLab.php
+
+		-
+			message: '#^Cannot access offset 0 on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 3
+			path: src/Adapter/Git/GitLab.php
+
+		-
+			message: '#^Cannot access offset mixed on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/GitLab.php
+
+		-
+			message: '#^Cannot cast mixed to int\.$#'
+			identifier: cast.int
+			count: 2
+			path: src/Adapter/Git/GitLab.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 2
+			path: src/Adapter/Git/GitLab.php
+
+		-
+			message: '#^Method Utopia\\VCS\\Adapter\\Git\\GitLab\:\:createBranch\(\) should return array\<mixed\> but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Adapter/Git/GitLab.php
+
+		-
+			message: '#^Method Utopia\\VCS\\Adapter\\Git\\GitLab\:\:createFile\(\) should return array\<mixed\> but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Adapter/Git/GitLab.php
+
+		-
+			message: '#^Method Utopia\\VCS\\Adapter\\Git\\GitLab\:\:createPullRequest\(\) should return array\<mixed\> but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Adapter/Git/GitLab.php
+
+		-
+			message: '#^Method Utopia\\VCS\\Adapter\\Git\\GitLab\:\:createTag\(\) should return array\<mixed\> but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Adapter/Git/GitLab.php
+
+		-
+			message: '#^Method Utopia\\VCS\\Adapter\\Git\\GitLab\:\:createWebhook\(\) should return int but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Adapter/Git/GitLab.php
+
+		-
+			message: '#^Method Utopia\\VCS\\Adapter\\Git\\GitLab\:\:getComment\(\) should return string but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Adapter/Git/GitLab.php
+
+		-
+			message: '#^Method Utopia\\VCS\\Adapter\\Git\\GitLab\:\:getOwnerName\(\) should return string but returns mixed\.$#'
+			identifier: return.type
+			count: 2
+			path: src/Adapter/Git/GitLab.php
+
+		-
+			message: '#^Method Utopia\\VCS\\Adapter\\Git\\GitLab\:\:getRepositoryName\(\) should return string but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Adapter/Git/GitLab.php
+
+		-
+			message: '#^Method Utopia\\VCS\\Adapter\\Git\\GitLab\:\:getRepositoryTree\(\) should return array\<string\> but returns list\.$#'
+			identifier: return.type
+			count: 2
+			path: src/Adapter/Git/GitLab.php
+
+		-
+			message: '#^Method Utopia\\VCS\\Adapter\\Git\\GitLab\:\:getUser\(\) should return array\<mixed\> but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Adapter/Git/GitLab.php
+
+		-
+			message: '#^Method Utopia\\VCS\\Adapter\\Git\\GitLab\:\:listBranches\(\) should return array\<string\> but returns list\<mixed\>\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Adapter/Git/GitLab.php
+
+		-
+			message: '#^Method Utopia\\VCS\\Adapter\\Git\\GitLab\:\:listNamespaces\(\) should return array\{items\: array\<array\{id\: string, name\: string, path\: string, kind\: string, avatarUrl\: string\}\>, total\: int\} but returns array\{items\: array\<array\{id\: string, name\: mixed, path\: mixed, kind\: mixed, avatarUrl\: mixed\}\>, total\: int\}\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Adapter/Git/GitLab.php
+
+		-
+			message: '#^Parameter \#1 \$array of function array_key_last expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapter/Git/GitLab.php
+
+		-
+			message: '#^Parameter \#1 \$callback of function array_map expects \(callable\(mixed\)\: mixed\)\|null, Closure\(array\)\: array\{id\: string, name\: mixed, path\: mixed, kind\: mixed, avatarUrl\: mixed\} given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapter/Git/GitLab.php
+
+		-
+			message: '#^Parameter \#1 \$names of method Utopia\\VCS\\Adapter\\Git\:\:matchGlob\(\) expects array\<string\>, list\<mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapter/Git/GitLab.php
+
+		-
+			message: '#^Parameter \#1 \$value of function strval expects bool\|float\|GMP\|int\|resource\|string\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Adapter/Git/GitLab.php
+
+		-
+			message: '#^Parameter \#1 \.\.\.\$arrays of function array_merge expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapter/Git/GitLab.php
+
+		-
+			message: '#^Parameter \#2 \$array of function array_key_exists expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapter/Git/GitLab.php
+
+		-
+			message: '#^Parameter \#2 \$code of class Exception constructor expects int, mixed given\.$#'
+			identifier: argument.type
+			count: 19
+			path: src/Adapter/Git/GitLab.php
+
+		-
+			message: '#^Parameter \#2 \.\.\.\$arrays of function array_merge expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapter/Git/GitLab.php
+
+		-
+			message: '#^Parameter \#3 \$subject of function str_replace expects array\<string\>\|string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapter/Git/GitLab.php
+
+		-
+			message: '#^Parameter \#3 \.\.\.\$arrays of function array_merge expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapter/Git/GitLab.php
+
+		-
+			message: '#^Part \$responseHeadersStatusCode \(mixed\) of encapsed string cannot be cast to string\.$#'
+			identifier: encapsedStringPart.nonString
+			count: 7
+			path: src/Adapter/Git/GitLab.php
+
+		-
+			message: '#^Part \$statusCode \(mixed\) of encapsed string cannot be cast to string\.$#'
+			identifier: encapsedStringPart.nonString
+			count: 11
+			path: src/Adapter/Git/GitLab.php
+
+		-
+			message: '#^Possibly invalid array key type mixed\.$#'
+			identifier: offsetAccess.invalidOffset
+			count: 2
+			path: src/Adapter/Git/GitLab.php
+
+		-
+			message: '#^Argument of an invalid type mixed supplied for foreach, only iterables are supported\.$#'
+			identifier: foreach.nonIterable
+			count: 6
+			path: src/Adapter/Git/Gitea.php
+
+		-
+			message: '#^Binary operation "\." between mixed and ''/commit/'' results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: src/Adapter/Git/Gitea.php
+
+		-
+			message: '#^Binary operation "\." between mixed and ''/src/branch/'' results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 2
+			path: src/Adapter/Git/Gitea.php
+
+		-
+			message: '#^Binary operation "\." between non\-falsy\-string and mixed results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 2
+			path: src/Adapter/Git/Gitea.php
+
+		-
+			message: '#^Cannot access offset ''added'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/Gitea.php
+
+		-
+			message: '#^Cannot access offset ''author'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 5
+			path: src/Adapter/Git/Gitea.php
+
+		-
+			message: '#^Cannot access offset ''avatar_url'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 4
+			path: src/Adapter/Git/Gitea.php
+
+		-
+			message: '#^Cannot access offset ''base'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/Gitea.php
+
+		-
+			message: '#^Cannot access offset ''body'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/Gitea.php
+
+		-
+			message: '#^Cannot access offset ''commit'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: src/Adapter/Git/Gitea.php
+
+		-
+			message: '#^Cannot access offset ''content'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/Gitea.php
+
+		-
+			message: '#^Cannot access offset ''context'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/Gitea.php
+
+		-
+			message: '#^Cannot access offset ''description'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/Gitea.php
+
+		-
+			message: '#^Cannot access offset ''email'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/Gitea.php
+
+		-
+			message: '#^Cannot access offset ''encoding'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/Gitea.php
+
+		-
+			message: '#^Cannot access offset ''full_name'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: src/Adapter/Git/Gitea.php
+
+		-
+			message: '#^Cannot access offset ''head'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/Gitea.php
+
+		-
+			message: '#^Cannot access offset ''html_url'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 8
+			path: src/Adapter/Git/Gitea.php
+
+		-
+			message: '#^Cannot access offset ''id'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 3
+			path: src/Adapter/Git/Gitea.php
+
+		-
+			message: '#^Cannot access offset ''login'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 5
+			path: src/Adapter/Git/Gitea.php
+
+		-
+			message: '#^Cannot access offset ''message'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 3
+			path: src/Adapter/Git/Gitea.php
+
+		-
+			message: '#^Cannot access offset ''modified'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/Gitea.php
+
+		-
+			message: '#^Cannot access offset ''name'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 7
+			path: src/Adapter/Git/Gitea.php
+
+		-
+			message: '#^Cannot access offset ''owner'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 4
+			path: src/Adapter/Git/Gitea.php
+
+		-
+			message: '#^Cannot access offset ''ref'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/Gitea.php
+
+		-
+			message: '#^Cannot access offset ''removed'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/Gitea.php
+
+		-
+			message: '#^Cannot access offset ''repo'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/Gitea.php
+
+		-
+			message: '#^Cannot access offset ''sha'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 4
+			path: src/Adapter/Git/Gitea.php
+
+		-
+			message: '#^Cannot access offset ''size'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: src/Adapter/Git/Gitea.php
+
+		-
+			message: '#^Cannot access offset ''status'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/Gitea.php
+
+		-
+			message: '#^Cannot access offset ''status\-code'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 26
+			path: src/Adapter/Git/Gitea.php
+
+		-
+			message: '#^Cannot access offset ''target_url'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/Gitea.php
+
+		-
+			message: '#^Cannot access offset ''tree'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/Gitea.php
+
+		-
+			message: '#^Cannot access offset ''type'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/Gitea.php
+
+		-
+			message: '#^Cannot access offset ''url'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/Gitea.php
+
+		-
+			message: '#^Cannot access offset ''user'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/Gitea.php
+
+		-
+			message: '#^Cannot access offset 0 on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 3
+			path: src/Adapter/Git/Gitea.php
+
+		-
+			message: '#^Cannot cast mixed to int\.$#'
+			identifier: cast.int
+			count: 1
+			path: src/Adapter/Git/Gitea.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 3
+			path: src/Adapter/Git/Gitea.php
+
+		-
+			message: '#^Method Utopia\\VCS\\Adapter\\Git\\Gitea\:\:createBranch\(\) should return array\<mixed\> but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Adapter/Git/Gitea.php
+
+		-
+			message: '#^Method Utopia\\VCS\\Adapter\\Git\\Gitea\:\:createFile\(\) should return array\<mixed\> but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Adapter/Git/Gitea.php
+
+		-
+			message: '#^Method Utopia\\VCS\\Adapter\\Git\\Gitea\:\:createOrganization\(\) should return string but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Adapter/Git/Gitea.php
+
+		-
+			message: '#^Method Utopia\\VCS\\Adapter\\Git\\Gitea\:\:createPullRequest\(\) should return array\<mixed\> but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Adapter/Git/Gitea.php
+
+		-
+			message: '#^Method Utopia\\VCS\\Adapter\\Git\\Gitea\:\:createTag\(\) should return array\<mixed\> but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Adapter/Git/Gitea.php
+
+		-
+			message: '#^Method Utopia\\VCS\\Adapter\\Git\\Gitea\:\:getAuthenticatedUserLogin\(\) should return string but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Adapter/Git/Gitea.php
+
+		-
+			message: '#^Method Utopia\\VCS\\Adapter\\Git\\Gitea\:\:getComment\(\) should return string but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Adapter/Git/Gitea.php
+
+		-
+			message: '#^Method Utopia\\VCS\\Adapter\\Git\\Gitea\:\:getOwnerName\(\) should return string but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Adapter/Git/Gitea.php
+
+		-
+			message: '#^Method Utopia\\VCS\\Adapter\\Git\\Gitea\:\:getPullRequest\(\) should return array\<mixed\> but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Adapter/Git/Gitea.php
+
+		-
+			message: '#^Method Utopia\\VCS\\Adapter\\Git\\Gitea\:\:getPullRequestFromBranch\(\) should return array\<mixed\> but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Adapter/Git/Gitea.php
+
+		-
+			message: '#^Method Utopia\\VCS\\Adapter\\Git\\Gitea\:\:getRepositoryName\(\) should return string but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Adapter/Git/Gitea.php
+
+		-
+			message: '#^Method Utopia\\VCS\\Adapter\\Git\\Gitea\:\:getRepositoryTree\(\) should return array\<string\> but returns list\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Adapter/Git/Gitea.php
+
+		-
+			message: '#^Method Utopia\\VCS\\Adapter\\Git\\Gitea\:\:getUser\(\) should return array\<mixed\> but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Adapter/Git/Gitea.php
+
+		-
+			message: '#^Method Utopia\\VCS\\Adapter\\Git\\Gitea\:\:listBranches\(\) should return array\<string\> but returns list\<mixed\>\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Adapter/Git/Gitea.php
+
+		-
+			message: '#^Parameter \#1 \$array of function array_column expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapter/Git/Gitea.php
+
+		-
+			message: '#^Parameter \#1 \$array of function array_keys expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapter/Git/Gitea.php
+
+		-
+			message: '#^Parameter \#1 \$json of function json_decode expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Adapter/Git/Gitea.php
+
+		-
+			message: '#^Parameter \#1 \$names of method Utopia\\VCS\\Adapter\\Git\:\:matchGlob\(\) expects array\<string\>, list\<mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapter/Git/Gitea.php
+
+		-
+			message: '#^Parameter \#1 \$string of function base64_decode expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapter/Git/Gitea.php
+
+		-
+			message: '#^Parameter \#1 \$value of function count expects array\|Countable, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Adapter/Git/Gitea.php
+
+		-
+			message: '#^Parameter \#1 \$value of function strval expects bool\|float\|GMP\|int\|resource\|string\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Adapter/Git/Gitea.php
+
+		-
+			message: '#^Parameter \#2 \$array of function array_key_exists expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 3
+			path: src/Adapter/Git/Gitea.php
+
+		-
+			message: '#^Parameter \#2 \$code of class Exception constructor expects int, mixed given\.$#'
+			identifier: argument.type
+			count: 21
+			path: src/Adapter/Git/Gitea.php
+
+		-
+			message: '#^Parameter \#2 \.\.\.\$arrays of function array_merge expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapter/Git/Gitea.php
+
+		-
+			message: '#^Parameter \#3 \$subject of function str_replace expects array\<string\>\|string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapter/Git/Gitea.php
+
+		-
+			message: '#^Part \$responseHeadersStatusCode \(mixed\) of encapsed string cannot be cast to string\.$#'
+			identifier: encapsedStringPart.nonString
+			count: 20
+			path: src/Adapter/Git/Gitea.php
+
+		-
+			message: '#^Part \$statusCode \(mixed\) of encapsed string cannot be cast to string\.$#'
+			identifier: encapsedStringPart.nonString
+			count: 1
+			path: src/Adapter/Git/Gitea.php
+
+		-
+			message: '#^Possibly invalid array key type mixed\.$#'
+			identifier: offsetAccess.invalidOffset
+			count: 3
+			path: src/Adapter/Git/Gitea.php
+
+		-
+			message: '#^Argument of an invalid type mixed supplied for foreach, only iterables are supported\.$#'
+			identifier: foreach.nonIterable
+			count: 2
+			path: src/Adapter/Git/Gogs.php
+
+		-
+			message: '#^Binary operation "\." between mixed and ''/'' results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: src/Adapter/Git/Gogs.php
+
+		-
+			message: '#^Cannot access offset ''author'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: src/Adapter/Git/Gogs.php
+
+		-
+			message: '#^Cannot access offset ''avatar_url'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/Gogs.php
+
+		-
+			message: '#^Cannot access offset ''commit'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/Gogs.php
+
+		-
+			message: '#^Cannot access offset ''data'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/Gogs.php
+
+		-
+			message: '#^Cannot access offset ''default_branch'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/Gogs.php
+
+		-
+			message: '#^Cannot access offset ''html_url'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: src/Adapter/Git/Gogs.php
+
+		-
+			message: '#^Cannot access offset ''id'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/Gogs.php
+
+		-
+			message: '#^Cannot access offset ''login'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/Gogs.php
+
+		-
+			message: '#^Cannot access offset ''message'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/Gogs.php
+
+		-
+			message: '#^Cannot access offset ''name'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/Gogs.php
+
+		-
+			message: '#^Cannot access offset ''path'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: src/Adapter/Git/Gogs.php
+
+		-
+			message: '#^Cannot access offset ''sha'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: src/Adapter/Git/Gogs.php
+
+		-
+			message: '#^Cannot access offset ''status\-code'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 6
+			path: src/Adapter/Git/Gogs.php
+
+		-
+			message: '#^Cannot access offset ''tree'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/Gogs.php
+
+		-
+			message: '#^Cannot access offset ''type'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/Gogs.php
+
+		-
+			message: '#^Cannot access offset ''username'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/Gogs.php
+
+		-
+			message: '#^Method Utopia\\VCS\\Adapter\\Git\\Gogs\:\:createFile\(\) should return array\<mixed\> but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Adapter/Git/Gogs.php
+
+		-
+			message: '#^Method Utopia\\VCS\\Adapter\\Git\\Gogs\:\:createOrganization\(\) should return string but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Adapter/Git/Gogs.php
+
+		-
+			message: '#^Method Utopia\\VCS\\Adapter\\Git\\Gogs\:\:findRepositoryById\(\) should return array\<mixed\> but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Adapter/Git/Gogs.php
+
+		-
+			message: '#^Method Utopia\\VCS\\Adapter\\Git\\Gogs\:\:getOwnerName\(\) should return string but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Adapter/Git/Gogs.php
+
+		-
+			message: '#^Method Utopia\\VCS\\Adapter\\Git\\Gogs\:\:getRepositoryName\(\) should return string but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Adapter/Git/Gogs.php
+
+		-
+			message: '#^Method Utopia\\VCS\\Adapter\\Git\\Gogs\:\:getRepositoryTree\(\) should return array\<string\> but returns list\<mixed\>\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Adapter/Git/Gogs.php
+
+		-
+			message: '#^Method Utopia\\VCS\\Adapter\\Git\\Gogs\:\:listBranches\(\) should return array\<string\> but returns list\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Adapter/Git/Gogs.php
+
+		-
+			message: '#^Parameter \#1 \$names of method Utopia\\VCS\\Adapter\\Git\:\:matchGlob\(\) expects array\<string\>, list given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapter/Git/Gogs.php
+
+		-
+			message: '#^Parameter \#1 \$value of function count expects array\|Countable, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapter/Git/Gogs.php
+
+		-
+			message: '#^Parameter \#2 \$code of class Exception constructor expects int, mixed given\.$#'
+			identifier: argument.type
+			count: 4
+			path: src/Adapter/Git/Gogs.php
+
+		-
+			message: '#^Parameter \#3 \$branch of method Utopia\\VCS\\Adapter\\Git\\Gogs\:\:getRepositoryTree\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapter/Git/Gogs.php
+
+		-
+			message: '#^Part \$responseHeadersStatusCode \(mixed\) of encapsed string cannot be cast to string\.$#'
+			identifier: encapsedStringPart.nonString
+			count: 3
+			path: src/Adapter/Git/Gogs.php
+
+		-
+			message: '#^Part \$statusCode \(mixed\) of encapsed string cannot be cast to string\.$#'
+			identifier: encapsedStringPart.nonString
+			count: 1
+			path: src/Adapter/Git/Gogs.php
+
+		-
+			message: '#^Binary operation "\." between ''Failed to retrieve…'' and mixed results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: src/Adapter/Git/Origin.php
+
+		-
+			message: '#^Cannot access offset ''crv'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/Origin.php
+
+		-
+			message: '#^Cannot access offset ''kty'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/Origin.php
+
+		-
+			message: '#^Cannot access offset ''status\-code'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 40
+			path: src/Adapter/Git/Origin.php
+
+		-
+			message: '#^Cannot access offset ''x'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Git/Origin.php
+
+		-
+			message: '#^Cannot cast mixed to int\.$#'
+			identifier: cast.int
+			count: 15
+			path: src/Adapter/Git/Origin.php
+
+		-
+			message: '#^Method Utopia\\VCS\\Adapter\\Git\\Origin\:\:getRepositoryTree\(\) should return array\<string\> but returns list\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Adapter/Git/Origin.php
+
+		-
+			message: '#^Method Utopia\\VCS\\Adapter\\Git\\Origin\:\:jwks\(\) should return array\<array\<string, mixed\>\> but returns list\<mixed\>\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Adapter/Git/Origin.php
+
+		-
+			message: '#^Method Utopia\\VCS\\Adapter\\Git\\Origin\:\:verifyReceipt\(\) should return array\<string, mixed\> but returns array\<mixed\>\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Adapter/Git/Origin.php
+
+		-
+			message: '#^Parameter \#1 \$callback of function array_map expects \(callable\(mixed\)\: mixed\)\|null, Closure\(array\|bool\|float\|GMP\|int\|resource\|SimpleXMLElement\|string\|null, int\=\)\: int given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapter/Git/Origin.php
+
+		-
+			message: '#^Parameter \#1 \$value of function strval expects bool\|float\|GMP\|int\|resource\|string\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 101
+			path: src/Adapter/Git/Origin.php
+
+		-
+			message: '#^Property Utopia\\VCS\\Adapter\\Git\\Origin\:\:\$jwks \(array\<array\<string, mixed\>\>\|null\) does not accept list\<mixed\>\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: src/Adapter/Git/Origin.php
+
+		-
+			message: '#^Cannot access offset ''author'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/BitbucketTest.php
+
+		-
+			message: '#^Cannot access offset ''changes'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/BitbucketTest.php
+
+		-
+			message: '#^Cannot access offset ''new'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/BitbucketTest.php
+
+		-
+			message: '#^Cannot access offset ''target'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/BitbucketTest.php
+
+		-
+			message: '#^Cannot access offset ''user'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/BitbucketTest.php
+
+		-
+			message: '#^Cannot access offset 0 on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/BitbucketTest.php
+
+		-
+			message: '#^Method Utopia\\VCS\\Tests\\BitbucketTest\:\:eventActor\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: tests/BitbucketTest.php
+
+		-
+			message: '#^Method Utopia\\VCS\\Tests\\BitbucketTest\:\:eventRepository\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: tests/BitbucketTest.php
+
+		-
+			message: '#^Argument of an invalid type mixed supplied for foreach, only iterables are supported\.$#'
+			identifier: foreach.nonIterable
+			count: 1
+			path: tests/E2E/Base.php
+
+		-
+			message: '#^Binary operation "\." between ''blob '' and mixed results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: tests/E2E/Base.php
+
+		-
+			message: '#^Binary operation "\." between non\-falsy\-string and mixed results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: tests/E2E/Base.php
+
+		-
+			message: '#^Cannot access offset ''context'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/E2E/Base.php
+
+		-
+			message: '#^Cannot access offset ''description'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/E2E/Base.php
+
+		-
+			message: '#^Cannot access offset ''ref'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/E2E/Base.php
+
+		-
+			message: '#^Cannot access offset ''state'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/E2E/Base.php
+
+		-
+			message: '#^Cannot access offset ''summary'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/E2E/Base.php
+
+		-
+			message: '#^Cannot access offset ''title'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/E2E/Base.php
+
+		-
+			message: '#^Cannot cast mixed to int\.$#'
+			identifier: cast.int
+			count: 1
+			path: tests/E2E/Base.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 6
+			path: tests/E2E/Base.php
+
+		-
+			message: '#^Method Utopia\\VCS\\Tests\\E2E\\Base\:\:awaitWebhook\(\) should return array\<string, mixed\> but returns array\<mixed\>\.$#'
+			identifier: return.type
+			count: 1
+			path: tests/E2E/Base.php
+
+		-
+			message: '#^Method Utopia\\VCS\\Tests\\E2E\\Base\:\:getLastWebhookRequest\(\) should return array\<mixed\> but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: tests/E2E/Base.php
+
+		-
+			message: '#^Method Utopia\\VCS\\Tests\\E2E\\Base\:\:getLatestCommitEventually\(\) should return array\<string, mixed\> but returns array\<mixed\>\.$#'
+			identifier: return.type
+			count: 1
+			path: tests/E2E/Base.php
+
+		-
+			message: '#^Parameter \#1 \$array of function array_column expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/E2E/Base.php
+
+		-
+			message: '#^Parameter \#1 \$commit of method Utopia\\VCS\\Tests\\E2E\\Base\:\:assertCommitAuthorLinks\(\) expects array\<string, mixed\>, array\<mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/E2E/Base.php
+
+		-
+			message: '#^Parameter \#1 \$headers of method Utopia\\VCS\\Tests\\E2E\\Base\:\:findHeader\(\) expects array\<string, mixed\>, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: tests/E2E/Base.php
+
+		-
+			message: '#^Parameter \#1 \$needle of method PHPUnit\\Framework\\Assert\:\:assertStringContainsString\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/E2E/Base.php
+
+		-
+			message: '#^Parameter \#1 \$payload of method Utopia\\VCS\\Adapter\:\:validateWebhookEvent\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/E2E/Base.php
+
+		-
+			message: '#^Parameter \#1 \$pullRequest of method Utopia\\VCS\\Tests\\E2E\\Base\:\:pullRequestNumberOf\(\) expects array\<string, mixed\>, array\<mixed\> given\.$#'
+			identifier: argument.type
+			count: 5
+			path: tests/E2E/Base.php
+
+		-
+			message: '#^Parameter \#1 \$repository of method Utopia\\VCS\\Tests\\E2E\\Base\:\:assertPushedAt\(\) expects array\<string, mixed\>, array\<mixed\> given\.$#'
+			identifier: argument.type
+			count: 2
+			path: tests/E2E/Base.php
+
+		-
+			message: '#^Parameter \#1 \$repository of method Utopia\\VCS\\Tests\\E2E\\Base\:\:assertPushedAt\(\) expects array\<string, mixed\>, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/E2E/Base.php
+
+		-
+			message: '#^Parameter \#1 \$repository of method Utopia\\VCS\\Tests\\E2E\\Base\:\:isPrivate\(\) expects array\<string, mixed\>, array\<mixed\> given\.$#'
+			identifier: argument.type
+			count: 4
+			path: tests/E2E/Base.php
+
+		-
+			message: '#^Parameter \#1 \$repository of method Utopia\\VCS\\Tests\\E2E\\Base\:\:ownerOf\(\) expects array\<string, mixed\>, array\<mixed\> given\.$#'
+			identifier: argument.type
+			count: 2
+			path: tests/E2E/Base.php
+
+		-
+			message: '#^Parameter \#2 \$SHA of method Utopia\\VCS\\Adapter\:\:updateCommitStatus\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: tests/E2E/Base.php
+
+		-
+			message: '#^Parameter \#2 \$array of method PHPUnit\\Framework\\Assert\:\:assertArrayHasKey\(\) expects array\<mixed\>\|ArrayAccess\<\(int\|string\), covariant mixed\>, mixed given\.$#'
+			identifier: argument.type
+			count: 11
+			path: tests/E2E/Base.php
+
+		-
+			message: '#^Parameter \#2 \$haystack of method PHPUnit\\Framework\\Assert\:\:assertCount\(\) expects Countable\|iterable, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: tests/E2E/Base.php
+
+		-
+			message: '#^Parameter \#2 \$payload of method Utopia\\VCS\\Adapter\:\:getEvents\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/E2E/Base.php
+
+		-
+			message: '#^Parameter \#2 \$string of method PHPUnit\\Framework\\Assert\:\:assertStringStartsWith\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 3
+			path: tests/E2E/Base.php
+
+		-
+			message: '#^Parameter \#3 \$commitHash of method Utopia\\VCS\\Adapter\:\:getCommit\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: tests/E2E/Base.php
+
+		-
+			message: '#^Parameter \#3 \$commitHash of method Utopia\\VCS\\Adapter\\Git\:\:getCommitStatuses\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 3
+			path: tests/E2E/Base.php
+
+		-
+			message: '#^Parameter \#3 \$version of method Utopia\\VCS\\Adapter\:\:generateCloneCommand\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/E2E/Base.php
+
+		-
+			message: '#^Parameter \#4 \$target of method Utopia\\VCS\\Adapter\\Git\:\:createTag\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 5
+			path: tests/E2E/Base.php
+
+		-
+			message: '#^Parameter \$checkRunId of method Utopia\\VCS\\Adapter\\Git\:\:updateCheckRun\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: tests/E2E/Base.php
+
+		-
+			message: '#^Parameter \$headSha of method Utopia\\VCS\\Adapter\\Git\:\:createCheckRun\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 8
+			path: tests/E2E/Base.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 1
+			path: tests/E2E/BitbucketTest.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 1
+			path: tests/E2E/GitLabTest.php
+
+		-
+			message: '#^Cannot access offset ''Authorization'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 3
+			path: tests/GitHubTest.php
+
+		-
+			message: '#^Cannot access offset ''iss'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: tests/GitHubTest.php
+
+		-
+			message: '#^Cannot access offset ''key'' on array\|false\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: tests/GitHubTest.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 3
+			path: tests/GitHubTest.php
+
+		-
+			message: '#^Parameter \#2 \$privateKey of method Utopia\\VCS\\Adapter\\Git\\GitHub\:\:initializeVariables\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 3
+			path: tests/GitHubTest.php
+
+		-
+			message: '#^Parameter \#3 \$public_key of function openssl_verify expects array\|OpenSSLAsymmetricKey\|OpenSSLCertificate\|string, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: tests/GitHubTest.php
+
+		-
+			message: '#^Cannot access an offset on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/OriginTest.php
+
+		-
+			message: '#^Cannot access offset ''payload'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: tests/OriginTest.php
+
+		-
+			message: '#^Cannot access offset ''ref'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/OriginTest.php
+
+		-
+			message: '#^Cannot access offset ''refUpdates'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: tests/OriginTest.php
+
+		-
+			message: '#^Cannot access offset ''refUpdatesCount'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/OriginTest.php
+
+		-
+			message: '#^Cannot access offset 0 on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/OriginTest.php
+
+		-
+			message: '#^Parameter \#1 \$value of function strval expects bool\|float\|GMP\|int\|resource\|string\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/OriginTest.php
+
+		-
+			message: '#^Cannot access offset ''iss'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: tests/credentials.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 1
+			path: tests/credentials.php
+
+		-
+			message: '#^Parameter \#1 \$json of function json_decode expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/credentials.php

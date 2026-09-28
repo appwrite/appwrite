@@ -41,6 +41,7 @@
             "Utopia\\DNS\\": "packages/dns/src",
             "Utopia\\Domains\\": "packages/domains/src",
             "Utopia\\DSN\\": "packages/dsn/src",
+            "Utopia\\Emails\\": "packages/emails/src",
             "Utopia\\Http\\": "packages/http/src",
             "Utopia\\Image\\": "packages/image/src",
             "Utopia\\Locale\\": "packages/locale/src",
@@ -48,6 +49,7 @@
             "Utopia\\Messaging\\": "packages/messaging/src",
             "Utopia\\Mqtt\\": "packages/mqtt/src",
             "Utopia\\OpenAPI\\": "packages/openapi/src",
+            "Utopia\\Platform\\": "packages/platform/src",
             "Utopia\\Pools\\": "packages/pools/src",
             "Utopia\\Psr7\\": "packages/psr7/src",
             "Utopia\\Query\\": "packages/query/src",
@@ -61,6 +63,7 @@
             "Utopia\\System\\": "packages/system/src",
             "Utopia\\Telemetry\\": "packages/telemetry/src",
             "Utopia\\UserAgent\\": "packages/user-agent/src",
+            "Utopia\\VCS\\": "packages/vcs/src",
             "Utopia\\WebSocket\\": "packages/websocket/src",
             "Utopia\\": [
                 "packages/console/src",
@@ -89,6 +92,7 @@
             "Utopia\\DNS\\Tests\\": "packages/dns/tests",
             "Utopia\\Domains\\Tests\\": "packages/domains/tests",
             "Utopia\\DSN\\Tests\\": "packages/dsn/tests",
+            "Utopia\\Emails\\Tests\\": "packages/emails/tests",
             "Utopia\\Http\\Tests\\": "packages/http/tests",
             "Utopia\\Image\\Tests\\": "packages/image/tests",
             "Utopia\\Locale\\Tests\\": "packages/locale/tests",
@@ -96,6 +100,7 @@
             "Utopia\\Messaging\\Tests\\": "packages/messaging/tests",
             "Utopia\\Mqtt\\Tests\\": "packages/mqtt/tests",
             "Utopia\\OpenAPI\\Tests\\": "packages/openapi/tests",
+            "Utopia\\Platform\\Tests\\": "packages/platform/tests",
             "Utopia\\Pools\\Tests\\": "packages/pools/tests",
             "Utopia\\Psr7\\Tests\\": "packages/psr7/tests",
             "Utopia\\Query\\Tests\\": "packages/query/tests",
@@ -110,17 +115,13 @@
             "Utopia\\Telemetry\\Tests\\": "packages/telemetry/tests",
             "Utopia\\UserAgent\\Tests\\": "packages/user-agent/tests",
             "Utopia\\Validator\\Tests\\": "packages/validators/tests",
+            "Utopia\\VCS\\Tests\\": "packages/vcs/tests",
             "Utopia\\WebSocket\\Tests\\": "packages/websocket/tests"
         }
     },
     "minimum-stability": "dev",
     "prefer-stable": true,
-    "repositories": [
-        {
-            "type": "vcs",
-            "url": "https://github.com/utopia-php/vcs"
-        }
-    ],
+    "repositories": [],
     "require": {
         "php": ">=8.5.0",
         "ext-curl": "*",
@@ -143,11 +144,8 @@
         "utopia-php/audit": "^4.0",
         "utopia-php/config": "1.*",
         "utopia-php/database": "^7.3.11",
-        "utopia-php/emails": "0.8.*",
         "utopia-php/migration": "^2.0.0",
-        "utopia-php/platform": "1.0.0-rc25",
         "mustangostang/spyc": "0.6.*",
-        "utopia-php/vcs": "5.5.*",
         "dragonmantank/cron-expression": "3.4.*",
         "chillerlan/php-qrcode": "4.3.*",
         "adhocore/jwt": "1.1.*",
@@ -209,6 +207,7 @@
         "utopia-php/dns": "*",
         "utopia-php/domains": "*",
         "utopia-php/dsn": "*",
+        "utopia-php/emails": "*",
         "utopia-php/http": "*",
         "utopia-php/image": "*",
         "utopia-php/locale": "*",
@@ -216,6 +215,7 @@
         "utopia-php/messaging": "*",
         "utopia-php/mqtt": "*",
         "utopia-php/openapi": "*",
+        "utopia-php/platform": "*",
         "utopia-php/pools": "*",
         "utopia-php/psr7": "*",
         "utopia-php/query": "*",
@@ -230,6 +230,7 @@
         "utopia-php/telemetry": "*",
         "utopia-php/user-agent": "*",
         "utopia-php/validators": "*",
+        "utopia-php/vcs": "*",
         "utopia-php/websocket": "*"
     }
 }
