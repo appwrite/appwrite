@@ -3,11 +3,11 @@
 namespace Appwrite\Platform\Modules\Databases\Http\Databases;
 
 use Appwrite\Databases\ListCache;
+use Appwrite\Databases\Support;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action as AppwriteAction;
 use Utopia\Database\Adapter;
 use Utopia\Database\Adapter\Feature\Relationships as FeatureRelationships;
-use Utopia\Database\Adapter\Feature\Spatial as FeatureSpatial;
 use Utopia\Database\Capability;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -23,10 +23,6 @@ class Action extends AppwriteAction
         return $this->context;
     }
 
-    /**
-     * Pool implements every Feature interface as a proxy, so instanceof is
-     * always true. Capability checks are delegated to the pooled adapter.
-     */
     protected function supportsDefinedAttributes(Adapter $adapter): bool
     {
         return $adapter->supports(Capability::DefinedAttributes);
@@ -34,7 +30,7 @@ class Action extends AppwriteAction
 
     protected function supportsSpatial(Adapter $adapter): bool
     {
-        return $adapter->hasFeature(FeatureSpatial::class);
+        return Support::spatial($adapter);
     }
 
     /**

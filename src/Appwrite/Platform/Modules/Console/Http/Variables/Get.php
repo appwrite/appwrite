@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Console\Http\Variables;
 
+use Appwrite\Databases\Support;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
@@ -9,7 +10,6 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Utopia\Database\Adapter\Feature\Relationships as FeatureRelationships;
-use Utopia\Database\Adapter\Feature\Spatial as FeatureSpatial;
 use Utopia\Database\Capability;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -119,7 +119,7 @@ class Get extends Action
             'supportForAttributes' => $adapter->supports(Capability::DefinedAttributes),
             'supportForRelationships' => $adapter->hasFeature(FeatureRelationships::class),
             'supportForOperators' => $adapter->supports(Capability::Operators),
-            'supportForSpatials' => $adapter->hasFeature(FeatureSpatial::class),
+            'supportForSpatials' => Support::spatial($adapter),
             'supportForAggregations' => $adapter->supports(Capability::Aggregations),
             'supportForJoins' => $adapter->supports(Capability::Joins),
             'supportForSpatialIndexNull' => $adapter->supports(Capability::SpatialIndexNull),
