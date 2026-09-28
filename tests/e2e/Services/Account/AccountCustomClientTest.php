@@ -5242,6 +5242,11 @@ final class AccountCustomClientTest extends Scope
         $this->assertNotEmpty($recoveryCodes['body']['recoveryCodes']);
 
         $totp = \OTPHP\TOTP::create($authenticator['body']['secret']);
+        // The server accepts only the current time step. Leave a five-second
+        // margin for the enrollment request instead of sending an expiring code.
+        if ($totp->expiresIn() <= 5) {
+            $this->getNextTOTP($totp, $totp->now());
+        }
         $enrollmentOtp = $totp->now();
 
         $verification = $this->client->call(Client::METHOD_PUT, '/account/mfa/authenticators/totp', $headers, [

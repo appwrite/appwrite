@@ -38,11 +38,15 @@ class Client implements Adapter
 
     private const float DEFAULT_TIMEOUT = 30.0;
 
+    private const int TEMP_MEMORY = 2 * 1024 * 1024;
+
     private readonly ResponseBuilder $responseBuilder;
 
     private bool $reuseConnections = false;
 
     private bool $followRedirects = false;
+
+    private int $maxHops = Redirect::MAX_HOPS;
 
     private ?CurlHandle $handle = null;
 
@@ -137,10 +141,15 @@ class Client implements Adapter
         return $clone;
     }
 
-    public function withFollowRedirects(bool $enabled = true): static
+    public function withFollowRedirects(bool $enabled = true, int $maxHops = Redirect::MAX_HOPS): static
     {
+        if ($maxHops < 0) {
+            throw new ValueError('Redirect hop limit must be greater than or equal to zero.');
+        }
+
         $clone = clone $this;
         $clone->followRedirects = $enabled;
+        $clone->maxHops = $maxHops;
 
         return $clone;
     }
@@ -311,7 +320,14 @@ class Client implements Adapter
         // Stream the body through a read callback so it is never fully held in
         // memory. cURL pulls it in chunks; we hand it the size when known so the
         // request carries Content-Length, and fall back to chunked otherwise.
-        if ($size !== 0) {
+        if ($size !== null && $size !== 0 && $size <= self::TEMP_MEMORY && \in_array($body->getMetadata('uri'), ['php://temp', 'php://memory'], true)) {
+            // cURL keeps a copy of POSTFIELDS, so 307/308 redirects can resend it
+            $options[\CURLOPT_POSTFIELDS] = (string) $body;
+
+            if (!$request->hasHeader(Header::CONTENT_TYPE)) {
+                $options[\CURLOPT_HTTPHEADER][] = 'Content-Type:';
+            }
+        } elseif ($size !== 0) {
             if ($body->isSeekable()) {
                 $body->rewind();
             }
@@ -342,7 +358,7 @@ class Client implements Adapter
         $merged[\CURLOPT_FOLLOWLOCATION] = $this->followRedirects;
 
         if ($this->followRedirects) {
-            $merged[\CURLOPT_MAXREDIRS] = Redirect::MAX_HOPS;
+            $merged[\CURLOPT_MAXREDIRS] = $this->maxHops;
         }
 
         return $merged;

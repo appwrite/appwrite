@@ -62,7 +62,7 @@ class Create extends IndexCreate
             ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
             ->param('key', null, new Key(), 'Index Key.')
             ->param('type', null, new WhiteList([IndexType::HnswEuclidean->value,IndexType::HnswDot->value, IndexType::HnswCosine->value, IndexType::Object->value, IndexType::Key->value, IndexType::Unique->value]), 'Index type.', enum: new Enum(name: 'VectorsDBIndexType'))
-            ->param('attributes', null, new ArrayList(new Key(true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of attributes to index. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' attributes are allowed, each 32 characters long.')
+            ->param('attributes', null, new ArrayList(new Key(true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of attributes to index. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' attributes are allowed, each 32 characters long.', example: '["embeddings"]')
             ->param('orders', [], new ArrayList(new WhiteList(['ASC', 'DESC'], false, ColumnType::String->value), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of index orders. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' orders are allowed.', true, enum: new Enum(name: 'OrderBy'))
             ->param('lengths', [], new ArrayList(new Nullable(new Integer()), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Length of index. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE, optional: true)
             ->inject('response')

@@ -10,8 +10,13 @@ use Psr\Http\Client\ClientExceptionInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Utopia\Client\Adapter;
+use Utopia\Client\Adapter\Curl\Client as CurlClient;
 use Utopia\Client\Client;
+use Utopia\Client\Exception\ProtocolException;
+use Utopia\Client\Redirect;
+use Utopia\Client\Tests\Server\Http;
 use Utopia\Client\Tls;
+use Utopia\Psr7\Method;
 use Utopia\Psr7\Request;
 use Utopia\Psr7\Response;
 use Utopia\Span\Span;
@@ -75,6 +80,23 @@ final class ClientTest extends TestCase
         $this->assertSame('', $client->sendRequest($request)->getHeaderLine('X-Follow-Redirects'));
         $this->assertSame('on', $configured->sendRequest($request)->getHeaderLine('X-Follow-Redirects'));
         $this->assertSame('off', $client->withFollowRedirects(false)->sendRequest($request)->getHeaderLine('X-Follow-Redirects'));
+    }
+
+    public function testItStopsFollowingRedirectsAtTheConfiguredHopLimit(): void
+    {
+        Http::serve(function (int $port): void {
+            $requestFactory = new Request\Factory();
+            $client = new Client(new CurlClient())->withFollowRedirects(maxHops: 5);
+
+            $response = $client->sendRequest($requestFactory->createRequest(Method::GET, 'http://127.0.0.1:' . $port . '/hops/5'));
+
+            $this->assertSame(200, $response->getStatusCode());
+            $this->assertSame('hopped', (string) $response->getBody());
+
+            $this->expectException(ProtocolException::class);
+
+            $client->sendRequest($requestFactory->createRequest(Method::GET, 'http://127.0.0.1:' . $port . '/hops/6'));
+        });
     }
 
     public function testItRejectsInvalidTimeouts(): void
@@ -318,7 +340,7 @@ final class RecordingAdapter implements Adapter
         return $clone;
     }
 
-    public function withFollowRedirects(bool $enabled = true): static
+    public function withFollowRedirects(bool $enabled = true, int $maxHops = Redirect::MAX_HOPS): static
     {
         $clone = clone $this;
         $clone->followRedirects = $enabled;
