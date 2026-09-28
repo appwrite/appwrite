@@ -1,0 +1,47 @@
+{
+    "name": "utopia-php/usage",
+    "description": "Light and Fast Usage library",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Appwrite",
+            "email": "team@appwrite.io"
+        }
+    ],
+    "scripts": {
+        "test": "phpunit --testsuite unit",
+        "test:e2e": "phpunit --testsuite e2e",
+        "bench": "phpunit --testsuite bench"
+    },
+    "minimum-stability": "stable",
+    "require": {
+        "php": ">=8.4",
+        "psr/http-client": "^1.0",
+        "utopia-php/client": "^0.5",
+        "utopia-php/database": "^7.0.0",
+        "utopia-php/query": "0.6.*"
+    },
+    "require-dev": {
+        "utopia-php/cache": "^4.0"
+    },
+    "suggest": {
+        "ext-curl": "Required by the default cURL transport for the ClickHouse adapter. Not needed if you inject a non-cURL utopia-php/client into the adapter."
+    },
+    "autoload": {
+        "psr-4": {
+            "Utopia\\Usage\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Utopia\\Usage\\Tests\\": "tests/"
+        }
+    },
+    "config": {
+        "allow-plugins": {
+            "php-http/discovery": false,
+            "tbachert/spi": false
+        }
+    }
+}
