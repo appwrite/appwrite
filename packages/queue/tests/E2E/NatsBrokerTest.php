@@ -619,10 +619,11 @@ final class NatsBrokerTest extends TestCase
         $dying = new Nats(Connection::connect($url), ackWait: 1.0, maxDeliver: 2);
         $dying->publish($queue, ['poison' => true]);
         $this->assertCount(1, $dying->receive($queue, 2));
-        sleep(2);
-        $this->assertCount(1, $dying->receive($queue, 2)); // the last delivery, never acked
+        $this->assertCount(1, $dying->receive($queue, 2)); // redelivered after ackWait: the last, never acked
         $dying->close();
-        sleep(2); // past ackWait with no broker subscribed to anything
+        // Not a wait for an event: the gap itself is the scenario. The last delivery's
+        // ackWait has to lapse while nothing is subscribed, or the advisory is caught.
+        sleep(2);
 
         $fresh = new Nats(Connection::connect($url), ackWait: 1.0, maxDeliver: 2);
         $this->assertSame([], $fresh->receive($queue, 2), 'an exhausted message must not reach a handler');
@@ -1588,10 +1589,9 @@ final class NatsBrokerTest extends TestCase
         $owner = new Nats(Connection::connect($url), ackWait: 1.0, maxDeliver: 2);
         $owner->publish($queue, ['poison' => true]);
         $this->assertCount(1, $owner->receive($queue, 2));
-        sleep(2);
         $this->assertCount(1, $owner->receive($queue, 2));
         $owner->close();
-        sleep(2);
+        sleep(2); // the last delivery's ackWait lapses with nothing subscribed
 
         $adopter = new Nats(Connection::connect($url), ackWait: 1.0, maxDeliver: 9, provisioning: Provisioning::Require);
         $this->assertSame([], $adopter->receive($queue, 2), 'an exhausted message must not reach a handler');
@@ -1617,7 +1617,7 @@ final class NatsBrokerTest extends TestCase
         $stream = 'Q_' . strtoupper($queue->name);
         $legacy = $js->getConsumer($stream, 'worker')->info(true)->config->toArray();
         // What a pre-spare broker provisioned: no extra delivery, and no marker for one.
-        $legacy['max_deliver'] = 2;
+        $legacy['max_deliver'] = $maxDeliver = 2;
         $this->assertIsArray($legacy['metadata']);
         unset($legacy['metadata']['utopia_queue_spare_delivery']);
         $js->updateConsumer($stream, ConsumerConfig::fromArray($legacy));
@@ -1633,11 +1633,32 @@ final class NatsBrokerTest extends TestCase
         );
         $adopter->receive($queue, 1);
 
-        $this->assertCount(1, $reported);
-        $this->assertStringContainsString('allows no delivery past max_deliver 2', $reported[0]);
-        $this->assertSame(2, $js->getConsumer($stream, 'worker')->info(true)->config->maxDeliver, 'and leaves the consumer as it found it');
+        $this->assertCount(1, $reported, 'the missing spare delivery is reported');
+        $this->assertSame($maxDeliver, $js->getConsumer($stream, 'worker')->info(true)->config->maxDeliver, 'and the consumer left as it was found');
 
         $adopter->close();
+    }
+
+    public function testASpareDeliveryRaisedByAnotherBrokerIsNotParkedEarly(): void
+    {
+        // The work consumer is shared. A broker that cached a spare delivery of 3 must
+        // not park the 3rd delivery once a broker with a larger budget has reprovisioned
+        // the consumer to allow more.
+        $url = getenv('NATS_URL') ?: 'nats://127.0.0.1:14225';
+        $queue = new Queue('t_' . substr(md5(uniqid('', true)), 0, 8));
+
+        $small = new Nats(Connection::connect($url), ackWait: 1.0, maxDeliver: 2);
+        $small->publish($queue, ['task' => 'a']);
+        $this->assertCount(1, $small->receive($queue, 2));
+        $this->assertCount(1, $small->receive($queue, 2));
+
+        $large = new Nats(Connection::connect($url), ackWait: 1.0, maxDeliver: 5);
+        $this->assertCount(1, $large->receive($queue, 2), 'the 3rd delivery, within the new budget');
+
+        $this->assertCount(1, $small->receive($queue, 2), 'the 4th delivery reaches a handler, not the dead stream');
+
+        $small->close();
+        $large->close();
     }
 
     // JetStream updates a consumer's num_pending asynchronously after the publish ack.

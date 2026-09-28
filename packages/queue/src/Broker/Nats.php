@@ -743,9 +743,15 @@ class Nats implements Synchronous, Consumer, Bounded
             // died holding each one. Dead-lettered on this delivery rather than by the
             // advisory, which nobody receives while no broker is subscribed.
             if ($spare !== null && $jsMessage->metadata()->numDelivered >= $spare) {
-                $this->park($queue, $jsMessage, 'max deliveries exceeded');
+                // The consumer is shared: a broker with a larger maxDeliver may have
+                // reprovisioned it since this one cached its spare. Parking on a stale
+                // threshold would take attempts the server still allows, so re-read it.
+                $spare = $this->spareDelivery[$key] = $this->spareOf($this->consumers[$key]->info(true)->config);
+                if ($spare !== null && $jsMessage->metadata()->numDelivered >= $spare) {
+                    $this->park($queue, $jsMessage, 'max deliveries exceeded');
 
-                continue;
+                    continue;
+                }
             }
 
             try {
@@ -1383,13 +1389,11 @@ class Nats implements Synchronous, Consumer, Bounded
         // provisioned one, which it marks in the consumer's metadata. A consumer from
         // before the spare was introduced allows none, and nothing here may change that,
         // so it is reported instead -- a message it exhausts while no broker is
-        // subscribed stays on the work stream until its owner reprovisions. A limit
-        // below 1 is unlimited: such a message never exhausts.
+        // subscribed stays on the work stream until its owner reprovisions.
         $config = $this->consumers[$key]->info()->config;
+        $this->spareDelivery[$key] = $this->spareOf($config);
         $allowed = $config->maxDeliver ?? -1;
-        $marked = isset($config->metadata[self::METADATA_SPARE_DELIVERY]);
-        $this->spareDelivery[$key] = $marked && $allowed >= 1 ? $allowed : null;
-        if (!$marked && $allowed >= 1) {
+        if ($this->spareDelivery[$key] === null && $allowed >= 1) {
             $this->report(new \RuntimeException('NATS consumer "' . self::CONSUMER_WORK . "\" on stream \"{$this->workStream($queue)}\" allows no delivery past max_deliver {$allowed}, so a message exhausted while no broker is subscribed is left on the work stream; reprovision it from the queue's owner."));
         }
 
@@ -1402,6 +1406,18 @@ class Nats implements Synchronous, Consumer, Bounded
         );
 
         $this->provisioned[$key] = true;
+    }
+
+    /**
+     * The delivery a work consumer's configuration spares for dead-lettering: its last,
+     * when the metadata marks one past maxDeliver; null when it spares none. A limit
+     * below 1 is unlimited, so nothing ever exhausts it.
+     */
+    private function spareOf(ConsumerConfig $config): ?int
+    {
+        $allowed = $config->maxDeliver ?? -1;
+
+        return isset($config->metadata[self::METADATA_SPARE_DELIVERY]) && $allowed >= 1 ? $allowed : null;
     }
 
     /** Resolve an existing durable consumer, refusing rather than creating it. */
