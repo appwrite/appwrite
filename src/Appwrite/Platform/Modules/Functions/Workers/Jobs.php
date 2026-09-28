@@ -183,7 +183,7 @@ class Jobs extends Action
 
             $deployment = match ($callback) {
                 CallbackEvent::Log => $this->onLog($dbForProject, $dbForPlatform, $project, $deployment, JobLog::fromArray($event->data), $vcsFactory, $platform),
-                CallbackEvent::Artifact => $this->onArtifact($dbForProject, $dbForPlatform, $project, $deployment, $artifact, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
+                CallbackEvent::Artifact => $this->onArtifact($dbForProject, $dbForPlatform, $project, $deployment, $artifact, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $deviceForFunctions, $deviceForSites, $vcsFactory, $cache, $platform, $plan, $bus),
                 CallbackEvent::Exit => $this->onExit($dbForProject, $dbForPlatform, $project, $deployment, JobExit::fromArray($event->data), $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
                 CallbackEvent::Complete => $this->onComplete($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $deviceForFunctions, $deviceForSites, $vcsFactory, $cache, $platform, $plan, $bus),
                 default => $this->onCallback($event->event, $dbForProject, $dbForPlatform, $project, $deployment, $event->data, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
@@ -346,6 +346,8 @@ class Jobs extends Action
         UsagePublisher $publisherForUsage,
         ScreenshotPublisher $publisherForScreenshots,
         Device $deviceForBuilds,
+        Device $deviceForFunctions,
+        Device $deviceForSites,
         VcsFactory $vcsFactory,
         Cache $cache,
         array $platform,
@@ -411,10 +413,16 @@ class Jobs extends Action
             return $deployment;
         }
 
-        return $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
+        $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
             'sourceSize' => $size,
             'totalSize' => $size + (int) $deployment->getAttribute('buildSize', 0),
         ]));
+
+        if ($cache->load('jobs-complete-' . $deployment->getId(), self::DEDUPE_TTL) !== false) {
+            $deployment = $this->keepStagedSource($dbForProject, $project, $deployment, $deviceForBuilds, $deviceForFunctions, $deviceForSites);
+        }
+
+        return $deployment;
     }
 
     /**
@@ -503,55 +511,66 @@ class Jobs extends Action
     ): Document {
         $cache->save('jobs-complete-' . $deployment->getId(), true);
 
-        // On the local device a remote-source build leaves its source on the
-        // builds volume (see Deployments::payload()). The build's own code can
-        // write that volume too, so only a regular file within the deployment
-        // size limit is kept, reached without any symlink, whose opened inode
-        // is the one checked. Losing it costs the download, never the build.
-        $staged = Deployments::stagedSourcePath($deviceForBuilds, $deployment->getId());
-        if ($deviceForBuilds->getType() === DeviceType::Local && (\is_link($staged) || $deviceForBuilds->exists($staged))) {
-            $file = false;
-            try {
-                $stat = \lstat($staged);
-                $opened = false;
-                $limit = isset($plan['deploymentSize'])
-                    ? (int) $plan['deploymentSize'] * 1000 * 1000
-                    : (int) System::getEnv('_APP_COMPUTE_SIZE_LIMIT', '30000000');
-                if ($deployment->getAttribute('sourcePath', '') === ''
-                    && $stat !== false
-                    && ($stat['mode'] & 0o170000) === 0o100000
-                    && $stat['size'] <= $limit
-                    && \realpath($staged) === $staged
-                    && ($file = \fopen($staged, 'rb')) !== false
-                ) {
-                    $opened = \fstat($file);
-                }
+        $deployment = $this->keepStagedSource($dbForProject, $project, $deployment, $deviceForBuilds, $deviceForFunctions, $deviceForSites);
 
-                if ($file !== false && $opened !== false && $opened['ino'] === $stat['ino'] && $opened['dev'] === $stat['dev']) {
-                    $resourceType = $deployment->getAttribute('resourceType', 'functions');
-                    $sourcePath = Deployments::sourcePath($project->getId(), $resourceType, $deployment->getId());
-                    ($resourceType === 'sites' ? $deviceForSites : $deviceForFunctions)->write($sourcePath, Stream::fromResource($file), 'application/gzip');
-                    $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
-                        'sourcePath' => $sourcePath,
-                    ]));
-                } else {
-                    Span::add('source.error', 'Staged source refused');
-                }
-            } catch (\Throwable $error) {
-                Span::add('source.error', $error->getMessage());
-            } finally {
-                if ($file !== false) {
-                    \fclose($file);
-                }
-                // Unlinking follows symlinked parent directories, which the
-                // build could plant, so clean up only inside the builds tree.
-                if (\realpath(\dirname($staged)) === \dirname($staged)) {
-                    $deviceForBuilds->delete($staged);
-                }
+        return $this->ready($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus);
+    }
+
+    /**
+     * On the local device a remote-source build leaves its source on the
+     * builds volume (see Deployments::payload()). It moves beside manual
+     * uploads' once the build has completed and the sidecar's sourceSize is
+     * recorded, whichever callback lands second. The build's own code can
+     * write that volume too, so only a regular file of that size is kept,
+     * reached without any symlink, whose opened inode is the one checked.
+     * Losing it costs the download, never the build.
+     */
+    private function keepStagedSource(Database $dbForProject, Document $project, Document $deployment, Device $deviceForBuilds, Device $deviceForFunctions, Device $deviceForSites): Document
+    {
+        $staged = Deployments::stagedSourcePath($deviceForBuilds, $deployment->getId());
+        $size = (int) $deployment->getAttribute('sourceSize', 0);
+        if ($deviceForBuilds->getType() !== DeviceType::Local || $size <= 0 || !(\is_link($staged) || $deviceForBuilds->exists($staged))) {
+            return $deployment;
+        }
+
+        $file = false;
+        try {
+            $stat = \lstat($staged);
+            $opened = false;
+            if ($deployment->getAttribute('sourcePath', '') === ''
+                && $stat !== false
+                && ($stat['mode'] & 0o170000) === 0o100000
+                && $stat['size'] === $size
+                && \realpath($staged) === $staged
+                && ($file = \fopen($staged, 'rb')) !== false
+            ) {
+                $opened = \fstat($file);
+            }
+
+            if ($file !== false && $opened !== false && $opened['ino'] === $stat['ino'] && $opened['dev'] === $stat['dev']) {
+                $resourceType = $deployment->getAttribute('resourceType', 'functions');
+                $sourcePath = Deployments::sourcePath($project->getId(), $resourceType, $deployment->getId());
+                ($resourceType === 'sites' ? $deviceForSites : $deviceForFunctions)->write($sourcePath, Stream::fromResource($file), 'application/gzip');
+                $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
+                    'sourcePath' => $sourcePath,
+                ]));
+            } else {
+                Span::add('source.error', 'Staged source refused');
+            }
+        } catch (\Throwable $error) {
+            Span::add('source.error', $error->getMessage());
+        } finally {
+            if ($file !== false) {
+                \fclose($file);
+            }
+            // Unlinking follows symlinked parent directories, which the build
+            // could plant, so clean up only inside the builds tree.
+            if (\realpath(\dirname($staged)) === \dirname($staged)) {
+                $deviceForBuilds->delete($staged);
             }
         }
 
-        return $this->ready($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus);
+        return $deployment;
     }
 
     /**
