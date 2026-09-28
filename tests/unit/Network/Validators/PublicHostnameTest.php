@@ -7,6 +7,8 @@ namespace Tests\Unit\Network\Validators;
 use Appwrite\Network\Validator\PublicHostname;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Swoole\Coroutine;
+use Swoole\Runtime;
 
 final class PublicHostnameTest extends TestCase
 {
@@ -154,5 +156,52 @@ final class PublicHostnameTest extends TestCase
         $this->assertFalse(PublicHostname::isPublicIp('100.127.255.255'));
         $this->assertTrue(PublicHostname::isPublicIp('100.128.0.0'));
         $this->assertTrue(PublicHostname::isPublicIp('100.63.255.255'));
+    }
+
+    public function testResolvesHostnameInsideCoroutine(): void
+    {
+        $validator = new PublicHostname();
+        $valid = null;
+
+        $this->inHookedCoroutine(function () use ($validator, &$valid): void {
+            $valid = $validator->isValid('localhost');
+        });
+
+        $this->assertFalse($valid);
+        $this->assertSame('Hostname localhost resolves to private or reserved address 127.0.0.1.', $validator->getDescription());
+    }
+
+    public function testResolvingInsideCoroutineRetainsNoMemory(): void
+    {
+        $validator = new PublicHostname();
+        $growth = null;
+
+        $this->inHookedCoroutine(function () use ($validator, &$growth): void {
+            $validator->isValid('localhost');
+            \gc_collect_cycles();
+            $before = \memory_get_usage();
+
+            for ($i = 0; $i < 200; $i++) {
+                $validator->isValid('localhost');
+            }
+
+            \gc_collect_cycles();
+            $growth = \memory_get_usage() - $before;
+        });
+
+        // The hooked dns_get_record() kept ~140 KiB per call, ~27 MiB over this loop.
+        $this->assertLessThan(1024 * 1024, $growth);
+    }
+
+    private function inHookedCoroutine(callable $callback): void
+    {
+        $flags = Runtime::getHookFlags();
+
+        try {
+            Coroutine::set(['hook_flags' => SWOOLE_HOOK_ALL]);
+            Coroutine\run($callback);
+        } finally {
+            Runtime::setHookFlags($flags);
+        }
     }
 }
