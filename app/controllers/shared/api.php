@@ -1302,7 +1302,8 @@ Http::shutdown()
         foreach (\array_keys($methods) as $method) {
             $row = $byMethod[$method] ?? null;
             $status = \is_array($row) ? ($row['status'] ?? null) : null;
-            if ($status === ONBOARDING_STATUS_COMPLETED || $status === ONBOARDING_STATUS_SKIPPED) {
+            // Skipped stages still upgrade to completed once the user actually performs the action.
+            if ($status === ONBOARDING_STATUS_COMPLETED) {
                 continue;
             }
             $byMethod[$method] = [
