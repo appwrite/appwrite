@@ -166,7 +166,7 @@ final class JoinsTest extends TestCase
     {
         $collections = [
             self::collection('customers', '1', [Permission::read(Role::any())], documentSecurity: true),
-            self::collection('shared', '2', [Permission::read(Role::any())], documentSecurity: true),
+            self::collection('shared', '2', [Permission::read(Role::any())], documentSecurity: false),
             self::collection('owned', '3', [Permission::create(Role::any())], documentSecurity: true),
             self::collection('closed', '4', [Permission::create(Role::any())], documentSecurity: false),
             self::collection('disabled', '5', [Permission::read(Role::any())], documentSecurity: true, enabled: false),
