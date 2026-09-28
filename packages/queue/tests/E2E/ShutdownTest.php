@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Utopia\Queue\Tests;
+namespace Utopia\Queue\Tests\E2E;
 
 use PHPUnit\Framework\TestCase;
 use Swoole\Coroutine;
