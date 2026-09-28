@@ -422,7 +422,7 @@ export const enCatalog = {
           'Subscribe to live events and react to changes as they happen.',
         mcpTitle: 'MCP',
         mcpDescription:
-          'Connect AI agents to your Appwrite project, APIs, and docs through MCP servers.', // pragma: allowlist secret
+          'Connect AI agents to your Appwrite project, APIs, and docs through one remote MCP server.', // pragma: allowlist secret
         terraformTitle: 'Terraform',
         terraformDescription:
           'Manage Appwrite infrastructure as code with the official provider.', // pragma: allowlist secret

@@ -144,6 +144,9 @@ The `init`, `pull`, `push`, and `run` commands support [multi-file project confi
 * `--id [id...]`      
 * Flag to pass a list of ids for a given action
 ---
+* `--config-file <path>`
+* Project config file to use instead of the nearest `appwrite.config.json`
+---
 * `--report`          
 * Enable reporting in case of CLI errors
 ---
@@ -178,6 +181,13 @@ By default, when pushing or pulling resources, Appwrite CLI would ask you to sel
 
 ```sh
 appwrite pull functions --all
+```
+
+# Config file {% #config-file %}
+By default, the CLI reads the nearest `appwrite.config.json`. Use the `--config-file` flag, or set the `APPWRITE_CONFIG_FILE` environment variable, to read a different project config file. This lets you keep one config per environment in the same repository. [Learn more about multiple environments](/docs/tooling/command-line/installation#multiple-environments).
+
+```sh
+appwrite push --config-file appwrite.config.prod.json
 ```
 
 # Error reporting {% #report %}

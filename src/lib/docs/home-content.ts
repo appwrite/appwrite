@@ -121,6 +121,12 @@ export const DOCS_HOME_IDE_AI_TOOLS: DocsHomeToolCard[] = [
     badges: [OFFICIAL_TOOL_BADGE],
   },
   {
+    title: 'ChatGPT',
+    href: '/docs/tooling/ai/agents/chatgpt',
+    iconSrc: '/icons/chatgpt.svg',
+    badges: [OFFICIAL_TOOL_BADGE],
+  },
+  {
     title: 'Codex',
     href: '/docs/tooling/ai/agents/codex',
     iconSrc: '/icons/codex.svg',

@@ -1,10 +1,13 @@
 /**
  * Acquisition-source tracking for the marketing site shell, ported from
- * https://github.com/appwrite/website. `/` is a home-vs-console hop and is
- * not a marketing page, so it never POSTs.
+ * https://github.com/appwrite/website. The marketing shell only mounts on `/`
+ * when it renders the guest homepage, never for the console hop.
  */
 
-import { isConsoleRedirectHopPath } from '@/lib/root-guest-redirect'
+import {
+  isConsoleRedirectHopPath,
+  isRootRedirectPath,
+} from '@/lib/root-guest-redirect'
 
 const STORAGE_KEYS = {
   utmReferral: 'utmReferral',
@@ -221,9 +224,10 @@ function createSource(source: AcquisitionSource): void {
 }
 
 /**
- * Capture landing-page source from the marketing site shell. `/` is a
- * home-vs-console hop and must not POST. Cloud only stores a row when at
- * least one of `ref`, an external referrer, or a UTM param is present.
+ * Capture landing-page source from the marketing site shell. `/` only counts
+ * when it renders the guest homepage; as a console hop it must not POST.
+ * Cloud only stores a row when at least one of `ref`, an external referrer,
+ * or a UTM param is present.
  */
 export function saveReferrerAndUtmSource(
   url: URL = typeof window === 'undefined'
@@ -237,7 +241,9 @@ export function saveReferrerAndUtmSource(
     : window.location.origin,
 ): void {
   if (typeof window === 'undefined') return
-  if (isConsoleRedirectHopPath(url.pathname)) return
+  if (isConsoleRedirectHopPath(url.pathname) && !isRootRedirectPath(url.pathname)) {
+    return
+  }
 
   const source = parseAcquisitionSource(url, documentReferrer, currentOrigin)
   const storage = getSessionStorage()

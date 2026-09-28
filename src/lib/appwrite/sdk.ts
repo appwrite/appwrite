@@ -16,6 +16,7 @@ import {
   Client,
   Console,
   Functions,
+  Growth,
   ImageFormat,
   Locale,
   Manager,
@@ -667,6 +668,24 @@ export const sdk = {
       >,
       'forConsoleIn',
     ) as ReturnType<typeof createConsoleSdkRaw>
+  },
+
+  /**
+   * Growth service on a client that never sends cookies. Cloud serves
+   * `/growth/*` with `origin: *`, where browsers reject credentialed requests,
+   * so the console identity goes in `jwt` instead.
+   */
+  forGrowth(endpoint: string, jwt: string | null): Growth {
+    const growthClient = new Client()
+    growthClient
+      .setEndpoint(endpoint)
+      .setProject('console')
+      .setLocale(getActiveLanguage())
+      .setCredentials('omit')
+    if (jwt) {
+      growthClient.setJWT(jwt)
+    }
+    return new Growth(growthClient)
   },
 
   // Project SDK - for managing project-specific resources.

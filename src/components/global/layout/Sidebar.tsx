@@ -63,6 +63,7 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import { ProjectSelector } from '@/components/pages/projects/$projectId/shared/ProjectSelector'
+import { EnvironmentSwitcher } from '@/components/pages/projects/$projectId/shared/EnvironmentSwitcher'
 import {
   Tooltip,
   TooltipContent,
@@ -326,6 +327,7 @@ export function ConsoleSidebar({
   const { collapsed, setCollapsed } = useSidebarCollapsed(accountWithPrefs)
   const navRef = useRef<HTMLElement>(null)
   const { isDebugModeOpen } = useDebugMode()
+  const { showProjectEnvironments } = useDebugOverrides()
   const { features, isCloud } = useConsoleProfile()
   const { project } = useProject(projectId)
   const { access, isLoading: scopesLoading } = useOrganizationScopes(
@@ -629,6 +631,10 @@ export function ConsoleSidebar({
               <OnboardingCard projectId={projectId} collapsed={collapsed} />
             )}
 
+            {showProjectEnvironments && (
+              <EnvironmentSwitcher projectId={projectId} collapsed={collapsed} />
+            )}
+
             {/* Overview */}
             {showOverview && (
               <div className="space-y-0.5">{renderNavItem(overviewItem)}</div>
@@ -714,6 +720,10 @@ export function ConsoleSidebar({
           {/* Onboarding Card - only owners and developers */}
           {showGetStarted && (
             <OnboardingCard projectId={projectId} collapsed={false} />
+          )}
+
+          {showProjectEnvironments && (
+            <EnvironmentSwitcher projectId={projectId} isMobile />
           )}
 
           {/* Overview */}

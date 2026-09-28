@@ -3038,4 +3038,18 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Resume live updates': 'ライブ更新を再開',
   'Updating…': '更新中…',
   Paused: '一時停止',
+  'AI discovery': 'AI ディスカバリー',
+  'Agent crawler breakdown is not available on this dataset yet':
+    'このデータセットではエージェントクローラーの内訳はまだ利用できません',
+  'This view does not include mock ChatGPT, Claude, or Perplexity counts. Measure coding-agent fetches on llms.txt and Markdown docs in Plausible instead of chatgpt.com referrers.':
+    'このビューに ChatGPT、Claude、Perplexity のモック件数は含まれません。chatgpt.com リファラではなく、llms.txt と Markdown ドキュメントへのコーディングエージェント取得を Plausible で計測してください。',
+
+  // Project environment switcher
+  Environments: '環境',
+  Staging: 'ステージング',
+  Development: '開発',
+  'Switch environment': '環境を切り替え',
+  'Environment switched': '環境を切り替えました',
+  'Create environment': '環境を作成',
+  'Custom environments are coming soon': 'カスタム環境は近日公開予定です',
 }

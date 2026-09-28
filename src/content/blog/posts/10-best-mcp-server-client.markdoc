@@ -14,7 +14,7 @@ faqs:
   - question: "What is the difference between an MCP server and an MCP client?"
     answer: "An MCP server exposes capabilities (tools, resources, data sources) for AI to consume, while an MCP client is the interface the user interacts with, such as an IDE or chat app. The client connects to one or more servers and routes the AI's tool calls to them. You almost always pick the client first, then attach the servers you need."
   - question: "How do I use the Appwrite MCP server?"
-    answer: "The [Appwrite MCP server](/docs/tooling/mcp/api) exposes your Appwrite project to AI clients so they can create users, manage databases, upload files, and trigger Functions through prompts. You install it in your MCP-compatible client (Cursor, Claude Desktop, VS Code) and authenticate with an API key scoped to the actions you want the AI to perform."
+    answer: "The [Appwrite MCP server](/docs/tooling/ai/mcp-servers) exposes your Appwrite project to AI clients so they can create users, manage databases, upload files, and trigger Functions through prompts. You install it in your MCP-compatible client (Cursor, Claude Desktop, VS Code) and authenticate with an API key scoped to the actions you want the AI to perform."
   - question: "Are MCP servers safe to use with production projects?"
     answer: "MCP servers are as safe as the credentials you give them. Use API keys with the minimum scopes needed, prefer staging or dev projects for exploratory work, and audit what tools each server exposes before connecting it. For Appwrite, scope keys to specific products (databases, functions, etc.) instead of using a full-access key."
   - question: "Can I build my own MCP server?"
@@ -56,7 +56,7 @@ So instead of jumping between dashboards, your MCP client can pull logs from Sen
 
 Appwrite’s MCP server lets your tools talk directly to your Appwrite project. It can create users, manage databases, handle storage, and more, all through simple prompts. It’s a clean way to connect your AI environment to your backend without extra setup.
 
-Link: [Appwrite MCP server](/docs/tooling/mcp/api)
+Link: [Appwrite MCP server](/docs/tooling/ai/mcp-servers)
 
 ## 2. GitHub MCP server
 
@@ -172,7 +172,7 @@ Link: [Goose](https://github.com/block/goose)
 
 The MCP ecosystem is becoming an important part of how developers connect tools, data, and AI systems. Servers expose useful capabilities, and clients make those capabilities accessible within the environments developers already use.
 
-Appwrite has added two servers that fit naturally into this ecosystem. [MCP server for Appwrite **API**](/docs/tooling/mcp/api) lets AI tools interact with Appwrite projects to create users, manage databases, and handle resources through simple prompts. The [MCP server for Appwrite docs](/docs/tooling/mcp/docs) complements it by allowing clients to access Appwrite’s documentation contextually, so information and references are always within reach.
+Appwrite has an official remote MCP server that fits this ecosystem. The [Appwrite MCP server](/docs/tooling/ai/mcp-servers) at `https://mcp.appwrite.io` lets AI tools interact with Appwrite projects (create users, manage databases, handle resources) and search current docs through the same server. Do not add separate `appwrite-api` and `appwrite-docs` servers.
 
 # More resources
 
