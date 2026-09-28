@@ -16,8 +16,6 @@ use Utopia\Database\Validator\Authorization;
  */
 final readonly class RelationshipValues
 {
-    private const string UNIQUE_ID = 'unique()';
-
     public function __construct(
         private Database $dbForProject,
         private Document $database,
@@ -44,7 +42,7 @@ final readonly class RelationshipValues
             foreach ($relations as $index => $relation) {
                 $isDocument = \is_array($relation) && !\array_is_list($relation);
 
-                if ($isDocument && ($relation['$id'] ?? self::UNIQUE_ID) === self::UNIQUE_ID) {
+                if ($isDocument && ($relation['$id'] ?? CustomId::UNIQUE) === CustomId::UNIQUE) {
                     $relation['$id'] = ID::unique();
                 }
 

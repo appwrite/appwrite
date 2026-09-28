@@ -14,8 +14,6 @@ use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
 abstract class Action extends DatabasesAction
 {
-    protected const string UNIQUE_ID = 'unique()';
-
     /**
      * @var string The current context (either 'row' or 'document')
      */

@@ -309,7 +309,7 @@ class Create extends Action
             }
 
             // Assign a unique ID if needed, otherwise use the provided ID.
-            $document['$id'] = $sourceId === self::UNIQUE_ID ? ID::unique() : $sourceId;
+            $document['$id'] = $sourceId === CustomId::UNIQUE ? ID::unique() : $sourceId;
             $document = $relationshipValues->prepare($document, $collection);
             $document = $this->removeReadonlyAttributes($document, $isAPIKey || $isPrivilegedUser);
             $this->validateTimestamps($document);
