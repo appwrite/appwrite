@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "2a2b74bd30431e23ced0d9f5896de625",
+    "content-hash": "a6acdb795dba272959592aff3b03663b",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2849,12 +2849,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/abuse.git",
-                "reference": "521ce1511248ebe52ca0efff2407ccb5c00db258"
+                "reference": "cf0ed5d129b1b32db360a63c360041bde27f4b05"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/521ce1511248ebe52ca0efff2407ccb5c00db258",
-                "reference": "521ce1511248ebe52ca0efff2407ccb5c00db258",
+                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/cf0ed5d129b1b32db360a63c360041bde27f4b05",
+                "reference": "cf0ed5d129b1b32db360a63c360041bde27f4b05",
                 "shasum": ""
             },
             "require": {
@@ -2863,9 +2863,9 @@
                 "ext-pdo": "*",
                 "ext-redis": "*",
                 "php": ">=8.5",
-                "utopia-php/database": "8.*",
+                "utopia-php/database": "^8.0",
                 "utopia-php/pools": "2.*",
-                "utopia-php/query": "0.6.*"
+                "utopia-php/query": "^0.6"
             },
             "require-dev": {
                 "laravel/pint": "1.*",
@@ -2901,7 +2901,7 @@
                 "issues": "https://github.com/utopia-php/abuse/issues",
                 "source": "https://github.com/utopia-php/abuse/tree/feat-query-lib"
             },
-            "time": "2026-09-25T01:52:33+00:00"
+            "time": "2026-09-25T12:09:52+00:00"
         },
         {
             "name": "utopia-php/async",
@@ -2971,20 +2971,24 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/audit.git",
-                "reference": "36a1e7843d373f09365e69c4562fa520a2c90fd4"
+                "reference": "f8422f9cbf72449fba42ee2f713637d13686ef69"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/audit/zipball/36a1e7843d373f09365e69c4562fa520a2c90fd4",
-                "reference": "36a1e7843d373f09365e69c4562fa520a2c90fd4",
+                "url": "https://api.github.com/repos/utopia-php/audit/zipball/f8422f9cbf72449fba42ee2f713637d13686ef69",
+                "reference": "f8422f9cbf72449fba42ee2f713637d13686ef69",
                 "shasum": ""
             },
             "require": {
                 "php": ">=8.5",
-                "utopia-php/database": "dev-feat-query-lib as 7.0.0",
+                "utopia-php/database": "dev-feat-query-lib",
                 "utopia-php/fetch": "^1.1",
                 "utopia-php/query": "0.6.*",
                 "utopia-php/validators": "^1.0"
+            },
+            "require-dev": {
+                "ext-pdo_mysql": "*",
+                "ext-swoole": "*"
             },
             "type": "library",
             "autoload": {
@@ -3020,7 +3024,7 @@
                 "source": "https://github.com/utopia-php/audit/tree/feat-query-lib",
                 "issues": "https://github.com/utopia-php/audit/issues"
             },
-            "time": "2026-09-10T15:17:55+00:00"
+            "time": "2026-09-28T09:42:34+00:00"
         },
         {
             "name": "utopia-php/auth",
@@ -3333,12 +3337,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "8b716e3c1c21cf0a216b074ad670c30e21556cba"
+                "reference": "30f25fd13bff1f379a96f8265cfab347c00b4fdc"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/8b716e3c1c21cf0a216b074ad670c30e21556cba",
-                "reference": "8b716e3c1c21cf0a216b074ad670c30e21556cba",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/30f25fd13bff1f379a96f8265cfab347c00b4fdc",
+                "reference": "30f25fd13bff1f379a96f8265cfab347c00b4fdc",
                 "shasum": ""
             },
             "require": {
@@ -3347,21 +3351,21 @@
                 "ext-pdo": "*",
                 "ext-redis": "*",
                 "php": ">=8.5",
-                "utopia-php/async": "0.1.*",
-                "utopia-php/cache": "4.* || 5.*",
-                "utopia-php/console": "0.1.* || 0.2.*",
+                "utopia-php/async": "^0.1",
+                "utopia-php/cache": "^4.0 || ^5.0",
+                "utopia-php/console": "^0.1 || ^0.2",
                 "utopia-php/mongo": "1.*",
                 "utopia-php/pools": "2.*",
-                "utopia-php/query": "0.6.*",
-                "utopia-php/validators": "1.*"
+                "utopia-php/query": "^0.6",
+                "utopia-php/validators": "^1.0"
             },
             "require-dev": {
-                "brianium/paratest": "7.20.*",
+                "brianium/paratest": "^7.20",
                 "fakerphp/faker": "1.23.*",
                 "laravel/pint": "*",
-                "phpstan/phpstan": "2.1.*",
-                "phpstan/phpstan-phpunit": "2.0.*",
-                "phpunit/phpunit": "12.5.*",
+                "phpstan/phpstan": "^2.1",
+                "phpstan/phpstan-phpunit": "^2.0",
+                "phpunit/phpunit": "^12.5",
                 "rregeer/phpunit-coverage-check": "0.3.*",
                 "swoole/ide-helper": "5.1.3",
                 "utopia-php/cli": "^0.24.4"
@@ -3400,7 +3404,7 @@
                 "issues": "https://github.com/utopia-php/database/issues",
                 "source": "https://github.com/utopia-php/database/tree/feat-query-lib"
             },
-            "time": "2026-09-24T05:48:44+00:00"
+            "time": "2026-09-28T08:28:43+00:00"
         },
         {
             "name": "utopia-php/di",
@@ -3779,21 +3783,21 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "3863a14c3d4dc207eaecfd4f14e6ece0e03bd55f"
+                "reference": "edf623008504edde1634bf6a5ca79c2abf87dc48"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/3863a14c3d4dc207eaecfd4f14e6ece0e03bd55f",
-                "reference": "3863a14c3d4dc207eaecfd4f14e6ece0e03bd55f",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/edf623008504edde1634bf6a5ca79c2abf87dc48",
+                "reference": "edf623008504edde1634bf6a5ca79c2abf87dc48",
                 "shasum": ""
             },
             "require": {
-                "appwrite/appwrite": "27.*",
+                "appwrite/appwrite": "^27.0",
                 "ext-curl": "*",
                 "ext-openssl": "*",
                 "halaxa/json-machine": "^1.2",
                 "php": ">=8.5",
-                "utopia-php/database": "8.*",
+                "utopia-php/database": "^8.0",
                 "utopia-php/dsn": "0.2.*",
                 "utopia-php/storage": "4.*"
             },
@@ -3832,7 +3836,7 @@
                 "issues": "https://github.com/utopia-php/migration/issues",
                 "source": "https://github.com/utopia-php/migration/tree/feat-query-lib"
             },
-            "time": "2026-09-25T02:46:20+00:00"
+            "time": "2026-09-25T12:10:14+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -4340,26 +4344,26 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/usage.git",
-                "reference": "24ace647857d5a9715bb35af923a9d0ecfbcac74"
+                "reference": "bf9ab997fa229c6664789111d558a9b366e15141"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/usage/zipball/24ace647857d5a9715bb35af923a9d0ecfbcac74",
-                "reference": "24ace647857d5a9715bb35af923a9d0ecfbcac74",
+                "url": "https://api.github.com/repos/utopia-php/usage/zipball/bf9ab997fa229c6664789111d558a9b366e15141",
+                "reference": "bf9ab997fa229c6664789111d558a9b366e15141",
                 "shasum": ""
             },
             "require": {
                 "php": ">=8.5",
-                "psr/http-client": "1.*",
-                "utopia-php/client": "0.4.*",
-                "utopia-php/database": "8.*",
+                "psr/http-client": "^1.0",
+                "utopia-php/client": "^0.5",
+                "utopia-php/database": "^8.0",
                 "utopia-php/query": "0.6.*"
             },
             "require-dev": {
                 "laravel/pint": "1.*",
-                "phpstan/phpstan": "2.*",
+                "phpstan/phpstan": "^2.0",
                 "phpunit/phpunit": "^9.5",
-                "utopia-php/cache": "4.*"
+                "utopia-php/cache": "^4.0"
             },
             "suggest": {
                 "ext-curl": "Required by the default cURL transport for the ClickHouse adapter. Not needed if you inject a non-cURL utopia-php/client into the adapter."
@@ -4391,7 +4395,7 @@
                 "issues": "https://github.com/utopia-php/usage/issues",
                 "source": "https://github.com/utopia-php/usage/tree/feat-query-lib"
             },
-            "time": "2026-09-24T09:47:56+00:00"
+            "time": "2026-09-28T07:03:24+00:00"
         },
         {
             "name": "utopia-php/validators",
