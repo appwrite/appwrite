@@ -425,10 +425,10 @@ readonly class Deployments
 
         // Only the sidecar ever sees a remote source, so pack the root
         // directory it builds, flat like an uploaded tarball, and keep it where
-        // manual uploads keep theirs for downloads and duplicates. Both the
-        // upload and the local staging copy run before build.sh, so nothing
-        // the build runs produces what is kept. The stat reports its size as
-        // sourceSize.
+        // manual uploads keep theirs for downloads and duplicates. The stat
+        // reports its size as sourceSize. On S3 the sidecar uploads it before
+        // build.sh starts; locally the worker can only stage it on the builds
+        // volume, which the build can write too (see the Jobs worker).
         $stage = '';
         if ($source !== null) {
             $sourceArtifacts[] = new ArchiveArtifact(id: 'sourceArchive', in: 'source', out: 'source-root.tar.gz', compression: ArchiveCompression::Gzip, depends: isset($source['clone']) ? 'source' : 'extract');

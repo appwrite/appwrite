@@ -1579,9 +1579,13 @@ class Deletes extends Action
         $buildPath = $deployment->getAttribute('buildPath', '');
 
         // A build canceled or deleted before it completed never had its staged
-        // source moved (see Deployments::payload()).
+        // source moved (see Deployments::payload()). Unlinking follows
+        // symlinked parent directories the build could plant, so clean up only
+        // inside the builds tree.
         $staged = Deployments::stagedSourcePath($device, $deploymentId);
-        if ($device->getType() === DeviceType::Local && $device->exists($staged)) {
+        if ($device->getType() === DeviceType::Local
+            && (\is_link($staged) || $device->exists($staged))
+            && \realpath(\dirname($staged)) === \dirname($staged)) {
             $device->delete($staged);
         }
 

@@ -505,29 +505,35 @@ class Jobs extends Action
 
         // On the local device a remote-source build leaves its source on the
         // builds volume (see Deployments::payload()). The build's own code can
-        // write that volume too, so only a regular file reached without any
-        // symlink is kept, and only if the inode opened is the one checked.
-        // Losing it costs the download, never the build.
+        // write that volume too, so only the file the sidecar measured is kept:
+        // a regular file of the recorded sourceSize, reached without any
+        // symlink, whose opened inode is the one checked. Losing it costs the
+        // download, never the build.
         $staged = Deployments::stagedSourcePath($deviceForBuilds, $deployment->getId());
-        if ($deviceForBuilds->getType() === DeviceType::Local && $deviceForBuilds->exists($staged)) {
+        if ($deviceForBuilds->getType() === DeviceType::Local && (\is_link($staged) || $deviceForBuilds->exists($staged))) {
             $file = false;
             try {
                 $stat = \lstat($staged);
+                $opened = false;
                 if ($deployment->getAttribute('sourcePath', '') === ''
                     && $stat !== false
                     && ($stat['mode'] & 0o170000) === 0o100000
+                    && $stat['size'] === (int) $deployment->getAttribute('sourceSize', 0)
                     && \realpath($staged) === $staged
                     && ($file = \fopen($staged, 'rb')) !== false
                 ) {
                     $opened = \fstat($file);
-                    if ($opened !== false && $opened['ino'] === $stat['ino'] && $opened['dev'] === $stat['dev']) {
-                        $resourceType = $deployment->getAttribute('resourceType', 'functions');
-                        $sourcePath = Deployments::sourcePath($project->getId(), $resourceType, $deployment->getId());
-                        ($resourceType === 'sites' ? $deviceForSites : $deviceForFunctions)->write($sourcePath, new Stream((string) \stream_get_contents($file)), 'application/gzip');
-                        $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
-                            'sourcePath' => $sourcePath,
-                        ]));
-                    }
+                }
+
+                if ($file !== false && $opened !== false && $opened['ino'] === $stat['ino'] && $opened['dev'] === $stat['dev']) {
+                    $resourceType = $deployment->getAttribute('resourceType', 'functions');
+                    $sourcePath = Deployments::sourcePath($project->getId(), $resourceType, $deployment->getId());
+                    ($resourceType === 'sites' ? $deviceForSites : $deviceForFunctions)->write($sourcePath, Stream::fromResource($file), 'application/gzip');
+                    $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
+                        'sourcePath' => $sourcePath,
+                    ]));
+                } else {
+                    Span::add('source.error', 'Staged source refused');
                 }
             } catch (\Throwable $error) {
                 Span::add('source.error', $error->getMessage());
@@ -535,7 +541,11 @@ class Jobs extends Action
                 if ($file !== false) {
                     \fclose($file);
                 }
-                $deviceForBuilds->delete($staged);
+                // Unlinking follows symlinked parent directories, which the
+                // build could plant, so clean up only inside the builds tree.
+                if (\realpath(\dirname($staged)) === \dirname($staged)) {
+                    $deviceForBuilds->delete($staged);
+                }
             }
         }
 
