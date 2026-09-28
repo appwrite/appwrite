@@ -6,7 +6,7 @@
         "app/console"
     ],
     "notPath": [
-        "data/data.php"
+        "packages/domains/data/data.php"
     ],
     "rules": {
         "array_indentation": true,
