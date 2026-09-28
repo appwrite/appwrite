@@ -334,7 +334,7 @@ class Store
 
         $where = \implode(' AND ', $conditions);
         $this->query(
-            'DELETE FROM ' . $this->table() . " WHERE {$where} SETTINGS lightweight_deletes_sync=0",
+            'DELETE FROM ' . $this->table() . " WHERE {$where}",
             $params
         );
     }
