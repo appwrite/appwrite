@@ -517,11 +517,11 @@ abstract class Action extends DatabasesAction
             throw new Exception($this->getNotAvailableException());
         }
 
-        if ($attribute->getAttribute(('type') !== $type)) {
+        if ($attribute->getAttribute('type') !== $type) {
             throw new Exception($this->getTypeInvalidException());
         }
 
-        if ($attribute->getAttribute('type') === Database::VAR_STRING && $attribute->getAttribute(('filter') !== $filter)) {
+        if ($attribute->getAttribute('type') === Database::VAR_STRING && $attribute->getAttribute('filter') !== $filter) {
             throw new Exception($this->getTypeInvalidException());
         }
 
