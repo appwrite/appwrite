@@ -1,5 +1,8 @@
 # Utopia Usage
 
+> [!IMPORTANT]
+> This repository is a read-only mirror of [`packages/usage`](https://github.com/appwrite/appwrite/tree/main/packages/usage) in [appwrite/appwrite](https://github.com/appwrite/appwrite). Development happens there — please open issues and pull requests against appwrite/appwrite.
+
 ![Total Downloads](https://img.shields.io/packagist/dt/utopia-php/usage.svg)
 [![Discord](https://img.shields.io/discord/564160730845151244)](https://appwrite.io/discord)
 
