@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react'
+import { TerraformIndicator } from '@/components/global/shared/TerraformIndicator'
 import {
   Plus,
   Plug2,
@@ -1020,6 +1021,7 @@ export function View({ projectId, initialData }: ViewProps) {
               >
                 {currentProject?.name || ''}
               </h1>
+              <TerraformIndicator projectId={projectId} />
             </div>
 
             {/* Right: Project ID and Region/Endpoint labels */}

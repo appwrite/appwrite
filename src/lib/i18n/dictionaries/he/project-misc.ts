@@ -3023,6 +3023,32 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'פירוט סורקי סוכנים עדיין לא זמין בסט הנתונים הזה',
   'This view does not include mock ChatGPT, Claude, or Perplexity counts. Measure coding-agent fetches on llms.txt and Markdown docs in Plausible instead of chatgpt.com referrers.':
     'תצוגה זו לא כוללת ספירות מדומות של ChatGPT, Claude או Perplexity. מדדו שליפות של סוכני קוד על llms.txt ומסמכי Markdown ב-Plausible, לא לפי מפנים מ-chatgpt.com.',
+  'No changes were made. This resource is managed by Terraform.':
+    'לא בוצעו שינויים. המשאב הזה מנוהל על ידי Terraform.',
+  'Managed by Terraform': 'מנוהל על ידי Terraform',
+  'The Appwrite Terraform provider created this resource. Update it in your Terraform configuration.':
+    'ספק ה-Terraform של Appwrite יצר את המשאב הזה. עדכנו אותו בתצורת ה-Terraform שלכם.',
+  'Resources in this project were created by the Appwrite Terraform provider. Update them in your Terraform configuration.':
+    'המשאבים בפרויקט הזה נוצרו על ידי ספק ה-Terraform של Appwrite. עדכנו אותם בתצורת ה-Terraform שלכם.',
+  'Managed resources': 'משאבים מנוהלים',
+  'Last apply': 'apply אחרון',
+  'View activity': 'צפייה בפעילות',
+  'Changed outside Terraform': 'שונה מחוץ ל-Terraform',
+  'This resource is managed by Terraform, but it changed after the last apply. Run terraform plan to see what differs from your configuration.':
+    'המשאב הזה מנוהל על ידי Terraform, אבל הוא השתנה אחרי ה-apply האחרון. הריצו terraform plan כדי לראות מה שונה מהתצורה שלכם.',
+  'Last change:': 'שינוי אחרון:',
+  'Changes you make here are not in your Terraform configuration. The next terraform apply may revert them.':
+    'שינויים שתבצעו כאן לא נמצאים בתצורת ה-Terraform שלכם. ה-terraform apply הבא עשוי לבטל אותם.',
+  'Delete a Terraform-managed resource?': 'למחוק משאב שמנוהל על ידי Terraform?',
+  'Update a Terraform-managed resource?': 'לעדכן משאב שמנוהל על ידי Terraform?',
+  'Terraform created this resource. Your next terraform apply will recreate it unless you also remove it from your Terraform configuration.':
+    'Terraform יצר את המשאב הזה. ה-terraform apply הבא ייצור אותו מחדש, אלא אם תסירו אותו גם מתצורת ה-Terraform שלכם.',
+  'Terraform created this resource. Your next terraform apply may overwrite this change unless you also update your Terraform configuration.':
+    'Terraform יצר את המשאב הזה. ה-terraform apply הבא עשוי לדרוס את השינוי, אלא אם תעדכנו גם את תצורת ה-Terraform שלכם.',
+  "Don't ask again for this project": 'לא לשאול שוב עבור הפרויקט הזה',
+  'Delete anyway': 'מחיקה בכל זאת',
+  'Update anyway': 'עדכון בכל זאת',
+  'Via Terraform': 'דרך Terraform',
 
   // Project environment switcher
   Environments: 'סביבות',

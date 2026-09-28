@@ -44,9 +44,11 @@ import {
   getActiveProfileId,
 } from '@/lib/console-profiles'
 import { consoleVariablesQueryOptions } from '@/lib/react-query/hooks/console-variables'
+import { prefetchTerraformProject } from '@/lib/react-query/hooks/terraform'
 import { ErrorComponent } from '@/components/error/Component'
 import { ConsoleImpersonationBanner } from '@/components/global/shared/ConsoleImpersonationBanner'
 import { PostgresPromoBanner } from '@/components/global/shared/PostgresPromoBanner'
+import { ConfirmTerraformChange } from '@/components/global/shared/ConfirmTerraformChange'
 import { reportConsoleAccess } from '@/lib/appwrite/console-access'
 import {
   ensureProjectRegion,
@@ -452,9 +454,14 @@ export const Route = createFileRoute('/_public/projects/$projectId')({
       // Prefetch console variables (CNAME, A, AAAA, nameservers, CAA) for domain verification.
       // Skip heavy background work when the project is plan-locked.
       if (!planUsageLimitReached) {
-        await queryClient
-          .ensureQueryData(consoleVariablesQueryOptions(projectData?.region))
-          .catch(() => {})
+        await Promise.all([
+          queryClient
+            .ensureQueryData(consoleVariablesQueryOptions(projectData?.region))
+            .catch(() => {}),
+          // Terraform state comes from the activity store, which has no failover,
+          // so the project waits for it only briefly.
+          prefetchTerraformProject(queryClient, projectId),
+        ])
 
         // Warm API explorer specs in the background so Explorer opens without a loading state.
         void queryClient
@@ -857,6 +864,7 @@ function ProjectLayout() {
           {features.browserAlerts ? (
             <BuildNotificationsProvider projectId={projectId} />
           ) : null}
+          <ConfirmTerraformChange />
           <ProjectCliShellLayout
             projectId={projectId}
             sidebar={{
