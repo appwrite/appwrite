@@ -57,7 +57,7 @@ $pdo = new PDO("mysql:host={$dbHost};port={$dbPort};charset=utf8mb4", $dbUser, $
     PDO::ATTR_EMULATE_PREPARES => true,
     PDO::ATTR_STRINGIFY_FETCHES => true,
 ]);
-        
+
 $cache = new Cache(new NoCache());
 
 $database = new Database(new MySQL($pdo), $cache);
@@ -254,7 +254,7 @@ $logs = $audit->getLogsByResourceAndEvents(
 All retrieval methods support the following optional parameters:
 
 - **after** (`?\DateTime`): Get logs created after this datetime
-- **before** (`?\DateTime`): Get logs created before this datetime  
+- **before** (`?\DateTime`): Get logs created before this datetime
 - **limit** (`int`, default: 25): Maximum number of logs to return
 - **offset** (`int`, default: 0): Number of logs to skip (for pagination)
 - **ascending** (`bool`, default: false): Sort order - false for newest first, true for oldest first
