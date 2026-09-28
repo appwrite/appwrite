@@ -164,6 +164,41 @@ export function useTerraformResourceOnMount(
   return decision.key === key && decision.show ? managed : null
 }
 
+/** Resolves with the value, or with null once `timeoutMs` passes. */
+async function withinTimeout<T>(
+  work: Promise<T>,
+  timeoutMs: number,
+): Promise<T | null> {
+  let timer: ReturnType<typeof setTimeout> | undefined
+  const timedOut = new Promise<null>((resolve) => {
+    timer = setTimeout(() => resolve(null), timeoutMs)
+  })
+  try {
+    return await Promise.race([work, timedOut])
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
+/** How long the project loader waits so a cold visit can show Terraform banners on first paint. */
+const FIRST_PAINT_WAIT_MS = 1500
+
+/**
+ * Starts loading Terraform state and waits briefly for it. The activity store
+ * has no failover, so a slow or failing lookup never holds the page longer;
+ * banners are then left out rather than popping in later.
+ */
+export async function prefetchTerraformProject(
+  queryClient: QueryClient,
+  projectId: string,
+  waitMs: number = FIRST_PAINT_WAIT_MS,
+): Promise<void> {
+  await withinTimeout(
+    queryClient.prefetchQuery(terraformProjectQueryOptions(projectId)),
+    waitMs,
+  )
+}
+
 /** How long a console write waits for ownership before using the last known state. */
 const OWNERSHIP_LOOKUP_TIMEOUT_MS = 5000
 
@@ -181,19 +216,13 @@ export async function lookupTerraformResource(
   const options = terraformProjectQueryOptions(projectId)
   const lastKnown = () =>
     queryClient.getQueryData(options.queryKey)?.resources[resource] ?? null
-  let timer: ReturnType<typeof setTimeout> | undefined
-  const timedOut = new Promise<null>((resolve) => {
-    timer = setTimeout(() => resolve(null), timeoutMs)
-  })
   try {
-    const project = await Promise.race([
+    const project = await withinTimeout(
       queryClient.fetchQuery(options),
-      timedOut,
-    ])
+      timeoutMs,
+    )
     return project ? (project.resources[resource] ?? null) : lastKnown()
   } catch {
     return lastKnown()
-  } finally {
-    clearTimeout(timer)
   }
 }

@@ -1,5 +1,7 @@
 import { afterAll, beforeEach, describe, expect, mock, test } from 'bun:test'
-import { QueryClient } from '@tanstack/react-query'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { createElement } from 'react'
+import { renderToString } from 'react-dom/server'
 import type { Models } from '@appwrite.io/console'
 import prodEvents from './fixtures/terraform-activity-prod.json'
 import stagingEvents from './fixtures/terraform-activity-staging.json'
@@ -22,9 +24,13 @@ mock.module('@/lib/appwrite/sdk', () => ({
 
 const {
   lookupTerraformResource,
+  prefetchTerraformProject,
   recordTerraformDrift,
   terraformProjectQueryOptions,
 } = await import('@/lib/react-query/hooks/terraform')
+const { TerraformResourceAlert } = await import(
+  '@/components/global/shared/TerraformResourceAlert'
+)
 const {
   guardTerraformChanges,
   setTerraformChangeConfirmer,
@@ -133,15 +139,30 @@ describe('console change on a Terraform-managed resource', () => {
   })
 })
 
-describe('background prefetch', () => {
-  test('stays cached until a page that shows the banner mounts', async () => {
-    await queryClient.prefetchQuery(terraformProjectQueryOptions(projectId))
+/** What a resource page renders on its first paint after the project loader ran. */
+function firstPaint(): string {
+  return renderToString(
+    createElement(
+      QueryClientProvider,
+      { client: queryClient },
+      createElement(TerraformResourceAlert, { projectId, resource: RESOURCE }),
+    ),
+  )
+}
+
+describe('cold visit to a managed resource', () => {
+  test('shows the banner on first paint when the activity store answers', async () => {
+    await prefetchTerraformProject(queryClient, projectId)
     await new Promise((resolve) => setTimeout(resolve, 20))
-    expect(
-      queryClient.getQueryData(
-        terraformProjectQueryOptions(projectId).queryKey,
-      ),
-    ).toBeDefined()
+    expect(firstPaint()).toContain('Managed by Terraform')
+  })
+
+  test('renders without the banner when the activity store hangs', async () => {
+    listEvents = () => new Promise(() => {})
+    const started = Date.now()
+    await prefetchTerraformProject(queryClient, projectId, 50)
+    expect(Date.now() - started).toBeLessThan(1000)
+    expect(firstPaint()).not.toContain('Terraform')
   })
 })
 
