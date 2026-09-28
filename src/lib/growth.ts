@@ -10,17 +10,12 @@
  * instead. Self-hosted servers have no growth route, so self-hosted consoles
  * send anonymously to Appwrite Cloud, where the email param is required.
  *
- * Requests go through the console SDK's Growth service on a dedicated client
- * that never sends cookies; the attachment (5 MB at most) goes out in the same
- * multipart request.
+ * Requests go through `sdk.forGrowth`, a Growth service on a client that never
+ * sends cookies; the attachment (5 MB at most) goes out in the same multipart
+ * request.
  */
 
-import {
-  AppwriteException,
-  Client,
-  ConversationType,
-  Growth,
-} from '@appwrite.io/console'
+import { AppwriteException, ConversationType } from '@appwrite.io/console'
 import { getBaseEndpoint, sdk } from '@/lib/appwrite/sdk'
 import { isCloudProfile } from '@/lib/console-profiles'
 import { DEFAULT_CLOUD_APPWRITE_ENDPOINT } from '@/lib/runtime-config-shared'
@@ -193,14 +188,6 @@ export async function createConversation(
   )
   const jwt = identify ? await createSessionJwt() : null
 
-  const client = new Client()
-    .setEndpoint(endpoint)
-    .setProject('console')
-    .setCredentials('omit')
-  if (jwt) {
-    client.setJWT(jwt)
-  }
-
   const fields = compact<string>({
     email: params.email?.trim(),
     name: params.name?.trim(),
@@ -212,7 +199,7 @@ export async function createConversation(
   const attributes = compact<string | number>(params.attributes ?? {})
 
   try {
-    await new Growth(client).createConversation({
+    await sdk.forGrowth(endpoint, jwt).createConversation({
       type: params.type,
       ...fields,
       ...(Object.keys(attributes).length > 0 ? { attributes } : {}),
