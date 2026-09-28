@@ -270,9 +270,7 @@ readonly class Deployments
         // the builds tree.
         $device = static::device($this->project->getId());
         $staged = static::stagedSourcePath($device, $deploymentId);
-        if ($device->getType() === DeviceType::Local
-            && (\is_link($staged) || $device->exists($staged))
-            && \realpath(\dirname($staged)) === \dirname($staged)) {
+        if ($device->getType() === DeviceType::Local && \realpath(\dirname($staged)) === \dirname($staged)) {
             $device->delete($staged);
         }
     }
@@ -437,8 +435,7 @@ readonly class Deployments
 
         // Only the sidecar ever sees a remote source, so pack the root
         // directory it builds, flat like an uploaded tarball, and keep it where
-        // manual uploads keep theirs for downloads and duplicates. The stat
-        // reports its size as sourceSize. On S3 the sidecar uploads it before
+        // manual uploads keep theirs. On S3 the sidecar uploads it before
         // build.sh starts; locally the worker can only stage it on the builds
         // volume, which the build can write too (see the Jobs worker).
         $stage = '';
@@ -448,8 +445,6 @@ readonly class Deployments
 
             $sourceDevice = getDevice(($isSite ? APP_STORAGE_SITES : APP_STORAGE_FUNCTIONS) . "/app-{$projectId}");
             if ($sourceDevice->getType() === DeviceType::Local) {
-                // The worker mounts only the builds volume, so it stages the
-                // tarball there for the Jobs worker to move.
                 $staged = static::stagedSourcePath(static::device($projectId), $deploymentId);
                 $stage = 'mkdir -p ' . \escapeshellarg(\dirname($staged)) . ' && cp /mnt/code/source-root.tar.gz ' . \escapeshellarg($staged) . '; ';
             } else {
@@ -536,9 +531,8 @@ readonly class Deployments
 
     /**
      * Where a remote-source deployment keeps the source it was built from: on
-     * the resource's own device, like a manual upload's tarball, so downloads
-     * and duplicates read both alike. The Jobs worker sets it as sourcePath
-     * once the file is there.
+     * the resource's own device, like a manual upload's tarball. The Jobs
+     * worker sets it as sourcePath once the file is there.
      */
     public static function sourcePath(string $projectId, string $resourceType, string $deploymentId): string
     {

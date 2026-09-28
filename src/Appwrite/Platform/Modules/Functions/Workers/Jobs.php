@@ -521,8 +521,7 @@ class Jobs extends Action
      * builds volume (see Deployments::payload()). It moves beside manual
      * uploads' once the build has completed and the sidecar's sourceSize is
      * recorded, whichever callback lands second. The build's own code can
-     * write that volume too, so only a regular file of that size is kept,
-     * reached without any symlink, whose opened inode is the one checked.
+     * write that volume too, so only the file the sidecar measured is kept.
      * Losing it costs the download, never the build.
      */
     private function keepStagedSource(Database $dbForProject, Document $project, Document $deployment, Device $deviceForBuilds, Device $deviceForFunctions, Device $deviceForSites): Document

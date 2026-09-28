@@ -1583,9 +1583,7 @@ class Deletes extends Action
         // symlinked parent directories the build could plant, so clean up only
         // inside the builds tree.
         $staged = Deployments::stagedSourcePath($device, $deploymentId);
-        if ($device->getType() === DeviceType::Local
-            && (\is_link($staged) || $device->exists($staged))
-            && \realpath(\dirname($staged)) === \dirname($staged)) {
+        if ($device->getType() === DeviceType::Local && \realpath(\dirname($staged)) === \dirname($staged)) {
             $device->delete($staged);
         }
 
