@@ -152,6 +152,7 @@ const APP_SDK_PLATFORM_SERVER = 'server';
 const APP_SDK_PLATFORM_CLIENT = 'client';
 const APP_SDK_PLATFORM_CONSOLE = 'console';
 const APP_SDK_PLATFORM_STATIC = 'static';
+const APP_SDK_INTEGRATIONS = ['terraform']; // Server-side tools built on a generated SDK that report their own x-sdk-name
 const APP_LIMIT_VCS_STATE = 4096; // Maximum length of the state the VCS authorize endpoints hand to a provider
 const APP_VCS_GITHUB_USERNAME = 'Appwrite';
 const APP_VCS_GITHUB_EMAIL = 'team@appwrite.io';
