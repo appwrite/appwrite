@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "46caf08e20865c0e9570cf5b5f813d99",
+    "content-hash": "0ed5a3912a0fb92ca6e5a96a5384972b",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2939,6 +2939,47 @@
             "time": "2026-09-17T08:18:45+00:00"
         },
         {
+            "name": "utopia-php/fetch",
+            "version": "1.1.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/utopia-php/fetch.git",
+                "reference": "64f2b3a789480f1deb102ce684dac4217d8e98d5"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/fetch/zipball/64f2b3a789480f1deb102ce684dac4217d8e98d5",
+                "reference": "64f2b3a789480f1deb102ce684dac4217d8e98d5",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "require-dev": {
+                "laravel/pint": "^1.5.0",
+                "phpstan/phpstan": "^1.10",
+                "phpunit/phpunit": "^9.5",
+                "swoole/ide-helper": "^6.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Utopia\\Fetch\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "A simple library that provides an interface for making HTTP Requests.",
+            "support": {
+                "issues": "https://github.com/utopia-php/fetch/issues",
+                "source": "https://github.com/utopia-php/fetch/tree/1.1.2"
+            },
+            "abandoned": true,
+            "time": "2026-04-29T11:19:19+00:00"
+        },
+        {
             "name": "utopia-php/migration",
             "version": "2.0.7",
             "source": {
@@ -3052,53 +3093,6 @@
                 "source": "https://github.com/utopia-php/mongo/tree/1.5.4"
             },
             "time": "2026-09-09T05:42:37+00:00"
-        },
-        {
-            "name": "utopia-php/platform",
-            "version": "1.0.0-rc25",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/utopia-php/platform.git",
-                "reference": "dc43dd34951d2b00946056cd5d269427b68dbd3a"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/platform/zipball/dc43dd34951d2b00946056cd5d269427b68dbd3a",
-                "reference": "dc43dd34951d2b00946056cd5d269427b68dbd3a",
-                "shasum": ""
-            },
-            "require": {
-                "ext-json": "*",
-                "ext-redis": "*",
-                "php": ">=8.5",
-                "utopia-php/cli": "^0.24",
-                "utopia-php/http": "^2.0@RC",
-                "utopia-php/queue": "^6.0.0",
-                "utopia-php/servers": "^0.4"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Utopia\\Platform\\": "src/Platform"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "description": "Light and Fast Platform Library",
-            "keywords": [
-                "framework",
-                "php",
-                "platform",
-                "upf",
-                "utopia"
-            ],
-            "support": {
-                "issues": "https://github.com/utopia-php/platform/issues",
-                "source": "https://github.com/utopia-php/platform/tree/1.0.0-rc25"
-            },
-            "time": "2026-09-23T13:10:08+00:00"
         },
         {
             "name": "utopia-php/usage",
